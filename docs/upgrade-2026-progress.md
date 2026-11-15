@@ -1,5 +1,10 @@
 # 2026 upgrade implementation evidence
 
+## November 15 guided Ohio original balance entry
+
+Adopted the reviewed seven-file interview package: 81 main tests, ten separate
+review tests, types/spec/lint and two actual browser cases pass. [Evidence](upgrade-2026-oh-guided-balance-20261115.md).
+
 ## November15 actual ARM64 consolidated run
 
 Completed exacta32 runtime session73762 with normal cleanup.632 passes/five

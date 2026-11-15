@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Collect the finite 2025 Ohio school-district remaining-balance originals;
+  81 main tests, ten independent tests and two desktop/mobile cases pass.
+  [Evidence and unchanged qualification gates](upgrade-2026-oh-guided-balance-20261115.md).
+
 - [x] Complete exacta32 ARM64 build, recovery, runtime637-case browser and
   artifact/source review; normal resource restoration verified. [Evidence](upgrade-2026-arm64-a32a3b10-20261115.md).
 - [ ] Resolve separate AMD64 browser failure; qualify later aggregate source and

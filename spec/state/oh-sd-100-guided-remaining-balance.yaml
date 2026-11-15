@@ -1,0 +1,36 @@
+form: "Ohio SD100 guided current-original balance records"
+fullName: "Visible source entry parity for the finite 2025 timely SD100 balance method"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Final2025 booklet page58; engine method state/oh-sd-100-remaining-balance.yaml.
+  Guided parity adds no calculation or new tax method. Keep every existing
+  residence/W2/IT1040/SD100 payment/quarter/penalty/original/year guard. No annual
+  2026, filing, physical map or independent human-review promotion follows.
+  Known credited zero is entered, never defaulted. Expected cash is not paid.
+  Actual receipt source year is a visible string converted only as a four-digit
+  year and bound to the canonical2025/current original/district by the engine.
+  Unpaid/no_remaining_tax do not discard retained actual/planned details; the
+  user must reconcile or explicitly remove inactive details. Expected status
+  cannot silently discard retained actual original or actual confirmation.
+  Every visible edit revokes overall confirmation; neither reopening nor JSON
+  replay refreshes private original snapshots. All new source references,
+  account identifiers and receipts remain private/local, absent from hosted
+  metadata/provider projections. Desktop/mobile source fields must be visible.
+lines:
+  - line: "original-parity"
+    description: "Actual typed current-original receipt reaches canonical source validation"
+    formula: "Wages80000×.0125=1000 minus originalSD withholding600 and estimates0 gives400 line18; same-return actual400 does not become another line12credit"
+    testRef: "tests/apps/web/oh-sd-100-guided-remaining-balance.test.ts::confirms and replays actual string-year balance originals without a second credit"
+  - line: "unknown-and-retained"
+    description: "Blank is not zero and status switches do not erase facts"
+    formula: "Reject missing/blank credited amount and contradictory inactive receipt/date/amount, preserving the saved source verbatim"
+    testRef: "tests/apps/web/oh-sd-100-guided-remaining-balance.test.ts::preserves unknown and contradictory inactive payment evidence"
+  - line: "native-source-entry"
+    description: "Collect new actual payment fields visibly and revoke stale confirmation"
+    formula: "Typed400 current-original receipt and credited400 bind owner/year/district/date; blank original year denies, edit or status switch invalidates confirmation"
+    testRef: "tests/apps/web/oh-sd-100-guided-remaining-balance-details.test.tsx::visibly enters current-original receipt confirms and invalidates after edits"
+  - line: "json-and-privacy"
+    description: "Private receipts survive local replay without cloud disclosure"
+    formula: "Original current-return reference/confirmation/accountSSN are absent from hosted shell and provider request; saved confirmed facts read purely"
+    testRef: "tests/apps/web/oh-sd-100-guided-remaining-balance.test.ts::reopens private balance facts without promoting them into hosted projections"

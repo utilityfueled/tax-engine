@@ -1,5 +1,11 @@
 # Current 2026 upgrade continuation
 
+## November 15 guided Ohio original balance entry
+
+The finite 2025 interview now collects original-payment receipts with explicit
+known-zero credits, replay and confirmation controls. Main 81 tests, independent
+10 tests and two actual desktop/mobile cases pass. [Evidence and limits](upgrade-2026-oh-guided-balance-20261115.md).
+
 ## November15 actual ARM64 consolidated run
 
 Exacta32 ARM64 build/smoke/recovery/SBOM/scan and637 browser cases passed

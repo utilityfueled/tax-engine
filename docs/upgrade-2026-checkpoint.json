@@ -1,4 +1,15 @@
 {
+  "nov15OhioGuidedOriginalBalance": {
+    "sourceFreeze": "f015d835d086fe772d05b7d648f4c330b938234067b0435a381a81516391d08f",
+    "rootAdoption": "82c69af9d163b09fed919d6d462f109d2eabfa0b7a6d62d319a62aaf381bf325",
+    "mainTests": 81,
+    "independentTests": 10,
+    "actualDesktopMobileCasesPassed": 2,
+    "providerAndExportRequestsAllowed": 0,
+    "laterCombinedChecksPending": true,
+    "humanAnd2026GatesClosed": true,
+    "evidence": "upgrade-2026-oh-guided-balance-20261115.md"
+  },
   "nov15ActualA32Arm64": {
     "source": "a32a3b10796656d881d0bff042512cdb620710fc",
     "actualSession": 73762,

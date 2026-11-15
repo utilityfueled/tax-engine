@@ -13,6 +13,10 @@ export interface SchoolLocalRowDraft{printedRow:number|null;sourceReference:stri
 export interface SchoolW2Draft{w2Index:number|null;sourceReference:string;box14SchoolDistrictReporting:{status:string;sourceReference:string};localRows:SchoolLocalRowDraft[]}
 export interface SchoolReceiptOriginalDraft{accountName:string;accountSsn:string;taxYear:string;returnType:string;kind:string;date:string;amount:string;confirmationNumber:string}
 export interface SchoolReceiptDraft{sourceId:string;sourceReference:string;accountHolder:string;taxYear:string;returnType:string;kind:string;date:string;amount:string;appliedToThisReturnConfirmed:Confirmation;original:SchoolReceiptOriginalDraft}
+export interface SchoolBalanceDraft{
+ status:string;sourceReference:string;sourceFactsConfirmed:Confirmation;date?:string;amountAppliedToTax?:string;
+ currentOriginalReturnConfirmed?:Confirmation;original?:(SchoolReceiptOriginalDraft&{districtCode:string});
+}
 export interface SchoolPriorDraft{status:string;sourceReference:string;taxYear?:string;returnType?:string;districtCode?:string;accountName?:string;accountSsn?:string;filingStatus?:string;periodStart?:string;periodEnd?:string;returnKind?:string;filedDate?:string;filingExtension?:{kind:string};line8?:string;line19?:string;electedCreditCarryforward?:string}
 export interface SchoolCarryDraft{status:string;sourceReference:string;accountHolder?:string;accountSsn?:string;electedAmount?:string;availableForThisReturn?:string;appliedToThisReturnConfirmed?:Confirmation}
 export interface SchoolPartYearHomeDraft{sourceReference:string;from:string;through:string;domicileState:string;originalAddress:SourceAddress}
@@ -31,8 +35,8 @@ export interface OhioSchoolDistrictDraft{
  income:{sourceReference:string;ordinaryCompensationOnlyConfirmed:Confirmation;noSelfEmploymentIncomeConfirmed:Confirmation;allOtherIncomeSourcesCheckedConfirmed:Confirmation;noSpecialWageAdjustmentsConfirmed:Confirmation};
  w2Sources:SchoolW2Draft[];
  payments:{sourceReference:string;allCurrentAndPriorPaymentsIncludedConfirmed:Confirmation;withholdingTreatment:string;paymentRows:SchoolReceiptDraft[];
-  account:{sourceReference:string;accountName:string;accountSsn:string;taxYear:string;returnType:string;asOfDate:string;completeAccountConfirmed:Confirmation;estimatedPaymentsCredited:string;priorCreditApplied:string};
-  priorReturn:SchoolPriorDraft;priorCreditCarryforward:SchoolCarryDraft;remainingTaxPayment:{status:string;sourceReference:string;sourceFactsConfirmed:Confirmation};
+  account:{sourceReference:string;accountName:string;accountSsn:string;taxYear:string;returnType:string;asOfDate:string;completeAccountConfirmed:Confirmation;estimatedPaymentsCredited:string;priorCreditApplied:string;currentOriginalReturnPaymentCredited?:string};
+  priorReturn:SchoolPriorDraft;priorCreditCarryforward:SchoolCarryDraft;remainingTaxPayment:SchoolBalanceDraft;
   currentTiming:{kind:string;expectedDate?:string;filedDate?:string;asOfDate:string};filingExtension:{kind:string};paymentExtension:{kind:string};returnKind:string;specialMethod:string;refundDisposition:{sourceReference:string;outgoingCarryforward:string}};
 }
 const address=():SourceAddress=>({street:'',apt:'',city:'',state:'',zip:''});
@@ -81,6 +85,24 @@ function partYearPacket(d:SchoolPartYearWageDraft){
     schoolReporting:status==='none'?{status}:{...row.schoolReporting,wages:normalizeSchoolCurrency(row.schoolReporting.wages??''),withheld:normalizeSchoolCurrency(row.schoolReporting.withheld??'')}};
   })};
 }
+/** Native values are validated as supplied; inactive receipts are never silently lost. */
+function remainingPacket(d:SchoolBalanceDraft){
+ const {status,sourceReference,sourceFactsConfirmed,...details}=d;
+ if(status==='no_remaining_tax'||status==='unpaid'){
+  if(hasReported(details))fail('retained remaining-payment details contradict this status; reconcile or explicitly remove inactive details');
+  return{status,sourceReference,sourceFactsConfirmed};
+ }
+ if(status==='expected_payment'){
+  const {original,currentOriginalReturnConfirmed,...expected}=d;
+  if(hasReported({original,currentOriginalReturnConfirmed}))fail('actual payment receipt details remain saved with an expected payment; reconcile or explicitly remove inactive details');
+  return{...expected,amountAppliedToTax:normalizeSchoolCurrency(d.amountAppliedToTax??'')};
+ }
+ if(status==='actual_payment'){
+  if(!d.original||typeof d.original!=='object')fail('actual current-original SD payment receipt is incomplete');
+  return{...d,amountAppliedToTax:normalizeSchoolCurrency(d.amountAppliedToTax??''),original:{...d.original,taxYear:year(d.original.taxYear),amount:normalizeSchoolCurrency(d.original.amount)}};
+ }
+ return structuredClone(d);
+}
 function originalPacket(d:OhioSchoolDistrictDraft):unknown{
  checkDraftStructure(d);
  const p=d.payments,prior=p.priorReturn,carry=p.priorCreditCarryforward,timing=p.currentTiming;
@@ -91,7 +113,7 @@ function originalPacket(d:OhioSchoolDistrictDraft):unknown{
  if(timing.kind==='expected'&&timing.filedDate?.trim()||timing.kind==='filed'&&timing.expectedDate?.trim())fail('retained actual filed and expected timing records conflict; reconcile the separate endpoint records');
  const raw={...structuredClone(d),...(d.partYearWageSources?{partYearWageSources:partYearPacket(d.partYearWageSources)}:{}),taxYear:year(d.taxYear),residence:{...d.residence,originalAddress:actualAddress(d.residence.originalAddress),lookup:{...d.residence.lookup,taxYear:year(d.residence.lookup.taxYear),originalAddress:actualAddress(d.residence.lookup.originalAddress)}},
   w2Sources:d.w2Sources.map(row=>({...row,localRows:row.localRows.map(local=>({...local,...(!local.districtCode?.trim()?{districtCode:undefined}:{}),...(!local.municipalityCode?.trim()?{municipalityCode:undefined}:{})}))})),
-  payments:{...p,paymentRows:p.paymentRows.map(row=>({...row,taxYear:year(row.taxYear),amount:normalizeSchoolCurrency(row.amount),original:{...row.original,taxYear:year(row.original.taxYear),amount:normalizeSchoolCurrency(row.original.amount)}})),account:{...p.account,taxYear:year(p.account.taxYear),estimatedPaymentsCredited:normalizeSchoolCurrency(p.account.estimatedPaymentsCredited),priorCreditApplied:normalizeSchoolCurrency(p.account.priorCreditApplied)},
+  payments:{...p,remainingTaxPayment:remainingPacket(p.remainingTaxPayment),paymentRows:p.paymentRows.map(row=>({...row,taxYear:year(row.taxYear),amount:normalizeSchoolCurrency(row.amount),original:{...row.original,taxYear:year(row.original.taxYear),amount:normalizeSchoolCurrency(row.original.amount)}})),account:{...p.account,taxYear:year(p.account.taxYear),estimatedPaymentsCredited:normalizeSchoolCurrency(p.account.estimatedPaymentsCredited),priorCreditApplied:normalizeSchoolCurrency(p.account.priorCreditApplied),...(p.account.currentOriginalReturnPaymentCredited!==undefined?{currentOriginalReturnPaymentCredited:normalizeSchoolCurrency(p.account.currentOriginalReturnPaymentCredited)}:{})},
    priorReturn:prior.status==='no_return'?{status:prior.status,sourceReference:prior.sourceReference}:{...prior,taxYear:year(prior.taxYear??''),line8:normalizeSchoolCurrency(prior.line8??''),line19:normalizeSchoolCurrency(prior.line19??''),electedCreditCarryforward:normalizeSchoolCurrency(prior.electedCreditCarryforward??'')},
    priorCreditCarryforward:carry.status==='none'?{status:carry.status,sourceReference:carry.sourceReference}:{...carry,electedAmount:normalizeSchoolCurrency(carry.electedAmount??''),availableForThisReturn:normalizeSchoolCurrency(carry.availableForThisReturn??'')},
    currentTiming:timing.kind==='filed'?{kind:timing.kind,filedDate:timing.filedDate,asOfDate:timing.asOfDate}:{kind:timing.kind,expectedDate:timing.expectedDate,asOfDate:timing.asOfDate},refundDisposition:{...p.refundDisposition,outgoingCarryforward:normalizeSchoolCurrency(p.refundDisposition.outgoingCarryforward)}}};
