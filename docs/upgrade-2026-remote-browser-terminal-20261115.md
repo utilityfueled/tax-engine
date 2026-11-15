@@ -57,3 +57,46 @@ files and no browser collection, batch or trace results. Its SHA-256 is
 This is a source-audit refusal with zero executed cases, not another count of
 the previous timeouts. The separately reviewed metadata commits address the
 refusal; actual current-source runtime qualification remains required.
+
+
+## Later f307 terminal qualification failures
+
+Exact `f30723f9c531d8e0eae1fa15f5efabcc435d61b4` passes
+[CI43713466647](https://github.com/utilityfueled/tax-engine/actions/runs/43713466647)
+and [Docker43713466783](https://github.com/utilityfueled/tax-engine/actions/runs/43713466783).
+Unit and coverage each pass 28,746 tests in 2,101 files; branch coverage is 88.13%.
+[Web43713466687](https://github.com/utilityfueled/tax-engine/actions/runs/43713466687)
+passes its build but fails both browser jobs. Complete artifacts contain all 643
+original identities in eight batches, two workers, zero retries and five original
+skips in each lane. Ordinary self-host policy retains its declared 90-second
+default; strict container policy retains 30 seconds. Eight executed body overrides
+and all original skip declarations remain unchanged.
+
+Self-host passes 636 cases and fails two RRTA cases at the unchanged four-second
+saved-PDF privacy-inspection deadline. Strict container passes 621 and fails
+seventeen at their original 30-second deadlines: five Ohio business/reciprocal,
+eight Ohio resident-credit/school, two PA married-payment and two passenger cases.
+These establish failed qualification. They do not establish a tax formula defect,
+a CPU cause or a result for the later goodwill/PA residency packages. Both actual
+RRTA PDFs and safe phase prefixes are retained for bounded investigation.
+
+The complete strict artifact is 729,816,634 bytes, SHA-256
+`185400eccda18d137d9c51ddc375553fc639078ab3b3767963c59dae9fa08dcd`;
+self-host is 137,026,852 bytes,
+`37f528bad26074eb6bfaa986d756edcbed3039e3b312b40d7bd49fa87e65b1bc`.
+Exact Git archive, Dockerfile, lockfile and workflow bind image
+`sha256:262697c49d9200e2684468f94153f100cb8f5f63d2ffd31525333f6b206033d8`.
+Smoke, six Compose phases, independent archive import/scratch removal and
+image/SBOM/scan identity checks pass. The scan has zero Critical and 56 High
+findings; risk acceptance remains absent. Workflow cleanup uses actual
+`docker rm --force`; it does not prove normal server or PostgreSQL shutdown.
+
+Independent artifact review and root rehash all 22 pins; separate root replay
+passes seventeen verifier controls and reconciles both complete reports.
+Only five absolute annotation-root prefixes are normalized; skip descriptions,
+locations, case identities and declared lane policies remain checked. The first
+strict-policy verifier refusal on ordinary self-host evidence is retained and
+corrected explicitly. Root's accidental repeat into existing control outputs
+is also retained; its successful replay uses a distinct private directory.
+Packets: `nov15-f307-remote-terminal-review` and
+`nov15-f307-remote-root-independent`. Qualification remains failed.

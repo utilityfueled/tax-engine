@@ -2,7 +2,7 @@
 
 ## Active work — November 15, 13:20 UTC
 
-All committed work through `f30723f9` is pushed to `main` and the remote backup.
+All committed work through `f368372d` is pushed to `main` and the remote backup.
 Fresh scoped Vercel inspection confirms the saved production-build guard; its
 actual production-target build is canceled. The backup Preview is ready, which
 does not establish completed staging qualification.
@@ -25,10 +25,12 @@ does not establish completed staging qualification.
   [PA evidence](upgrade-2026-pa-dividend-residency-paper-20261115.md).
 - Current integrated metadata, all twelve checks, ARM and protected Preview
   qualification follow these reviewed source packages. New commits are saved
-  to the backup branch while the exact-f307 main CI and Web runs finish.
-- Earlier strict remote browser failures remain retained. The current Docker
-  workflow passes; CI and Web are still running at the saved snapshot. Their
-  terminal artifacts require review before any current remote pass is claimed.
+  to both remote branches; the guarded f368 production build is canceled.
+- Earlier strict remote browser failures remain retained. Exact-f307 CI and Docker
+  pass. Its complete Web evidence has 636 ordinary self-host passes/two RRTA
+  inspection timeouts and 621 strict-container passes/seventeen deadlines, with
+  five original skips per lane. Root and independent review retain both failures.
+  [Terminal evidence](upgrade-2026-remote-browser-terminal-20261115.md).
   [Earlier terminal evidence](upgrade-2026-remote-browser-terminal-20261115.md).
 - The corrected XML comparison retains eighteen mismatches, 303 exclusions and
   nine missing inputs per variant, despite identical paired classifications.
