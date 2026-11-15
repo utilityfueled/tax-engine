@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 15 completed a137 remote audit and pushed Worksheet E intake
+
+All reviewed commits through `5e018159` are pushed to main and the backup after
+fresh readback of the automatic production-build guard. EIC's two targeted
+browser cases pass. Worksheet E source and metadata reviews pass, with972
+focused and1,033 metadata checks, web types and9,367 valid spec references;
+its two actual production browser cases also pass with original policy and
+normal owned cleanup.
+[Worksheet E evidence](upgrade-2026-guided-married-third-family-20261115.md).
+
+Full a137 remote artifacts reconcile CI/Docker passes, ordinary640passes/5skips,
+and strict624passes/16failures/5skips. Fourteen overall30s and two inspector4s
+deadlines remain failures; no gate is weakened. Source/image/SBOM/archive/recovery
+and normal cleanup are verified;192 scan findings remain unaccepted.
+[Completed remote evidence](upgrade-2026-integrated-runtime-a137b172-20261115.md).
+Final combined-source and external human/form/security qualification remain open.
+
 ## November 15 a137 local completion and original EIC intake
 
 Exact `a137b172` passes all twelve local checks with separate completed-lane

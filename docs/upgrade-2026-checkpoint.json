@@ -1,4 +1,42 @@
 {
+  "nov15A137TerminalAndWorksheetIntake": {
+    "recordedUtc": "2026-11-15T17:25:41.246772+00:00",
+    "pushedMainAndBackup": "5e018159eaa892aafa65a10efce95ccedcb58cc0",
+    "sourceReviews": {
+      "worksheetE": "7807a44cd14f7d73ce4d194446013f36b00d23dd21c9e3321e2a6fb8c0a8e07f",
+      "worksheetMetadata": "0b8acd7cd362566cfae79b896da62abbef842373f91b1afd08ebde609c1d8943"
+    },
+    "worksheetChecks": {
+      "focused": 972,
+      "metadata": 1033,
+      "webTypes": "passed",
+      "validSpecRefs": 9367,
+      "newCasesCollected": 2,
+      "actualTargetedBrowser": "passed2-with-original-policy-root-reviewed-normal-cleanup",
+      "combinedSource": "pending"
+    },
+    "a137Remote": {
+      "ci": "passed",
+      "docker": "passed",
+      "ordinary": {
+        "passed": 640,
+        "skipped": 5
+      },
+      "strict": {
+        "passed": 624,
+        "failed": 16,
+        "skipped": 5,
+        "overall30sDeadlines": 14,
+        "inspector4sDeadlines": 2
+      },
+      "fullArtifactReview": true,
+      "strictReviewSha256": "55dece5ca1f0410f0bb8487fa8cc05c7893357c18db72c158f1513b5fd3bcca7",
+      "scanFindingsUnaccepted": 192
+    },
+    "nextPackages": "two existing foreign-business original-fact methods; bounded inspector/CPU diagnosis; final source integration and rehearsals",
+    "humanFinalFormSecurityGatesRemainOpen": true,
+    "releaseQualified": false
+  },
   "nov15A137LocalAndEicIntake": {
     "source": "a137b172b328684c04bac3a770ff20d63ea96334",
     "allTwelveLocalPassed": true,

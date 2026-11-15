@@ -49,3 +49,21 @@ Private evidence is retained under
 Independent review:
 `.local/upgrade-evidence/nov15-closed-webpack-cache-reclaim-farmland-peer/REVIEW.json`,
 SHA-256 `f851c40d62e46448cc21e450f47bc319993eb9f9887515e34d4b4c0a34e5dd5e`.
+
+Two later bounded cleanup packages remove only four completed a137/1360
+static/browser caches and six other completed verification-lane caches. The
+four-target variant passes separate source review; root checks both actual
+terminal acknowledgments and retained receipts. All non-cache source, final
+assets, reports, package stores and VM state remain unchanged. Some other lanes
+of the older six-target packages have historical failures; only the enumerated
+completed lanes are in scope. No VM is started.
+
+The last recorded available-disk observation is558,992,326,656bytes. Concurrent
+net increases of4,295,405,568 and7,227,965,440bytes are not exclusive attribution
+or fresh VM admission. The512GiB floor remains unchanged, with current memory,
+disk and custody checks required before every actual rehearsal. Private receipts
+are `nov15-completed-a137-1360-cache-reclaim/RECEIPT.json`
+(`6fb20b2a534bc9a8e0d1e5907e24f1ad95b089e6f2c8494346c21edb7a06fcee`)
+and `nov15-six-completed-lane-cache-reclaim/ROOT-REVIEW.json`.
+The six-target variant has root source review, with no independent source-review
+claim. Both actual apply commands exit0.

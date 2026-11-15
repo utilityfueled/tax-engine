@@ -31,3 +31,12 @@ rows remain unchanged; each new protected endpoint budget is zero. The finite
 source closure has1,988 inputs, the fourteen diagnostic targets remain intact,
 and the generated spec inventory adds only this guide entry. This metadata does
 not establish actual browser or final combined-source qualification.
+
+Actual targeted production-build execution on `5e018159` now passes both cases:
+6,495ms desktop and5,906ms mobile, no skips or retries. The configuration retains
+two workers; this single-file run uses one actual worker. Root reconciles all
+6,105 source entries, the full649-case collection, the two exact selected
+identities, all four zero action bounds, three unchanged-build observations and
+normal server closure. Desktop/mobile screenshots were visually inspected.
+The owner exits0; the completed root review digest is `049db49f08f9860a96ce933d5500dcdca1fddd9a99c2ee7dd24645fa8867e319`.
+This targeted run does not establish full649-case, hosted or self-hosted qualification.

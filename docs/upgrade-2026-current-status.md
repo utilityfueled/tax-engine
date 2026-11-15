@@ -1,5 +1,33 @@
 # Current 2026 upgrade continuation
 
+## Active work — November 15, 17:25 UTC
+
+Reviewed commits through `5e018159` are pushed to main and the existing backup.
+Vercel's saved production-build guard was read back before that push; no
+production deployment is authorized. EIC original-petition intake passes its two
+actual managed production browser cases. The Worksheet E three-family collector
+passes source and metadata reviews, 972 focused tests, 1,033 metadata checks,
+web types and all 9,367 spec references; its two actual targeted production browser cases also pass.
+The remaining two existing foreign-business original-fact methods are being
+implemented privately. Final combined-source checks and distribution qualification
+follow these separate packages.
+
+Exact a137 remote CI and Docker passed. Ordinary self-host passed 640 cases and
+five original skips. Strict AMD64 qualification failed with 624 passes, sixteen
+failures and five original skips: fourteen overall 30-second deadlines and two
+four-second RRTA inspector deadlines. Full saved-artifact review is complete;
+limits and failed evidence remain intact. The scan retains192 unaccepted findings,
+including56 High. [Completed evidence](upgrade-2026-integrated-runtime-a137b172-20261115.md).
+
+An unsafe parser-reuse optimization is rejected after a real extracted-text
+counterexample. Independent diagnosis and source-first alternatives continue.
+Preview and ARM64 successors retain the actual1360 evidence and await exact
+final-source binding; no new runtime is claimed. Human tax/AI/security reviews,
+final annual2026 forms and accountable advisory dispositions remain external
+gates. Filing, model promotion and production release remain closed.
+
+## Earlier November 15 observations
+
 ## Active work — November 15, a137 checks and EIC intake
 
 The latest complete local aggregate is `a137b172`: all twelve checks pass,
