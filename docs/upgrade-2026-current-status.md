@@ -1,51 +1,48 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, 11:08 UTC
+## Active work — November 15, 11:54 UTC
 
-`main` contains all commits through `aa4df8c2`; the remote backup also contains
-the three later evidence commits through `da086211`, confirmed by a fresh
-remote-ref read. Those commits await the next main push so its current CI/Web
-qualification jobs can finish without cancellation.
-Vercel's production build for `aa4df8c2` is canceled by the saved guard; the
-existing production site is not redeployed.
+All committed work through `442bfd81` is pushed to `main` and the remote backup.
+Fresh scoped Vercel inspection confirms the saved production-build guard; the
+actual production-target build for this push is `CANCELED`. The existing site
+is not redeployed. The PA dividend physical-review package is included in that
+push. The two discarded W-2 commitment callsites are the next reviewed package.
 
-- Exact `8c1bd108` passes all twelve local checks: 28,728 unit/coverage tests,
-  88.13% branches and 638 browser passes/five original skips at the governed
-  30-second ordinary deadline. [Evidence](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
-- Its actual isolated Preview passes 105 API admission checks and four typed
-  desktop/mobile journeys, with 927 conservative operations and verified cleanup.
-  Those API outcomes do not claim independent remote numeric tax results.
-- Remote CI and Docker pass for `8c1bd108`. Its self-host browser lane passes
-  638/five skips at the workflow's original 90-second default. The separate
-  container lane records thirteen failures in completed batches and at least
-  two more timeouts before the next push cancels it. Its strict 30-second
-  qualification remains incomplete; reports and traces are retained for analysis.
-- The reviewed AMD64 image-chain cleanup correction is on `main`; actual run
-  `43704599960` passes all three jobs for `aa4df8c2`; root and independent
-  saved-artifact reviews pass. Six visible Critical findings and a separate
-  ignored Critical finding remain unaccepted. Current CI/Web/Docker runs have their own
-  source identity and results; no prior pass substitutes for them.
-- The XML rehearsal stops before payload work because free disk misses the
-  unchanged 250 GiB floor by 394,485,760 bytes. All eighteen normal-recovery
-  commands pass and the test VM is stopped with original resources/routes.
-  A later cache-maintenance attempt boots normally but fails before any image
-  action because its supervisor omits the PID expected by the boot guard.
-  Separate normal recovery passes all eighteen commands and restores the stopped
-  VM/routes; real-process regression covers the producer/consumer interface.
-  Corrected maintenance then passes65 commands: exactly five proven-owned images
-  removed, all36 others preserved, and normal closure verified. Measured disk
-  gains467,492,864 bytes and passes the unchanged floor. The corrected XML
-  comparison follows; no global pruning, floor reduction or unproved cause
-  attribution. [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
-- The exact `8c1bd108` ARM64 packet passes file-only admission and independent
-  source review. Its actual rehearsal waits for sequential VM work and capacity.
+- Exact `8c1bd108` passes all twelve local checks, actual protected Preview and
+  independent artifact review. Its strict remote container browser lane retains
+  real failures and cancellation; its source boundary remains explicit.
+  [Evidence](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
+- Remote `aa4df8c2` CI passes all six jobs, including 28,729 unit and coverage tests
+  with 88.13% branches. Docker passes. Its self-host browser lane passes 638 with
+  five original skips at the workflow's original 90-second default; the separate
+  strict 30-second container lane finishes with failure. The d192 diagnostic is
+  separately nonqualifying. Their complete saved artifacts are under review;
+  no cause or current-source pass is inferred.
+- The native AMD64 backport rehearsal passes all three actual jobs and both
+  saved-artifact reviews. Six visible Critical findings and one separate ignored
+  Critical remain unaccepted. [Evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
+- The corrected external XML comparison completes 57 outer commands with normal
+  VM/resources/routes restoration. All2,594 pairs match classification, retaining
+  eighteen mismatches, 303 exclusions and nine missing inputs per variant.
+  Root and independent reviews pass; XML conformance, release and risk acceptance
+  remain false. A distinct cleanup removes only proven-owned fresh toolchain
+  intermediates before the next native application run.
+  [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+- Finite original-bound 2025 single-primary resident PA Schedule B physical review
+  passes author 1044, independent 22+37 and root 118 focused tests. Actual interactive
+  and flattened PDFs pass physical/privacy checks. Other cohorts retain references;
+  filing and final 2026 gates remain closed. [Evidence](upgrade-2026-pa-dividend-official-review-20261115.md).
+- The two W-2 validation-only callers pass 105 focused and six independent tests.
+  Actual consumed commitments, all original checks and strict browser policies
+  remain unchanged. Source-audit metadata and fresh exact-source all-twelve,
+  Preview and ARM64 application qualification follow these product commits.
+  [Evidence](upgrade-2026-w2-validation-only-callers-20261115.md).
 
 Qualified human tax/spec/expected-result and AI-case review, final annual 2026
 forms, advisory disposition by an accountable owner, security/privacy acceptance
-and final distribution evidence remain open. The unresolved provider timeout
-reserve stays accounted. Filing and model promotion remain closed. The dated
-entries below are historical package snapshots, not a replacement for this
-active list or their exact-source receipts.
+and final distribution evidence remain open. The unresolved provider-timeout
+reserve stays accounted. Filing and model promotion remain closed. Dated entries
+below retain historical package/source boundaries rather than current readiness.
 
 ## November 15 native archive path correction
 

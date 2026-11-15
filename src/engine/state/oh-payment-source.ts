@@ -1,7 +1,7 @@
 /** Spec: state/ohio-payments.yaml. Source projection, not a payment override. */
 import Decimal from 'decimal.js';
 import { calculateForm1099OID } from '@/engine/forms/form-1099-oid.js';
-import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
+import { assertW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import type { TaxYearInput } from '@/models/inputs.js';
@@ -88,7 +88,7 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
             // Validate the full original, never substitute a fabricated OH zero.
             const packet = field === 'stateTaxWithheld' ? row.stateLocalSources : undefined;
             if (packet !== undefined) {
-                calculateW2StateLocalSources(input, index, packet);
+                assertW2StateLocalSources(input, index, packet);
                 continue;
             }
             if (row[field] === undefined)

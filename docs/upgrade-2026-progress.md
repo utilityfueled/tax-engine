@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 two remaining discarded W-2 commitments
+
+The guided-section and Ohio-payment guards now use the existing assertion
+wrapper, preserving original checks and actual output digests. Main105 and
+independent six tests pass; combined/runtime qualification follows.
+[Evidence and limits](upgrade-2026-w2-validation-only-callers-20261115.md).
+
 ## November 15 original-bound Pennsylvania dividend paper
 
 The finite 2025 single-primary resident packet now includes the pinned official

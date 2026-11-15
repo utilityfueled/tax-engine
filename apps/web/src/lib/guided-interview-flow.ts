@@ -22,7 +22,7 @@ import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import { buildGuidedPAOrdinaryReturnFacts } from "./guided-pa-ordinary-return-facts";
 import { buildGuidedPAOrdinaryReturnCompletionSources, type GuidedPAOrdinaryReturnCompletionSources } from "./guided-pa-ordinary-return-completion";
-import { calculateW2StateLocalSources } from "@/engine/forms/w2-state-local";
+import { assertW2StateLocalSources } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
 import type { OhioResidencyDraft } from "./guided-ohio-residency-facts";
 import type { OhioPaymentDraft } from "./guided-ohio-payment-facts";
@@ -2374,7 +2374,7 @@ function validateW2Section(data: SectionDataMap["income-w2"], filingStatus?: Fil
     const context = buildGuidedW2SourceContext(state);
     try {
       if (!context) throw new Error("Complete the current taxpayer and original W-2 before confirming its rows.");
-      context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) calculateW2StateLocalSources(context, index, entry.stateLocalSources); });
+      context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) assertW2StateLocalSources(context, index, entry.stateLocalSources); });
     } catch (error) { return { status: "partial", message: "Review the actual W-2 rows after the last edit.", fieldErrors: { "w2-actual-sources": error instanceof Error ? error.message : "Actual source review is required." } }; }
   }
   return VALID_SECTION;

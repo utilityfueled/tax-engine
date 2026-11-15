@@ -1,4 +1,18 @@
 {
+  "nov15W2ValidationOnlyCallers": {
+    "paths": [
+      "apps/web/src/lib/guided-interview-flow.ts",
+      "src/engine/state/oh-payment-source.ts"
+    ],
+    "genuineBaselineFailures": 2,
+    "focusedTests": 105,
+    "independentTests": 6,
+    "sourceFreezeSha256": "8bd970be43206ea1f7c63b8e2ff3e536f96a4d22078de124bfacd8f08c5c1003",
+    "independentReviewSha256": "bb89b16160c584e4c4cdbbe420993ba4af22e88f3e176b632956a110b3a7c286",
+    "monetaryFormulaOrBrowserPolicyChanged": false,
+    "exactSourceCombinedAndRuntimePending": true,
+    "ledger": "upgrade-2026-w2-validation-only-callers-20261115.md"
+  },
   "nov15PaDividendOfficialReview": {
     "authorSourceFiles": 14,
     "authorTests": 1044,
