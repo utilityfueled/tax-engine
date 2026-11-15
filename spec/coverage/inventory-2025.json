@@ -2575,6 +2575,45 @@
       ]
     },
     {
+      "key": "federal/foreign-tax-k3-ordinary",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1116",
+      "specPath": "spec/federal/foreign-tax-k3-ordinary.yaml",
+      "enginePath": "src/engine/forms/foreign-tax-k3-ordinary.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/foreign-tax-k3-ordinary-browser",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1116",
+      "specPath": "spec/federal/foreign-tax-k3-ordinary-browser.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/foreign-tax-multiple-state",
       "jurisdiction": "federal",
       "taxYear": 2026,

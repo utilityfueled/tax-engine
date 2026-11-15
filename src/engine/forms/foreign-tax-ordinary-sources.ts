@@ -1,5 +1,6 @@
 /** Actual ordinary passive source binding. Spec: spec/federal/foreign-tax-ordinary-sources.yaml. */
 import Decimal from 'decimal.js';
+import { requireForeignTaxK3Ordinary } from './foreign-tax-k3-ordinary.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
@@ -41,13 +42,16 @@ export function resolveForeignTaxOrdinarySources(input: ForeignTaxCreditSourceIn
   const seen = new Set<string>(), countries = new Map<string, { country: string; gross: Decimal; tax: Decimal }>();
   const groups = new Set<PassiveGroup>();
   for (const source of facts.incomeSources) {
-    const id = source.sourceId, match = /^(form1099Int|form1099Div):(0|[1-9]\d*)$/.exec(id ?? '');
+    const id = source.sourceId, match = /^(form1099Int|form1099Div|scheduleK1):(0|[1-9]\d*)$/.exec(id ?? '');
     if (!id || !match || seen.has(id) || !Number.isSafeInteger(Number(match[2]))) throw new Error('Ordinary foreign credit actual income source is missing or duplicate');
     seen.add(id);
-    const actual = match[1] === 'form1099Int' ? input.form1099Int[Number(match[2])] : input.form1099Div[Number(match[2])];
+    const k3 = match[1] === 'scheduleK1' ? requireForeignTaxK3Ordinary(input, source) : undefined;
+    if (!k3 && source.qualifiedPartnership !== undefined) throw new Error('Ordinary K3 proof cannot substitute for a bank original');
+    const actual = k3 ? { accountHolder: k3.accountHolder, payer: k3.partnershipName, payerTin: k3.partnershipEIN, interestIncome: k3.interestIncome, foreignCountry: source.foreignCountry, accountReference: undefined }
+      : match[1] === 'form1099Int' ? input.form1099Int[Number(match[2])] : input.form1099Div[Number(match[2])];
     if (!actual || !actual.accountHolder || source.owner !== actual.accountHolder || (source.owner === 'spouse' && input.taxpayer.filingStatus !== 'married_filing_jointly')
       || !actual.payer.trim() || normalize(source.payerName) !== normalize(actual.payer) || !/^\d{9}$/.test(tin(actual.payerTin) ?? '') || tin(source.payerTin) !== tin(actual.payerTin)
-      || !actual.accountReference?.trim() || source.accountReference?.trim() !== actual.accountReference.trim() || !source.sourceReference?.trim()) {
+      || (!k3 && (!actual.accountReference?.trim() || source.accountReference?.trim() !== actual.accountReference.trim())) || !source.sourceReference?.trim()) {
       throw new Error('Ordinary foreign credit income must bind the actual owner payer account and source identity');
     }
     const country = normalize(source.foreignCountry);
@@ -73,6 +77,7 @@ export function resolveForeignTaxOrdinarySources(input: ForeignTaxCreditSourceIn
   const statements = [
     ...input.form1099Int.map((row, index) => ({ id: `form1099Int:${index}`, country: row.foreignCountry, income: row.interestIncome })),
     ...input.form1099Div.map((row, index) => ({ id: `form1099Div:${index}`, country: row.foreignCountry, income: row.ordinaryDividends })),
+    ...input.scheduleK1.map((row, index) => ({ id: `scheduleK1:${index}`, country: row.foreignSourceIncome && !d(row.foreignSourceIncome).isZero() ? 'Foreign K3' : undefined, income: row.foreignSourceIncome ?? '0' })),
   ];
   if (statements.some(row => row.country?.trim() && !notForeign.has(normalize(row.country) ?? '') && amount(row.income, 'reported income').gt(0) && !seen.has(row.id))) {
     throw new Error('Ordinary foreign credit complete income sources omit a known foreign-country statement');

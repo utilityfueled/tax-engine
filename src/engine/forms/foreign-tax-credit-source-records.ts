@@ -1,5 +1,6 @@
 /** Shared actual paid-tax credit records. Spec: spec/federal/foreign-tax-ordinary-sources.yaml. */
 import Decimal from 'decimal.js';
+import { requireForeignTaxK3Ordinary } from './foreign-tax-k3-ordinary.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
@@ -74,7 +75,7 @@ export function resolveForeignTaxCreditSourceRecords(input: ForeignTaxCreditSour
   }
   if (owners.size !== expectedOwners.length) throw new Error('Foreign credit requires actual status for every return taxpayer');
   if (input.form2555 && amount(input.form2555.foreignEarnedIncome, 'foreign earned income').gt(0)) throw new Error('Foreign credit cannot ignore actual nonpassive foreign earned income');
-  // Spec: pass-through-statements. Only the election without Form 1116 reads these statements.
+  // Spec: pass-through-statements. The election without Form 1116 and the finite ordinary K3 method read these statements.
   const passThrough = [
     ...(input.scheduleK1 ?? []).map((row, index) => ({ sourceId: `scheduleK1:${index}`, kind: 'schedule_k3' as const, passive: row.foreignTaxCategory === 'passive', hasIncome: !d(row.foreignSourceIncome).isZero(),
       form: { accountHolder: row.accountHolder, payer: row.partnershipName, payerTin: row.partnershipEIN, foreignTaxPaid: row.foreignTaxPaid } })),
@@ -82,7 +83,11 @@ export function resolveForeignTaxCreditSourceRecords(input: ForeignTaxCreditSour
       // A single-owner return has only one possible beneficiary.
       form: { accountHolder: row.accountHolder ?? (input.taxpayer.filingStatus === 'married_filing_jointly' ? undefined : 'primary' as const), payer: row.estateTrustName, payerTin: row.estateTrustEIN, foreignTaxPaid: row.foreignTaxesPaid } })),
   ];
-  if (passThrough.some(row => row.hasIncome || amount(row.form.foreignTaxPaid, 'pass-through tax').gt(0)) && method !== 'direct') throw new Error('Foreign credit pass-through foreign sources require their separate qualified-statement method');
+  if (method === 'ordinary') for (const row of passThrough.filter(item => item.hasIncome || amount(item.form.foreignTaxPaid, 'pass-through tax').gt(0))) {
+    const source = annual.creditWithForm1116?.incomeSources?.find(item => item.sourceId === row.sourceId);
+    if (!source) throw new Error('Foreign credit pass-through foreign sources require their separate qualified-statement method');
+    requireForeignTaxK3Ordinary(input, source);
+  }
   if (passThrough.some(row => row.hasIncome && !annual.sources?.some(source => source.sourceId === row.sourceId))) throw new Error('Foreign credit requires every actual positive foreign-tax statement, including pass-through foreign income');
   const statements = [
     ...input.form1099Int.map((form, index) => ({ sourceId: `form1099Int:${index}`, form })),

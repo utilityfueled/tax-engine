@@ -5068,6 +5068,19 @@ const ForeignTaxPriorCapacitySchema = z.object({
   sourceFactsConfirmed: z.boolean().optional(), sourceReference: z.string().optional(), allPriorUseIncludedConfirmed: z.boolean().optional(),
   limitation: decimal.optional(), currentTaxes: decimal.optional(), priorCarryoversUsed: decimal.optional(),
 }).strict();
+/** Actual qualified K3 ordinary-interest originals; no confirmation or amount defaults. */
+export const ForeignTaxK3OrdinaryProofSchema = z.object({
+  sourceTaxYear: z.number().int().optional(), originalK1Reference: z.string().optional(), qualifiedK3Reference: z.string().optional(),
+  beginningBasisSourceReference: z.string().optional(), usdPaidTaxSourceReference: z.string().optional(),
+  calendarYearPartnershipConfirmed: z.boolean().optional(), usdReportedPaidTaxesConfirmed: z.boolean().optional(),
+  entityPaidTaxPayments: z.array(z.object({ date: z.string().optional(), amountUsd: decimal.optional() }).strict()).optional(),
+  foreignDeductions: decimal.optional(), foreignInterestExpense: decimal.optional(), otherExpenses: decimal.optional(),
+  taxReduction: decimal.optional(), redeterminationAmount: decimal.optional(),
+  domesticContinuingNonPtpConfirmed: z.boolean().optional(), portfolioIncomeOnlyConfirmed: z.boolean().optional(),
+  allOtherK1AmountsZeroConfirmed: z.boolean().optional(), noOtherBasisChangesConfirmed: z.boolean().optional(),
+  priorBasisSuspensionsZeroConfirmed: z.boolean().optional(), priorAtRiskSuspensionsZeroConfirmed: z.boolean().optional(),
+  priorPassiveSuspensionsZeroConfirmed: z.boolean().optional(), sourceFactsConfirmed: z.boolean().optional(),
+}).strict();
 const ForeignTaxOrdinaryCreditSchema = ForeignTaxCreditSourceSchema.extend({
   sourceTaxYear: z.number().int().optional(), method: z.enum(["ordinary_passive"]).optional(),
   allForeignIncomeSourcesIncludedConfirmed: z.boolean().optional(), noForeignOrDomesticLossAccountsConfirmed: z.boolean().optional(),
@@ -5077,6 +5090,7 @@ const ForeignTaxOrdinaryCreditSchema = ForeignTaxCreditSourceSchema.extend({
     owner: z.enum(["primary", "spouse"]).optional(), foreignCountry: z.string().optional(),
     reportedIncome: decimal.optional(), foreignIncome: decimal.optional(), sourceReference: z.string().optional(),
     passiveGroup: z.enum(["withholding_15_or_more", "withholding_under_15", "no_foreign_tax", "other_foreign_tax"]).optional(),
+    qualifiedPartnership: ForeignTaxK3OrdinaryProofSchema.optional(),
   }).strict()).optional(),
   itemizedAllocation: ForeignTaxDeductionCarryoverSchema.shape.itemizedAllocation,
   amt: z.object({

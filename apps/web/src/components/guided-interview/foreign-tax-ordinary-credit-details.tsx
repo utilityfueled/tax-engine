@@ -1,4 +1,5 @@
 "use client";
+import { snapshotGuidedK3OrdinaryIncome, type GuidedForeignTaxK3StatementData } from '@/lib/guided-foreign-tax-k3';
 import type { ForeignOrdinaryCreditData, ForeignOrdinaryIncomeData, ForeignOrdinaryPriorData } from '@/lib/guided-foreign-tax-ordinary-credit';
 import { foreignCarryoverStatements, snapshotForeignCarryoverIncome } from '@/lib/guided-foreign-tax-carryover';
 import type { InvestmentData } from '@/lib/guided-investment-facts';
@@ -9,7 +10,7 @@ import { CurrencyField } from './currency-field';
 function Choice({ label, value, options, onChange }: { label: string; value?: string; options: readonly (readonly [string, string])[]; onChange: (value: string | undefined) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(event.target.value || undefined)}><option value="">Not answered</option>{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>;
 }
-export function ForeignTaxOrdinaryCreditDetails({ data, investment, onChange }: { data?: ForeignOrdinaryCreditData; investment?: InvestmentData; onChange: (data: ForeignOrdinaryCreditData | undefined) => void }) {
+export function ForeignTaxOrdinaryCreditDetails({ data, investment, qualifiedK3Statements, onChange }: { data?: ForeignOrdinaryCreditData; investment?: InvestmentData; qualifiedK3Statements?: GuidedForeignTaxK3StatementData[]; onChange: (data: ForeignOrdinaryCreditData | undefined) => void }) {
   if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add ordinary Form 1116 worksheet</button>;
   const update = (patch: Partial<ForeignOrdinaryCreditData>) => {
     const next = { ...data, ...patch, sourceFactsConfirmed: null };
@@ -19,6 +20,7 @@ export function ForeignTaxOrdinaryCreditDetails({ data, investment, onChange }: 
     onChange(next);
   };
   const statements = foreignCarryoverStatements(investment);
+  const k3Statements = (qualifiedK3Statements ?? []).map((row,index)=>({sourceId:`scheduleK1:${index}`,row,index}));
   const income = (index: number, patch: Partial<ForeignOrdinaryIncomeData>) => update({ incomeSources: data.incomeSources?.map((row, i) => i === index ? { ...row, ...patch } : row) });
   const amt = data.amt;
   const updateAmt = (patch: Partial<NonNullable<typeof amt>>) => update({ amt: { ...amt, ...patch, sourceFactsConfirmed: undefined } });
@@ -51,8 +53,8 @@ export function ForeignTaxOrdinaryCreditDetails({ data, investment, onChange }: 
     <fieldset className="guided-fieldset"><legend>Actual ordinary foreign income</legend>
       <p className="guided-hint">Select each original statement, including foreign income with no foreign tax. Enter its actual foreign portion and prescribed passive group. A statement total does not establish the foreign portion or grouping.</p>
       {(data.incomeSources ?? []).map((row, index) => <fieldset className="guided-fieldset" key={index}><legend>Ordinary income {index + 1}</legend>
-        <Choice label={`Ordinary income statement ${index + 1}`} value={row.sourceId} options={statements.map(source => [source.sourceId, `${source.entry.payer} — ${source.entry.accountReference ?? 'Account reference missing'}`])} onChange={sourceId => {
-          const source = statements.find(item => item.sourceId === sourceId); update({ incomeSources: data.incomeSources?.map((item, i) => i === index ? source ? snapshotForeignCarryoverIncome(source) : {} : item) });
+        <Choice label={`Ordinary income statement ${index + 1}`} value={row.sourceId} options={[...statements.map(source => [source.sourceId, `${source.entry.payer} — ${source.entry.accountReference ?? 'Account reference missing'}`] as const),...k3Statements.map(source=>[source.sourceId,`Qualified K3: ${source.row.partnershipName ?? 'Original name missing'}`] as const)]} onChange={sourceId => {
+          const source = statements.find(item => item.sourceId === sourceId), k3 = k3Statements.find(item=>item.sourceId===sourceId); update({ incomeSources: data.incomeSources?.map((item, i) => i === index ? source ? snapshotForeignCarryoverIncome(source) : k3 ? snapshotGuidedK3OrdinaryIncome(k3.row,k3.index) : {} : item) });
         }} />
         <CurrencyField label={`Ordinary income ${index + 1} foreign amount`} value={row.foreignIncome ?? ''} onChange={foreignIncome => income(index, { foreignIncome })} />
         <Choice label={`Ordinary income ${index + 1} passive group`} value={row.passiveGroup} options={[

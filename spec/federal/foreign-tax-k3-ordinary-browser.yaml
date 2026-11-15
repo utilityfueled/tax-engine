@@ -1,0 +1,27 @@
+form: "Ordinary K3 guided browser original intake"
+fullName: "Finite ordinary Form1116 K3 visible original journey"
+taxYear: 2025
+supportedTaxYears: [2025]
+irsReference: "https://www.irs.gov/instructions/i1116"
+notes: |
+  Extends the separately frozen finite ordinary K3 source admission; no tax formula.
+  Seed only the established household/W2 and annual eligibility/AMT-history scaffold.
+  Remove every new K1/K3 original, tax snapshot and ordinary income snapshot before
+  opening the actual UI. At1280 and390 visibly enter actual original identities,
+  reference, owner/year, amounts including knownzero, calendar and USD-paid details,
+  original confirmations; select both actual tax/income sources and confirm.
+  Explicit fictional W2 box2 withholding12000 in the established scaffold.
+  Require actual visible555 estimatedbalance, penalty0 under the Form2210 current-year
+  tax-minus-withholding555<1000 exception; no invented prior-year history. Require independently derived12555 tax,
+  regular900 and workingAMT619/carry281. Edit allocated deduction to blank; original,
+  ordinary and annual confirmations must revoke and visible estimate failclosed.
+  Knownzero is not blank; restore actualzero, reselect actual source snapshots,
+  reconfirm and reload preserving actual originals/visible estimate. All provider
+  and protected requests remainzero; no original identity/reference in requestbody.
+  Source-only until root launches original default30s/2workers/0retry policy.
+lines:
+  - line: "visible-originals"
+    description: "Desktop and mobile actual K3 original entry with fresh source snapshots"
+    formula: "Originate all new K3 source facts using controls; actual visible555 and canonical regular900/AMT619/carry281; blank edit failsclosed; knownzero plus explicit fresh confirmations restores then survives reload"
+    irsRef: "i1116 K3 originalrecords;i1065sk3 PartII and PartIIIsection4line1;i6251line8Step4;i2210 current-year withholding exception"
+    testRef: "apps/web/tests/guided-foreign-tax-k3-ordinary.spec.ts::originates ordinary K3 originals and refreshes source proof after an unknown edit"

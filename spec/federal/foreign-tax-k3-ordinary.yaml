@@ -1,0 +1,65 @@
+form: "Qualified partnership K3 ordinary Form1116 sources"
+fullName: "Finite primary continuing partnership passive interest original records"
+taxYear: 2025
+supportedTaxYears: [2025]
+irsReference: "https://www.irs.gov/instructions/i1116"
+sources:
+  - url: "https://www.irs.gov/instructions/i1116"
+    revision: "2025 K3 reporting, allocated expenses and current taxes; lines1,3,18–21"
+    retrieved: "2026-11-15"
+  - url: "https://www.irs.gov/instructions/i6251"
+    revision: "2025 line8 steps2/4/5, independent AMT carry records; denominator is line4 AMTI"
+    retrieved: "2026-11-15"
+  - url: "https://www.irs.gov/instructions/i1065sk3"
+    revision: "2025 actual PartII income/deductions; PartIII section4 line1 creditable paid taxes; PartII line45 excluded"
+    retrieved: "2026-11-15"
+notes: |
+  Source admission only, not a new tax formula. One2025 calendar-year primary single continuing
+  domestic nonPTP partnership, qualifiedK3 passive interest wholly foreign in one
+  actual foreign country. No other partnership/trust or INT/DIV originals in this
+  finite method. Require actual K1/K3/beginningbasis references and explicit zero
+  allocated foreign deductions/interest/otherexpenses/taxreductions/redeterminations,
+  all otherK1 boxes and all suspension/basis-change history. Fresh partnerbasis must
+  allow every cent. Preserve all annual eligibility/paid/noaccrual/owner/source,
+  separate actual regular/AMT ledgers and AMT election/priorcapacity validation.
+  Require actual entity-paid2025 dates and USD-reported PartIII section4 line1
+  amounts matching tax, with original conversion/source reference; no inferred
+  personal payment date, currency/rate or FX calculation. This calendar paid
+  cohort is finite, not a universal fiscal-year partnership rule.
+  Neither a bareK1 nor missing/false/blank/unknown facts establishes zero or proof.
+  New2026 admission, other entities, spouse/joint, losses, domestic/foreign mixes,
+  preferential income and expense allocations remain unsupported. Existing direct
+  credit and ordinary bank methods retain their original behavior and all final
+  forms/privacy/review-only export/readiness gates. UI records sources, not tax math.
+  Fixture originals explicitly report W2 federalWithheld12000 in both canonical and
+  guided paths. Tax12555 less withholding12000 is555, below the Form2210 current-year
+  withholding exception threshold1000; estimated-tax penalty0 and full amountOwed555.
+  Prior-year history remains unknown; do not infer a prior-year safe harbor. This
+  changes synthetic fixture facts and assertions only, not any production formula.
+lines:
+  - line: "canonical"
+    description: "Exact qualified ordinary K3 original source cohort"
+    formula: "Bind unique K1:0 original owner/year/entity/name/EIN/interest/foreigngross/tax/country with strict qualifiedPartnership actual references and zero-source proof; reuse canonical ordinary regular and AMT calculators; fixture finaltax12555 regularcredit900 workingAMTcredit619 AMTcarry281 AMT0; explicit W2withholding12000; gross/fullbalance555 and penalty0 because current tax minus withholding555<1000"
+    irsRef: "i1116 K3 reporting and lines1/3/18–21;i6251line8Step4;i2210 Who Must Pay the Underpayment Penalty, current-year withholding exception"
+    testRef: "tests/engine/forms/foreign-tax-k3-ordinary.test.ts::admits qualified K3 originals into independent regular and AMT limits"
+  - line: "boundaries"
+    description: "Unknowns conflicts histories basis and original identity remain explicit"
+    formula: "Reject omitted/false confirmations, unknown/nonzero allocated amounts, wrong actual source identity/year/owner/entity/country, any other actual K1 amounts or inadequate basis; preserve input and existing early errors"
+    irsRef: "i1116 K3 allocated expenses taxreductions and recordkeeping"
+    testRef: "tests/engine/forms/foreign-tax-k3-ordinary.test.ts::rejects incomplete conflicting or unsupported original facts without mutation"
+  - line: "guided"
+    description: "Visible original intake and fresh snapshot binding"
+    formula: "Normalize explicit original values only, retain unknown keys for strict rejection; compare actual K3 original snapshot before canonical bridge; edits revoke confirmations; no inferred zero, owner, year, country, date or tax eligibility"
+    irsRef: "i1116 K3 original records"
+    testRef: "tests/guided-interview/guided-foreign-tax-k3-ordinary.test.ts::builds actual original K3 ordinary sources and rejects stale snapshots"
+  - line: "visible"
+    description: "Actual source controls expose finite ordinary K3 facts"
+    formula: "User records all five allocated original amount fields and selects actual qualifiedK3 source; never prefill zero or compute tax in UI; source edits revoke original/ordinary/annual confirmation"
+    irsRef: "i1116 K3 deductions reductions and records"
+    testRef: "tests/apps/web/guided-foreign-tax-k3-ordinary.test.tsx::originates explicit ordinary K3 originals and invalidates source confirmation"
+
+  - line: "direct-preservation"
+    description: "Ordinary original facts remain incompatible with the separate direct method"
+    formula: "Direct K3 method rejects any ordinary-only original key present, including undefined/null/blank/knownzero/false; switching methods preserves these facts and failsclosed rather than silently dropping them"
+    irsRef: "i1116 separate election withoutForm1116 eligibility; originalrecords retained"
+    testRef: "tests/guided-interview/guided-foreign-tax-k3-ordinary.test.ts::preserves direct method rejection of every ordinary-only original key"

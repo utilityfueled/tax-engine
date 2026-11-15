@@ -1,3 +1,4 @@
+import { normalizeGuidedK3OrdinaryProof } from './guided-foreign-tax-k3';
 import type { TaxYearInput } from '@/models/inputs.js';
 import { parseGuidedCurrency } from './guided-currency';
 import { buildGuidedForeignTaxDirectCredit, type ForeignDirectCreditData, type ForeignCreditKnownResidency } from './guided-foreign-tax-direct-credit';
@@ -35,7 +36,7 @@ export function buildGuidedForeignTaxOrdinaryCredit(data: ForeignOrdinaryCreditD
   const common = buildGuidedForeignTaxDirectCredit(data, known, 'ordinary foreign-credit worksheet');
   if (!common) throw new Error('Complete the actual ordinary foreign-credit source history.');
   if (yearValue(data.sourceTaxYear, 'ordinary credit source year') !== year) throw new Error('Match the actual ordinary foreign-credit source year to this return.');
-  const incomeSources = data.incomeSources?.map(row => ({ ...row, reportedIncome: money(row.reportedIncome, 'original statement income'), foreignIncome: money(row.foreignIncome, 'foreign ordinary income') }));
+  const incomeSources = data.incomeSources?.map(row => ({ ...row, reportedIncome: money(row.reportedIncome, 'original statement income'), foreignIncome: money(row.foreignIncome, 'foreign ordinary income'), ...(row.qualifiedPartnership !== undefined ? { qualifiedPartnership: normalizeGuidedK3OrdinaryProof(row.qualifiedPartnership) } : {}) }));
   const amt = data.amt ? { ...data.amt, firstPost1997CreditClaimTaxYear: yearValue(data.amt.firstPost1997CreditClaimTaxYear, 'first AMT credit claim year') } : undefined;
   const regularCarryback = prior(data.regularCarryback), amtCarryback = prior(data.amtCarryback);
   if (amt && amtCarryback?.election === 'form1116_credit' && amtCarryback.currentTaxes !== undefined && amtCarryback.limitation !== undefined && amtCarryback.priorCarryoversUsed !== undefined
