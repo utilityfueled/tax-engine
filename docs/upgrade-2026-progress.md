@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 Ohio header single replay
+
+Current parent originals validate once within the qualified header invocation,
+with retained and unsupported compositions preserving their original errors.
+Main 127 tests and both original desktop/mobile journeys pass without policy
+changes or retries. [Evidence](upgrade-2026-ohio-header-single-replay-20261115.md).
+
 ## November 15 compatible image-fix refresh
 
 Official image pins remain current; fourteen primary Debian package tables

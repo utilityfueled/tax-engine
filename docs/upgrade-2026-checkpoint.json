@@ -1,4 +1,20 @@
 {
+  "nov15OhioHeaderSingleReplay": {
+    "base": "27364f66",
+    "freeze": "48790645a2c68a2f496e116045eeb308518143a6c653261c15593fb7942938f9",
+    "peerReview": "0573a2681614306a9774816c040cb4ce0504f0fef635bec3fcc7799d169cec5d",
+    "mainTests": 127,
+    "mainFiles": 7,
+    "specReferences": 31,
+    "inventoryUnchanged": 1030,
+    "originalBrowserCasesPassed": 2,
+    "bodyTimeoutMs": 30000,
+    "retries": 0,
+    "actualArtifactAudit": "737158f87134089b0265b9f94fd74d952e6f64d170c71e9758388423736b0c23",
+    "mainReceipt": "1c6f733d4bad61ee816aa0dd609ea5281e5077aa0e93dddd0b7eadd405b2c952",
+    "remaining": "Fourformoriginalyear/HSAknowninheritedtiming/currentcombined+runtimes/externalgates",
+    "evidence": "docs/upgrade-2026-ohio-header-single-replay-20261115.md"
+  },
   "nov15CompatibleImageFixRefresh": {
     "base": "55f4bcc7",
     "review": "b4c4ed1d2b4c8da1d5dd6c58f040c981d7a076691448db0133cab7664e6008a0",

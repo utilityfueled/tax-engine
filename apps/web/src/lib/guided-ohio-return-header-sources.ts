@@ -68,10 +68,15 @@ export function confirmGuidedOhioReturnHeaderSources(input:TaxYearInput,data:Ohi
 }
 /** Pure replay of entered records AND every retained actual dependency, including the complete native credit child. */
 export function buildGuidedOhioReturnHeaderSources(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft):OhioReturnHeaderSources{
+ return buildGuidedOhioReturnHeaderOriginals(input,data,residency,payments,school).ohioReturnHeaderSources;
+}
+/** Validate the same current context once for a header and its canonical parent fields.
+ * No externally supplied context and no cross-invocation reuse: every call replays originals. */
+export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft):TaxYearInput&{ohioReturnHeaderSources:OhioReturnHeaderSources}{
  if(!data)return fail('actual header records and explicit confirmation are required');
  const current=currentContext(input,residency,payments,school),source=enteredSource(data),saved=OhioReturnHeaderSourcesSchema.safeParse(data.confirmedHeaderSources);
  if(!same(data.originalOhioSchoolDistrictSources,current.district))return fail('actual school district originals differ from the separately confirmed header child; explicitly review them again');
  if(!saved.success||!same(source,saved.data))return fail('actual header records differ from the separately confirmed originals; explicitly review them again');
  calculateOhioReturnHeaderSource(current.canonical,source);
- return source;
+ return{...input,ohioResidency:current.facts,ohioPayments:current.paid,...(current.district?{ohioSchoolDistrict:current.district}:{}),ohioReturnHeaderSources:source};
 }

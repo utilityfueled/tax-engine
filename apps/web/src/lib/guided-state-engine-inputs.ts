@@ -1,4 +1,4 @@
-import {buildGuidedOhioReturnHeaderSources} from './guided-ohio-return-header-sources';
+import {buildGuidedOhioReturnHeaderSources,buildGuidedOhioReturnHeaderOriginals} from './guided-ohio-return-header-sources';
 import {buildGuidedOhioReciprocalWages} from './guided-oh-reciprocal-wages';
 import {buildGuidedOhioResidentCreditSources} from './guided-ohio-resident-credit-sources';
 import {buildGuidedOhioSchoolDistrictFacts} from './guided-ohio-school-district-facts';
@@ -105,6 +105,11 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     if(input.ohioResidency?.residentCreditSources&&!data?.ohioResidency?.residentCreditSources)throw Error('Retained actual Ohio resident-credit originals require the native packet and reconfirmation.');
     if(input.ohioResidency?.businessSources&&!data?.ohioResidency?.businessSources)throw Error('Retained actual Ohio business source records require the current native packet and reconfirmation.');
     if(input.ohioResidency?.reciprocalWageSources&&!data?.ohioReciprocalWages)throw new Error('Reconcile the retained canonical reciprocal sources with actual native originals before replacing them.');
+    // The header needs the same validated current parent/payment/credit/district originals.
+    // Keep unsupported reciprocal and missing retained child composition on the existing path.
+    if(data?.ohioReturnHeaderSources&&!input.ohioReturnHeaderSources&&!data.ohioReciprocalWages&&!(input.ohioSchoolDistrict&&!data.ohioSchoolDistrict)){
+      return buildGuidedOhioReturnHeaderOriginals(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict);
+    }
     let ohioResidency = data?.ohioReciprocalWages
       ?buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments)
       :buildGuidedOhioResidencyFacts(data?.ohioResidency, input);
