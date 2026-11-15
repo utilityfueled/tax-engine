@@ -1,5 +1,10 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Resolve actual native archive path-length defect with a short owned root,
+  identity-checked cleanup, 968 author/main checks and twenty separate controls.
+  [Evidence](upgrade-2026-archive-short-root-20261115.md).
+- [ ] Pass corrected-source aggregate checks and actual AMD64 import/runtime.
+
 - [x] Preserve and correct the actual full-browser Ohio status-message failure;
   one original-policy mobile production case and twenty source rejections pass.
   [Evidence](upgrade-2026-oh-blank-status-geometry-20261115.md).

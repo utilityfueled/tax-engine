@@ -1,5 +1,14 @@
 # 2026 upgrade implementation evidence
 
+## November 15 native archive path correction
+
+Actual retained AMD64 diagnostics identify Podman's 50-character runroot limit.
+A spec-first short owned path and stronger custody checks pass 968 author/main
+checks and twenty separate controls. All browser policies/source hashes remain
+unchanged. [Evidence](upgrade-2026-archive-short-root-20261115.md). Actual native
+qualification and new exact-source aggregate checks remain pending; prepared
+6ebc rehearsals were not launched.
+
 ## November 15 corrected aggregate source preparation
 
 The full bf3 browser run preserves 635 passes, one stale blank-status assertion

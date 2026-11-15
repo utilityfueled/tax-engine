@@ -1,4 +1,24 @@
 {
+  "nov15NativeArchiveShortRoot": {
+    "actualFailureSource": "8ab7ff49f8ad2f9ec18bda1f8105e162e66e88df",
+    "actualPodmanInfoExit": 125,
+    "actualCause": "runroot longer than50characters",
+    "actualLoadOccurred": false,
+    "actualScratchRemoved": true,
+    "authorFreeze": "6c804d329dfc36e3fece7df6daed73bdfd9a2b6d0ddaaee0b7bdf5421fce875e",
+    "genuineRED": {
+      "failed": 4,
+      "passed": 10
+    },
+    "authorAndMainTestsEach": 968,
+    "mainTestInvocations": 2,
+    "independentControls": 20,
+    "independentReview": "4bdce92ac209fa27352e697d53c21a184f67d345615144e7fd8a0f551700ce0f",
+    "allBrowserClosureAndPoliciesUnchanged": true,
+    "actualSuccessorImportPending": true,
+    "prior6ebcPreparedRehearsalsNeverLaunched": true,
+    "evidence": "upgrade-2026-archive-short-root-20261115.md"
+  },
   "nov15PAMergeOhioDiagnosticMetadataSuccessor": {
     "applicationSource": "f32db9afa0c9a3d8dbf0ff1e5f39d7396d4accae",
     "sourceFreeze": "85cf8fd38167eb4d48da19f74b33ce7dcae1628b014ca7115d40a889822a1179",

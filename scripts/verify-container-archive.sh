@@ -8,17 +8,27 @@ revision=${GITHUB_SHA:?Expected the original workflow revision}
 image_id=${CANDIDATE_IMAGE_ID:?Expected an immutable Docker image ID}
 [[ $revision =~ ^[a-f0-9]{40}$ && $image_id =~ ^sha256:[a-f0-9]{64}$ ]] || exit 1
 
-scratch=$(mktemp -d "${RUNNER_TEMP:?Expected a job-owned temporary directory}/tax-engine-archive.XXXXXXXX")
-scratch=$(cd "$scratch" && pwd -P)
+scratch=
+scratch_identity=
 receipt=container-archive-verification.json
 stage=preflight
 archive_sha=
 archive_bytes=0
 store_info_diagnostics=null
 cleanup() {
-  local result=$? removed=true verified=false
+  local result=$? removed=true verified=false current_identity=
   trap - EXIT HUP INT TERM
-  if ! sudo -n -- rm -rf --one-file-system -- "$scratch" 2>/dev/null || [[ -e $scratch ]]; then
+  # Never remove a substituted path, symlink or directory whose custody changed.
+  if [[ -z $scratch_identity || ! -d $scratch || -L $scratch ]]; then
+    removed=false
+    result=1
+  elif ! current_identity=$(stat -c '%d:%i:%u:%a' -- "$scratch" 2>/dev/null); then
+    removed=false
+    result=1
+  elif [[ $current_identity != "$scratch_identity" ]]; then
+    removed=false
+    result=1
+  elif ! sudo -n -- rm -rf --one-file-system -- "$scratch" 2>/dev/null || [[ -e $scratch ]]; then
     removed=false
     result=1
   fi
@@ -41,7 +51,22 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-mkdir "$scratch/tmp"
+stage=preflight-root
+: "${RUNNER_TEMP:?Expected the workflow temporary-directory contract}"
+# Podman's native runroot is limited to 50 characters. RUNNER_TEMP/TMPDIR may
+# be longer than this, so use one exclusive short root under canonical /tmp.
+scratch_parent=$(cd /tmp && pwd -P) || exit 1
+scratch=$(mktemp -d /tmp/tax26archive.XXXXXXXX) || exit 1
+[[ $scratch =~ ^/tmp/tax26archive\.[A-Za-z0-9]{8}$ ]] || exit 1
+[[ -d $scratch && ! -L $scratch && -O $scratch ]] || exit 1
+scratch=$(cd "$scratch" && pwd -P) || exit 1
+[[ ${scratch%/*} == "$scratch_parent" && ${scratch##*/} =~ ^tax26archive\.[A-Za-z0-9]{8}$ ]] || exit 1
+owner_uid=$(id -u) || exit 1
+current_identity=$(stat -c '%d:%i:%u:%a' -- "$scratch") || exit 1
+[[ $current_identity =~ ^[0-9]+:[0-9]+:${owner_uid}:700$ ]] || exit 1
+scratch_identity=$current_identity
+(( ${#scratch} + 4 <= 50 )) || exit 1
+mkdir "$scratch/tmp" || exit 1
 unset DOCKER_HOST DOCKER_CONTEXT DOCKER_TLS_VERIFY DOCKER_CERT_PATH CONTAINER_HOST CONTAINER_CONNECTION
 docker=(docker --host unix:///var/run/docker.sock)
 podman=(sudo -n -- env "TMPDIR=$scratch/tmp" podman --remote=false
