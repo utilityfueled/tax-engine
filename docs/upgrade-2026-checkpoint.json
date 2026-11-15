@@ -1,4 +1,23 @@
 {
+  "nov15PAAggregateMergeCorrection": {
+    "failedAggregateSource": "bf3e613af0eedfa35e236ce8e86f5223d11958b6",
+    "unitAndCoverageFailuresEach": 4,
+    "passesEach": 28613,
+    "ownedDatabasesStopped": true,
+    "newIntegrationRED": {
+      "failed": 4,
+      "passed": 9
+    },
+    "affectedGREEN": 972,
+    "aggregateAssertionsGREEN": 8,
+    "currentSpecValidation": true,
+    "separateReviewTests": 84,
+    "separateReview": "f3f7c392b15a58ee9a9d6bf697c01b52793888053c4165242358a0252e56cad3",
+    "conditionalFlattenOnly": true,
+    "pdfMergeGuardUnchanged": true,
+    "finalCombinedAndRuntimePending": true,
+    "evidence": "upgrade-2026-pa-interest-merge-20261115.md"
+  },
   "nov15FinalFiniteMetadata": {
     "applicationSource": "e014f390c246b8420a5918daa02aff9e9a989e7a",
     "rootAdoption": "b16cb55882e94a55988d4941d63562733940f6b89928553b2896f945c587f8a7",

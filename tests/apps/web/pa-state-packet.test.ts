@@ -450,7 +450,7 @@ describe("Pennsylvania workspace packet disclosure", () => {
     );
   });
 
-  it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule A reference summary and marks the packet partial", async () => {
+  it("buildWorkspaceFilledReturnDownload omits Schedule A for ordinary Pennsylvania interest without adjustments and keeps the packet supported", async () => {
     const renderer=vi.spyOn(rendering,"fillReturn");
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
@@ -463,11 +463,12 @@ describe("Pennsylvania workspace packet disclosure", () => {
     expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
-    expect(download.includedForms).toContain("pa-schedule-a-reference.pdf");
-    expect(pdfText).toContain("Packet completeness status: partial.");
-    expect(pdfText).toContain(
-      "Pennsylvania Schedule A is included as a reference summary, not an official PA-40 Schedule A filing copy.",
-    );
+    expect(download.includedForms).not.toContain("pa-schedule-a-review.pdf");
+    expect(download.includedForms).not.toContain("pa-schedule-a-reference.pdf");
+    expect(pdfText).toContain("Packet completeness status: supported.");
+    expect(pdfText).not.toContain("Pennsylvania Schedule A applies");
+    expect(pdfText).not.toContain("Pennsylvania Schedule A is included");
+    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
   });
 
   it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule B reference summary and marks the packet partial", async () => {

@@ -1,5 +1,10 @@
 # Remaining 2026 upgrade execution checklist
 
+- [x] Fix conditional PA Schedule A flattening after real aggregate failures;
+  preserve merge/filing guards and reconcile the two stale assertions.
+  [Focused evidence](upgrade-2026-pa-interest-merge-20261115.md).
+- [ ] Pass corrected-source aggregate and runtime qualification.
+
 - [x] Bind final finite source metadata: actual 641 cases, four zero-action
   additions, all prior policies and 1,024 inventory rows unchanged; 83 author,
   separate-review and adoption checks pass. [Evidence](upgrade-2026-final-finite-metadata-20261115.md).

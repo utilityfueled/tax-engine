@@ -1400,6 +1400,7 @@ export async function fillReturn(
       const physical = isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)
         ? await fillPAOrdinaryScheduleA(input,result,join(blankFormsDir,"pa-schedule-a.pdf"),options.paOrdinaryReview) : undefined;
       if (physical) {
+        if (flatten) await flattenForm(physical.getForm());
         const outputPathPAScheduleA = join(outputDir,"pa-schedule-a-review.pdf");
         await savePacketPdf(physical,outputPathPAScheduleA);
         filledForms.push(outputPathPAScheduleA);

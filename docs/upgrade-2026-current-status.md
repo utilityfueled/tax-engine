@@ -1,5 +1,9 @@
 # Current 2026 upgrade continuation
 
+## November 15 PA aggregate correction
+
+The bf3 aggregate unit/coverage runs each found four failures. A confined conditional flatten fixes two real part-year exports; two aggregate assertions now reflect the official attachment rule and 47 pinned templates. Focused 972 plus eight tests, types/spec/lint pass. Final combined and runtime checks must use the corrected source. [Evidence](upgrade-2026-pa-interest-merge-20261115.md).
+
 ## November 15 final finite aggregate preparation
 
 All current finite packages are committed through `e014f390`. Metadata now binds

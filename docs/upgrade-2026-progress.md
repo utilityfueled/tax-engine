@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 15 PA attachment merge correction
+
+Preserved bf3 unit/coverage failures (four each, 28,613 passes, normal PostgreSQL cleanup). Spec-first integration RED exposed the omitted conditional flatten; 972 affected and eight aggregate assertion checks now pass. No monetary calculation, guard or readiness gate was weakened. [Evidence](upgrade-2026-pa-interest-merge-20261115.md).
+
 ## November 15 final finite aggregate preparation
 
 All current finite packages are committed through `e014f390`. Metadata now binds
