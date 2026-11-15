@@ -63,5 +63,7 @@ Private evidence is under `.local/upgrade-evidence/`:
 Preparation and independent review each verify 62 wire/math, 47 actual-adapter
 synthetic validation, 25 controller and four preflight controls. Independent
 actual-result review passes the saved usage, ledger and normal-stop artifacts.
-Human-reviewed evaluation labels, provider invoice reconciliation, hosted
-qualification, final filing readiness and model promotion remain separate gates.
+Human-reviewed evaluation labels, disposition of the unchanged unknown-usage
+hold, hosted qualification, final filing readiness and model promotion remain
+separate gates. The recorded usage-priced charges are not a provider invoice;
+a provider invoice is not itself a separate route-promotion requirement.
