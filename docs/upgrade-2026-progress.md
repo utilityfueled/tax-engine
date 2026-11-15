@@ -6230,3 +6230,13 @@ checks exit zero and cleanup errors are empty. Root and independent archive,
 source/image/SBOM/scan reviews pass. Raw509 visible matches include6Critical/
 110High, plus one ignoredCritical retained separately; no risk/ABI/release
 acceptance is inferred. [Actual evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
+
+### November 15: preserve supervisor contract failure and normal recovery
+
+The cache-maintenance boot succeeds but its inherited supervisor omits the PID
+required by the consumer. No image action occurs. Current process/start-time
+custody is independently established; all18 separate normal-recovery commands
+pass, restoring the stopped VM/resources/routes without guest deletion.
+Actual benign-process RED/GREEN controls cover the missing producer field;
+root and separate source review each pass46 controls. Corrected maintenance and
+XML/native qualification remain pending. [Failure and recovery evidence](upgrade-2026-postgres-libxml2-native-20261114.md).

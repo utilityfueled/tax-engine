@@ -234,3 +234,42 @@ independent source review:
 independent actual restoration review:
 `4805b4630b3d9960891b054cf6b2eb28edc257fdca0f814b15be8f2702bbc45e`.
 External conformance, candidate release and security acceptance remain pending.
+
+## November 15: retain cache harness failure and normally recover
+
+The separately reviewed owned-cache maintenance attempt boots the isolated VM
+normally, then stops before guest observation or image deletion. Its inherited
+supervisor returns no `childPid`, while the boot-custody consumer requires that
+field. All seven actual commands exit zero, but the controller records
+`KeyError:'childPid'` and retains the VM because boot custody is unconfirmed.
+The original source reviews and mocked controls missed this interface defect;
+their earlier passes do not establish successful maintenance.
+
+A bounded read-only census independently derives the current unique daemon
+group from exact argv, owner, parent, configuration, executable, disk and socket
+identities. Start times fall within the actual boot interval. The historical
+child PID was never recorded and is not reconstructed as direct evidence.
+Separate recovery repeats fresh host and strict empty-guest/path-absence proofs,
+then normally stops the VM. All eighteen commands pass, with original 2 CPUs,
+8192 MiB, 384 GiB disk and socket routes restored; no child/operation uncertainty
+or deadline overrun remains. No image, volume, container or guest file is deleted.
+
+The minimal supervisor correction adds the actual owned `Popen.pid`, or null
+when spawning failed. Real benign-process tests reproduce the missing field
+against the failed source, then verify PID/PGID equality, the unchanged boot
+consumer with a naturally closing descendant, and failed-spawn behavior.
+Root and separate source review each pass 46 controls against 56 frozen inputs.
+Corrected maintenance, disk reclamation and XML comparison remain unexecuted.
+
+Failed maintenance receipt:
+`f46b87411d2da41c178b5cd351e1aa0ea88d30ff1199d8ef54cb44fb32243007`;
+independent failure/real-contract review:
+`83c1bd16a0a865f25f56ccb050b43e721a8ba1fd4512cccac8087a94e1e437d0`;
+actual normal-recovery receipt:
+`d4af1a00914e79368621838765f13d90023733ed36b8e479b010155b0219cca4`;
+root actual restoration review:
+`3afbf1bc25949a2c77032694a66ba3704cdb0bf1097d0c3488b68509212d44d0`;
+independent recovery source review:
+`0af9125383966f5e4433684404d30410f2a08efb41f5c921eff27b42e07db833`;
+independent actual restoration review:
+`b15dc3454b33570a0f9972a30d0d7214ed2518a7861aa7dbb07ab49fa175edeb`.

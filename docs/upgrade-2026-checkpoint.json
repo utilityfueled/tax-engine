@@ -1,4 +1,23 @@
 {
+  "nov15CacheSupervisorFailureAndNormalRecovery": {
+    "failedMaintenanceReceiptSha256": "f46b87411d2da41c178b5cd351e1aa0ea88d30ff1199d8ef54cb44fb32243007",
+    "failure": "KeyError:'childPid'",
+    "imageActions": 0,
+    "recoveryCommands": 18,
+    "normalStop": true,
+    "resourcesRestored": true,
+    "childOrOperationUncertain": false,
+    "historicalBootPidRecorded": false,
+    "currentDerivedCustodyAndStartTimesVerified": true,
+    "sourceControlsRootAndPeerEach": 46,
+    "sourcePinnedFiles": 56,
+    "recoveryReceiptSha256": "d4af1a00914e79368621838765f13d90023733ed36b8e479b010155b0219cca4",
+    "rootActualReviewSha256": "3afbf1bc25949a2c77032694a66ba3704cdb0bf1097d0c3488b68509212d44d0",
+    "independentActualReviewSha256": "b15dc3454b33570a0f9972a30d0d7214ed2518a7861aa7dbb07ab49fa175edeb",
+    "correctedMaintenanceExecuted": false,
+    "capacityImprovementClaim": false,
+    "ledger": "docs/upgrade-2026-postgres-libxml2-native-20261114.md"
+  },
   "nov15Amd64ThirdActualFunctionalPass": {
     "source": "aa4df8c226713480117350c32fe8c1a14fcdbbd1",
     "run": 43704599960,

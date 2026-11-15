@@ -1,10 +1,11 @@
 # Current 2026 upgrade continuation
 
-## Active work — November 15, 10:40 UTC
+## Active work — November 15, 11:08 UTC
 
-`main` and the remote backup contain all commits through `aa4df8c2`. The later
-protected-Preview evidence commit `d1921cd0` is also on the remote backup and
-awaits the next main push so the current qualification jobs can finish.
+`main` contains all commits through `aa4df8c2`; the remote backup also contains
+the three later evidence commits through `da086211`, confirmed by a fresh
+remote-ref read. Those commits await the next main push so its current CI/Web
+qualification jobs can finish without cancellation.
 Vercel's production build for `aa4df8c2` is canceled by the saved guard; the
 existing production site is not redeployed.
 
@@ -20,12 +21,17 @@ existing production site is not redeployed.
   two more timeouts before the next push cancels it. Its strict 30-second
   qualification remains incomplete; reports and traces are retained for analysis.
 - The reviewed AMD64 image-chain cleanup correction is on `main`; actual run
-  `43704599960` passes all three jobs for `aa4df8c2`; independent saved-artifact
-  review is in progress and Critical findings remain unaccepted. Current CI/Web/Docker runs have their own
+  `43704599960` passes all three jobs for `aa4df8c2`; root and independent
+  saved-artifact reviews pass. Six visible Critical findings and a separate
+  ignored Critical finding remain unaccepted. Current CI/Web/Docker runs have their own
   source identity and results; no prior pass substitutes for them.
 - The XML rehearsal stops before payload work because free disk misses the
   unchanged 250 GiB floor by 394,485,760 bytes. All eighteen normal-recovery
   commands pass and the test VM is stopped with original resources/routes.
+  A later cache-maintenance attempt boots normally but fails before any image
+  action because its supervisor omits the PID expected by the boot guard.
+  Separate normal recovery passes all eighteen commands and restores the stopped
+  VM/routes; real-process regression covers the producer/consumer interface.
   Only demonstrably owned cache cleanup is being prepared; no global pruning,
   floor reduction or unproved cause attribution. [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
 - The exact `8c1bd108` ARM64 packet passes file-only admission and independent

@@ -11,10 +11,15 @@
   browser evidence without relabeling observed failures or cancellation.
 - [x] Normally recover the capacity-stopped XML VM without deleting guest data
   or weakening its floor. [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+- [x] Preserve the later cache harness failure before image actions; prove current
+  process/start-time custody, normally recover in eighteen commands, and exercise
+  the missing supervisor PID contract with actual benign processes.
+- [x] Pass and independently review the third native AMD64 functional/cleanup
+  rehearsal. Its scan findings remain unaccepted. [Evidence](upgrade-2026-amd64-backports-workflow-20261115.md).
 - [ ] Review and execute only proven-owned cache cleanup; finish the corrected
   XML comparison and actual exact-source ARM64 qualification sequentially.
-- [ ] Finish the third native AMD64 backport run, strict container browser
-  qualification and current remote artifact review; fix any confirmed defects.
+- [ ] Finish strict container browser qualification and current remote artifact
+  review; fix any confirmed defects.
 - [ ] Obtain qualified independent human reviews, final annual forms, accountable
   advisory disposition and all remaining AI/hosting/release evidence from the
   execution brief. No completion, filing or model promotion is inferred.
