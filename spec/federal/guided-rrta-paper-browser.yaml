@@ -66,3 +66,16 @@ lines:
       privacy verdict, cross an inspection boundary, omit a surface or marker, or change
       the original four-second child deadline and exact output projection.
     testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::reuses text-phase parser bytes only within the same inspection and retains complete fallback"
+
+  - line: "saved-pdf-text-copy-admission"
+    formula: >
+      Within each inspection, count exact text-constructor bytes from every fully checked
+      content context, retaining at most 4096 entries and 8 MiB. Preserve singleton and
+      array structure and the pinned pypdf constructor's actual newline behavior; never
+      normalize incoming text bytes. A byte sequence observed exactly once takes the
+      complete original text parser without a speculative canonical operand copy.
+      Repeated or unrecorded bytes retain the original bounded text cache with separate
+      reader and forced encoding, fresh mutable copies, full fallback and finally restore.
+      Counts are admission hints only: all content, operand, raw, graph, encoded marker
+      and page-text checks still execute. Keep four seconds, 64 KiB and two browser workers.
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::avoids speculative copies for exact one-off array constructor bytes"

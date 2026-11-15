@@ -6097,3 +6097,14 @@ regeneration and the repeated check pass. All9,311 spec references and web types
 pass. Separate saved-artifact audits verify the final105 Preview source/statuses/
 925-operation count/cleanup and the real three-test PostgreSQL recovery result.
 Neither review substitutes for a qualified human tax or security sign-off.
+
+### November 15: avoid unused RRTA text copies without reducing privacy scans
+
+Spec-first regression records eight unused copies on one-off content. Bounded,
+per-inspection exact constructor-byte counts avoid those copies while every
+original scan/parser surface remains. Root68 tests and both actual saved PDFs
+pass; independent62 controls plus90 additional parity comparisons and both PDFs
+pass. Sixteen isolated normal observations measure18.4% lower mean local time;
+strict parsing/text-call counts remain unchanged. Four seconds/64KiB/two workers/
+zero retries remain. The remote failures are retained and new runtime qualification
+is pending. [Exact change and review](upgrade-2026-rrta-text-copy-admission-20261115.md).

@@ -91,6 +91,13 @@ def parse_content(data,reader):
  require(len(ops)==len(other) and all(a[1]==b[1] and (a[1]==b'INLINE IMAGE' or a[0]==b[0]) for a,b in zip(ops,other)),'parser-disagreement')
  return ops,spans
 
+
+def exact_text_context_bytes(values,chunks):
+ # Match the pinned ContentStream constructor after strict stream validation.
+ if isinstance(values,ArrayObject):
+  return b''.join(data+b'\n' for key,start,data in chunks)
+ return chunks[0][2] if chunks else b''
+
 def inspect(raw,markers):
  _phase('inspection_entered')
  require(type(raw) is bytes and 0<len(raw)<=MAX_PDF and raw.startswith(b'%PDF-'),'pdf-input')
@@ -106,7 +113,7 @@ def inspect(raw,markers):
   ascii_numeric=m.encode('ascii') if m.isascii() and m.isdecimal() else None
   compiled.append((variants,ascii_numeric,Decimal(m) if ascii_numeric is not None else None))
  known={};parsed={};active=set();visiting=set();exemptions=set();seenrefs=set();seenobjects=set();decoded_total=0
- parse_cache={};parse_cache_bytes=0;names_scanned=set()
+ parse_cache={};parse_cache_bytes=0;names_scanned=set();text_context_counts={};text_context_bytes=0
  def scan_bytes(data,label,spans=()):
   for mi,(variants,ascii_numeric,numeric_value) in enumerate(compiled):
    for pattern in variants:
@@ -156,13 +163,17 @@ def inspect(raw,markers):
     scan_bytes(decoded,'decoded-stream-string');scan_string(create_string_object(decoded))
  groups=[]
  def content_group(values,resources,depth=0):
-  nonlocal parse_cache_bytes
+  nonlocal parse_cache_bytes,text_context_bytes
   require(depth<=50,'content-depth');items=[(v,resolved(v)) for v in values]
   require(all(isinstance(obj,StreamObject) for v,obj in items),'content-type')
   groupkey=tuple(key(v) for v,obj in items);require(groupkey not in visiting,'content-cycle');visiting.add(groupkey)
   chunks=[];offset=0
   for v,obj in items:
    data=obj.get_data();require(len(data)<=64*1024*1024,'stream-size');chunks.append((key(v),offset,data));offset+=len(data)+1
+  text_data=exact_text_context_bytes(values,chunks)
+  if text_data in text_context_counts:text_context_counts[text_data]+=1
+  elif len(text_context_counts)<TEXT_PARSE_CACHE_ENTRIES and text_context_bytes+len(text_data)<=TEXT_PARSE_CACHE_BYTES:
+   text_context_counts[text_data]=1;text_context_bytes+=len(text_data)
   combined=b'\n'.join(d for k,start,d in chunks)
   if combined in parse_cache:ops,spans=parse_cache[combined]
   else:
@@ -267,7 +278,8 @@ def inspect(raw,markers):
    if cloned is not None:
     stream.seek(0,io.SEEK_END);current._operations=cloned;return
   original_text_parser(current,stream)
-  if (len(text_cache)<TEXT_PARSE_CACHE_ENTRIES and
+  if (text_context_counts.get(data)!=1 and
+      len(text_cache)<TEXT_PARSE_CACHE_ENTRIES and
       text_cache_bytes+len(data)<=TEXT_PARSE_CACHE_BYTES and
       all(operator!=b'INLINE IMAGE' for operands,operator in current._operations)):
    cloned=clone_text_operations(current._operations)

@@ -229,3 +229,84 @@ it('keeps mutable operands isolated and preserves parser stream position on reus
 it('falls back to complete parsing for inline images and copy failure',async()=>{
  for(const mode of ['inline','copy-failure']as const)expect(await runTextReuse({pdf:await sample(),inspections:1,mode})).toEqual({results:['PASS'],textParserCalls:4,restored:[true],operandTypes:[]});
 });
+
+/** Spec: federal/guided-rrta-paper-browser.yaml#saved-pdf-text-copy-admission. */
+const admissionProbe=String.raw`import importlib.util,sys,json,base64,io
+from pypdf._page import PageObject
+s=importlib.util.spec_from_file_location('admission_probe',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+p=json.loads(sys.stdin.read());raw=base64.b64decode(p['pdf']);parser=m.ContentStream._parse_content_stream;extract=PageObject.extract_text;text=False;calls=0;clones=0
+if p.get('fallback')=='bytes':m.TEXT_PARSE_CACHE_BYTES=0
+if p.get('fallback')=='entries':m.TEXT_PARSE_CACHE_ENTRIES=0
+def phase(name):
+ global text
+ if name=='page_text':text=True
+ elif name=='complete':text=False
+m._phase=phase
+def counted(self,stream):
+ global calls
+ if text:calls+=1
+ return parser(self,stream)
+m.ContentStream._parse_content_stream=counted
+def synthetic(self,*a,**kw):
+ for encoding in [None,'bytes'] if p.get('encoding') else [None]:
+  if p.get('unknown'):
+   content=m.ContentStream(None,self.pdf,encoding);content.set_data(b'BT (A) Tj ET')
+  else:content=m.ContentStream(self['/Contents'],self.pdf,encoding)
+  ops=content.operations
+  if p.get('mutation'):
+   assert str(ops[1][0][0])=='A';ops[1][0][0]=m.TextStringObject('changed')
+ return ''
+PageObject.extract_text=synthetic
+def profile(frame,event,arg):
+ global clones
+ if event=='call' and frame.f_code.co_name=='clone_text_operations':clones+=1
+results=[];restored=[];sys.setprofile(profile)
+try:
+ for _ in range(p.get('inspections',1)):
+  results.append(m.inspect(raw,['111111111'])['status']);restored.append(m.ContentStream._parse_content_stream is counted)
+finally:
+ sys.setprofile(None);m.ContentStream._parse_content_stream=parser;PageObject.extract_text=extract
+print(json.dumps({'results':results,'parserCalls':calls,'cloneCalls':clones,'restored':restored}))`;
+async function admissionPdf(unique:boolean,split=false){
+ const doc=await PDFDocument.create();
+ for(let i=0;i<4;i++){
+  const page=doc.addPage([200,200]);
+  const text='BT (A) Tj ET\n'+(unique?`% unique ${i}\n`:'');
+  const chunks=split?['q\n',text,'Q\n']:[text];
+  page.node.set(PDFName.of('Contents'),doc.context.obj(chunks.map(chunk=>doc.context.register(doc.context.flateStream(chunk)))));
+ }
+ return Buffer.from(await doc.save({useObjectStreams:false})).toString('base64');
+}
+async function runAdmission(data:{pdf:string;inspections?:number;unknown?:boolean;encoding?:boolean;mutation?:boolean;fallback?:'bytes'|'entries'}){
+ const real=await vi.importActual<typeof import('node:child_process')>('node:child_process');
+ const r=real.spawnSync(python,['-I','-B','-c',admissionProbe,pySource],{input:JSON.stringify(data),encoding:'utf8',timeout:4000,maxBuffer:65536,env:{PATH:process.env.PATH??'/usr/bin:/bin'}});
+ expect(r.error).toBeUndefined();expect(r.status,r.stderr).toBe(0);expect(r.stderr).toBe('');return JSON.parse(r.stdout);
+}
+it('avoids speculative copies for exact one-off array constructor bytes',async()=>{
+ for(const split of [false,true])expect(await runAdmission({pdf:await admissionPdf(true,split),inspections:2})).toEqual({results:['PASS','PASS'],parserCalls:8,cloneCalls:0,restored:[true,true]});
+});
+it('retains repeated and unrecorded text caching with distinct encodings and mutable isolation',async()=>{
+ const pdf=await admissionPdf(false);
+ expect(await runAdmission({pdf,encoding:true})).toEqual({results:['PASS'],parserCalls:2,cloneCalls:8,restored:[true]});
+ expect(await runAdmission({pdf,mutation:true})).toEqual({results:['PASS'],parserCalls:1,cloneCalls:4,restored:[true]});
+ expect(await runAdmission({pdf:await admissionPdf(true),unknown:true})).toEqual({results:['PASS'],parserCalls:1,cloneCalls:4,restored:[true]});
+ for(const fallback of ['bytes','entries']as const)expect(await runAdmission({pdf,fallback})).toEqual({results:['PASS'],parserCalls:4,cloneCalls:0,restored:[true]});
+});
+it('matches the actual pinned text constructor for singleton arrays and trailing newlines',async()=>{
+ const real=await vi.importActual<typeof import('node:child_process')>('node:child_process');
+ const probe=String.raw`import importlib.util,sys,json
+from pypdf.generic import ArrayObject,DecodedStreamObject,ContentStream
+s=importlib.util.spec_from_file_location('constructor_probe',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+checked=0
+for array in [False,True]:
+ for data in [[b'q Q'],[b'q Q\n'],[b''],[b'\n']]+([[b'q',b'Q'],[b'',b'\n',b'q Q'],[]] if array else []):
+  streams=[];chunks=[];offset=0
+  for i,raw in enumerate(data):
+   stream=DecodedStreamObject();stream.set_data(raw);streams.append(stream);chunks.append((i,offset,raw));offset+=len(raw)+1
+  values=ArrayObject(streams) if array else streams
+  expected=ContentStream(values if array else streams[0],None).get_data()
+  assert m.exact_text_context_bytes(values,chunks)==expected;checked+=1
+print(json.dumps({'checked':checked}))`;
+ const r=real.spawnSync(python,['-I','-B','-c',probe,pySource],{encoding:'utf8',timeout:4000,maxBuffer:65536,env:{PATH:process.env.PATH??'/usr/bin:/bin'}});
+ expect(r.error).toBeUndefined();expect(r.status,r.stderr).toBe(0);expect(r.stderr).toBe('');expect(JSON.parse(r.stdout)).toEqual({checked:11});
+});

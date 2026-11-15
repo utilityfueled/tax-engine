@@ -1,4 +1,23 @@
 {
+  "nov15RrtaTextCopyAdmission": {
+    "base": "026c663c",
+    "document": "docs/upgrade-2026-rrta-text-copy-admission-20261115.md",
+    "manifest": "91abe5b8b58a58476692b12effbcbcd4421a1364e11b6958998203194a2370c8",
+    "independentPeer": "493bcd62fbcdb002638077b7706f54f3c2b575c3579b80286a8d68d3ab52af96",
+    "rootFocusedPassed": 68,
+    "independentFocusedPassed": 62,
+    "independentAdditionalParityCases": 90,
+    "actualSavedPdfs": 2,
+    "markersEach": 18,
+    "childDeadlineMs": 4000,
+    "outputLimitBytes": 65536,
+    "browserWorkers": 2,
+    "retries": 0,
+    "localNormalMeanReductionPercent": "18.4",
+    "allPrivacySurfacesPreserved": true,
+    "newRemoteBrowserQualificationPending": true,
+    "releaseReady": false
+  },
   "nov15InfrastructureInventoryAndArtifactPeers": {
     "commits": [
       "dbb190ff",
