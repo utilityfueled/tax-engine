@@ -6209,3 +6209,14 @@ Preview/environment/webhook state close or restore correctly. Root and two
 independent artifact reviews pass. Exact remote tax numbers, live ledger queries,
 human approval and whole hosted qualification are not inferred.
 [Actual evidence and limits](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
+
+
+### November 15: retain distinct remote browser outcomes
+
+Exact8c remote CI/Docker pass. Self-host browser643 cases pass638/five skips at
+its original90s default; strict container completed batches instead record
+434PASS/13FAIL/five skips, plus an incomplete191-case final batch and two further
+logged timeouts before push cancellation. All failures remain evidence. The650MB
+artifact matches its API digest; trace durations do not establish a CPU cause.
+A separately bounded optional profiling workflow runs on the backup branch.
+[Source, sample difference and cleanup limits](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).

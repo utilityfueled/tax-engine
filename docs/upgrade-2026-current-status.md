@@ -1,5 +1,43 @@
 # Current 2026 upgrade continuation
 
+## Active work — November 15, 10:40 UTC
+
+`main` and the remote backup contain all commits through `aa4df8c2`. The later
+protected-Preview evidence commit `d1921cd0` is also on the remote backup and
+awaits the next main push so the current qualification jobs can finish.
+Vercel's production build for `aa4df8c2` is canceled by the saved guard; the
+existing production site is not redeployed.
+
+- Exact `8c1bd108` passes all twelve local checks: 28,728 unit/coverage tests,
+  88.13% branches and 638 browser passes/five original skips at the governed
+  30-second ordinary deadline. [Evidence](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
+- Its actual isolated Preview passes 105 API admission checks and four typed
+  desktop/mobile journeys, with 927 conservative operations and verified cleanup.
+  Those API outcomes do not claim independent remote numeric tax results.
+- Remote CI and Docker pass for `8c1bd108`. Its self-host browser lane passes
+  638/five skips at the workflow's original 90-second default. The separate
+  container lane records thirteen failures in completed batches and at least
+  two more timeouts before the next push cancels it. Its strict 30-second
+  qualification remains incomplete; reports and traces are retained for analysis.
+- The reviewed AMD64 image-chain cleanup correction is on `main`; actual run
+  `43704599960` passes all three jobs for `aa4df8c2`; independent saved-artifact
+  review is in progress and Critical findings remain unaccepted. Current CI/Web/Docker runs have their own
+  source identity and results; no prior pass substitutes for them.
+- The XML rehearsal stops before payload work because free disk misses the
+  unchanged 250 GiB floor by 394,485,760 bytes. All eighteen normal-recovery
+  commands pass and the test VM is stopped with original resources/routes.
+  Only demonstrably owned cache cleanup is being prepared; no global pruning,
+  floor reduction or unproved cause attribution. [Evidence](upgrade-2026-postgres-libxml2-native-20261114.md).
+- The exact `8c1bd108` ARM64 packet passes file-only admission and independent
+  source review. Its actual rehearsal waits for sequential VM work and capacity.
+
+Qualified human tax/spec/expected-result and AI-case review, final annual 2026
+forms, advisory disposition by an accountable owner, security/privacy acceptance
+and final distribution evidence remain open. The unresolved provider timeout
+reserve stays accounted. Filing and model promotion remain closed. The dated
+entries below are historical package snapshots, not a replacement for this
+active list or their exact-source receipts.
+
 ## November 15 native archive path correction
 
 Actual retained AMD64 diagnostics identify Podman's 50-character runroot limit.

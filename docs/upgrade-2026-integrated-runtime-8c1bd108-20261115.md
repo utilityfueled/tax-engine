@@ -94,3 +94,32 @@ imply a native success for that correction. Qualified human
 tax/spec/expected-result review, final annual forms, security/privacy acceptance,
 advisory ownership and independent AI evaluation remain required. Filing, model
 promotion, production deployment and release qualification remain disabled.
+
+
+Remote CI run `43700644697` and Docker run `43700644675` finish successfully
+for the exact 8c commit. Unit and coverage each pass 28,728 tests in 2,098 files;
+coverage remains 92.02/88.13/90.99/95.27. Remote service teardown is GitHub's
+container removal, separate from the normal local PostgreSQL shutdown above.
+
+Web run `43700644756` has distinct outcomes. Its self-host lane passes the full
+643-case union (638 passes/five original skips), at the workflow's unchanged
+90-second default, two workers and zero retries. That result does not establish
+the separate strict 30-second container gate. Seven completed container batches
+report 434 passes, thirteen failures and five skips in 452 cases. All thirteen
+failures hit the overall deadline. The 191-case final batch is incomplete, with
+at least two further timeouts logged before the newer main push cancels the job.
+Its artifact is retained with API-digest verification:
+`43bf0b981b4b7cc18b17953e5e7397859b76ae91ae97c623f456048118a74a18`.
+The named-container cleanup step succeeds, but cancellation leaves no normal
+runner final summary. No completed container qualification, archive/scan result
+or CPU cause is inferred.
+
+Both remote browser artifacts record one mutable official sample difference:
+Publication 4491's downloaded hash differs from the pinned local sample. The
+remote PDF bytes are not archived, so identical sample content is not claimed.
+Other reported source inputs match. Independent strict-container artifact review:
+`5826df447128adba2ecdd8f5939c7953e834711c146dbe0305e56da198390f2d`;
+independent remote self-host artifact review:
+`47e0d6b08a359a460c4c9360737b048ad38bd066142dc8dde5f45188c6d2c560`.
+A separate bounded, opt-in profiling run retains the unchanged test bodies,
+deadlines and request limits; diagnostic outcomes cannot replace qualification.
