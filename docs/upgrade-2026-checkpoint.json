@@ -1,4 +1,22 @@
 {
+  "nov15RrtaTextParserEfficiency": {
+    "base": "8e861572",
+    "freeze": "1696e7a1ca22ffc257d937e04533ca7284d1ab4b50567dee82fc46b20e407a82",
+    "peer": "a7e32d8c00f1e07446fb62104d977fc5ab4e589f156e63b9917bea767001f286",
+    "root": "dcf1f0940f74f5fe53a5abcef7d24fb420a3a4fccd8bdd6850b96ebf530ed648",
+    "mainTests": 65,
+    "mainFiles": 3,
+    "independentExtraControls": 11,
+    "actualSavedPdfParity": 2,
+    "allEightFieldsExact": true,
+    "markers": 18,
+    "childDeadlineMs": 4000,
+    "mainReceipt": "0bd95611dbdf95909cfa5166f438bd92557c3ffcea63cdb7e28a1b1ab89e4cb8",
+    "inventoryUnchanged": 1030,
+    "browserPoliciesUnchanged": true,
+    "remaining": "Currentcombined/remoteAMD64timing/nativebrowserfailures/humansecurityreview",
+    "evidence": "docs/upgrade-2026-rrta-text-parser-efficiency-20261115.md"
+  },
   "nov15ConfirmedMiscNecYears": {
     "base": "a80f4a71",
     "freeze": "2c7e3597d47e52bf91f59e0f432a6a5b0b028621800914c2cbb50380b67c6e12",

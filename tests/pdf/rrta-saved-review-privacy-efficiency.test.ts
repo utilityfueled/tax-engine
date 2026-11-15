@@ -160,3 +160,72 @@ it('retains supported ASCII spaces and safe integer values without changing nume
  expect(parseSavedPrivacyPhases(raw)).toEqual([{v:1,seq:0,phase:'module_started',wallUs:100,cpuUs:1}]);
  for(const n of [-1,0.5,10000001,Number.MAX_SAFE_INTEGER])expect(parseSavedPrivacyPhases(wire([{...phaseRows[0],wallUs:n}]))).toBeNull();
 });
+
+/** Spec: federal/guided-rrta-paper-browser.yaml#saved-pdf-text-parser-local-reuse. */
+const textReuseProbe=String.raw`import importlib.util,sys,json,base64,io
+from pypdf import PdfReader
+from pypdf._page import PageObject
+s=importlib.util.spec_from_file_location('text_reuse_probe',sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+p=json.loads(sys.stdin.read());raw=base64.b64decode(p['pdf']);original=m.ContentStream._parse_content_stream;extract=PageObject.extract_text;text=False;calls=0;restored=[];types=[];deepcopy=m.copy.deepcopy if hasattr(m,'copy') else None
+def counted(self,stream):
+ global calls
+ if text:calls+=1
+ return original(self,stream)
+m.ContentStream._parse_content_stream=counted
+if p.get('fallback')=='bytes':m.TEXT_PARSE_CACHE_BYTES=0
+if p.get('fallback')=='entries':m.TEXT_PARSE_CACHE_ENTRIES=0
+def phase(name):
+ global text
+ if name=='page_text':text=True
+ elif name=='complete':text=False
+m._phase=phase
+other=PdfReader(io.BytesIO(raw))
+def synthetic(self,*a,**kw):
+ if p.get('mode')=='failure':raise ValueError('synthetic extraction failure')
+ if p.get('mode')=='inline':
+  content=m.ContentStream(None,self.pdf,'bytes');content.set_data(b'q BI /W 1 /H 1 /BPC 8 /CS /RGB ID '+bytes([0,0,0])+b' EI Q');content.operations;return ''
+ if p.get('mode')=='cursor':
+  content=m.ContentStream(None,self.pdf,'bytes');data=b'q Q';stream=io.BytesIO(data);content._parse_content_stream(stream);assert stream.tell()==len(data);return ''
+ if p.get('mode')=='mutation':
+  content=m.ContentStream(None,self.pdf,None);content.set_data(b'BT (A) Tj ET');ops=content.operations;assert str(ops[1][0][0])=='A';ops[1][0][0]=m.TextStringObject('changed');return ''
+ for encoding in [None,'bytes']:
+  content=m.ContentStream(None,other if p.get('mode')=='reader' else self.pdf,encoding);content.set_data(b'BT (A) Tj ET');ops=content.operations;types.append(type(ops[1][0][0]).__name__)
+ return ''
+if p.get('mode') in ['encoding','reader','failure','inline','cursor','mutation']:PageObject.extract_text=synthetic
+if p.get('mode')=='copy-failure' and deepcopy is not None:
+ def broken_copy(*a,**kw):raise ValueError('synthetic copy failure')
+ m.copy.deepcopy=broken_copy
+results=[]
+try:
+ for i in range(p['inspections']):
+  try:results.append(m.inspect(raw,['111111111'])['status'])
+  except ValueError:results.append('EXTRACTION_FAILURE')
+  restored.append(m.ContentStream._parse_content_stream is counted);text=False
+finally:
+ m.ContentStream._parse_content_stream=original;PageObject.extract_text=extract
+ if deepcopy is not None:m.copy.deepcopy=deepcopy
+print(json.dumps({'results':results,'textParserCalls':calls,'restored':restored,'operandTypes':sorted(set(types))}))`;
+async function runTextReuse(data:{pdf:string;inspections:number;fallback?:'bytes'|'entries';mode?:'encoding'|'reader'|'failure'|'inline'|'cursor'|'mutation'|'copy-failure'}){
+ const real=await vi.importActual<typeof import('node:child_process')>('node:child_process');
+ const r=real.spawnSync(python,['-I','-B','-c',textReuseProbe,pySource],{input:JSON.stringify(data),encoding:'utf8',timeout:4000,maxBuffer:65536,env:{PATH:process.env.PATH??'/usr/bin:/bin'}});
+ expect(r.error).toBeUndefined();expect(r.status).toBe(0);expect(r.signal).toBeNull();expect(r.stderr).toBe('');return JSON.parse(r.stdout)as{results:string[];textParserCalls:number;restored:boolean[];operandTypes:string[]};
+}
+it('reuses text-phase parser bytes only within the same inspection and retains complete fallback',async()=>{
+ const data={pdf:await sample(),inspections:2};
+ expect(await runTextReuse(data)).toEqual({results:['PASS','PASS'],textParserCalls:2,restored:[true,true],operandTypes:[]});
+ for(const fallback of ['bytes','entries']as const)expect(await runTextReuse({...data,fallback})).toEqual({results:['PASS','PASS'],textParserCalls:8,restored:[true,true],operandTypes:[]});
+});
+it('keeps distinct forced encodings and different readers separate during text parsing',async()=>{
+ const pdf=await sample();const encoded=await runTextReuse({pdf,inspections:1,mode:'encoding'});
+ expect(encoded).toEqual({results:['PASS'],textParserCalls:2,restored:[true],operandTypes:['ByteStringObject','TextStringObject']});
+ const foreign=await runTextReuse({pdf,inspections:1,mode:'reader'});expect(foreign).toEqual({results:['PASS'],textParserCalls:8,restored:[true],operandTypes:['ByteStringObject','TextStringObject']});
+});
+it('restores the parser on page-text extraction failure without a cross-inspection cache',async()=>{
+ const r=await runTextReuse({pdf:await sample(),inspections:2,mode:'failure'});expect(r.results).toEqual(['EXTRACTION_FAILURE','EXTRACTION_FAILURE']);expect(r.restored).toEqual([true,true]);
+});
+it('keeps mutable operands isolated and preserves parser stream position on reused bytes',async()=>{
+ for(const mode of ['mutation','cursor']as const)expect(await runTextReuse({pdf:await sample(),inspections:1,mode})).toEqual({results:['PASS'],textParserCalls:1,restored:[true],operandTypes:[]});
+});
+it('falls back to complete parsing for inline images and copy failure',async()=>{
+ for(const mode of ['inline','copy-failure']as const)expect(await runTextReuse({pdf:await sample(),inspections:1,mode})).toEqual({results:['PASS'],textParserCalls:4,restored:[true],operandTypes:[]});
+});

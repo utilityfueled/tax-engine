@@ -54,3 +54,15 @@ lines:
   - line: "saved-pdf-exact-name-success-reuse"
     formula: "Within one inspect marker closure only, exact type NameObject may reuse its full successful scan_string verdict for the exact immutable str after str(value) still executes. Retain only complete successes, at most4096 names and512 characters per retained name; long names and capacity exhaustion fall back to all original checks without denial. TextString original_bytes, ByteString bytes, subclasses, raw/graph/encoded/geometry/context/resource/cycle/parser/page-text checks are unchanged. New marker sets and inspections never share verdicts;4s/64KiB and strict8field output stay unchanged."
     testRef: "tests/pdf/rrta-saved-review-name-verdict.test.ts::reuses only complete successful exact NameObject checks within one inspection"
+
+  - line: "saved-pdf-text-parser-local-reuse"
+    formula: >
+      In the final page-text phase of one inspect call, the pinned pypdf parser may reuse
+      a complete successful content parse only for exact bytes, the exact forced encoding
+      and the same reader. Keep at most 4096 entries and 8 MiB input bytes, excluding inline
+      images and unsupported reader/reference/copy semantics. Deep-copy operand lists for
+      every use; cache failure or exhaustion falls back to the original parser. Restore
+      the original parser in finally on success and failure. Never cache page text or a
+      privacy verdict, cross an inspection boundary, omit a surface or marker, or change
+      the original four-second child deadline and exact output projection.
+    testRef: "tests/pdf/rrta-saved-review-privacy-efficiency.test.ts::reuses text-phase parser bytes only within the same inspection and retains complete fallback"

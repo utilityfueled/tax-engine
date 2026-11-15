@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 RRTA text parser efficiency
+
+The saved-PDF privacy scanner reuses exact same-reader parses within one inspection
+while retaining every prior surface, marker, deadline and fallback. Main 65 tests
+and both retained actual PDF parity checks pass; separate review adds eleven
+controls. Fresh remote timing remains required.
+[Evidence](upgrade-2026-rrta-text-parser-efficiency-20261115.md).
+
 ## November 15 confirmed MISC/NEC source years
 
 Known conflicting MISC/NEC original years now reject before confirmed provider or

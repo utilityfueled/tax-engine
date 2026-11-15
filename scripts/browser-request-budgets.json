@@ -603,7 +603,7 @@
     "apps/web/tests/helpers/oh-resident-credit-browser.ts": "a70192aad91262d79fa68e0c851344fe9277198d200f85c37766db50803f392b",
     "apps/web/tests/helpers/pa-married-review-inspection.ts": "96505b1b359d765aeb12059a6567a40a2457e2680de897261648203a9c9ab0b8",
     "apps/web/tests/helpers/rrta-paper-review-fixture.ts": "0c07708ce2ee4e088b04b1bdb3c9d38865512dc05e901efaab1c1a9e25634132",
-    "apps/web/tests/helpers/rrta-paper-review-privacy.py": "c96790a2aa6d17ffe041dc75bfde40e2e5584defc3c836552f1d607049a99885",
+    "apps/web/tests/helpers/rrta-paper-review-privacy.py": "00660e5384586cb0e47f93d7cd4e04f9d920b034655eb150c6d40af74c228544",
     "apps/web/tests/home.spec.ts": "ea34470836aa022bcff755c41e089d699bd0c69bfb20e05f0e88c063718d2b33",
     "apps/web/tests/hosted-happy-path-admission.ts": "0460769576dc83aaa18f5df186f5a0397b19905e8fd4b825128d3c5e4df8e15b",
     "apps/web/tests/hosted-happy-paths.spec.ts": "f9af59df8137a820fbb2b1af6bcd21bfb5e20bc21ef185161b5683f166b4f183",

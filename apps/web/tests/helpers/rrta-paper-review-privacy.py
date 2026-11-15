@@ -2,7 +2,7 @@
 Every surface is strict except source-position-proven fractional cm/Tm operands
 in actual page content or Do-referenced Form XObjects. Not a general PII claim.
 """
-import io,json,re,sys,os,stat,hashlib,time
+import io,json,re,sys,os,stat,hashlib,time,copy
 from decimal import Decimal
 # Optional source-free evidence only. Unsupported/broken FD disables diagnostics.
 _PHASE_NAMES=('module_started','imports_ready','inspection_entered','content_contexts','operand_strings','raw_graph','page_text','complete')
@@ -28,7 +28,7 @@ def _phase(name):
  except Exception:_phase_enabled=False
 _phase('module_started')
 from pypdf import PdfReader
-from pypdf.generic import (ContentStream,IndirectObject,DictionaryObject,ArrayObject,StreamObject,TextStringObject,ByteStringObject,NameObject,NumberObject,FloatObject,read_object,create_string_object)
+from pypdf.generic import (ContentStream,IndirectObject,DictionaryObject,ArrayObject,StreamObject,TextStringObject,ByteStringObject,NameObject,NumberObject,FloatObject,BooleanObject,NullObject,read_object,create_string_object)
 from pypdf._utils import read_non_whitespace,read_until_regex
 
 _phase('imports_ready')
@@ -43,6 +43,9 @@ OPERAND_CACHE_ENTRIES=4096
 # Exact immutable NameObject success only, local to each inspect marker closure.
 NAME_CACHE_ENTRIES=4096
 NAME_CACHE_MAX_CHARS=512
+# Final text extraction only; complete parser successes, never privacy verdicts.
+TEXT_PARSE_CACHE_BYTES=8*1024*1024
+TEXT_PARSE_CACHE_ENTRIES=4096
 NUM=re.compile(rb'[+-]?(?:\d+(?:\.\d*)?|\.\d+)\Z')
 FRAC=re.compile(rb'[+-]?(?:\d+\.\d*|\.\d+)\Z')
 # PDF-defined content operators only. BI consumes its whole ID/EI image using
@@ -235,7 +238,47 @@ def inspect(raw,markers):
    if num:visit(IndirectObject(num,gen,reader),'xref')
  for num in reader.xref_objStm:visit(IndirectObject(num,0,reader),'object-stream')
  _phase('page_text')
- for page in reader.pages:scan_string(page.extract_text())
+ text_cache={};text_cache_bytes=0
+ original_text_parser=ContentStream._parse_content_stream
+ def clone_text_operations(operations):
+  # Literal operand trees only. Reader references, streams, subclasses, large
+  # trees and copy failures retain the original parser path without caching.
+  stack=[operations];seen=set();remaining=100000
+  while stack:
+   value=stack.pop();remaining-=1
+   if remaining<0:return None
+   if type(value) in (str,bytes,int,float,type(None),TextStringObject,ByteStringObject,NameObject,NumberObject,FloatObject,BooleanObject,NullObject):continue
+   if type(value) not in (list,tuple,ArrayObject,DictionaryObject):return None
+   if id(value) in seen:continue
+   seen.add(id(value))
+   if type(value) is DictionaryObject:
+    for k,v in value.items():stack.extend((k,v))
+   else:stack.extend(value)
+  try:return copy.deepcopy(operations,{id(reader):reader})
+  except Exception:return None
+ def text_parser(current,stream):
+  nonlocal text_cache_bytes
+  if (current.pdf is not reader or type(stream) is not io.BytesIO or
+      current._operations or type(current.forced_encoding) not in (str,type(None))):
+   return original_text_parser(current,stream)
+  data=stream.getvalue();cache_key=(current.forced_encoding,data)
+  if cache_key in text_cache:
+   cloned=clone_text_operations(text_cache[cache_key])
+   if cloned is not None:
+    stream.seek(0,io.SEEK_END);current._operations=cloned;return
+  original_text_parser(current,stream)
+  if (len(text_cache)<TEXT_PARSE_CACHE_ENTRIES and
+      text_cache_bytes+len(data)<=TEXT_PARSE_CACHE_BYTES and
+      all(operator!=b'INLINE IMAGE' for operands,operator in current._operations)):
+   cloned=clone_text_operations(current._operations)
+   if cloned is not None:
+    text_cache[cache_key]=cloned;text_cache_bytes+=len(data)
+ # The CLI owns one reader/process. Still restore on every extraction/scan
+ # failure and retain an outer instrumentation parser if one was installed.
+ ContentStream._parse_content_stream=text_parser
+ try:
+  for page in reader.pages:scan_string(page.extract_text())
+ finally:ContentStream._parse_content_stream=original_text_parser
  _phase('complete')
  return {'schemaVersion':1,'status':'PASS','sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),'pages':len(reader.pages),'markersChecked':len(markers),'geometrySubstringExemptions':len(exemptions),'scope':'full-graph-typed-content'}
 
