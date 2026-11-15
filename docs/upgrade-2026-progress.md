@@ -6328,3 +6328,13 @@ inventory. Available disk gains467,492,864 bytes and passes the unchanged250GiB
 floor. Normal VM/resource/route closure passes with no force, guest-file deletion
 or uncertainty. XML comparison and exact-source ARM64 qualification follow;
 no security/release acceptance is inferred. [Actual scope and receipts](upgrade-2026-postgres-libxml2-native-20261114.md).
+
+### November 15: all twelve goodwill/PA integrated checks pass
+
+Exact611ad215 passes all12 local checks:28,765 unit/coverage tests in2,104files,
+88.14% branches and645 browser cases (640PASS/five original skips). The two new
+visible goodwill journeys pass; root and independent saved-artifact reviews agree.
+Both SCRAM databases and the browser close normally. The later RRTA/Ohio metadata
+preserves every existing policy row and adds one unsupported inventory entry;
+83 relevant controls pass. Fresh final-source checks and distribution rehearsals
+follow. [Evidence and remaining gates](upgrade-2026-integrated-runtime-611ad215-20261115.md).
