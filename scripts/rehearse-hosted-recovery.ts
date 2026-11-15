@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { defaultChecklist, type ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { ensureHostedAppSchema, ensureHostedWorkspaceRevisionSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db";
 import { createHostedAiCreditIssuance, bindHostedAiCreditIssuance } from "../apps/web/src/lib/hosted-ai-credit-issuance";
 import { ensureHostedAiCreditIssuanceSchema } from "../apps/web/src/lib/hosted-ai-credit-issuance-schema";
@@ -13,7 +14,6 @@ import { ensureHostedAiStorageModeSchema } from "../apps/web/src/lib/hosted-ai-s
 import { ensureHostedBillingEventBindingSchema } from "../apps/web/src/lib/hosted-billing-event-schema";
 import { getHostedAiBudgetSnapshot, recordHostedAiCreditPurchase } from "../apps/web/src/lib/hosted-ai-usage-db";
 import { migrateHostedWorkspaceMetadata } from "../apps/web/src/lib/hosted-workspace-metadata-migration";
-import { createWorkspaceRecord } from "../apps/web/src/lib/workspace-storage";
 import { createHostedPostgresWorkspaceStoreFactory } from "../apps/web/src/lib/hosted-postgres-workspace-store";
 import { getHostedPersistenceRuntimeConfig } from "../apps/web/src/lib/workspace-persistence";
 
@@ -22,6 +22,27 @@ export async function closeRecoveryRuntime(runtime: Awaited<ReturnType<typeof ge
   await runtime.db.destroy();
   if (!runtime.pool.ending && !runtime.pool.ended) await runtime.pool.end();
   assert.equal(runtime.pool.ended, true, "Hosted recovery pool did not finish closing");
+}
+
+/** Fixed synthetic shell, checked against the real browser factory in tests.
+ * The recovery workload exercises persisted metadata, not engine calculations.
+ */
+export function createRecoveryWorkspace(): ReturnWorkspaceRecord {
+  const now = "2026-10-24T12:00:00.000Z";
+  return {
+    id: "synthetic-shared-return", createdAt: now, updatedAt: now, storageMode: "local-browser", documents: [],
+    summary: { totalDocuments: 0, officialFixtureMatches: 0, supportedDocuments: 0, pendingReviewDocuments: 0, interviewQuestionsRemaining: 0 },
+    seededReturn: { status: "empty", taxYearHints: [], facts: [], interviewQuestions: [], interviewQueue: [], nextQuestionId: null, reviewNotes: [] },
+    structuredFacts: [],
+    returnSummary: { status: "empty", targetTaxYear: null, taxYearState: "missing", answeredFactCount: 0, totalFactCount: 0, readyItemCount: 0, itemCount: 0, blockers: [], items: [] },
+    enginePreview: null, guidedCompletion: null,
+    checklist: defaultChecklist.map(item => {
+      if (item.id === "documents" || item.id === "coverage") return { ...item, status: "needs-input" };
+      if (item.id === "interview" || item.id === "review") return { ...item, status: "blocked" };
+      return { ...item };
+    }),
+    auditTrail: [{ id: "workspace-created:1", occurredAt: now, kind: "workspace-created", message: "Return created.", documentIds: [], questionId: null, answerText: null }]
+  };
 }
 
 /** Synthetic, local-only PostgreSQL dump/restore rehearsal. Never DATABASE_URL. */
@@ -60,7 +81,7 @@ async function main() {
     runtime = await getHostedServerDatabase(env);
     const { pool } = runtime;
     const issuance = await createHostedAiCreditIssuance(env, { ownerId: "synthetic-owner-a", stripeCustomerId: "cus_issued", livemode: false, amountPaidCents: 700, creditedBudgetCents: 500 });
-    const workspace = createWorkspaceRecord("synthetic-shared-return", { now: "2026-10-24T12:00:00.000Z" });
+    const workspace = createRecoveryWorkspace();
     workspace.returnSummary.targetTaxYear = null;
     Object.assign(workspace, { legacyPrivateNotes: "Synthetic Person 123-45-6789" });
     for (const owner of ["synthetic-owner-a", "synthetic-owner-b"]) {

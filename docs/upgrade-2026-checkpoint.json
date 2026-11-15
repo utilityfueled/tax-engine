@@ -1,4 +1,17 @@
 {
+  "nov15RecoveryColdImport": {
+    "status": "source-reviewed-local-actual-postgres-pass-remote-pending",
+    "base": "dbb190ff",
+    "document": "docs/upgrade-2026-recovery-cold-import-20261115.md",
+    "sourceManifest": "2b20de2c8ad3d037f37edbe207c4ec89fc67b6ff9adbd4b31f979b02f06cbb45",
+    "independentSourceReview": "545f16ffaaadd711f8061e24d9829dcedc340e3ee492e3976ae58521eccd285d",
+    "actualLocalTests": 3,
+    "skipped": 0,
+    "realRecoveryChildMs": 329,
+    "originalChildDeadlineMs": 4500,
+    "ownedPostgresStoppedNormally": true,
+    "releaseQualified": false
+  },
   "nov15Amd64CandidateWorkflow": {
     "status": "implemented-source-reviewed-actual-dispatch-pending",
     "document": "docs/upgrade-2026-amd64-backports-workflow-20261115.md",

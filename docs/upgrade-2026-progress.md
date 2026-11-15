@@ -6066,3 +6066,13 @@ Author 70PASS/one real-database skip, 13 spec references and independent source
 review pass; root focused AMD64/recovery checks pass16/one database skip. Actual
 runner capacity and qualification remain pending; default images and readiness
 are unchanged. [Scope and retained review](upgrade-2026-amd64-backports-workflow-20261115.md).
+
+### November 15: recovery cold startup and real local database pass
+
+The recovery command now avoids loading the calculation engine solely to create
+an empty synthetic workspace. Exact canonical-shell and fresh mutable-state
+checks pass; all existing recovery SQL and the 4,500 ms child deadline remain.
+Independent source review passes. All three actual local tests pass without a
+skip, including eleven-table dump/restore and migration, followed by normal owned
+PostgreSQL stop and private credential cleanup. Remote coverage remains pending.
+[Exact change, checks and limitations](upgrade-2026-recovery-cold-import-20261115.md).

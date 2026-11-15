@@ -1,0 +1,19 @@
+form: "Hosted-Recovery-Cold-Import"
+taxYear: 2026
+status: "infrastructure-efficiency-contract"
+reference: "scripts/rehearse-hosted-recovery.ts; actual remote9b2d coverage ETIMEDOUT receipt"
+notes: |
+  Synthetic database recovery infrastructure only. The remote unit rehearsal passed
+  in2347ms; coverage hit the existing4500ms child timeout. File-only uncached imports
+  confirm unrelated engine graph startup cost, not the exact remote timeout cause.
+  Keep4500ms and every actual dump/restore,11-table, NUMERIC, replay and revision check.
+  No local database, listener or service is required for these source controls.
+lines:
+  - line: "bounded-cold-graph"
+    description: "Import the real recovery entry without unrelated tax calculation modules"
+    formula: "A fresh real Node26/tsx child imports the actual guarded recovery script with no DB URL and no module mocks. A synchronous resolution hook rejects the engine calculation barrel. Preserve the4500ms original runtime child timeout; graph exclusion is a deterministic dependency assertion, not a host timing threshold."
+    testRef: "tests/runtime/hosted-ai-credit-recovery.test.ts::imports the real rehearsal without the unrelated calculation barrel"
+  - line: "same-synthetic-workspace"
+    description: "Use exactly the original canonical empty workspace fixture"
+    formula: "The script-local synthetic recovery workspace is deep-equal to actual createWorkspaceRecord for original ID and timestamp, including checklist, audit event and empty summary facts. Fresh calls do not share mutable arrays. Original legacy private field injection and every SQL/dump/restore assertion remain in the rehearsal."
+    testRef: "tests/runtime/hosted-ai-credit-recovery.test.ts::preserves the actual canonical synthetic workspace without shared state"
