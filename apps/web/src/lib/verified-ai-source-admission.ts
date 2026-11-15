@@ -89,6 +89,11 @@ function applicableIraWorksheet(input:TaxYearInput,result:TaxReturnResult,source
 
 /** Verifies software source admission, never real-world truth or filing readiness. */
 export function assertVerifiedAiSourceAdmission(input:TaxYearInput,result:TaxReturnResult,originalInput:unknown):void {
+  // These are actual calendar-year originals, not prior-year carry or worksheet histories.
+  const directOriginals=[...input.w2s,...input.form1099Int,...input.form1099Div,...(input.form1099R??[])];
+  if(directOriginals.some(form=>form.taxYear!==undefined && form.taxYear!==input.taxpayer.taxYear)){
+    throw new Error('A confirmed explanation requires matching-year direct income originals.');
+  }
   if(result.deductionUsed==='itemized'){
     const mortgage=calculateHomeMortgageInterest(input);
     if(!mortgage.sourceFactsVerified && sum(mortgage.line8a,mortgage.line8b,mortgage.line8c).gt(0)){

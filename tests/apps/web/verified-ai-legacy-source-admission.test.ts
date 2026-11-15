@@ -125,3 +125,57 @@ it('denies an invalid actual Box7 combination at the authenticated POST before d
  expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('private');expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
  const body=JSON.stringify(await response.json());for(const value of ['123-45-6789','Fictional Pension','P7'])expect(body).not.toContain(value);
 });
+
+it.each([[2024,'7'],[2026,'7'],[2026,'P1']] as const)('denies an explicit mismatched retirement original %s at confirmed POST',async(originalYear,distributionCode)=>{
+ const taxInput={...retirement(),form1099R:[{...retirement().form1099R[0],taxYear:originalYear,taxableAmount:'7000',distributionCode,iraSepSimple:false}]};
+ const preview=calculateFederalTax(TaxYearInputSchema.parse(taxInput));expect(preview.agi.toFixed()).toBe(distributionCode==='P1'?'85000':'92000');
+ const actor={id:'synthetic-year-owner',label:'Synthetic',email:'year-fixture@example.test'};
+ const workspace=createWorkspaceRecord('original-year-triage');workspace.returnSummary.targetTaxYear=2025;
+ const providerRequest=buildProviderWorkspaceRequest(workspace,{task:'workspace-help',question:'Explain taxable income.',now:'2026-11-14T12:00:00Z'});
+ const fetchFn=vi.fn(()=>{throw Error('No external transport');}),accounting=vi.fn();
+ const handler=createTaxExplanationRouteHandlers({env:{TAX_ENGINE_DEPLOYMENT_MODE:'hosted',NODE_ENV:'production',TAX_ENGINE_APP_URL:'https://tax.example'},resolveActor:vi.fn().mockResolvedValue(actor),getEntitlementByOwnerId:vi.fn().mockResolvedValue({subscription:{planId:'starter'},entitlement:{workspaceAccess:true}}),rateLimitStore:new Map(),fetchFn,accounting});
+ const response=await handler.POST(new Request('https://tax.example/api/workspace/tax-explanation',{method:'POST',headers:{'content-type':'application/json',origin:'https://tax.example','X-Tax-Engine-Workspace-Owner':'hosted-owner:'+actor.id},body:JSON.stringify({version:1,confirmed:true,workspaceId:workspace.id,workspaceRevision:workspace.updatedAt,taxYear:2025,taxInput,providerRequest})}));
+ expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');expect(await response.json()).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+ expect(()=>calculateVerifiedAiAudit(scope,taxInput)).toThrow();
+});
+it('preserves matching missing and zero retirement original-year controls',()=>{
+ for(const taxYear of [undefined,2025]){
+  const ordinary={...retirement(),form1099R:[{...retirement().form1099R[0],taxYear,taxableAmount:'7000',distributionCode:'7',iraSepSimple:false}]};
+  expect(calculateVerifiedAiAudit(scope,ordinary).entries.find(x=>x.line==='11')?.value).toBe('92000');
+  const prior={...ordinary,form1099R:[{...ordinary.form1099R[0],distributionCode:'P1'}]};expect(calculateVerifiedAiAudit(scope,prior).entries.find(x=>x.line==='11')?.value).toBe('85000');
+ }
+ const zero={...retirement(),form1099R:[{...retirement().form1099R[0],taxYear:2025,taxableAmount:'0',grossDistribution:'0'}]};expect(()=>calculateVerifiedAiAudit(scope,zero)).not.toThrow();
+});
+
+it.each(['w2','interest','dividend'] as const)('denies a known mismatched %s direct-income original at confirmed POST',async(kind)=>{
+ const taxInput=structuredClone(simpleW2Fixture);
+ if(kind==='w2')taxInput.w2s[0].taxYear=2024;
+ else if(kind==='interest')taxInput.form1099Int=[{taxYear:2024,payer:'Fictional source-year bank',interestIncome:'1000'}];
+ else taxInput.form1099Div=[{taxYear:2024,payer:'Fictional source-year dividend',ordinaryDividends:'1000'}];
+ expect(calculateFederalTax(TaxYearInputSchema.parse(taxInput)).agi.toFixed()).toBe(kind==='w2'?'85000':'86000');
+ const actor={id:'synthetic-direct-owner',label:'Synthetic',email:'direct-fixture@example.test'},workspace=createWorkspaceRecord('direct-original-year');workspace.returnSummary.targetTaxYear=2025;
+ const providerRequest=buildProviderWorkspaceRequest(workspace,{task:'workspace-help',question:'Explain taxable income.',now:'2026-11-14T12:00:00Z'}),fetchFn=vi.fn(()=>{throw Error('No external transport');}),accounting=vi.fn();
+ const handler=createTaxExplanationRouteHandlers({env:{TAX_ENGINE_DEPLOYMENT_MODE:'hosted',NODE_ENV:'production',TAX_ENGINE_APP_URL:'https://tax.example'},resolveActor:vi.fn().mockResolvedValue(actor),getEntitlementByOwnerId:vi.fn().mockResolvedValue({subscription:{planId:'starter'},entitlement:{workspaceAccess:true}}),rateLimitStore:new Map(),fetchFn,accounting});
+ const response=await handler.POST(new Request('https://tax.example/api/workspace/tax-explanation',{method:'POST',headers:{'content-type':'application/json',origin:'https://tax.example','X-Tax-Engine-Workspace-Owner':'hosted-owner:'+actor.id},body:JSON.stringify({version:1,confirmed:true,workspaceId:workspace.id,workspaceRevision:workspace.updatedAt,taxYear:2025,taxInput,providerRequest})}));
+ expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');expect(await response.json()).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+});
+
+it.each(['w2','interest','dividend','retirement'] as const)('denies a withholding-only mismatched %s original before confirmed accounting',async(kind)=>{
+ const taxInput=structuredClone(simpleW2Fixture);
+ if(kind==='w2')taxInput.w2s=[{...taxInput.w2s[0],taxYear:2024,wages:'0',federalWithheld:'1000',socialSecurityWages:'0',socialSecurityWithheld:'0',medicareWages:'0',medicareWithheld:'0'}];
+ else if(kind==='interest')taxInput.form1099Int=[{taxYear:2024,payer:'Fictional bank',interestIncome:'0',federalWithheld:'1000'}];
+ else if(kind==='dividend')taxInput.form1099Div=[{taxYear:2024,payer:'Fictional dividend',ordinaryDividends:'0',federalWithheld:'1000'}];
+ else taxInput.form1099R=[{taxYear:2024,payer:'Fictional retirement',grossDistribution:'0',taxableAmount:'0',federalWithheld:'1000'}];
+ const actor={id:'synthetic-withholding-owner',label:'Synthetic',email:'withholding-fixture@example.test'},workspace=createWorkspaceRecord('withholding-source-year');workspace.returnSummary.targetTaxYear=2025;
+ const providerRequest=buildProviderWorkspaceRequest(workspace,{task:'workspace-help',question:'Explain tax payments.',now:'2026-11-14T12:00:00Z'}),fetchFn=vi.fn(()=>{throw Error('No external transport');}),accounting=vi.fn();
+ const handler=createTaxExplanationRouteHandlers({env:{TAX_ENGINE_DEPLOYMENT_MODE:'hosted',NODE_ENV:'production',TAX_ENGINE_APP_URL:'https://tax.example'},resolveActor:vi.fn().mockResolvedValue(actor),getEntitlementByOwnerId:vi.fn().mockResolvedValue({subscription:{planId:'starter'},entitlement:{workspaceAccess:true}}),rateLimitStore:new Map(),fetchFn,accounting});
+ const response=await handler.POST(new Request('https://tax.example/api/workspace/tax-explanation',{method:'POST',headers:{'content-type':'application/json',origin:'https://tax.example','X-Tax-Engine-Workspace-Owner':'hosted-owner:'+actor.id},body:JSON.stringify({version:1,confirmed:true,workspaceId:workspace.id,workspaceRevision:workspace.updatedAt,taxYear:2025,taxInput,providerRequest})}));
+ expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');expect(await response.json()).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+});
+it('preserves matching and missing direct-original years',()=>{
+ for(const taxYear of [undefined,2025]){
+  const taxInput=structuredClone(simpleW2Fixture);taxInput.w2s[0].taxYear=taxYear;
+  taxInput.form1099Int=[{taxYear,payer:'Fictional bank',interestIncome:'1000'}];taxInput.form1099Div=[{taxYear,payer:'Fictional dividend',ordinaryDividends:'1000'}];taxInput.form1099R=[{taxYear,payer:'Fictional pension',grossDistribution:'10000',taxableAmount:'7000',distributionCode:'7',federalWithheld:'0'}];
+  expect(calculateVerifiedAiAudit(scope,taxInput).entries.find(x=>x.line==='11')?.value).toBe('94000');
+ }
+});

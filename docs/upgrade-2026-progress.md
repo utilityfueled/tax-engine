@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 15 confirmed original-year contradictions
+
+Known contradictory years on W-2, interest, dividend and retirement originals
+now reject confirmed explanations, including withholding-only sources. Ten
+actual predecessor failures, 86 author tests and 95 separate-review tests are
+retained; historical previews and legitimate prior-year histories are preserved.
+[Source, checks and limits](upgrade-2026-confirmed-original-years-20261115.md).
+The new combined and hosted/native checks remain pending; no human or annual
+qualification is inferred.
+
 ## November 15 completed consolidated local checks
 
 Exact `e719e3fe` passes all twelve checks: 28,538 unit/coverage tests,

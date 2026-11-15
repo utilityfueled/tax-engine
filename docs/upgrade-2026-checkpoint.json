@@ -1,4 +1,26 @@
 {
+  "nov15ConfirmedOriginalYears": {
+    "sourceFreeze": "1c8345bab7fc3bd4bfb5719e380df782a84911d1645aea0854d30faaacfaecda",
+    "independentReview": "85460ee96a1ab45beabdc076c2818156eac3c6c7b4feb63a279e913d34c0f1c8",
+    "rootAdoptionReview": "886a16cf0948f2495cb5d19de6de17c903c87cd69c6c853e3edf4e762ed9f7fe",
+    "changedFiles": 3,
+    "actualPredecessorPostFailures": 10,
+    "authorFocusedTests": 86,
+    "independentFocusedTests": 95,
+    "additionalIndependentPosts": 17,
+    "explicitDirectFamilies": [
+      "W2",
+      "1099INT",
+      "1099DIV",
+      "1099R"
+    ],
+    "withholdingOnlyIncluded": true,
+    "missingYearNotInferred": true,
+    "canonicalTaxMathUnchanged": true,
+    "historicalSourceYearsPreserved": true,
+    "combinedRuntimePending": true,
+    "ledger": "docs/upgrade-2026-confirmed-original-years-20261115.md"
+  },
   "nov15CombinedE719Local": {
     "head": "e719e3fec0fd251d06fe0b8f8b450f088772acbe",
     "checksPassed": 12,
