@@ -1456,7 +1456,7 @@ describe("Simple W-2 single filer", () => {
     expect(result.totalIncome.toNumber()).toBe(90600);
   });
 
-  it("Form 1040 Line 8 and Form 8889 - code 6 Form 1099-SA death distributions infer the beneficiary-only post-death medical-expense offset", () => {
+  it("Form 1040 Line 8 and Form 8889 - code 6 reports current post-death earnings without repeating prior FMV or medical offsets", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       form1099SA: [
@@ -1480,15 +1480,16 @@ describe("Simple W-2 single filer", () => {
       },
     });
 
-    expect(result.form1099SA?.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(5000);
+    expect(result.form1099SA?.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(5000);
+    expect(result.form1099SA?.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     expect(result.form1099SA?.hsaEstateDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
-    expect(result.form8889?.line14a.toNumber()).toBe(5000);
-    expect(result.form8889?.line15.toNumber()).toBe(1000);
-    expect(result.form8889?.line16.toNumber()).toBe(4000);
-    expect(result.form8889?.line17aHasException).toBe(true);
+    expect(result.form8889?.line14a.toNumber()).toBe(0);
+    expect(result.form8889?.line15.toNumber()).toBe(0);
+    expect(result.form8889?.line16.toNumber()).toBe(0);
+    expect(result.form8889?.line17aHasException).toBe(false);
     expect(result.form8889?.line17b.toNumber()).toBe(0);
-    expect(result.otherIncome.toNumber()).toBe(4300);
-    expect(result.totalIncome.toNumber()).toBe(89300);
+    expect(result.otherIncome.toNumber()).toBe(300);
+    expect(result.totalIncome.toNumber()).toBe(85300);
   });
 
   it("Form 1040 Line 8 and Form 8889 - estate-beneficiary Form 1099-SA death distributions do not use the beneficiary-only medical-expense offset", () => {

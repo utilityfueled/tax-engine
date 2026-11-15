@@ -721,7 +721,7 @@ export function calculateForm8889(
     "Line 12": line12,
   }));
   audit.record("Form 8889", "14a", "Total HSA distributions received during the year", line14a,
-    "Validated Form 8889 Line 14a input or supported Form 1099-SA gross-distribution amount, including death-distribution Box 4 fair market value and prohibited-transaction deemed distributions when present",
+    "Validated Form 8889 Line 14a input or supported Form 1099-SA gross-distribution amount, including supported current death-year Box 4 fair market value (not prior death-year code 6 or explicit after-year code 4) and prohibited-transaction deemed distributions when present",
     ownerAwareInputs({
       "Validated Form 8889 Line 14a input": input.distributionsReceived ?? "0",
       "Supported Form 1099-SA gross distributions": supported1099SAGrossDistributions,

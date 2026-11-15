@@ -104,9 +104,10 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
     },
   ]);
 
-  it("Form 1099-SA Line 5 - code 4 and code 6 death distributions use Box 4 fair market value for Form 8889 support", () => {
-    expect(deathDistributionResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(11000);
-    expect(deathDistributionResult.hsaGrossDistributions.toNumber()).toBe(11000);
+  it("Form 1099-SA Line 5 - reported Box 4 trace excludes prior code 6 value from current Form 8889 support", () => {
+    expect(deathDistributionResult.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(11000);
+    expect(deathDistributionResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(6000);
+    expect(deathDistributionResult.hsaGrossDistributions.toNumber()).toBe(6000);
   });
 
   it("Form 1099-SA Line 5 - estate death distributions preserve a separate subtotal for downstream Form 8889 Line 15 support", () => {
@@ -133,17 +134,18 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       (line) => line.form === "Form 1099-SA" && line.line === "5"
     );
 
-    expect(estateDeathDistributionResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(11000);
-    expect(estateDeathDistributionResult.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(5000);
+    expect(estateDeathDistributionResult.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(11000);
+    expect(estateDeathDistributionResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(6000);
+    expect(estateDeathDistributionResult.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     expect(estateDeathDistributionResult.hsaEstateDeathDistributionDateOfDeathValue.toNumber()).toBe(6000);
-    expect(String(line5?.inputs["Other-beneficiary death-distribution amount"])).toBe("5000");
+    expect(String(line5?.inputs["Other-beneficiary death-distribution amount"])).toBe("0");
     expect(String(line5?.inputs["Estate death-distribution amount"])).toBe("6000");
-    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("11000");
-    expect(merged?.supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue).toBe("5000");
+    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("6000");
+    expect(merged?.supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue).toBe("0");
     expect(merged?.supported1099SAEstateDeathDistributionDateOfDeathValue).toBe("6000");
   });
 
-  it("Form 1099-SA Line 5 - code 6 death distributions infer the non-estate beneficiary subtotal for downstream Form 8889 Line 15 support", () => {
+  it("Form 1099-SA Line 5 - code 6 preserves reported Box 4 but cannot repeat prior death year support", () => {
     const inferredCode6BeneficiaryResult = calculateForm1099SA([
       {
         payer: "Inherited HSA Custodian",
@@ -158,14 +160,13 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
       (line) => line.form === "Form 1099-SA" && line.line === "5"
     );
 
-    expect(inferredCode6BeneficiaryResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(5000);
-    expect(inferredCode6BeneficiaryResult.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(5000);
+    expect(inferredCode6BeneficiaryResult.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(5000);
+    expect(inferredCode6BeneficiaryResult.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
+    expect(inferredCode6BeneficiaryResult.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     expect(inferredCode6BeneficiaryResult.hsaEstateDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
-    expect(String(line5?.inputs["Other-beneficiary death-distribution amount"])).toBe("5000");
+    expect(String(line5?.inputs["Other-beneficiary death-distribution amount"])).toBe("0");
     expect(String(line5?.inputs["Estate death-distribution amount"])).toBe("0");
-    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("5000");
-    expect(merged?.supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue).toBe("5000");
-    expect(merged?.supported1099SAEstateDeathDistributionDateOfDeathValue).toBe("0");
+    expect(merged).toBeUndefined();
   });
 
   it("Form 1099-SA Line 5 - death distributions without a validated non-estate beneficiary role stay out of the beneficiary-only Line 15 subtotal", () => {
@@ -538,7 +539,8 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
 
     expect(parsed.deathDistributionTiming).toBe("after_year_of_death");
     const result = calculateForm1099SA([parsed]);
-    expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(6000);
+    expect(result.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(6000);
+    expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     expect(result.hsaPostDeathEarnings.toNumber()).toBe(2400);
   });
 
@@ -674,10 +676,10 @@ describe("Form 1099-SA HSA distribution aggregation", () => {
   it("mergeForm1099SAIntoForm8889Input preserves 1099-SA support subtotals for downstream Form 8889 audit trail", () => {
     const merged = mergeForm1099SAIntoForm8889Input(undefined, deathDistributionResult);
 
-    expect(merged?.supported1099SAGrossDistributions).toBe("11000");
+    expect(merged?.supported1099SAGrossDistributions).toBe("6000");
     expect(merged?.supported1099SAReturnedExcessContributions).toBe("0");
-    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("11000");
-    expect(merged?.supported1099SAAutomaticExceptionDistributions).toBe("11000");
+    expect(merged?.supported1099SADeathDistributionDateOfDeathValue).toBe("6000");
+    expect(merged?.supported1099SAAutomaticExceptionDistributions).toBe("6000");
     expect(merged?.supported1099SAProhibitedTransactionDistributions).toBe("0");
   });
 

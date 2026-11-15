@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 inherited HSA timing
+
+Historical death-date balances remain traceable but no longer enter later-year
+taxable HSA support. Main 702 tests and separate608-test/API review pass.
+Current combined and runtime qualification follow this correction.
+[Evidence](upgrade-2026-hsa-inherited-timing-20261115.md).
+
 ## November 15 four original source headers
 
 COD, HSA, RRB and estate/trust K1 headers now survive parsing. Confirmed

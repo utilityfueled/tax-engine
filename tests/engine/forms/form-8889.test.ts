@@ -1119,8 +1119,8 @@ describe("Form 8889 HSA contribution deduction", () => {
     expect(line15?.inputs.estateDeathDistributionMedicalExpenseDisallowedAmount?.toString()).toBe("0");
   });
 
-  it("Form 8889 Line 15 - code 6 death distributions infer the beneficiary-only post-death medical-expense offset", () => {
-    const inferredCode6DeathDistributionScenario = calculateForm8889(simpleW2Fixture.taxpayer, {
+  it("Form 8889 Line 15 - current death year numeric support limits the beneficiary medical expense offset", () => {
+    const currentDeathYearSupportScenario = calculateForm8889(simpleW2Fixture.taxpayer, {
       accountOwner: "primary",
       coverageByMonth: Array(12).fill("self_only"),
       contributionsMade: "0",
@@ -1131,13 +1131,13 @@ describe("Form 8889 HSA contribution deduction", () => {
       decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath: "1000",
     }, constants);
 
-    const line15 = inferredCode6DeathDistributionScenario.lines.find(
+    const line15 = currentDeathYearSupportScenario.lines.find(
       (line) => line.form === "Form 8889" && line.line === "15"
     );
 
-    expect(inferredCode6DeathDistributionScenario.line14a.toNumber()).toBe(5000);
-    expect(inferredCode6DeathDistributionScenario.line15.toNumber()).toBe(1000);
-    expect(inferredCode6DeathDistributionScenario.line16.toNumber()).toBe(4000);
+    expect(currentDeathYearSupportScenario.line14a.toNumber()).toBe(5000);
+    expect(currentDeathYearSupportScenario.line15.toNumber()).toBe(1000);
+    expect(currentDeathYearSupportScenario.line16.toNumber()).toBe(4000);
     expect(line15?.inputs.supportedOtherBeneficiaryDeathDistributionDateOfDeathValue?.toString()).toBe("5000");
     expect(line15?.inputs.supportedUnknownBeneficiaryDeathDistributionDateOfDeathValue?.toString()).toBe("0");
     expect(line15?.inputs.otherBeneficiaryDeathDistributionEligibleAmount?.toString()).toBe("5000");

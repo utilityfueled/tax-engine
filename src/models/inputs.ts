@@ -1956,9 +1956,9 @@ export const Form8889Schema = z.object({
   supported1099SAGrossDistributions: optionalDecimal, // Engine trace: aggregated Form 1099-SA support for Line 14a
   supported1099SAReturnedExcessContributions: optionalDecimal, // Engine trace: aggregated Form 1099-SA code 2 support for Line 14b
   supported1099SAReturnedExcessContributionEarnings: optionalDecimalInput, // Actual included Box2 earnings; principal correction is gross Box1 minus Box2.
-  supported1099SADeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: Box 4 death-distribution support included in Line 14a
-  supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: non-estate-beneficiary Box 4 death-distribution support eligible for the special Line 15 offset, including inferred Form 1099-SA code 6 records
-  supported1099SAEstateDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: estate-beneficiary Box 4 death-distribution support that cannot offset Form 8889 Line 15 medical expenses
+  supported1099SADeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: current death-year Box 4 support included in Line 14a; excludes code 6 and explicitly after-year code 4
+  supported1099SAOtherBeneficiaryDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: current death-year non-estate Box 4 support eligible for Line 15; excludes prior-death-year code 6
+  supported1099SAEstateDeathDistributionDateOfDeathValue: optionalDecimal, // Engine trace: current death-year estate Box 4 support that cannot offset Line 15; excludes explicit after-year records
   supported1099SADisabilityExceptionDistributions: optionalDecimal, // Engine trace: Form 1099-SA code 3 disability support for Lines 17a/17b
   supported1099SAAutomaticExceptionDistributions: optionalDecimal, // Engine trace: Form 1099-SA disability and death exception support for Lines 17a/17b
   supported1099SAProhibitedTransactionDistributions: optionalDecimal, // Engine trace: Form 1099-SA code 5 deemed-distribution support

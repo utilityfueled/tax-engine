@@ -35,7 +35,7 @@ businessRuleValidation:
 lines:
   - line: "1"
     description: "HSA gross distributions reported on Form 8889 Line 14a"
-    formula: "Sum ordinary HSA Box 1, including surviving-spouse inherited accounts, plus Box 4 for nonspouse/estate death distributions. Attribute only through actual primary/spouse source tags; beneficiary relationship never establishes the return owner. Preserve missing tags as unattributed and require actual owners for 2026 calculations and document previews. Reject stale spouse ownership when no spouse exists rather than moving amounts to primary."
+    formula: "Sum ordinary HSA Box 1, including surviving-spouse inherited accounts, plus current death-year Box 4 for nonspouse/estate death distributions. Code 6 is intrinsically after the year of death and contributes no current Box 4 inclusion, even without optional timing metadata. Explicit after-year-of-death code 4 likewise contributes no current Box 4 inclusion; unknown legacy code 4 timing is not reclassified. Attribute only through actual primary/spouse source tags; beneficiary relationship never establishes the return owner. Preserve missing tags as unattributed and require actual owners for 2026 calculations and document previews. Reject stale spouse ownership when no spouse exists rather than moving amounts to primary."
     irsRef: "Form 1099-SA Instructions, Boxes 1, 3, 4, and 5; Form 8889 Instructions, Line 14a"
     inputs:
       - "Form 1099-SA Box 1"
@@ -82,8 +82,8 @@ lines:
     testRef: "tests/engine/forms/form-1099-sa-ownership.test.ts::retains actual owner attribution for returned excess and disability distributions"
 
   - line: "5"
-    description: "Death-distribution fair market value routed into Form 8889"
-    formula: "Sum Form 1099-SA Box 4 fair market value on date of death for HSA records with Box 3 distribution code 4 or 6 only when the beneficiary is not a validated surviving spouse, use that amount as both the Form 8889 Line 14a death-distribution amount and the automatic Form 8889 Line 17a/17b death exception base, preserve the estate-beneficiary portion separately so the downstream Form 8889 Line 15 medical-expense cap can keep estate death distributions out of the beneficiary-only post-death medical-expense branch described in the instructions, and preserve the other-beneficiary portion separately for either an explicitly validated `other_beneficiary` record or any Box 3 code 6 record because the Form 1099-SA instructions define code 6 as a nonspouse beneficiary other than an estate"
+    description: "Reported death-distribution fair market value trace and current death-year amount routed into Form 8889"
+    formula: "Retain all original nonspouse/estate Box 4 amounts in the reported-value trace. Route only current death-year amounts to Form 8889 line 14a, automatic death exception and eligible non-estate medical-expense support: omit every code 6 record because the code itself means after the year of death, and omit code 4 records explicitly documenting after_year_of_death. Do not invent timing for legacy code 4. Preserve current estate and other-beneficiary subtotals separately; no prior death-year FMV or prior death-year medical reduction is claimed again in the distribution year."
     irsRef: "Form 1099-SA Instructions, Box 3 codes 4 and 6 and Box 4; Form 8889 Instructions, Line 14a and Lines 17a-17b"
     inputs:
       - "Form 1099-SA Box 3 distribution code"
@@ -91,8 +91,8 @@ lines:
       - "Form 1099-SA Box 5 account type"
       - "Validated surviving-spouse beneficiary indicator"
       - "Validated death-distribution timing metadata when the record documents year-of-death versus after-year-of-death reporting"
-    notes: "This slice covers the nonspouse-beneficiary and estate death-distribution amount routed through Form 8889 Part II. Validated surviving-spouse year-of-death code 4 records do not contribute to this death branch because the spouse treats the HSA as their own account. Estate-beneficiary death distributions remain traceable as a separate subtotal because the Form 8889 instructions reserve the special post-death Line 15 medical-expense entry for a beneficiary other than the estate. The engine preserves a separate non-estate-beneficiary subtotal for death distributions explicitly tagged as `other_beneficiary`, and it also infers that same subtotal from any Box 3 code 6 record because the Form 1099-SA instructions say code 6 is used only for a nonspouse beneficiary other than an estate after the year of death. Unlabeled code 4 death distributions still remain conservative because they could belong to either an estate or another beneficiary. When optional death-distribution timing metadata is present, the supported parser preserves the IRS distinction between year-of-death code 4 distributions and after-year-of-death estate-versus-other-beneficiary coding so statement-form reviews can reconcile why an estate stays on code 4 while a nonspouse beneficiary other than the estate moves to code 6. Because the instructions reserve Box 4 for death-of-account-holder reporting, the supported parser rejects Box 4 fair-market-value input on ordinary non-death distribution codes instead of silently ignoring it, while still allowing the instructions' after-year-of-death surviving-spouse code 1 branch to carry Box 4. The audit trail for this line should expose both the estate-only subtotal and the other-beneficiary subtotal, including any inferred code 6 amount, so reviewers can reconcile the Line 15 cap."
-    testRef: "tests/engine/forms/form-1099-sa.test.ts::Form 1099-SA Line 5 - code 6 death distributions infer the non-estate beneficiary subtotal for downstream Form 8889 Line 15 support"
+    notes: "Final 2025 i1099sa distribution-code table defines code 6 as after-death-year nonspouse, non-estate. Pub 969 assigns FMV to the death year; an estate reports FMV on the decedent final return. Final 2025 i8889 permits decedent medical expenses paid within one year only against the eligible death-year non-estate amount. This correction computes no prior return/amendment, makes no guessed date, and preserves current ordinary/surviving-spouse and unknown code 4 behavior. Audit line 5 reports original Box 4 while explicit current-year and prior-year components reconcile it to actual Form 8889 support."
+    testRef: "tests/engine/forms/form-1099-sa.test.ts::Form 1099-SA Line 5 - code 6 preserves reported Box 4 but cannot repeat prior death year support"
 
   - line: "6"
     description: "Post-death earnings reported as other income"
@@ -124,3 +124,28 @@ lines:
     irsRef: "Form 1099-SA Instructions, Boxes 1-5; Form 8889 Instructions, Lines 14a, 14b, 16, 17a, and 17b"
     notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate the payer-issued Form 1099-SA. Unsupported Archer MSA and Medicare Advantage MSA statements must stay out of this HSA-only reference packet so the draft output remains honest about the supported scope."
     testRef: "tests/pdf/fill-form-1099-sa.test.ts::fillReturn includes a Form 1099-SA reference summary when supported HSA statements are present"
+
+  - line: "death-year-routing"
+    description: "Prevent after-death-year death FMV from being taxed a second time"
+    formula: "Current inclusion = 0 for code 6 or explicitly after-year-of-death code 4; retained reported Box 4 stays unchanged. Current postdeath earnings = max(0, actual Box 1 - actual Box 4), once only. No current medical expense offset or additional 20 percent tax attaches to that prior death FMV."
+    irsRef: "https://www.irs.gov/pub/irs-prior/i1099sa--2025.pdf pp2-3; https://www.irs.gov/pub/irs-prior/i8889--2025.pdf p3 Death of Account Beneficiary; Pub969(2025) Death of HSA Holder"
+    notes: "Known same-year nonspouse code 4 keeps the death FMV inclusion and actual one-year medical-expense cap. Estate cannot use beneficiary medical deduction. Unknown legacy code 4 is not assumed to be after-year. Code 6 timing is inherent even if the optional timing field is absent. Header retention/admission, unknown owner, HSA/MSA and annual qualification gates remain independent."
+    testRef: "tests/engine/forms/form-1099-sa-death-timing.test.ts::routes intrinsic code six after death earnings once without repeating death FMV"
+
+  - line: "death-year-conservation"
+    description: "Preserve source timing, owner and medical expense conservation"
+    formula: "Sum only actual current-inclusion components by actual owner, preserve raw Box 4 trace, current earnings and cents exactly. Prior death-year medical amounts do not reduce unrelated ordinary current distributions."
+    irsRef: "Final2025 i8889 Death of Account Beneficiary; Pub969(2025)"
+    testRef: "tests/engine/forms/form-1099-sa-death-timing.test.ts::preserves mixed timing ownership medical offsets and historical trace"
+
+  - line: "death-year-api"
+    description: "Preserve verified privacy and qualification while correcting current earnings"
+    formula: "The actual canonical 2025 current earnings 1000 minus reported death FMV 800 = 200; no prior FMV inclusion and no taxpayer fact invention. Confirmed explanation uses this canonical result privately and all existing source/year/2026 annual guards remain."
+    irsRef: "Final2025 i1099sa; final2025 i8889; Pub969(2025)"
+    testRef: "tests/engine/forms/form-1099-sa-death-timing.test.ts::preserves actual private verified admission and independent source gates"
+
+  - line: "death-owner-trace"
+    description: "Historical source trace cannot disappear from owner validation"
+    formula: "Retain actual reported Box 4 per actual owner even with zero current inclusion and earnings; reject spouse-owned sources when no actual spouse context exists. Do not reassign historical amounts or invent current income."
+    irsRef: "Final2025 i8889 Death of Account Beneficiary; existing actual-owner contract"
+    testRef: "tests/engine/forms/form-1099-sa-death-timing.test.ts::retains actual owner checks even when all prior FMV has no current earnings"

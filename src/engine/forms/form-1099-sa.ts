@@ -13,6 +13,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { d, sum } from "@/utils/decimal.js";
 
 interface Form1099SAOwnerSupport {
+  hsaReportedDeathDistributionDateOfDeathValue: Decimal;
   hsaGrossDistributions: Decimal;
   hsaReturnedExcessContributions: Decimal;
   hsaReturnedExcessContributionEarnings: Decimal;
@@ -25,6 +26,8 @@ interface Form1099SAOwnerSupport {
 }
 
 export interface Form1099SAResult {
+  /** All original Box 4 values, including prior death years; not current taxable income. */
+  hsaReportedDeathDistributionDateOfDeathValue: Decimal;
   hsaGrossDistributions: Decimal;
   hsaReturnedExcessContributions: Decimal;
   hsaReturnedExcessContributionEarnings: Decimal;
@@ -43,6 +46,7 @@ export interface Form1099SAResult {
 
 const DEFAULT_HSA_COVERAGE_BY_MONTH = Array.from({ length: 12 }, () => "none") as Form8889Input["coverageByMonth"];
 const EMPTY_OWNER_SUPPORT: Form1099SAOwnerSupport = {
+  hsaReportedDeathDistributionDateOfDeathValue: new Decimal(0),
   hsaGrossDistributions: new Decimal(0),
   hsaReturnedExcessContributions: new Decimal(0),
   hsaReturnedExcessContributionEarnings: new Decimal(0),
@@ -58,6 +62,7 @@ function normalizeOwnerSupport(
   ownerSupport: Partial<Form1099SAOwnerSupport> | undefined
 ): Form1099SAOwnerSupport {
   return {
+    hsaReportedDeathDistributionDateOfDeathValue: d(ownerSupport?.hsaReportedDeathDistributionDateOfDeathValue),
     hsaGrossDistributions: d(ownerSupport?.hsaGrossDistributions),
     hsaReturnedExcessContributions: d(ownerSupport?.hsaReturnedExcessContributions),
     hsaReturnedExcessContributionEarnings: d(ownerSupport?.hsaReturnedExcessContributionEarnings),
@@ -101,7 +106,8 @@ function deriveOwnerAttributionStatus(
 
 function ownerSupportHasAnyValues(ownerSupport: Form1099SAOwnerSupport): boolean {
   const normalizedOwnerSupport = normalizeOwnerSupport(ownerSupport);
-  return normalizedOwnerSupport.hsaGrossDistributions.greaterThan(0)
+  return normalizedOwnerSupport.hsaReportedDeathDistributionDateOfDeathValue.greaterThan(0)
+    || normalizedOwnerSupport.hsaGrossDistributions.greaterThan(0)
     || normalizedOwnerSupport.hsaReturnedExcessContributions.greaterThan(0)
     || normalizedOwnerSupport.hsaReturnedExcessContributionEarnings.greaterThan(0)
     || normalizedOwnerSupport.hsaDisabilityExceptionDistributions.greaterThan(0)
@@ -122,6 +128,11 @@ function isNonSpouseDeathDistribution(form: Form1099SA): boolean {
     && !isSurvivingSpouseInheritedHsaDistribution(form);
 }
 
+function isAfterYearOfDeathDistribution(form: Form1099SA): boolean {
+  // Code 6 itself documents timing even when the optional local timing field is absent.
+  return form.distributionCode === "6" || form.deathDistributionTiming === "after_year_of_death";
+}
+
 function isOtherBeneficiaryDeathDistribution(form: Form1099SA): boolean {
   return isNonSpouseDeathDistribution(form)
     && (form.beneficiaryRole === "other_beneficiary" || form.distributionCode === "6");
@@ -134,6 +145,7 @@ function resolveOwnerAttribution(
 }
 
 function summarizeHsaForms(forms: Form1099SA[]): {
+  hsaReportedDeathDistributionDateOfDeathValue: Decimal;
   hsaGrossDistributions: Decimal;
   hsaReturnedExcessContributions: Decimal;
   hsaReturnedExcessContributionEarnings: Decimal;
@@ -145,15 +157,19 @@ function summarizeHsaForms(forms: Form1099SA[]): {
   hsaProhibitedTransactionDistributions: Decimal;
 } {
   const deathDistributionForms = forms.filter(isNonSpouseDeathDistribution);
-  const otherBeneficiaryDeathDistributionForms = deathDistributionForms.filter(isOtherBeneficiaryDeathDistribution);
-  const estateDeathDistributionForms = deathDistributionForms.filter((form) => form.beneficiaryRole === "estate");
+  const currentDeathDistributionForms = deathDistributionForms.filter((form) => !isAfterYearOfDeathDistribution(form));
+  const otherBeneficiaryDeathDistributionForms = currentDeathDistributionForms.filter(isOtherBeneficiaryDeathDistribution);
+  const estateDeathDistributionForms = currentDeathDistributionForms.filter((form) => form.beneficiaryRole === "estate");
   const ordinaryDistributionForms = forms.filter((form) => !isNonSpouseDeathDistribution(form));
   const code2Forms = forms.filter((form) => form.distributionCode === "2");
   const code3Forms = forms.filter((form) => form.distributionCode === "3");
   const code5Forms = forms.filter((form) => form.distributionCode === "5");
 
-  const hsaDeathDistributionDateOfDeathValue = sum(
+  const hsaReportedDeathDistributionDateOfDeathValue = sum(
     ...deathDistributionForms.map((form) => d(form.fmvOnDateOfDeath))
+  );
+  const hsaDeathDistributionDateOfDeathValue = sum(
+    ...currentDeathDistributionForms.map((form) => d(form.fmvOnDateOfDeath))
   );
   const hsaOtherBeneficiaryDeathDistributionDateOfDeathValue = sum(
     ...otherBeneficiaryDeathDistributionForms.map((form) => d(form.fmvOnDateOfDeath))
@@ -163,6 +179,7 @@ function summarizeHsaForms(forms: Form1099SA[]): {
   );
 
   return {
+    hsaReportedDeathDistributionDateOfDeathValue,
     hsaGrossDistributions: sum(
       ...ordinaryDistributionForms.map((form) => d(form.grossDistribution)),
       hsaDeathDistributionDateOfDeathValue
@@ -188,6 +205,7 @@ function addOwnerSupport(
   right: Form1099SAOwnerSupport
 ): Form1099SAOwnerSupport {
   return {
+    hsaReportedDeathDistributionDateOfDeathValue: left.hsaReportedDeathDistributionDateOfDeathValue.plus(right.hsaReportedDeathDistributionDateOfDeathValue),
     hsaGrossDistributions: left.hsaGrossDistributions.plus(right.hsaGrossDistributions),
     hsaReturnedExcessContributions: left.hsaReturnedExcessContributions.plus(right.hsaReturnedExcessContributions),
     hsaReturnedExcessContributionEarnings: left.hsaReturnedExcessContributionEarnings
@@ -254,7 +272,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
     "1",
     "HSA gross distributions available for Form 8889 Line 14a",
     aggregate.hsaGrossDistributions,
-    "Sum Form 1099-SA Box 1 for ordinary HSA records, including surviving-spouse inherited accounts attributed only by actual return owner, plus Box 4 fair market value for nonspouse or estate death-distribution records",
+    "Sum Form 1099-SA Box 1 for ordinary HSA records, including surviving-spouse inherited accounts attributed only by actual return owner, plus current death-year Box 4 fair market value for nonspouse or estate records, excluding intrinsic code 6 and explicit after-year-of-death records",
     {
       "Ordinary HSA forms": ordinaryDistributionForms.length.toString(),
       "Nonspouse or estate death-distribution HSA forms": deathDistributionForms.length.toString(),
@@ -304,10 +322,12 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
     "Form 1099-SA",
     "5",
     "Fair market value at date of death for HSA death distributions",
-    aggregate.hsaDeathDistributionDateOfDeathValue,
-    "Sum Form 1099-SA Box 4 for nonspouse or estate HSA records with Box 3 codes 4 or 6",
+    aggregate.hsaReportedDeathDistributionDateOfDeathValue,
+    "Retain reported Form 1099-SA Box 4 for nonspouse or estate HSA records with Box 3 codes 4 or 6",
     {
       "Nonspouse or estate death-distribution HSA forms": deathDistributionForms.length.toString(),
+      "Current-year death-distribution amount included in Form 8889": aggregate.hsaDeathDistributionDateOfDeathValue,
+      "Prior-death-year reported amount excluded from current Form 8889": aggregate.hsaReportedDeathDistributionDateOfDeathValue.minus(aggregate.hsaDeathDistributionDateOfDeathValue),
       "Other-beneficiary death-distribution amount":
         aggregate.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toString(),
       "Estate death-distribution amount": aggregate.hsaEstateDeathDistributionDateOfDeathValue.toString(),
@@ -341,6 +361,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
   );
 
   return {
+    hsaReportedDeathDistributionDateOfDeathValue: aggregate.hsaReportedDeathDistributionDateOfDeathValue,
     hsaGrossDistributions: aggregate.hsaGrossDistributions,
     hsaReturnedExcessContributions: aggregate.hsaReturnedExcessContributions,
     hsaReturnedExcessContributionEarnings: aggregate.hsaReturnedExcessContributionEarnings,
@@ -355,6 +376,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
     unattributedRecordCount: hsaForms.length - attributableOwners.length,
     accountOwnerSupport: {
       primary: {
+        hsaReportedDeathDistributionDateOfDeathValue: accountOwnerSupport.primary.hsaReportedDeathDistributionDateOfDeathValue,
         hsaGrossDistributions: accountOwnerSupport.primary.hsaGrossDistributions,
         hsaReturnedExcessContributions: accountOwnerSupport.primary.hsaReturnedExcessContributions,
         hsaReturnedExcessContributionEarnings: accountOwnerSupport.primary.hsaReturnedExcessContributionEarnings,
@@ -368,6 +390,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
         hsaProhibitedTransactionDistributions: accountOwnerSupport.primary.hsaProhibitedTransactionDistributions,
       },
       spouse: {
+        hsaReportedDeathDistributionDateOfDeathValue: accountOwnerSupport.spouse.hsaReportedDeathDistributionDateOfDeathValue,
         hsaGrossDistributions: accountOwnerSupport.spouse.hsaGrossDistributions,
         hsaReturnedExcessContributions: accountOwnerSupport.spouse.hsaReturnedExcessContributions,
         hsaReturnedExcessContributionEarnings: accountOwnerSupport.spouse.hsaReturnedExcessContributionEarnings,
@@ -382,6 +405,7 @@ export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult 
       },
     },
     unattributedSupport: {
+      hsaReportedDeathDistributionDateOfDeathValue: unattributedSupport.hsaReportedDeathDistributionDateOfDeathValue,
       hsaGrossDistributions: unattributedSupport.hsaGrossDistributions,
       hsaReturnedExcessContributions: unattributedSupport.hsaReturnedExcessContributions,
       hsaReturnedExcessContributionEarnings: unattributedSupport.hsaReturnedExcessContributionEarnings,

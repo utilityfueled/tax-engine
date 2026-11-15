@@ -153,16 +153,17 @@ describe("Form 1099-SA edge cases", () => {
     ]);
 
     // Line 1: code 1 ($1000) + code 2 ($500) + code 3 ($2000) + code 5 ($800) ordinary
-    //   + death FMV: code 4 ($28000) + code 6 ($14000) = $46300
-    expect(result.hsaGrossDistributions.toNumber()).toBe(46300);
+    //   + current death FMV: code 4 ($28000); prior code 6 ($14000) excluded = $32300
+    expect(result.hsaGrossDistributions.toNumber()).toBe(32300);
     // Line 2: code 2 gross
     expect(result.hsaReturnedExcessContributions.toNumber()).toBe(500);
     // Line 3: code 2 Box 2 earnings
     expect(result.hsaReturnedExcessContributionEarnings.toNumber()).toBe(50);
     // Line 4: code 3 disability
     expect(result.hsaDisabilityExceptionDistributions.toNumber()).toBe(2000);
-    // Line 5: death FMV (code 4 + code 6)
-    expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(42000);
+    // Line 5 retains both reported Box 4 values; only code 4 is current support.
+    expect(result.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(42000);
+    expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(28000);
     // Line 6: post-death earnings: (30000-28000) + (15000-14000) = 3000
     expect(result.hsaPostDeathEarnings.toNumber()).toBe(3000);
     // Line 7: code 5 prohibited transactions
@@ -345,9 +346,10 @@ describe("Form 1099-SA edge cases", () => {
       }),
     ]);
 
-    expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(32000);
+    expect(result.hsaReportedDeathDistributionDateOfDeathValue.toNumber()).toBe(32000);
+    expect(result.hsaDeathDistributionDateOfDeathValue.toNumber()).toBe(18000);
     expect(result.hsaEstateDeathDistributionDateOfDeathValue.toNumber()).toBe(18000);
-    expect(result.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(14000);
+    expect(result.hsaOtherBeneficiaryDeathDistributionDateOfDeathValue.toNumber()).toBe(0);
     // Post-death earnings: (20000-18000) + (15000-14000) = 3000
     expect(result.hsaPostDeathEarnings.toNumber()).toBe(3000);
   });

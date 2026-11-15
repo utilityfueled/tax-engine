@@ -1,4 +1,18 @@
 {
+  "nov15InheritedHsaTiming": {
+    "base": "1768448b",
+    "freeze": "e3f3738cd2e0b63dc705004a8de940cedead4e178fa2cc84b7b6f5e2ec4c97c1",
+    "peerReview": "e9383a5868872332d205b41cde55308bfd18c43bb6f60b59b5106fbad1639255",
+    "mainReceipt": "69afe2f5da262895034a6449a00f4385b78488702a575d12e6afdc109234d248",
+    "mainTests": 702,
+    "mainFiles": 14,
+    "specRefs": 36,
+    "peerTests": 608,
+    "peerPost": 5,
+    "inventoryUnchanged": 1030,
+    "remaining": "Currentcombined/Preview/ARM/AMD64/externalhuman/final2026/securitygates",
+    "evidence": "docs/upgrade-2026-hsa-inherited-timing-20261115.md"
+  },
   "nov15FourOriginalSourceHeaders": {
     "base": "9ce3b97e",
     "freeze": "48bd353008b17995d124f91f53713ec90d96ba0b84c7fafd69bb287e28136a67",
