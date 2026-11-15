@@ -1,0 +1,32 @@
+form: "Guided Pub974 WorksheetE three-family originals"
+taxYear: 2025
+status: "experimental-source-intake"
+reference: "spec/federal/form-8962-married-third-family.yaml; final2025 Pub974 WorksheetE"
+notes: |
+  Intake parity only for the existing finite married-filing-separately/no-exception
+  source method, exactly three actual tax-family originals and one original policy.
+  No new tax formula, third-person return, election, entitlement or 2026 filing
+  qualification. Original identity, year, actual covered months, full claimed members,
+  independent benchmarks and both spouse/third-taxpayer agreements stay required.
+  Explicit known-empty primary/spouse dependents differ from unknown; zero amounts
+  and zero/one fractions remain known. Preserve all unknown/false answers (null Boolean controls become canonical unknown, not false) and reject
+  competing source methods or extra original meaning. Source edits invalidate proof.
+lines:
+  - line: "source-parity"
+    formula: "Convert actual entered years/months and exact known money to canonical sources, retaining original facts; existing WorksheetE rounds (1-.67)/2=.165 to printed .17, then .17 times original APTC200=34 per actual month. No monetary arithmetic in UI."
+    testRef: "tests/guided-interview/guided-married-third-family.test.ts::preserves the published34 source allocation through guided originals"
+  - line: "unknown-and-snapshot"
+    formula: "Require complete original identities, policies and source months with both independent agreements; bind explicit confirmation to actual current household/status/year/original-policy/source values, without inference, aliases, stale snapshots or competing methods."
+    testRef: "tests/guided-interview/guided-married-third-family.test.ts::rejects unknown stale conflicting and competing originals without mutation"
+  - line: "visible-originals"
+    formula: "Originate all three actual family/member sources and actual month/benchmark/agreement facts visibly; preserve unknown versus empty/zero and explicitly confirm/revoke edited sources."
+    testRef: "tests/apps/web/guided-married-third-family.test.tsx::collects actual WorksheetE originals and invalidates edited confirmations"
+  - line: "privacy-and-year"
+    formula: "Keep original family SSNs and references out of actual verified-AI, hosted and provider public projections; isolated actual2026 sources retain existing support while full calculation/export gates stay closed."
+    testRef: "tests/guided-interview/guided-married-third-family.test.ts::preserves actual privacy and annual readiness boundaries"
+  - line: "browser-originals"
+    formula: "At1280/390 type actual original source fields and assert visible estimate and fail-closed source edits/reload/geometry, with default30s,2workers,0retry and zero protected request budgets; no qualification implied by collection alone."
+    testRef: "apps/web/tests/guided-married-third-family.spec.ts::originates private three-family sources and preserves visible source gates"
+  - line: "physical-transfer"
+    formula: "Use the unchanged historical Form8962 mapper with canonical prepared original context; reopen the saved actual two-page PDF and verify line25=34,line27=34,column g=.17,e/f blank, and private family identifiers absent."
+    testRef: "tests/guided-interview/guided-married-third-family.test.ts::transfers guided originals into saved historical physical review without private family identifiers"

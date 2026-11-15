@@ -4,7 +4,9 @@ import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import type { MarketplacePolicyData, PremiumTaxCreditData, MarketplaceCoverageMonthData } from "./guided-premium-tax-credit-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 
+import {convertMarriedThirdFamilySources,assertMarriedThirdFamilyMethod,type MarriedThirdFamilyData} from "./guided-married-third-family";
 export interface SharedPolicyAllocationData {
+  marriedThirdFamily?: MarriedThirdFamilyData;
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allSharedPoliciesIncluded: boolean | null;
   primaryName: string; primarySsn: string; spouseName?: string; spouseSsn?: string;
   policies: SharedPolicyAgreementData[];
@@ -106,8 +108,9 @@ export function captureNoAdvanceCoverageFamilies(packet: SharedPolicyAllocationD
   return { sourceTaxYear: packet.sourceTaxYear, sourceReference: "", sourceFactsConfirmed: null, allBenchmarkMonthsIncluded: null, months };
 }
 
-export function invalidateSharedPolicySources(packet: SharedPolicyAllocationData): SharedPolicyAllocationData {
+export function invalidateSharedPolicySources(packet: SharedPolicyAllocationData, invalidateThirdFamily = true): SharedPolicyAllocationData {
   return { ...packet, sourceFactsConfirmed: null,
+    ...(packet.marriedThirdFamily && invalidateThirdFamily ? {marriedThirdFamily:{...packet.marriedThirdFamily,sourceFactsConfirmed:null}} : {}),
     ...(packet.noAdvanceCoverageFamilies ? { noAdvanceCoverageFamilies: { ...packet.noAdvanceCoverageFamilies, sourceFactsConfirmed: null } } : {}),
     ...(packet.overlappingCoverage ? { overlappingCoverage: { ...packet.overlappingCoverage, sourceFactsConfirmed: null } } : {}), policies: packet.policies.map(policy => ({ ...policy,
     ...(policy.noAdvanceAllocation ? { noAdvanceAllocation: { ...policy.noAdvanceAllocation, sourceFactsConfirmed: null } } : {}) })) };
@@ -246,8 +249,10 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
   if (!packet || data.allocationRequired !== true) throw new Error("Complete the actual shared-policy allocation worksheet and reconcile its required answer.");
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus || !personal) throw new Error("Complete the actual return household, year and filing status for the allocation.");
   const policies = data.policies.map(policy => normalizeMarketplacePolicy(policy, taxYear, true));
+  const thirdFamily = convertMarriedThirdFamilySources(data,taxYear,filingStatus,personal);
+  if(thirdFamily)assertMarriedThirdFamilyMethod(packet);
   const sharedPolicyAllocations = {
-    ...packet, sourceTaxYear: whole(packet.sourceTaxYear, "allocation source year"), sourceFactsConfirmed: packet.sourceFactsConfirmed ?? undefined, allSharedPoliciesIncluded: packet.allSharedPoliciesIncluded ?? undefined,
+    ...packet, ...(thirdFamily ? {marriedThirdFamily:thirdFamily} : {}), sourceTaxYear: whole(packet.sourceTaxYear, "allocation source year"), sourceFactsConfirmed: packet.sourceFactsConfirmed ?? undefined, allSharedPoliciesIncluded: packet.allSharedPoliciesIncluded ?? undefined,
     noAdvanceCoverageFamilies: packet.noAdvanceCoverageFamilies ? { ...packet.noAdvanceCoverageFamilies,
       sourceTaxYear: whole(packet.noAdvanceCoverageFamilies.sourceTaxYear, "complete coverage-family source year"), sourceFactsConfirmed: packet.noAdvanceCoverageFamilies.sourceFactsConfirmed ?? undefined,
       allBenchmarkMonthsIncluded: packet.noAdvanceCoverageFamilies.allBenchmarkMonthsIncluded ?? undefined,
@@ -262,10 +267,11 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
         slcsp: money(group.slcsp, "applicable group benchmark"), allUnsharedCoverageFamilyMembersIncludedConfirmed: group.allUnsharedCoverageFamilyMembersIncludedConfirmed ?? undefined,
         allCoveredPeopleShareRatingAreaConfirmed: group.allCoveredPeopleShareRatingAreaConfirmed ?? undefined })) })) } : undefined,
     policies: packet.policies.map(policy => ({ ...policy, original: policy.original ? normalizeMarketplacePolicy(policy.original, taxYear, true) : undefined,
-      situation: policy.situation || undefined, noCurrentYearMarriageOrDivorceConfirmed: policy.noCurrentYearMarriageOrDivorceConfirmed ?? undefined,
+      situation: policy.situation || undefined, noCurrentYearMarriageOrDivorceConfirmed: thirdFamily ? undefined : policy.noCurrentYearMarriageOrDivorceConfirmed ?? undefined,
       otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed: policy.otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed ?? undefined,
       twoTaxFamiliesConfirmed: policy.twoTaxFamiliesConfirmed ?? undefined, allCoveredPeopleAssignedConfirmed: policy.allCoveredPeopleAssignedConfirmed ?? undefined,
-      originalSlcspCorrectConfirmed: policy.originalSlcspCorrectConfirmed ?? undefined, agreementConfirmed: policy.agreementConfirmed ?? undefined,
+      originalSlcspCorrectConfirmed: thirdFamily ? undefined : policy.originalSlcspCorrectConfirmed ?? undefined, agreementConfirmed: thirdFamily ? undefined : policy.agreementConfirmed ?? undefined,
+      ...(thirdFamily ? {agreementReference:undefined} : {}),
       allCoveredPeopleInThisTaxFamilyConfirmed: policy.allCoveredPeopleInThisTaxFamilyConfirmed ?? undefined,
       noAdvanceAllocation: policy.noAdvanceAllocation ? { ...policy.noAdvanceAllocation,
         sourceTaxYear: whole(policy.noAdvanceAllocation.sourceTaxYear, "benchmark source year"), sourceFactsConfirmed: policy.noAdvanceAllocation.sourceFactsConfirmed ?? undefined,
@@ -274,11 +280,11 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
           thisReturnSlcsp: money(row.thisReturnSlcsp, "this-return benchmark"), otherReturnSlcsp: money(row.otherReturnSlcsp, "other-return benchmark") })) } : undefined,
       separateReturn: policy.separateReturn ? { ...policy.separateReturn, marriedAtYearEndConfirmed: policy.separateReturn.marriedAtYearEndConfirmed ?? undefined,
         onlySpouseTaxFamiliesConfirmed: policy.separateReturn.onlySpouseTaxFamiliesConfirmed ?? undefined,
-        livingApartExceptionConfirmed: filingStatus === "mfs" ? undefined : policy.separateReturn.livingApartExceptionConfirmed ?? undefined,
-        ownCoverageFamilySlcsp: (filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : policy.separateReturn.livingApartExceptionConfirmed === true) ? policy.separateReturn.ownCoverageFamilySlcsp.map(row => ({ month: whole(row.month, "own benchmark month"), slcsp: money(row.slcsp, "own coverage-family benchmark") })) : [] } : undefined,
+        livingApartExceptionConfirmed: filingStatus === "mfs" && !thirdFamily ? undefined : policy.separateReturn.livingApartExceptionConfirmed ?? undefined,
+        ownCoverageFamilySlcsp: thirdFamily ? undefined : (filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : policy.separateReturn.livingApartExceptionConfirmed === true) ? policy.separateReturn.ownCoverageFamilySlcsp.map(row => ({ month: whole(row.month, "own benchmark month"), slcsp: money(row.slcsp, "own coverage-family benchmark") })) : [] } : undefined,
       defaultAllocation: policy.defaultAllocation ? { ...policy.defaultAllocation, allCoveredPeopleEnrolledByTaxpayerConfirmed: policy.defaultAllocation.allCoveredPeopleEnrolledByTaxpayerConfirmed ?? undefined } : undefined,
-      coveredFamilyAssignments: policy.coveredFamilyAssignments.map(entry => ({ ...entry, family: entry.family || undefined })),
-      monthlyAllocations: policy.monthlyAllocations.map(row => ({ month: whole(row.month, "agreement month"), fraction: row.fraction.trim() })) })) };
+      coveredFamilyAssignments: thirdFamily ? undefined : policy.coveredFamilyAssignments.map(entry => ({ ...entry, family: entry.family || undefined })),
+      monthlyAllocations: thirdFamily ? undefined : policy.monthlyAllocations.map(row => ({ month: whole(row.month, "agreement month"), fraction: row.fraction.trim() })) })) };
   const form8962 = Form8962Schema.parse({ sharedPolicyAllocations, taxFamilySize: whole(data.taxFamilySize, "actual tax family size"), allocationRequired: data.allocationRequired,
     canBeClaimedAsDependent: data.canBeClaimedAsDependent ?? undefined,
     marriedFilingSeparatelyExceptionConfirmed: data.marriedFilingSeparatelyExceptionConfirmed ?? undefined,

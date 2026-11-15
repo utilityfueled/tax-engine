@@ -30,6 +30,7 @@ import type { PAResidencySources } from "@/models/pa-residency";
 import type { PAReciprocitySources } from "@/models/pa-reciprocity";
 import { cryptoDonationFactErrors, type CryptoDonationData } from './guided-crypto-donations';
 import { royaltySourceFactErrors, invalidateRoyaltySources, type RoyaltyIncomeData } from "./guided-royalty-sources";
+import {marriedThirdFamilyOriginalsChanged} from "./guided-married-third-family";
 import { invalidateSharedPolicySources } from "./guided-shared-policy";
 import { invalidateMarriageSources } from "./guided-marriage-policy";
 import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreign-income";
@@ -2154,7 +2155,7 @@ export function updateSectionData(
         ...(careEarnedIncomeChanged ? { dependentCare: { ...care, sourceFactsConfirmed: null } } : {}),
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
         ...(educationSourcesChanged ? { educationDistributions: invalidateEducationPeriodSources(nextCredits.educationDistributions) } : {}),
-        ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null, ...(premiumTaxCreditSourcesChanged.sharedPolicyAllocations ? { sharedPolicyAllocations: invalidateSharedPolicySources(premiumTaxCreditSourcesChanged.sharedPolicyAllocations) } : {}), ...(premiumTaxCreditSourcesChanged.marriageSources ? { marriageSources: invalidateMarriageSources(premiumTaxCreditSourcesChanged.marriageSources) } : {}) } } : {}),
+        ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null, ...(premiumTaxCreditSourcesChanged.sharedPolicyAllocations ? { sharedPolicyAllocations: invalidateSharedPolicySources(premiumTaxCreditSourcesChanged.sharedPolicyAllocations, sectionId !== "credits" || marriedThirdFamilyOriginalsChanged(credits?.premiumTaxCredit, premiumTaxCreditSourcesChanged)) } : {}), ...(premiumTaxCreditSourcesChanged.marriageSources ? { marriageSources: invalidateMarriageSources(premiumTaxCreditSourcesChanged.marriageSources) } : {}) } } : {}),
         ...(bondSourcesChanged ? { savingsBondEducation: invalidateSavingsBondSources(nextCredits.savingsBondEducation) } : {}),
       } } : {}),
     },

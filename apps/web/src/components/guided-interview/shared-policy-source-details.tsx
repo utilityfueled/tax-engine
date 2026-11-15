@@ -4,6 +4,8 @@ import { NoAdvanceCoverageFamilyDetails } from "./no-advance-coverage-family-det
 import { NoAdvanceBenchmarkSourceDetails } from "./no-advance-benchmark-source-details";
 import { OverlappingBenchmarkSourceDetails } from "./overlapping-benchmark-source-details";
 
+import {MarriedThirdFamilySourceDetails} from "./married-third-family-source-details";
+import {confirmMarriedThirdFamilySources} from "@/lib/guided-married-third-family";
 import { useState } from "react";
 import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
 import type { MarketplacePolicyData, PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
@@ -103,16 +105,16 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
             <BooleanFact label={`${prefix}: This taxpayer enrolled every original covered person`} value={policy.defaultAllocation?.allCoveredPeopleEnrolledByTaxpayerConfirmed ?? null} onChange={allCoveredPeopleEnrolledByTaxpayerConfirmed => set({ defaultAllocation: { sourceReference: policy.defaultAllocation?.sourceReference ?? "", enrollingTaxpayerSsn: policy.defaultAllocation?.enrollingTaxpayerSsn ?? "", allCoveredPeopleEnrolledByTaxpayerConfirmed } })} />
           </>}</>}
         </div>
-          {!unshared && policy.coveredFamilyAssignments.map((person, personIndex) => <Choice key={personIndex} label={`${prefix}: Covered person ${personIndex + 1} tax family`} value={person.family} choices={[["this_return", "This return's tax family"], ["other_return", "Other taxpayer's tax family"]]} onChange={family => set({ coveredFamilyAssignments: policy.coveredFamilyAssignments.map((current, i) => i === personIndex ? { ...current, family: family as typeof person.family } : current) })} />)}
+          {!unshared && !packet.marriedThirdFamily && policy.coveredFamilyAssignments.map((person, personIndex) => <Choice key={personIndex} label={`${prefix}: Covered person ${personIndex + 1} tax family`} value={person.family} choices={[["this_return", "This return's tax family"], ["other_return", "Other taxpayer's tax family"]]} onChange={family => set({ coveredFamilyAssignments: policy.coveredFamilyAssignments.map((current, i) => i === personIndex ? { ...current, family: family as typeof person.family } : current) })} />)}
           {separate && policy.separateReturn && (() => {
             const evidence = policy.separateReturn, patch = (next: Partial<NonNullable<SharedPolicyAgreementData["separateReturn"]>>) => set({ separateReturn: { ...evidence, ...next } });
             return <>
-              <p className="guided-hint">Spouses who file separate returns split this policy equally. The other taxpayer above is your spouse.</p>
+              <p className="guided-hint">{packet.marriedThirdFamily ? "The separate three-family Worksheet E below uses both spouses’ actual sources and agreements with the third taxpayer." : "Spouses who file separate returns split this policy equally. The other taxpayer above is your spouse."}</p>
               <div className="guided-form-grid">
                 <TextFact label={`${prefix}: Separate-return source reference`} value={evidence.sourceReference} onChange={sourceReference => patch({ sourceReference })} />
                 <BooleanFact label={`${prefix}: Married at the end of the year`} value={evidence.marriedAtYearEndConfirmed} onChange={marriedAtYearEndConfirmed => patch({ marriedAtYearEndConfirmed })} />
                 <BooleanFact label={`${prefix}: Only your and your spouse's tax families are on this policy`} value={evidence.onlySpouseTaxFamiliesConfirmed} onChange={onlySpouseTaxFamiliesConfirmed => patch({ onlySpouseTaxFamiliesConfirmed })} />
-                {filingStatus === "hoh" && <BooleanFact label={`${prefix}: Married but living apart and filing as head of household`} value={evidence.livingApartExceptionConfirmed ?? null} onChange={livingApartExceptionConfirmed => patch({ livingApartExceptionConfirmed })} />}
+                {(filingStatus === "hoh" || packet.marriedThirdFamily) && <BooleanFact label={packet.marriedThirdFamily ? `${prefix}: Living-apart exception applies` : `${prefix}: Married but living apart and filing as head of household`} value={evidence.livingApartExceptionConfirmed ?? null} onChange={livingApartExceptionConfirmed => patch({ livingApartExceptionConfirmed })} />}
                 {(filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : evidence.livingApartExceptionConfirmed === true) && <TextFact label={`${prefix}: Source for any month above the reported SLCSP`} value={evidence.benchmarkAboveReportedReference ?? ""} onChange={benchmarkAboveReportedReference => patch({ benchmarkAboveReportedReference })} />}
                 {(filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : evidence.livingApartExceptionConfirmed === true) && evidence.ownCoverageFamilySlcsp.map((row, rowIndex) => <TextFact key={rowIndex} label={`${prefix}: Month ${row.month} SLCSP for your own coverage family`} value={row.slcsp}
                   onChange={slcsp => patch({ ownCoverageFamilySlcsp: evidence.ownCoverageFamilySlcsp.map((current, i) => i === rowIndex ? { ...current, slcsp } : current) })} />)}
@@ -126,6 +128,7 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
           </> : !unshared && !separate && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === false && <p className="guided-hint">Use the covered-person order on the copied original. The enrolling taxpayer is the person who expected to claim these people when enrolling them. The default share uses their actual coverage months and tax-family assignments; the enrolling taxpayer keeps the remaining share.</p>}
         </fieldset>;
       })}
+      {packet.marriedThirdFamily ? <MarriedThirdFamilySourceDetails value={packet.marriedThirdFamily} onChange={marriedThirdFamily=>onChange({sharedPolicyAllocations:{...packet,marriedThirdFamily}})} onConfirm={()=>perform(()=>onChange({sharedPolicyAllocations:{...packet,marriedThirdFamily:confirmMarriedThirdFamilySources(data,taxYear,filingStatus,personal)}}))} onRemove={()=>onChange({sharedPolicyAllocations:{...packet,marriedThirdFamily:undefined}})}/> : <button type="button" onClick={()=>onChange({sharedPolicyAllocations:{...packet,marriedThirdFamily:{}}})}>Add Worksheet E three-family originals</button>}
       {(packet.noAdvanceCoverageFamilies || (packet.policies.length > 1 && packet.policies.some(policy => policy.situation === "no_advance_credit"))) && <NoAdvanceCoverageFamilyDetails value={packet.noAdvanceCoverageFamilies}
         onCapture={() => perform(() => onChange({ sharedPolicyAllocations: { ...packet, noAdvanceCoverageFamilies: captureNoAdvanceCoverageFamilies(packet) } }))}
         onChange={noAdvanceCoverageFamilies => onChange({ sharedPolicyAllocations: { ...packet, noAdvanceCoverageFamilies } })} />}

@@ -8,6 +8,7 @@ import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedPolicyOriginalDetails, SharedPolicySourceDetails } from "./shared-policy-source-details";
 import { MarriagePolicySourceDetails } from "./marriage-policy-source-details";
+import {marriedThirdFamilyOriginalsChanged} from "@/lib/guided-married-third-family";
 import { invalidateSharedPolicySources } from "@/lib/guided-shared-policy";
 import { invalidateMarriageSources } from "@/lib/guided-marriage-policy";
 
@@ -27,7 +28,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     if (guidedSourceValuesChanged(data, next)) {
       next.sourceFactsConfirmed = null;
       if (next.marriageSources) next.marriageSources = invalidateMarriageSources(next.marriageSources);
-      if (next.sharedPolicyAllocations) next.sharedPolicyAllocations = invalidateSharedPolicySources(next.sharedPolicyAllocations);
+      if (next.sharedPolicyAllocations) next.sharedPolicyAllocations = invalidateSharedPolicySources(next.sharedPolicyAllocations, marriedThirdFamilyOriginalsChanged(data,next));
     }
     onChange(next);
   };
