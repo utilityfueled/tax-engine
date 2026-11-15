@@ -1,5 +1,13 @@
 # Current 2026 upgrade continuation
 
+## November 15 additional unassigned human source packet
+
+The confirmed-explanation and partial-interest changes now have 21 detached
+committed source blobs and four blank 2025 review decisions. Separate custody
+review verifies exact bytes, modes, hashes and unassigned human fields.
+[Reconstructible source index and limits](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md).
+This is review material, not human approval or a complete dependency audit.
+
 ## November 15 actual partial investment interest
 
 The finite single-primary 2025 Schedule AI route now uses actual allowed

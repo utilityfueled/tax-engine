@@ -1,5 +1,42 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 15 current execution and remaining external evidence
+
+All 396 local commits through `8a31d8ae` are saved on the public
+[backup branch](https://github.com/utilityfueled/tax-engine/tree/codex/2026-upgrade-backup-20261114).
+Remote main remains at the PR13 merge; automatic production builds are still
+configured and the owner's production push hold remains. The pending proposal
+to disable those builds has not been approved or executed. No production action
+is inferred from backup pushes or isolated rehearsals.
+
+Exact `e719e3fe` passes all twelve local checks: 28,538 unit/coverage tests,
+88.10% branches and 632 browser passes/five unchanged hosted skips. Its remote
+CI/Web workflows are running on the backup branch. The actual AMD64 container
+build, smoke and six recovery phases have passed; the full workflow and image
+artifact/scan are not yet complete. Subsequent known direct-original-year and
+partial-current-interest packages are separately committed and reviewed;
+their combined metadata/checks and final hosted/native artifacts follow.
+The prepared e719 Preview/ARM64 packets remain unused, rather than being
+attributed to these later fixes. [Baseline evidence](upgrade-2026-combined-e719e3fe-checks-20261115.md).
+
+The [new 21-blob/four-decision packet](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md)
+adds review material for confirmed-explanation admission and partial investment
+interest. All human fields remain unassigned. Qualified independent tax,
+AI-case and security/privacy reviews are still required; agent reviews are
+engineering evidence. The remaining interpretation questions below retain
+their exact source-method boundaries. PA and Ohio are selected for all three
+residency categories; none has final 2026 filing qualification.
+
+Actual provider usage remains 179 known calls/$0.27185270 plus the unchanged
+$0.022384 unknown-usage reserve, totaling $0.29423670 accounted exposure under
+the authorized $140 ceiling. No new paid calls accompany these source packages.
+Official documentation remains consistent with existing candidate pricing;
+published capabilities/catalog visibility do not supply independently reviewed
+quality labels or Google project access. The prior physical-form endpoint,
+application-image and PostgreSQL scans retain their stated source/time scope:
+final annual-form qualification, accountable advisory dispositions with expiry
+and final artifact reviews remain open. No filing or model promotion occurred.
+
 ## November 15 current source and human handoff
 
 Local `d9026aea`, `8ecac234` and `46a95320` separately deliver actual

@@ -1,4 +1,16 @@
 {
+  "nov15HumanAiPartialSupplement": {
+    "sourceHead": "8a31d8ae754fc1651b5aa0408850ec956beb0f6f",
+    "selectedBlobs": 21,
+    "blank2025Decisions": 4,
+    "completeTransitiveClosure": false,
+    "humanAssigned": false,
+    "humanApproval": false,
+    "annual2026Qualified": false,
+    "preparation": "668d87e57edfaf161ba53c54408d8e10bdffeede2d9798203c774efc43dc6aab",
+    "independentEngineeringCustodyReview": "88138582a7742e85ef3964c4227a9083bc9c4ff4b3a31f039b7096cc5e90ee10",
+    "ledger": "docs/upgrade-2026-human-ai-partial-supplement-8a31d8ae.md"
+  },
   "nov15PartialInvestmentInterest": {
     "sourceFreeze": "e452910ab973f24a024f8e247e1bdf44c213e554042c9f1504b92898c5a47021",
     "independentReview": "8fadcc192b54d98dfd08e4fc2c9b24019e2a799ab95a1bf2d6a86394595df0eb",
