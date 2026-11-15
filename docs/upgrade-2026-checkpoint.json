@@ -1,4 +1,23 @@
 {
+  "nov15Integrated8cAllTwelve": {
+    "source": "8c1bd108bbad1a8c68c4273c25e8023ad314b231",
+    "all12Passed": true,
+    "unitAndCoverageEach": 28728,
+    "testFiles": 2098,
+    "branchCoverage": "88.13",
+    "browserCases": 643,
+    "browserPassed": 638,
+    "originalSkips": 5,
+    "workers": 2,
+    "retries": 0,
+    "ordinaryTimeoutMs": 30000,
+    "executedOriginalOverrides": 8,
+    "normalPgAndBrowserCleanup": true,
+    "root": "46370283985dadada4bf295f45662cae37f3637dec86c2b09b12be6d87cdbb5b",
+    "independent": "cba5db849e2ce286ca9d48bc3ca8b189400302f5bf084804d417998c0cfe7d80",
+    "distributionAndHumanQualificationPending": true,
+    "releaseReady": false
+  },
   "nov15Amd64ExplicitIntermediateCleanup": {
     "actualRun": "43699867290",
     "source": "21dfc258",

@@ -6177,3 +6177,12 @@ pruning foreign ancestors. Root2RED/14PASS precedes adoption;64 related controls
 all9,316 spec references, types/inventory/lint and ten independent controls pass.
 Actual native correction and scan qualification remain pending.
 [Failure limits and source review](upgrade-2026-amd64-backports-workflow-20261115.md).
+
+### November 15: all twelve integrated 8c checks pass
+
+Exact8c1bd108 passes all12 local checks:28,728 unit/coverage tests in2,098files,
+88.13% branches and the full643-browser union (638PASS/five original skips).
+Two actual SCRAM clusters and the owned browser server close normally. Root and
+independent saved-artifact review pass; original budgets/deadlines/skips remain.
+Protected Preview/native/current remote and human/forms/security/AI qualification
+are separate and pending. [Checks and receipt hashes](upgrade-2026-integrated-runtime-8c1bd108-20261115.md).
