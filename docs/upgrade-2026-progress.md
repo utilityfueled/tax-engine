@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 15 retained W-2G calendar originals
+
+Actually supplied legacy gambling years now survive parsing and conflicting
+years reject before confirmed effects. Main 154 tests and 33 spec references
+pass; independent review verifies strict-2026 preservation and fifteen POSTs.
+[Evidence](upgrade-2026-confirmed-w2g-years-20261115.md).
+
 ## November 15 confirmed benefit, education and Marketplace years
 
 Known contradictory original years now reject before explanation/accounting,

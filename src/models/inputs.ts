@@ -798,6 +798,8 @@ export const Form1099OIDSchema = z.preprocess((value) => {
 export type Form1099OID = z.infer<typeof Form1099OIDSchema>;
 
 const formW2GFields = z.object({
+  /** Actual calendar-year header, independent of the continuous-use form revision. */
+  taxYear: z.number().int().optional(),
   payer: z.string(),
   payerTin: z.string().optional(), // Payer identification number for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns

@@ -90,7 +90,7 @@ function applicableIraWorksheet(input:TaxYearInput,result:TaxReturnResult,source
 /** Verifies software source admission, never real-world truth or filing readiness. */
 export function assertVerifiedAiSourceAdmission(input:TaxYearInput,result:TaxReturnResult,originalInput:unknown):void {
   // These are actual calendar-year originals, not prior-year carry or worksheet histories.
-  const directOriginals=[...input.w2s,...input.form1099Int,...input.form1099Div,...(input.form1099R??[]),...input.form1099Misc,...input.form1099Nec,...input.form1099OID,...input.form1099K,...input.form1098E,...input.form1095A];
+  const directOriginals=[...input.w2s,...input.form1099Int,...input.form1099Div,...(input.form1099R??[]),...input.form1099Misc,...input.form1099Nec,...input.form1099OID,...input.form1099K,...input.form1098E,...input.form1095A,...input.formW2G];
   if(directOriginals.some(form=>form.taxYear!==undefined && form.taxYear!==input.taxpayer.taxYear)
     || (input.formSSA1099??[]).some(form=>form.sourceTaxYear!==undefined && form.sourceTaxYear!==input.taxpayer.taxYear)){
     throw new Error('A confirmed explanation requires matching-year direct income originals.');

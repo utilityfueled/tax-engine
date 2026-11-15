@@ -1,4 +1,19 @@
 {
+  "nov15ConfirmedW2GYears": {
+    "base": "7c9d8968",
+    "freeze": "70db97f021e4ca16b3bb8ca1149879bb41bd5dc7f3763b1c29cd2f9b78135924",
+    "mainTests": 154,
+    "mainFiles": 7,
+    "peerReview": "a14a6a2c6f6840eedd71575cc635634250bbf84e74cb9228c0819bf67a3debe6",
+    "peerTests": 103,
+    "peerActualPosts": 15,
+    "specReferences": 33,
+    "inventoryUnchanged": 1030,
+    "mainReceipt": "adbdebda54394f6f822edfd63c5308e90c6f510eb5f1be494ecf0336e90784b2",
+    "meaning": "Preserveactualoptionalcalendarheader;strict2026unchanged;noinference/datewon/formula/thresholdchange",
+    "remaining": "FutureK1;OHduplicatereplay/currentcombined+runtimes;externalreview/final2026",
+    "evidence": "docs/upgrade-2026-confirmed-w2g-years-20261115.md"
+  },
   "nov15ConfirmedBenefitsEducationMarketplaceYears": {
     "base": "25b9a953",
     "freeze": "e47afc2b26e1e42d88f5bbae28151462710e22b4eb6d8cb42b2fd2438ab7efbd",
