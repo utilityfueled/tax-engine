@@ -102,7 +102,8 @@
     "apps/web/src/components/guided-interview/eic-disallowance-history-details.tsx": "396ffeaf5cc03610a07fd2cf99d37f8a86cecfe2e395b54f8b968f6a0a41ffce",
     "apps/web/src/components/guided-interview/eic-separated-spouse-details.tsx": "f99f9fb9f8b22163dd1eeaf0f95d4f478756c2ba52bd08ba60a3eb5a1af7ace6",
     "apps/web/src/components/guided-interview/energy-source-details.tsx": "83176550278e3b7cc799fe08bbc61e376fafedb26af4704cefa6edf2176288df",
-    "apps/web/src/components/guided-interview/estimated-investment-election-details.tsx": "632a60dd03a8faf31ede6bbe1d3bbbddf1c436b79d07a090ad63883811440920",
+    "apps/web/src/components/guided-interview/estimated-investment-election-details.tsx": "13d8a8595109244714d7f9028f48e05389073b0a6037f7850d51b130afbb81af",
+    "apps/web/src/components/guided-interview/estimated-investment-household-details.tsx": "7f77de2da53a879528a26f5017168c83a591010a04d48ad82ef5c682a8e32fb6",
     "apps/web/src/components/guided-interview/estimated-tax-source-details.tsx": "b40b180ea9baee179619ec2427a1dba57768678a37edd11ba75de96f208b1df9",
     "apps/web/src/components/guided-interview/fact-fields.tsx": "aa4fcda63a24a39ea368bb7282b2df1487ba2f27ecd3710c6bad16f90a22dc1f",
     "apps/web/src/components/guided-interview/foreign-income-details.tsx": "e8445b24b8c82756d3afae4635cb38db7c1ad12e1007cdfe4e1607e85a544844",
@@ -285,7 +286,8 @@
     "apps/web/src/lib/guided-eic-eligibility.ts": "f06fa1c2b003e95a67e26ba1144cbcd51b8f71117688a4da87ef50926a5433a1",
     "apps/web/src/lib/guided-eic-separated-spouse.ts": "aed8d7a3428e0c34d5b00ca642a781363f1df9eb1a631395e656af369ae1d643",
     "apps/web/src/lib/guided-energy-facts.ts": "d9f8b3741eb72318b1dc07836c3606705bc17113c1b674af33bcecce415d0dd2",
-    "apps/web/src/lib/guided-estimated-investment-election.ts": "da2cec491b4a337b101dfe7c971f7fa7be9f6cdba4ae84a050ac2cccf6d76753",
+    "apps/web/src/lib/guided-estimated-investment-election.ts": "045b6d1ebd783932fb0253b224046392b2208d179a20f5753ea9e0c8ab820d2d",
+    "apps/web/src/lib/guided-estimated-investment-household.ts": "885ce315880b0c83e4c473fb10dd6285ca81d14c703c6fd396c5ddce4cac07d5",
     "apps/web/src/lib/guided-estimated-tax-facts.ts": "8964df84f4b1c6be5658b8b658cdee9e1d157ae98a37497e5b16a7d8652f3b18",
     "apps/web/src/lib/guided-foreign-income.ts": "36f30870e01a475a8a523e6456eea39e7c9571a0f5ed85062917cc995363087e",
     "apps/web/src/lib/guided-foreign-tax-carryover.ts": "bcacfabf0f1258e58f4b42d10519a8ffdf4f5278294acb45b490b43cb8664603",
@@ -301,7 +303,7 @@
     "apps/web/src/lib/guided-hsa-facts.ts": "bad97489b43ff81ed079b9c193f1f77f6fd62950ee159256456a79a6d009654e",
     "apps/web/src/lib/guided-interest-originals.ts": "105f06ec3c31e2405ea430e9e1e614aee8b3ef443ce3e88ebf92471d9108420b",
     "apps/web/src/lib/guided-interview-bridge.ts": "bae1f7f1a5709ffd8afd206235717cd05cafd8cebc21cf2ecd7ea0d8bbf31189",
-    "apps/web/src/lib/guided-interview-flow.ts": "84a8f589611c04d2d915970e096f8899dfdcc9e00d475aa3ff5f895cb0456032",
+    "apps/web/src/lib/guided-interview-flow.ts": "adbad59c780ba22dbd8245a84f41b5508a404fa056eb99386cb67921bef75425",
     "apps/web/src/lib/guided-investment-facts.ts": "ebe7613a7677d1a2f892dab42244f67be10b07f4ad9907517534e9658753cc3e",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
@@ -582,6 +584,7 @@
     "apps/web/tests/guided-savings-bond-reissue-fixture.ts": "d7e8f9e581f3b0d852f591cd60f804488448f33d62b41575dbb8048e293bd9ae",
     "apps/web/tests/guided-savings-bond-reissues.spec.ts": "74763712b1ba036dc10b11e9a288c5d6db8ff9d88694639baef1bc31e7f9ea08",
     "apps/web/tests/guided-schedule-ai-investment-election.spec.ts": "9f219935539b0a4a73cdf5eb6eca2c09880e609e5f564ed0331381f617d3507b",
+    "apps/web/tests/guided-schedule-ai-investment-household.spec.ts": "13f54fc464299231e22f6e2345b726451839e68f8c5ce7ea3f2d9beca944d638",
     "apps/web/tests/guided-schedule-ai.spec.ts": "691380825d67a4c6d345fcfac5a81dcb537c44ee6f953a9a17db7aaff6b218e5",
     "apps/web/tests/guided-schedule-d-sources.spec.ts": "7bd96c86ec8792aa09749c9f37c9259fd3cf838c437f70ece2e905a972db0185",
     "apps/web/tests/guided-shared-health-other-allocations.spec.ts": "a722ee20dc914860076f615eb62fed788d44713daa1c9f729cdfe218b73e9f45",
@@ -1759,6 +1762,7 @@
     "tests/fixtures/guided-savings-bond-reissues.ts": "aa1e4f601967f45e18937c71d8d9158833b0a2fb5dcfd560745aef04dde0020e",
     "tests/fixtures/guided-savings-bond.ts": "ef40943f32a93ae3c44bb46f1064851002673491c2acf376b35d8289cb06e954",
     "tests/fixtures/guided-schedule-ai-investment-election.ts": "90d1945731e816dcd12f8addfd71e1997885604bf52290a8e557513c6b1ced1c",
+    "tests/fixtures/guided-schedule-ai-investment-household.ts": "78956d871ae14ebc003fc3f3ea7ffd1ce3b3d89727cd94119d69bc1bd93c6308",
     "tests/fixtures/guided-schedule-d-sources.ts": "b74011a0bd7db9c88ebcc5dfe40035ab132a75a8eff48a9767c84f177b2aa5dc",
     "tests/fixtures/guided-separate-return.ts": "c0649ccfc8f217a5e5dfd99b0741882358850a05c07349ee50b4b287f645de95",
     "tests/fixtures/guided-shared-health-other-allocation-records.ts": "d9b28b0429ed85e98579739fa017aafdb421788e7baed3ebc5ca6aff96a7771a",
@@ -4244,6 +4248,18 @@
       },
       "requestSourceLines": [],
       "reviewBasis": "Root reviewed both viewport journeys: local actual Ohio school balance originals, source confirmation, reopen and stale-source denial; no export, provider, business or self-employment action; all four bounds stay zero.",
+      "skippedTitles": []
+    },
+    "guided-schedule-ai-investment-household.spec.ts": {
+      "caseCount": 2,
+      "bounds": {
+        "filled-return": 0,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      },
+      "requestSourceLines": [],
+      "reviewBasis": "Root and independent source/artifact review of actual desktop/mobile typed household originals, explicit spouse zeros, grouped dividend amounts, reload and stale-source denial. No export/provider action; current and legacy protected endpoints checked at zero with private source markers excluded from request wires.",
       "skippedTitles": []
     }
   }

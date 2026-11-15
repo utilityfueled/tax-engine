@@ -1,0 +1,39 @@
+form: "Guided MFJ investment-interest household originals"
+fullName: "Actual 2025 primary separate-property election source entry"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/f4952--2025.pdf"
+notes: |
+  Entry parity with form-2210-investment-household, not a new calculation or
+  filing-status determination. Final2025 Form4952/i2210 and sections6013/6654.
+  Both spouses actual full-year MA domicile/marriage/residency/ownership originals
+  and indexed primary DIV sources are entered, never inferred from mailing
+  address, primary income or missing spouse amounts. No2026/filing/state gate.
+lines:
+  - line: "actual-household-entry"
+    description: "Forward complete actual jointly filed separate-property originals"
+    formula: "Require both names/fullIDs, marriage/year/source references, actual all-year MA domicile dates and sources, both alive/resident and joint-return originals, four explicit spouse zero amounts, complete-no-other-spouse-sources, actual never-community and primary ownership history, and complete indexed DIV originals. Existing canonical engine proves identity/payer/TIN/account/year/owner/amount equality and annual/period reconciliation. No defaults."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::forwards actual joint household originals and exact canonical taxes without mutation"
+  - line: "unknown-conflict"
+    description: "Reject incomplete and contradictory saved original proofs"
+    formula: "Blank/missing/false confirmations, missing or positive spouse amounts, malformed identity/year/index, unsupported domicile/status/year and stale source snapshots cannot certify the finite route. Keep packet-free legacy single unchanged."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::rejects unknown and contradictory household originals without inventing spouse facts"
+  - line: "edit-replay-privacy"
+    description: "Retain private originals and invalidate confirmations on edits"
+    formula: "Household edit clears household and outer election confirmation. Underlying personal/investment/deduction edits also clear household confirmation, retaining originals. Local JSON replay retains unknowns. Actual provider/shared audit and hosted shell exclude private household originals."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::revokes stale household confirmation and preserves private JSON replay"
+  - line: "visible-entry"
+    description: "Visible controlled source fields never manufacture values"
+    formula: "Add creates empty fields only. Actual year/index/money/identity/domicile/marriage/spouse facts are typed or explicitly answered. Every edit revokes confirmation; confirmation never fills missing facts."
+    testRef: "tests/apps/web/estimated-investment-household-details.test.tsx::requires visible household originals and revokes confirmation after edits"
+  - line: "identity-source-bindings"
+    description: "Saved source mismatch cannot override actual spouse or dividend originals"
+    formula: "All newly required facts are independently supplied. Missing source record or wrong original year/index/domicile/identity fails. Actual canonical spouse and DIV owner/account/value mismatches reject; consistent real identity edits require both originals. No future-year admission."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::binds actual source identities and retains both spouse and dividend conflicts"
+  - line: "actual-browser"
+    description: "Actual typed desktop/mobile joint household originals"
+    formula: "Both spouse identities/domicile/marriage/residency/ownership/known-none and indexed DIV original fields entered visibly, never preseeded as a new household packet. Blank denies; actual zero admits; save/reopen preserves both; stale account clears confirmations and cannot regain estimate by checking flags. Protected provider/export actions0, retries0, default30s."
+    testRef: "apps/web/tests/guided-schedule-ai-investment-household.spec.ts::enters both spouse and dividend originals without inferred facts"
+  - line: "formatted-original-money"
+    description: "Accept exact displayed original money and retain unknowns"
+    formula: "Use existing strict guided Decimal money parser after requiring actual nonblank originals. Grouped UI money such as40,000 equals original40000 exactly. Whole-dollar/nonnegative scope retained; no malformed grouping, fractional, negative, missing or blank amounts become known zero. Saved source input stays unchanged. Actual native currency blur regression covers presentation-to-source parsing."
+    testRef: "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::accepts actual formatted money without turning missing originals into zero"

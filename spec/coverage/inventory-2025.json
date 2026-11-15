@@ -7766,6 +7766,29 @@
       ]
     },
     {
+      "key": "federal/guided-schedule-ai-investment-household",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f4952--2025.pdf",
+      "specPath": "spec/federal/guided-schedule-ai-investment-household.yaml",
+      "enginePath": "src/engine/forms/form-2210-investment-election.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-2210.ts",
+      "implementationTestRefs": [
+        "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::forwards actual joint household originals and exact canonical taxes without mutation",
+        "tests/apps/web/estimated-investment-household-details.test.tsx::requires visible household originals and revokes confirmation after edits"
+      ],
+      "implementationNote": "Finite2025 joint household typed original collector, exact grouped-currency parsing, explicit spouse zeros and actual domicile/ownership/indexed dividend identity. No final2026, filing or qualified-human approval.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-schedule-d-sources",
       "jurisdiction": "federal",
       "taxYear": 2026,

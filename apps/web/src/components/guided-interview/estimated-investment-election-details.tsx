@@ -2,6 +2,7 @@
 import { ESTIMATED_INVESTMENT_AMOUNTS, emptyEstimatedInvestmentElection, type EstimatedInvestmentElectionData, type EstimatedInvestmentWorksheetData, type EstimatedInvestmentAmtData } from '@/lib/guided-estimated-investment-election';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import {EstimatedInvestmentHouseholdDetails} from './estimated-investment-household-details';
 
 export function EstimatedInvestmentElectionDetails({ data, onChange }: { data?: EstimatedInvestmentElectionData; onChange: (data: EstimatedInvestmentElectionData | undefined) => void }) {
   if (!data) return <button type="button" onClick={() => onChange(emptyEstimatedInvestmentElection())}>Add actual period investment-interest election originals</button>;
@@ -9,7 +10,7 @@ export function EstimatedInvestmentElectionDetails({ data, onChange }: { data?: 
   const amt=data.annualAmtCapitalGains ?? {};
   const updateAmt=(patch:Partial<EstimatedInvestmentAmtData>)=>update({annualAmtCapitalGains:{...amt,...patch,...(Object.keys(patch).every(key=>key==='sourceFactsConfirmed')?{}:{sourceFactsConfirmed:null})}});
   return <fieldset style={{ minWidth: 0 }}><legend>Actual Schedule AI investment-interest election originals</legend>
-    <p className="guided-hint">For the supported 2025 single primary taxpayer ordinary method, enter four actual cumulative Form 4952 originals. Enter the actual election and its capital-gain allocation; the app does not choose or optimize an election. Include known zeros. The allowed interest deduction is calculated separately for each period and reconciled to its itemized total. The full-year original must match the separate annual Form 4952 entered in deductions. Other methods remain for review.</p>
+    <p className="guided-hint">For the supported 2025 single-primary or separately source-qualified joint household ordinary method, enter four actual cumulative Form 4952 originals. Enter the actual election and its capital-gain allocation; the app does not choose or optimize an election. Include known zeros. The allowed interest deduction is calculated separately for each period and reconciled to its itemized total. The full-year original must match the separate annual Form 4952 entered in deductions. Other methods remain for review.</p>
     <div className="guided-form-grid">
       {([['sourceTaxYear','Election originals tax year'],['sourceReference','Election originals source reference'],['taxpayerFirstName','Election original taxpayer first name'],['taxpayerLastName','Election original taxpayer last name'],['taxpayerSsnLast4','Election original taxpayer ID last four digits'],['annualForm4952SourceReference','Annual Form 4952 original source reference']] as const).map(([key,label])=><TextFact key={key} label={label} value={data[key] ?? ''} onChange={value=>update({[key]:value})}/>)}
       <label className="guided-field"><span className="guided-field-label">Election original owner</span><select className="guided-input" value={data.accountHolder ?? ''} onChange={event=>update({accountHolder:event.target.value as EstimatedInvestmentElectionData['accountHolder']})}><option value="">Choose actual owner</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse — separate method required</option></select></label>
@@ -36,6 +37,7 @@ export function EstimatedInvestmentElectionDetails({ data, onChange }: { data?: 
         <BooleanFact label={`${prefix}: Original checked after the last edit`} value={worksheet.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>setWorksheet({sourceFactsConfirmed})}/>
       </div></fieldset>;
     })}
+    <EstimatedInvestmentHouseholdDetails data={data.household} onChange={household=>update({household})}/>
     <BooleanFact label="All investment-election originals checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>update({sourceFactsConfirmed})}/>
     <button type="button" onClick={()=>onChange(undefined)}>Remove period investment-election originals</button>
   </fieldset>;

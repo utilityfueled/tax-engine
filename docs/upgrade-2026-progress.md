@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 actual joint household interview
+
+The reviewed finite joint-original collector passes both actual desktop/mobile
+journeys and preserves explicit zero, reload, changed-source and privacy guards.
+Main seventeen affected tests and 59 orchestration checks pass; 643 browser cases
+retain all original policies and five skips.
+[Evidence and preserved currency failure](upgrade-2026-guided-mfj-household-20261115.md).
+
 ## November 15 joint investment household originals
 
 Finite historical 2025 MFJ originals now reconcile both actual spouses, explicit

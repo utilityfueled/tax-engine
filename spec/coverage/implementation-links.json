@@ -1754,6 +1754,16 @@
         "tests/engine/forms/form-2210-investment-household.test.ts::preserves private originals and physical source revalidation"
       ],
       "note": "Finite historical2025 MFJ actual primary-owned current-paid DIV originals, spouse known-zero investments and both actual all-year MA domicile/ownership history. Shared helper preserves four-period conservation and private proof; source-recomputed physical review is not filing, final2026 or qualified-human approval."
+    },
+    {
+      "key": "federal/guided-schedule-ai-investment-household",
+      "enginePath": "src/engine/forms/form-2210-investment-election.ts",
+      "testRefs": [
+        "tests/guided-interview/guided-schedule-ai-investment-household.test.ts::forwards actual joint household originals and exact canonical taxes without mutation",
+        "tests/apps/web/estimated-investment-household-details.test.tsx::requires visible household originals and revokes confirmation after edits"
+      ],
+      "note": "Finite2025 joint household typed original collector, exact grouped-currency parsing, explicit spouse zeros and actual domicile/ownership/indexed dividend identity. No final2026, filing or qualified-human approval.",
+      "packetPath": "src/pdf/mappings/2025/fill-form-2210.ts"
     }
   ]
 }

@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import { AMTCapitalGainsSchema, Form4952InputSchema, type TaxYearInput } from '@/models/inputs';
 import { calculateForm4952 } from '@/engine/forms/form-4952';
 import { parseGuidedCurrency } from './guided-currency';
+import {buildEstimatedInvestmentHousehold,type EstimatedInvestmentHouseholdData} from './guided-estimated-investment-household';
 import type { AnnualizedPeriodData } from './guided-estimated-tax-facts';
 
 export const ESTIMATED_INVESTMENT_AMOUNTS = [
@@ -16,6 +17,7 @@ type AmountKey = typeof ESTIMATED_INVESTMENT_AMOUNTS[number][0];
 export interface EstimatedInvestmentWorksheetData extends Partial<Record<AmountKey | 'sourceTaxYear' | 'sourceReference', string>> { sourceFactsConfirmed?: boolean | null }
 export interface EstimatedInvestmentAmtData extends Partial<Record<'sourceTaxYear' | 'sourceReference' | 'qualifiedDividends' | 'netCapitalGain' | 'section1250Gain' | 'collectiblesGain', string>> { sourceFactsConfirmed?: boolean | null }
 export interface EstimatedInvestmentElectionData {
+  household?: EstimatedInvestmentHouseholdData;
   annualAmtCapitalGains?: EstimatedInvestmentAmtData;
   sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null;
   allPeriodsCompleteConfirmed?: boolean | null; electionValidConfirmed?: boolean | null; otherInvestmentIncomePresent?: boolean | null;
@@ -65,7 +67,7 @@ export function buildEstimatedInvestmentElection(data: EstimatedInvestmentElecti
   return { sourceTaxYear: year, sourceReference: nonblank(data.sourceReference), sourceFactsConfirmed: true,
     allPeriodsCompleteConfirmed: true, electionValidConfirmed: true, otherInvestmentIncomePresent: false, accountHolder: 'primary',
     taxpayerFirstName: nonblank(data.taxpayerFirstName), taxpayerLastName: nonblank(data.taxpayerLastName), taxpayerSsnLast4: data.taxpayerSsnLast4,
-    annualForm4952SourceReference: annualRef, periods: built };
+    annualForm4952SourceReference: annualRef, periods: built, ...(data.household !== undefined ? {household:buildEstimatedInvestmentHousehold(data.household)} : {}) };
 }
 
 /** Independent annual AMT original; never inferred from regular or period amounts. */

@@ -1,4 +1,26 @@
 {
+  "nov15GuidedMfjHousehold": {
+    "canonicalCommit": "d79ce1df",
+    "sourceFreeze": "beee6725cd6dfb22a33e9c0d20e86809421c462a78a49ba2e46c29ca091003ed",
+    "actualLocalBrowser": "2PASS1280/390;30s0retry;normalcleanup;0protected/external",
+    "sourcePeer": "72841a19045dbe5b46f89870b74bd28d900d065db00d7efabd5b21747909de7e",
+    "actualArtifactPeer": "f039b81e233efb98da8822d6662789b593de538c2172af7f3c983adcf19795e3",
+    "rootReview": "f64ab2c3328c4d13ef2ac7a9a0997a962c374bd79913fc6f34f199aafce44687",
+    "mainFocused": 17,
+    "mainMetadata": 59,
+    "specLines": 7,
+    "inventory": 1030,
+    "browserCases": 643,
+    "prior641PoliciesUnchanged": true,
+    "newProtectedBounds": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "evidence": "docs/upgrade-2026-guided-mfj-household-20261115.md",
+    "remaining": "Fullcurrentcombinedandhosted/native;human/final2026gatesremain"
+  },
   "nov15MfjInvestmentHousehold": {
     "base": "e2d6280cc812239a2a2bbc26654b5d55006d19a5",
     "scope": "Finite2025MFJprimary-ownedDIV/full-yearMA/actualspouseknownzero;no2026orfilingqualification",
