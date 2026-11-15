@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 15 confirmed OID/payment-settlement source years
+
+Known conflicting OID/K calendar originals now reject before confirmed effects,
+including zero/withholding-only records. Main 97 tests and 24 spec references
+pass; separate review checks 53 tests/34 authenticated POST cases and preserves
+actual income/withholding semantics.
+[Evidence and remaining calendar audit](upgrade-2026-confirmed-oid-k-years-20261115.md).
+
 ## November 15 exact 19a runtime results and remaining failures
 
 All twelve exact-source local checks, protected Preview and ARM64 recovery/browser

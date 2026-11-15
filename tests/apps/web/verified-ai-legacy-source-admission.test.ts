@@ -220,3 +220,55 @@ it('preserves matched and missing MISC and withholding-only NEC years without op
  expect(()=>calculateVerifiedAiAudit(scope,incomplete)).toThrow('Year-specific federal calculation is unavailable');
  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(incomplete);expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
 });
+
+
+type OidKYearKind='oid-income'|'oid-withholding'|'k-income'|'k-withholding';
+function oidKYearFixture(kind:OidKYearKind,taxYear?:number){
+ const input=structuredClone(simpleW2Fixture);
+ if(kind==='oid-income'||kind==='oid-withholding')input.form1099OID=[{taxYear,payer:'Fictional calendar OID payer',originalIssueDiscount:kind==='oid-income'?'1000':'0',federalWithheld:kind==='oid-withholding'?'1000':'0'}];
+ else input.form1099K=[{taxYear,pse:'Fictional calendar settlement payer',grossAmount:kind==='k-income'?'1000':'0',federalWithheld:kind==='k-withholding'?'1000':'0',incomeType:'other'}];
+ return input;
+}
+it.each([
+ ['oid-income-past','oid-income',2024],['oid-income-future','oid-income',2026],
+ ['oid-withholding-past','oid-withholding',2024],['oid-withholding-future','oid-withholding',2026],
+ ['k-income-past','k-income',2024],['k-income-future','k-income',2026],
+ ['k-withholding-past','k-withholding',2024],['k-withholding-future','k-withholding',2026],
+] as const)('denies a known mismatched OID or K calendar original %s before confirmed accounting',async(_label,kind,taxYear)=>{
+ const input=oidKYearFixture(kind,taxYear),before=structuredClone(input),preview=calculateFederalTax(TaxYearInputSchema.parse(input)),baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
+ expect(preview.agi.minus(baseline.agi).toFixed()).toBe(kind==='oid-income'?'1000':'0');
+ expect(preview.totalWithholding.minus(baseline.totalWithholding).toFixed()).toBe(kind.endsWith('withholding')?'1000':'0');
+ const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);
+ expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');
+ const text=await response.text();expect(JSON.parse(text)).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});
+ for(const privateValue of [input.taxpayer.primary.ssn,'Fictional calendar OID payer','Fictional calendar settlement payer'])expect(text).not.toContain(privateValue);
+ expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();expect(input).toEqual(before);
+ expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('matching-year direct income originals');
+});
+it('preserves matching and missing OID and K originals with income and withholding conservation',async()=>{
+ const baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
+ for(const kind of ['oid-income','oid-withholding','k-income','k-withholding'] as const)for(const taxYear of [undefined,2025]){
+  const input=oidKYearFixture(kind,taxYear),before=structuredClone(input),preview=calculateFederalTax(TaxYearInputSchema.parse(input));
+  expect(preview.agi.minus(baseline.agi).toFixed()).toBe(kind==='oid-income'?'1000':'0');
+  expect(preview.totalWithholding.minus(baseline.totalWithholding).toFixed()).toBe(kind.endsWith('withholding')?'1000':'0');
+  expect(calculateVerifiedAiAudit(scope,input).entries.find(entry=>entry.line==='11')?.value).toBe(preview.agi.toFixed());
+  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(accounting).toHaveBeenCalledTimes(1);expect(input).toEqual(before);
+  if(taxYear===undefined)expect((kind.startsWith('oid')?input.form1099OID[0]:input.form1099K[0]).taxYear).toBeUndefined();
+ }
+ const incomplete=oidKYearFixture('oid-income',2026);incomplete.taxpayer.taxYear=2026;incomplete.w2s=incomplete.w2s.map(row=>({...row,taxYear:2026}));
+ expect(()=>calculateVerifiedAiAudit(scope,incomplete)).toThrow('Year-specific federal calculation is unavailable');
+ const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(incomplete);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+});
+it('denies zero-impact OID and K year contradictions and conflicting duplicate years in either order',async()=>{
+ for(const kind of ['oid-income','k-income'] as const){
+  const zero=oidKYearFixture(kind,2024);
+  if(kind==='oid-income')zero.form1099OID=zero.form1099OID.map(row=>({...row,originalIssueDiscount:'0'}));else zero.form1099K=zero.form1099K.map(row=>({...row,grossAmount:'0'}));
+  expect(calculateFederalTax(TaxYearInputSchema.parse(zero)).agi.toFixed()).toBe('85000');
+  const denied=await confirmedMiscNecYearRequest(zero);expect(denied.response.status).toBe(400);expect(denied.accounting).not.toHaveBeenCalled();expect(denied.fetchFn).not.toHaveBeenCalled();
+  for(const reversed of [false,true]){
+   const input=oidKYearFixture(kind,2025),foreign=oidKYearFixture(kind,2024);
+   if(kind==='oid-income')input.form1099OID=reversed?[...foreign.form1099OID,...input.form1099OID]:[...input.form1099OID,...foreign.form1099OID];else input.form1099K=reversed?[...foreign.form1099K,...input.form1099K]:[...input.form1099K,...foreign.form1099K];
+   const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
+  }
+ }
+});

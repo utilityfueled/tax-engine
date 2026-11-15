@@ -1,4 +1,21 @@
 {
+  "nov15ConfirmedOidKYears": {
+    "base": "10820a1f",
+    "freeze": "e31bd5f7552d6f7274677daaa44e1a80ffbe585257e4fb24ebcf05ed97961a55",
+    "mainTests": 97,
+    "mainFiles": 3,
+    "peerTests": 53,
+    "peerActualPosts": 34,
+    "peer": "176f82a096c1fca204a3d4d599bb72ddf3ed4a0ea5dadf1cb7715f566fded1b6",
+    "mainReceipt": "b70b23ec796c06ec41bd0d43a23b14edaf3e3c85b449ddf445e093c5e2cf32b4",
+    "specReferences": 24,
+    "webTypes": 0,
+    "lintErrors": 0,
+    "inventoryUnchanged": 1030,
+    "sourceMeaning": "Calendaroriginalyearnotrevisionyear;Kgrossinformational;noformulachange",
+    "remaining": "SSA/studentloan/Marketplacecalendar audit;K1fiscal/W2Gsource-semantics;currentcombined+runtimes;externalhuman/final2026",
+    "evidence": "docs/upgrade-2026-confirmed-oid-k-years-20261115.md"
+  },
   "nov15Combined19aActual": {
     "source": "19a6134b7c72cbd2b6cbacf7579d8a171596c2ee",
     "all12LocalChecks": "PASS;28624unit+coverage/2088files;88.09branches;636browserPASS5originalSKIP0retry",

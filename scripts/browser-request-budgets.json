@@ -457,7 +457,7 @@
     "apps/web/src/lib/transient-tax-explanation-route.ts": "c4f790b5c2a51c7b1aba671e957b4e8ee084d5939c407d0ed46c0ba46daf5c67",
     "apps/web/src/lib/transient-tax-identifiers.ts": "d4a38457b0c7fecb93a3d49d29a4a474c440b231c7f036e625dfa73d0a4535db",
     "apps/web/src/lib/uploaded-document-detection.ts": "2f67b296095770ac6cc5dbe3d01212fe39e0241a65179f8acdd394a4e2be10bf",
-    "apps/web/src/lib/verified-ai-source-admission.ts": "8a1570b57ae0f4c72a0517eed11d06e03a8efe5866f2b0dd91e92986ca646b74",
+    "apps/web/src/lib/verified-ai-source-admission.ts": "179e5b7e776355ed473fea5d1bab3adae13044dd8d4abb9ce7d43a31f7ced504",
     "apps/web/src/lib/workspace-ai-preferences.ts": "2ef711ca5c09289c82a3a54068870cdee40c14fd6f84113fd35e32243376e08d",
     "apps/web/src/lib/workspace-assistant.ts": "f2eaf60fc3bf8d2ab5dff56a4e30187184c8a94cefa74f064e9f01bc5a787381",
     "apps/web/src/lib/workspace-document-file-cache.ts": "c754cfdc8706841881f196679e050ae58fd719c50d7dd4736188b5c57f72dbd7",
