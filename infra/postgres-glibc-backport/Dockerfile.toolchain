@@ -1,0 +1,21 @@
+# Root must admit the native daemon, exact architecture/base and bounded custody first.
+ARG BASE
+FROM ${BASE}
+USER root
+ARG EXPECTED_ARCH
+ENV DEBIAN_FRONTEND=noninteractive
+RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCH" && \
+    . /etc/os-release && test "$VERSION_CODENAME" = bookworm && \
+    test "$(dpkg-query -W -f='${Version}' libc6)" = '2.36-9+deb12u14'
+RUN test -f /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && \
+    apt-get build-dep -y --no-install-recommends 'glibc=2.36-9+deb12u14' && \
+    apt-get install -y --no-install-recommends devscripts quilt abigail-tools binutils gpgv xz-utils python3 ca-certificates && \
+    test "$(dpkg-query -W -f='${Version}' libc6)" = '2.36-9+deb12u14' && \
+    mkdir /qualification-toolchain && \
+    dpkg-query -W -f='${binary:Package}\t${Version}\t${Architecture}\n' > /qualification-toolchain/packages.tsv && \
+    cp -a /var/lib/apt/lists /qualification-toolchain/apt-lists && \
+    cc --version > /qualification-toolchain/compiler.txt && \
+    ld --version > /qualification-toolchain/linker.txt && \
+    dpkg-buildflags > /qualification-toolchain/buildflags.txt

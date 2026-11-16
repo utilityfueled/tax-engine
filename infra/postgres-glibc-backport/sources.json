@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "2.36-9+deb12u14",
+  "privateCandidateVersion": "2.36-9+deb12u14+vivalatax1",
+  "upstreamCommit": "839898777226a3ed88c0859f25ffe712519b4ead",
+  "trustedArchiveFingerprints": [
+    "B8B80B5B623EAB6AD8775C45B7C5D7D6350947F8",
+    "04B54C3CDCA79751B16BC6B5225629DF75B188BD",
+    "4D64FEC119C2029067D6E791F8D2585B8783D481"
+  ],
+  "sources": [
+    {
+      "name": "InRelease",
+      "sha256": "77737fa4b34f2693e982cc9ee35736816c35a7778fc2d326cc1bbf5b301fe1aa",
+      "bytes": 151075,
+      "url": "https://deb.debian.org/debian/dists/bookworm/InRelease"
+    },
+    {
+      "name": "Sources.xz",
+      "sha256": "92d11a035571df011f06f28c61cb9825130ef1d92abb2f2e0525e8674dc44af8",
+      "bytes": 9491888,
+      "url": "https://deb.debian.org/debian/dists/bookworm/main/source/Sources.xz"
+    },
+    {
+      "name": "glibc_2.36-9+deb12u14.dsc",
+      "sha256": "cfe1f0b8dc1fa211ce5a45b3725cc38b29f88667f1140ebdca6de35cf9c6f1fd",
+      "bytes": 9765,
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36-9+deb12u14.dsc"
+    },
+    {
+      "name": "glibc_2.36.orig.tar.xz",
+      "sha256": "a543c02070d46ccaf866957efd13f10c924daa74c86a90a0254db09a92a708ee",
+      "bytes": 19363988,
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36.orig.tar.xz"
+    },
+    {
+      "name": "glibc_2.36-9+deb12u14.debian.tar.xz",
+      "sha256": "cf4ac9cd98185452cae3ef34e2e4ee12753e3d93fd0c62c61396d4a47eec902f",
+      "bytes": 918488,
+      "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36-9+deb12u14.debian.tar.xz"
+    }
+  ],
+  "recipeFiles": {
+    "CVE-2026-5450.patch": {
+      "bytes": 4151,
+      "sha256": "8f9a7e3fd3fb91655c4095a197777cef5adf52b8d1720c997ecab9f84cd6b752"
+    },
+    "upstream-839898777226a3ed88c0859f25ffe712519b4ead.patch": {
+      "bytes": 4728,
+      "sha256": "03c8e19d948c110a4ed2adb19000d47217d213be3b2b2775779907602c6b349b"
+    },
+    "debian-archive-keys.gpg": {
+      "bytes": 17678,
+      "sha256": "cf08bdd637cd5f851b85a9636e6f7b5ed0de7df4c45931927596acfe4f768600"
+    },
+    "Dockerfile.toolchain": {
+      "bytes": 1238,
+      "sha256": "aea568159c79db6f6d8fb8abe95d210bc1ca574b67bf1cda5139e6c6c4e8a459"
+    },
+    "Dockerfile.packages": {
+      "bytes": 300,
+      "sha256": "3ffac757d0dfc7ce092a135e4fc58a376fc96dcd764aec11190df8516162e97e"
+    },
+    "build-packages.sh": {
+      "bytes": 7659,
+      "sha256": "7247e9537caff40132070e8a52da2f58a9867acef1ce94e8d47cd15b3a3a35da"
+    },
+    "Dockerfile": {
+      "bytes": 589,
+      "sha256": "e83e4a2dbe9391dca9c4fd462d6c3c188ebfe007b13111cf19637b481d098065"
+    },
+    "install-runtime.sh": {
+      "bytes": 2526,
+      "sha256": "a83b5f74e6124b5e6e5a435ee1a883f4051689b43a3a8d1de1653133f6d9d842"
+    }
+  },
+  "candidateReleaseQualified": false,
+  "genericAbiApproval": false,
+  "riskAccepted": false,
+  "authoredBinaryReproductionExecuted": false,
+  "postgres": {
+    "repository": "docker.io/library/postgres:16.16-bookworm",
+    "index": "sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca",
+    "platforms": {
+      "arm64": {
+        "digest": "sha256:586813eb2f2d5491a992541f7f0b91bf837e7ae43ec1c42af5a9639483e068c7",
+        "multiarch": "aarch64-linux-gnu"
+      },
+      "amd64": {
+        "digest": "sha256:f45d631d050c2fe068f384ed6c4faac506e9cd7f4da605ce703648e4b0985848",
+        "multiarch": "x86_64-linux-gnu"
+      }
+    }
+  }
+}

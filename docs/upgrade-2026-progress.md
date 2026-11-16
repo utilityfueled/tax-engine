@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 16: standalone glibc source candidate
+
+The [glibc source package](upgrade-2026-glibc-source-candidate-20261116.md) preserves the official fix and complete regression, authenticates signed Bookworm sources and passes focused checks plus independent source review. Binary builds, regressions, ABI/consumers and raw scans remain pending; no image integration, suppression or readiness approval occurred.
+
 ## November 16 archive identity failures retain fixed predicates
 
 The verifier keeps its exact image-ID, signature and archive-hash rejection

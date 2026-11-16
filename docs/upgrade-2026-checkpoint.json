@@ -1,4 +1,16 @@
 {
+  "nov16GlibcSourceCandidate": {
+    "status": "implemented-source-checks-and-independent-review-passed",
+    "baselineVersion": "2.36-9+deb12u14",
+    "upstreamCommit": "839898777226a3ed88c0859f25ffe712519b4ead",
+    "focusedTests": 4,
+    "rootSignedSourceContextPassed": true,
+    "independentSourceReviewSha256": "5a13eb07b476a7b9ec22d731dba910d5811181a79ab22656e47f16428c62d4f0",
+    "binaryBuildExecuted": false,
+    "candidateReleaseQualified": false,
+    "genericAbiApproval": false,
+    "riskAccepted": false
+  },
   "nov16ArchivePredicateDiagnostics": {
     "status": "implemented-focused-checks-and-independent-review-passed",
     "sourceApplication": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",

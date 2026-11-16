@@ -1,0 +1,24 @@
+form: "PostgreSQL-Glibc-Backport"
+taxYear: 2025
+status: "source-only-private-infrastructure-contract"
+reference: "https://security-tracker.debian.org/tracker/CVE-2026-5450; https://sourceware.org/git/?p=glibc.git;a=commit;h=839898777226a3ed88c0859f25ffe712519b4ead"
+notes: |
+  No tax calculation. Bookworm glibc2.36 only; no Trixie libc replacement,
+  ordinary image/workflow integration, scanner suppression, risk acceptance or release claim.
+lines:
+  - line: "signed-bookworm-source"
+    description: "Authenticate the exact Debian source through the signed archive index"
+    formula: "Require exact reviewed Bookworm2.36-9+deb12u14 source/index/keyring bytes, successful gpgv with only the three reviewed Debian archive/release fingerprints, SHA256 Sources.xz binding, and exactly one matching source stanza with exact descriptor and two archive hashes/lengths. Reject bad signatures, duplicate stanzas, altered source or version substitutions."
+    testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::authenticates exact Bookworm source and rejects broken signature or index chains"
+  - line: "upstream-regression"
+    description: "Preserve the upstream three-branch fix and complete allocator-checking regression"
+    formula: "Backport only upstream839898777226a3ed88c0859f25ffe712519b4ead to Debian2.36; adapt Makefile context only, preserve the regression body byte-for-byte, MALLOC_CHECK_=3 and libc_malloc_debug preloading. Keep all three corrected growth branches. Paired baseline must actually fail that exact regression and candidate must pass. Source applicability is not binary reproduction."
+    testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::preserves the full upstream regression and all three allocation fixes"
+  - line: "qualification-hold"
+    description: "Retain full suites, ABI and consumers as separate required actual evidence"
+    formula: "Require both full package builds and explicit full-suite summaries with no unexpected FAIL/XPASS/UNRESOLVED/ERROR, candidate regression PASS under allocator checking, same-architecture ABI equality and all six consumers. Absent, skipped, changed or nonzero checks hold. Source preparation never grants ABI approval, vulnerability remediation approval, human acceptance or release qualification."
+    testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::rejects incomplete regression suite ABI and consumer evidence"
+  - line: "offline-preparation"
+    description: "Create an exclusive verified build context without invoking a container runtime"
+    formula: "Only explicit arm64 or amd64 and an absent private output directory; verify regular single-link nofollow exact pinned source and recipe files, copy exclusively and verify copied bytes, then authenticate the staged signed-index chain with bounded local gpgv/xz. No download, container, VM, package installation or image change in preparation."
+    testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::prepares only an exclusive offline source context"

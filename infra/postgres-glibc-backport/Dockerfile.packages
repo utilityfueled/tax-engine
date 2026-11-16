@@ -1,0 +1,9 @@
+ARG TOOLCHAIN
+FROM ${TOOLCHAIN}
+USER root
+ARG EXPECTED_ARCH
+ENV EXPECTED_ARCH=${EXPECTED_ARCH}
+COPY inputs /qualification-inputs
+COPY build-packages.sh /qualification-build.sh
+# Invoke this build only with the controller's explicit --network=none and deadlines.
+RUN /bin/bash /qualification-build.sh

@@ -11042,6 +11042,26 @@
       ]
     },
     {
+      "key": "federal/postgres-glibc-backport",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://security-tracker.debian.org/tracker/CVE-2026-5450; https://sourceware.org/git/?p=glibc.git;a=commit;h=839898777226a3ed88c0859f25ffe712519b4ead",
+      "specPath": "spec/federal/postgres-glibc-backport.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/premium-tax-credit-return",
       "jurisdiction": "federal",
       "taxYear": 2026,
