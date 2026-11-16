@@ -1,4 +1,23 @@
 {
+  "nov16FreshArm64Runtime": {
+    "status": "failed-before-workloads-normal-cleanup",
+    "applicationSource": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
+    "actualSession": 53001,
+    "actualTerminalExit": 1,
+    "actualTerminalChunk": "953751",
+    "successfulPrefixStages": 13,
+    "normalStopStages": 1,
+    "completedWorkloadOutcomes": 0,
+    "normalStopResourcesRoutesRestored": true,
+    "deadlineExceeded": false,
+    "cleanupErrors": [],
+    "freshUnbootedWitnessConsumed": true,
+    "rootAckSha256": "7129c831742e00b0beeb6e48716ef2f42723a94ce12104eefa41772ae0dcf519",
+    "independentReviewSha256": "d2f8fdb46a2ea0ff82e8a87181e1a03d6339f7f5f8f26c10644f2e543ca5ec97",
+    "relayCorrectionSourceReviewed": true,
+    "runtimeQualified": false,
+    "ledger": "docs/upgrade-2026-native-fresh-runtime-20261116.md"
+  },
   "nov16NativeServiceCustodyDiagnostic": {
     "status": "failed-read-only-diagnostic-normal-cleanup",
     "applicationSource": "c01803082b74db96a90ccb2e8433cd3b40877c1c",

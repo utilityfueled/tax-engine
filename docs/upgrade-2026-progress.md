@@ -6693,3 +6693,17 @@ independent saved-artifact reviews agree on32steps/66files, normal restoration,
 zero removals and the remaining unknowns. The earlier missing-prerequisite
 preboot failure remains preserved. Current ARM64 staging and qualification
 remain open. [Evidence](upgrade-2026-native-service-custody-20261116.md).
+
+
+### November 16: fresh native build/import and relay failure
+
+The fresh isolated VM initializes successfully after two retained failures.
+The actual runtime attempt then builds, transfers and independently imports
+the c018 image, but the relay's historical socket assertion stops it before
+qualification workloads. Thirteen prefix stages and normal stop pass; zero
+workload outcomes complete. Root and independent reviews verify normal cleanup
+and record the missed reachable source binding. The narrow relay/interpreter
+correction passes source review and contracts; a genuine fresh attempt is still
+required. All commits through `80547c1b` are pushed to main and backup, with its
+production build observed canceled.
+[Actual evidence and next execution](upgrade-2026-native-fresh-runtime-20261116.md).
