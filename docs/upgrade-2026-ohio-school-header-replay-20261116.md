@@ -24,6 +24,15 @@ in six files, engine and web types, scoped lint, spec validation and regenerated
 inventory checks. Initial inventory staleness and three malformed spec test
 references are retained; the references were corrected and those checks passed.
 
+The first full unit run at `66fb52dc` then caught the catalog's stricter quoted
+line/literal-test-name contract: 28,903 tests passed and one catalog assertion
+failed. Its database closed normally. The correction quotes the same YAML line
+identifiers, links exact literal names and declares the same two fixture cases
+with `test.each`. Every fixture and assertion remains. The complete catalog plus
+the affected render tests now pass 968 tests; spec validation, inventory and lint
+also pass. The original full failure remains retained. Fresh full checks are
+required for the corrected revision.
+
 Independent candidate verification passed 178 tests in ten files, including eight
 separately authored accessor/effect controls. Thirty complete output/error
 records remain equal. The final predeclared ABBA comparison, using 80 measurements

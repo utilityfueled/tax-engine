@@ -1,4 +1,4 @@
-form: Ohio current school-to-header source replay
+form: "Ohio current school-to-header source replay"
 taxYear: 2025
 source: spec/state/oh-return-header-sources.yaml
 notes: >-
@@ -8,15 +8,15 @@ notes: >-
   fresh federal calculation remains. Standalone and changed or expired contexts
   run the original full adapter; final header-added preview input is distinct.
 lines:
-  - line: same-invocation
+  - line: "same-invocation"
     description: Complete original replay and immutable proof scope
     formula: exact current canonical input and fresh federal material equality, then validated school method; otherwise original full replay
-    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::complete current school header replay"
-  - line: observed-work
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::complete current school header replay %s"
+  - line: "observed-work"
     description: Original complete guided render work-count assertion preserves all expected outputs
     formula: OH school header fresh federal seven and school two; unrelated PA four and zero unchanged
-    testRef: "tests/guided-interview/guided-render-evaluation.test.ts::shares only one actual current source evaluation"
-  - line: unsupported-material
+    testRef: "tests/guided-interview/guided-render-evaluation.test.ts::shares only one actual current source evaluation %s"
+  - line: "unsupported-material"
     description: A source proof cannot omit unsupported defined values or normalize distinct material into an existing proof
     formula: after the original full adapter, only finite primitives, explicit finite Decimal values with original data descriptors and dense finite integer digit arrays, exact plain objects with defined data properties and exact dense ordered arrays can capture or consume authority; unsupported types, symbol keys, accessors (never invoked by proof admission), extended Decimal metadata and nonfinite numbers fall back to original full validation without an earlier error; undefined object data properties remain omitted
     testRef: "tests/guided-interview/oh-school-header-material-boundary.test.ts::unsupported capture follows the actual adapter and leaves original fallback authority absent"

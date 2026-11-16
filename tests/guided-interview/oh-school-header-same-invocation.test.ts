@@ -28,7 +28,7 @@ function ohio(which:0|1=0){
 }
 
 
-for(const which of [0,1]as const)test(`complete current school header replay ${which}`,()=>{
+test.each([0,1]as const)('complete current school header replay %s',(which)=>{
  const state=ohio(which),before=structuredClone(state),f=vi.spyOn(federal,'calculateFederalTax'),sd=vi.spyOn(school,'buildOhioSchoolDistrictSource');
  try{const result=evaluateGuidedRender(state);expect(result.preview.metrics?.state).toMatchObject({stateTax:'811',stateRefund:'1189',schoolDistrict:{tax:'500',refund:which===0?'100':'0'}});expect(state).toEqual(before);expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:7,school:2});}finally{vi.restoreAllMocks();}
 });
