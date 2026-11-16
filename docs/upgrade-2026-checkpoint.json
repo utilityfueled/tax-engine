@@ -1,4 +1,15 @@
 {
+  "nov16ArchivePredicateDiagnostics": {
+    "status": "implemented-focused-checks-and-independent-review-passed",
+    "sourceApplication": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",
+    "ledger": "docs/upgrade-2026-archive-predicates-20261116.md",
+    "focusedTests": 35,
+    "redNewCases": 7,
+    "originalCasesPreserved": 14,
+    "exactImageIdSignatureHashGatesPreserved": true,
+    "configValuesRetained": false,
+    "remoteRuntimeQualified": false
+  },
   "nov16CiPostgresClientMajorBinding": {
     "affectedJobs": [
       "unit-test",

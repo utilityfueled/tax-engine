@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 16 archive identity failures retain fixed predicates
+
+The verifier keeps its exact image-ID, signature and archive-hash rejection
+checks and records only fixed boolean comparisons. Thirty-five focused checks
+pass after seven genuine new diagnostic failures; no config values are retained.
+The preceding strict run keeps six browser deadline failures and an unresolved
+loaded-image verification failure. [Evidence and limits](upgrade-2026-archive-predicates-20261116.md).
+
 
 ## November 16 CI recovery clients bind to the server major
 

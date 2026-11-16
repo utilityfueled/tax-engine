@@ -15,6 +15,7 @@ stage=preflight
 archive_sha=
 archive_bytes=0
 store_info_diagnostics=null
+loaded_image_diagnostics=null
 cleanup() {
   local result=$? removed=true verified=false current_identity=
   trap - EXIT HUP INT TERM
@@ -38,9 +39,11 @@ cleanup() {
     --arg archiveSha256 "$archive_sha" --argjson archiveBytes "$archive_bytes" \
     --argjson verified "$verified" --argjson removed "$removed" \
     --argjson diagnostics "$store_info_diagnostics" \
+    --argjson loadedDiagnostics "$loaded_image_diagnostics" \
     '{version: 1, $source, $imageId, platform: "linux/amd64", $stage,
       $archiveSha256, $archiveBytes, importStore: "fresh local Podman vfs",
-      archiveImportVerified: $verified, scratchRemoved: $removed, storeInfoDiagnostics: $diagnostics}' > "$receipt"
+      archiveImportVerified: $verified, scratchRemoved: $removed, storeInfoDiagnostics: $diagnostics,
+      loadedImageDiagnostics: $loadedDiagnostics}' > "$receipt"
   if [[ $result != 0 ]]; then
     printf 'Archive verification stopped at %s. See the sanitized receipt.\n' "$stage" >&2
   fi
@@ -148,9 +151,33 @@ stage=load
 "${podman[@]}" load --quiet --input "$archive" >/dev/null 2>&1
 stage=verify-loaded-image
 loaded_id=$("${podman[@]}" images --all --no-trunc --quiet 2>/dev/null)
+loaded_id_matches=false
+if [[ ${loaded_id#sha256:} == "${image_id#sha256:}" ]]; then loaded_id_matches=true; fi
+loaded_image_diagnostics=$(jq -n --argjson matches "$loaded_id_matches" \
+  '{imageListMatches: $matches, signatureMatches: null, signatureFields: null, archiveHashMatches: null}')
 [[ ${loaded_id#sha256:} == "${image_id#sha256:}" ]] || exit 1
 loaded=$("${podman[@]}" image inspect "${image_id#sha256:}" 2>/dev/null | jq -ecS "$signature")
+signature_matches=false
+if [[ $loaded == "$expected" ]]; then signature_matches=true; fi
+# Retain fixed equality predicates only. Config values can contain credentials.
+loaded_image_diagnostics=$(printf '%s\n%s\n' "$expected" "$loaded" | \
+  jq -s --argjson matches "$signature_matches" \
+  '.[0] as $expected | .[1] as $loaded |
+   {imageListMatches: true, signatureMatches: $matches, archiveHashMatches: null,
+    signatureFields: {
+      Id: ($expected.Id == $loaded.Id), Os: ($expected.Os == $loaded.Os),
+      Architecture: ($expected.Architecture == $loaded.Architecture),
+      RootFS: ($expected.RootFS == $loaded.RootFS),
+      User: ($expected.Config.User == $loaded.Config.User),
+      Cmd: ($expected.Config.Cmd == $loaded.Config.Cmd),
+      Entrypoint: ($expected.Config.Entrypoint == $loaded.Config.Entrypoint),
+      Env: ($expected.Config.Env == $loaded.Config.Env),
+      Labels: ($expected.Config.Labels == $loaded.Config.Labels)}}')
 [[ $loaded == "$expected" ]] || exit 1
 loaded_sha=$(sha256sum < "$archive")
+archive_matches=false
+if [[ ${loaded_sha%% *} == "$archive_sha" ]]; then archive_matches=true; fi
+loaded_image_diagnostics=$(jq --argjson matches "$archive_matches" '.archiveHashMatches = $matches' \
+  <<< "$loaded_image_diagnostics")
 [[ ${loaded_sha%% *} == "$archive_sha" ]] || exit 1
 stage=verified
