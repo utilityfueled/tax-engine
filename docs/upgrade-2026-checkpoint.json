@@ -1,4 +1,22 @@
 {
+  "nov16New212KnownNativeControls": {
+    "specFirstRed": true,
+    "permanentTests": 3,
+    "actualDomCases": 8,
+    "initialFields": 181,
+    "fillTabPairs": 130,
+    "selects": 51,
+    "managedBrowserCasesPassed": 2,
+    "managedElapsedSeconds": 19.3,
+    "original30SecondPolicyAndZeroRetries": true,
+    "browserIdentities": 655,
+    "originalSkips": 5,
+    "dependencyClosure": 2000,
+    "precedingSourceAll12Passed": "9b946adf7757b8d6bfb5a04ddc40c0862b8ff09c",
+    "newRevisionFullChecksPending": true,
+    "releaseQualified": false,
+    "details": "docs/upgrade-2026-new212-known-native-controls-20261116.md"
+  },
   "nov16SchoolKnownNativeControls": {
     "specFirstRed": 3,
     "focusedTests": 6,

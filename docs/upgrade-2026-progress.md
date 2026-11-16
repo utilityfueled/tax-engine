@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 16 NEW212 browser entry and complete preceding-source checks
+
+NEW212 uses fixture-defined kinds for initial entry while preserving all original
+values, native actions and assertions. The two managed desktop/mobile cases pass
+in 19.3 seconds with the existing 30-second policy and zero retries. The preceding
+pushed `9b946adf` revision passes all twelve local checks: 28,934 unit/coverage
+tests, 92.04% statement coverage and 650 browser passes/five original skips.
+Complete checks on the new commit follow. [Detailed evidence](upgrade-2026-new212-known-native-controls-20261116.md).
+
+
 ## November 16 school browser entry uses reviewed native kinds
 
 The test helper retains all original values/actions/assertions and uses explicit

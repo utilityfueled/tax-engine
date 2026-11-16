@@ -1,5 +1,7 @@
 // Spec: spec/state/oh-business-part-year-native-browser.yaml. Source-first NEW212 actual-parent journey.
 import { nativeControlTag } from './helpers/native-control-snapshot';
+import {enterKnownNativeControl} from './helpers/known-native-control';
+import {new212NativeKind} from './helpers/new212-native-kinds';
 import {expect,test,type Page,type Locator,type TestInfo} from '../scripts/browser-cpu-diagnostics/fixture';
 import {readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -14,7 +16,7 @@ const revisedFinder='PRIVATE-JULY212-REVIEWED-FINDER-SAME-JURISDICTION';
 function required<T>(v:T|null|undefined):T{if(v==null)throw Error('Actual separately authored NEW212 source required');return v;}
 function control(page:Page,label:string){return page.locator('label').filter({has:page.getByText(label,{exact:true})}).locator('input,select');}
 async function enter(page:Page,label:string,value:string){const field=control(page,label);const tagName=await nativeControlTag(field);if(tagName==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
-async function fields(page:Page,rows:readonly(readonly[string,string])[]){for(const[label,value]of rows)await enter(page,label,value);}
+async function fields(page:Page,rows:readonly(readonly[string,string])[]){for(const[label,value]of rows)await enterKnownNativeControl(page,label,value,new212NativeKind(label));}
 function normalizePrivacy(value:string){return value.replace(/[\u200b\u00ad]/g,'').trim().replace(/\s+/g,' ');}
 async function privateAbsent(scope:Locator,values:readonly string[]){let text='';await expect.poll(async()=>{const raw=await scope.textContent();if(raw===null)return['missing scope'];text=normalizePrivacy(raw);return values.filter(v=>text.includes(normalizePrivacy(v)));}).toEqual([]);for(const v of values)expect(text).not.toContain(normalizePrivacy(v));}
 async function saved(page:Page,id:string):Promise<GuidedFlowState>{return required(await page.evaluate(id=>{const raw=localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`);return raw?JSON.parse(raw)as GuidedFlowState:null;},id));}

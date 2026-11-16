@@ -1,0 +1,19 @@
+form: "NEW212-Known-Native-Control"
+taxYear: 2025
+status: "verification-contract"
+reference: "Existing NEW212 source fixture and actual Ohio business, residency, payment and header component definitions"
+notes: |
+  Test protocol only. Replace runtime tag discovery only in the existing initial
+  fields helper. Keep later enter edits dynamic. Every source value, field order,
+  native fill then Tab, select action, row-add, assertion, geometry, privacy,
+  original 30s strict deadline, worker/retry and PDF/source guards stay unchanged.
+  No app performance or remote readiness claim follows from this contract.
+lines:
+  - line: "source-defined-kind"
+    description: "Initial NEW212 labels use an explicit current component kind contract"
+    formula: "All 181 original initial field rows (130 fill/Tab pairs and 51 selects) must match exactly one current component label/control and supported option. Unknown labels reject; no DOM-inferred or cached element kind. Replay all original values/order against the baseline."
+    testRef: "tests/apps/web/new212-native-kind.test.tsx::matches current components and original NEW212 actions"
+  - line: "strict-actions"
+    description: "Known native kinds replace initial discovery only"
+    formula: "Use existing enterKnownNativeControl with independent label count and strict native fill/Tab or select. Missing, duplicate and wrong-type controls reject with no following action; global nativeControlTag and later edits remain unchanged."
+    testRef: "tests/apps/web/new212-native-kind.test.tsx::uses explicit kinds only for initial NEW212 fields"
