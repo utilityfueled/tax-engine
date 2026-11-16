@@ -12696,6 +12696,26 @@
       ]
     },
     {
+      "key": "federal/school-part-year-known-native-control",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "Existing actual component field definitions and synthetic two-case official-review fixtures; no tax calculation change",
+      "specPath": "spec/browser/school-part-year-known-native-control.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/scorp-debt-nondeductible-order",
       "jurisdiction": "federal",
       "taxYear": 2025,

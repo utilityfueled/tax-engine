@@ -1,0 +1,19 @@
+form: "School-Part-Year-Known-Native-Control"
+taxYear: 2025
+status: "verification-contract"
+reference: "Existing actual component field definitions and synthetic two-case official-review fixtures; no tax calculation change"
+notes: |
+  Test protocol only. Limit known-kind entry to initial enterSchool in the existing
+  two part-year school fixtures. All source values, 137 scalar actions, 11 row adds,
+  98 fill/Tab pairs, 39 select actions, independent exact label counts, confirmation,
+  privacy, save/reopen, geometry, PDF and filing denial checks remain intact.
+  No application performance claim follows from static DOM protocol measurements.
+lines:
+  - line: "source-defined-native-kind"
+    description: "Expected native kind comes from the reviewed fixture contract"
+    formula: "Every one of 137 unique labels has an explicit input/select kind. Both actual component renders must match all expected kinds and original source values. Unknown labels/kinds reject before actions. No live DOM inference or cached element is used."
+    testRef: "tests/apps/web/school-part-year-native-kind.test.tsx::matches actual component definitions and all original actions %s"
+  - line: "strict-native-actions"
+    description: "Native action strictness enforces exactly one current control"
+    formula: "Keep independent exact label count. Input uses fill(value) then Tab; select uses selectOption(value), always on a freshly resolved input,select locator. Native actions reject absent/duplicate/wrong-type targets. Any rejection propagates without later actions. Preserve 30s strict test policy, workers, retries and every existing source/result assertion."
+    testRef: "tests/apps/web/school-part-year-native-kind.test.tsx::preserves independent labels and strict native actions"

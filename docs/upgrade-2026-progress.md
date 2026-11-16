@@ -1,5 +1,14 @@
 # 2026 upgrade implementation evidence
 
+## November 16 school browser entry uses reviewed native kinds
+
+The test helper retains all original values/actions/assertions and uses explicit
+fixture control kinds with strict native actions. Six permanent tests, eight
+real-DOM cases, four actual desktop/mobile school journeys and scoped checks
+pass. Original 30-second policies, zero retries and all 655 case identities
+remain. Full new-source and remote/native checks continue; no application-speed
+or release claim follows. [Review and exact limits](upgrade-2026-school-known-native-controls-20261116.md).
+
 ## November 16 exact current local checks pass; runtime failures retained
 
 Exact `116aa1ea` passes all twelve local checks, including 28,928 tests in each

@@ -1,4 +1,22 @@
 {
+  "nov16SchoolKnownNativeControls": {
+    "specFirstRed": 3,
+    "focusedTests": 6,
+    "actualDomCases": 8,
+    "actualSchoolJourneys": 4,
+    "schoolTerminal": "14939/0/e2f3b0",
+    "normalServerClosed": true,
+    "browserIdentities": 655,
+    "finiteSource": 1999,
+    "strictDeadlineMs": 30000,
+    "retries": 0,
+    "nativeWaitingDifferenceDisclosed": true,
+    "productCodeChanged": false,
+    "fullNewSourceChecksPending": true,
+    "sourcePeerSha256": "af7599530b6183b19a914d4355f2098dd00d213c50d8d20312884bf9bf88d325",
+    "adoptionReviewSha256": "9b2359496706fa2e7c86cdd9b47e9a03638457a7cf40dc5839432f409fbc348a",
+    "ledger": "docs/upgrade-2026-school-known-native-controls-20261116.md"
+  },
   "nov16Exact116LocalAndRehearsalFailures": {
     "source": "116aa1eaafe7f8a277c292d3d1fb227199f5ced1",
     "localAll12Passed": true,
