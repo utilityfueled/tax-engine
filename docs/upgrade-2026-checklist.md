@@ -1,5 +1,28 @@
 # Remaining 2026 upgrade execution checklist
 
+## Latest package — November 15, 5a45443e
+
+- [x] Commit and push finite ordinary K3 originals to main and backup; read back
+  the exact production-build guard and observe its canceled production target.
+- [x] Preserve source-first failures, direct-method boundary regression and both
+  initial browser failures; correct explicit fictional withholding and full-balance
+  oracle without inventing prior-year history or changing production tax formulas.
+- [x] Pass two corrected desktop/mobile browser journeys, relevant checks and
+  independent source/artifact review. [Evidence](upgrade-2026-k3-ordinary-originals-20261115.md).
+- [x] Complete and independently review historical797 ARM64 recovery/runtime and
+  normal closure; retain its earlier capacity failure and unaccepted advisories.
+- [x] Pass and independently review guarded seven-module financial import smoke;
+  preserve all predecessor holds and honest denied local-IPC accounting.
+- [x] Complete and independently reconcile all twelve exact5a local checks:
+  28,869 tests,88.18% branches,650 browser passes/five original skips.
+- [ ] Complete current-source hosted and self-host distributions.
+- [ ] Complete full cloud purchased-credit/provider accounting rehearsal under the
+  original spend/privacy bounds; import success does not establish financial proof.
+- [ ] Pass strict Linux runtime deadlines and required human, final-form, security
+  and accountable advisory gates. Filing/model promotion/release remain closed.
+
+Earlier entries retain their exact historical source and outcome.
+
 ## Latest exact-source continuation — November 15, 79792ec7
 
 - [x] Retain all twelve exact-source local checks and independent artifact review:

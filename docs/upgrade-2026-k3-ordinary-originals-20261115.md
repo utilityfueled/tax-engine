@@ -1,0 +1,63 @@
+# Finite qualified partnership K-3 ordinary foreign-tax credit sources
+
+Implementation commit `5a45443e` is pushed to main and the existing backup. This finite 2025 ordinary Form 1116 source path records engineering evidence; qualified human approval, final annual 2026 forms and broader upgrade completion remain required. Vercel’s exact production ignored-build guard was read back before the push; its production-target deployment was canceled.
+
+## Supported source facts
+
+The added intake admits one actual primary-owner, single-return, continuing domestic non-PTP partnership for calendar year2025. Its only income is passive-category portfolio interest, wholly foreign in one actual country. It requires original K-1/K-3 and opening-basis references, actual recipient/entity/year/owner identity, known-zero other K-1 boxes and suspension/basis-change history, and a fresh canonical partner-basis check allowing every cent of the tax.
+
+Allocated foreign deductions, foreign interest expense, other expenses, tax reductions and redetermination amounts must each be explicitly known zero. Creditable paid taxes come from Schedule K-3 PartIII section4 line1 and actual entity-paid2025 USD-reported detail records with dates and source reference. PartII supplies income/deductions; PartII line45 taxes are excluded. Personal payment dates, exchange rates, currency conversions and other taxpayer facts are never inferred.
+
+This is a finite calendar-year, paid-USD source cohort. It does not establish general partnership fiscal-year timing, FX conversion, accrued taxes, spouse/joint treatment, business income, preferential income, losses, mixed sources or other entities. Existing direct-credit and ordinary bank methods keep their guards. Unknown, blank, false and known zero remain distinct. Ordinary-only facts cannot silently pass into the separate direct method when the user switches methods.
+
+The guide visibly records the original packet and selects fresh actual tax/income snapshots. Source edits revoke confirmations and stale snapshots fail closed. Canonical regular/AMT calculators, Decimal arithmetic, durable carry records, existing state-source restrictions, privacy projections and review-only export gates remain in force; the UI adds no tax formula.
+
+## Independently derived synthetic oracle
+
+For the fictional 2025 single-return cohort with wages80000, wholly foreign interest20000, paid foreign tax900, explicit fictional W-2 box2 withholding12000 and the documented foreign-credit history/basis originals:
+
+| Record | Expected value |
+| --- | ---: |
+| AGI / taxable income | 100000 /84250 |
+| Published 2025 Tax Table regular tax | 13455 |
+| Regular Form1116 limit /current credit | 2691 /900 |
+| Raw tentative minimum tax | 3094 |
+| Working AMT Form1116 limit /current credit | 619 /619 |
+| Current AMT foreign-tax carryforward | 281 |
+| Actual AMT owed | 0 |
+| Total federal tax /explicit W-2 withholding | 12555 /12000 |
+| Tax less withholding /estimated-tax penalty /full amount owed | 555 /0 /555 |
+
+The current-year tax less withholding is555, below the1000 Form2210 withholding exception, so the penalty is0 and the complete balance is555. Prior-year tax/payment history remains unknown; no prior-year safe harbor is invented. This independently established current-year exception is separate from the foreign-credit calculation.
+
+The AMT foreign-income fraction uses Form6251 line4 AMTI100000, not the11900 amount after exemption. The unrounded AMT working limit is618.8, rounded619 under the existing canonical rule. The published Tax Table result13455 is used rather than substituting exact bracket tax. Because regular tax after the credit exceeds raw tentative minimum tax, Form6251 instructions permit leaving filed line8 blank and entering zero on line11. The working credit/carry records do not assert that a filed line8 must contain619.
+
+Primary authorities: [Form1116 instructions](https://www.irs.gov/instructions/i1116), [ScheduleK-3 Form1065 partner instructions](https://www.irs.gov/instructions/i1065sk3), [Form6251 instructions](https://www.irs.gov/instructions/i6251), the [2025 Tax Table](https://www.irs.gov/publications/p1040), and the [2025 Form2210 instructions](https://www.irs.gov/instructions/i2210). Retained official bodies and an independent Decimal oracle are bound in the private review evidence; no new qualified-human tax interpretation is claimed.
+
+## Completed engineering evidence and remaining execution
+
+The fourteen-path source proposal retained genuine canonical, guided and mounted-DOM failures before implementation. A peer then reproduced a private-candidate direct-method regression: newly recognized ordinary-only fields were ignored. A distinct successor restored the original first unsupported-key rejection without erasing facts, with63 key/value source vectors and a real mounted ordinary-to-direct switch regression. The predecessor remains retained.
+
+Pinned Node26.13.1 replay passed130 behavioral tests plus954 strict-reference tests across15 files; root/web typechecks and scoped lint passed with zero warnings. Independent source review passed. Root separately reproduced a semantic predecessor failure, then25 focused tests across7 files passed with the pinned PDF environment. Retained root integration evidence also records types/spec/inventory passing. Initial missing-PDF-environment, stale-inventory and private-candidate failures remain separate evidence.
+
+Canonical review-PDF reopening checks900/619/281 values, per-page review notice and exclusion of original names, identifiers, references, country and payment dates. Actual guide-to-workspace hosted/provider projections are checked separately for original-packet privacy. These are local engineering checks, not live-provider execution.
+
+A separately reviewed browser source adds desktop1280/mobile390 journeys: visibly originate every new K-3 original field, select both actual source snapshots, require the visible555 full balance, zero penalty, actual12000 withholding and canonical tax/credit oracle, edit a known-zero allocation to unknown, observe revoked confirmations/closed estimate, restore explicit zero, reselect/reconfirm and reopen. Only established household/W-2/annual-eligibility/AMT-history scaffold is seeded. The initial actual two-case browser run failed in both viewports: its expected2555 gross balance differed from the observed2616 full preview balance. Pure diagnosis identified61 from the existing legacy2025 Form2210 preview branch and a separate canonical-fixture typo: it wrote an unused withholding property, leaving12750 rather than the guided10000. Missing prior-year facts did not independently establish a final61 penalty. That failure remains retained. A distinct six-file correction explicitly sets the actual W-2 field federalWithheld to12000 in both fictional fixture paths and requires555/penalty0 under the current-year exception. Spec-first tests genuinely failed2 and passed7 before correction; the corrected focused replay passed966 checks across4 files, with web types and scoped lint passing. Root actual managed production-build replay passed both corrected browser cases at1280/390 in7.4 seconds, using the original30s deadline, configured maximum two workers (one used for this file) and zero retries. Independent saved-artifact review confirmed both results and normal owned-server closure; root viewed both screenshots. Root replay also passed39 tests across4 files, root/web types, specs, inventory and scoped lint. The prior full-unit core run passed28,868 tests in2,119 files before the six fixture/oracle corrections; it is not relabeled a final-source aggregate. All twelve exact final-source checks pass at5a45443e:28,869 unit/coverage tests in2,119 files; coverage92.04% statements,88.18% branches,91.07% functions and95.31% lines;650 browser passes/five original skips across all655 identities/eight windows. Root saved-artifact review verifies all6,130 Git entries, six literal links, fifteen samples,5,229 whole-source inputs,1,996 finite audited inputs,176 policy rows and fourteen diagnostic targets. Independent completed-artifact review passes from a separate invocation, including fresh owned-process absence checks. Separate SCRAM PostgreSQL16.16 clusters and the owned browser server closed normally; private PG credentials were removed. No current-source image, hosted-runtime or release qualification follows from local checks. No new timeout, retry, request limit or protected action is allowed.
+
+The completed native ARM rehearsal at exact historical source79792ec7 passed24 controller stages, four workloads and six Compose phases, including653 browser cases under the existing policies. Its source, OCI archive, SBOM, configured scan and normal VM/resource/socket restoration were independently reconciled from saved artifacts. That source did not include this K-3 addition or its fixture correction. The historical ARM pass remains valid evidence for79792ec7; it is not a K-3 browser result or qualification of the current changed source.
+
+For context, the completed remote run at documentation source76f68d7c used unchanged application source79792ec7: CI/Docker and ordinary browser checks passed; strict container browser results were644PASS, four overall30-second deadline failures and five original skips. All653 identities/policies, eight windows and source/image/archive/SBOM bindings were reconciled. The optional CPU diagnostic step was skipped, so no new CPU profiles or timeout cause are claimed. Those historical results do not qualify the new K-3 source package.
+
+Qualified human review, final2026 form qualification, provider entitlement and risk-owner decisions remain separate gates. Existing240/160/80 AI/reference partitions and unassigned human decisions are unchanged. No filing, release, security-risk acceptance, ABI compatibility or whole-goal completion claim follows from these results.
+
+## Retained evidence references
+
+- Core source peer: `824fdbddf27bb758d49a0d8b22e96b9ae32b3d7ae068884b7743185a8bd5f6c0`.
+- Six-file balance correction and saved-browser independent peer: `cc894d8d62b38aaedada09ac177884646582f7ba707e2bc778395870a79b8922`.
+- Historical797 ARM root review: `dbd99f52ddb9f1c55da12b8cf8caae77873b53120f1bd03b8fa29ea0b6964e41`; independent review: `317035aec407e65d6e16be5c4b32ea84227957e69caaeef421d52040e789088f`.
+
+A separate Ohio header validation-only proposal preserved outputs and removed an unused final hash, but its complete four-process local ABBA comparison showed no material improvement. It was not adopted. That result establishes no strict Linux deadline cause or projected savings.
+
+The distinct full cloud financial attempt stopped before any card entry, payment submission or provider call. It selected the real sandbox Card method but did not recognize the current expiration control:74SQL, six Stripe requests and171 browser requests. Browser/pools/controller closed normally. The actual import scope unregistered after six imports; a subsequent configured-seven count assertion misleadingly recorded a close error. The synthetic schema and owned sandbox resources remain retained pending read-only payment-status reconciliation. No financial or cleanup success is claimed. The separate host archive-maintenance attempt stopped at507GiB free versus the unchanged512GiB host floor, before any VM boot or file deletion; its consumed intent is preserved.
+
+Final local all12 root and independent readers independently produced the same deterministic review hash`bf67812d290ce28469f7574336a8385a43eef143d5e0773b819f8ce06630e997`; the separate peer execution receipt is`573c2181597efc0b8185b87272051687cb64bb343b35affcaf473c80744fde37`. The scoped Ohio school same-invocation experiment reduced duplicate federal calls and preserved all47 proof/parity checks, but its complete ABBA improvement was5.87%, below the predeclared10% material-benefit threshold. It was also not adopted; neither experiment establishes a Linux deadline cause.

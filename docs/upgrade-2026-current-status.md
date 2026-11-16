@@ -1,5 +1,37 @@
 # Current 2026 upgrade continuation
 
+## Current continuation — November 15, K3 originals
+
+Commit `5a45443e` is pushed to main and the backup. Its finite 2025 original-bound
+ordinary K3 intake preserves unknowns, source freshness, privacy and year/filing
+gates. The corrected desktop/mobile journeys and independent artifact review pass;
+root types/specs/inventory/lint pass. All twelve exact-source checks pass in four
+isolated lanes:28,869 tests,88.18% branches and650 browser passes/five original
+skips. Root and independent artifact/source reconciliation pass, including fresh owned
+process absence. Earlier complete results remain attributed to their original source.
+[Scope, corrected oracle and retained failures](upgrade-2026-k3-ordinary-originals-20261115.md).
+
+Historical `79792ec7` ARM64 now passes all24 stages, four workloads, six Compose
+phases and653 browser cases, with root/independent artifact review and normal
+VM/resource/route restoration. Its configured scan retains56 unaccepted High
+findings. The earlier capacity failure remains recorded; this result excludes K3.
+
+The guarded historical8cc financial import smoke passes seven pinned modules,
+normal scope/child closure and unchanged3432/10000 raw-event cap. One optional
+local TSX IPC initialization is explicitly denied; other network, SQL, provider,
+credential and application-function calls remain zero. Independent saved review
+passes. This is import-only evidence. The full financial attempt stopped before
+card entry/payment/provider dispatch because the current expiration label was not
+recognized; normal closure is verified, and retained resources await reconciliation.
+The self-host maintenance attempt stopped before VM boot at the unchanged512GiB
+host-space floor; owned completed-build cache cleanup is being prepared.
+
+Human tax/AI/security reviews, final annual2026 forms, accountable advisory
+disposition, strict Linux deadlines and current-source distribution qualification
+remain open. Filing, model promotion and production release remain closed.
+
+## Earlier exact-source continuation
+
 ## Current continuation — November 15, completed 797 evidence
 
 Application source `79792ec7` and documentation-only head `76f68d7c` are pushed to

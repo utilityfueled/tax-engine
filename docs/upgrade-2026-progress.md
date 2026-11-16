@@ -6520,3 +6520,21 @@ fingerprints remain identical. Independent normalization/tamper/context review
 passes. The fully observed local ABBA benchmark improves its median by31.4%;
 this does not resolve strict-container deadlines or qualify tax law.
 [Scope and retained evidence](upgrade-2026-ohio-business-material-work-20261115.md).
+
+
+### November 15: ordinary K3 original intake and corrected full-balance oracle
+
+Commit `5a45443e` adds finite2025 primary-owner ordinary K3 original intake and
+source binding, preserving unknowns and freshness/privacy gates. Both corrected
+desktop/mobile browser journeys and independent review pass. The initial two
+failures remain recorded: fixture withholding and pre-penalty/full-balance
+expectations were corrected with explicit fictional12000 withholding, tax12555,
+penalty0 and full balance555. Full exact-source checks pass as recorded below.
+Historical797 ARM64 now passes all24 stages and normal closure; it excludes K3.
+[Source, independent oracle and evidence](upgrade-2026-k3-ordinary-originals-20261115.md).
+
+### November15: exact5a local checks and retained bounded holds
+
+All twelve checks at5a45443e pass:28,869 unit/coverage tests in2,119 files;92.04/88.18/91.07/95.31% statement/branch/function/line coverage;650 browser passes/five original skips across655 identities/eight unchanged windows. Root saved-artifact review bf67812d290ce28469f7574336a8385a43eef143d5e0773b819f8ce06630e997 verifies full source/build/policy identity, normal two-PG/browser closure and removed private PG credentials; independent completed review also passes. The separate cloud financial attempt holds before card entry/payment/provider call on an unrecognized expiration control; its actual normal closure and successful six-import unregister remain distinct from a subsequent count-assertion close error. Synthetic resources remain pending read-only reconciliation. The exact-three archive-maintenance attempt holds at the unchanged512GiB host floor before any VM boot or deletion. Original caps, floors, failures and intents remain retained; fresh bounded successors continue.
+
+Independent final5a saved-artifact replay also passed, with deterministic review bf67812d290ce28469f7574336a8385a43eef143d5e0773b819f8ce06630e997 and separate execution receipt573c2181597efc0b8185b87272051687cb64bb343b35affcaf473c80744fde37. All original gates remain. The separate school duplicate-federal experiment achieved5.87% measured improvement versus its predeclared10% threshold and was not adopted.
