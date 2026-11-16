@@ -6612,3 +6612,17 @@ operations and scoped cleanup. Its historical2025 facts and source-bound numeric
 assertions do not qualify2026 law or establish remote numeric API values.
 Source preparation and historical distribution success do not establish current
 runtime/release readiness.
+
+
+### November 16: refreshed official sources and runtime-library exposure
+
+Forty-five fixed public requests (48 GETs) complete with 33 HTTP 200 and twelve
+HTTP 404 responses; forty response bodies remain exact. PA parsed text and its
+349 hrefs, and Google's nonwhitespace content, are unchanged. Both pinned
+Node 26 npm audits report zero findings for 447 production and 539 total
+dependencies. All 280 tracked Debian release records remain unchanged.
+New CVE-2026-125709 affects installed historical 5a libstdc++6 14.2.0-19; no
+supported fixed Trixie version is recorded. Root and independent saved-source
+reviews verify all 63 packet files and the historical scan. Preserve that
+191-finding scan and all filing, model, human and security gates.
+[Exact evidence and follow-up](upgrade-2026-official-refresh-20261116.md).

@@ -2,6 +2,8 @@
 
 ## Current continuation — November 16
 
+- [x] Refresh 45 fixed official sources and both npm audits; independently review the new unresolved runtime-library advisory without rewriting historical scans. [Source refresh](upgrade-2026-official-refresh-20261116.md).
+
 - [x] Push reviewed Ohio replay package `66fb52dc` to main and backup after fresh production-build suppression readback; preserve all existing test policies. [Source and checks](upgrade-2026-ohio-school-header-replay-20261116.md).
 - [x] Complete root and independent primary exact5a Preview artifact/visual review:118 API,14 UI,five PDFs,2078/2310 operations. [Bounded evidence](upgrade-2026-preview-5a45443e-20261116.md).
 - [x] Preserve and independently review separate K3 follow-up failure; correct recorded accounting to259 and verify cleanup.

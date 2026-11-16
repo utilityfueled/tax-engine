@@ -1,4 +1,36 @@
 {
+  "nov16OfficialSourceRefresh": {
+    "observedUtc": "2026-11-16T07:10:22Z",
+    "publicRequests": 45,
+    "getsIncludingRedirects": 48,
+    "http200": 33,
+    "http404": 12,
+    "downloadBytes": 102155815,
+    "sameBytes": 40,
+    "npm": {
+      "node": "26.13.1",
+      "productionDependencies": 447,
+      "totalDependencies": 539,
+      "vulnerabilities": 0
+    },
+    "existingDebianReleaseRecordsUnchanged": 280,
+    "newUnresolvedAdvisory": {
+      "id": "CVE-2026-125709",
+      "source": "gcc-14",
+      "historicalArmRuntimeLibrary": "libstdc++6 14.2.0-19",
+      "trixieStatus": "open",
+      "supportedFixedVersion": null,
+      "scanRewritten": false,
+      "riskAccepted": false,
+      "engineeringOwner": "active2026upgradegoal",
+      "recheckByUtc": "2026-11-17T12:00:00Z"
+    },
+    "completedManifestSha256": "4fe6fe0a93ce8fdcdd0c66abdcae0034c73a8f31fc0c1ee77f997c51b1284de1",
+    "rootReviewSha256": "2306587002ed070d51efd6bbf13a66769511dd72397ac4132071e90b537b520d",
+    "independentReviewSha256": "e397fc472686609d2f5b2e7fb45ee02625d06b7c93c3012b52802cc6a80bb2cb",
+    "sourceLedger": "docs/upgrade-2026-official-refresh-20261116.md",
+    "qualificationClaimed": false
+  },
   "nov16ExactF3Integrated": {
     "source": "f3cb88e0a1013b2a52837f63410773a4b27ffd62",
     "localAll12Passed": true,
