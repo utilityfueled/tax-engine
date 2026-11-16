@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 16 current Preview passes; remote browser failures remain
+
+All local commits through `6df59454` are pushed to main and the backup with
+automatic production builds suppressed. Current `c0180308` protected Preview
+passes 118 API cases, fourteen visible journeys and five PDF reopenings, with
+2,080/2,310 counted operations, zero paid providers and verified scoped cleanup.
+Root and independent completed reviews plus fourteen actual visual inspections
+pass. The preceding absence diagnostic retains saved child/supervisor evidence
+but loses its direct outer tool terminal; that limitation stays explicit.
+
+Completed GitHub CI/Docker pass. Ordinary browser retains two RRTA PDF privacy
+child failures; strict retains two school part-year desktop timeouts, each with
+648 passes/five original skips and unchanged policies. A read-only native
+diagnostic normally closes all42 stages without deletion or capacity admission.
+Current ARM64, browser, human/final-form/security and release gates stay open.
+[Exact source and evidence](upgrade-2026-runtime-c0180308-20261116.md).
+
 ## November 16 current school-display revision passes all local checks
 
 Pushed application revision `c0180308` passes all twelve local checks:

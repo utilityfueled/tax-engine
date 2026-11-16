@@ -1,4 +1,58 @@
 {
+  "nov16CurrentRuntimeC018": {
+    "source": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
+    "localAll12Passed": true,
+    "lastVerifiedPushedDocumentationHead": "6df594549c63b0a381d85e5c95b82bbbe2147363",
+    "preview": {
+      "passed": true,
+      "api": 118,
+      "ui": 14,
+      "pdf": 5,
+      "countedOperations": 2080,
+      "operationCap": 2310,
+      "paidProviderCalls": 0,
+      "scopedCleanup": true,
+      "distinctCompletedReaders": true,
+      "independentVisualImages": 14,
+      "precedingAbsenceOuterToolTerminalRetained": false,
+      "precedingAbsenceSavedNormalSupervisorClosure": true
+    },
+    "remote": {
+      "ci": "success",
+      "docker": "success",
+      "ordinary": {
+        "passed": 648,
+        "failed": 2,
+        "originalSkips": 5,
+        "failure": "RRTA PDF privacy child4000ms"
+      },
+      "strict": {
+        "passed": 648,
+        "timedOut": 2,
+        "originalSkips": 5,
+        "failure": "school part-year desktop30000ms"
+      },
+      "cpuCauseEstablished": false,
+      "scanMatches": 196,
+      "scanHigh": 56,
+      "scanCritical": 0,
+      "releaseRiskAccepted": false
+    },
+    "nativeDiagnostic": {
+      "passed": true,
+      "steps": 42,
+      "normalStopResourcesRoutesRestored": true,
+      "imagesPreserved": 40,
+      "rootNamesPreserved": 37,
+      "removals": 0,
+      "capacityAdmitted": false,
+      "currentApplicationQualified": false,
+      "initialReaderModeHoldRetained": true,
+      "readerGuardWeakened": false
+    },
+    "filingModelReleaseQualified": false,
+    "ledger": "docs/upgrade-2026-runtime-c0180308-20261116.md"
+  },
   "nov16ExactC018Local": {
     "source": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
     "all12LocalPassed": true,

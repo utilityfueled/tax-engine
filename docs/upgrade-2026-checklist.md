@@ -2,11 +2,18 @@
 
 ## Current continuation — November 16
 
+- [x] Push reviewed local history through `6df59454` to main and backup after fresh production-build suppression readback.
+- [x] Close current `c0180308` protected Preview:118API/14UI/5PDF,2080/2310operations, zero paid providers, scoped cleanup, distinct completed readers and actual14-image visual review. Retain the absent outer absence-diagnostic terminal explicitly.
+- [x] Review completed current GitHub artifacts: CI/Docker pass; ordinary648pass/2RRTA-PDF failures/5originalskips; strict648pass/2school desktop timeouts/5originalskips. Original policies remain.
+- [x] Close and independently review42-step read-only native diagnostic and one exact closed host-cache cleanup; neither admits current-source runtime.
+- [ ] Complete the supported process-absence proof and current ARM64 runtime/recovery/scan, resolve both browser failure classes, and retain human/final-form/security/AI/advisory gates.
+- Evidence: [current Preview, remote and native admission](upgrade-2026-runtime-c0180308-20261116.md).
+
 - [x] Push `b4658b0c` and `c0180308` to main and backup under freshly verified production-build suppression.
 - [x] Independently execute and review all twelve exact `c0180308` local checks: 28,913 tests per unit/coverage lane, 88.19% branches, 650 browser passes/five original skips, with genuine terminal receipts for every lane. [Completed evidence](upgrade-2026-integrated-local-c0180308-20261116.md).
 - [x] Independently verify the single recovered f3 build-cache removal and full preservation of source, final assets, reports and dependency stores.
 - [ ] Recover unchanged host/guest capacity floors and complete current `c0180308` ARM64 runtime, recovery and scan; source reviews alone supply no admission.
-- [ ] Complete current `c0180308` protected Preview and remote strict Linux qualification; retain all earlier source-specific failures.
+- [ ] Complete current `c0180308` remote strict Linux qualification; protected Preview is complete above, with its explicit evidence limitations. Retain earlier source-specific failures.
 
 
 - [x] Implement and independently review display-only school-card replay elimination; preserve all core validation, policies and error order. Fixed local comparison improves 38.6048%; all twelve current local checks pass and distribution checks continue. [Source and scoped checks](upgrade-2026-school-display-validation-20261116.md).
