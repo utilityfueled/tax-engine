@@ -1,5 +1,15 @@
 # Remaining 2026 upgrade execution checklist
 
+## Current continuation — November 16
+
+- [x] Push reviewed Ohio replay package `66fb52dc` to main and backup after fresh production-build suppression readback; preserve all existing test policies. [Source and checks](upgrade-2026-ohio-school-header-replay-20261116.md).
+- [x] Complete root and independent primary exact5a Preview artifact/visual review:118 API,14 UI,five PDFs,2078/2310 operations. [Bounded evidence](upgrade-2026-preview-5a45443e-20261116.md).
+- [x] Preserve and independently review separate K3 follow-up failure; correct recorded accounting to259 and verify cleanup.
+- [ ] Complete exact66fb all twelve checks in four isolated lanes and review artifacts.
+- [ ] Complete and review exact5a ARM64 runtime, recovery, scan and normal closure.
+- [ ] Correct K3 follow-up controller/policy assertions and run a fresh bounded successor.
+- [ ] Resolve strict Linux deadline failures; retain all original policies and security/human/final-form/AI qualification gates.
+
 ## Latest package — November 15, 5a45443e
 
 - [x] Commit and push finite ordinary K3 originals to main and backup; read back

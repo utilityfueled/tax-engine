@@ -1,4 +1,39 @@
 {
+  "nov16Exact5aPrimaryHosted": {
+    "source": "5a45443e228dd49001059d17b9c5105c176e7962",
+    "boundedRehearsalPassed": true,
+    "apiCases": 118,
+    "visibleJourneys": 14,
+    "savedPdfReopenings": 5,
+    "countedOperations": 2078,
+    "operationCap": 2310,
+    "parentTerminalIndependentlyObserved": false,
+    "cleanupVerified": true,
+    "wholeHostedQualified": false,
+    "ledger": "docs/upgrade-2026-preview-5a45443e-20261116.md"
+  },
+  "nov16K3FollowupFailure": {
+    "source": "5a45443e228dd49001059d17b9c5105c176e7962",
+    "passed": false,
+    "rootTerminalExit": 1,
+    "reportedCountIncorrect": 116,
+    "correctedCount": 259,
+    "completedCases": 0,
+    "exactFailedAssertionRetained": false,
+    "cleanupVerified": true,
+    "ownedChildUncertainty": null,
+    "rootAndIndependentFailureReview": "5399147a58b22da26f00db1617fa824e4d488d0a7623d7038f6f5b95135e55c3"
+  },
+  "nov16OhioSchoolHeaderReplay": {
+    "source": "66fb52dc7aa5a0fb350b6f75cb76018d907be5f0",
+    "committedAndPushed": true,
+    "rootFocusedTests": 147,
+    "independentCandidateTests": 178,
+    "localImprovementPercent": "19.639828",
+    "fullIntegratedChecks": "running in four isolated lanes",
+    "finalMainReview": "3d7ab026b73801d7b342e703ac269db4085f5ea506f90f1d3af4e60f3db26e98",
+    "ledger": "docs/upgrade-2026-ohio-school-header-replay-20261116.md"
+  },
   "nov15PrivatePurchasedCreditActual": {
     "source": "8cc5b0ec0b1507e0203a8ce1bc5f3a72de1b5f09",
     "privateBackendOnly": true,

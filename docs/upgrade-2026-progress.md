@@ -6560,3 +6560,10 @@ container log retains641 passes/nine30-second failures/five skips across655 case
 No deadline, retry, skip or readiness gate changed. All local commits through
 60b8f45a are pushed to main and backup after fresh production-build suppression
 readback; no production build or release is authorized.
+
+
+### November16: reviewed Ohio replay and separate Preview evidence
+
+Ohio package `66fb52dc` is pushed to main and backup after fresh production-build suppression readback. Spec-first RED,147 root tests,178 independent tests, types, lint and corrected spec/inventory checks pass; measured local median improves19.64% with original output/error guards. Four isolated exact-source integrated lanes are running. [Scope](upgrade-2026-ohio-school-header-replay-20261116.md).
+
+Primary exact5a Preview root/independent artifact and visual reviews pass118 API contracts,14 visible journeys and five PDF reopenings at2078/2310 operations. The separate K3 follow-up fails after its desktop screenshot; no complete case is claimed. Its historical-year PDF expectation mismatch and failed-child accounting defect are preserved, with corrected259 operations and verified cleanup. [Evidence and limits](upgrade-2026-preview-5a45443e-20261116.md). ARM64, strict Linux and broader qualification remain open.
