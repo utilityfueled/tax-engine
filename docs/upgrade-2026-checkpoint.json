@@ -1,4 +1,47 @@
 {
+  "nov15PrivatePurchasedCreditActual": {
+    "source": "8cc5b0ec0b1507e0203a8ce1bc5f3a72de1b5f09",
+    "privateBackendOnly": true,
+    "passed": true,
+    "rootReview": "cb0d387726b28f16317ecc62f5bd399fbf8cd3d93bfe471e45d8cfd3855b2cb3",
+    "independentReview": "a195888844c12d51ce9680578c915e7f707323533db192c3cc36b1822d8e5919",
+    "stripeRequests": 14,
+    "sqlQueries": 249,
+    "browserRequests": 191,
+    "providerCalls": 2,
+    "newProviderCostUsd": "0.0004776",
+    "conservativeExposureUsd": "0.29471430",
+    "priorUnknownReserveUsd": "0.022384",
+    "budgetCents": 1000,
+    "chargedCents": 2,
+    "remainingCents": 998,
+    "cleanupAndNormalClosure": true,
+    "publicCheckoutQualified": false,
+    "signedDeliveryQualified": false,
+    "modelQualified": false
+  },
+  "nov15RetainedCopyArchiveMaintenance": {
+    "threeLeavesRemoved": true,
+    "twelveLeavesRemoved": true,
+    "normalStopAndResourceRestoration": true,
+    "imagesPreserved": 39,
+    "rootNamesPreserved": 35,
+    "guestFreeBytes": 269142761472,
+    "guestRequiredBytes": 268435456000,
+    "rootActualAck": "295695b3517a937c27b21767468566ba1f97a25b203caf79c8a3b0e42f261b68",
+    "currentSourceNativeQualified": false
+  },
+  "nov15Remote5aLogObservation": {
+    "CI": "SUCCESS",
+    "Docker": "SUCCESS",
+    "ordinarySelfHost": "SUCCESS",
+    "strictContainer": "FAILURE",
+    "strictPasses": 641,
+    "strictFailures": 9,
+    "strictOriginalSkips": 5,
+    "strictTotal": 655,
+    "strictArtifactsFullyReviewed": false
+  },
   "nov15K3Originals5a45443e": {
     "applicationSource": "5a45443e228dd49001059d17b9c5105c176e7962",
     "mainAndBackupPushed": true,

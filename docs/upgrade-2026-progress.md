@@ -6538,3 +6538,25 @@ Historical797 ARM64 now passes all24 stages and normal closure; it excludes K3.
 All twelve checks at5a45443e pass:28,869 unit/coverage tests in2,119 files;92.04/88.18/91.07/95.31% statement/branch/function/line coverage;650 browser passes/five original skips across655 identities/eight unchanged windows. Root saved-artifact review bf67812d290ce28469f7574336a8385a43eef143d5e0773b819f8ce06630e997 verifies full source/build/policy identity, normal two-PG/browser closure and removed private PG credentials; independent completed review also passes. The separate cloud financial attempt holds before card entry/payment/provider call on an unrecognized expiration control; its actual normal closure and successful six-import unregister remain distinct from a subsequent count-assertion close error. Synthetic resources remain pending read-only reconciliation. The exact-three archive-maintenance attempt holds at the unchanged512GiB host floor before any VM boot or deletion. Original caps, floors, failures and intents remain retained; fresh bounded successors continue.
 
 Independent final5a saved-artifact replay also passed, with deterministic review bf67812d290ce28469f7574336a8385a43eef143d5e0773b819f8ce06630e997 and separate execution receipt573c2181597efc0b8185b87272051687cb64bb343b35affcaf473c80744fde37. All original gates remain. The separate school duplicate-federal experiment achieved5.87% measured improvement versus its predeclared10% threshold and was not adopted.
+
+
+### November15: real private purchased-credit backend and retained-copy maintenance
+
+A distinct isolated historical8cc rehearsal passes root and independent actual
+review: genuine Stripe sandbox completion, one1000-cent credit, two real provider
+attempts charged one cent each, duplicate processing unchanged and998 cents
+remaining. New provider cost$0.0004776; conservative cumulative exposure
+$0.29471430 including the retained$0.022384 reserve. Owned schema/active resource
+cleanup and normal pool/import-scope/child closure pass. Public checkout, signed
+delivery and model qualification remain excluded.
+[Actual evidence](upgrade-2026-cloud-purchased-credit-20261115.md).
+
+Two bounded normally closed maintenance runs removed three then twelve exact
+archive leaves with byte-identical local copies retained, preserving all39 images
+and35 guest root names. The second observed269142761472 guest free bytes, above
+the unchanged250GiB floor; fresh admission remains required for the current-source
+ARM64 workload. Exact5a remote CI/Docker/ordinary self-host pass, while the strict
+container log retains641 passes/nine30-second failures/five skips across655 cases.
+No deadline, retry, skip or readiness gate changed. All local commits through
+60b8f45a are pushed to main and backup after fresh production-build suppression
+readback; no production build or release is authorized.

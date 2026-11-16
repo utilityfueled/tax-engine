@@ -3441,3 +3441,20 @@ packages keep full source copies, patches, hashes, genuine failures and receipts
 - [x] All 24 stages/four workloads, six recovery phases and 630 browser passes/five original skips; separate root review, normal stop and original resources/routes restored. [Ledger](upgrade-2026-arm64-aea453ec-20261114.md).
 - [x] Same-image fresh database scan: zero Critical, 56 unaccepted High; scanner/database hashes independently verified, original scan retained.
 - [ ] Later source packages, native AMD64, accountable advisory disposition and qualified human/final-form qualification remain open.
+
+
+### November15: bounded real private-credit result
+
+- [x] Historical8cc private billing backend: genuine sandbox purchase;1000 credit
+  cents, two provider attempts charged1cent each,998remaining; duplicate purchase
+  and settlement replay unchanged, control actor unchanged. Root and independent
+  actual review pass, schema/active resources removed and child normally closed.
+  [Scope and source evidence](upgrade-2026-cloud-purchased-credit-20261115.md).
+- [x] Three plus twelve exact retained-copy archive leaves removed in separately
+  reviewed, normally closed maintenance. All39 images/35 root names preserved;
+  last guest capacity269142761472 bytes clears the unchanged250GiB floor.
+- [ ] Public credit checkout/signed webhook delivery, current-source ARM64 and
+  strict Linux deadline qualification remain separate. Exact5a strict log has
+  nine original30-second failures; no cause or passing distribution is inferred.
+- [ ] Human tax/AI/security reviews, final2026 annual forms and accountable
+  advisory disposition remain required; filing/model/production gates closed.

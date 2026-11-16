@@ -22,14 +22,33 @@ local TSX IPC initialization is explicitly denied; other network, SQL, provider,
 credential and application-function calls remain zero. Independent saved review
 passes. This is import-only evidence. The full financial attempt stopped before
 card entry/payment/provider dispatch because the current expiration label was not
-recognized; normal closure is verified, and retained resources await reconciliation.
+recognized; normal closure is verified, and its original HOLD is preserved.
 Separate read-only reconciliation and scoped unpaid-resource cleanup now pass,
 with independent saved-artifact review: the synthetic schema is absent, the
 owned test product/price are inactive and the test customer is deleted. Neither
 operation made a payment or provider call; the original financial HOLD remains.
-Four completed-build caches were removed with all source, final assets, reports
-and other files unchanged. Available host space still fluctuates below the
-unchanged512GiB floor, so no new native boot or workload is claimed.
+Four completed-build caches and one normally closed, canceled-run cache were
+removed while preserving source, final assets, reports and all other files. A
+separate normally closed VM maintenance run removed three exact archive leaves
+with byte-identical local copies retained; all39 images and35 guest root names
+were preserved. Guest free space remains2,043,715,584 bytes below its unchanged
+250GiB workload floor in that observation. A second normally closed maintenance
+run removed twelve more exact retained-copy archives and observed269142761472
+free bytes, clearing the unchanged floor. Fresh workload admission and the
+current-source native rehearsal remain required.
+
+A distinct reviewed historical8cc private-backend financial rehearsal now passes: a
+Stripe sandbox purchase issued1000 credit cents; two real provider attempts each
+settled one cent, leaving998 cents. Duplicate purchase/settlement replay left the
+ledger unchanged, and a separate synthetic control actor remained unchanged.
+Actual provider cost was$0.0004776. Schema removal, owned-resource cleanup,
+seven-import scope closure and normal child closure passed. This excludes public
+checkout and signed webhook delivery; independent saved review passes.
+[Evidence and remaining boundaries](upgrade-2026-cloud-purchased-credit-20261115.md).
+
+Remote exact5a CI, Docker and ordinary self-host checks pass. Strict container
+checks fail:641 passes, nine original30-second deadline failures and five
+original skips across655 cases. No deadline or case was changed.
 
 Human tax/AI/security reviews, final annual2026 forms, accountable advisory
 disposition, strict Linux deadlines and current-source distribution qualification
