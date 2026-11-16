@@ -15,6 +15,10 @@
   preserve all predecessor holds and honest denied local-IPC accounting.
 - [x] Complete and independently reconcile all twelve exact5a local checks:
   28,869 tests,88.18% branches,650 browser passes/five original skips.
+- [x] Independently review separate0918 unpaid Checkout reconciliation/cleanup;
+  preserve its original financial HOLD and make zero payment/provider calls.
+- [x] Remove four closed generated build caches while preserving every non-cache
+  domain and retained report; keep fresh native capacity admission mandatory.
 - [ ] Complete current-source hosted and self-host distributions.
 - [ ] Complete full cloud purchased-credit/provider accounting rehearsal under the
   original spend/privacy bounds; import success does not establish financial proof.

@@ -23,8 +23,13 @@ credential and application-function calls remain zero. Independent saved review
 passes. This is import-only evidence. The full financial attempt stopped before
 card entry/payment/provider dispatch because the current expiration label was not
 recognized; normal closure is verified, and retained resources await reconciliation.
-The self-host maintenance attempt stopped before VM boot at the unchanged512GiB
-host-space floor; owned completed-build cache cleanup is being prepared.
+Separate read-only reconciliation and scoped unpaid-resource cleanup now pass,
+with independent saved-artifact review: the synthetic schema is absent, the
+owned test product/price are inactive and the test customer is deleted. Neither
+operation made a payment or provider call; the original financial HOLD remains.
+Four completed-build caches were removed with all source, final assets, reports
+and other files unchanged. Available host space still fluctuates below the
+unchanged512GiB floor, so no new native boot or workload is claimed.
 
 Human tax/AI/security reviews, final annual2026 forms, accountable advisory
 disposition, strict Linux deadlines and current-source distribution qualification
