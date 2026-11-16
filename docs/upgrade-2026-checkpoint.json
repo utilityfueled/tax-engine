@@ -1,4 +1,31 @@
 {
+  "nov16ExactC018Local": {
+    "source": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
+    "all12LocalPassed": true,
+    "unitTests": 28913,
+    "coverageTests": 28913,
+    "filesEach": 2122,
+    "branchCoveragePercent": "88.19",
+    "browser": {
+      "passed": 650,
+      "originalSkipped": 5,
+      "identities": 655,
+      "windows": 8,
+      "workers": 2,
+      "retries": 0
+    },
+    "allFiveGenuineTerminalReceiptsRetained": true,
+    "ownedDatabasesAndBrowserNormallyClosed": true,
+    "temporaryDatabaseCredentialsRemoved": true,
+    "rootCompletedReviewSha256": "f0066c4e7b581f36253383c97f60a0e43bc2575c22ab3abb5d7ee4c4242b5170",
+    "independentCompletedReviewSha256": "2117d6e59c54d47450e77991f17749f7027cb5a63d691ca6bd3e3dc5a93af850",
+    "remoteCIWebStatusAtObservation": "in_progress",
+    "remoteDockerPassed": true,
+    "currentPreviewAndArm64Pending": true,
+    "strictLinuxResolved": false,
+    "filingModelReleaseQualified": false,
+    "ledger": "docs/upgrade-2026-integrated-local-c0180308-20261116.md"
+  },
   "nov16SchoolDisplayReplay": {
     "sourcePackage": "nov16-school-card-display-replay-candidate",
     "runtimeFilesChanged": 7,
@@ -30,7 +57,7 @@
     "metadataChangedSourceHashes": 7,
     "finiteSourceCount": 1997,
     "strictLinuxResolved": false,
-    "fullNewSourceChecksPending": true,
+    "fullNewSourceChecksPending": false,
     "sourceLedger": "docs/upgrade-2026-school-display-validation-20261116.md"
   },
   "nov16OfficialSourceRefresh": {

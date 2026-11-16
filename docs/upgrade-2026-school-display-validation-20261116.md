@@ -32,8 +32,9 @@ Unconfirmed header entry still performs four federal calculations and one school
 adapter; its matching display guard now adds zero. Confirmed-header core counts
 remain seven and two. These local macOS ARM measurements do not establish Linux
 CPU causality, actual browser latency, or resolution of the four strict runtime
-timeouts. Full checks and distribution qualification of the new revision remain
-pending. Existing deadlines, request windows, identities, skips, retries,
+timeouts. All twelve local checks of the pushed revision now pass with independent
+completed-artifact review; [the exact results](upgrade-2026-integrated-local-c0180308-20261116.md)
+retain the remaining remote and distribution qualification. Existing deadlines, request windows, identities, skips, retries,
 coverage floors and readiness gates remain unchanged.
 
 Browser metadata refreshes only seven runtime source hashes and its dependent

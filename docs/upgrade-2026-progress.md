@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 16 current school-display revision passes all local checks
+
+Pushed application revision `c0180308` passes all twelve local checks:
+28,913 tests in each unit/coverage lane, 88.19% branches, and 650 browser passes
+plus five original skips. Both owned PostgreSQL clusters and the browser server
+close normally; temporary database credentials are removed. Root and an
+independent agent separately execute complete saved-artifact reviews with
+genuine staging and all four lane terminal receipts, including unit.
+[Exact source, checks and review hashes](upgrade-2026-integrated-local-c0180308-20261116.md).
+
+Remote CI/Web and current-source Preview/ARM64/strict qualification continue.
+The separate Docker workflow passes. The latest official-source refresh retains
+the unresolved runtime-library advisory; human, final-form, AI and security
+gates remain open. Filing, model promotion and production release stay closed.
+
+
 ## November 15 completed 797 local and Preview evidence; strict and ARM remain open
 
 Exact `79792ec7` passes all twelve local checks: 28,856 tests in each unit/coverage

@@ -2,7 +2,14 @@
 
 ## Current continuation — November 16
 
-- [x] Implement and independently review display-only school-card replay elimination; preserve all core validation, policies and error order. Fixed local comparison improves 38.6048%; current full/distribution checks remain pending. [Source and scoped checks](upgrade-2026-school-display-validation-20261116.md).
+- [x] Push `b4658b0c` and `c0180308` to main and backup under freshly verified production-build suppression.
+- [x] Independently execute and review all twelve exact `c0180308` local checks: 28,913 tests per unit/coverage lane, 88.19% branches, 650 browser passes/five original skips, with genuine terminal receipts for every lane. [Completed evidence](upgrade-2026-integrated-local-c0180308-20261116.md).
+- [x] Independently verify the single recovered f3 build-cache removal and full preservation of source, final assets, reports and dependency stores.
+- [ ] Recover unchanged host/guest capacity floors and complete current `c0180308` ARM64 runtime, recovery and scan; source reviews alone supply no admission.
+- [ ] Complete current `c0180308` protected Preview and remote strict Linux qualification; retain all earlier source-specific failures.
+
+
+- [x] Implement and independently review display-only school-card replay elimination; preserve all core validation, policies and error order. Fixed local comparison improves 38.6048%; all twelve current local checks pass and distribution checks continue. [Source and scoped checks](upgrade-2026-school-display-validation-20261116.md).
 
 - [x] Refresh 45 fixed official sources and both npm audits; independently review the new unresolved runtime-library advisory without rewriting historical scans. [Source refresh](upgrade-2026-official-refresh-20261116.md).
 
