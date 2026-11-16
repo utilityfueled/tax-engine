@@ -6626,3 +6626,15 @@ supported fixed Trixie version is recorded. Root and independent saved-source
 reviews verify all 63 packet files and the historical scan. Preserve that
 191-finding scan and all filing, model, human and security gates.
 [Exact evidence and follow-up](upgrade-2026-official-refresh-20261116.md).
+
+
+### November 16: display-only school-card replay elimination
+
+The school card now consumes an ephemeral descriptor-bound observation only
+after the same render completes full source validation. Every calculation,
+confirmation and export guard remains intact. Spec-first failures precede root
+52 affected tests plus 957 catalog cases passing, and independent eight-test,
+301-file/385-link review. All 384 fixed ABBA observations remain retained;
+local combined work improves 38.6048%. No Linux resolution is inferred.
+[Implementation, checks and limits](upgrade-2026-school-display-validation-20261116.md).
+Full current-source checks and distribution qualification continue.

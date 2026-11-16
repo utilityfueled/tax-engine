@@ -1,5 +1,6 @@
 'use client';
 import {useState} from 'react';
+import {matchesGuidedOhioSchoolDisplayObservation} from '@/lib/guided-interview-flow';
 import type {TaxYearInput} from '@/models/inputs';
 import type {OhioResidencyDraft} from '@/lib/guided-ohio-residency-facts';
 import type {OhioPaymentDraft} from '@/lib/guided-ohio-payment-facts';
@@ -12,7 +13,7 @@ function write(value:OhioSchoolDistrictDraft,path:Path,next:unknown){let current
 const returnTypes=[['sd100','School district income tax (SD100)'],['it1040','Individual income tax (IT1040) — different account']]as const;
 const incomeSourceLabels={"ordinaryCompensationOnlyConfirmed": "School income consists only of ordinary wages", "noSelfEmploymentIncomeConfirmed": "Actual school records contain no self-employment income", "allOtherIncomeSourcesCheckedConfirmed": "All actual income sources have been checked", "noSpecialWageAdjustmentsConfirmed": "Actual school wages need no special adjustments"};
 const accountHolders=[['primary','Primary taxpayer'],['spouse','Spouse — separate method']]as const;
-export function OhioSchoolDistrictDetails({data,onChange,originalInput,ohioResidency,ohioPayments,taxYear}:{data:OhioSchoolDistrictDraft|undefined;onChange:(data:OhioSchoolDistrictDraft|undefined)=>void;originalInput:TaxYearInput|null;ohioResidency:OhioResidencyDraft|undefined;ohioPayments:OhioPaymentDraft|undefined;taxYear:number|null|undefined}){
+export function OhioSchoolDistrictDetails({data,onChange,originalInput,ohioResidency,ohioPayments,taxYear,schoolDisplayObservation}:{data:OhioSchoolDistrictDraft|undefined;onChange:(data:OhioSchoolDistrictDraft|undefined)=>void;originalInput:TaxYearInput|null;ohioResidency:OhioResidencyDraft|undefined;ohioPayments:OhioPaymentDraft|undefined;taxYear:number|null|undefined;schoolDisplayObservation?:unknown}){
  const[error,setError]=useState<string|null>(null);const d=data??emptyOhioSchoolDistrictDraft();
  function edit(path:Path,value:unknown){const copy=structuredClone(d);write(copy,path,value);copy.sourceFactsConfirmed=null;setError(null);onChange(copy);}
  function text(label:string,path:Path,type:'text'|'date'='text'){const v=read(d,path);return <TextFact key={path.join('.')} label={label} value={typeof v==='string'?v:''} type={type} onChange={value=>edit(path,value)}/>;}
@@ -22,7 +23,7 @@ export function OhioSchoolDistrictDetails({data,onChange,originalInput,ohioResid
  function choice(label:string,path:Path,options:ReadonlyArray<readonly[string,string]>){const v=read(d,path);return <label key={path.join('.')} className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={typeof v==='string'?v:''} onChange={event=>edit(path,event.target.value)}><option value="">Choose from actual records</option>{options.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>;}
  function position(label:string,path:Path,options:ReadonlyArray<readonly[number|null,string]>){const v=read(d,path);return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={typeof v==='number'?String(v):''} onChange={event=>edit(path,/^\d+$/.test(event.target.value)?Number(event.target.value):null)}><option value="">Select the actual original position</option>{options.map(([key,label],index)=><option key={key===null?`unknown-${index}`:key} value={key===null?'':key} disabled={key===null}>{label}</option>)}</select></label>;}
  function sourceAddress(prefix:string,path:Path){return <div className="grid gap-3 md:grid-cols-2">{(['street','apt','city','state','zip']as const).map(key=>text(`${prefix} ${key}`,[...path,key]))}</div>;}
- let confirmed=false;if(data?.sourceFactsConfirmed&&originalInput)try{buildGuidedOhioSchoolDistrictFacts(originalInput,data,ohioResidency,ohioPayments);confirmed=true;}catch{/* A stale saved header cannot represent a validated current packet. */}
+ const confirmed=schoolDistrictDisplayConfirmed(originalInput,data,ohioResidency,ohioPayments,schoolDisplayObservation);
  return <section className="guided-card space-y-4" aria-label="Ohio school district actual source facts"><h3 className="guided-card-title">Ohio school district sources</h3>
  <p>Use your actual home, school district lookup, original W2 rows and separate school tax account records. A W2 locality does not establish where you lived. Leave unknown answers blank; enter zero only when your records establish zero.</p>
  <p>Calculation supports 2025 Hillsdale earned-income sources for a single taxpayer under 65 with ordinary W2 income: full-year Ohio, or the separately documented January–July Ohio and August–December Virginia specific-payroll method. Experimental SD 100 and school withholding review PDFs support only the original-bound full-year Hillsdale method, or the separately qualified 212-day Ohio / 153-day Virginia payroll method with actual Ashland County / Hillsdale (0302) header originals. Part-year sources without that header and broader methods have no qualified paper packet. Filing remains unavailable. Other sources remain saved for reconciliation and require their separate method. {taxYear!==2025?'The selected year does not have this source method.':''}</p>
@@ -99,4 +100,11 @@ export function OhioSchoolDistrictDetails({data,onChange,originalInput,ohioResid
  <button type="button" onClick={()=>onChange(undefined)}>Remove Ohio school district source facts</button>
  </>}
  </section>;
+}
+
+/** The optional observation affects this status sentence only. Standalone use replays originals. */
+export function schoolDistrictDisplayConfirmed(originalInput:TaxYearInput|null,data:OhioSchoolDistrictDraft|undefined,ohioResidency:OhioResidencyDraft|undefined,ohioPayments:OhioPaymentDraft|undefined,observation?:unknown):boolean{
+ if(!data?.sourceFactsConfirmed||!originalInput)return false;
+ if(matchesGuidedOhioSchoolDisplayObservation(observation,originalInput,data,ohioResidency,ohioPayments))return true;
+ try{buildGuidedOhioSchoolDistrictFacts(originalInput,data,ohioResidency,ohioPayments);return true;}catch{return false;}
 }

@@ -2821,6 +2821,75 @@ export function clearGuidedFlowState(storage: Storage, target: GuidedFlowStorage
   }
 }
 
+/** Display-only observation. No engine, confirmation, export or storage consumer. */
+const schoolDisplayMint = Symbol('current school display');
+type DisplayRecord = {object: object; prototype: object | null; keys: string[]; descriptors: PropertyDescriptorMap};
+function schoolDisplayMaterial(roots: unknown[]) {
+  const records: DisplayRecord[] = [], visiting = new Set<object>();
+  function read(value: unknown): unknown {
+    if (value === undefined) return ['undefined'];
+    if (value === null || typeof value === 'string' || typeof value === 'boolean') return [typeof value, value];
+    if (typeof value === 'number' && Number.isFinite(value)) return ['number', Object.is(value, -0) ? '-0' : String(value)];
+    if (typeof value !== 'object' || visiting.has(value)) throw Error('Unsupported display material');
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== Array.prototype && prototype !== null) throw Error('Unsupported display prototype');
+    const keys = Reflect.ownKeys(value);
+    if (keys.some(key => typeof key !== 'string')) throw Error('Unsupported display key');
+    const names = keys as string[], descriptors = Object.getOwnPropertyDescriptors(value);
+    visiting.add(value);
+    records.push({object: value, prototype, keys: names, descriptors});
+    const result = names.map(key => {
+      const descriptor = descriptors[key];
+      if (!descriptor || !('value' in descriptor)) throw Error('Unsupported display accessor');
+      return [key, descriptor.enumerable, descriptor.configurable, descriptor.writable, read(descriptor.value)];
+    });
+    visiting.delete(value);
+    return [Array.isArray(value) ? 'array' : prototype === null ? 'null-object' : 'object', result];
+  }
+  try {
+    const fingerprint = JSON.stringify(roots.map(read));
+    return {fingerprint, matches(next: unknown[]) {
+      return next.length === roots.length && next.every((value, index) => value === roots[index]) && records.every(record => {
+        if (Object.getPrototypeOf(record.object) !== record.prototype) return false;
+        const keys = Reflect.ownKeys(record.object);
+        if (keys.length !== record.keys.length || keys.some((key, index) => key !== record.keys[index])) return false;
+        const descriptors = Object.getOwnPropertyDescriptors(record.object);
+        return record.keys.every(key => {
+          const before = record.descriptors[key], now = descriptors[key];
+          return now && 'value' in now && before && Object.is(now.value, before.value)
+            && now.enumerable === before.enumerable && now.configurable === before.configurable && now.writable === before.writable;
+        });
+      });
+    }};
+  } catch { return null; }
+}
+function schoolDisplayOwn(value: unknown, key: string): unknown {
+  try {
+    if (typeof value !== 'object' || value === null) return undefined;
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && 'value' in descriptor ? descriptor.value : undefined;
+  } catch { return undefined; }
+}
+class SchoolDisplayObservation {
+  #material: NonNullable<ReturnType<typeof schoolDisplayMaterial>>;
+  constructor(mint: symbol, material: NonNullable<ReturnType<typeof schoolDisplayMaterial>>) {
+    if (mint !== schoolDisplayMint) throw Error('Actual current display observation required');
+    this.#material = material;
+    Object.freeze(this);
+  }
+  static matches(observation: unknown, roots: unknown[]): boolean {
+    try { return typeof observation === 'object' && observation !== null && #material in observation && observation.#material.matches(roots); }
+    catch { return false; }
+  }
+}
+Object.freeze(SchoolDisplayObservation);
+Object.freeze(SchoolDisplayObservation.prototype);
+/** A display hint can never authorize calculations or capture confirmations. */
+export function matchesGuidedOhioSchoolDisplayObservation(observation: unknown, input: TaxYearInput | null,
+  school: OhioSchoolDistrictDraft | undefined, residency: OhioResidencyDraft | undefined, payments: OhioPaymentDraft | undefined): boolean {
+  return SchoolDisplayObservation.matches(observation, [input, school, residency, payments]);
+}
+
 /** One synchronous read of the actual current state. No context survives this call. */
 export function evaluateGuidedRenderState(actual: GuidedFlowState) {
   const state = structuredClone(actual);
@@ -2840,7 +2909,23 @@ export function evaluateGuidedRenderState(actual: GuidedFlowState) {
   const projection: CurrentRenderProjection = {stateSourcesValidated: ordinary && fresh.sourceReplaySucceeded};
   const analysis = state.phase === "segmentation" ? null : analyzeGuidedRenderUsing(state, section => getVisitedSectionStatusUsing(state, section,
     () => validateSectionUsing(state, section, projection)));
-  return { preview: fresh.preview, analysis: analysis === null ? null : structuredClone(analysis),
-    originalInput: input === null ? null : structuredClone(input),
-    ordinaryOriginalInput: paInput === null ? null : structuredClone(paInput) };
+  const originalInput = input === null ? null : structuredClone(input);
+  // Unsupported actual accessors receive the unchanged standalone display guard;
+  // observation admission never reads a getter a second time after structuredClone.
+  const actualData = schoolDisplayOwn(schoolDisplayOwn(actual, 'sectionData'), 'state-return');
+  const actualSchool = schoolDisplayOwn(actualData, 'ohioSchoolDistrict');
+  const actualResidency = schoolDisplayOwn(actualData, 'ohioResidency');
+  const actualPayments = schoolDisplayOwn(actualData, 'ohioPayments');
+  let schoolDisplayObservation: SchoolDisplayObservation | undefined;
+  if (fresh.schoolReplaySucceeded && originalInput && schoolDisplayOwn(actualSchool, 'sourceFactsConfirmed') === true) {
+    const current = schoolDisplayMaterial([originalInput, actualSchool, actualResidency, actualPayments]);
+    const validated = schoolDisplayMaterial([originalInput, data?.ohioSchoolDistrict, data?.ohioResidency, data?.ohioPayments]);
+    if (current && validated && current.fingerprint === validated.fingerprint)
+      schoolDisplayObservation = new SchoolDisplayObservation(schoolDisplayMint, current);
+  }
+  const evaluation = { preview: fresh.preview, analysis: analysis === null ? null : structuredClone(analysis),
+    originalInput, ordinaryOriginalInput: paInput === null ? null : structuredClone(paInput) };
+  // Deliberately absent from saved/serialized projections and ordinary result iteration.
+  if (schoolDisplayObservation) Object.defineProperty(evaluation, 'schoolDisplayObservation', {value: schoolDisplayObservation});
+  return evaluation as typeof evaluation & {readonly schoolDisplayObservation?: SchoolDisplayObservation};
 }

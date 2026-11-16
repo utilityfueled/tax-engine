@@ -167,17 +167,18 @@ export function computeGuidedPreviewOutcome(state: GuidedFlowState | null | unde
 
 /** A fresh producer: accepts actual state only, never a caller-prepared input or proof.
  * Returned originals are private source data, not an export or confirmation action. */
-export function computeGuidedPreviewEvaluation(state: GuidedFlowState): {preview: ReturnType<typeof computeGuidedPreviewOutcome>; input: TaxYearInput | null; sourceReplaySucceeded: boolean} {
+export function computeGuidedPreviewEvaluation(state: GuidedFlowState): {preview: ReturnType<typeof computeGuidedPreviewOutcome>; input: TaxYearInput | null; sourceReplaySucceeded: boolean; schoolReplaySucceeded: boolean} {
   let input: TaxYearInput | null = null;
   let sourceReplaySucceeded = false;
+  let schoolReplaySucceeded = false;
   let blockedBy: string | null = null;
   const metrics = runGuidedPreview(state, message => { blockedBy = message; },
-    current => { input = current; }, () => { sourceReplaySucceeded = true; });
-  return { preview: {metrics, blockedBy}, input, sourceReplaySucceeded };
+    current => { input = current; }, () => { sourceReplaySucceeded = true; }, () => { schoolReplaySucceeded = true; });
+  return { preview: {metrics, blockedBy}, input, sourceReplaySucceeded, schoolReplaySucceeded };
 }
 
 function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void,
-  onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void): GuidedPreviewMetrics | null {
+  onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void, onSchoolReplay?: () => void): GuidedPreviewMetrics | null {
   if (!state || typeof state !== "object" || state.segmentation == null || state.sectionData == null) {
     return null;
   }
@@ -221,7 +222,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
             stateResult={stateCode,stateName:'Pennsylvania',stateTax:pa.netTaxLiability,refund:pa.netOverpayment,balanceDue:pa.totalAmountDue,totalPayments:pa.totalPayments};
           }
         } else if (stateCode === "OH") {
-          const currentOriginals = buildGuidedStateOriginals(taxInput, state);
+          const currentOriginals = buildGuidedStateOriginals(taxInput, state, onSchoolReplay);
           const ohio = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest)));
           const oh=ohio.it1040,sd=ohio.sd100,source=ohio.schoolDistrictSource,schoolPacket=currentOriginals.ohioSchoolDistrict;
           if(currentOriginals.ohioSchoolDistrict&&(!sd||!source))throw new Error('Actual required school district result is unavailable.');

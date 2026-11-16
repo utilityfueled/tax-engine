@@ -489,7 +489,7 @@ function SectionContent({
 }: {
   sectionId: InterviewSectionId;
   analysis: GuidedRenderAnalysis;
-  stateProjection: Pick<ReturnType<typeof evaluateGuidedRender>, "originalInput" | "ordinaryOriginalInput">;
+  stateProjection: Pick<ReturnType<typeof evaluateGuidedRender>, "originalInput" | "ordinaryOriginalInput" | "schoolDisplayObservation">;
   state: GuidedFlowState;
   workspace: ReturnWorkspaceRecord;
   documentCacheWorkspaceId?: string | null;
@@ -770,6 +770,7 @@ function SectionContent({
           stateCode={state.segmentation.stateCode as SupportedStateCode}
           originalInput={originalInput}
           ordinaryOriginalInput={stateProjection.ordinaryOriginalInput}
+          schoolDisplayObservation={stateProjection.schoolDisplayObservation}
           taxYear={state.taxYear}
           filingStatus={state.segmentation.filingStatus ? mapFilingStatus(state.segmentation.filingStatus) : null}
           data={getSectionData(state, "state-return")}
@@ -815,7 +816,7 @@ function InterviewPhase({
 }: {
   state: GuidedFlowState;
   analysis: GuidedRenderAnalysis;
-  stateProjection: Pick<ReturnType<typeof evaluateGuidedRender>, "originalInput" | "ordinaryOriginalInput">;
+  stateProjection: Pick<ReturnType<typeof evaluateGuidedRender>, "originalInput" | "ordinaryOriginalInput" | "schoolDisplayObservation">;
   guidedPreview: GuidedPreviewMetrics | null;
   guidedPreviewBlockedBy: string | null;
   onStateChange: (next: GuidedFlowState) => void;

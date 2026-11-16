@@ -1,4 +1,38 @@
 {
+  "nov16SchoolDisplayReplay": {
+    "sourcePackage": "nov16-school-card-display-replay-candidate",
+    "runtimeFilesChanged": 7,
+    "displayOnly": true,
+    "coreAndAllReadinessGuardsUnchanged": true,
+    "specFirstGenuineRed": 2,
+    "rootFocusedTests": 52,
+    "rootCatalogCases": 957,
+    "rootWebTypesPassed": true,
+    "specLinesPassed": 9397,
+    "inventoryPassed": true,
+    "scopedLintErrors": 0,
+    "originalScopedWarnings": 3,
+    "fixedABBA": {
+      "measuredSamples": 384,
+      "pairs": 192,
+      "warmupsRetained": 192,
+      "processes": 16,
+      "baselineMedianMs": 27.7866045,
+      "candidateMedianMs": 17.059646,
+      "improvementPercent": 38.604783466795105,
+      "thresholdPercent": 10,
+      "allSamplesRetained": true
+    },
+    "parityRecords": 102,
+    "orderedErrorsMatched": 6,
+    "rootReviewSha256": "a8d096a0b7f4d9d5becb45f1998bc6de778f478d02b6d915b1e5899250903a64",
+    "independentReviewSha256": "138967e43ed745664cdeaa3e26b5f1f670905ca6ff9d02a1f534b88972061cfa",
+    "metadataChangedSourceHashes": 7,
+    "finiteSourceCount": 1997,
+    "strictLinuxResolved": false,
+    "fullNewSourceChecksPending": true,
+    "sourceLedger": "docs/upgrade-2026-school-display-validation-20261116.md"
+  },
   "nov16OfficialSourceRefresh": {
     "observedUtc": "2026-11-16T07:10:22Z",
     "publicRequests": 45,

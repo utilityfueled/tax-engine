@@ -44,7 +44,7 @@ function enteredSource(data:OhioReturnHeaderDraft):OhioReturnHeaderSources{
  if(!parsed.success)return fail('complete every actual header field and retain its explicit source confirmation');return parsed.data;
 }
 type CurrentHeaderContext={canonical:TaxYearInput;federal:Record<string,unknown>;facts:ReturnType<typeof buildGuidedOhioResidencyFacts>;paid:ReturnType<typeof buildGuidedOhioPaymentFacts>;district:OhioSchoolDistrictFacts|undefined};
-function withCurrentContext<T>(input:TaxYearInput,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school:OhioSchoolDistrictDraft|undefined,use:(current:CurrentHeaderContext,proof?:OhioSourceAdapterInvocation)=>T):T{
+function withCurrentContext<T>(input:TaxYearInput,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school:OhioSchoolDistrictDraft|undefined,use:(current:CurrentHeaderContext,proof?:OhioSourceAdapterInvocation)=>T,onSchoolReplay?:()=>void):T{
  const original=structuredClone(input);Reflect.deleteProperty(original,'ohioReturnHeaderSources');
  if(input.ohioSchoolDistrict&&!school)return fail('retained canonical school district originals require their current native child');
  if(input.ohioResidency?.residentCreditSources&&!residency?.residentCreditSources)return fail('retained canonical resident-credit originals require their current native child');
@@ -55,6 +55,7 @@ function withCurrentContext<T>(input:TaxYearInput,residency:OhioResidencyDraft|u
  const finish=(district:OhioSchoolDistrictFacts|undefined,proof?:OhioSourceAdapterInvocation)=>{
   const canonical={...original,ohioResidency:facts,ohioPayments:paid,...(district?{ohioSchoolDistrict:district}:{})};
   const federal=Object.fromEntries(Object.entries(original).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key)));
+  if(district)onSchoolReplay?.();
   return use({canonical,federal,facts,paid,district},proof);
  };
  return school||facts.schoolDistrictStatus==='actual_district_sources_required'?withGuidedOhioSchoolDistrictAdapter(original,school,residency,payments,finish):finish(undefined);
@@ -78,7 +79,7 @@ export function buildGuidedOhioReturnHeaderSources(input:TaxYearInput,data:OhioR
 }
 /** Validate the same current context once for a header and its canonical parent fields.
  * No externally supplied context and no cross-invocation reuse: every call replays originals. */
-export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft):TaxYearInput&{ohioReturnHeaderSources:OhioReturnHeaderSources}{
+export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft,onSchoolReplay?:()=>void):TaxYearInput&{ohioReturnHeaderSources:OhioReturnHeaderSources}{
  if(!data)return fail('actual header records and explicit confirmation are required');
  return withCurrentContext(input,residency,payments,school,(current,proof)=>{
  const source=enteredSource(data),saved=OhioReturnHeaderSourcesSchema.safeParse(data.confirmedHeaderSources);
@@ -86,5 +87,5 @@ export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:Ohi
  if(!saved.success||!same(source,saved.data))return fail('actual header records differ from the separately confirmed originals; explicitly review them again');
  calculateOhioReturnHeaderWithSchoolAdapter(current.canonical,source,proof);
  return{...input,ohioResidency:current.facts,ohioPayments:current.paid,...(current.district?{ohioSchoolDistrict:current.district}:{}),ohioReturnHeaderSources:source};
- });
+ },onSchoolReplay);
 }

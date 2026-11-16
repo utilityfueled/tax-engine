@@ -130,6 +130,7 @@ export function SectionStateReturn({
   onDataChange,
   originalInput,
   ordinaryOriginalInput,
+  schoolDisplayObservation,
   taxYear,
   filingStatus,
 }: {
@@ -137,6 +138,7 @@ export function SectionStateReturn({
   currentWorkspaceId?: string;
   originalInput?: TaxYearInput | null;
   ordinaryOriginalInput?: TaxYearInput | null;
+  schoolDisplayObservation?: unknown;
   taxYear?: number | null;
   filingStatus?: string | null;
   data: StateReturnData | undefined;
@@ -249,7 +251,7 @@ export function SectionStateReturn({
           <OhioReturnHeaderDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioReturnHeaderSources} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} ohioSchoolDistrict={current.ohioSchoolDistrict} onChange={ohioReturnHeaderSources=>onDataChange({...current,ohioReturnHeaderSources})}/>
           <OhioReciprocalWagesDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioReciprocalWages} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioReciprocalWages=>onDataChange({...current,ohioReciprocalWages})}/>
           {(taxYear===2026||current.ohio2026SchoolSources!==undefined)&&<Ohio2026SchoolSourceDetails originalInput={originalInput??null} data={current.ohio2026SchoolSources} onChange={ohio2026SchoolSources=>onDataChange({...current,ohio2026SchoolSources})}/>}
-          {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
+          {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails schoolDisplayObservation={schoolDisplayObservation} originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
 
         </>}
         {stateCode==='PA'&&(filingStatus==='married_filing_jointly'||filingStatus==='mfj'||current.paMarriedOrdinarySources!==undefined)?<>

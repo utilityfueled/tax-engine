@@ -97,7 +97,7 @@ export function buildGuidedPennsylvaniaOverrides(state?: GuidedFlowState | null)
 
 /** Bind current private originals before state calculation and before redaction.
  * This does not turn a source packet into a complete return or filing approval. */
-export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlowState | null): TaxYearInput {
+export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlowState | null, onSchoolReplay?: () => void): TaxYearInput {
   if (!state) return input;
   const data = state.sectionData["state-return"];
   if (state.segmentation.stateCode === "OH") {
@@ -108,7 +108,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     // The header needs the same validated current parent/payment/credit/district originals.
     // Keep unsupported reciprocal and missing retained child composition on the existing path.
     if(data?.ohioReturnHeaderSources&&!input.ohioReturnHeaderSources&&!data.ohioReciprocalWages&&!(input.ohioSchoolDistrict&&!data.ohioSchoolDistrict)){
-      return buildGuidedOhioReturnHeaderOriginals(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict);
+      return buildGuidedOhioReturnHeaderOriginals(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict,onSchoolReplay);
     }
     let ohioResidency = data?.ohioReciprocalWages
       ?buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments)

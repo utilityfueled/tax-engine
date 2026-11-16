@@ -1,0 +1,22 @@
+form: "Ohio school source display observation"
+taxYear: 2025
+source: spec/state/oh-school-header-same-invocation.yaml
+notes: >-
+  Display performance only. Every current core evaluation retains its complete
+  original full school adapter, fresh federal, proof and header error ordering.
+  A successful school replay may suppress only a duplicate display-status guard
+  for exactly the same returned input and native sources in that render. No
+  observation survives serialization or qualifies confirmation, tax, export or filing.
+lines:
+  - line: "same-render-display"
+    description: Original component markup with one completed actual validation
+    formula: authentic observation bound to exact current input and all native school, residency and payment identities and contents; otherwise original complete standalone guard
+    testRef: "tests/guided-interview/oh-school-display-replay.test.tsx::current school display reuses only completed same-render validation %s"
+  - line: "rejected-display-material"
+    description: Foreign, forged, replaced, mutated and unsupported observations cannot skip standalone replay
+    formula: missing or invalid runtime brand, exact identity or complete own-data snapshot causes the original complete standalone display validation without granting calculation authority
+    testRef: "tests/guided-interview/oh-school-display-replay.test.tsx::foreign forged or mutated school display observations fall back %s"
+  - line: "unknown-remains-unknown"
+    description: Unknown and stale originals remain unavailable; established zero remains valid
+    formula: each actual edit gets a fresh whole evaluation; an old display observation cannot validate changed school confirmation, payment or federal originals
+    testRef: "tests/guided-interview/oh-school-display-replay.test.tsx::school display cannot retain unknown or stale source success %s"

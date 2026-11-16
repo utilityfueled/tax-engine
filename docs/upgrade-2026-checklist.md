@@ -2,6 +2,8 @@
 
 ## Current continuation — November 16
 
+- [x] Implement and independently review display-only school-card replay elimination; preserve all core validation, policies and error order. Fixed local comparison improves 38.6048%; current full/distribution checks remain pending. [Source and scoped checks](upgrade-2026-school-display-validation-20261116.md).
+
 - [x] Refresh 45 fixed official sources and both npm audits; independently review the new unresolved runtime-library advisory without rewriting historical scans. [Source refresh](upgrade-2026-official-refresh-20261116.md).
 
 - [x] Push reviewed Ohio replay package `66fb52dc` to main and backup after fresh production-build suppression readback; preserve all existing test policies. [Source and checks](upgrade-2026-ohio-school-header-replay-20261116.md).
