@@ -51,16 +51,17 @@ describe('Optional-Browser-CPU-Diagnostics', () => {
     }
   });
   it('refuses corrupt or absent sample evidence instead of reporting zero activity', () => {
-    for (const mutate of [
-      (p: ReturnType<typeof profile>) => { p.samples = [999]; p.timeDeltas = [1000]; },
-      (p: ReturnType<typeof profile>) => { p.timeDeltas = [1]; },
-      (p: ReturnType<typeof profile>) => { p.timeDeltas[0] = -1; },
-      (p: ReturnType<typeof profile>) => { p.endTime = 9000; },
-      (p: ReturnType<typeof profile>) => { p.timeDeltas[0] = 9000; },
-      (p: ReturnType<typeof profile>) => { p.nodes[2].id = 2; },
-      (p: ReturnType<typeof profile>) => { p.nodes[2].children = [1]; },
-      (p: ReturnType<typeof profile>) => { p.nodes[0].children.push(999); },
-    ]) { const raw = profile(); mutate(raw); expect(summarizeProfile(raw, options())).toEqual({ version: 1, qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', code: 'invalid-profile' }); }
+    const cases: [string, (p: ReturnType<typeof profile>) => void][] = [
+      ['sample-reference', p => { p.samples = [999]; p.timeDeltas = [1000]; }],
+      ['sample-count', p => { p.timeDeltas = [1]; }],
+      ['sample-interval', p => { p.timeDeltas[0] = -1; }],
+      ['time-bounds', p => { p.endTime = 9000; }],
+      ['interval-total', p => { p.timeDeltas[0] = 9000; }],
+      ['node-identity', p => { p.nodes[2].id = 2; }],
+      ['tree-edge', p => { p.nodes[2].children = [1]; }],
+      ['tree-edge', p => { p.nodes[0].children.push(999); }],
+    ];
+    for (const [reason, mutate] of cases) { const raw = profile(); mutate(raw); expect(summarizeProfile(raw, options())).toEqual({ version: 1, qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', code: 'invalid-profile', reason }); }
     expect(summarizeProfile({ ...profile(), samples: undefined }, options()).status).toBe('unavailable');
   });
   it('rejects finite profile bounds before serialization and never persists raw nodes', () => {
@@ -199,6 +200,17 @@ it('settles an unresponsive owned child without waiting indefinitely for close',
 });
 
 import { sanitizeStoredRecord } from '../../scripts/browser-cpu-diagnostics/profile.mjs';
+it('records only fixed rejection reasons and rejects private additions', () => {
+  const raw = profile(); raw.timeDeltas[0] = -1;
+  const record = summarizeProfile(raw, options());
+  expect(record).toEqual({ version: 1, qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', code: 'invalid-profile', reason: 'sample-interval' });
+  expect(sanitizeStoredRecord(record, options())).toEqual(record);
+  const historical = { version: 1, qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', code: 'invalid-profile' };
+  expect(sanitizeStoredRecord(historical, options())).toEqual(historical);
+  for (const altered of [{ ...record, reason: 'private exception value' }, { ...record, error: 'private exception value' }, { ...record, code: 'profile-limit' }]) {
+    expect(sanitizeStoredRecord(altered, options())).toEqual({ version: 1, qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', code: 'invalid-artifact' });
+  }
+});
 it('rejects private additions in transient records before the upload projection', () => {
   const good = summarizeProfile(profile(), options());
   expect(sanitizeStoredRecord(good, options())).toEqual(good);

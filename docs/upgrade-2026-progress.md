@@ -6671,3 +6671,14 @@ confirmation and export guard remains intact. Spec-first failures precede root
 local combined work improves 38.6048%. No Linux resolution is inferred.
 [Implementation, checks and limits](upgrade-2026-school-display-validation-20261116.md).
 Full current-source checks and distribution qualification continue.
+
+
+### November 16: fixed private CPU-profile rejection reasons
+
+Optional profiling now identifies failed invariants with a fixed reason enum,
+while strict upload reconstruction excludes raw data and private additions.
+Spec-first two RED precede26 passing tests; independent960-case parity,1772
+upload roundtrips and84 private-addition rejections pass. All original profile
+limits and acceptance predicates remain unchanged. Earlier eleven rejected
+profiles remain unexplained; runtime and readiness gates remain open.
+[Evidence](upgrade-2026-cpu-rejection-diagnostics-20261116.md).

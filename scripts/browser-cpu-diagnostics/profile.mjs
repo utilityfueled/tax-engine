@@ -7,6 +7,11 @@ const TAG = 'NONQUALIFYING_DIAGNOSTIC';
 export const unavailable = code => ({ version: 1, qualification: TAG, status: 'unavailable', code });
 const check = (condition, code = 'invalid-profile') => { if (!condition) throw new Error(code); };
 const integer = (n, min = 0) => Number.isSafeInteger(n) && n >= min;
+const PROFILE_REASONS = Object.freeze(['profile-shape', 'sample-count', 'time-bounds', 'node-identity', 'frame-shape', 'children-shape', 'tree-edge', 'tree-cycle', 'tree-disconnected', 'sample-reference', 'sample-interval', 'interval-total']);
+class ProfileRejection extends Error {
+  constructor(reason) { super('invalid-profile'); this.reason = reason; }
+}
+const profileCheck = (condition, reason) => { if (!condition) throw new ProfileRejection(reason); };
 
 function inventoryDataEntries(value, maximum) {
   check(value && typeof value === 'object' && !Array.isArray(value), 'invalid-inventory');
@@ -56,38 +61,39 @@ function classify(frame, inventory) {
 export function summarizeProfile(raw, { origin, inventory }) {
   try {
     check(origin === ORIGIN, 'invalid-target'); validateInventory(inventory);
-    check(raw && Array.isArray(raw.nodes) && Array.isArray(raw.samples) && Array.isArray(raw.timeDeltas));
+    profileCheck(raw && Array.isArray(raw.nodes) && Array.isArray(raw.samples) && Array.isArray(raw.timeDeltas), 'profile-shape');
     check(raw.nodes.length <= LIMITS.nodes && raw.samples.length <= LIMITS.samples && raw.timeDeltas.length <= LIMITS.samples, 'profile-limit');
-    check(raw.nodes.length > 0 && raw.samples.length > 0 && raw.samples.length === raw.timeDeltas.length);
-    check(Number.isFinite(raw.startTime) && Number.isFinite(raw.endTime) && raw.startTime >= 0 && raw.endTime >= raw.startTime);
+    profileCheck(raw.nodes.length > 0 && raw.samples.length > 0 && raw.samples.length === raw.timeDeltas.length, 'sample-count');
+    profileCheck(Number.isFinite(raw.startTime) && Number.isFinite(raw.endTime) && raw.startTime >= 0 && raw.endTime >= raw.startTime, 'time-bounds');
     const span = raw.endTime - raw.startTime;
     check(span <= LIMITS.periodMs * 1000, 'profile-limit');
     let edges = 0, measuredBytes = 0;
     const byId = new Map(), parents = new Map();
     const nodes = raw.nodes.map(node => {
-      check(node && integer(node.id, 1) && !byId.has(node.id) && node.callFrame);
+      profileCheck(node && integer(node.id, 1) && !byId.has(node.id) && node.callFrame, 'node-identity');
       const frame = node.callFrame;
-      check(typeof frame.functionName === 'string' && typeof frame.url === 'string');
+      profileCheck(typeof frame.functionName === 'string' && typeof frame.url === 'string', 'frame-shape');
       check(frame.functionName.length <= 4096 && frame.url.length <= 4096, 'profile-limit');
       measuredBytes += Buffer.byteLength(frame.functionName) + Buffer.byteLength(frame.url) + 128;
       check(measuredBytes <= LIMITS.bytes, 'profile-limit');
       const children = node.children ?? [];
-      check(Array.isArray(children)); edges += children.length; check(edges <= LIMITS.edges, 'profile-limit');
+      profileCheck(Array.isArray(children), 'children-shape'); edges += children.length; check(edges <= LIMITS.edges, 'profile-limit');
       const safe = { id: node.id, ...classify(frame, inventory), children: [...children] };
       byId.set(node.id, safe); return safe;
     });
     for (const node of nodes) for (const child of node.children) {
-      check(integer(child, 1) && byId.has(child) && child !== nodes[0].id && !parents.has(child)); parents.set(child, node.id);
+      profileCheck(integer(child, 1) && byId.has(child) && child !== nodes[0].id && !parents.has(child), 'tree-edge'); parents.set(child, node.id);
     }
     // Verify one rooted tree iteratively, rather than following untrusted recursive links.
     const seen = new Set(), pending = [nodes[0].id];
-    while (pending.length) { const id = pending.pop(); check(!seen.has(id)); seen.add(id); pending.push(...byId.get(id).children); }
-    check(seen.size === nodes.length);
+    while (pending.length) { const id = pending.pop(); profileCheck(!seen.has(id), 'tree-cycle'); seen.add(id); pending.push(...byId.get(id).children); }
+    profileCheck(seen.size === nodes.length, 'tree-disconnected');
     const categories = Object.fromEntries(['publicJavaScript', 'idle', 'program', 'garbageCollector', 'other'].map(k => [k, { samples: 0, intervalWeightUs: 0 }]));
     const locations = new Map(); let sampled = 0;
     for (let i = 0; i < raw.samples.length; i++) {
-      const id = raw.samples[i], delta = raw.timeDeltas[i]; check(integer(id, 1) && byId.has(id) && integer(delta));
-      sampled += delta; check(Number.isSafeInteger(sampled) && sampled <= span);
+      const id = raw.samples[i], delta = raw.timeDeltas[i];
+      profileCheck(integer(id, 1) && byId.has(id), 'sample-reference'); profileCheck(integer(delta), 'sample-interval');
+      sampled += delta; profileCheck(Number.isSafeInteger(sampled) && sampled <= span, 'interval-total');
       const node = byId.get(id), category = categories[node.kind]; category.samples++; category.intervalWeightUs += delta;
       if (node.kind === 'publicJavaScript') {
         const key = JSON.stringify([node.sha256, node.line, node.column]);
@@ -102,6 +108,7 @@ export function summarizeProfile(raw, { origin, inventory }) {
       nodes, samples: [...raw.samples], timeDeltas: [...raw.timeDeltas] };
     check(Buffer.byteLength(JSON.stringify(result)) <= LIMITS.bytes, 'profile-limit'); return result;
   } catch (error) {
+    if (error instanceof ProfileRejection && PROFILE_REASONS.includes(error.reason)) return { ...unavailable('invalid-profile'), reason: error.reason };
     const allowed = ['invalid-target', 'invalid-inventory', 'invalid-profile', 'profile-limit'];
     return unavailable(allowed.includes(error?.message) ? error.message : 'invalid-profile');
   }
@@ -167,6 +174,9 @@ export function sanitizeStoredRecord(record, options) {
     if (record?.status === 'unavailable') {
       const codes = ['invalid-target', 'invalid-inventory', 'invalid-profile', 'profile-limit', 'profiler-unavailable', 'profile-not-recovered'];
       check(codes.includes(record.code)); const safe = unavailable(record.code);
+      if (Object.hasOwn(record, 'reason')) {
+        check(record.code === 'invalid-profile' && PROFILE_REASONS.includes(record.reason)); safe.reason = record.reason;
+      }
       check(JSON.stringify(record) === JSON.stringify(safe)); return safe;
     }
     check(record?.status === 'available' && Array.isArray(record.nodes) && record.nodes.length <= LIMITS.nodes);
