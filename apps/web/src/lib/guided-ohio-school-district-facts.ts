@@ -1,6 +1,7 @@
 /** Spec: state/oh-sd-100-guided.yaml. Native drafts are private source records, never scalar overrides. */
 import {calculateFederalTax} from '@/engine/federal';
 import {buildOhioResidentReturnInput} from '@/engine/state/oh-input-adapter';
+import {withOhioSchoolAdapterInvocation,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {OhioSchoolDistrictFactsSchema,type OhioSchoolDistrictFacts} from '@/models/ohio-school-district';
 import type {TaxYearInput} from '@/models/inputs';
 import {buildGuidedOhioResidencyFacts,snapshotGuidedOhioOriginals,assertGuidedOhioOriginals,type OhioResidencyDraft} from './guided-ohio-residency-facts';
@@ -120,7 +121,7 @@ function originalPacket(d:OhioSchoolDistrictDraft):unknown{
  return raw;
 }
 /** Pure read: neither retained snapshots nor any confirmation is refreshed here. */
-export function buildGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictFacts{
+function replayGuidedOhioSchoolDistrictFacts<T>(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined,use:(facts:OhioSchoolDistrictFacts,proof?:OhioSourceAdapterInvocation)=>T,share:boolean):T{
  if(!data||data.sourceFactsConfirmed!==true)fail('complete and explicitly confirm the actual school district records after the last edit');
  assertGuidedOhioOriginals(input,data.originalFederalSources);
  const residency=buildGuidedOhioResidencyFacts(residencyDraft,input),payments=buildGuidedOhioPaymentFacts(paymentDraft,input);
@@ -128,8 +129,17 @@ export function buildGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioS
  const parsed=OhioSchoolDistrictFactsSchema.safeParse(originalPacket(data));
  if(!parsed.success)fail(`complete actual source facts; zero only when known (${parsed.error.issues.map(i=>i.path.join('.')).join('; ')})`);
  const current={...input,ohioResidency:residency,ohioPayments:payments,ohioSchoolDistrict:parsed.data};
- buildOhioResidentReturnInput(current,calculateFederalTax(input));
- return parsed.data;
+ const federal=calculateFederalTax(input);
+ if(share)return withOhioSchoolAdapterInvocation(current,federal,proof=>use(parsed.data,proof));
+ buildOhioResidentReturnInput(current,federal);
+ return use(parsed.data);
+}
+export function buildGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictFacts{
+ return replayGuidedOhioSchoolDistrictFacts(input,data,residencyDraft,paymentDraft,facts=>facts,false);
+}
+/** Only the immediately following synchronous header may consume this actual completed adapter. */
+export function withGuidedOhioSchoolDistrictAdapter<T>(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined,use:(facts:OhioSchoolDistrictFacts,proof?:OhioSourceAdapterInvocation)=>T):T{
+ return replayGuidedOhioSchoolDistrictFacts(input,data,residencyDraft,paymentDraft,use,true);
 }
 /** Explicit user action is the only authority to capture current raw private originals. */
 export function confirmGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictDraft{

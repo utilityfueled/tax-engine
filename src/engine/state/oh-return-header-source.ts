@@ -7,6 +7,7 @@ import {OhioResidencyFactsSchema} from '@/models/ohio-residency.js';
 import {OhioPaymentFactsSchema} from '@/models/ohio-payments.js';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
+import {readOhioSchoolAdapterMethod,type OhioSourceAdapterInvocation} from './oh-source-adapter-invocation.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
 import {buildOhioResidentCreditSource} from './oh-resident-credit-source.js';
 import {calculateOhioCanonicalBusinessSource} from './oh-business-source.js';
@@ -32,7 +33,10 @@ export interface OhioReturnHeaderSourceResult{
  readonly sourceCommitment:string;
  readonly audit:ReadonlyArray<{readonly rule:string;readonly description:string;readonly status:'validated'}>;
 }
-export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):OhioReturnHeaderSourceResult{
+export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):OhioReturnHeaderSourceResult{return calculateHeader(input,raw);}
+/** Internal producer proof only; standalone public entry always performs full fresh validation. */
+export function calculateOhioReturnHeaderWithSchoolAdapter(input:TaxYearInput,raw:unknown,proof:OhioSourceAdapterInvocation|undefined):OhioReturnHeaderSourceResult{return calculateHeader(input,raw,proof);}
+function calculateHeader(input:TaxYearInput,raw:unknown,proof?:OhioSourceAdapterInvocation):OhioReturnHeaderSourceResult{
  const parsed=OhioReturnHeaderSourcesSchema.safeParse(raw);if(!parsed.success)return fail('complete confirmed actual header originals are required');const source=parsed.data;
  const context=structuredClone(input);Reflect.deleteProperty(context,'ohioReturnHeaderSources');
  const currentFederal=Object.fromEntries(Object.entries(context).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key)));
@@ -61,8 +65,10 @@ export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):
   if(partYearBusiness)calculateOhioCanonicalBusinessSource({taxInput:context,residencyFacts:facts,federalResult:calculateFederalTax(context)});
   if(partYearSchool){
    // The existing complete payroll/domicile/payment validator owns every monetary and source guard.
-   const adapted=buildOhioResidentReturnInput(context,calculateFederalTax(context));
-   if(adapted.schoolDistrictSource?.methodVersion!=='oh-2025-sd100-part-year-payroll-sources-v1'||!same(context.ohioSchoolDistrict?.residence.originalAddress,source.residence.originalAddress))return fail('actual school district home and complete current payroll sources must match the header');
+   const freshFederal=calculateFederalTax(context);
+   const prior=readOhioSchoolAdapterMethod(context,freshFederal,proof);
+   const method=prior?prior.method:buildOhioResidentReturnInput(context,freshFederal).schoolDistrictSource?.methodVersion;
+   if(method!=='oh-2025-sd100-part-year-payroll-sources-v1'||!same(context.ohioSchoolDistrict?.residence.originalAddress,source.residence.originalAddress))return fail('actual school district home and complete current payroll sources must match the header');
   }
   buildOhioPaymentSource(context,paid);
  }else{
