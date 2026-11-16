@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 16 exact current local checks pass; runtime failures retained
+
+Exact `116aa1ea` passes all twelve local checks, including 28,928 tests in each
+unit/coverage lane, 88.20% branches and 650 browser passes/five original skips.
+Distinct completed reviews pass. Current remote strict and ordinary browser
+runs retain four and one failures respectively. Current Preview reaches its
+owned sandbox Checkout Session but stops before card entry; cleanup and signed
+credit qualification remain incomplete. ARM64 stops before boot at the unchanged
+host disk floor and restores resources/routes. [Evidence and remaining actions](upgrade-2026-current-checks-116aa1ea-20261116.md).
+
 ## November 16 completed current ARM64 recovery rehearsal
 
 Exact `c0180308` passes all 24 native stages, four workloads, six Compose phases

@@ -1,4 +1,87 @@
 {
+  "nov16Exact116LocalAndRehearsalFailures": {
+    "source": "116aa1eaafe7f8a277c292d3d1fb227199f5ced1",
+    "localAll12Passed": true,
+    "unitTests": 28928,
+    "coverageTests": 28928,
+    "filesEach": 2123,
+    "coveragePercent": {
+      "statements": "92.04",
+      "branches": "88.20",
+      "functions": "91.09",
+      "lines": "95.31"
+    },
+    "localBrowser": {
+      "passed": 650,
+      "originalSkipped": 5,
+      "identities": 655,
+      "workers": 2,
+      "retries": 0,
+      "windows": 8
+    },
+    "remoteWebRun": 43878997891,
+    "remoteStrict": {
+      "passed": 646,
+      "failed": 4,
+      "originalSkipped": 5
+    },
+    "remoteOrdinary": {
+      "passed": 649,
+      "failed": 1,
+      "originalSkipped": 5
+    },
+    "billing": {
+      "twoExistingSignins": true,
+      "publicPrivacyAndFinancialEquality": true,
+      "existingOwnedCheckoutSessionCreated": true,
+      "cardFieldsReady": false,
+      "fillActions": 0,
+      "submitActions": 0,
+      "normalBrowserAndChildClosed": true,
+      "cleanupComplete": false,
+      "signedGrantQualified": false
+    },
+    "currentArm64": {
+      "booted": false,
+      "failure": "host capacity below original 512 GiB floor",
+      "availableBytes": 539494416384,
+      "requiredBytes": 549755813888,
+      "resourcesRestored": true,
+      "runtimeQualified": false
+    },
+    "evidence": {
+      "all12Root": {
+        "path": ".local/upgrade-evidence/nov16-116aa-all12-root-completed/REVIEW.json",
+        "sha256": "e5823c29ca1a499c1f9e87aee570ce5c786d7a5c9aec890611e1e1d584968bf3"
+      },
+      "all12Independent": {
+        "path": ".local/upgrade-evidence/nov16-116aa-all12-independent-actual-sealed/REVIEW.json",
+        "sha256": "582133e99fa10041cd356c98d1e822f11a1b76458d80921e352d33d89e16659c"
+      },
+      "billingFailureRoot": {
+        "path": ".local/upgrade-evidence/nov16-current-116-rehearsal-failures-root-review/BILLING-FAILURE-ACK.json",
+        "sha256": "79fd3494756fef340d335ded668690008b0e92a1c59a0da3c0e314c7581439d9"
+      },
+      "billingFailureIndependent": {
+        "path": ".local/upgrade-evidence/nov16-current-billing-checkout-failure-independent-review/REVIEW.json",
+        "sha256": "f80415d4f49fb92dfc44c3e09c792a41e9f3e3ce1e90852dec5bc1b619080aa2"
+      },
+      "armFailureRoot": {
+        "path": ".local/upgrade-evidence/nov16-current-116-rehearsal-failures-root-review/ARM-FAILURE-ACK.json",
+        "sha256": "79707d595ab25c3f7829e1c89c16ab0a78b66913fbc96d2713161706056a3368"
+      },
+      "armFailureIndependent": {
+        "path": ".local/upgrade-evidence/nov16-current116-arm-capacity-failure-independent-saved-review/REVIEW.json",
+        "sha256": "9b9572ba08fdbc432471fe36e7676073e9328ee9504d0dce8d0e65df21d3fdb7"
+      },
+      "remoteFailuresIndependent": {
+        "path": ".local/upgrade-evidence/nov16-116-remote-browser-failure-independent-review/REVIEW.json",
+        "sha256": "ded7549fb25085dcd8cfcfdb38225a9e039de45241aa02ae0978900351f78e42"
+      }
+    },
+    "filingModelReleaseQualified": false,
+    "ledger": "docs/upgrade-2026-current-checks-116aa1ea-20261116.md"
+  },
   "nov16CompletedCurrentArm64": {
     "status": "passed-root-and-independent-strict-completed-review",
     "applicationSource": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
