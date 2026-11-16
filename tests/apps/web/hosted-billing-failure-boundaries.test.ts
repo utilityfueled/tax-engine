@@ -174,7 +174,7 @@ describe("hosted billing failure boundaries (synthetic dependencies, no provider
       }
       const response = await factory({ env, rateLimitStore: createRateLimitStore() }).POST(request(body));
       expect(response.status).toBe(503);
-      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.headers.get("cache-control")).toBe(factory === createHostedAiCreditCheckoutRouteHandlers ? "no-store, private" : "no-store");
       expect(response.headers.get("retry-after")).toBe("5");
       expect(await response.json()).toEqual({ error: "Hosted billing is temporarily unavailable. Please try again later.", code: "billing-unavailable" });
       if (dependency !== "provider") {
@@ -308,7 +308,7 @@ describe("hosted billing failure boundaries (synthetic dependencies, no provider
     mocks.checkout.mockResolvedValue({ ...fixedCreditSession, amount_total: 1499 });
     const response = await createHostedAiCreditCheckoutRouteHandlers({ env, rateLimitStore: createRateLimitStore() }).POST(request(checkoutBody));
     expect(response.status).toBe(503);
-    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("cache-control")).toBe("no-store, private");
     expect(await response.text()).not.toContain(fixedCreditSession.url);
   });
 

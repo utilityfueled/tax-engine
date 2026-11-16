@@ -1,0 +1,15 @@
+form: "Hosted-AI-Checkout-Cache-Privacy"
+fullName: "AI credit checkout responses remain private and uncacheable"
+taxYear: 2026
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  Hosting privacy correction discovered by a protected synthetic rehearsal.
+  Exercise real Request and NextResponse boundaries with synthetic dependency
+  adapters; no provider request, public sales activation or model promotion.
+  Preserve authentication, entitlement, qualification, validation, rate limits,
+  exact-cent terms, response bodies, statuses and Retry-After values.
+lines:
+  - line: "all-ai-checkout-responses"
+    description: "Every AI credit checkout response forbids cache storage"
+    formula: "After existing availability handling, set Cache-Control to no-store, private on every AI checkout response, including self-host bypass, configuration, protection, authentication, entitlement, validation, qualification, terms, successful sessions and dependency outages. Do not alter subscription or portal response contracts."
+    testRef: "tests/apps/web/hosted-ai-checkout-cache-privacy.test.ts::keeps the real AI checkout response private for %s"

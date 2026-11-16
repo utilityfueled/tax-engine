@@ -270,6 +270,15 @@ function withBillingAvailability(handler: (request: Request) => Promise<Response
   };
 }
 
+function withPrivateBillingAvailability(handler: (request: Request) => Promise<Response>) {
+  const availableHandler = withBillingAvailability(handler);
+  return async (request: Request): Promise<Response> => {
+    const response = await availableHandler(request);
+    response.headers.set("Cache-Control", "no-store, private");
+    return response;
+  };
+}
+
 export function getHostedBillingConfig(
   env: BillingEnvironment = process.env
 ): HostedBillingConfig {
@@ -622,7 +631,7 @@ export function createHostedAiCreditCheckoutRouteHandlers(
   }
 
   return {
-    POST: withBillingAvailability(async (request: Request) => {
+    POST: withPrivateBillingAvailability(async (request: Request) => {
       const env = dependencies.env ?? process.env;
       const config = getHostedBillingConfig(env);
 
