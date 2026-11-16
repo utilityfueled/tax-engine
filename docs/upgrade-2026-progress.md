@@ -6567,3 +6567,24 @@ readback; no production build or release is authorized.
 Ohio package `66fb52dc` is pushed to main and backup after fresh production-build suppression readback. Spec-first RED,147 root tests,178 independent tests, types, lint and corrected spec/inventory checks pass; measured local median improves19.64% with original output/error guards. Four isolated exact-source integrated lanes are running. [Scope](upgrade-2026-ohio-school-header-replay-20261116.md).
 
 Primary exact5a Preview root/independent artifact and visual reviews pass118 API contracts,14 visible journeys and five PDF reopenings at2078/2310 operations. The separate K3 follow-up fails after its desktop screenshot; no complete case is claimed. Its historical-year PDF expectation mismatch and failed-child accounting defect are preserved, with corrected259 operations and verified cleanup. [Evidence and limits](upgrade-2026-preview-5a45443e-20261116.md). ARM64, strict Linux and broader qualification remain open.
+
+### November16: completed historical ARM64 and retained K3 failures
+
+Exact5a ARM64 passes all24 stages, four workloads and six Compose recovery
+phases, with650 browser passes/five original skips and normal VM/resource/route
+restoration. Root and independent completed-artifact reviews agree. Its191 scan
+findings include56 High and remain unaccepted. This evidence belongs to5a,
+before the Ohio optimization. [Runtime ledger](upgrade-2026-arm64-5a45443e-20261116.md).
+
+The second isolated K3 follow-up fails at its fixed PDF-label assertion boundary;
+accounting now correctly includes all262 operations and cleanup verifies. Root
+and independent failure reviews agree. An offline CSS reproduction supports the
+rendered-uppercase label mechanism without inventing an unsaved hosted DOM
+observation. Both failures and the unused historical successor remain preserved.
+[Failure evidence](upgrade-2026-preview-5a45443e-20261116.md).
+
+The quoted spec-reference correction `f3cb88e0` is pushed to main and backup.
+Current unit/static/coverage checks pass28,904 tests and88.19% branches. The
+overlapping browser startup failure ran no tests and remains retained with its
+false cleanup flag; fresh exact-PID/descriptor/dual-family-port checks precede a
+separate browser-only run. Current-source distribution qualification stays open.

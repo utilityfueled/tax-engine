@@ -1,4 +1,41 @@
 {
+  "nov16Exact5aCompletedArm64": {
+    "source": "5a45443e228dd49001059d17b9c5105c176e7962",
+    "status": "BOUNDED_HISTORICAL_SOURCE_PASS",
+    "controllerStages": 24,
+    "workloads": 4,
+    "composePhases": 6,
+    "browser": {
+      "passed": 650,
+      "originalSkipped": 5,
+      "identities": 655
+    },
+    "normalStopResourcesAndRoutesRestored": true,
+    "rootCompletedReviewSha256": "ab0db9aed7f509832614760a54930479571fad86810afa86c2cb5d1bef7ab28a",
+    "independentCompletedReviewSha256": "f04842d99c5100e7d28b05833fe26835afeae274129a09eacac4a994172b88d5",
+    "scan": {
+      "findings": 191,
+      "critical": 0,
+      "high": 56,
+      "riskAccepted": false
+    },
+    "currentF3RuntimeQualified": false,
+    "ledger": "docs/upgrade-2026-arm64-5a45443e-20261116.md"
+  },
+  "nov16K3SecondFailure": {
+    "source": "5a45443e228dd49001059d17b9c5105c176e7962",
+    "session": 55240,
+    "terminalExit": 1,
+    "actualRehearsalPassed": false,
+    "completedCases": 0,
+    "countedOperations": 262,
+    "assertionBoundary": "k3-assert-29",
+    "savedCleanupVerified": true,
+    "rootAndIndependentReviewSha256": "b39ab34a43e7670fde1347141b4da1001a09e01c143638383d4892c7d9d7bcc0",
+    "cssMechanismOfflineReproductionSha256": "d2ef145c95fcb5c934f7a5f2126cc7c152e7c213844bbf75653b1a9991efe8ef",
+    "historicalHostedDomLabelNotCaptured": true,
+    "ledger": "docs/upgrade-2026-preview-5a45443e-20261116.md"
+  },
   "nov16Exact5aPrimaryHosted": {
     "source": "5a45443e228dd49001059d17b9c5105c176e7962",
     "boundedRehearsalPassed": true,
