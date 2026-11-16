@@ -6682,3 +6682,14 @@ upload roundtrips and84 private-addition rejections pass. All original profile
 limits and acceptance predicates remain unchanged. Earlier eleven rejected
 profiles remain unexplained; runtime and readiness gates remain open.
 [Evidence](upgrade-2026-cpu-rejection-diagnostics-20261116.md).
+
+
+### November 16: observed native service identity mismatch
+
+The corrected read-only diagnostic closes normally after its original guard
+rejects service custody. One of two service candidates has socket UID501,
+GID1000 and mode0660; the other fails before a socket observation. Root and
+independent saved-artifact reviews agree on32steps/66files, normal restoration,
+zero removals and the remaining unknowns. The earlier missing-prerequisite
+preboot failure remains preserved. Current ARM64 staging and qualification
+remain open. [Evidence](upgrade-2026-native-service-custody-20261116.md).
