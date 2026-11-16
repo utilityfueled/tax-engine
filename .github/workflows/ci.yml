@@ -43,7 +43,7 @@ jobs:
 
   unit-test:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # A slow runner exceeded the old 30m job cap with no failing test.
     # This changes only the job budget, not test deadlines.
     timeout-minutes: 60
@@ -64,8 +64,23 @@ jobs:
     env:
       # Disposable loopback-only service; never reuse a deployment DATABASE_URL.
       TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL: postgresql://ai_test@127.0.0.1:5432/postgres
+      # Use the same major as the pinned recovery server, independent of PATH.
+      TAX_ENGINE_TEST_POSTGRES_BIN: /usr/lib/postgresql/16/bin
     steps:
       - uses: actions/checkout@v4
+      - name: Verify PostgreSQL recovery client/server majors
+        shell: bash
+        run: |
+          set -euo pipefail
+          for tool in pg_dump pg_restore; do
+            version="$("$TAX_ENGINE_TEST_POSTGRES_BIN/$tool" --version)" || exit 1
+            printf '%s\n' "$version"
+            [[ "$version" =~ ^$tool[[:space:]]+\(PostgreSQL\)[[:space:]]+16\. ]] || exit 1
+          done
+          test "$TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL" = 'postgresql://ai_test@127.0.0.1:5432/postgres' || exit 1
+          server_version_num="$(PGCONNECT_TIMEOUT=5 "$TAX_ENGINE_TEST_POSTGRES_BIN/psql" --no-psqlrc --no-password --tuples-only --no-align --command='SHOW server_version_num' "$TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL")" || exit 1
+          [[ "$server_version_num" =~ ^16[0-9]{4}$ ]] || exit 1
+          printf 'Loopback PostgreSQL server_version_num=%s\n' "$server_version_num"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -84,7 +99,7 @@ jobs:
 
   test:
     name: Tests and Coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Coverage for the complete single-worker suite exceeded the old 30m job cap.
     # This changes only the job budget, not test deadlines or coverage thresholds.
     timeout-minutes: 60
@@ -105,8 +120,23 @@ jobs:
     env:
       # Disposable loopback-only service; never reuse a deployment DATABASE_URL.
       TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL: postgresql://ai_test@127.0.0.1:5432/postgres
+      # Use the same major as the pinned recovery server, independent of PATH.
+      TAX_ENGINE_TEST_POSTGRES_BIN: /usr/lib/postgresql/16/bin
     steps:
       - uses: actions/checkout@v4
+      - name: Verify PostgreSQL recovery client/server majors
+        shell: bash
+        run: |
+          set -euo pipefail
+          for tool in pg_dump pg_restore; do
+            version="$("$TAX_ENGINE_TEST_POSTGRES_BIN/$tool" --version)" || exit 1
+            printf '%s\n' "$version"
+            [[ "$version" =~ ^$tool[[:space:]]+\(PostgreSQL\)[[:space:]]+16\. ]] || exit 1
+          done
+          test "$TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL" = 'postgresql://ai_test@127.0.0.1:5432/postgres' || exit 1
+          server_version_num="$(PGCONNECT_TIMEOUT=5 "$TAX_ENGINE_TEST_POSTGRES_BIN/psql" --no-psqlrc --no-password --tuples-only --no-align --command='SHOW server_version_num' "$TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL")" || exit 1
+          [[ "$server_version_num" =~ ^16[0-9]{4}$ ]] || exit 1
+          printf 'Loopback PostgreSQL server_version_num=%s\n' "$server_version_num"
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

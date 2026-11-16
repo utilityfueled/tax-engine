@@ -1,5 +1,16 @@
 # 2026 upgrade implementation evidence
 
+
+## November 16 CI recovery clients bind to the server major
+
+Exact `c0760d2b` passes all twelve local checks and two completed artifact
+reviews: 28,937 tests, 88.20% branch coverage and 650 browser passes/five
+original skips. Remote coverage retains one failed recovery case and an actual
+PostgreSQL 16 restore rejection. The two CI jobs now select matching version 16
+clients and verify the actual server/client majors before tests. YAML comparison
+and eleven independent shell controls pass; corrected remote execution remains
+pending. [Evidence and limits](upgrade-2026-ci-postgres-client-binding-20261116.md).
+
 ## November 16 NEW212 browser entry and complete preceding-source checks
 
 NEW212 uses fixture-defined kinds for initial entry while preserving all original

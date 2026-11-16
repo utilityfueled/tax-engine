@@ -1,4 +1,25 @@
 {
+  "nov16CiPostgresClientMajorBinding": {
+    "affectedJobs": [
+      "unit-test",
+      "test"
+    ],
+    "runner": "ubuntu-24.04",
+    "clientDirectory": "/usr/lib/postgresql/16/bin",
+    "requiredClientAndServerMajor": 16,
+    "independentShellControls": 11,
+    "assertionsDeadlinesWorkersAndThresholdsPreserved": true,
+    "correctedRemoteJobsPending": true,
+    "precedingSource": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",
+    "precedingLocalAll12Passed": true,
+    "unitAndCoverageTestsEach": 28937,
+    "branchesPercent": "88.20",
+    "browserPasses": 650,
+    "originalSkips": 5,
+    "remoteCoverageFailureRetained": true,
+    "releaseQualified": false,
+    "ledger": "docs/upgrade-2026-ci-postgres-client-binding-20261116.md"
+  },
   "nov16New212KnownNativeControls": {
     "specFirstRed": true,
     "permanentTests": 3,
