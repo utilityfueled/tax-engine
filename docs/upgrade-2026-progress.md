@@ -6588,3 +6588,27 @@ Current unit/static/coverage checks pass28,904 tests and88.19% branches. The
 overlapping browser startup failure ran no tests and remains retained with its
 false cleanup flag; fresh exact-PID/descriptor/dual-family-port checks precede a
 separate browser-only run. Current-source distribution qualification stays open.
+
+### November16: completed current local checks and actual Linux limits
+
+All twelve exactf3 checks now pass and root/independent saved-artifact reviews
+agree:28,904 unit/coverage tests,88.19% branches and650 browser passes/five
+original skips. The original zero-case startup failure and lost direct unit
+terminal visibility remain disclosed. Current remote CI/Docker/ordinary browser
+pass, while the strict runtime-image run retains four whole-test timeouts,
+646 passes and five original skips. No original policies changed. Every commit
+through e6811eee is pushed to main and backup after fresh production suppression
+readback. [Current evidence](upgrade-2026-integrated-runtime-f3cb88e0-20261116.md).
+
+Nine exact closed caches were removed with independent non-cache preservation
+review. The current ARM64 attempt then stopped at the unchanged guest capacity
+floor before transfer/build; normal stop, resources and routes were restored.
+The current protected primary Preview passes root and independent completed
+artifact reviews and independent visual review:118 API,14 UI,five PDFs,
+2065/2310 operations and normal scoped
+cleanup. The distinct corrected K3 follow-up also passes root and independent
+artifact/visual review with fresh actors:two desktop/mobile journeys,410
+operations and scoped cleanup. Its historical2025 facts and source-bound numeric
+assertions do not qualify2026 law or establish remote numeric API values.
+Source preparation and historical distribution success do not establish current
+runtime/release readiness.

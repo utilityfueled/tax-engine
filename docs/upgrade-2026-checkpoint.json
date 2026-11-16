@@ -1,4 +1,60 @@
 {
+  "nov16ExactF3Integrated": {
+    "source": "f3cb88e0a1013b2a52837f63410773a4b27ffd62",
+    "localAll12Passed": true,
+    "unitTests": 28904,
+    "coverageTests": 28904,
+    "branchCoveragePercent": "88.19",
+    "browser": {
+      "passed": 650,
+      "originalSkipped": 5,
+      "identities": 655
+    },
+    "unitDirectTerminalObservationRetained": false,
+    "originalBrowserStartupFailurePreserved": true,
+    "remoteCI": "success",
+    "remoteDocker": "success",
+    "remoteOrdinaryBrowser": "success",
+    "remoteStrictBrowser": {
+      "passed": 646,
+      "wholeTestTimeoutFailures": 4,
+      "originalSkipped": 5,
+      "gatePassed": false
+    },
+    "primaryPreview": {
+      "passed": true,
+      "api": 118,
+      "ui": 14,
+      "pdfReopened": 5,
+      "countedOperations": 2065,
+      "cap": 2310,
+      "cleanupVerified": true,
+      "independentArtifactAndVisualReviews": true,
+      "paidProviderCalls": 0,
+      "receiptSha256": "d18dd4701ad84e6bae02c2ac411f7696611ad9df0f92eb4eaa4d4cade7c291ff"
+    },
+    "arm64": {
+      "passed": false,
+      "stoppedBeforeTransferBuild": true,
+      "guestAvailableBytes": 264376438784,
+      "guestRequiredBytes": 268435456000,
+      "normalStopResourcesRoutesRestored": true,
+      "workloads": 0
+    },
+    "correctedK3Followup": {
+      "passed": true,
+      "desktopMobileCases": 2,
+      "fixtureTaxYear": 2025,
+      "operations": 410,
+      "cleanupVerified": true,
+      "independentArtifactAndVisualReview": true,
+      "referencePdfRequested": false,
+      "remoteNumericApiClaimed": false,
+      "receiptSha256": "abfa4a4801b192de54c1acb2a70dfb5e96dd95ba9b1d8eb4678ff3eb42cf1ee2"
+    },
+    "filingModelReleaseQualified": false,
+    "ledger": "docs/upgrade-2026-integrated-runtime-f3cb88e0-20261116.md"
+  },
   "nov16Exact5aCompletedArm64": {
     "source": "5a45443e228dd49001059d17b9c5105c176e7962",
     "status": "BOUNDED_HISTORICAL_SOURCE_PASS",

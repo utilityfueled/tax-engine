@@ -6,10 +6,15 @@
 - [x] Complete root and independent primary exact5a Preview artifact/visual review:118 API,14 UI,five PDFs,2078/2310 operations. [Bounded evidence](upgrade-2026-preview-5a45443e-20261116.md).
 - [x] Preserve and independently review separate K3 follow-up failure; correct recorded accounting to259 and verify cleanup.
 - [x] Preserve exact66fb unit/coverage catalog failures and passing browser run; commit and push the spec-reference correction `f3cb88e0` without changing runtime formulas or test policies.
-- [ ] Complete and independently review all twelve exactf3 checks; unit28,904/static/coverage88.19% pass, while a separately preserved browser startup conflict requires a fresh browser-only attempt.
+- [x] Complete and independently review all twelve exactf3 checks:28,904 unit/coverage tests,88.19% branches,650 browser passes/five original skips. Preserve the original startup conflict and lost unit-terminal visibility. [Exact evidence](upgrade-2026-integrated-runtime-f3cb88e0-20261116.md).
 - [x] Complete root and independent exact5a ARM64 runtime/recovery/browser/scan and normal closure review. Its56 High findings remain unaccepted. [Source-specific evidence](upgrade-2026-arm64-5a45443e-20261116.md).
-- [ ] Correct K3 follow-up controller/policy assertions and run a fresh bounded successor.
+- [x] Correct K3 follow-up controller/policy assertions and pass an independently reviewed fresh currentf3 desktop/mobile successor,410 operations and scoped cleanup; preserve both original failures.
 - [ ] Resolve strict Linux deadline failures; retain all original policies and security/human/final-form/AI qualification gates.
+- [x] Push every local commit through `e6811eee` to main and backup after fresh production-build suppression readback and completed prior CI runs.
+- [x] Independently verify nine-cache cleanup and preservation of every non-cache domain; retain fresh native capacity admission.
+- [x] Complete and independently review currentf3 protected primary Preview:118 API/14 UI/five PDFs,2065/2310 operations, normal scoped cleanup and genuine fourteen-PNG visual review.
+- [ ] Recover guest capacity and complete currentf3 ARM64 runtime; preserve its normally stopped pre-transfer admission failure and unchanged floors.
+- [ ] Resolve the current strict Linux four-timeout result (646 passes/five original skips); historical nine-failure evidence stays separate.
 
 ## Latest package — November 15, 5a45443e
 
