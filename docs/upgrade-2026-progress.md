@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 16 completed current ARM64 recovery rehearsal
+
+Exact `c0180308` passes all 24 native stages, four workloads, six Compose phases
+and 650 browser cases with five original skips. Root and independent strict
+saved-artifact reviews pass; normal stop restores resources and socket routes.
+The image retains 191 findings, including 56 High and zero Critical, without
+risk acceptance. Remote `38763eae` CI/Docker/ordinary browser pass; strict AMD64
+retains eight failures. Hosted billing, human/final-form/AI/security and release
+gates remain open. [Exact evidence](upgrade-2026-arm64-c0180308-completed-20261116.md).
+
 ## November 16 current Preview passes; remote browser failures remain
 
 All local commits through `6df59454` are pushed to main and the backup with

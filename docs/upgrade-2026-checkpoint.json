@@ -1,4 +1,27 @@
 {
+  "nov16CompletedCurrentArm64": {
+    "status": "passed-root-and-independent-strict-completed-review",
+    "applicationSource": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
+    "actualSession": 15983,
+    "actualTerminalExit": 0,
+    "actualTerminalChunk": "d3d16d",
+    "controllerStages": 24,
+    "workloads": 4,
+    "composePhases": 6,
+    "browserPassed": 650,
+    "browserFailed": 0,
+    "originalSkipped": 5,
+    "normalStopResourcesRoutesRestored": true,
+    "rootReviewSha256": "70dbbf77a9a970c180f05ad94fc5308636d3e59279fd220082a986a055524b9c",
+    "independentReviewSha256": "a475264a8da971c8fc02e089b44328fa29cb5fdc7327b64b2c361fe248c72622",
+    "scannerMatches": 191,
+    "scannerHigh": 56,
+    "scannerCritical": 0,
+    "riskAccepted": false,
+    "amd64Qualified": false,
+    "releaseQualified": false,
+    "ledger": "docs/upgrade-2026-arm64-c0180308-completed-20261116.md"
+  },
   "nov16FreshArm64Runtime": {
     "status": "failed-before-workloads-normal-cleanup",
     "applicationSource": "c01803082b74db96a90ccb2e8433cd3b40877c1c",
