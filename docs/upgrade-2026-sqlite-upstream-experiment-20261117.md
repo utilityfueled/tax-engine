@@ -38,3 +38,23 @@ run; the option selects exactly one original or paired runner. New controls,
 actionlint and the whole-workflow inverse pass. No existing default behavior,
 permission, source guard or deadline changes. Independent entry review:
 `2c9699dae1941308410c333571a98c84b2863775de7616035e70400a3bfdff20`.
+
+
+Actual paired run `44184632007` at `b9fe12dc` completed successfully. The
+original join script retains one failure among 107 tests; the original and
+instrumented OOM logs are byte-identical and retain one failure among 8,162
+tests at allocation 2330. The separately patched whole scripts pass all 107
+and 8,162 tests with all allocations freed. The original OOM script and fault
+count are unchanged. The paired DBPAGE core recovery still changes exit 1 to 0;
+that flag is separate from the two official upstream corrections.
+
+All 83 controller checks exit zero, with no deadline or cleanup errors.
+Independent artifact review verified 55 original-ledger files, 56 exports and
+the three exact reviewed source hunks; assessment SHA-256:
+`a030d6d7b9c714f1473835dbdccd7c5265992d63ecac41d148288750493697a5`.
+Root verified all 17 assessment pins and the retained original failures. The
+archive is 41,307,502 bytes, SHA-256
+`4dfed841f7a4ecee4480045f6390502307787e9a1c656aed3ae392971ba93095`.
+This is targeted diagnostic evidence. Full original SQLite qualification,
+package/runtime integration, ABI, all consumers and release gates remain open.
+The precise historical allocation cause remains unproven.
