@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: actual SQLite link failure and reviewed harness repair
+
+The [first native run failed before SQL tests](upgrade-2026-sqlite-harness-20261117.md). The reviewed repair selects the supported upstream amalgamation harness in three commands, preserving complete suites, all five cases and sanitizers. Root and independent16-control runs pass; a fresh native execution remains required.
+
 ## November 17: separately reviewed glibc native runner
 
 The [glibc runner](upgrade-2026-glibc-runner-20261117.md) passes whole-source root/independent reviews, 17 focused controls, lint and nine spec references. It preserves full suites, positive allocator reproduction, strict ABI checks and owned normal cleanup. Actual package execution remains pending.

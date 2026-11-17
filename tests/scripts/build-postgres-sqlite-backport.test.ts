@@ -1,4 +1,5 @@
-import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -36,6 +37,38 @@ describe("private PostgreSQL SQLite backport source admission", () => {
     const script = await readFile(new URL("build-packages.sh", recipe), "utf8");
     expect(script).toContain("--fuzz=0"); expect(script).toContain("baselineRegressionReproduced");
     expect(script).toContain("ASAN_OPTIONS"); expect(script).toContain("dpkg-buildpackage");
+  });
+  it("selects the upstream amalgamation harness without duplicating extension sources or reducing suites", async () => {
+    // These four branch rules are verbatim from the authenticated 3.40.1
+    // Makefile.in. The minimal source lists retain its real fts3_term collision.
+    const fixture = [
+      "TOP = source", "USE_AMALGAMATION = 0",
+      "TESTSRC = $(TOP)/src/test1.c $(TOP)/ext/fts3/fts3_term.c",
+      "TESTSRC2 = $(TOP)/src/main.c $(TOP)/ext/fts3/fts3_term.c",
+      "TESTFIXTURE_SRC0 = $(TESTSRC2) libsqlite3.la",
+      "TESTFIXTURE_SRC1 = sqlite3.c",
+      "TESTFIXTURE_SRC = $(TESTSRC) $(TOP)/src/tclsqlite.c",
+      "TESTFIXTURE_SRC += $(TESTFIXTURE_SRC$(USE_AMALGAMATION))",
+      "print-plan:", "\t@printf '%s\\n' '$(TESTFIXTURE_SRC)'", "",
+    ].join("\n");
+    const dir = await mkdtemp(join(tmpdir(), "tax-sqlite-make-plan-")); folders.push(dir);
+    const makefile = join(dir, "Makefile"); await writeFile(makefile, fixture);
+    const plan = (args: string[]) => execFileSync("make", ["-rR", "-f", makefile, ...args, "print-plan"], { encoding: "utf8", timeout: 5000, maxBuffer: 1024 * 1024, env: { PATH: process.env.PATH, TMPDIR: tmpdir(), LC_ALL: "C" } }).trim().split(/\s+/);
+    const original = plan([]);
+    expect(original.filter(p => p.endsWith("/fts3_term.c"))).toHaveLength(2);
+    const script = await readFile(new URL("build-packages.sh", recipe), "utf8");
+    const commands = [...script.matchAll(/^\s*make -j2 (.*?) (?:>|\\)/gm)].map(m => m[1].split(/\s+/));
+    expect(commands).toHaveLength(3);
+    expect(commands.map(args => args.at(-1))).toEqual(["fulltest", "testfixture", "testfixture"]);
+    for (const args of commands) {
+      expect(args.slice(0, -1)).toEqual(["USE_AMALGAMATION=1"]);
+      const selected = plan(args.slice(0, -1));
+      expect(selected).toEqual(["source/src/test1.c", "source/ext/fts3/fts3_term.c", "source/src/tclsqlite.c", "sqlite3.c"]);
+      expect(selected.filter(p => p.endsWith("/fts3_term.c"))).toHaveLength(1);
+    }
+    expect(script).toContain("dpkg-buildpackage -B -uc -us");
+    expect(script).toContain("ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1");
+    expect(script.match(/'--match=distinct-10\.\*'/g)).toHaveLength(2);
   });
   it("requires native architecture immutable toolchain and exclusive output", async () => {
     const args = ["--architecture", "arm64", "--source-cache", "cache", "--output", "fresh", "--toolchain", "sha256:" + "a".repeat(64)];

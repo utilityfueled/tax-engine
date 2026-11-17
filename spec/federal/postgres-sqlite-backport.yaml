@@ -27,3 +27,7 @@ lines:
     description: "Permit an owning runner to supervise every source verifier child"
     formula: "Forward an explicit optional controlled run callback to both gpgv and xz with their original bounds. Propagate uncertain child errors unchanged before output/context creation; never fall back to an unsupervised default. The offline CLI retains its existing default."
     testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::uses only the injected verifier runner and propagates unknown child custody"
+  - line: "upstream-amalgamation-test-harness"
+    description: "Select the supported upstream amalgamation testfixture after the Debian package build"
+    formula: "Keep the complete Debian package builds and configured features unchanged. Explicitly select USE_AMALGAMATION=1 for fulltest and paired testfixture builds so the upstream TESTFIXTURE_SRC1 branch uses sqlite3.c rather than duplicating TESTSRC2 implementation sources already present in TESTSRC. Preserve fulltest dependencies alltest and fuzztest, every original test and all five paired cases, positive baseline reproduction and ASan/UBSan checks. A successful source plan is not a native test result."
+    testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::selects the upstream amalgamation harness without duplicating extension sources or reducing suites"

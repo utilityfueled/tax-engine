@@ -1,4 +1,14 @@
 {
+  "nov17SqliteHarnessRepair": {
+    "status": "source-repair-reviewed-pending-native-rerun",
+    "failedNativeRun": 44035000141,
+    "baselinePackageBuildExit": 0,
+    "baselineFullTestExit": 2,
+    "originalFailureRetained": true,
+    "rootFocusedTests": 16,
+    "independentReviewSha256": "ff7395cdbdb76154d799d392eb7c89140d2e9b936cc437b9d45650562b05d18f",
+    "riskAccepted": false
+  },
   "nov17GlibcRunner": {
     "status": "source-reviewed-pending-native-package-execution",
     "manifestSha256": "ed2de15a60aeada00ae89104ae0bba2539d164be43c107d31049a488de3cc74e",

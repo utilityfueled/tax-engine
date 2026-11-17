@@ -65,6 +65,18 @@ is deliberately pending. No Docker or Podman call occurs in this preparation CLI
 The offline package recipe builds both the unchanged baseline and private
 `3.40.1-2+deb12u2+vivalatax1` candidate, runs both original full upstream suites,
 then runs the exact candidate regression text against both compiled variants.
+The package builds retain Debian's non-amalgamation configuration and features.
+For the later Tcl harness builds only, `USE_AMALGAMATION=1` explicitly selects the
+upstream-supported `TESTFIXTURE_SRC1 = sqlite3.c` branch. Upstream's Makefile.in
+explains that this compiles the amalgamation directly into the testfixture; its
+`TESTSRC` test modules and flags remain present. This avoids the duplicate
+`fts3_term.c` implementation from `TESTSRC` plus `TESTSRC2` observed during the
+first AMD64 baseline fulltest link (run44035000141). `fulltest` still depends on
+both `alltest` and `fuzztest`, including the complete `test/all.test` suite and
+original fuzz inputs. The same explicit setting is used for the paired harness
+and sanitizer harness (whose configure default already selected amalgamation).
+The failed native run remains failed; source-plan controls do not establish that
+the corrected recipe compiles or that any native test passes.
 A nonzero exit alone is insufficient: baseline reproduction requires normal Tcl
 exit1 and an explicitly named new `distinct-10.1` through `10.5` failure. A crash,
 timeout, build failure or unrelated test failure remains unqualified. All five

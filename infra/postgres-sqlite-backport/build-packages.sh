@@ -61,7 +61,7 @@ for variant in baseline candidate; do
     version=$(dpkg-parsechangelog -S Version)
     find /qualification-work -maxdepth 1 -type f -name "*_${version}_*" -exec cp -a '{}' "/qualification-out/$variant/" ';'
     set +e
-    make -j2 fulltest > "/qualification-out/$variant/fulltest.log" 2>&1
+    make -j2 USE_AMALGAMATION=1 fulltest > "/qualification-out/$variant/fulltest.log" 2>&1
     result=$?
     set -e
     record "${variant}FullTestExit" "$result"
@@ -75,7 +75,7 @@ cp /qualification-out/upstream-distinct.test candidate/test/distinct.test.paired
 cmp baseline/test/distinct.test.paired candidate/test/distinct.test.paired
 for variant in baseline candidate; do
     cd "/qualification-work/$variant"
-    make -j2 testfixture > "/qualification-out/$variant/regression-build.log" 2>&1
+    make -j2 USE_AMALGAMATION=1 testfixture > "/qualification-out/$variant/regression-build.log" 2>&1
     set +e
     ./testfixture test/distinct.test.paired '--match=distinct-10.*' > "/qualification-out/$variant/regression.log" 2>&1
     result=$?
@@ -100,7 +100,7 @@ cd candidate-sanitizer
 CFLAGS='-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' \
 LDFLAGS='-fsanitize=address,undefined' ../candidate/configure --disable-shared \
     > /qualification-out/candidate/sanitizer-configure.log 2>&1
-make -j2 testfixture > /qualification-out/candidate/sanitizer-build.log 2>&1
+make -j2 USE_AMALGAMATION=1 testfixture > /qualification-out/candidate/sanitizer-build.log 2>&1
 set +e
 ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 \
     ./testfixture ../candidate/test/distinct.test.paired '--match=distinct-10.*' \
