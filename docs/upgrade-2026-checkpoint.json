@@ -1,4 +1,14 @@
 {
+  "nov17GlibcExactVersionRepair": {
+    "status": "source-repair-reviewed-pending-native-rerun",
+    "failedNativeRun": 44037755888,
+    "failureStage": "patch-version-before-compilation",
+    "cleanupChecksPassed": 32,
+    "nativeChangelogExported": false,
+    "rootFocusedTests": 10,
+    "independentReviewSha256": "27eed154fa1d30aeaffe10be04deda0ce5705f7e7488cd9f1152166f7a8c5d80",
+    "riskAccepted": false
+  },
   "nov17OfficialSourceRefresh": {
     "status": "official-public-refresh-observed-not-human-qualified",
     "requests": 45,

@@ -59,6 +59,50 @@ describe("Bookworm glibc private source backport (spec/federal/postgres-glibc-ba
     } finally { await rm(root, { recursive: true, force: true }); }
 
   });
+  it("executes the recipe version block with exact dch newversion semantics and retains the mismatch guard", async () => {
+    const manifest = JSON.parse(await readFile("infra/postgres-glibc-backport/sources.json", "utf8"));
+    const script = await readFile("infra/postgres-glibc-backport/build-packages.sh", "utf8");
+    const start = script.indexOf("DEBFULLNAME=");
+    const block = script.slice(start, script.indexOf("# Full existing Debian/upstream tests", start));
+    expect(start).toBeGreaterThan(0);
+    expect(block).toContain('test "$(dpkg-parsechangelog -S Version)" = "$candidate_version"');
+    const root = await mkdtemp(join(tmpdir(), "glibc-exact-version-"));
+    try {
+      const versionFile = join(root, "version");
+      // Local suffix branch and version regex are from official devscripts
+      // 2.23.4+deb12u2 debchange. This inert CLI fixture only models the two
+      // version options; it does not execute the package manager or dch.
+      const fixture = String.raw`#!/usr/bin/perl
+use strict; use warnings;
+my ($new, $opt_l);
+for (my $i=0; $i<@ARGV; $i++) {
+  $new=$ARGV[++$i] if $ARGV[$i] eq '--newversion';
+  $opt_l=$ARGV[++$i] if $ARGV[$i] eq '--local';
+}
+my $VERSION='2.36-9+deb12u14';
+if (!defined $new) {
+  if ($VERSION =~ /(.*?)([a-yA-Y][a-zA-Z]*|\d+)([+~])?$/i) {
+    my $extra=$3||''; my $end=$2; my $start=$1;
+    if ($opt_l and not $start =~ /\Q$opt_l\E/) { $end .= $opt_l . "1"; }
+    $new="$start$end$extra";
+  } else { die "synthetic version mismatch"; }
+}
+open(my $out,'>',$ENV{'SYNTHETIC_VERSION_FILE'}) or die "synthetic output unavailable";
+print $out "$new\n"; close($out) or die "synthetic close failed";
+`;
+      const dch = join(root, "dch"); await writeFile(dch, fixture, { mode: 0o700 });
+      const env = { PATH: `${root}:/usr/bin:/bin`, SYNTHETIC_VERSION_FILE: versionFile, candidate_version: manifest.privateCandidateVersion };
+      execFileSync(dch, ["--local", "+vivalatax1"], { env, timeout: 5000 });
+      expect(await readFile(versionFile, "utf8")).toBe("2.36-9+deb12u14+vivalatax11\n");
+      const execute = (expected: string) => execFileSync("/bin/bash", ["-euc", 'dpkg-parsechangelog() { cat "$SYNTHETIC_VERSION_FILE"; };\n' + block], { env: { ...env, candidate_version: expected }, timeout: 5000, stdio: "pipe" });
+      expect(() => execute(manifest.privateCandidateVersion)).not.toThrow();
+      expect(await readFile(versionFile, "utf8")).toBe(manifest.privateCandidateVersion + "\n");
+      // A changed requested version cannot make the recipe silently accept a
+      // different produced version: keep its original exact equality guard.
+      await writeFile(dch, '#!/bin/sh\nprintf "%s\\n" "2.36-9+deb12u14+foreign" > "$SYNTHETIC_VERSION_FILE"\n', { mode: 0o700 });
+      expect(() => execute(manifest.privateCandidateVersion)).toThrow();
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
   it("rejects incomplete regression suite ABI and consumer evidence", () => {
     const v = { baselineBuildExit: 0, candidateBuildExit: 0, baselineRegressionExit: 1, candidateRegressionExit: 0, baselineSuiteVerified: true, candidateSuiteVerified: true, allocatorCheckingVerified: true, abidiffExit: 0, consumerExits: [0, 0, 0, 0, 0, 0], genericAbiApproval: false, riskAccepted: false, candidateReleaseQualified: false };
     expect(() => assertQualificationStatus(v)).not.toThrow();

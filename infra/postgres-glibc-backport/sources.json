@@ -62,8 +62,8 @@
       "sha256": "3ffac757d0dfc7ce092a135e4fc58a376fc96dcd764aec11190df8516162e97e"
     },
     "build-packages.sh": {
-      "bytes": 7659,
-      "sha256": "7247e9537caff40132070e8a52da2f58a9867acef1ce94e8d47cd15b3a3a35da"
+      "bytes": 7673,
+      "sha256": "a07789523acde85029d60a6ea1f172b6438fc9e3b302b4f47be21a083921f63d"
     },
     "Dockerfile": {
       "bytes": 589,

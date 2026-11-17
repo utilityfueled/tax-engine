@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: actual glibc version-stage failure and exact repair
+
+The [first native glibc build failed before compilation](upgrade-2026-glibc-version-20261117.md). The reviewed one-line repair sets the exact pinned private version rather than appending dch’s local counter. Root/independent10-control runs and six spec references pass; all full-suite/ABI gates remain. Native rerun is pending.
+
 ## November 17: refreshed official public sources and advisories
 
 The [45-response refresh](upgrade-2026-source-refresh-20261117.md) and independent raw-artifact audit pass; npm audits report zero advisories. Draft discovery, exact404s, changed metadata and advisory-association corrections are distinguished from final-form or runtime qualification. Human and release gates remain open.

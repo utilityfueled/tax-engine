@@ -100,3 +100,19 @@ source/archive identity and independent review. `assertQualificationStatus`
 rejects absent/nonzero build, paired regression, full-suite, ABI or consumer
 results; passing it still does not grant human risk acceptance or release
 qualification. No current source-only result clears a vulnerability finding.
+
+## Exact private version in the native package recipe
+
+The recipe sets the pinned private version with `dch --newversion` and immediately
+checks `dpkg-parsechangelog -S Version` for exact equality. Bookworm devscripts
+`2.23.4+deb12u2` appends a numeric counter to a new `--local` suffix; passing
+`+vivalatax1` therefore produces `+vivalatax11`, not the intended `+vivalatax1`.
+The first standalone AMD64 run44037755888 applied the patch but stopped during
+the patch/version stage before any package build. Its saved artifact does not
+contain the resulting changelog; exact version behavior is established separately
+from the matching official devscripts source, not invented as an exported value.
+The failed run remains failed. This correction changes no package features,
+complete suites, paired allocator regression, ABI check or release gate.
+
+Official version-option documentation:
+https://manpages.debian.org/bookworm/devscripts/dch.1.en.html

@@ -26,3 +26,7 @@ lines:
     description: "Let an owning execution controller supervise each source verifier child"
     formula: "An optional run callback must receive both original gpgv/xz argument vectors and ten-second bounds. Unknown child errors propagate unchanged before a success receipt; never fall back. Standalone offline defaults remain unchanged."
     testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::keeps both verifier children under injected custody without fallback"
+  - line: "exact-private-package-version"
+    description: "Set the intended private package version without a local suffix counter"
+    formula: "Use dch --newversion with the exact pinned candidate version and retain the immediate dpkg-parsechangelog equality guard. The official devscripts local suffix algorithm appends its own counter, so --local +vivalatax1 would produce +vivalatax11 and must not be used for this exact version. Preserve all patch, build, suite, allocator, ABI and release holds."
+    testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::executes the recipe version block with exact dch newversion semantics and retains the mismatch guard"

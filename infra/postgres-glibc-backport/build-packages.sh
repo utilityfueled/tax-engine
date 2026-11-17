@@ -46,7 +46,7 @@ body=''.join(x[1:]+'\n' for x in s.splitlines() if x.startswith('+'))
 assert Path('stdio-common/tst-vfscanf-bz34008.c').read_text()==body
 PY
 DEBFULLNAME='Viva La Tax private qualification' DEBEMAIL='private-qualification@example.invalid' \
-    dch --force-distribution --distribution bookworm --local +vivalatax1 \
+    dch --force-distribution --distribution bookworm --newversion "$candidate_version" \
     'Private Bookworm2.36 qualification of upstream839898777226a3ed88c0859f25ffe712519b4ead only. No distro or release approval.'
 test "$(dpkg-parsechangelog -S Version)" = "$candidate_version"
 # Full existing Debian/upstream tests remain enabled: no nocheck, stage1,
