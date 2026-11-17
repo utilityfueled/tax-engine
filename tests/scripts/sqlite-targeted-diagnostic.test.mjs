@@ -38,3 +38,10 @@ test('staged public Tcl observer is nonroot readable even under private host uma
     await rm(dir, { recursive: true });
   }
 });
+
+
+test('actual pinned compiler and hexadecimal mmap options are admitted without generic lowercase values',()=>{
+ const actual={variant:'baseline',path:'/qualification-work/baseline/.libs/libsqlite3.so.0',version:'3.40.1',sourceId:'2022-12-28 14:03:47 '+'a'.repeat(64),dbpage:false,options:['THREADSAFE=1','COMPILER=gcc-12.2.0','MAX_MMAP_SIZE=0x7fff0000']};
+ assert.equal(validateLinkedCore(actual,'baseline'),true);
+ for(const bad of ['COMPILER=gcc-12.3.0','COMPILER=GCC-12.2.0','MAX_MMAP_SIZE=0x7fff0001','MAX_MMAP_SIZE=0X7FFF0000','OTHER=arbitrary','COMPILER=/private/value'])assert.throws(()=>validateLinkedCore({...actual,options:[bad]},'baseline'));
+});

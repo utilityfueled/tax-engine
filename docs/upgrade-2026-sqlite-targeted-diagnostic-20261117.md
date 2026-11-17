@@ -53,3 +53,27 @@ and two additional file/symlink collision controls passing; no unrelated file
 is chmodded or rewritten. Review SHA-256
 `d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f`.
 A fresh actual diagnostic remains required.
+
+
+## Corrected run and exact compile-option literals
+
+The permission-corrected run `44165141626` emits the original OOM observer
+metadata successfully and retains its failure; it reaches diagnostic export,
+then the metadata validator rejects two genuine linked-core compile options:
+`COMPILER=gcc-12.2.0` and `MAX_MMAP_SIZE=0x7fff0000`. Their lower-case compiler
+and hexadecimal characters were absent from the initial synthetic fixtures.
+The intended admission contract is to require those two keys to equal these
+exact pinned toolchain values, while preserving the existing safe grammar for
+other options and every source/library/inventory/loader/pairing guard. Other
+compiler versions, mapped-memory values and arbitrary lower-case metadata must
+remain denied. This diagnostic-only parser correction does not qualify the
+original tests, security candidate, ABI or runtime.
+
+
+The actual-record regression first fails, then all 12 focused tests and scoped
+lint pass. Both saved baseline/DBPAGE core records and privacy-bounded OOM
+metadata validate. Independent review passes 41 actual/adversarial controls,
+reproduces the old parser rejection, and verifies the complete runner inverse
+changes only these two exact-key predicates. Review SHA-256:
+`4f2edad18b35577878eb00c76faab2a61a63fd53a79116da0c4a20a9a18dc329`.
+The recorded remote attempt remains failed; a fresh actual successor is needed.
