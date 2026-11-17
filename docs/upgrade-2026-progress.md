@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: actual ARM64 recovery and browser rehearsal passed
+
+The [closed c076 ARM64 run](upgrade-2026-arm64-c076-actual-20261117.md) passed root and independent artifact review:24stages,6Compose phases,650browser passes+5originalskips, exact image/archive/SBOM bindings and normal restoration. ZeroCritical/56High scan findings remain visible; no risk or release acceptance is implied.
+
 ## November 17: bounded standalone AMD64 source runner
 
 The [manual SQLite runner](upgrade-2026-source-candidate-runner-20261117.md) passed whole-source independent review, source controls and keyring replay. It preserves owned child custody, actual failure artifacts and normal scoped cleanup; no dispatch or qualification has yet occurred.

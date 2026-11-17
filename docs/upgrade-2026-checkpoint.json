@@ -1,4 +1,17 @@
 {
+  "nov17Arm64C076Actual": {
+    "status": "completed-root-and-independent-actual-review-passed",
+    "applicationSource": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",
+    "controllerStages": 24,
+    "composePhases": 6,
+    "browserPasses": 650,
+    "originalSkips": 5,
+    "normalStopAndResourcesRestored": true,
+    "rootReviewSha256": "1225d1e34a4e93ad27f4573dcf2025b494c3bb8025504d50bfc24346c45d84d4",
+    "independentReviewSha256": "c986062ca2e559a50d12f8f1822e0038bd89087b724586cd21c0aa6030b364bd",
+    "riskAccepted": false,
+    "releaseQualified": false
+  },
   "nov17SourceCandidateRunner": {
     "status": "reviewed-pending-actual-native-execution",
     "sourceCandidate": "sqlite",
