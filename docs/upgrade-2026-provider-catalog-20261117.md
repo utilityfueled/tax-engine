@@ -33,3 +33,8 @@ was already recorded separately. Root recomputed both known costs with Decimal;
 no new paid calls, invoice reconciliation or reserve release occurred. The old
 root review is retained and superseded for cumulative accounting by private
 `nov17-openai-account-catalog/ACCOUNTING-CORRECTION.json`.
+
+The superseding independent accounting review also passes:
+`dec1090f91df45d7411c52943dc5bb27e63da9179bc1a28c504b41eec845a31c`.
+It binds the later actual receipt and normal controller closure and independently
+recomputes the two costs and conservative exposure with Decimal.
