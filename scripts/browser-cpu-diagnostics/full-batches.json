@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "referenceSource": "2fccaa27f2305e2f59db43a0067e19f4c631898f",
+  "fullCaseCount": 655,
+  "totalBatches": 8,
+  "fullCollectionSha256": "c486b270fbc2136a6f6b11c3b0ae1c64c8e03107dc34fc5c77ed7f90aa355525",
+  "batches": {
+    "6": {
+      "rows": [
+        {
+          "key": "[\"chromium\",\"oh-business-native.spec.ts\",[\"Actual OH business nonresident at 1280px\",\"originates actual business sources and preserves canonical NRC through edits and reopen\"]]",
+          "id": "039489a8d63b0269289b-0b983fd9413926ecda6b",
+          "file": "oh-business-native.spec.ts",
+          "titles": [
+            "Actual OH business nonresident at 1280px",
+            "originates actual business sources and preserves canonical NRC through edits and reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-business-native.spec.ts\",[\"Actual OH business part_year_resident at 1280px\",\"originates actual business sources and preserves canonical NRC through edits and reopen\"]]",
+          "id": "039489a8d63b0269289b-89e80ad159fa4a3a2af2",
+          "file": "oh-business-native.spec.ts",
+          "titles": [
+            "Actual OH business part_year_resident at 1280px",
+            "originates actual business sources and preserves canonical NRC through edits and reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-business-native.spec.ts\",[\"Actual OH business nonresident at 390px\",\"originates actual business sources and preserves canonical NRC through edits and reopen\"]]",
+          "id": "039489a8d63b0269289b-98fc671e091d1b59adb4",
+          "file": "oh-business-native.spec.ts",
+          "titles": [
+            "Actual OH business nonresident at 390px",
+            "originates actual business sources and preserves canonical NRC through edits and reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-business-native.spec.ts\",[\"Actual OH business part_year_resident at 390px\",\"originates actual business sources and preserves canonical NRC through edits and reopen\"]]",
+          "id": "039489a8d63b0269289b-4fe91f6aed8f8c2aeeae",
+          "file": "oh-business-native.spec.ts",
+          "titles": [
+            "Actual OH business part_year_resident at 390px",
+            "originates actual business sources and preserves canonical NRC through edits and reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-business-part-year-native.spec.ts\",[\"Actual NEW212 source lifecycle 1280px\",\"originates212-day business and header originals through real save review reopen and delete\"]]",
+          "id": "b728893f573b6d85455a-44bacf3413917e38c444",
+          "file": "oh-business-part-year-native.spec.ts",
+          "titles": [
+            "Actual NEW212 source lifecycle 1280px",
+            "originates212-day business and header originals through real save review reopen and delete"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-business-part-year-native.spec.ts\",[\"Actual NEW212 source lifecycle 390px\",\"originates212-day business and header originals through real save review reopen and delete\"]]",
+          "id": "b728893f573b6d85455a-1f27c83ed876ec70bb57",
+          "file": "oh-business-part-year-native.spec.ts",
+          "titles": [
+            "Actual NEW212 source lifecycle 390px",
+            "originates212-day business and header originals through real save review reopen and delete"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-reciprocal-native.spec.ts\",[\"Actual OH reciprocal refund at 1280px\",\"originates reciprocal employee originals and preserves actual source-bound review through reopen\"]]",
+          "id": "cbbe468a2c437a74ba3b-b9a58af97c24a75e52a4",
+          "file": "oh-reciprocal-native.spec.ts",
+          "titles": [
+            "Actual OH reciprocal refund at 1280px",
+            "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-reciprocal-native.spec.ts\",[\"Actual OH reciprocal known-zero at 1280px\",\"originates reciprocal employee originals and preserves actual source-bound review through reopen\"]]",
+          "id": "cbbe468a2c437a74ba3b-05ac8b59964841d0dc0b",
+          "file": "oh-reciprocal-native.spec.ts",
+          "titles": [
+            "Actual OH reciprocal known-zero at 1280px",
+            "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-reciprocal-native.spec.ts\",[\"Actual OH reciprocal refund at 390px\",\"originates reciprocal employee originals and preserves actual source-bound review through reopen\"]]",
+          "id": "cbbe468a2c437a74ba3b-d71bc1a8bc93a25d5e2c",
+          "file": "oh-reciprocal-native.spec.ts",
+          "titles": [
+            "Actual OH reciprocal refund at 390px",
+            "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-reciprocal-native.spec.ts\",[\"Actual OH reciprocal known-zero at 390px\",\"originates reciprocal employee originals and preserves actual source-bound review through reopen\"]]",
+          "id": "cbbe468a2c437a74ba3b-33f2ddc9210831690b79",
+          "file": "oh-reciprocal-native.spec.ts",
+          "titles": [
+            "Actual OH reciprocal known-zero at 390px",
+            "originates reciprocal employee originals and preserves actual source-bound review through reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        }
+      ],
+      "bounds": {
+        "filled-return": 20,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      }
+    },
+    "7": {
+      "rows": [
+        {
+          "key": "[\"chromium\",\"oh-resident-credit-native.spec.ts\",[\"Actual Ohio resident credit distinct at 1280px\",\"types actual Virginia originals and preserves source-bound review lifecycle\"]]",
+          "id": "1c6b3c0da1a0cee28bb0-b18fd5b3cbf9cf54a7d3",
+          "file": "oh-resident-credit-native.spec.ts",
+          "titles": [
+            "Actual Ohio resident credit distinct at 1280px",
+            "types actual Virginia originals and preserves source-bound review lifecycle"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-resident-credit-native.spec.ts\",[\"Actual Ohio resident credit cents at 1280px\",\"types actual Virginia originals and preserves source-bound review lifecycle\"]]",
+          "id": "1c6b3c0da1a0cee28bb0-413dd8bf0f3f19bfdebc",
+          "file": "oh-resident-credit-native.spec.ts",
+          "titles": [
+            "Actual Ohio resident credit cents at 1280px",
+            "types actual Virginia originals and preserves source-bound review lifecycle"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-resident-credit-native.spec.ts\",[\"Actual Ohio resident credit distinct at 390px\",\"types actual Virginia originals and preserves source-bound review lifecycle\"]]",
+          "id": "1c6b3c0da1a0cee28bb0-661a9801074b0ae1fd61",
+          "file": "oh-resident-credit-native.spec.ts",
+          "titles": [
+            "Actual Ohio resident credit distinct at 390px",
+            "types actual Virginia originals and preserves source-bound review lifecycle"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-resident-credit-native.spec.ts\",[\"Actual Ohio resident credit cents at 390px\",\"types actual Virginia originals and preserves source-bound review lifecycle\"]]",
+          "id": "1c6b3c0da1a0cee28bb0-b9cc83516ffaa9de7d41",
+          "file": "oh-resident-credit-native.spec.ts",
+          "titles": [
+            "Actual Ohio resident credit cents at 390px",
+            "types actual Virginia originals and preserves source-bound review lifecycle"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-native-geometry.spec.ts\",[\"keeps actual blank school source validation within the mobile viewport\"]]",
+          "id": "221e3fbf79e2cd98ec20-da1a1866b03e3a302fc0",
+          "file": "oh-school-district-native-geometry.spec.ts",
+          "titles": [
+            "keeps actual blank school source validation within the mobile viewport"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-native.spec.ts\",[\"Native school district at 1280px\",\"originates actual school sources and preserves separate cash through reconfirmation and reopen\"]]",
+          "id": "4711347b927998f329ab-102cfaf7f68f950d1197",
+          "file": "oh-school-district-native.spec.ts",
+          "titles": [
+            "Native school district at 1280px",
+            "originates actual school sources and preserves separate cash through reconfirmation and reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-native.spec.ts\",[\"Native school district at 390px\",\"originates actual school sources and preserves separate cash through reconfirmation and reopen\"]]",
+          "id": "4711347b927998f329ab-98c5dfdc643fdcce8f2f",
+          "file": "oh-school-district-native.spec.ts",
+          "titles": [
+            "Native school district at 390px",
+            "originates actual school sources and preserves separate cash through reconfirmation and reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-part-year-native.spec.ts\",[\"PY school refund100 at 1280px\",\"originates dated school and header originals through actual review and saved reopen\"]]",
+          "id": "dea52e293800d48dc676-850bc71ea1c1aa50f182",
+          "file": "oh-school-district-part-year-native.spec.ts",
+          "titles": [
+            "PY school refund100 at 1280px",
+            "originates dated school and header originals through actual review and saved reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-part-year-native.spec.ts\",[\"PY school covered at 1280px\",\"originates dated school and header originals through actual review and saved reopen\"]]",
+          "id": "dea52e293800d48dc676-f185a68e4f050a27095f",
+          "file": "oh-school-district-part-year-native.spec.ts",
+          "titles": [
+            "PY school covered at 1280px",
+            "originates dated school and header originals through actual review and saved reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-part-year-native.spec.ts\",[\"PY school refund100 at 390px\",\"originates dated school and header originals through actual review and saved reopen\"]]",
+          "id": "dea52e293800d48dc676-4634c520e2768358b2cd",
+          "file": "oh-school-district-part-year-native.spec.ts",
+          "titles": [
+            "PY school refund100 at 390px",
+            "originates dated school and header originals through actual review and saved reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-part-year-native.spec.ts\",[\"PY school covered at 390px\",\"originates dated school and header originals through actual review and saved reopen\"]]",
+          "id": "dea52e293800d48dc676-35a1043fbf28043ab222",
+          "file": "oh-school-district-part-year-native.spec.ts",
+          "titles": [
+            "PY school covered at 390px",
+            "originates dated school and header originals through actual review and saved reopen"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-remaining-balance.spec.ts\",[\"collects current-original school balance receipts without double credit at 1280px\"]]",
+          "id": "08576fdc90adff2e2c1d-ee47d03c4a97a7a6f387",
+          "file": "oh-school-district-remaining-balance.spec.ts",
+          "titles": [
+            "collects current-original school balance receipts without double credit at 1280px"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"oh-school-district-remaining-balance.spec.ts\",[\"collects current-original school balance receipts without double credit at 390px\"]]",
+          "id": "08576fdc90adff2e2c1d-10f136cc7ba24c5ccb3d",
+          "file": "oh-school-district-remaining-balance.spec.ts",
+          "titles": [
+            "collects current-original school balance receipts without double credit at 390px"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"pa-2026-childless-eic-native.spec.ts\",[\"Actual2026 PA child inventory at 1280px\",\"captures confirms edits and reopens actual child sources while2026 output stays gated\"]]",
+          "id": "14acbef6b31b2abdb6e1-a8afe720b3fa29393ee0",
+          "file": "pa-2026-childless-eic-native.spec.ts",
+          "titles": [
+            "Actual2026 PA child inventory at 1280px",
+            "captures confirms edits and reopens actual child sources while2026 output stays gated"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        },
+        {
+          "key": "[\"chromium\",\"pa-2026-childless-eic-native.spec.ts\",[\"Actual2026 PA child inventory at 390px\",\"captures confirms edits and reopens actual child sources while2026 output stays gated\"]]",
+          "id": "14acbef6b31b2abdb6e1-62fac39b9238bdba751a",
+          "file": "pa-2026-childless-eic-native.spec.ts",
+          "titles": [
+            "Actual2026 PA child inventory at 390px",
+            "captures confirms edits and reopens actual child sources while2026 output stays gated"
+          ],
+          "project": "chromium",
+          "timeout": 30000,
+          "expectedStatus": "passed"
+        }
+      ],
+      "bounds": {
+        "filled-return": 20,
+        "provider": 0,
+        "business-expense-analysis": 0,
+        "self-employment-income-analysis": 0
+      }
+    }
+  },
+  "sourceSha256": {
+    "apps/web/tests/oh-business-native.spec.ts": "f2fd8513b115935a140efb26f4729d550c5f63a58385b07ad593e87e3545957e",
+    "apps/web/tests/oh-business-part-year-native.spec.ts": "affb6a996cbb6938774df5e5b0f78e722676c8a6a33457e783671b263b0591c8",
+    "apps/web/tests/oh-reciprocal-native.spec.ts": "51f47f64f4b4597f0adf63efa38abdd93f82412c2455b07304e8f4511619577a",
+    "apps/web/tests/oh-resident-credit-native.spec.ts": "6d52ee9b7e33b63d7ec37a1ab23452e0657307dcd61e8b7bd83ea5884a7476fb",
+    "apps/web/tests/oh-school-district-native-geometry.spec.ts": "6d9d492b43a4bdc1831c285e632ea98534d5e20a417c53a4a0178d6c3b4b8122",
+    "apps/web/tests/oh-school-district-native.spec.ts": "333113c448f6dca3246f157b202e4946bcfdac867298fddc70e4bf9b89cd64ed",
+    "apps/web/tests/oh-school-district-part-year-native.spec.ts": "066fe057163f2680868f05c212fe866475bc6430135e99f352d5959117d22c32",
+    "apps/web/tests/oh-school-district-remaining-balance.spec.ts": "c675deb99d32319e4170d9dd41be9fb2c02c9555b30615c2c6f9eff625784516",
+    "apps/web/tests/pa-2026-childless-eic-native.spec.ts": "1eb3c3b71bb403f2f1fa88eb397b2ac2444844f79a80ac7b8c9f8b97f8fd3dfb"
+  },
+  "paSampled": false
+}

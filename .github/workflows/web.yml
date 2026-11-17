@@ -10,11 +10,16 @@ on:
         type: boolean
         required: false
         default: false
+      cpu_full_batches:
+        description: Sample original full batches after the unchanged strict baseline fails
+        type: boolean
+        required: false
+        default: false
   pull_request:
     branches: [main]
 
 concurrency:
-  group: web-${{ github.ref }}-${{ github.sha }}
+  group: ${{ github.event_name == 'workflow_dispatch' && inputs.cpu_full_batches && format('web-cpu-full-batches-{0}', github.run_id) || format('web-{0}-{1}', github.ref, github.sha) }}
   cancel-in-progress: true
 
 jobs:
@@ -203,6 +208,26 @@ jobs:
           name: browser-cpu-diagnostics
           path: artifacts/browser-cpu-diagnostics/
           if-no-files-found: warn
+      - name: Sample original strict batch 6
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.cpu_full_batches && steps.container_browser.outcome == 'failure' }}
+        timeout-minutes: 10
+        uses: ./.github/actions/browser-cpu-full-batches
+        with:
+          enabled: 'true'
+          original-outcome: ${{ steps.container_browser.outcome }}
+          batch: '6'
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+      - name: Sample original strict batch 7
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.cpu_full_batches && steps.container_browser.outcome == 'failure' }}
+        timeout-minutes: 10
+        uses: ./.github/actions/browser-cpu-full-batches
+        with:
+          enabled: 'true'
+          original-outcome: ${{ steps.container_browser.outcome }}
+          batch: '7'
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
       - name: Verify Docker archive in an independent native image store
         id: archive
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}

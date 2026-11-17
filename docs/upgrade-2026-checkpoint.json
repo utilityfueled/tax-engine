@@ -17,15 +17,14 @@
       "signedCreditActualEvidence": "6fac7368",
       "sourceConcurrency": "6cf1d4f3",
       "cpuAuditBinding": "7ea7453b",
-      "sqliteUpstreamExperiment": "ef173322"
+      "sqliteUpstreamExperiment": "ef173322",
+      "providerCleanupEvidence": "12cd52d5",
+      "registeredSqlitePairedEntry": "b9fe12dc"
     },
     "liveRuns": {
-      "glibcXfdExperiment2fcc": 44169075945,
-      "web7ea": 44175466955,
-      "ci7ea": 44175466929,
-      "docker7ea": 44175466715,
-      "retainedWeb2fcc": 44169011257,
-      "retainedWeb6cf": 44174983879
+      "sqlitePairedB9": 44184632007,
+      "ciB9": 44184075029,
+      "webB9": 44184075018
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -44,13 +43,22 @@
       "supersededCi6cf": "Knownoldbinding retained; root requested cancellation44174983802 after recording exactsource/status/deadlines. Actualterminal cancellation awaitingobserver; no passclaim.",
       "ci6cf": "CANCELLED confirmed; knownstale-binding supersededrun only. Other4jobs passed; unit/coverage canceled, no final totals claimed.",
       "ordinaryWeb2fcc": "SUCCESS job134342982370:650PASS+5originalskips acrossall8batches; strict2fcc remainsactive. Not wholeWebqualification.",
-      "docker7ea": "SUCCESS44175466715."
+      "docker7ea": "SUCCESS44175466715.",
+      "ci7ea": "SUCCESS44175466929: all6jobs;29004tests/2132files, branch88.2% with85%gate unchanged.",
+      "ciC40": "SUCCESS44177523850: all6jobs.",
+      "web2fcc": "FAILURE44169011257: ordinary650PASS/5skips at90000ms; strict636PASS/14FAIL/5skips at30000ms, including12journey deadlines plus2RRTA4000ms privacy children. Cleanup/security/artifact guards passed.",
+      "web6cf": "FAILURE44174983879: ordinary648PASS/2RRTA4000ms failures/5skips; strict648PASS/2school-PY30000ms failures/5skips. Different outcomes do not establish cause or readiness.",
+      "web7ea": "FAILURE44175466955: ordinary jobSUCCESS; strict640PASS/10FAIL/5skips (NEW2122,resident-credit3,school-PY4 at30000ms;RRTA mobile1 at4000ms).",
+      "glibc44169075945": "FAILURE: XFD2assertionsnowPASS;libc5112PASS/16XFAIL/72UNSUPPORTED/10XPASS/0FAIL;i3861256PASS/15XFAIL/0FAIL. StrictXPASSgateholds,candidate/ABI/runtimeunreached;normalcleanup. Exactsourceclassificationshowsnosupportedlinker/profilefix;nogatechanged.",
+      "dockerB9": "SUCCESS44184075228.",
+      "webC40": "FAILURE44177523822: ordinary/buildSUCCESS;strict642PASS/8FAIL/5skips,all30000ms(NEW2122,resident-creditdesktop2,school-PY4);bothRRTApassed."
     },
     "nextActions": [
-      "Read the named push receipt for exact current source, then dispatch/observe separate SQLite upstream experiment; preserve original failures and full-suite gates.",
-      "Review/execute cleanupV2 after root+peer source checks; existing scoped credentials only, no providercalls, 300s/400SQL, exactownedresources/currentfinancialAfterHash, keepgoalreservation.",
-      "Observe exact fullCI/Web and XFD source-linkedhandles withoutrestarts; source_refresh ownsXFD, ohio_finish ownsWeb/CI.",
-      "External final2026annualforms and qualifiedindependenthuman tax/AI/securityreviews remainunresolved; noreadinesspromotion."
+      "Observe already-running paired SQLite44184632007; source_refresh owns terminal artifact review. Do not dispatch a duplicate.",
+      "Commit/push and dispatch exactlyone reviewed default-off whole-original-batch CPU diagnostic; sourcepeer9797eb13/workflowpeerf9f2526f/rootchecks passed. Retain originalfullbaseline/2workers/0retry/30000ms/allactions/tracing/90minjob; separate manualrun-IDconcurrencygroup. ohio_finish monitors actualterminal results.",
+      "Use Python-version feasibility report only as a proposed controlled comparison: local3.14.6 vs actualCI3.13.18 withsamepypdf6.10.0. No version effect established; no privacy helper optimization qualified.",
+      "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
+      "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
     ],
     "checks": {
       "sqliteDiagnosticLocalControls": 10,
@@ -63,7 +71,11 @@
       "rootPostStageFullBrowserAudit": true,
       "new212ReplayRootControls": 5,
       "new212IndependentAdjacentControls": 161,
-      "specReferences": 9442
+      "specReferences": 9447,
+      "ci7eaAllSixJobsPassed": true,
+      "ciC40AllSixJobsPassed": true,
+      "fullCoverageBranchesPercent": "88.2",
+      "unchangedBranchThresholdPercent": "85"
     },
     "sourceLedger": "docs/upgrade-2026-official-source-refresh-20261117-continuation.md",
     "unresolvedExternalGates": [
@@ -74,13 +86,15 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "7ea7453b",
+    "latestPushedSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
-    "queuedReviewedSource": "ef173322 with current evidence update",
     "pushReceipt": ".local/upgrade-evidence/nov17-reviewed-experiment-evidence-push.json",
-    "cleanupContinuation": "V2 cleanup-onlypacket MF0620270b...179pins: exactpost-disableStripeeventGET pending0 replacesagent-inventeddashboardhandshake; root/peerreviewpending. No actualmutation yet."
+    "cleanupContinuation": "Current isolated cleanupV4 PASSED: endpointdisabled/pending0; exactsuccessfulproviderfinancialhashverified;2sessionsrevoked;owned15table-schema/emptyDB/roledeleted;testcustomerdeleted/product+priceinactive;2ownedPreviewdeletionsGET404;nonceRedisprefixonlycleared. 14Stripe/8Vercel/59SQL/4Preview/3Redis;supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Root+independentactualreview6412c975passed. Goalreservationunchanged;historical/globalcleanupandexpirydeletionnotclaimed.",
+    "sqliteContinuation": "44184632007 actualmanualdispatch accepted via existingregisteredworkflow/defaultfalseupstream_experiment; originals12controls and upstream12controlsSUCCESS; onlypairedrunneractive,originalrunnercorrectlyskipped. Sourceb9fe12dc; terminal evidencepending.",
+    "browserDiagnosticLedger": "docs/upgrade-2026-full-batch-cpu-diagnostic-20261117.md",
+    "contextPolicy": "Resume only from activeContinuation and named current artifact; bound command output and delegate independent work. Do not reread whole progress/checkpoint or restart completed work after compaction."
   },
   "nov17New212Timing": {
     "status": "source-reviewed-local-instrumented-two-pass-remote-pending",

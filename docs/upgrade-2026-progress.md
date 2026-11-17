@@ -6938,3 +6938,22 @@ A genuine focused RED (26 pass/1 fail) became 27 passing tests after the
 one-field binding fix `7ea7453b`. Independent review and complete browser audit
 pass; targets, action counts, workers, retries and deadlines are unchanged.
 The failed full run remains evidence; current-source full checks are pending.
+
+
+Continuation: full CI at `7ea7453b` and `c40ad8cf` passes all six jobs.
+Coverage runs 29,004 tests in 2,132 files with 88.2% branches against the
+unchanged 85% gate. Strict Web remains failed: 2fcc has 14 failures, 6cf has
+two, and 7ea has ten. Their ordinary counterparts use 90-second case deadlines;
+strict mode retains 30 seconds and the four-second PDF privacy child. No
+successful ordinary run substitutes for the strict failures.
+
+The isolated signed-credit cleanup passed root and independent actual review
+and is documented in the [provider ledger](upgrade-2026-signed-credit-provider-20261117.md).
+The full paid reservation and old unknown holds remain intact. The separate
+XFD run fixes both assertions but retains ten XPASS and the strict package
+hold; see the [package ledger](upgrade-2026-glibc-package-profile-20261117.md).
+Paired SQLite experiment `44184632007` is running from `b9fe12dc` through a
+default-off input on the already registered workflow. Its terminal result is
+pending. Whole-batch CPU sampling remains source-only pending review and
+adoption. The focused continuation object records exact current handles and
+avoids rereading this historical log after compaction.

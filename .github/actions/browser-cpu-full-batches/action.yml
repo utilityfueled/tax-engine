@@ -1,0 +1,38 @@
+name: Optional original-batch public JavaScript sampling
+description: Nonqualifying diagnostics after the unchanged full strict browser baseline
+inputs:
+  enabled:
+    description: Explicit manual cpu_full_batches opt-in
+    required: false
+    default: 'false'
+  original-outcome:
+    description: Actual full strict browser step outcome in this same job
+    required: true
+  qualification-directory:
+    description: Optional exact original rate-window basename
+    required: false
+    default: ''
+  batch:
+    description: One original whole batch, exactly6 or7; caller must use a10-minute workflow step
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Sample one original whole batch
+      if: ${{ !cancelled() && inputs.enabled == 'true' && inputs.original-outcome == 'failure' }}
+      shell: bash
+      env:
+        TAX_BROWSER_CPU_BATCH_DIAGNOSTICS: '1'
+        TAX_BROWSER_CPU_BATCH: ${{ inputs.batch }}
+        TAX_BROWSER_CPU_ORIGINAL_OUTCOME: ${{ inputs.original-outcome }}
+        TAX_BROWSER_CPU_QUALIFICATION_DIRECTORY: ${{ inputs.qualification-directory }}
+        PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
+      run: node scripts/browser-cpu-diagnostics/full-batch.mjs
+    - name: Retain sanitized full-batch sampling evidence
+      if: ${{ !cancelled() && inputs.enabled == 'true' && inputs.original-outcome == 'failure' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: browser-cpu-full-batch-${{ inputs.batch }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: artifacts/browser-cpu-full-batch-${{ inputs.batch }}/
+        if-no-files-found: warn
+        retention-days: 3
