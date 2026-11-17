@@ -57,3 +57,26 @@ A genuine RED precedes 25 passing controls; lint/spec validation and independent
 source review pass. Independent review SHA-256:
 `6aa191d1f2eaf0972109ece3f31d6a834be7ecd2a3cf623c69720880de104ed1`.
 The package recipe, runner and all FAIL/XPASS/ABI gates remain unchanged.
+
+
+The corrected XFD experiment actually completed in `44169075945` at
+`2fccaa27`. Both CPU-feature assertions now pass. The full libc summary is
+5,112 PASS, 16 XFAIL, 72 UNSUPPORTED, 10 XPASS and zero FAIL; i386 retains
+1,256 PASS, 15 XFAIL and zero FAIL. The unchanged strict XPASS gate rejects
+this baseline, so candidate build, allocator regression, ABI comparison and
+runtime integration were not reached. The workflow failed without a deadline
+or cleanup error. Independent actual review verified all 55 ledger files and
+56 exported files; assessment SHA-256:
+`c62cbf829901f13de4f898099f9230f507118c60905d1b95a0d15f12d4323fc4`.
+
+A separate source classification verified the ten exact expectations in the
+authenticated original package. The four IFUNC cases expand `with-lld`, while
+Makeconfig interprets either nonempty value `yes` or `no` as expected failure.
+Choosing GNU ld alone therefore does not clear those expectations. Debian
+explicitly marks the other six as expected failures for intermittent,
+load-sensitive or other build-profile conditions. All ten actual test commands
+exited successfully; none of their annotations or the strict gate was changed.
+The source review identifies no supported linker, resource or security-profile
+change that resolves this gate. It does not justify suppressing the results or
+accepting a package. Classification SHA-256:
+`837f83370dce077af5a04f350439420500484e39fa362c68b724bc76caef3460`.
