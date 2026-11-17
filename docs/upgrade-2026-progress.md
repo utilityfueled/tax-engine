@@ -6971,3 +6971,15 @@ links, current claims and retained gates. The focused continuation records
 manual diagnostic `44187013822` and other exact source handles. At b063, spec
 references passed but generated inventory failed; genuine RED, a single added
 inventory row and GREEN precede correction `5b56e256`. No test or gate changed.
+
+
+Full SQLite package run `44190069976` is active at reviewed `17cf0189` under
+the existing full-suite/CVE/sanitizer and cleanup bounds. The separate paired
+RRTA interpreter comparison is source-reviewed: exact Linux 3.13.18/3.14.10,
+two pinned synthetic PDFs, full eight-field parity, 104 fixed ABBA children,
+unchanged four-second child deadline and a predeclared 10% improvement on both
+PDFs before any adoption proposal. A genuine FD3 regression precedes the
+corrected four-pipe invocation; root eight controls, all 37 pins, independent
+review, lint, workflow grammar, 9,452 spec references and inventory checks pass.
+No helper or ordinary Web/CI interpreter version changes; actual comparison
+and strict-current-runtime qualification remain pending.

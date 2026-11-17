@@ -22,7 +22,9 @@
       "registeredSqlitePairedEntry": "b9fe12dc",
       "fullBatchCpuDiagnostic": "b0634d4b",
       "xfdActualEvidence": "34620aea",
-      "fullBatchInventoryFix": "5b56e256"
+      "fullBatchInventoryFix": "5b56e256",
+      "compactContext": "c4e92399",
+      "sqliteFullPrerequisites": "17cf0189"
     },
     "liveRuns": {
       "ciB9": 44184075029,
@@ -30,7 +32,8 @@
       "cpuFullBatchB063": 44187013822,
       "ciB063": 44186922860,
       "webB063": 44186922899,
-      "dockerB063": 44186922673
+      "dockerB063": 44186922673,
+      "sqliteFullPackage17cf": 44190069976
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -59,12 +62,13 @@
       "dockerB9": "SUCCESS44184075228.",
       "webC40": "FAILURE44177523822: ordinary/buildSUCCESS;strict642PASS/8FAIL/5skips,all30000ms(NEW2122,resident-creditdesktop2,school-PY4);bothRRTApassed.",
       "sqlitePairedB9": "SUCCESS44184632007,b9fe12dc: original1/107join8 +1/8162OOM retained; separatepatchedwhole107/8162PASS; all83checks0/normalcleanup. Peer55ledger56exports,root17pins; reviewa030d6d7. Package/runtime/ABI/fulloriginalsuite remainfalse.",
-      "ciB063Inventory": "Spec refs passed; inventorycheckFAILED missingnewdiagnosticrow. GenuineRED,generatedonlyoneentry,unchangedallpriorentries,GREEN;fix5b56e256committed."
+      "ciB063Inventory": "Spec refs passed; inventorycheckFAILED missingnewdiagnosticrow. GenuineRED,generatedonlyoneentry,unchangedallpriorentries,GREEN;fix5b56e256committed.",
+      "ciC4eInventory": "Spec ValidateSUCCESS134410578567,confirmingremoteinventoryrepair;type/lint/buildSUCCESS,unit/coveragepending."
     },
     "nextActions": [
-      "Use completed SQLite paired actual evidence to prepare only the existing next full qualification path; preserve original baseline failures and full suite/runtime/ABI gates. source_refresh owns investigation.",
+      "Observe singlefullSQLitequalification44190069976 at17cf0189: original165minutejob/155controller/120package/15cleanup,fulltest/alltest/fuzztest +5positivebaseline +5candidate +5sanitizer unchanged. source_refresh monitors/reviews. Preview prepares distinct ABI diagnostics from actual saveddeb+dbgsym; no duplicate package dispatch.",
       "Observe the single reviewed full-batch CPU diagnostic44187013822 atb0634d4b. Defaultsourcechecks remain separate; original full baseline/deadlines/actions/tracing/gates unchanged. ohio_finish monitors terminal results. No duplicate dispatch.",
-      "Use Python-version feasibility report only as a proposed controlled comparison: local3.14.6 vs actualCI3.13.18 withsamepypdf6.10.0. No version effect established; no privacy helper optimization qualified.",
+      "Commit/push reviewed pairedRRTA Python3.13.18/3.14.10 comparison, then dispatchonce/saveallresults.8rootcontrols/37pins/peerb60e856fpassed; exact2PDF/full8fields/104fixedABBA/4schildren/10%bothgate; no originalhelper/Web/CIversionchange. Source-only before actual.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
       "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
     ],
@@ -79,7 +83,7 @@
       "rootPostStageFullBrowserAudit": true,
       "new212ReplayRootControls": 5,
       "new212IndependentAdjacentControls": 161,
-      "specReferences": 9447,
+      "specReferences": 9452,
       "ci7eaAllSixJobsPassed": true,
       "ciC40AllSixJobsPassed": true,
       "fullCoverageBranchesPercent": "88.2",
@@ -94,7 +98,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "b0634d4bfd73f57b4efdb11c2015353a8fbfe190",
+    "latestPushedSource": "17cf0189d078b88c54047249e08568ab68a56592",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -102,7 +106,8 @@
     "cleanupContinuation": "Current isolated cleanupV4 PASSED: endpointdisabled/pending0; exactsuccessfulproviderfinancialhashverified;2sessionsrevoked;owned15table-schema/emptyDB/roledeleted;testcustomerdeleted/product+priceinactive;2ownedPreviewdeletionsGET404;nonceRedisprefixonlycleared. 14Stripe/8Vercel/59SQL/4Preview/3Redis;supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Root+independentactualreview6412c975passed. Goalreservationunchanged;historical/globalcleanupandexpirydeletionnotclaimed.",
     "sqliteContinuation": "Completed targeted paired experiment and root/independent artifact review. source_refresh identifies existing full-package/ABI/runtime qualification path; no duplicate targeted replay.",
     "browserDiagnosticLedger": "docs/upgrade-2026-full-batch-cpu-diagnostic-20261117.md",
-    "contextPolicy": "Resume only from activeContinuation and named current artifact; bound command output and delegate independent work. Do not reread whole progress/checkpoint or restart completed work after compaction."
+    "contextPolicy": "Resume only from activeContinuation and named current artifact; bound command output and delegate independent work. Do not reread whole progress/checkpoint or restart completed work after compaction.",
+    "pythonComparisonLedger": "scripts/rrta-python-version-comparison/README.md"
   },
   "nov17New212Timing": {
     "status": "source-reviewed-local-instrumented-two-pass-remote-pending",

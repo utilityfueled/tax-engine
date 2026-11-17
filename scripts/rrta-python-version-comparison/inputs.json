@@ -1,0 +1,68 @@
+{
+  "artifact": {
+    "id": 14372125476,
+    "run": 44169011257,
+    "repository": "utilityfueled/tax-engine",
+    "repositoryId": 1199090938,
+    "source": "2fccaa27f2305e2f59db43a0067e19f4c631898f",
+    "bytes": 459416206,
+    "sha256": "20d8d9e49a5f355aaf5f64d205c4b6300aac2334b535c12afc0616a8b88f7676"
+  },
+  "helper": "apps/web/tests/helpers/rrta-paper-review-privacy.py",
+  "helperSha256": "c5c723994d7336d22c341e25e531a33b713bd9227891d4b6aa4553a2adec32f3",
+  "requirementsSha256": "dbb811ae6d9075eda79092433769e009d33968d4cd9c9817de5a4a10c28d0036",
+  "wheelSha256": "90005e959e1596c6e6c84c8b0ad383285b3e17011751cedd17f2ce8fcdfc86de",
+  "markers": [
+    "SYNTHETIC-private-all-W2-paper-B-N-review",
+    "SYNTHETIC-private-all-W2-paper-reference-revised",
+    "synthetic-paper-encrypted-recovery-password",
+    "wrong-synthetic-paper-recovery-password",
+    "111-22-3333",
+    "111223333",
+    "222-33-4444",
+    "222334444",
+    "11-1111111",
+    "111111111",
+    "Actual annual diary and payroll reconciliation",
+    "restaurant",
+    "12-3456789",
+    "123456789",
+    "Actual railroad annual payroll and Box14 originals",
+    "rail-original",
+    "formW2:0",
+    "Actual W2 Box14 original"
+  ],
+  "pdfs": [
+    {
+      "width": 1280,
+      "member": "apps/web/test-results/rate-window-1794947497164-8673/batch-8-artifacts/rrta-paper-review-native-N-19c10-very-privacy-and-year-gates-chromium/actual-rrta-paper-1280.pdf",
+      "expected": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "sha256": "d2cbbeb4221ea6851219f77d378755e4560cf3854d7585854af3bf1e7a074546",
+        "bytes": 509346,
+        "pages": 16,
+        "markersChecked": 18,
+        "geometrySubstringExemptions": 21,
+        "scope": "full-graph-typed-content"
+      }
+    },
+    {
+      "width": 390,
+      "member": "apps/web/test-results/rate-window-1794947497164-8673/batch-8-artifacts/rrta-paper-review-native-N-dde40-very-privacy-and-year-gates-chromium/actual-rrta-paper-390.pdf",
+      "expected": {
+        "schemaVersion": 1,
+        "status": "PASS",
+        "sha256": "300d65a915a86931d708bf7112419f3f9621dd4caef2361a5c06b11564d057ee",
+        "bytes": 509346,
+        "pages": 16,
+        "markersChecked": 18,
+        "geometrySubstringExemptions": 21,
+        "scope": "full-graph-typed-content"
+      }
+    }
+  ],
+  "syntheticProvenance": {
+    "source": "Fixed public repository test-generated PDF members; no upload of local PDFs. Marker values are explicitly asserted synthetic fixtures in tests/pdf/rrta-saved-review-privacy.test.ts. Expected complete eight-field outputs were retained on the exact saved PDFs; these are comparison oracles, not a remote qualification pass."
+  }
+}

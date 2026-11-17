@@ -1,0 +1,53 @@
+name: RRTA Python version comparison (nonqualifying)
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact reviewed main source SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: rrta-python-versions-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    if: ${{ github.repository == 'utilityfueled/tax-engine' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.source_sha == github.sha }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '26.13.1'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        id: a
+        with:
+          python-version: '3.13.18'
+          architecture: x64
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        id: b
+        with:
+          python-version: '3.14.10'
+          architecture: x64
+      - name: Fixed source-only controls
+        run: node --test tests/scripts/rrta-python-version-comparison.test.mjs
+      - name: Compare exact synthetic saved PDFs
+        timeout-minutes: 16
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHON_JIT: '0'
+        run: node scripts/rrta-python-version-comparison/run.mjs '${{ steps.a.outputs.python-path }}' '${{ steps.b.outputs.python-path }}'
+      - name: Retain only fixed metadata and every attempt
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rrta-python-versions-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/rrta-python-versions/*.json
+          if-no-files-found: warn
+          retention-days: 3
