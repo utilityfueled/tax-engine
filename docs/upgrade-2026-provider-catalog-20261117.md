@@ -18,9 +18,18 @@ Private packet: `nov17-openai-account-catalog`. Receipt SHA256
 `dc75255df7f2320bfdda390d98ea9b5159ce35b237414d1d4e0c7e44391ad26a`; root review
 `af289f6dbed6f7ce5253cf3e36ba7537186e3069aeb1bf9236c88d28baf912ce`;
 independent review `62a5024617c07fc5c6cf5801c75af66b6cdad596e7e23596fad2e0a795e787d4`.
-Known paid calls remain179 and reported usage remains$0.27185270. The unresolved
-$0.022384 reserve remains; accounted exposure is$0.29423670. Independent human
+The November15 catalog ledger preceded two later purchased-credit provider
+attempts. Including their$0.0004776 reported cost, known paid calls are181 and
+known usage is$0.27233030. The unresolved$0.022384 reserve remains; conservative
+exposure is$0.29471430. Independent human
 labels, held-out evaluation and Google project access remain open.
 
 The separate [official source refresh](upgrade-2026-source-refresh-20261117.md)
 records current public documentation; it does not establish account access.
+
+Accounting correction: the first catalog summary reused the earlier179-call
+ledger as current. The later [actual purchased-credit receipt](upgrade-2026-cloud-purchased-credit-20261115.md)
+was already recorded separately. Root recomputed both known costs with Decimal;
+no new paid calls, invoice reconciliation or reserve release occurred. The old
+root review is retained and superseded for cumulative accounting by private
+`nov17-openai-account-catalog/ACCOUNTING-CORRECTION.json`.

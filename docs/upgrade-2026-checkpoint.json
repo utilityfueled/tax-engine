@@ -15,9 +15,13 @@
     "listedModels": 96,
     "selectedListingsMatchNov15": true,
     "independentReviewSha256": "62a5024617c07fc5c6cf5801c75af66b6cdad596e7e23596fad2e0a795e787d4",
-    "knownUsageUsd": "0.27185270",
+    "knownUsageUsd": "0.27233030",
     "unknownReserveUsd": "0.022384",
-    "modelPromotion": false
+    "modelPromotion": false,
+    "knownPaidCalls": 181,
+    "conservativeExposureUsd": "0.29471430",
+    "historicalLedgerCorrection": true,
+    "additionalPaidCallsFromCatalogRefresh": 0
   },
   "nov17GlibcExactVersionRepair": {
     "status": "source-repair-reviewed-pending-native-rerun",
