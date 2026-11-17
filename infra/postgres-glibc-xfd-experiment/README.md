@@ -29,3 +29,9 @@ before compilation. It publishes bounded diagnostic artifacts only, never a
 runtime image. Even successful package evidence would leave runtime integration,
 six consumers, image scanning, qualified human review and release qualification
 as separate requirements. No risk is accepted by this experiment.
+
+The authenticated upstream mail patch intentionally retains its original `-- `
+trailer and trailing blank line. `git diff --check` reports those exact upstream
+transport bytes; they are not reformatted because the complete vendor-patch
+hash is the authentication boundary. Whitespace checks for authored files are
+separate from this retained vendor artifact.

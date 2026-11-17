@@ -1,4 +1,55 @@
 {
+  "activeContinuation": {
+    "status": "active-not-release-qualified",
+    "resumeInstruction": "Read only this activeContinuation object and the named dedicated ledgers first; preserve historical evidence without rereading the whole checkpoint.",
+    "branch": "main",
+    "productionPushGuard": "Vercel project Ignored Build Step visibly Only build pre-production; command skips non-preview. Verified this continuation before pushes.",
+    "commits": {
+      "stripeReplay": "85e483533014ab3a458b1839b98585965c9eed65",
+      "browserFixtureAudit": "933b1a85a43f09e16245a31230b210f63160bae8",
+      "officialAnnualRefresh": "95270afa932cfe184c3d6f2e3705035ee00e1226",
+      "sqliteObserverMode": "898fafbd",
+      "picomatchExposure": "5bd8ed32",
+      "glibcXfdExperiment": "17785f68"
+    },
+    "liveRuns": {
+      "webSourceAuditSuccessor": 44159693087,
+      "dockerSourceAuditSuccessor": 44159693045,
+      "ciSourceAuditSuccessor": 44159692992
+    },
+    "observedTerminal": {
+      "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
+      "glibc44148810935": "baseline suite failed two XFD/proc-cpuinfo checks; ten XPASS also remain; candidate/ABI not reached",
+      "sqlite44158923668": "failed at diagnostic-export because root-only Tcl observer was unreadable by nonroot fixture; all 82 recorded commands/cleanup passed. Original join/OOM failures retained; paired DBPAGE recovery change observed."
+    },
+    "nextActions": [
+      "After the current browser evidence closes, push queued reviewed commits and dispatch one corrected SQLite diagnostic on the exact pushed SHA.",
+      "Poll exact live handles; never restart from an observation timeout.",
+      "Finish separate glibc original-artifact investigation and independently review any upstream test-only experiment.",
+      "Finish current picomatch GHSA-fc5q-39xc-vjpf reachability and official-fix investigation.",
+      "Commit and push completed packages without canceling active CI unnecessarily.",
+      "After push, dispatch the separate reviewed glibc XFD experiment; original XFD FAIL/ten XPASS remain unwaived until actual evidence."
+    ],
+    "checks": {
+      "sqliteDiagnosticLocalControls": 10,
+      "browserCorrectionControls": 159,
+      "glibcFixtureControls": 13,
+      "rootVerifiedAllOtherBrowserBudgetFieldsUnchanged": true,
+      "sqliteObserverModeControls": 11,
+      "sqliteIndependentCollisionControls": 2,
+      "glibcXfdInheritedAndExperimentControls": 24,
+      "rootPostStageFullBrowserAudit": true
+    },
+    "sourceLedger": "docs/upgrade-2026-official-source-refresh-20261117-continuation.md",
+    "unresolvedExternalGates": [
+      "Final applicable 2026 annual forms and qualified independent human tax/spec/expected-output review.",
+      "Qualified independent human AI-label/held-out/privacy review and human security/advisory accountability."
+    ],
+    "releaseReady": false,
+    "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
+    "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
+    "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f"
+  },
   "nov17New212Timing": {
     "status": "source-reviewed-local-instrumented-two-pass-remote-pending",
     "defaultOff": true,
@@ -3253,9 +3304,10 @@
   "releaseBlockers": [
     "Exact 1360b9cb passes all twelve local checks, protected Preview 118 API/six UI and the bounded ARM64 rehearsal with completed-artifact review. Remote CI/Docker and ordinary self-host browser pass. Strict-container qualification remains failed with 623 passes/17 deadlines/5 original skips; cause investigation and any confirmed remedy remain open without policy changes.",
     "PA/OH finite full-year, part-year and nonresident methods retain individual source/form boundaries. Qualified independent tax/spec/expected-result review and remaining applicable final 2026 forms remain open. Filing remains disabled and exports are review-only.",
-    "Qualified human AI-label/held-out/privacy review and route qualification remain open. Google access is unavailable for the explicitly optional Gemini alternate; record candidate unavailability without treating it as a requirement to enable a deterministic or separately qualified OpenAI-only route. Known 179 provider calls cost 0.27185270 USD plus the unchanged 0.022384 USD unresolved reserve; exposure is 0.29423670 USD. No model promotion or invoice reconciliation is inferred.",
+    "Qualified human AI-label/held-out/privacy review and route qualification remain open. Google access is unavailable for the explicitly optional Gemini alternate; record candidate unavailability without treating it as a requirement to enable a deterministic or separately qualified OpenAI-only route. Known 181 provider calls cost 0.27233030 USD plus the unchanged 0.022384 USD unresolved reserve; exposure is 0.29471430 USD. No model promotion or invoice reconciliation is inferred.",
     "Current configured ARM64 app scan retains 191 matches: 0 Critical/56 High/61 Medium/17 Low/47 Negligible/10 Unknown; ignored 0. The separate strict AMD64 app scan retains 192 matches, also with 56 High; the earlier stock PostgreSQL scan retains 9 Critical/138 High. These remain unaccepted. Accountable advisory/security/privacy dispositions and final distribution qualification remain open. The engineering recheck is due November 15 at 18:30 UTC or before qualification; accountable advisory and human security/privacy review owners remain unassigned. Configured scan execution does not establish unfiltered findings, risk acceptance, ABI or release qualification.",
-    "The complete 2026 federal return remains unavailable in production pending final parent Form 1040, ordinary/EIC tables and other applicable official annual packages, complete scenarios and qualified review. Production is unchanged; no overall completion or release claim is established."
+    "The complete 2026 federal return remains unavailable in production pending final parent Form 1040, ordinary/EIC tables and other applicable official annual packages, complete scenarios and qualified review. Production is unchanged; no overall completion or release claim is established.",
+    "Current package refresh reports picomatch GHSA-fc5q-39xc-vjpf: two high full-audit paths and one high production-declared path. No published patched version or adequate referenced upstream PR fix was found. Inspected build/test consumers do not establish an untrusted request-glob route, but complete artifact reachability and risk acceptance remain unproven. Engineering follow-up is owned by this upgrade goal, due November 18 16:00 UTC or before qualification; see the dedicated picomatch ledger."
   ],
   "ongoingExecution": {
     "historicalSnapshotNotice": "This nested execution snapshot and its dated source-specific subrecords are retained history; current state is in top-level nov14 entries, releaseBlockers and docs/upgrade-2026-current-status.md. Historical credential and provider-availability gaps below are not current blockers.",

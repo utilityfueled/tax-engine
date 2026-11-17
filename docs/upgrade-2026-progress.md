@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 17 continuation: browser source admission and actual diagnostics
+
+Stripe same-event evidence is saved in `85e48353`; the three inert-fixture source-audit correction is saved and pushed in `933b1a85`. Root verified the three exact bytes and that every other browser budget field remains unchanged; 159 orchestration/native controls and 13 fixture controls pass. Web run `44159693087`, Docker `44159693045` and CI `44159692992` are the live successors. Prior Web `44147020790` stopped before browser collection; it supplies no Ohio case outcome.
+
+SQLite diagnostic `44158923668` is terminal failed at export: its public Tcl observer retained root-only permissions. The independently reviewed repair is committed as `898fafbd`; 11 focused and two independent collision controls pass. Original failures remain, and the corrected actual diagnostic is pending. Glibc `44148810935` is terminal failed at its baseline: two XFD/proc-cpuinfo checks fail and ten XPASS remain; candidate and ABI stages were not reached. These outcomes remain separate from runtime qualification. The [official annual source refresh](upgrade-2026-official-source-refresh-20261117-continuation.md) retains final-form gates. The separate [picomatch exposure ledger](upgrade-2026-picomatch-security-20261117.md), committed as `5bd8ed32`, records the new advisory, two high full-audit paths/one production-declared path, no supported published fix, and an explicit engineering follow-up deadline without acceptance.
+
+For bounded resumption, read `activeContinuation` in the JSON checkpoint first, then only its named ledgers and live handles. Historical checks remain retained. Production builds were visibly configured to skip non-Preview builds before this continuation's main pushes; no production deployment was requested.
+
 ## November 17: Stripe Sandbox same-event replay
 
 On source `c0760d2b1421ed22ff62dc4e4e72caba484b8a69`, the initial automatic delivery at 09:42:16 UTC and the official resend of the same event at 10:13:58 UTC both returned HTTP 200. Stripe showed two deliveries and zero pending. Each database observation used one connection and one read-only query, then closed. The before and after fingerprints across 11 financial tables matched: one event, one issuance, and one purchase; a 1,500-cent sandbox payment and exactly 1,000 credit cents issued and remaining. No usage or reservation was recorded, and the control account stayed empty.
