@@ -36,3 +36,29 @@ A separate saved-actual review verifies all six result IDs and single attempts,
 inventory adds exactly one unsupported browser-spec entry; it changes no
 qualification. Full spec validation records9430references and zero broken links.
 Independent actual review `3b6e198c8f156d980991a331af5e7d0c4ffe7b8bb4963cd56be4a7c82624a0a0`.
+
+
+## Current-source pre-browser guard correction
+
+Current-source `c2210167` Web run44147020790 is terminal failed. Both ordinary
+and strict browser jobs stopped at orchestration prerequisites before case
+collection, so this run provides no six-case Ohio result. The actual runtime
+smoke, Compose recovery, archive verification, SBOM/scan binding and normal
+browser-container removal steps passed; that does not substitute for browser
+qualification. No additional run was dispatched during this inspection.
+
+The same source-audit failure was reproduced locally: three tracked glibc
+regression fixtures were missing from the reviewed browser closure. The remote
+log itself prints only the generic prerequisite error; the exact three-file
+cause is established by local reproduction against those exact committed bytes.
+README text, the baseline runner text used with injected fake dependencies, and
+the projected historical inspection JSON introduce no browser action. Their
+three hashes are now added to `scripts/browser-request-budgets.json`; all other
+parsed fields, weights, cases, skips, deadlines, windows and assertions remain
+identical. The full source-audit guard now passes.
+
+Relevant checks pass:159 browser/orchestrator/native-control tests in four files
+and13 inert glibc-fixture controls. Diff whitespace verification passes. These
+checks establish the narrow audit correction, not remote strict qualification;
+a fresh pushed-source run is still required. Saved local/remote evidence is
+retained in `nov17-ohio-current-c221-remote-observation`.
