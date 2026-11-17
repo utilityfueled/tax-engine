@@ -5,7 +5,7 @@ reference: "https://sourceware.org/pipermail/glibc-cvs/2024q3/085609.html; https
 lines:
   - line: "exact-test-only-patch"
     description: "Apply the exact official upstream branch XFD test correction without changing production code"
-    formula: "Pin official patch and actual failed baseline target bytes; require whole-file three-line inverse and exact no-fuzz patch application. This changes one test oracle, not the original full suite or stable-branch authority."
+    formula: "Pin official patch and actual failed baseline target bytes; require whole-file three-line inverse and exact no-fuzz patch application. The pinned older baseline locates the upstream hunk at line 286 rather than 294; accept only that exact minus-eight-line relocation report, rejecting fuzz and every other reported offset. This changes one test oracle, not the original full suite or stable-branch authority."
     testRef: "tests/scripts/glibc-xfd-experiment.test.mjs::official patch bytes and exact three-line whole-file delta"
   - line: "authenticated-derived-context"
     description: "Retain authenticated original preparation and explicitly bind the experimental input additions"

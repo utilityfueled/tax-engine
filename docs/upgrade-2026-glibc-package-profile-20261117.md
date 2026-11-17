@@ -43,3 +43,17 @@ after staging. Original recipe and runner remain unchanged. Source/adoption
 review SHA-256 is
 `4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f`.
 Actual dispatch and all its qualification outcomes remain pending.
+
+
+The first opt-in attempt, `44165158398` on `ba02ee88`, stopped in inert
+preflight with 23 controls passing and one failing; no package build occurred.
+GNU patch reported the exact eight-line relocation from the official hunk's
+line 294 to the pinned older baseline's line 286. The macOS patch command did
+not report this relocation, so the initial report assertion was platform
+specific. The spec-linked correction admits only that precise GNU report,
+rejects fuzz/other locations/multiple offsets, and preserves the original patch
+hash, exact whole-file before/after equality, exit-status and `--fuzz=0` checks.
+A genuine RED precedes 25 passing controls; lint/spec validation and independent
+source review pass. Independent review SHA-256:
+`6aa191d1f2eaf0972109ece3f31d6a834be7ecd2a3cf623c69720880de104ed1`.
+The package recipe, runner and all FAIL/XPASS/ABI gates remain unchanged.
