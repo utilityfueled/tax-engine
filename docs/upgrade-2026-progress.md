@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 17: Stripe Sandbox same-event replay
+
+On source `c0760d2b1421ed22ff62dc4e4e72caba484b8a69`, the initial automatic delivery at 09:42:16 UTC and the official resend of the same event at 10:13:58 UTC both returned HTTP 200. Stripe showed two deliveries and zero pending. Each database observation used one connection and one read-only query, then closed. The before and after fingerprints across 11 financial tables matched: one event, one issuance, and one purchase; a 1,500-cent sandbox payment and exactly 1,000 credit cents issued and remaining. No usage or reservation was recorded, and the control account stayed empty.
+
+This verifies deduplication for this delivery pair. The original combined rehearsal remains unresolved because its browser action count is unknown; the hosted billing gate stays open.
+
 ## November 17: six preserved native-entry cases pass local strict deadlines
 
 The [reviewed control-kind optimization](upgrade-2026-ohio-native-entry-20261117.md) passes root/independent source checks and all six local30-second cases with2workers/0retries. All actions/assertions and budgets remain; the preceding remote eight deadline failures remain and require a fresh container pass.

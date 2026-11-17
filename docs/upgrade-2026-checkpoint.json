@@ -73,6 +73,23 @@
     "specReferences": 9430,
     "inventoryChange": "one unsupported browser entry"
   },
+  "nov17SignedCreditSameEventReplay": {
+    "sourceCommit": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",
+    "initialAutomaticDeliveryAt": "2026-11-17T09:42:16Z",
+    "officialSameEventResendAt": "2026-11-17T10:13:58Z",
+    "bothHttpStatus": 200,
+    "providerDelivered": 2,
+    "providerPending": 0,
+    "financialSnapshotUnchanged": true,
+    "financialSnapshotTableCount": 11,
+    "eventCount": 1,
+    "issuanceCount": 1,
+    "purchaseCount": 1,
+    "sandboxPaymentCents": 1500,
+    "issuedAndRemainingCreditCents": 1000,
+    "originalCombinedRehearsal": "Unresolved; original browser action count unknown",
+    "hostedBillingGate": "Open"
+  },
   "nov17ExpiredRehearsalExternalCleanup": {
     "status": "external-cleanup-passed-database-unknown",
     "rootTerminalSession": 73378,
