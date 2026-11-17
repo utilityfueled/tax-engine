@@ -1,4 +1,14 @@
 {
+  "nov17ImageIdentityChain": {
+    "status": "source-reviewed-pending-native-identity-rehearsal",
+    "rootFocusedTests": 56,
+    "independentFocusedTests": 56,
+    "allOriginalGatesRetained": true,
+    "finalSourceAddendumSha256": "116ed7311e2dbb1232f113f30e7eae2f57af995e263ae4688c7cee90d2022a46",
+    "independentReviewSha256": "05fdcb69de88424e5863299dbbba912f4a4f89950bbb126cce8f2d86aaa8df3e",
+    "historicalA5eQualificationFailed": true,
+    "releaseQualified": false
+  },
   "nov17SqliteHarnessRepair": {
     "status": "source-repair-reviewed-pending-native-rerun",
     "failedNativeRun": 44035000141,

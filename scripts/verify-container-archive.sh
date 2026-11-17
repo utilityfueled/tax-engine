@@ -16,6 +16,8 @@ archive_sha=
 archive_bytes=0
 store_info_diagnostics=null
 loaded_image_diagnostics=null
+image_identity_sha=
+config_id=
 cleanup() {
   local result=$? removed=true verified=false current_identity=
   trap - EXIT HUP INT TERM
@@ -40,10 +42,11 @@ cleanup() {
     --argjson verified "$verified" --argjson removed "$removed" \
     --argjson diagnostics "$store_info_diagnostics" \
     --argjson loadedDiagnostics "$loaded_image_diagnostics" \
+    --arg imageIdentitySha256 "$image_identity_sha" \
     '{version: 1, $source, $imageId, platform: "linux/amd64", $stage,
       $archiveSha256, $archiveBytes, importStore: "fresh local Podman vfs",
       archiveImportVerified: $verified, scratchRemoved: $removed, storeInfoDiagnostics: $diagnostics,
-      loadedImageDiagnostics: $loadedDiagnostics}' > "$receipt"
+      loadedImageDiagnostics: $loadedDiagnostics, imageIdentitySha256: $imageIdentitySha256}' > "$receipt"
   if [[ $result != 0 ]]; then
     printf 'Archive verification stopped at %s. See the sanitized receipt.\n' "$stage" >&2
   fi
@@ -112,6 +115,14 @@ archive_sha=${archive_sha%% *}
 [[ $archive_sha =~ ^[a-f0-9]{64}$ ]] || exit 1
 chmod 0400 "$archive"
 
+stage=verify-archive-identity
+python3 -E -B "$(dirname -- "${BASH_SOURCE[0]}")/lib/container-image-identity.py" "$archive" \
+  container-candidate.json "$revision" container-image-identity.json
+image_identity_sha=$(sha256sum < container-image-identity.json)
+image_identity_sha=${image_identity_sha%% *}
+config_id=$(jq -er '.configDigest | select(test("^sha256:[a-f0-9]{64}$"))' container-image-identity.json)
+# Podman identifies the imported native image by its config, not its OCI index.
+expected=$(jq -cS --arg id "${config_id#sha256:}" '.Id = $id' <<< "$expected")
 stage=verify-empty-store
 # Keep a bounded prefix from this fixed, directly owned local command. Drain
 # the rest so the diagnostic reader cannot change the command's exit via SIGPIPE.
@@ -152,11 +163,11 @@ stage=load
 stage=verify-loaded-image
 loaded_id=$("${podman[@]}" images --all --no-trunc --quiet 2>/dev/null)
 loaded_id_matches=false
-if [[ ${loaded_id#sha256:} == "${image_id#sha256:}" ]]; then loaded_id_matches=true; fi
+if [[ ${loaded_id#sha256:} == "${config_id#sha256:}" ]]; then loaded_id_matches=true; fi
 loaded_image_diagnostics=$(jq -n --argjson matches "$loaded_id_matches" \
   '{imageListMatches: $matches, signatureMatches: null, signatureFields: null, archiveHashMatches: null}')
-[[ ${loaded_id#sha256:} == "${image_id#sha256:}" ]] || exit 1
-loaded=$("${podman[@]}" image inspect "${image_id#sha256:}" 2>/dev/null | jq -ecS "$signature")
+[[ ${loaded_id#sha256:} == "${config_id#sha256:}" ]] || exit 1
+loaded=$("${podman[@]}" image inspect "${config_id#sha256:}" 2>/dev/null | jq -ecS "$signature")
 signature_matches=false
 if [[ $loaded == "$expected" ]]; then signature_matches=true; fi
 # Retain fixed equality predicates only. Config values can contain credentials.

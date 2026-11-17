@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: verified OCI target-to-config source correction
+
+The [identity correction](upgrade-2026-image-identity-20261117.md) distinguishes Docker OCI index IDs from native config IDs through mandatory exported-byte hash chains. Root and independent whole-source reviews and56focused controls pass. All signatures, telemetry, cleanup, scan policy and deadlines remain; fresh native proof is required.
+
 ## November 17: actual SQLite link failure and reviewed harness repair
 
 The [first native run failed before SQL tests](upgrade-2026-sqlite-harness-20261117.md). The reviewed repair selects the supported upstream amalgamation harness in three commands, preserving complete suites, all five cases and sanitizers. Root and independent16-control runs pass; a fresh native execution remains required.
