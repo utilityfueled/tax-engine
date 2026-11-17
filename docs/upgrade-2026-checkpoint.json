@@ -64,8 +64,8 @@
       "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35\u20135.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification."
     },
     "nextActions": [
-      "Run one reviewed common-DBPAGE fullSQLitepackage qualification on the next pushed exactsource; retain prior44190069976 failure and original full/CVE/sanitizer/deadline/cleanup gates. Native ABI adapter remains separately reviewed/prepared; no candidate/ABI/runtime result invented.",
-      "Preserve CPU44187013822 original4failures/18diagnosticfailures and all14profile outcomes. Fixedcounts/categories source successor reviewed privately; adopt only after root scopedchecks and closure audit. No oldrawvalues recovered/no weights or acceptance changes.",
+      "Observe singlefullDBPAGEpackage44198188977/dc2185da without duplicate, unchanged165mjob/155controller/120package/15cleanup. ABI native adapter source reviewed privately; GPG TOFU runtime implementation private. No candidate/ABI/runtime result invented.",
+      "FixedCPUmetadata successor adopted: root14new/fullbatch+27originalCPU and scopedchecksPASS; acceptance/weights/actions/limits unchanged. Preserve allCPU44187013822 unknowns; any future actualrun retains exactsourceguard and originalfailures.",
       "Actual immutableSQLitediscovery44196293753 identifies usr/bin/gpg directconsumer. Prepare exact-source GPG SQLite-backed runtime fixture; indirect/alias uses remain outside discovery. No runtimeclaim.",
       "Retain completed pairedPython44190812240 valid negative:104passes/0timeouts, exactparity/controls/cleanup, bothpairedmedians below10%; no interpreter adoption. Original4sprivacy failures remain; no repeat comparison for green.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
@@ -97,7 +97,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "bb3fd00e5b70f705655dec517c9613fbe75c6c30",
+    "latestPushedSource": "dc2185dacedbd11595b6d7fd39b03570669e9c49",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -123,9 +123,16 @@
       "ledger": "docs/upgrade-2026-sqlite-dbpage-profile-20261117.md",
       "sourceReviewSha256": "fadfd90bec3a7423dd7109b0860beea87de1ebd617692908be0b4238d199d3c6",
       "independentReviewSha256": "70111176e28c53e89064bf3b3a24fcfb3c7470faaba39aebc0c8547217259d68",
-      "actualExecution": "pending",
+      "actualExecution": "RUNNING44198188977/dc2185da/attempt1/job134445081615;165mjobdeadlineNov18 02:03:26Z,155controller/120package/15cleanup;source_refresh monitors;no duplicate",
       "realCommonFeatureDelta": true,
       "candidateReleaseQualified": false
+    },
+    "fixedCpuMetadata": {
+      "sourceManifestSha256": "76e736a9686b24eb9d027f3bc9168ef7ed7fdeac3f14bb8f59c21f47657633e0",
+      "independentReviewSha256": "add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc",
+      "rootChecks": "14new/fullbatch+27originalCPU,lint/syntax/spec/inventory/audit/closurePASS",
+      "allOriginalLimitsAndAcceptanceUnchanged": true,
+      "actualFutureRun": "not yet dispatched"
     }
   },
   "nov17New212Timing": {

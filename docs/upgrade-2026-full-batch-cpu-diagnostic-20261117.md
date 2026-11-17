@@ -81,3 +81,17 @@ container-removal step succeeded; no separate post-removal inspection is claimed
 The next source investigation may examine the rejected interval contract while
 retaining these negatives; no rerun or product optimization follows from this
 partial sample alone.
+
+## Fixed metadata successor
+
+A separately reviewed successor records only bounded fixed interval rejection
+counts and diagnostic browser failure categories. Raw values/messages/stacks
+stay private; unknown or inaccessible facts remain unknown. Profile acceptance,
+weights, actions, limits, retries, workers, exits and cleanup are unchanged.
+The original baseline projection and historical unknown records are preserved.
+Eight new, six unchanged full-batch and all 27 original CPU controls pass,
+along with lint, syntax, spec/inventory, browser audit and script closure.
+Spec-first failures precede implementation. All 34 source/evidence pins match.
+Source manifest: `76e736a9686b24eb9d027f3bc9168ef7ed7fdeac3f14bb8f59c21f47657633e0`.
+Independent review: `add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc`.
+No fresh browser result or recovered historical category is claimed.

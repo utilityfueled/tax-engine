@@ -1,0 +1,16 @@
+form: "Fixed-CPU-Diagnostic-Metadata"
+taxYear: 2025
+status: "verification-contract"
+notes: |
+  Source-only diagnostic successor. Preserve all profile acceptance predicates,
+  public-code projection, original failures, timeouts, workers, retries and cleanup.
+  Unknown data remains unknown; no raw messages, stacks, names, URLs or sample values.
+lines:
+  - line: "fixed-interval-rejection-metadata"
+    description: "Count bounded fixed interval rejection subtypes without accepting them"
+    formula: "Only explicit profiler rejection metadata may count own data descriptors across at most40000 intervals as valid, negative, fractional, unsafe, nonfinite, nonnumeric or unknown. Never invoke accessors, normalize or retain interval values; preserve unavailable reason and existing negative controls. Historical records remain readable; private/invalid additions fail exact upload projection. Valid profiles remain byte-identical."
+    testRef: "tests/scripts/fixed-cpu-metadata.test.mjs::fixed interval rejection counts preserve rejection and weights"
+  - line: "fixed-browser-failure-metadata"
+    description: "Retain fixed categories only for the sampled batch before erasure"
+    formula: "Keep original validated ID/status/duration/retry. TimedOut status is timeout; otherwise inspect at most16 own-data error records and4096 message characters each, emitting only timeout/assertion/browserclosed/other. Unknown or conflicting evidence is other. No arbitrary error/message/stack/snippet is saved, and no getter invoked. Original baseline is separate and unchanged; all failing statuses retain nonzero diagnostic exits and raw temporary reports remain deleted."
+    testRef: "tests/scripts/fixed-cpu-metadata.test.mjs::sampled browser categories never expose raw errors"

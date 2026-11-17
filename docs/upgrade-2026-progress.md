@@ -7020,3 +7020,8 @@ original shell except one explicit build prefix shared by both variants. Root
 repeated3RED→3GREEN,18adjacent tests, lint/Bash/spec/inventory checks. Prior
 fulltest failure remains; one exact-source complete package run is next.
 [Profile](upgrade-2026-sqlite-dbpage-profile-20261117.md).
+
+November 17: single DBPAGE fullpackage44198188977 runs atdc2185da.
+FixedCPUmetadata successor passes14new/fullbatch+27original controls and all
+scopedchecks; original acceptance/weights/limits and all historical unknowns
+remain. [Source/review](upgrade-2026-full-batch-cpu-diagnostic-20261117.md).

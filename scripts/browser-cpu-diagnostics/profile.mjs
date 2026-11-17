@@ -1,3 +1,4 @@
+import {fixedIntervalRejections,validateIntervalRejections} from './fixed-metadata.mjs';
 import { Buffer } from 'node:buffer';
 import { performance } from 'node:perf_hooks';
 
@@ -58,7 +59,7 @@ function classify(frame, inventory) {
 }
 
 /** The protocol response is already in memory. These bounds limit accepted work/output, not transport peak memory. */
-export function summarizeProfile(raw, { origin, inventory }) {
+export function summarizeProfile(raw, { origin, inventory, fixedRejectionMetadata = false }) {
   try {
     check(origin === ORIGIN, 'invalid-target'); validateInventory(inventory);
     profileCheck(raw && Array.isArray(raw.nodes) && Array.isArray(raw.samples) && Array.isArray(raw.timeDeltas), 'profile-shape');
@@ -108,7 +109,7 @@ export function summarizeProfile(raw, { origin, inventory }) {
       nodes, samples: [...raw.samples], timeDeltas: [...raw.timeDeltas] };
     check(Buffer.byteLength(JSON.stringify(result)) <= LIMITS.bytes, 'profile-limit'); return result;
   } catch (error) {
-    if (error instanceof ProfileRejection && PROFILE_REASONS.includes(error.reason)) return { ...unavailable('invalid-profile'), reason: error.reason };
+    if (error instanceof ProfileRejection && PROFILE_REASONS.includes(error.reason)) return { ...unavailable('invalid-profile'), reason: error.reason, ...(fixedRejectionMetadata === true && error.reason === 'sample-interval' ? {intervalRejections:fixedIntervalRejections(raw)} : {}) };
     const allowed = ['invalid-target', 'invalid-inventory', 'invalid-profile', 'profile-limit'];
     return unavailable(allowed.includes(error?.message) ? error.message : 'invalid-profile');
   }
@@ -134,7 +135,7 @@ export async function withProfile({ enabled, origin, inventory, createSession, u
       if (!session) return;
       try {
         const response = await within(() => session.send('Profiler.stop'), deadline);
-        if (!setupFailed) record = summarizeProfile(response?.profile, { origin, inventory });
+        if (!setupFailed) record = summarizeProfile(response?.profile, { origin, inventory, fixedRejectionMetadata: true });
       } catch { record = unavailable('profiler-unavailable'); }
       finally {
         const disable = Promise.resolve().then(() => session.send('Profiler.disable')).catch(() => {});
@@ -176,6 +177,12 @@ export function sanitizeStoredRecord(record, options) {
       check(codes.includes(record.code)); const safe = unavailable(record.code);
       if (Object.hasOwn(record, 'reason')) {
         check(record.code === 'invalid-profile' && PROFILE_REASONS.includes(record.reason)); safe.reason = record.reason;
+      }
+      if (Object.hasOwn(record, 'intervalRejections')) {
+        check(record.code === 'invalid-profile' && record.reason === 'sample-interval');
+        const descriptor = Object.getOwnPropertyDescriptor(record, 'intervalRejections');
+        check(descriptor?.enumerable === true && Object.hasOwn(descriptor, 'value'));
+        safe.intervalRejections = validateIntervalRejections(descriptor.value);
       }
       check(JSON.stringify(record) === JSON.stringify(safe)); return safe;
     }
