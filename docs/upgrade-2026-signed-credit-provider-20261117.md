@@ -52,3 +52,33 @@ No public credit-sale qualification, model promotion, complete original
 rehearsal or full external-resource cleanup is claimed. The independent human
 AI-label/held-out/privacy and security gates remain open. Credentials, raw rows,
 provider IDs and private journals stay outside Git.
+
+
+## Current isolated-resource cleanup
+
+A separate cleanup-only child passed root and independent actual review. It
+used 14 Stripe, 8 Vercel, 59 SQL, 4 Preview and 3 Redis operations, within the
+existing 300-second bound. The saved Vercel bundle token was expired; the
+existing authorized CLI session supplied a current token after explicit
+isolated-project/team verification, without new sign-in or credential creation.
+Only the new private cleanup subset changed.
+
+The exact endpoint is independently disabled, and its retained sandbox event
+reports zero pending webhooks; this is not a fresh delivery-attempt recount.
+The full eleven-table snapshot before deletion exactly matches the successful
+provider settlement. Both synthetic sessions are revoked; the owned schema,
+empty database/role and two Preview deployments are removed. The test catalog
+is inactive, synthetic customer deleted and only owned Redis buckets cleared.
+Normal remote idle closure preceded the unchanged zero-connection guard; no
+force termination occurred. Environment and full goal-reservation bytes remain
+unchanged. The supervisor observed exit 0, both EOFs, reaped child and absent
+owned group without TERM.
+
+Receipt: `fe19a7417f68607706f8d03cc9aa0b7afa08ba2346218c08a16e64746a0a5c3f`.
+Independent review: `6412c9757d36e26829c4b0c41da922684241c60cae6b25cd8c6fd8481960c153`.
+Completed Stripe history/disabled endpoint, original failure evidence and cost
+holds remain. The free parent branch is unchanged until its saved
+2026-11-18T09:19:28Z expiry; shared free ephemeral cache retention is bounded by
+2026-11-19T00:00:00Z. These are retained bounds, not observed deletion. Global
+historical cleanup/operation counts remain incomplete; public/model and full
+upgrade readiness remain unqualified.
