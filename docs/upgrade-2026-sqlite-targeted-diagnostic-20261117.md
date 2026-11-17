@@ -77,3 +77,23 @@ reproduces the old parser rejection, and verifies the complete runner inverse
 changes only these two exact-key predicates. Review SHA-256:
 `4f2edad18b35577878eb00c76faab2a61a63fd53a79116da0c4a20a9a18dc329`.
 The recorded remote attempt remains failed; a fresh actual successor is needed.
+
+
+## Corrected actual diagnostic
+
+[Run 44169075587](https://github.com/utilityfueled/tax-engine/actions/runs/44169075587)
+succeeded as a diagnostic on source
+`2fccaa27f2305e2f59db43a0067e19f4c631898f`. The independent assessment verifies
+47 original ledger files and all 83 controller checks/normal cleanup. Both
+original join8 rowid and injected-OOM failures reproduce; original and
+instrumented OOM logs are byte-identical. Eight observed callback statements
+contain no NULL tokens, which does not exclude an internal metadata-query
+failure. The separately built DBPAGE-only core changes recovery exit 1 to 0;
+it does not resolve the original test failures. Root verified the seven bound
+assessment-file hashes. Independent assessment SHA-256:
+`e0b3ab1675d3dc8f69bc3388417cd63493bfd1a19770ea98ec70b46b89dc1c57`.
+
+A source-only separate experiment now examines official upstream rowid
+capability-dependent test changes and a recovery NULL-conversion guard.
+Applicability/local controls are preliminary; historical OOM2330 causality
+and all full-suite/runtime/ABI/package gates remain unqualified.

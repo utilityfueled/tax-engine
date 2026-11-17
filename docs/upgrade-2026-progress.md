@@ -6894,3 +6894,47 @@ inventory preserve the original full suites, allocator regression, ABI checks
 and cleanup. Root and independent 13-control runs pass. No original suite has
 yet run under this profile, and runtime security settings remain unchanged.
 [Source and qualification limits](upgrade-2026-glibc-package-profile-20261117.md).
+
+
+### November 17: exact-source diagnostic successors
+
+Reviewed commits `e4b4681c` (exact GNU patch relocation), `6a5c33dc`
+(pinned SQLite compiler/mmap literals), and `2fccaa27` (default-off strict
+NEW212 timing replay) are pushed to main. The replay retains the two original
+cases, two workers, zero retries, 30-second deadline and original assertions.
+Its five new controls and 161 adjacent controls pass; the generated inventory
+adds only one unsupported diagnostic entry, and all 9,442 spec references pass.
+Actual source `2fccaa27f2305e2f59db43a0067e19f4c631898f` is now running SQLite
+`44169075587`, glibc XFD experiment `44169075945`, and NEW212 `44169079491`.
+These observations do not erase original failures or establish release readiness.
+
+The distinct private provider-only V2 source and executor passed independent
+review, retaining conservative unknown-cost holds and the full prospective
+$0.05 reservation under the authorized goal budget. The actual supervisor
+closed normally with child exit 1 and admission held before provider-phase
+output/reservation creation. Saved/local prerequisite diagnosis is underway;
+no successful provider/accounting outcome is claimed. The compact
+`activeContinuation` record holds current handles without reloading history.
+
+
+The corrected provider V3 phase subsequently passed: two real calls, known
+Decimal cost $0.0005246, 129/300 queries, exact purchased-credit balance
+1,000/2/998 cents, duplicate denial, unchanged settlement replay and control
+account. Root and independent actual reviews passed; closure is clean and the
+full reservation/old unknown holds remain. See the separately committed
+[signed-credit ledger](upgrade-2026-signed-credit-provider-20261117.md),
+`6fac7368`. No public-sale/model/full-cleanup qualification is claimed.
+
+Commit `6cf1d4f3` adds exact source SHA to only the CI/Web concurrency group
+keys. Duplicate same-SHA runs retain cancellation; older distinct-source runs
+now finish while work continues. Both old 2fcc workflows remained active after
+the push, confirming the intended group separation. All other workflow bytes,
+required jobs and gates are unchanged.
+
+Coverage on 2fcc completed 29,003 passing tests and one stale optional CPU
+diagnostic audit-hash failure. The audit delta is exactly three reviewed inert
+glibc fixture pins; all existing pins and every other budget field are equal.
+A genuine focused RED (26 pass/1 fail) became 27 passing tests after the
+one-field binding fix `7ea7453b`. Independent review and complete browser audit
+pass; targets, action counts, workers, retries and deadlines are unchanged.
+The failed full run remains evidence; current-source full checks are pending.

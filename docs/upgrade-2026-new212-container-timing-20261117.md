@@ -82,3 +82,23 @@ edited for this package.
 
 Private preparation evidence is in
 `.local/upgrade-evidence/nov17-new212-container-timing-preparation/`.
+
+
+## Actual isolated strict-container replay
+
+[Run 44169079491](https://github.com/utilityfueled/tax-engine/actions/runs/44169079491)
+passed on source `2fccaa27f2305e2f59db43a0067e19f4c631898f`, image
+`sha256:b3ab501e670140493cf2986fae5096db4a7b079262c28a21688d0ba63046fd4b`.
+Both unchanged cases passed: desktop 24,191 ms and mobile 18,861 ms. The
+configuration retains two workers; the single selected file used one actual
+worker. All 40 fixed timing records completed successfully. Response-wait
+intervals were 2,213/2,040 ms, and Python-call wall intervals 2,389/2,146 ms.
+These intervals include wall time and are not CPU attribution. Owned normal
+container stop/removal and runner cleanup completed.
+
+Root verified all 14 evidence-file hashes and the case/phase/configuration
+records against manifest `4a11df011367a8e0cedf2adfe306580493b9e665e488f5a22d24cfa9a26bbdfd`.
+The source/image/strict-settings proof is recorded with eight exact-Git source
+pins. This isolated pass neither establishes the earlier full-batch failure's
+cause nor substitutes for the current complete browser suite. Original failure,
+deadline, action, assertion and readiness gates remain unchanged.
