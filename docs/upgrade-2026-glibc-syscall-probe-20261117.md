@@ -29,3 +29,31 @@ Primary references: [Moby28.0.4 policy](https://github.com/moby/moby/blob/v28.0.
 [Docker28.0.4 option serialization](https://github.com/docker/cli/blob/v28.0.4/cli/command/container/opts.go),
 [glibc personality test](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/tst-personality.c;hb=glibc-2.36),
 [glibc clock test](https://sourceware.org/git/?p=glibc.git;a=blob;f=time/tst-clock2.c;hb=glibc-2.36).
+
+
+## Actual native result
+
+Manual run [44057386555](https://github.com/utilityfueled/tax-engine/actions/runs/44057386555)
+on `9343d78a` passes the bounded diagnostic. Built-in and official default
+profiles both return EPERM for the two tested calls. The profile with only the
+two reviewed argument rules returns the saved personality, permits its exact
+query and restoration, and returns EINVAL for setting CLOCK_MONOTONIC, as the
+original test expects. It adds no capability or host clock write.
+
+All 73 commands exit zero; normal cleanup removes three owned containers and
+eight owned images while preserving the six initial images. No deadline or
+cleanup error occurs. The executed controller checks complete toolchain
+inventory equality; those private inventory bytes were not exported, so an
+independent artifact-level byte comparison is unavailable.
+
+The probe does not execute the original full glibc test binaries or qualify a
+backport, runtime, ABI, release or advisory disposition. The next correction
+applies only these rules to the existing owned qualification container and
+must pass all original suites.
+
+Artifact 14317180818 SHA256
+`ca1407d935720fff49aa875ff509715558fd2d3a033fa80f994c71150340bb2d`;
+independent actual review
+`774eb98c1573e9e59f1580cf7053762091cb7557162832dec6f30a224c07af56`;
+root review of 173 saved pins
+`a32b243df0257b1ff69ecd18eb09ec90ddba1fb6647e5c9382c37270b980f7b4`.

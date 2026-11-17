@@ -6849,3 +6849,13 @@ their 30-second deadlines. All 40 fixed timing records complete; the managed
 server closes normally. Root verifies 53 saved pins and both results. This
 single macOS run gives no explanation or resolution for earlier Linux failures.
 [Actual results and limits](upgrade-2026-new212-timing-20261117.md).
+
+
+### November 17: actual glibc syscall prerequisite identified
+
+The three-profile native probe passes. Two exact argument rules restore the
+original expected syscall semantics; built-in and official default profiles
+both deny the calls. All 73 commands and normal cleanup pass. Root and
+independent saved-artifact reviews agree; original full suites and release
+qualification remain required.
+[Native result and limits](upgrade-2026-glibc-syscall-probe-20261117.md).
