@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, mkdtemp, rm, writeFile, symlink, link, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   assertSignedSourceChain, assertQualificationStatus, assertSuiteSummary,
   validateManifest, parseArguments, createExclusiveContext, stagePinnedFile,
@@ -96,4 +96,26 @@ describe("Bookworm glibc private source backport (spec/federal/postgres-glibc-ba
 
     for (const args of [["--architecture", "emulated"], ["--runtime", "podman"], ["--architecture", "amd64", "--architecture", "arm64"], ["--architecture", "amd64", "--source-cache", "cache"]]) expect(() => parseArguments(args)).toThrow();
   });
+  it("keeps both verifier children under injected custody without fallback", async () => {
+    const fs = await import("node:fs/promises");
+    const root = await mkdtemp(join(tmpdir(), "glibc-verifier-custody-"));
+    const fallback = vi.fn(() => { throw new Error("Unexpected default verifier child"); });
+    vi.resetModules();
+    vi.doMock("node:fs/promises", () => ({ ...fs, copyFile: async (_source: string, destination: string) => { await fs.writeFile(destination, "synthetic staged fixture", { flag: "wx" }); } }));
+    vi.doMock("../../scripts/build-postgres-libxml2-backport.mjs", () => ({ runBoundedCommand: fallback, verifyPinnedFile: async () => "synthetic-pin" }));
+    try {
+      const candidate = await import("../../scripts/build-postgres-glibc-backport.mjs");
+      for (const failAt of [1, 2]) {
+        const output = join(root, "attempt-" + failAt); const calls: { executable: string; options: { timeoutMs: number } }[] = [];
+        const unknown = Object.assign(new Error("synthetic unknown child"), { childExitConfirmed: false, code: "BOUNDED_COMMAND_TERMINATED" });
+        const run = async (executable: string, _args: string[], options: { timeoutMs: number }) => { calls.push({ executable, options }); if (calls.length === failAt) throw unknown; return { stdout: "fixture" }; };
+        await expect(candidate.prepareBuildContext({ architecture: "amd64", sourceCache: "/synthetic-source-cache", output }, { run })).rejects.toBe(unknown);
+        expect(calls.map(v => v.executable.split("/").at(-1))).toEqual(failAt === 1 ? ["gpgv"] : ["gpgv", "xz"]);
+        expect(calls.every(v => v.options.timeoutMs === 10000)).toBe(true);
+        await expect(fs.lstat(join(output, "preparation-receipt.json"))).rejects.toMatchObject({ code: "ENOENT" });
+      }
+      expect(fallback).not.toHaveBeenCalled();
+    } finally { vi.doUnmock("node:fs/promises"); vi.doUnmock("../../scripts/build-postgres-libxml2-backport.mjs"); vi.resetModules(); await rm(root, { recursive: true, force: true }); }
+  });
+
 });

@@ -11062,6 +11062,26 @@
       ]
     },
     {
+      "key": "federal/postgres-glibc-candidate-amd64",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://sourceware.org/pipermail/libc-alpha/2026-April/176841.html; https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch",
+      "specPath": "spec/federal/postgres-glibc-candidate-amd64.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/postgres-source-candidates-amd64",
       "jurisdiction": "federal",
       "taxYear": 2025,

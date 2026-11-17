@@ -22,3 +22,7 @@ lines:
     description: "Create an exclusive verified build context without invoking a container runtime"
     formula: "Only explicit arm64 or amd64 and an absent private output directory; verify regular single-link nofollow exact pinned source and recipe files, copy exclusively and verify copied bytes, then authenticate the staged signed-index chain with bounded local gpgv/xz. No download, container, VM, package installation or image change in preparation."
     testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::prepares only an exclusive offline source context"
+  - line: "controlled-verifier"
+    description: "Let an owning execution controller supervise each source verifier child"
+    formula: "An optional run callback must receive both original gpgv/xz argument vectors and ten-second bounds. Unknown child errors propagate unchanged before a success receipt; never fall back. Standalone offline defaults remain unchanged."
+    testRef: "tests/scripts/build-postgres-glibc-backport.test.ts::keeps both verifier children under injected custody without fallback"

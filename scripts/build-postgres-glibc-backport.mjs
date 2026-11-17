@@ -119,7 +119,7 @@ export async function stagePinnedFile(source, destination, pin) {
   await verifyPinnedFile(destination, pin);
 }
 
-export async function prepareBuildContext(options) {
+export async function prepareBuildContext(options, { run = runBoundedCommand } = {}) {
   assert.ok(["arm64", "amd64"].includes(options.architecture));
   const manifestBytes = await readFile(join(recipe, "sources.json"));
   const manifest = validateManifest(JSON.parse(manifestBytes));
@@ -133,8 +133,8 @@ export async function prepareBuildContext(options) {
   for (const [name, pin] of Object.entries(manifest.recipeFiles)) await stagePinnedFile(join(recipe, name), join(["Dockerfile.toolchain", "Dockerfile.packages", "build-packages.sh", "Dockerfile", "install-runtime.sh"].includes(name) ? options.output : inputs, name), pin);
   assert.ok(["darwin", "linux"].includes(process.platform), "Supported local verification tools required.");
   const toolDirectory = process.platform === "darwin" ? "/opt/homebrew/bin" : "/usr/bin";
-  const status = await runBoundedCommand(join(toolDirectory, "gpgv"), ["--keyring", join(inputs, "debian-archive-keys.gpg"), "--status-fd", "1", join(inputs, "InRelease")], { env: { PATH: process.env.PATH, LC_ALL: "C" }, timeoutMs: 10_000 });
-  const expanded = await runBoundedCommand(join(toolDirectory, "xz"), ["--decompress", "--stdout", join(inputs, "Sources.xz")], { env: { PATH: process.env.PATH, LC_ALL: "C" }, timeoutMs: 10_000 });
+  const status = await run(join(toolDirectory, "gpgv"), ["--keyring", join(inputs, "debian-archive-keys.gpg"), "--status-fd", "1", join(inputs, "InRelease")], { env: { PATH: process.env.PATH, LC_ALL: "C" }, timeoutMs: 10_000 });
+  const expanded = await run(join(toolDirectory, "xz"), ["--decompress", "--stdout", join(inputs, "Sources.xz")], { env: { PATH: process.env.PATH, LC_ALL: "C" }, timeoutMs: 10_000 });
   const chain = assertSignedSourceChain({ release: await readFile(join(inputs, "InRelease"), "utf8"), compressed: await readFile(join(inputs, "Sources.xz")), index: expanded.stdout, signatureStatus: status.stdout, sources: manifest.sources.filter(x => sourceNames.includes(x.name)).map(({ name, bytes, sha256 }) => ({ name, bytes, sha256 })) });
   await writeFile(join(inputs, "SHA256SUMS"), (await Promise.all((await readdir(inputs)).sort().map(async name => `${hash(await readFile(join(inputs, name)))}  ${name}\n`))).join(""), { flag: "wx", mode: 0o600 });
   const receipt = { sourcePreparationPassed: true, architecture: options.architecture, sourceManifestSha256: hash(manifestBytes), authenticatedSource: chain, runtimeCalls: 0, binaryBuildExecuted: false, binaryRegressionExecuted: false, genericAbiApproval: false, riskAccepted: false, candidateReleaseQualified: false };

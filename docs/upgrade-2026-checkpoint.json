@@ -1,4 +1,13 @@
 {
+  "nov17GlibcRunner": {
+    "status": "source-reviewed-pending-native-package-execution",
+    "manifestSha256": "ed2de15a60aeada00ae89104ae0bba2539d164be43c107d31049a488de3cc74e",
+    "rootFocusedTests": 17,
+    "sourcePinsVerified": 24,
+    "independentReviewSha256": "e5717b66db60672b5115d071d2876672a2a06f6a5ca1325f8336a33d1b6a6456",
+    "riskAccepted": false,
+    "releaseQualified": false
+  },
   "nov17Arm64C076Actual": {
     "status": "completed-root-and-independent-actual-review-passed",
     "applicationSource": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",

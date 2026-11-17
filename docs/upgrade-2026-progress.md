@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: separately reviewed glibc native runner
+
+The [glibc runner](upgrade-2026-glibc-runner-20261117.md) passes whole-source root/independent reviews, 17 focused controls, lint and nine spec references. It preserves full suites, positive allocator reproduction, strict ABI checks and owned normal cleanup. Actual package execution remains pending.
+
 ## November 17: actual ARM64 recovery and browser rehearsal passed
 
 The [closed c076 ARM64 run](upgrade-2026-arm64-c076-actual-20261117.md) passed root and independent artifact review:24stages,6Compose phases,650browser passes+5originalskips, exact image/archive/SBOM bindings and normal restoration. ZeroCritical/56High scan findings remain visible; no risk or release acceptance is implied.
