@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: bounded standalone AMD64 source runner
+
+The [manual SQLite runner](upgrade-2026-source-candidate-runner-20261117.md) passed whole-source independent review, source controls and keyring replay. It preserves owned child custody, actual failure artifacts and normal scoped cleanup; no dispatch or qualification has yet occurred.
+
 ## November 17: standalone SQLite source candidate
 
 The [SQLite package](upgrade-2026-sqlite-source-candidate-20261117.md) preserves the upstream fix and all five regressions, authenticates signed Bookworm sources and passes focused/source reviews. The verifier callback now preserves sanitized child custody. Compilation, binary regressions, sanitizers, ABI/consumers and scans remain pending.

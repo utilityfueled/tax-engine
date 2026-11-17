@@ -1,0 +1,44 @@
+name: Standalone PostgreSQL source candidates AMD64 (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact full default-branch commit SHA selected for this dispatch
+        type: string
+        required: true
+      candidate:
+        description: Standalone source recipe (glibc remains a future separately reviewed runner delta)
+        type: choice
+        options: [sqlite]
+        default: sqlite
+        required: true
+concurrency:
+  group: postgres-source-candidates-amd64-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  package:
+    if: github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 165
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Build and preserve the actual standalone source experiment
+        env:
+          SOURCE_CANDIDATE: ${{ inputs.candidate }}
+        run: node scripts/qualify-postgres-source-candidates-amd64.mjs "$SOURCE_CANDIDATE" "$RUNNER_TEMP/postgres-source-candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: source-candidate-amd64-${{ inputs.candidate }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/postgres-source-candidate/evidence/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 6

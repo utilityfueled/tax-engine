@@ -1,4 +1,17 @@
 {
+  "nov17SourceCandidateRunner": {
+    "status": "reviewed-pending-actual-native-execution",
+    "sourceCandidate": "sqlite",
+    "manifestSha256": "21a01b15098f1e40d109f00fceaeedaa9399240577018df528d1c164cd19c34d",
+    "independentReviewSha256": "bcec59abb9f50cb64bbdc7f94e35729024f36acb45f98cf6b3c550a9f99df934",
+    "keyringExtractionReplayed": true,
+    "jobMinutes": 165,
+    "controllerMinutes": 155,
+    "cleanupReserveMinutes": 15,
+    "runtimeIntegrationExecuted": false,
+    "candidateReleaseQualified": false,
+    "riskAccepted": false
+  },
   "nov17SqliteSourceCandidate": {
     "status": "source-implemented-and-independently-reviewed",
     "focusedTests": 7,
