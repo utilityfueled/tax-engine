@@ -1,6 +1,6 @@
 {
   "nov17New212Timing": {
-    "status": "source-reviewed-actual-pending",
+    "status": "source-reviewed-local-instrumented-two-pass-remote-pending",
     "defaultOff": true,
     "exactOptInValue": "1",
     "sourceLinkedRedAndGreen": 2,
@@ -14,9 +14,17 @@
     "auditOrderOnlyCorrection": true,
     "auditedSourceHashes": 2002,
     "independentIntegrationSha256": "d1f72185991cfad0316381a7b638be1d5c0621bc0893a5a612be2287687e1929",
-    "actualInstrumentedRun": false,
+    "actualInstrumentedRun": true,
     "containerQualified": false,
-    "independentAdoptionSha256": "5736db20e0b3fa96506db6cce9fa0c480420ba6ff296359ccbae50e13fc5701f"
+    "independentAdoptionSha256": "5736db20e0b3fa96506db6cce9fa0c480420ba6ff296359ccbae50e13fc5701f",
+    "actualSource": "9343d78a3106f7aac6d620bcab6a0215c78466df",
+    "localDesktopMs": 9686,
+    "localMobileMs": 8604,
+    "fixedCompleteTimingRecords": 40,
+    "actualResultSha256": "1922b8643ff24412e276f1c9ed390e784b8d233147f93ef342970b0e688e6e2d",
+    "rootActualReviewSha256": "006aa5d5fdfe598ff392b788ccec764188e695d29c120773eccf9ead0cf2732b",
+    "normalServerClosure": true,
+    "priorContainerFailureExplained": false
   },
   "nov17GlibcSyscallProbe": {
     "status": "source-reviewed-actual-pending",

@@ -22,9 +22,21 @@ The source audit retains every budget and hash value; its initial key-order
 failure is retained and fixed by restoring the snapshot's required ordering.
 The generated inventory adds one unsupported browser-contract entry.
 
-No timing measurement, speedup, causal explanation or container qualification
-is claimed by these source checks. Actual instrumented execution remains next.
-Workers2, retries0, deadlines and original cases remain unchanged.
+The first actual instrumented local run on `9343d78a` passes both original
+cases: desktop 9,686 ms and mobile 8,604 ms. The fresh web build passes. Both workers
+retain the 30-second deadline, zero retries and the original PDF assertions.
+All 40 fixed timing records have successful finishes; the managed server closes
+normally and a fresh check finds its PID and port absent.
+
+Remaining response waits are 1,093.867 ms / 986.929 ms; the existing Python-call
+intervals are 937.100 ms / 946.247 ms. These intervals include callback argument
+construction and wall time, not isolated child CPU. They exclude other journey
+work. A single macOS run neither reproduces nor explains the prior Linux
+container failures and establishes no speedup or container qualification.
+
+Actual execution result `1922b8643ff24412e276f1c9ed390e784b8d233147f93ef342970b0e688e6e2d`;
+root saved-artifact review verifies 53 pins and both original results:
+`006aa5d5fdfe598ff392b788ccec764188e695d29c120773eccf9ead0cf2732b`.
 
 Root source review `6337491039e8abbcf86bdac6be5174b767113a216c2553f7f45bfa3e2b8736ed`;
 independent helper `35e60f512bf099e871e928c599dfca8cd4d841521f169efb713ffb4774d6420c`;

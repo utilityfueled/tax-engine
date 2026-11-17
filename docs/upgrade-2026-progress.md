@@ -6840,3 +6840,12 @@ spec and inventory pass. Independent source reviews pass; a retained audit
 key-order failure is corrected without changing hash values or budgets.
 [Source checks and measurement limits](upgrade-2026-new212-timing-20261117.md).
 Actual instrumented evidence and strict container qualification remain pending.
+
+
+### November 17: actual local NEW212 phase measurement
+
+The fresh web build and both unchanged NEW212 cases pass on `9343d78a`, within
+their 30-second deadlines. All 40 fixed timing records complete; the managed
+server closes normally. Root verifies 53 saved pins and both results. This
+single macOS run gives no explanation or resolution for earlier Linux failures.
+[Actual results and limits](upgrade-2026-new212-timing-20261117.md).
