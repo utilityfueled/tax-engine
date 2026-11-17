@@ -174,8 +174,8 @@
   "targetSourceSha256": {
     "oh-business-part-year-native.spec.ts": "fd4abf7c48e58ba88f46aa4019a869c2a591ef57858e6336e969ff4eb16ab841",
     "oh-reciprocal-native.spec.ts": "fbabb235a1803f1487e2f4db0e61fe8cba43c06dcf649d52da9598910626366b",
-    "oh-resident-credit-native.spec.ts": "a63c81e7604477a2bbdb0f4e7bc340d407f2d9f67f4a4995f15e28b304b7582d",
-    "oh-school-district-part-year-native.spec.ts": "8aec57e79377ca4be0663aa5d4e77e4e189d6f4a2a3ab34b60a2bedb5c826762"
+    "oh-resident-credit-native.spec.ts": "ade98e39c4d7b1f2562a20a705c95fe264ee17945973a402820b7c99809a02ce",
+    "oh-school-district-part-year-native.spec.ts": "1128e986c23b6627d6a9f6baf28e586ca749f26724d790eaae4a9fa35aef0f93"
   },
   "fullCollectionSha256": "d198850bbaf6bb9aea91be6f252c185a2b1eb28c9bb2732bc9bbaa5ddc68c0e0",
   "originalAuditSha256": "7330923d4f247b90548f0384614ae916a88259b5da97a6b0aab1ce74e504fbb6"

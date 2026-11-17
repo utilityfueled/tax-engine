@@ -139,6 +139,18 @@ import { admission, projectCaseResults, main } from '../../scripts/browser-cpu-d
 import { environment, planBatches, exactUnion } from '../../scripts/run-browser-tests.mjs';
 
 describe('Optional-Browser-CPU-Diagnostics CI boundary', () => {
+  it('binds declared current target sources through the strict import-only overlay', () => {
+    const files = [...new Set(realManifest.targets.map((target: { file: string }) => target.file))];
+    expect(files.sort()).toEqual(Object.keys(realManifest.targetSourceSha256).sort());
+    expect(files).toHaveLength(4);
+    for (const file of files) {
+      const current = readFileSync(new URL(`../../apps/web/tests/${file}`, import.meta.url), 'utf8');
+      const original = current.replace('../scripts/browser-cpu-diagnostics/fixture', '@playwright/test');
+      const expected = realManifest.targetSourceSha256[file];
+      expect(rewriteImport(original, expected)).toBe(current);
+      expect(() => rewriteImport(original + '\n// undeclared target body change\n', expected)).toThrow();
+    }
+  });
   it('requires original failure and the exact Linux job-owned runtime before diagnostic work', async () => {
     const env = { TAX_BROWSER_CPU_DIAGNOSTICS: '1', TAX_BROWSER_CPU_ORIGINAL_OUTCOME: 'failure', GITHUB_ACTIONS: 'true', GITHUB_SHA: 'a'.repeat(40), CANDIDATE_IMAGE_ID: 'sha256:'+'b'.repeat(64), PLAYWRIGHT_BASE_URL: 'http://127.0.0.1:3109' };
     expect(admission(env, 'linux')).toBe(true);
