@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .node-version
+      - name: Check inert package sandbox contracts
+        run: node --test tests/scripts/glibc-package-seccomp.test.mjs tests/scripts/glibc-package-seccomp-integration.test.mjs
       - name: Execute the original native glibc package recipe and retain actual results
         run: node scripts/qualify-postgres-glibc-candidate-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -10,6 +10,7 @@ import { URL, fileURLToPath, pathToFileURL } from "node:url";
 import { SourceCandidateController, assertOwnedImage, labelRecipe, validateSourceUrl } from "./qualify-postgres-source-candidates-amd64.mjs";
 import { assertSuiteSummary, prepareBuildContext, validateManifest } from "./build-postgres-glibc-backport.mjs";
 import { verifyPinnedFile } from "./build-postgres-libxml2-backport.mjs";
+import { buildGlibcProfile, glibcEnvironment, validateGlibcEngine, validateGlibcSandbox } from "./lib/glibc-package-seccomp.mjs";
 const REPO = fileURLToPath(new URL("../", import.meta.url));
 const LABEL = "io.vivalatax.qualification.operation", TARGET = "stdio-common/tst-vfscanf-bz34008", GIB = 1024 ** 3;
 const hash = value => createHash("sha256").update(value).digest("hex");
@@ -120,16 +121,27 @@ export class GlibcCandidateController extends SourceCandidateController {
     await this.docker("glibc-toolchain-build", ["build", "--rm=true", "--force-rm=false", "--platform", "linux/amd64", "--build-arg", "BASE=" + base, "--build-arg", "EXPECTED_ARCH=amd64", "--iidfile", iid, "--tag", `tax-source-${this.operation}:toolchain`, tool], 25 * 60);
     const toolchain = imageId((await readFile(iid, "utf8")).trim()); assertOwnedImage(await this.inspect("glibc-toolchain-native", toolchain), this.operation, this.preexistingImages);
     this.stage = "offline-package";
+    validateGlibcEngine(JSON.parse(await this.docker("glibc-exact-engine", ["info", "--format", "{{json .}}"])));
+    const officialProfile = await readFile(join(REPO, "infra/glibc-syscall-probe/default-seccomp.json"), "utf8"), packageProfile = buildGlibcProfile(officialProfile);
+    const profilePath = join(this.private, "glibc-package-seccomp.json"); await save(profilePath, packageProfile);
+    await save(join(this.evidence, "glibc-package-seccomp.json"), packageProfile);
+    const [toolchainConfig] = JSON.parse(await this.docker("glibc-toolchain-environment", ["image", "inspect", toolchain])); assertOwnedImage(toolchainConfig, this.operation, this.preexistingImages); assert.equal(toolchainConfig.Id, toolchain);
+    const expectedEnvironment = glibcEnvironment(toolchainConfig.Config.Env);
     const inputs = await realpath(join(prepared, "inputs")); assert.ok(!/[,\r\n]/.test(inputs));
     const name = "tax-source-" + this.operation + "-glibc";
-    await this.docker("glibc-package-create", ["create", "--name", name, "--label", `${LABEL}=${this.operation}`, "--network", "none", "--mount", `type=bind,src=${inputs},dst=/qualification-inputs,readonly`, "--mount", "type=tmpfs,destination=/var/lib/postgresql/data", "--env", "EXPECTED_ARCH=amd64", "--env", "LC_ALL=C", "--env", "LANG=C", "--entrypoint", "/bin/bash", toolchain, "/qualification-build.sh"]);
+    await this.docker("glibc-package-create", ["create", "--name", name, "--label", `${LABEL}=${this.operation}`, "--network", "none", "--security-opt", "seccomp=" + profilePath, "--mount", `type=bind,src=${inputs},dst=/qualification-inputs,readonly`, "--mount", "type=tmpfs,destination=/var/lib/postgresql/data", "--env", "EXPECTED_ARCH=amd64", "--env", "LC_ALL=C", "--env", "LANG=C", "--entrypoint", "/bin/bash", toolchain, "/qualification-build.sh"]);
     await this.docker("glibc-script-copy", ["cp", join(prepared, "build-packages.sh"), name + ":/qualification-build.sh"]);
     const scriptCopy = join(this.private, "glibc-container-script.sh"); await this.docker("glibc-script-readback", ["cp", name + ":/qualification-build.sh", scriptCopy]); await verifyPinnedFile(scriptCopy, manifest.recipeFiles["build-packages.sh"]);
     const [before] = JSON.parse(await this.docker("glibc-package-before", ["inspect", name])); assert.equal(before.Image, toolchain); assert.equal(before.Config.Labels[LABEL], this.operation); assert.equal(before.State.Running, false); assert.equal(before.HostConfig.NetworkMode, "none");
     assert.ok(before.Mounts.some(v => v.Type === "bind" && v.Source === inputs && v.Destination === "/qualification-inputs" && v.RW === false));
+    validateGlibcSandbox(before, inputs, packageProfile, expectedEnvironment);
+    const inventoryPath = join(this.evidence, "glibc-toolchain-packages.tsv"); await this.docker("glibc-toolchain-inventory", ["cp", name + ":/qualification-toolchain/packages.tsv", inventoryPath]);
+    assert.equal(await readFile(inventoryPath, "utf8"), await readFile(join(REPO, "infra/glibc-syscall-probe/expected-packages.tsv"), "utf8"));
+    await save(join(this.evidence, "glibc-sandbox-binding.json"), { source: this.identity.source, toolchain, profileSha256: hash(await readFile(profilePath)), officialProfileSha256: hash(officialProfile), packageInventorySha256: hash(await readFile(inventoryPath)), exactArgumentRules: [{ syscall: "personality", argument: 0, value: 4294967274 }, { syscall: "clock_settime", argument: 0, value: 1 }], addedCapabilities: false, privileged: false, network: "none", originalPackageScriptSha256: manifest.recipeFiles["build-packages.sh"].sha256, candidateReleaseQualified: false, riskAccepted: false });
     await this.docker("glibc-package-run", ["start", "--attach", name], 290 * 60, { allow: Array.from({ length: 126 }, (_, n) => n) });
     const scriptExit = this.checks.at(-1).exit;
     const [after] = JSON.parse(await this.docker("glibc-package-after", ["inspect", name])); assert.equal(after.Image, toolchain); assert.equal(after.Config.Labels[LABEL], this.operation); assert.equal(after.State.Running, false); assert.equal(after.State.OOMKilled, false); assert.equal(after.State.ExitCode, scriptExit); assert.equal(after.State.Error, "");
+    validateGlibcSandbox(after, inputs, packageProfile, expectedEnvironment);
     // childExitConfirmed/BOUNDED_COMMAND_TERMINATED uncertainty is propagated by
     // the unchanged inherited Controller.command; no further daemon action then.
     this.stage = "export-actual-checks";

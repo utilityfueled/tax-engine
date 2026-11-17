@@ -6870,3 +6870,13 @@ measures linked-core identity and conditionally compares one DBPAGE build flag.
 Root and independent source review, ten adopted controls, syntax and lint pass.
 Actual diagnosis remains pending; no failure is excluded or risk accepted.
 [Scope and remaining gates](upgrade-2026-sqlite-targeted-diagnostic-20261117.md).
+
+
+### November 17: narrow glibc qualification-container profile
+
+The existing package container now receives only the two syscall argument rules
+proved by the native probe. Strict before/after sandbox checks and exported
+inventory preserve the original full suites, allocator regression, ABI checks
+and cleanup. Root and independent 13-control runs pass. No original suite has
+yet run under this profile, and runtime security settings remain unchanged.
+[Source and qualification limits](upgrade-2026-glibc-package-profile-20261117.md).

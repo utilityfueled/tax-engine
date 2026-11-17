@@ -29220,5 +29220,20 @@
     "candidateReleaseQualified": false,
     "riskAccepted": false,
     "independentFinalWorkflowAckSha256": "15566b56681ed29df0225f618ab1cad73459cdd63dd7f5b85281d670fe08146c"
+  },
+  "nov17GlibcPackageProfile": {
+    "status": "source-reviewed-adopted-controls-passed-actual-pending",
+    "causalProbeRun": 44057386555,
+    "exactAdditionalArgumentRules": 2,
+    "rootOriginalAndAdoptedControls": 13,
+    "independentControls": 13,
+    "independentSourceReviewSha256": "fe3e3d446b780e643ff7f10241d38bdb8703a8ed9bd26c3c4bff9d82b2e2205b",
+    "independentAdoptionReviewSha256": "f469aee0726457c97c4dc50f4544ac56eb87208fd3edba9ff60f483a06b987a7",
+    "originalPackageScriptAndFullSuitesUnchanged": true,
+    "workflowInertPreflightAdded": true,
+    "actualFullSuitesPassed": false,
+    "runtimeProfileChanged": false,
+    "riskAccepted": false,
+    "independentFinalWorkflowAckSha256": "de3a0affb1db62ba3f0c49d3fcd8850b1013797df2cf52f6c2a3516d7a682273"
   }
 }
