@@ -1,4 +1,14 @@
 {
+  "nov17SqliteSourceCandidate": {
+    "status": "source-implemented-and-independently-reviewed",
+    "focusedTests": 7,
+    "specReferences": 5,
+    "negativeChainControls": 13,
+    "controlledVerifierCallbackReviewed": true,
+    "compileExecuted": false,
+    "candidateReleaseQualified": false,
+    "riskAccepted": false
+  },
   "nov16GlibcSourceCandidate": {
     "status": "implemented-source-checks-and-independent-review-passed",
     "baselineVersion": "2.36-9+deb12u14",

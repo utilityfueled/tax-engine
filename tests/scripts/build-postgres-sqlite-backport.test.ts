@@ -1,0 +1,82 @@
+import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { assertReleaseSignature, assertSqliteChecksPassed, parseBuilderArguments, parseSqliteSourceStanza, prepareBuildContext, verifySourceCache } from "../../scripts/build-postgres-sqlite-backport.mjs";
+const folders: string[] = [];
+afterEach(async () => { await Promise.all(folders.splice(0).map(p => rm(p, { recursive: true, force: true }))); });
+const recipe = new URL("../../infra/postgres-sqlite-backport/", import.meta.url);
+describe("private PostgreSQL SQLite backport source admission", () => {
+  it("requires the complete signed source chain before preparing a context", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "tax-sqlite-source-")); folders.push(dir);
+    await expect(verifySourceCache(dir)).rejects.toThrow();
+    const stanza = "Package: sqlite3\nVersion: 3.40.1-2+deb12u2\nDirectory: pool/main/s/sqlite3\nChecksums-Sha256:\n";
+    expect(() => parseSqliteSourceStanza(stanza)).toThrow();
+    expect(() => parseSqliteSourceStanza(stanza + "\n" + stanza)).toThrow();
+    expect(() => parseSqliteSourceStanza(stanza.replace("sqlite3", "other"))).toThrow();
+  });
+  it("checks the archive signing fingerprint and rejects invalid signature categories", () => {
+    const fingerprint = "4CB50190207B4758A3F73A796ED0E7B82643E131";
+    const valid = `[GNUPG:] VALIDSIG ${fingerprint} 2026-07-11 1 0 4 0 1 10 01 ${fingerprint}\n`;
+    expect(() => assertReleaseSignature(valid, [fingerprint])).not.toThrow();
+    for (const status of ["", valid.replace(fingerprint, "0".repeat(40)), ...["BADSIG", "REVKEYSIG", "EXPKEYSIG"].map(key => valid + `[GNUPG:] ${key} denied\n`)]) expect(() => assertReleaseSignature(status, [fingerprint])).toThrow();
+  });
+  it("binds every source archive exactly once in the only matching Debian stanza", async () => {
+    const manifest = JSON.parse(await readFile(new URL("sources.json", recipe), "utf8"));
+    const rows = manifest.sources.map((v: { sha256: string; bytes: number; name: string }) => ` ${v.sha256} ${v.bytes} ${v.name}\n`).join("");
+    const valid = `Package: sqlite3\nVersion: 3.40.1-2+deb12u2\nChecksums-Sha256:\n${rows}Directory: pool/main/s/sqlite3\n`;
+    expect(parseSqliteSourceStanza(valid).size).toBe(4);
+    for (const invalid of [valid.replace("3.40.1-2+deb12u2", "3.46.1-7"), valid.replace("pool/main/s/sqlite3", "pool/foreign"), valid.replace(rows, rows + rows.split("\n")[0] + "\n"), valid.replace(manifest.sources[0].name, "../foreign.dsc"), valid.replace(manifest.sources[0].name, "foreign.dsc")]) expect(() => parseSqliteSourceStanza(invalid)).toThrow();
+  });
+  it("retains exact upstream patch scope and all original regression cases", async () => {
+    const patch = await readFile(new URL("CVE-2025-7458.patch", recipe), "utf8");
+    expect([...patch.matchAll(/^diff --git a\/(\S+) b\/\S+$/gm)].map(m => m[1])).toEqual(["src/where.c", "test/distinct.test"]);
+    expect(patch).toContain("pWInfo->nOBSat > pWInfo->pSelect->pOrderBy->nExpr");
+    for (let n = 1; n <= 5; n++) expect(patch).toContain(`+do_execsql_test 10.${n} {`);
+    const script = await readFile(new URL("build-packages.sh", recipe), "utf8");
+    expect(script).toContain("--fuzz=0"); expect(script).toContain("baselineRegressionReproduced");
+    expect(script).toContain("ASAN_OPTIONS"); expect(script).toContain("dpkg-buildpackage");
+  });
+  it("requires native architecture immutable toolchain and exclusive output", async () => {
+    const args = ["--architecture", "arm64", "--source-cache", "cache", "--output", "fresh", "--toolchain", "sha256:" + "a".repeat(64)];
+    expect(parseBuilderArguments(args).architecture).toBe("arm64");
+    expect(() => parseBuilderArguments(args.map(x => x === "arm64" ? "unknown" : x))).toThrow();
+    expect(() => parseBuilderArguments(args.map(x => x.startsWith("sha256:") ? "image:latest" : x))).toThrow();
+    expect(() => parseBuilderArguments([...args, "--output", "again"])).toThrow();
+    const out = await mkdtemp(join(tmpdir(), "tax-sqlite-output-")); folders.push(out);
+    await expect(prepareBuildContext({ architecture: "arm64", sourceCache: out, output: out, toolchain: "sha256:" + "a".repeat(64) })).rejects.toThrow();
+  });
+  it("requires positive paired reproduction and retains every readiness hold", () => {
+    const passed = { recipeExit: 0, baselinePackageBuildExit: 0, candidatePackageBuildExit: 0, baselineFullTestExit: 0, candidateFullTestExit: 0, baselineRegressionReproduced: true, candidateRegressionExit: 0, candidateSanitizerRegressionExit: 0, candidateRegressionCasesPassed: 5, candidateSanitizerRegressionCasesPassed: 5, genericAbiApproval: false, candidateReleaseQualified: false, riskAccepted: false };
+    expect(() => assertSqliteChecksPassed(passed)).not.toThrow();
+    for (const key of Object.keys(passed)) {
+      const changed = { ...passed, [key]: typeof passed[key as keyof typeof passed] === "boolean" ? !passed[key as keyof typeof passed] : 1 };
+      expect(() => assertSqliteChecksPassed(changed), key).toThrow();
+      const missing: Record<string, unknown> = { ...passed }; delete missing[key]; expect(() => assertSqliteChecksPassed(missing), key).toThrow();
+    }
+  });
+  it("uses only the injected verifier runner and propagates unknown child custody", async () => {
+    const manifest = JSON.parse(await readFile(new URL("sources.json", recipe), "utf8"));
+    const actualFs = await import("node:fs/promises");
+    const out = await mkdtemp(join(tmpdir(), "tax-sqlite-custody-")); folders.push(out);
+    const output = join(out, "fresh");
+    const fallback = vi.fn(() => { throw new Error("Unexpected unsupervised child"); });
+    vi.resetModules();
+    vi.doMock("node:fs/promises", () => ({ ...actualFs, readFile: async (path: Parameters<typeof actualFs.readFile>[0]) => String(path) === "/synthetic-source-cache/InRelease" ? ` ${manifest.sourceIndex.sha256}  ${manifest.sourceIndex.bytes} main/source/Sources.xz\n` : actualFs.readFile(path) }));
+    vi.doMock("../../scripts/build-postgres-libxml2-backport.mjs", () => ({ runBoundedCommand: fallback, verifyPinnedFile: async () => "verified-synthetic-input" }));
+    try {
+      const candidate = await import("../../scripts/build-postgres-sqlite-backport.mjs");
+      for (const failAt of [1, 2]) {
+        const unknown = Object.assign(new Error("synthetic unknown child"), { childExitConfirmed: false, code: "BOUNDED_COMMAND_TERMINATED" });
+        const calls: { executable: string; args: string[]; options: { timeoutMs: number } }[] = [];
+        const run = async (executable: string, args: string[], options: { timeoutMs: number }) => { calls.push({ executable, args, options }); if (calls.length === failAt) throw unknown; return { stdout: `[GNUPG:] VALIDSIG ${manifest.acceptedReleaseSigningFingerprints[0]} 2026-07-11 1 0 4 0 1 10 01\n` }; };
+        await expect(candidate.prepareBuildContext({ architecture: "amd64", sourceCache: "/synthetic-source-cache", output, toolchain: "sha256:" + "a".repeat(64) }, { run })).rejects.toBe(unknown);
+        expect(calls.map(v => v.executable)).toEqual(failAt === 1 ? ["gpgv"] : ["gpgv", "xz"]);
+        expect(calls.every(v => v.options.timeoutMs === 30000)).toBe(true);
+        await expect(actualFs.lstat(output)).rejects.toMatchObject({ code: "ENOENT" });
+      }
+      expect(fallback).not.toHaveBeenCalled();
+    } finally { vi.doUnmock("node:fs/promises"); vi.doUnmock("../../scripts/build-postgres-libxml2-backport.mjs"); vi.resetModules(); }
+  });
+
+});

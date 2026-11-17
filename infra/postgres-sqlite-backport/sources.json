@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "baselineVersion": "3.40.1-2+deb12u2",
+  "privateCandidateVersion": "3.40.1-2+deb12u2+vivalatax1",
+  "sources": [
+    {
+      "name": "sqlite3_3.40.1-2+deb12u2.dsc",
+      "bytes": 2519,
+      "sha256": "ee3459ae9d00939741c7708fc1b8ce1bde12d8c3fb1dfa005bbbc8651d884e23",
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1-2+deb12u2.dsc"
+    },
+    {
+      "name": "sqlite3_3.40.1.orig-www.tar.xz",
+      "bytes": 5865720,
+      "sha256": "a5e95a18d1b59729278860559ded78751b9163ffb5bb906c5cd24c015f71d5fd",
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1.orig-www.tar.xz"
+    },
+    {
+      "name": "sqlite3_3.40.1.orig.tar.xz",
+      "bytes": 8019048,
+      "sha256": "aaa776260ab4dc976db34aa7891819484c8676b5b2783123ebc6301e2ca5d655",
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1.orig.tar.xz"
+    },
+    {
+      "name": "sqlite3_3.40.1-2+deb12u2.debian.tar.xz",
+      "bytes": 34260,
+      "sha256": "0843bc12e4364076477935ce313a6d0796fd899a989ff18ebb6545540e10e4ca",
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1-2+deb12u2.debian.tar.xz"
+    }
+  ],
+  "release": {
+    "name": "InRelease",
+    "bytes": 151075,
+    "sha256": "77737fa4b34f2693e982cc9ee35736816c35a7778fc2d326cc1bbf5b301fe1aa",
+    "url": "https://deb.debian.org/debian/dists/bookworm/InRelease"
+  },
+  "sourceIndex": {
+    "name": "Sources.xz",
+    "bytes": 9491888,
+    "sha256": "92d11a035571df011f06f28c61cb9825130ef1d92abb2f2e0525e8674dc44af8",
+    "url": "https://deb.debian.org/debian/dists/bookworm/main/source/Sources.xz"
+  },
+  "archiveKeyring": {
+    "name": "debian-archive-keyring.pgp",
+    "bytes": 55918,
+    "sha256": "506b815cbb32d9b6066b4a2aa524071e071761e7e7f68c3ac74f3061ba852017",
+    "authorityUrl": "https://ftp-master.debian.org/keys.html",
+    "cachedArtifactProvenance": "Existing nov12-debian-zlib-security/debian-archive-keyring.pgp; exact bytes and accepted Bookworm release-signing fingerprints are verified separately. The authority page is not a binary download URL."
+  },
+  "acceptedReleaseSigningFingerprints": [
+    "4CB50190207B4758A3F73A796ED0E7B82643E131",
+    "4D64FEC119C2029067D6E791F8D2585B8783D481"
+  ],
+  "upstream": {
+    "fossilCommit": "12ad822d9b827777526ca5ed5bf3e678d600294fc9b5c25482dfff2a021328a4",
+    "officialGitMirrorCommit": "b816ca9994e03a8bc829b49452b8158a731e81a9",
+    "patchUrl": "https://github.com/sqlite/sqlite/commit/b816ca9994e03a8bc829b49452b8158a731e81a9.patch",
+    "runtimePaths": [
+      "src/where.c"
+    ],
+    "regressionPaths": [
+      "test/distinct.test"
+    ]
+  },
+  "candidateReleaseQualified": false,
+  "genericAbiApproval": false,
+  "riskAccepted": false,
+  "recipeFiles": {
+    "CVE-2025-7458.patch": {
+      "bytes": 5754,
+      "sha256": "fbfe6f3d9d253c58bf86ac99e03fcd830bc8cefc5742c59abda277a679bbcf7b"
+    },
+    "Dockerfile.packages": {
+      "bytes": 281,
+      "sha256": "58a6e7767ba000d83e2cdb69aa4acff42c4fb7d8c20f4e7a01fd1d72b716c291"
+    },
+    "Dockerfile.toolchain": {
+      "bytes": 905,
+      "sha256": "bc1c925eb7850477f4f1138788fd76cbe6e09dc846132237152f0feafa84d532"
+    },
+    "build-packages.sh": {
+      "bytes": 6345,
+      "sha256": "e3f56514a8189a87efe3958736d3940ab34c92fa38e29a47a4b7e6198316f022"
+    },
+    "provenance.json": {
+      "bytes": 1635,
+      "sha256": "34790f2716b96e8705fdaca38596fa25931b02096bd0d86cc0259ced4834e54c"
+    },
+    "upstream-12ad822.patch": {
+      "bytes": 9762,
+      "sha256": "411243a6543e3bf4adb5674c29ee9166515cb01cc975e7b9a6d664bb3277e4be"
+    }
+  }
+}

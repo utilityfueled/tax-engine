@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: standalone SQLite source candidate
+
+The [SQLite package](upgrade-2026-sqlite-source-candidate-20261117.md) preserves the upstream fix and all five regressions, authenticates signed Bookworm sources and passes focused/source reviews. The verifier callback now preserves sanitized child custody. Compilation, binary regressions, sanitizers, ABI/consumers and scans remain pending.
+
 ## November 16: standalone glibc source candidate
 
 The [glibc source package](upgrade-2026-glibc-source-candidate-20261116.md) preserves the official fix and complete regression, authenticates signed Bookworm sources and passes focused checks plus independent source review. Binary builds, regressions, ABI/consumers and raw scans remain pending; no image integration, suppression or readiness approval occurred.

@@ -1,0 +1,29 @@
+form: "PostgreSQL-SQLite-Backport"
+taxYear: 2025
+status: "source-only-private-backport-contract"
+reference: "https://security-tracker.debian.org/tracker/CVE-2025-7458; https://sqlite.org/src/info/12ad822d9b827777; https://github.com/sqlite/sqlite/commit/b816ca9994e03a8bc829b49452b8158a731e81a9"
+notes: |
+  Infrastructure only; no tax calculation or deployed image change. Debian Bookworm
+  sqlite3 3.40.1-2+deb12u2 remains vulnerable. A private source candidate is not a
+  distribution fix, scanner suppression, ABI approval, risk acceptance or release qualification.
+lines:
+  - line: "signed-source"
+    description: "Verify source inputs against the signed Debian release chain"
+    formula: "Require exact regular non-aliased cached source bytes, a valid pinned Bookworm archive signing fingerprint on InRelease, its exact main/source/Sources.xz hash/length, and one sqlite3 3.40.1-2+deb12u2 stanza binding the descriptor and all three source tarballs. Reject any altered, missing, duplicate or foreign source."
+    testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::requires the complete signed source chain before preparing a context"
+  - line: "upstream-patch"
+    description: "Preserve upstream runtime change and all five upstream regression cases"
+    formula: "Backport only the exact src/where.c and test/distinct.test diff sections from official Git mirror b816ca9994e03a8bc829b49452b8158a731e81a9, whose FossilOrigin is12ad822d9b827777526ca5ed5bf3e678d600294fc9b5c25482dfff2a021328a4. Require fuzz0 application after Debian patches, unchanged original regression text and a paired vulnerable-baseline/candidate regression result. No fabricated baseline failure."
+    testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::retains exact upstream patch scope and all original regression cases"
+  - line: "native-package"
+    description: "Prepare native package build without touching a daemon"
+    formula: "Require explicit arm64 or amd64 and immutable toolchain image, exclusive private output, exact pinned recipe/context and source copies. Preparation never launches a VM, daemon, build, package installation, provider or deployment. Future execution requires separate actual evidence; baseline and candidate package/upstream tests, sanitizer regression and consumer/ABI diagnostics stay mandatory."
+    testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::requires native architecture immutable toolchain and exclusive output"
+  - line: "no-qualification"
+    description: "Keep build and regression evidence separate from release approval"
+    formula: "Reject absent/failing package, full test or candidate regression/sanitizer results and reject a baseline that did not positively reproduce the upstream regression failure. Preserve genericAbiApproval, candidateReleaseQualified and riskAccepted false; no scanner findings are suppressed or relabeled."
+    testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::requires positive paired reproduction and retains every readiness hold"
+  - line: "controlled-verifier"
+    description: "Permit an owning runner to supervise every source verifier child"
+    formula: "Forward an explicit optional controlled run callback to both gpgv and xz with their original bounds. Propagate uncertain child errors unchanged before output/context creation; never fall back to an unsupervised default. The offline CLI retains its existing default."
+    testRef: "tests/scripts/build-postgres-sqlite-backport.test.ts::uses only the injected verifier runner and propagates unknown child custody"

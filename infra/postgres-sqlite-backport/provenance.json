@@ -1,0 +1,36 @@
+{
+  "scope": "source-only; no native compilation or release qualification",
+  "baselineVersion": "3.40.1-2+deb12u2",
+  "signedReleaseSha256": "77737fa4b34f2693e982cc9ee35736816c35a7778fc2d326cc1bbf5b301fe1aa",
+  "sourceIndexSha256": "92d11a035571df011f06f28c61cb9825130ef1d92abb2f2e0525e8674dc44af8",
+  "archiveKeyringSha256": "506b815cbb32d9b6066b4a2aa524071e071761e7e7f68c3ac74f3061ba852017",
+  "sourceIndexStanzaSha256": "a64f6d9fee4ddbd3d10247637e6d3974c87e2b64a1be274b6e782fb5037068a5",
+  "acceptedBookwormSigningFingerprints": [
+    "4CB50190207B4758A3F73A796ED0E7B82643E131",
+    "4D64FEC119C2029067D6E791F8D2585B8783D481"
+  ],
+  "officialUpstreamGitPatchSha256": "411243a6543e3bf4adb5674c29ee9166515cb01cc975e7b9a6d664bb3277e4be",
+  "selectedRuntimeAndRegressionPatchSha256": "fbfe6f3d9d253c58bf86ac99e03fcd830bc8cefc5742c59abda277a679bbcf7b",
+  "upstreamCommit": {
+    "fossilCommit": "12ad822d9b827777526ca5ed5bf3e678d600294fc9b5c25482dfff2a021328a4",
+    "officialGitMirrorCommit": "b816ca9994e03a8bc829b49452b8158a731e81a9",
+    "patchUrl": "https://github.com/sqlite/sqlite/commit/b816ca9994e03a8bc829b49452b8158a731e81a9.patch",
+    "runtimePaths": [
+      "src/where.c"
+    ],
+    "regressionPaths": [
+      "test/distinct.test"
+    ]
+  },
+  "localSourceControls": {
+    "signedSourceChainVerified": true,
+    "originalDebianPatchCount": 14,
+    "allDebianPatchesAppliedFuzzZero": true,
+    "candidateDryRunAppliedFuzzZero": true,
+    "nativeCompilationExecuted": false,
+    "upstreamSqlRegressionExecuted": false,
+    "candidateReleaseQualified": false,
+    "genericAbiApproval": false,
+    "riskAccepted": false
+  }
+}

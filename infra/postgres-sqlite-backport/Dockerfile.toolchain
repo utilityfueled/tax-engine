@@ -1,0 +1,17 @@
+# Future separately bounded native execution only; preparation does not build this.
+ARG BASE
+FROM ${BASE}
+USER root
+ARG EXPECTED_ARCH
+ENV DEBIAN_FRONTEND=noninteractive
+RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCH" && \
+    apt-get update && apt-get install -y --no-install-recommends \
+    build-essential debhelper autoconf automake libtool chrpath lynx \
+    libreadline-dev tcl8.6-dev devscripts dpkg-dev binutils abigail-tools \
+    python3 ca-certificates xz-utils patch && \
+    mkdir /qualification-toolchain && \
+    dpkg-query -W -f='${binary:Package}\t${Version}\t${Architecture}\n' > /qualification-toolchain/packages.tsv && \
+    cp -a /var/lib/apt/lists /qualification-toolchain/apt-lists && \
+    cc --version > /qualification-toolchain/compiler.txt && \
+    ld --version > /qualification-toolchain/linker.txt && \
+    dpkg-buildflags > /qualification-toolchain/buildflags.txt
