@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: refreshed official public sources and advisories
+
+The [45-response refresh](upgrade-2026-source-refresh-20261117.md) and independent raw-artifact audit pass; npm audits report zero advisories. Draft discovery, exact404s, changed metadata and advisory-association corrections are distinguished from final-form or runtime qualification. Human and release gates remain open.
+
 ## November 17: verified OCI target-to-config source correction
 
 The [identity correction](upgrade-2026-image-identity-20261117.md) distinguishes Docker OCI index IDs from native config IDs through mandatory exported-byte hash chains. Root and independent whole-source reviews and56focused controls pass. All signatures, telemetry, cleanup, scan policy and deadlines remain; fresh native proof is required.

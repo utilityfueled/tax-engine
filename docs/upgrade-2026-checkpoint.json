@@ -1,4 +1,18 @@
 {
+  "nov17OfficialSourceRefresh": {
+    "status": "official-public-refresh-observed-not-human-qualified",
+    "requests": 45,
+    "http200": 33,
+    "http404": 12,
+    "sameBytes": 38,
+    "changedBytes": 7,
+    "npmAllDependencies": 539,
+    "npmProductionDependencies": 447,
+    "npmAdvisories": 0,
+    "independentReviewSha256": "695b3c1516a9efb92dd066d290b79b3484336c6a05dd1f30f053a1411fd19ef4",
+    "riskAccepted": false,
+    "finalFormsQualified": false
+  },
   "nov17ImageIdentityChain": {
     "status": "source-reviewed-pending-native-identity-rehearsal",
     "rootFocusedTests": 56,
