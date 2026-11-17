@@ -1,4 +1,13 @@
 {
+  "nov17QuotedSourceSpec": {
+    "status": "focused-repair-passed-global-rerun-required",
+    "failedRemoteCoverageRun": 44040017712,
+    "rootTests": 970,
+    "independentTests": 970,
+    "specReferences": 9426,
+    "parserUnchanged": true,
+    "independentReviewSha256": "598928cf0697909df45e8ede37d51f3d41c55879e5dcadd8f27a1f37a0d082cb"
+  },
   "nov17ProviderCatalog": {
     "status": "catalog-visible-not-generation-qualified",
     "httpStatus": 200,

@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: restored source-runner spec reference visibility
+
+The [quote-only YAML repair](upgrade-2026-source-spec-quotes-20261117.md) follows the actual current coverage failure and matching local reproduction. Root and independent970-test runs,9,426reference validation and inventory check pass; global rerun remains required.
+
 ## November 17: read-only account model catalog refresh
 
 The [one-request catalog refresh](upgrade-2026-provider-catalog-20261117.md) returns200 and the same four selected listings. Root and independent source/receipt reviews pass; no generation, new spend, reserve reconciliation or model qualification occurred.

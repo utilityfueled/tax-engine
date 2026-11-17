@@ -1,4 +1,4 @@
-form: postgres-source-candidates-amd64
+form: "postgres-source-candidates-amd64"
 jurisdiction: federal
 taxYear: 2025
 sources:
@@ -6,23 +6,23 @@ sources:
   - https://ftp-master.debian.org/keys.html
   - https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/
 lines:
-  - line: admission
+  - line: "admission"
     description: Manual public nonfork default-branch exact source SHA, first attempt, GitHub-hosted native AMD64 local Unix Docker only; unchanged tracked source and no running containers.
     formula: Reject every unsupported authority, source, architecture, endpoint, retry, or capacity claim before a build.
-    testRef: tests/scripts/postgres-source-candidates-amd64.test.ts::admits only exact manual native source execution
-  - line: source
+    testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::admits only exact manual native source execution"
+  - line: "source"
     description: Reproduce the existing SQLite keyring bytes from the exact official Debian keyring package member; verify package/member hashes, then the archive-signature source chain and offline context.
     formula: Official package pin AND unique exact regular keyring member pin AND original source verifier AND immutable native toolchain.
-    testRef: tests/scripts/postgres-source-candidates-amd64.test.ts::pins reproducible official keyring and rejects foreign source inputs
-  - line: result
+    testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::pins reproducible official keyring and rejects foreign source inputs"
+  - line: "result"
     description: Actual recipe and full-suite regression/sanitizer checks are mandatory. An artifact-carrier image or exported early failure is never a passing candidate; no runtime integration, ABI acceptance or release qualification.
     formula: passed = original candidate status validator passes AND normal owned cleanup AND deadline not exceeded; releaseQualified = false.
-    testRef: tests/scripts/postgres-source-candidates-amd64.test.ts::requires every actual SQLite check and never grants release authority
-  - line: cleanup
+    testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::requires every actual SQLite check and never grants release authority"
+  - line: "cleanup"
     description: Preserve unrelated resources; only exact operation-labelled newly created containers/images may be normally stopped and nonforce removed, with closed child custody and capacity/deadline reserve.
     formula: cleanup requires exact new identity, label, native image, normal stopped exit and no unknown child; uncertainty holds.
-    testRef: tests/scripts/postgres-source-candidates-amd64.test.ts::bounds cleanup to exact owned new identities
-  - line: workflow
+    testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::bounds cleanup to exact owned new identities"
+  - line: "workflow"
     description: Explicit dispatch only, contents read, no push/deploy, 165-minute package job, no cancellation or retry, artifacts retained three days and no credential environment publication.
     formula: native source experiment does not promote any image or change readiness policy.
-    testRef: tests/scripts/postgres-source-candidates-amd64.test.ts::keeps workflow manual read only bounded and unpromoted
+    testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::keeps workflow manual read only bounded and unpromoted"
