@@ -1,0 +1,109 @@
+name: NEW212 strict-container timing replay AMD64 (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact full default-branch source commit
+        type: string
+        required: true
+      enable_timing:
+        description: Enable only the existing fixed-schema nonqualifying timing probe
+        type: boolean
+        required: false
+        default: false
+concurrency:
+  group: new212-container-timing-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  replay:
+    if: inputs.enable_timing && github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      TAX_ENGINE_DEPLOYMENT_MODE: self-host
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - name: Admit only the exact first-attempt default-branch source
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$GITHUB_SHA" = "$SOURCE_SHA"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git diff --exit-code
+          test "$(uname -m)" = x86_64
+          test "$(docker info --format '{{.OSType}} {{.Architecture}}')" = 'linux x86_64'
+      - name: Check inert replay contracts
+        run: node --test tests/scripts/new212-container-timing-replay.test.mjs
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+      - run: pnpm test:setup
+      - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
+      - run: pnpm sample-docs:fetch
+      - name: Build the same original application image for this source
+        run: |
+          docker build --label org.opencontainers.image.revision="$GITHUB_SHA" --tag tax-engine:new212-timing .
+          image=$(docker image inspect --format '{{.Id}}' tax-engine:new212-timing)
+          [[ "$image" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf 'CANDIDATE_IMAGE_ID=%s\n' "$image" >> "$GITHUB_ENV"
+      - name: Start the same strict isolated runtime
+        run: |
+          docker run --detach --name tax-engine-browser-ci --read-only --cap-drop ALL \
+            --label io.vivalatax.qualification.kind=new212-timing \
+            --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --tmpfs /app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777 \
+            --publish 127.0.0.1:3109:3000 --env TAX_ENGINE_DEPLOYMENT_MODE=self-host \
+            --env TAX_ENGINE_APP_URL=http://127.0.0.1:3109 "$CANDIDATE_IMAGE_ID"
+          test "$(docker inspect --format '{{.Image}}' tax-engine-browser-ci)" = "$CANDIDATE_IMAGE_ID"
+          docker inspect tax-engine-browser-ci > new212-container-identity.json
+          for attempt in $(seq 1 60); do
+            if curl --max-time 5 --fail --silent http://127.0.0.1:3109/api/health; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Measure only the two unchanged original NEW212 cases
+        timeout-minutes: 8
+        env:
+          TAX_ENGINE_TEST_NEW212_TIMING: '1'
+          PLAYWRIGHT_DISABLE_WEBSERVER: 'true'
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
+        run: node scripts/replay-new212-container-timing.mjs
+      - name: Normally stop and remove only this diagnostic runtime
+        if: always()
+        run: |
+          if docker container inspect tax-engine-browser-ci >/dev/null 2>&1; then
+            test "$(docker inspect --format '{{.Image}}' tax-engine-browser-ci)" = "$CANDIDATE_IMAGE_ID"
+            test "$(docker inspect --format '{{index .Config.Labels "io.vivalatax.qualification.kind"}}' tax-engine-browser-ci)" = new212-timing
+            docker logs tax-engine-browser-ci > new212-container-runtime.log 2>&1
+            docker stop --time 10 tax-engine-browser-ci
+            docker rm tax-engine-browser-ci
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: new212-container-timing-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/new212-container-timing/
+            apps/web/test-results/
+            new212-container-identity.json
+            new212-container-runtime.log
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 6
