@@ -1,0 +1,22 @@
+form: "Ohio-Strict-Six-Known-Native-Control"
+taxYear: 2025
+status: "verification-contract"
+reference: "Current actual Ohio component definitions and independently authored fictional native-entry fixtures"
+notes: |
+  Test protocol only: four part-year school cases and two 1280px resident-credit cases.
+  No changes to application, tax calculation, timeouts, retries, workers or assertions.
+  School body already known-kind; only parent/header source-entry discovery is replaced.
+  Resident-credit 390px and subsequent edit/negative actions retain original discovery.
+lines:
+  - line: "component-kind-contract"
+    description: "Explicit fixture kinds must match every actual current component"
+    formula: "Each unique label has a literal input/select kind checked independently against current components for both school and resident-credit fixtures; unknown labels fail before actions. No retained DOM node or runtime tag cache."
+    testRef: "tests/apps/web/ohio-strict-known-native-kind.test.tsx::matches complete actual component entry inventories"
+  - line: "action-and-assertion-preservation"
+    description: "Preserve full original native behavior and source assertions"
+    formula: "Every fill(value), Tab, selectOption(value), click and original assertion remains in the same order. Fresh strict native actions reject missing, duplicate and wrong-kind controls; independent exact labels remain. No action or assertion retry, no deadline change."
+    testRef: "tests/apps/web/ohio-strict-known-native-kind.test.tsx::preserves scoped full entry actions and excludes all other phases"
+  - line: "six-case-scope"
+    description: "Only four school and two resident desktop cases use new fixture kinds"
+    formula: "School enterParents/enterHeader only; resident typeOriginals explicit opt-in only at1280px. NEW212, resident390px, schoolbody, save/reopen, geometry, PDF, source mutations and negative confirmations remain unchanged."
+    testRef: "tests/apps/web/ohio-strict-known-native-kind.test.tsx::limits opt-in to six existing cases"

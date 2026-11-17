@@ -2,6 +2,7 @@
 import { nativeControlTag } from './helpers/native-control-snapshot';
 import {enterKnownNativeControl} from './helpers/known-native-control';
 import {schoolPartYearNativeKind} from './helpers/school-part-year-native-kinds';
+import {schoolParentHeaderNativeKind} from './helpers/ohio-strict-native-kinds';
 import {expect,test,type Page,type Locator,type TestInfo} from '../scripts/browser-cpu-diagnostics/fixture';
 import {readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -52,7 +53,10 @@ async function seedFederalOnly(page:Page,c:SchoolPyPaperCase){
  await page.evaluate(({id,state})=>{localStorage.setItem(`tax-engine:guided-mode:${id}`,'true');localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`,JSON.stringify(state));},{id,state});await page.reload();return{id,packet,original,initial:structuredClone(state)};
 }
 const categories=[['wages','Wages and compensation'],['capitalGains','Nonbusiness capital gains and losses'],['rentsRoyalties','Nonbusiness rents and royalties'],['gambling','Gambling income'],['interestDividends','Interest and dividends'],['pensions','Pensions and IRA distributions'],['unemployment','Unemployment'],['otherIncome','Other nonbusiness income'],['federalAdjustments','Federal adjustments to income']]as const;
-async function enterParents(page:Page,packet:ReturnType<typeof schoolPyHeaderPacket>,id:string){const r=packet.canonical.ohioResidency,o=required(r.owners[0]),p=packet.canonical.ohioPayments;
+async function enterParents(page:Page,packet:ReturnType<typeof schoolPyHeaderPacket>,id:string){
+ const enter=(page:Page,label:string,value:string)=>enterKnownNativeControl(page,label,value,schoolParentHeaderNativeKind(label));
+ const fields=async(page:Page,rows:readonly(readonly[string,string])[])=>{for(const[label,value]of rows)await enter(page,label,value);};
+const r=packet.canonical.ohioResidency,o=required(r.owners[0]),p=packet.canonical.ohioPayments;
  await page.getByRole('button',{name:'Add Ohio residency source facts',exact:true}).click();await page.getByRole('button',{name:'Add primary owner domicile source',exact:true}).click();await expect(control(page,'primary domicile period 1 begins')).toHaveValue('');for(let i=1;i<o.periods.length;i++)await page.getByRole('button',{name:'Add primary domicile period',exact:true}).click();
  await fields(page,[['Ohio residency source year','2025'],['Ohio residency source reference',r.sourceReference],['Ohio school district residency source status','actual_district_sources_required'],['primary domicile source reference',o.sourceReference],['primary actual Ohio residency status','part_year_resident'],['All actual federal income and adjustment sources included','true'],['Actual sources contain no business income requiring Ohio apportionment','true']]);
  for(const[i,p]of o.periods.entries())await fields(page,[[`primary domicile period ${i+1} begins`,p.from],[`primary domicile period ${i+1} ends`,p.to],[`primary domicile period ${i+1} state`,p.domicileState]]);
@@ -73,6 +77,9 @@ async function enterSchool(page:Page,packet:ReturnType<typeof schoolPyHeaderPack
  }
 }
 async function enterHeader(page:Page,h:ReturnType<typeof schoolPyHeaderPacket>['header']){
+ const enter=(page:Page,label:string,value:string)=>enterKnownNativeControl(page,label,value,schoolParentHeaderNativeKind(label));
+ const fields=async(page:Page,rows:readonly(readonly[string,string])[])=>{for(const[label,value]of rows)await enter(page,label,value);};
+
  await page.getByRole('button',{name:'Add actual Ohio residential period',exact:true}).click();const o=h.owner.originalTaxpayer,p=required(h.residence.periods[0]),f=h.finderOriginal,c=h.countyOriginal,i=h.officialInventoryOriginal;
  await fields(page,[['Header source tax year','2025'],['Header source record reference',h.sourceReference],['Header source as of date',h.asOfDate],['Header account owner','primary'],['Header original first name',o.firstName],['Header original last name',o.lastName],['Header original SSN',o.ssn],['Header original date of birth',required(o.dateOfBirth)],['Residence original reference',h.residence.sourceReference],['Actual residence period original reference',p.sourceReference],['Actual residence from',p.from],['Actual residence through',p.through],['All actual Ohio residential periods included','true'],['Finder original reference',f.sourceReference],['Finder original tax year','2025'],['Finder original lookup date',f.lookupDate],['Actual school district number','0302'],['Actual school district name','Hillsdale LSD'],['County shown in Finder original','Ashland'],['School income tax shown in actual original','reported'],['I reviewed the actual official Finder result','true'],['County original reference',c.sourceReference],['County original tax year','2025'],['County original record date',c.recordDate],['Actual county name','Ashland'],['Actual official district list publication','ohio_2025_it1040_booklet'],['Official district list original reference',i.sourceReference],['Official district list tax year','2025'],['Official district list printed page','51'],['District number in official list','0302'],['District name in official list','Hillsdale LSD'],['Rate shown in official district list','.0125'],['Tax base shown in official district list','E'],['I reviewed the actual official district list row','true']]);
  for(const[prefix,a]of[['Actual residential',h.residence.originalAddress],['Finder queried residential',f.originalAddress],['County original residential',c.originalAddress]]as const)for(const[key,label]of[['street','street'],['city','city'],['state','state'],['zip','ZIP']]as const)await enter(page,prefix+' '+label,a[key]);

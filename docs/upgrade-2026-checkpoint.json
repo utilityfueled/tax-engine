@@ -1,4 +1,24 @@
 {
+  "nov17OhioNativeEntry": {
+    "status": "source-reviewed-local-six-strict-pass-remote-pending",
+    "localCasesPassed": 6,
+    "localTimeoutMs": 30000,
+    "workers": 2,
+    "retries": 0,
+    "privateControls": 14,
+    "adoptedControls": 10,
+    "priorRemoteStrictPassed": 642,
+    "priorRemoteStrictDeadlineFailures": 8,
+    "priorRemoteOriginalSkips": 5,
+    "applicationChanged": false,
+    "budgetsAndAssertionsUnchanged": true,
+    "independentSourceSha256": "41b675dd1aeec44f8c3926ad70675b2d467fc866cdf16446965532dcce5e494b",
+    "independentAdoptionSha256": "6c03eb13651360b3aae7aebf11db70550520ec9f58459007ddf7cad071274e74",
+    "remoteQualified": false,
+    "independentLocalActualSha256": "3b6e198c8f156d980991a331af5e7d0c4ffe7b8bb4963cd56be4a7c82624a0a0",
+    "specReferences": 9430,
+    "inventoryChange": "one unsupported browser entry"
+  },
   "nov17ExpiredRehearsalExternalCleanup": {
     "status": "external-cleanup-passed-database-unknown",
     "rootTerminalSession": 73378,
@@ -2082,7 +2102,13 @@
     "separateReviewTests": 83,
     "separateReview": "c5011205a1767f4ba4ff8a1d75df97856f4dc870f7ddabb0c61a5f5bca8126fd",
     "rootAllClosureFilesRehashed": true,
-    "priorFullBrowser": { "source": "bf3e613a", "passed": 635, "failed": 1, "originalSkipped": 5, "ownedServerClosed": true },
+    "priorFullBrowser": {
+      "source": "bf3e613a",
+      "passed": 635,
+      "failed": 1,
+      "originalSkipped": 5,
+      "ownedServerClosed": true
+    },
     "correctedActualMobileCasePassed": true,
     "finalCombinedAndRuntimePending": true
   },
@@ -2846,7 +2872,12 @@
     "unitAndCoverageSameFrozenSource": "Each28409PASS2oldReadinessFixtureFAIL;retained;ownedDBstopped",
     "readinessTestSuccessor": "3777cb84",
     "currentCombinedSuccessorRequired": true,
-    "activeParallel": ["guidedMortgageActualBrowser", "currentLossMortgageGuideComposition", "independentSourceAndArtifactReviews", "humanReviewPacketSupplement"],
+    "activeParallel": [
+      "guidedMortgageActualBrowser",
+      "currentLossMortgageGuideComposition",
+      "independentSourceAndArtifactReviews",
+      "humanReviewPacketSupplement"
+    ],
     "mainPushHold": true,
     "humanReview": false,
     "filingEnabled": false,
@@ -26046,9 +26077,20 @@
     "browserTestsPassed": 587,
     "existingHostedBrowserSkips": 5,
     "remoteRuns": {
-      "ci": { "id": 42292813045, "coverage": "passed", "unit": "failed" },
-      "web": { "id": 42292813115, "managedBrowser": "passed", "containerBrowser": "failed" },
-      "docker": { "id": 42292813072, "build": "passed" }
+      "ci": {
+        "id": 42292813045,
+        "coverage": "passed",
+        "unit": "failed"
+      },
+      "web": {
+        "id": 42292813115,
+        "managedBrowser": "passed",
+        "containerBrowser": "failed"
+      },
+      "docker": {
+        "id": 42292813072,
+        "build": "passed"
+      }
     },
     "productionDeployFromMergeObserved": true,
     "native032bConditionalActivated": false,
@@ -26114,7 +26156,11 @@
     "sourceBaseline": "6fe8dcace9270a54606e63ee42925b53968ba7f2",
     "advisory": "DSA-6613-1",
     "fixedPackage": "1:1.3.dfsg+really1.3.1-1+deb13u1",
-    "cves": ["CVE-2026-27171", "CVE-2026-76844", "CVE-2026-85091"],
+    "cves": [
+      "CVE-2026-27171",
+      "CVE-2026-76844",
+      "CVE-2026-85091"
+    ],
     "baselinePassed": 6,
     "baselineExpectedFailures": 2,
     "sourceContractPassed": 8,
@@ -26222,7 +26268,10 @@
     "testSha256": "8a823ff2efce46d0b39d1abc3e45128e4d436fa7b98fa23fcce99a539f796e5c",
     "verifiedSummarySha256": "dc0f59b2a73c030c2c3d71ac7fd69e36b85ea208c32b1317aa9736156aa379e8",
     "currentStrictCollectionSha256": "132ea729e23611b8bad0b18becaf65488d055c9bd6add751bdd9d0a13cb3919c",
-    "viewports": [1280, 390],
+    "viewports": [
+      1280,
+      390
+    ],
     "managedPassed": 2,
     "originalHostedSkips": 5,
     "deadlineMs": 30000,
@@ -26940,7 +26989,10 @@
     "chromiumRetries": 0,
     "chromiumReportSha256": "b9fd9e50a1b5f55ddc2e9482772922663cae30b31f2a4e9b48067eb7d6d2917d",
     "auditSha256": "7ca36cb6614ae4e8be99e41827cdca9dd97463ce7d57d60bb91740198f81e3b0",
-    "promptVersions": ["workspace-summary/4", "tax-explanation/4"],
+    "promptVersions": [
+      "workspace-summary/4",
+      "tax-explanation/4"
+    ],
     "liveProviderCalls": 0,
     "modelPromoted": false,
     "evidence": ".local/upgrade-evidence/nov13-provider-server-projection"
@@ -27522,7 +27574,10 @@
     "specReferencesValidated": 8956,
     "specimenSha256": "0fcc3ec4c9e29651516a10595d0c15ec809122ee05be1fdd85b4e27df8339090",
     "specimenPagesRendered": 4,
-    "visuallyInspectedPages": [1, 3],
+    "visuallyInspectedPages": [
+      1,
+      3
+    ],
     "partIIOnlyEstateTaxRemainderTransferredToAnnualReturn": false,
     "qualifiedReviewReceived": false,
     "sources": [
@@ -27568,8 +27623,14 @@
     "specReferencesValidated": 8938,
     "redSha256": "2daf611a22a8ec6149872e0a934291ef7e38a0fa2a13540c1ef0cf27e7658df2",
     "focusedSha256": "5912a4e608edab9a2f2940103278a2d865d3a0a4fe33eab0627bcced5e1267e0",
-    "publishedExamples": ["821", "3021"],
-    "returnForms": ["1040", "1040-SR"],
+    "publishedExamples": [
+      "821",
+      "3021"
+    ],
+    "returnForms": [
+      "1040",
+      "1040-SR"
+    ],
     "productionCalculationOrExportEnabled": false,
     "finalRegulationVerified": false,
     "sources": [
@@ -27617,7 +27678,10 @@
     "filledFields": 22,
     "checkedBoxes": 6,
     "renderedPages": 4,
-    "visualInspectionPages": [1, 3],
+    "visualInspectionPages": [
+      1,
+      3
+    ],
     "exportsEnabled": false,
     "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
   },
@@ -27772,7 +27836,9 @@
     "checkedBoxes": 5,
     "reviewNoticePages": 4,
     "renderedPages": 4,
-    "visualInspectionPages": [1],
+    "visualInspectionPages": [
+      1
+    ],
     "exportsEnabled": false,
     "source": "https://www.irs.gov/pub/irs-pdf/f4972.pdf"
   },
@@ -28120,7 +28186,10 @@
     },
     "postgresqlComposeScans": {
       "source": "c9ca587de773485a7df7799c74bd848228c52961",
-      "platforms": ["linux/arm64", "linux/amd64"],
+      "platforms": [
+        "linux/arm64",
+        "linux/amd64"
+      ],
       "matchesPerPlatform": 565,
       "highMatchesPerPlatform": 138,
       "criticalMatchesPerPlatform": 9,
@@ -28228,7 +28297,10 @@
     },
     "postgresqlAlpineComparison": {
       "source": "19aebd59bf1be81961b65ef4b6417bbf6c3a352b",
-      "platforms": ["linux/arm64", "linux/amd64"],
+      "platforms": [
+        "linux/arm64",
+        "linux/amd64"
+      ],
       "matchesPerPlatform": 65,
       "highMatchesPerPlatform": 32,
       "criticalMatchesPerPlatform": 3,
@@ -28382,7 +28454,13 @@
     "charitableIndependentProbes": 18,
     "chapter12FocusedTests": 1064,
     "chapter12Commit": "c00d937d",
-    "chapter12ActualBrowser": { "passed": 6, "failed": 0, "skipped": 0, "retries": 0, "ownedServerClosed": true },
+    "chapter12ActualBrowser": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "ownedServerClosed": true
+    },
     "combinedCurrentSourceChecks": "pending",
     "sourceBoundary": "Earlier hosted/native artifacts remain bound to their named revisions, not these new patches.",
     "qualifiedHumanReview": false,
@@ -28782,7 +28860,11 @@
       "entitledPreviewReadOnlyDatabaseQueries": 3,
       "entitledPreviewSignedSandboxTrials": 2,
       "entitledPreviewSignedCancellationDenials": 2,
-      "entitledPreviewSyntheticShellCounts": [0, 2, 0],
+      "entitledPreviewSyntheticShellCounts": [
+        0,
+        2,
+        0
+      ],
       "entitledPreviewScopedAiCountChanges": 0,
       "entitledPreviewAllCleanupVerified": true,
       "entitledPreviewExecutedControllerSha256": "ff02999e335a6c68b701dc6af7439ce75ea586f280def0cc0df75ade27bee8d5",

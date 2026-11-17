@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: six preserved native-entry cases pass local strict deadlines
+
+The [reviewed control-kind optimization](upgrade-2026-ohio-native-entry-20261117.md) passes root/independent source checks and all six local30-second cases with2workers/0retries. All actions/assertions and budgets remain; the preceding remote eight deadline failures remain and require a fresh container pass.
+
 ## November 17: expired rehearsal external cleanup passed
 
 The [bounded cleanup](upgrade-2026-expired-rehearsal-cleanup-20261117.md) passed root and independent completed-artifact review with normal child closure and only owned external resources affected. Historical failures, database uncertainty and failed billing qualification remain; a fresh signed-delivery rehearsal is being prepared.

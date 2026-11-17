@@ -1,5 +1,7 @@
 /** Spec: state/oh-resident-credit-native-browser.yaml. Fictional originals; no calculated RC seed. */
 import { nativeControlTag } from './native-control-snapshot';
+import {enterKnownNativeControl} from './known-native-control';
+import {residentCreditOriginalNativeKind} from './ohio-strict-native-kinds';
 import { expect, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -132,14 +134,18 @@ export async function confirm(page: Page, id: string) {
   await expect.poll(async () => (await packet(page, id)).sourceFactsConfirmed).toBe(true);
   expect((await saved(page, id)).sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).toBe(true);
 }
-export async function typeOriginals(page: Page, facts: ReturnType<typeof guidedResidentCreditFixture>) {
+export async function typeOriginals(page: Page, facts: ReturnType<typeof guidedResidentCreditFixture>, knownKinds = false) {
   for (const name of ['Review actual Virginia payments', 'Review actual Virginia received refunds']) await page.getByRole('button', { name, exact: true }).click();
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Add actual Virginia service period', exact: true }).click();
   for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Add actual Virginia payment record', exact: true }).click();
   await page.getByRole('button', { name: 'Add actual Virginia received refund record', exact: true }).click();
   for (const i of [2, 3]) await page.getByRole('button', { name: `Add actual bank and agency originals for Virginia payment ${i}`, exact: true }).click();
   // Reviewed raw fixture is a factual entry inventory, not an output or calculation oracle.
-  for (const [label, , value] of residentCreditNativeFields(facts)) await enter(page, label, value === '100000' ? '100,000' : value === '2500' ? '2,500' : value);
+  for (const [label, , value] of residentCreditNativeFields(facts)) {
+    const entered = value === '100000' ? '100,000' : value === '2500' ? '2,500' : value;
+    if (knownKinds) await enterKnownNativeControl(page, label, entered, residentCreditOriginalNativeKind(label));
+    else await enter(page, label, entered);
+  }
 }
 export function pin(draft: OhioResidentCreditDraft, cohort: Cohort, reference: string) {
   expect(draft.sourceTaxYear).toBe('2025'); expect(draft.sourceFactsConfirmed).toBe(true);
