@@ -40,3 +40,44 @@ The existing registered Web workflow now exposes the default-false boolean `cpu_
 Author controls: five meaningful controls first failed before implementation; a sixth outcome-preservation control also failed before its correction. All six now pass, including foreign-source/attempt/job refusal, exact original row/order/bounds refusal, preflight-before-execution refusal, deadline/remaining-budget boundaries and sanitized-artifact/default-off contracts. All 182 adjacent controls in four files pass, scoped ESLint and syntax checks pass, both YAML files parse, nine original test-source pins match, and spec validation reports 9,447 valid test references with none missing or broken. Independent source review passed (`9797eb1348d5b052faf5654aa01ddedcfc9c3a2f5fa6c834cd7a57cb29e0bfff`). Separate workflow adoption review passed (`f9f2526fb1afa911c4ff7d8fe2b86e948fc8193aa139d37604062299fed97c10`), including an exact YAML inverse of every original field and 36 concurrency cases. Root reran the six focused controls, syntax, scoped lint, workflow grammar and spec validation. No deployment, service creation, provider call or actual browser rehearsal occurred in this package.
 
 References: [GitHub manual workflow requirements](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow), [workflow step timeouts](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepstimeout-minutes), [composite action metadata](https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#runs-for-composite-actions).
+
+
+## Actual original-batch run
+
+[Manual run 44187013822](https://github.com/utilityfueled/tax-engine/actions/runs/44187013822)
+at `b0634d4bfd73f57b4efdb11c2015353a8fbfe190` failed. Its original strict
+baseline completed 646 passes, four failures and five original skips. The four
+failures are NEW212 desktop, school refund desktop/mobile and school covered
+desktop. Ordinary mode separately completed 649 passes, one RRTA desktop
+four-second privacy-child failure and five skips. Neither result qualifies the
+strict suite.
+
+Both diagnostic admissions retained the same source/image and exact original
+rows/bounds, configured two workers, zero retries, 30-second case deadlines and
+retain-on-failure tracing. More than 45 minutes of the original job remained
+before each invocation, with its ten-minute controller and cleanup reserves
+unchanged. Batch 6 completed ten failed cases; batch 7 completed seven passes
+and eight failures. Both diagnostic steps returned nonzero. Actual parallel
+slots 0 and 1 were observed, with worker restarts. These diagnostic failures
+are distinct from the original baseline's four failures. The fixed privacy
+projection retains case IDs/status/duration, not arbitrary assertion text;
+exact diagnostic assertion categories are unavailable in the retained records.
+
+Ten of fourteen sanitized profiles validate. Four remain unavailable with
+`invalid-profile/sample-interval`. Valid profiles span only 1.35–5.54 seconds
+in the current-page main isolate. Their sampling wall intervals establish no
+complete-journey or process-CPU cause; PA remains unsampled. No raw profiles or
+traces were downloaded. The original failure and all unavailable records remain
+retained; no limits, retries or assertions changed.
+
+Assessment SHA-256:
+`4e2aedcd0f76ffbdfe5a91e7a023d4fe5aa27df58543107bec3103df586e0a9c`.
+It verifies 24 sanitized artifact file pins, 15 frozen source/dependency pins
+and the separately reviewed workflow adoption. The recorded image is
+`sha256:64c3a5034324ecffaf5141c70f703d62e4f0f725e86fd0785b978324ab6e7d93`.
+Source/image admission is evidenced by the reviewed same-job guards and plans;
+this assessment did not independently inspect the full image archive. The owned
+container-removal step succeeded; no separate post-removal inspection is claimed.
+The next source investigation may examine the rejected interval contract while
+retaining these negatives; no rerun or product optimization follows from this
+partial sample alone.

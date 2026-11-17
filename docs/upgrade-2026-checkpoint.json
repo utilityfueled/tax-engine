@@ -26,15 +26,7 @@
       "compactContext": "c4e92399",
       "sqliteFullPrerequisites": "17cf0189"
     },
-    "liveRuns": {
-      "ciB9": 44184075029,
-      "webB9": 44184075018,
-      "cpuFullBatchB063": 44187013822,
-      "ciB063": 44186922860,
-      "webB063": 44186922899,
-      "dockerB063": 44186922673,
-      "sqliteFullPackage17cf": 44190069976
-    },
+    "liveRuns": {},
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
       "glibc44148810935": "baseline suite failed two XFD/proc-cpuinfo checks; ten XPASS also remain; candidate/ABI not reached",
@@ -63,12 +55,18 @@
       "webC40": "FAILURE44177523822: ordinary/buildSUCCESS;strict642PASS/8FAIL/5skips,all30000ms(NEW2122,resident-creditdesktop2,school-PY4);bothRRTApassed.",
       "sqlitePairedB9": "SUCCESS44184632007,b9fe12dc: original1/107join8 +1/8162OOM retained; separatepatchedwhole107/8162PASS; all83checks0/normalcleanup. Peer55ledger56exports,root17pins; reviewa030d6d7. Package/runtime/ABI/fulloriginalsuite remainfalse.",
       "ciB063Inventory": "Spec refs passed; inventorycheckFAILED missingnewdiagnosticrow. GenuineRED,generatedonlyoneentry,unchangedallpriorentries,GREEN;fix5b56e256committed.",
-      "ciC4eInventory": "Spec ValidateSUCCESS134410578567,confirmingremoteinventoryrepair;type/lint/buildSUCCESS,unit/coveragepending."
+      "ciC4eInventory": "Spec ValidateSUCCESS134410578567,confirmingremoteinventoryrepair;type/lint/buildSUCCESS,unit/coveragepending.",
+      "ciB9": "SUCCESS44184075029:all6jobs;coverage2132files/88.2%branches,85%gate unchanged.",
+      "webB9": "FAILURE44184075018:ordinary/buildSUCCESS;strict637PASS/13FAIL/5skips:11journey30000ms +2RRTA4000ms. No CPU cause/readiness.",
+      "supersededB063C4eDefaults": "Root-canceled normal PUSH CI/Web b06344186922860/44186922899 and c4e44188295946/44188296970, actual terminalCANCELLED. b063specinventoryfailure retained; c4ecoverage/spec/type/lint/buildPASS,unitcanceled. Partialbrowserfailureheadings retained; no finalqualification.",
+      "sqliteFull17cf": "FAILURE44190069976/17cf0189:compatibility-repaired baselinePackage0/fulltest2 recover.test:78/do_recover_test1.1.2 CLIcloseSQLlogicerror,recipe1. Candidate/CVE/sanitizer not reached.36ledger/37exports/88checks0;normalcleanup/deadlinefalse;independentreviewe48c4c22. No DBPAGEcause/ABI/runtime/releaseclaim.",
+      "rrtaPython40f8": "SUCCESS44190812240/40f819b7 valid COMPLETE_NEGATIVE:104uncensoredpasses/0timeouts,11controls each+parity/versions/pypdf verified,temporarycleanuptrue.24pairs per PDF medians4.0744922688778225%/4.177413413033565% below10%;noadoption/CPUcause/strictqualification. Peerceb58ca3.",
+      "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35\u20135.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification."
     },
     "nextActions": [
-      "Observe singlefullSQLitequalification44190069976 at17cf0189: original165minutejob/155controller/120package/15cleanup,fulltest/alltest/fuzztest +5positivebaseline +5candidate +5sanitizer unchanged. source_refresh monitors/reviews. Preview prepares distinct ABI diagnostics from actual saveddeb+dbgsym; no duplicate package dispatch.",
-      "Observe the single reviewed full-batch CPU diagnostic44187013822 atb0634d4b. Defaultsourcechecks remain separate; original full baseline/deadlines/actions/tracing/gates unchanged. ohio_finish monitors terminal results. No duplicate dispatch.",
-      "Commit/push reviewed pairedRRTA Python3.13.18/3.14.10 comparison, then dispatchonce/saveallresults.8rootcontrols/37pins/peerb60e856fpassed; exact2PDF/full8fields/104fixedABBA/4schildren/10%bothgate; no originalhelper/Web/CIversionchange. Source-only before actual.",
+      "Diagnose retained fullSQLite44190069976 recover.test:78/do_recover_test1.1.2 failure. Baselinepackage0/fulltest2; candidate/CVE/sanitizer not reached. Original fulltest/alltest/fuzztest, all5originalCVEcases with at least1named normalbaselinefailure, all5candidate+5sanitizerpass, deadlines/cleanup remain. Source_refresh owns source investigation; preview prepares separate ABI diagnostics from saveddeb/dbgsym. No duplicate package dispatch.",
+      "Preserve completedCPU44187013822 original4failures and18distinctdiagnosticfailures. Investigate source-only invalid-profile/sample-interval contract from four retained rejections; ten partial current-isolate profiles do not establish fulljourneycause. PAunsampled;no automatic rerun/deadline/action change.",
+      "Retain completed pairedPython44190812240 valid negative:104passes/0timeouts, exactparity/controls/cleanup, bothpairedmedians below10%; no interpreter adoption. Original4sprivacy failures remain; no repeat comparison for green.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
       "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
     ],
@@ -98,16 +96,19 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "17cf0189d078b88c54047249e08568ab68a56592",
+    "latestPushedSource": "40f819b7ba7daac43f907090e73c3ea9361deea4",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
     "pushReceipt": ".local/upgrade-evidence/nov17-reviewed-experiment-evidence-push.json",
     "cleanupContinuation": "Current isolated cleanupV4 PASSED: endpointdisabled/pending0; exactsuccessfulproviderfinancialhashverified;2sessionsrevoked;owned15table-schema/emptyDB/roledeleted;testcustomerdeleted/product+priceinactive;2ownedPreviewdeletionsGET404;nonceRedisprefixonlycleared. 14Stripe/8Vercel/59SQL/4Preview/3Redis;supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Root+independentactualreview6412c975passed. Goalreservationunchanged;historical/globalcleanupandexpirydeletionnotclaimed.",
-    "sqliteContinuation": "Completed targeted paired experiment and root/independent artifact review. source_refresh identifies existing full-package/ABI/runtime qualification path; no duplicate targeted replay.",
+    "sqliteContinuation": "Full-package44190069976 baseline package builds; fulltest fails recover.test1.1.2 before candidate/CVE/sanitizer. Preserve targeted paired success and original failures. Diagnose full-suite failure; no duplicate old-image rehearsal or runtime/ABI approval.",
     "browserDiagnosticLedger": "docs/upgrade-2026-full-batch-cpu-diagnostic-20261117.md",
     "contextPolicy": "Resume only from activeContinuation and named current artifact; bound command output and delegate independent work. Do not reread whole progress/checkpoint or restart completed work after compaction.",
-    "pythonComparisonLedger": "scripts/rrta-python-version-comparison/README.md"
+    "pythonComparisonLedger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
+    "browserCpuActualAssessmentSha256": "4e2aedcd0f76ffbdfe5a91e7a023d4fe5aa27df58543107bec3103df586e0a9c",
+    "sqliteFullActualAssessmentSha256": "e48c4c22d86c30e5c7b45920298add58fe035c19b54823e1f5cbad936ed90344",
+    "pythonActualAssessmentSha256": "ceb58ca301632679857fad9f16026562d827a38cdc7982866d2573df83b2fa25"
   },
   "nov17New212Timing": {
     "status": "source-reviewed-local-instrumented-two-pass-remote-pending",

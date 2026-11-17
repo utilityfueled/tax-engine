@@ -6983,3 +6983,24 @@ corrected four-pipe invocation; root eight controls, all 37 pins, independent
 review, lint, workflow grammar, 9,452 spec references and inventory checks pass.
 No helper or ordinary Web/CI interpreter version changes; actual comparison
 and strict-current-runtime qualification remain pending.
+
+
+November 17 terminal experiments: full SQLite package run `44190069976` at
+`17cf0189` built the compatibility-repaired baseline package, then failed
+fulltest at recover.test1.1.2; candidate/CVE/sanitizer gates were not reached.
+All 88 controller checks and normal cleanup passed. The preserved CVE contract
+runs all five original cases and requires a normal baseline exit naming at
+least one of them; candidate and sanitizer must each pass all five.
+[Actual SQLite evidence](upgrade-2026-sqlite-upstream-experiment-20261117.md).
+Paired Python run `44190812240` at `40f819b7` is a valid negative: 104 retained
+passes, no child timeouts, exact controls/parity and temporary cleanup, but
+4.07449%/4.17741% improvements miss the unchanged 10% threshold. No interpreter
+adoption or runtime qualification follows. [Evidence](upgrade-2026-rrta-python-paired-20261117.md).
+
+Manual CPU run `44187013822` at `b0634d4b` failed: original strict646/4/5;
+ordinary649/1/5 retains an RRTA desktop privacy-child failure. Diagnostic
+batches6/7 completed10FAIL and7PASS/8FAIL, with ten valid and four
+`sample-interval`-rejected public profiles. Valid1.35–5.54second current-isolate
+spans do not establish complete-journey CPU cause; PA remains unsampled. Both
+steps retained nonzero exits and normal owned-container removal succeeded.
+[Exact diagnostic evidence and limits](upgrade-2026-full-batch-cpu-diagnostic-20261117.md).

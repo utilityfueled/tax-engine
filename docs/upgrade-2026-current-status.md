@@ -1,7 +1,7 @@
 # Current 2026 upgrade status
 
 The goal remains active and is not release qualified. Reviewed work is pushed to
-`main` through `b0634d4bfd73f57b4efdb11c2015353a8fbfe190`. Automatic production
+`main` through `40f819b7ba7daac43f907090e73c3ea9361deea4`. Automatic production
 builds are disabled; no production deployment, filing or model promotion is authorized.
 
 For continuation, read only `activeContinuation` in
@@ -13,10 +13,11 @@ The [execution brief](upgrade-2026-execution-brief.md) remains the complete scop
 
 | Package | Verified result and remaining work |
 | --- | --- |
-| Global checks | Full CI at `7ea7453b` and `c40ad8cf` passed all six jobs. Coverage: 29,004 tests, 88.2% branches; the 85% gate is unchanged. At b063, spec validation passed but generated-inventory check failed; the sole missing diagnostic row was regenerated and committed as `5b56e256`. Other source checks remain in progress. |
+| Global checks | Full CI at `7ea7453b`, `c40ad8cf` and `b9fe12dc` passed all six jobs. Coverage: 29,004 tests, 88.2% branches; the 85% gate is unchanged. At b063, spec validation passed but generated-inventory check failed; the sole missing diagnostic row was regenerated and committed as `5b56e256`. Other source checks remain in progress. |
 | Tax facts, federal and PA/OH | Extensive finite, source-bound cases pass; broader enabled scenarios, independent expected outputs and applicable final 2026 forms remain required. All three residency types remain in scope for each selected state. |
-| Strict browser | Ordinary and strict modes retain different 90/30-second case deadlines. Strict 2fcc/6cf/7ea/c40 runs failed with 14/2/10/8 cases respectively. No successful ordinary run replaces those failures. Original-batch diagnostic `44187013822` is running with two workers, zero retries and unchanged assertions/deadlines. [Diagnostic ledger](upgrade-2026-full-batch-cpu-diagnostic-20261117.md). |
-| SQLite | Paired run `44184632007` preserves the original join/OOM failures. Official corrections pass both complete targeted scripts, 107 and 8,162 tests. Root and independent artifact review pass. Full package suite, ABI and runtime integration remain open. [Experiment](upgrade-2026-sqlite-upstream-experiment-20261117.md). |
+| Strict browser | Ordinary and strict modes retain different 90/30-second case deadlines. Strict 2fcc/6cf/7ea/c40/b9 runs failed with 14/2/10/8/13 cases respectively. No successful ordinary run replaces those failures. Original-batch diagnostic `44187013822` completed with original baseline 646/4/5; its two sampled batches failed, retaining ten valid/four unavailable partial-isolate profiles. No cause or qualification follows. [Diagnostic ledger](upgrade-2026-full-batch-cpu-diagnostic-20261117.md). |
+| SQLite | Paired run `44184632007` preserves the original join/OOM failures. Official corrections pass both complete targeted scripts, 107 and 8,162 tests. Root and independent artifact review pass. Full-package attempt `44190069976` built the baseline package but failed fulltest at recover.test1.1.2; candidate/CVE/sanitizer, ABI and runtime integration remain open. [Experiment](upgrade-2026-sqlite-upstream-experiment-20261117.md). |
+| RRTA interpreter | Paired experiment `44190812240` retained 104 passing children, but 4.07449%/4.17741% medians fail the predeclared 10% threshold. No version adoption or strict privacy qualification. [Evidence](upgrade-2026-rrta-python-paired-20261117.md). |
 | glibc | XFD assertions now pass; ten XPASS retain the unchanged strict package hold. Candidate build, allocator, ABI and consumers were not reached. [Package evidence](upgrade-2026-glibc-package-profile-20261117.md). |
 | Hosted billing and real provider costs | The signed-credit proof issued 1,000 cents, charged two one-cent settlements and retained 998 cents. Two real calls cost $0.0005246; duplicate/replay/control-account checks pass. Current isolated cleanup passed. Historical/global cleanup, public-sale and model qualification remain separate. [Evidence](upgrade-2026-signed-credit-provider-20261117.md). |
 | AI evaluation | Known goal usage is 183 calls/$0.27285490. Old unknown holds and the full current reservation remain; conservative reserved ceiling is $0.47348230. Independent labels, held-out review, repeated qualification and route-specific provider evidence remain required. |

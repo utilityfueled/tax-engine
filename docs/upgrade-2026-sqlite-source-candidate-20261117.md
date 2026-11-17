@@ -27,8 +27,10 @@ Evidence:
 - Count correction: `944f686f1b516075b5bba943e8fd2b919d9f52efc2ad0d9b0a71b6b56152e564`.
 - Final helper/runner source review: `bcec59abb9f50cb64bbdc7f94e35729024f36acb45f98cf6b3c550a9f99df934`.
 
-Compilation, actual SQL regressions, sanitizers, ABI/consumers and raw scans
-remain pending. The package clears no advisory and grants no risk acceptance.
+The later compatibility-repaired baseline compiles, but its fulltest fails;
+candidate/CVE/sanitizer, ABI/consumers and runtime qualification remain open.
+[Actual full-package result](upgrade-2026-sqlite-upstream-experiment-20261117.md).
+The package clears no advisory and grants no risk acceptance.
 
 Sources: [Debian tracker](https://security-tracker.debian.org/tracker/CVE-2025-7458),
 [official SQLite fix](https://github.com/sqlite/sqlite/commit/b816ca9994e03a8bc829b49452b8158a731e81a9).

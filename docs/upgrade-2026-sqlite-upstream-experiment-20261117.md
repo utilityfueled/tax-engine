@@ -25,7 +25,7 @@ Manifest: `3c6e341e94acea5f4a5977b7c85e6ae3e1cc5141757d3f9f700933b9db0787d7`.
 The separate manual workflow retains the original 30-minute controller bound,
 27-minute work/3-minute cleanup split and 14-minute build-command cap. It
 changes no original runner, test selection, fault index, timeout or cleanup.
-Original failures remain available. Actual paired execution is pending;
+Original failures remain available. At preparation, paired execution was pending;
 full-suite, runtime, ABI, CVE-candidate and package qualification remain open.
 
 
@@ -63,11 +63,32 @@ The precise historical allocation cause remains unproven.
 The next full-package path now applies those same three pinned prerequisites
 to the authenticated common source before creating the vulnerable-CVE baseline
 and fixed candidate. Both variants are explicitly compatibility-repaired. The
-existing fulltest/alltest/fuzztest, five positive baseline CVE reproductions,
-five candidate cases, five sanitizer cases, nonroot execution, signed inputs,
+existing fulltest/alltest/fuzztest, all five original CVE cases with a normal
+baseline exit 1 naming at least one distinct-10.1–10.5 failure, all five
+candidate passes, all five sanitizer passes, nonroot execution, signed inputs,
 compiler flags, deadlines and normal cleanup remain unchanged. DBPAGE is not
 added to this package. Root and independent review verify 39 source/evidence
 pins, the whole original recipe inverse and 26 passing relevant controls;
 independent review SHA-256:
 `fd59ccf6662fd19aeba9f49fe259003c87b830e13997567548e4229944825af3`.
-Actual full-package qualification, ABI and runtime integration remain pending.
+The actual full-package attempt below remains unqualified; ABI and runtime
+integration remain pending.
+
+
+The full-package attempt [44190069976](https://github.com/utilityfueled/tax-engine/actions/runs/44190069976)
+at `17cf0189d078b88c54047249e08568ab68a56592` failed. The
+compatibility-repaired baseline Debian package build exited 0, but its complete
+upstream fulltest exited 2 at `recover.test:78`, `do_recover_test1.1.2`, when
+closing the recovery CLI pipe reported an SQL logic error. The recipe exited 1.
+Candidate packaging, paired CVE regressions and sanitizer gates were not reached.
+This does not prove a DBPAGE cause or qualify the baseline's full suite.
+
+Independent artifact review verifies the exact nine reviewed source bindings,
+the three common prerequisites, 36 ledger files, 37 export bindings and all 88
+zero-exit controller checks. Normal cleanup has no errors and the deadline was
+not exceeded. Assessment SHA-256:
+`e48c4c22d86c30e5c7b45920298add58fe035c19b54823e1f5cbad936ed90344`.
+The 62,375,818-byte archive has SHA-256
+`50e80b6a995a8877b808a34f99cc75f5becd429c83aa30b1dc7c9af2ca70587c`.
+Earlier original failures remain retained. Full package, CVE, sanitizer, ABI,
+consumer and runtime qualification remain open; no risk acceptance follows.
