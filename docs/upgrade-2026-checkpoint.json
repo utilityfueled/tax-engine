@@ -24,7 +24,10 @@
     "actualResultSha256": "1922b8643ff24412e276f1c9ed390e784b8d233147f93ef342970b0e688e6e2d",
     "rootActualReviewSha256": "006aa5d5fdfe598ff392b788ccec764188e695d29c120773eccf9ead0cf2732b",
     "normalServerClosure": true,
-    "priorContainerFailureExplained": false
+    "priorContainerFailureExplained": false,
+    "actualWorkers": 1,
+    "actualCasesSequential": true,
+    "independentActualReviewSha256": "7d63b479a6b65b01d8f10758cd8d7337d9d837e712235571cd99d468f0b4f553"
   },
   "nov17GlibcSyscallProbe": {
     "status": "actual-three-profile-probe-passed-full-suites-required",

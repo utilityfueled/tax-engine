@@ -23,8 +23,10 @@ failure is retained and fixed by restoring the snapshot's required ordering.
 The generated inventory adds one unsupported browser-contract entry.
 
 The first actual instrumented local run on `9343d78a` passes both original
-cases: desktop 9,686 ms and mobile 8,604 ms. The fresh web build passes. Both workers
+cases: desktop 9,686 ms and mobile 8,604 ms. The fresh web build passes. Both cases
 retain the 30-second deadline, zero retries and the original PDF assertions.
+The configured worker limit stays two; Playwright reports one actual worker
+executing these same-file cases sequentially.
 All 40 fixed timing records have successful finishes; the managed server closes
 normally and a fresh check finds its PID and port absent.
 
@@ -45,3 +47,10 @@ The root source review predates the subsequent order-only audit repair;
 its separate adoption addendum binds the final metadata.
 
 Independent final adoption/order review `5736db20e0b3fa96506db6cce9fa0c480420ba6ff296359ccbae50e13fc5701f`.
+
+
+Independent saved-run review
+`7d63b479a6b65b01d8f10758cd8d7337d9d837e712235571cd99d468f0b4f553`
+confirms the build, both cases, 40 fixed records and normal server closure.
+It distinguishes the configured two-worker limit from the one actual worker;
+this corrects the earlier root wording without changing the saved results.
