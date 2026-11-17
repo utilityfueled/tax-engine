@@ -6830,3 +6830,13 @@ three-policy diagnostic passes ten source controls and root/independent review.
 It adds no capability or host clock write and preserves the full test gates.
 [Source, checks and limits](upgrade-2026-glibc-syscall-probe-20261117.md).
 Actual diagnostic and package qualification remain pending.
+
+
+### November17: optional NEW212 PDF phase timing
+
+The default-off fixed-metadata probe preserves every original action, assertion
+and PDF oracle. Two genuine failures precede passing controls; types, lint,
+spec and inventory pass. Independent source reviews pass; a retained audit
+key-order failure is corrected without changing hash values or budgets.
+[Source checks and measurement limits](upgrade-2026-new212-timing-20261117.md).
+Actual instrumented evidence and strict container qualification remain pending.

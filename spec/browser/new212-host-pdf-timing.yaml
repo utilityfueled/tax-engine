@@ -1,0 +1,13 @@
+form: "NEW212-Host-PDF-Timing"
+taxYear: 2025
+status: "verification-contract"
+notes: "Optional test-only elapsed intervals, no optimization, CPU, tax, network or readiness claim."
+lines:
+  - line: "exact-opt-in-forwarding"
+    description: "Enable only the explicit fixed metadata probe"
+    formula: "Both ordinary strict browser child environment and the optional CPU runner use the same environment reducer. Only TAX_ENGINE_TEST_NEW212_TIMING exactly equal to string 1 is forwarded; unset, zero, true, whitespace and arbitrary values remain absent. Preserve selected PDF Python. No secrets, NODE_OPTIONS, foreign endpoints or profiler controls enter the ordinary child."
+    testRef: "tests/scripts/new212-host-pdf-timing.test.ts::forwards only exact opt-in without opening other environment scope"
+  - line: "same-inherited-runner-boundary"
+    description: "Preserve both runners and all workloads"
+    formula: "The optional CPU childEnv derives from the same reducer and profilerEnv spreads childEnv. No separate allowlist, workers, retries, deadlines, case collection, scheduling, request budget, host interpreter or production code change. Preserve all actions and assertions, entire strict Python PDF oracle and execFileSync arguments. Log only the ten fixed phase enums, boundaries, elapsedMs and success boolean; missing records remain incomplete."
+    testRef: "tests/scripts/new212-host-pdf-timing.test.ts::propagates the same fixed opt-in through both actual runner constructions"

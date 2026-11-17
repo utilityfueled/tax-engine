@@ -239,7 +239,7 @@ export function environment(parent) {
     for (const k of ['PATH', 'HOME', 'USERPROFILE', 'TMPDIR', 'TMP', 'TEMP', 'SystemRoot', 'WINDIR', 'COMSPEC', 'LANG', 'LC_ALL', 'TERM', 'CI', 'GITHUB_ACTIONS', 'GITHUB_SHA', 'GITHUB_WORKSPACE', 'TAX_ENGINE_PDF_TEST_PYTHON'])
         if (parent[k] !== undefined)
             env[k] = parent[k];
-    return { ...env, NEXT_TELEMETRY_DISABLED: '1', NODE_ENV: 'production', TAX_ENGINE_DEPLOYMENT_MODE: 'self-host', PLAYWRIGHT_DISABLE_WEBSERVER: 'true' };
+    return { ...env, ...(parent.TAX_ENGINE_TEST_NEW212_TIMING === '1' ? { TAX_ENGINE_TEST_NEW212_TIMING: '1' } : {}), NEXT_TELEMETRY_DISABLED: '1', NODE_ENV: 'production', TAX_ENGINE_DEPLOYMENT_MODE: 'self-host', PLAYWRIGHT_DISABLE_WEBSERVER: 'true' };
 }
 export async function noEnvFiles(root) {
     for (const dir of ['', 'apps/web'])
