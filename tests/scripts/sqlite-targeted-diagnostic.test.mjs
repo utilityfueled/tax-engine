@@ -15,3 +15,26 @@ test('exact OOM2330 metadata cannot be missing, raw SQL, changed oracle or arbit
 test('real isolated Tcl callback records enum/length/NULL only and ignores another case',async()=>{const{mkdtemp,writeFile,readFile,rm}=await import('node:fs/promises');const{tmpdir}=await import('node:os');const{runBoundedCommand}=await import(path.join(ROOT,'scripts/build-postgres-libxml2-backport.mjs'));const tmp=await mkdtemp(path.join(tmpdir(),'sqlite-metadata-control-'));try{const src=fs.readFileSync(path.join(P,'infra/sqlite-targeted-diagnostic/oom-observe.tcl'),'utf8');let callback=src.slice(src.indexOf('proc capture_2330'),src.indexOf('source $argv0'));const out=path.join(tmp,'metadata.json');callback=callback.replace('/qualification-out/oom-2330-metadata.json',out);const file=path.join(tmp,'control.tcl');await writeFile(file,'proc do_test {args} {return original}\nset ::lSql [list NULL {CREATE TABLE t1(a)}]\n'+callback+'\ndo_test other {} {}\nif {[file exists {'+out+'}]} {error unexpected}\ndo_test recoverfault2-2-oom-transient.2330 {} {}\n',{mode:0o600});await runBoundedCommand('tclsh',[file],{env:{PATH:'/usr/bin:/bin'},timeoutMs:3000});const d=JSON.parse(await readFile(out,'utf8'));validateOomMetadata(d);assert.equal(d.statementCount,2);assert.deepEqual(d.statements.map(x=>x.class),['NULL','CREATE']);assert.equal(d.statements[0].startsNullToken,true);assert.ok(!JSON.stringify(d).includes('t1'));}finally{await rm(tmp,{recursive:true});}});
 test('real Python flag projector admits only one DBPAGE macro and exact ordered flags',async()=>{const{mkdtemp,writeFile,rm}=await import('node:fs/promises');const{tmpdir}=await import('node:os');const{runBoundedCommand}=await import(path.join(ROOT,'scripts/build-postgres-libxml2-backport.mjs'));const tmp=await mkdtemp(path.join(tmpdir(),'sqlite-flags-control-'));try{const module=path.join(P,'infra/sqlite-targeted-diagnostic/project.py');const script=path.join(tmp,'control.py');await writeFile(script,`import importlib.util\ns=importlib.util.spec_from_file_location('p',${JSON.stringify(module)});m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\na='CFLAGS = -O2 -ffile-prefix-map=/qualification-work/baseline=. -DSQLITE_ALLOW_ROWID_IN_VIEW\\nOPT_FEATURE_FLAGS = -DSQLITE_ENABLE_FTS3\\n'\nb=a.replace('/baseline=','/dbpage=').replace('FTS3\\n','FTS3 -DSQLITE_ENABLE_DBPAGE_VTAB\\n')\nassert m.paired_flags(a,b)['allOtherCompilerFlagsAndOrderExact']\nfor bad in [b.replace('-DSQLITE_ENABLE_FTS3',''),b+'CFLAGS = extra\\n',b.replace('DBPAGE_VTAB','DBPAGE_VTAB -DSQLITE_FOREIGN'),b.replace('-O2','-O3')]:\n try:m.paired_flags(a,bad)\n except AssertionError:pass\n else:raise AssertionError('accepted another flag change')\n`,{mode:0o600});await runBoundedCommand('python3',['-I','-B',script],{env:{PATH:'/usr/bin:/bin'},timeoutMs:3000});}finally{await rm(tmp,{recursive:true});}});
 test('workflow and runtime keep bounded manual original custody with no broad suites or integration',()=>{const w=fs.readFileSync(path.join(P,'.github/workflows/sqlite-targeted-diagnostic-amd64.yml'),'utf8'),s=fs.readFileSync(path.join(P,'scripts/qualify-sqlite-targeted-diagnostic-amd64.mjs'),'utf8');assert.ok(w.includes('workflow_dispatch:')&&w.includes('timeout-minutes: 30')&&w.includes('retention-days: 3'));assert.ok(!/push:|pull_request:|packages: write/.test(w));assert.ok(s.includes('27*60_000')&&s.includes('3*60_000'));assert.ok(s.includes('context-verification-')===false);assert.ok(s.includes("this.command('diagnostic-verifier-'"));assert.ok(!/--privileged|--cap-add|seccomp=unconfined|\bfulltest\b|docker push|--force=true/.test(s));});
+
+
+test('staged public Tcl observer is nonroot readable even under private host umask', async () => {
+  const { mkdtemp, readFile, stat, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { stageDiagnosticInputs } = await import('../../scripts/qualify-sqlite-targeted-diagnostic-amd64.mjs');
+  assert.equal(typeof stageDiagnosticInputs, 'function');
+  const dir = await mkdtemp(path.join(tmpdir(), 'sqlite-observer-mode-'));
+  const previousUmask = process.umask(0o077);
+  try {
+    const pins = await stageDiagnosticInputs(dir);
+    assert.deepEqual(Object.keys(pins), ['run.sh', 'project.py', 'core-link.c', 'oom-observe.tcl']);
+    for (const name of Object.keys(pins)) {
+      const actual = await readFile(path.join(dir, name));
+      assert.deepEqual(actual, await readFile(path.join(P, 'infra/sqlite-targeted-diagnostic', name)));
+      assert.equal((await stat(path.join(dir, name))).mode & 0o777, name === 'oom-observe.tcl' ? 0o444 : 0o600);
+    }
+    await assert.rejects(stageDiagnosticInputs(dir), { code: 'EEXIST' });
+  } finally {
+    process.umask(previousUmask);
+    await rm(dir, { recursive: true });
+  }
+});

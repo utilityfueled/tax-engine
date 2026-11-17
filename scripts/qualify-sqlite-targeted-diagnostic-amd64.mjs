@@ -1,11 +1,22 @@
 // Measurement only: never promotes a package or changes an original test oracle.
-import assert from'node:assert/strict';import{readFile,writeFile,mkdir}from'node:fs/promises';
+import assert from'node:assert/strict';import{readFile,writeFile,mkdir,chmod}from'node:fs/promises';
 import{join,resolve}from'node:path';import{URL,fileURLToPath,pathToFileURL}from'node:url';import{createHash}from'node:crypto';import{performance}from'node:perf_hooks';
 const REPO=process.cwd(),DATA=fileURLToPath(new URL('../infra/sqlite-targeted-diagnostic/',import.meta.url));
 const{SourceCandidateController,assertOwnedImage,labelRecipe,publishArtifacts}=await import(pathToFileURL(join(REPO,'scripts/qualify-postgres-source-candidates-amd64.mjs')).href);
 const{prepareBuildContext}=await import(pathToFileURL(join(REPO,'scripts/build-postgres-sqlite-backport.mjs')).href);
 const sha=x=>createHash('sha256').update(x).digest('hex'),LABEL='io.vivalatax.qualification.operation';
 const save=(p,d)=>writeFile(p,JSON.stringify(d,null,2)+'\n',{flag:'wx',mode:0o600});
+// Only this committed, nonsecret observer is read by the nonroot test user.
+// COPY preserves its mode; explicitly set read bits despite a private host umask.
+export async function stageDiagnosticInputs(context) {
+ const pins={};
+ for(const n of ['run.sh','project.py','core-link.c','oom-observe.tcl']) {
+  const b=await readFile(join(DATA,n));pins[n]={bytes:b.length,sha256:sha(b)};
+  const target=join(context,n);await writeFile(target,b,{flag:'wx',mode:0o600});
+  if(n==='oom-observe.tcl')await chmod(target,0o444);
+ }
+ return pins;
+}
 export const LIMITS={jobMinutes:30,controllerMinutes:27,cleanupMinutes:3,initialDiskGiB:20,reserveDiskGiB:2};
 export function validateInventory(a,b){assert.ok(a.length>0);assert.equal(b,a,'Original toolchain inventory drift holds.');return true;}
 export function validateLinkedCore(d,variant){assert.ok(['baseline','dbpage'].includes(variant));assert.equal(d.variant,variant);assert.equal(d.version,'3.40.1');assert.match(d.path,new RegExp('^/qualification-work/'+variant+'/\\.libs/libsqlite3\\.so\\.0(?:\\.8\\.6)?$'));assert.equal(typeof d.dbpage,'boolean');assert.ok(Array.isArray(d.options)&&d.options.every(v=>typeof v==='string'&&/^[A-Z0-9_=.,()+-]+$/.test(v)));assert.match(d.sourceId,/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d [a-f0-9]{60}(?:[a-f0-9]{4}|alt[0-9])$/);if(d.cliLoaderSelectedLocalLibrary!==undefined)assert.equal(d.cliLoaderSelectedLocalLibrary,true);return true;}
@@ -33,8 +44,7 @@ export class SqliteDiagnosticController extends SourceCandidateController{
   const inv=join(this.private,'inventory.tsv');await this.docker('diagnostic-inventory-copy',['cp',inventoryName+':/qualification-toolchain/packages.tsv',inv]);validateInventory(await readFile(join(DATA,'expected-packages.tsv'),'utf8'),await readFile(inv,'utf8'));
   this.stage='diagnostic-context';const prepared=join(this.private,'diagnostic-prepared');
   const plan=await prepareBuildContext({architecture:'amd64',sourceCache:this.cache,output:prepared,toolchain},{run:(exe,args,o)=>this.command('diagnostic-verifier-'+this.checks.length,exe,args,o.timeoutMs).then(stdout=>({stdout}))});
-  const context=join(prepared,'context');const pins={};
-  for(const n of ['run.sh','project.py','core-link.c','oom-observe.tcl']){const b=await readFile(join(DATA,n));pins[n]={bytes:b.length,sha256:sha(b)};await writeFile(join(context,n),b,{flag:'wx',mode:0o600});}
+  const context=join(prepared,'context');const pins=await stageDiagnosticInputs(context);
   const dockerfile=labelRecipe('ARG TOOLCHAIN\nFROM ${TOOLCHAIN}\nUSER root\nARG EXPECTED_ARCH\nENV EXPECTED_ARCH=${EXPECTED_ARCH}\nCOPY inputs /qualification-inputs\nCOPY run.sh project.py core-link.c oom-observe.tcl /qualification-diagnostics/\nRUN /bin/bash /qualification-diagnostics/run.sh\n',this.operation);
   await writeFile(join(context,'Dockerfile.diagnostic'),dockerfile,{flag:'wx',mode:0o600});
   await save(join(this.evidence,'diagnostic-source-binding.json'),{source:this.identity.source,base,toolchain,plan,inputPins:pins,expectedInventorySha256:sha(await readFile(join(DATA,'expected-packages.tsv'))),contextDockerfileSha256:sha(dockerfile),originalTestsReferenceOnlyUntilActual:true,packageQualificationClaim:false});

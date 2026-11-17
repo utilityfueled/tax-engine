@@ -21,3 +21,35 @@ independent source review
 independent final adoption acknowledgment
 `15566b56681ed29df0225f618ab1cad73459cdd63dd7f5b85281d670fe08146c`.
 The workflow runs the same ten inert controls before the actual diagnostic.
+
+
+## Actual diagnostic and observer-permission repair
+
+Run `44158923668` on `c2210167` completed with a failed diagnostic-export
+stage. All 82 recorded commands and normal cleanup passed, with no cleanup
+errors or deadline overrun; these facts do not turn the diagnostic into a pass.
+Original `join8-1010` still fails on view rowid, and the original OOM test still
+fails. The instrumented observer did not run: its log reports permission denied
+reading the root-owned `0600` Tcl source. Missing metadata correctly held the
+controller. The original tests and their failures remain retained.
+
+The separately authenticated baseline and DBPAGE diagnostic libraries both
+link locally. Baseline DBPAGE is absent and synthetic `.recover` exits 1; the
+single-flag DBPAGE build exposes the module and `.recover` exits 0. This is
+bounded causal evidence about recovery support, not original full-suite,
+security-candidate or runtime qualification.
+
+The repair stages only the committed, nonsecret Tcl observer as read-only
+`0444`, so Docker COPY preserves nonroot readability even under a private host
+umask. The three other staged diagnostic inputs remain `0600`; content, hashes,
+paths, original suites, runtime privileges, deadlines and normal cleanup are
+unchanged. A real staging-filesystem test first fails, then all 11 focused
+controls and scoped ESLint pass after the repair. The test verifies exact public
+bytes, every staged mode under umask `077`, and exclusive-create refusal.
+Saved original result, raw logs, RED and GREEN remain in
+`.local/upgrade-evidence/nov17-sqlite-diagnostic-actual-44158923668/`.
+Independent source/artifact review approves the narrow fix, with all 11 controls
+and two additional file/symlink collision controls passing; no unrelated file
+is chmodded or rewritten. Review SHA-256
+`d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f`.
+A fresh actual diagnostic remains required.
