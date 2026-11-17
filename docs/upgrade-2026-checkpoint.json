@@ -1,4 +1,15 @@
 {
+  "nov17ProviderCatalog": {
+    "status": "catalog-visible-not-generation-qualified",
+    "httpStatus": 200,
+    "generationRequests": 0,
+    "listedModels": 96,
+    "selectedListingsMatchNov15": true,
+    "independentReviewSha256": "62a5024617c07fc5c6cf5801c75af66b6cdad596e7e23596fad2e0a795e787d4",
+    "knownUsageUsd": "0.27185270",
+    "unknownReserveUsd": "0.022384",
+    "modelPromotion": false
+  },
   "nov17GlibcExactVersionRepair": {
     "status": "source-repair-reviewed-pending-native-rerun",
     "failedNativeRun": 44037755888,

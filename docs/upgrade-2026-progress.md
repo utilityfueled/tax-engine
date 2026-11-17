@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: read-only account model catalog refresh
+
+The [one-request catalog refresh](upgrade-2026-provider-catalog-20261117.md) returns200 and the same four selected listings. Root and independent source/receipt reviews pass; no generation, new spend, reserve reconciliation or model qualification occurred.
+
 ## November 17: actual glibc version-stage failure and exact repair
 
 The [first native glibc build failed before compilation](upgrade-2026-glibc-version-20261117.md). The reviewed one-line repair sets the exact pinned private version rather than appending dch’s local counter. Root/independent10-control runs and six spec references pass; all full-suite/ABI gates remain. Native rerun is pending.
