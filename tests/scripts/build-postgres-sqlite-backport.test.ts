@@ -57,7 +57,7 @@ describe("private PostgreSQL SQLite backport source admission", () => {
     const original = plan([]);
     expect(original.filter(p => p.endsWith("/fts3_term.c"))).toHaveLength(2);
     const script = await readFile(new URL("build-packages.sh", recipe), "utf8");
-    const commands = [...script.matchAll(/^\s*make -j2 (.*?) (?:>|\\)/gm)].map(m => m[1].split(/\s+/));
+    const commands = [...script.matchAll(/^\s*(?:as_test_user )?make -j2 (.*?) (?:>|\\)/gm)].map(m => m[1].split(/\s+/));
     expect(commands).toHaveLength(3);
     expect(commands.map(args => args.at(-1))).toEqual(["fulltest", "testfixture", "testfixture"]);
     for (const args of commands) {
@@ -69,6 +69,43 @@ describe("private PostgreSQL SQLite backport source admission", () => {
     expect(script).toContain("dpkg-buildpackage -B -uc -us");
     expect(script).toContain("ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1");
     expect(script.match(/'--match=distinct-10\.\*'/g)).toHaveLength(2);
+  });
+  it("runs every upstream harness command as the isolated nonroot user and preserves failing exits", async () => {
+    const script = await readFile(new URL("build-packages.sh", recipe), "utf8");
+    const helper = script.match(/^as_test_user\(\) \{[\s\S]*?^\}/m)?.[0];
+    expect(helper).toBeDefined();
+    if (helper === undefined) throw Error("Nonroot harness helper required");
+    expect(script).toContain("useradd --system --no-create-home --home-dir /qualification-work --shell /usr/sbin/nologin sqlite-test");
+    expect(script).toContain('test "$(id -u sqlite-test)" -ne 0');
+    expect(script).toContain("chown -R sqlite-test:sqlite-test /qualification-work /qualification-out");
+    expect(script.match(/^\s*as_test_user /gm)).toHaveLength(7);
+    const calls = script.split("\n").filter(line => /^\s*as_test_user (make |\.\/testfixture |env |\.\.\/candidate\/configure)/.test(line));
+    expect(calls).toHaveLength(6);
+    expect(calls.filter(line => line.includes("make -j2 USE_AMALGAMATION=1"))).toHaveLength(3);
+    expect(calls.filter(line => line.includes("./testfixture"))).toHaveLength(1);
+    expect(calls.filter(line => line.includes("env "))).toHaveLength(2);
+    expect(script).toContain("LDFLAGS='-fsanitize=address,undefined' ../candidate/configure");
+    const fulltest = script.match(/^( {4}as_test_user make -j2 USE_AMALGAMATION=1 fulltest[^\n]*\n[\s\S]*? {4}test "\$result" = 0)/m)?.[1];
+    expect(fulltest).toBeDefined();
+    if (fulltest === undefined) throw Error("Fulltest command and exit gate required");
+    const dir = await mkdtemp(join(tmpdir(), "tax-sqlite-nonroot-")); folders.push(dir);
+    for (const exit of [0, 2]) {
+      // Execute the actual source function/exit gate, with inert runuser/make
+      // stand-ins. No users, ownership, root directories or packages are changed.
+      const program = ["set -euo pipefail", `cd '${dir}'`, "variant=baseline",
+        'runuser() { test "$1" = -u; test "$2" = sqlite-test; test "$3" = --; shift 3; printf "nonroot-boundary\\n"; "$@"; }',
+        `make() { test "$*" = '-j2 USE_AMALGAMATION=1 fulltest'; return ${exit}; }`,
+        'record() { printf "status:%s:%s\\n" "$1" "$2"; }', helper, "set +e",
+        fulltest.replace(' > "/qualification-out/$variant/fulltest.log" 2>&1', ""), 'printf "completed\\n"',
+      ].join("\n");
+      if (exit === 0) expect(execFileSync("bash", ["-c", program], { encoding: "utf8", timeout: 5000 })).toBe("nonroot-boundary\nstatus:baselineFullTestExit:0\ncompleted\n");
+      else {
+        try { execFileSync("bash", ["-c", program], { encoding: "utf8", timeout: 5000, stdio: "pipe" }); throw Error("Expected failed fulltest"); }
+        catch (error) { expect(error).toMatchObject({ status: 1, stdout: "nonroot-boundary\nstatus:baselineFullTestExit:2\n" }); }
+      }
+    }
+    expect(script).toContain("dpkg-buildpackage -B -uc -us");
+    expect(script).not.toMatch(/(?:exclude|skip).*recoverfault2/);
   });
   it("requires native architecture immutable toolchain and exclusive output", async () => {
     const args = ["--architecture", "arm64", "--source-cache", "cache", "--output", "fresh", "--toolchain", "sha256:" + "a".repeat(64)];

@@ -77,6 +77,20 @@ original fuzz inputs. The same explicit setting is used for the paired harness
 and sanitizer harness (whose configure default already selected amalgamation).
 The failed native run remains failed; source-plan controls do not establish that
 the corrected recipe compiles or that any native test passes.
+The second native AMD64 attempt (run44038687405) compiled the harness and
+completed46,217 fuzz checks without errors, but its baseline full suite remained
+failed. It reported `recoverfault2-2-oom-transient.2330` before the original
+`attach-6.2` permission test deliberately aborted with “Tests do not work when run
+as root.” The authenticated upstream test makes a file mode0000 and requires it
+to be unwritable; that assertion must remain intact. Debian package builds still
+run as root as their `debian/rules` require. Subsequent full, paired and sanitizer
+harness commands run through `runuser` under a new isolated nonroot test account,
+with ownership limited to the disposable qualification work/output trees.
+Sanitizer options, fulltest dependencies, every upstream test and all exit gates
+remain unchanged. The earlier injected-OOM failure has no established relation
+to root execution and is not waived or claimed fixed by this environment change.
+A complete genuine baseline full suite must pass before the candidate can run.
+
 A nonzero exit alone is insufficient: baseline reproduction requires normal Tcl
 exit1 and an explicitly named new `distinct-10.1` through `10.5` failure. A crash,
 timeout, build failure or unrelated test failure remains unqualified. All five

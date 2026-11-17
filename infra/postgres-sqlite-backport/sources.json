@@ -79,8 +79,8 @@
       "sha256": "bc1c925eb7850477f4f1138788fd76cbe6e09dc846132237152f0feafa84d532"
     },
     "build-packages.sh": {
-      "bytes": 6402,
-      "sha256": "a39d070027ceb5af251d502dcb6013f7a3bb5075013d027217f865fcdd26fcf7"
+      "bytes": 6925,
+      "sha256": "145d5858898f396e0341725c483c7d9c854cac578a30e48018e0d69e88043bd9"
     },
     "provenance.json": {
       "bytes": 1635,

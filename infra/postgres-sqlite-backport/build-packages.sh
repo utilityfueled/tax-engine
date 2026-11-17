@@ -24,6 +24,13 @@ DEBFULLNAME='Viva La Tax private qualification' DEBEMAIL='private-qualification@
 # Retain the actual upstream regression file unchanged, including all five cases.
 cp test/distinct.test /qualification-out/upstream-distinct.test
 sha256sum /qualification-out/upstream-distinct.test > /qualification-out/upstream-regression.sha256
+# Debian packaging needs root; the upstream permission tests explicitly do not.
+# This account exists only inside the disposable source-candidate container.
+useradd --system --no-create-home --home-dir /qualification-work --shell /usr/sbin/nologin sqlite-test
+test "$(id -u sqlite-test)" -ne 0
+as_test_user() {
+    runuser -u sqlite-test -- "$@"
+}
 cd /qualification-work
 printf '{}\n' > /qualification-out/status.json
 record() {
@@ -60,8 +67,9 @@ for variant in baseline candidate; do
     test "$result" = 0
     version=$(dpkg-parsechangelog -S Version)
     find /qualification-work -maxdepth 1 -type f -name "*_${version}_*" -exec cp -a '{}' "/qualification-out/$variant/" ';'
+    chown -R sqlite-test:sqlite-test /qualification-work /qualification-out
     set +e
-    make -j2 USE_AMALGAMATION=1 fulltest > "/qualification-out/$variant/fulltest.log" 2>&1
+    as_test_user make -j2 USE_AMALGAMATION=1 fulltest > "/qualification-out/$variant/fulltest.log" 2>&1
     result=$?
     set -e
     record "${variant}FullTestExit" "$result"
@@ -75,9 +83,9 @@ cp /qualification-out/upstream-distinct.test candidate/test/distinct.test.paired
 cmp baseline/test/distinct.test.paired candidate/test/distinct.test.paired
 for variant in baseline candidate; do
     cd "/qualification-work/$variant"
-    make -j2 USE_AMALGAMATION=1 testfixture > "/qualification-out/$variant/regression-build.log" 2>&1
+    as_test_user make -j2 USE_AMALGAMATION=1 testfixture > "/qualification-out/$variant/regression-build.log" 2>&1
     set +e
-    ./testfixture test/distinct.test.paired '--match=distinct-10.*' > "/qualification-out/$variant/regression.log" 2>&1
+    as_test_user ./testfixture test/distinct.test.paired '--match=distinct-10.*' > "/qualification-out/$variant/regression.log" 2>&1
     result=$?
     set -e
     record "${variant}RegressionExit" "$result"
@@ -95,14 +103,14 @@ with open(p,'w')as f:json.dump(v,f,indent=2);f.write('\n')
 PY
 # Independent ASan/UBSan build of the candidate and the unchanged upstream cases.
 cd /qualification-work
-mkdir candidate-sanitizer
+as_test_user mkdir candidate-sanitizer
 cd candidate-sanitizer
-CFLAGS='-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' \
+as_test_user env CFLAGS='-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer' \
 LDFLAGS='-fsanitize=address,undefined' ../candidate/configure --disable-shared \
     > /qualification-out/candidate/sanitizer-configure.log 2>&1
-make -j2 USE_AMALGAMATION=1 testfixture > /qualification-out/candidate/sanitizer-build.log 2>&1
+as_test_user make -j2 USE_AMALGAMATION=1 testfixture > /qualification-out/candidate/sanitizer-build.log 2>&1
 set +e
-ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 \
+as_test_user env ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 \
     ./testfixture ../candidate/test/distinct.test.paired '--match=distinct-10.*' \
     > /qualification-out/candidate/sanitizer-regression.log 2>&1
 result=$?

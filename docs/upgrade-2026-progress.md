@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: preserved SQLite failures and corrected test-user prerequisite
+
+The [second actual SQLite failure](upgrade-2026-sqlite-nonroot-20261117.md) reports an injected-OOM assertion and upstream root-user guard. The independently reviewed nonroot harness repair passes17controls and9,427spec references; the OOM failure and complete-suite qualification remain open.
+
 ## November 17: restored source-runner spec reference visibility
 
 The [quote-only YAML repair](upgrade-2026-source-spec-quotes-20261117.md) follows the actual current coverage failure and matching local reproduction. Root and independent970-test runs,9,426reference validation and inventory check pass; global rerun remains required.

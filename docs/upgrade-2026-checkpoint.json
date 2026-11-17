@@ -1,4 +1,15 @@
 {
+  "nov17SqliteNonrootHarness": {
+    "status": "source-repair-passed-native-pending",
+    "failedRun": 44038687405,
+    "originalOomFailureUnresolved": true,
+    "rootGuardUnchanged": true,
+    "rootAndIndependentTests": 17,
+    "specReferences": 9427,
+    "independentReviewSha256": "25b64cf16dcba4be03b53f86f998c298c21739fa6da1c79a6ce84f976aec3418",
+    "nativeQualified": false,
+    "riskAccepted": false
+  },
   "nov17QuotedSourceSpec": {
     "status": "focused-repair-passed-global-rerun-required",
     "failedRemoteCoverageRun": 44040017712,
