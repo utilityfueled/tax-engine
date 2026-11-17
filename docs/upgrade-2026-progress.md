@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 17: expired rehearsal external cleanup passed
+
+The [bounded cleanup](upgrade-2026-expired-rehearsal-cleanup-20261117.md) passed root and independent completed-artifact review with normal child closure and only owned external resources affected. Historical failures, database uncertainty and failed billing qualification remain; a fresh signed-delivery rehearsal is being prepared.
+
 ## November 17: preserved SQLite failures and corrected test-user prerequisite
 
 The [second actual SQLite failure](upgrade-2026-sqlite-nonroot-20261117.md) reports an injected-OOM assertion and upstream root-user guard. The independently reviewed nonroot harness repair passes17controls and9,427spec references; the OOM failure and complete-suite qualification remain open.

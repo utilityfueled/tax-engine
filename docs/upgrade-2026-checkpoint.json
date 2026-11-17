@@ -1,4 +1,21 @@
 {
+  "nov17ExpiredRehearsalExternalCleanup": {
+    "status": "external-cleanup-passed-database-unknown",
+    "rootTerminalSession": 73378,
+    "rootTerminalExit": 0,
+    "stripeRequests": 17,
+    "vercelControllerRequests": 8,
+    "redisScans": 2,
+    "redisDeletes": 0,
+    "normalOwnedChildClosure": true,
+    "originalPaymentAttemptPassed": false,
+    "priorCleanupPassed": false,
+    "historicalManualTotalsUnknown": true,
+    "databaseState": "unknown-expired-branch",
+    "fullCleanupComplete": false,
+    "signedDeliveryQualified": false,
+    "independentReviewSha256": "84fe8a837d8c6374e8ba24d35849b66e3d5cf61ad9551d97f858e9b5ce003fb7"
+  },
   "nov17SqliteNonrootHarness": {
     "status": "source-repair-passed-native-pending",
     "failedRun": 44038687405,
