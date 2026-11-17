@@ -6405,6 +6405,26 @@
       ]
     },
     {
+      "key": "federal/glibc-xfd-test-experiment",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://sourceware.org/pipermail/glibc-cvs/2024q3/085609.html; https://sourceware.org/git/?p=glibc.git;a=patch;h=8c7c188d62d76acda1b273b0d4d9c3b32983b28d",
+      "specPath": "spec/federal/glibc-xfd-test-experiment.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-adoption-prior-benefits",
       "jurisdiction": "federal",
       "taxYear": 2026,

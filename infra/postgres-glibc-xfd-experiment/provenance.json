@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "experimentalTestOracleVariant": true,
+  "upstream": [
+    {
+      "name": "upstream-announcement.html",
+      "url": "https://sourceware.org/pipermail/glibc-cvs/2024q3/085609.html",
+      "finalUrl": "https://sourceware.org/pipermail/glibc-cvs/2024q3/085609.html",
+      "status": 200,
+      "bytes": 3894,
+      "sha256": "3295d629c5bf38990088023b071e1d5d044bd56f97232e961dfecc209c6fca01"
+    },
+    {
+      "name": "upstream.patch",
+      "url": "https://sourceware.org/git/?p=glibc.git;a=patch;h=8c7c188d62d76acda1b273b0d4d9c3b32983b28d",
+      "finalUrl": "https://sourceware.org/git/?p=glibc.git;a=patch;h=8c7c188d62d76acda1b273b0d4d9c3b32983b28d",
+      "status": 200,
+      "bytes": 1014,
+      "sha256": "2d828dfe3dee8f48174707cdc3bf0f08ed9803bb989fb43dceb98c04a0aee48f"
+    }
+  ],
+  "sourcePacketManifestSha256": "0c2fb53397c61710a3da387433cf879098da1660e95090891cac72c813707758",
+  "originalFailureRun": 44148810935,
+  "xpassAuthority": {
+    "signedSourceArchivePins": [
+      {
+        "name": "glibc_2.36.orig.tar.xz",
+        "sha256": "a543c02070d46ccaf866957efd13f10c924daa74c86a90a0254db09a92a708ee",
+        "bytes": 19363988,
+        "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36.orig.tar.xz"
+      },
+      {
+        "name": "glibc_2.36-9+deb12u14.debian.tar.xz",
+        "sha256": "cf4ac9cd98185452cae3ef34e2e4ee12753e3d93fd0c62c61396d4a47eec902f",
+        "bytes": 918488,
+        "url": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36-9+deb12u14.debian.tar.xz"
+      }
+    ],
+    "originalActualTargetMatchesSignedSource": true,
+    "debianPatchFilesModifyingTarget": [],
+    "upstreamPatchOrigin": "Sourceware HTTPS official glibc/arm/gcs branch; not claimed developer-signed or stable/security branch approval",
+    "upstreamPatchSha256": "2d828dfe3dee8f48174707cdc3bf0f08ed9803bb989fb43dceb98c04a0aee48f",
+    "tenXpass": [
+      {
+        "actualCase": "elf/tst-ifunc-isa-1",
+        "actualStatus": "XPASS",
+        "authorityMember": "glibc-2.36/sysdeps/x86/Makefile",
+        "authorityLine": 26,
+        "exactAssignment": "test-xfail-tst-ifunc-isa-1 = $(with-lld)",
+        "explanation": "Upstream expectation is conditional on with-lld; actual XPASS establishes the test expectation was true and original test exit was zero, not an observed failure. Exact run-specific with-lld value was not separately exported.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "elf/tst-ifunc-isa-1-static",
+        "actualStatus": "XPASS",
+        "authorityMember": "glibc-2.36/sysdeps/x86/Makefile",
+        "authorityLine": 27,
+        "exactAssignment": "test-xfail-tst-ifunc-isa-1-static = $(with-lld)",
+        "explanation": "Upstream expectation is conditional on with-lld; actual XPASS establishes the test expectation was true and original test exit was zero, not an observed failure. Exact run-specific with-lld value was not separately exported.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "elf/tst-ifunc-isa-2",
+        "actualStatus": "XPASS",
+        "authorityMember": "glibc-2.36/sysdeps/x86/Makefile",
+        "authorityLine": 34,
+        "exactAssignment": "test-xfail-tst-ifunc-isa-2 = $(with-lld)",
+        "explanation": "Upstream expectation is conditional on with-lld; actual XPASS establishes the test expectation was true and original test exit was zero, not an observed failure. Exact run-specific with-lld value was not separately exported.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "elf/tst-ifunc-isa-2-static",
+        "actualStatus": "XPASS",
+        "authorityMember": "glibc-2.36/sysdeps/x86/Makefile",
+        "authorityLine": 35,
+        "exactAssignment": "test-xfail-tst-ifunc-isa-2-static = $(with-lld)",
+        "explanation": "Upstream expectation is conditional on with-lld; actual XPASS establishes the test expectation was true and original test exit was zero, not an observed failure. Exact run-specific with-lld value was not separately exported.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "nptl/tst-create-detached",
+        "actualStatus": "XPASS",
+        "authorityMember": "debian/testsuite-xfail-debian.mk",
+        "authorityLine": 12,
+        "exactAssignment": "test-xfail-tst-create-detached = yes",
+        "explanation": "Signed Debian source marks this test as an expected failure. Actual XPASS means its original exit was zero, per unchanged upstream evaluate-test.sh. The experiment does not edit the expectation.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "nptl/tst-robust8",
+        "actualStatus": "XPASS",
+        "authorityMember": "debian/testsuite-xfail-debian.mk",
+        "authorityLine": 155,
+        "exactAssignment": "test-xfail-tst-robust8 = yes",
+        "explanation": "Signed Debian source marks this test as an expected failure. Actual XPASS means its original exit was zero, per unchanged upstream evaluate-test.sh. The experiment does not edit the expectation.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "rt/tst-cpuclock2",
+        "actualStatus": "XPASS",
+        "authorityMember": "debian/testsuite-xfail-debian.mk",
+        "authorityLine": 5,
+        "exactAssignment": "test-xfail-tst-cpuclock2 = yes",
+        "explanation": "Signed Debian source marks this test as an expected failure. Actual XPASS means its original exit was zero, per unchanged upstream evaluate-test.sh. The experiment does not edit the expectation.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "rt/tst-cputimer1",
+        "actualStatus": "XPASS",
+        "authorityMember": "debian/testsuite-xfail-debian.mk",
+        "authorityLine": 6,
+        "exactAssignment": "test-xfail-tst-cputimer1 = yes",
+        "explanation": "Signed Debian source marks this test as an expected failure. Actual XPASS means its original exit was zero, per unchanged upstream evaluate-test.sh. The experiment does not edit the expectation.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "rt/tst-timer",
+        "actualStatus": "XPASS",
+        "authorityMember": "debian/testsuite-xfail-debian.mk",
+        "authorityLine": 7,
+        "exactAssignment": "test-xfail-tst-timer = yes",
+        "explanation": "Signed Debian source marks this test as an expected failure. Actual XPASS means its original exit was zero, per unchanged upstream evaluate-test.sh. The experiment does not edit the expectation.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      },
+      {
+        "actualCase": "support/tst-support_descriptors",
+        "actualStatus": "XPASS",
+        "authorityMember": "debian/testsuite-xfail-debian.mk",
+        "authorityLine": 16,
+        "exactAssignment": "test-xfail-tst-support_descriptors = yes",
+        "explanation": "Signed Debian source marks this test as an expected failure. Actual XPASS means its original exit was zero, per unchanged upstream evaluate-test.sh. The experiment does not edit the expectation.",
+        "strictQualificationDisposition": "HOLD unchanged"
+      }
+    ],
+    "suiteStatusEvaluation": {
+      "authorityMember": "glibc-2.36/scripts/evaluate-test.sh",
+      "rule": "Original rc=0 + xfail=true produces XPASS and wrapper rc0. No assertion that unexpected pass is a package defect or qualification success."
+    },
+    "memberPins": {
+      "glibc-2.36/sysdeps/x86/tst-cpu-features-cpuinfo.c": {
+        "bytes": 10268,
+        "sha256": "f5b68cc950a49835e2f629dbb6c7dec8a147f4e93014d8a406948056d2e57ad2"
+      },
+      "glibc-2.36/sysdeps/x86/tst-cpu-features-cpuinfo-static.c": {
+        "bytes": 38,
+        "sha256": "7d67e83e8060de71e9e0296b57559109501e601a9aa1e76fac4d4ae82c1ef7f6"
+      },
+      "glibc-2.36/sysdeps/x86/Makefile": {
+        "bytes": 9039,
+        "sha256": "2b0f31587044c5fcf812f0ef41bb4baa5eb2b517bdd5cded631c15273d6c01c9"
+      },
+      "glibc-2.36/Makeconfig": {
+        "bytes": 52058,
+        "sha256": "f37dbaa8219318186156347bbec944eeb8153ed3c51edfe5a1a8bfb862a6886c"
+      },
+      "glibc-2.36/scripts/evaluate-test.sh": {
+        "bytes": 1243,
+        "sha256": "4b071a3759648aeae303761a35975df4e37c98ccc621a1f15379c9b1cee82db4"
+      },
+      "debian/testsuite-xfail-debian.mk": {
+        "bytes": 36326,
+        "sha256": "c75938bb76320623f776b29f67bd21bc4d0a782c8495093998ee390db7ed3903"
+      }
+    }
+  },
+  "candidateReleaseQualified": false,
+  "riskAccepted": false,
+  "qualifiedHumanReview": false
+}

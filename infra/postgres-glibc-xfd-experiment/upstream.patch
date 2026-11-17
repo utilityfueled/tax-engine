@@ -1,0 +1,29 @@
+From 8c7c188d62d76acda1b273b0d4d9c3b32983b28d Mon Sep 17 00:00:00 2001
+From: "H.J. Lu" <hjl.tools@gmail.com>
+Date: Tue, 27 Feb 2024 11:43:39 -0800
+Subject: [PATCH] x86: Don't check XFD against /proc/cpuinfo
+
+Since /proc/cpuinfo doesn't report XFD, don't check it against
+/proc/cpuinfo.
+---
+ sysdeps/x86/tst-cpu-features-cpuinfo.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sysdeps/x86/tst-cpu-features-cpuinfo.c b/sysdeps/x86/tst-cpu-features-cpuinfo.c
+index c11c6951c3..0251fb5460 100644
+--- a/sysdeps/x86/tst-cpu-features-cpuinfo.c
++++ b/sysdeps/x86/tst-cpu-features-cpuinfo.c
+@@ -294,7 +294,10 @@ do_test (int argc, char **argv)
+   fails += CHECK_PROC (waitpkg, WAITPKG);
+   fails += CHECK_PROC (wbnoinvd, WBNOINVD);
+   fails += CHECK_PROC (x2apic, X2APIC);
++#if 0
++  /* NB: /proc/cpuinfo doesn't report this feature.  */
+   fails += CHECK_PROC (xfd, XFD);
++#endif
+   fails += CHECK_PROC (xgetbv1, XGETBV_ECX_1);
+   fails += CHECK_PROC (xop, XOP);
+   fails += CHECK_PROC (xsave, XSAVE);
+-- 
+2.43.7
+

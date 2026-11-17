@@ -1,0 +1,37 @@
+{
+  "originalSha256": "3cea1d37b5070637ca63ff0e112576d8fac4da9fc077cfb0206c98abff2fed84",
+  "derivedSha256": "7d604367520dff092aa83a9502911a3ff96968c271166c9ffc59ea598ea82fb4",
+  "inverseExact": true,
+  "replacements": [
+    {
+      "before": "const REPO =",
+      "after": "import { prepareXfdExperiment } from \"../infra/postgres-glibc-xfd-experiment/experiment.mjs\";\nconst REPO =",
+      "count": 1
+    },
+    {
+      "before": "    return { recipe, manifest, prepared };",
+      "after": "    const experiment = await prepareXfdExperiment({ prepared, manifest, evidence: this.evidence });\n    return { recipe, manifest: experiment.manifest, prepared };",
+      "count": 1
+    },
+    {
+      "before": "fullOriginalSuitesRetained",
+      "after": "fullSuitesWithExactXfdOracleBackportRetained",
+      "count": 1
+    },
+    {
+      "before": "fullOriginalSuitesVerified",
+      "after": "fullSuitesWithExactXfdOracleBackportVerified",
+      "count": 1
+    },
+    {
+      "before": "originalPackageScriptSha256",
+      "after": "effectivePackageScriptSha256",
+      "count": 1
+    },
+    {
+      "before": "unchangedScriptSha256",
+      "after": "effectiveScriptSha256",
+      "count": 1
+    }
+  ]
+}
