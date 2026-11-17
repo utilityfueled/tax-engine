@@ -17,7 +17,7 @@ describe("SQLite common compatibility prerequisites", () => {
     expect(shell).toContain("as_test_user make -j2 USE_AMALGAMATION=1 fulltest");
     expect(shell).toContain("dpkg-buildpackage -B -uc -us");
     expect(shell).toContain("candidateRegressionCasesPassed']==v['candidateSanitizerRegressionCasesPassed']==5");
-    expect(shell).not.toContain("-DSQLITE_ENABLE_DBPAGE_VTAB");
+    expect(await readFile(new URL("apply-compatibility.py", recipe), "utf8")).not.toContain("-DSQLITE_ENABLE_DBPAGE_VTAB");
   });
   it("pins the same three official hunks that passed the complete paired diagnostic", async () => {
     const bytes = await readFile(new URL("compatibility-changes.json", recipe));

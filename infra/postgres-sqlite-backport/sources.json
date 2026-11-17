@@ -79,12 +79,12 @@
       "sha256": "bc1c925eb7850477f4f1138788fd76cbe6e09dc846132237152f0feafa84d532"
     },
     "build-packages.sh": {
-      "bytes": 7223,
-      "sha256": "68969e7c2bcd95cb1b95222bc567b41917ca9df24229b8b1607cbacc45b205c7"
+      "bytes": 7269,
+      "sha256": "5b154faeebed25ac07e112944fb4ddd7b1a7f162185ba90e72683b5a4f021b55"
     },
     "provenance.json": {
-      "bytes": 2662,
-      "sha256": "8d16b1a7d7ef98f5a7c25b9910ee65ad21550d64375b4d729b1674f08c7fb643"
+      "bytes": 3677,
+      "sha256": "cfc2a846592f213ea96f35e5a5701ca1cdd42cfff068610d63a3d0e6ce55c8a7"
     },
     "upstream-12ad822.patch": {
       "bytes": 9762,
@@ -118,5 +118,27 @@
     "fullPackageQualificationClaim": false,
     "runtimeIntegrationExecuted": false,
     "genericAbiApproval": false
+  },
+  "commonPackageBuildProfile": {
+    "id": "common-dbpage-recovery-v1",
+    "scope": "Explicit common core feature profile; source hunk provenance remains separately scoped",
+    "appliesTo": "baseline-and-candidate",
+    "environment": {
+      "DEB_CFLAGS_APPEND": "-DSQLITE_ENABLE_DBPAGE_VTAB"
+    },
+    "actualPackageFeatureDelta": true,
+    "otherOriginalBuildFlagsRetained": true,
+    "priorPairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
+    "priorPairedSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf",
+    "currentOriginalFailureRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44190069976",
+    "currentOriginalFailureSource": "17cf0189d078b88c54047249e08568ab68a56592",
+    "reference": [
+      "https://sqlite.org/dbpage.html",
+      "https://sqlite.org/compile.html#enable_dbpage_vtab"
+    ],
+    "fullPackageQualificationClaim": false,
+    "genericAbiApproval": false,
+    "runtimeIntegrationExecuted": false,
+    "riskAccepted": false
   }
 }

@@ -64,8 +64,9 @@
       "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35\u20135.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification."
     },
     "nextActions": [
-      "Diagnose retained fullSQLite44190069976 recover.test:78/do_recover_test1.1.2 failure. Baselinepackage0/fulltest2; candidate/CVE/sanitizer not reached. Original fulltest/alltest/fuzztest, all5originalCVEcases with at least1named normalbaselinefailure, all5candidate+5sanitizerpass, deadlines/cleanup remain. Source_refresh owns source investigation; preview prepares separate ABI diagnostics from saveddeb/dbgsym. No duplicate package dispatch.",
-      "Preserve completedCPU44187013822 original4failures and18distinctdiagnosticfailures. Investigate source-only invalid-profile/sample-interval contract from four retained rejections; ten partial current-isolate profiles do not establish fulljourneycause. PAunsampled;no automatic rerun/deadline/action change.",
+      "Run one reviewed common-DBPAGE fullSQLitepackage qualification on the next pushed exactsource; retain prior44190069976 failure and original full/CVE/sanitizer/deadline/cleanup gates. Native ABI adapter remains separately reviewed/prepared; no candidate/ABI/runtime result invented.",
+      "Preserve CPU44187013822 original4failures/18diagnosticfailures and all14profile outcomes. Fixedcounts/categories source successor reviewed privately; adopt only after root scopedchecks and closure audit. No oldrawvalues recovered/no weights or acceptance changes.",
+      "Actual immutableSQLitediscovery44196293753 identifies usr/bin/gpg directconsumer. Prepare exact-source GPG SQLite-backed runtime fixture; indirect/alias uses remain outside discovery. No runtimeclaim.",
       "Retain completed pairedPython44190812240 valid negative:104passes/0timeouts, exactparity/controls/cleanup, bothpairedmedians below10%; no interpreter adoption. Original4sprivacy failures remain; no repeat comparison for green.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
       "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
@@ -96,7 +97,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "40f819b7ba7daac43f907090e73c3ea9361deea4",
+    "latestPushedSource": "bb3fd00e5b70f705655dec517c9613fbe75c6c30",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -113,9 +114,18 @@
       "ledger": "docs/upgrade-2026-sqlite-consumers-20261117.md",
       "sourceReviewSha256": "b7729dd008c1573add9547992371e833fb164c85614e79b541847a3e703d2c6f",
       "independentReviewSha256": "a5fcc795ee707daa93d4a5bb471068370acc5b2e1fc15e38640f007e14689541",
-      "sourceOnly": true,
-      "actualNativeDiscovery": "pending",
-      "runtimeCompatibilityQualified": false
+      "sourceOnly": false,
+      "actualNativeDiscovery": "SUCCESS44196293753/bb3fd00e:22zeroexitchecks/normalcleanup,1042regularELFs,10930members,1151unresolvedlinks;knownSQLiteprovider +sole directconsumer usr/bin/gpg; no indirect/runtimequalification",
+      "runtimeCompatibilityQualified": false,
+      "actualIndependentReviewSha256": "0ce1d67606facaabcdcccd5f1d5124dd3467e71ff5bd5c62fb1824df6d50a9b5"
+    },
+    "sqliteDbpageProfile": {
+      "ledger": "docs/upgrade-2026-sqlite-dbpage-profile-20261117.md",
+      "sourceReviewSha256": "fadfd90bec3a7423dd7109b0860beea87de1ebd617692908be0b4238d199d3c6",
+      "independentReviewSha256": "70111176e28c53e89064bf3b3a24fcfb3c7470faaba39aebc0c8547217259d68",
+      "actualExecution": "pending",
+      "realCommonFeatureDelta": true,
+      "candidateReleaseQualified": false
     }
   },
   "nov17New212Timing": {

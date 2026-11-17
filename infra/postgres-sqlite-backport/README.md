@@ -48,7 +48,8 @@ Cache all exact files listed by `sources`, `release`, `sourceIndex` and
 `archiveKeyring` in `sources.json`. Supply an actual immutable native toolchain
 image identity. `Dockerfile.toolchain` describes the necessary native development
 packages and records their exact installed versions, signed apt indexes, compiler,
-linker and build flags when separately built. It has not been built by this work.
+linker and build flags when separately built. The later hosted runner has built
+this toolchain; each actual run must bind its own observed immutable identity.
 
 ```
 node scripts/build-postgres-sqlite-backport.mjs \
@@ -59,13 +60,17 @@ node scripts/build-postgres-sqlite-backport.mjs \
 The result is a checksum-verified context and `SOURCE-BUILD-PLAN.json`, not an
 executed build. The plan retains `--network=none`, explicit native architecture
 and the immutable toolchain. Actual execution needs a bounded owned native
-runner, capacity/custody checks and normal cleanup; integration into that runner
-is deliberately pending. No Docker or Podman call occurs in this preparation CLI.
+runner, capacity/custody checks and normal cleanup, supplied by the separate
+hosted source controller. No Docker or Podman call occurs in this preparation CLI.
 
-The offline package recipe builds both the unchanged baseline and private
+The offline package recipe builds both the common compatibility-repaired baseline and private
 `3.40.1-2+deb12u2+vivalatax1` candidate, runs both original full upstream suites,
 then runs the exact candidate regression text against both compiled variants.
-The package builds retain Debian's non-amalgamation configuration and features.
+Both variants retain Debian's non-amalgamation configuration and original features,
+with the separately declared common `SQLITE_ENABLE_DBPAGE_VTAB` core addition.
+This is a real package feature change, required by the recovery path; it is not
+merely a test harness change. The prior baseline fulltest failure remains retained.
+[Profile evidence and qualification limits](../../docs/upgrade-2026-sqlite-dbpage-profile-20261117.md).
 For the later Tcl harness builds only, `USE_AMALGAMATION=1` explicitly selects the
 upstream-supported `TESTFIXTURE_SRC1 = sqlite3.c` branch. Upstream's Makefile.in
 explains that this compiles the amalgamation directly into the testfixture; its

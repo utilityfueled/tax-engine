@@ -52,5 +52,27 @@
     "fullPackageQualificationClaim": false,
     "runtimeIntegrationExecuted": false,
     "genericAbiApproval": false
+  },
+  "commonPackageBuildProfile": {
+    "id": "common-dbpage-recovery-v1",
+    "scope": "Explicit common core feature profile; source hunk provenance remains separately scoped",
+    "appliesTo": "baseline-and-candidate",
+    "environment": {
+      "DEB_CFLAGS_APPEND": "-DSQLITE_ENABLE_DBPAGE_VTAB"
+    },
+    "actualPackageFeatureDelta": true,
+    "otherOriginalBuildFlagsRetained": true,
+    "priorPairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
+    "priorPairedSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf",
+    "currentOriginalFailureRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44190069976",
+    "currentOriginalFailureSource": "17cf0189d078b88c54047249e08568ab68a56592",
+    "reference": [
+      "https://sqlite.org/dbpage.html",
+      "https://sqlite.org/compile.html#enable_dbpage_vtab"
+    ],
+    "fullPackageQualificationClaim": false,
+    "genericAbiApproval": false,
+    "runtimeIntegrationExecuted": false,
+    "riskAccepted": false
   }
 }

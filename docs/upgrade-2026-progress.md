@@ -7011,3 +7011,12 @@ checks. Both independently reproduced parser/archive findings are fixed; all
 43 source/evidence pins, scoped checks and browser audit pass. Actual discovery
 remains pending; no runtime/ABI/advisory qualification follows.
 [Source and review](upgrade-2026-sqlite-consumers-20261117.md).
+
+November 17: inert discovery `44196293753` passed with22zero-exit checks,
+normal cleanup and1042regularELFs; `gpg` is the sole directSQLiteconsumer.
+Root/independent actual review and48artifactpins pass; no indirect/runtime claim.
+The separately reviewed common DBPAGE feature profile now preserves the complete
+original shell except one explicit build prefix shared by both variants. Root
+repeated3RED→3GREEN,18adjacent tests, lint/Bash/spec/inventory checks. Prior
+fulltest failure remains; one exact-source complete package run is next.
+[Profile](upgrade-2026-sqlite-dbpage-profile-20261117.md).

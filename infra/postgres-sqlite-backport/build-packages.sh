@@ -63,7 +63,7 @@ for variant in baseline candidate; do
     dpkg-parsechangelog > "/qualification-out/$variant/changelog-fields.txt"
     find . -type f -print0 | sort -z | xargs -0 sha256sum > "/qualification-out/$variant/source-files.sha256"
     set +e
-    dpkg-buildpackage -B -uc -us > "/qualification-out/$variant/package-build.log" 2>&1
+    DEB_CFLAGS_APPEND=-DSQLITE_ENABLE_DBPAGE_VTAB dpkg-buildpackage -B -uc -us > "/qualification-out/$variant/package-build.log" 2>&1
     result=$?
     set -e
     record "${variant}PackageBuildExit" "$result"
