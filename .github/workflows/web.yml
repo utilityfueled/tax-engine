@@ -14,7 +14,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: web-${{ github.ref }}
+  group: web-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
