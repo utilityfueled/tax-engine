@@ -6821,3 +6821,12 @@ correction passes source review and contracts; a genuine fresh attempt is still
 required. All commits through `80547c1b` are pushed to main and backup, with its
 production build observed canceled.
 [Actual evidence and next execution](upgrade-2026-native-fresh-runtime-20261116.md).
+
+
+### November17: separate glibc syscall prerequisite diagnostic
+
+The failed native baseline retains both syscall failures. A separate bounded
+three-policy diagnostic passes ten source controls and root/independent review.
+It adds no capability or host clock write and preserves the full test gates.
+[Source, checks and limits](upgrade-2026-glibc-syscall-probe-20261117.md).
+Actual diagnostic and package qualification remain pending.

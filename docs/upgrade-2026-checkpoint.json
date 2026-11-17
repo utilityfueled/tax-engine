@@ -1,4 +1,18 @@
 {
+  "nov17GlibcSyscallProbe": {
+    "status": "source-reviewed-actual-pending",
+    "failedNativeRun": 44040154316,
+    "nativeBaselineFailedTests": 2,
+    "inertControls": 10,
+    "variants": 3,
+    "newCapabilities": 0,
+    "controllerMinutes": 17,
+    "cleanupReserveMinutes": 3,
+    "originalFullTestGatesUnchanged": true,
+    "independentAdoptionSha256": "0ac02d6ae2967eb5d9f12b978c426573badc8ea30bd8289ad9a6873d1639e340",
+    "packageQualified": false,
+    "riskAccepted": false
+  },
   "nov17OhioNativeEntry": {
     "status": "source-reviewed-local-six-strict-pass-remote-pending",
     "localCasesPassed": 6,
