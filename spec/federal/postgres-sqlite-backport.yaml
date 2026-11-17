@@ -7,6 +7,10 @@ notes: |
   sqlite3 3.40.1-2+deb12u2 remains vulnerable. A private source candidate is not a
   distribution fix, scanner suppression, ABI approval, risk acceptance or release qualification.
 lines:
+  - line: "common-upstream-compatibility-prerequisites"
+    description: "Apply three authenticated upstream compatibility changes before splitting the vulnerable and CVE-fixed variants"
+    formula: "After the signed Debian extraction, require exact original/result SHA256 for only src/test_config.c, test/join8.test and ext/recover/sqlite3recover.c; apply the pinned f891ef8d rowid capability/oracle and 73a50fa4 NULL table-name guard before copying the common tree. Label both variants compatibility-repaired, retaining prior original-baseline failures. Preserve original packaging flags, complete nonroot fulltest/alltest/fuzztest, positive CVE baseline reproduction, all five candidate and sanitizer cases and every exit gate. Emit a common-prerequisite provenance receipt; no DBPAGE feature flag, OOM-causality, ABI, runtime or release claim follows. Reject altered, aliased or already-patched input before writing."
+    testRef: "tests/scripts/sqlite-common-prerequisites.test.ts::applies the exact common prerequisites before the CVE split without changing qualification gates"
   - line: "signed-source"
     description: "Verify source inputs against the signed Debian release chain"
     formula: "Require exact regular non-aliased cached source bytes, a valid pinned Bookworm archive signing fingerprint on InRelease, its exact main/source/Sources.xz hash/length, and one sqlite3 3.40.1-2+deb12u2 stanza binding the descriptor and all three source tarballs. Reject any altered, missing, duplicate or foreign source."

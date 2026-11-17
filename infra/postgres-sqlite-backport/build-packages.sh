@@ -14,6 +14,9 @@ cd /qualification-work
 # --no-check skips duplicate maintainer-key verification only. Context preparation
 # already verified signed release -> source index -> descriptor -> all tarballs.
 dpkg-source --no-check -x /qualification-inputs/sqlite3_3.40.1-2+deb12u2.dsc baseline
+# Compatibility-repaired vulnerable baseline and CVE candidate; prior original
+# baseline failures remain historical evidence, not relabeled as passing.
+python3 /qualification-inputs/apply-compatibility.py --source /qualification-work/baseline --record /qualification-out/common-compatibility.json
 cp -a baseline candidate
 cd candidate
 patch --batch --fuzz=0 -p1 < /qualification-inputs/CVE-2025-7458.patch > /qualification-out/patch.log

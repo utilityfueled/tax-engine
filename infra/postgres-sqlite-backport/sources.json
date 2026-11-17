@@ -71,24 +71,52 @@
       "sha256": "fbfe6f3d9d253c58bf86ac99e03fcd830bc8cefc5742c59abda277a679bbcf7b"
     },
     "Dockerfile.packages": {
-      "bytes": 281,
-      "sha256": "58a6e7767ba000d83e2cdb69aa4acff42c4fb7d8c20f4e7a01fd1d72b716c291"
+      "bytes": 435,
+      "sha256": "4db08c54bce3701ed416ede93c3378f6000e3df24574f871e5b616c012561b63"
     },
     "Dockerfile.toolchain": {
       "bytes": 905,
       "sha256": "bc1c925eb7850477f4f1138788fd76cbe6e09dc846132237152f0feafa84d532"
     },
     "build-packages.sh": {
-      "bytes": 6925,
-      "sha256": "145d5858898f396e0341725c483c7d9c854cac578a30e48018e0d69e88043bd9"
+      "bytes": 7223,
+      "sha256": "68969e7c2bcd95cb1b95222bc567b41917ca9df24229b8b1607cbacc45b205c7"
     },
     "provenance.json": {
-      "bytes": 1635,
-      "sha256": "34790f2716b96e8705fdaca38596fa25931b02096bd0d86cc0259ced4834e54c"
+      "bytes": 2662,
+      "sha256": "8d16b1a7d7ef98f5a7c25b9910ee65ad21550d64375b4d729b1674f08c7fb643"
     },
     "upstream-12ad822.patch": {
       "bytes": 9762,
       "sha256": "411243a6543e3bf4adb5674c29ee9166515cb01cc975e7b9a6d664bb3277e4be"
+    },
+    "apply-compatibility.py": {
+      "bytes": 2560,
+      "sha256": "2d727605a159306003ed656aef80040be88896e40a6a8741512e5828414dec09"
+    },
+    "compatibility-changes.json": {
+      "bytes": 3660,
+      "sha256": "d9552451cc54bc4f974db45c580875d00e9c7083477166ceb03f24d5990ffb96"
     }
+  },
+  "commonCompatibilityPrerequisites": {
+    "scope": "Three reviewed common compatibility prerequisites before vulnerable-baseline/CVE-candidate split; full qualification still required",
+    "changesSha256": "d9552451cc54bc4f974db45c580875d00e9c7083477166ceb03f24d5990ffb96",
+    "officialGitMirrorCommits": [
+      "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+      "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"
+    ],
+    "officialUrls": [
+      "https://github.com/sqlite/sqlite/commit/f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+      "https://github.com/sqlite/sqlite/commit/73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"
+    ],
+    "pairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
+    "pairedActualSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf",
+    "originalBaselineUnmodified": false,
+    "compilerFlagsChanged": false,
+    "historicalOomCauseProven": false,
+    "fullPackageQualificationClaim": false,
+    "runtimeIntegrationExecuted": false,
+    "genericAbiApproval": false
   }
 }

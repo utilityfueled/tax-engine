@@ -58,3 +58,16 @@ archive is 41,307,502 bytes, SHA-256
 This is targeted diagnostic evidence. Full original SQLite qualification,
 package/runtime integration, ABI, all consumers and release gates remain open.
 The precise historical allocation cause remains unproven.
+
+
+The next full-package path now applies those same three pinned prerequisites
+to the authenticated common source before creating the vulnerable-CVE baseline
+and fixed candidate. Both variants are explicitly compatibility-repaired. The
+existing fulltest/alltest/fuzztest, five positive baseline CVE reproductions,
+five candidate cases, five sanitizer cases, nonroot execution, signed inputs,
+compiler flags, deadlines and normal cleanup remain unchanged. DBPAGE is not
+added to this package. Root and independent review verify 39 source/evidence
+pins, the whole original recipe inverse and 26 passing relevant controls;
+independent review SHA-256:
+`fd59ccf6662fd19aeba9f49fe259003c87b830e13997567548e4229944825af3`.
+Actual full-package qualification, ABI and runtime integration remain pending.

@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "changes": [
+    {
+      "path": "src/test_config.c",
+      "beforeSha256": "e558632a34ceff9073ed46a5d0a18de19435ecb3e9e1568e9f127d5d222339bc",
+      "afterSha256": "7438b75846c1fd29f7209fd735484e95c8ff03e04fe4557f9b94f29b0a043326",
+      "upstreamCommit": "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+      "authorityResponseSha256": "e632b92a364832a7c4bf4ee36946c8c8aa08afc2b58398d904900571ea08c213",
+      "hunks": [
+        {
+          "before": "  Tcl_SetVar2(interp, \"sqlite_options\", \"rowid32\", \"0\", TCL_GLOBAL_ONLY);\n#endif\n\n#ifdef SQLITE_CASE_SENSITIVE_LIKE\n  Tcl_SetVar2(interp, \"sqlite_options\",\"casesensitivelike\",\"1\",TCL_GLOBAL_ONLY);\n#else",
+          "after": "  Tcl_SetVar2(interp, \"sqlite_options\", \"rowid32\", \"0\", TCL_GLOBAL_ONLY);\n#endif\n\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n  Tcl_SetVar2(\n      interp, \"sqlite_options\", \"allow_rowid_in_view\", \"1\", TCL_GLOBAL_ONLY);\n#else\n  Tcl_SetVar2(\n      interp, \"sqlite_options\", \"allow_rowid_in_view\", \"0\", TCL_GLOBAL_ONLY);\n#endif\n\n#ifdef SQLITE_CASE_SENSITIVE_LIKE\n  Tcl_SetVar2(interp, \"sqlite_options\",\"casesensitivelike\",\"1\",TCL_GLOBAL_ONLY);\n#else"
+        }
+      ]
+    },
+    {
+      "path": "test/join8.test",
+      "beforeSha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc",
+      "afterSha256": "38909666f2540393537a49113ca7984dfbcd2ec0d79ca1f2678c6d45177b9fc2",
+      "upstreamCommit": "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+      "authorityResponseSha256": "e632b92a364832a7c4bf4ee36946c8c8aa08afc2b58398d904900571ea08c213",
+      "hunks": [
+        {
+          "before": "  CREATE INDEX t1x2 ON t1(b);\n  INSERT INTO t1 DEFAULT VALUES;\n} {}\ndo_catchsql_test join8-1010 {\n  SELECT a\n    FROM (\n",
+          "after": "  CREATE INDEX t1x2 ON t1(b);\n  INSERT INTO t1 DEFAULT VALUES;\n} {}\nifcapable allow_rowid_in_view {\n  set res {1 {no such column: rowid}}\n} else {\n  set res {0 1}\n}\ndo_catchsql_test join8-1010 {\n  SELECT a\n    FROM (\n"
+        },
+        {
+          "before": "    NATURAL LEFT FULL JOIN t1\n   WHERE ( rowid , 1 )<=(CASE 5 WHEN 619 THEN 841 ELSE 3374391096 END,0)\n   ORDER BY a ASC;\n} {0 1}\n\n# Pending issue #2: (now resolved)\n# Jump to addrHalt inside the RIGHT JOIN body subroutine bypasses the",
+          "after": "    NATURAL LEFT FULL JOIN t1\n   WHERE ( rowid , 1 )<=(CASE 5 WHEN 619 THEN 841 ELSE 3374391096 END,0)\n   ORDER BY a ASC;\n} $res\n\n# Pending issue #2: (now resolved)\n# Jump to addrHalt inside the RIGHT JOIN body subroutine bypasses the"
+        }
+      ]
+    },
+    {
+      "path": "ext/recover/sqlite3recover.c",
+      "beforeSha256": "e2ca660cf5ecaa2e9ec82ecdbe0e8851f872adf83bdde540f8c09193bb59cf99",
+      "afterSha256": "ca2f40064b6d990fd108f202589cc4e67b3036490478c13003fb05721ffb5156",
+      "upstreamCommit": "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9",
+      "authorityResponseSha256": "af482bc32b189dd13df7ec889ca541ad596c1e47c84e766759061d00302835fc",
+      "hunks": [
+        {
+          "before": "        if( bTable && !bVirtual ){\n          if( SQLITE_ROW==sqlite3_step(pTblname) ){\n            const char *zTbl = (const char*)sqlite3_column_text(pTblname, 0);\n            recoverAddTable(p, zTbl, iRoot);\n          }\n          recoverReset(p, pTblname);\n        }",
+          "after": "        if( bTable && !bVirtual ){\n          if( SQLITE_ROW==sqlite3_step(pTblname) ){\n            const char *zTbl = (const char*)sqlite3_column_text(pTblname, 0);\n            if( zTbl ) recoverAddTable(p, zTbl, iRoot);\n          }\n          recoverReset(p, pTblname);\n        }"
+        }
+      ]
+    }
+  ]
+}

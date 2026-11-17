@@ -32,5 +32,25 @@
     "candidateReleaseQualified": false,
     "genericAbiApproval": false,
     "riskAccepted": false
+  },
+  "commonCompatibilityPrerequisites": {
+    "scope": "Three reviewed common compatibility prerequisites before vulnerable-baseline/CVE-candidate split; full qualification still required",
+    "changesSha256": "d9552451cc54bc4f974db45c580875d00e9c7083477166ceb03f24d5990ffb96",
+    "officialGitMirrorCommits": [
+      "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+      "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"
+    ],
+    "officialUrls": [
+      "https://github.com/sqlite/sqlite/commit/f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+      "https://github.com/sqlite/sqlite/commit/73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"
+    ],
+    "pairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
+    "pairedActualSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf",
+    "originalBaselineUnmodified": false,
+    "compilerFlagsChanged": false,
+    "historicalOomCauseProven": false,
+    "fullPackageQualificationClaim": false,
+    "runtimeIntegrationExecuted": false,
+    "genericAbiApproval": false
   }
 }
