@@ -1,0 +1,41 @@
+{
+  "signedSourceManifest": "infra/postgres-sqlite-backport/sources.json",
+  "files": {
+    "debian/rules": {
+      "copy": "reference-debian-rules",
+      "sha256": "172b1f317341d5425eb9415048086f6a403f6cb268c582bfa228f4272917188d"
+    },
+    "Makefile.in": {
+      "copy": "reference-Makefile.in",
+      "sha256": "200b38190b28784b4041c2e2d248982ee5c01f4ea232b8105dd198c5b5f00151"
+    },
+    "ext/recover/recoverfault2.test": {
+      "copy": "reference-ext-recover-recoverfault2.test",
+      "sha256": "e777b7163cb94b67627849be62ae1c17f181b75f0e2f39e83628f40160bd7615"
+    },
+    "test/join8.test": {
+      "copy": "reference-test-join8.test",
+      "sha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc"
+    },
+    "src/dbpage.c": {
+      "copy": "reference-src-dbpage.c",
+      "sha256": "82864d80188d16ec4c01103839ed19008c08ef2806d19c1f5eaa5495e27f4a42"
+    },
+    "test/tester.tcl": {
+      "copy": "reference-test-tester.tcl",
+      "sha256": "e4e170df30b8a3d680f48cf41d796d31b64e9b1be4bb31f1349774362a9e6769"
+    },
+    "test/malloc_common.tcl": {
+      "copy": "reference-test-malloc_common.tcl",
+      "sha256": "93224261f935d8e59286bf60abe3375233bae2525597107e9a5ac7708eaf5f7d"
+    }
+  },
+  "officialUrls": [
+    "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1-2+deb12u2.debian.tar.xz",
+    "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1.orig.tar.xz",
+    "https://www.sqlite.org/recovery.html"
+  ],
+  "priorRun": 44047637765,
+  "priorArtifactSha256": "aae6bfc15cb2ac2d74121fdfe3c2fc0e8e4c8213776a89105150f40e9614674d",
+  "toolchainInventorySha256": "d09b55fbf3ba8b937dc0f226b2dc251b42a036bbd36dd977aafe36c5f669b52d"
+}

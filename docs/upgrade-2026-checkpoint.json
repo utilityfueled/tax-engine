@@ -88,7 +88,7 @@
     "independentReviewSha256": "84fe8a837d8c6374e8ba24d35849b66e3d5cf61ad9551d97f858e9b5ce003fb7"
   },
   "nov17SqliteNonrootHarness": {
-    "status": "source-repair-passed-native-pending",
+    "status": "actual-nonroot-baseline-full-suite-failed-diagnostic-required",
     "failedRun": 44038687405,
     "originalOomFailureUnresolved": true,
     "rootGuardUnchanged": true,
@@ -96,7 +96,9 @@
     "specReferences": 9427,
     "independentReviewSha256": "25b64cf16dcba4be03b53f86f998c298c21739fa6da1c79a6ce84f976aec3418",
     "nativeQualified": false,
-    "riskAccepted": false
+    "riskAccepted": false,
+    "actualRun": 44047637765,
+    "permissionAbortResolved": true
   },
   "nov17QuotedSourceSpec": {
     "status": "focused-repair-passed-global-rerun-required",
@@ -29191,5 +29193,29 @@
       "independentReviewSha256": "ea21cb7112a99b1c75f553d4b1f57091f8f78cabe337c618c9a774032221ea49",
       "rootReviewSha256": "3ec8ba0dda3c0be3a1c33bde156177356bee871a4008524fda1e99b914075d50"
     }
+  },
+  "nov17SqliteTargetedDiagnostic": {
+    "status": "source-reviewed-local-controls-passed-actual-pending",
+    "failedNativeRun": 44047637765,
+    "baselinePackageBuilt": true,
+    "baselineFullTestExit": 2,
+    "originalFailuresUnresolved": true,
+    "sourceManifestSha256": "73efeb52e7ccb582b3ca6a446343a762aa62b742fd58a0bdf8846748b76001e0",
+    "rootControls": 10,
+    "independentControls": 10,
+    "adoptedControls": 10,
+    "independentSourceReviewSha256": "e801c192cca6f06fc893ef391384d80bba4be3c247e612139ea483020d26847d",
+    "independentAdoptionReviewSha256": "d3d348e5e56d5b237879ee0208b9d8cb2a6e97496d169fb765ada8c6644dd02f",
+    "rootAdoptedTerminal": {
+      "chunk": "11d3ae",
+      "exit": 0
+    },
+    "workflowInertPreflightAdded": true,
+    "jobMinutes": 30,
+    "controllerMinutes": 27,
+    "cleanupReserveMinutes": 3,
+    "candidateReleaseQualified": false,
+    "riskAccepted": false,
+    "independentFinalWorkflowAckSha256": "15566b56681ed29df0225f618ab1cad73459cdd63dd7f5b85281d670fe08146c"
   }
 }

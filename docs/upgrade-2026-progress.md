@@ -6859,3 +6859,14 @@ both deny the calls. All 73 commands and normal cleanup pass. Root and
 independent saved-artifact reviews agree; original full suites and release
 qualification remain required.
 [Native result and limits](upgrade-2026-glibc-syscall-probe-20261117.md).
+
+
+### November 17: targeted SQLite diagnostic after nonroot baseline failure
+
+The actual nonroot run passes its permission prerequisite and builds Debian's
+baseline, then fails the original suite before candidate qualification. A
+separate bounded diagnostic preserves original join and injected-OOM tests,
+measures linked-core identity and conditionally compares one DBPAGE build flag.
+Root and independent source review, ten adopted controls, syntax and lint pass.
+Actual diagnosis remains pending; no failure is excluded or risk accepted.
+[Scope and remaining gates](upgrade-2026-sqlite-targeted-diagnostic-20261117.md).
