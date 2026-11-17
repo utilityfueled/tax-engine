@@ -7004,3 +7004,10 @@ batches6/7 completed10FAIL and7PASS/8FAIL, with ten valid and four
 spans do not establish complete-journey CPU cause; PA remains unsampled. Both
 steps retained nonzero exits and normal owned-container removal succeeded.
 [Exact diagnostic evidence and limits](upgrade-2026-full-batch-cpu-diagnostic-20261117.md).
+
+November 17: reviewed inert SQLite consumer discovery is implemented with six
+spec-first controls, bounded pure ELF parsing and physical archive metadata
+checks. Both independently reproduced parser/archive findings are fixed; all
+43 source/evidence pins, scoped checks and browser audit pass. Actual discovery
+remains pending; no runtime/ABI/advisory qualification follows.
+[Source and review](upgrade-2026-sqlite-consumers-20261117.md).

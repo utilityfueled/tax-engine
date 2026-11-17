@@ -1,0 +1,37 @@
+name: SQLite immutable runtime ELF discovery AMD64
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact reviewed default-branch commit
+        type: string
+        required: true
+concurrency:
+  group: sqlite-runtime-consumers-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  discovery:
+    if: github.repository == 'utilityfueled/tax-engine' && github.event.repository.private == false && github.event.repository.fork == false && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - name: Check inert discovery controls
+        run: node --test tests/scripts/sqlite-runtime-consumers.test.mjs
+      - name: Discover immutable regular ELF payloads without starting a container
+        run: node scripts/sqlite-runtime-consumers.mjs "$RUNNER_TEMP/postgres-source-candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: sqlite-runtime-consumers-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/postgres-source-candidate/evidence/
+          if-no-files-found: error
+          retention-days: 3

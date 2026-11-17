@@ -108,7 +108,15 @@
     "pythonComparisonLedger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
     "browserCpuActualAssessmentSha256": "4e2aedcd0f76ffbdfe5a91e7a023d4fe5aa27df58543107bec3103df586e0a9c",
     "sqliteFullActualAssessmentSha256": "e48c4c22d86c30e5c7b45920298add58fe035c19b54823e1f5cbad936ed90344",
-    "pythonActualAssessmentSha256": "ceb58ca301632679857fad9f16026562d827a38cdc7982866d2573df83b2fa25"
+    "pythonActualAssessmentSha256": "ceb58ca301632679857fad9f16026562d827a38cdc7982866d2573df83b2fa25",
+    "sqliteConsumerDiscovery": {
+      "ledger": "docs/upgrade-2026-sqlite-consumers-20261117.md",
+      "sourceReviewSha256": "b7729dd008c1573add9547992371e833fb164c85614e79b541847a3e703d2c6f",
+      "independentReviewSha256": "a5fcc795ee707daa93d4a5bb471068370acc5b2e1fc15e38640f007e14689541",
+      "sourceOnly": true,
+      "actualNativeDiscovery": "pending",
+      "runtimeCompatibilityQualified": false
+    }
   },
   "nov17New212Timing": {
     "status": "source-reviewed-local-instrumented-two-pass-remote-pending",

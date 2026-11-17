@@ -1,0 +1,28 @@
+form: sqlite-runtime-consumers
+taxYear: 2025
+jurisdiction: federal
+notes: >
+  Nonqualifying immutable-image discovery, not a tax calculation. No image,
+  package or application is modified or started. Direct ELF dependencies do
+  not establish absence of dlopen, script or other indirect uses.
+lines:
+  - line: fixed-source
+    description: Admit only the existing pinned AMD64 PostgreSQL base
+    formula: Require the exact current Compose index and existing authenticated source-runner platform digest; preserve inherited hosted/source/first-attempt/capacity/owned-command gates.
+    testRef: "tests/scripts/sqlite-runtime-consumers.test.mjs::fixed image and source bindings"
+  - line: stopped-export
+    description: Export only the newly owned never-started container
+    formula: Require exact image/label, created state, no network, read-only root, dropped capabilities, no privilege, no-new-privileges and only the declared PostgreSQL data tmpfs; retain normal label-scoped cleanup and all initial images.
+    testRef: "tests/scripts/sqlite-runtime-consumers.test.mjs::never-started container contract"
+  - line: bounded-discovery
+    description: Inspect only bounded regular public image files
+    formula: Reject traversal, duplicates, oversized or incomplete archives, reader failures and unsupported dynamic records. Bind the entire archive hash and every ELF hash; record all direct libsqlite3.so.0 consumers, provider SONAME and package ownership without running ELF files. Missing providers are a HOLD, not successful absence. Never infer complete runtime compatibility or absence of indirect consumers.
+    testRef: "tests/scripts/sqlite-runtime-consumers.test.mjs::bounded tar discovery preserves negative evidence"
+  - line: bounded-elf-parser
+    description: Parse dynamic metadata without starting another process
+    formula: Parse ELF32 or ELF64 headers with declared endianness and bounded program tables, segments, dynamic entries and file-backed string tables. Reject incomplete, ambiguous, duplicate or out-of-range metadata. Never execute payloads or launch nested readers. The existing parent supervisor bounds the single parser process.
+    testRef: "tests/scripts/sqlite-runtime-consumers.test.mjs::pure ELF parser bounds dynamic and string tables"
+  - line: physical-archive-bounds
+    description: Bound extension metadata before the tar reader allocates it
+    formula: Before tarfile parsing, scan physical headers without buffering bodies; require bounded member counts, complete bodies and zero end padding. Refuse sparse headers, PAX metadata over 64 KiB, GNU name metadata over 4 KiB, aggregate extension metadata over 16 MiB or more than sixteen consecutive extension headers. Logical member checks still apply afterward.
+    testRef: "tests/scripts/sqlite-runtime-consumers.test.mjs::physical tar headers bound metadata before logical parsing"
