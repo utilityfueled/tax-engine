@@ -1,14 +1,14 @@
 # External actions needed to finish the 2026 upgrade
 
-## Current external inputs — November 15
+## Current external inputs — November 17
 
 | Input still needed | Specific review material and deliverable |
 | --- | --- |
 | Qualified independent tax reviewers | Derive and record independent worksheets, authority, findings and dated decisions for the [original nine-case assignment](upgrade-2026-nov14-human-tax-review.md), [five-method supplement](upgrade-2026-human-tax-five-method-supplement-46a95320.md), [AI/partial-interest source supplement](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md) and [state/guide supplement](upgrade-2026-human-state-guide-supplement-e014f390.md) and [goodwill/PA supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md), including their linked earlier packets. All human assignments remain unfilled. |
 | Independent AI case and output reviewers | Review the 240 draft cases and their source, monetary/date, answerability, grounding and safety labels; preserve the 160/80 partition and provenance. Then run the separately required repeated qualification described in the [executor guide](ai-evaluation-executor.md). |
 | Independent security/privacy reviewer and accountable advisory owner | Review exact artifacts and staging evidence; record findings, remediation or evidence-backed acceptance, owner and expiry against the [advisory ledger](upgrade-2026-advisory-refresh-20261114.md). Earlier scan counts and agent reviews supply no acceptance. |
-| Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Public pricing/catalog observations](upgrade-2026-provider-refresh-20261115.md) do not establish Google entitlement or generation qualification. |
-| Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-annual-20261115.md) does not establish global absence or qualify drafts. |
+| Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
+| Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
 
 These inputs do not replace unfinished engineering. Final-source managed,
 hosted/native and scenario checks, remaining source-settled methods and later

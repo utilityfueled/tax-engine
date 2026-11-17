@@ -6957,3 +6957,17 @@ default-off input on the already registered workflow. Its terminal result is
 pending. Whole-batch CPU sampling remains source-only pending review and
 adoption. The focused continuation object records exact current handles and
 avoids rereading this historical log after compaction.
+
+
+Paired SQLite `44184632007` at `b9fe12dc` completed: the original 1/107 join
+and 1/8,162 OOM failures remain; official corrections pass both whole targeted
+scripts. All 83 controller checks and normal cleanup pass. Root and independent
+artifact review pass; full package/ABI/runtime qualification remains open.
+The next package uses the existing full-suite path without relaxing its gates.
+
+The current-status entrypoint is now 34 lines, with all 2,913 historical lines
+preserved verbatim in a linked archive. Independent review verifies the copy,
+links, current claims and retained gates. The focused continuation records
+manual diagnostic `44187013822` and other exact source handles. At b063, spec
+references passed but generated inventory failed; genuine RED, a single added
+inventory row and GREEN precede correction `5b56e256`. No test or gate changed.
