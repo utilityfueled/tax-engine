@@ -6,6 +6,11 @@ on:
         description: Exact full default-branch source commit
         type: string
         required: true
+      upstream_experiment:
+        description: Also measure the separate reviewed upstream compatibility tree
+        type: boolean
+        required: false
+        default: false
 concurrency:
   group: sqlite-targeted-diagnostic-amd64-${{ github.run_id }}
   cancel-in-progress: false
@@ -27,7 +32,14 @@ jobs:
       - name: Check inert diagnostic contracts
         run: node --test tests/scripts/sqlite-targeted-diagnostic.test.mjs
       - name: Execute only the targeted nonqualifying diagnostic
+        if: ${{ !inputs.upstream_experiment }}
         run: node scripts/qualify-sqlite-targeted-diagnostic-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
+      - name: Check inert upstream experiment contracts
+        if: ${{ inputs.upstream_experiment }}
+        run: python3 -B infra/sqlite-upstream-experiment/check-source-controls.py
+      - name: Execute only the separate nonqualifying upstream experiment
+        if: ${{ inputs.upstream_experiment }}
+        run: node scripts/qualify-sqlite-upstream-experiment-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

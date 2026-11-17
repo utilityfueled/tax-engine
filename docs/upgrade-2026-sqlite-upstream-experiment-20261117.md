@@ -27,3 +27,14 @@ The separate manual workflow retains the original 30-minute controller bound,
 changes no original runner, test selection, fault index, timeout or cleanup.
 Original failures remain available. Actual paired execution is pending;
 full-suite, runtime, ABI, CVE-candidate and package qualification remain open.
+
+
+The standalone workflow file is present on remote main and passes actionlint,
+but GitHub's workflow registry returned 404 and no matching manual run was
+observed. Its registration cause remains unknown. A default-false
+`upstream_experiment` boolean on the existing registered targeted diagnostic
+workflow provides the reviewed alternative entry. Original 12 controls always
+run; the option selects exactly one original or paired runner. New controls,
+actionlint and the whole-workflow inverse pass. No existing default behavior,
+permission, source guard or deadline changes. Independent entry review:
+`2c9699dae1941308410c333571a98c84b2863775de7616035e70400a3bfdff20`.
