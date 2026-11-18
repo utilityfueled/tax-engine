@@ -79,3 +79,14 @@ Private frozen manifest:
 `nov18-rrta-compound-buffered-numeric-private/MANIFEST.json`, SHA256
 `cb05df10a8cf28acec50939ae55c7df9209b95f786765ab6fe4e365cc7338f8a`.
 Root verified all31 owned/input pins; retain this negative without replay.
+
+November18 GC observation used exactly one instrumented child per held public
+PDF, unchanged helper outputs, GC settings and four-second limit. Host ARM64
+Python3.14.6 observed 32.797ms/849.532ms (3.861%) at1280 and
+32.205ms/813.183ms (3.960%) at390. Root independently verified all149actual
+bindings, exact outputs, counts and ratios. Callback/wrapper overhead perturbs
+scheduling and shutdown GC is excluded; these are host observations, neither
+a counterfactual speedup limit nor a cause for the Linux browser deadlines.
+No GC policy candidate, retry or adoption is justified by this observation.
+Actual manifest: `77d60869b8fa54f34d7d396a9d2f787440cc681946d3bf81ba6c39acde489e9a`;
+root actual review: `2a6cfac9d0fcb1d78b84842b2491623defcdf555f62ca31bfed901e638018a84`.

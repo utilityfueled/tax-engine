@@ -57,3 +57,25 @@ byte-identical, the same detailed spec adds only operations metadata and four
 actual references, and every prior ordered inventory row remains unchanged.
 Supplement manifest SHA256:
 `653acb77ea3d3a3d3532fd88d67241ad5027fa728724b7d7b7c102f9b17f61f9`.
+
+Actual run `44251370387` at `32f623a8` failed in independent verification.
+Package and runtime stages passed, with original handoff/status/static-gosu/
+archive identity and package-to-runtime lineage replayed against actual inputs.
+Package ABI difference exit4 remains recorded without generic ABI approval.
+Runtime reports159/159zero commands; package/runtime recorded cleanup passes
+within those source-bound receipts. The independent scanner database import
+returned `BOUNDED_COMMAND_TERMINATED`, followed by cleanup HOLD. The original
+command can terminate on time or output size, and its exported receipt does not
+distinguish those reasons or prove direct-child closure. The database listing
+is byte-identical to the earlier successful raw-base scans. No cause or deadline
+change is inferred. Final seal, purge, scans, init matrices and database recovery
+were skipped. The failed run does not qualify the composite.
+
+All31public artifact members were indexed/hashed, with no raw DB log/env/dump
+member paths. Source keeps authentication, SQL diagnostics and dump private;
+actual secrets are intentionally unavailable and there is no independent live
+postinspection. Actual data/lineage manifest:
+`5c6b85086e7428b9c5f5d6ad91fc6575d6e8242048548e2617ff4d9d4f80cc04`;
+root lifecycle/privacy review:
+`b8622505be5c9c92b06308325772b92c148e053c4b1e4bcd09395576a29a38fb`.
+Every final readiness gate remains in force.

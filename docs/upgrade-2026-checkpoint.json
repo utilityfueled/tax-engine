@@ -27,13 +27,13 @@
       "sqliteFullPrerequisites": "17cf0189"
     },
     "liveRuns": {
-      "sqlite40df": "44235763098",
       "glibc91": "44248166149",
-      "ci91": "44248132696",
-      "composite32f": "44251370387",
       "ci32f": "44251313869",
       "web32f": "44251314094",
-      "docker32f": "44251313885"
+      "docker32f": "44251313885",
+      "ci7cfa": "44252593961",
+      "web7cfa": "44252593940",
+      "docker7cfa": "44252594078"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -105,9 +105,9 @@
       }
     },
     "nextActions": [
-      "Observe existing SQLite run 44235763098 at 40df910c. Do not redispatch. Full paired suites, CVE and sanitizer gates must pass; ABI, GPG and final runtime remain open.",
+      "SQLite40df fullsuites passed but paired fixture and instrumented Lemon build failed. Root owns exact five-case fixture/bootstrap repair and buildscript integration; closure_review owns sanitizer-only two-rehash ownership repair. Preserve all originals/gates; independent review and fresh native evidence required.",
       "Observe existing glibc mandatory-PASS run 44248166149 at 91dbc3a5. Do not redispatch. All original paired suite, CVE, allocator, ABI, resource and cleanup gates plus fresh six-case evidence must pass.",
-      "Observe exact32f623a8 composite44251370387 and ordinary CI44251313869/Web44251314094/Docker44251313885 through actual_runs_continuation only. Four chained composite jobs require same-source artifact, data, lineage, lifecycle/privacy and actual cleanup reviews; no release qualification.",
+      "Preserve composite44251370387 failure: package/runtime pass, independent bounded scanner import reason unavailable/cleanupHOLD; finalstage skipped. Add narrowly typed missing termination evidence without changing original limits/strictHOLD, independently review; no blind replay or final qualification. Ordinary7cfa CI/Web/Docker have sole actual_runs watcher.",
       "Observe remaining91CI44248132696 through actual_runs_continuation. 32f browser preflight failed stale dependent digest;7136c322 repairs exactly that field with37retained controls and independent review. After guarded push, discover ordinary exact-source runs once; preserve old failures and original gates.",
       "RRTA candidates failed unchanged thresholds. Do not adopt them or repeat those stopped avenues.",
       "Qualified independent human tax, AI and security reviews, applicable final 2026 forms and selected Google-route access remain unresolved. Do not enable readiness, filing or model promotion."
@@ -141,7 +141,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "32f623a8567b1243ef7f5cb237d225f5ad1bb3b5",
+    "latestPushedSource": "7cfa03ed93fb5c357d29e0ee3f2ddd303f08d9d2",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -900,6 +900,54 @@
       "rootReceiptSha256": "8c0919fb1c8c4964bf609d58e75f19f8005f98f0d4aa8470e07637c575906392",
       "repairCommit": "7136c322",
       "independentReceiptSha256": "5f426061115bba8d2e7890ec5755c2d4bd46940c0ac35ee81bf9a825e06e44ed"
+    },
+    "rrtaGcObservation": {
+      "status": "complete-host-observation-no-policy-candidate",
+      "actualChildren": 2,
+      "retry": 0,
+      "gcPercent1280": 3.861,
+      "gcPercent390": 3.96,
+      "originalOutputsAndPolicyUnchanged": true,
+      "readinessManifestSha256": "9f4bdc793f97bd8c265a3c0f47c5190109dd370779ed23b23a6393b1e7bde12d",
+      "actualManifestSha256": "77d60869b8fa54f34d7d396a9d2f787440cc681946d3bf81ba6c39acde489e9a",
+      "rootReviewSha256": "2a6cfac9d0fcb1d78b84842b2491623defcdf555f62ca31bfed901e638018a84",
+      "limits": "Host-only wrapper/callback perturbation; excludes shutdown; no causal/counterfactual/paired qualification claim."
+    },
+    "composite32fActual": {
+      "status": "failed-independent-import-final-stage-skipped",
+      "source": "32f623a8567b1243ef7f5cb237d225f5ad1bb3b5",
+      "run": "44251370387",
+      "packageRuntimeLineage": "pass-actual-original-validators",
+      "independentFailure": "database-import BOUNDED_COMMAND_TERMINATED; reason and direct-child closure unavailable; cleanup HOLD",
+      "finalStage": "skipped-unqualified",
+      "actualManifestSha256": "5c6b85086e7428b9c5f5d6ad91fc6575d6e8242048548e2617ff4d9d4f80cc04",
+      "rootLifecyclePrivacyManifestSha256": "b8622505be5c9c92b06308325772b92c148e053c4b1e4bcd09395576a29a38fb"
+    },
+    "sqlite40dfActual": {
+      "status": "failed-after-full-suites-pass",
+      "baselineTests": 5552180,
+      "candidateTests": 5552194,
+      "pairedRegression": "missing setup before intended distinct-10.1 through10.5, no CVE outcome established",
+      "sanitizerBuild": "Lemon superseded hash table allocations17408B;runtime/ABI unavailable",
+      "outerCommandsZero": 88,
+      "recordedCleanupErrors": 0,
+      "deadlineExceeded": false,
+      "manifestSha256": "65a6bd9d5d81c32e32403cf3e20291cfa2cbf8bcd30b29f3f3a211d69470a853",
+      "scopeCorrection": "Earlier private assessment mentions16.x; actual filter is10.x. Preserve frozen original and this explicit amendment."
+    },
+    "nativeWatcherOwnership": {
+      "owner": "root",
+      "originalLocalObserver": "g3:499",
+      "noReplacementNetworkObserver": true,
+      "latestFile": ".local/upgrade-evidence/nov18-40df-ci-sqlite-watch/44248166149-LATEST.json",
+      "reason": "Previous agent turns failed; original local metadata observer remains live."
+    },
+    "boundedCommandDiagnostic": {
+      "commit": "fb9a3390",
+      "status": "source-reviewed-no-native-replay",
+      "producer": "100719f2faf247142845fd01eda59336d0ec8d288a2ed33d50b087550d793243",
+      "root": "5fc70dc1f14aee6d96fc5561cb911666d5283a9642f3f78bb4aa1150b401cfd8",
+      "peer": "dfa21be1d3bd618832729c7f9a3222ed790f58998f14c526a83df06afd104e10"
     }
   },
   "nov17New212Timing": {
