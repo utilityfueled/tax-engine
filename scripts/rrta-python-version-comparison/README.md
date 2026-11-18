@@ -54,4 +54,7 @@ The same104children, four-second cap, full eight-field output parity, eleven
 controls per interpreter, ABBA schedule, all-outcome retention, cleanup and
 10percent paired-median threshold on EACH PDF apply. No individual-component
 causality or automatic adoption follows. No ordinary helper or interpreter is
-changed. Actual compound execution is pending.
+changed. Actual compound execution failed the unchanged 10% threshold on both
+PDFs; it is rejected. The later buffered-numeric composition also failed its
+predeclared incremental screen and is stopped. See the
+[actual result ledger](../../docs/upgrade-2026-rrta-python-paired-20261117.md).
