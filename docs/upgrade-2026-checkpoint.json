@@ -1,7 +1,7 @@
 {
   "activeContinuation": {
     "status": "active-not-release-qualified",
-    "resumeInstruction": "Read only this activeContinuation object and the named dedicated ledgers first; preserve historical evidence without rereading the whole checkpoint.",
+    "resumeInstruction": "Read docs/upgrade-2026-current-status.md first. Query only activeContinuation.liveRuns, nextActions and the single named package key needed next; do not print the entire activeContinuation object.",
     "branch": "main",
     "productionPushGuard": "Live read-only VercelCLI/API check2026-11-18T01:21:32Z: exact tax-engine project and approved preview-only ignored build command match; no mutation.",
     "commits": {
@@ -27,10 +27,9 @@
       "sqliteFullPrerequisites": "17cf0189"
     },
     "liveRuns": {
-      "phaseOriginalBatches365": "44215474850",
-      "normalCi365": "44215418095",
-      "normalWeb365": "44215418092",
-      "normalDocker365": "44215418097"
+      "fullSqlite385": "44221292131",
+      "normalCi385": "44221205498",
+      "normalWeb385": "44221205476"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -70,8 +69,8 @@
       "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
-      "After awaited-call fix commit/push, seal fresh37 GPGsourceauthority to exactHEAD and dispatch one fullSQLite source rehearsal (315job/300controller/240package). Userauthorizesroutine rehearsals; no extra sourceapproval needed. Keep old134-error baseline and365coverage failure recorded.",
-      "Observe exact365ba0af phase44215474850 andnormalCI44215418095/Web44215418092/Docker44215418097. Do notrestart completedwork or infer newer-sourcequalification. Sourcephase35Node/27Vitest+655collectionequal passed.",
+      "Observe existing fullSQLite44221292131 at385db284 (315/300/240bounds). DO NOT dispatch duplicate aftercompaction. Fresh37GPGauthority HEADseal completeat385; originalqualifiedpair andactualABI/GPGremainrequired. Keep old134-errorbaselinefailed.",
+      "Observe existing385CI44221205498/Web44221205476; Docker38544221205594PASS. Phase36544215474850 terminalFAILED, frozen43+23pins verified; fourvalidboundmain-thread phases do notqualify385orprovewholeprocesscause. Both365ordinaryruns648/2/5 withRRTA4stimeouts; strict646/4/5; no repeatdiagnostic. CurrentRRTAhotspot/privateglibcsourceinvestigations independent.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
       "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
@@ -106,7 +105,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "251216bd0b3caae6b94918b798649f1c26114951",
+    "latestPushedSource": "385db28429a13bc1a3bc3bf309bccfd469f81d54",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -114,7 +113,7 @@
     "cleanupContinuation": "Current isolated cleanupV4 PASSED: endpointdisabled/pending0; exactsuccessfulproviderfinancialhashverified;2sessionsrevoked;owned15table-schema/emptyDB/roledeleted;testcustomerdeleted/product+priceinactive;2ownedPreviewdeletionsGET404;nonceRedisprefixonlycleared. 14Stripe/8Vercel/59SQL/4Preview/3Redis;supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Root+independentactualreview6412c975passed. Goalreservationunchanged;historical/globalcleanupandexpirydeletionnotclaimed.",
     "sqliteContinuation": "DBPAGEfullsuitecompleted134errors/5,550,419;source-backedDebianlegacyrowid/pagecap profile mismatch. Faithful officialrowidadaptedbackport +configuredpagecaporacles privatelyprepared; do notremovefeatures/skiptests orclaimnativeGREEN. No candidatepair, soABI/GPGundispatched.",
     "browserDiagnosticLedger": "docs/upgrade-2026-full-batch-cpu-diagnostic-20261117.md",
-    "contextPolicy": "Resume only from activeContinuation and its named current artifact. Bound command output; delegate independent work. Do not reload whole progress/checkpoint/history or restart completed work after compaction.",
+    "contextPolicy": "Keep resume reads below 2,000 tokens. Do not reload historical progress, whole checkpoint or completed diagnostics. Preserve existing live runs; one watcher owns each. Read specific artifact sections only when the next action needs them.",
     "pythonComparisonLedger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
     "browserCpuActualAssessmentSha256": "4e2aedcd0f76ffbdfe5a91e7a023d4fe5aa27df58543107bec3103df586e0a9c",
     "sqliteFullActualAssessmentSha256": "e48c4c22d86c30e5c7b45920298add58fe035c19b54823e1f5cbad936ed90344",
@@ -205,8 +204,12 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "glibc": "Independent read-only10XPASS investigation; narrowofficial4IFUNC conditionalcorrection underreview, sixDebianannotationsretained; no blanketreclassification",
-      "budgetCommitSeal": "Fresh37sourceauthority must be exactHEADsealed after budgetcommit",
+      "glibc": "Four-IFUNC conditional/export proposal is held for confirmed valid-Make-override parser defect. Author preparing separate successor; independently review before adoption. Six other XPASS remain strict holds.",
+      "heldManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-export-preparation/MANIFEST.json",
+      "heldManifestSha256": "a07f3ae56f0b6800c8585c7902107470dd3d51ccaea0d2865dcd6f93d171a7cf",
+      "independentHoldManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-export-independent-review/MANIFEST.json",
+      "independentHoldManifestSha256": "b399016b60d7fa139687650107d1278f2506275633cd8ae290e0eee69d5f4fee",
+      "rootChecks": "All177 pins verified;35Node/12Python pass in separate root overlay. Those controls did not detect the parser defect.",
       "packageQualification": false
     },
     "browserOriginalEntryPhase": {
@@ -252,9 +255,14 @@
       "proposalManifestSha256": "c70e61481c7ab936b9f61cb2536354e0569d98415503d215afc79df42a62b767",
       "independentReviewManifestSha256": "dafa27386782bbf525f442db040d9d41d7ac5ce8adc1148d29d8369aa6e67917",
       "gpgAuthoritySha256": "d5b0b54c281d4d895b6a8ff4bf461eb26db1ce462491ae2e85a0b42028084b46",
-      "gpgCommitSealPending": true,
+      "gpgCommitSealPending": false,
       "qualification": false,
-      "sourceCommit": "251216bd0b3caae6b94918b798649f1c26114951"
+      "sourceCommit": "251216bd0b3caae6b94918b798649f1c26114951",
+      "gpgSealSource": "385db28429a13bc1a3bc3bf309bccfd469f81d54",
+      "gpgHeadSealSha256": "0e5853584e811de8917ddeb59ecfc5839b3476db0aad3cb93e51b1b80b0d7a00",
+      "actualRun": "44221292131",
+      "actualRunSource": "385db28429a13bc1a3bc3bf309bccfd469f81d54",
+      "actualOutcome": "pending"
     },
     "observed365CoverageFailure": {
       "run": "44215418095",
@@ -280,6 +288,54 @@
       "frozenCollectionEqual": true,
       "requestAudit": true,
       "qualification": false
+    },
+    "phase365Actual": {
+      "status": "failed-preserved-measurements-nonqualifying",
+      "run": "44215474850",
+      "source": "365ba0af95d23e5502484cdd4be37dde427cee5e",
+      "image": "sha256:377375c6a190c6ca823bf76b6bc6ce6307f0d514453fe41b4d6ad3f8a0ad020f",
+      "originalStrict": {
+        "passed": 646,
+        "failed": 4,
+        "skipped": 5
+      },
+      "batch6": {
+        "passed": 0,
+        "failed": 10
+      },
+      "batch7": {
+        "passed": 7,
+        "failed": 8
+      },
+      "boundPhaseRecords": 4,
+      "threadSecondsRange": [
+        6.013578,
+        7.68097
+      ],
+      "wallSecondsRange": [
+        10.076084,
+        17.251263
+      ],
+      "profiles": {
+        "valid": 8,
+        "unavailable": 6,
+        "negativeIntervals": 6,
+        "totalIntervals": 17577
+      },
+      "assessmentSha256": "75fd42c481e2be61e2596feb7bbe1507c2c80997aaaf43d959cd94c8683e67b2",
+      "batchManifestSha256": "0a123c3a388238113644c60476c98d7706d3be17851187a8d2c46bc6a0d1774f",
+      "terminalManifestSha256": "75164d814c88305e0cc2bdb535cc5ce8a6a8b571200c1afc2d9c13b0b5a20c14",
+      "rootVerifiedPins": 66,
+      "current385Qualification": false,
+      "causeProven": false
+    },
+    "rrtaStoppedAvenues": {
+      "rule": "Do not rerun these negatives or create a numeric/name-only candidate without new evidence supporting the unchanged10% gate; reference pypdf remains independent.",
+      "nameWhitespaceManifest": ".local/upgrade-evidence/nov18-rrta-strict-name-whitespace-observation/MANIFEST.json",
+      "nameWhitespaceSha256": "ac1605989ece628afd3ef8bea70f3bc8d063bb0e20647fa949425c61fb4bcbc3",
+      "numericManifest": ".local/upgrade-evidence/nov18-rrta-strict-numeric-attribution/MANIFEST.json",
+      "numericSha256": "7c67325c1392cc3f5a14821857f93223becdd228e826ed00e94e49cf108123d8",
+      "numericObservation": "All top-level numeric parsing7.16%/7.06% of observed child wall, with replacement/token-only savings strictly smaller. Both complete8field outputs equal. No candidate or104-child rerun."
     }
   },
   "nov17New212Timing": {

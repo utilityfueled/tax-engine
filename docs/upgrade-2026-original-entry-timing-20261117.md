@@ -1,8 +1,9 @@
 # Original entry timing diagnostic
 
 This package adds a default-off observer around the existing Ohio resident-credit
-`typeOriginals` callback. It is diagnostic instrumentation; there is no actual
-browser measurement or new qualification result from this package.
+`typeOriginals` callback. It is diagnostic instrumentation. The initial source checks did not execute
+a browser; the later365 run below supplies bounded observations, without a new
+qualification result.
 
 The manual Web workflow requires both `cpu_full_batches` and `cpu_phase_metrics`.
 The runner independently checks those inputs. Original actions, assertions,
@@ -49,3 +50,28 @@ the same frozen values. Historical CI failure remains recorded; complete new
 source CI and actual runtime results remain separate. Private fix authority:
 `nov18-phase-awaited-call-compatibility/MANIFEST.json`, SHA256
 `573ed7ce1d404dfeb0e5282980609ca0c130f5240fda84fc1177bb8fbc938494`.
+
+## Actual source 365 observation
+
+Run `44215474850` failed. Its original strict suite had 646 passes, four failures
+and five skips. Diagnostic batch 6 had ten failures; batch 7 had seven passes
+and eight failures. Four resident-entry records and their file receipts match
+the same source, image, inventory and reviewed Chromium revision. ThreadTime was
+6.014–7.681 seconds over 10.076–17.251 seconds of phase wall time. Counters overlap
+and cannot be summed; these values establish neither whole-process CPU nor cause.
+
+Eight CPU profiles were valid; six remained unavailable because of negative
+intervals (six of 17,577). Their magnitude, origin and cause remain unknown.
+Both ordinary source 365 runs had 648 passes, two failures and five skips. Both
+failures were RRTA saved-PDF inspections at the unchanged four-second bound.
+The strict failures and source 365 CI contract failure remain recorded. None
+qualifies source 385. Container-removal steps succeeded; no independent live
+cleanup inspection is claimed.
+
+Private assessment SHA256:
+`75fd42c481e2be61e2596feb7bbe1507c2c80997aaaf43d959cd94c8683e67b2`.
+Batch manifest:
+`0a123c3a388238113644c60476c98d7706d3be17851187a8d2c46bc6a0d1774f`.
+Terminal manifest:
+`75164d814c88305e0cc2bdb535cc5ce8a6a8b571200c1afc2d9c13b0b5a20c14`.
+All are under `nov18-phase-44215474850-observation`; root verified all 66 pins.

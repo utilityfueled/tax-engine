@@ -1,35 +1,31 @@
 # Current 2026 upgrade status
 
-The goal remains active and is not release qualified. Reviewed work is pushed to
-`main` through `251216bd0b3caae6b94918b798649f1c26114951`. Automatic production
-builds are disabled; no production deployment, filing or model promotion is authorized.
+The goal remains active and unqualified. Reviewed source is pushed to `main`
+through `385db28429a13bc1a3bc3bf309bccfd469f81d54`. Automatic production builds
+are disabled. Production deployment, filing and model promotion remain unauthorized.
 
-For continuation, read only `activeContinuation` in
-[the checkpoint](upgrade-2026-checkpoint.json) and its named current ledgers.
-The complete earlier status is preserved verbatim in
-[the historical record](upgrade-2026-status-history-through-20261117.md).
-Do not reload that history unless a specific unresolved question requires it.
-The [execution brief](upgrade-2026-execution-brief.md) remains the complete scope.
+Start here after compaction. Query only `activeContinuation.liveRuns`, `nextActions`
+and the needed package key in [the checkpoint](upgrade-2026-checkpoint.json).
+Do not print the whole checkpoint, reload history or restart existing diagnostics.
+One watcher owns the current runs. The [execution brief](upgrade-2026-execution-brief.md)
+remains the complete scope; earlier evidence remains in its dedicated ledgers and
+[historical status](upgrade-2026-status-history-through-20261117.md).
 
-| Package | Verified result and remaining work |
+| Package | Current evidence and next action |
 | --- | --- |
-| Global checks | Full CI at `7ea7453b`, `c40ad8cf` and `b9fe12dc` passed all six jobs. Coverage: 29,004 tests, 88.2% branches; the 85% gate is unchanged. At b063, spec validation passed but generated-inventory check failed; the sole missing diagnostic row was regenerated and committed as `5b56e256`. At bb3f, all six CI jobs passed: 29,013 tests, 88.2% branches; remaining checks remain open. Normal CI at c50c00ab and9d63c37e also passed all6jobs with29,015tests/88.2%branches. At365 coverage has1existing source-contract failure/29,014passes; wrapper fix now passes unchanged oldtest4/4 plus35phase controls; fullnewsource CI pending. |
-| Tax facts, federal and PA/OH | Extensive finite, source-bound cases pass; broader enabled scenarios, independent expected outputs and applicable final 2026 forms remain required. All three residency types remain in scope for each selected state. |
-| Strict browser | Ordinary and strict modes retain different 90/30-second case deadlines. Strict 2fcc/6cf/7ea/c40/b9 runs failed with 14/2/10/8/13 cases respectively. No successful ordinary run replaces those failures. Original-batch diagnostic `44187013822` completed with original baseline 646/4/5; its two sampled batches failed, retaining ten valid/four unavailable partial-isolate profiles. No cause or qualification follows. Fixed-metadata44199237148 finished: ordinary650/0/5, strict640/10/5; nine valid/five unavailable profiles give no complete CPU cause. [Diagnostic ledger](upgrade-2026-full-batch-cpu-diagnostic-20261117.md). Default-off [original-entry timing](upgrade-2026-original-entry-timing-20261117.md) passes35Node/27existing controls and exact655-case collection comparison; runtime remains unobserved. |
-| SQLite | Paired run `44184632007` preserves the original join/OOM failures. Official corrections pass both complete targeted scripts, 107 and 8,162 tests. Root and independent artifact review pass. Full-package attempt `44190069976` built the baseline package but failed fulltest at recover.test1.1.2; candidate/CVE/sanitizer, ABI and runtime integration remain open; the [reviewed manual harness](upgrade-2026-sqlite-exported-abi-20261117.md) is adopted with scoped checks passing, without native execution; two strict baseline comparisons and explicit37-file GPG rebind are now reviewed. DBPAGE44198188977 failed baseline fulltest with134errors/5,550,419tests; candidate stages were not reached. The reviewed20-path [common correction](upgrade-2026-sqlite-common-profile-20261117.md) retains fuzz/features and has host semantic RED/GREEN plus28Python/58Node/19Vitest passes; actualLinuxpackage gates remain open. Reviewed [full-pair window](upgrade-2026-source-package-budget-20261117.md) now admits240package minutes within300controller/315job; actual remains pending. Inert discovery passed and identifies `gpg` as the sole regular ELF direct consumer; indirect uses remain unresolved. The [GPG TOFU harness](upgrade-2026-sqlite-gpg-tofu-20261117.md) has source review and scoped checks only. [Discovery](upgrade-2026-sqlite-consumers-20261117.md), [profile](upgrade-2026-sqlite-dbpage-profile-20261117.md), [experiment](upgrade-2026-sqlite-upstream-experiment-20261117.md). |
-| RRTA interpreter | Paired experiment `44190812240` retained 104 passing children, but 4.07449%/4.17741% medians fail the predeclared 10% threshold. No version adoption or strict privacy qualification. Compound44204325512 also retained104passes but9.95128%/9.76440% fail both10% gates; rejected. [Evidence](upgrade-2026-rrta-python-paired-20261117.md). |
-| glibc | XFD assertions now pass; ten XPASS retain the unchanged strict package hold. Candidate build, allocator, ABI and consumers were not reached. [Package evidence](upgrade-2026-glibc-package-profile-20261117.md). |
-| Hosted billing and real provider costs | The signed-credit proof issued 1,000 cents, charged two one-cent settlements and retained 998 cents. Two real calls cost $0.0005246; duplicate/replay/control-account checks pass. Current isolated cleanup passed. Historical/global cleanup, public-sale and model qualification remain separate. [Evidence](upgrade-2026-signed-credit-provider-20261117.md). |
-| AI evaluation | Known goal usage is 183 calls/$0.27285490. Old unknown holds and the full current reservation remain; conservative reserved ceiling is $0.47348230. Independent labels, held-out review, repeated qualification and route-specific provider evidence remain required. |
-| Security and self-hosting | Earlier bounded rehearsals do not qualify newer artifacts. Remaining advisories and final AMD64/ARM64 runtime, recovery and release evidence require exact-source disposition. No FAIL/XPASS/coverage/privacy/readiness gate is relaxed. |
+| Global checks | Current CI `44221205498` and Web `44221205476` are being observed. Docker `44221205594` passed. Earlier c50/9d63 CI passed all six jobs, 29,015 tests and 88.2% branches. The 85% coverage gate remains. Source365 failed one existing contract test;385 fixes it with unchanged old test passing4/4 plus35 phase controls. Await full385 results. |
+| Federal facts and PA/OH | All three residency types remain in scope for both states. Source-bound cases pass; full enabled scenarios, independent expected outputs and applicable final2026 forms remain required. |
+| Strict browser | No complete current strict qualification. Actual365 ordinary648/2/5 and strict646/4/5 failed. Four original-entry observations are valid, limited thread measurements, with no whole-process cause or385 qualification. Preserve completed negatives. [Timing ledger](upgrade-2026-original-entry-timing-20261117.md). |
+| SQLite | Existing full paired package run `44221292131` at385 is active; do not dispatch another. The reviewed20-path common correction has host RED/GREEN and28Python/58Node/19Vitest passes. New315/300/240-minute job/controller/package bounds are adopted. Package/full-suite/CVE/sanitizer, ABI, GPG and runtime qualification remain open. [Common correction](upgrade-2026-sqlite-common-profile-20261117.md), [budget](upgrade-2026-source-package-budget-20261117.md), [GPG](upgrade-2026-sqlite-gpg-tofu-20261117.md). |
+| glibc | Original XFD assertions pass; ten XPASS still hold the package. A private four-IFUNC-condition correction/export proposal is under independent review; a confirmed Make-override parser defect blocks adoption pending correction. Six other XPASS remain strict holds. Candidate, allocator, ABI and consumers were not reached. [Package ledger](upgrade-2026-glibc-package-profile-20261117.md). |
+| RRTA privacy | Original and compound paired candidates failed the unchanged10% improvement threshold; no adoption. Completed font/cache/name/whitespace investigations do not support a safe candidate. Do not rerun those negatives. Privacy inspection retains its4-second limit and independent reference parser. [Paired ledger](upgrade-2026-rrta-python-paired-20261117.md). |
+| Hosted billing and providers | Signed-credit proof:1,000 cents issued, two one-cent settlements,998 retained; two real calls cost$0.0005246. Duplicate/control checks and current isolated cleanup pass. Historical cleanup and public-sale qualification remain separate. [Ledger](upgrade-2026-signed-credit-provider-20261117.md). |
+| AI evaluation | Known183 calls/$0.27285490; conservative reserved ceiling$0.47348230 remains. Independent labels, held-out review, repeated qualification and route-specific provider evidence remain required. |
+| Security and self-hosting | Exact-artifact AMD64/ARM64 runtime, recovery and release evidence remain required after dependency disposition. [Picomatch](upgrade-2026-picomatch-security-20261117.md) is still unfixed with a dated follow-up. No failure, coverage, privacy or readiness gate is relaxed. |
 
-The [external-action list](upgrade-2026-external-actions.md) identifies required
-qualified human tax, AI and security/accountability reviews, Google project access
-where that route is selected, and final applicable annual forms. No qualified
-human reviewer has accepted the tax assignment. Agent review does not replace it.
-
-The [November 17 official-source refresh](upgrade-2026-official-source-refresh-20261117-continuation.md)
-and [provider catalog](upgrade-2026-provider-catalog-20261117.md) record bounded
-observations; they do not qualify drafts, prove entitlement or establish global absence.
-The [picomatch ledger](upgrade-2026-picomatch-security-20261117.md) retains its
-unfixed advisory and dated follow-up. Formal verification remains excluded.
+[External actions](upgrade-2026-external-actions.md) retain qualified human tax,
+AI and security/accountability reviews, selected Google-route access and final
+applicable annual forms. No qualified human has accepted the tax review.
+[Official-source refresh](upgrade-2026-official-source-refresh-20261117-continuation.md)
+and [provider catalog](upgrade-2026-provider-catalog-20261117.md) are bounded
+observations, not qualification. Formal verification remains excluded.
