@@ -1,0 +1,65 @@
+name: SQLite exported package ABI diagnostics AMD64 (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact default-branch adapter commit SHA
+        type: string
+        required: true
+      artifact_source:
+        description: Exact original source-candidate artifact commit SHA
+        type: string
+        required: true
+      artifact_run:
+        description: Completed original source-candidate workflow run ID, attempt one
+        type: string
+        required: true
+      artifact_id:
+        description: Exact immutable artifact ID
+        type: string
+        required: true
+      artifact_sha256:
+        description: Exact GitHub artifact ZIP SHA256 digest without prefix
+        type: string
+        required: true
+      artifact_bytes:
+        description: Exact GitHub artifact ZIP byte size
+        type: string
+        required: true
+concurrency:
+  group: sqlite-exported-abi-amd64-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  abi:
+    if: github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - name: Check inert ABI contracts
+        run: |
+          node --test tests/scripts/sqlite-exported-package-abi.test.mjs tests/scripts/sqlite-exported-abi-artifact.test.mjs tests/scripts/sqlite-exported-abi-native-amd64.test.mjs
+          python3 -I -B tests/scripts/sqlite-exported-package-abi-parser.py
+          python3 -I -B tests/scripts/sqlite-exported-abi-tools.test.py
+      - name: Diagnose the exact exported pair without rebuilding SQLite
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/qualify-sqlite-exported-abi-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: sqlite-exported-abi-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/postgres-source-candidate/publish/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 6

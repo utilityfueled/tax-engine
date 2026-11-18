@@ -7036,3 +7036,13 @@ The paired-runtime ledger records scope and no automatic adoption. Fixed-metadat
 CPU run44199237148 and full DBPAGE run44198188977 remain active. Normal bb3f CI
 passed all six jobs, 29,013 tests and 88.2% branches; this is not current release
 qualification. Context is retained in the short current-status record.
+
+### November 17: public exported-package ABI harness
+
+Adopted the16-path independently reviewed manual-only harness after all42frozen
+pins verified.14Node/9Python/scopedlint/actionlint/spec/inventory/browserauditPASS.
+Root fixed one inherited explicitURLimport and matching input pin after retaining
+the lint failure; agreed README deadline sentence corrected. No native ABI run,
+raw-output review or qualification claimed. New ABI ledger records limits, strict
+unsuppressed commands and remaining original-distribution comparison. Compound
+RRTA44204325512 runs once from pushed441373a9; existing CPU/SQLite watches continue.

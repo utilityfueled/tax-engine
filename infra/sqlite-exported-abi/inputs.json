@@ -1,0 +1,24 @@
+{
+  "files": {
+    "scripts/sqlite-exported-package-abi.mjs": {
+      "bytes": 5199,
+      "sha256": "104a2ab48e3832cab9d8221a2fbc9557341e7dd6a889ffe7440a32c34bfdd2f0"
+    },
+    "scripts/lib/inspect-sqlite-exported-package-abi.py": {
+      "bytes": 13298,
+      "sha256": "4b90386821b26b4565f20a920ef6c8392f2d8b145c6de17d8586be951896c2f3"
+    },
+    "infra/sqlite-exported-abi/preflight.py": {
+      "bytes": 2154,
+      "sha256": "a7c3c418fdcefff00c567ae54f346259db4964055ed0a76a2ec499bb07cc2ed2"
+    },
+    "infra/sqlite-exported-abi/verify-tools.py": {
+      "bytes": 3876,
+      "sha256": "c61a6e2fa14fdc238567f4a2e2c77998b892e65579c9510da5756f05be8e71ff"
+    },
+    "scripts/lib/sqlite-abi-artifact.mjs": {
+      "bytes": 10184,
+      "sha256": "5ca789108dbf102cb8cc34cf931d98eb2f7a19650d690aa560f03b49f129a824"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+form: "sqlite-exported-package-abi-diagnostics"
+jurisdiction: federal
+taxYear: 2025
+sources:
+  - https://sources.debian.org/src/libabigail/2.2-2/tools/abidiff.cc/
+  - https://sourceware.org/libabigail/manual/abidiff.html
+lines:
+  - line: "expanded-archive-bound"
+    description: Bound each complete decompressed control/data tar stream before tarfile parses any record, including internally consumed PAX headers; reject trailing compressed streams and excessive decoder memory.
+    formula: Every expanded tar stream is at most64MiB before metadata parsing; compressed input remains at most32MiB.
+    testRef: "tests/scripts/sqlite-exported-package-abi.test.mjs::bounds complete expanded metadata before tar parsing"
+  - line: "custody"
+    description: Consume only an independently pinned source-run ZIP with matched baseline and candidate AMD64 library and debug packages; authenticate every selected member against the original artifact ledger and export binding.
+    formula: Exact source/admission/result identity AND package version/control identity AND GNU build ID/debuglink CRC/DWARF identity; missing or ambiguous data fails before tools.
+    testRef: "tests/scripts/sqlite-exported-package-abi.test.mjs::requires corresponding debug information and exact package identity"
+  - line: "diagnostics"
+    description: Preserve complete SONAME, dependency, dynamic-symbol and symbol-version observations and require unsuppressed abidiff with debug information. Every nonzero or unknown child outcome fails.
+    formula: All fixed bounded commands close successfully AND corresponding SONAME/dependencies match AND abidiff exit zero; genericAbiApproval and release qualification always false.
+    testRef: "tests/scripts/sqlite-exported-package-abi.test.mjs::requires all bounded unsuppressed commands and retains failure"
+  - line: "separation"
+    description: No package compilation, installation, runtime library loading, daemon actions, network, test replacement or acceptance. The caller supplies the existing supervised command runner and remaining deadline.
+    formula: Source-only standalone diagnostic over exported pairs; original full/CVE/sanitizer outcomes retained unchanged.
+    testRef: "tests/scripts/sqlite-exported-package-abi.test.mjs::fails before dispatch without an adequate remaining deadline"
