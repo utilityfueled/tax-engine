@@ -1,0 +1,68 @@
+{
+  "kind": "local-source-derived-four-conditional-correction",
+  "targetVersion": "2.36-9+deb12u14",
+  "authorityVersion": "2.44-1 experimental",
+  "correctingUpstreamCommitClaim": false,
+  "authorityManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-authority-supplement/MANIFEST.json",
+  "authorityManifestSha256": "7c5c5fc859225cca222d2cd25127ac6d973445296f2e893fa0ca2f0bb39df5a7",
+  "signatureChain": {
+    "passed": true,
+    "gpgvExit": 0,
+    "keyringSha256": "cf08bdd637cd5f851b85a9636e6f7b5ed0de7df4c45931927596acfe4f768600",
+    "keyringIdenticalToPreviouslyPinnedQualificationInput": true,
+    "trustedPrimaryFingerprints": [
+      "B8B80B5B623EAB6AD8775C45B7C5D7D6350947F8",
+      "04B54C3CDCA79751B16BC6B5225629DF75B188BD",
+      "4D64FEC119C2029067D6E791F8D2585B8783D481"
+    ],
+    "actualValidPrimaryFingerprints": [
+      "B8B80B5B623EAB6AD8775C45B7C5D7D6350947F8",
+      "04B54C3CDCA79751B16BC6B5225629DF75B188BD"
+    ],
+    "inReleaseSha256": "e7a56ea1502f6cab1934005532c4598c731665e7a8ee6988cd5d22d57eb5dce0",
+    "releaseDate": "Tue, 17 Nov 2026 20:11:06 UTC",
+    "validUntil": "Tue, 24 Nov 2026 20:11:06 UTC",
+    "checkedAtUtc": "2026-11-18T02:10:49.485011+00:00",
+    "sourcesSha256": "b12b247da865eb630585d663b731875afe7690c79eb1489e006f485480e5b770",
+    "sourceVersion": "2.44-1",
+    "allThreeSourceObjectsSizeSha256Verified": true,
+    "dscTarChecksumsAgreeWithAuthenticatedSourceIndex": true,
+    "packageSuite": "experimental",
+    "authorityOnlyNotPackageQualification": true,
+    "glibcNativeExecuted": false
+  },
+  "authenticatedAuthorityPatchedMakefileSha256": "1d4a09df088431c04df25aa3df46a2a3cade446ebc628d028935922a25c39195",
+  "targetBeforeMakefileSha256": "0140e6fb8e5b07a2879f9cc65ac34fe290f01dbd60a476ace728abdefdc450f5",
+  "targetAfterMakefileSha256": "c92ace019719eee098249b27d7473028f896861d4434258c3aa6325c4feb4117",
+  "localPatchSha256": "5b9d174c51d343e270529147f57478ca324b97fc65987466daf5aebc15f4bddd",
+  "exactTwoAuthenticatedConditionalChunks": true,
+  "allOtherTargetMakefileBytesUnchanged": true,
+  "originalIntroducingCommitOnly": "224edada607ebc6aaa1aadaae423128fae7880df",
+  "introducingCommitIsNotCorrectingCommit": true,
+  "authorityUrls": [
+    "https://deb.debian.org/debian/dists/experimental/InRelease",
+    "https://deb.debian.org/debian/dists/experimental/main/source/Sources.xz",
+    "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.44.orig.tar.xz",
+    "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.44-1.debian.tar.xz"
+  ],
+  "sixHardHolds": [
+    "nptl/tst-create-detached",
+    "nptl/tst-robust8",
+    "rt/tst-cpuclock2",
+    "rt/tst-cputimer1",
+    "rt/tst-timer",
+    "support/tst-support_descriptors"
+  ],
+  "sixAnnotationsUnchanged": true,
+  "packageQualification": false,
+  "parserPredecessorManifestSha256": "a07f3ae56f0b6800c8585c7902107470dd3d51ccaea0d2865dcd6f93d171a7cf",
+  "admittedDebianInclude": {
+    "targetVersion": "2.36-9+deb12u14",
+    "sha256": "c75938bb76320623f776b29f67bd21bc4d0a782c8495093998ee390db7ed3903",
+    "actualSourceLedgerMatched": true,
+    "noRelevantVariableReferences": true,
+    "role": "read-only-admission-authority-no-source-overwrite"
+  },
+  "makeEvaluationClaim": false,
+  "operatorPredecessorManifestSha256": "003a7beafb2d749622083339ebaff6e0017b1052138cc6a4554a0b5a40b2e664"
+}

@@ -12,6 +12,7 @@ import { assertSuiteSummary, prepareBuildContext, validateManifest } from "./bui
 import { verifyPinnedFile } from "./build-postgres-libxml2-backport.mjs";
 import { buildGlibcProfile, glibcEnvironment, validateGlibcEngine, validateGlibcSandbox } from "./lib/glibc-package-seccomp.mjs";
 import { prepareXfdExperiment } from "../infra/postgres-glibc-xfd-experiment/experiment.mjs";
+import { prepareIfuncExperiment, verifyProfileExport } from "../infra/postgres-glibc-ifunc-experiment/experiment.mjs";
 const REPO = fileURLToPath(new URL("../", import.meta.url));
 const LABEL = "io.vivalatax.qualification.operation", TARGET = "stdio-common/tst-vfscanf-bz34008", GIB = 1024 ** 3;
 const hash = value => createHash("sha256").update(value).digest("hex");
@@ -34,7 +35,8 @@ export async function validateGlibcEvidence(root, scriptExit) {
   const execution = JSON.parse(await text(root, "execution-status.json", 65536));
   assert.deepEqual(execution, { stage: "complete", exit: 0, packageExecutionCompleted: true, candidateReleaseQualified: false, riskAccepted: false });
   const status = JSON.parse(await text(root, "package-status.json", 65536));
-  assert.deepEqual(status, { baselineBuildExit: 0, candidateBuildExit: 0, pairedRegressionVerified: true, fullSuitesWithExactXfdOracleBackportRetained: true, abidiffExit: 0, sixConsumersExecuted: false, genericAbiApproval: false, riskAccepted: false, candidateReleaseQualified: false });
+  assert.deepEqual(status, { baselineBuildExit: 0, candidateBuildExit: 0, pairedRegressionVerified: true, fullSuitesWithExactXfdOracleBackportRetained: true, fourIfuncConditionalsRetained: true, sourceProfilesExportRequired: true, abidiffExit: 0, sixConsumersExecuted: false, genericAbiApproval: false, riskAccepted: false, candidateReleaseQualified: false });
+  await verifyProfileExport(root);
   for (const variant of ["baseline", "candidate"]) {
     const paths = (await text(root, variant + "/suite-paths.txt", 65536)).trim().split("\n");
     assert.ok(paths.length > 0 && paths.length <= 8 && new Set(paths).size === paths.length);
@@ -111,7 +113,8 @@ export class GlibcCandidateController extends SourceCandidateController {
     await copyFile(join(prepared, "source-manifest.json"), join(this.evidence, "source-manifest.json"), constants.COPYFILE_EXCL);
     await copyFile(join(prepared, "preparation-receipt.json"), join(this.evidence, "preparation-receipt.json"), constants.COPYFILE_EXCL);
     const experiment = await prepareXfdExperiment({ prepared, manifest, evidence: this.evidence });
-    return { recipe, manifest: experiment.manifest, prepared };
+    const ifunc = await prepareIfuncExperiment({ prepared, manifest: experiment.manifest, evidence: this.evidence });
+    return { recipe, manifest: ifunc.manifest, prepared };
   }
   async build() {
     const { recipe, manifest, prepared } = await this.sources(); this.stage = "toolchain";

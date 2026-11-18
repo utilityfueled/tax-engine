@@ -1,0 +1,24 @@
+form: "glibc-IFUNC-Conditional-Profile"
+taxYear: 2025
+status: "private-source-proposal-not-qualified"
+reference: "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.44-1.dsc"
+notes: |
+  Local two-hunk adaptation from authenticated Debian2.44-1 to exact2.36-9+deb12u14.
+  No claim of an upstream correcting-commit cherry-pick. Six other XPASS remain a hard hold.
+lines:
+  - line: "four-conditional-only"
+    description: "Retain all original test bodies and only scope four LLD expectations"
+    formula: "Only configured with-lld=no clears four IFUNC expectations; yes/unset/unknown retain them. Exact source before/after hashes and inverse retain every other byte, all test registrations/static variants/tunables and all six Debian expected-failure annotations. Keep the original strict FAIL/XPASS/UNRESOLVED/ERROR gate."
+    testRef: "tests/scripts/glibc-ifunc-experiment.test.mjs::four-only source correction preserves all assertions and six strict holds"
+  - line: "exact-context-before-mutation"
+    description: "Admit only exact reviewed XFD intermediate recipe and fresh additive inputs"
+    formula: "Validate original XFD recipe and all authenticated existing input hashes, exactly pinned five new source inputs and fresh destinations before mutation; retain prior recipes/ledgers and bind the final derived recipe digest in the returned manifest. All existing actions/security/resource/deadline/CVE/ABI gates retain exact original inverse."
+    testRef: "tests/scripts/glibc-ifunc-experiment.test.mjs::prepared context binds exact new inputs and effective recipe without replacing authority"
+  - line: "per-flavour-source-export"
+    description: "Retain configuration/linker evidence even when build or strict gate fails"
+    formula: "One EXIT-trap hook before original artifact ledger, preserving original nonzero exit, exports baseline/candidate per-flavour config.make/configparms/config.log bytes and hashes. Record literal with-lld/LD and overrides; never eval Make or shell. Resolve only supported single linker token, hash canonical ELF and bounded --version under shared6second budget. Missing/unsafe/failed identities are explicit unavailable; never infer qualified success. Source read custody checks reject symlink/hardlink/drift and source bytes stay unchanged. Export failure holds an otherwise successful recipe."
+    testRef: "tests/scripts/glibc-ifunc-export.py::ExportControls"
+  - line: "literal-make-admission"
+    description: "Fail closed on unsupported Make syntax; never infer effective linker execution"
+    formula: "Admit plain assignments only. Relevant LD and with-lld values must be literal; reject prefixed/target-specific/indirect assignments, conditionals, define/eval/functions and physical continuations. Admit only the exact variant-bound Debian expected-failure include with the pinned original file bytes; all other includes are unavailable. Retain literal config.make values, literal configparms overrides, merged configuration values and an explicit no-Make-evaluation/no-historical-execution disclaimer. The exact target template and Debian-generated configparms syntax are retained positive controls; actual config.make has not yet been exported."
+    testRef: "tests/scripts/glibc-ifunc-export.py::ExportControls"

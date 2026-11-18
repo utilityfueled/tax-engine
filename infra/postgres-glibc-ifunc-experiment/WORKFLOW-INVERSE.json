@@ -1,0 +1,12 @@
+{
+  "originalSha256": "0c38f5d8d4a12dee47e4790615b6b894e4359fdfb3dcdfcdc3dc3f15f725fc42",
+  "derivedSha256": "91ecd24c8fee7f96c31bf0eaa86c72fff99898b2af15e1b00c0e03c6a774f387",
+  "replacements": [
+    {
+      "before": "tests/scripts/glibc-xfd-experiment.test.mjs",
+      "after": "tests/scripts/glibc-xfd-experiment.test.mjs tests/scripts/glibc-ifunc-experiment.test.mjs",
+      "count": 1
+    }
+  ],
+  "inverseExact": true
+}

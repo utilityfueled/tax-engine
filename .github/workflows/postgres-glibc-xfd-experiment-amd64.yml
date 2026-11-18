@@ -25,7 +25,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Check inert package sandbox contracts
-        run: node --test tests/scripts/glibc-package-seccomp.test.mjs tests/scripts/glibc-package-seccomp-integration.test.mjs tests/scripts/glibc-xfd-experiment.test.mjs
+        run: node --test tests/scripts/glibc-package-seccomp.test.mjs tests/scripts/glibc-package-seccomp-integration.test.mjs tests/scripts/glibc-xfd-experiment.test.mjs tests/scripts/glibc-ifunc-experiment.test.mjs
       - name: Execute the explicitly altered XFD test-oracle experiment and retain actual results
         run: node scripts/qualify-postgres-glibc-xfd-experiment-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

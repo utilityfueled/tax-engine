@@ -1,16 +1,16 @@
 {
   "originalSha256": "3cea1d37b5070637ca63ff0e112576d8fac4da9fc077cfb0206c98abff2fed84",
-  "derivedSha256": "7d604367520dff092aa83a9502911a3ff96968c271166c9ffc59ea598ea82fb4",
+  "derivedSha256": "a92f0863c294df3a89206552dc64be70315321b1e0e69b64b1692f7f9b597b35",
   "inverseExact": true,
   "replacements": [
     {
       "before": "const REPO =",
-      "after": "import { prepareXfdExperiment } from \"../infra/postgres-glibc-xfd-experiment/experiment.mjs\";\nconst REPO =",
+      "after": "import { prepareXfdExperiment } from \"../infra/postgres-glibc-xfd-experiment/experiment.mjs\";\nimport { prepareIfuncExperiment, verifyProfileExport } from \"../infra/postgres-glibc-ifunc-experiment/experiment.mjs\";\nconst REPO =",
       "count": 1
     },
     {
       "before": "    return { recipe, manifest, prepared };",
-      "after": "    const experiment = await prepareXfdExperiment({ prepared, manifest, evidence: this.evidence });\n    return { recipe, manifest: experiment.manifest, prepared };",
+      "after": "    const experiment = await prepareXfdExperiment({ prepared, manifest, evidence: this.evidence });\n    const ifunc = await prepareIfuncExperiment({ prepared, manifest: experiment.manifest, evidence: this.evidence });\n    return { recipe, manifest: ifunc.manifest, prepared };",
       "count": 1
     },
     {
@@ -31,6 +31,16 @@
     {
       "before": "unchangedScriptSha256",
       "after": "effectiveScriptSha256",
+      "count": 1
+    },
+    {
+      "before": "fullSuitesWithExactXfdOracleBackportRetained: true, abidiffExit",
+      "after": "fullSuitesWithExactXfdOracleBackportRetained: true, fourIfuncConditionalsRetained: true, sourceProfilesExportRequired: true, abidiffExit",
+      "count": 1
+    },
+    {
+      "before": "  for (const variant of [\"baseline\", \"candidate\"]) {",
+      "after": "  await verifyProfileExport(root);\n  for (const variant of [\"baseline\", \"candidate\"]) {",
       "count": 1
     }
   ]

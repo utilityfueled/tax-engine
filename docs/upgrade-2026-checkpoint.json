@@ -28,7 +28,6 @@
     },
     "liveRuns": {
       "fullSqlite385": "44221292131",
-      "normalCi385": "44221205498",
       "normalWeb385": "44221205476"
     },
     "observedTerminal": {
@@ -204,12 +203,7 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "glibc": "Four-IFUNC conditional/export proposal is held for confirmed valid-Make-override parser defect. Author preparing separate successor; independently review before adoption. Six other XPASS remain strict holds.",
-      "heldManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-export-preparation/MANIFEST.json",
-      "heldManifestSha256": "a07f3ae56f0b6800c8585c7902107470dd3d51ccaea0d2865dcd6f93d171a7cf",
-      "independentHoldManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-export-independent-review/MANIFEST.json",
-      "independentHoldManifestSha256": "b399016b60d7fa139687650107d1278f2506275633cd8ae290e0eee69d5f4fee",
-      "rootChecks": "All177 pins verified;35Node/12Python pass in separate root overlay. Those controls did not detect the parser defect.",
+      "glibc": "Bounded six-case per-test output export being prepared before next opt-in native attempt; no dispatch yet. Six annotated XPASS remain strict holds.",
       "packageQualification": false
     },
     "browserOriginalEntryPhase": {
@@ -336,6 +330,30 @@
       "numericManifest": ".local/upgrade-evidence/nov18-rrta-strict-numeric-attribution/MANIFEST.json",
       "numericSha256": "7c67325c1392cc3f5a14821857f93223becdd228e826ed00e94e49cf108123d8",
       "numericObservation": "All top-level numeric parsing7.16%/7.06% of observed child wall, with replacement/token-only savings strictly smaller. Both complete8field outputs equal. No candidate or104-child rerun."
+    },
+    "glibcIfunc": {
+      "sourceManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-export-operator-successor/MANIFEST.json",
+      "sourceSha256": "a05cfd93f67987e51babb671a1c9708fa8b2d72d421b289f9d34644e9bc42b72",
+      "reviewManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-operator-independent-review/MANIFEST.json",
+      "reviewSha256": "87da000c1da1881969777ef7863dc7b4e05ce9d4163ef3dd66e9089e0f884529",
+      "rootChecks": "184pins/35Node/36Python/spec/inventory/typecheck/lint/actionlint PASS; sole generated row and explicit Node imports independently reviewed.",
+      "adoptionSourcePaths": 15,
+      "nativeDispatch": null,
+      "sixRemainingXpassHold": true,
+      "releaseQualified": false,
+      "ledger": "docs/upgrade-2026-glibc-ifunc-profile-20261117.md",
+      "rootReceiptSha256": "726dc8ae9eb785b6af5d682b0570e50be46d5b031040b5b3436e49580002ca12",
+      "rootDerivativeReviewSha256": "87eb39687dbf09db5345f2f07eca4ba6dc006caf56c0ba9a96b0c9a73baa51fd"
+    },
+    "coverage385": {
+      "tests": 29019,
+      "files": 2133,
+      "passed": true,
+      "branchesPercent": "88.2",
+      "receiptSha256": "547263fda79d4fc29482e5bf78a5eebe5f11f64cc0ee21c7c4c8a8eca41968c5",
+      "wholeCiPending": false,
+      "finalCiManifestSha256": "5091bcf449d5fc1a0d162846b6c1fe0b5e2c4150c1cb15a1b97a6fb8f6fa439c",
+      "finalCiAssessmentSha256": "a366c9b3e2e3ccfce4598430f08326617d8f20021ed672dbca0f4b2e13ef722c"
     }
   },
   "nov17New212Timing": {
