@@ -3,7 +3,7 @@
     "status": "active-not-release-qualified",
     "resumeInstruction": "Read only this activeContinuation object and the named dedicated ledgers first; preserve historical evidence without rereading the whole checkpoint.",
     "branch": "main",
-    "productionPushGuard": "Vercel project Ignored Build Step visibly Only build pre-production; command skips non-preview. Verified this continuation before pushes.",
+    "productionPushGuard": "Live read-only VercelCLI/API check2026-11-18T01:21:32Z: exact tax-engine project and approved preview-only ignored build command match; no mutation.",
     "commits": {
       "stripeReplay": "85e483533014ab3a458b1839b98585965c9eed65",
       "browserFixtureAudit": "933b1a85a43f09e16245a31230b210f63160bae8",
@@ -68,8 +68,8 @@
       "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
-      "Implement/reviewfaithful3.40rowidcompatibilityadaptation fromofficial2024source andIOconfiguredcaptestproposal; obtainboundednativeRED/GREEN beforeanotherfullsuite. PreserveDebianfeatures/allfulltestintent. NoABI/GPGdispatchwithoutrealpair.",
-      "RetainCPU44199237148 actualfailure; no safeproductpatchproven. Preparedefaultoff,navigation-free originalphase threadTickscounters withactualChromiumrevision/context/outerprovenanceguards; keeporiginalbaseline/actions/30s/4s/2workers unchanged. Currentc50+9d63normalCIwatched.",
+      "Adopt reviewed20-path IO/ROWID common-source correction only after custody successor passes independent race controls. Native host semantic RED/GREEN is available; retain all fuzz invariants/production flags, require actual Linux fullsuite/package/CVE/sanitizer/ABI/GPG gates.",
+      "Original-entry threadTicks observer source adopted with35Node/27retainedVitest controls, three typechecks/spec/inventory/lint/actionlint and actual655-case collection equivalence. After reviewed commit/push, obtain bounded actual original full-batch runtime evidence; old strict failures remain open.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
       "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
@@ -112,7 +112,7 @@
     "cleanupContinuation": "Current isolated cleanupV4 PASSED: endpointdisabled/pending0; exactsuccessfulproviderfinancialhashverified;2sessionsrevoked;owned15table-schema/emptyDB/roledeleted;testcustomerdeleted/product+priceinactive;2ownedPreviewdeletionsGET404;nonceRedisprefixonlycleared. 14Stripe/8Vercel/59SQL/4Preview/3Redis;supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Root+independentactualreview6412c975passed. Goalreservationunchanged;historical/globalcleanupandexpirydeletionnotclaimed.",
     "sqliteContinuation": "DBPAGEfullsuitecompleted134errors/5,550,419;source-backedDebianlegacyrowid/pagecap profile mismatch. Faithful officialrowidadaptedbackport +configuredpagecaporacles privatelyprepared; do notremovefeatures/skiptests orclaimnativeGREEN. No candidatepair, soABI/GPGundispatched.",
     "browserDiagnosticLedger": "docs/upgrade-2026-full-batch-cpu-diagnostic-20261117.md",
-    "contextPolicy": "Resume only from activeContinuation and named current artifact; bound command output and delegate independent work. Do not reread whole progress/checkpoint or restart completed work after compaction.",
+    "contextPolicy": "Resume only from activeContinuation and its named current artifact. Bound command output; delegate independent work. Do not reload whole progress/checkpoint/history or restart completed work after compaction.",
     "pythonComparisonLedger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
     "browserCpuActualAssessmentSha256": "4e2aedcd0f76ffbdfe5a91e7a023d4fe5aa27df58543107bec3103df586e0a9c",
     "sqliteFullActualAssessmentSha256": "e48c4c22d86c30e5c7b45920298add58fe035c19b54823e1f5cbad936ed90344",
@@ -203,12 +203,27 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "rowid": ".local/upgrade-evidence/nov17-sqlite-rowid-profile-independent-research/",
-      "io": ".local/upgrade-evidence/nov17-sqlite-io-configured-cap-preparation/MANIFEST.json",
-      "ioManifestSha256": "8f18e2c048e5c855e287da4345e3186f56177e4fe727b43a111287f2de4d6883",
-      "ioChecks": "4realTcloracle-generationcontrols after3meaningfulRED;NO nativeSQLitepass",
-      "phaseCounters": "strict_failure_continuation preparing reviewed defaultoff same-document phase",
-      "actualReceipts": ".local/upgrade-evidence/nov17-actual-runs-continuation-0023/"
+      "sqliteCommon": "nov18-sqlite-combined-common-integration-preparation; native ROWID and IO semantic proofs available, source custody successor required after independent deterministic race reproduction",
+      "nativeRowidManifestSha256": "23732ce220a0da0b7c4aec20f17199d554ec32e4382a8e1d2d54ab4a1259cbcf",
+      "nativeIoManifestSha256": "69efbf404b2474d78c5cf3743367801d846fd90a2d1b0d9fb9fa2eb26bb4be9c",
+      "packageQualification": false
+    },
+    "browserOriginalEntryPhase": {
+      "status": "source-adopted-local-checks-pass-runtime-unobserved",
+      "ledger": "docs/upgrade-2026-original-entry-timing-20261117.md",
+      "privateAuthoritySha256": "be7cf22794705eaeaaf1c31b39e3f1d362466049c4d10a0161a756c6e4309a6d",
+      "publicNodeControls": 35,
+      "retainedVitestControls": 27,
+      "collectionCounts": [
+        655,
+        655,
+        655
+      ],
+      "collectionSha256": "c486b270fbc2136a6f6b11c3b0ae1c64c8e03107dc34fc5c77ed7f90aa355525",
+      "actualBrowserMeasurement": false,
+      "qualification": false,
+      "independentReviewSha256": "22b687fe399608459db7374774d54ce0e76f098aad3311d30d606b125592a75a",
+      "rootReceiptSha256": "cc5e48d7f74f3705cd67bf8c105a63dd1f0259e453a8a227bae2648f433e1383"
     }
   },
   "nov17New212Timing": {

@@ -1,0 +1,195 @@
+// Spec: spec/browser/thread-tick-phase.yaml
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {setImmediate} from 'node:timers';
+import {URL} from 'node:url';
+import yaml from 'yaml';
+import * as phaseModule from '../../scripts/browser-cpu-diagnostics/phase.mjs';
+import {EventEmitter} from 'node:events';
+import {withPhaseMetrics, NAMES, bindPhaseReceipt, sanitizePhaseRecord, SUPPORTED_CHROMIUM_REVISION} from '../../scripts/browser-cpu-diagnostics/phase.mjs';
+import {withOriginalEntryMetrics,registerOriginalEntryMetrics} from '../../scripts/browser-cpu-diagnostics/phase-hook.mjs';
+
+const binding={sourceSha:'a'.repeat(40),imageId:'sha256:'+'b'.repeat(64),inventorySha256:'c'.repeat(64),chromiumRevision:SUPPORTED_CHROMIUM_REVISION};
+const context={id:1,uniqueId:'PRIVATE-CONTEXT',auxData:{isDefault:true,frameId:'PRIVATE-FRAME'}};
+test('entry wrapper inverts to exact original test source bytes',async()=>{
+ const source=await readFile(new URL('../../apps/web/tests/oh-resident-credit-native.spec.ts',import.meta.url),'utf8');
+ const importLine="\nimport {withOriginalEntryMetrics} from '../../../scripts/browser-cpu-diagnostics/phase-hook.mjs';";
+ const wrapper='await withOriginalEntryMetrics(page, () => typeOriginals(page, facts, viewport.width === 1280));';
+ assert.equal(source.split(importLine).length,2);assert.equal(source.split(wrapper).length,2);
+ const original=source.replace(importLine,'').replace(wrapper,'await typeOriginals(page, facts, viewport.width === 1280);');
+ assert.equal(createHash('sha256').update(original).digest('hex'),'6d52ee9b7e33b63d7ec37a1ab23452e0657307dcd61e8b7bd83ea5884a7476fb');
+});
+function harness(overrides={}) {
+ const session=new EventEmitter(), commands=[],records=[];let n=0,body=0;
+ session.send=async(name,args)=>{commands.push([name,args]);
+  if(name==='Browser.getVersion')return{revision:'@'+binding.chromiumRevision,product:'PRIVATE-PRODUCT'};
+  if(name==='Page.getFrameTree')return{frameTree:{frame:{id:'PRIVATE-FRAME'}}};
+  if(name==='Runtime.enable')session.emit('Runtime.executionContextCreated',{context});
+  if(name==='Runtime.evaluate')return{result:{type:'number',value:0}};
+  if(name==='Performance.getMetrics'){n++;overrides.metricsEvent?.(session,n);return{metrics:NAMES.map((name,i)=>({name,value:10+i+n/10})).concat([{name:'PRIVATE-IGNORED',value:12}])};}
+  return{};
+ };
+ session.detach=async()=>{commands.push(['detach']);};
+ const options={enabled:true,origin:'http://127.0.0.1:3109',binding,createSession:async()=>session,use:async()=>{body++;return 42;},save:async r=>records.push(r),...overrides};
+ return{session,commands,records,options,counts:()=>({body})};
+}
+test('positive fixed threadTicks deltas, no raw metadata',async()=>{
+ const h=harness();assert.equal(await withPhaseMetrics(h.options),42);assert.equal(h.records[0].status,'observed-unbound');
+ assert.deepEqual(h.commands.find(([n])=>n==='Performance.enable'),['Performance.enable',{timeDomain:'threadTicks'}]);
+ assert.deepEqual(Object.keys(h.records[0].deltaSeconds),NAMES);
+ for(const value of Object.values(h.records[0].deltaSeconds))assert.ok(Math.abs(value-.1)<1e-9);
+ assert.doesNotMatch(JSON.stringify(h.records),/PRIVATE|ProcessTime|idle/);assert.deepEqual(h.counts(),{body:1});
+});
+test('default-off touches only use; preserves return and thrown identity',async()=>{
+ const error={private:'body'};const options=new Proxy({enabled:false,use:()=>42},{get(o,k){assert.ok(['enabled','use'].includes(k));return o[k];}});
+ assert.equal(await withPhaseMetrics(options),42);
+ await assert.rejects(withPhaseMetrics({enabled:false,use:async()=>{throw error;}}),e=>e===error);
+});
+for(const event of ['Runtime.executionContextsCleared','Runtime.executionContextDestroyed','Page.frameStartedNavigating','Page.frameNavigated','Page.frameDetached','Inspector.detached']){
+ for(const when of ['body','snapshot'])test(event+' rejects during '+when,async()=>{
+  const h=harness(when==='snapshot'?{metricsEvent:(s,n)=>{if(n===2)s.emit(event,{PRIVATE:'secret'});}}:{});
+  if(when==='body')h.options.use=async()=>h.session.emit(event,{PRIVATE:'secret'});
+  await withPhaseMetrics(h.options);assert.equal(h.records[0].status,'unavailable');assert.equal(h.records[0].code,'epoch-changed');
+ });
+}
+test('default-context replacement and missing uniqueId reject',async()=>{
+ for(const replacement of [{...context,uniqueId:'replacement'},{...context,uniqueId:undefined}]){
+  const h=harness();h.options.use=async()=>h.session.emit('Runtime.executionContextCreated',{context:replacement});
+  await withPhaseMetrics(h.options);assert.equal(h.records[0].status,'unavailable');
+ }
+});
+for(const kind of ['missing','duplicate','nan','infinity','negative','negative-delta','overlong'])test('metrics reject '+kind,async()=>{
+ const h=harness(),send=h.session.send;let n=0;
+ h.session.send=async(name,args)=>{const r=await send(name,args);if(name==='Performance.getMetrics'){
+  n++;if(kind==='missing')r.metrics.shift();if(kind==='duplicate')r.metrics.push(r.metrics[0]);
+  if(kind==='nan')r.metrics[0].value=NaN;if(kind==='infinity')r.metrics[0].value=Infinity;if(kind==='negative')r.metrics[0].value=-1;
+  if(kind==='negative-delta'&&n===2)r.metrics[1].value=0;if(kind==='overlong')r.metrics=Array(129).fill(r.metrics[0]);
+ }return r;};await withPhaseMetrics(h.options);assert.equal(h.records[0].status,'unavailable');
+});
+test('unsupported threadTicks and unknown revision fail closed; body always runs',async()=>{
+ for(const kind of ['unsupported','revision','unreviewed-binding']){
+  const h=harness(),send=h.session.send;
+  if(kind==='unreviewed-binding')h.options.binding={...binding,chromiumRevision:'e'.repeat(40)};
+  h.session.send=async(name,args)=>{if(name==='Performance.enable'&&kind==='unsupported')throw Error('PRIVATE');if(name==='Browser.getVersion'&&kind==='revision')return{revision:'@'+'e'.repeat(40)};return send(name,args);};
+  await withPhaseMetrics(h.options);assert.equal(h.records[0].status,'unavailable');assert.equal(h.counts().body,1);
+  assert.equal(h.commands.filter(([name])=>name==='Performance.enable').length<=1,true);
+ }
+});
+test('actual hook default-off return, body-error identity and registered cleanup',async()=>{
+ const page=new Proxy({}, {get(){throw Error('page touched');}}),value={token:1},error={original:1};
+ assert.equal(withOriginalEntryMetrics(page,()=>value),value);
+ assert.throws(()=>withOriginalEntryMetrics(page,()=>{throw error;}),e=>e===error);
+ const h=harness(),remove=registerOriginalEntryMetrics(page,h.options);
+ assert.equal(await withOriginalEntryMetrics(page,()=>42),42);assert.equal(h.records[0].status,'observed-unbound');
+ remove();assert.equal(withOriginalEntryMetrics(page,()=>value),value);
+});
+test('outer receipt seals only independently validated source/image/inventory and file hash',()=>{
+ const recordSha256='e'.repeat(64);
+ assert.equal(bindPhaseReceipt({recordSha256,binding,outerIdentityValidated:true}).status,'bound');
+ for(const outerIdentityValidated of [false,undefined,'true'])assert.equal(bindPhaseReceipt({recordSha256,binding,outerIdentityValidated}).code,'provenance-unavailable');
+ assert.equal(bindPhaseReceipt({recordSha256:'PRIVATE',binding,outerIdentityValidated:true}).code,'provenance-unavailable');
+});
+test('stored projection rejects extra private keys, binding mismatch and counter tampering',async()=>{
+ const h=harness();await withPhaseMetrics(h.options);const record=h.records[0];
+ assert.deepEqual(sanitizePhaseRecord(record,binding),record);
+ for(const mutation of [r=>r.PRIVATE='secret',r=>r.binding.imageId='sha256:'+'e'.repeat(64),r=>r.deltaSeconds.ThreadTime=-1,r=>r.deltaSeconds.EXTRA=1,r=>r.scope='whole-renderer-cpu']){
+  const clone=globalThis.structuredClone(record);mutation(clone);assert.equal(sanitizePhaseRecord(clone,binding).code,'invalid-phase-artifact');
+ }
+});
+test('post-snapshot guard addresses original unique context and failure rejects',async()=>{
+ const h=harness();await withPhaseMetrics(h.options);
+ assert.deepEqual(h.commands.find(([name])=>name==='Runtime.evaluate'),['Runtime.evaluate',{expression:'0',uniqueContextId:context.uniqueId,silent:true,returnByValue:true}]);
+ const bad=harness(),send=bad.session.send;bad.session.send=async(name,args)=>name==='Runtime.evaluate'?{exceptionDetails:{PRIVATE:'secret'}}:send(name,args);
+ await withPhaseMetrics(bad.options);assert.equal(bad.records[0].code,'epoch-changed');
+});
+test('missing, non-default and duplicate initial contexts reject',async()=>{
+ for(const kind of ['missing','nondefault','duplicate']){
+  const h=harness(),send=h.session.send;h.session.send=async(name,args)=>{
+   if(name!=='Runtime.enable')return send(name,args);
+   if(kind==='nondefault')h.session.emit('Runtime.executionContextCreated',{context:{...context,auxData:{isDefault:false,frameId:'PRIVATE-FRAME'}}});
+   if(kind==='duplicate'){h.session.emit('Runtime.executionContextCreated',{context});h.session.emit('Runtime.executionContextCreated',{context});}
+   return{};
+  };
+  await withPhaseMetrics(h.options);assert.equal(h.records[0].code,'epoch-changed');assert.equal(h.counts().body,1);
+ }
+});
+test('late acquisition is bounded, body runs once, late session detaches',async()=>{
+ const h=harness();let resolve,detached=0;h.session.detach=async()=>{detached++;};
+ h.options.createSession=()=>new Promise(r=>{resolve=r;});
+ await withPhaseMetrics(h.options);assert.equal(h.records[0].code,'command-unavailable');assert.equal(h.counts().body,1);
+ resolve(h.session);await new Promise(r=>setImmediate(r));assert.equal(detached,1);
+});
+test('original body failure propagates while rejected record remains separate',async()=>{
+ const h=harness(),error=new Error('PRIVATE');h.options.use=async()=>{throw error;};
+ await assert.rejects(withPhaseMetrics(h.options),e=>e===error);assert.equal(h.records[0].status,'unavailable');assert.equal(h.records[0].code,'phase-incomplete');
+});
+test('cleanup failures are unavailable and detach is always issued',async()=>{
+ for(const mode of ['disable-reject','disable-timeout','detach-reject','detach-timeout']){
+  const h=harness(),send=h.session.send;let detaches=0;
+  h.session.send=async(name,args)=>{
+   const result=await send(name,args);
+   if(name==='Performance.disable'&&mode==='disable-reject')throw Error('PRIVATE cleanup');
+   if(name==='Performance.disable'&&mode==='disable-timeout')return new Promise(()=>{});
+   return result;
+  };
+  h.session.detach=async()=>{detaches++;if(mode==='detach-reject')throw Error('PRIVATE detach');if(mode==='detach-timeout')return new Promise(()=>{});};
+  assert.equal(await withPhaseMetrics(h.options),42);assert.equal(detaches,1);
+  assert.equal(h.records[0].status,'unavailable',mode);assert.equal(h.records[0].code,'cleanup-unconfirmed',mode);
+  assert.deepEqual(sanitizePhaseRecord(h.records[0],binding),h.records[0]);
+  assert.doesNotMatch(JSON.stringify(h.records),/PRIVATE|deltaSeconds/);
+ }
+});
+test('cleanup rejection preserves original body error identity',async()=>{
+ const h=harness(),error={original:'PRIVATE body'},send=h.session.send;let detaches=0;
+ h.options.use=async()=>{throw error;};
+ h.session.send=async(name,args)=>{const result=await send(name,args);if(name==='Performance.disable')throw Error('PRIVATE cleanup');return result;};
+ h.session.detach=async()=>{detaches++;};
+ await assert.rejects(withPhaseMetrics(h.options),e=>e===error);assert.equal(detaches,1);
+ assert.equal(h.records[0].code,'cleanup-unconfirmed');assert.doesNotMatch(JSON.stringify(h.records),/PRIVATE/);
+});
+test('workflow phase observer requires explicit full-batch dispatch opt-in',async()=>{
+ const source=await readFile(new URL('../../.github/workflows/web.yml',import.meta.url),'utf8'),workflow=yaml.parse(source);
+ assert.deepEqual(workflow.on.workflow_dispatch.inputs.cpu_phase_metrics,{description:'Observe original resident-entry threadTicks inside approved full-batch diagnostics',type:'boolean',required:false,default:false});
+ const steps=Object.values(workflow.jobs).flatMap(job=>job.steps??[]),batchSteps=steps.filter(s=>s.uses==='./.github/actions/browser-cpu-full-batches');
+ assert.equal(batchSteps.length,2);
+ for(const step of steps){
+  if(batchSteps.includes(step)){
+   assert.ok(step.if.includes('inputs.cpu_full_batches'));
+   assert.equal(step.env.TAX_BROWSER_PHASE_DIAGNOSTICS,"${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}");
+  }else assert.equal(step.env?.TAX_BROWSER_PHASE_DIAGNOSTICS,undefined);
+ }
+ const {phaseAdmission}=phaseModule,env={TAX_BROWSER_CPU_BATCH_DIAGNOSTICS:'1',TAX_BROWSER_PHASE_DIAGNOSTICS:'1'},event={inputs:{cpu_full_batches:'true',cpu_phase_metrics:'true'}};
+ assert.equal(phaseAdmission({},event),false);assert.equal(phaseAdmission(env,event),true);
+ for(const inputs of [{},{cpu_full_batches:'true'},{cpu_phase_metrics:'true'},{cpu_full_batches:'false',cpu_phase_metrics:'true'},{cpu_full_batches:'true',cpu_phase_metrics:'false'},{cpu_full_batches:true,cpu_phase_metrics:true}])assert.throws(()=>phaseAdmission(env,{inputs}));
+ assert.throws(()=>phaseAdmission({...env,TAX_BROWSER_CPU_BATCH_DIAGNOSTICS:'0'},event));
+ const input="      cpu_phase_metrics:\n        description: Observe original resident-entry threadTicks inside approved full-batch diagnostics\n        type: boolean\n        required: false\n        default: false\n";
+ const forwarding="          TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}\n";
+ assert.equal(source.split(input).length,2);assert.equal(source.split(forwarding).length,3);
+ let original=source.replace(input,'').replaceAll(forwarding,'');
+ // Separately reviewed lint fixes and CI retention preserve the prior workflow.
+ const reviewedDeltas=[
+  ["git rev-parse HEAD 'HEAD^{tree}'",'git rev-parse HEAD HEAD^{tree}'],
+  ['for ((attempt=1; attempt<=60; attempt++)); do','for attempt in $(seq 1 60); do'],
+  ['      - name: Verify original-entry timing contracts\n        run: node --test tests/scripts/thread-tick-phase.test.mjs\n',''],
+ ];
+ for(const[after,before]of reviewedDeltas){
+  assert.equal(original.split(after).length,2);
+  original=original.replace(after,before);
+ }
+ assert.equal(createHash('sha256').update(original).digest('hex'),'b3b8d319e952234e3f4d918c8c0b61823af060ce914501449aa768e1b0c8e6c3');
+});
+
+test('diagnostic source pins refresh without changing original budgets or collection',async()=>{
+ const read=async name=>readFile(new URL('../../'+name,import.meta.url),'utf8'),sha=text=>createHash('sha256').update(text).digest('hex');
+ const [auditText,casesText,fullText,source]=await Promise.all([read('scripts/browser-request-budgets.json'),read('scripts/browser-cpu-diagnostics/cases.json'),read('scripts/browser-cpu-diagnostics/full-batches.json'),read('apps/web/tests/oh-resident-credit-native.spec.ts')]);
+ const audit=JSON.parse(auditText),cases=JSON.parse(casesText),full=JSON.parse(fullText),path='apps/web/tests/oh-resident-credit-native.spec.ts';
+ assert.equal(audit.sourceHashes[path],sha(source));assert.equal(full.sourceSha256[path],sha(source));assert.equal(cases.auditSha256,sha(auditText));
+ assert.equal(cases.targetSourceSha256['oh-resident-credit-native.spec.ts'],sha(source.replace('../scripts/browser-cpu-diagnostics/fixture','@playwright/test')));
+ const project=(data,keys)=>Object.fromEntries(Object.entries(data).filter(([key])=>!keys.includes(key)));
+ assert.equal(sha(JSON.stringify(project(audit,['sourceHashes']))),'9b02fb1cec7f0ec815c5b54e35b2e469c12de9f3859adb9bf73b00d83518478a');
+ assert.equal(sha(JSON.stringify(project(cases,['auditSha256','targetSourceSha256']))),'e12b15fe0536c166f6c15b0c9b460583c8588500f77a1839d822e78369ee2bed');
+ assert.equal(sha(JSON.stringify(project(full,['sourceSha256']))),'b08c9c74fca59e0f25c9f88fa8b00c7d10eac463f22b32d547252f2ba88378f2');
+ assert.equal(full.fullCaseCount,655);assert.equal(cases.workers,2);assert.equal(cases.retries,0);assert.equal(cases.targetDeadlineMs,30000);
+});

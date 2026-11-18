@@ -7083,3 +7083,7 @@ FrozenV2review2f51805c andmanifest3f73b26f verified; initialassessmentdrift
 explicitlyretained. RootIOproposal8f18e2c0 passes4Tcloracle-generationcontrols
 only, no nativeSQLitepass. Sourcepackages through9d63c37e pushed; currentCI
 continues. The short35-line current-status record remains continuation entry.
+
+## November17 continuation: original-entry timing contracts
+
+Added default-off threadTicks observation for the unchanged original Ohio entry phase. Independent source review22b687fe and root receiptcc5e48d7 pass;35public Node controls,27existing CPU controls, all3typechecks/spec/inventory/scopedlint/actionlint pass. Actual before/plain/enabled collection remains655cases with exact frozen c486b270 hash and requestauditPASS. Controls now execute in ordinaryWebCI. No actual phase counter, browser success or readiness claim; old strict failures remain. Current continuation remains35lines and only activeContinuation changed in the checkpoint. See docs/upgrade-2026-original-entry-timing-20261117.md. Fresh read-only production push guard matches the approved preview-only build command. Source/native SQLite corrections remain a separately reviewed package.

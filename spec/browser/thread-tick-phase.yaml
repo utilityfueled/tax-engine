@@ -1,0 +1,49 @@
+form: "Thread-Tick-Phase-Diagnostic"
+taxYear: 2025
+status: "verification-contract"
+notes: |
+  Default-off diagnostic contract; no qualifying browser measurement is inferred.
+  Separate default-off observer wraps original typeOriginals only, including
+  original review/add buttons,181fields,fill/select/Tab actions and assertions.
+  Original655-case collection,2workers,0retries,30s cases and4s privacy remain.
+  Inspected-main-thread counters include automation and cannot establish whole
+  journey/process CPU, application-only script, idle, or exclusive categories.
+  Expected PW1.64.1 Chromium156.0.8078.4 tag pins revision
+  f842f52ef39fd97b449eb27cff414bf05a98ddce; actual version must match.
+lines:
+  - line: "fixed-thread-ticks-observation"
+    description: "Observe bounded numeric counters with explicit threadTicks"
+    formula: "Fresh CDP session; require reviewed Browser.getVersion revision; enable Performance with threadTicks only. Require fixed Timestamp,ThreadTime,TaskDuration,ScriptDuration,LayoutDuration,RecalcStyleDuration,DevToolsCommandDuration numeric deltas. No negative clamping, fallback, raw metric output, labels, URLs or context IDs. Timestamp remains timeTicks. Accepted phase window <=30000ms and command budget1000ms; no original deadline increases."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::positive fixed threadTicks deltas, no raw metadata"
+  - line: "default-original-body"
+    description: "Default-off is direct original body and unchanged errors"
+    formula: "Unregistered hook directly invokes body and returns its exact value/error without accessing page, sessions, bindings or save. Enabled body executes once and original error identity propagates. No retry."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::actual hook default-off return, body-error identity and registered cleanup"
+  - line: "stable-context-epoch"
+    description: "Reject navigation or lost default execution context"
+    formula: "Require exactly one main-frame default context with uniqueId. Context-clear/destroy, navigation, frame/session detach or replacement invalidates observation. After second metrics snapshot, fixed Runtime.evaluate expression0 addressed by original uniqueContextId must succeed. It reads no application data and runs outside metric interval. No reset or epoch-sum assumption."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::post-snapshot guard addresses original unique context and failure rejects"
+  - line: "fixed-artifact-projection"
+    description: "Keep exact schema and reviewed bindings"
+    formula: "Bound response to128metric rows and80-character names; inspect numeric finite nonnegative values only for the fixed allowlist; discard unknown values. Exact stored projection rejects private/extra fields, changed bindings and invalid counters. Output <=4096bytes. Missing/bad records stay unavailable."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::stored projection rejects extra private keys, binding mismatch and counter tampering"
+  - line: "separate-outer-provenance"
+    description: "Keep phase observation unbound until original runner closes"
+    formula: "Worker record remains observed-unbound. Existing enclosing source/image/inventory pre/post checks and complete closure alone permit separate bound receipt for exact uploaded phase-file SHA. No host Docker commands in phase. Failed closure means provenance unavailable; no profile rejection or original qualification is superseded."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::outer receipt seals only independently validated source/image/inventory and file hash"
+  - line: "exact-original-source-inverse"
+    description: "One-call wrapper inverses to original test bytes"
+    formula: "Remove the one diagnostic import and inverse the one typeOriginals callback wrapper. Require exact original SHA2566d52ee9b7e33b63d7ec37a1ab23452e0657307dcd61e8b7bd83ea5884a7476fb. Every original input/action/assertion/deadline remains in the source."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::entry wrapper inverts to exact original test source bytes"
+  - line: "confirmed-observer-cleanup"
+    description: "Reject observations when observer cleanup cannot be confirmed"
+    formula: "Share the original1000ms ending budget across final observation and cleanup. Always issue Performance.disable and detach; observe their rejections rather than swallowing them. Either rejection or budget expiry emits fixed unavailable cleanup-unconfirmed, with no counters/raw error retained. Original body result or error identity remains unchanged and no deadline is extended."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::cleanup failures are unavailable and detach is always issued"
+  - line: "explicit-workflow-opt-in"
+    description: "Expose phase observation only inside approved original full-batch diagnostics"
+    formula: "Workflow cpu_phase_metrics boolean defaults false. Forward its flag only on the existing cpu_full_batches steps, requiring both inputs. Runner independently requires exact phase env1 plus cpu_full_batches and cpu_phase_metrics event inputs true and full-batch diagnostic env1. No phase input alone starts a test, build or dispatch. Preserve normal655collection, workers, retries, case/privacy deadlines and all request budget rows."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::workflow phase observer requires explicit full-batch dispatch opt-in"
+  - line: "exact-source-audit-closure"
+    description: "Refresh only diagnostic wrapper source hashes and dependent audit digest"
+    formula: "Update resident spec source hash in request audit and frozen batches, resident plain-import hash in cases, and dependent cases audit digest. Preserve every request budget,655collection row, worker/retry/deadline and historical reference. This metadata projection does not replace actual root collection validation before adoption."
+    testRef: "tests/scripts/thread-tick-phase.test.mjs::diagnostic source pins refresh without changing original budgets or collection"

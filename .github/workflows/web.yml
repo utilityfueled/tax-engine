@@ -15,6 +15,11 @@ on:
         type: boolean
         required: false
         default: false
+      cpu_phase_metrics:
+        description: Observe original resident-entry threadTicks inside approved full-batch diagnostics
+        type: boolean
+        required: false
+        default: false
   pull_request:
     branches: [main]
 
@@ -58,6 +63,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Verify original-entry timing contracts
+        run: node --test tests/scripts/thread-tick-phase.test.mjs
       - run: pnpm test:setup
       - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
       - run: pnpm sample-docs:fetch
@@ -137,7 +144,7 @@ jobs:
           test "$(docker version --format '{{.Server.Os}}')" = linux
           test "$(docker version --format '{{.Server.Arch}}')" = amd64
           docker info --format '{{json .Architecture}} {{json .OSType}} {{json .CgroupVersion}} {{json .NCPU}} {{json .MemTotal}}' >> container-host.txt
-          git rev-parse HEAD HEAD^{tree} > container-source.txt
+          git rev-parse HEAD 'HEAD^{tree}' > container-source.txt
           sha256sum Dockerfile pnpm-lock.yaml .github/workflows/web.yml >> container-source.txt
           git archive "$GITHUB_SHA" | sha256sum >> container-source.txt
           candidate_id=$(docker image inspect --format '{{.Id}}' tax-engine:ci)
@@ -179,7 +186,7 @@ jobs:
             --env TAX_ENGINE_APP_URL=http://127.0.0.1:3109 "$CANDIDATE_IMAGE_ID"
           test "$(docker inspect --format '{{.Image}}' tax-engine-browser-ci)" = "$CANDIDATE_IMAGE_ID"
           docker inspect tax-engine-browser-ci > container-browser.json
-          for attempt in $(seq 1 60); do
+          for ((attempt=1; attempt<=60; attempt++)); do
             if curl --fail --silent http://127.0.0.1:3109/api/health; then exit 0; fi
             sleep 1
           done
@@ -218,6 +225,7 @@ jobs:
           batch: '6'
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+          TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}
       - name: Sample original strict batch 7
         if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.cpu_full_batches && steps.container_browser.outcome == 'failure' }}
         timeout-minutes: 10
@@ -228,6 +236,7 @@ jobs:
           batch: '7'
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+          TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}
       - name: Verify Docker archive in an independent native image store
         id: archive
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}

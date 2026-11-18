@@ -1,3 +1,4 @@
+import {bindPhaseReceipt,sanitizePhaseRecord,phaseAdmission} from './phase.mjs';
 import {projectDiagnosticCases} from './fixed-metadata.mjs';
 import {createHash} from 'node:crypto';
 import {Buffer} from 'node:buffer';
@@ -105,7 +106,9 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const childEnv={...environment(env),PLAYWRIGHT_BASE_URL:ORIGIN};
   const exec=(file,args,options={})=>command(file,args,{cwd:root,env:childEnv,signal:abort.signal,...options});
   const head=await exec('git',['rev-parse','HEAD']);need(head.exit===0);
-  const number=admitBatch(env,await readJson(env.GITHUB_EVENT_PATH,2*1024*1024),head.stdout.trim());
+  const event=await readJson(env.GITHUB_EVENT_PATH,2*1024*1024);
+  const number=admitBatch(env,event,head.stdout.trim());
+  const phaseEnabled=phaseAdmission(env,event);
   const out=path.join(root,`artifacts/browser-cpu-full-batch-${number}`);await mkdir(path.dirname(out),{recursive:true});await mkdir(out,{mode:0o700});
   save=async(name,record)=>{need(/^[a-z0-9-]+\.json$/u.test(name));const bytes=JSON.stringify(record,null,2)+'\n';need(Buffer.byteLength(bytes)<=LIMITS.bytes);await writeFile(path.join(out,name),bytes,{flag:'wx',mode:0o600});};
   const budget=remainingJobBudget(await currentJob(env,abort.signal),env);
@@ -125,7 +128,11 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const inventory=JSON.parse(inventoryResult.stdout);validateInventory(inventory);await identity();
   const inventoryFile=path.join(temporary,'public-chunks.json');await writeFile(inventoryFile,JSON.stringify(inventory),{flag:'wx',mode:0o600});
   const app=path.join(root,'apps/web'),cli=path.join(app,'node_modules/@playwright/test/cli.js');
-  const profilerEnv={...childEnv,TAX_BROWSER_CPU_DIAGNOSTICS:'1',TAX_BROWSER_CPU_OUTPUT:profiles,TAX_BROWSER_CPU_INVENTORY:inventoryFile};
+  // Phase counters remain a separate opt-in; their source/image provenance closes with this runner.
+  const phaseBinding={sourceSha:proof[3],imageId:proof[1],inventorySha256:sha(inventoryResult.stdout),chromiumRevision:'f842f52ef39fd97b449eb27cff414bf05a98ddce'};
+  const phaseBindingFile=path.join(temporary,'phase-binding.json');
+  if(phaseEnabled)await writeFile(phaseBindingFile,JSON.stringify(phaseBinding),{flag:'wx',mode:0o600});
+  const profilerEnv={...childEnv,TAX_BROWSER_CPU_DIAGNOSTICS:'1',TAX_BROWSER_CPU_OUTPUT:profiles,TAX_BROWSER_CPU_INVENTORY:inventoryFile,...(phaseEnabled?{TAX_BROWSER_PHASE_DIAGNOSTICS:'1',TAX_BROWSER_PHASE_BINDING:phaseBindingFile}:{})};
   const collect=async(enabled,list)=>{const args=list?browserArguments(list):['test','--workers=2','--retries=0','--timeout=30000','--project=chromium','--trace=retain-on-failure'];const r=await exec(process.execPath,[cli,...args,'--list','--reporter=json'],{cwd:app,env:enabled?profilerEnv:childEnv});need(r.exit===0);return rowsFromReport(JSON.parse(r.stdout));};
   const plain=await collect(false),instrumented=await collect(true);selectCases(plain,manifest,sha(auditBytes));selectCases(instrumented,manifest,sha(auditBytes));auditCollection(plain,audit);
   need(collectionHash(plain)===collectionHash(instrumented)&&collectionHash(plain)===frozen.fullCollectionSha256);
@@ -139,6 +146,20 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   }});
   let missing=0;for(const row of sampled){let record;try{record=sanitizeStoredRecord(await readJson(path.join(profiles,`${row.id}.json`)),{origin:ORIGIN,inventory});}catch{record=unavailable('profile-not-recovered');}if(record.status!=='available')missing++;await save(`profile-${row.id}.json`,record);}
   await identity();const complete=summary.caseCount===batch.rows.length&&!summary.error&&summary.cleanup;
+  if(phaseEnabled){
+   for(const row of sampled.filter(r=>r.file==='oh-resident-credit-native.spec.ts')){
+    let record,receipt;
+    try{
+     const file=path.join(profiles,`${row.id}.phase.json`);
+     record=sanitizePhaseRecord(await readJson(file,4096),phaseBinding);
+     const bytes=await readFile(file);need(bytes.length<=4096);
+     // Only an exact validated projection is uploaded; receipt hashes those exact uploaded bytes.
+     const canonical=JSON.stringify(record)+'\n';need(bytes.toString('utf8')===canonical);
+     receipt=bindPhaseReceipt({recordSha256:sha(JSON.stringify(record,null,2)+'\n'),binding:phaseBinding,outerIdentityValidated:complete});
+    }catch{record={version:1,qualification:'NONQUALIFYING_DIAGNOSTIC',phase:'ohio-resident-credit-type-originals',status:'unavailable',code:'phase-not-recovered'};receipt=bindPhaseReceipt({binding:phaseBinding,outerIdentityValidated:false});}
+    await save(`phase-${row.id}.json`,record);await save(`phase-receipt-${row.id}.json`,receipt);
+   }
+  }
   await save('result.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',originalQualification:original.summary,originalBatch:number,cases:outcomes,complete,failed:summary.failed,missingProfiles:missing,configuredWorkers:2,observedWorkerIndices:[...new Set(observedWorkers)].sort((a,b)=>a-b),observedParallelIndices:[...new Set(observedParallel)].sort((a,b)=>a-b),sampling:'wall-weights-not-process-cpu',originalFailureSuperseded: false,paSampled: false});
   exit=diagnosticExit(summary,batch.rows.length,missing);
  }catch{

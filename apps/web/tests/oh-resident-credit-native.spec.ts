@@ -1,5 +1,6 @@
 /** Spec: spec/state/oh-resident-credit-native-browser.yaml. Actual native sources, not injected RC cash. */
 import { expect, test } from '../scripts/browser-cpu-diagnostics/fixture';
+import {withOriginalEntryMetrics} from '../../../scripts/browser-cpu-diagnostics/phase-hook.mjs';
 import { writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import {
@@ -45,7 +46,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
         await expect(control(page, 'Virginia source year')).toHaveValue('');
         await pendingMoney(active);
 
-        await typeOriginals(page, facts, viewport.width === 1280);
+        await withOriginalEntryMetrics(page, () => typeOriginals(page, facts, viewport.width === 1280));
         draft = await packet(page, id); noCaptures(draft); expect(draft.sourceFactsConfirmed).not.toBe(true);
         expect(draft.filedReturn.federalAgi).toBe('100,000');
         expect(draft.filedReturn.incomeTaxBeforeCredits).toBe(cohort === 'cents' ? '2,500.5' : '2,500');
