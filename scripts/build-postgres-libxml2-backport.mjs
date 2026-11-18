@@ -23,6 +23,10 @@ export function runBoundedCommand(executable, arguments_, { env, timeoutMs, clos
     const child = spawn(executable, arguments_, { env, stdio: ["ignore", "pipe", "pipe"] });
     const chunks = { stdout: [], stderr: [] };
     let bytes = 0;
+    const observed = { stdout: 0, stderr: 0 };
+    const retained = { stdout: 0, stderr: 0 };
+    let firstGuard = null;
+    let directChildCloseConfirmed = false;
     let settled = false;
     let termination;
     let closeTimer;
@@ -34,7 +38,9 @@ export function runBoundedCommand(executable, arguments_, { env, timeoutMs, clos
       clearTimeout(closeTimer);
       const output = { stdout: Buffer.concat(chunks.stdout).toString("utf8"), stderr: Buffer.concat(chunks.stderr).toString("utf8") };
       if (error) {
-        Object.assign(error, output, { childExitConfirmed });
+        Object.assign(error, output, { childExitConfirmed, boundedCommandEvidence: { firstGuard, directChildCloseConfirmed,
+          stdoutBytesObserved: observed.stdout, stderrBytesObserved: observed.stderr,
+          stdoutBytesRetained: retained.stdout, stderrBytesRetained: retained.stderr } });
         if (!childExitConfirmed) {
           error.ownedChildPid = child.pid;
           error.ownedChild = child;
@@ -46,8 +52,9 @@ export function runBoundedCommand(executable, arguments_, { env, timeoutMs, clos
       } else resolveCommand(output);
     }
 
-    function terminate(reason) {
+    function terminate(reason, guard) {
       if (termination || settled) return;
+      firstGuard = guard;
       termination = new Error(reason);
       termination.code = "BOUNDED_COMMAND_TERMINATED";
       child.kill("SIGTERM");
@@ -56,19 +63,25 @@ export function runBoundedCommand(executable, arguments_, { env, timeoutMs, clos
 
     function collect(stream, chunk) {
       const remaining = 64 * 1024 ** 2 - bytes;
-      if (remaining > 0) chunks[stream].push(chunk.subarray(0, remaining));
+      observed[stream] += chunk.length;
+      if (remaining > 0) {
+        const kept = chunk.subarray(0, remaining);
+        chunks[stream].push(kept);
+        retained[stream] += kept.length;
+      }
       bytes += chunk.length;
-      if (bytes > 64 * 1024 ** 2) terminate("Container command exceeded its output limit.");
+      if (bytes > 64 * 1024 ** 2) terminate("Container command exceeded its output limit.", "output-limit");
     }
 
     child.stdout.on("data", chunk => collect("stdout", chunk));
     child.stderr.on("data", chunk => collect("stderr", chunk));
     child.on("error", error => finish(error));
     child.on("close", (code, signal) => {
+      directChildCloseConfirmed = true;
       const error = termination ?? (code === 0 ? null : Object.assign(new Error("Container command exited unsuccessfully."), { code: code ?? signal }));
       finish(error);
     });
-    const timeoutTimer = setTimeout(() => terminate("Container command exceeded its time limit."), timeoutMs);
+    const timeoutTimer = setTimeout(() => terminate("Container command exceeded its time limit.", "time-limit"), timeoutMs);
   });
 }
 

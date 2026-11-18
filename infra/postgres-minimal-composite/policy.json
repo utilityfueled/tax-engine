@@ -7,7 +7,7 @@
     "infra/postgres-minimal-runtime/remove-runtime-packages.sh": "cfa015c5a7d3c55189bd985f7ccb7f6412f44988771d81814185173b7fec36d9",
     "infra/postgres-minimal-runtime/inspect.py": "be645ef9364e4784ab9c7c180bb997b21a13050f7f1524c60e331440e50b7167",
     "infra/sqlite-runtime-consumers/inspect.py": "91776ff0a2afc8cf8e544e7362f701956e70618d47e7e0ca90921f9f998aa9b5",
-    "scripts/qualify-postgres-backports-amd64.mjs": "02038eeda44a8e0c54fc652f7de3e59d231e553c475c4197c7b147aa1ed9d37d",
+    "scripts/qualify-postgres-backports-amd64.mjs": "834424bb9f985a8c51c4324c3317183a8f6cd4bcaa3615a4f55c091f6a5fa8d7",
     "scripts/qualify-postgres-source-candidates-amd64.mjs": "3d3b73585e49263909dad72520afb38634c8c6bcb8c602f1af7544955871b775",
     "scripts/qualify-postgres-minimal-runtime-amd64.mjs": "ded8965fcad9e5b131f1e18f73d8fe7f452f409378eed98816140b5222ee06ee",
     "scripts/qualify-postgres-minimal-db-amd64.mjs": "47cc4aa826e65ef1eb36c71d00eddad8190a2c3736613b9c241a3f90953ab352",

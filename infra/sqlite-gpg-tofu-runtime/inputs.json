@@ -54,8 +54,8 @@
       "sha256": "32007f0a40434763303ae88931f84836070e1434f0ce2e49b1a07d7a4fca01fb"
     },
     "scripts/build-postgres-libxml2-backport.mjs": {
-      "bytes": 19315,
-      "sha256": "979a27c19ff87e915c76913c304f9cc26d8b56db3e09370e9dd80263be73e390"
+      "bytes": 19947,
+      "sha256": "9d296c02c218575170503be841fb9bfffee2e6f2385bb003e49746632c286884"
     },
     "scripts/build-postgres-sqlite-backport.mjs": {
       "bytes": 8478,
@@ -86,8 +86,8 @@
       "sha256": "976f04c7cc470c40fecaa51dc3073d288d7d10b2b1bcfdcc379b74f41f4a97e1"
     },
     "scripts/qualify-postgres-backports-amd64.mjs": {
-      "bytes": 48092,
-      "sha256": "02038eeda44a8e0c54fc652f7de3e59d231e553c475c4197c7b147aa1ed9d37d"
+      "bytes": 49765,
+      "sha256": "834424bb9f985a8c51c4324c3317183a8f6cd4bcaa3615a4f55c091f6a5fa8d7"
     },
     "scripts/qualify-postgres-source-candidates-amd64.mjs": {
       "bytes": 18899,

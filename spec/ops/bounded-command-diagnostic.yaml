@@ -1,0 +1,19 @@
+form: "Bounded-Command-Termination-Diagnostic"
+taxYear: 2025
+reference: "https://nodejs.org/api/child_process.html#event-close"
+notes: |
+  Operations traceability only. Numeric diagnostic evidence never changes a command verdict,
+  proves daemon/descendant closure, or requalifies an earlier failed run.
+  Source-seal refresh is restricted to the four existing source-pin records (four hashes
+  plus the two GPG byte counts) for the two reviewed changed scripts
+  in the GPG inputs, minimal DB policy and composite policy. Every other pin, cap and
+  admission gate remains exact. Historical run seals stay source-specific; no retroqualification.
+lines:
+  - line: "first-guard-and-close"
+    description: "Preserve termination while distinguishing the first guard and direct close event"
+    formula: "Keep original arguments, environment, timeout, combined 64MiB retained-output cap, SIGTERM, close grace, error code and childExitConfirmed semantics. Attach only the first triggering time-limit/output-limit enum, actual direct child close event boolean, and separate observed/retained byte counts for stdout/stderr. An error event alone never proves close. Existing uncertainty always remains a strict hold, even if the direct child closed."
+    testRef: "tests/scripts/bounded-command-evidence.test.ts::first guard and direct close preserve all original bounded semantics"
+  - line: "fixed-import-publication"
+    description: "Export only fixed database-import failure diagnostics without raw private data"
+    formula: "For an admitted BOUNDED_COMMAND_TERMINATED database-import failure only, write a separate fixed numeric/enum JSON artifact; preserve the original result schema, error and all cleanup/deadline/resource gates. Reject unknown/malformed diagnostic values and never copy message, stdout, stderr, arguments, environment, PIDs or arbitrary keys. Missing diagnostics remain unavailable and cannot turn failure into success."
+    testRef: "tests/scripts/bounded-command-evidence.test.ts::database import keeps strict hold and recursively publishes no secret surfaces"

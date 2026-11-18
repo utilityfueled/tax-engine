@@ -243,6 +243,26 @@
       ]
     },
     {
+      "key": "federal/bounded-command-diagnostic",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://nodejs.org/api/child_process.html#event-close",
+      "specPath": "spec/ops/bounded-command-diagnostic.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/browser-federal-source-year-contract",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -16,6 +16,22 @@ const LABEL = "io.vivalatax.qualification.operation";
 const SHA = /^[a-f0-9]{64}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
 const RESERVE = 2 * GIB;
+// Fixed failure diagnostics only: never a command verdict or closure permission.
+export function terminationEvidence(step, error) {
+  if (step !== 'database-import' || error?.code !== 'BOUNDED_COMMAND_TERMINATED') return null;
+  const v = error.boundedCommandEvidence;
+  if (!v || !['time-limit', 'output-limit'].includes(v.firstGuard) || typeof v.directChildCloseConfirmed !== 'boolean') return null;
+  const names = ['stdoutBytesObserved', 'stderrBytesObserved', 'stdoutBytesRetained', 'stderrBytesRetained'];
+  if (!names.every(k => Number.isSafeInteger(v[k]) && v[k] >= 0)) return null;
+  const observed = v.stdoutBytesObserved + v.stderrBytesObserved, retained = v.stdoutBytesRetained + v.stderrBytesRetained;
+  if (!Number.isSafeInteger(observed) || v.stdoutBytesRetained > v.stdoutBytesObserved || v.stderrBytesRetained > v.stderrBytesObserved || retained !== Math.min(observed, 64 * 1024 ** 2)) return null;
+  if (v.firstGuard === 'output-limit' && observed <= 64 * 1024 ** 2) return null;
+  return { schemaVersion: 1, step: 'database-import', code: 'BOUNDED_COMMAND_TERMINATED', firstGuard: v.firstGuard,
+    directChildCloseConfirmed: v.directChildCloseConfirmed, stdoutBytesObserved: v.stdoutBytesObserved,
+    stderrBytesObserved: v.stderrBytesObserved, stdoutBytesRetained: v.stdoutBytesRetained,
+    stderrBytesRetained: v.stderrBytesRetained, diagnosticOnly: true };
+}
+
 // The extra workflow time permits final publication after the controller exits.
 export const JOB_LIMITS = { package: { minutes: 165, controllerMinutes: 155, cleanupMinutes: 15, diskGiB: 20 }, runtime: { minutes: 90, controllerMinutes: 80, cleanupMinutes: 15, diskGiB: 12 }, independent: { minutes: 15, controllerMinutes: 10, cleanupMinutes: 3, diskGiB: 8 } };
 const PUBLIC = new Set(["result.json", "handoff.json", "candidate.tar", "runtime-image.cdx.json", "runtime-scan.json", "build-receipt.json", "source-manifest.json", "admission.json", "runtime-summary.json", "scan-binding.json", "database-listing.json", "package-status.json", "gosu", "go-metadata.txt", "LICENSE", "THIRD-PARTY-LICENSES.txt", "gosu-status.json", "artifact-hashes.txt", "abidiff.txt", "toolchain-packages.tsv", "toolchain-compiler.txt", "toolchain-linker.txt", "toolchain-buildflags.txt", "candidate-package.deb", "baseline-package.deb"]);
@@ -206,6 +222,11 @@ export class Controller {
       try { ({ stdout, stderr } = await runBoundedCommand(exe, args, { env, timeoutMs })); }
       catch (error) {
         stdout = error.stdout ?? ""; stderr = error.stderr ?? ""; code = error.code ?? "unavailable";
+        const diagnostic = terminationEvidence(step, error);
+        if (diagnostic) {
+          try { await exclusive(join(this.public, "database-import-termination.json"), diagnostic); }
+          catch { /* Diagnostic unavailable; preserve the original error and hold. */ }
+        }
         if (error.childExitConfirmed === false || code === "BOUNDED_COMMAND_TERMINATED" || /^SIG[A-Z0-9]+$/.test(String(code))) { this.unconfirmedChild = true; throw error; }
         if (!allow.includes(code)) throw error;
       }
