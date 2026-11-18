@@ -9,7 +9,7 @@ notes: |
 lines:
   - line: "new-fixture-pin"
     description: "Explicitly account for the admitted fixed glibc output fixture"
-    formula: "The complete original strict snapshot verifier must accept the current exact audited closure including the reviewed fixture hash. Retain every previous pin; add no exclusions. Pin bytes separately in the reviewed adoption receipt. This is source admission, never browser runtime success."
+    formula: "The complete original strict snapshot verifier must accept the current exact audited closure including the reviewed fixture hash. Retain every previous pin; add no exclusions. Refresh the dependent cases.auditSha256 to the SHA256 of the exact request-audit bytes; all other cases fields remain unchanged. The existing original-entry source-pin test must pass unchanged. Pin bytes separately in the reviewed adoption receipt. This is source admission, never browser runtime success."
     testRef: "tests/scripts/browser-source-fixture-accounting.test.mjs::reviewed glibc fixture is pinned in the complete original source audit"
   - line: "drift-remains-fatal"
     description: "Reject omitted, changed and additional fixture data"

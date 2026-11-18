@@ -45,5 +45,5 @@ lines:
     testRef: "tests/scripts/thread-tick-phase.test.mjs::workflow phase observer requires explicit full-batch dispatch opt-in"
   - line: "exact-source-audit-closure"
     description: "Refresh only diagnostic wrapper source hashes and dependent audit digest"
-    formula: "Update resident spec source hash in request audit and frozen batches, resident plain-import hash in cases, and dependent cases audit digest. Preserve every request budget,655collection row, worker/retry/deadline and historical reference. This metadata projection does not replace actual root collection validation before adoption."
+    formula: "Update resident spec source hash in request audit and frozen batches, resident plain-import hash in cases, and dependent cases audit digest, including after a separately reviewed additive inert-fixture pin. Preserve every request budget,655collection row, worker/retry/deadline and historical reference. This metadata projection does not replace actual root collection validation before adoption."
     testRef: "tests/scripts/thread-tick-phase.test.mjs::diagnostic source pins refresh without changing original budgets or collection"

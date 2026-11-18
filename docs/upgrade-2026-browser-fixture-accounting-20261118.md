@@ -30,3 +30,16 @@ Independent review SHA256:
 Root checks SHA256:
 `2c007e516afe09e5ee079e55f3d37278147ca02fd52c083e2280697d99e72f60`.
 No runtime, release, filing or model qualification is claimed.
+
+Run `44251314094` at `32f623a8` subsequently stopped before browser cases:
+the retained original-entry contract rejected the dependent
+`cases.auditSha256`, which still described the audit before the fixture pin.
+The original test reproduced RED locally. Refreshing that single digest to
+the exact audited bytes makes all 35 retained timing controls and both fixture
+controls pass. An exact byte inverse verifies every other cases byte is
+unchanged; no test, budget, collection or deadline changes. Spec and inventory
+checks pass. JavaScript lint passes without warnings; JSON is parsed and checked
+separately because ESLint does not configure JSON. The failed run stays failed.
+Root receipt: `8c0919fb1c8c4964bf609d58e75f19f8005f98f0d4aa8470e07637c575906392`.
+Independent exact-source RED/GREEN review passes: `5f426061115bba8d2e7890ec5755c2d4bd46940c0ac35ee81bf9a825e06e44ed`.
+Actual browser outcome remains pending a source-bound run.
