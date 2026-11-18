@@ -26,7 +26,9 @@
       "compactContext": "c4e92399",
       "sqliteFullPrerequisites": "17cf0189"
     },
-    "liveRuns": {},
+    "liveRuns": {
+      "sqlite40df": "44235763098"
+    },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
       "glibc44148810935": "baseline suite failed two XFD/proc-cpuinfo checks; ten XPASS also remain; candidate/ABI not reached",
@@ -68,13 +70,38 @@
         "source": "7bea6c1f477e704f0d4c4049a835c1867e875486",
         "conclusion": "FAILURE",
         "jobCompletedAt": "2026-11-18T04:07:14Z",
-        "actualArtifactAssessment": "Pending sole watcher assessment; no rerun or qualification"
+        "actualArtifactAssessment": ".local/upgrade-evidence/nov18-glibc-7bea-terminal-review/GLIBC-ASSESSMENT.json",
+        "actualManifestSha256": "89e6923dbe0a4fc6e55983f0b5b3a62fab87002e8212fa26b5a74125a7b1cc15",
+        "assessmentSha256": "646c9011af86e86427bee3f7e993d13046230cbc4870b2d97401dfe49296c02f",
+        "rootVerifiedReceiptPins": 46,
+        "baselineLibcSummary": {
+          "PASS": 5060,
+          "XFAIL": 16,
+          "UNSUPPORTED": 128,
+          "XPASS": 6
+        },
+        "baselineI386Summary": {
+          "PASS": 1256,
+          "XFAIL": 15
+        },
+        "sixOriginalExitStatuses": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "allTwelveDiagnosticCapturesComplete": true,
+        "candidateReached": false,
+        "qualification": false,
+        "cleanup": "Controller recorded no cleanup errors or deadline; owned final lists empty; no independent live post-inspection"
       }
     },
     "nextActions": [
-      "Push reviewed SQLite successor after fresh main production-build guard. Then one exact-source full paired Linux package/CVE/sanitizer run; no duplicate predecessor run. Original ABI/GPG/runtime gates remain.",
-      "Assess existing terminal glibc run44227921612 and its configuration/six test outputs. Preserve FAILURE; no unchanged redispatch or blanket XPASS reclassification.",
-      "Finish and independently review private minimal-runtime native harness. No runtime removal/adoption until exact artifact, retained-feature, package/ELF, scan and recovery evidence passes.",
+      "Observe existing SQLite successor44235763098 at exact40df910c. Do NOT redispatch. Both full suites/CVE/sanitizer must pass; original ABI/GPG/runtime remain open.",
+      "Preserve failed glibc44227921612 and six strictXPASS. Literal-source exporter corrected in1663f9e1 with54Python/10Node PASS; original missing linker identity/probe remains missing. No unchanged rerun.",
+      "Push reviewed sources with fresh production-build guard, then one opt-in raw-base minimal-runtime native build/inventory/scan. No DB start/Compose change/release claim; all original runtime/recovery/composition gates remain.",
       "CI385,5e,7bea passed29,019 tests/88.2% branches. Web385 strict642/8/5 FAIL remains; completed timing/source investigations do not establish a production fix. Do not repeat negatives.",
       "RRTA compound and buffered-numeric successor screens failed unchanged thresholds. No adoption or repeated run of those stopped avenues.",
       "Final2026 forms, qualified independent human tax/AI/security reviews and selected Google-route access remain unresolved. No readiness, filing or model promotion."
@@ -108,7 +135,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "7bea6c1f477e704f0d4c4049a835c1867e875486",
+    "latestPushedSource": "40df910c0433fdbf3c53eff93251dcb496ac8aee",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -461,14 +488,34 @@
       "checks": "30 Vitest,31 Python,types,9515 spec lines,inventory and scoped lint PASS; independent host RED/GREEN retained",
       "changingPaths": 21,
       "unchangedJoin8": "Authenticated original retained and identity-checked; obsolete transformation retired with predecessor/inverse",
+      "nativeRun": "44235763098",
+      "qualification": false,
+      "nativeSource": "40df910c0433fdbf3c53eff93251dcb496ac8aee",
+      "publicationReceipt": ".local/upgrade-evidence/nov18-sqlite-nested-rowid-root-adoption/PUBLISH.json"
+    },
+    "postgresMinimalRuntime": {
+      "status": "Reviewed source adopted; native build/inventory/scan pending, no Compose/runtime switch",
+      "proposalManifestSha256": "af9d9b34ca757da62a4bda2891e124833499d4714c879d9d1a60204c5f6b3ede",
+      "independentManifestSha256": "1274918a1f0329beea8ec458518d6e4c66080d48379c381f41c78b8c243c7592",
+      "scope": "Raw official base only; exact five-package removal requires actual merged-rootfs/provider proof, retained dependencies, fresh scans and all original recovery gates. Lower OCI layers/custom hooks/composite image remain unqualified.",
+      "sourceCommit": "1046073ab0e1141ac2cf5882c90224992c723a55",
+      "stageManifestSha256": "b68410649315cd3a3ce98be063d9953984a8388cae5a360166f93d6ad9f74c81",
+      "archivePeerSha256": "743be8890ad5e232cf2c5fca0143e6e85c4e2baa4404f4795aba8467751e63a8",
+      "widePeerSha256": "1156311e23ae95fcda26ff1ae370c7d425c5f6bddadf5ea74bb06de79b97b66a",
+      "derivativePeerSha256": "8d604b238b35934ac4c373873f654b51e2fddeb64bd66c568fd373e14fe25591",
+      "rootReceiptSha256": "af14734e76918f47e55ca9b68f9760be8f320fb762b9b97838ef1b62b2b51cc3",
+      "ledger": "docs/upgrade-2026-postgres-minimal-runtime-20261118.md",
+      "checks": "13Node/5readerPython/3packagePython(18synthetic scenarios)/types/actionlint/lint/spec9520/inventory1075PASS. Initial archive HOLD and lint errors retained.",
       "nativeRun": null,
       "qualification": false
     },
-    "postgresMinimalRuntime": {
-      "status": "PRIVATE unbuilt proposal and native harness preparation; no public runtime switch",
-      "proposalManifestSha256": "af9d9b34ca757da62a4bda2891e124833499d4714c879d9d1a60204c5f6b3ede",
-      "independentManifestSha256": "1274918a1f0329beea8ec458518d6e4c66080d48379c381f41c78b8c243c7592",
-      "scope": "Raw official base only; exact five-package removal requires actual merged-rootfs/provider proof, retained dependencies, fresh scans and all original recovery gates. Lower OCI layers/custom hooks/composite image remain unqualified."
+    "glibcConfigLog": {
+      "sourceCommit": "1663f9e1",
+      "sourceManifestSha256": "4c47f8a6ad49002345cab4401903e880d8c98e040e85d11a9cda90fe8aa9dfd5",
+      "peerReceiptSha256": "2aaa3fc8ea3fd670751681b422e9d84c718f461621be5ecf61586d79c653a7fe",
+      "rootReceiptSha256": "97528fac7efd9cb0b6301179cf0dfd070e40b430cb889dfbead7dbeb10ef1223",
+      "checks": "54Python/10Node/types/spec9516/lint/inventoryPASS",
+      "scope": "Saved three profiles admit literalLD=ld/with-lld=no only; original missing linker identity/probe, FAILURE and sixXPASS strict hold unchanged. No rerun."
     }
   },
   "nov17New212Timing": {
