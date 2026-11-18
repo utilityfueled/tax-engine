@@ -15,23 +15,6 @@
       ]
     },
     {
-      "path": "test/join8.test",
-      "beforeSha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc",
-      "afterSha256": "38909666f2540393537a49113ca7984dfbcd2ec0d79ca1f2678c6d45177b9fc2",
-      "upstreamCommit": "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
-      "authorityResponseSha256": "e632b92a364832a7c4bf4ee36946c8c8aa08afc2b58398d904900571ea08c213",
-      "hunks": [
-        {
-          "before": "  CREATE INDEX t1x2 ON t1(b);\n  INSERT INTO t1 DEFAULT VALUES;\n} {}\ndo_catchsql_test join8-1010 {\n  SELECT a\n    FROM (\n",
-          "after": "  CREATE INDEX t1x2 ON t1(b);\n  INSERT INTO t1 DEFAULT VALUES;\n} {}\nifcapable allow_rowid_in_view {\n  set res {1 {no such column: rowid}}\n} else {\n  set res {0 1}\n}\ndo_catchsql_test join8-1010 {\n  SELECT a\n    FROM (\n"
-        },
-        {
-          "before": "    NATURAL LEFT FULL JOIN t1\n   WHERE ( rowid , 1 )<=(CASE 5 WHEN 619 THEN 841 ELSE 3374391096 END,0)\n   ORDER BY a ASC;\n} {0 1}\n\n# Pending issue #2: (now resolved)\n# Jump to addrHalt inside the RIGHT JOIN body subroutine bypasses the",
-          "after": "    NATURAL LEFT FULL JOIN t1\n   WHERE ( rowid , 1 )<=(CASE 5 WHEN 619 THEN 841 ELSE 3374391096 END,0)\n   ORDER BY a ASC;\n} $res\n\n# Pending issue #2: (now resolved)\n# Jump to addrHalt inside the RIGHT JOIN body subroutine bypasses the"
-        }
-      ]
-    },
-    {
       "path": "ext/recover/sqlite3recover.c",
       "beforeSha256": "e2ca660cf5ecaa2e9ec82ecdbe0e8851f872adf83bdde540f8c09193bb59cf99",
       "afterSha256": "ca2f40064b6d990fd108f202589cc4e67b3036490478c13003fb05721ffb5156",
@@ -139,64 +122,92 @@
     {
       "path": "src/resolve.c",
       "beforeSha256": "8e7cc927ec6ccf480a7d28ebe1e60dabc1bc4dd0f03117d412343dba7f222b4f",
-      "afterSha256": "33d145a0f153a00b1690c5bcc6aeab1e8dcbdbdd8e20c35ea77bf09093a24711",
+      "afterSha256": "e212dfde54166f3fbb20f66ffc43ac83ac5735ff1db6ad5f8f8d631575d2b94f",
       "provenance": {
         "kind": "adapted-upstream",
         "officialGitMirrorCommits": [
+          "f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
           "daee74c3ac0112ecaca4817954f0394454050065"
         ],
         "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
           "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
         ],
-        "nativePackageQualification": false
+        "nativePackageQualification": false,
+        "adaptation": "Complete nested-FROM rowid representation prerequisite, manually applied to SQLite3.40 AST; retains prior2024 compatibility changes."
       },
       "hunks": [
         {
+          "before": "}\n\n/*\n** Subqueries stores the original database, table and column names for their\n** result sets in ExprList.a[].zSpan, in the form \"DATABASE.TABLE.COLUMN\".\n** Check to see if the zSpan given to this routine matches the zDb, zTab,\n** and zCol.  If any of zDb, zTab, and zCol are NULL then those fields will\n** match anything.\n*/\nint sqlite3MatchEName(\n  const struct ExprList_item *pItem,\n  const char *zCol,\n  const char *zTab,\n  const char *zDb\n){\n  int n;\n  const char *zSpan;\n  if( pItem->fg.eEName!=ENAME_TAB ) return 0;\n  zSpan = pItem->zEName;\n  for(n=0; ALWAYS(zSpan[n]) && zSpan[n]!='.'; n++){}\n  if( zDb && (sqlite3StrNICmp(zSpan, zDb, n)!=0 || zDb[n]!=0) ){\n",
+          "after": "}\n\n/*\n** Subqueries store the original database, table and column names for their\n** result sets in ExprList.a[].zSpan, in the form \"DATABASE.TABLE.COLUMN\",\n** and mark the expression-list item by setting ExprList.a[].fg.eEName\n** to ENAME_TAB.\n**\n** Check to see if the zSpan/eEName of the expression-list item passed to this\n** routine matches the zDb, zTab, and zCol.  If any of zDb, zTab, and zCol are\n** NULL then those fields will match anything. Return true if there is a match,\n** or false otherwise.\n**\n** SF_NestedFrom subqueries also store an entry for the implicit rowid (or\n** _rowid_, or oid) column by setting ExprList.a[].fg.eEName to ENAME_ROWID,\n** and setting zSpan to \"DATABASE.TABLE.<rowid-alias>\". This type of pItem\n** argument matches if zCol is a rowid alias. If it is not NULL, (*pbRowid)\n** is set to 1 if there is this kind of match.\n*/\nint sqlite3MatchEName(\n  const struct ExprList_item *pItem,\n  const char *zCol,\n  const char *zTab,\n  const char *zDb,\n  int *pbRowid\n){\n  int n;\n  const char *zSpan;\n  int eEName = pItem->fg.eEName;\n  if( eEName!=ENAME_TAB && (eEName!=ENAME_ROWID || NEVER(pbRowid==0)) ){\n    return 0;\n  }\n  assert( pbRowid==0 || *pbRowid==0 );\n  zSpan = pItem->zEName;\n  for(n=0; ALWAYS(zSpan[n]) && zSpan[n]!='.'; n++){}\n  if( zDb && (sqlite3StrNICmp(zSpan, zDb, n)!=0 || zDb[n]!=0) ){\n"
+        },
+        {
+          "before": "    return 0;\n  }\n  zSpan += n+1;\n  if( zCol && sqlite3StrICmp(zSpan, zCol)!=0 ){\n    return 0;\n  }\n  return 1;\n}\n\n",
+          "after": "    return 0;\n  }\n  zSpan += n+1;\n  if( zCol ){\n    if( eEName==ENAME_TAB && sqlite3StrICmp(zSpan, zCol)!=0 ) return 0;\n    if( eEName==ENAME_ROWID && sqlite3IsRowid(zCol)==0 ) return 0;\n  }\n  if( eEName==ENAME_ROWID ) *pbRowid = 1;\n  return 1;\n}\n\n"
+        },
+        {
+          "before": "){\n  int i, j;                         /* Loop counters */\n  int cnt = 0;                      /* Number of matching column names */\n  int cntTab = 0;                   /* Number of matching table names */\n  int nSubquery = 0;                /* How many levels of subquery */\n  sqlite3 *db = pParse->db;         /* The database connection */\n  SrcItem *pItem;                   /* Use for looping over pSrcList items */\n",
+          "after": "){\n  int i, j;                         /* Loop counters */\n  int cnt = 0;                      /* Number of matching column names */\n  int cntTab = 0;                   /* Number of potential \"rowid\" matches */\n  int nSubquery = 0;                /* How many levels of subquery */\n  sqlite3 *db = pParse->db;         /* The database connection */\n  SrcItem *pItem;                   /* Use for looping over pSrcList items */\n"
+        },
+        {
+          "before": "          assert( pEList!=0 );\n          assert( pEList->nExpr==pTab->nCol );\n          for(j=0; j<pEList->nExpr; j++){\n            if( !sqlite3MatchEName(&pEList->a[j], zCol, zTab, zDb) ){\n              continue;\n            }\n            if( cnt>0 ){\n              if( pItem->fg.isUsing==0\n               || sqlite3IdListIndex(pItem->u3.pUsing, zCol)<0\n              ){\n                /* Two or more tables have the same column name which is\n                ** not joined by USING.  This is an error.  Signal as much\n                ** by clearing pFJMatch and letting cnt go above 1. */\n                sqlite3ExprListDelete(db, pFJMatch);\n                pFJMatch = 0;\n              }else\n              if( (pItem->fg.jointype & JT_RIGHT)==0 ){\n                /* An INNER or LEFT JOIN.  Use the left-most table */\n                continue;\n              }else\n              if( (pItem->fg.jointype & JT_LEFT)==0 ){\n                /* A RIGHT JOIN.  Use the right-most table */\n                cnt = 0;\n                sqlite3ExprListDelete(db, pFJMatch);\n                pFJMatch = 0;\n              }else{\n                /* For a FULL JOIN, we must construct a coalesce() func */\n                extendFJMatch(pParse, &pFJMatch, pMatch, pExpr->iColumn);\n              }\n            }\n            cnt++;\n            cntTab = 2;\n            pMatch = pItem;\n            pExpr->iColumn = j;\n            pEList->a[j].fg.bUsed = 1;\n            hit = 1;\n            if( pEList->a[j].fg.bUsingTerm ) break;\n          }\n          if( hit || zTab==0 ) continue;\n",
+          "after": "          assert( pEList!=0 );\n          assert( pEList->nExpr==pTab->nCol );\n          for(j=0; j<pEList->nExpr; j++){\n            int bRowid = 0;       /* True if possible rowid match */\n            if( !sqlite3MatchEName(&pEList->a[j], zCol, zTab, zDb, &bRowid) ){\n              continue;\n            }\n            if( bRowid==0 ){\n              if( cnt>0 ){\n                if( pItem->fg.isUsing==0\n                 || sqlite3IdListIndex(pItem->u3.pUsing, zCol)<0\n                ){\n                  /* Two or more tables have the same column name which is\n                  ** not joined by USING.  This is an error.  Signal as much\n                  ** by clearing pFJMatch and letting cnt go above 1. */\n                  sqlite3ExprListDelete(db, pFJMatch);\n                  pFJMatch = 0;\n                }else\n                if( (pItem->fg.jointype & JT_RIGHT)==0 ){\n                  /* An INNER or LEFT JOIN.  Use the left-most table */\n                  continue;\n                }else\n                if( (pItem->fg.jointype & JT_LEFT)==0 ){\n                  /* A RIGHT JOIN.  Use the right-most table */\n                  cnt = 0;\n                  sqlite3ExprListDelete(db, pFJMatch);\n                  pFJMatch = 0;\n                }else{\n                  /* For a FULL JOIN, we must construct a coalesce() func */\n                  extendFJMatch(pParse, &pFJMatch, pMatch, pExpr->iColumn);\n                }\n              }\n              cnt++;\n              hit = 1;\n            }else if( cnt>0 ){\n              /* This is a potential rowid match, but there has already been\n              ** a real match found. So this can be ignored.  */\n              continue;\n            }\n            cntTab++;\n            pMatch = pItem;\n            pExpr->iColumn = j;\n            pEList->a[j].fg.bUsed = 1;\n\n            /* rowid cannot be part of a USING clause - assert() this. */\n            assert( bRowid==0 || pEList->a[j].fg.bUsingTerm==0 );\n            if( pEList->a[j].fg.bUsingTerm ) break;\n          }\n          if( hit || zTab==0 ) continue;\n"
+        },
+        {
           "before": "          }\n        }\n        if( 0==cnt && VisibleRowid(pTab) ){\n          cntTab++;\n          pMatch = pItem;\n        }\n      }\n      if( pMatch ){\n",
-          "after": "          }\n        }\n        if( 0==cnt && VisibleRowid(pTab) ){\n          /* pTab is a potential ROWID match.  Keep track of it and match\n          ** the ROWID later if that seems appropriate.  (Search for \"cntTab\"\n          ** to find related code.)  Only allow a ROWID match if there is\n          ** a single ROWID match candidate.\n          */\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n          /* In SQLITE_ALLOW_ROWID_IN_VIEW mode, allow a ROWID match\n          ** if there is a single VIEW candidate or if there is a single\n          ** non-VIEW candidate plus multiple VIEW candidates.  In other\n          ** words non-VIEW candidate terms take precedence over VIEWs.\n          */\n          if( cntTab==0\n           || (cntTab==1\n               && ALWAYS(pMatch!=0)\n               && ALWAYS(pMatch->pTab!=0)\n               && (pMatch->pTab->tabFlags & TF_Ephemeral)!=0\n               && (pTab->tabFlags & TF_Ephemeral)==0)\n          ){\n            cntTab = 1;\n            pMatch = pItem;\n          }else{\n            cntTab++;\n          }\n#else\n          /* The (much more common) non-SQLITE_ALLOW_ROWID_IN_VIEW case is\n          ** simpler since we require exactly one candidate, which will\n          ** always be a non-VIEW\n          */\n          cntTab++;\n          pMatch = pItem;\n#endif\n        }\n      }\n      if( pMatch ){\n",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Exact official hunk; line offsets only"
+          "after": "          }\n        }\n        if( 0==cnt && VisibleRowid(pTab) ){\n          /* pTab is a potential ROWID match.  Keep track of it and match\n          ** the ROWID later if that seems appropriate.  (Search for \"cntTab\"\n          ** to find related code.)  Only allow a ROWID match if there is\n          ** a single ROWID match candidate.\n          */\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n          /* In SQLITE_ALLOW_ROWID_IN_VIEW mode, allow a ROWID match\n          ** if there is a single VIEW candidate or if there is a single\n          ** non-VIEW candidate plus multiple VIEW candidates.  In other\n          ** words non-VIEW candidate terms take precedence over VIEWs.\n          */\n          if( cntTab==0\n           || (cntTab==1\n               && ALWAYS(pMatch!=0)\n               && ALWAYS(pMatch->pTab!=0)\n               && (pMatch->pTab->tabFlags & TF_Ephemeral)!=0\n               && (pTab->tabFlags & TF_Ephemeral)==0)\n          ){\n            cntTab = 1;\n            pMatch = pItem;\n          }else{\n            cntTab++;\n          }\n#else\n          /* The (much more common) non-SQLITE_ALLOW_ROWID_IN_VIEW case is\n          ** simpler since we require exactly one candidate, which will\n          ** always be a non-VIEW\n          */\n          cntTab++;\n          pMatch = pItem;\n#endif\n        }\n      }\n      if( pMatch ){\n"
         },
         {
-          "before": "     && cntTab==1\n",
-          "after": "     && cntTab>=1\n",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Retain existing 3.40.1 VisibleRowid and iColumn AST handling; official candidate-count predicate"
-        },
-        {
-          "before": "    ){\n      cnt = 1;\n      pExpr->iColumn = -1;\n      pExpr->affExpr = SQLITE_AFF_INTEGER;\n",
-          "after": "    ){\n      cnt = cntTab;\n      pExpr->iColumn = -1;\n      pExpr->affExpr = SQLITE_AFF_INTEGER;\n",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Official ambiguity count, keeping 3.40.1 direct rowid expression representation"
+          "before": "    ** Perhaps the name is a reference to the ROWID\n    */\n    if( cnt==0\n     && cntTab==1\n     && pMatch\n     && (pNC->ncFlags & (NC_IdxExpr|NC_GenCol))==0\n     && sqlite3IsRowid(zCol)\n     && ALWAYS(VisibleRowid(pMatch->pTab))\n    ){\n      cnt = 1;\n      pExpr->iColumn = -1;\n      pExpr->affExpr = SQLITE_AFF_INTEGER;\n    }\n\n",
+          "after": "    ** Perhaps the name is a reference to the ROWID\n    */\n    if( cnt==0\n     && cntTab>=1\n     && pMatch\n     && (pNC->ncFlags & (NC_IdxExpr|NC_GenCol))==0\n     && sqlite3IsRowid(zCol)\n     && ALWAYS(VisibleRowid(pMatch->pTab) || pMatch->fg.isNestedFrom)\n    ){\n      cnt = cntTab;\n      if( pMatch->fg.isNestedFrom==0 ) pExpr->iColumn = -1;\n      pExpr->affExpr = SQLITE_AFF_INTEGER;\n    }\n\n"
         }
       ]
     },
     {
       "path": "src/select.c",
       "beforeSha256": "e7a58326aafe9a3814c8f72b3a6d05d285a847dcb7ef21769f063e2d8b0e9472",
-      "afterSha256": "bf364fa5ff71c401c4c6d3ee3b39b306ecda038fe6b058fc310d2e55d300994c",
+      "afterSha256": "69d0f31fcfa73e39eb3c8e04ac2d1d465e253147f5f11780a754c39bf52532bf",
       "provenance": {
         "kind": "adapted-upstream",
         "officialGitMirrorCommits": [
+          "f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
           "daee74c3ac0112ecaca4817954f0394454050065"
         ],
         "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
           "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
         ],
-        "nativePackageQualification": false
+        "nativePackageQualification": false,
+        "adaptation": "Complete nested-FROM rowid representation prerequisite, manually applied to SQLite3.40 AST; retains prior2024 compatibility changes."
       },
       "hunks": [
         {
-          "before": "  /* The usual case - do not allow ROWID on a subquery */\n  pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;\n#else\n  pTab->tabFlags |= TF_Ephemeral;  /* Legacy compatibility mode */\n#endif\n  return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;\n}\n",
-          "after": "  /* The usual case - do not allow ROWID on a subquery */\n  pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;\n#else\n  /* Legacy compatibility mode */\n  pTab->tabFlags |= TF_Ephemeral | sqlite3Config.mNoVisibleRowid;\n#endif\n  return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;\n}\n",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Exact official hunk; line offsets only"
+          "before": "        ** data for the result-set column of the sub-select.\n        */\n        if( iCol<pS->pEList->nExpr\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n         && iCol>=0\n#else\n         && ALWAYS(iCol>=0)\n#endif\n        ){ \n          /* If iCol is less than zero, then the expression requests the\n          ** rowid of the sub-select or view. This expression is legal (see \n",
+          "after": "        ** data for the result-set column of the sub-select.\n        */\n        if( iCol<pS->pEList->nExpr\n         && (!ViewCanHaveRowid || iCol>=0)\n        ){ \n          /* If iCol is less than zero, then the expression requests the\n          ** rowid of the sub-select or view. This expression is legal (see \n"
         },
         {
-          "before": "#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n         && iCol>=0\n#else\n         && ALWAYS(iCol>=0)\n#endif\n",
-          "after": "         && (!ViewCanHaveRowid || iCol>=0)\n",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Exact official conditional replacement, excluding trailing whitespace-only context"
+          "before": "  /* The usual case - do not allow ROWID on a subquery */\n  pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;\n#else\n  pTab->tabFlags |= TF_Ephemeral;  /* Legacy compatibility mode */\n#endif\n  return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;\n}\n",
+          "after": "  /* The usual case - do not allow ROWID on a subquery */\n  pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;\n#else\n  /* Legacy compatibility mode */\n  pTab->tabFlags |= TF_Ephemeral | sqlite3Config.mNoVisibleRowid;\n#endif\n  return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;\n}\n"
+        },
+        {
+          "before": "        int tableSeen = 0;      /* Set to 1 when TABLE matches */\n        char *zTName = 0;       /* text of name of TABLE */\n        if( pE->op==TK_DOT ){\n          assert( pE->pLeft!=0 );\n          assert( !ExprHasProperty(pE->pLeft, EP_IntValue) );\n          zTName = pE->pLeft->u.zToken;\n        }\n        for(i=0, pFrom=pTabList->a; i<pTabList->nSrc; i++, pFrom++){\n          Table *pTab = pFrom->pTab;   /* Table for this data source */\n          ExprList *pNestedFrom;       /* Result-set of a nested FROM clause */\n          char *zTabName;              /* AS name for this data source */\n",
+          "after": "        int tableSeen = 0;      /* Set to 1 when TABLE matches */\n        char *zTName = 0;       /* text of name of TABLE */\n        if( pE->op==TK_DOT ){\n          assert( (selFlags & SF_NestedFrom)==0 );\n          assert( pE->pLeft!=0 );\n          assert( !ExprHasProperty(pE->pLeft, EP_IntValue) );\n          zTName = pE->pLeft->u.zToken;\n        }\n        for(i=0, pFrom=pTabList->a; i<pTabList->nSrc; i++, pFrom++){\n          int nAdd;                    /* Number of cols including rowid */\n          Table *pTab = pFrom->pTab;   /* Table for this data source */\n          ExprList *pNestedFrom;       /* Result-set of a nested FROM clause */\n          char *zTabName;              /* AS name for this data source */\n"
+        },
+        {
+          "before": "            pNestedFrom = pFrom->pSelect->pEList;\n            assert( pNestedFrom!=0 );\n            assert( pNestedFrom->nExpr==pTab->nCol );\n          }else{\n            if( zTName && sqlite3StrICmp(zTName, zTabName)!=0 ){\n              continue;\n",
+          "after": "            pNestedFrom = pFrom->pSelect->pEList;\n            assert( pNestedFrom!=0 );\n            assert( pNestedFrom->nExpr==pTab->nCol );\n            assert( VisibleRowid(pTab)==0 || ViewCanHaveRowid );\n          }else{\n            if( zTName && sqlite3StrICmp(zTName, zTabName)!=0 ){\n              continue;\n"
+        },
+        {
+          "before": "          }else{\n            pUsing = 0;\n          }\n          for(j=0; j<pTab->nCol; j++){\n            char *zName = pTab->aCol[j].zCnName;\n            struct ExprList_item *pX; /* Newly added ExprList term */\n\n            assert( zName );\n            if( zTName\n             && pNestedFrom\n             && sqlite3MatchEName(&pNestedFrom->a[j], 0, zTName, 0)==0\n            ){\n              continue;\n            }\n\n            /* If a column is marked as 'hidden', omit it from the expanded\n            ** result-set list unless the SELECT has the SF_IncludeHidden\n            ** bit set.\n            */\n            if( (p->selFlags & SF_IncludeHidden)==0\n             && IsHiddenColumn(&pTab->aCol[j]) \n            ){\n              continue;\n            }\n            if( (pTab->aCol[j].colFlags & COLFLAG_NOEXPAND)!=0\n             && zTName==0\n             && (selFlags & (SF_NestedFrom))==0\n            ){\n              continue;\n            }\n            tableSeen = 1;\n\n            if( i>0 && zTName==0 && (selFlags & SF_NestedFrom)==0 ){\n",
+          "after": "          }else{\n            pUsing = 0;\n          }\n\n          nAdd = pTab->nCol;\n          if( VisibleRowid(pTab) && (selFlags & SF_NestedFrom)!=0 ) nAdd++;\n          for(j=0; j<nAdd; j++){\n            const char *zName; \n            struct ExprList_item *pX; /* Newly added ExprList term */\n\n            if( j==pTab->nCol ){\n              zName = sqlite3RowidAlias(pTab);\n              if( zName==0 ) continue;\n            }else{\n              zName = pTab->aCol[j].zCnName;\n\n              /* If pTab is actually an SF_NestedFrom sub-select, do not\n              ** expand any ENAME_ROWID columns.  */\n              if( pNestedFrom && pNestedFrom->a[j].fg.eEName==ENAME_ROWID ){\n                continue;\n              }\n\n              if( zTName\n               && pNestedFrom\n               && sqlite3MatchEName(&pNestedFrom->a[j], 0, zTName, 0, 0)==0\n              ){\n                continue;\n              }\n\n              /* If a column is marked as 'hidden', omit it from the expanded\n              ** result-set list unless the SELECT has the SF_IncludeHidden\n              ** bit set.\n              */\n              if( (p->selFlags & SF_IncludeHidden)==0\n                && IsHiddenColumn(&pTab->aCol[j])\n              ){\n                continue;\n              }\n              if( (pTab->aCol[j].colFlags & COLFLAG_NOEXPAND)!=0\n               && zTName==0\n               && (selFlags & (SF_NestedFrom))==0\n              ){\n                continue;\n              }\n            }\n            assert( zName );\n            tableSeen = 1;\n\n            if( i>0 && zTName==0 && (selFlags & SF_NestedFrom)==0 ){\n"
+        },
+        {
+          "before": "            pX = &pNew->a[pNew->nExpr-1];\n            assert( pX->zEName==0 );\n            if( (selFlags & SF_NestedFrom)!=0 && !IN_RENAME_OBJECT ){\n              if( pNestedFrom ){\n                pX->zEName = sqlite3DbStrDup(db, pNestedFrom->a[j].zEName);\n                testcase( pX->zEName==0 );\n              }else{\n",
+          "after": "            pX = &pNew->a[pNew->nExpr-1];\n            assert( pX->zEName==0 );\n            if( (selFlags & SF_NestedFrom)!=0 && !IN_RENAME_OBJECT ){\n              if( pNestedFrom && (!ViewCanHaveRowid || j<pNestedFrom->nExpr) ){\n                assert( j<pNestedFrom->nExpr );\n                pX->zEName = sqlite3DbStrDup(db, pNestedFrom->a[j].zEName);\n                testcase( pX->zEName==0 );\n              }else{\n"
+        },
+        {
+          "before": "                                           zSchemaName, zTabName, zName);\n                testcase( pX->zEName==0 );\n              }\n              pX->fg.eEName = ENAME_TAB;\n              if( (pFrom->fg.isUsing\n                   && sqlite3IdListIndex(pFrom->u3.pUsing, zName)>=0)\n               || (pUsing && sqlite3IdListIndex(pUsing, zName)>=0)\n               || (pTab->aCol[j].colFlags & COLFLAG_NOEXPAND)!=0\n              ){\n                pX->fg.bNoExpand = 1;\n              }\n",
+          "after": "                                           zSchemaName, zTabName, zName);\n                testcase( pX->zEName==0 );\n              }\n              pX->fg.eEName = (j==pTab->nCol ? ENAME_ROWID : ENAME_TAB);\n              if( (pFrom->fg.isUsing\n                   && sqlite3IdListIndex(pFrom->u3.pUsing, zName)>=0)\n               || (pUsing && sqlite3IdListIndex(pUsing, zName)>=0)\n               || (j<pTab->nCol && (pTab->aCol[j].colFlags & COLFLAG_NOEXPAND))\n              ){\n                pX->fg.bNoExpand = 1;\n              }\n"
         }
       ]
     },
@@ -267,29 +278,40 @@
     {
       "path": "src/sqliteInt.h",
       "beforeSha256": "a6d9260fda695bb5e69f14b445f53ae11383d2af3e03b06dca5315967a71f0a3",
-      "afterSha256": "07266394d141aed3cb670e84095774da98dd820c4c0125bff87bd55cc620d042",
+      "afterSha256": "4a035d98946a3ae50bff145bf3c00b0dc98bbdd873a78a95144ea72d9ea92333",
       "provenance": {
         "kind": "adapted-upstream",
         "officialGitMirrorCommits": [
+          "f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
           "daee74c3ac0112ecaca4817954f0394454050065"
         ],
         "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
           "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
         ],
-        "nativePackageQualification": false
+        "nativePackageQualification": false,
+        "adaptation": "Complete nested-FROM rowid representation prerequisite, manually applied to SQLite3.40 AST; retains prior2024 compatibility changes."
       },
       "hunks": [
         {
           "before": "#define HasRowid(X)     (((X)->tabFlags & TF_WithoutRowid)==0)\n#define VisibleRowid(X) (((X)->tabFlags & TF_NoVisibleRowid)==0)\n\n/*\n** Each foreign key constraint is an instance of the following structure.\n**\n",
-          "after": "#define HasRowid(X)     (((X)->tabFlags & TF_WithoutRowid)==0)\n#define VisibleRowid(X) (((X)->tabFlags & TF_NoVisibleRowid)==0)\n\n/* Macro is true if the SQLITE_ALLOW_ROWID_IN_VIEW (mis-)feature is\n** available.  By default, this macro is false\n*/\n#ifndef SQLITE_ALLOW_ROWID_IN_VIEW\n# define ViewCanHaveRowid     0\n#else\n# define ViewCanHaveRowid     (sqlite3Config.mNoVisibleRowid==0)\n#endif\n\n/*\n** Each foreign key constraint is an instance of the following structure.\n**\n",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Exact official hunk; line offsets only"
+          "after": "#define HasRowid(X)     (((X)->tabFlags & TF_WithoutRowid)==0)\n#define VisibleRowid(X) (((X)->tabFlags & TF_NoVisibleRowid)==0)\n\n/* Macro is true if the SQLITE_ALLOW_ROWID_IN_VIEW (mis-)feature is\n** available.  By default, this macro is false\n*/\n#ifndef SQLITE_ALLOW_ROWID_IN_VIEW\n# define ViewCanHaveRowid     0\n#else\n# define ViewCanHaveRowid     (sqlite3Config.mNoVisibleRowid==0)\n#endif\n\n/*\n** Each foreign key constraint is an instance of the following structure.\n**\n"
         },
         {
-          "before": "#endif\n#ifndef SQLITE_UNTESTABLE\n  int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */\n#endif\n  int bLocaltimeFault;              /* True to fail localtime() calls */\n  int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */",
-          "after": "#endif\n#ifndef SQLITE_UNTESTABLE\n  int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */\n#endif\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n  u32 mNoVisibleRowid;              /* TF_NoVisibleRowid if the ROWID_IN_VIEW\n                                    ** feature is disabled.  0 if rowids can\n                                    ** occur in views. */\n#endif\n  int bLocaltimeFault;              /* True to fail localtime() calls */\n  int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */",
-          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
-          "adaptation": "Exact official hunk; line offsets only"
+          "before": "#define ENAME_NAME  0       /* The AS clause of a result set */\n#define ENAME_SPAN  1       /* Complete text of the result set expression */\n#define ENAME_TAB   2       /* \"DB.TABLE.NAME\" for the result set */\n\n/*\n** An instance of this structure can hold a simple list of identifiers,\n",
+          "after": "#define ENAME_NAME  0       /* The AS clause of a result set */\n#define ENAME_SPAN  1       /* Complete text of the result set expression */\n#define ENAME_TAB   2       /* \"DB.TABLE.NAME\" for the result set */\n#define ENAME_ROWID 3       /* \"DB.TABLE._rowid_\" for * expansion of rowid */\n\n/*\n** An instance of this structure can hold a simple list of identifiers,\n"
+        },
+        {
+          "before": "#ifndef SQLITE_UNTESTABLE\n  int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */\n#endif\n  int bLocaltimeFault;              /* True to fail localtime() calls */\n  int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */\n  int iOnceResetThreshold;          /* When to reset OP_Once counters */\n",
+          "after": "#ifndef SQLITE_UNTESTABLE\n  int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */\n#endif\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n  u32 mNoVisibleRowid;              /* TF_NoVisibleRowid if the ROWID_IN_VIEW\n                                    ** feature is disabled.  0 if rowids can\n                                    ** occur in views. */\n#endif\n  int bLocaltimeFault;              /* True to fail localtime() calls */\n  int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */\n  int iOnceResetThreshold;          /* When to reset OP_Once counters */\n"
+        },
+        {
+          "before": "int sqlite3ExprCanBeNull(const Expr*);\nint sqlite3ExprNeedsNoAffinityChange(const Expr*, char);\nint sqlite3IsRowid(const char*);\nvoid sqlite3GenerateRowDelete(\n    Parse*,Table*,Trigger*,int,int,int,i16,u8,u8,u8,int);\nvoid sqlite3GenerateRowIndexDelete(Parse*, Table*, int, int, int*, int);\n",
+          "after": "int sqlite3ExprCanBeNull(const Expr*);\nint sqlite3ExprNeedsNoAffinityChange(const Expr*, char);\nint sqlite3IsRowid(const char*);\nconst char *sqlite3RowidAlias(Table *pTab);\nvoid sqlite3GenerateRowDelete(\n    Parse*,Table*,Trigger*,int,int,int,i16,u8,u8,u8,int);\nvoid sqlite3GenerateRowIndexDelete(Parse*, Table*, int, int, int*, int);\n"
+        },
+        {
+          "before": "  const struct ExprList_item*,\n  const char*,\n  const char*,\n  const char*\n);\nBitmask sqlite3ExprColUsed(Expr*);\nu8 sqlite3StrIHash(const char*);\n",
+          "after": "  const struct ExprList_item*,\n  const char*,\n  const char*,\n  const char*,\n  int*\n);\nBitmask sqlite3ExprColUsed(Expr*);\nu8 sqlite3StrIHash(const char*);\n"
         }
       ]
     },
@@ -503,6 +525,91 @@
           "after": "    }\n    expr {[file size test.db]/2}\n  } $pgsize\n}\n\n# Assert the configured upper bound as well as the historical 16KiB input.\n# Expected values use the read-only compile constant, never observed DB output.\nforeach sectorsize {32768 65536} {\n  db close\n  forcedelete test.db test.db-journal\n  sqlite3_simulate_device -char {} -sectorsize $sectorsize\n  sqlite3 db test.db -vfs devsym\n  db eval { PRAGMA auto_vacuum=OFF; }\n  set expected [expr {min($sectorsize, $::SQLITE_MAX_DEFAULT_PAGE_SIZE)}]\n  do_test io-5-cap.$sectorsize {\n    execsql { CREATE TABLE abc(a, b, c); }\n    expr {[file size test.db]/2}\n  } $expected\n}\n\n#----------------------------------------------------------------------\n"
         }
       ]
+    },
+    {
+      "path": "src/expr.c",
+      "beforeSha256": "8c756479204f3ce8ad381dd3c2000368830bd3ccb5df40d4e211c9ccf187dba0",
+      "afterSha256": "e47da3e53de28cf87ab2fa2dca5747e97adff98e6e574cab236a17c02f4b2101",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
+          "296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
+          "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "nativePackageQualification": false,
+        "adaptation": "Runtime helper exact upstream algorithm at SQLite3.40 insertion point."
+      },
+      "hunks": [
+        {
+          "before": "  if( sqlite3StrICmp(z, \"OID\")==0 ) return 1;\n  return 0;\n}\n\n/*\n** pX is the RHS of an IN operator.  If pX is a SELECT statement \n",
+          "after": "  if( sqlite3StrICmp(z, \"OID\")==0 ) return 1;\n  return 0;\n}\n\n/*\n** Return a pointer to a buffer containing a usable rowid alias for table\n** pTab. An alias is usable if there is not an explicit user-defined column \n** of the same name.\n*/\nconst char *sqlite3RowidAlias(Table *pTab){\n  const char *azOpt[] = {\"_ROWID_\", \"ROWID\", \"OID\"};\n  int ii;\n  assert( VisibleRowid(pTab) );\n  for(ii=0; ii<ArraySize(azOpt); ii++){\n    int iCol;\n    for(iCol=0; iCol<pTab->nCol; iCol++){\n      if( sqlite3_stricmp(azOpt[ii], pTab->aCol[iCol].zCnName)==0 ) break;\n    }\n    if( iCol==pTab->nCol ){\n      return azOpt[ii];\n    }\n  }\n  return 0;\n}\n\n\n/*\n** pX is the RHS of an IN operator.  If pX is a SELECT statement \n"
+        }
+      ]
+    },
+    {
+      "path": "test/joinH.test",
+      "beforeSha256": "ff39103158785861cf861a124b232dd0bada7603ad70ac6ed942c0e7332e860b",
+      "afterSha256": "ff32a2057690ee7425bea0855225bafa4609a6abb7e56509892e54d319c9bbbc",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
+          "296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd",
+          "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "nativePackageQualification": false,
+        "adaptation": "Append only21 nested-FROM controls from final296 sections7-9; retain breakpoint command; rename duplicate7.1 UPDATE and9.8 setup identifiers only; all SQL/oracles exact."
+      },
+      "hunks": [
+        {
+          "before": "} {1}\n\n\nfinish_test\n",
+          "after": "} {1}\n\n\n#-------------------------------------------------------------------------\nreset_db\ndo_execsql_test 7.0 {\n  CREATE TABLE t1(a, b);\n  CREATE TABLE t2(c);\n  CREATE TABLE t3(d);\n\n  INSERT INTO t1 VALUES ('a', 'a');\n  INSERT INTO t2 VALUES ('ddd');\n  INSERT INTO t3 VALUES(1234);\n}\n\ndo_execsql_test 7.1 {\n  SELECT t2.rowid FROM t1 JOIN (t2 JOIN t3);\n} {1}\n\ndo_execsql_test 7.1-update {\n  UPDATE t1 SET b = t2.rowid FROM t2, t3;\n}\n\ndo_execsql_test 7.2 { \n  SELECT * FROM t1\n} {a 1}\n\n#-------------------------------------------------------------------------\nreset_db\ndo_execsql_test 8.0 {\n  CREATE TABLE x1(a INTEGER PRIMARY KEY, b);\n  CREATE TABLE x2(c, d);\n  CREATE TABLE x3(rowid, _rowid_);\n\n  CREATE TABLE x4(rowid, _rowid_, oid);\n\n  INSERT INTO x1 VALUES(1000, 'thousand');\n  INSERT INTO x2 VALUES('c', 'd');\n  INSERT INTO x3(oid, rowid, _rowid_) VALUES(43, 'hello', 'world');\n  INSERT INTO x4(oid, rowid, _rowid_) VALUES('forty three', 'hello', 'world');\n}\n\ndo_execsql_test 8.1 {\n  SELECT x3.oid FROM x1 JOIN (x2 JOIN x3 ON c='c')\n} 43\n\nbreakpoint\ndo_execsql_test 8.2 {\n  SELECT x3.rowid FROM x1 JOIN (x2 JOIN x3 ON c='c')\n} {hello}\n\ndo_execsql_test 8.3 {\n  SELECT x4.oid FROM x1 JOIN (x2 JOIN x4 ON c='c')\n} {{forty three}}\n\n\n#---------------------------------------------------------------------\n#\nreset_db\ndo_execsql_test 9.0 {\n  CREATE TABLE x1(a);\n  CREATE TABLE x2(b);\n  CREATE TABLE x3(c);\n\n  CREATE TABLE wo1(a PRIMARY KEY, b) WITHOUT ROWID;\n  CREATE TABLE wo2(a PRIMARY KEY, rowid) WITHOUT ROWID;\n  CREATE TABLE wo3(a PRIMARY KEY, b) WITHOUT ROWID;\n}\n\ndo_catchsql_test 9.1 {\n  SELECT rowid FROM wo1, x1, x2;\n} {1 {ambiguous column name: rowid}}\ndo_catchsql_test 9.2 {\n  SELECT rowid FROM wo1, (x1, x2);\n} {1 {ambiguous column name: rowid}}\ndo_catchsql_test 9.3 {\n  SELECT rowid FROM wo1 JOIN (x1 JOIN x2);\n} {1 {ambiguous column name: rowid}}\ndo_catchsql_test 9.4 {\n  SELECT a FROM wo1, x1, x2;\n} {1 {ambiguous column name: a}}\n\n\n# It is not possible to use \"rowid\" in a USING clause.\n#\ndo_catchsql_test 9.5 {\n  SELECT * FROM x1 JOIN x2 USING (rowid);\n} {1 {cannot join using column rowid - column not present in both tables}}\ndo_catchsql_test 9.6 {\n  SELECT * FROM wo2 JOIN x2 USING (rowid);\n} {1 {cannot join using column rowid - column not present in both tables}}\n\n# \"rowid\" columns are not matched by NATURAL JOIN. If they were, then\n# the SELECT below would return zero rows.\ndo_execsql_test 9.7 {\n  INSERT INTO x1(rowid, a) VALUES(101, 'A');\n  INSERT INTO x2(rowid, b) VALUES(55, 'B');\n  SELECT * FROM x1 NATURAL JOIN x2;\n} {A B}\n\ndo_execsql_test 9.8-setup {\n  INSERT INTO wo1(a, b) VALUES('mya', 'myb');\n  INSERT INTO wo2(a, rowid) VALUES('mypk', 'myrowid');\n  INSERT INTO wo3(a, b) VALUES('MYA', 'MYB');\n  INSERT INTO x3(rowid, c) VALUES(99, 'x3B');\n}\n\ndo_catchsql_test 9.8 {\n  SELECT rowid FROM x1 JOIN (x2 JOIN wo2);\n} {0 myrowid}\ndo_catchsql_test 9.9 {\n  SELECT _rowid_ FROM wo1 JOIN (wo3 JOIN x3)\n} {0 99}\ndo_catchsql_test 9.10 {\n  SELECT oid FROM wo1 JOIN (wo3 JOIN x3)\n} {0 99}\ndo_catchsql_test 9.11 {\n  SELECT oid FROM wo2 JOIN (wo3 JOIN x3)\n} {0 99}\n\nfinish_test\n"
+        }
+      ]
     }
-  ]
+  ],
+  "unchangedSourceRequirements": [
+    {
+      "path": "test/join8.test",
+      "sha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc",
+      "authorityCommit": "296ae1e4673151e59593105b653e87eceae25163"
+    }
+  ],
+  "predecessor": {
+    "changesSha256": "94eab602b296dc264e167d0c22297b360faa0d7dbe68afb99eefc85015914394",
+    "sourcePathCount": 20,
+    "retainedOrExtendedChangingPaths": 19,
+    "newChangingPaths": [
+      "src/expr.c",
+      "test/joinH.test"
+    ],
+    "retiredTransformations": [
+      {
+        "path": "test/join8.test",
+        "beforeSha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc",
+        "afterSha256": "38909666f2540393537a49113ca7984dfbcd2ec0d79ca1f2678c6d45177b9fc2",
+        "upstreamCommit": "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
+        "authorityResponseSha256": "e632b92a364832a7c4bf4ee36946c8c8aa08afc2b58398d904900571ea08c213",
+        "hunks": [
+          {
+            "before": "  CREATE INDEX t1x2 ON t1(b);\n  INSERT INTO t1 DEFAULT VALUES;\n} {}\ndo_catchsql_test join8-1010 {\n  SELECT a\n    FROM (\n",
+            "after": "  CREATE INDEX t1x2 ON t1(b);\n  INSERT INTO t1 DEFAULT VALUES;\n} {}\nifcapable allow_rowid_in_view {\n  set res {1 {no such column: rowid}}\n} else {\n  set res {0 1}\n}\ndo_catchsql_test join8-1010 {\n  SELECT a\n    FROM (\n"
+          },
+          {
+            "before": "    NATURAL LEFT FULL JOIN t1\n   WHERE ( rowid , 1 )<=(CASE 5 WHEN 619 THEN 841 ELSE 3374391096 END,0)\n   ORDER BY a ASC;\n} {0 1}\n\n# Pending issue #2: (now resolved)\n# Jump to addrHalt inside the RIGHT JOIN body subroutine bypasses the",
+            "after": "    NATURAL LEFT FULL JOIN t1\n   WHERE ( rowid , 1 )<=(CASE 5 WHEN 619 THEN 841 ELSE 3374391096 END,0)\n   ORDER BY a ASC;\n} $res\n\n# Pending issue #2: (now resolved)\n# Jump to addrHalt inside the RIGHT JOIN body subroutine bypasses the"
+          }
+        ],
+        "retirementReason": "Final296 exact original SQL/oracle restores pre-common join8 bytes; obsolete conditional retired, not silently retained or converted to no-op.",
+        "finalSha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc"
+      }
+    ]
+  }
 }

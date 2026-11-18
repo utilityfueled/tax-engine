@@ -13426,6 +13426,26 @@
       ]
     },
     {
+      "key": "federal/sqlite-nested-rowid-compatibility",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd; https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065; https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163",
+      "specPath": "spec/ops/sqlite-nested-rowid-compatibility.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/sqlite-original-distribution-abi",
       "jurisdiction": "federal",
       "taxYear": 2026,

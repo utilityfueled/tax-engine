@@ -3,8 +3,8 @@ from pathlib import Path
 import argparse,hashlib,json,os,re,stat
 
 E=Path(__file__).resolve().parent
-PATHS=frozenset({'src/test_config.c','test/join8.test','ext/recover/sqlite3recover.c','src/build.c','src/ctime.c','src/global.c','src/main.c','src/resolve.c','src/select.c','src/shell.c.in','src/sqlite.h.in','src/sqliteInt.h','test/join5.test','test/misc2.test','test/misc8.test','test/returning1.test','test/rowid.test','test/trigger9.test','tool/mkctimec.tcl','test/io.test'})
-ORIGINAL_PATHS={'src/test_config.c','test/join8.test','ext/recover/sqlite3recover.c'}
+PATHS=frozenset({'src/select.c', 'src/sqlite.h.in', 'ext/recover/sqlite3recover.c', 'src/global.c', 'test/misc8.test', 'src/expr.c', 'src/shell.c.in', 'src/build.c', 'test/joinH.test', 'test/misc2.test', 'tool/mkctimec.tcl', 'test/returning1.test', 'test/io.test', 'src/ctime.c', 'test/rowid.test', 'src/resolve.c', 'test/join5.test', 'test/trigger9.test', 'src/sqliteInt.h', 'src/main.c', 'src/test_config.c'})
+ORIGINAL_PATHS={'src/test_config.c','ext/recover/sqlite3recover.c'}
 sha=lambda b:hashlib.sha256(b).hexdigest()
 def digest(value):
     return isinstance(value,str)and re.fullmatch('[0-9a-f]{64}',value) is not None
@@ -58,17 +58,26 @@ def apply(source,record):
     assert record.parent.is_dir()and record.parent.resolve()==record.parent.absolute(),'canonical-record-parent'
     assert not os.path.lexists(record),'fresh-record'
     manifest=json.loads((E/'compatibility-changes.json').read_text());assert manifest['schema']==2,'compatibility-schema'
-    rows=manifest['changes'];assert len(rows)==20 and {r['path']for r in rows}==PATHS,'exact-twenty-paths'
+    rows=manifest['changes'];assert len(rows)==21 and {r['path']for r in rows}==PATHS,'exact-twenty-one-paths'
+    guards=manifest['unchangedSourceRequirements']
+    assert len(guards)==1 and guards[0]['path']=='test/join8.test','exact-unchanged-join8'
+    assert digest(guards[0]['sha256'])and guards[0]['authorityCommit']=='296ae1e4673151e59593105b653e87eceae25163','unchanged-join8-authority'
     prepared=[];fds=[];record_fd=None;written=[];started=[]
     try:
-        for row in rows:
+        for row in rows+guards:
             path=source/row['path'];identity=path.lstat()
             assert path.resolve()==path and stat.S_ISREG(identity.st_mode)and identity.st_nlink==1,'regular-source'
-            info=provenance(row);data=path.read_bytes();result=transform(data,row)
+            data=path.read_bytes()
+            if row in guards:
+                assert sha(data)==row['sha256'],'unchanged-original-join8-hash'
+                result=data;info={'unchangedSourceRequirement':True,'authorityCommit':row['authorityCommit']}
+                row=dict(row,beforeSha256=row['sha256'],afterSha256=row['sha256'])
+            else:
+                info=provenance(row);result=transform(data,row)
             fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW);fds.append(fd);opened=os.fstat(fd)
             assert (opened.st_dev,opened.st_ino,opened.st_size,opened.st_nlink)==(identity.st_dev,identity.st_ino,identity.st_size,1),'stable-source'
             prepared.append((path,fd,opened,data,result,row,info))
-        # All twenty transformations, custody checks, and live descriptor bytes
+        # All twenty-one transformations and unchanged join8 identity, custody checks, and live descriptor bytes
         # are checked before the first source write. Hold all descriptors open.
         for path,fd,identity,data,result,row,info in prepared:
             verify_custody(path,fd,identity,data,row['beforeSha256'])
@@ -81,6 +90,7 @@ def apply(source,record):
             verify_custody(path,fd,identity,data,row['beforeSha256'])
         for path,fd,identity,data,result,row,info in prepared:
             verify_custody(path,fd,identity,data,row['beforeSha256'])
+            if info.get('unchangedSourceRequirement'):continue
             started.append(row['path'])
             os.ftruncate(fd,0)
             with os.fdopen(fd,'wb',closefd=False)as target:target.write(result);target.flush();os.fsync(fd)
@@ -90,7 +100,7 @@ def apply(source,record):
         # requires all final live paths to retain their held inode and bytes.
         for path,fd,identity,data,result,row,info in prepared:
             verify_custody(path,fd,identity,result,row['afterSha256'])
-        receipt={'passed':True,'selectedPaths':sorted(PATHS),'files':[dict(path=row['path'],beforeSha256=row['beforeSha256'],afterSha256=row['afterSha256'],**info)for path,fd,identity,data,result,row,info in prepared],'commonPrerequisitesAppliedBeforeCveSplit':True,'originalBaselineUnmodified':False,'allOriginalFuzzInvariantsPreserved':True,'oomHistoricalCauseProven':False,'packageQualificationClaim':False}
+        receipt={'passed':True,'selectedPaths':sorted(PATHS),'files':[dict(path=row['path'],beforeSha256=row['beforeSha256'],afterSha256=row['afterSha256'],**info)for path,fd,identity,data,result,row,info in prepared if not info.get('unchangedSourceRequirement')],'unchangedSourceRequirements':guards,'activeChangingPathCount':21,'commonPrerequisitesAppliedBeforeCveSplit':True,'originalBaselineUnmodified':False,'allOriginalFuzzInvariantsPreserved':True,'oomHistoricalCauseProven':False,'packageQualificationClaim':False}
         with os.fdopen(record_fd,'w',closefd=False)as target:json.dump(receipt,target,indent=2);target.write('\n');target.flush();os.fsync(record_fd)
         return receipt
     except Exception:

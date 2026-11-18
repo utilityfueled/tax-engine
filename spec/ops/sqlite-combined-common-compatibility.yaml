@@ -3,17 +3,18 @@ taxYear: 2025
 status: "private-integration-proposal-not-qualified"
 reference: "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065; https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
 notes: |
-  Extends three existing common source changes by sixteen adapted ROWID changes
-  and one local source-derived IO oracle correction. No fuzz invariant is changed.
+  Retains or extends nineteen prior common changing paths and adds two nested-FROM paths;
+  retires the obsolete join8 conditional to restore exact original SQL/oracle bytes. Retains the local IO correction and adapted ROWID changes
+  without changing any fuzz invariant.
   Native host smoke, Debian suites, ABI/GPG and release evidence stay separate.
 lines:
   - line: "exact-common-inputs"
-    description: "Apply twenty exact source transformations before baseline/candidate split"
-    formula: "Require exactly twenty unique fixed paths, schema2, exact original/result hashes, unique hunks, canonical regular singly-linked files and all source/receipt custody prechecks before the first source write. Invalid initial inputs must leave every source byte unchanged. Recheck all targets after reserving the receipt, immediately before and after each write, and all final paths before success: canonical live regular pathname and held descriptor must retain original device/inode, single link, exact expected bytes and hash. Detected later drift fails a reserved receipt and may leave partial source writes. Require an exclusively owned build tree; checks do not provide atomic rollback or safety against arbitrary concurrent writers."
+    description: "Apply twenty-one exact source transformations before baseline/candidate split"
+    formula: "Require exactly twenty-one unique changing paths plus one unchanged join8 identity input, schema2, exact original/result hashes, unique hunks, canonical regular singly-linked files and all source/receipt custody prechecks before the first source write. Invalid initial inputs must leave every source byte unchanged. Recheck all targets after reserving the receipt, immediately before and after each write, and all final paths before success: canonical live regular pathname and held descriptor must retain original device/inode, single link, exact expected bytes and hash. Detected later drift fails a reserved receipt and may leave partial source writes. Require an exclusively owned build tree; checks do not provide atomic rollback or safety against arbitrary concurrent writers."
     testRef: "tests/scripts/sqlite-common-compatibility-processor.py::ProcessorControls"
   - line: "honest-provenance"
     description: "Preserve existing upstream authorities and identify adapted/local transformations"
-    formula: "Keep the original three manifest rows byte-equivalent. Every ROWID hunk names its official commit and adaptation. IO is a local source-derived oracle correction tied to pager C constants and authenticated Debian cap, with no invented upstream commit. Receipts retain each provenance kind and hold qualification false."
+    formula: "Keep the two still-applicable original manifest rows byte-equivalent. Preserve the complete retired join8 row in predecessor metadata and require its original before hash as the unchanged source input, justified by exact final296 authority. Keep the immutable original20 predecessor hash and failed actual385 receipt. Every ROWID hunk names its official commit and adaptation. IO is a local source-derived oracle correction tied to pager C constants and authenticated Debian cap, with no invented upstream commit. Receipts retain each provenance kind and hold qualification false."
     testRef: "tests/scripts/sqlite-common-prerequisites.test.ts::pins the original three reviewed prerequisites and the explicit combined extension"
   - line: "retained-gates"
     description: "Preserve complete CVE, suite, fuzz and production feature requirements"

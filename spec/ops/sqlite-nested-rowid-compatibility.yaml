@@ -1,0 +1,21 @@
+form: "SQLite-Nested-Rowid-Compatibility"
+taxYear: 2025
+status: "private-source-proposal-host-semantics-verified-package-qualification-pending"
+reference: "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd; https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065; https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+notes: |
+  The spec-first private predecessor and failed actual385 run44221292131 remain evidence.
+  This is a common runtime prerequisite in both vulnerable baseline and CVE candidate,
+  not a CVE-only patch. Host ARM64 semantic evidence does not qualify Debian/Linux packages.
+lines:
+  - line: "nested-from-runtime-prerequisite"
+    description: "Backport complete nested-FROM rowid representation across four coupled runtime files"
+    formula: "Adapt official f99 nested-FROM rowid alias selection/shadowing, ENAME_ROWID creation, matching/counting, hidden expansion exclusion, original column index and declarations to SQLite3.40; retain later daee/296 configuration and preference semantics, including rowid16.8 result3. Preserve every original query, fuzz invariant and production flag."
+    testRef: "tests/scripts/sqlite-common-prerequisites.test.ts::pins the original three reviewed prerequisites and the explicit combined extension"
+  - line: "join8-final-oracle-and-misc8-ambiguity"
+    description: "Restore exact final296 join8 original oracle while retaining misc8 errors"
+    formula: "Require original join8-1010 query/oracle catchsql0 result1 as final296, retiring the obsolete conditional and guarding exact original file hash. Keep complete misc8-3.0 SQL and final296 ambiguity error in legacy, original no-such-column error in standard. Preserve original joinH corpus and append21 exact nested-FROM bodies/oracles; only duplicate test identifiers receive unique suffixes."
+    testRef: "tests/scripts/sqlite-common-compatibility-processor.py::ProcessorControls"
+  - line: "qualification-and-source-custody"
+    description: "Keep source identities, original failed evidence and all later qualification gates"
+    formula: "Keep immutable predecessor20 plan and original Debian evidence. Apply exactly21 changing paths plus unchanged join8 input with all custody checks before writes; later drift fails an honest potentially-partial receipt. Both original complete full suites, paired CVE regression controls, candidate sanitizer, ABI, GPG consumers and runtime integration remain required for exact new package/source bindings. No qualification or original-unmodified claim from host semantic checks."
+    testRef: "tests/scripts/sqlite-common-compatibility-processor.py::ProcessorControls"

@@ -111,3 +111,12 @@ archive-bound SBOM/raw scan and independent review remain mandatory. Successful
 source controls or a changed package version cannot remove the Critical finding
 or imply risk acceptance. `candidateReleaseQualified`, `genericAbiApproval` and
 `riskAccepted` stay false.
+
+The common source plan now includes the upstream nested-FROM ROWID representation prerequisite,
+adapted across expr.c, resolve.c, select.c and sqliteInt.h. This changes runtime behavior
+in both the compatibility-repaired vulnerable baseline and the CVE candidate; the original
+Debian source and prior failed actual results remain separate evidence. Final296 upstream
+join8 restores its original query/oracle bytes, retiring the earlier conditional transform.
+The active plan has21 changing paths and verifies the unchanged join8 input. Added upstream
+joinH controls retain every SQL/oracle. Host ARM64 semantic checks do not qualify Debian/Linux
+packages, paired full suites, sanitizer, ABI, GPG consumers or runtime integration.

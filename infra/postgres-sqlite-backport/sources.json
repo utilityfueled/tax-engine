@@ -83,36 +83,38 @@
       "sha256": "5b154faeebed25ac07e112944fb4ddd7b1a7f162185ba90e72683b5a4f021b55"
     },
     "provenance.json": {
-      "bytes": 4504,
-      "sha256": "37afb546efa290c91dec8d5c3f7b07c8472d343500b1a2ee5f2b27f4719833ff"
+      "bytes": 5118,
+      "sha256": "facf8ec95cb01793c531db53dc930ef2da24869c1346ca80e32317295a77867c"
     },
     "upstream-12ad822.patch": {
       "bytes": 9762,
       "sha256": "411243a6543e3bf4adb5674c29ee9166515cb01cc975e7b9a6d664bb3277e4be"
     },
     "apply-compatibility.py": {
-      "bytes": 7882,
-      "sha256": "e374dc25a438abcdaed3e32a33aac315561c6e3f02f840355a7d68bbd9ace079"
+      "bytes": 8738,
+      "sha256": "0c922a19f4fc9e1e0acfcb1f7eea937c1eb9a530191b59113b67dde58392db39"
     },
     "compatibility-changes.json": {
-      "bytes": 38098,
-      "sha256": "94eab602b296dc264e167d0c22297b360faa0d7dbe68afb99eefc85015914394"
+      "bytes": 61811,
+      "sha256": "4fc63090e4bcebd06da6b836360f2113d32f8ef8d6720a8636e70e8ba52e5fbc"
     }
   },
   "commonCompatibilityPrerequisites": {
-    "scope": "Twenty exact common source transformations before vulnerable-baseline/CVE-candidate split: three existing prerequisites, sixteen adapted ROWID runtime/test changes, and one local source-derived IO oracle correction; native/full qualification still required",
-    "changesSha256": "94eab602b296dc264e167d0c22297b360faa0d7dbe68afb99eefc85015914394",
+    "scope": "Twenty-one exact changing source paths plus unchanged original join8 identity before vulnerable-baseline/CVE-candidate split: nineteen retained/extended prior paths and two added nested-FROM paths; obsolete join8 conditional retired by final296 authority; native/full qualification remains required",
+    "changesSha256": "4fc63090e4bcebd06da6b836360f2113d32f8ef8d6720a8636e70e8ba52e5fbc",
     "officialGitMirrorCommits": [
       "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
       "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9",
       "daee74c3ac0112ecaca4817954f0394454050065",
-      "296ae1e4673151e59593105b653e87eceae25163"
+      "296ae1e4673151e59593105b653e87eceae25163",
+      "f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd"
     ],
     "officialUrls": [
       "https://github.com/sqlite/sqlite/commit/f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
       "https://github.com/sqlite/sqlite/commit/73a50fa42cbc2ddd1bf9e795a1407c3c746896e9",
       "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065",
-      "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+      "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163",
+      "https://github.com/sqlite/sqlite/commit/f99a27fab927a8c8fc8dc3c7d179654fa2b12fcd"
     ],
     "originalBaselineUnmodified": false,
     "compilerFlagsChanged": false,
@@ -120,9 +122,9 @@
     "fullPackageQualificationClaim": false,
     "runtimeIntegrationExecuted": false,
     "genericAbiApproval": false,
-    "sourcePathCount": 20,
-    "originalChangesRetained": 3,
-    "adaptedRowidChanges": 16,
+    "sourcePathCount": 21,
+    "originalChangesRetained": 2,
+    "adaptedRowidChanges": 18,
     "localSourceDerivedIoCorrections": 1,
     "allOriginalFuzzInvariantsPreserved": true,
     "nativeFullSuiteQualification": false,
@@ -130,7 +132,16 @@
       "pairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
       "pairedActualSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf"
     },
-    "ioOracleProvenance": "Local source-derived cap-aware expected value and two added boundaries, not an upstream commit; no runtime feature changes."
+    "ioOracleProvenance": "Local source-derived cap-aware expected value and two added boundaries, not an upstream commit; no runtime feature changes.",
+    "unchangedSourceRequirements": [
+      {
+        "path": "test/join8.test",
+        "sha256": "681816ba477d9a74b94afbf0f6ed708d164aaab037e9a17d14158f92c2dee1dc"
+      }
+    ],
+    "predecessor20ChangesSha256": "94eab602b296dc264e167d0c22297b360faa0d7dbe68afb99eefc85015914394",
+    "priorTwentyPathActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44221292131",
+    "commonRuntimePrerequisiteChanged": true
   },
   "commonPackageBuildProfile": {
     "id": "common-dbpage-recovery-v1",
