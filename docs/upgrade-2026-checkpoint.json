@@ -61,13 +61,14 @@
       "supersededB063C4eDefaults": "Root-canceled normal PUSH CI/Web b06344186922860/44186922899 and c4e44188295946/44188296970, actual terminalCANCELLED. b063specinventoryfailure retained; c4ecoverage/spec/type/lint/buildPASS,unitcanceled. Partialbrowserfailureheadings retained; no finalqualification.",
       "sqliteFull17cf": "FAILURE44190069976/17cf0189:compatibility-repaired baselinePackage0/fulltest2 recover.test:78/do_recover_test1.1.2 CLIcloseSQLlogicerror,recipe1. Candidate/CVE/sanitizer not reached.36ledger/37exports/88checks0;normalcleanup/deadlinefalse;independentreviewe48c4c22. No DBPAGEcause/ABI/runtime/releaseclaim.",
       "rrtaPython40f8": "SUCCESS44190812240/40f819b7 valid COMPLETE_NEGATIVE:104uncensoredpasses/0timeouts,11controls each+parity/versions/pypdf verified,temporarycleanuptrue.24pairs per PDF medians4.0744922688778225%/4.177413413033565% below10%;noadoption/CPUcause/strictqualification. Peerceb58ca3.",
-      "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35\u20135.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification."
+      "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35\u20135.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification.",
+      "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
       "Observe fullDBPAGE44198188977/dc2185da once under original165/155/120/15minlimits. Public ABI harness adopted/scopedchecksPASS; no actual dispatch until genuine pairs, originaldistribution extension and review. GPG runnable successor private.",
       "Observe fixedCPUmanual44199237148/43423f37 with original baseline first; preview_review owns one watcher. No changed acceptance, weights, actions or time limits.",
-      "Actual immutableSQLitediscovery44196293753 identifies usr/bin/gpg directconsumer. Prepare exact-source GPG SQLite-backed runtime fixture; indirect/alias uses remain outside discovery. No runtimeclaim.",
-      "Observe one compoundRRTA44204325512/441373a9 through preview_review; same104attempts/4s/8outputs/22controls/10%both; no componentcause or adoption. Preserve runtime-only negative.",
+      "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
+      "Retain compound44204325512 valid negative:104complete,0timeouts,fullparity/cleanup;both10%gatesfail. No adoption/repeat same comparison. Distinct bounded-surface prefilter explored privately with all original gates retained.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
       "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
     ],
@@ -100,7 +101,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "441373a9d53a1c1ba54ee67de4476b42b4baa79e",
+    "latestPushedSource": "ed0b125a",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -135,16 +136,17 @@
       "independentReviewSha256": "add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc",
       "rootChecks": "14new/fullbatch+27originalCPU,lint/syntax/spec/inventory/audit/closurePASS",
       "allOriginalLimitsAndAcceptanceUnchanged": true,
-      "actualFutureRun": "RUNNING44199237148/43423f37/attempt1; original baseline first,2workers/0retry/30sstrict unchanged; preview_review owns watcher"
+      "actualFutureRun": "RUNNING44199237148/43423f37:ordinaryPASS38m18s;strictoriginalbrowserstageactive;2workers/0retry/30sstrict unchanged;preview_review monitors"
     },
     "rrtaCompoundPrefilter": {
       "ledger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
       "sourceManifestSha256": "f7feeb79aec909af28537876ae5287c5e33f7d161928a2ba0b11d111f10c37dc",
       "independentReviewSha256": "8ae82d2a5fe833fcc3abc56dd959c844ddfcc742edafa2c958a1cbfa27f1fca0",
       "checks": "11Node/scopedlint/spec/inventory/actionlintPASS;22controls+4exact complete output parities; ordinaryhelper unchanged",
-      "actual": "RUNNING44204325512/441373a9/attempt1;preview_review owns one actual artifact monitor;20mjob/16mstep original limits",
+      "actual": "COMPLETE44204325512/441373a9:104PASS/0timeout/8fieldparity/22controls/cleanup;pairedmedians9.951277323618509%/9.764402390204502%;both10%FAIL,candidateREJECTED,noadoption",
       "defaultOff": true,
-      "automaticAdoption": false
+      "automaticAdoption": false,
+      "actualIndependentReviewSha256": "0796de5ad74f9178e75a705374a35939e2106d6e2cf75366d85506c5aa69d81b"
     },
     "sqliteExportedAbi": {
       "ledger": "docs/upgrade-2026-sqlite-exported-abi-20261117.md",
@@ -153,6 +155,15 @@
       "rootChecks": "42frozenpins;14Node/9Python/lint/actionlint/spec/inventory/browserauditPASS; explicitURLimport+matchingpinfix after scopedlintfailure",
       "nativeExecution": false,
       "remaining": "Need genuine corresponding library/debug pairs and separate original-distribution\u2192candidate comparison; no runtime/genericABI/release approval"
+    },
+    "sqliteGpgRuntime": {
+      "ledger": "docs/upgrade-2026-sqlite-gpg-tofu-20261117.md",
+      "sourceManifestSha256": "c44cae01895cb38da699e6acb2759f41a5dda5804af5dc878b4bb5940092d85f",
+      "independentReviewSha256": "fb4f38799af2a1acfb0326614e38af11a4e33d7ce58b92ee45aef78557df2a35",
+      "rootChecks": "56frozenpins/15currentdependencies/14exactpaths;21Node/3Python/28closurepins/lint/actionlint/shell/spec/inventory/auditPASS",
+      "actualRuntime": false,
+      "qualifiedPairAvailable": false,
+      "laterAbiSourceChangesRequireExplicitRebind": true
     }
   },
   "nov17New212Timing": {

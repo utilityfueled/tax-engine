@@ -45,3 +45,22 @@ complete-output parity observations. Scoped lint, spec, inventory and actionlint
 passed. Earlier local filter timing used different PDF serialization; those
 negative results do not predict this exact-input combined experiment. No actual
 compound run or adoption is claimed here. The workflow defaults to false.
+
+## Actual compound result: rejected
+
+Run44204325512, source441373a9d53a1c1ba54ee67de4476b42b4baa79e,
+attempt1 completed. All104 scheduled children passed with zero timeouts/errors,
+full eight-field output parity, identical22 controls and normal temporary-input
+removal. Maximum observed child wall time was2.314465020 seconds. Independently
+recomputed paired medians were9.951277323618509% desktop and9.764402390204502%
+mobile. **Both fail the unchanged10% requirement.** The candidate is rejected;
+workflow success records complete measurement, not performance acceptance.
+No helper/interpreter adoption or strict-runtime qualification follows.
+
+Artifact14381844880 is3,792 bytes, SHA-256
+`e5f2591034068af9bf2ac8d6061d75d2802f1197feb09d286bae4c7361779bcf`.
+Independent actual assessment
+`0796de5ad74f9178e75a705374a35939e2106d6e2cf75366d85506c5aa69d81b`
+retains all104 outcomes and the24 pairs per width. Reviewer authorship of the
+original comparison harness is disclosed; the compound change received a separate
+source review. All original failures and thresholds remain.

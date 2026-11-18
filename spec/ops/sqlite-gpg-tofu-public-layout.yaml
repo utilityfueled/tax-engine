@@ -1,0 +1,33 @@
+form: sqlite-gpg-tofu-public-layout
+taxYear: 2025
+jurisdiction: federal
+notes: Standalone explicit consumer-contract diagnostic; no generic ABI or release approval.
+lines:
+  - line: public-admission
+    description: Require explicit exact-source default-off hosted admission before Docker
+    formula: Require matching canonical true event and environment, public nonfork exact repository/default main/first manual attempt/exact source. Token remains API-only and is deleted from child environment.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::requires explicit canonical exact-source public admission"
+  - line: source-closure
+    description: Pin the complete public runtime and guarded broker closure
+    formula: All fixed safe public paths must be regular single-link files with exact bytes and SHA before external requests. Missing or changed files hold.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::refuses missing changed or aliased closure files"
+  - line: fixed-projection
+    description: Publish bounded fixed facts only
+    formula: Require real originalQualificationPassed true and full passing original gates before fixture; public result keeps known source/archive/receipt/provider hashes and exact fixed consumer facts only. Drop arbitrary machine data and map unknown stages honestly. No raw key/home/database/message/status/loader output is published.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::projects only fixed facts and refuses unqualified success"
+  - line: guarded-archive
+    description: Reuse authenticated public archive with full pair decoding and original gates
+    formula: Reuse exact guarded ABI broker and bounded read-only paired inspector; require successful original controller/full/package/CVE/sanitizer receipts and cleanup. Reconstruct only fixed private receipts and candidate package from same immutable ZIP. No build/install or baseline substitution.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::public layout retains original runtime and workflow bounds"
+  - line: token-before-daemon
+    description: Keep API token private and reject the default before inherited admission
+    formula: Constructor removes token from environment, keeps only private memory for broker, and disabled input refuses before inherited native setup.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::captures token privately and rejects default before inherited daemon admission"
+  - line: public-publisher
+    description: Publish exact fixed result and hash leaves with unchanged failure truth
+    formula: Two fresh exclusive result/hash files only; unknown raw fields are dropped, all failures remain false and private unrelated files are excluded.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::publisher exports only two fixed files and preserves failure truth"
+  - line: public-to-original-receipt-integration
+    description: Preserve the original opaque pair admission after public ZIP staging
+    formula: Synthetic read-only archive staging emits real ledger-bound receipt bytes; the unchanged original validator must admit only its opaque token and reject serialized copies. No native code executes in this control.
+    testRef: "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs::private public-archive receipts satisfy the unchanged opaque original gate"

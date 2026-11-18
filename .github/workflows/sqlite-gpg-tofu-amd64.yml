@@ -1,0 +1,70 @@
+name: SQLite GPG TOFU consumer contract AMD64 (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      enable_runtime:
+        description: Explicitly enable the bounded GPG consumer fixture
+        type: boolean
+        required: false
+        default: false
+      source_sha:
+        description: Exact reviewed default-branch adapter SHA
+        type: string
+        required: true
+      artifact_source:
+        description: Exact original qualified source-candidate SHA
+        type: string
+        required: true
+      artifact_run:
+        description: Completed original source-candidate run ID (attempt one)
+        type: string
+        required: true
+      artifact_id:
+        description: Exact closed public original artifact ID
+        type: string
+        required: true
+      artifact_sha256:
+        description: Exact artifact ZIP SHA256 without prefix
+        type: string
+        required: true
+      artifact_bytes:
+        description: Exact artifact ZIP size
+        type: string
+        required: true
+concurrency:
+  group: sqlite-gpg-tofu-amd64-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  runtime:
+    if: inputs.enable_runtime == true && github.repository == 'utilityfueled/tax-engine' && github.event.repository.private == false && github.event.repository.fork == false && github.ref == 'refs/heads/main' && github.run_attempt == 1 && inputs.source_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - name: Check inert public runtime contracts
+        run: |
+          node --test tests/scripts/sqlite-gpg-tofu-runtime.test.mjs tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs tests/scripts/sqlite-exported-abi-artifact.test.mjs
+          python3 -I -B tests/scripts/sqlite-gpg-tofu-public-layout.test.py
+      - name: Execute only the exact qualified pair consumer fixture
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GPG_TOFU_ENABLED: '${{ inputs.enable_runtime }}'
+        run: node scripts/qualify-sqlite-gpg-tofu-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: sqlite-gpg-tofu-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/postgres-source-candidate/publish/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 6

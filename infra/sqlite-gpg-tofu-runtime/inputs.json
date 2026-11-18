@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "files": {
+    ".github/workflows/sqlite-exported-abi-amd64.yml": {
+      "bytes": 2600,
+      "sha256": "a09b7e0a257e9d0337b72df64f2be7438434ddde0587ed3eb36014e7c47fa6de"
+    },
+    ".github/workflows/sqlite-gpg-tofu-amd64.yml": {
+      "bytes": 2810,
+      "sha256": "ff53824fe239489e59a54b23f852ddf89966ab0f0005f454117d8c611485f5c3"
+    },
+    ".node-version": {
+      "bytes": 8,
+      "sha256": "5c293036fc0a61ad76e15d85f454c3c7cec157e181e035b69f95058a2c239144"
+    },
+    "infra/sqlite-gpg-tofu-runtime/README.md": {
+      "bytes": 10859,
+      "sha256": "5130b2f5e591fd0b53400b1caf643a602617f8dec6593ee5e3efcda3395c1802"
+    },
+    "infra/sqlite-gpg-tofu-runtime/command.sh": {
+      "bytes": 5856,
+      "sha256": "3a9176b3e34a535abc1fbce69a05728b749296f093fa6ddb6300f2a4c5b55631"
+    },
+    "infra/sqlite-gpg-tofu-runtime/extract-provider.py": {
+      "bytes": 4008,
+      "sha256": "3ca0e84425c87dd9b9ae8949a031e1bd3153afe3749ce2f1830b00585cdabb97"
+    },
+    "infra/sqlite-gpg-tofu-runtime/prepare-pair.py": {
+      "bytes": 5628,
+      "sha256": "9d9a601c982b09db9582242f0cf8f6cd9d2ba52968003720f7616e0988531aa2"
+    },
+    "infra/sqlite-runtime-consumers/inspect.py": {
+      "bytes": 10306,
+      "sha256": "91776ff0a2afc8cf8e544e7362f701956e70618d47e7e0ca90921f9f998aa9b5"
+    },
+    "scripts/build-postgres-gosu-backport.mjs": {
+      "bytes": 16744,
+      "sha256": "32007f0a40434763303ae88931f84836070e1434f0ce2e49b1a07d7a4fca01fb"
+    },
+    "scripts/build-postgres-libxml2-backport.mjs": {
+      "bytes": 19315,
+      "sha256": "979a27c19ff87e915c76913c304f9cc26d8b56db3e09370e9dd80263be73e390"
+    },
+    "scripts/build-postgres-sqlite-backport.mjs": {
+      "bytes": 8478,
+      "sha256": "f6cc1941f8a17ead0c37c13224c11837d69c1d783a7f18c7660e17157435e9ea"
+    },
+    "scripts/lib/inspect-sqlite-exported-package-abi.py": {
+      "bytes": 13298,
+      "sha256": "4b90386821b26b4565f20a920ef6c8392f2d8b145c6de17d8586be951896c2f3"
+    },
+    "scripts/lib/sqlite-abi-artifact.mjs": {
+      "bytes": 10184,
+      "sha256": "5ca789108dbf102cb8cc34cf931d98eb2f7a19650d690aa560f03b49f129a824"
+    },
+    "scripts/lib/sqlite-gpg-tofu-evidence.mjs": {
+      "bytes": 9506,
+      "sha256": "434fd3a52c8e682f93ded4b21736899c19607e65f44d35ebf8be2c35103fd0fc"
+    },
+    "scripts/local-container-runtime.mjs": {
+      "bytes": 2414,
+      "sha256": "976f04c7cc470c40fecaa51dc3073d288d7d10b2b1bcfdcc379b74f41f4a97e1"
+    },
+    "scripts/qualify-postgres-backports-amd64.mjs": {
+      "bytes": 48092,
+      "sha256": "02038eeda44a8e0c54fc652f7de3e59d231e553c475c4197c7b147aa1ed9d37d"
+    },
+    "scripts/qualify-postgres-source-candidates-amd64.mjs": {
+      "bytes": 18899,
+      "sha256": "42bfd60962ec2e958f61f7141311742a37297f3436312dd6a405a7b23b64fa52"
+    },
+    "scripts/qualify-sqlite-exported-abi-amd64.mjs": {
+      "bytes": 12013,
+      "sha256": "2f640f1db45af7946df7bf25bfba1cc17a47f2a8c1dd117931c630ecb91fcb02"
+    },
+    "scripts/qualify-sqlite-gpg-tofu-amd64.mjs": {
+      "bytes": 12628,
+      "sha256": "fbe500f58a81dbc578371c94c901991b6621756fdf85ab3dd173c1eb756831cc"
+    },
+    "scripts/sqlite-exported-package-abi.mjs": {
+      "bytes": 5199,
+      "sha256": "104a2ab48e3832cab9d8221a2fbc9557341e7dd6a889ffe7440a32c34bfdd2f0"
+    },
+    "scripts/sqlite-gpg-tofu-runtime.mjs": {
+      "bytes": 13946,
+      "sha256": "9698a90e7b9613cb8293f0084d76b6b934e762a9719256b96767026cea6adb63"
+    },
+    "spec/ops/sqlite-gpg-tofu-public-layout.yaml": {
+      "bytes": 3429,
+      "sha256": "79ae1b9cf70fb80de2f07762bf0cd6ee63ea34bef0176f910a955d080984542b"
+    },
+    "spec/ops/sqlite-gpg-tofu-runtime.yaml": {
+      "bytes": 3918,
+      "sha256": "d56510453e1f39d6d8a6a2e79a584f50d745248c97cd051460d7e292636fc12c"
+    },
+    "tests/scripts/sqlite-exported-abi-artifact.test.mjs": {
+      "bytes": 7651,
+      "sha256": "afa241e4b364e381582562c474468f54623c819aee1cedbf184576cf5a8c8502"
+    },
+    "tests/scripts/sqlite-exported-package-abi-parser.py": {
+      "bytes": 9810,
+      "sha256": "b7256126d5d767af605bfbfb02bf564b2d368e0ca80fec693e463c54db36a0b2"
+    },
+    "tests/scripts/sqlite-gpg-tofu-public-layout.test.mjs": {
+      "bytes": 11006,
+      "sha256": "6e5a6ee75fadf19b95cd845252811f913259f521c17cb4a00aeff4b4087b6dbd"
+    },
+    "tests/scripts/sqlite-gpg-tofu-public-layout.test.py": {
+      "bytes": 4663,
+      "sha256": "14ba11286c804755b67853f63a547a21309321865a1f35e0db7ae429d0b5b7dd"
+    },
+    "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs": {
+      "bytes": 20470,
+      "sha256": "f00ee491b8f139cb7b420f7d4c94b1f2f70ff480528fe7579fbc02e4b3be9fb1"
+    }
+  }
+}

@@ -7046,3 +7046,14 @@ the lint failure; agreed README deadline sentence corrected. No native ABI run,
 raw-output review or qualification claimed. New ABI ledger records limits, strict
 unsuppressed commands and remaining original-distribution comparison. Compound
 RRTA44204325512 runs once from pushed441373a9; existing CPU/SQLite watches continue.
+
+### November 17: GPG runtime harness and actual rejected compound result
+
+Adopted14exact GPG runtime fixture paths after56frozenpins/15currentdependencies
+and independentreviewfb4f3879 verified.21Node/3Python/28closurepins/lint/actionlint/
+shell/spec/inventory/auditPASS; no real qualified pair or actualrun. Ledger keeps
+originalqualification, actualPIDboundload, TOFU, privacy and cleanup gates.
+Compound44204325512 completed104/0timeouts with fullparity/controls/cleanup,
+but9.951277%/9.764402% bothFAIL10%; no adoption. Actualreview0796de5a retained.
+Normalbb3fWebfailed649/1/5ordinary,636/14/5strict; newCPUmanual ordinary stage
+passed while its originalstrict stage remains pending. No failure erased.

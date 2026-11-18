@@ -1,0 +1,32 @@
+form: sqlite-gpg-tofu-runtime
+taxYear: 2025
+jurisdiction: federal
+notes: >
+  Default-off source-only runtime fixture, not tax law or qualification. No CLI,
+  workflow or native execution is supplied. Only an authenticated successful
+  original SQLite package pair may be admitted. Existing failing results remain.
+lines:
+  - line: qualified-pair
+    description: Preserve original package and security prerequisites
+    formula: Hash-bound source/run/attempt/result/status/package-ledger receipts must pass existing assertSqliteChecksPassed; require successful cleanup and no deadline, exact candidate package hash and expected provider hash. Opaque admission cannot be forged by caller metadata. No receipt is currently available.
+    testRef: "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs::qualified pair refuses absent failed or substituted receipts"
+  - line: fixed-status
+    description: Verify exact fictional signer with bounded private machine status
+    formula: Require one expected VALIDSIG and GOODSIG plus matching TOFU_USER and TOFU_STATS for successful verification; tamper must fail with BADSIG and no VALIDSIG. Refuse malformed, unknown or oversized records. Never export raw status, names, fingerprints, messages or stacks.
+    testRef: "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs::bounded verification status refuses false positives"
+  - line: persistent-counts
+    description: Exercise actual SQLite-backed TOFU persistence and deduplication
+    formula: Original exact GnuPG 2.2.40 uses sqlite3_open on tofu.db and inserts signatures. Fresh verifier home with public key only must persist TFS version1 counts 1 then1 then2 across A A B; encryption0 policyauto. A tampered A must leave count2. Require original SQLite header; absence or unsupported is HOLD.
+    testRef: "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs::TFS and fingerprint parsing preserve count and identity semantics"
+  - line: actual-loader
+    description: Prove provider initialized in each actual verifier process
+    formula: Match PID recorded from the exact spawned loader/GPG process to that PID's bounded LD_DEBUG_OUTPUT file; require exactly one calling-init libsqlite3.so.0 at the expected baseline or candidate path, exact pre/post provider hash, and reject fallback, another PID, loader-list-only or version-only output. glibc2.36 source supports these exact options and format.
+    testRef: "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs::actual verifier loader proof rejects fallback and unrelated process"
+  - line: owned-protocol
+    description: Retain inherited supervision security bounds and normal cleanup
+    formula: One labeled native AMD64 immutable-base container, readonly root, networknone, nonroot65534, all capabilities dropped, no-new-privileges, readonly public-code inputs and bounded tmpfs; exact immutable image environment with only HOME=/work and LC_ALL=C overrides. Reuse inherited admission capacity supervision and normal cleanup. Fifteen-minute job, twelve-minute controller including three-minute cleanup reserve, at most48 fixed commands, no retry. Only fixed allowlisted evidence files may leave tmpfs; no keyring/home/database/socket export. Require normal owned-home agent shutdown before container stop.
+    testRef: "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs::inert controller runs only bounded fixed owned protocol"
+  - line: provider-extraction
+    description: Read only exact hash-bound provider from candidate package
+    formula: Bound regular Debian ar input to16MiB and decompressed data to32MiB, no aliases/traversal/duplicate members, exact provider path and ELF64 little-endian ET_DYN AMD64 header, original SONAME/dependencies and ELF hash, fresh0444 output. No package execution or filesystem tree extraction.
+    testRef: "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs::bounded package extraction rejects oversized traversal aliases and substitution"
