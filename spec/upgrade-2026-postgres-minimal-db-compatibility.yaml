@@ -1,0 +1,65 @@
+form: "Postgres-Minimal-DB-Compatibility"
+taxYear: 2025
+reference: "https://github.com/docker-library/postgres"
+notes: |
+  Operations evidence only; taxYear is inventory metadata, not tax-year qualification.
+  This isolated synthetic database experiment does not qualify an application or release.
+id: upgrade-2026-postgres-minimal-db-compatibility
+status: opt-in-source-controls-verified-native-qualification-pending
+scope: isolated-synthetic-database-compatibility-only
+platform: linux/amd64
+source_baseline: 7f189699cb3d6001f646e7e727be7b5da2d7955c
+prerequisites:
+  - Rebuild and reverify the unchanged raw-base minimal package/inventory/archive/scan stage in the same owned job.
+  - Use the new actual baseline/candidate IDs from that stage, never the cleaned prior candidate.
+  - Preserve source_sha, capacity, bounded subprocess custody and owned cleanup semantics.
+  - Preserve the existing Controller.databaseChecks function verbatim, including SCRAM, exact NUMERIC/XML/bytea, restart, dump/restore and baseline rollback.
+init_matrix:
+  images: [raw-official-baseline, freshly-built-minimal-candidate]
+  files: [00-schema.sql, 01-sourced.sh, 02-executable.sh, 03-plain.sql, 04-gzip.sql.gz, 05-xz.sql.xz, 06-zstd.sql.zst]
+  expected_exact_rows: [sourced-sh, executable-sh, plain-sql, gzip-sql, xz-sql, zstd-sql]
+  numeric_literal: '9007199254740991.01000001'
+  bytea_hex: '00010aff00f1'
+  xml_text: init-restore
+  retain_permissions: sourced-sh-0644-and-executable-sh-0755
+  assertions: [configured-role-and-database, actual-scram-auth, missing-password-rejected, wrong-password-rejected, nonroot-postgres-pid1, six-exact-rows, persistence-after-restart, scripts-not-rerun]
+privacy:
+  - Enter a distinct private execution/log directory before generating any ephemeral synthetic DB password.
+  - Keep this private scope active through all DB commands, inspections, failure handling and cleanup.
+  - Do not invoke inherited SourceCandidateController.run command-log copying for this DB runner.
+  - Publish only fixed schema booleans/counts/hashes; never raw checks, args, env, Docker inspect or DB/cleanup logs.
+  - Test real publication recursively with an adversarial secret sentinel in all those private surfaces.
+  - No production credentials or host DATABASE_URL/PG environment is used; keep original real SCRAM authentication, never trust auth.
+resources:
+  - Snapshot all preexisting volume names before DB mutations and reject collisions before volume create/mount.
+  - Admit only fresh expected named volumes with local driver, empty options and exact current operation labels.
+  - Validate operation labels/current identity and absence of references before removing each owned volume; no force or prune.
+  - Keep unconfirmed child closure as a hard stop for all later daemon commands.
+  - Close owned containers normally, then volumes, then use inherited owned image/preexisting-image preservation checks.
+limits:
+  job_minutes: 75
+  controller_minutes: 65
+  cleanup_minutes: 10
+  initial_disk_gib: 20
+  reserve_disk_gib: 2
+held:
+  - Full self-host/hosted application and browser recovery rehearsals remain unchanged and required separately.
+  - No full service/release/composite-libxml-gosu/other-CVE/custom-hook/lower-layer qualification.
+  - This specification records controls; actual native execution and release readiness require their own source-bound evidence.
+lines:
+  - line: "authenticated-init-matrix"
+    description: "Exercise both fresh images with original entrypoint compression and script permissions"
+    formula: "Require six exact NUMERIC/XML/bytea rows, SCRAM, missing/wrong password rejection, nonroot PID1 and restart persistence on baseline and candidate."
+    testRef: "tests/scripts/postgres-minimal-db-amd64.test.mjs::actual init matrix retains authenticated exact assertions and restart protocol on both images"
+  - line: "original-recovery"
+    description: "Retain the original database recovery protocol verbatim"
+    formula: "Call the unchanged Controller.databaseChecks, including exact precision, restart, dump/restore and baseline rollback; preserve source admission and cleanup reserves."
+    testRef: "tests/scripts/postgres-minimal-db-amd64.test.mjs::actual unchanged native recovery sequence executes complete assertions through fake Docker only"
+  - line: "private-publication"
+    description: "Keep generated credentials and raw database diagnostics private"
+    formula: "Enter private execution scope before database commands, retain it through cleanup, and publish only fixed boolean/count/hash schemas; adversarial secret sentinels must be absent recursively."
+    testRef: "tests/scripts/postgres-minimal-db-amd64.test.mjs::actual publication excludes auth recursively through success partial failures and cleanup"
+  - line: "owned-volumes"
+    description: "Preserve foreign and preexisting resources"
+    formula: "Snapshot names, reject collisions and require verified fresh identities before use or deletion; close owned containers normally before removing unused owned volumes and images."
+    testRef: "tests/scripts/postgres-minimal-db-amd64.test.mjs::volume removal preserves preexisting foreign referenced and uncertain resources"

@@ -1,0 +1,11 @@
+{
+  "rawOfficialBaseOnly": true,
+  "databaseChecksVerbatim": true,
+  "rawBaseSource": "7f189699cb3d6001f646e7e727be7b5da2d7955c",
+  "files": {
+    "scripts/lib/postgres-minimal-db-fixtures.mjs": "fc303d7893509243b033d5c056c62b0e580e4f118688ddb9b61c46ef746cf01d",
+    "scripts/qualify-postgres-backports-amd64.mjs": "02038eeda44a8e0c54fc652f7de3e59d231e553c475c4197c7b147aa1ed9d37d",
+    "scripts/qualify-postgres-minimal-runtime-amd64.mjs": "ded8965fcad9e5b131f1e18f73d8fe7f452f409378eed98816140b5222ee06ee",
+    "scripts/qualify-postgres-source-candidates-amd64.mjs": "3d3b73585e49263909dad72520afb38634c8c6bcb8c602f1af7544955871b775"
+  }
+}

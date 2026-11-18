@@ -1,0 +1,41 @@
+name: PostgreSQL minimal raw-base DB compatibility AMD64 (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact reviewed default-branch source commit
+        type: string
+        required: true
+concurrency:
+  group: postgres-minimal-db-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  compatibility:
+    if: github.repository == 'utilityfueled/tax-engine' && github.event.repository.private == false && github.event.repository.fork == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - name: Check inert minimal runtime and DB controls
+        run: |
+          node --test tests/scripts/postgres-minimal-runtime-amd64.test.mjs tests/scripts/postgres-minimal-db-amd64.test.mjs
+          python3 -B tests/scripts/test_minimal_runtime_inventory.py
+          python3 -B tests/scripts/test_minimal_runtime_package_gate.py
+      - name: Rebuild exact raw-base candidate and test isolated synthetic DB compatibility
+        run: node scripts/qualify-postgres-minimal-db-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: postgres-minimal-raw-base-db-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/postgres-source-candidate/evidence/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 6

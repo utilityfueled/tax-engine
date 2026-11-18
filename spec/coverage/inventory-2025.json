@@ -13753,6 +13753,26 @@
       ]
     },
     {
+      "key": "federal/upgrade-2026-postgres-minimal-db-compatibility",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://github.com/docker-library/postgres",
+      "specPath": "spec/upgrade-2026-postgres-minimal-db-compatibility.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/upgrade-2026-postgres-minimal-runtime-amd64",
       "jurisdiction": "federal",
       "taxYear": 2025,
