@@ -26,10 +26,7 @@
       "compactContext": "c4e92399",
       "sqliteFullPrerequisites": "17cf0189"
     },
-    "liveRuns": {
-      "fullSqlite385": "44221292131",
-      "normalCi5e": "44226410024"
-    },
+    "liveRuns": {},
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
       "glibc44148810935": "baseline suite failed two XFD/proc-cpuinfo checks; ten XPASS also remain; candidate/ABI not reached",
@@ -40,7 +37,7 @@
       "ba02Defaults": "Web44165106163 and CI44165106145 canceled by reviewed source push; Docker44165106069 passed. Retain any earlier failures from partial logs; no final qualification claim.",
       "docker44169011200": "SUCCESS on current pushed 2fccaa27 source; no production deployment.",
       "new21244169079491": "SUCCESS, exact2fcc source/image; both originalcases pass 24191/18861ms, configuration2workers/actual1worker, 0retry/30000ms, all40fixedrecords complete, normalownedcleanup. Root verified14artifacthashes. Original full-batch cause not established; full suite not qualified.",
-      "sqlite44169075587": "SUCCESS diagnostic only, original join8 rowid/OOM2330 failures reproduced. Independent assessment verified47files/83zero-exitchecks/normalcleanup; DBPAGE-only pairedcore recovery changes1\u21920. Fullsuite/runtime/ABI remain unqualified. preview_review investigates source/packagingcause.",
+      "sqlite44169075587": "SUCCESS diagnostic only, original join8 rowid/OOM2330 failures reproduced. Independent assessment verified47files/83zero-exitchecks/normalcleanup; DBPAGE-only pairedcore recovery changes1→0. Fullsuite/runtime/ABI remain unqualified. preview_review investigates source/packagingcause.",
       "coverage2fcc": "29003 tests pass/1 stale optionalCPU audit binding fail; focusedgenuineRED then27pass fix7ea7453b, independentreviewfba40620. No thresholds/tests weakened; fullcurrentrun pending.",
       "concurrency6cf": "After exactSHAgroup change, prior2fcc CI/Web remainedactive; onlytwo groupkeys changed, sameSHA duplicates stillcancel. Current-source result still required.",
       "ci2fcc": "FAILURE in both unit+coverage: each29003PASS/1same optionalCPU audit-hash bindingFAIL; exactfocusedfix7ea now27PASS, fullcurrentchecks pending.",
@@ -64,17 +61,23 @@
       "supersededB063C4eDefaults": "Root-canceled normal PUSH CI/Web b06344186922860/44186922899 and c4e44188295946/44188296970, actual terminalCANCELLED. b063specinventoryfailure retained; c4ecoverage/spec/type/lint/buildPASS,unitcanceled. Partialbrowserfailureheadings retained; no finalqualification.",
       "sqliteFull17cf": "FAILURE44190069976/17cf0189:compatibility-repaired baselinePackage0/fulltest2 recover.test:78/do_recover_test1.1.2 CLIcloseSQLlogicerror,recipe1. Candidate/CVE/sanitizer not reached.36ledger/37exports/88checks0;normalcleanup/deadlinefalse;independentreviewe48c4c22. No DBPAGEcause/ABI/runtime/releaseclaim.",
       "rrtaPython40f8": "SUCCESS44190812240/40f819b7 valid COMPLETE_NEGATIVE:104uncensoredpasses/0timeouts,11controls each+parity/versions/pypdf verified,temporarycleanuptrue.24pairs per PDF medians4.0744922688778225%/4.177413413033565% below10%;noadoption/CPUcause/strictqualification. Peerceb58ca3.",
-      "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35\u20135.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification.",
-      "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
+      "cpuFullBatchB063": "FAILURE44187013822/b063:originalstrict646PASS/4FAIL/5skips;ordinary649PASS/1RRTA4000msFAIL/5skips. Diagnosticbatch6 complete10FAIL/1missing, batch7 complete7PASS/8FAIL/3missing.10validcurrentisolate1.35–5.54s profiles/4invalid-profile sample-interval;actualparallel0/1,PAunsampled. OwnedcontainerremovalstepSUCCESS;noindependentpostinspection/fullimageassessment. Review4e2aedcd;noCPUcause/qualification.",
+      "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause.",
+      "glibc7bea": {
+        "run": "44227921612",
+        "source": "7bea6c1f477e704f0d4c4049a835c1867e875486",
+        "conclusion": "FAILURE",
+        "jobCompletedAt": "2026-11-18T04:07:14Z",
+        "actualArtifactAssessment": "Pending sole watcher assessment; no rerun or qualification"
+      }
     },
     "nextActions": [
-      "Observe existing fullSQLite44221292131 at385db284 (315/300/240bounds). DO NOT dispatch duplicate aftercompaction. Fresh37GPGauthority HEADseal completeat385; originalqualifiedpair andactualABI/GPGremainrequired. Keep old134-errorbaselinefailed.",
-      "Web38544221205476 terminalFAILED:ordinary650/0/5, strict642/8/5. CI385 all6PASS29,019tests/88.2%branches. Preserve failures; no redispatch. ExistingSQLite385 andnormalCI5e are watched.",
-      "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
-      "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
-      "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
-      "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion.",
-      "After commit/push of reviewed fixed-six glibc export, dispatch one exact-source opt-in experiment. Five-path source delta passes35Node/50Python/spec/inventory/lint; no assertion/gate/resource/deadline change. Keep six XPASS holds and do not retry old diagnostics."
+      "Push reviewed SQLite successor after fresh main production-build guard. Then one exact-source full paired Linux package/CVE/sanitizer run; no duplicate predecessor run. Original ABI/GPG/runtime gates remain.",
+      "Assess existing terminal glibc run44227921612 and its configuration/six test outputs. Preserve FAILURE; no unchanged redispatch or blanket XPASS reclassification.",
+      "Finish and independently review private minimal-runtime native harness. No runtime removal/adoption until exact artifact, retained-feature, package/ELF, scan and recovery evidence passes.",
+      "CI385,5e,7bea passed29,019 tests/88.2% branches. Web385 strict642/8/5 FAIL remains; completed timing/source investigations do not establish a production fix. Do not repeat negatives.",
+      "RRTA compound and buffered-numeric successor screens failed unchanged thresholds. No adoption or repeated run of those stopped avenues.",
+      "Final2026 forms, qualified independent human tax/AI/security reviews and selected Google-route access remain unresolved. No readiness, filing or model promotion."
     ],
     "checks": {
       "sqliteDiagnosticLocalControls": 10,
@@ -105,7 +108,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "5e5af99064ee269eeb85d90f773e46aa4fa6c9f9",
+    "latestPushedSource": "7bea6c1f477e704f0d4c4049a835c1867e875486",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -168,8 +171,8 @@
         "rootChecks": "106frozenpins/15exactpaths;37Node/16Python/lint/actionlint/spec/inventory/audit/executionpinsPASS",
         "actualNative": false,
         "comparisonsRequired": [
-          "common-baseline\u2192candidate",
-          "original-distribution\u2192same-candidate"
+          "common-baseline→candidate",
+          "original-distribution→same-candidate"
         ],
         "same240SecondAbiWindow": true
       }
@@ -204,8 +207,9 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "glibc": "Five-path six-case export reviewed and source checks passed; ready for one exact-source opt-in native attempt after commit/push. No dispatch yet. Six XPASS remain hard holds.",
-      "packageQualification": false
+      "glibc": "Reviewed fixed-six collector is pushed7bea; exact native44227921612 running. No new source preparation. Six XPASS remain strict holds; qualification open.",
+      "packageQualification": false,
+      "sqlite": "Author prepares test-first private correction: join8 expected result from final official296 snapshot, plus four-runtime-file nested-FROM prerequisite for misc8 from exact officialf99a27 merge. Peer reviews authority/scope. All20priorchanges/fuzz/profileflags/gates retained; no publicedit/rerun yet."
     },
     "browserOriginalEntryPhase": {
       "status": "source-adopted-local-checks-pass-runtime-unobserved",
@@ -330,7 +334,10 @@
       "nameWhitespaceSha256": "ac1605989ece628afd3ef8bea70f3bc8d063bb0e20647fa949425c61fb4bcbc3",
       "numericManifest": ".local/upgrade-evidence/nov18-rrta-strict-numeric-attribution/MANIFEST.json",
       "numericSha256": "7c67325c1392cc3f5a14821857f93223becdd228e826ed00e94e49cf108123d8",
-      "numericObservation": "All top-level numeric parsing7.16%/7.06% of observed child wall, with replacement/token-only savings strictly smaller. Both complete8field outputs equal. No candidate or104-child rerun."
+      "numericObservation": "All top-level numeric parsing7.16%/7.06% of observed child wall, with replacement/token-only savings strictly smaller. Both complete8field outputs equal. No candidate or104-child rerun.",
+      "numericCompoundManifest": ".local/upgrade-evidence/nov18-rrta-compound-buffered-numeric-private/MANIFEST.json",
+      "numericCompoundSha256": "cb05df10a8cf28acec50939ae55c7df9209b95f786765ab6fe4e365cc7338f8a",
+      "numericCompoundResult": "NO-GO:16whole-output matches,0.534486%/1.368578%additional vs2%both gate; no104run, nopublicchange, stopped. Independent of strict385 inline PDF helpers."
     },
     "glibcIfunc": {
       "sourceManifest": ".local/upgrade-evidence/nov18-glibc-ifunc-export-operator-successor/MANIFEST.json",
@@ -364,8 +371,10 @@
       "rootReceiptSha256": "8100e3a58cb2ca431d1a0f7eebc9c69c97b958fe58e263efa243f302a6284ec0",
       "rootChecks": "185pins/35Node/50Python/spec/inventory/lint PASS; no inventory change.",
       "sourcePaths": 5,
-      "nativeRun": null,
-      "qualification": false
+      "nativeRun": "44227921612",
+      "qualification": false,
+      "sourceCommit": "7bea6c1f477e704f0d4c4049a835c1867e875486",
+      "publicationReceipt": ".local/upgrade-evidence/nov18-glibc-six-diagnostic-root-adoption/PUBLISH.json"
     },
     "web385": {
       "run": "44221205476",
@@ -383,6 +392,83 @@
       "recordedRemovalStepSuccess": true,
       "independentLiveCleanupInspection": false,
       "qualification": false
+    },
+    "browser385TraceReview": {
+      "manifestSha256": "03cb7e63d40ca4e4d20891a231b473afd9f3150f6bf378e36d509db9662a1f9a",
+      "packet": ".local/upgrade-evidence/nov18-strict385-stage-timing-review",
+      "sourceAuditSha256": "c06d3a45075b7949b43c5a8a7f90411093dbd0a63867e3b6e515c2cfb10abf4b",
+      "findings": "4firstPDFwaits at30s;1postPDFunknown;3prePDF. MostPDFchild-containing gaps afterdeadline. No CPU/wholejourneycause established. Existingaction/waitreason followup underway; no newrun/instrumentation.",
+      "rootPinsVerified": {
+        "nov18-rrta-compound-buffered-numeric-private": 31,
+        "nov18-strict385-source-audit-negative-002": 12,
+        "nov18-strict385-stage-timing-review": 60
+      },
+      "qualification": false,
+      "entryObservationSha256": "4cc6444d2cbc8e8d335e10031529b8c10f5c3ea22636af7d88ae72a327aa32ed",
+      "entryObservation": "4,823completeentrycalls;165>=100ms;2explicitstabilityretryclicks/3longnavigationchecks. FourPDFclickscompletebefore30s with0.26–0.69sremaining; response200checkpointsafter30s. No request/serverduration or causeproved."
+    },
+    "ci5e": {
+      "run": "44226410024",
+      "allSixJobsPassed": true,
+      "testFiles": 2133,
+      "tests": 29019,
+      "branchesPercent": "88.2",
+      "manifestSha256": "b6574f7eb9d117127b7d48e441c1231bb7c6f56871a72781d774ee9068d1fd88",
+      "assessmentSha256": "babf4b7a38ad420b44d4bd7dd51ec07ef4871fd339c744dcd8004e75f528b419",
+      "rootPinsVerified": 8
+    },
+    "sqlite385Actual": {
+      "run": "44221292131",
+      "source": "385db28429a13bc1a3bc3bf309bccfd469f81d54",
+      "result": "FAILURE",
+      "artifact": 14395137052,
+      "artifactBytes": 62533691,
+      "baselineBuildExit": 0,
+      "baselineFulltestExit": 2,
+      "errors": 16,
+      "tests": 5550520,
+      "cases": [
+        "join8-1010",
+        "misc8-3.0"
+      ],
+      "configurationsEach": 8,
+      "candidateCveSanitizerReached": false,
+      "deadlineExceeded": false,
+      "cleanupErrors": [],
+      "packet": ".local/upgrade-evidence/nov18-sqlite-385-terminal-review",
+      "frozenReceiptPending": false,
+      "qualification": false,
+      "manifestSha256": "d40957bebb361d0a01db4b786edd02bee1a9f55459530ddac80d2313c9a7386d",
+      "assessmentSha256": "953952ccce699cd07f0ce0e7990c9af336bb3223e0c31660186b02fb79de8f7c",
+      "rootReceiptPinsVerified": 23
+    },
+    "ci7bea": {
+      "run": "44227883978",
+      "allSixJobsPassed": true,
+      "tests": 29019,
+      "testFiles": 2133,
+      "branchesPercent": "88.2",
+      "manifestSha256": "9ca0e0866906bffbf00cd152f5d9cfd433a2f471fb8cf4ca42d522b272b7ce4c",
+      "assessmentSha256": "77b43d5efcf6a0a131b323e76862c37f844d7fd066045cfe49a19c39096dc3da",
+      "rootPinsVerified": 8
+    },
+    "sqliteNestedRowid": {
+      "sourceCommit": "b0fef69c84cdf5361b05b5514355baa480108ee0",
+      "ledger": "docs/upgrade-2026-sqlite-nested-rowid-20261118.md",
+      "sourceManifestSha256": "8d89a97071d4d30654181f62a55a55c8122de6e8906e8351b8d9e517502948b4",
+      "independentManifestSha256": "43b483eaf290c3c302cf2c706d499dddb6a1f4ae5d1e52a0648068d9891486d2",
+      "rootReceiptSha256": "e93cc88a0abdd237a9af7e025154ff2e245b8778ce78d8e668201ac36fa2579b",
+      "checks": "30 Vitest,31 Python,types,9515 spec lines,inventory and scoped lint PASS; independent host RED/GREEN retained",
+      "changingPaths": 21,
+      "unchangedJoin8": "Authenticated original retained and identity-checked; obsolete transformation retired with predecessor/inverse",
+      "nativeRun": null,
+      "qualification": false
+    },
+    "postgresMinimalRuntime": {
+      "status": "PRIVATE unbuilt proposal and native harness preparation; no public runtime switch",
+      "proposalManifestSha256": "af9d9b34ca757da62a4bda2891e124833499d4714c879d9d1a60204c5f6b3ede",
+      "independentManifestSha256": "1274918a1f0329beea8ec458518d6e4c66080d48379c381f41c78b8c243c7592",
+      "scope": "Raw official base only; exact five-package removal requires actual merged-rootfs/provider proof, retained dependencies, fresh scans and all original recovery gates. Lower OCI layers/custom hooks/composite image remain unqualified."
     }
   },
   "nov17New212Timing": {
@@ -12308,88 +12394,88 @@
           "suite": "tests/apps/web/workspace-filled-return.test.ts",
           "reportedFailures": 3,
           "cases": [
-            "2026-10-26T19:56:10.4838875Z      \u00d7 binds actual K1 loss sources before redacting the workspace packet 5007ms",
-            "2026-10-26T19:56:10.4840586Z      \u00d7 prepares the actual passive distribution context before workspace redaction 5001ms",
-            "2026-10-26T19:56:10.4863010Z    \u00d7 exports actual shared health through the original workspace source context 5878ms"
+            "2026-10-26T19:56:10.4838875Z      × binds actual K1 loss sources before redacting the workspace packet 5007ms",
+            "2026-10-26T19:56:10.4840586Z      × prepares the actual passive distribution context before workspace redaction 5001ms",
+            "2026-10-26T19:56:10.4863010Z    × exports actual shared health through the original workspace source context 5878ms"
           ]
         },
         {
           "suite": "tests/pdf/qbi-loss-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T19:58:53.1118173Z    \u00d7 retains a saved zero-deduction QBI packet and separate loss limits 5026ms"
+            "2026-10-26T19:58:53.1118173Z    × retains a saved zero-deduction QBI packet and separate loss limits 5026ms"
           ]
         },
         {
           "suite": "tests/engine/provider-model-eval.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:00:23.7035272Z      \u00d7 requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review 12293ms"
+            "2026-10-26T20:00:23.7035272Z      × requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review 12293ms"
           ]
         },
         {
           "suite": "tests/pdf/form-8862-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:00:58.6929815Z    \u00d7 uses actual current child presence for printed claimant restrictions 5322ms"
+            "2026-10-26T20:00:58.6929815Z    × uses actual current child presence for printed claimant restrictions 5322ms"
           ]
         },
         {
           "suite": "tests/pdf/form8839-history-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:02:14.1862248Z    \u00d7 preserves source cents and private identity through redacted review rendering 5007ms"
+            "2026-10-26T20:02:14.1862248Z    × preserves source cents and private identity through redacted review rendering 5007ms"
           ]
         },
         {
           "suite": "tests/pdf/form-8949-digital-reporting.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:04:04.1852439Z    \u00d7 retains all categories and digital continuation rows after reopening 5856ms"
+            "2026-10-26T20:04:04.1852439Z    × retains all categories and digital continuation rows after reopening 5856ms"
           ]
         },
         {
           "suite": "tests/pdf/schedule-e-passive-distribution-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:04:50.5198938Z    \u00d7 saves and reopens the redacted complete passive distribution packet 5598ms"
+            "2026-10-26T20:04:50.5198938Z    × saves and reopens the redacted complete passive distribution packet 5598ms"
           ]
         },
         {
           "suite": "tests/pdf/eic-additional-checkboxes.test.ts",
           "reportedFailures": 3,
           "cases": [
-            "2026-10-26T20:08:16.9722518Z    \u00d7 uses actual death and either-spouse ages only on the childless route 5014ms",
-            "2026-10-26T20:08:16.9724560Z    \u00d7 prints actual joint homes while preserving false and unknown sources 5008ms",
-            "2026-10-26T20:08:16.9725880Z    \u00d7 binds military and source conditions without treating every zero as an opt-out 5080ms"
+            "2026-10-26T20:08:16.9722518Z    × uses actual death and either-spouse ages only on the childless route 5014ms",
+            "2026-10-26T20:08:16.9724560Z    × prints actual joint homes while preserving false and unknown sources 5008ms",
+            "2026-10-26T20:08:16.9725880Z    × binds military and source conditions without treating every zero as an opt-out 5080ms"
           ]
         },
         {
           "suite": "tests/pdf/k1-cash-distribution-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:11:56.5439427Z    \u00d7 binds and saves the redacted distribution gain with original basis evidence 5068ms"
+            "2026-10-26T20:11:56.5439427Z    × binds and saves the redacted distribution gain with original basis evidence 5068ms"
           ]
         },
         {
           "suite": "tests/pdf/marketplace-business-credit-method-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:16:30.6923670Z    \u00d7 binds the chosen method and signed business rows before redacted PDF output 5132ms"
+            "2026-10-26T20:16:30.6923670Z    × binds the chosen method and signed business rows before redacted PDF output 5132ms"
           ]
         },
         {
           "suite": "tests/pdf/shared-owner-marketplace-health-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:18:29.7176781Z    \u00d7 renders separate shared-plan owners from the original private context 5608ms"
+            "2026-10-26T20:18:29.7176781Z    × renders separate shared-plan owners from the original private context 5608ms"
           ]
         },
         {
           "suite": "tests/apps/web/workspace-room-board-prior-use.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:21:52.1035404Z    \u00d7 replays actual historical room and board sources before workspace redaction 5165ms"
+            "2026-10-26T20:21:52.1035404Z    × replays actual historical room and board sources before workspace redaction 5165ms"
           ]
         }
       ],
@@ -15408,7 +15494,7 @@
     "beforeHealth77e8f663": [
       "Intermediate 318 passes 19,587 unit and coverage cases in 1,406 files. Coverage is 91.90% statements, 86.98% branches, 90.79% functions and 94.63% lines; all unchanged 90/85/90/90 thresholds pass. The first seven 5000 ms timeout failures remain retained. Later packages and final integrated verification remain internal.",
       "The2026 pack and finite carryover/health methods remain incomplete. COD ced90a20, changed one-owner filing histories a1f63cf2, actual-paid health661977aa and educator/reissue2ab4d9ac are delivered. Current joint-pool artifact/final integration, positive other-return health, explicit nonitemized2026 prior property release and source-determined EBL composition remain internal. Precise unresolved source interpretations stay documented; full2026 calculation remains blocked.",
-      "Independent human tax review, selected-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
+      "Independent human tax review, selected-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net §1202/Form172 interpretations remain unresolved.",
       "AI application/scorer bindings are reviewed; 240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
       "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
       "Intermediate 31812714 native amd64 recovery and both 500-case browser suites pass with verified SBOM/archive; later final-source native arm64+amd64 images/scans/recovery remain due. The same exact 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07. No critical/npm/fixed-version matches. Historical failed/cancelled runs retained; no staging, publication or human security approval."
@@ -16190,7 +16276,7 @@
     },
     "ohioResidentCreditCorrection": {
       "commit": "3e08ad01d7a680ce3d69c9f11165c87446f32db2",
-      "source": "Actual2025ITRC printed1\u20137; RC5747.05(B,C,D)",
+      "source": "Actual2025ITRC printed1–7; RC5747.05(B,C,D)",
       "sourceSha256": "ebd9960d6a8004d6803f0f22238f989043db794e9ebc9aa9fcb3d5588112cb48",
       "independentReviewSha256": "3378d5b6045ccaa0694bf972d71a9d812b3115607ef533718fa465509b5cee93",
       "independentProbes": 6,
@@ -16281,7 +16367,7 @@
     "activeStateSharedIntegration20261102": {
       "source": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-work/root-state-integration/source",
       "mainBase": "3dfe1316c0932b2e7bfc4c2b0c8c389f219aaee2",
-      "status": "Unfrozen historical temporary14 source archive lost on interruption. Rebuilt source-first in durable ignored archive; historical22tests/5files are not current proof. New canonical schema true2red\u21922green; shared source handoff/invalidation true4red retained, firstgreen running. No main shared code adopted.",
+      "status": "Unfrozen historical temporary14 source archive lost on interruption. Rebuilt source-first in durable ignored archive; historical22tests/5files are not current proof. New canonical schema true2red→2green; shared source handoff/invalidation true4red retained, firstgreen running. No main shared code adopted.",
       "mainPAOrdinary10": "Delivered87b23938 afterindependent33controls,main962/8andall9checks; sourcehelpers only, notcompleteall3statequalification",
       "multiStateW2": "Required internal source model/guide/once-only federal counting successor; no missing state row inferred",
       "remainingQueue": "Full PA/OH all3 residency canonical guide/preview/workspace/private-context integration; PAordinaryfacts10 reconstruction, W2 source10+consumer8 independent review/shared admission, OHdated5 independent review, SD/local and other source methods, forms, full final qualification."
@@ -16376,8 +16462,8 @@
       "newArchiveRoot": ".local/upgrade-work",
       "newEvidenceRequires": "full source copies and patches per coherent state; hashes/logs alone are not reconstructed source proof",
       "ohGuideV2": "frozen5 exact reconstruction; independent20/3pass SHA6dfa6fac43cb3527736a2f68df3b7d680a3f76eac2804ae01347110ec6785f53",
-      "w2Consumers8": "new source-first4red\u219237/7green,3types/spec6647/lint0err8oldwarn; independent review pending",
-      "ohDated5": "rebuilt source-first missing-module red\u219277/77combined,types/spec/lint; independent review pending",
+      "w2Consumers8": "new source-first4red→37/7green,3types/spec6647/lint0err8oldwarn; independent review pending",
+      "ohDated5": "rebuilt source-first missing-module red→77/77combined,types/spec/lint; independent review pending",
       "paOrdinaryFacts10": "rebuilt source-first missing-module red; product reconstruction active"
     },
     "ohioDatedPayments20261102": {
@@ -16577,7 +16663,7 @@
     "sourceFirst": "3genuinefail2pass; separatemissingmodule diagnostic excluded",
     "evidence": "nov02-parent-pa-rich-credit-main-green/checks.json",
     "independentReview": "7cc833b3eabef649ffe05166625229a6e1ce53e6f295ef6eb398ddc85861f829",
-    "workspaceCandidate": "new5pass; legacy38baselinepass\u219214fail24pass; exactcandidate deferred privately until actualA/B/business/NRH migrations",
+    "workspaceCandidate": "new5pass; legacy38baselinepass→14fail24pass; exactcandidate deferred privately until actualA/B/business/NRH migrations",
     "releaseReady": false,
     "commit": "11cea224"
   },
@@ -16592,7 +16678,7 @@
     "independentReview": "a1b3e6f109ea76f52652ffe6e5d8f057eeeff81ec329df47c320a85a84e469a8",
     "paperReview": "3PDF6pages145canonical119widgets each; strictAP/privacy/rootvisualpass",
     "paperIndependent": "9dda042befaaf1abc05892f1a5c6ed1f35ab88cdd6e72db0b7f0158159dc3f2b",
-    "portableHarness": "3configurationfails2pass\u21925pass standardnoenv; staticf7a83186da71c09a1468a08118442e9909e6cf62bd26ae3be6b6ca7d23120ed3",
+    "portableHarness": "3configurationfails2pass→5pass standardnoenv; staticf7a83186da71c09a1468a08118442e9909e6cf62bd26ae3be6b6ca7d23120ed3",
     "releaseReady": false,
     "commit": "42919e82"
   },
@@ -17808,7 +17894,7 @@
     "mainFiles": 11,
     "checksPassed": 10,
     "originalTitles": 4,
-    "soleAuthorizedOracleCorrection": "OH canonical printed withholding2000.6\u21922000; raw2000.60 retained",
+    "soleAuthorizedOracleCorrection": "OH canonical printed withholding2000.6→2000; raw2000.60 retained",
     "mainReviewSHA256": "cc2f56619e6f1729309306cb352296bb086eba7b9a9b595540cb1de7f257d0f1",
     "releaseReady": false,
     "commit": "7334c690",
@@ -17994,7 +18080,7 @@
     ],
     "retries": 0,
     "skipped": 0,
-    "rootVisualReview": "Root opened all10: readable mobile controls/no horizontal overflow; actual refund80.20/currentexpense149.25/filedAGI211001/current210901 preserved. Desktop detailedtax6478\u21926475. Animated aggregate frames are transient and not exact-number visual evidence; reopened settled48147 confirmed.",
+    "rootVisualReview": "Root opened all10: readable mobile controls/no horizontal overflow; actual refund80.20/currentexpense149.25/filedAGI211001/current210901 preserved. Desktop detailedtax6478→6475. Animated aggregate frames are transient and not exact-number visual evidence; reopened settled48147 confirmed.",
     "sourceReview": "exactsourcefirstfacts/oracles; only accessible-role locatorcorrection; no postinitialstoragewrite",
     "priorAttemptsRetained": [
       1,
@@ -18562,7 +18648,7 @@
     "isolatedPostgresPendingInThisRun": 33,
     "currentCoveragePending": "Superseded for d76a2baf: fullcoverage23011PASS0FAIL33PGpending;91.44statements/87.12branches/90.32functions/94.46lines allthresholdsPASS. Later source integrations require finalhead refresh.",
     "releaseReady": false,
-    "nativeCarePackage": "730c07fa pushed;75native+adjacent/8savedPDF/13checksetsPASS; DCreferencecountdisplay nowcorrected2RED\u219213PASS, actualbrowseractive"
+    "nativeCarePackage": "730c07fa pushed;75native+adjacent/8savedPDF/13checksetsPASS; DCreferencecountdisplay nowcorrected2RED→13PASS, actualbrowseractive"
   },
   "nov03NativeActualCareSources": {
     "status": "approved-finite-native-source-entry-and-saved-money-controls",

@@ -64,3 +64,18 @@ Independent actual assessment
 retains all104 outcomes and the24 pairs per width. Reviewer authorship of the
 original comparison harness is disclosed; the compound change received a separate
 source review. All original failures and thresholds remain.
+
+## Private numeric composition: stopped
+
+A scanner-local buffered numeric path was screened against compound alone.
+Seven focused cursor/type/error/fallback controls and all22 retained outcomes
+passed; all16 bounded complete outputs matched. Additional paired medians were
+0.534486% desktop and1.368578% mobile, below the predeclared2% screen at both
+widths. The avenue is stopped, with no104-child run, public helper change or
+threshold revision. These RRTA helper results do not diagnose the strict385
+browser failures, whose inline PDF programs are different.
+
+Private frozen manifest:
+`nov18-rrta-compound-buffered-numeric-private/MANIFEST.json`, SHA256
+`cb05df10a8cf28acec50939ae55c7df9209b95f786765ab6fe4e365cc7338f8a`.
+Root verified all31 owned/input pins; retain this negative without replay.
