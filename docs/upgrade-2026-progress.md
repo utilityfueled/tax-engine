@@ -7070,3 +7070,16 @@ full job is live; CPU ordinary passed but original strict failed, sample6active.
 Superseded six normalpush runs had cancellation requests accepted; current and
 manuals preserved, no cancellation counted PASS. Local all-bytefilter candidate
 was a valid negative and stopped; original compound rejection remains.
+
+### November18UTC: actual DBPAGE and fixed CPU failures retained
+
+DBPAGE44198188977/dc2185da baselinebuildPASS,fulltest134errors/5,550,419tests;
+no candidate/CVE/sanitizer.88controllerchecks0/normalownedcleanup/deadlinefalse;
+actualreviewb196e612 and frozenmanifest2660858c verified. Debianrowid/pagecap
+profile contradictions require faithful source/test work; nofeature removals,
+skippedtests orqualifiedpair claims. CPU44199237148 ordinary650/0/5,strict
+640/10/5;batch6tenfails,batch7eightfails/sevenpass;9valid/5unknownprofiles.
+FrozenV2review2f51805c andmanifest3f73b26f verified; initialassessmentdrift
+explicitlyretained. RootIOproposal8f18e2c0 passes4Tcloracle-generationcontrols
+only, no nativeSQLitepass. Sourcepackages through9d63c37e pushed; currentCI
+continues. The short35-line current-status record remains continuation entry.

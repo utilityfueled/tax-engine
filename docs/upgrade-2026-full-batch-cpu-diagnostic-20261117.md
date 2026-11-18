@@ -95,3 +95,35 @@ Spec-first failures precede implementation. All 34 source/evidence pins match.
 Source manifest: `76e736a9686b24eb9d027f3bc9168ef7ed7fdeac3f14bb8f59c21f47657633e0`.
 Independent review: `add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc`.
 No fresh browser result or recovered historical category is claimed.
+
+## Actual fixed-metadata run
+
+Run44199237148, source43423f37, failed November18 at00:29:25UTC.
+Ordinary self-host tests passed650 with zero failures and five skips. Original
+strict container tests passed640, failed ten and skipped five. These retain
+the original655 cases and all timing/assertion gates. Diagnostic batch6 failed
+all ten (eight other/two timeout); batch7 passed seven and failed eight
+(four other/four timeout). No cancellation or sampled success replaces failure.
+
+Fourteen stored profiles were checked with the exact same-source validator:
+nine valid, five unavailable for negative sample intervals. The fixed metadata
+records seven negative deltas among35,569 intervals, with zero other rejection
+categories. Their magnitude, origin and causal significance are unknown. Valid
+profile spans range0.171–27.467seconds and cover only the current-page main
+isolate. They establish neither complete journey/process CPU nor a host-gap cause.
+The cleanup step succeeded; no separate post-removal inspection is claimed.
+
+Frozen V2 actual assessment:
+`2f51805c8ad4a1fef32574f23cc6fdcee0eda8453cf98b74c0e53e1c1c41170d`;
+V2 manifest:
+`3f73b26f33d662b14d91fc6f22e6d126676c9d2beffb49fdfb5eb47e468fd7be`.
+The initial assessment was expanded before freezing; its first communicated
+bytes were not retained. The version chain documents that drift without
+reconstruction. The original raw-artifact manifest is unchanged. Root verified
+the frozen V2 receipt and all eight manifest pins.
+
+Real browser and React follow-up rejected two selector substitutions and found
+no duplicate whole evaluation per fill. These negative investigations preserve
+all original actions and failures. A separately reviewed, default-off counter
+diagnostic for a navigation-free original phase is in preparation; no new
+phase observation, product optimization or cause is claimed.

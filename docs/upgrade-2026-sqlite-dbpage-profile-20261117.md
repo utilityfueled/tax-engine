@@ -27,7 +27,38 @@ changed only a disposable cache included inadvertently in the private manifest;
 the later review records 96/97 total matches and preserves that discrepancy.
 The original manifest was not rewritten. No cache is an adoption input.
 
-Actual full-package execution of this profile remains pending. It grants no
+The actual full-package result is recorded below. It grants no
 runtime, ABI or advisory acceptance. Sources: [DBPAGE](https://sqlite.org/dbpage.html),
 [compile option](https://sqlite.org/compile.html#enable_dbpage_vtab),
 [recovery](https://sqlite.org/recovery.html).
+
+## Actual full-suite result: failed
+
+Run44198188977, source dc2185dacedbd11595b6d7fd39b03570669e9c49,
+failed November18 at00:34:35UTC. The baseline package built, and its complete
+alltest reached5,550,419 tests with134 errors (126unique IDs). Baseline fulltest
+exit2 and recipe exit1 preserve failure. Candidate package, paired CVE and
+sanitizer stages were not reached. No ABI/GPG runtime dispatch is appropriate
+without the corresponding real pair.
+
+The errors span io6, join5 eight, misc2 eighteen, misc8 eight, returning1
+twenty-four, rowid fifty-four and trigger9 sixteen occurrences. Source review
+identifies configuration disagreements: Debian enables legacy view-rowid behavior
+and raises the maximum default-page cap from8192 to32768; the old upstream
+tests include contrary assumptions. For io-5.5, simulated16384-byte sectors
+yield16384 while the upstream literal expects8192. This is a source-backed
+profile/oracle finding, not permission to remove features or weaken assertions.
+Official rowid compatibility history and a configuration-correct page-cap
+proposal are under separate review; neither is implemented or runtime-qualified.
+
+All88 recorded controller checks exit0; owned remaining-container/image checks
+returned empty, cleanupErrors is empty and deadlineExceeded is false. Reviewers
+performed no separate live post-cleanup inspection. The artifact ledger verifies
+36files,37exportbindings,eight recipe pins and seven adoption pins.
+Artifact14384429094:62,491,963bytes, SHA-256
+`ef878e89987438716fb18988be3d181da6be2e15d68fa8422e71383178288043`.
+Actual assessment:
+`b196e6125492a432e5109e28eb5e6594da2e43bde3674b67964618aa194ae306`;
+frozen manifest:
+`2660858cb2d1c4b6ae0e3a53fcd56f3c9fbc414b8addd5b365ec0ac58a05141f`.
+The earlier recover.test abort and all original failure evidence remain.

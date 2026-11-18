@@ -27,9 +27,8 @@
       "sqliteFullPrerequisites": "17cf0189"
     },
     "liveRuns": {
-      "sqliteFull": 44198188977,
-      "fixedCpuManual": 44199237148,
-      "normalCiC50": 44205950721
+      "normalCiC50": 44205950721,
+      "normalCi9d63": 44207536926
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -69,8 +68,8 @@
       "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
-      "Observe fullDBPAGE44198188977/dc2185da liveas00:21:59Z under original165/155/120/15minlimits. Public ABI now covers common+originaldistribution\u2192samecandidate; waitgenuinepair beforedispatch. GPGrebound37pins.",
-      "Observe CPUmanual44199237148/434:ordinaryPASS,originalstrictFAILED,batch6active;actual_runs_continuation ownsonewatch. No acceptance/weights/actions/limits change; independent strictfailure source investigation underway.",
+      "Implement/reviewfaithful3.40rowidcompatibilityadaptation fromofficial2024source andIOconfiguredcaptestproposal; obtainboundednativeRED/GREEN beforeanotherfullsuite. PreserveDebianfeatures/allfulltestintent. NoABI/GPGdispatchwithoutrealpair.",
+      "RetainCPU44199237148 actualfailure; no safeproductpatchproven. Preparedefaultoff,navigation-free originalphase threadTickscounters withactualChromiumrevision/context/outerprovenanceguards; keeporiginalbaseline/actions/30s/4s/2workers unchanged. Currentc50+9d63normalCIwatched.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
       "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
@@ -105,13 +104,13 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "c50c00ab",
+    "latestPushedSource": "9d63c37ed7a78d7dffcb0443e366f276bfeedd49",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
     "pushReceipt": ".local/upgrade-evidence/nov17-reviewed-experiment-evidence-push.json",
     "cleanupContinuation": "Current isolated cleanupV4 PASSED: endpointdisabled/pending0; exactsuccessfulproviderfinancialhashverified;2sessionsrevoked;owned15table-schema/emptyDB/roledeleted;testcustomerdeleted/product+priceinactive;2ownedPreviewdeletionsGET404;nonceRedisprefixonlycleared. 14Stripe/8Vercel/59SQL/4Preview/3Redis;supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Root+independentactualreview6412c975passed. Goalreservationunchanged;historical/globalcleanupandexpirydeletionnotclaimed.",
-    "sqliteContinuation": "Full-package44190069976 baseline package builds; fulltest fails recover.test1.1.2 before candidate/CVE/sanitizer. Preserve targeted paired success and original failures. Diagnose full-suite failure; no duplicate old-image rehearsal or runtime/ABI approval.",
+    "sqliteContinuation": "DBPAGEfullsuitecompleted134errors/5,550,419;source-backedDebianlegacyrowid/pagecap profile mismatch. Faithful officialrowidadaptedbackport +configuredpagecaporacles privatelyprepared; do notremovefeatures/skiptests orclaimnativeGREEN. No candidatepair, soABI/GPGundispatched.",
     "browserDiagnosticLedger": "docs/upgrade-2026-full-batch-cpu-diagnostic-20261117.md",
     "contextPolicy": "Resume only from activeContinuation and named current artifact; bound command output and delegate independent work. Do not reread whole progress/checkpoint or restart completed work after compaction.",
     "pythonComparisonLedger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
@@ -131,16 +130,19 @@
       "ledger": "docs/upgrade-2026-sqlite-dbpage-profile-20261117.md",
       "sourceReviewSha256": "fadfd90bec3a7423dd7109b0860beea87de1ebd617692908be0b4238d199d3c6",
       "independentReviewSha256": "70111176e28c53e89064bf3b3a24fcfb3c7470faaba39aebc0c8547217259d68",
-      "actualExecution": "RUNNING44198188977/dc2185da/attempt1/job134445081615;165mjobdeadlineNov18 02:03:26Z,155controller/120package/15cleanup;source_refresh monitors;no duplicate",
+      "actualExecution": "FAILED44198188977/dc2185da:baselinepackagePASS;baselinefulltest134errors/5,550,419tests(exit2),recipeexit1;candidate/CVE/sanitizerunreached;88controllerchecks0,normalownedcleanup/deadlinefalse",
       "realCommonFeatureDelta": true,
-      "candidateReleaseQualified": false
+      "candidateReleaseQualified": false,
+      "actualAssessmentSha256": "b196e6125492a432e5109e28eb5e6594da2e43bde3674b67964618aa194ae306"
     },
     "fixedCpuMetadata": {
       "sourceManifestSha256": "76e736a9686b24eb9d027f3bc9168ef7ed7fdeac3f14bb8f59c21f47657633e0",
       "independentReviewSha256": "add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc",
       "rootChecks": "14new/fullbatch+27originalCPU,lint/syntax/spec/inventory/audit/closurePASS",
       "allOriginalLimitsAndAcceptanceUnchanged": true,
-      "actualFutureRun": "RUNNING44199237148/43423f37:ordinaryPASS;originalstrictbrowserFAILED00:18:51Z,batch6activeas00:21:59Z;all original limits unchanged,actual_runs_continuation monitors"
+      "actualFutureRun": "FAILED44199237148/434:ordinary650PASS/0FAIL/5skip,strict640PASS/10FAIL/5skip;batch6tenFAIL,batch7sevenPASS/eightFAIL;9valid/5negativeintervalunknownprofiles;cleanupsteponlySUCCESS,noindependentpostinspect",
+      "actualV2AssessmentSha256": "2f51805c8ad4a1fef32574f23cc6fdcee0eda8453cf98b74c0e53e1c1c41170d",
+      "versionChain": "Initialassessmentexpandedbeforefreeze,oldbytesnotretained;V2+chain/rawmanifestpreserved.Nohistoricalreconstruction."
     },
     "rrtaCompoundPrefilter": {
       "ledger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
@@ -199,6 +201,14 @@
       ],
       "reason": "superseded normalpushes; preserve currentc50 andmanuals; cancellation is notPASS",
       "terminalConfirmationPending": true
+    },
+    "currentPrivatePreparation": {
+      "rowid": ".local/upgrade-evidence/nov17-sqlite-rowid-profile-independent-research/",
+      "io": ".local/upgrade-evidence/nov17-sqlite-io-configured-cap-preparation/MANIFEST.json",
+      "ioManifestSha256": "8f18e2c048e5c855e287da4345e3186f56177e4fe727b43a111287f2de4d6883",
+      "ioChecks": "4realTcloracle-generationcontrols after3meaningfulRED;NO nativeSQLitepass",
+      "phaseCounters": "strict_failure_continuation preparing reviewed defaultoff same-document phase",
+      "actualReceipts": ".local/upgrade-evidence/nov17-actual-runs-continuation-0023/"
     }
   },
   "nov17New212Timing": {
