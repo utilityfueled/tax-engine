@@ -13,7 +13,7 @@ export const SOURCE_PINS={
  'ifunc-before.mk':'0140e6fb8e5b07a2879f9cc65ac34fe290f01dbd60a476ace728abdefdc450f5',
  'ifunc-after.mk':'c92ace019719eee098249b27d7473028f896861d4434258c3aa6325c4feb4117',
  'ifunc.patch':'5b9d174c51d343e270529147f57478ca324b97fc65987466daf5aebc15f4bddd',
- 'export-build-profiles.py':'600dbbdd654ac87d178b54648bb8174962fc2704875ea0023c441da146f24cf6',
+ 'export-build-profiles.py':'a53532787f8a6e2445c9adf57ee2b4a9d5194f71255f06b8836c5c48f8ae488e',
 };
 export const IFUNC_INSERT=`# Local four-only conditional correction derived from authenticated Debian 2.44.
 # Target remains pinned Debian 2.36; no correcting-upstream-commit claim.
@@ -75,7 +75,8 @@ export async function verifyProfileExport(root){
   assert.equal(row.available,true);assert.deepEqual(row.unavailableReasons,[]);assert.equal(row.linker.available,true);assert.equal(row.linker.exit,0);assert.match(row.linker.sha256,/^[a-f0-9]{64}$/);assert.ok(Number.isSafeInteger(row.linker.bytes)&&row.linker.bytes>0&&row.linker.bytes<=64*1024*1024);assert.equal(row.linker.observedAt,'export-time');
   assert.equal(typeof row.configuredWithLld,'string');assert.equal(typeof row.configuredLd,'string');
   assert.equal(row.makeEvaluationPerformed,false);assert.deepEqual(row.configurationWithOverrides,{'with-lld':row.configuredWithLld,LD:row.configuredLd,...row.configparmsOverrides});assert.equal(row.linker.configured,row.configurationWithOverrides.LD);
-  assert.equal(row.identityBasis,'literal-config-with-plain-configparms-overrides-only');
+  assert.equal(row.identityBasis,'literal-autoconf-output-and-config.make-with-plain-configparms-overrides-only');
+  assert.deepEqual(row.configurationLiteralSources,{LD:'config.log:Output variables:LD','with-lld':'config.make + config.log:Cache variables:libc_cv_with_lld'});
   assert.deepEqual(Object.keys(row.files).sort(),['config.log','config.make','configparms']);
   for(const [name,pin]of Object.entries(row.files)){const data=await bytes(join(root,'build-profiles',row.variant,row.flavour,name),4*1024*1024);assert.deepEqual(pin,{bytes:data.length,sha256:sha(data)});}
  }

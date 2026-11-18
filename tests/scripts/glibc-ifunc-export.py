@@ -3,11 +3,13 @@ from pathlib import Path
 import importlib.util,json,tempfile,unittest,os,hashlib
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[2];spec=importlib.util.spec_from_file_location('profiles',ROOT/'infra/postgres-glibc-ifunc-experiment/export-build-profiles.py');M=importlib.util.module_from_spec(spec);spec.loader.exec_module(M)
+LOG="\n## ---------------- ##\n## Cache variables. ##\n## ---------------- ##\n\nlibc_cv_with_lld=no\n\n## ----------------- ##\n## Output variables. ##\n## ----------------- ##\n\nLD='ld'\n\n## ----------- ##\n## confdefs.h. ##\n## ----------- ##\n"
 class ExportControls(unittest.TestCase):
  def exercise(self,case):
   with tempfile.TemporaryDirectory(prefix='glibc-profile-export-')as t:
    root=Path(t).resolve();work=root/'work';work.mkdir();out=root/'out';out.mkdir();f=work/'baseline/build-tree/amd64-libc';f.mkdir(parents=True)
-   (f/'config.make').write_text('with-lld = no\nLD = ld\n');(f/'configparms').write_text('CFLAGS = -O2\n');(f/'config.log').write_text('checking version of ld...2.40, ok\n')
+   (f/'config.make').write_text('with-lld = no\nLD = ld\n');(f/'configparms').write_text('CFLAGS = -O2\n');(f/'config.log').write_text(LOG)
+   if case=='no-ld-in-configmake':(f/'config.make').write_text('with-lld = no\n')
    if case=='positive':
     for rel in ['baseline/build-tree/amd64-x32','candidate/build-tree/amd64-libc']:
      d=work/rel;d.mkdir(parents=True)
@@ -32,6 +34,7 @@ class ExportControls(unittest.TestCase):
     'indirect-lhs':'name = LD\n$(name) = ld.lld\n',
     'target-specific':'target: LD = ld.lld\n',
     'indirect-with-lld':'with-lld = $(mode)\n',
+    'with-lld-unknown':'with-lld = maybe\n',
     'with-lld-comment':'with-lld = no # ambiguous trailing whitespace\n',
    }
    if case in malformed:(f/'configparms').write_text(malformed[case])
@@ -62,7 +65,7 @@ class ExportControls(unittest.TestCase):
    if case=='unsafe-ld':identity=None
    result=M.collect(work,out,identity=identity)
    self.assertEqual(snapshot,{str(p):p.read_bytes()for p in work.rglob('*')if p.is_file()and not p.is_symlink()});self.assertFalse((root/'marker').exists());self.assertFalse(result['packageQualificationClaim']);self.assertEqual(json.loads((out/'build-profiles/summary.json').read_text()),result)
-   if case in ['positive','override','admitted-include']:
+   if case in ['positive','no-ld-in-configmake','override','admitted-include']:
     self.assertTrue(result['passed']);self.assertEqual(len(result['profiles']),3 if case=='positive'else 1)
     row=result['profiles'][0];self.assertEqual(row['configuredWithLld'],'no');self.assertEqual(row['configuredLd'],'ld');self.assertTrue(row['linker']['available']);self.assertFalse(row['makeEvaluationPerformed']);self.assertEqual(row['configurationWithOverrides'],{'with-lld':'yes' if case=='override' else 'no','LD':'x86_64-linux-gnu-ld' if case=='override' else 'ld'})
     if case=='override':self.assertEqual(row['configparmsOverrides'],{'with-lld':'yes','LD':'x86_64-linux-gnu-ld'});self.assertEqual(calls,['x86_64-linux-gnu-ld'])
@@ -89,14 +92,14 @@ class ExportControls(unittest.TestCase):
  def test_no_configurations_is_explicit_unavailable(self):
   with tempfile.TemporaryDirectory()as t:
    root=Path(t).resolve();(root/'work').mkdir();(root/'out').mkdir();r=M.collect(root/'work',root/'out',identity=lambda *a:None);self.assertFalse(r['passed']);self.assertEqual(r['profiles'],[])
-for case in ['positive','missing','symlink','hardlink','wrong-kind','unsafe-ld','override','duplicate','probe-error','replacement-during-probe','unsupported-profile','export-ld','export-with-lld','private-ld','unexport-ld','define-ld','conditional','include','eval','continuation','indirect-lhs','target-specific','indirect-with-lld','with-lld-comment','admitted-include','admitted-include-drift','comment-continuation','unicode-separator','admitted-include-replacement','cross-variant-include','admitted-include-symlink','append-ld-tight','append-with-lld-tight','crlf-comment-continuation']:
+for case in ['no-ld-in-configmake','positive','missing','symlink','hardlink','wrong-kind','unsafe-ld','override','duplicate','probe-error','replacement-during-probe','unsupported-profile','export-ld','export-with-lld','private-ld','unexport-ld','define-ld','conditional','include','eval','continuation','indirect-lhs','target-specific','indirect-with-lld','with-lld-comment','with-lld-unknown','admitted-include','admitted-include-drift','comment-continuation','unicode-separator','admitted-include-replacement','cross-variant-include','admitted-include-symlink','append-ld-tight','append-with-lld-tight','crlf-comment-continuation']:
  def run(self,case=case):self.exercise(case)
  setattr(ExportControls,'test_'+case.replace('-','_'),run)
 class DiagnosticControls(unittest.TestCase):
  def exercise(self,case):
   with tempfile.TemporaryDirectory(prefix='glibc-six-diagnostics-')as t:
    root=Path(t).resolve();work=root/'work';work.mkdir();out=root/'out';out.mkdir();source=work/'baseline/build-tree/amd64-libc';source.mkdir(parents=True)
-   for name,data in {'config.make':'with-lld = no\nLD = ld\n','configparms':'CFLAGS = -O2\n','config.log':'GNU ld2.40\n'}.items():(source/name).write_text(data)
+   for name,data in {'config.make':'with-lld = no\nLD = ld\n','configparms':'CFLAGS = -O2\n','config.log':LOG}.items():(source/name).write_text(data)
    cases=['nptl/tst-create-detached','nptl/tst-robust8','rt/tst-cpuclock2','rt/tst-cputimer1','rt/tst-timer','support/tst-support_descriptors']
    fixed=[name+suffix for name in cases for suffix in ['.out','.test-result']]
    for name in fixed:
@@ -164,5 +167,46 @@ class DiagnosticControls(unittest.TestCase):
 for case in ['positive','missing','symlink','hardlink','wrong-kind','oversize-out','oversize-result','aggregate','unavailable-config','replacement-during-probe','bytes-during-probe','replacement-after-output-open','hardlink-after-output-open','partial-output']:
  def run(self,case=case):self.exercise(case)
  setattr(DiagnosticControls,'test_diagnostic_'+case.replace('-','_'),run)
+
+class ConfigLogControls(unittest.TestCase):
+ def test_literal_config_log_with_target_no_ld_make(self):
+  self.assertEqual(M.configuration_literals(b'with-lld = no\n',LOG.encode()),{'with-lld':'no','LD':'ld'})
+  self.assertEqual(M.configuration_literals(b'with-lld = no\nLD = ld\n',LOG.encode()),{'with-lld':'no','LD':'ld'})
+  self.assertEqual(M.configuration_literals(b'with-lld = no\n',LOG.replace('libc_cv_with_lld=no',"libc_cv_with_lld='no'").encode()),{'with-lld':'no','LD':'ld'})
+  self.assertEqual(M.configuration_literals(b'with-lld = yes\n',LOG.replace('libc_cv_with_lld=no','libc_cv_with_lld=yes').encode()),{'with-lld':'yes','LD':'ld'})
+ def test_reject_ambiguous_or_nonliteral_config_logs(self):
+  rows={
+   'missing-ld':LOG.replace("LD='ld'\n",''),
+   'duplicate-ld':LOG.replace("LD='ld'","LD='ld'\nLD='ld'"),
+   'export-ld':LOG.replace("LD='ld'","export LD='ld'"),
+   'operator-ld':LOG.replace("LD='ld'","LD+='ld'"),
+   'unquoted-ld':LOG.replace("LD='ld'","LD=ld"),
+   'double-quoted-ld':LOG.replace("LD='ld'",'LD="ld"'),
+   'command-substitution':LOG.replace("LD='ld'","LD='$(touch marker)'"),
+   'backtick':LOG.replace("LD='ld'","LD='`touch marker`'"),
+   'shell-tail':LOG.replace("LD='ld'","LD='ld'; touch marker"),
+   'cache-in-output':LOG.replace("LD='ld'","LD='ld'\nlibc_cv_with_lld='no'"),
+   'ld-in-cache':LOG.replace('libc_cv_with_lld=no',"libc_cv_with_lld=no\nLD='ld'"),
+   'arguments':LOG.replace("LD='ld'","LD='ld --version'"),
+   'multiline':LOG.replace("LD='ld'","LD='ld\nother'"),
+   'continuation':LOG.replace("LD='ld'","LD='l\\\nd'"),
+   'crlf':LOG.replace('\n','\r\n'),
+   'unicode-separator':LOG.replace("LD='ld'","LD\u00a0='ld'"),
+   'missing-cache':LOG.replace('libc_cv_with_lld=no\n',''),
+   'unknown-cache':LOG.replace('libc_cv_with_lld=no','libc_cv_with_lld=maybe'),
+   'duplicate-cache':LOG.replace('libc_cv_with_lld=no','libc_cv_with_lld=no\nlibc_cv_with_lld=no'),
+   'prefixed-cache':LOG.replace('libc_cv_with_lld=no','export libc_cv_with_lld=no'),
+   'multiline-cache':LOG.replace('libc_cv_with_lld=no',"libc_cv_with_lld='n\no'"),
+   'missing-output-section':LOG.replace('## Output variables. ##','## Other variables. ##'),
+   'duplicate-output-section':LOG+LOG,
+   'unknown-output-statement':LOG.replace("LD='ld'","LD='ld'\n$(touch marker)"),
+   'unknown-cache-statement':LOG.replace('libc_cv_with_lld=no','libc_cv_with_lld=no\neval bad'),
+  }
+  for label,value in rows.items():
+   with self.subTest(label=label):
+    with self.assertRaises(ValueError):M.configuration_literals(b'with-lld = no\n',value.encode())
+  for data in [b'with-lld = yes\n',b'with-lld = no\nLD = ld.lld\n',b'with-lld = maybe\n',b'LD = ld\n']:
+   with self.subTest(make=data):
+    with self.assertRaises(ValueError):M.configuration_literals(data,LOG.encode())
 
 if __name__=='__main__':unittest.main()

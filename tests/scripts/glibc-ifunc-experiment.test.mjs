@@ -19,15 +19,17 @@ for(const scenario of ['recipe-drift','extra-input','existing-backup'])test('inv
 test('real source exporter inert controls',()=>{const r=spawnSync('python3',['-B',join(ROOT,'tests/scripts/glibc-ifunc-export.py')],{encoding:'utf8',timeout:5000,maxBuffer:1024*1024});assert.equal(r.status,0,r.stdout+r.stderr);});
 test('source export admission requires complete per-suite hashes and both variants',async()=>{
  const {verifyProfileExport}=await import('../../infra/postgres-glibc-ifunc-experiment/experiment.mjs');
- for(const scenario of ['positive','hash-drift','missing-variant','unavailable','extra-profile']){
+ for(const scenario of ['positive','hash-drift','missing-variant','unavailable','extra-profile','source-origin-missing','source-origin-drift']){
   const d=await mkdtemp(join(tmpdir(),'glibc-profile-admission-'));try{
    const profiles=[];
    for(const variant of ['baseline','candidate']){
     await mkdir(join(d,variant),{recursive:true});await writeFile(join(d,variant,'suite-paths.txt'),'build-tree/amd64-libc/tests.sum\n');
     const t=join(d,'build-profiles',variant,'amd64-libc');await mkdir(t,{recursive:true});const files={};for(const name of ['config.make','configparms','config.log']){const data='fixed '+name;await writeFile(join(t,name),data);files[name]={bytes:Buffer.byteLength(data),sha256:sha(data)};}
-    profiles.push({variant,flavour:'amd64-libc',files,available:true,unavailableReasons:[],configuredWithLld:'no',configuredLd:'ld',configparmsOverrides:{},configurationWithOverrides:{'with-lld':'no',LD:'ld'},makeEvaluationPerformed:false,identityBasis:'literal-config-with-plain-configparms-overrides-only',linker:{available:true,configured:'ld',exit:0,bytes:100,sha256:'1'.repeat(64),observedAt:'export-time'}});
+    profiles.push({variant,flavour:'amd64-libc',files,available:true,unavailableReasons:[],configuredWithLld:'no',configuredLd:'ld',configparmsOverrides:{},configurationWithOverrides:{'with-lld':'no',LD:'ld'},makeEvaluationPerformed:false,identityBasis:'literal-autoconf-output-and-config.make-with-plain-configparms-overrides-only',configurationLiteralSources:{LD:'config.log:Output variables:LD','with-lld':'config.make + config.log:Cache variables:libc_cv_with_lld'},linker:{available:true,configured:'ld',exit:0,bytes:100,sha256:'1'.repeat(64),observedAt:'export-time'}});
    }
    const value={passed:true,profiles,missingVariants:[],packageQualificationClaim:false,historicalLinkerExecutionProven:false};
+   if(scenario==='source-origin-missing')delete profiles[0].configurationLiteralSources;
+   if(scenario==='source-origin-drift')profiles[0].configurationLiteralSources.LD='guessed';
    if(scenario==='hash-drift')profiles[0].files['config.make'].sha256='0'.repeat(64);
    if(scenario==='missing-variant')profiles.pop();if(scenario==='unavailable')profiles[0].available=false;if(scenario==='extra-profile')profiles.push({...profiles[0],flavour:'amd64-x32'});
    await writeFile(join(d,'build-profiles/summary.json'),JSON.stringify(value));

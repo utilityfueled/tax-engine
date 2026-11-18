@@ -64,3 +64,42 @@ Independent follow-up review:
 The next exact-source opt-in attempt may now retain the previously missing
 configuration and six-case outputs. No retry, altered test or relaxed status is
 introduced; six XPASS would still fail the original strict gate.
+
+
+## Exact 7bea native result
+
+Run `44227921612` failed the baseline strict gate: libc 5,060 PASS, 16 XFAIL,
+128 UNSUPPORTED and six XPASS; i386 1,256 PASS and 15 XFAIL. All six original
+processes exited zero. All twelve fixed output/result files were captured
+completely, including two empty output files. No candidate, CVE, allocator or
+ABI check was reached. No test is reclassified and no unchanged rerun is planned.
+Configuration qualification remains unavailable; exported data does not prove
+historical linker execution or a cause for these six unexpected passes.
+
+Frozen actual assessment SHA256:
+`646c9011af86e86427bee3f7e993d13046230cbc4870b2d97401dfe49296c02f`.
+Manifest SHA256:
+`89e6923dbe0a4fc6e55983f0b5b3a62fab87002e8212fa26b5a74125a7b1cc15`.
+Root verified all 46 receipt pins. The controller records no cleanup errors or
+deadline expiry and empty owned final object lists; this is not an independent
+live cleanup inspection. Strict package and runtime holds remain.
+
+
+## Corrected literal source location
+
+The authenticated target config.make.in has no LD assignment. The exporter
+wrongly required it there, stopping before linker resolution/probing. The
+reviewed successor reads only literal config.log Output variables LD and Cache
+variables libc_cv_with_lld, cross-checks config.make and any explicit plain
+configparms overrides, and rejects ambiguity, unsupported syntax or disagreement.
+No shell or Make contents are evaluated. All existing custody, bounded linker
+probe and diagnostic-export functions remain unchanged.
+
+Source review passes; 54 Python and 10 Node controls, types, 9,516 spec lines,
+strict scoped lint and unchanged inventory checks pass. Three saved actual
+profiles yield LD=ld and with-lld=no as literal observations only. Their missing
+linker identity/probe evidence remains missing; the failed original run and six
+XPASS holds are unchanged. No native rerun is dispatched for this metadata fix.
+Independent receipt SHA256:
+`2aaa3fc8ea3fd670751681b422e9d84c718f461621be5ecf61586d79c653a7fe`.
+Root checks receipt SHA256: `97528fac7efd9cb0b6301179cf0dfd070e40b430cb889dfbead7dbeb10ef1223`.

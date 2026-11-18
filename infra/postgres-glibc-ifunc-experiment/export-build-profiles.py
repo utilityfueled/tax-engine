@@ -111,6 +111,49 @@ def assignments(data, required, admitted_include=None):
     if any(name not in result for name in required): raise ValueError('missing-assignment')
     return result
 
+def configuration_literals(make_data, log_data):
+    """Read literal Autoconf observations, never execute/evaluate log contents.
+
+    Target2.36 config.make.in does not contain LD. Its config.log output-variable
+    section records the configured LD; this is not historical Make execution.
+    """
+    configured=assignments(make_data,['with-lld'])
+    text=log_data.decode('utf-8',errors='strict')
+    if '\r' in text or '\x00' in text: raise ValueError('unsupported-config-log-bytes')
+    titles=[('cache','----------------','Cache variables.'),('output','-----------------','Output variables.'),('confdefs','-----------','confdefs.h.')]
+    sections={}
+    for name,border,title in titles:
+        marker='\n## '+border+' ##\n## '+title+' ##\n## '+border+' ##\n'
+        if text.count(marker)!=1: raise ValueError('ambiguous-config-log-section')
+        position=text.index(marker);sections[name]=(position,position+len(marker))
+    if not sections['cache'][0]<sections['output'][0]<sections['confdefs'][0]:
+        raise ValueError('config-log-section-order')
+    values={}
+    for name,end in [('cache','output'),('output','confdefs')]:
+        body=text[sections[name][1]:sections[end][0]]
+        for line in body.split('\n'):
+            if not line: continue
+            if line.endswith('\\'): raise ValueError('config-log-continuation')
+            pattern=r"([A-Za-z_][A-Za-z0-9_]*)=('([^'\r\n]*)'|[A-Za-z0-9_./:+=-]*)" if name=='cache' else r"([A-Za-z_][A-Za-z0-9_]*)='([^'\r\n]*)'"
+            match=re.fullmatch(pattern,line)
+            if not match: raise ValueError('unsupported-config-log-statement')
+            variable=match.group(1)
+            if variable not in ['LD','libc_cv_with_lld']: continue
+            if variable in values: raise ValueError('duplicate-config-log-variable')
+            if variable=='LD':
+                if name!='output': raise ValueError('config-log-variable-section')
+                value=match.group(2)
+                if not TOKEN.fullmatch(value): raise ValueError('nonliteral-config-log-linker')
+            else:
+                if name!='cache': raise ValueError('config-log-variable-section')
+                value=match.group(3) if match.group(2).startswith("'") else match.group(2)
+                if value not in ['yes','no']: raise ValueError('unknown-config-log-with-lld')
+            values[variable]=value
+    if set(values)!={'LD','libc_cv_with_lld'}: raise ValueError('missing-config-log-variable')
+    if configured['with-lld']!=values['libc_cv_with_lld']: raise ValueError('with-lld-source-disagreement')
+    if 'LD' in configured and configured['LD']!=values['LD']: raise ValueError('linker-source-disagreement')
+    return {'with-lld':configured['with-lld'],'LD':values['LD']}
+
 DIAGNOSTIC_CASES=('nptl/tst-create-detached','nptl/tst-robust8','rt/tst-cpuclock2','rt/tst-cputimer1','rt/tst-timer','support/tst-support_descriptors')
 DIAGNOSTIC_TOTAL_MAX=16*1024*1024
 DIAGNOSTIC_SUFFIX_LIMITS={'.out':1024*1024,'.test-result':64*1024}
@@ -200,7 +243,7 @@ def collect(work,out,identity=None):
                 for name,data in raw.items():
                     with (target/name).open('xb') as f: f.write(data)
                     row['files'][name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
-                configured=assignments(raw['config.make'],['with-lld','LD'])
+                configured=configuration_literals(raw['config.make'],raw['config.log'])
                 include_path=work/variant/'debian/testsuite-xfail-debian.mk'
                 admitted_include='include '+str(include_path)
                 include_data=None;include_custody=None;row['sourceIncludes']=[]
@@ -212,9 +255,11 @@ def collect(work,out,identity=None):
                     if authority!=include_data: raise ValueError('include-authority')
                     row['sourceIncludes'].append({'path':str(include_path),'bytes':len(include_data),'sha256':DEBIAN_XFAIL_SHA,'role':'exact-Debian-expected-failure-annotations'})
                 overrides=assignments(raw['configparms'],[],admitted_include=admitted_include)
+                if 'with-lld' in overrides and overrides['with-lld'] not in ['yes','no']: raise ValueError('unknown-override-with-lld')
+                row['configurationLiteralSources']={'LD':'config.log:Output variables:LD','with-lld':'config.make + config.log:Cache variables:libc_cv_with_lld'}
                 row['configurationWithOverrides']={**configured,**overrides}
                 row['makeEvaluationPerformed']=False
-                row['identityBasis']='literal-config-with-plain-configparms-overrides-only'
+                row['identityBasis']='literal-autoconf-output-and-config.make-with-plain-configparms-overrides-only'
                 row.update(configuredWithLld=configured['with-lld'],configuredLd=configured['LD'],configparmsOverrides=overrides)
                 effective=overrides.get('LD',configured['LD'])
                 if not TOKEN.fullmatch(effective): raise ValueError('unsafe-linker-token')
