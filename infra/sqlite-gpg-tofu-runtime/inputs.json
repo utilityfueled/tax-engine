@@ -2,8 +2,8 @@
   "schema": 1,
   "files": {
     ".github/workflows/sqlite-exported-abi-amd64.yml": {
-      "bytes": 2600,
-      "sha256": "a09b7e0a257e9d0337b72df64f2be7438434ddde0587ed3eb36014e7c47fa6de"
+      "bytes": 2758,
+      "sha256": "b875a94845bfb0ca6fe96bbc8a490facb4b5aec9be9abfbb97db99ce0f198968"
     },
     ".github/workflows/sqlite-gpg-tofu-amd64.yml": {
       "bytes": 2810,
@@ -12,6 +12,22 @@
     ".node-version": {
       "bytes": 8,
       "sha256": "5c293036fc0a61ad76e15d85f454c3c7cec157e181e035b69f95058a2c239144"
+    },
+    "infra/sqlite-exported-abi/README.md": {
+      "bytes": 7705,
+      "sha256": "7918dbb7727dac36ee19ccc9d8ff000c3e5230716f336a2ff7a83d1e7837da95"
+    },
+    "infra/sqlite-exported-abi/inputs.json": {
+      "bytes": 1329,
+      "sha256": "1630b6a635012b313943e0eefb0144c56fb726a51ea63b96c437ea51c246ec93"
+    },
+    "infra/sqlite-exported-abi/original-distribution.json": {
+      "bytes": 3639,
+      "sha256": "9631a716cb529c36b1d118bdad2899a33c6e90e66e03b83337161458130a28fb"
+    },
+    "infra/sqlite-exported-abi/preflight.py": {
+      "bytes": 2418,
+      "sha256": "9b9d15ae0d128f5f09211801504ae61fda4a59ca83877e89bfde011616c6a033"
     },
     "infra/sqlite-gpg-tofu-runtime/README.md": {
       "bytes": 10859,
@@ -50,12 +66,20 @@
       "sha256": "4b90386821b26b4565f20a920ef6c8392f2d8b145c6de17d8586be951896c2f3"
     },
     "scripts/lib/sqlite-abi-artifact.mjs": {
-      "bytes": 10184,
-      "sha256": "5ca789108dbf102cb8cc34cf931d98eb2f7a19650d690aa560f03b49f129a824"
+      "bytes": 11102,
+      "sha256": "7b263dddbb2337e4841d1979a48a0a21798d023272553fe9a4ff57281ed5d6c6"
     },
     "scripts/lib/sqlite-gpg-tofu-evidence.mjs": {
       "bytes": 9506,
       "sha256": "434fd3a52c8e682f93ded4b21736899c19607e65f44d35ebf8be2c35103fd0fc"
+    },
+    "scripts/lib/sqlite-original-distribution.mjs": {
+      "bytes": 5622,
+      "sha256": "a9cac15d45b4c5cf0884c9bbf2ecb3325bc72d7249c61835573af657a27d44c1"
+    },
+    "scripts/lib/stage-sqlite-original-abi.py": {
+      "bytes": 2702,
+      "sha256": "ec3ed0f2fc3439bdf8e6197efdcbb95ef703d9e770efb212ec3d5ec68788f619"
     },
     "scripts/local-container-runtime.mjs": {
       "bytes": 2414,
@@ -70,12 +94,12 @@
       "sha256": "42bfd60962ec2e958f61f7141311742a37297f3436312dd6a405a7b23b64fa52"
     },
     "scripts/qualify-sqlite-exported-abi-amd64.mjs": {
-      "bytes": 12013,
-      "sha256": "2f640f1db45af7946df7bf25bfba1cc17a47f2a8c1dd117931c630ecb91fcb02"
+      "bytes": 12543,
+      "sha256": "15980e220cd62719086450781e36361406a4788a92b9a0720f6fd84a5f987439"
     },
     "scripts/qualify-sqlite-gpg-tofu-amd64.mjs": {
-      "bytes": 12628,
-      "sha256": "fbe500f58a81dbc578371c94c901991b6621756fdf85ab3dd173c1eb756831cc"
+      "bytes": 13058,
+      "sha256": "75925d135b9a7ef0e6991141da5d87dba731787ce771585db7390d02f5e1732f"
     },
     "scripts/sqlite-exported-package-abi.mjs": {
       "bytes": 5199,
@@ -93,9 +117,13 @@
       "bytes": 3918,
       "sha256": "d56510453e1f39d6d8a6a2e79a584f50d745248c97cd051460d7e292636fc12c"
     },
+    "spec/ops/sqlite-original-distribution-abi.yaml": {
+      "bytes": 2329,
+      "sha256": "c6736457f2df892b2b3ff69bc858659bc01c95c888da578df006905d6ec7c801"
+    },
     "tests/scripts/sqlite-exported-abi-artifact.test.mjs": {
-      "bytes": 7651,
-      "sha256": "afa241e4b364e381582562c474468f54623c819aee1cedbf184576cf5a8c8502"
+      "bytes": 7894,
+      "sha256": "91a6917fdf11ac139cd97838af4f4bf9930468f4ec24043f72a2f0e86452e466"
     },
     "tests/scripts/sqlite-exported-package-abi-parser.py": {
       "bytes": 9810,
@@ -112,6 +140,14 @@
     "tests/scripts/sqlite-gpg-tofu-runtime.test.mjs": {
       "bytes": 20470,
       "sha256": "f00ee491b8f139cb7b420f7d4c94b1f2f70ff480528fe7579fbc02e4b3be9fb1"
+    },
+    "tests/scripts/sqlite-original-distribution-abi-parser.py": {
+      "bytes": 3438,
+      "sha256": "5f86cbe494354e6851e26dee69f53a3c82df6d90f313fa3ab0755b4b587ec6df"
+    },
+    "tests/scripts/sqlite-original-distribution-abi.test.mjs": {
+      "bytes": 7257,
+      "sha256": "a0813cb0d87f77e083c50c7efbf865d2accb364cbc51d658607808dcdc8fc31d"
     }
   }
 }

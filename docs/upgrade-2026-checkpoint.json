@@ -26,7 +26,11 @@
       "compactContext": "c4e92399",
       "sqliteFullPrerequisites": "17cf0189"
     },
-    "liveRuns": {},
+    "liveRuns": {
+      "sqliteFull": 44198188977,
+      "fixedCpuManual": 44199237148,
+      "normalCiC50": 44205950721
+    },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
       "glibc44148810935": "baseline suite failed two XFD/proc-cpuinfo checks; ten XPASS also remain; candidate/ABI not reached",
@@ -65,10 +69,10 @@
       "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
-      "Observe fullDBPAGE44198188977/dc2185da once under original165/155/120/15minlimits. Public ABI harness adopted/scopedchecksPASS; no actual dispatch until genuine pairs, originaldistribution extension and review. GPG runnable successor private.",
-      "Observe fixedCPUmanual44199237148/43423f37 with original baseline first; preview_review owns one watcher. No changed acceptance, weights, actions or time limits.",
+      "Observe fullDBPAGE44198188977/dc2185da liveas00:21:59Z under original165/155/120/15minlimits. Public ABI now covers common+originaldistribution\u2192samecandidate; waitgenuinepair beforedispatch. GPGrebound37pins.",
+      "Observe CPUmanual44199237148/434:ordinaryPASS,originalstrictFAILED,batch6active;actual_runs_continuation ownsonewatch. No acceptance/weights/actions/limits change; independent strictfailure source investigation underway.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
-      "Retain compound44204325512 valid negative:104complete,0timeouts,fullparity/cleanup;both10%gatesfail. No adoption/repeat same comparison. Distinct bounded-surface prefilter explored privately with all original gates retained.",
+      "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
       "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
     ],
@@ -101,7 +105,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "ed0b125a",
+    "latestPushedSource": "c50c00ab",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -136,7 +140,7 @@
       "independentReviewSha256": "add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc",
       "rootChecks": "14new/fullbatch+27originalCPU,lint/syntax/spec/inventory/audit/closurePASS",
       "allOriginalLimitsAndAcceptanceUnchanged": true,
-      "actualFutureRun": "RUNNING44199237148/43423f37:ordinaryPASS38m18s;strictoriginalbrowserstageactive;2workers/0retry/30sstrict unchanged;preview_review monitors"
+      "actualFutureRun": "RUNNING44199237148/43423f37:ordinaryPASS;originalstrictbrowserFAILED00:18:51Z,batch6activeas00:21:59Z;all original limits unchanged,actual_runs_continuation monitors"
     },
     "rrtaCompoundPrefilter": {
       "ledger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
@@ -154,7 +158,18 @@
       "independentReviewSha256": "e1dafe86d7fe8a5dc1ac8f873ab16be784eeb22768f799185744c818b2e0c7d3",
       "rootChecks": "42frozenpins;14Node/9Python/lint/actionlint/spec/inventory/browserauditPASS; explicitURLimport+matchingpinfix after scopedlintfailure",
       "nativeExecution": false,
-      "remaining": "Need genuine corresponding library/debug pairs and separate original-distribution\u2192candidate comparison; no runtime/genericABI/release approval"
+      "remaining": "Await real full-package pair; both strict comparisons and actual tools must execute; no genericABI/runtime/release approval.",
+      "originalDistributionExtension": {
+        "sourceManifestSha256": "f2b752121fb215fd8515b754caa2465d4a2680b8f5aa74dae76f04c4e75929b4",
+        "independentReviewSha256": "e930eea94d506e558acf65a30cbb9adc95824be388bbd7faed28f0d3291a864e",
+        "rootChecks": "106frozenpins/15exactpaths;37Node/16Python/lint/actionlint/spec/inventory/audit/executionpinsPASS",
+        "actualNative": false,
+        "comparisonsRequired": [
+          "common-baseline\u2192candidate",
+          "original-distribution\u2192same-candidate"
+        ],
+        "same240SecondAbiWindow": true
+      }
     },
     "sqliteGpgRuntime": {
       "ledger": "docs/upgrade-2026-sqlite-gpg-tofu-20261117.md",
@@ -163,7 +178,27 @@
       "rootChecks": "56frozenpins/15currentdependencies/14exactpaths;21Node/3Python/28closurepins/lint/actionlint/shell/spec/inventory/auditPASS",
       "actualRuntime": false,
       "qualifiedPairAvailable": false,
-      "laterAbiSourceChangesRequireExplicitRebind": true
+      "laterAbiSourceChangesRequireExplicitRebind": true,
+      "sourceClosureRebind": {
+        "manifestSha256": "cf1997050e59e2d602cfe103d3f7df9df2008f9d34069f3de2ad4e1db193a3d1",
+        "independentReviewSha256": "2b90a7ab08b5646215e95fef8338cc2d5e03ac1b437282dd9bbd6adcc5db4c68",
+        "currentSourcePins": 37,
+        "originalPinsUnchanged": 23,
+        "runtimeChanged": false
+      }
+    },
+    "normalPushCancellation": {
+      "receipt": ".local/upgrade-evidence/nov17-gpg-tofu-public-root-adoption/SUPERSEDED-NORMAL-CANCEL.json",
+      "requested": [
+        44204744858,
+        44204745131,
+        44204268919,
+        44204268960,
+        44199176905,
+        44199176236
+      ],
+      "reason": "superseded normalpushes; preserve currentc50 andmanuals; cancellation is notPASS",
+      "terminalConfirmationPending": true
     }
   },
   "nov17New212Timing": {

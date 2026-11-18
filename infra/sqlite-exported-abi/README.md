@@ -84,7 +84,7 @@ safe evidence publication path is reviewed later.
 
 ## Controls and execution
 
-The default-off workflow runs Node inert controls and both Python synthetic
+The default-off workflow runs Node inert controls and three Python synthetic
 parser/tool controls before the adapter. Tests use only synthetic temporary files
 and stubbed transports; no daemon, package code or ELF execution occurs there.
 Actual commands use the unchanged original SourceCandidateController supervisor,
@@ -92,11 +92,29 @@ capacity/native admission and normal owned cleanup. Job 35 minutes, controller
 32 minutes with three minutes cleanup reserve; no recompilation of SQLite.
 
 ```
-node --test tests/scripts/sqlite-exported-package-abi.test.mjs tests/scripts/sqlite-exported-abi-artifact.test.mjs tests/scripts/sqlite-exported-abi-native-amd64.test.mjs
+node --test tests/scripts/sqlite-exported-package-abi.test.mjs tests/scripts/sqlite-exported-abi-artifact.test.mjs tests/scripts/sqlite-exported-abi-native-amd64.test.mjs tests/scripts/sqlite-original-distribution-abi.test.mjs
 python3 -I -B tests/scripts/sqlite-exported-package-abi-parser.py
 python3 -I -B tests/scripts/sqlite-exported-abi-tools.test.py
+python3 -I -B tests/scripts/sqlite-original-distribution-abi-parser.py
 ```
 
 The CLI takes only the exclusive output directory; selected artifact coordinates
 are read from the authenticated dispatch event. No shell expansion of user input
 occurs. No production, database, provider or private runtime data is consumed.
+
+The separately source-bound original distribution pair is downloaded only from two
+fixed official public Debian HTTPS endpoints with no credentials, redirects or
+retries, exact length/SHA256 and bounded deadlines. Its signed-index provenance
+was independently verified during source preparation; runtime makes no fresh
+signature-verification or repository-freshness claim. Three decoded pairs must
+pass admission before new native tool materialization. The original distribution
+ELF is byte-identical to the immutable installed provider; matching debug build
+ID, debuglink CRC, positive DWARF and exact package controls are still required.
+
+The existing common-profile baseline→CVE-candidate strict comparison remains. A
+second unsuppressed `--fail-no-debug-info --no-default-suppression` comparison
+requires original-distribution→the same CVE-candidate exit 0. Both consume the
+same 240-second diagnostic deadline and existing controller/cleanup limits.
+Safe output names each comparison independently and includes original pair hashes;
+it still publishes no raw ABI tool outputs and asserts no generic ABI, runtime,
+release qualification or risk acceptance. Missing real candidate remains HOLD.

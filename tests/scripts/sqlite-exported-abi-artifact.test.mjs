@@ -7,6 +7,7 @@ import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {Buffer} from 'node:buffer';
 import {URL} from 'node:url';
+import originalAuthority from '../../infra/sqlite-exported-abi/original-distribution.json' with {type:'json'};
 import {validateArtifactMetadata,projectAbiResult,artifactLocation,retrieveArtifact} from '../../scripts/lib/sqlite-abi-artifact.mjs';
 import {publishProjection} from '../../scripts/qualify-sqlite-exported-abi-amd64.mjs';
 const source='a'.repeat(40), digest='b'.repeat(64),run=123,artifact=456;
@@ -29,8 +30,8 @@ test('requires exact closed workflow run source and immutable artifact metadata'
 });
 test('never publishes raw ABI or arbitrary command text',()=>{
  const row=version=>({version,architecture:'amd64',libraryPackage:'libsqlite3-0',debugPackage:'libsqlite3-0-dbgsym',library:'usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6',buildId:'1'.repeat(40),debugBuildId:'1'.repeat(40),debug:'usr/lib/debug/.build-id/11/'+('1'.repeat(38))+'.debug',debuglinkCrcMatches:true,alternateDebugInfoRequired:false,debugInfoBytes:3,debugAbbrevBytes:4,soname:['libsqlite3.so.0'],needed:['libm.so.6','libc.so.6'],librarySha256:digest,debugSha256:digest,libraryPackageSha256:digest,debugPackageSha256:digest});
- const inputs={source,runId:'123',archiveSha256:digest,artifactLedgerSha256:digest,originalQualificationPassed:false,originalStatus:{baselinePackageBuildExit:0,candidatePackageBuildExit:0,baselineFullTestExit:2},baseline:row('3.40.1-2+deb12u2'),candidate:row('3.40.1-2+deb12u2+vivalatax1')};
- const result=projectAbiResult({passed:true,failure:false,cleanupErrors:[],checks:[{step:'abidiff',exit:0}],source,operation:'11111111-2222-3333-4444-555555555555',runId:'789',attempt:'1'}, {passed:true,inputs,checks:[{step:'abidiff',bytes:8,stdoutSha256:digest}],toolBinarySha256:{'/usr/bin/abidiff':digest,'/usr/bin/readelf':digest,'/usr/bin/dpkg-query':digest},secret:'NEVER-EXPORT-RAW'});
+ const inputs={source,originalDistribution:originalAuthority.projection,runId:'123',archiveSha256:digest,artifactLedgerSha256:digest,originalQualificationPassed:false,originalStatus:{baselinePackageBuildExit:0,candidatePackageBuildExit:0,baselineFullTestExit:2},baseline:row('3.40.1-2+deb12u2'),candidate:row('3.40.1-2+deb12u2+vivalatax1')};
+ const result=projectAbiResult({passed:true,failure:false,cleanupErrors:[],checks:[{step:'abidiff',exit:0}],source,operation:'11111111-2222-3333-4444-555555555555',runId:'789',attempt:'1'}, {passed:true,comparisons:{commonBaselineToCandidate:true,originalDistributionToCandidate:true},inputs,checks:[{step:'abidiff',bytes:8,stdoutSha256:digest}],toolBinarySha256:{'/usr/bin/abidiff':digest,'/usr/bin/readelf':digest,'/usr/bin/dpkg-query':digest},secret:'NEVER-EXPORT-RAW'});
  assert.equal(result.rawIndependentAbiReviewAvailable,false);assert.equal(result.genericAbiApproval,false);assert.equal(result.runtimeIntegrationExecuted,false);assert.equal(JSON.stringify(result).includes('NEVER-EXPORT-RAW'),false);
  assert.equal(result.diagnosticPassed,true);assert.equal(result.originalPackageQualificationSuperseded,false);
  assert.equal(result.originalQualificationPassed,false);assert.equal(result.packageBinding.baseline.librarySha256,digest);

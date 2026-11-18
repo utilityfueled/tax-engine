@@ -9,16 +9,28 @@
       "sha256": "4b90386821b26b4565f20a920ef6c8392f2d8b145c6de17d8586be951896c2f3"
     },
     "infra/sqlite-exported-abi/preflight.py": {
-      "bytes": 2154,
-      "sha256": "a7c3c418fdcefff00c567ae54f346259db4964055ed0a76a2ec499bb07cc2ed2"
+      "bytes": 2418,
+      "sha256": "9b9d15ae0d128f5f09211801504ae61fda4a59ca83877e89bfde011616c6a033"
     },
     "infra/sqlite-exported-abi/verify-tools.py": {
       "bytes": 3876,
       "sha256": "c61a6e2fa14fdc238567f4a2e2c77998b892e65579c9510da5756f05be8e71ff"
     },
     "scripts/lib/sqlite-abi-artifact.mjs": {
-      "bytes": 10184,
-      "sha256": "5ca789108dbf102cb8cc34cf931d98eb2f7a19650d690aa560f03b49f129a824"
+      "bytes": 11102,
+      "sha256": "7b263dddbb2337e4841d1979a48a0a21798d023272553fe9a4ff57281ed5d6c6"
+    },
+    "scripts/lib/sqlite-original-distribution.mjs": {
+      "bytes": 5622,
+      "sha256": "a9cac15d45b4c5cf0884c9bbf2ecb3325bc72d7249c61835573af657a27d44c1"
+    },
+    "scripts/lib/stage-sqlite-original-abi.py": {
+      "bytes": 2702,
+      "sha256": "ec3ed0f2fc3439bdf8e6197efdcbb95ef703d9e770efb212ec3d5ec68788f619"
+    },
+    "infra/sqlite-exported-abi/original-distribution.json": {
+      "bytes": 3639,
+      "sha256": "9631a716cb529c36b1d118bdad2899a33c6e90e66e03b83337161458130a28fb"
     }
   }
 }

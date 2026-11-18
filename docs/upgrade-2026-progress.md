@@ -7057,3 +7057,16 @@ Compound44204325512 completed104/0timeouts with fullparity/controls/cleanup,
 but9.951277%/9.764402% bothFAIL10%; no adoption. Actualreview0796de5a retained.
 Normalbb3fWebfailed649/1/5ordinary,636/14/5strict; newCPUmanual ordinary stage
 passed while its originalstrict stage remains pending. No failure erased.
+
+### November17: original distribution ABI and explicit GPG rebind
+
+Preserved the first strict ABI comparison and added original distribution→same
+candidate under the existing240-second window and35/32/3-minute limits. All106
+frozen pins and15 public paths verified;37Node/16Python/lint/actionlint/spec/
+inventory/audit/sourcepinsPASS. Source reviewe930eea9 and separate GPG list-only
+rebind review2b90a7ab pass; old28 union13=37,23 oldpins unchanged. No native
+result. Earlier harness commits ed0b125a/c50c00ab are pushed. Existing SQLite
+full job is live; CPU ordinary passed but original strict failed, sample6active.
+Superseded six normalpush runs had cancellation requests accepted; current and
+manuals preserved, no cancellation counted PASS. Local all-bytefilter candidate
+was a valid negative and stopped; original compound rejection remains.

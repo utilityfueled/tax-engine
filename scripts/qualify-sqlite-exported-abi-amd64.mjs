@@ -9,7 +9,7 @@ import {join,resolve} from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {fileURLToPath,URL,pathToFileURL} from 'node:url';
 import {SourceCandidateController,assertOwnedImage,labelRecipe} from './qualify-postgres-source-candidates-amd64.mjs';
-import {diagnose} from './sqlite-exported-package-abi.mjs';
+import {diagnoseOriginal as diagnose,retrieveOriginalDistribution} from './lib/sqlite-original-distribution.mjs';
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const HERE=join(ROOT,'infra/sqlite-exported-abi');
 const INSPECTOR=join(ROOT,'scripts/lib/inspect-sqlite-exported-package-abi.py');
@@ -64,10 +64,14 @@ export class SqliteAbiAdapter extends SourceCandidateController{
   const archive=join(this.private,'source-artifact.zip');
   const retrieved=await retrieveArtifact(request,archive,{token:this.githubToken,deadlineMs:Math.min(performance.now()+180000,this.deadline-this.cleanupReserve-2000)});this.githubToken=undefined;
   await save(join(this.evidence,'artifact-binding.json'),retrieved);
-  const input={source:request.source,archive,archiveSha256:request.archiveSha256};
+  const originalInput=join(this.private,'original-distribution-inputs');
+  const originalAuthority=JSON.parse(await readFile(join(HERE,'original-distribution.json'),'utf8'));
+  const originalBinding=await retrieveOriginalDistribution(originalInput,originalAuthority,{deadlineMs:Math.min(performance.now()+60000,this.deadline-this.cleanupReserve-2000)});
+  await save(join(this.evidence,'original-distribution-binding.json'),originalBinding);
+  const input={source:request.source,archive,archiveSha256:request.archiveSha256,originalInput};
   const work=join(this.private,'abi-payloads');let toolsProof;
   const io={operation:this.operation,work,uid:process.getuid(),docker:(...args)=>this.docker(...args),hostStage:(step,exe,args,timeout)=>this.command('abi-'+step,exe,args,timeout),
-   preflight:async value=>{this.stage='abi-pair-preflight';return JSON.parse(await this.command('abi-pair-preflight','python3',['-I','-B',join(HERE,'preflight.py'),INSPECTOR,value.archive,value.archiveSha256,value.source,this.private],60000));},
+   preflight:async value=>{this.stage='abi-pair-preflight';return JSON.parse(await this.command('abi-pair-preflight','python3',['-I','-B',join(HERE,'preflight.py'),INSPECTOR,value.archive,value.archiveSha256,value.source,this.private,value.originalInput],60000));},
    materialize:async(value,before)=>{
     this.stage='abi-tools-materialization';
     const original=await this.command('abi-source-toolchain','git',['-C',ROOT,'show',value.source+':infra/postgres-sqlite-backport/Dockerfile.toolchain']);

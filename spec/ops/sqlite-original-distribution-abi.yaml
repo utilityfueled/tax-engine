@@ -1,0 +1,24 @@
+form: SQLiteOriginalDistributionABI
+taxYear: 2026
+source: https://deb.debian.org/debian/pool/main/s/sqlite3/
+lines:
+  - line: original_distribution_identity
+    description: Exact official Debian library and matching debug pair authenticate immutable original provider independently from rebuilt common baseline
+    formula: Pinned signed index package hash and byte count then bounded decoder package version architecture ELF hash build ID CRC DWARF all match
+    testRef: "tests/scripts/sqlite-original-distribution-abi.test.mjs::source bound original provider requires exact whole package and decoded debug identity"
+  - line: two_distinct_comparisons
+    description: Preserve original common baseline comparison and separately compare original distribution against the same candidate
+    formula: Existing strict common baseline candidate abidiff exit zero AND strict original distribution candidate abidiff exit zero
+    testRef: "tests/scripts/sqlite-original-distribution-abi.test.mjs::preserves first comparison and appends separate strict original candidate gate"
+  - line: preserved_bounds_and_scope
+    description: No new qualification or runtime claim and no budget extension
+    formula: Same source archive real candidate custody and 240 second shared ABI window with original cleanup controller limits
+    testRef: "tests/scripts/sqlite-original-distribution-abi.test.mjs::both comparisons share existing deadline and forbid overlarge output"
+  - line: original_pair_download
+    description: Fixed public official source bytes only with exact pins and bounded transport
+    formula: Two exact public HTTPS URLs no headers redirects retries or byte overflow and the common controller deadline remains
+    testRef: "tests/scripts/sqlite-original-distribution-abi.test.mjs::downloader is fixed public HTTPS pin checked bounded no redirects and no retries"
+  - line: safe_comparison_publication
+    description: Publish separate safe comparison outcomes while keeping original source gates and raw outputs private
+    formula: Both comparison booleans required for ABI success and exact original pair hashes only with all broad qualification flags false
+    testRef: "tests/scripts/sqlite-original-distribution-abi.test.mjs::safe publication names both independent comparisons and original pair without raw output"

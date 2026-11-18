@@ -31,8 +31,41 @@ corrected, with the initial failure retained. Fourteen Node and nine Python
 controls, scoped lint, actionlint, spec, inventory and browser audit passed.
 
 No native ABI execution or candidate result is claimed. Current complete-package
-run44198188977 is still pending. A separate source-reviewed extension must also
-compare the original distribution provider with the same candidate: common-profile
-baseline comparison alone does not cover the common feature/profile changes.
+run44198188977 is still pending. The separately reviewed extension below also
+compares the original distribution provider with the same candidate; neither
+comparison has executed yet.
 [Source contract](../spec/ops/sqlite-exported-abi-native-amd64.yaml),
 [harness](../infra/sqlite-exported-abi/README.md).
+
+## Original distribution comparison and closure rebind
+
+The exact official library/debug pair is now a third explicit input role.
+Independent signed-index research binds both packages to the Debian and Debian
+debug archives. The decoded original library matches the immutable installed
+provider, SHA-256
+`2e6eef9a727f081f0d453b4e5e6cbd8b9ef8b6f86cbf7681cbad444d3b0b55c8`.
+The official whole library package differs from the saved rebuilt package; ELF
+identity does not imply package identity. Build-ID, CRC and DWARF checks bind its
+corresponding debug file. Signed releases are dated July11 and were retrieved
+November17; this makes no additional freshness claim.
+
+The original strict common-baseline→candidate comparison remains. A separate
+original-distribution→same-candidate comparison must also exit zero without
+suppressions, inside the unchanged shared 240-second diagnostic window and
+35/32/3-minute job/controller/cleanup limits. All existing original source gates,
+private raw outputs and broad qualification holds remain. Both matching pairs
+are required before tools run. Exact five tool versions are present in the
+verified current Bookworm index; actual installed version/byte equality remains
+unproven until materialization. No substitute or automatic retry is introduced.
+
+Author manifest:
+`f2b752121fb215fd8515b754caa2465d4a2680b8f5aa74dae76f04c4e75929b4`.
+Independent source review:
+`e930eea94d506e558acf65a30cbb9adc95824be388bbd7faed28f0d3291a864e`.
+Root verified all106 ABI/rebind frozen pins before15 exact public adoptions.
+Thirty-seven Node and16 Python controls, lint, actionlint, spec, inventory,
+browser audit and current source closures passed. The GPG CLI changed only its
+source list; 28 original paths union13 ABI paths yields37, with23 original pins
+unchanged. Independent rebind review:
+`2b90a7ab08b5646215e95fef8338cc2d5e03ac1b437282dd9bbd6adcc5db4c68`.
+No ABI/runtime execution or release qualification follows from these controls.

@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "version": "3.40.1-2+deb12u2",
+  "packages": [
+    {
+      "name": "library.deb",
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/libsqlite3-0_3.40.1-2+deb12u2_amd64.deb",
+      "bytes": 838808,
+      "sha256": "a8d78b40e9b4e422224aeebfe0e4dfc243f6acf3532490b0c05480d4283d41e2"
+    },
+    {
+      "name": "debug.deb",
+      "url": "https://deb.debian.org/debian-debug/pool/main/s/sqlite3/libsqlite3-0-dbgsym_3.40.1-2+deb12u2_amd64.deb",
+      "bytes": 2397844,
+      "sha256": "1cf05d1aed09c42275723d3bcf4cd461ddd86c48cb4b555dbd0d30278912b9ae"
+    }
+  ],
+  "projection": {
+    "version": "3.40.1-2+deb12u2",
+    "architecture": "amd64",
+    "libraryPackage": "libsqlite3-0",
+    "debugPackage": "libsqlite3-0-dbgsym",
+    "library": "usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6",
+    "debug": "usr/lib/debug/.build-id/52/21b80bd99650e3e55370b0e24f4b4dbe81264f.debug",
+    "buildId": "5221b80bd99650e3e55370b0e24f4b4dbe81264f",
+    "debugBuildId": "5221b80bd99650e3e55370b0e24f4b4dbe81264f",
+    "debuglinkCrcMatches": true,
+    "debugInfoBytes": 1259367,
+    "debugAbbrevBytes": 24403,
+    "alternateDebugInfoRequired": false,
+    "soname": [
+      "libsqlite3.so.0"
+    ],
+    "needed": [
+      "libm.so.6",
+      "libc.so.6"
+    ],
+    "librarySha256": "2e6eef9a727f081f0d453b4e5e6cbd8b9ef8b6f86cbf7681cbad444d3b0b55c8",
+    "debugSha256": "8da0802603cefe222eb91a4bada6da2c2adcdfc396c771988f12fad6e7c72670",
+    "libraryPackageSha256": "a8d78b40e9b4e422224aeebfe0e4dfc243f6acf3532490b0c05480d4283d41e2",
+    "debugPackageSha256": "1cf05d1aed09c42275723d3bcf4cd461ddd86c48cb4b555dbd0d30278912b9ae"
+  },
+  "signedIndexProvenance": [
+    {
+      "release": "bookworm.InRelease",
+      "releaseSha256": "77737fa4b34f2693e982cc9ee35736816c35a7778fc2d326cc1bbf5b301fe1aa",
+      "releaseDate": "Sat, 11 Jul 2026 10:16:37 UTC",
+      "acceptedSignatures": [
+        "4CB50190207B4758A3F73A796ED0E7B82643E131",
+        "4D64FEC119C2029067D6E791F8D2585B8783D481"
+      ],
+      "index": "bookworm.Packages.xz",
+      "indexSha256": "9e0b5aabb2465b3d2e7a7fe27f9913846277833f7a2826e7767acccff5b588c5",
+      "indexBytes": 8790396,
+      "package": "libsqlite3-0",
+      "version": "3.40.1-2+deb12u2",
+      "architecture": "amd64",
+      "filename": "pool/main/s/sqlite3/libsqlite3-0_3.40.1-2+deb12u2_amd64.deb",
+      "packageBytes": 838808,
+      "packageSha256": "a8d78b40e9b4e422224aeebfe0e4dfc243f6acf3532490b0c05480d4283d41e2"
+    },
+    {
+      "release": "bookworm-debug.InRelease",
+      "releaseSha256": "b9c92629b9816d06f89a0a30b404cf1b950f4ec4de0efc1b3aee85d2f98f6dd0",
+      "releaseDate": "Sat, 11 Jul 2026 10:16:37 UTC",
+      "acceptedSignatures": [
+        "4CB50190207B4758A3F73A796ED0E7B82643E131",
+        "4D64FEC119C2029067D6E791F8D2585B8783D481"
+      ],
+      "index": "bookworm-debug.Packages.xz",
+      "indexSha256": "cd37aecee79b7858904fdb6a658bc13a71d5ea0dc8929776dd2ab41b2324921f",
+      "indexBytes": 3586960,
+      "package": "libsqlite3-0-dbgsym",
+      "version": "3.40.1-2+deb12u2",
+      "architecture": "amd64",
+      "filename": "pool/main/s/sqlite3/libsqlite3-0-dbgsym_3.40.1-2+deb12u2_amd64.deb",
+      "packageBytes": 2397844,
+      "packageSha256": "1cf05d1aed09c42275723d3bcf4cd461ddd86c48cb4b555dbd0d30278912b9ae"
+    }
+  ],
+  "keyringSha256": "506b815cbb32d9b6066b4a2aa524071e071761e7e7f68c3ac74f3061ba852017",
+  "immutableOriginalProviderSha256": "2e6eef9a727f081f0d453b4e5e6cbd8b9ef8b6f86cbf7681cbad444d3b0b55c8",
+  "authorityReviewSha256": "3a62b605532186865ecaf95349a4d891d0217912420e7d23a70341831cf0a5f9",
+  "freshSignatureVerificationAtRuntimeClaimed": false
+}

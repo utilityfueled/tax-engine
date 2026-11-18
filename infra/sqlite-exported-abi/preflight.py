@@ -9,12 +9,14 @@ from pathlib import Path
 import zipfile
 
 
-def preflight(inspector, archive, digest, source, parent):
-    spec = importlib.util.spec_from_file_location('abi_inspector', inspector)
+def preflight(inspector, archive, digest, source, parent, original_input):
+    stager = Path(inspector).with_name('stage-sqlite-original-abi.py')
+    authority = Path(inspector).parents[2]/'infra/sqlite-exported-abi/original-distribution.json'
+    spec = importlib.util.spec_from_file_location('abi_original_stager', stager)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     with tempfile.TemporaryDirectory(prefix='abi-pair-check-', dir=parent) as tmp:
-        value = module.stage(archive, digest, source, str(Path(tmp)/'payloads'))
+        value = module.stage(inspector, str(authority), original_input, archive, digest, source, str(Path(tmp)/'payloads'))
     # stage already verifies the complete archive digest and stable file identity.
     # Rehash the separately opened provenance view; no executable is run.
     path = Path(archive)
@@ -43,9 +45,10 @@ def preflight(inspector, archive, digest, source, parent):
     value['originalToolchainImageId'] = image['Id']
     value['originalToolchainImageRestorable'] = False
     value['sourcePairsDecodedBeforeMaterialization'] = True
+    value['sourcePairCount'] = 3
     return value
 
 
 if __name__ == '__main__':
-    assert len(sys.argv) == 6
+    assert len(sys.argv) == 7
     print(json.dumps(preflight(*sys.argv[1:]), separators=(',', ':')))

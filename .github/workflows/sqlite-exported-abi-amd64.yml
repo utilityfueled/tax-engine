@@ -48,10 +48,11 @@ jobs:
           node-version-file: .node-version
       - name: Check inert ABI contracts
         run: |
-          node --test tests/scripts/sqlite-exported-package-abi.test.mjs tests/scripts/sqlite-exported-abi-artifact.test.mjs tests/scripts/sqlite-exported-abi-native-amd64.test.mjs
+          node --test tests/scripts/sqlite-exported-package-abi.test.mjs tests/scripts/sqlite-exported-abi-artifact.test.mjs tests/scripts/sqlite-exported-abi-native-amd64.test.mjs tests/scripts/sqlite-original-distribution-abi.test.mjs
           python3 -I -B tests/scripts/sqlite-exported-package-abi-parser.py
           python3 -I -B tests/scripts/sqlite-exported-abi-tools.test.py
-      - name: Diagnose the exact exported pair without rebuilding SQLite
+          python3 -I -B tests/scripts/sqlite-original-distribution-abi-parser.py
+      - name: Diagnose the exported pairs and original distribution without rebuilding SQLite
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/qualify-sqlite-exported-abi-amd64.mjs "$RUNNER_TEMP/postgres-source-candidate"
