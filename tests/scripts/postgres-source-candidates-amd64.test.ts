@@ -1,10 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { performance } from "node:perf_hooks";
+import { Controller, JOB_LIMITS, boundedTimeout } from "../../scripts/qualify-postgres-backports-amd64.mjs";
 import { readFileSync } from "node:fs";
 import { mkdtemp, mkdir, writeFile, symlink, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { admitCandidate, assertCandidateStatus, assertOwnedImage, assertKeyringMember, SOURCE_LIMITS, KEYRING_SOURCE, validateSourceUrl, admitSourceExecution, cleanupSourceOwned, labelRecipe, publishArtifacts } from "../../scripts/qualify-postgres-source-candidates-amd64.mjs";
+import { admitCandidate, assertCandidateStatus, assertOwnedImage, assertKeyringMember, SOURCE_LIMITS, SourceCandidateController, sourcePackageBuildSeconds, KEYRING_SOURCE, validateSourceUrl, admitSourceExecution, cleanupSourceOwned, labelRecipe, publishArtifacts } from "../../scripts/qualify-postgres-source-candidates-amd64.mjs";
+vi.mock("../../scripts/build-postgres-sqlite-backport.mjs", async (importOriginal) => {
+  const original = await importOriginal<Record<string, unknown>>();
+  return { ...original, prepareBuildContext: async ({ output }: { output: string }) => {
+    await mkdir(join(output, "context"), { recursive: true });
+    await writeFile(join(output, "context", "Dockerfile.packages"), "FROM ${TOOLCHAIN}\nRUN true\n");
+    return {};
+  } };
+});
 const spec = "spec/federal/postgres-source-candidates-amd64.yaml";
 void spec;
 describe("standalone native source candidates", () => {
@@ -19,8 +29,41 @@ describe("standalone native source candidates", () => {
     expect(() => admitSourceExecution(env, { ...event, inputs: { source_sha: "b".repeat(40) } }, host)).toThrow();
     for (const patch of [{ arch: "arm64" }, { endpoint: "tcp://127.0.0.1:2375" }, { trackedUnchanged: false }, { runningContainers: ["foreign"] }]) expect(() => admitSourceExecution(env, event, { ...host, ...patch })).toThrow();
     for (const patch of [{ private: true }, { fork: true }]) expect(() => admitSourceExecution(env, { ...event, repository: { ...event.repository, ...patch } }, host)).toThrow();
-    expect(SOURCE_LIMITS).toEqual({ jobMinutes: 165, controllerMinutes: 155, cleanupMinutes: 15, initialDiskGiB: 20, reserveDiskGiB: 2 });
+    expect(SOURCE_LIMITS).toEqual({ jobMinutes: 315, controllerMinutes: 300, cleanupMinutes: 15, packageBuildMinutes: 240, exportMinutes: 5, initialDiskGiB: 20, reserveDiskGiB: 2 });
   });
+  it("uses a live source-only full-package deadline and preserves cleanup reserves", () => {
+    const source = new SourceCandidateController("sqlite", "/private/tmp/not-executed", {});
+    const remaining = source.deadline - performance.now();
+    expect(source.limit.controllerMinutes).toBe(300); expect(source.cleanupReserve).toBe(15 * 60_000);
+    expect(remaining).toBeLessThanOrEqual(300 * 60_000); expect(remaining).toBeGreaterThan(300 * 60_000 - 1000);
+    const ordinary = new Controller("package", "/private/tmp/not-executed", undefined, {});
+    expect(ordinary.limit).toBe(JOB_LIMITS.package); expect(ordinary.limit.controllerMinutes).toBe(155);
+    const threshold = (240 + 5) * 60_000 + 2000;
+    expect(sourcePackageBuildSeconds(threshold)).toBe(240 * 60);
+    for (const invalid of [threshold - 1, 0, -1, NaN, Infinity]) expect(() => sourcePackageBuildSeconds(invalid)).toThrow();
+    expect(boundedTimeout(300 * 60_000, 240 * 60_000, 15 * 60_000, false, 30 * 60_000)).toBe(240 * 60_000);
+    expect(boundedTimeout(300 * 60_000, 60_000, 15 * 60_000, true, 299 * 60_000)).toBe(60_000);
+  });
+ async function capturePackageCommand(ordinaryMinutes:number){
+  const recipe = join(process.cwd(), 'infra/postgres-sqlite-backport');
+  const directory=await mkdtemp(join(tmpdir(),'sqlite-source-budget-private-'));
+  const c=new SourceCandidateController('sqlite',directory,{});c.private=join(directory,'private');c.evidence=join(directory,'evidence');
+  await mkdir(c.private);await mkdir(c.evidence);c.preexistingImages=new Set();c.cleanupReserve=15*60000;c.deadline=performance.now()+(ordinaryMinutes+15)*60000;
+  c.sources=async()=>({recipe,manifest:{privateCandidateVersion:'unused'}});
+  const calls:Array<{step:string,seconds:number}>=[];const fake='sha256:'+'a'.repeat(64);
+  c.inspect=async()=>({Id:fake,Os:'linux',Architecture:'amd64',Config:{Labels:{'io.vivalatax.qualification.operation':c.operation}},RepoTags:[],RepoDigests:[]});
+  c.docker=async(step:string,args:string[],seconds=60)=>{
+   calls.push({step,seconds});if(step==='source-toolchain-build')await writeFile(args[args.indexOf('--iidfile')+1],fake+'\n');
+   if(step==='source-package-build')throw Error('PRIVATE_PACKAGE_COMMAND_CAPTURED');return '';
+  };
+  let error:unknown;try{await c.build();}catch(e){error=e;}finally{await rm(directory,{recursive:true,force:true});}return {calls,error};
+ }
+ it('actual build holds before a package command without full240+export5 window',async()=>{
+  const {calls,error}=await capturePackageCommand(244);expect(error).toBeTruthy();expect(calls.filter(c=>c.step==='source-package-build')).toEqual([]);
+ });
+ it('actual build submits the complete240minute command with sufficient window',async()=>{
+  const {calls,error}=await capturePackageCommand(250);expect(String(error)).toContain('PRIVATE_PACKAGE_COMMAND_CAPTURED');expect(calls.find(c=>c.step==='source-package-build')?.seconds).toBe(240*60);
+ });
   it("pins reproducible official keyring and rejects foreign source inputs", () => {
     expect(KEYRING_SOURCE.url).toBe("https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2023.3+deb12u2_all.deb");
     expect(KEYRING_SOURCE.sha256).toBe("f699e2f88dca05212f2a452b58475f2993cb6993dfbafb1d0205a3291eb8b4b8");
@@ -67,7 +110,7 @@ describe("standalone native source candidates", () => {
   });
   it("keeps workflow manual read only bounded and unpromoted", () => {
     const w = readFileSync(".github/workflows/postgres-source-candidates-amd64.yml", "utf8");
-    expect(w).toContain("workflow_dispatch:"); expect(w).toContain("timeout-minutes: 165"); expect(w).toContain("contents: read"); expect(w).toContain("retention-days: 3"); expect(w).toContain("persist-credentials: false"); expect(w).toContain("cancel-in-progress: false");
+    expect(w).toContain("workflow_dispatch:"); expect(w).toContain("timeout-minutes: 315"); expect(w).toContain("contents: read"); expect(w).toContain("retention-days: 3"); expect(w).toContain("persist-credentials: false"); expect(w).toContain("cancel-in-progress: false");
     expect(w).not.toMatch(/\b(?:push|pull_request|schedule):|docker\s+push|secrets\./);
   });
 });

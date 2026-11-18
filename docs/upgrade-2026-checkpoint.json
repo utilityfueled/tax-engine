@@ -70,7 +70,7 @@
       "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
-      "Commit/push independently reviewed20-path SQLcommon correction with alloriginalfuzz/feature/fulltest intent retained. Extend source-only fullpair rehearsal time budget after separate review: old120minpackage cannot fit two~76min variants. Then actualLinuxbaseline/candidate/full/CVE/sanitizer; noABI/GPGuntilrequiredrealqualifiedpair.",
+      "After separate budget/source-contract fix commits and pushes, seal fresh37 GPGauthority to exactHEAD, then dispatch one fullnativeSQLite source package with source_sha exactHEAD.315/300/240 bounds retainallgates; previous134-error baseline and365coverage failure remainfailed.",
       "Observe exact365ba0af phase44215474850 andnormalCI44215418095/Web44215418092/Docker44215418097. Do notrestart completedwork or infer newer-sourcequalification. Sourcephase35Node/27Vitest+655collectionequal passed.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
       "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
@@ -106,7 +106,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "365ba0af95d23e5502484cdd4be37dde427cee5e",
+    "latestPushedSource": "ab46756bab9159d6cec27696d620d379dc42f83c",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -205,9 +205,8 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "sqliteCommon": "nov18-sqlite-combined-common-integration-preparation; native ROWID and IO semantic proofs available, source custody successor required after independent deterministic race reproduction",
-      "nativeRowidManifestSha256": "23732ce220a0da0b7c4aec20f17199d554ec32e4382a8e1d2d54ab4a1259cbcf",
-      "nativeIoManifestSha256": "69efbf404b2474d78c5cf3743367801d846fd90a2d1b0d9fb9fa2eb26bb4be9c",
+      "glibc": "Independent read-only10XPASS investigation; narrowofficial4IFUNC conditionalcorrection underreview, sixDebianannotationsretained; no blanketreclassification",
+      "budgetCommitSeal": "Fresh37sourceauthority must be exactHEADsealed after budgetcommit",
       "packageQualification": false
     },
     "browserOriginalEntryPhase": {
@@ -239,7 +238,34 @@
       "vitestControls": 19,
       "fuzzAssertionsPreserved": true,
       "gpgClosure37Unchanged": true,
-      "packageQualification": false
+      "packageQualification": false,
+      "sourceCommit": "ab46756bab9159d6cec27696d620d379dc42f83c"
+    },
+    "sqliteFullPairBudget": {
+      "status": "source-adopted-local-checks-pass-actual-pending",
+      "ledger": "docs/upgrade-2026-source-package-budget-20261117.md",
+      "jobMinutes": 315,
+      "controllerMinutes": 300,
+      "cleanupMinutes": 15,
+      "packageMinutes": 240,
+      "exportAdmissionMinutes": 5,
+      "proposalManifestSha256": "c70e61481c7ab936b9f61cb2536354e0569d98415503d215afc79df42a62b767",
+      "independentReviewManifestSha256": "dafa27386782bbf525f442db040d9d41d7ac5ce8adc1148d29d8369aa6e67917",
+      "gpgAuthoritySha256": "d5b0b54c281d4d895b6a8ff4bf461eb26db1ce462491ae2e85a0b42028084b46",
+      "gpgCommitSealPending": true,
+      "qualification": false
+    },
+    "observed365CoverageFailure": {
+      "run": "44215418095",
+      "job": "134503919209",
+      "source": "365ba0af95d23e5502484cdd4be37dde427cee5e",
+      "counts": {
+        "passed": 29014,
+        "failed": 1
+      },
+      "cause": "Existing ohio-strict-known-native-kind source contract requires unchanged await typeOriginals literal; fix wrapper, retain existing test and allactions",
+      "assessmentSha256": "e261673f78422e5d915ed006c91cf440f8f10f80ff739df4ed37f2de296ce2cf",
+      "status": "failed-preserved-source-fix-in-progress"
     }
   },
   "nov17New212Timing": {

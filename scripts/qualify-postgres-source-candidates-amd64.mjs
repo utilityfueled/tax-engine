@@ -16,7 +16,11 @@ const digest = value => createHash("sha256").update(value).digest("hex");
 const json = async path => JSON.parse(await readFile(path, "utf8"));
 const save = (path, value) => writeFile(path, JSON.stringify(value, null, 2) + "\n", { flag: "wx", mode: 0o600 });
 const id = value => { assert.match(value, /^sha256:[a-f0-9]{64}$/); return value; };
-export const SOURCE_LIMITS = { jobMinutes: 165, controllerMinutes: 155, cleanupMinutes: 15, initialDiskGiB: 20, reserveDiskGiB: 2 };
+export const SOURCE_LIMITS = { jobMinutes: 315, controllerMinutes: 300, cleanupMinutes: 15, packageBuildMinutes: 240, exportMinutes: 5, initialDiskGiB: 20, reserveDiskGiB: 2 };
+export function sourcePackageBuildSeconds(remainingOrdinaryMs) {
+  assert.ok(Number.isFinite(remainingOrdinaryMs) && remainingOrdinaryMs >= (SOURCE_LIMITS.packageBuildMinutes + SOURCE_LIMITS.exportMinutes) * 60_000 + 2000, "Insufficient remaining full package and artifact-export window.");
+  return SOURCE_LIMITS.packageBuildMinutes * 60;
+}
 export const KEYRING_SOURCE = {
   url: "https://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2023.3+deb12u2_all.deb",
   bytes: 178572, sha256: "f699e2f88dca05212f2a452b58475f2993cb6993dfbafb1d0205a3291eb8b4b8",
@@ -87,7 +91,13 @@ export async function publishArtifacts(source, destination) {
   await save(join(destination, "export-binding.json"), { totalBytes: total, files: Object.fromEntries(files), noAliases: true, originalArtifactLedgerVerified: true });
 }
 export class SourceCandidateController extends Controller {
-  constructor(candidate, output, env = process.env) { super("package", output, undefined, env); this.sourceCandidate = admitCandidate(candidate); this.stage = "admission"; }
+  constructor(candidate, output, env = process.env) {
+    super("package", output, undefined, env);
+    this.limit = { ...this.limit, minutes: SOURCE_LIMITS.jobMinutes, controllerMinutes: SOURCE_LIMITS.controllerMinutes, cleanupMinutes: SOURCE_LIMITS.cleanupMinutes };
+    this.deadline = performance.now() + this.limit.controllerMinutes * 60_000;
+    this.cleanupReserve = this.limit.cleanupMinutes * 60_000;
+    this.sourceCandidate = admitCandidate(candidate); this.stage = "admission";
+  }
   async initialize() {
     assert.equal(await realpath(dirname(this.output)), await realpath(this.env.RUNNER_TEMP), "Output must be one fresh direct RUNNER_TEMP child.");
     assert.equal(basename(this.output), "postgres-source-candidate");
@@ -132,7 +142,8 @@ export class SourceCandidateController extends Controller {
     await writeFile(dockerfile, labelRecipe(await readFile(dockerfile, "utf8"), this.operation));
     await save(join(this.evidence, "source-plan.json"), { ...plan, contextDockerfileSha256: digest(await readFile(dockerfile)), operationLabelOnlyDelta: true, source: this.identity.source });
     const packageIdFile = join(this.private, "package.id");
-    await this.docker("source-package-build", ["build", "--rm=true", "--force-rm=false", "--network=none", "--platform", "linux/amd64", "--build-arg", "TOOLCHAIN=" + toolchain, "--build-arg", "EXPECTED_ARCH=amd64", "--iidfile", packageIdFile, "--tag", `tax-source-${this.operation}:package`, "--file", dockerfile, context], 120 * 60);
+    const packageBuildSeconds = sourcePackageBuildSeconds(this.deadline - performance.now() - this.cleanupReserve);
+    await this.docker("source-package-build", ["build", "--rm=true", "--force-rm=false", "--network=none", "--platform", "linux/amd64", "--build-arg", "TOOLCHAIN=" + toolchain, "--build-arg", "EXPECTED_ARCH=amd64", "--iidfile", packageIdFile, "--tag", `tax-source-${this.operation}:package`, "--file", dockerfile, context], packageBuildSeconds);
     const image = id((await readFile(packageIdFile, "utf8")).trim()); assertOwnedImage(await this.inspect("source-package-native", image), this.operation, this.preexistingImages);
     this.stage = "export-actual-checks";
     const name = "tax-source-" + this.operation + "-export";

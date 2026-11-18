@@ -7091,3 +7091,9 @@ Added default-off threadTicks observation for the unchanged original Ohio entry 
 ## November17 continuation: faithful SQLite common profile
 
 Adopted20exact common transformations, preserving original3 prerequisites, all fuzz assertions and production features. Independent review864c2ce9 resolves the reproduced post-reservation custody defect with28retained/boundary controls;58SQLite Node and19Vitest controls pass, as do spec/lint. Host rowid and IO RED/GREEN are scoped separately; no Linux/fullsuite/CVE/sanitizer/ABI/runtime qualification. Fullpairedpackage scheduling needs a separately reviewed extension because prior baseline alone took~76minutes. See docs/upgrade-2026-sqlite-common-profile-20261117.md. Phase commit365ba0af is pushed; opted runtime44215474850 andnormal365CI/Web/Docker runs are active. No production deployment or paid provider call.
+
+## November17 continuation: full paired package window
+
+SQLsource correctionab46756b is pushed. Separately reviewed source-only budget315job/300livecontroller/15cleanup/240package now reflects the prior~76minute baseline and retains everyfullsuite/fuzz/CVE/sanitizer gate; shared/diagnostic ceilings stayseparate. Independentdafa2738 review (fullhash inledger) androot15Vitest/58Node/typecheck/spec/inventory/lint/actionlint pass. Fresh37GPGsourceauthority identifiesonechangedmember and must be sealedtoactualcommit; oldsourceauthorityisnotreused. No actualpackagepass or nativeGPGclaim. See docs/upgrade-2026-source-package-budget-20261117.md. Originalphase44215474850 remainsboundonlyto365ba0af.
+
+Full CI365 coverage subsequently failed1/29,015 tests: retained Ohio strict source contract expects the original await typeOriginals literal. Actualfailure/assessment e261673f is preserved; repair keeps that test unchanged. Native diagnostic365 evidence cannot qualify the newer source.

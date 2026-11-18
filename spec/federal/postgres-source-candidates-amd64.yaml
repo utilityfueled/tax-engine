@@ -23,6 +23,10 @@ lines:
     formula: cleanup requires exact new identity, label, native image, normal stopped exit and no unknown child; uncertainty holds.
     testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::bounds cleanup to exact owned new identities"
   - line: "workflow"
-    description: Explicit dispatch only, contents read, no push/deploy, 165-minute package job, no cancellation or retry, artifacts retained three days and no credential environment publication.
+    description: Explicit dispatch only, contents read, no push/deploy, 315-minute package job, no cancellation or retry, artifacts retained three days and no credential environment publication.
     formula: native source experiment does not promote any image or change readiness policy.
     testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::keeps workflow manual read only bounded and unpromoted"
+  - line: "full-package-budget"
+    description: Source-only controller300minutes includes the unchanged15minute cleanup reserve; ordinary work285minutes; full paired offline package command240minutes plus5minute artifact-export admission allowance. The shared backport and diagnostic controller ceilings remain separate.
+    formula: Admit the whole package command only if remaining ordinary milliseconds >= (240+5)*60000+2000; every original baseline/candidate package/full-suite, five-case paired regression and sanitizer gate remains mandatory.
+    testRef: "tests/scripts/postgres-source-candidates-amd64.test.ts::uses a live source-only full-package deadline and preserves cleanup reserves"
