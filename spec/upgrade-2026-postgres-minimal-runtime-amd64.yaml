@@ -1,0 +1,66 @@
+form: "Postgres-Minimal-Runtime-AMD64"
+taxYear: 2025
+status: "opt-in-source-controls-verified-native-qualification-pending"
+reference: "https://github.com/docker-library/postgres; https://github.com/anchore/syft; https://github.com/anchore/grype"
+notes: |
+  Operations evidence only; this descriptor does not qualify a tax year or filing scenario.
+  Detailed raw-base policy below is operations evidence, not a tax rule pack.
+  No DB startup, runtime/recovery/release qualification or lower-layer erasure claim.
+id: upgrade-2026-postgres-minimal-runtime-amd64
+platform: linux/amd64
+baseline:
+  index: sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca
+  manifest: sha256:f45d631d050c2fe068f384ed6c4faac506e9cd7f4da605ce703648e4b0985848
+  config: sha256:68beac29d3dda63428173674fa868d5544913658694cd4b09f6f15230a0ba1bb
+  dpkg_status_sha256: 115f014bc7b114c49ee0321b01f9cd3b3f1bdd608cc97812010c9452970c4806
+  installed_packages: 155
+  regular_elf_payloads: 1042
+candidate:
+  remove_exactly: [gnupg, gpg, gpg-wks-client, gpg-wks-server, libsqlite3-0]
+  installed_packages: 150
+  regular_elf_payloads: 1038
+  sqlite_providers: 0
+  sqlite_direct_consumers: 0
+invariants:
+  - Original SourceCandidateController admission, ownership, capacity, child custody and cleanup remain unchanged.
+  - Exact source_sha and clean checkout; opt-in public default-branch AMD64 hosted runner; no retry.
+  - Network-disabled ten-minute build; no DB starts; only created stopped export containers.
+  - Exact package purge admission, apt dependency checks, empty dpkg audits and protected hashes.
+  - No force-depends, blanket autoremove, installs, index updates or extra removals.
+  - Baseline provider and direct consumer must be actual SQLite and gpg at their exact known hashes.
+  - Candidate absence requires complete paired strict inventories; parse failures or missing retained payloads are failures.
+  - Every retained ELF row and installed-package record unchanged; all DT_NEEDED providers still present and unique.
+  - Original image Config preserved except labels; entrypoint bytes unchanged.
+  - Before/after immutable rootfs exports and image saves bind fresh SBOM/scan with no ignore rules and same fresh DB.
+  - Each saved image archive independently verifies config SHA equals exact Docker image ID before any scanner runs.
+  - Archive config Linux/AMD64 and layer identities match native image inspections before and after scanning.
+  - Saved archive hash and size remain unchanged across identity verification and scanning; bindings retain all identities.
+limits:
+  job_minutes: 60
+  controller_minutes: 55
+  cleanup_minutes: 10
+  build_minutes: 10
+  initial_disk_gib: 20
+  reserve_disk_gib: 2
+held:
+  - Runtime readiness, DB/init/recovery/Compose override and existing retained-runtime gates remain required later.
+  - This raw-base-only stage cannot compose qualified libxml2/gosu images without new status/source pins and review.
+  - Lower OCI layer bytes, indirect loading and custom hooks remain unqualified.
+  - No SQLite patch, general ABI, risk acceptance or release qualification claim.
+lines:
+  - line: "bounded-custody"
+    description: "Preserve source, owner, capacity and cleanup admission"
+    formula: "Use unchanged SourceCandidateController admission and owned cleanup, exact source SHA, 60-minute job/55-minute controller/10-minute cleanup reserve; network-disabled ten-minute build, no retry or database start."
+    testRef: "tests/scripts/postgres-minimal-runtime-amd64.test.mjs::separate bounded controller retains inherited custody and unchanged image config"
+  - line: "exact-package-removal"
+    description: "Remove exactly five packages without changing retained records or protected executables"
+    formula: "Require pinned raw status, empty before/after dpkg audit, apt dependency checks, exact dry-run and actual removal sets; no install/update/force-depends/autoremove. Require retained records and protected executable hashes unchanged."
+    testRef: "tests/scripts/test_minimal_runtime_package_gate.py::Controls"
+  - line: "complete-paired-inventory"
+    description: "Treat missing evidence or parser errors as failure"
+    formula: "Require complete baseline155/candidate150 packages and1042/1038 regular ELF inventories, exact four removed payloads and every retained row unchanged; require unique remaining providers and zero candidate SQLite provider/direct consumers. Preserve non-ELF, indirect-loading and custom-hook limits."
+    testRef: "tests/scripts/test_minimal_runtime_inventory.py::Inventory"
+  - line: "independent-image-scan-binding"
+    description: "Bind scanner inputs independently to immutable native image configuration and layers"
+    formula: "Before either scanner, verify actual saved archive config SHA, Linux/AMD64 and layer IDs against before/after native inspection; recheck archive hash and size. Pin tools and same fresh DB, reject ignore drift and preserve all findings. No layer-payload-hashing or release-readiness claim."
+    testRef: "tests/scripts/postgres-minimal-runtime-amd64.test.mjs::real valid synthetic archive binds actual config and layers while retaining critical findings"

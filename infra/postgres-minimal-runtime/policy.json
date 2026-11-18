@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "rawOfficialBaseOnly": true,
+  "baseConfig": "sha256:68beac29d3dda63428173674fa868d5544913658694cd4b09f6f15230a0ba1bb",
+  "platformManifest": "sha256:f45d631d050c2fe068f384ed6c4faac506e9cd7f4da605ce703648e4b0985848",
+  "files": {
+    "infra/postgres-minimal-runtime/Dockerfile": "189322bde784614409844d8ac945dece59c47bcd8ebca3e79177ebe06b05779d",
+    "infra/postgres-minimal-runtime/remove-runtime-packages.sh": "cfa015c5a7d3c55189bd985f7ccb7f6412f44988771d81814185173b7fec36d9",
+    "infra/postgres-minimal-runtime/inspect.py": "be645ef9364e4784ab9c7c180bb997b21a13050f7f1524c60e331440e50b7167",
+    "infra/sqlite-runtime-consumers/inspect.py": "91776ff0a2afc8cf8e544e7362f701956e70618d47e7e0ca90921f9f998aa9b5"
+  },
+  "originalProposalManifestSha256": "af9d9b34ca757da62a4bda2891e124833499d4714c879d9d1a60204c5f6b3ede",
+  "composedLibxmlGosuStatusPinNotEstablished": true,
+  "removeExactly": [
+    "gnupg",
+    "gpg",
+    "gpg-wks-client",
+    "gpg-wks-server",
+    "libsqlite3-0"
+  ],
+  "initialDpkgStatusSha256": "115f014bc7b114c49ee0321b01f9cd3b3f1bdd608cc97812010c9452970c4806",
+  "retain": [
+    "apt",
+    "gpgv",
+    "postgresql-16",
+    "postgresql-client-16",
+    "postgresql-common",
+    "postgresql-client-common"
+  ]
+}
