@@ -29,7 +29,11 @@
     "liveRuns": {
       "sqlite40df": "44235763098",
       "glibc91": "44248166149",
-      "ci91": "44248132696"
+      "ci91": "44248132696",
+      "composite32f": "44251370387",
+      "ci32f": "44251313869",
+      "web32f": "44251314094",
+      "docker32f": "44251313885"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -103,8 +107,8 @@
     "nextActions": [
       "Observe existing SQLite run 44235763098 at 40df910c. Do not redispatch. Full paired suites, CVE and sanitizer gates must pass; ABI, GPG and final runtime remain open.",
       "Observe existing glibc mandatory-PASS run 44248166149 at 91dbc3a5. Do not redispatch. All original paired suite, CVE, allocator, ABI, resource and cleanup gates plus fresh six-case evidence must pass.",
-      "Push reviewed composite and fixture accounting commits with fresh production guard; dispatch one exact-source four-job composite rehearsal. Keep glibc/other findings, lower layers, full service and release unqualified.",
-      "Observe existing CI and Web runs at 7f189699 through their sole watcher. Preserve original deadlines and failed timing investigations; no cause is established.",
+      "Observe exact32f623a8 composite44251370387 and ordinary CI44251313869/Web44251314094/Docker44251313885 through actual_runs_continuation only. Four chained composite jobs require same-source artifact, data, lineage, lifecycle/privacy and actual cleanup reviews; no release qualification.",
+      "Observe remaining91CI44248132696 through actual_runs_continuation. 32f browser preflight failed stale dependent digest;7136c322 repairs exactly that field with37retained controls and independent review. After guarded push, discover ordinary exact-source runs once; preserve old failures and original gates.",
       "RRTA candidates failed unchanged thresholds. Do not adopt them or repeat those stopped avenues.",
       "Qualified independent human tax, AI and security reviews, applicable final 2026 forms and selected Google-route access remain unresolved. Do not enable readiness, filing or model promotion."
     ],
@@ -137,7 +141,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "91dbc3a523e4d8e798d47fd96caf8fbe715121a1",
+    "latestPushedSource": "32f623a8567b1243ef7f5cb237d225f5ad1bb3b5",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -722,7 +726,21 @@
       "actual_runs_continuation": [
         "ci91"
       ],
-      "closure_review_continuation": []
+      "closure_review_continuation": [],
+      "current32f": {
+        "owner": "actual_runs_continuation",
+        "sourceCommit": "32f623a8567b1243ef7f5cb237d225f5ad1bb3b5",
+        "runs": [
+          "44248132696",
+          "44251370387",
+          "44251313869",
+          "44251314094",
+          "44251313885"
+        ],
+        "observationReceipt": ".local/upgrade-evidence/nov18-32f623a8-ordinary-composite-observation/OBSERVER-TRANSITION.json",
+        "boundHours": 8,
+        "note": "Replaces local metadata observer only; no GitHub retry or job mutation."
+      }
     },
     "dockerF9": {
       "run": "44243701234",
@@ -871,6 +889,17 @@
       "sourceAuditManifestSha256": "69ca86223a89b8035a7d980d0aa53c8a80a7f0961a337f5e289fa95ee461af34",
       "hotspotManifestSha256": "c9855df0f1e7e2773440c725fafe952ab628f064bf3416c2f9e684ae978d2732",
       "publicEdits": false
+    },
+    "web32fPreflight": {
+      "status": "failed-before-browser-cases",
+      "run": "44251314094",
+      "source": "32f623a8567b1243ef7f5cb237d225f5ad1bb3b5",
+      "cause": "Dependent cases.auditSha256 stale after additive reviewed fixture pin; unchanged original timing test failed.",
+      "actualReceiptSha256": "b705d9cdba54df140e1bc75b9fef0f1483a0791a60ff4a6908fbb9a30cba837b",
+      "repair": "single digest refresh; exact byte inverse; retained37controls pass; no runtime qualification",
+      "rootReceiptSha256": "8c0919fb1c8c4964bf609d58e75f19f8005f98f0d4aa8470e07637c575906392",
+      "repairCommit": "7136c322",
+      "independentReceiptSha256": "5f426061115bba8d2e7890ec5755c2d4bd46940c0ac35ee81bf9a825e06e44ed"
     }
   },
   "nov17New212Timing": {
