@@ -87,3 +87,17 @@ step succeeded; no independent live cleanup inspection is claimed.
 
 Private `nov18-phase-44215474850-observation/385-WEB-MANIFEST.json` SHA256:
 `73c5d3fc05aa523d1f2b6d2c2b475a352a9b7ad0e67f0ff92a791cd009515295`.
+
+
+## Subsequent exact40df global result
+
+Web run `44235730238` failed the unchanged strict 655-case collection:
+648 passed, two failed, five skipped. The two 1280px part-year school cases
+(refund100 and covered) reached their original 30-second deadlines at download/
+response and API-post waits. These are deadline locations, not request, server
+or CPU attribution. The separate self-host job passed. No new trace analysis,
+manual replay or production performance fix is claimed.
+
+Frozen receipt SHA256:
+`3e7038ec9ac768503231a5327ea6965ff262eb383722886e352ca259cce6710d`.
+Root verified the receipt and its raw log and terminal metadata pins.

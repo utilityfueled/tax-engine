@@ -55,3 +55,36 @@ candidate Compose-override tests remain required. Non-ELF behavior, custom
 hooks, indirect loading, all other CVEs and lower OCI layer bytes remain open.
 Removing merged-rootfs files does not erase underlying image-layer bytes.
 No release, generic ABI, risk acceptance, filing or model promotion is enabled.
+
+
+## First actual native result
+
+Exact source `7f189699cb3d6001f646e7e727be7b5da2d7955c`, run `44238508493`,
+completed successfully at 2026-11-18 04:38:38 UTC. Candidate config is
+`sha256:a4ee9ef799532b51566bff32fafee8c6c6b80c8cdb574fee7528f07301573d67`.
+The exact five package/four ELF removals pass; all retained package and regular
+ELF records and protected tools remain unchanged. SQLite providers and direct
+consumers fall from one each to zero. This is exposure-elimination inventory
+evidence, not a patched SQLite or database compatibility claim.
+
+Raw scan matches fall from 574 to 535; active critical findings fall from nine
+to eight. Both raw reports also retain one suppressed critical zlib1g finding.
+Effective user-ignore rules are empty. Remaining glibc, libxml2 and Go findings
+are not accepted or resolved by this raw-base experiment. Fourteen original OCI
+layers remain, with two added layers.
+
+All 65 recorded commands exit zero; final owned object lists are empty with no
+controller cleanup errors. No independent live cleanup inspection was performed.
+Root verified 60 frozen receipt pins. Independent actual review passes for this
+scoped stage: all 149 ZIP members and 921,475,688 bytes, both raw rootfs
+archives, every regular ELF hash/size/owner, package/status record and protected
+payload were independently verified. Nineteen SQLite vulnerability matches
+fall to zero. Docker-save bytes were not retained, so subsequent replay of that
+archive is unavailable. A later DB stage must rebuild and rebind its own image.
+Independent review manifest SHA256:
+`46840d689081f0021562216a9612008bb2c16ecc9492fc04d23968abbd3cc6bb`.
+Actual manifest SHA256:
+`276c5271ff31972780af4983b87bc09719465365ef4a154ea5d5ab231b296d1b`.
+Actual assessment SHA256:
+`43ea40be738ad3ae737b46f668688b77959cd362c85d17a63fc07a824dbcf218`.
+All original runtime, recovery, composite-image and release gates remain.
