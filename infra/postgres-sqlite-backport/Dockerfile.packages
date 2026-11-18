@@ -7,5 +7,6 @@ COPY inputs /qualification-inputs
 COPY CVE-2025-7458.patch /qualification-inputs/CVE-2025-7458.patch
 COPY apply-compatibility.py /qualification-inputs/apply-compatibility.py
 COPY compatibility-changes.json /qualification-inputs/compatibility-changes.json
+COPY extract-distinct-paired.py /qualification-inputs/extract-distinct-paired.py
 COPY build-packages.sh /qualification-build.sh
 RUN /bin/bash /qualification-build.sh

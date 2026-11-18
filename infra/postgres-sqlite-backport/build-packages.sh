@@ -79,10 +79,12 @@ for variant in baseline candidate; do
     test "$result" = 0
     cd /qualification-work
 done
-# Same original patched regression text on both compiled source variants; baseline
-# full suite above ran before this copied test. A nonzero exit alone is not proof.
-cp /qualification-out/upstream-distinct.test baseline/test/distinct.test.paired
-cp /qualification-out/upstream-distinct.test candidate/test/distinct.test.paired
+# Keep the complete upstream file above. Isolate its exact appended five-case
+# block and bootstrap: filtering the full file skips required legacy setup.
+# No case body, oracle or status gate changes. A nonzero exit alone is not proof.
+python3 -I -B /qualification-inputs/extract-distinct-paired.py --source /qualification-out/upstream-distinct.test --output /qualification-out/paired-distinct.test --record /qualification-out/paired-fixture.json
+cp /qualification-out/paired-distinct.test baseline/test/distinct.test.paired
+cp /qualification-out/paired-distinct.test candidate/test/distinct.test.paired
 cmp baseline/test/distinct.test.paired candidate/test/distinct.test.paired
 for variant in baseline candidate; do
     cd "/qualification-work/$variant"

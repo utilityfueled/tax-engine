@@ -71,16 +71,16 @@
       "sha256": "fbfe6f3d9d253c58bf86ac99e03fcd830bc8cefc5742c59abda277a679bbcf7b"
     },
     "Dockerfile.packages": {
-      "bytes": 435,
-      "sha256": "4db08c54bce3701ed416ede93c3378f6000e3df24574f871e5b616c012561b63"
+      "bytes": 516,
+      "sha256": "faeb1f262f71e87712a9c3e7c81d8c91b99d85167cf7b126a598046370fb7171"
     },
     "Dockerfile.toolchain": {
       "bytes": 905,
       "sha256": "bc1c925eb7850477f4f1138788fd76cbe6e09dc846132237152f0feafa84d532"
     },
     "build-packages.sh": {
-      "bytes": 7269,
-      "sha256": "5b154faeebed25ac07e112944fb4ddd7b1a7f162185ba90e72683b5a4f021b55"
+      "bytes": 7546,
+      "sha256": "b26faa3ea9b672d4d97a68d53f1531e8e131ea50bda5aa3f24b7a3ed4b067f48"
     },
     "provenance.json": {
       "bytes": 5118,
@@ -97,6 +97,10 @@
     "compatibility-changes.json": {
       "bytes": 61811,
       "sha256": "4fc63090e4bcebd06da6b836360f2113d32f8ef8d6720a8636e70e8ba52e5fbc"
+    },
+    "extract-distinct-paired.py": {
+      "bytes": 2742,
+      "sha256": "0ade2ec06bc6c20ff100df9c49172fcd9a7c9bd8531ed1aae7b568282c9eb9f6"
     }
   },
   "commonCompatibilityPrerequisites": {

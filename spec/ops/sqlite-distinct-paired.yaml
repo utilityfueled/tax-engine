@@ -1,0 +1,18 @@
+form: "SQLite-Distinct-Paired-Fixture"
+taxYear: 2025
+status: "source-only-unqualified"
+reference: "https://github.com/sqlite/sqlite/commit/b816ca9994e03a8bc829b49452b8158a731e81a9"
+notes: |
+  The full upstream distinct.test remains unchanged and retained. Its filtered
+  legacy setup fails before the intended cases. A separate exact derived fixture
+  retains the original tester bootstrap, all five appended bodies and expected
+  outputs, and finish_test. This changes test isolation, not the SQL or oracle.
+lines:
+  - line: "exact-isolation"
+    description: "Isolate all five authenticated cases without legacy setup"
+    formula: "Require the exact 15475-byte authenticated patched upstream file, bootstrap hash, complete appended-case hash and output hash. Preserve every original byte in the bootstrap and five-case block; require names10.1 through10.5 in order. Use identical derived bytes for baseline, candidate and sanitizer. Keep the original filter, exit and five-positive-case status oracles. Full suites remain unchanged."
+    testRef: "tests/scripts/sqlite-distinct-paired.test.py::test_authenticated_case_block_and_bootstrap_are_exact"
+  - line: "admission-and-custody"
+    description: "Reject drift, unsafe files and output replacement"
+    formula: "No network, source patching or arbitrary code evaluation. Reject any input mutation, symlink, hardlink, oversized file or changed path identity; output and fixed hash receipt are exclusive new files. Preserve input bytes and never modify the held full upstream test. Missing or failed stage remains unqualified."
+    testRef: "tests/scripts/sqlite-distinct-paired.test.py::test_cli_rejects_mutation_links_and_existing_output"
