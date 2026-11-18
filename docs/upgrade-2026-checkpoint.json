@@ -28,8 +28,8 @@
     },
     "liveRuns": {
       "sqlite40df": "44235763098",
-      "ciF9": "44243701268",
-      "webF9": "44243701280"
+      "glibc91": "44248166149",
+      "ci91": "44248132696"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -102,8 +102,8 @@
     },
     "nextActions": [
       "Observe existing SQLite run 44235763098 at 40df910c. Do not redispatch. Full paired suites, CVE and sanitizer gates must pass; ABI, GPG and final runtime remain open.",
-      "Push reviewed ec91daac source with fresh production guard, then dispatch one explicit mandatory_pass paired glibc native run. Do not rerun the old profile or waive any missing evidence; record one watcher and original gates.",
-      "Prepare and independently review the same-source libxml2/gosu plus minimal-removal composite. Isolated raw-base DB run 44243730083 passes; composite, other CVEs, lower layers, full service and release remain unqualified.",
+      "Observe existing glibc mandatory-PASS run 44248166149 at 91dbc3a5. Do not redispatch. All original paired suite, CVE, allocator, ABI, resource and cleanup gates plus fresh six-case evidence must pass.",
+      "Push reviewed composite and fixture accounting commits with fresh production guard; dispatch one exact-source four-job composite rehearsal. Keep glibc/other findings, lower layers, full service and release unqualified.",
       "Observe existing CI and Web runs at 7f189699 through their sole watcher. Preserve original deadlines and failed timing investigations; no cause is established.",
       "RRTA candidates failed unchanged thresholds. Do not adopt them or repeat those stopped avenues.",
       "Qualified independent human tax, AI and security reviews, applicable final 2026 forms and selected Google-route access remain unresolved. Do not enable readiness, filing or model promotion."
@@ -137,7 +137,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "d0f121a93c4f21a3832043c104d53e94fb60581a",
+    "latestPushedSource": "91dbc3a523e4d8e798d47fd96caf8fbe715121a1",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -587,7 +587,7 @@
       "readiness": false
     },
     "glibcMandatoryPassPreparation": {
-      "status": "Committed opt-in source controls and independent adoption review pass; native pending",
+      "status": "One fresh paired native run dispatched; actual evidence pending",
       "conceptManifestSha256": "2a54f7e0cb9b09d5bde5398156f64fd4e0d0973940bc517de5a53e26931b0787",
       "scopeSuccessorManifestSha256": "9180db42615248dd7242e2eefd56bdbb281f1aeb0cabfad4a05e1344f38ae9cc",
       "scope": "Original amd64-libc baseline/candidate only; six individually mandatoryPASS withfullbody/skip/source/output evidence. Otherflavour suites andoriginalgates unchanged. NoXPASSacceptance oroldrunretroqualification.",
@@ -609,7 +609,7 @@
         "Fresh full paired suites, CVE, allocator and ABI evidence"
       ],
       "publicAdoption": true,
-      "nativeExecuted": false,
+      "nativeExecuted": true,
       "sourceCommit": "ec91daace874cdd2251de3ce44c50a69797280e3",
       "independentSourceReviewManifestSha256": "ae3f9130dbeed3d1e4326e0d8afd53d8f8cc58acf2acab36b5a990700e77f339",
       "independentRootDerivativeReviewManifestSha256": "f4ea27f8f6d060eeb753c82c1446ba482f907a56f352931b43510a0e3984b894",
@@ -625,7 +625,15 @@
         "inventoryEntries": 1077,
         "previousRowsUnchanged": 1076
       },
-      "ledger": "docs/upgrade-2026-glibc-mandatory-pass-20261118.md"
+      "ledger": "docs/upgrade-2026-glibc-mandatory-pass-20261118.md",
+      "run": "44248166149",
+      "runSource": "91dbc3a523e4d8e798d47fd96caf8fbe715121a1",
+      "createdAtUtc": "2026-11-18T06:00:29Z",
+      "mandatoryPass": true,
+      "nativeDispatched": true,
+      "watcher": "strict_failure_continuation",
+      "preflight": "PASS",
+      "nativeJob": "134612078251"
     },
     "web40df": {
       "run": "44235730238",
@@ -708,12 +716,11 @@
     },
     "runWatchers": {
       "strict_failure_continuation": [
-        "sqlite40df"
+        "sqlite40df",
+        "glibc91"
       ],
       "actual_runs_continuation": [
-        "ciF9",
-        "webF9",
-        "dockerF9"
+        "ci91"
       ],
       "closure_review_continuation": []
     },
@@ -730,15 +737,39 @@
       "runtimeQualification": false
     },
     "postgresMinimalCompositePreparation": {
-      "state": "private-spec-first-implementation-active",
+      "state": "Committed source controls and independent reviews pass; native pending",
       "designManifestSha256": "59fc9b4735c037b945262f52faa821d7fa6267b70a563f16fdc8751ff904150a",
       "rootVerifiedDesignInputs": 20,
       "owner": "closure_review_continuation",
       "scope": "Same-source original libxml2 package, gosu runtime and independent handoffs; new authenticated exact composite seal, exact-five removal, private DB checks and fresh resource custody. Raw profile remains unchanged.",
       "stopCondition": "If exact allowed drift cannot be derived from both qualified component handoffs and bounded package contents, retain diagnostic-only inventory for review. Do not learn an oracle from observations.",
-      "publicEdits": false,
+      "publicEdits": true,
       "nativeExecuted": false,
-      "releaseQualified": false
+      "releaseQualified": false,
+      "implementationManifestSha256": "88397efee07c929fef8e28ff52f1461c3fb62589a050cbf3d8033a88bb056c3b",
+      "rootVerifiedImplementationBindings": {
+        "owned": 41,
+        "inputs": 29
+      },
+      "independentReviewOwners": {
+        "actual_runs_continuation": "Package/status/ELF/provider/gosu seal, data-only archive readers and both handoff lineages",
+        "strict_failure_continuation": "Private runtime/DB publication, fresh-volume/imported-image custody, normal cleanup and workflow inverses/bounds"
+      },
+      "checksReported": {
+        "node": 28,
+        "newPythonMethods": 8,
+        "retainedPythonMethods": 8,
+        "fakePackageScenarios": 18,
+        "semanticMutationReds": 5,
+        "scopedLint": "PASS",
+        "actionlint": "PASS"
+      },
+      "sourceCommit": "f5682a4f77a13d13e56f7784d16167f0b0717130",
+      "independentDataReviewSha256": "89ff8dd74b75814b5df310ac0d19e07f2fa7962d10566d146610a603546b0b9d",
+      "independentLifecycleReviewSha256": "efe2040ee22f8874791853307fac57a1ac074e1b90b92da8818fd97c46fa1efa",
+      "independentRootDerivativeReviewSha256": "653acb77ea3d3a3d3532fd88d67241ad5027fa728724b7d7b7c102f9b17f61f9",
+      "rootChecksSha256": "91a56c62c6db438a7ec3ee9d34e939f8f5d8cfc6063818cdd3bf078b2f262a38",
+      "ledger": "docs/upgrade-2026-minimal-composite-20261118.md"
     },
     "web7f": {
       "run": "44238476326",
@@ -764,6 +795,82 @@
       "reason": "Prior native application/Compose/browser rehearsal passed. Current application tree differences are browser tests/diagnostic helpers, while final PostgreSQL security composition is still private. Defer a fresh VM rehearsal until a new actual runtime candidate is ready; do not reuse prior image bytes as qualification for future images.",
       "currentImageQualified": false,
       "scopeReceiptSha256": "9bf6e6c3f632236267dd7acea9379373a9e8395ad1009360a1216d5d8b91e073"
+    },
+    "web91BrowserSetup": {
+      "run": "44248132606",
+      "job": "134611966942",
+      "source": "91dbc3a523e4d8e798d47fd96caf8fbe715121a1",
+      "state": "One-pin source regression repair committed; later source-bound browser execution still required",
+      "browserExecuted": false,
+      "trackedAuditedFiles": 2006,
+      "pinnedAuditedFiles": 2005,
+      "soleMissingPath": "tests/fixtures/glibc-mandatory-pass/positive-output.json",
+      "soleMissingSha256": "990ec3aa9bf540846db27bcffa888af20d1dc2eda0458423a2f005a0924d682e",
+      "owner": "closure_review_continuation",
+      "testGateRelaxed": false,
+      "fixCommit": "192528c30a05544fb851a87ab4db591df0154ef8",
+      "rootChecksSha256": "2c007e516afe09e5ee079e55f3d37278147ca02fd52c083e2280697d99e72f60",
+      "reviewManifestSha256": "87a7ce338a228908f9da8ede6279ec63ef93293916d7575d086ee4f89b85ca93",
+      "ledger": "docs/upgrade-2026-browser-fixture-accounting-20261118.md",
+      "containerSourceCauseAlsoConfirmed": true
+    },
+    "ciF9": {
+      "run": "44243701268",
+      "source": "f9a3d1f7ef71c38d2fd9ffacb83cf7a1dc5709b8",
+      "conclusion": "success",
+      "jobsPassed": 6,
+      "filesPerUnitAndCoverage": 2133,
+      "testsPerUnitAndCoverage": 29019,
+      "branchCoveragePercent": 88.2,
+      "unchangedBranchGatePercent": 85,
+      "manifestSha256": "67b77c5e6cad04928ea64012a489796ab8696cf28fe0edb2da1bcf6b3bda24ee"
+    },
+    "webF9": {
+      "run": "44243701280",
+      "source": "f9a3d1f7ef71c38d2fd9ffacb83cf7a1dc5709b8",
+      "conclusion": "failure",
+      "ordinary": {
+        "passed": 648,
+        "failed": 2,
+        "skipped": 5,
+        "failure": "RRTA 1280/390px saved-PDF privacy child at original4000ms"
+      },
+      "container": {
+        "passed": 648,
+        "failed": 2,
+        "skipped": 5,
+        "failure": "Ohio school refund100/covered1280px at original30000ms"
+      },
+      "cleanup": "Recorded step31 success; no independent live post-inspection",
+      "manifestSha256": "90cb10377dbeb6ce247b7457caec0b2b74a57938bbbd955b452cd89385b175ad",
+      "causeProven": false
+    },
+    "docker91": {
+      "run": "44248132740",
+      "conclusion": "success",
+      "jobsPassed": 1,
+      "manifestSha256": "0658835e012474463c8aa8fe1de45d6e939bc42ec68493db42a5943f49c972ed",
+      "runtimeQualified": false
+    },
+    "web91": {
+      "run": "44248132606",
+      "conclusion": "failure",
+      "build": "PASS",
+      "browserCasesExecuted": 0,
+      "containerBrowserCasesExecuted": 0,
+      "failure": "Exact source audit missing sole new glibc fixture pin; fix192528c3",
+      "otherContainerChecks": "Build/smoke/Compose recovery/rollback/archive/SBOM/scan and recorded cleanup passed",
+      "manifestSha256": "d9be847ffdd2455eb4b3da6e577c87f4de06088093edafb95947149eef130e90",
+      "causeSupplementSha256": "c76f418096ef5998e7ce4c71a35540a4405ff5fd19f78939ae9786e944022b0f"
+    },
+    "rrtaRemainingMeasurement": {
+      "state": "Private GC diagnostic preparation only; no optimization or qualification claim",
+      "owner": "closure_review_continuation",
+      "scope": "Original helper and GC policy unchanged; numeric gc.callbacks observer only, original4000ms cap and child custody; at most one child per already-held exact public PDF. No network or browser replay.",
+      "priorFontMapAvenue": "NO-GO from historical source-bound attribution; no distinct safe >=10% transform justified.",
+      "sourceAuditManifestSha256": "69ca86223a89b8035a7d980d0aa53c8a80a7f0961a337f5e289fa95ee461af34",
+      "hotspotManifestSha256": "c9855df0f1e7e2773440c725fafe952ab628f064bf3416c2f9e684ae978d2732",
+      "publicEdits": false
     }
   },
   "nov17New212Timing": {

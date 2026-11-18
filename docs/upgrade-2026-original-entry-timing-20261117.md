@@ -116,3 +116,20 @@ investigation, manual replay or deadline change was performed.
 Receipt SHA256:
 `df01ead3d290cb9ef9e6da11496ef6aa52b9f42ea5c0c8758b9fa0abc36bd67d`.
 Root verified the receipt and both raw metadata/log pins.
+
+
+## Subsequent exact f9a3d1f7 result
+
+Web `44243701280` failed with 648 passes, two failures and five skips in both
+ordinary and container modes. Ordinary failures were the two RRTA paper widths
+at the unchanged 4,000-ms privacy child limit. Container failures were the
+1280px Ohio school refund100/covered paths at original 30-second waits. These
+are failure locations, not a CPU/server cause. Recorded cleanup step31 passed;
+no independent live post-inspection, trace download or manual replay occurred.
+Manifest SHA256:
+`90cb10377dbeb6ce247b7457caec0b2b74a57938bbbd955b452cd89385b175ad`.
+Root verified all nine held receipt inputs.
+
+The later source91 run stopped before browser cases on a separate fixture
+accounting regression; see [the specific repair](upgrade-2026-browser-fixture-accounting-20261118.md).
+It does not resolve the runtime deadline failures recorded here.
