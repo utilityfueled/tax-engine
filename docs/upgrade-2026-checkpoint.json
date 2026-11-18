@@ -27,8 +27,10 @@
       "sqliteFullPrerequisites": "17cf0189"
     },
     "liveRuns": {
-      "normalCiC50": 44205950721,
-      "normalCi9d63": 44207536926
+      "phaseOriginalBatches365": "44215474850",
+      "normalCi365": "44215418095",
+      "normalWeb365": "44215418092",
+      "normalDocker365": "44215418097"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -68,8 +70,8 @@
       "bb3fNormalWeb": "FAIL44196252566:ordinary649PASS/1RRTA4stimeout/5skip;strict636PASS/14FAIL/5skip;buildPASS. Original30s/4s/oracles unchanged;phaseprefix does not proveCPUcause."
     },
     "nextActions": [
-      "Adopt reviewed20-path IO/ROWID common-source correction only after custody successor passes independent race controls. Native host semantic RED/GREEN is available; retain all fuzz invariants/production flags, require actual Linux fullsuite/package/CVE/sanitizer/ABI/GPG gates.",
-      "Original-entry threadTicks observer source adopted with35Node/27retainedVitest controls, three typechecks/spec/inventory/lint/actionlint and actual655-case collection equivalence. After reviewed commit/push, obtain bounded actual original full-batch runtime evidence; old strict failures remain open.",
+      "Commit/push independently reviewed20-path SQLcommon correction with alloriginalfuzz/feature/fulltest intent retained. Extend source-only fullpair rehearsal time budget after separate review: old120minpackage cannot fit two~76min variants. Then actualLinuxbaseline/candidate/full/CVE/sanitizer; noABI/GPGuntilrequiredrealqualifiedpair.",
+      "Observe exact365ba0af phase44215474850 andnormalCI44215418095/Web44215418092/Docker44215418097. Do notrestart completedwork or infer newer-sourcequalification. Sourcephase35Node/27Vitest+655collectionequal passed.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
       "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
@@ -104,7 +106,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "9d63c37ed7a78d7dffcb0443e366f276bfeedd49",
+    "latestPushedSource": "365ba0af95d23e5502484cdd4be37dde427cee5e",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -223,7 +225,21 @@
       "actualBrowserMeasurement": false,
       "qualification": false,
       "independentReviewSha256": "22b687fe399608459db7374774d54ce0e76f098aad3311d30d606b125592a75a",
-      "rootReceiptSha256": "cc5e48d7f74f3705cd67bf8c105a63dd1f0259e453a8a227bae2648f433e1383"
+      "rootReceiptSha256": "cc5e48d7f74f3705cd67bf8c105a63dd1f0259e453a8a227bae2648f433e1383",
+      "sourceCommit": "365ba0af95d23e5502484cdd4be37dde427cee5e",
+      "actualRun": "44215474850"
+    },
+    "sqliteCommon20": {
+      "status": "source-adopted-local-checks-pass-package-unqualified",
+      "ledger": "docs/upgrade-2026-sqlite-common-profile-20261117.md",
+      "sourceManifestSha256": "55508ed53100e624b64951a11d1ad48ea5d5db30a8d25f37b51fe251ff9155d4",
+      "independentReviewSha256": "864c2ce98e0c9bbd1c313028561c707062f0ac8da15bc8ca92359c4d7958df9b",
+      "pythonControls": 28,
+      "nodeControls": 58,
+      "vitestControls": 19,
+      "fuzzAssertionsPreserved": true,
+      "gpgClosure37Unchanged": true,
+      "packageQualification": false
     }
   },
   "nov17New212Timing": {

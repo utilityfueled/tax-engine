@@ -19,12 +19,19 @@ describe("SQLite common compatibility prerequisites", () => {
     expect(shell).toContain("candidateRegressionCasesPassed']==v['candidateSanitizerRegressionCasesPassed']==5");
     expect(await readFile(new URL("apply-compatibility.py", recipe), "utf8")).not.toContain("-DSQLITE_ENABLE_DBPAGE_VTAB");
   });
-  it("pins the same three official hunks that passed the complete paired diagnostic", async () => {
+  it("pins the original three reviewed prerequisites and the explicit combined extension", async () => {
     const bytes = await readFile(new URL("compatibility-changes.json", recipe));
-    expect(bytes).toEqual(await readFile(new URL("../../infra/sqlite-upstream-experiment/changes.json", import.meta.url)));
+    const original = JSON.parse(await readFile(new URL("../../infra/sqlite-upstream-experiment/changes.json", import.meta.url), "utf8")).changes;
+    expect(JSON.parse(bytes.toString()).changes.slice(0, 3)).toEqual(original);
     const changes = JSON.parse(bytes.toString()).changes;
-    expect(changes.map((r: { path: string }) => r.path)).toEqual(["src/test_config.c", "test/join8.test", "ext/recover/sqlite3recover.c"]);
-    expect(changes.map((r: { upstreamCommit: string }) => r.upstreamCommit)).toEqual(["f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47", "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47", "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"]);
+    expect(changes.slice(0, 3).map((r: { path: string }) => r.path)).toEqual(["src/test_config.c", "test/join8.test", "ext/recover/sqlite3recover.c"]);
+    expect(changes.slice(0, 3).map((r: { upstreamCommit: string }) => r.upstreamCommit)).toEqual(["f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47", "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47", "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"]);
+    expect(changes).toHaveLength(20);
+    expect(changes.some((r: { path: string }) => r.path === "test/fuzzinvariants.c")).toBe(false);
+    const io = changes.find((r: { path: string }) => r.path === "test/io.test");
+    expect(io.provenance.kind).toBe("local-source-derived-oracle");
+    expect(io).not.toHaveProperty("upstreamCommit");
+    expect(changes.slice(3, 19).every((r: { provenance: { kind: string } }) => r.provenance.kind === "adapted-upstream")).toBe(true);
   });
   it("binds every added prerequisite in the pinned Docker context and source plan", async () => {
     const manifest = JSON.parse(await readFile(new URL("sources.json", recipe), "utf8"));
@@ -39,27 +46,31 @@ describe("SQLite common compatibility prerequisites", () => {
     expect(manifest.commonCompatibilityPrerequisites.originalBaselineUnmodified).toBe(false);
     expect(manifest.commonCompatibilityPrerequisites.changesSha256).toBe(sha(await readFile(new URL("compatibility-changes.json", recipe))));
   });
+  it("executes strict processor controls for all twenty paths", () => {
+    execFileSync("python3", ["-B", fileURLToPath(new URL("./sqlite-common-compatibility-processor.py", import.meta.url))], { encoding: "utf8", timeout: 5000, maxBuffer: 1024 * 1024 });
+  });
   for (const scenario of ["pass", "changed", "alias", "repeat", "result-hash", "extra-path"] as const) {
     it(`checks exact hashes and custody before any common-tree write: ${scenario}`, () => {
-      // The real production helper operates on three tiny synthetic files here.
+      // The real production helper operates on twenty tiny synthetic files here.
       // Production hashes/hunks are independently pinned above, not bypassed in a build.
       const program = String.raw`
 import importlib.util,tempfile,pathlib,json,hashlib,os
 spec=importlib.util.spec_from_file_location('compat',${JSON.stringify(fileURLToPath(new URL("apply-compatibility.py", recipe)))})
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+production=json.loads((m.E/'compatibility-changes.json').read_text());by_path={r['path']:r for r in production['changes']}
 sha=lambda b:hashlib.sha256(b).hexdigest()
 with tempfile.TemporaryDirectory(prefix='sqlite-common-controls-') as t:
  root=pathlib.Path(t).resolve();source=root/'source';source.mkdir();inputs=root/'inputs';inputs.mkdir();m.E=inputs
  rows=[]
  for n,p in enumerate(sorted(m.PATHS)):
   f=source/p;f.parent.mkdir(parents=True,exist_ok=True);a=('before%d\n'%n).encode();b=('after%d\n'%n).encode();f.write_bytes(a)
-  rows.append(dict(path=p,beforeSha256=sha(a),afterSha256=sha(b),hunks=[dict(before=a.decode(),after=b.decode())],upstreamCommit='synthetic-only'))
+  row=dict(by_path[p]);row.update(beforeSha256=sha(a),afterSha256=sha(b),hunks=[dict(before=a.decode(),after=b.decode())]);rows.append(row)
  case=${JSON.stringify(scenario)}
  if case=='changed':(source/rows[-1]['path']).write_text('altered')
  if case=='alias':os.link(source/rows[-1]['path'],root/'alias')
  if case=='result-hash':rows[-1]['afterSha256']='0'*64
  if case=='extra-path':rows.append(dict(rows[0],path='foreign'))
- (inputs/'compatibility-changes.json').write_text(json.dumps(dict(schema=1,changes=rows)))
+ (inputs/'compatibility-changes.json').write_text(json.dumps(dict(schema=2,changes=rows)))
  snapshot={p:p.read_bytes() for p in source.rglob('*') if p.is_file()};record=root/'receipt.json'
  if case in ('pass','repeat'):
   result=m.apply(source,record);assert result['commonPrerequisitesAppliedBeforeCveSplit'] is True;assert result['originalBaselineUnmodified'] is False

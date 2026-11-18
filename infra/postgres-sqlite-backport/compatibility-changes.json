@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "changes": [
     {
       "path": "src/test_config.c",
@@ -41,6 +41,466 @@
         {
           "before": "        if( bTable && !bVirtual ){\n          if( SQLITE_ROW==sqlite3_step(pTblname) ){\n            const char *zTbl = (const char*)sqlite3_column_text(pTblname, 0);\n            recoverAddTable(p, zTbl, iRoot);\n          }\n          recoverReset(p, pTblname);\n        }",
           "after": "        if( bTable && !bVirtual ){\n          if( SQLITE_ROW==sqlite3_step(pTblname) ){\n            const char *zTbl = (const char*)sqlite3_column_text(pTblname, 0);\n            if( zTbl ) recoverAddTable(p, zTbl, iRoot);\n          }\n          recoverReset(p, pTblname);\n        }"
+        }
+      ]
+    },
+    {
+      "path": "src/build.c",
+      "beforeSha256": "4a39fee8e9c831218ae44c9122770a423610505497ed6d40ae9289b67305abb9",
+      "afterSha256": "200bec03d3a4750b16f7f92cc53cc5e19600563c171067fa37376ad76849f6cd",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  ** on a view, even though views do not have rowids.  The following flag\n  ** setting fixes this problem.  But the fix can be disabled by compiling\n  ** with -DSQLITE_ALLOW_ROWID_IN_VIEW in case there are legacy apps that\n  ** depend upon the old buggy behavior. */\n#ifndef SQLITE_ALLOW_ROWID_IN_VIEW\n  p->tabFlags |= TF_NoVisibleRowid;\n#endif\n\n  sqlite3TwoPartName(pParse, pName1, pName2, &pName);",
+          "after": "  ** on a view, even though views do not have rowids.  The following flag\n  ** setting fixes this problem.  But the fix can be disabled by compiling\n  ** with -DSQLITE_ALLOW_ROWID_IN_VIEW in case there are legacy apps that\n  ** depend upon the old buggy behavior.  The ability can also be toggled\n  ** using sqlite3_config(SQLITE_CONFIG_ROWID_IN_VIEW,...) */\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n  p->tabFlags |= sqlite3Config.mNoVisibleRowid; /* Optional. Allow by default */\n#else\n  p->tabFlags |= TF_NoVisibleRowid;             /* Never allow rowid in view */\n#endif\n\n  sqlite3TwoPartName(pParse, pName1, pName2, &pName);",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "src/ctime.c",
+      "beforeSha256": "236dfcaa6ea66dfb394cfbdc8f7110ffb1d5d42fdc438d6a7c08db1e7a154c13",
+      "afterSha256": "7cce56e28ddd1f68c9e892c525d45fed8a3a8347b2ebccbad4b2cfee3991f08e",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  \"ALLOW_COVERING_INDEX_SCAN=\" CTIMEOPT_VAL(SQLITE_ALLOW_COVERING_INDEX_SCAN),\n# endif\n#endif\n#ifdef SQLITE_ALLOW_URI_AUTHORITY\n  \"ALLOW_URI_AUTHORITY\",\n#endif",
+          "after": "  \"ALLOW_COVERING_INDEX_SCAN=\" CTIMEOPT_VAL(SQLITE_ALLOW_COVERING_INDEX_SCAN),\n# endif\n#endif\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n  \"ALLOW_ROWID_IN_VIEW\",\n#endif\n#ifdef SQLITE_ALLOW_URI_AUTHORITY\n  \"ALLOW_URI_AUTHORITY\",\n#endif",
+          "upstreamCommit": "296ae1e4673151e59593105b653e87eceae25163",
+          "adaptation": "Exact official follow-up hunk"
+        }
+      ]
+    },
+    {
+      "path": "src/global.c",
+      "beforeSha256": "3aeb949d6e4a0d55d704a330f4b46aecf8674a7ac2768c5a817284a572b86bf1",
+      "afterSha256": "fcdf885409e4d63f4b2336e3f9cf4de1a01ce8341c8432f6972192d6b853a2e3",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "#endif\n#ifndef SQLITE_UNTESTABLE\n   0,                         /* xTestCallback */\n#endif\n   0,                         /* bLocaltimeFault */\n   0,                         /* xAltLocaltime */",
+          "after": "#endif\n#ifndef SQLITE_UNTESTABLE\n   0,                         /* xTestCallback */\n#endif\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n   0,                         /* mNoVisibleRowid.  0 == allow rowid-in-view */\n#endif\n   0,                         /* bLocaltimeFault */\n   0,                         /* xAltLocaltime */",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "src/main.c",
+      "beforeSha256": "95a002803f241415936ace56baabf959fbf401d52026698bf3c54c42d77e6af3",
+      "afterSha256": "090ff63b9d6a05153de449f53e104f3d2433420ed22f89ac7d57aba4b27f759e",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "    }\n#endif /* SQLITE_OMIT_DESERIALIZE */\n\n    default: {\n      rc = SQLITE_ERROR;\n      break;",
+          "after": "    }\n#endif /* SQLITE_OMIT_DESERIALIZE */\n\n    case SQLITE_CONFIG_ROWID_IN_VIEW: {\n      int *pVal = va_arg(ap,int*);\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n      if( 0==*pVal ) sqlite3GlobalConfig.mNoVisibleRowid = TF_NoVisibleRowid;\n      if( 1==*pVal ) sqlite3GlobalConfig.mNoVisibleRowid = 0;\n      *pVal = (sqlite3GlobalConfig.mNoVisibleRowid==0);\n#else\n      *pVal = 0;\n#endif\n      break;\n    }\n\n    default: {\n      rc = SQLITE_ERROR;\n      break;",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "src/resolve.c",
+      "beforeSha256": "8e7cc927ec6ccf480a7d28ebe1e60dabc1bc4dd0f03117d412343dba7f222b4f",
+      "afterSha256": "33d145a0f153a00b1690c5bcc6aeab1e8dcbdbdd8e20c35ea77bf09093a24711",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "          }\n        }\n        if( 0==cnt && VisibleRowid(pTab) ){\n          cntTab++;\n          pMatch = pItem;\n        }\n      }\n      if( pMatch ){\n",
+          "after": "          }\n        }\n        if( 0==cnt && VisibleRowid(pTab) ){\n          /* pTab is a potential ROWID match.  Keep track of it and match\n          ** the ROWID later if that seems appropriate.  (Search for \"cntTab\"\n          ** to find related code.)  Only allow a ROWID match if there is\n          ** a single ROWID match candidate.\n          */\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n          /* In SQLITE_ALLOW_ROWID_IN_VIEW mode, allow a ROWID match\n          ** if there is a single VIEW candidate or if there is a single\n          ** non-VIEW candidate plus multiple VIEW candidates.  In other\n          ** words non-VIEW candidate terms take precedence over VIEWs.\n          */\n          if( cntTab==0\n           || (cntTab==1\n               && ALWAYS(pMatch!=0)\n               && ALWAYS(pMatch->pTab!=0)\n               && (pMatch->pTab->tabFlags & TF_Ephemeral)!=0\n               && (pTab->tabFlags & TF_Ephemeral)==0)\n          ){\n            cntTab = 1;\n            pMatch = pItem;\n          }else{\n            cntTab++;\n          }\n#else\n          /* The (much more common) non-SQLITE_ALLOW_ROWID_IN_VIEW case is\n          ** simpler since we require exactly one candidate, which will\n          ** always be a non-VIEW\n          */\n          cntTab++;\n          pMatch = pItem;\n#endif\n        }\n      }\n      if( pMatch ){\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        },
+        {
+          "before": "     && cntTab==1\n",
+          "after": "     && cntTab>=1\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Retain existing 3.40.1 VisibleRowid and iColumn AST handling; official candidate-count predicate"
+        },
+        {
+          "before": "    ){\n      cnt = 1;\n      pExpr->iColumn = -1;\n      pExpr->affExpr = SQLITE_AFF_INTEGER;\n",
+          "after": "    ){\n      cnt = cntTab;\n      pExpr->iColumn = -1;\n      pExpr->affExpr = SQLITE_AFF_INTEGER;\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Official ambiguity count, keeping 3.40.1 direct rowid expression representation"
+        }
+      ]
+    },
+    {
+      "path": "src/select.c",
+      "beforeSha256": "e7a58326aafe9a3814c8f72b3a6d05d285a847dcb7ef21769f063e2d8b0e9472",
+      "afterSha256": "bf364fa5ff71c401c4c6d3ee3b39b306ecda038fe6b058fc310d2e55d300994c",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  /* The usual case - do not allow ROWID on a subquery */\n  pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;\n#else\n  pTab->tabFlags |= TF_Ephemeral;  /* Legacy compatibility mode */\n#endif\n  return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;\n}\n",
+          "after": "  /* The usual case - do not allow ROWID on a subquery */\n  pTab->tabFlags |= TF_Ephemeral | TF_NoVisibleRowid;\n#else\n  /* Legacy compatibility mode */\n  pTab->tabFlags |= TF_Ephemeral | sqlite3Config.mNoVisibleRowid;\n#endif\n  return pParse->nErr ? SQLITE_ERROR : SQLITE_OK;\n}\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        },
+        {
+          "before": "#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n         && iCol>=0\n#else\n         && ALWAYS(iCol>=0)\n#endif\n",
+          "after": "         && (!ViewCanHaveRowid || iCol>=0)\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official conditional replacement, excluding trailing whitespace-only context"
+        }
+      ]
+    },
+    {
+      "path": "src/shell.c.in",
+      "beforeSha256": "3c38f25a579b6bf1530c81270fca76a4f2dfe32c15fd8e64d66effd3ba1dd6ca",
+      "afterSha256": "e12efd10254d3cf2890fa3fdcad091dbded338a3a05acab9da8d7d6866a39a16",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  \"   -nonce STRING        set the safe-mode escape nonce\\n\"\n",
+          "after": "  \"   -nonce STRING        set the safe-mode escape nonce\\n\"\n  \"   -no-rowid-in-view    Disable rowid-in-view using sqlite3_config()\\n\"\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Official CLI help in old shell option table"
+        },
+        {
+          "before": "      ** we do the actual processing of arguments later in a second pass.\n      */\n      stdin_is_interactive = 0;\n    }else if( cli_strcmp(z,\"-heap\")==0 ){",
+          "after": "      ** we do the actual processing of arguments later in a second pass.\n      */\n      stdin_is_interactive = 0;\n    }else if( cli_strcmp(z,\"-no-rowid-in-view\")==0 ){\n      int val = 0;\n      sqlite3_config(SQLITE_CONFIG_ROWID_IN_VIEW, &val);\n      assert( val==0 );\n    }else if( cli_strcmp(z,\"-heap\")==0 ){",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Official startup handler inserted after old batch option, before initialization"
+        },
+        {
+          "before": "    }else if( cli_strcmp(z,\"-nofollow\")==0 ){\n      data.openFlags |= SQLITE_OPEN_NOFOLLOW;",
+          "after": "    }else if( cli_strcmp(z,\"-no-rowid-in-view\")==0 ){\n      /* already handled before initialization */\n    }else if( cli_strcmp(z,\"-nofollow\")==0 ){\n      data.openFlags |= SQLITE_OPEN_NOFOLLOW;",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Official second-pass already-handled option in old shell"
+        }
+      ]
+    },
+    {
+      "path": "src/sqlite.h.in",
+      "beforeSha256": "d8c088412c11fced19a85796edb16a467c5cc88bf50eded68f352d33c060531f",
+      "afterSha256": "565d1cfe959ccaa407060372d09b6e67752b9a557b51f55e3c088c44250bded7",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "#define SQLITE_CONFIG_SMALL_MALLOC        27  /* boolean */\n#define SQLITE_CONFIG_SORTERREF_SIZE      28  /* int nByte */\n#define SQLITE_CONFIG_MEMDB_MAXSIZE       29  /* sqlite3_int64 */\n\n/*\n** CAPI3REF: Database Connection Configuration Options",
+          "after": "#define SQLITE_CONFIG_SMALL_MALLOC        27  /* boolean */\n#define SQLITE_CONFIG_SORTERREF_SIZE      28  /* int nByte */\n#define SQLITE_CONFIG_MEMDB_MAXSIZE       29  /* sqlite3_int64 */\n#define SQLITE_CONFIG_ROWID_IN_VIEW       30  /* int* */\n\n/*\n** CAPI3REF: Database Connection Configuration Options",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        },
+        {
+          "before": "** </dl>\n*/\n#define SQLITE_CONFIG_SINGLETHREAD",
+          "after": "**\n** [[SQLITE_CONFIG_ROWID_IN_VIEW]]\n** <dt>SQLITE_CONFIG_ROWID_IN_VIEW\n** <dd>The SQLITE_CONFIG_ROWID_IN_VIEW option enables or disables the ability\n** for VIEWs to have a ROWID.  The capability can only be enabled if SQLite is\n** compiled with -DSQLITE_ALLOW_ROWID_IN_VIEW, in which case the capability\n** defaults to on.  This configuration option queries the current setting or\n** changes the setting to off or on.  The argument is a pointer to an integer.\n** If that integer initially holds a value of 1, then the ability for VIEWs to\n** have ROWIDs is activated.  If the integer initially holds zero, then the\n** ability is deactivated.  Any other initial value for the integer leaves the\n** setting unchanged.  After changes, if any, the integer is written with\n** a 1 or 0, if the ability for VIEWs to have ROWIDs is on or off.  If SQLite\n** is compiled without -DSQLITE_ALLOW_ROWID_IN_VIEW (which is the usual and\n** recommended case) then the integer is always filled with zero, regardless\n** if its initial value.\n** </dl>\n*/\n#define SQLITE_CONFIG_SINGLETHREAD",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official API documentation with old macro alignment context"
+        }
+      ]
+    },
+    {
+      "path": "src/sqliteInt.h",
+      "beforeSha256": "a6d9260fda695bb5e69f14b445f53ae11383d2af3e03b06dca5315967a71f0a3",
+      "afterSha256": "07266394d141aed3cb670e84095774da98dd820c4c0125bff87bd55cc620d042",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "#define HasRowid(X)     (((X)->tabFlags & TF_WithoutRowid)==0)\n#define VisibleRowid(X) (((X)->tabFlags & TF_NoVisibleRowid)==0)\n\n/*\n** Each foreign key constraint is an instance of the following structure.\n**\n",
+          "after": "#define HasRowid(X)     (((X)->tabFlags & TF_WithoutRowid)==0)\n#define VisibleRowid(X) (((X)->tabFlags & TF_NoVisibleRowid)==0)\n\n/* Macro is true if the SQLITE_ALLOW_ROWID_IN_VIEW (mis-)feature is\n** available.  By default, this macro is false\n*/\n#ifndef SQLITE_ALLOW_ROWID_IN_VIEW\n# define ViewCanHaveRowid     0\n#else\n# define ViewCanHaveRowid     (sqlite3Config.mNoVisibleRowid==0)\n#endif\n\n/*\n** Each foreign key constraint is an instance of the following structure.\n**\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        },
+        {
+          "before": "#endif\n#ifndef SQLITE_UNTESTABLE\n  int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */\n#endif\n  int bLocaltimeFault;              /* True to fail localtime() calls */\n  int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */",
+          "after": "#endif\n#ifndef SQLITE_UNTESTABLE\n  int (*xTestCallback)(int);        /* Invoked by sqlite3FaultSim() */\n#endif\n#ifdef SQLITE_ALLOW_ROWID_IN_VIEW\n  u32 mNoVisibleRowid;              /* TF_NoVisibleRowid if the ROWID_IN_VIEW\n                                    ** feature is disabled.  0 if rowids can\n                                    ** occur in views. */\n#endif\n  int bLocaltimeFault;              /* True to fail localtime() calls */\n  int (*xAltLocaltime)(const void*,void*); /* Alternative localtime() routine */",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "test/join5.test",
+      "beforeSha256": "1a81e4c01866cbd6e8dd33ad9698449d24b41d74ad7bed0b3cacd4e2df6c00e9",
+      "afterSha256": "2e58f55f6bcdde45a4e5f3536e049b528b87bb9c5953119458ee50b82447972c",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  ANALYZE sqlite_schema;\n  INSERT INTO sqlite_stat1 VALUES('t1','t1x1','648 324 81 81 81 81 81 81 81081 81 81 81');\n  ANALYZE sqlite_schema;\n  SELECT a FROM (SELECT a FROM t1 NATURAL LEFT JOIN t1) NATURAL LEFT JOIN t1 WHERE (rowid,1)<=(5,0);\n} {1}\n\n# 2022-03-02 https://sqlite.org/forum/info/50a1bbe08ce4c29c\n# Bloom-filter pulldown is incompatible with skip-scan.",
+          "after": "  ANALYZE sqlite_schema;\n  INSERT INTO sqlite_stat1 VALUES('t1','t1x1','648 324 81 81 81 81 81 81 81081 81 81 81');\n  ANALYZE sqlite_schema;\n}\ndo_catchsql_test 9.2 {\n  SELECT a FROM \n      (SELECT a FROM t1 NATURAL LEFT JOIN t1) NATURAL LEFT JOIN t1 \n  WHERE (rowid,1)<=(5,0);\n} {0 1}\n\n# 2022-03-02 https://sqlite.org/forum/info/50a1bbe08ce4c29c\n# Bloom-filter pulldown is incompatible with skip-scan.",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "test/misc2.test",
+      "beforeSha256": "c2f455be62456581601fec54a7613dafef85e9578b7c8cf1b61e1a08e825d237",
+      "afterSha256": "5bb93d4d25895a467799e9ea7cc1e7ab9c2c09a0dab65552c82d6aaaf4a49f23",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  }\n} {}\nifcapable subquery {\n  do_catchsql_test misc2-2.2 {\n    SELECT rowid, * FROM (SELECT * FROM t1, t2);\n  } {1 {no such column: rowid}}\n  do_catchsql_test misc2-2.2b {\n    SELECT 'rowid', * FROM (SELECT * FROM t1, t2);\n  } {0 {rowid 1 2 3 7 8 9}}\n}\n\nifcapable view {\n  do_catchsql_test misc2-2.3 {\n    CREATE VIEW v1 AS SELECT * FROM t1, t2;\n    SELECT rowid, * FROM v1;\n  } {1 {no such column: rowid}}\n  do_catchsql_test misc2-2.3b {\n    SELECT 'rowid', * FROM v1;\n  } {0 {rowid 1 2 3 7 8 9}}",
+          "after": "  }\n} {}\nifcapable subquery {\n  ifcapable allow_rowid_in_view {\n    do_catchsql_test misc2-2.2 {\n      SELECT rowid, * FROM (SELECT * FROM t1, t2);\n    } {0 {{} 1 2 3 7 8 9}}\n  } else {\n    do_catchsql_test misc2-2.2 {\n      SELECT rowid, * FROM (SELECT * FROM t1, t2);\n    } {1 {no such column: rowid}}\n  }\n  do_catchsql_test misc2-2.2b {\n    SELECT 'rowid', * FROM (SELECT * FROM t1, t2);\n  } {0 {rowid 1 2 3 7 8 9}}\n}\n\nifcapable view {\n  ifcapable allow_rowid_in_view {\n    do_catchsql_test misc2-2.3 {\n      CREATE VIEW v1 AS SELECT * FROM t1, t2;\n      SELECT rowid, * FROM v1;\n    } {0 {{} 1 2 3 7 8 9}}\n  } else {\n    do_catchsql_test misc2-2.3 {\n      CREATE VIEW v1 AS SELECT * FROM t1, t2;\n      SELECT rowid, * FROM v1;\n    } {1 {no such column: rowid}}\n  }\n\n\n  do_catchsql_test misc2-2.3b {\n    SELECT 'rowid', * FROM v1;\n  } {0 {rowid 1 2 3 7 8 9}}",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "test/misc8.test",
+      "beforeSha256": "630b3906ee0e5bdbc063b1179c8741f0b02232ba3bdd8de13a468f30ba7123cd",
+      "afterSha256": "2cd891def86bb7f2928588aefdc0a34277688565a8c1c8d47ea5cfcea95cdb43",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "\n# 2016-02-26: An assertion fault found by the libFuzzer project\n#\ndo_catchsql_test misc8-3.0 {\n  SELECT *\n    FROM\n",
+          "after": "\n# 2016-02-26: An assertion fault found by the libFuzzer project\n#\nifcapable allow_rowid_in_view {\n  set nosuch \"1 {ambiguous column name: rowid}\"\n} else {\n  set nosuch \"1 {no such column: rowid}\"\n}\ndo_catchsql_test misc8-3.0 {\n  SELECT *\n    FROM\n",
+          "upstreamCommit": "296ae1e4673151e59593105b653e87eceae25163",
+          "adaptation": "Exact official follow-up hunk"
+        },
+        {
+          "before": "         (SELECT 6 AS j UNION ALL SELECT 7) AS x4\n   WHERE i<rowid\n   ORDER BY 1;\n} {1 {no such column: rowid}}\n\n# The SQLITE_DBCONFIG_MAINDBNAME interface\n#",
+          "after": "         (SELECT 6 AS j UNION ALL SELECT 7) AS x4\n   WHERE i<rowid\n   ORDER BY 1;\n} $nosuch\n\n# The SQLITE_DBCONFIG_MAINDBNAME interface\n#",
+          "upstreamCommit": "296ae1e4673151e59593105b653e87eceae25163",
+          "adaptation": "Exact official follow-up hunk"
+        }
+      ]
+    },
+    {
+      "path": "test/returning1.test",
+      "beforeSha256": "eb094508300270cd2cf8c718a4e4a9f187f645bdbfaab233929249ac495c2542",
+      "afterSha256": "9f53bca3658d963fd952fc58ee34afb10df9e8a63db531e9a682c577ed040e5f",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "do_catchsql_test 10.3 {\n  INSERT INTO t1(a, b) VALUES(1234, 5678) RETURNING rowid;\n} {1 {no such column: rowid}}\n\ndo_catchsql_test 10.3 {\n  UPDATE t1 SET a='z' WHERE b='y' RETURNING rowid;\n} {1 {no such column: rowid}}\n\ndo_execsql_test 10.4 {\n  SELECT * FROM log;\n} {}\n\n",
+          "after": "ifcapable !allow_rowid_in_view {\n  do_catchsql_test 10.3 {\n    INSERT INTO t1(a, b) VALUES(1234, 5678) RETURNING rowid;\n  } {1 {no such column: rowid}}\n  \n  do_catchsql_test 10.3 {\n    UPDATE t1 SET a='z' WHERE b='y' RETURNING rowid;\n  } {1 {no such column: rowid}}\n  \n  do_execsql_test 10.4 {\n    SELECT * FROM log;\n  } {}\n} else {\n  # Note: The values returned by the RETURNING clauses of the following\n  # two statements are the rowid columns of views. These values are not\n  # well defined, so the INSERT returns -1, and the UPDATE returns 1, 2 \n  # and 3. These match the values used for new.rowid expressions, but \n  # not much else.\n  do_catchsql_test 10.3 {\n    INSERT INTO t1(a, b) VALUES(1234, 5678) RETURNING rowid;\n  } {0 -1}\n  \n  do_catchsql_test 10.3 {\n    UPDATE t1 SET a='z' WHERE b='y' RETURNING rowid;\n  } {0 {1 2 3}}\n  \n  do_execsql_test 10.4 {\n    SELECT * FROM log;\n  } {\n    insert -1 1234 5678 update 1 z y update 2 z y update 3 z y\n  }\n}\n\n",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Preserve both old duplicate10.3 IDs and original old nonlegacy error strings; exact official new legacy result/log branches"
+        }
+      ]
+    },
+    {
+      "path": "test/rowid.test",
+      "beforeSha256": "a72ce8090b19fcf57ba6d0010fd9cd21fb028919f330b82f11b6c534c366e013",
+      "afterSha256": "61441793204b75685b4502f214e12309072147e1c5c63bb2b4be57ddb70fa7b6",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "296ae1e4673151e59593105b653e87eceae25163",
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163",
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  INSERT INTO t3(rowid, z) VALUES(3, 3);\n}\n\ndo_execsql_test 16.1 { SELECT rowid FROM t1, t2; } {1}\ndo_execsql_test 16.2 { SELECT rowid FROM t1, v1; } {1}\ndo_execsql_test 16.3 { SELECT rowid FROM t3, v1; } {3}\ndo_execsql_test 16.4 { SELECT rowid FROM t3, (SELECT 123); } {3}\n\ndo_execsql_test 16.5 { SELECT rowid FROM t2, t1; } {1}\ndo_execsql_test 16.6 { SELECT rowid FROM v1, t1; } {1}\ndo_execsql_test 16.7 { SELECT rowid FROM v1, t3; } {3}\ndo_execsql_test 16.8 { SELECT rowid FROM (SELECT 123), t3; } {3}\n\ndo_catchsql_test 16.5 { SELECT rowid FROM t1, t3; } {1 {no such column: rowid}}\n\n\n\nfinish_test",
+          "after": "  INSERT INTO t3(rowid, z) VALUES(3, 3);\n}\n\nifcapable allow_rowid_in_view {\n  set nosuch \"1 {no such column: rowid}\"\n  do_execsql_test 16.1 { SELECT rowid FROM t1, t2; } {1}\n  do_catchsql_test 16.2 { SELECT rowid FROM t1, v1; } $nosuch\n  do_catchsql_test 16.3 { SELECT rowid FROM t3, v1; } $nosuch\n  do_catchsql_test 16.4 { SELECT rowid FROM t3, (SELECT 123); } $nosuch\n\n  do_execsql_test 16.5 { SELECT rowid FROM t2, t1; } {1}\n  do_catchsql_test 16.6 { SELECT rowid FROM v1, t1; } $nosuch\n  do_catchsql_test 16.7 { SELECT rowid FROM v1, t3; } $nosuch\n  do_execsql_test 16.8 { SELECT rowid FROM (SELECT 123), t3; } {3}\n} else {\n  do_execsql_test 16.1 { SELECT rowid FROM t1, t2; } {1}\n  do_execsql_test 16.2 { SELECT rowid FROM t1, v1; } {1}\n  do_execsql_test 16.3 { SELECT rowid FROM t3, v1; } {3}\n  do_execsql_test 16.4 { SELECT rowid FROM t3, (SELECT 123); } {3}\n\n  do_execsql_test 16.5 { SELECT rowid FROM t2, t1; } {1}\n  do_execsql_test 16.6 { SELECT rowid FROM v1, t1; } {1}\n  do_execsql_test 16.7 { SELECT rowid FROM v1, t3; } {3}\n  do_execsql_test 16.8 { SELECT rowid FROM (SELECT 123), t3; } {3}\n}\n\ndo_catchsql_test 16.9 { \n  SELECT rowid FROM t1, t3; \n} {1 {ambiguous column name: rowid}}\n\nfinish_test",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        },
+        {
+          "before": "}\n\nifcapable allow_rowid_in_view {\n  set nosuch \"1 {no such column: rowid}\"\n  do_execsql_test 16.1 { SELECT rowid FROM t1, t2; } {1}\n  do_catchsql_test 16.2 { SELECT rowid FROM t1, v1; } $nosuch\n  do_catchsql_test 16.3 { SELECT rowid FROM t3, v1; } $nosuch",
+          "after": "}\n\nifcapable allow_rowid_in_view {\n  set nosuch \"1 {ambiguous column name: rowid}\"\n  do_execsql_test 16.1 { SELECT rowid FROM t1, t2; } {1}\n  do_catchsql_test 16.2 { SELECT rowid FROM t1, v1; } $nosuch\n  do_catchsql_test 16.3 { SELECT rowid FROM t3, v1; } $nosuch",
+          "upstreamCommit": "296ae1e4673151e59593105b653e87eceae25163",
+          "adaptation": "Exact official follow-up hunk"
+        }
+      ]
+    },
+    {
+      "path": "test/trigger9.test",
+      "beforeSha256": "1d11398a577a3151d0ce5f73db5d02275327a48a928972e06b17d6127f964db7",
+      "afterSha256": "cc8ff702dca648f06bdd087190f0fe80abc413512f90b8178b0ae46cb4c1d72b",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  END;\n}\n\ndo_catchsql_test 4.2 {\n  DELETE FROM v1 WHERE rowid=1;\n} {1 {no such column: rowid}}\n\ndo_catchsql_test 4.3 {\n  UPDATE v1 SET a=b WHERE rowid=2;\n} {1 {no such column: rowid}}\n\nfinish_test",
+          "after": "  END;\n}\n\nifcapable !allow_rowid_in_view {\n  do_catchsql_test 4.2 {\n    DELETE FROM v1 WHERE rowid=1;\n  } {1 {no such column: rowid}}\n\n  do_catchsql_test 4.3 {\n    UPDATE v1 SET a=b WHERE rowid=2;\n  } {1 {no such column: rowid}}\n} else {\n  do_execsql_test 4.2a {\n    DELETE FROM log;\n  }\n  do_catchsql_test 4.2 {\n    DELETE FROM v1 WHERE rowid=1;\n  } {0 {}}\n  do_catchsql_test 4.3 {\n    UPDATE v1 SET a=b WHERE rowid=2;\n  } {0 {}}\n  do_execsql_test 4.3b {\n    SELECT * FROM log;\n  }\n}\n\nfinish_test",
+          "upstreamCommit": "daee74c3ac0112ecaca4817954f0394454050065",
+          "adaptation": "Exact official hunk; line offsets only"
+        }
+      ]
+    },
+    {
+      "path": "tool/mkctimec.tcl",
+      "beforeSha256": "ed5d09e867cbfe062281308880be7901faa72be854162832d37146be50bd6b69",
+      "afterSha256": "31d1eea4eca22b43ad91afa969fb30fcb0265c3e424a8fb18de0b72520995082",
+      "provenance": {
+        "kind": "adapted-upstream",
+        "officialGitMirrorCommits": [
+          "296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "officialUrls": [
+          "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
+        ],
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "  SQLITE_64BIT_STATS\n  SQLITE_ALLOW_URI_AUTHORITY\n",
+          "after": "  SQLITE_64BIT_STATS\n  SQLITE_ALLOW_ROWID_IN_VIEW\n  SQLITE_ALLOW_URI_AUTHORITY\n",
+          "upstreamCommit": "296ae1e4673151e59593105b653e87eceae25163",
+          "adaptation": "Exact option insertion with 3.40.1 intervening SQLITE_64BIT_STATS option retained"
+        }
+      ]
+    },
+    {
+      "path": "test/io.test",
+      "beforeSha256": "941b60a0ca67ee9ace46b73deecb31998c5fca9944e1405637257ef4503e7f35",
+      "afterSha256": "a68b578a8f52c51254235fda3157e905f5b87e1951089fc10afdfaa7ff29fb30",
+      "provenance": {
+        "kind": "local-source-derived-oracle",
+        "derivation": "For non-atomic devices with sector>=16384 and fixture DEFAULT_PAGE_SIZE=1024, pager.c:4904-4910 selects min(sector,SQLITE_MAX_DEFAULT_PAGE_SIZE). test_config.c exports the C constant read-only. Debian patch31 retains32768cap. All11 original inputs/bodies retained; two boundary cases added.",
+        "sourceReferences": [
+          {
+            "path": "src/pager.c",
+            "sha256": "01a6bae7af25b5bd4ee959fea19151caad692954c56da6d5a50777888972bf4b"
+          },
+          {
+            "path": "src/test_config.c",
+            "sha256": "e558632a34ceff9073ed46a5d0a18de19435ecb3e9e1568e9f127d5d222339bc"
+          },
+          {
+            "path": "src/sqliteLimit.h",
+            "sha256": "d9f30f6e3656c75a11704747a6fb1f37bc3ca906deccbb926385ac52c05751bd"
+          }
+        ],
+        "debianPatchSha256": "ed6392b4eee3d0cdb5e92e623027e1a38e02447d10ba1ad65e32c8af336ce719",
+        "upstreamCommitClaim": false,
+        "nativePackageQualification": false
+      },
+      "hunks": [
+        {
+          "before": "         {atomic64K}            512      1024\n} {\n  incr tn\n  if {$pgsize>$::SQLITE_MAX_PAGE_SIZE} continue\n  db close\n  forcedelete test.db test.db-journal\n",
+          "after": "         {atomic64K}            512      1024\n} {\n  incr tn\n  # Honor the same configured cap exported read-only by test_config.c.\n  if {$tn == 5} {\n    set pgsize [expr {min($sectorsize, $::SQLITE_MAX_DEFAULT_PAGE_SIZE)}]\n  }\n  if {$pgsize>$::SQLITE_MAX_PAGE_SIZE} continue\n  db close\n  forcedelete test.db test.db-journal\n"
+        },
+        {
+          "before": "    }\n    expr {[file size test.db]/2}\n  } $pgsize\n}\n\n#----------------------------------------------------------------------\n",
+          "after": "    }\n    expr {[file size test.db]/2}\n  } $pgsize\n}\n\n# Assert the configured upper bound as well as the historical 16KiB input.\n# Expected values use the read-only compile constant, never observed DB output.\nforeach sectorsize {32768 65536} {\n  db close\n  forcedelete test.db test.db-journal\n  sqlite3_simulate_device -char {} -sectorsize $sectorsize\n  sqlite3 db test.db -vfs devsym\n  db eval { PRAGMA auto_vacuum=OFF; }\n  set expected [expr {min($sectorsize, $::SQLITE_MAX_DEFAULT_PAGE_SIZE)}]\n  do_test io-5-cap.$sectorsize {\n    execsql { CREATE TABLE abc(a, b, c); }\n    expr {[file size test.db]/2}\n  } $expected\n}\n\n#----------------------------------------------------------------------\n"
         }
       ]
     }

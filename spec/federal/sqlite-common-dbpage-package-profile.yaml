@@ -9,7 +9,7 @@ notes: |
 lines:
   - line: "common-package-profile"
     description: "Enable the documented core DBPAGE feature identically in both source package variants"
-    formula: "Append only -DSQLITE_ENABLE_DBPAGE_VTAB via DEB_CFLAGS_APPEND to the original dpkg-buildpackage command inside the baseline/candidate loop; preserve all original hardening and other feature flags, three common source prerequisites and CVE-only delta. Declare the real package feature addition separately from source-only compilerFlagsChanged:false provenance."
+    formula: "Append only -DSQLITE_ENABLE_DBPAGE_VTAB via DEB_CFLAGS_APPEND to the original dpkg-buildpackage command inside the baseline/candidate loop; preserve all original hardening and other feature flags, declared common source prerequisites and CVE-only delta. Declare the real package feature addition separately from source-only compilerFlagsChanged:false provenance."
     testRef: "tests/scripts/sqlite-common-dbpage-package-profile.test.mjs::declares the one common feature delta without changing any original recipe gates"
   - line: "normal-package-failure"
     description: "Keep nonzero package builds fatal before all subsequent qualification work"
@@ -17,5 +17,5 @@ lines:
     testRef: "tests/scripts/sqlite-common-dbpage-package-profile.test.mjs::retains actual package command arguments common flags and every failing status"
   - line: "explicit-provenance"
     description: "Bind the common feature profile to recipe bytes while retaining every acceptance hold"
-    formula: "Exact sources/provenance profile equality and recipe SHA/length; original three-hunk flags statement remains scoped to those hunks. Full signed source manifest identity remains bound by existing source-plan SHA. No native run, current DBPAGE runtime result, ABI approval or production promotion is implied."
+    formula: "Exact sources/provenance profile equality and recipe SHA/length; compilerFlagsChanged:false remains scoped to source transformations. Full signed source manifest identity remains bound by existing source-plan SHA. No native run, current DBPAGE runtime result, ABI approval or production promotion is implied."
     testRef: "tests/scripts/sqlite-common-dbpage-package-profile.test.mjs::binds the explicit profile and preserves the source-only component provenance"

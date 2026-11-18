@@ -34,24 +34,37 @@
     "riskAccepted": false
   },
   "commonCompatibilityPrerequisites": {
-    "scope": "Three reviewed common compatibility prerequisites before vulnerable-baseline/CVE-candidate split; full qualification still required",
-    "changesSha256": "d9552451cc54bc4f974db45c580875d00e9c7083477166ceb03f24d5990ffb96",
+    "scope": "Twenty exact common source transformations before vulnerable-baseline/CVE-candidate split: three existing prerequisites, sixteen adapted ROWID runtime/test changes, and one local source-derived IO oracle correction; native/full qualification still required",
+    "changesSha256": "94eab602b296dc264e167d0c22297b360faa0d7dbe68afb99eefc85015914394",
     "officialGitMirrorCommits": [
       "f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
-      "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"
+      "73a50fa42cbc2ddd1bf9e795a1407c3c746896e9",
+      "daee74c3ac0112ecaca4817954f0394454050065",
+      "296ae1e4673151e59593105b653e87eceae25163"
     ],
     "officialUrls": [
       "https://github.com/sqlite/sqlite/commit/f891ef8d6111c8c8aa7de74bcd36aaf2f4569c47",
-      "https://github.com/sqlite/sqlite/commit/73a50fa42cbc2ddd1bf9e795a1407c3c746896e9"
+      "https://github.com/sqlite/sqlite/commit/73a50fa42cbc2ddd1bf9e795a1407c3c746896e9",
+      "https://github.com/sqlite/sqlite/commit/daee74c3ac0112ecaca4817954f0394454050065",
+      "https://github.com/sqlite/sqlite/commit/296ae1e4673151e59593105b653e87eceae25163"
     ],
-    "pairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
-    "pairedActualSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf",
     "originalBaselineUnmodified": false,
     "compilerFlagsChanged": false,
     "historicalOomCauseProven": false,
     "fullPackageQualificationClaim": false,
     "runtimeIntegrationExecuted": false,
-    "genericAbiApproval": false
+    "genericAbiApproval": false,
+    "sourcePathCount": 20,
+    "originalChangesRetained": 3,
+    "adaptedRowidChanges": 16,
+    "localSourceDerivedIoCorrections": 1,
+    "allOriginalFuzzInvariantsPreserved": true,
+    "nativeFullSuiteQualification": false,
+    "priorThreeChangeEvidence": {
+      "pairedActualRun": "https://github.com/utilityfueled/tax-engine/actions/runs/44184632007",
+      "pairedActualSource": "b9fe12dc97c9827956cf1e9980a5549d870a19cf"
+    },
+    "ioOracleProvenance": "Local source-derived cap-aware expected value and two added boundaries, not an upstream commit; no runtime feature changes."
   },
   "commonPackageBuildProfile": {
     "id": "common-dbpage-recovery-v1",
