@@ -40,3 +40,12 @@ shellcheck warnings; the original workflow hash remains asserted.
 
 Independent review: `nov18-phase-independent-review/REVIEW.json`, SHA256
 `22b687fe399608459db7374774d54ce0e76f098aad3311d30d606b125592a75a`.
+
+Full CI at365ba0af caught an existing contract requiring the exact original
+awaited entry call. A separate repair preserves that call inside the observer
+callback and leaves the existing test unchanged. Its four tests and all35phase
+controls pass; both actual655-case collection modes and the request audit match
+the same frozen values. Historical CI failure remains recorded; complete new
+source CI and actual runtime results remain separate. Private fix authority:
+`nov18-phase-awaited-call-compatibility/MANIFEST.json`, SHA256
+`573ed7ce1d404dfeb0e5282980609ca0c130f5240fda84fc1177bb8fbc938494`.

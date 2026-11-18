@@ -7097,3 +7097,7 @@ Adopted20exact common transformations, preserving original3 prerequisites, all f
 SQLsource correctionab46756b is pushed. Separately reviewed source-only budget315job/300livecontroller/15cleanup/240package now reflects the prior~76minute baseline and retains everyfullsuite/fuzz/CVE/sanitizer gate; shared/diagnostic ceilings stayseparate. Independentdafa2738 review (fullhash inledger) androot15Vitest/58Node/typecheck/spec/inventory/lint/actionlint pass. Fresh37GPGsourceauthority identifiesonechangedmember and must be sealedtoactualcommit; oldsourceauthorityisnotreused. No actualpackagepass or nativeGPGclaim. See docs/upgrade-2026-source-package-budget-20261117.md. Originalphase44215474850 remainsboundonlyto365ba0af.
 
 Full CI365 coverage subsequently failed1/29,015 tests: retained Ohio strict source contract expects the original await typeOriginals literal. Actualfailure/assessment e261673f is preserved; repair keeps that test unchanged. Native diagnostic365 evidence cannot qualify the newer source.
+
+## November17 continuation: preserve original awaited-entry contract
+
+Full365coverage failuree261673f remainsfailed. The wrapper now preserves the exact originalawait typeOriginals call; oldCItest is unchanged andpasses4/4.35phasecontrols, lint, exact655plain/enabledcollection andrequestaudits pass; original6d52sourceinverse unchanged, only4derivedhashfields refreshed. Fixmanifest573ed7ce; budget251216bd is pushedseparately. FullnewsourceCI/runtime remainpending; do notclaim365measurementsfornewerHEAD.

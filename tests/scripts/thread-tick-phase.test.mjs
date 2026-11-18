@@ -16,7 +16,7 @@ const context={id:1,uniqueId:'PRIVATE-CONTEXT',auxData:{isDefault:true,frameId:'
 test('entry wrapper inverts to exact original test source bytes',async()=>{
  const source=await readFile(new URL('../../apps/web/tests/oh-resident-credit-native.spec.ts',import.meta.url),'utf8');
  const importLine="\nimport {withOriginalEntryMetrics} from '../../../scripts/browser-cpu-diagnostics/phase-hook.mjs';";
- const wrapper='await withOriginalEntryMetrics(page, () => typeOriginals(page, facts, viewport.width === 1280));';
+ const wrapper='await withOriginalEntryMetrics(page, async () => {\n          await typeOriginals(page, facts, viewport.width === 1280);\n        });';
  assert.equal(source.split(importLine).length,2);assert.equal(source.split(wrapper).length,2);
  const original=source.replace(importLine,'').replace(wrapper,'await typeOriginals(page, facts, viewport.width === 1280);');
  assert.equal(createHash('sha256').update(original).digest('hex'),'6d52ee9b7e33b63d7ec37a1ab23452e0657307dcd61e8b7bd83ea5884a7476fb');
