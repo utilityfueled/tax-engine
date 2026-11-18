@@ -7025,3 +7025,14 @@ November 17: single DBPAGE fullpackage44198188977 runs atdc2185da.
 FixedCPUmetadata successor passes14new/fullbatch+27original controls and all
 scopedchecks; original acceptance/weights/limits and all historical unknowns
 remain. [Source/review](upgrade-2026-full-batch-cpu-diagnostic-20261117.md).
+
+### November 17: bounded compound RRTA experiment and current CI
+
+Prepared a default-off exact-input combined runtime/prefilter experiment; ordinary
+behavior and all privacy/performance gates remain unchanged. Eleven Node controls,
+scoped lint, spec, inventory and actionlint pass. Independent review SHA-256
+8ae82d2a5fe833fcc3abc56dd959c844ddfcc742edafa2c958a1cbfa27f1fca0.
+The paired-runtime ledger records scope and no automatic adoption. Fixed-metadata
+CPU run44199237148 and full DBPAGE run44198188977 remain active. Normal bb3f CI
+passed all six jobs, 29,013 tests and 88.2% branches; this is not current release
+qualification. Context is retained in the short current-status record.

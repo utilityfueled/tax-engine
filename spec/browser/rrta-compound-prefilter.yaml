@@ -1,0 +1,17 @@
+form: rrta-compound-prefilter
+taxYear: 2025
+jurisdiction: federal
+notes: Nonqualifying compound experiment; neither earlier individual experiment passed its threshold. Ordinary privacy inspection and Python selection stay unchanged.
+lines:
+  - line: exact-derivative
+    description: Bind the complete original and literal-filter derivative
+    formula: Accept only the pinned complete helper, apply the exact previously tested negative-only escaped literal filters, require the complete candidate hash and reject every other source. Original hit scanning and all privacy surfaces remain.
+    testRef: "tests/scripts/rrta-compound-prefilter.test.mjs::binds the exact complete derivative and refuses changed input"
+  - line: explicit-mode
+    description: Preserve the runtime-only default and require matching opt-in
+    formula: Only matching explicit true event input and environment enable the compound candidate. Missing values mean false; reject noncanonical or conflicting values.
+    testRef: "tests/scripts/rrta-compound-prefilter.test.mjs::requires canonical matching explicit opt in"
+  - line: branch-binding
+    description: Compare original Python and helper against the combined candidate
+    formula: A remains Python3.13.18 with original helper; opted-in B uses Python3.14.10 with the exact derivative in private temporary storage. Preserve original104attempts, four-second deadline, eight complete output fields, eleven controls per interpreter, ABBA and10percent both-PDF threshold; assert both complete helper hashes before cleanup. No individual-causality or automatic adoption claim.
+    testRef: "tests/scripts/rrta-compound-prefilter.test.mjs::binds both branch helper paths and hashes without changing the default"

@@ -65,9 +65,9 @@
     },
     "nextActions": [
       "Observe singlefullDBPAGEpackage44198188977/dc2185da without duplicate, unchanged165mjob/155controller/120package/15cleanup. ABI native adapter source reviewed privately; GPG TOFU runtime implementation private. No candidate/ABI/runtime result invented.",
-      "FixedCPUmetadata successor adopted: root14new/fullbatch+27originalCPU and scopedchecksPASS; acceptance/weights/actions/limits unchanged. Preserve allCPU44187013822 unknowns; any future actualrun retains exactsourceguard and originalfailures.",
+      "Observe fixedCPUmanual44199237148/43423f37 with original baseline first; preview_review owns one watcher. No changed acceptance, weights, actions or time limits.",
       "Actual immutableSQLitediscovery44196293753 identifies usr/bin/gpg directconsumer. Prepare exact-source GPG SQLite-backed runtime fixture; indirect/alias uses remain outside discovery. No runtimeclaim.",
-      "Retain completed pairedPython44190812240 valid negative:104passes/0timeouts, exactparity/controls/cleanup, bothpairedmedians below10%; no interpreter adoption. Original4sprivacy failures remain; no repeat comparison for green.",
+      "Run one default-off compound Python3.14.10+negative-only filter experiment against unchanged3.13.18/helper using exact saved PDFs; same104children/4s/8outputs/22controls/ABBA/10%both threshold. Retain runtime-only negative; no additive or component-cause claim, no automatic adoption.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
       "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
     ],
@@ -86,7 +86,10 @@
       "ci7eaAllSixJobsPassed": true,
       "ciC40AllSixJobsPassed": true,
       "fullCoverageBranchesPercent": "88.2",
-      "unchangedBranchThresholdPercent": "85"
+      "unchangedBranchThresholdPercent": "85",
+      "ciBb3fAllSixJobsPassed": true,
+      "ciBb3fTests": 29013,
+      "ciBb3fBranchesPercent": "88.2"
     },
     "sourceLedger": "docs/upgrade-2026-official-source-refresh-20261117-continuation.md",
     "unresolvedExternalGates": [
@@ -97,7 +100,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "dc2185dacedbd11595b6d7fd39b03570669e9c49",
+    "latestPushedSource": "43423f37f1165b4cdb323295c886550796a63011",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -132,7 +135,16 @@
       "independentReviewSha256": "add0662789ff6b37b85149b599eedec248d54b2689b7ef8f6bce30038df9c2bc",
       "rootChecks": "14new/fullbatch+27originalCPU,lint/syntax/spec/inventory/audit/closurePASS",
       "allOriginalLimitsAndAcceptanceUnchanged": true,
-      "actualFutureRun": "not yet dispatched"
+      "actualFutureRun": "RUNNING44199237148/43423f37/attempt1; original baseline first,2workers/0retry/30sstrict unchanged; preview_review owns watcher"
+    },
+    "rrtaCompoundPrefilter": {
+      "ledger": "docs/upgrade-2026-rrta-python-paired-20261117.md",
+      "sourceManifestSha256": "f7feeb79aec909af28537876ae5287c5e33f7d161928a2ba0b11d111f10c37dc",
+      "independentReviewSha256": "8ae82d2a5fe833fcc3abc56dd959c844ddfcc742edafa2c958a1cbfa27f1fca0",
+      "checks": "11Node/scopedlint/spec/inventory/actionlintPASS;22controls+4exact complete output parities; ordinaryhelper unchanged",
+      "actual": "not yet dispatched",
+      "defaultOff": true,
+      "automaticAdoption": false
     }
   },
   "nov17New212Timing": {

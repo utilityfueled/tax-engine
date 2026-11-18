@@ -1,6 +1,6 @@
 # RRTA interpreter comparison
 
-Source-only, standalone manual experiment. No comparison or version adoption has run. No Web/CI setting or privacy-helper implementation changes here.
+Standalone, nonqualifying manual experiment. Default mode compares Python versions using the same unchanged helper. Actual run44190812240 completed below the10percent threshold on both PDFs; no version was adopted. Ordinary Web/CI Python and privacy inspection remain unchanged. [Actual result](../../docs/upgrade-2026-rrta-python-paired-20261117.md).
 
 The public `utilityfueled/tax-engine` artifact `14372125476` belongs to completed run `44169011257`, source `2fccaa27f2305e2f59db43a0067e19f4c631898f`. Read-only metadata was rechecked: unexpired, 459,416,206 bytes, SHA256 `20d8d9e49a5f355aaf5f64d205c4b6300aac2334b535c12afc0616a8b88f7676`. `inputs.json` pins exactly two 509,346-byte PDF members, their full eight-field expected outputs, the eighteen already asserted fictional test markers, unchanged helper and requirements. This is a test fixture provenance claim; it is not a claim about arbitrary artifact contents. The extractor opens only those exact members, bounds their sizes, checks hashes, rejects duplicate names and never extracts the archive tree. No local/private PDF is staged or uploaded.
 
@@ -30,3 +30,28 @@ node node_modules/eslint/bin/eslint.js scripts/rrta-python-version-comparison/ru
 ```
 
 References: [official interpreter manifest](https://github.com/actions/python-versions/blob/main/versions-manifest.json), [setup-python exact-version selection](https://github.com/actions/setup-python/blob/v5/docs/advanced-usage.md), [read-only artifact API](https://docs.github.com/en/rest/actions/artifacts#download-an-artifact), [pypdf 6.10.0](https://pypi.org/project/pypdf/6.10.0/).
+
+
+## Explicit compound experiment
+
+The default-false `compound_prefilter` input selects a new combined candidate:
+A is Python3.13.18 with the original helper; B is Python3.14.10 with the exact
+previously tested negative-only literal-filter derivative. This is a distinct
+experiment. The runtime-only comparison and earlier local filter comparison
+individually missed their predeclared thresholds; their timings cannot establish
+a combined gain. The earlier local filter PDFs were a different serialization;
+the new experiment retains the exact original source-pinned two-PDF input set.
+
+Both event input and environment must canonically agree. The complete original
+and derivative source hashes are fixed; an altered source holds the comparison.
+The derivative exists only in the owned private temporary directory. Every
+positive byte hit follows the original scanner; text-marker matching remains
+exact escaped literal matching. All original parsers, surfaces, exemptions,
+limits and privacy controls remain. Both helper hashes are checked afterward.
+The versions/result records identify the experiment mode and helper hashes.
+
+The same104children, four-second cap, full eight-field output parity, eleven
+controls per interpreter, ABBA schedule, all-outcome retention, cleanup and
+10percent paired-median threshold on EACH PDF apply. No individual-component
+causality or automatic adoption follows. No ordinary helper or interpreter is
+changed. Actual compound execution is pending.

@@ -1,3 +1,4 @@
+import {derive,compoundMode,helperPlan} from './compound-prefilter.mjs';
 import {createHash} from 'node:crypto';
 import {Buffer} from 'node:buffer';
 import {spawnSync} from 'node:child_process';
@@ -91,6 +92,7 @@ export async function main(){
  need(process.platform==='linux'&&process.arch==='x64'&&env.GITHUB_ACTIONS==='true'&&env.GITHUB_EVENT_NAME==='workflow_dispatch'&&env.GITHUB_RUN_ATTEMPT==='1'&&env.GITHUB_REPOSITORY==='utilityfueled/tax-engine'&&env.GITHUB_REF==='refs/heads/main');
  need(/^[a-f0-9]{40}$/u.test(env.GITHUB_SHA)&&typeof token==='string'&&token.length>0);
  const event=JSON.parse(await readFile(env.GITHUB_EVENT_PATH));need(event.repository?.private===false&&event.repository.fork===false&&event.inputs?.source_sha===env.GITHUB_SHA);
+ const compound=compoundMode(env.RRTA_COMPOUND_PREFILTER,event.inputs?.compound_prefilter);
  const git=spawnSync('git',['rev-parse','HEAD'],childOptions(env,''));need(!git.error&&git.status===0&&!git.signal&&git.stdout.trim()===env.GITHUB_SHA);
  validateInputs(INPUTS);need(HASH(await readFile(path.join(ROOT,INPUTS.helper)))===INPUTS.helperSha256);need(HASH(await readFile(path.join(ROOT,'requirements-test.txt')))===INPUTS.requirementsSha256);
  const out=path.join(ROOT,'artifacts/rrta-python-versions');await mkdir(path.dirname(out),{recursive:true});await mkdir(out,{mode:0o700});
@@ -111,23 +113,26 @@ export async function main(){
    const install=spawnSync(pythons[branch],['-I','-B','-m','pip','--isolated','install','--no-index','--no-deps',wheel],{env:pipEnv,encoding:'utf8',timeout:30000,maxBuffer:65536});need(!install.error&&install.status===0&&!install.signal);
    versions[branch]=JSON.parse(runChecked(pythons[branch],['-I','-B','-c',VERSION_PROBE],{timeout:4000}));
   }
-  validateVersions(versions);await privateJson(path.join(out,'versions.json'),{versions,helperSha256:INPUTS.helperSha256,artifactSha256:INPUTS.artifact.sha256,inputSha256:INPUT_HASH});
+  stage='helper-binding';const helper=path.join(ROOT,INPUTS.helper),helpers=helperPlan(helper,work,compound);
+  if(compound)await writeFile(helpers.paths.B,derive(await readFile(helper,'utf8')),{flag:'wx',mode:0o600});
+  validateVersions(versions);await privateJson(path.join(out,'versions.json'),{versions,helperSha256:INPUTS.helperSha256,artifactSha256:INPUTS.artifact.sha256,inputSha256:INPUT_HASH,helperHashes:helpers.hashes,experimentMode:compound?'compound-runtime-prefilter':'runtime-only'});
   stage='synthetic-parity';
-  const controls={};for(const branch of ['A','B'])controls[branch]=JSON.parse(runChecked(pythons[branch],['-I','-B',path.join(HERE,'controls.py'),path.join(ROOT,INPUTS.helper)],{timeout:4000}));
+  const controls={};for(const branch of ['A','B'])controls[branch]=JSON.parse(runChecked(pythons[branch],['-I','-B',path.join(HERE,'controls.py'),helpers.paths[branch]],{timeout:4000}));
   const controlsPassed=controls.A.passed&&controls.B.passed&&JSON.stringify(controls.A)===JSON.stringify(controls.B);await privateJson(path.join(out,'controls.json'),{controls,controlsPassed});
-  const rows=[],helper=path.join(ROOT,INPUTS.helper),input=JSON.stringify(INPUTS.markers);
+  const rows=[],input=JSON.stringify(INPUTS.markers);
   stage='fixed-comparison';
   for(const row of schedule()){
    const pdf=INPUTS.pdfs.find(x=>x.width===row.width),started=process.hrtime.bigint();
-   const r=spawnSync(pythons[row.branch],['-I','-B',helper,path.join(work,`actual-${row.width}.pdf`),'--phase-fd3'],childOptions(env,input));
+   const r=spawnSync(pythons[row.branch],['-I','-B',helpers.paths[row.branch],path.join(work,`actual-${row.width}.pdf`),'--phase-fd3'],childOptions(env,input));
    rows.push(projectAttempt(row,r,Number(process.hrtime.bigint()-started),pdf.expected));
    await writeFile(path.join(out,'attempts.json'),JSON.stringify(rows,null,2)+'\n',{mode:0o600});
   }
   stage='final-integrity';need(HASH(await readFile(helper))===INPUTS.helperSha256&&HASH(await readFile(path.join(HERE,'inputs.json')))===INPUT_HASH);
+  for(const branch of ['A','B'])need(HASH(await readFile(helpers.paths[branch]))===helpers.hashes[branch]);
   for(const branch of ['A','B'])need(JSON.stringify(JSON.parse(runChecked(pythons[branch],['-I','-B','-c',VERSION_PROBE],{timeout:4000})))===JSON.stringify(versions[branch]));
   result=assess(rows,controlsPassed);result.sourceAndPackagesUnchangedAfter=true;failed=result.status!=='COMPLETE';
  }catch{failed=true;result={status:'HOLD',reason:'fixed-comparison-contract-unavailable',stage,noStrictRuntimeQualification:true,noCpuCauseClaim:true,noVersionAdoption:true};}
- finally{try{await rm(work,{recursive:true,force:true});result.temporaryInputsRemoved=true;}catch{result.temporaryInputsRemoved=false;failed=true;result.status='HOLD';}await privateJson(path.join(out,'result.json'),result);}
+ finally{result.experimentMode=compound?'compound-runtime-prefilter':'runtime-only';result.noAutomaticAdoption=true;result.noComponentCauseClaim=true;try{await rm(work,{recursive:true,force:true});result.temporaryInputsRemoved=true;}catch{result.temporaryInputsRemoved=false;failed=true;result.status='HOLD';}await privateJson(path.join(out,'result.json'),result);}
  process.stdout.write(JSON.stringify({status:result.status,thresholdPassedBoth:result.thresholdPassedBoth??false,temporaryInputsRemoved:result.temporaryInputsRemoved})+'\n');return failed?1:0;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().then(code=>{process.exitCode=code;},()=>{process.stderr.write('RRTA version comparison held.\n');process.exitCode=1;});

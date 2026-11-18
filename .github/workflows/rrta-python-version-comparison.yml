@@ -6,6 +6,11 @@ on:
         description: Exact reviewed main source SHA
         required: true
         type: string
+      compound_prefilter:
+        description: Compare combined Python and exact negative-only filter (nonqualifying)
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
   actions: read
@@ -36,12 +41,13 @@ jobs:
           python-version: '3.14.10'
           architecture: x64
       - name: Fixed source-only controls
-        run: node --test tests/scripts/rrta-python-version-comparison.test.mjs
+        run: node --test tests/scripts/rrta-python-version-comparison.test.mjs tests/scripts/rrta-compound-prefilter.test.mjs
       - name: Compare exact synthetic saved PDFs
         timeout-minutes: 16
         env:
           GH_TOKEN: ${{ github.token }}
           PYTHON_JIT: '0'
+          RRTA_COMPOUND_PREFILTER: '${{ inputs.compound_prefilter }}'
         run: node scripts/rrta-python-version-comparison/run.mjs '${{ steps.a.outputs.python-path }}' '${{ steps.b.outputs.python-path }}'
       - name: Retain only fixed metadata and every attempt
         if: ${{ !cancelled() }}

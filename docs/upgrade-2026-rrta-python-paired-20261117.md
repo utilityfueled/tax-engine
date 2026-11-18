@@ -23,3 +23,25 @@ The four-file artifact is 3,671 bytes, SHA-256
 `264242644ea434714610effd021b423f63eb285e325b040b62a55c3e29effd25`.
 [Source contract](../spec/browser/rrta-python-version-comparison.yaml).
 The original strict privacy-child failures remain open.
+
+## Default-off compound successor
+
+A separate experiment combines Python 3.14.10 with an exact negative-only
+literal prefilter against the unchanged Python 3.13.18/helper baseline. The
+ordinary helper and interpreter selection remain unchanged. This tests the
+combined candidate without assuming additive improvements or component causes.
+The same 104 children, four-second child limit, eight complete output fields,
+11 controls per branch, ABBA ordering, complete outcome retention and 10%
+paired-median threshold for both exact saved PDFs remain enforced. A hit
+retains the original scanner; the generated candidate is confined to an owned
+temporary directory and checked before and after execution.
+
+The six source paths match author manifest
+`f7feeb79aec909af28537876ae5287c5e33f7d161928a2ba0b11d111f10c37dc`.
+Independent source review
+`8ae82d2a5fe833fcc3abc56dd959c844ddfcc742edafa2c958a1cbfa27f1fca0`
+verified all 39 pins, 11 Node controls, 22 branch controls and four exact
+complete-output parity observations. Scoped lint, spec, inventory and actionlint
+passed. Earlier local filter timing used different PDF serialization; those
+negative results do not predict this exact-input combined experiment. No actual
+compound run or adoption is claimed here. The workflow defaults to false.
