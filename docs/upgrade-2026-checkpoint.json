@@ -28,7 +28,7 @@
     },
     "liveRuns": {
       "fullSqlite385": "44221292131",
-      "normalWeb385": "44221205476"
+      "normalCi5e": "44226410024"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -69,11 +69,12 @@
     },
     "nextActions": [
       "Observe existing fullSQLite44221292131 at385db284 (315/300/240bounds). DO NOT dispatch duplicate aftercompaction. Fresh37GPGauthority HEADseal completeat385; originalqualifiedpair andactualABI/GPGremainrequired. Keep old134-errorbaselinefailed.",
-      "Observe existing385CI44221205498/Web44221205476; Docker38544221205594PASS. Phase36544215474850 terminalFAILED, frozen43+23pins verified; fourvalidboundmain-thread phases do notqualify385orprovewholeprocesscause. Both365ordinaryruns648/2/5 withRRTA4stimeouts; strict646/4/5; no repeatdiagnostic. CurrentRRTAhotspot/privateglibcsourceinvestigations independent.",
+      "Web38544221205476 terminalFAILED:ordinary650/0/5, strict642/8/5. CI385 all6PASS29,019tests/88.2%branches. Preserve failures; no redispatch. ExistingSQLite385 andnormalCI5e are watched.",
       "GPG public runtime harness adopted; no actual until original package/full/CVE/sanitizer qualification passes. Later original-distribution ABI extension requires closure rebind and review.",
       "Retain compound44204325512 valid negative9.951277%/9.764402% vs10%; no adoption. Distinct all-byteprefilter also validLOCALNEGATIVE104/22controls/4PDFoutputs,-0.346097%/-0.486650% additional; pathstopped, no publicchange.",
       "Observe exact Web/CI handles without restarting or reloading historical logs. Full current strict browser and runtime dependency qualification remain open.",
-      "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion."
+      "External final2026annual forms and qualified independent human tax/AI/security reviews remain unresolved; no readiness/model/filing promotion.",
+      "After commit/push of reviewed fixed-six glibc export, dispatch one exact-source opt-in experiment. Five-path source delta passes35Node/50Python/spec/inventory/lint; no assertion/gate/resource/deadline change. Keep six XPASS holds and do not retry old diagnostics."
     ],
     "checks": {
       "sqliteDiagnosticLocalControls": 10,
@@ -104,7 +105,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "385db28429a13bc1a3bc3bf309bccfd469f81d54",
+    "latestPushedSource": "5e5af99064ee269eeb85d90f773e46aa4fa6c9f9",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -203,7 +204,7 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "glibc": "Bounded six-case per-test output export being prepared before next opt-in native attempt; no dispatch yet. Six annotated XPASS remain strict holds.",
+      "glibc": "Five-path six-case export reviewed and source checks passed; ready for one exact-source opt-in native attempt after commit/push. No dispatch yet. Six XPASS remain hard holds.",
       "packageQualification": false
     },
     "browserOriginalEntryPhase": {
@@ -343,7 +344,9 @@
       "releaseQualified": false,
       "ledger": "docs/upgrade-2026-glibc-ifunc-profile-20261117.md",
       "rootReceiptSha256": "726dc8ae9eb785b6af5d682b0570e50be46d5b031040b5b3436e49580002ca12",
-      "rootDerivativeReviewSha256": "87eb39687dbf09db5345f2f07eca4ba6dc006caf56c0ba9a96b0c9a73baa51fd"
+      "rootDerivativeReviewSha256": "87eb39687dbf09db5345f2f07eca4ba6dc006caf56c0ba9a96b0c9a73baa51fd",
+      "sourceCommit": "5e5af99064ee269eeb85d90f773e46aa4fa6c9f9",
+      "publicationReceipt": ".local/upgrade-evidence/nov18-glibc-ifunc-operator-root-adoption/PUBLISH.json"
     },
     "coverage385": {
       "tests": 29019,
@@ -354,6 +357,32 @@
       "wholeCiPending": false,
       "finalCiManifestSha256": "5091bcf449d5fc1a0d162846b6c1fe0b5e2c4150c1cb15a1b97a6fb8f6fa439c",
       "finalCiAssessmentSha256": "a366c9b3e2e3ccfce4598430f08326617d8f20021ed672dbca0f4b2e13ef722c"
+    },
+    "glibcDiagnosticExport": {
+      "sourceSha256": "02ece4694fa31d8d155aa6c3edf5d912dc8bf009c9581979b098d4ef755d9783",
+      "reviewSha256": "2fe8809447ab1b4022d16f4b335e4da210ba098ee04383fed3c3fa6860dbe101",
+      "rootReceiptSha256": "8100e3a58cb2ca431d1a0f7eebc9c69c97b958fe58e263efa243f302a6284ec0",
+      "rootChecks": "185pins/35Node/50Python/spec/inventory/lint PASS; no inventory change.",
+      "sourcePaths": 5,
+      "nativeRun": null,
+      "qualification": false
+    },
+    "web385": {
+      "run": "44221205476",
+      "ordinary": [
+        650,
+        0,
+        5
+      ],
+      "strict": [
+        642,
+        8,
+        5
+      ],
+      "manifestSha256": "73c5d3fc05aa523d1f2b6d2c2b475a352a9b7ad0e67f0ff92a791cd009515295",
+      "recordedRemovalStepSuccess": true,
+      "independentLiveCleanupInspection": false,
+      "qualification": false
     }
   },
   "nov17New212Timing": {

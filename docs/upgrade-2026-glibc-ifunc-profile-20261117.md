@@ -1,7 +1,7 @@
 # glibc IFUNC conditional experiment
 
 The opt-in XFD experiment now adds a four-condition correction derived from
-authenticated Debian2.44-1 source to pinned Debian2.36-9+deb12u14. Only explicit
+authenticated Debian 2.44-1 source to pinned Debian 2.36-9+deb12u14. Only explicit
 `with-lld=no` clears the four IFUNC expected-failure annotations. All original
 test bodies, assertions, registrations, static variants and tunables remain.
 This is a local adaptation, without a correcting-upstream-commit claim.
@@ -24,9 +24,9 @@ coverage and exported hashes. Export failure holds an otherwise successful run.
 Review caught and retained two failed proposals: prefixed assignments were
 silently ignored, then tight `LD+=...` and CRLF continuations bypassed rejection.
 The final successor rejects those forms and the finite operator/spacing matrix.
-Root verified184 pins and ran35 Node and36 Python controls, all passing. The
-40 inert source/evaluator checks retain16 RED failures before the IFUNC change
-and40 passes after it. These checks execute no native glibc package. Root also
+Root verified 184 pins and ran 35 Node and 36 Python controls, all passing. The
+40 inert source/evaluator checks retain 16 RED failures before the IFUNC change
+and 40 passes after it. These checks execute no native glibc package. Root also
 adds explicit Node imports required by lint and the generated inventory row;
 that row claims no tax engine, form or filing support.
 
@@ -35,7 +35,7 @@ Six other annotations remain strict holds: `tst-create-detached`, `tst-robust8`,
 No profile-specific cause or valid correction has been established for them.
 The original FAIL/XPASS/UNRESOLVED/ERROR gate, full suites, allocator regression,
 ABI, consumers, sandbox, resource and deadline requirements remain unchanged.
-All15 adopted source paths are outside the current37-member GPG authority.
+All 15 adopted source paths are outside the current 37-member GPG authority.
 No native package, runtime or release qualification is claimed.
 
 Private final source manifest:
@@ -46,7 +46,21 @@ Independent source review:
 `87da000c1da1881969777ef7863dc7b4e05ce9d4163ef3dd66e9089e0f884529`.
 Root checks: `nov18-glibc-ifunc-operator-root-adoption/`.
 
-The next native attempt is deferred while a bounded export of the missing six
-per-test outputs is prepared. Repeating the old failure without those records
-would leave the same diagnostic gap. Existing SQLite/browser/CI runs continue
-on their original exact source; none is restarted for this package.
+The follow-up collector retains only the six fixed cases' existing `.out` and
+`.test-result` files, with one MiB and 64 KiB per-file limits and a 16 MiB aggregate
+reserved-byte ceiling. It records absent, oversized, changed and partial outputs
+explicitly, without inferring test execution. Capture follows all original linker
+observations, leaving their six-second budget unchanged. The original recipe,
+runner, workflow, strict gate and resources remain unchanged. Root verified 185
+pins; 35 Node/50 Python, spec, inventory and lint checks pass. Inventory stays
+unchanged. No native qualification follows from these controls.
+
+Follow-up source manifest:
+`nov18-glibc-six-diagnostic-export-preparation/MANIFEST.json`, SHA256
+`02ece4694fa31d8d155aa6c3edf5d912dc8bf009c9581979b098d4ef755d9783`.
+Independent follow-up review:
+`nov18-glibc-six-diagnostic-export-independent-review/MANIFEST.json`, SHA256
+`2fe8809447ab1b4022d16f4b335e4da210ba098ee04383fed3c3fa6860dbe101`.
+The next exact-source opt-in attempt may now retain the previously missing
+configuration and six-case outputs. No retry, altered test or relaxed status is
+introduced; six XPASS would still fail the original strict gate.

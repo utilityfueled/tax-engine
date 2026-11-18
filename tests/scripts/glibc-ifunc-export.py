@@ -1,6 +1,7 @@
 """Spec: spec/ops/glibc-ifunc-conditional-profile.yaml; inert source export controls."""
 from pathlib import Path
 import importlib.util,json,tempfile,unittest,os,hashlib
+from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[2];spec=importlib.util.spec_from_file_location('profiles',ROOT/'infra/postgres-glibc-ifunc-experiment/export-build-profiles.py');M=importlib.util.module_from_spec(spec);spec.loader.exec_module(M)
 class ExportControls(unittest.TestCase):
  def exercise(self,case):
@@ -91,4 +92,77 @@ class ExportControls(unittest.TestCase):
 for case in ['positive','missing','symlink','hardlink','wrong-kind','unsafe-ld','override','duplicate','probe-error','replacement-during-probe','unsupported-profile','export-ld','export-with-lld','private-ld','unexport-ld','define-ld','conditional','include','eval','continuation','indirect-lhs','target-specific','indirect-with-lld','with-lld-comment','admitted-include','admitted-include-drift','comment-continuation','unicode-separator','admitted-include-replacement','cross-variant-include','admitted-include-symlink','append-ld-tight','append-with-lld-tight','crlf-comment-continuation']:
  def run(self,case=case):self.exercise(case)
  setattr(ExportControls,'test_'+case.replace('-','_'),run)
+class DiagnosticControls(unittest.TestCase):
+ def exercise(self,case):
+  with tempfile.TemporaryDirectory(prefix='glibc-six-diagnostics-')as t:
+   root=Path(t).resolve();work=root/'work';work.mkdir();out=root/'out';out.mkdir();source=work/'baseline/build-tree/amd64-libc';source.mkdir(parents=True)
+   for name,data in {'config.make':'with-lld = no\nLD = ld\n','configparms':'CFLAGS = -O2\n','config.log':'GNU ld2.40\n'}.items():(source/name).write_text(data)
+   cases=['nptl/tst-create-detached','nptl/tst-robust8','rt/tst-cpuclock2','rt/tst-cputimer1','rt/tst-timer','support/tst-support_descriptors']
+   fixed=[name+suffix for name in cases for suffix in ['.out','.test-result']]
+   for name in fixed:
+    f=source/name;f.parent.mkdir(exist_ok=True);f.write_text('original '+name+'\n')
+   victim=source/fixed[0]
+   if case=='missing':victim.unlink()
+   if case=='symlink':victim.rename(root/'foreign');victim.symlink_to(root/'foreign')
+   if case=='hardlink':os.link(victim,root/'alias')
+   if case=='wrong-kind':victim.unlink();victim.mkdir()
+   if case=='oversize-out':victim.write_bytes(b'x'*(1024*1024+1))
+   if case=='oversize-result':(source/fixed[1]).write_bytes(b'x'*(64*1024+1))
+   if case=='unavailable-config':(source/'config.make').unlink()
+   (source/'nptl/not-selected.out').write_text('not selected')
+   if case=='aggregate':
+    second=work/'candidate/build-tree/amd64-libc';second.mkdir(parents=True)
+    for f in source.rglob('*'):
+     if f.is_file():d=second/f.relative_to(source);d.parent.mkdir(exist_ok=True);d.write_bytes(f.read_bytes())
+   before={str(f):f.read_bytes()for f in work.rglob('*')if f.is_file()and not f.is_symlink()}
+   oldcap=getattr(M,'DIAGNOSTIC_TOTAL_MAX',None)
+   if case=='aggregate':M.DIAGNOSTIC_TOTAL_MAX=80
+   def identity(value,deadline):
+    if case=='replacement-during-probe':
+     data=victim.read_bytes();victim.rename(root/'held');victim.write_bytes(data)
+    if case=='bytes-during-probe':victim.write_text('externally changed')
+    return dict(available=True,configured=value,resolved='/usr/bin/ld.bfd',bytes=100,sha256='1'*64,version='GNU ld2.40',exit=0,observedAt='export-time-mock')
+   old_open=Path.open
+   target_victim=out/'build-profiles/baseline/amd64-libc/test-diagnostics'/fixed[0]
+   def wrapped_open(path,*args,**kwargs):
+    stream=old_open(path,*args,**kwargs)
+    if path==target_victim and args and args[0]=='xb':
+     if case=='replacement-after-output-open':
+      data=victim.read_bytes();victim.rename(root/'held-output-open');victim.write_bytes(data)
+     if case=='hardlink-after-output-open':os.link(victim,root/'alias-output-open')
+     if case=='partial-output':
+      class Partial:
+       def __enter__(self):return self
+       def __exit__(self,*a):stream.close()
+       def write(self,data):return stream.write(data[:len(data)//2])
+      return Partial()
+    return stream
+   try:
+    with patch.object(Path,'open',wrapped_open):r=M.collect(work,out,identity=identity)
+   finally:
+    if oldcap is not None:M.DIAGNOSTIC_TOTAL_MAX=oldcap
+    elif hasattr(M,'DIAGNOSTIC_TOTAL_MAX'):del M.DIAGNOSTIC_TOTAL_MAX
+   if case!='bytes-during-probe':self.assertEqual(before,{str(f):f.read_bytes()for f in work.rglob('*')if f.is_file()and not f.is_symlink()})
+   self.assertEqual(r['passed'],case!='unavailable-config')
+   self.assertIn('testDiagnostics',r['profiles'][0]);records=[]
+   for row in r['profiles']:
+    diag=row['testDiagnostics'];self.assertFalse(diag['testExecutionInferred']);self.assertFalse(diag['qualificationGate']);self.assertEqual(set(diag['files']),set(fixed));records.extend(diag['files'].values())
+    self.assertNotIn('not-selected',json.dumps(diag))
+    for name,item in diag['files'].items():
+     target=out/'build-profiles'/row['variant']/row['flavour']/'test-diagnostics'/name
+     if item.get('captured'):
+      data=target.read_bytes();self.assertEqual(item['sha256'],hashlib.sha256(data).hexdigest());self.assertEqual(item['bytes'],len(data))
+     else:self.assertFalse(target.exists())
+   unavailable=[x for x in records if x['status']!='available']
+   if case in ['positive','unavailable-config','replacement-during-probe','bytes-during-probe']:self.assertEqual(unavailable,[])
+   else:self.assertGreater(len(unavailable),0)
+   self.assertLessEqual(sum(x.get('bytes',0)for x in records),80 if case=='aggregate'else 16*1024*1024)
+   if case=='bytes-during-probe':self.assertEqual((out/'build-profiles/baseline/amd64-libc/test-diagnostics'/fixed[0]).read_text(),'externally changed')
+   if case=='partial-output':
+    row=r['profiles'][0]['testDiagnostics']['files'][fixed[0]];self.assertTrue(row['captured']);self.assertFalse(row['captureComplete']);self.assertEqual(row['status'],'unavailable-output')
+   self.assertEqual(r,json.loads((out/'build-profiles/summary.json').read_text()))
+for case in ['positive','missing','symlink','hardlink','wrong-kind','oversize-out','oversize-result','aggregate','unavailable-config','replacement-during-probe','bytes-during-probe','replacement-after-output-open','hardlink-after-output-open','partial-output']:
+ def run(self,case=case):self.exercise(case)
+ setattr(DiagnosticControls,'test_diagnostic_'+case.replace('-','_'),run)
+
 if __name__=='__main__':unittest.main()

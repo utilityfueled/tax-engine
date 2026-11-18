@@ -75,3 +75,15 @@ Batch manifest:
 Terminal manifest:
 `75164d814c88305e0cc2bdb535cc5ce8a6a8b571200c1afc2d9c13b0b5a20c14`.
 All are under `nov18-phase-44215474850-observation`; root verified all 66 pins.
+
+## Actual source385 follow-up
+
+Normal Web run `44221205476` passed the ordinary suite650/0/5, while the strict
+suite failed642/8/5. Strict failures span business part-year(two), resident
+credit(two) and school-district part-year(four). The exact image is
+`sha256:5a1e20bf8fd16524170134818b0e5b9e3c98165f8a7afcb58273776b7f33b0a5`.
+This ordinary pass does not replace the strict failures. The recorded removal
+step succeeded; no independent live cleanup inspection is claimed.
+
+Private `nov18-phase-44215474850-observation/385-WEB-MANIFEST.json` SHA256:
+`73c5d3fc05aa523d1f2b6d2c2b475a352a9b7ad0e67f0ff92a791cd009515295`.

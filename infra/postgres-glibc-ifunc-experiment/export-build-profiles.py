@@ -111,12 +111,66 @@ def assignments(data, required, admitted_include=None):
     if any(name not in result for name in required): raise ValueError('missing-assignment')
     return result
 
+DIAGNOSTIC_CASES=('nptl/tst-create-detached','nptl/tst-robust8','rt/tst-cpuclock2','rt/tst-cputimer1','rt/tst-timer','support/tst-support_descriptors')
+DIAGNOSTIC_TOTAL_MAX=16*1024*1024
+DIAGNOSTIC_SUFFIX_LIMITS={'.out':1024*1024,'.test-result':64*1024}
+
+def empty_test_diagnostics():
+    return {'testExecutionInferred':False,'qualificationGate':False,'files':{case+suffix:{'status':'unavailable-profile','captured':False,'captureComplete':False} for case in DIAGNOSTIC_CASES for suffix in DIAGNOSTIC_SUFFIX_LIMITS}}
+
+def capture_test_diagnostics(source,target,budget):
+    """Copy fixed already-existing files; missing diagnostics never waive gates."""
+    result=empty_test_diagnostics();captures=[]
+    for case in DIAGNOSTIC_CASES:
+        for suffix,limit in DIAGNOSTIC_SUFFIX_LIMITS.items():
+            name=case+suffix;path=source/name;item=result['files'][name];output=target/'test-diagnostics'/name
+            try:
+                directory(path.parent);before=path.lstat()
+                if not stat.S_ISREG(before.st_mode) or before.st_nlink!=1: raise ValueError('source-custody')
+                if before.st_size>limit:
+                    item['status']='unavailable-size-limit';continue
+                if before.st_size>budget['remaining']:
+                    item['status']='unavailable-aggregate-limit';continue
+                data=regular_bytes(path,limit);custody=signature(before)
+                if signature(path.lstat())!=custody: raise ValueError('source-custody')
+                if len(data)>budget['remaining']: raise ValueError('source-custody')
+                budget['remaining']-=len(data);budget['reserved']+=len(data)
+                output.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+                opened=False
+                try:
+                    with output.open('xb') as stream:
+                        opened=True
+                        written=stream.write(data)
+                        if written!=len(data): raise OSError('short-write')
+                    item.update(captured=True,captureComplete=True,bytes=len(data),sha256=hashlib.sha256(data).hexdigest(),status='available')
+                except OSError:
+                    # A partial owned output may remain. Bind its actual bytes
+                    # honestly; do not represent a truncated input as complete.
+                    if opened and os.path.lexists(output):
+                        partial=regular_bytes(output,limit)
+                        item.update(captured=True,captureComplete=False,bytes=len(partial),sha256=hashlib.sha256(partial).hexdigest())
+                    item['status']='unavailable-output';continue
+                captures.append((path,limit,custody,data,item))
+                if regular_bytes(path,limit)!=data or signature(path.lstat())!=custody: raise ValueError('source-custody')
+            except FileNotFoundError:
+                item['status']='missing'
+            except (OSError,ValueError):
+                item['status']='unavailable-custody'
+    return result,captures
+
+def recheck_test_diagnostics(captures):
+    for path,limit,custody,data,item in captures:
+        try:
+            if regular_bytes(path,limit)!=data or signature(path.lstat())!=custody: raise ValueError('source-custody')
+        except (OSError,ValueError):
+            item['status']='unavailable-custody'
+
 def collect(work,out,identity=None):
     work=Path(work).absolute();out=Path(out).absolute();directory(work);directory(out)
     dest=out/'build-profiles';dest.mkdir(mode=0o700)
     result={'passed':False,'profiles':[],'packageQualificationClaim':False,'observation':'export-time-source-and-linker-identity','historicalLinkerExecutionProven':False,'exclusiveBuildTreeRequired':True,'missingVariants':[]}
     deadline=time.monotonic()+6.0;identity=identity or linker_identity
-    count=0
+    count=0;diagnostic_budget={'remaining':DIAGNOSTIC_TOTAL_MAX,'reserved':0};diagnostic_captures=[];diagnostic_queue=[]
     for variant in ['baseline','candidate']:
         tree=work/variant/'build-tree'
         if not tree.exists(): result['missingVariants'].append(variant);continue
@@ -132,14 +186,17 @@ def collect(work,out,identity=None):
             if count>16:
                 result['profiles'].append({'variant':variant,'available':False,'unavailableReasons':['profile-limit']});break
             row={'variant':variant,'flavour':source.name,'files':{},'available':False,'unavailableReasons':[],'linker':{'available':False,'reason':'configuration-unavailable'}}
+            row['testDiagnostics']=empty_test_diagnostics()
             result['profiles'].append(row)
             try:
                 if not FLAVOUR.fullmatch(source.name): raise ValueError('unsupported-profile')
-                directory(source); custody={name:signature((source/name).lstat()) for name in NAMES}
+                directory(source)
+                target=dest/variant/source.name;target.mkdir(parents=True,mode=0o700)
+                diagnostic_queue.append((source,target,row))
+                custody={name:signature((source/name).lstat()) for name in NAMES}
                 raw={name:regular_bytes(source/name,limit) for name,limit in NAMES.items()}
                 # Re-read the complete group before exporting any configuration.
                 if any(regular_bytes(source/name,NAMES[name])!=data or signature((source/name).lstat())!=custody[name] for name,data in raw.items()): raise ValueError('source-custody')
-                target=dest/variant/source.name;target.mkdir(parents=True,mode=0o700)
                 for name,data in raw.items():
                     with (target/name).open('xb') as f: f.write(data)
                     row['files'][name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
@@ -168,6 +225,12 @@ def collect(work,out,identity=None):
                 row['available']=True
             except (OSError,ValueError,UnicodeError,TypeError,KeyError):
                 row['unavailableReasons'].append('configuration-or-linker-unavailable')
+    # New diagnostic I/O follows all existing linker observations, leaving
+    # their original shared deadline unchanged. No tests are invoked.
+    for source,target,row in diagnostic_queue:
+        row['testDiagnostics'],captured=capture_test_diagnostics(source,target,diagnostic_budget);diagnostic_captures.extend(captured)
+    recheck_test_diagnostics(diagnostic_captures)
+    result['diagnosticLimits']={'outBytes':DIAGNOSTIC_SUFFIX_LIMITS['.out'],'testResultBytes':DIAGNOSTIC_SUFFIX_LIMITS['.test-result'],'aggregateBytes':DIAGNOSTIC_TOTAL_MAX,'reservedBytes':diagnostic_budget['reserved']}
     result['passed']=bool(result['profiles']) and all(p['available'] for p in result['profiles'])
     with (dest/'summary.json').open('x') as f: json.dump(result,f,indent=2,sort_keys=True);f.write('\n')
     return result
