@@ -101,3 +101,18 @@ manual replay or production performance fix is claimed.
 Frozen receipt SHA256:
 `3e7038ec9ac768503231a5327ea6965ff262eb383722886e352ca259cce6710d`.
 Root verified the receipt and its raw log and terminal metadata pins.
+
+
+## Subsequent exact 7f189699 result
+
+Web run `44238476326` failed the unchanged strict collection: 636 passed,
+14 failed, five skipped. Twelve cases reached original 30-second deadlines
+across Ohio business, reciprocal, resident and school paths and a Pennsylvania
+payment path. Two RRTA saved-PDF privacy inspections reached their unchanged
+four-second bound. Build and the separate self-host job passed. These deadline
+locations do not establish a request, server or CPU cause. No repeat trace
+investigation, manual replay or deadline change was performed.
+
+Receipt SHA256:
+`df01ead3d290cb9ef9e6da11496ef6aa52b9f42ea5c0c8758b9fa0abc36bd67d`.
+Root verified the receipt and both raw metadata/log pins.

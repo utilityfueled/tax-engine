@@ -28,7 +28,6 @@
     },
     "liveRuns": {
       "sqlite40df": "44235763098",
-      "web7f": "44238476326",
       "ciF9": "44243701268",
       "webF9": "44243701280"
     },
@@ -103,7 +102,7 @@
     },
     "nextActions": [
       "Observe existing SQLite run 44235763098 at 40df910c. Do not redispatch. Full paired suites, CVE and sanitizer gates must pass; ABI, GPG and final runtime remain open.",
-      "Preserve failed glibc run 44227921612. Review the private mandatory-PASS profile and compiled-selection collector; use scoped empty assignments, verified against the actual Make evaluator. No waiver or unchanged rerun.",
+      "Push reviewed ec91daac source with fresh production guard, then dispatch one explicit mandatory_pass paired glibc native run. Do not rerun the old profile or waive any missing evidence; record one watcher and original gates.",
       "Prepare and independently review the same-source libxml2/gosu plus minimal-removal composite. Isolated raw-base DB run 44243730083 passes; composite, other CVEs, lower layers, full service and release remain unqualified.",
       "Observe existing CI and Web runs at 7f189699 through their sole watcher. Preserve original deadlines and failed timing investigations; no cause is established.",
       "RRTA candidates failed unchanged thresholds. Do not adopt them or repeat those stopped avenues.",
@@ -138,7 +137,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "f9a3d1f7ef71c38d2fd9ffacb83cf7a1dc5709b8",
+    "latestPushedSource": "d0f121a93c4f21a3832043c104d53e94fb60581a",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -237,7 +236,7 @@
       "terminalConfirmationPending": true
     },
     "currentPrivatePreparation": {
-      "glibc": "Private mandatory-PASS implementation and independent source review are active. Empty assignments are required by the actual prepared Make evaluator. No public adoption, native dispatch, XPASS waiver or retroactive qualification.",
+      "glibc": "Default-off profile committed as ec91daac after independent source/derivative review. One fresh exact-source paired run is next; original failed run and all full suite/CVE/allocator/ABI/resource gates remain.",
       "sqlite": "Existing exact-source full paired run 44235763098 is active. No duplicate preparation or dispatch.",
       "minimalDb": "Isolated raw-base DB stage passed independent actual review. Private composite libxml2/gosu plus minimal-removal preparation is next; fresh bindings and unchanged qualified handoffs are required.",
       "packageQualification": false
@@ -588,13 +587,45 @@
       "readiness": false
     },
     "glibcMandatoryPassPreparation": {
-      "status": "PRIVATE implementation authorized after conditional architecture review; no public/native actions",
+      "status": "Committed opt-in source controls and independent adoption review pass; native pending",
       "conceptManifestSha256": "2a54f7e0cb9b09d5bde5398156f64fd4e0d0973940bc517de5a53e26931b0787",
       "scopeSuccessorManifestSha256": "9180db42615248dd7242e2eefd56bdbb281f1aeb0cabfad4a05e1344f38ae9cc",
       "scope": "Original amd64-libc baseline/candidate only; six individually mandatoryPASS withfullbody/skip/source/output evidence. Otherflavour suites andoriginalgates unchanged. NoXPASSacceptance oroldrunretroqualification.",
       "controls": "125 actualoldhelper cases:31positive/retainedGREEN94missing-rejectionRED; notfutureimplementationqualification",
       "next": "Hold six amd64-libc objects and binaries plus fixed headers/dependencies within the original six-second/16-MiB collector budget. Use scoped empty expected-failure assignments; literal no remains truthy in the actual Make evaluator. Keep default and other flavour behavior unchanged. Missing or altered evidence is fatal.",
-      "mappingManifestSha256": "fc862d726fca6193a45c2493a6bbc0a020b201751436b80c338f73984c571a19"
+      "mappingManifestSha256": "fc862d726fca6193a45c2493a6bbc0a020b201751436b80c338f73984c571a19",
+      "heldImplementationManifestSha256": "b3d31e01015a8a7920c9bd2e6be161bebc09a19d75ada7c7cbc5e972c80aa3e8",
+      "dependencyLifetimeManifestSha256": "2ad3367d7e329c715d1a99999586a4935666ab29a081eab3f6921ff557ffc5b0",
+      "dependencySuccessorManifestSha256": "d6c0b8a0420b9524a0d9fac66b5dbdf4bda60ccec57b280ef9257b0ad8231395",
+      "fileCapSuccessorManifestSha256": "8c6e60254dab41568e39b5ad1f4f3c1250339306aaa388453a529b6bb954dea6",
+      "resolvedBeforeNative": [
+        "Make nonempty no value replaced by scoped empty assignments",
+        "Retain fixed final .o.d and/or temporary .o.dt; require agreement if both present",
+        "Replay enforces the same per-type file caps as capture; rehashed oversized records rejected"
+      ],
+      "knownNativeHolds": [
+        "Actual retained dependency spelling and file sizes",
+        "Original six-second/16-MiB collector fit",
+        "Fresh full paired suites, CVE, allocator and ABI evidence"
+      ],
+      "publicAdoption": true,
+      "nativeExecuted": false,
+      "sourceCommit": "ec91daace874cdd2251de3ce44c50a69797280e3",
+      "independentSourceReviewManifestSha256": "ae3f9130dbeed3d1e4326e0d8afd53d8f8cc58acf2acab36b5a990700e77f339",
+      "independentRootDerivativeReviewManifestSha256": "f4ea27f8f6d060eeb753c82c1446ba482f907a56f352931b43510a0e3984b894",
+      "rootChecksSha256": "0a8d892e9c3d064902057eab7125daef48832705c25713ad8ec587c95bb3ba56",
+      "checks": {
+        "profilePython": 108,
+        "retainedExporterPython": 54,
+        "node": 51,
+        "scopedLint": "PASS",
+        "actionlint": "PASS",
+        "typecheck": "PASS",
+        "specLines": 9528,
+        "inventoryEntries": 1077,
+        "previousRowsUnchanged": 1076
+      },
+      "ledger": "docs/upgrade-2026-glibc-mandatory-pass-20261118.md"
     },
     "web40df": {
       "run": "44235730238",
@@ -677,8 +708,7 @@
     },
     "runWatchers": {
       "strict_failure_continuation": [
-        "sqlite40df",
-        "web7f"
+        "sqlite40df"
       ],
       "actual_runs_continuation": [
         "ciF9",
@@ -698,6 +728,42 @@
       "artifactDownloaded": false,
       "receiptManifestSha256": "ed794f99510a3dee79e3de5046cc7014d42ea7994ff2bdf7f51a803ddc2c5f9d",
       "runtimeQualification": false
+    },
+    "postgresMinimalCompositePreparation": {
+      "state": "private-spec-first-implementation-active",
+      "designManifestSha256": "59fc9b4735c037b945262f52faa821d7fa6267b70a563f16fdc8751ff904150a",
+      "rootVerifiedDesignInputs": 20,
+      "owner": "closure_review_continuation",
+      "scope": "Same-source original libxml2 package, gosu runtime and independent handoffs; new authenticated exact composite seal, exact-five removal, private DB checks and fresh resource custody. Raw profile remains unchanged.",
+      "stopCondition": "If exact allowed drift cannot be derived from both qualified component handoffs and bounded package contents, retain diagnostic-only inventory for review. Do not learn an oracle from observations.",
+      "publicEdits": false,
+      "nativeExecuted": false,
+      "releaseQualified": false
+    },
+    "web7f": {
+      "run": "44238476326",
+      "source": "7f189699cb3d6001f646e7e727be7b5da2d7955c",
+      "conclusion": "failure",
+      "strict": {
+        "passed": 636,
+        "failed": 14,
+        "skipped": 5
+      },
+      "failures": {
+        "originalThirtySecondDeadlines": 12,
+        "originalFourSecondPrivacyDeadlines": 2
+      },
+      "selfHostAndBuild": "PASS",
+      "receiptSha256": "df01ead3d290cb9ef9e6da11496ef6aa52b9f42ea5c0c8758b9fa0abc36bd67d",
+      "causalAttribution": false
+    },
+    "arm64RepeatDecision": {
+      "state": "no-new-boot",
+      "priorScopedLedger": "docs/upgrade-2026-arm64-c076-actual-20261117.md",
+      "priorSource": "c0760d2b1421ed22ff62dc4e4e72caba484b8a69",
+      "reason": "Prior native application/Compose/browser rehearsal passed. Current application tree differences are browser tests/diagnostic helpers, while final PostgreSQL security composition is still private. Defer a fresh VM rehearsal until a new actual runtime candidate is ready; do not reuse prior image bytes as qualification for future images.",
+      "currentImageQualified": false,
+      "scopeReceiptSha256": "9bf6e6c3f632236267dd7acea9379373a9e8395ad1009360a1216d5d8b91e073"
     }
   },
   "nov17New212Timing": {
