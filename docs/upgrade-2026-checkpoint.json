@@ -28,8 +28,9 @@
     },
     "liveRuns": {
       "sqlite40df": "44235763098",
-      "ci7f": "44238476210",
-      "web7f": "44238476326"
+      "web7f": "44238476326",
+      "ciF9": "44243701268",
+      "webF9": "44243701280"
     },
     "observedTerminal": {
       "priorWeb44147020790": "failed before browser case collection; local exact-source audit reproduced three missing inert-fixture pins, now corrected",
@@ -103,7 +104,7 @@
     "nextActions": [
       "Observe existing SQLite run 44235763098 at 40df910c. Do not redispatch. Full paired suites, CVE and sanitizer gates must pass; ABI, GPG and final runtime remain open.",
       "Preserve failed glibc run 44227921612. Review the private mandatory-PASS profile and compiled-selection collector; use scoped empty assignments, verified against the actual Make evaluator. No waiver or unchanged rerun.",
-      "Commit and dispatch one exact-source minimal DB compatibility run after source checks and independent review. Raw-base inventory evidence passes; composite image, remaining CVEs, lower layers, full service and release remain unqualified.",
+      "Prepare and independently review the same-source libxml2/gosu plus minimal-removal composite. Isolated raw-base DB run 44243730083 passes; composite, other CVEs, lower layers, full service and release remain unqualified.",
       "Observe existing CI and Web runs at 7f189699 through their sole watcher. Preserve original deadlines and failed timing investigations; no cause is established.",
       "RRTA candidates failed unchanged thresholds. Do not adopt them or repeat those stopped avenues.",
       "Qualified independent human tax, AI and security reviews, applicable final 2026 forms and selected Google-route access remain unresolved. Do not enable readiness, filing or model promotion."
@@ -137,7 +138,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "7f189699cb3d6001f646e7e727be7b5da2d7955c",
+    "latestPushedSource": "f9a3d1f7ef71c38d2fd9ffacb83cf7a1dc5709b8",
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",
@@ -238,7 +239,7 @@
     "currentPrivatePreparation": {
       "glibc": "Private mandatory-PASS implementation and independent source review are active. Empty assignments are required by the actual prepared Make evaluator. No public adoption, native dispatch, XPASS waiver or retroactive qualification.",
       "sqlite": "Existing exact-source full paired run 44235763098 is active. No duplicate preparation or dispatch.",
-      "minimalDb": "Source controls and independent adoption review passed. Commit 2d35630c adds the isolated raw-base DB stage. One exact-source native run is next; full application, composite image and release remain unqualified.",
+      "minimalDb": "Isolated raw-base DB stage passed independent actual review. Private composite libxml2/gosu plus minimal-removal preparation is next; fresh bindings and unchanged qualified handoffs are required.",
       "packageQualification": false
     },
     "browserOriginalEntryPhase": {
@@ -616,7 +617,7 @@
       "scope": "Deadline locations only; no request/server/CPU cause. No new tracing or manual replay."
     },
     "postgresMinimalDbCompatibility": {
-      "state": "source-controls-and-independent-adoption-review-pass-native-pending",
+      "state": "isolated-native-db-and-independent-actual-review-pass",
       "producerManifestSha256": "08e8637b2507337d447a4f854c8ed54cc156be18bfe1f69e2868d506d7cb6685",
       "independentSourceReviewSha256": "58e2e1326803998e8abd4bf47cd4103756f5b309c4803fb5d2a0301a0f840655",
       "independentDerivativeReviewSha256": "33a1bdede458611b24232f6215dff66e0495bcb31075d9a0babe6672e21896cc",
@@ -631,9 +632,72 @@
         "previousRowsUnchanged": 1075
       },
       "ledger": "docs/upgrade-2026-postgres-minimal-db-20261118.md",
-      "nativeExecuted": false,
+      "nativeExecuted": true,
       "releaseQualified": false,
-      "sourceCommit": "2d35630c19ee3716e8caf4be2af5de50f4b9eca6"
+      "sourceCommit": "2d35630c19ee3716e8caf4be2af5de50f4b9eca6",
+      "run": "44243730083",
+      "runSource": "f9a3d1f7ef71c38d2fd9ffacb83cf7a1dc5709b8",
+      "createdAtUtc": "2026-11-18T05:21:50Z",
+      "watcher": "closure_review_continuation",
+      "conclusion": "success",
+      "completedAtUtc": "2026-11-18T05:25:01Z",
+      "actualManifestSha256": "cd78165ba9894fbfaf2cdd93801b3c784334ec111920b97bb363de654cc3b75c",
+      "assessmentSha256": "838ffabcc4393a7984246d3ccd4baa28f2359fcab9252a260dffc3499c85cd13",
+      "rootVerifiedInputs": 34,
+      "candidate": "sha256:5288bcc9659da95501223c0740e4e93bcc8409b99bb0bf719fe4d350dc611570",
+      "commands": {
+        "total": 175,
+        "zero": 175,
+        "nonzero": 0,
+        "unavailable": 0
+      },
+      "cleanupEvidence": "Recorded fixed-source execution; no independent live post-inspection or actual secret-value comparison.",
+      "remainingCriticalFindings": {
+        "active": 8,
+        "suppressed": 1
+      },
+      "fullServiceQualified": false
+    },
+    "ci7f": {
+      "run": "44238476210",
+      "source": "7f189699cb3d6001f646e7e727be7b5da2d7955c",
+      "conclusion": "success",
+      "jobsPassed": 6,
+      "filesPerUnitAndCoverageRun": 2133,
+      "testsPerUnitAndCoverageRun": 29019,
+      "coveragePercent": {
+        "statements": 92.05,
+        "branches": 88.2,
+        "functions": 91.09,
+        "lines": 95.31
+      },
+      "branchGateUnchanged": 85,
+      "manifestSha256": "6384d383f36c09641b961e735013cd5301bde3948f6f778daa328b2d14e18939",
+      "qualificationClaim": false
+    },
+    "runWatchers": {
+      "strict_failure_continuation": [
+        "sqlite40df",
+        "web7f"
+      ],
+      "actual_runs_continuation": [
+        "ciF9",
+        "webF9",
+        "dockerF9"
+      ],
+      "closure_review_continuation": []
+    },
+    "dockerF9": {
+      "run": "44243701234",
+      "source": "f9a3d1f7ef71c38d2fd9ffacb83cf7a1dc5709b8",
+      "conclusion": "success",
+      "completedAtUtc": "2026-11-18T05:25:29Z",
+      "jobsPassed": 1,
+      "buildRecordArtifactId": "14400643732",
+      "buildRecordBytes": 49910,
+      "artifactDownloaded": false,
+      "receiptManifestSha256": "ed794f99510a3dee79e3de5046cc7014d42ea7994ff2bdf7f51a803ddc2c5f9d",
+      "runtimeQualification": false
     }
   },
   "nov17New212Timing": {
