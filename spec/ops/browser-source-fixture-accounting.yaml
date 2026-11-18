@@ -1,0 +1,17 @@
+form: "Browser-Source-Fixture-Accounting"
+taxYear: 2025
+status: "source-regression-controls"
+reference: "scripts/run-browser-tests.mjs::verifyAudit"
+notes: |
+  Operational source admission only. Web job134611966942 at91dbc3a523e4d8e798d47fd96caf8fbe715121a1 failed before collection.
+  Add exactly tests/fixtures/glibc-mandatory-pass/positive-output.json (7375bytes, SHA256990ec3aa9bf540846db27bcffa888af20d1dc2eda0458423a2f005a0924d682e).
+  Fixture is used by offline glibc parser controls only. Every prior source pin and all browser runtime/request/deadline/privacy/resource contracts remain unchanged.
+lines:
+  - line: "new-fixture-pin"
+    description: "Explicitly account for the admitted fixed glibc output fixture"
+    formula: "The complete original strict snapshot verifier must accept the current exact audited closure including the reviewed fixture hash. Retain every previous pin; add no exclusions. Pin bytes separately in the reviewed adoption receipt. This is source admission, never browser runtime success."
+    testRef: "tests/scripts/browser-source-fixture-accounting.test.mjs::reviewed glibc fixture is pinned in the complete original source audit"
+  - line: "drift-remains-fatal"
+    description: "Reject omitted, changed and additional fixture data"
+    formula: "Exercise the unchanged original verifyAudit on a bounded data-only source tree. A missing fixture pin, mutated bytes or a newly added unrelated source file must fail; only exact complete accounting passes."
+    testRef: "tests/scripts/browser-source-fixture-accounting.test.mjs::strict source verifier still rejects omitted changed and additional fixture bytes"

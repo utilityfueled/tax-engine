@@ -1657,6 +1657,7 @@
     "tests/fixtures/form-8949-reporting.ts": "38f8198d82491883158c10ed3ac61569dfc913f4acfa352d9b4b157799a69a75",
     "tests/fixtures/form4137.ts": "de723a180c3bf5cab2309941adfd0dd809140f1c0f14f1aa1a7a99b33c0da26d",
     "tests/fixtures/form7206.ts": "b9f3580247d2750136c2d2e9c27a65b3a509dd9f5c549d9c433057c6e0328a0a",
+    "tests/fixtures/glibc-mandatory-pass/positive-output.json": "990ec3aa9bf540846db27bcffa888af20d1dc2eda0458423a2f005a0924d682e",
     "tests/fixtures/glibc-package-seccomp/README.md": "6febba0c42ceb53f06c62e1e5c6159e49281a7db5a8bfeac05fb943404a3d998",
     "tests/fixtures/glibc-package-seccomp/baseline-runner.txt": "703af2c4ab36575f72c6c7f7f777865396b43b8d5247060115c4ec3953c7bdd1",
     "tests/fixtures/glibc-package-seccomp/historical-package-before.json": "f18c43af5470fd565cc5644ed4dcd654d89b1b41a19c217099afd3a04b3cdff0",
