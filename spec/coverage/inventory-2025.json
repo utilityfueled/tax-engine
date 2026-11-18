@@ -11242,6 +11242,26 @@
       ]
     },
     {
+      "key": "federal/postgres-minimal-composite",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://github.com/docker-library/postgres",
+      "specPath": "spec/ops/postgres-minimal-composite.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/postgres-source-candidates-amd64",
       "jurisdiction": "federal",
       "taxYear": 2025,

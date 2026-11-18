@@ -1,0 +1,44 @@
+form: "Postgres-Minimal-Composite-AMD64"
+taxYear: 2025
+reference: "https://github.com/docker-library/postgres"
+notes: |
+  Operations traceability only; this inventory metadata does not qualify a tax year.
+  Same-source component composition requires fresh native evidence and independent review.
+id: postgres-minimal-composite
+status: opt-in-source-controls-native-pending
+scope: same-source-libxml2-gosu-minimal-database-composition
+requirements:
+  provenance: Original package/runtime handoff validators, source/run/attempt/kind, successful original statuses, package-to-runtime base lineage and exact artifact hashes are mandatory.
+  seal: Derive libxml2 package and payload replacements from bounded data-only candidate deb contents and qualified gosu artifact; preserve every unrelated installed record, ELF row and protected tool. A newly observed vector alone is never authority.
+  status: Preserve every unrelated raw status paragraph; replacement libxml2 status fields must equal deb control fields plus install-ok-installed. Unknown fields, conffiles or malformed control are a diagnostic hold.
+  raw: Original raw profile, readers, builders, native SQL assertions and validators remain byte-identical and reject a composite baseline.
+  privacy: Explicit private DB scope through cleanup; fixed public schemas and recursive arbitrary-name sentinel controls. No raw logs, generated passwords or dumps are published.
+  resources: Preserve source/admission/child/command/capacity bounds; fresh named-volume guards cover original runtimeBuild as well as final DB. Close owned containers then volumes then owned/imported images; no preexisting or foreign resource removal.
+  qualification: No composition/native/DB/release success claim before same-source original package/runtime/independent checks and strict minimal/DB actual evidence all pass.
+limits:
+  original_jobs_minutes: [165, 90, 15]
+  final_job_minutes: 75
+  final_controller_minutes: 65
+  cleanup_minutes: 10
+  ordinary_db_admission_minutes: 20
+  initial_disk_gib: 20
+  reserve_disk_gib: 2
+held: [glibc-and-other-CVEs, suppressed-findings, lower-layer-bytes, custom-hooks, full-product-recovery, general-ABI, release]
+
+lines:
+  - line: "component-lineage"
+    description: "Admit both original same-source component handoffs"
+    formula: "Preserve original source/run/attempt/kind/content validators and bind package-to-runtime base lineage, exact provider/gosu payloads and notices. Foreign, changed or extra leaves fail."
+    testRef: "tests/scripts/postgres-composite-inputs.test.mjs::real original handoff validators reject foreign identities lineage status and content"
+  - line: "derived-seal"
+    description: "Derive allowed composite changes from authenticated package contents"
+    formula: "Bound data-only deb parsing; retain every unrelated raw status paragraph and ELF/tool row. Admit only exact package-control/provider and qualified gosu replacements. Unknown formats hold; observed vectors alone are not authority."
+    testRef: "tests/scripts/test_composite_seal.py::Seal"
+  - line: "strict-paired-removal"
+    description: "Preserve every original exact-five removal and inventory assertion"
+    formula: "Raw profile stays unchanged and rejects composite inputs. Require authenticated status authority, original four ELF removals, unchanged retained rows/protected tools/provider closure and fresh bound scans before database checks."
+    testRef: "tests/scripts/test_composite_inventory.py::CompositeInventory"
+  - line: "private-owned-recovery"
+    description: "Preserve original SQL assertions, private publication and owned cleanup"
+    formula: "Use unchanged authenticated init/recovery bodies with private-before-auth runtime handling, fresh volume identities, normal container closure and original owned/imported-image cleanup. Keep original bounds and all current-run predecessor successes."
+    testRef: "tests/scripts/postgres-composite-controller.test.mjs::composite actual publication has truthful profile and no private success/failure/cleanup surfaces"
