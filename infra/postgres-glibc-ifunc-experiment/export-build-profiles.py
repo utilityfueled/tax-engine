@@ -208,7 +208,7 @@ def recheck_test_diagnostics(captures):
         except (OSError,ValueError):
             item['status']='unavailable-custody'
 
-def collect(work,out,identity=None):
+def collect(work,out,identity=None,mandatory_profile=None):
     work=Path(work).absolute();out=Path(out).absolute();directory(work);directory(out)
     dest=out/'build-profiles';dest.mkdir(mode=0o700)
     result={'passed':False,'profiles':[],'packageQualificationClaim':False,'observation':'export-time-source-and-linker-identity','historicalLinkerExecutionProven':False,'exclusiveBuildTreeRequired':True,'missingVariants':[]}
@@ -250,10 +250,12 @@ def collect(work,out,identity=None):
                 if admitted_include in [line.strip(' \t') for line in raw['configparms'].decode('utf-8').split('\n')]:
                     directory(include_path.parent);include_custody=signature(include_path.lstat())
                     include_data=regular_bytes(include_path,1024*1024)
-                    if hashlib.sha256(include_data).hexdigest()!=DEBIAN_XFAIL_SHA: raise ValueError('include-authority')
-                    authority=regular_bytes(Path(__file__).resolve().with_name('debian-xfail-authority.mk'),1024*1024)
+                    expected_include_sha='5d97ea45b34b2b6daf7a10c85fbad879e66e37495a3b78a5c5cc5c8a79a90b1a' if mandatory_profile is not None else DEBIAN_XFAIL_SHA
+                    if hashlib.sha256(include_data).hexdigest()!=expected_include_sha: raise ValueError('include-authority')
+                    authority_path=Path(mandatory_profile).resolve().with_name('mandatory-xfail-authority.mk') if mandatory_profile is not None else Path(__file__).resolve().with_name('debian-xfail-authority.mk')
+                    authority=regular_bytes(authority_path,1024*1024)
                     if authority!=include_data: raise ValueError('include-authority')
-                    row['sourceIncludes'].append({'path':str(include_path),'bytes':len(include_data),'sha256':DEBIAN_XFAIL_SHA,'role':'exact-Debian-expected-failure-annotations'})
+                    row['sourceIncludes'].append({'path':str(include_path),'bytes':len(include_data),'sha256':expected_include_sha,'role':'exact-Debian-expected-failure-annotations'})
                 overrides=assignments(raw['configparms'],[],admitted_include=admitted_include)
                 if 'with-lld' in overrides and overrides['with-lld'] not in ['yes','no']: raise ValueError('unknown-override-with-lld')
                 row['configurationLiteralSources']={'LD':'config.log:Output variables:LD','with-lld':'config.make + config.log:Cache variables:libc_cv_with_lld'}
@@ -277,11 +279,18 @@ def collect(work,out,identity=None):
     recheck_test_diagnostics(diagnostic_captures)
     result['diagnosticLimits']={'outBytes':DIAGNOSTIC_SUFFIX_LIMITS['.out'],'testResultBytes':DIAGNOSTIC_SUFFIX_LIMITS['.test-result'],'aggregateBytes':DIAGNOSTIC_TOTAL_MAX,'reservedBytes':diagnostic_budget['reserved']}
     result['passed']=bool(result['profiles']) and all(p['available'] for p in result['profiles'])
+    if mandatory_profile is not None:
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('mandatory_profile',mandatory_profile)
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        result['mandatoryPass']=module.capture(work,out,deadline,diagnostic_budget,module.load_authority())
+        result['passed']=result['passed'] and result['mandatoryPass']['passed']
+        result['diagnosticLimits']['reservedBytes']=diagnostic_budget['reserved']
     with (dest/'summary.json').open('x') as f: json.dump(result,f,indent=2,sort_keys=True);f.write('\n')
     return result
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--work',type=Path,required=True);parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
-    try: ok=collect(args.work,args.output)['passed']
+    parser=argparse.ArgumentParser();parser.add_argument('--work',type=Path,required=True);parser.add_argument('--output',type=Path,required=True);parser.add_argument('--mandatory-pass',type=Path);args=parser.parse_args()
+    try: ok=collect(args.work,args.output,mandatory_profile=args.mandatory_pass)['passed']
     except (OSError,ValueError): ok=False
     raise SystemExit(0 if ok else 1)

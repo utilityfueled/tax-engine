@@ -13,6 +13,7 @@ import { verifyPinnedFile } from "./build-postgres-libxml2-backport.mjs";
 import { buildGlibcProfile, glibcEnvironment, validateGlibcEngine, validateGlibcSandbox } from "./lib/glibc-package-seccomp.mjs";
 import { prepareXfdExperiment } from "../infra/postgres-glibc-xfd-experiment/experiment.mjs";
 import { prepareIfuncExperiment, verifyProfileExport } from "../infra/postgres-glibc-ifunc-experiment/experiment.mjs";
+import { mandatoryPassEnabled, prepareMandatoryProfile } from "../infra/postgres-glibc-mandatory-pass/experiment.mjs";
 const REPO = fileURLToPath(new URL("../", import.meta.url));
 const LABEL = "io.vivalatax.qualification.operation", TARGET = "stdio-common/tst-vfscanf-bz34008", GIB = 1024 ** 3;
 const hash = value => createHash("sha256").update(value).digest("hex");
@@ -30,13 +31,14 @@ async function text(root, name, max = 256 * 1024 ** 2) {
   assert.ok(info.isFile() && !info.isSymbolicLink() && info.nlink === 1 && info.size <= max, "Bounded regular glibc evidence required.");
   return readFile(path, "utf8");
 }
-export async function validateGlibcEvidence(root, scriptExit) {
+export async function validateGlibcEvidence(root, scriptExit, { mandatoryPass = false, verifyMandatory } = {}) {
   assert.equal(scriptExit, 0, "An ordinary failed package script is not a passing candidate.");
   const execution = JSON.parse(await text(root, "execution-status.json", 65536));
   assert.deepEqual(execution, { stage: "complete", exit: 0, packageExecutionCompleted: true, candidateReleaseQualified: false, riskAccepted: false });
   const status = JSON.parse(await text(root, "package-status.json", 65536));
   assert.deepEqual(status, { baselineBuildExit: 0, candidateBuildExit: 0, pairedRegressionVerified: true, fullSuitesWithExactXfdOracleBackportRetained: true, fourIfuncConditionalsRetained: true, sourceProfilesExportRequired: true, abidiffExit: 0, sixConsumersExecuted: false, genericAbiApproval: false, riskAccepted: false, candidateReleaseQualified: false });
   await verifyProfileExport(root);
+  if (mandatoryPass) { assert.equal(typeof verifyMandatory, "function"); await verifyMandatory(root); }
   for (const variant of ["baseline", "candidate"]) {
     const paths = (await text(root, variant + "/suite-paths.txt", 65536)).trim().split("\n");
     assert.ok(paths.length > 0 && paths.length <= 8 && new Set(paths).size === paths.length);
@@ -98,6 +100,7 @@ export class GlibcCandidateController extends SourceCandidateController {
     // Reuse the frozen generic execution/custody/cleanup implementation. The
     // inherited SQLite build/sources methods are both overridden below.
     super("sqlite", output, env); this.sourceCandidate = "glibc";
+    this.mandatoryPass = mandatoryPassEnabled(env);
     this.limit = { minutes: GLIBC_LIMITS.jobMinutes, controllerMinutes: GLIBC_LIMITS.controllerMinutes, cleanupMinutes: GLIBC_LIMITS.cleanupMinutes };
     this.deadline = performance.now() + GLIBC_LIMITS.controllerMinutes * 60_000; this.cleanupReserve = GLIBC_LIMITS.cleanupMinutes * 60_000;
   }
@@ -114,7 +117,8 @@ export class GlibcCandidateController extends SourceCandidateController {
     await copyFile(join(prepared, "preparation-receipt.json"), join(this.evidence, "preparation-receipt.json"), constants.COPYFILE_EXCL);
     const experiment = await prepareXfdExperiment({ prepared, manifest, evidence: this.evidence });
     const ifunc = await prepareIfuncExperiment({ prepared, manifest: experiment.manifest, evidence: this.evidence });
-    return { recipe, manifest: ifunc.manifest, prepared };
+    const selected = this.mandatoryPass ? await prepareMandatoryProfile({ prepared, manifest: ifunc.manifest, evidence: this.evidence }) : ifunc;
+    return { recipe, manifest: selected.manifest, prepared };
   }
   async build() {
     const { recipe, manifest, prepared } = await this.sources(); this.stage = "toolchain";
@@ -152,7 +156,7 @@ export class GlibcCandidateController extends SourceCandidateController {
     this.stage = "export-actual-checks";
     const raw = join(this.private, "glibc-artifacts"); await this.docker("glibc-package-artifacts", ["cp", name + ":/qualification-out", raw], 180);
     await publishGlibcArtifacts(raw, join(this.evidence, "artifacts"));
-    const checks = await validateGlibcEvidence(raw, scriptExit);
+    const checks = await validateGlibcEvidence(raw, scriptExit, { mandatoryPass: this.mandatoryPass, verifyMandatory: this.mandatoryPass ? root => this.command("glibc-six-mandatory-pass", "python3", [join(REPO, "infra/postgres-glibc-mandatory-pass/profile.py"), "--verify", root], 20_000) : undefined });
     await save(join(this.evidence, "package-checks.json"), { ...checks, source: this.identity.source, toolchainImage: toolchain, scriptExit, effectiveScriptSha256: manifest.recipeFiles["build-packages.sh"].sha256, sourceManifestSha256: hash(await readFile(join(recipe, "sources.json"))) });
   }
 }

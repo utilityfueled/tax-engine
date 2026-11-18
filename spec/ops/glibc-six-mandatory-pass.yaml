@@ -1,0 +1,30 @@
+form: "glibc-Six-Mandatory-PASS-Profile"
+taxYear: 2025
+status: "opt-in-controls-implemented-native-pending"
+reference: "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36-9+deb12u14.dsc"
+notes: |
+  Separate functional qualification contract, requiring a disclosed expectation-oracle change.
+  Only six cases in the original amd64-libc full suite; i386/x32 suites and gates unchanged.
+  Never retroqualifies original7bea FAILURE or accepts XPASS. Opt-in controls are implemented; no native or release qualification exists.
+lines:
+  - line: "six-exact-allowances"
+    description: "Remove only six named Debian environment failure allowances in both variants"
+    formula: "Exact authenticated Debian file is an unchanged prefix; append only six EMPTY overrides under the two exact original amd64-libc common-objpfx paths, both paired variants. GNU Make nonempty evaluation must yield false. All original yes assignments remain effective outside that scope. Preserve original comments, test body/assertion/registration, four IFUNC and XFD adaptations, flags, work counts, deadlines, resources and all other allowances. Record forward/inverse and no upstream-fix claim."
+    testRef: "tests/scripts/glibc-mandatory-pass-prepare.test.mjs::original amd64-libc removes exactly six allowances"
+  - line: "mandatory-native-pass"
+    description: "Require each named case once in the original selected amd64-libc suite of baseline and candidate"
+    formula: "Original full suite/status gate remains. Additionally require exactly one complete summary PASS and matching original test-result PASS with original exit status0 for each of six cases in the original selected amd64-libc profile of both baseline and candidate. Any FAIL/XFAIL/XPASS/UNSUPPORTED/UNRESOLVED/ERROR, absent/duplicate/truncated record, nonzero or missing exit, tool error or timeout fails. All paired allocator/CVE/ABI gates remain mandatory."
+    testRef: "tests/scripts/glibc-mandatory-pass.py::Contract"
+  - line: "full-supported-execution"
+    description: "Reject zero-exit skipped/stub paths and bind actual compiled implementation"
+    formula: "Require exact source pins for six bodies plus included timer4; fresh source/image/run/variant/flavour-bound compile/link command, selected generated headers/configuration, binary and complete-output identities. Verify selected full implementation rather than self-declared booleans or host architecture. Require actual Makerules authority for fixed .o.d/.o.dt pair, at least one complete form and both equal canonical tokens when both present; permit only its literal common-objpfx prefix rewrite, never arbitrary Make interpretation. Require case-specific positive output where available, normal zero return only after original body otherwise; reject every known printed unsupported/setup route and silent compile stub. Missing evidence is fatal. Expected descriptor negative self-test messages remain valid and all their assertions remain."
+    testRef: "tests/scripts/glibc-mandatory-pass.py::Contract"
+  - line: "fresh-proof-only"
+    description: "Keep original failure and original qualification boundaries"
+    formula: "Fresh exact source/image-bound full paired run is required after reviewed implementation; old exit0 or synthetic fixtures are no qualification. No retry, gate, timeout, resource, allocator, CVE, ABI, provider or release claim changes. Require reviewed exact recipe inverse and fixed bounded artifact collection; source/image/run binding remains the outer runner responsibility."
+    testRef: "tests/scripts/glibc-mandatory-pass.py::test_original_xpass_not_requalified"
+
+# Retained implementation controls: tests/scripts/glibc-mandatory-pass.py (Contract, CollectorBoundaries, ReplayFileCaps).
+
+# Replay enforces the same per-file caps as collection: file_names() limits;
+# fixed .o.d/.o.dt dependencies and commands.json are each at most 65536 bytes.

@@ -13,7 +13,7 @@ export const SOURCE_PINS={
  'ifunc-before.mk':'0140e6fb8e5b07a2879f9cc65ac34fe290f01dbd60a476ace728abdefdc450f5',
  'ifunc-after.mk':'c92ace019719eee098249b27d7473028f896861d4434258c3aa6325c4feb4117',
  'ifunc.patch':'5b9d174c51d343e270529147f57478ca324b97fc65987466daf5aebc15f4bddd',
- 'export-build-profiles.py':'a53532787f8a6e2445c9adf57ee2b4a9d5194f71255f06b8836c5c48f8ae488e',
+ 'export-build-profiles.py':'69a61c95bbf912b8b7e8c8df755bf8dbcb819fcde44d523b50d0c1f13574f68c',
 };
 export const IFUNC_INSERT=`# Local four-only conditional correction derived from authenticated Debian 2.44.
 # Target remains pinned Debian 2.36; no correcting-upstream-commit claim.

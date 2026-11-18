@@ -6465,6 +6465,26 @@
       ]
     },
     {
+      "key": "federal/glibc-six-mandatory-pass",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://deb.debian.org/debian/pool/main/g/glibc/glibc_2.36-9+deb12u14.dsc",
+      "specPath": "spec/ops/glibc-six-mandatory-pass.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/glibc-xfd-test-experiment",
       "jurisdiction": "federal",
       "taxYear": 2025,
