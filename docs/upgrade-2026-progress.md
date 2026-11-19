@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: Help Center support claims
+
+The Help Center now describes estimates and review-only downloads for supported 2025 drafts, and fact entry and saving for 2026. The rendered help regression failed against the earlier filing wording. The exact replacement passed 36 help and browser-orchestration controls, and the broader support cohort passed 51 tests. Web typecheck and scoped lint passed.
+
 ## November 19: federal automatic deduction comparison
 
 The 2026 federal draft compares completed standard and itemized returns for a narrow, source-confirmed single filer with only qualifying REIT dividends and eligible current cash gifts. Each path computes the §68 deduction limit, §199A deduction, and final balance before choosing the result and recording both balances. In the $1 million REIT fixture, a $23,100 gift selects standard at $277,296 owed versus $277,362 itemized. A $25,000 gift selects itemized at $276,837. Independent review reproduced a cents mismatch between the source total and Form 8995-A. The calculation now reconciles exact statement amounts and rounds the aggregate once for the form. The exact package passed 1,674 tests and the whole spec and inventory checks. Explicit elections and the closed 2026 annual gate are preserved. [26 U.S.C. §68](https://uscode.house.gov/us/usc/119-118/t26/s68/) · [26 U.S.C. §199A](https://uscode.house.gov/us/usc/119-120/t26/s199A/) · [Draft 2026 Schedule A](https://www.irs.gov/pub/irs-dft/f1040sa--dft.pdf)

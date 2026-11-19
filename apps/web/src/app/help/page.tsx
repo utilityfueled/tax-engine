@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 const faqItems = [
   {
     q: "How does Viva La Tax work?",
-    a: "Upload your tax documents (W-2s, 1099s, etc.) or enter your info step by step. The engine assembles draft federal and state returns and shows you the calculation trail so you can review it yourself.",
+    a: "Upload tax documents such as W-2s and 1099s or enter your information step by step. For supported 2025 cases, the engine assembles draft federal and state returns and shows how it calculated the results. You can save 2026 facts for later review.",
   },
   {
     q: "Is this really free?",
@@ -32,7 +32,7 @@ const faqItems = [
   },
   {
     q: "What tax situations do you support?",
-    a: "Tax year 2025 has experimental federal and state calculations for review. Coverage varies by form, residency and facts; no state or federal filing export is qualified. Tax year 2026 calculation remains unavailable while its rules and forms are being implemented and reviewed. Importing a document does not establish support for filing it.",
+    a: "Tax year 2025 has experimental federal and state calculations for review. Coverage varies by form, residency and facts. Filing exports are unavailable for all years. Full return calculations and review PDFs are unavailable for 2026 while its rules and forms are under review. Importing a document does not establish support for filing it.",
   },
   {
     q: "How accurate is this?",
@@ -112,21 +112,21 @@ export default function HelpPage() {
               <span className="help-step-number">1</span>
               <div>
                 <strong>Start your return</strong>
-                <p>Click &quot;Start Your Tax Return&quot; on the home page. You&apos;ll answer a few questions about your filing status, income types, and state so the app can assemble a draft return.</p>
+                <p>Click &quot;Start Your Tax Return&quot; on the home page. Choose your tax year and answer a few questions about your filing status, income types, and state.</p>
               </div>
             </div>
             <div className="help-step">
               <span className="help-step-number">2</span>
               <div>
                 <strong>Enter your information</strong>
-                <p>Walk through each section step by step — income, deductions, credits. Upload documents or enter numbers manually. Your estimated result updates in real time.</p>
+                <p>Upload documents or enter income, deductions, and credits manually. In supported 2025 cases, your estimate updates as you enter the required information. For 2026, you can enter and save facts.</p>
               </div>
             </div>
             <div className="help-step">
               <span className="help-step-number">3</span>
               <div>
                 <strong>Review and download</strong>
-                <p>Review your draft return with line-by-line explanations. Download filled PDF reference forms and independently verify them before filing.</p>
+                <p>For supported 2025 drafts, review the line-by-line calculations and download available review-only PDFs.</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import HelpPage from "@/app/help/page";
 import SupportPage from "@/app/support/page";
 import { taxYearSupportRows } from "@/lib/tax-year-support";
 import { FEDERAL_RULE_PACKS } from "@/models/rule-pack-metadata";
@@ -25,5 +26,13 @@ describe("public scenario and output capability disclosure", () => {
       expect(row[5]).toBe("Unavailable");
       if (row[0] === "2026") expect(row[4]).toContain("full return calculation and PDFs unavailable");
     }
+  });
+
+  it("limits Help Center estimates and review downloads to supported 2025 cases", () => {
+    const html = renderToStaticMarkup(<HelpPage />);
+    expect(html).toContain("In supported 2025 cases, your estimate updates");
+    expect(html).toContain("For 2026, you can enter and save facts");
+    expect(html).toContain("For supported 2025 drafts, review the line-by-line calculations and download available review-only PDFs");
+    expect(html).not.toContain("verify them before filing");
   });
 });
