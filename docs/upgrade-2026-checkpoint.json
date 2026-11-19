@@ -141,7 +141,7 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "e9506fb7",
+    "latestPushedSource": "25bbd2e3",
     "nov19TaxAndBrowserContinuation": {
       "resume": "Read only this object and the November 19 paragraphs at the top of the progress ledger. Resolve exact committed or remote source with git; each new package requires actual checks. Keep the release gates.",
       "sourcePackages": "ba4d55ce: 2026 Form 8863/8889, 92 tests. 2b08b632: Philadelphia salary allocation, 2580 tests. 46837e72: 2026 Form 5329/8880 physical maps, 43 tests. e852f79a: 2026 Form 8880 rates and cutoff, 506 tests. b765af11: confirmed facts and modified AGI, 541 tests. b06960c0: 2025 saver source and cutoff, 511 tests.",
@@ -151,6 +151,7 @@
       "managedLocalRecovery": { "source": "151ad6f9", "passed": 2, "skipped": 0, "cleanup": true, "summarySha256": "50ed521edb37ac3746297c54c0064f1f4e5186aa140805018e056c76e6dc0b5f" },
       "ohioBusinessPayment": "Exact narrow NR/PY C-only first Ohio return with $300 and inclusive $500 timed original settlement, verified source inventory and no taxing district. Three independent-source collision controls red then green. 502 focused tests and 11 of 11 spec references. Filing and school financials unavailable.",
       "paNonresidentSmallBalance": "Narrow actual one-W-2 nonresident PA-40 balance at $276 and $429; exact return due, actual receipt and outstanding kept separate. All contemporaneous §325 expectation periods below the $14,000 and $430 limits, with complete matching sources. 3480 exact tests and 3515 broader tests, independent source review. Filing closed.",
+      "ohioQualifyingCapitalGain": "Standalone source draft for one direct equity sale by a material participant under 5747.79. Five immediate years of OH organization/HQ and completed participation; five calendar years of qualifying payroll excluding specified relatives; whole-entity portion sold; Decimal minimum. Two independent alias/duplicate controls red then green. Exact 1485 tests and global spec references. Full-return integration pending.",
       "historicalSaverLine4": "Independently reproduced $300 incorrect credit versus $100 with complete joint Line 4; confirmed columns required for dated positive non-IRA Code 1 receipt. Explicit zero permitted. Exact 570 focused tests and 38 spec references. Ordinary explicitly mismatched Form 1099-R years tracked separately.",
       "form1099RStatementYear": "Explicit preceding/later-year legacy source rejects before current income and withholding. Same-year Code P retains withholding only. Exact 627 focused tests, broader 791 and independent 157; 14 spec references and archived authority. Existing 2026 checks and undated legacy handling preserved.",
       "historicalFullSuiteFollowup": "c1fe19bd frozen unit: 29098 pass, 5 fail, 75 skip. Exact parameterized references and the expected earlier rejection were corrected, preserving hosted route controls. Successor passed 1144 focused tests, full spec, inventory and browser source audit. Frozen full successor required.",

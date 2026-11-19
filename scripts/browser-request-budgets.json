@@ -1069,6 +1069,7 @@
     "src/engine/state/oh-2026-ordinary-estimated-tax.ts": "d85d2efd07474fd40e06ef64e04a1a9e9214543c8f7d8f3d1f729440dfe3ceec",
     "src/engine/state/oh-2026-ordinary-source.ts": "3379405b5e34f36c192dfb6afa4f7b4ac9f14c99cf55becb52aa21fb357a92ed",
     "src/engine/state/oh-2026-payment-source.ts": "f1fd4fa7a3305d69aa4e984227bcff34580ceb8821c63079e1b4cde9121ca7b3",
+    "src/engine/state/oh-2026-qualifying-capital-gain-draft.ts": "d3b5fc78729aa8137a3e0aefae31d647b13026567f00055d4c920052dde6ef54",
     "src/engine/state/oh-2026-reciprocal-source.ts": "d0f345efa57f8d1bfc7d1b7ffafbded51904ae1e45ce2d7eec9e4a034e1dc2a1",
     "src/engine/state/oh-2026-resident-credit-source.ts": "44a64c07e72f256bb251b74e9d1c0f65b6b9be9cd888929c84a469349d190972",
     "src/engine/state/oh-2026-resident-credit.ts": "ab422bb04c227625a8887a029b3e07dafb795329d12bbbc59e8a8c412817e514",

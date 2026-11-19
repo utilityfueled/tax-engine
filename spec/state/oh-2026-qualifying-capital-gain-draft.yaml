@@ -1,0 +1,91 @@
+form: "Ohio 2026 qualifying capital gain documentary draft"
+fullName: "One direct equity sale under R.C. 5747.79 material-participant method"
+taxYear: 2026
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.79"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.06"
+  - "https://tax.ohio.gov/individual/who-must-file/whats-new"
+  - "https://www.ecfr.gov/current/title-26/section-1.469-5T"
+notes: |
+  Authority checked 2026-11-19. 5747.79 effective September30,2021 applies to
+  taxable years beginning in2026. ODT2026 What's New identifies A34 as Schedule
+  of Adjustments line14; line15/A35 is the separate venture operating company
+  deduction. This helper does not implement the alternative million-dollar
+  venture-investment method within5747.79, or A35, or multiple/indirect sales.
+  Documentary boundary: source references and explicit completed assessments
+  are required inputs, not independently authenticated documents. A completed
+  material-participation assessment must establish a permitted (a)(1),(2),(3),
+  (4),or(7) criterion and applicable federal restrictions for the exact five
+  years immediately before sale. The helper does not infer this from hours or
+  prior-year participation, or substitute five calendar years for this period.
+  Payroll is separately the five calendar years2021–2025. A completed annual
+  withholding-base reconciliation under5747.06(A) is required; this helper
+  does not derive the legally applicable withholding base from gross wages,
+  withholding tax amounts, addresses, or an unsupported allocation.
+  Recipient IDs must be stable across the original payroll and relationship
+  sources. Canonical equality uses NFKC, collapsed whitespace and uppercase;
+  spelling aliases cannot turn the owner into a non-enumerated recipient or
+  duplicate a recipient. An annual source must explicitly confirm this stable
+  identity mapping. A separate originalPayrollRowReference identifies each
+  recipient's complete aggregate row uniquely within that year's originals;
+  sourceReference identifies its payroll file, which may legitimately be shared.
+  Unique row references cannot independently authenticate source documents or
+  detect an intentionally fabricated identity and fabricated original row.
+  Finite cohort: calendar2026, one owner, one direct sale, one equal-rights
+  equity class, integer units, exact finite decimal percentage of the whole
+  entity sold, one complete aggregate per compensation recipient per year,
+  completed original federal inclusion and exclusion reconciliation. Other
+  classes, installment/netting uncertainty and conflicting sources remain
+  incomplete. These cohort limits are not additional statutory disqualifiers.
+  Exact Decimal arithmetic retains fractional cents; no annual form rounding
+  is asserted. No OhioAGI/BID/MAGI, residency, school, return, UI, export or
+  filing integration opens. Existing business/ordinary drafts affirm no such
+  gains; baseline only consumes an already completed A34 scalar. A later
+  source-bound integration must deduct A34 before A28 BID, avoid a duplicate
+  OhioAGI deduction, and add A34 back for statutory MAGI and school purposes.
+lines:
+  - line: "A34-source"
+    description: "Admit only matching completed current sale and gain sources"
+    formula: "Same2026 owner/entity/sale/disposal and reported capital gain; qualifyingGain=includedFederalAgi-otherwiseOhioDeductedOrExcluded, with 0<=excluded<=included<=reported and sale gain=reported; no other sale or uncertain inclusion/netting"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::caps payroll by the source-reconciled gain remaining in federal and Ohio AGI"
+  - line: "A34-period"
+    description: "Keep immediate five-year entity and participation conditions separate from payroll"
+    formula: "OH organization and headquarters cover saleDate minus five years through saleDate; completed permitted federal material-participation assessment covers that exact interval; OH trade/business at sale"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::rejects missing conflicting and unsupported documentary sources"
+  - line: "A34-payroll"
+    description: "Reconcile the five preceding calendar years of withholding compensation"
+    formula: "Exactly2021,2022,2023,2024,2025, once each; each complete annual5747.06(A) compensation total equals sum of per-recipient qualified withholding bases, each<=gross compensation paid; non-enumerated recipients' qualifying bases summed before percentage"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::uses all five calendar years of withholding compensation rather than gross pay or withholding tax"
+  - line: "A34-family"
+    description: "Exclude all enumerated family compensation"
+    formula: "Exclude taxpayer,spouse,parent,grandparent,child,grandchild; require completed relationship classification for every recipient; no missing relation defaults to non-enumerated"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::excludes every enumerated family relationship"
+  - line: "A34-canonical-owner"
+    description: "An equivalent owner ID cannot evade the taxpayer compensation exclusion"
+    formula: "Canonical owner and recipient equality governs identity matching and taxpayer classification; a case-only taxpayer alias marked non-enumerated is incomplete"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::rejects the taxpayer relabeled as a non-enumerated case alias"
+  - line: "A34-original-payroll-row"
+    description: "One original recipient row cannot be counted twice under different aliases"
+    formula: "Require unique canonical recipient IDs and unique canonical original payroll-row references within each annual record; file references may be shared but do not identify distinct rows"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::rejects an unchanged original payroll row copied under a different recipient alias"
+  - line: "A34-canonical-duplicates"
+    description: "Canonical duplicate identities cannot create a second payroll amount"
+    formula: "Reject recipient or original-row identity duplicates after NFKC normalization, whitespace collapse and uppercase, even when the submitted spelling, other identity or annual reconciled total changes"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::rejects canonical duplicate recipient and original row identities"
+  - line: "A34-shared-payroll-file"
+    description: "Keep a shared documentary file distinct from unique original recipient rows"
+    formula: "Matching canonical owner/entity/sale spellings remain equivalent; different original recipient rows may share one payroll-file reference without losing the family exclusion or changing the deduction"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::reconciles canonical identities and distinct rows from a shared payroll file"
+  - line: "A34-percentage"
+    description: "Multiply by the percentage of the entire entity sold"
+    formula: "totalUnits*percentageOfEntireEntitySold=unitsSold*100; unitsSold<=ownedUnitsBefore<=totalUnits; deductiblePayroll=qualifyingPayroll*percentageOfEntireEntitySold/100, not the fraction of the taxpayer's personal holding disposed"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::uses whole-entity ownership sold and preserves exact fractional cents"
+  - line: "A34-cap"
+    description: "Apply the per-entity lesser-of cap for this single sale"
+    formula: "deduction=min(qualifyingGain,deductiblePayroll); exact known zero remains zero when all source facts are complete"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::preserves known zero and the gain and payroll caps"
+  - line: "A34-hold"
+    description: "Missing or conflicting sources remain incomplete without invented amounts"
+    formula: "Invalid or inconsistent documentary packet returns all money=null, empty audit, fixed incomplete reason; no input echo; every result retains calculationStatus=incomplete,filingQualified=false,exportAllowed=false"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::keeps all gates closed and never echoes documentary identities"
