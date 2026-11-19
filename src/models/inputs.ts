@@ -3933,10 +3933,10 @@ export const ScheduleAInputSchema = z.object({
   /** Actual modeled non-W2 withholding already deducted on C/E/F; unknown is not zero. */
   nonW2IncomeTaxesDeductedElsewhere: optionalDecimalInput,
   personalPropertyTaxes: optionalDecimal,
-  /** SALT MAGI worksheet line 3a. Not deducted from AGI by this adapter. */
-  excludedPuertoRicoIncome: optionalDecimal,
-  /** SALT MAGI worksheet line 3d; Form 4563 itself remains a separate scenario. */
-  form4563ExcludedIncome: optionalDecimal,
+  /** SALT MAGI worksheet line 3a. Omission permits reuse of a confirmed 2026 source. */
+  excludedPuertoRicoIncome: optionalDecimalInput,
+  /** SALT MAGI worksheet line 3d. Omission permits reuse of a confirmed 2026 source. */
+  form4563ExcludedIncome: optionalDecimalInput,
   investmentInterestExpense: optionalDecimal,
   gamblingWinnings: optionalDecimal,
   gamblingLosses: optionalDecimal,

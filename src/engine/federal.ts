@@ -91,7 +91,7 @@ import { calculateK1PassiveDistributionSources } from "./forms/k1-passive-distri
 import { calculateK1OrdinarySelfEmployment } from "./forms/k1-ordinary-self-employment.js";
 import { calculateScheduleSE, k1SelfEmploymentAmount } from "./schedules/schedule-se.js";
 import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
-import { calculateScheduleA } from "./schedules/schedule-a.js";
+import { calculateScheduleA, TERRITORY_DEDUCTION_ALLOCATION_REQUIRED } from "./schedules/schedule-a.js";
 import { calculateSelectedCharitableCarryover } from "./forms/selected-charitable-carryover.js";
 import { calculateFederalDeductionSelection } from "./forms/federal-deduction-selection.js";
 import { calculateSchedule1AReturn } from "./forms/schedule-1-a-return.js";
@@ -4273,6 +4273,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
   if (year === 2026 && qualifyingChildren > 0 && input.childTaxCredit?.bonaFidePuertoRicoResident === undefined) {
     throw new Error("2026 child-credit Puerto Rico residency is unknown");
+  }
+  if (year === 2026 && [childCreditPuertoRico, childCreditForm4563, childCreditPossessionTotal].some(amount => amount?.gt(0))) {
+    throw new Error(TERRITORY_DEDUCTION_ALLOCATION_REQUIRED);
   }
   const calculateChildCredit = (taxLiability: Decimal) => calculateForm8812({
     taxYear: year,

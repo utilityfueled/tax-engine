@@ -142,26 +142,36 @@ describe("Confirmed annual Form 8880 sources", () => {
     expect(withActualEligibleTotal.form8880?.line2a.toFixed()).toBe("700");
   });
 
-  it("restores the statutory exclusions before selecting the credit rate", () => {
-    const sources = { ...confirmed, americanSamoaAgiRestoration: "500.25", puertoRicoAgiRestoration: "749.75" };
-    const atLimit = tax(sources);
-    expect(atLimit?.line8.toFixed()).toBe("40250");
-    expect(atLimit?.line12.toFixed()).toBe("200");
-    const overLimit = tax({ ...sources, puertoRicoAgiRestoration: "749.76" });
-    expect(overLimit?.line8.toFixed()).toBe("40250.01");
-    expect(overLimit?.line12.toFixed()).toBe("0");
-    expect(overLimit?.lines.find(line => line.line === "8")?.formula).toContain("§25B(e)");
+  it.each([
+    { territory: "American Samoa", source: "americanSamoaAgiRestoration" },
+    { territory: "Puerto Rico", source: "puertoRicoAgiRestoration" },
+  ])("holds the ordinary return for a positive $territory restoration", ({ source }) => {
+    expect(() => tax({ ...confirmed, [source]: "500.25" })).toThrow(/territory income.*deduction allocation/i);
+  });
 
+  it("restores the statutory exclusions before selecting the credit rate", () => {
     const base = {
       taxYear: 2026,
       filingStatus: "single" as const,
       agi: "-5000",
       primaryDateOfBirth: "1990-01-15",
+      primaryIsFullTimeStudent: false,
+      primaryCanBeClaimedAsDependent: false,
+      primaryRecentDistributions: "0",
       primaryElectiveDeferrals: "2000",
       taxLiabilityBeforeCredit: "1000",
       priorNonrefundableCredits: "0",
     };
     const zeros = { foreignHousingDeduction: d("0"), americanSamoa: d("0"), puertoRico: d("0") };
+    const restored = { ...zeros, foreignIncomeReduction: d("0"), americanSamoa: d("500.25"), puertoRico: d("749.75") };
+    const atLimit = calculateForm8880({ ...base, agi: "39000", agiRestorations: restored });
+    expect(atLimit.line8.toFixed()).toBe("40250");
+    expect(atLimit.line12.toFixed()).toBe("200");
+    const overLimit = calculateForm8880({ ...base, agi: "39000", agiRestorations: { ...restored, puertoRico: d("749.76") } });
+    expect(overLimit.line8.toFixed()).toBe("40250.01");
+    expect(overLimit.line12.toFixed()).toBe("0");
+    expect(overLimit.lines.find(line => line.line === "8")?.formula).toContain("§25B(e)");
+
     const signedStartingAgi = calculateForm8880({
       ...base, agiRestorations: { ...zeros, foreignIncomeReduction: d("29250") },
     });

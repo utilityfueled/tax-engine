@@ -122,6 +122,76 @@ lines:
       - "High-MAGI floors, zero taxes, cents, and all filing statuses"
     testRef: "tests/regression/obbba-2025.test.ts::2025 SALT independent worksheet fixtures"
 
+  - line: "5e-territory-sources-2026"
+    description: "Reconcile territory exclusions and hold 2026 returns requiring deduction allocation"
+    formula: >-
+      When complete confirmed Schedule 1-A sources match the 2026 return
+      year, reconcile the distinct section 933 Puerto Rico and section 931
+      Form 4563 amounts. An omitted Schedule A alias uses the corresponding
+      confirmed amount. An equal alias confirms the amount once. A positive
+      exclusion requires a separate deduction allocation before tax can be
+      calculated for an itemized, standard, or automatic election. A source
+      that confirms excluded income alone cannot establish that allocation.
+      The same hold applies to a nonzero standalone Schedule A alias.
+      A negative legacy alias cannot reduce current-year SALT MAGI.
+      For general taxes, allocate to gross income subject to U.S. income tax
+      before the SALT limit. For example, with 505000 taxable gross income,
+      100000 excluded income, and 12000 general real estate taxes, the
+      allowable share before the cap is roundDollar(12000 × 505000 / 605000)
+      = 10017. The same fixture's 16100 standard deduction would require
+      allocation to 13439.
+    irsRef: "IRC 931(b), 933, and 164(b)(7)(B)(iv); Pub. 570 chapter 4, Deductions if Territory Income Is Excluded"
+    testRef: 'tests/engine/federal-salt-2026.test.ts::holds the $territory return until its actual deduction allocation is supported'
+
+  - line: "5e-territory-savers-2026"
+    description: "Hold a 2026 return when confirmed Form 8880 facts disclose a nonzero territory restoration"
+    formula: >-
+      A nonzero section 931 or 933 AGI restoration in the confirmed
+      annual Form 8880 packet also requires the separate territory deduction
+      allocation. The Form 8880 amount is a net section 25B restoration.
+      A future calculation requires actual gross income subject to U.S. tax,
+      worldwide gross income, and the attribution of each deduction to
+      taxable, excluded, or general income. Standalone Form 8880 uses its
+      own signed amount.
+    irsRef: "IRC 25B(e), 931(b), and 933; Pub. 570 chapter 4, Deductions if Territory Income Is Excluded"
+    testRef: 'tests/engine/federal-savers-credit-2026-sources.test.ts::holds the ordinary return for a positive $territory restoration'
+
+  - line: "5e-territory-worksheet-sources-2026"
+    description: "Apply the same 2026 deduction allocation hold to current-year exclusions disclosed on other worksheets"
+    formula: >-
+      Check confirmed current-year Social Security, student loan interest,
+      Form 8815, and Form 8936 exclusions, actual Form 8839 and Form 8863
+      possession-income exclusions, and explicit Schedule 8812 possession
+      components or total after Schedule 8812 source reconciliation.
+      A nonzero amount discloses territory exclusion treatment, as does
+      a signed nonzero Form 8880 restoration. Each amount
+      is evidence that deduction allocation is required. Allocation still
+      requires actual gross income and deduction attribution. Zero amounts
+      and separately entered historical exclusions do not trigger this
+      current-year hold.
+    irsRef: "IRC 931(b), 933, and 164(b)(7)(B)(iv); Pub. 570 chapter 4, Deductions if Territory Income Is Excluded"
+    testRef: 'tests/engine/federal-salt-2026.test.ts::holds a 2026 return when $source discloses a territory exclusion'
+
+  - line: "5e-territory-negative-alias-2026"
+    description: "Hold a 2026 return that enters a negative standalone Schedule A territory exclusion"
+    formula: >-
+      Do not subtract a negative Schedule A territory alias from SALT MAGI.
+      Reject a standalone nonzero alias before any deduction election.
+      An explicit zero leaves SALT MAGI unchanged.
+    irsRef: "IRC 164(b)(7)(B)(iv), 931(b), and 933"
+    testRef: 'tests/engine/federal-salt-2026.test.ts::prevents a negative standalone $territory alias from reducing SALT MAGI'
+
+  - line: "5e-territory-conflicts-2026"
+    description: "Preserve omission and reject a conflicting entered territory exclusion"
+    formula: >-
+      Reconcile each entered Schedule A alias exactly against the matching
+      confirmed 2026 exclusion, including explicit zero. Reject a conflict
+      before applying the phase-down. A confirmed zero is valid. Historical
+      refund worksheets continue to use the entered SALT MAGI of each
+      deduction year.
+    irsRef: "IRC 164(b)(7)(B)(iv); IRC 111; Pub. 525 recoveries"
+    testRef: 'tests/engine/federal-salt-2026.test.ts::rejects the entered $territory alias when it contradicts the confirmed exclusion'
+
   - line: "8a"
     description: "Qualified interest and points reported on current Form1098"
     formula: "Actual Pub936 source worksheet line8a; correct debt categories/average balances, Table1 ratio rounded3decimals, current-year qualified points, no prior-year Box4 refund netting. Historical aggregate amounts remain unverified."

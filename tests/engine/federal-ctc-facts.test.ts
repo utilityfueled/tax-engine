@@ -7,7 +7,10 @@ vi.mock("@/models/constants.js",async(importOriginal)=>{
 });
 
 import { calculateFederalTax } from "@/engine/federal.js";
+import { calculateForm8812 } from "@/engine/forms/form-8812.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
+import { d } from "@/utils/decimal.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 const child={firstName:"Synthetic",lastName:"Child",ssn:"999-88-7777",relationship:"child",dateOfBirth:"2018-03-02",monthsLivedWithYou:12,qualifiesForCTC:true,ctcSsnEligible:true};
 const fixture=(overrides:Record<string,unknown>={})=>TaxYearInputSchema.parse({...simpleW2Fixture,childTaxCredit:{bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"0"},taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026,primary:{...simpleW2Fixture.taxpayer.primary,employmentValidSsnIssuedByDueDate:true,tinIssuedByDueDate:true},dependents:[child],...overrides},w2s:[{...simpleW2Fixture.w2s[0],accountHolder:"primary",wages:"50000"}]});
@@ -62,8 +65,20 @@ describe("Schedule 8812 actual identity and payroll facts",()=>{
 
   it("audits actual Puerto Rico and Form4563 MAGI sources",()=>{
     const input=TaxYearInputSchema.parse({...fixture(),childTaxCredit:{bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"500",puertoRicoExcludedIncome:"200",form4563ExcludedIncome:"300"}});
-    const r=calculateFederalTax(input);
-    for(const [id,amount] of [["1","50000"],["2a","200"],["2b","0"],["2c","300"],["2d","500"],["3","50500"]]) expect(r.form8812?.lines.find(line=>line.line===id)?.value.toString()).toBe(amount);
+    const historical=calculateFederalTax({...input,taxpayer:{...input.taxpayer,taxYear:2025}}).form8812;
+    const standalone=calculateForm8812({
+      taxYear:2026, qualifyingChildren:1, otherDependents:0, filingStatus:"single", bonaFidePuertoRicoResident:false,
+      agi:d("50500"), adjustedGrossIncome:d("50000"), earnedIncome:d("50000"), taxLiability:d("5000"),
+      puertoRicoExcludedIncome:d("200"), form4563ExcludedIncome:d("300"), foreignExcludedIncome:d("0"),
+    },FEDERAL_2026_CONSTANTS);
+    for(const result of [historical,standalone]) {
+      for(const [id,amount] of [["1","50000"],["2a","200"],["2b","0"],["2c","300"],["2d","500"],["3","50500"]]) {
+        expect(result?.lines.find(line=>line.line===id)?.value.toString()).toBe(amount);
+      }
+    }
+    for(const deductionElection of ["itemized","standard","automatic"] as const) {
+      expect(()=>calculateFederalTax({...input,deductionElection})).toThrow(/territory income.*deduction allocation/i);
+    }
   });
   it("rejects a positive possession aggregate with unknown source split",()=>{
     const input=fixture();input.childTaxCredit={bonaFidePuertoRicoResident:false,possessionIncomeExclusion:"500"};

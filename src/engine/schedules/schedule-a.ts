@@ -43,6 +43,9 @@ import type { SelectedCharitableCarryover } from "@/engine/forms/selected-charit
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
+export const TERRITORY_DEDUCTION_ALLOCATION_REQUIRED =
+  "Excluded territory income on a 2026 federal return requires a separate deduction allocation using actual gross income and deduction sources.";
+
 export interface ScheduleAInput {
   /** Completed canonical exact educator ownership context, never a taxpayer override. */
   educatorBondSources?: EducatorBondSourceContext;
@@ -246,18 +249,56 @@ export function calculateScheduleA(
   audit.record("Sched A", "5b", "Real estate taxes", propertyTaxes,
     "Sum Form 1098 property tax + other qualified real estate tax payments");
 
-  // Restore excluded income before applying the 2025 SALT MAGI phase-down.
+  // Restore excluded income before applying the SALT MAGI phase-down.
   if (input.form2555 && extra?.saltMagiAdditions === undefined) {
     throw new Error("Schedule A requires computed Form 2555 exclusions and housing deduction for SALT MAGI.");
   }
+  const schedule1AFacts = input.schedule1A;
+  const territorySources = input.taxpayer.taxYear === 2026 && schedule1AFacts?.sourceTaxYear === 2026
+    && schedule1AFacts.sourceFactsConfirmed === true && schedule1AFacts.allSourcesIncluded === true
+    && schedule1AFacts.sourceReference?.trim() ? schedule1AFacts : undefined;
+  const puertoRicoAlias = input.scheduleA?.excludedPuertoRicoIncome;
+  const form4563Alias = input.scheduleA?.form4563ExcludedIncome;
+  const puertoRicoExclusion = d(territorySources?.excludedPuertoRicoIncome ?? puertoRicoAlias);
+  const form4563Exclusion = d(territorySources?.form4563Exclusion ?? form4563Alias);
+  if (territorySources && ((puertoRicoAlias !== undefined && !d(puertoRicoAlias).eq(puertoRicoExclusion))
+    || (form4563Alias !== undefined && !d(form4563Alias).eq(form4563Exclusion)))) {
+    throw new Error("Schedule A territory exclusions must agree with the confirmed Schedule 1-A source amounts.");
+  }
+  // Pub. 570 requires allocation for both standard and itemized deductions.
+  if (input.taxpayer.taxYear === 2026) {
+    const { educationExpenses, form8815, form8839, form8936, socialSecurityFacts, studentLoanInterestFacts } = input;
+    const saversCreditSources = input.form8880?.sourceFacts2026;
+    const hasNonzeroAmount = (...amounts: (Decimal | string | undefined)[]) => amounts.some(amount => !d(amount).isZero());
+    const requiresTerritoryAllocation =
+      hasNonzeroAmount(puertoRicoExclusion, form4563Exclusion,
+        educationExpenses?.possessionIncomeExclusion, form8839?.possessionIncomeExclusion)
+      || (socialSecurityFacts?.sourceFactsConfirmed === true
+        && hasNonzeroAmount(socialSecurityFacts.puertoRicoIncomeExclusion, socialSecurityFacts.americanSamoaIncomeExclusion))
+      || (studentLoanInterestFacts?.sourceTaxYear === 2026 && studentLoanInterestFacts.sourceFactsConfirmed === true
+        && hasNonzeroAmount(studentLoanInterestFacts.puertoRicoIncomeExclusion, studentLoanInterestFacts.americanSamoaIncomeExclusion))
+      || (form8815?.sourceFactsConfirmed === true && form8815.currentStatementReconciliationConfirmed === true
+        && hasNonzeroAmount(form8815.puertoRicoIncomeExclusion, form8815.americanSamoaIncomeExclusion))
+      || (form8936?.agiAdjustmentsConfirmed === true && hasNonzeroAmount(form8936.possessionIncomeExclusion))
+      || (saversCreditSources?.taxYear === 2026 && saversCreditSources.testingPeriodComplete
+        && hasNonzeroAmount(saversCreditSources.puertoRicoAgiRestoration, saversCreditSources.americanSamoaAgiRestoration));
+    if (requiresTerritoryAllocation) {
+      throw new Error(TERRITORY_DEDUCTION_ALLOCATION_REQUIRED);
+    }
+  }
   const saltMagi = agi.plus(extra?.saltMagiAdditions ?? ZERO)
-    .plus(d(input.scheduleA?.excludedPuertoRicoIncome))
-    .plus(d(input.scheduleA?.form4563ExcludedIncome));
+    .plus(puertoRicoExclusion)
+    .plus(form4563Exclusion);
   const saltTotal = stateLocalTaxes.plus(personalPropertyTaxes).plus(propertyTaxes);
   const saltCap = calculateSALTLimit(saltMagi, filingStatus, constants);
   const saltDeduction = roundDollar(min(zeroFloor(saltTotal), saltCap));
   audit.record("SALT WS", "4", "MAGI for SALT limitation", saltMagi,
-    "AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50 + Form 4563 line 15");
+    "AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50 + Form 4563 line 15",
+    territorySources ? {
+      "Territory exclusion source": "Confirmed Schedule 1-A",
+      "Puerto Rico exclusion": puertoRicoExclusion,
+      "Form 4563 exclusion": form4563Exclusion,
+    } : undefined);
   audit.record("SALT WS", "10-limit", "SALT limit after MAGI phase-down", saltCap,
     "Worksheet line 9, halved after phase-down for MFS");
   audit.record("Sched A", "5d", "State and local taxes before limitation", saltTotal,
