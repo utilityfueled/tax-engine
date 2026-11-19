@@ -126,7 +126,7 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
       if ((transaction.sourceDocumentType ?? '1099-b') !== '1099-b') continue;
       // Box1c is the actual disposition/short-sale closing date, not the
       // statement furnishing date. Preserve unknown summary text as unknown.
-      const value = transaction.dateSold.trim();
+      const value = transaction.dateSold?.trim() ?? '';
       const date = /^(\d{4})-\d{2}-\d{2}$/.exec(value);
       if (date && Number(date[1]) !== input.taxpayer.taxYear) {
         throw new Error('Form 1099-B disposition year must match the return year; reconcile the actual Box 1c date.');
