@@ -1,5 +1,57 @@
 # 2026 upgrade implementation evidence
 
+## November 19 guided Ohio unemployment payment proof
+
+The Ohio guided interview connects an eligible 2025 Form 1099-G to an
+actual payment reference, date, amount and completeness confirmation for
+the single-payment part-year case. The payment amount must reconcile to Box 1.
+The validated domicile timeline supplies the Ohio amount. A full-year
+nonresident uses the complete out-of-state timeline without a payment date.
+[Ohio IT NRC instructions, p. 36](https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36).
+
+The guided regression initially reached Complete with no Ohio preview. The
+replay now holds missing or inconsistent proof before completion. Reopening
+the saved part-year fixture produces $1,000 on IT NRC line 12 and a $1,396
+credit. Statement replacement and recipient changes require the actual
+payment evidence again. Removing the primary owner clears the proof. The
+draft saves a fingerprint of the original and recipient and keeps the new
+proof separate from raw identity fields. Independent review reproduced the
+recipient and removal cases before correction. The eight scoped suites
+passed 84 tests, including rendered controls, with both typechecks and lint.
+The final independent review passed 43 tests and five direct reproductions,
+including a tax ID formatting edit that preserves the same owner's proof.
+
+## November 19 exact browser and recovery results
+
+Exact `43956ac0` passed all nine local static and build checks. Its managed
+local browser run passed 650 runnable cases with five original hosted skips
+using the 15 pinned samples and pypdf 6.10.0. The loopback listener closed.
+The managed browser log SHA-256 is
+`a7a7935114ef9dddb340a4e601533b46a6b3abd3a57500052c44e2b7444d7bad`.
+
+Exact `7fe1a426` passed all six CI jobs, including 29,475 tests in coverage
+and 88.33% branch coverage. Docker and the managed browser job passed. The
+strict AMD64 image passed 642 browser cases, with eight 30-second deadlines
+and five original skips. Strict ARM64 passed 639, with eleven deadlines and
+the same five skips. Both ran image smoke, Compose upgrade and recovery, and
+container cleanup successfully. AMD64 also passed independent archive import.
+Exact `d52a596b` passed all six CI jobs, Docker and managed browsers. Its
+strict AMD64 run passed 644, with six deadlines and five original skips.
+[Form 8889 CI](https://github.com/utilityfueled/tax-engine/actions/runs/44631210955) ·
+[AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44631211136/job/135938008589) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44631260737/job/135938189799) ·
+[Child-credit AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44632834883/job/135943694338).
+
+Independent trace review found varying late operations. Both NEW212 traces
+show about 4.4–4.6 seconds between the completed download response and the
+next browser call, including host-side PDF verification. The trace interval
+leaves the execution cost and scheduling delay unseparated. The exact
+verifier took 1,182 ms on the retained synthetic mobile PDF with pinned
+pypdf 6.10.0. A single in-memory appearance cache trial preserved all 44
+pages, 390 cells and 41 status checks and took 1,122 ms. That small single-run
+difference did not support adopting the cache. All deadline, worker, retry,
+PDF and filing evidence requirements remain in force.
+
 ## November 19 Schedule A property-tax source year
 
 Schedule A holds a positive real-estate tax on an explicitly wrong-year Form
@@ -15,8 +67,9 @@ reproduced the issue before the fix. The 198-case regression suite covers
 cent-level inputs and the $40,400 SALT cap. Independent checks passed 164
 cases and eight additional canonical 2025 scenarios across automatic and
 explicit standard deduction choices. Both source specs and the full browser
-audit passed. The scoped lint run retained one existing warning. The 2026
-worksheet remains behind the existing filing gate.
+audit passed. The scoped lint run retained one existing warning. The exact
+combined revision `56a7ef3d` passed nine static and build checks and the
+Docker workflow. The 2026 worksheet remains behind the existing filing gate.
 
 ## November 19 Ohio nonresident and part-year unemployment
 
@@ -37,9 +90,10 @@ full-year nonresident control yields $1,885. Both the source reconciliation
 and competing school-error regressions failed before correction. Final tests
 passed 485 cases across nine files, with 21 spec links, production lint and
 typecheck. Independent checks passed 278 cases and a final 72-case rerun. The
-isolated exact browser source audit passed. Fractional Box 1, other benefit
-programs, repayments, mixed-source cohorts and guided collection need separate
-qualification. The 2026 filing gate remains closed.
+isolated exact browser source audit passed. The later guided package collects
+the same single-payment proof. Fractional Box 1, other benefit programs,
+repayments and mixed-source cohorts remain outside this method. The 2026 filing
+gate remains closed.
 
 ## November 19 Child Tax Credit relationship checks
 

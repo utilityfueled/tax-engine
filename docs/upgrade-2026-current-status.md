@@ -1,5 +1,17 @@
 # Current 2026 upgrade status
 
+The Ohio guided interview now collects actual dated unemployment proof for
+the single-payment part-year case. It checks the statement and owner before
+reopening or confirming the return. The saved fixture produced $1,000 on
+IT NRC line 12 and a $1,396 credit. A full-year nonresident can complete the
+same ordinary cohort with a complete out-of-state domicile timeline.
+[Guided Ohio evidence](upgrade-2026-progress.md#november-19-guided-ohio-unemployment-payment-proof).
+
+Exact `43956ac0` passed 650 runnable local browser cases. The earlier strict
+AMD64 and ARM64 images passed smoke and recovery and still hit the original
+browser deadlines in some Ohio and Pennsylvania journeys.
+[Exact browser evidence](upgrade-2026-progress.md#november-19-exact-browser-and-recovery-results).
+
 Schedule A now holds positive property tax sourced to an explicitly different
 Form 1098 year. Both the actual 2025 return and the internal 2026 worksheet
 reproduced the issue. The fix passed 198 focused tests and independent checks.
@@ -42,7 +54,9 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestScheduleAPropertyTaxSourceYear`, `latestOhioNonresidentUnemployment`,
+Resume with `latestGuidedOhioUnemploymentPaymentProof`,
+`latestBrowserRecoveryComparison`, `latestScheduleAPropertyTaxSourceYear`,
+`latestOhioNonresidentUnemployment`,
 `latestChildTaxCreditRawRelationship`, `latestChildTaxCreditRelationship`,
 `latestForm8889OrdinaryProjection`,
 `latestItemizedCharityElection` and `latestBrowserRequestAssertions` under

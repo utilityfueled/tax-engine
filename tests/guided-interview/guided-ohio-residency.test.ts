@@ -1,8 +1,18 @@
 /** Spec: spec/state/guided-ohio-residency.yaml */
 import { it, expect } from 'vitest';
-import { ohioResidencyFactErrors, confirmGuidedOhioResidencyFacts, buildGuidedOhioResidencyFacts, type OhioResidencyDraft } from '../../apps/web/src/lib/guided-ohio-residency-facts.js';
-import { ohioResidencyFacts } from '../fixtures/oh-residency.js';
+import { ohioResidencyFactErrors, confirmGuidedOhioResidencyFacts, buildGuidedOhioResidencyFacts, guidedOhioUnemploymentStatement, snapshotGuidedOhioOriginals, type OhioResidencyDraft } from '../../apps/web/src/lib/guided-ohio-residency-facts.js';
+import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
+import { confirmGuidedOhioPaymentFacts } from '@/lib/guided-ohio-payment-facts';
+import { computeGuidedPreview } from '@/lib/guided-preview-compute';
+import { emptyStateReturnData, goToNextSection, jumpToSection, loadGuidedFlowState, saveGuidedFlowState, shouldPromptBeforeAdvance, updateSectionData } from '@/lib/guided-interview-flow';
+import { calculateFederalTax } from '@/engine/federal';
+import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter';
+import { calculateOhioResidentReturn } from '@/engine/state/oh-return';
+import { TaxYearInputSchema } from '@/models/inputs';
+import { ohioResidencyFacts, ohioResidencyOwner } from '../fixtures/oh-residency.js';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
+import { unemploymentSource } from '../fixtures/guided-government-uc-original.js';
+import { completeW2Entry, startCompleteInterview } from './complete-facts.js';
 
 function required<T>(value: T | null | undefined, description: string): T {
     if (value === null || value === undefined) throw new Error(`Synthetic Ohio fixture requires ${description}`);
@@ -62,4 +72,111 @@ it('normalizes valid displayed grouping losslessly without manufacturing blank z
     expect(actualAmounts.wages.nonresidentOhioAmount).toBe('20000');
     amounts.pensions.federalAmount = '';
     expect(ohioResidencyFactErrors(d, 2025, 'single')).not.toEqual({});
+});
+
+function unemploymentFlow(status: 'part_year_resident' | 'nonresident') {
+    const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages', 'unemployment'], lifeEvents: [], stateCode: 'OH' });
+    state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '100000', socialSecurityWages: '100000',
+        medicareWages: '100000', sourceTaxYear: '2025', stateTaxReporting: 'single', state: 'OH',
+        stateWages: status === 'nonresident' ? '20000' : '40000', stateWithheld: '0' }] };
+    state.sectionData['income-unemployment'] = { compensation: '', federalWithheld: '', entries: [{ ...unemploymentSource, compensation: '1000' }] };
+    const original = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    const owner = ohioResidencyOwner('primary', status);
+    Object.assign(owner.amounts.wages, { federalAmount: '100000', residentAmount: status === 'nonresident' ? '0' : '30000',
+        nonresidentOhioAmount: status === 'nonresident' ? '20000' : '10000' });
+    Object.assign(owner.amounts.unemployment, { federalAmount: '1000', residentAmount: status === 'nonresident' ? '0' : '1000' });
+    const ohioResidency: OhioResidencyDraft = { ...ohioResidencyFacts(), taxYear: '2025', owners: [owner],
+        originalFederalSources: snapshotGuidedOhioOriginals(original) };
+    const ohioPayments = confirmGuidedOhioPaymentFacts(original, {
+        taxYear: '2025', sourceReference: 'Synthetic completed Ohio account', sourceFactsConfirmed: true,
+        calendarYearConfirmed: true, allPaymentsIncludedConfirmed: true, returnKind: 'original', paymentRows: [],
+        priorReturn: { status: 'no_return', sourceReference: 'Synthetic no prior Ohio return' },
+        priorCreditCarryforward: { status: 'none', sourceReference: 'Synthetic account credit records' },
+        currentTiming: { kind: 'expected', expectedDate: '2026-04-15', asOfDate: '2026-04-01' },
+        remainingTaxPayment: { status: 'expected_payment', sourceReference: 'Synthetic planned balance payment',
+            date: '2026-04-15', sourceFactsConfirmed: true, amountAppliedToTax: status === 'nonresident' ? '466' : '955' },
+        filingExtension: { kind: 'none' }, paymentExtension: { kind: 'none' },
+        specialFacts: { farmingFishingIncome: 'known_none', militaryDisasterRelief: 'known_none' },
+        balanceFacts: { sourceReference: 'Synthetic actual balance facts', useTax: '0', outgoingCarryforward: '0', donations: '0' },
+    });
+    state.sectionData['state-return'] = { ...emptyStateReturnData, ohioResidency, ohioPayments };
+    return { state: jumpToSection(state, 'state-return'), original, residency: ohioResidency, payments: ohioPayments };
+}
+
+it('requires actual unemployment evidence before Ohio wizard progression and replays saved originals', () => {
+    const { state, original, residency } = unemploymentFlow('part_year_resident');
+    expect(shouldPromptBeforeAdvance(state)).toMatchObject({ status: 'partial', allowSkip: false });
+    expect(computeGuidedPreview(state)?.state).toBeNull();
+    const statement = required(guidedOhioUnemploymentStatement(original), 'the current unemployment statement');
+    const proof = {
+        originalStatementFingerprint: statement.fingerprint, sourceReference: 'Synthetic actual payment record',
+        paidOrAccruedOn: '2025-07-01', amount: '1,000.00', allPaymentsIncludedConfirmed: true,
+    };
+    const stateReturn = required(state.sectionData['state-return'], 'actual Ohio state drafts');
+    for (const change of [
+        { sourceReference: '' }, { amount: '999.99' }, { paidOrAccruedOn: '2025-02-29' },
+        { paidOrAccruedOn: '2026-01-01' }, { allPaymentsIncludedConfirmed: false },
+    ]) {
+        const ohioResidency = { ...residency, unemploymentPaymentSource: { ...proof, ...change } };
+        const incomplete = { ...state, sectionData: { ...state.sectionData, 'state-return': { ...stateReturn, ohioResidency } } };
+        expect(shouldPromptBeforeAdvance(incomplete), JSON.stringify(change)).toMatchObject({ status: 'partial', allowSkip: false });
+        expect(computeGuidedPreview(incomplete)?.state).toBeNull();
+        expect(() => confirmGuidedOhioResidencyFacts(original, ohioResidency)).toThrow(/unemployment/i);
+    }
+
+    const edited = updateSectionData(state, 'state-return', { ...stateReturn,
+        ohioResidency: { ...residency, unemploymentPaymentSource: proof } });
+    const editedReturn = required(edited.sectionData['state-return'], 'the edited Ohio source drafts');
+    expect(editedReturn.ohioResidency?.sourceFactsConfirmed).toBeNull();
+    const confirmed = updateSectionData(edited, 'state-return', { ...editedReturn,
+        ohioResidency: confirmGuidedOhioResidencyFacts(original, editedReturn.ohioResidency) });
+    const records = new Map<string, string>();
+    const storage: Storage = {
+        get length() { return records.size; }, clear: () => records.clear(), key: index => [...records.keys()][index] ?? null,
+        getItem: key => records.get(key) ?? null, setItem: (key, value) => { records.set(key, value); },
+        removeItem: key => { records.delete(key); },
+    };
+    expect(saveGuidedFlowState(storage, 'synthetic-ohio-unemployment', confirmed)).toBe(true);
+    const reopened = required(loadGuidedFlowState(storage, 'synthetic-ohio-unemployment'), 'the reopened Ohio route');
+    const retained = required(reopened.sectionData['state-return']?.ohioResidency, 'the retained Ohio residency draft');
+    expect(retained.unemploymentPaymentSource).toEqual(proof);
+    expect(shouldPromptBeforeAdvance(reopened)).toBeNull();
+    expect(goToNextSection(reopened).completedSections).toContain('state-return');
+    expect(computeGuidedPreview(reopened)?.state).toMatchObject({ stateCode: 'OH', stateTax: '999' });
+    const facts = buildGuidedOhioResidencyFacts(retained, original);
+    expect(facts.unemploymentPaymentSource).toMatchObject({ originalSourceId: statement.sourceId, amount: '1000.00' });
+    const canonical = calculateOhioResidentReturn(buildOhioResidentReturnInput({ ...original, ohioResidency: facts }, calculateFederalTax(original)));
+    expect(canonical.nonresidentCreditResult?.line12.toFixed()).toBe('1000');
+    expect(canonical.nonresidentCreditResult?.line20.toFixed()).toBe('1396');
+
+    const replacement = updateSectionData(reopened, 'income-unemployment', { compensation: '', federalWithheld: '',
+        entries: [{ ...unemploymentSource, compensation: '1000', accountReference: 'Same value replacement statement' }] });
+    const replacementInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(replacement));
+    expect(guidedOhioUnemploymentStatement(replacementInput)?.sourceId).toBe(statement.sourceId);
+    expect(shouldPromptBeforeAdvance(replacement)).toMatchObject({ status: 'partial', allowSkip: false });
+    expect(computeGuidedPreview(replacement)?.state).toBeNull();
+    expect(() => confirmGuidedOhioResidencyFacts(replacementInput, retained)).toThrow(/1099-G was replaced or changed/i);
+    const personal = required(reopened.sectionData['personal-info'], 'the original primary identity');
+    const syntheticReplacementTaxId = '444-55-6666';
+    const anotherOwner = updateSectionData(reopened, 'personal-info', { ...personal, ssn: syntheticReplacementTaxId });
+    expect(shouldPromptBeforeAdvance(anotherOwner)).toMatchObject({ status: 'partial', allowSkip: false });
+    expect(computeGuidedPreview(anotherOwner)?.state ?? null).toBeNull();
+    const anotherInput = structuredClone(original);
+    anotherInput.taxpayer.primary.ssn = syntheticReplacementTaxId;
+    expect(() => confirmGuidedOhioResidencyFacts(anotherInput, retained)).toThrow(/unemployment owner changed/i);
+    const sameOwner = structuredClone(original);
+    sameOwner.taxpayer.primary.firstName = 'J. Example';
+    expect(confirmGuidedOhioResidencyFacts(sameOwner, retained).unemploymentPaymentSource).toEqual(proof);
+    expect(() => confirmGuidedOhioResidencyFacts(original, { ...retained, sourceReference: 'Updated domicile record' })).not.toThrow();
+});
+
+it('derives full-year nonresident unemployment without asking for payment evidence', () => {
+    const { state, original, residency } = unemploymentFlow('nonresident');
+    const amounts = required(required(residency.owners[0], 'the primary owner').amounts, 'actual source categories');
+    amounts.unemployment = { federalAmount: '', residentAmount: '', nonresidentOhioAmount: '', sourceReference: '' };
+    const ohioResidency = buildGuidedOhioResidencyFacts(confirmGuidedOhioResidencyFacts(original, residency), original);
+    expect(ohioResidency.unemploymentPaymentSource).toBeUndefined();
+    expect(ohioResidency.owners[0]?.amounts?.unemployment).toMatchObject({ federalAmount: '1000', residentAmount: '0', nonresidentOhioAmount: '0' });
+    expect(shouldPromptBeforeAdvance(state)).toBeNull();
+    expect(computeGuidedPreview(state)?.state).toMatchObject({ stateCode: 'OH', stateTax: '466' });
 });

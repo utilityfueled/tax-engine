@@ -9,14 +9,34 @@ notes: |
   resident only households need actual timelines but no fabricated NRC rows.
   The current original snapshot is copied only after actual source confirmation;
   source allocations and eligibility facts are never inferred from this copy.
-  Initial NRC source classification is nonbusiness wages/bank/dividends with
-  exact current owner reconciliation, no Ohio adjustment exclusions or district
-  ambiguity. Other internally actionable routes remain explicit required work.
+  Canonical NRC source classification includes the qualified nonbusiness
+  wages, bank interest, dividends, and single ordinary unemployment source.
+  Ohio adjustment exclusions and district ambiguity require separate methods.
 lines:
   - line: "residency"
     label: "Actual owner domicile and allocation facts"
     formula: "Validate current year, source reference, confirmation and complete unique owner timelines. Validate every required actual NRC row with Decimal and retain unknown versus zero."
     testRef: "tests/guided-interview/guided-ohio-residency.test.ts::preserves actual source allocations and copies only confirmed current originals"
+  - line: "ordinary-unemployment-payment"
+    label: "2025 Ohio IT NRC line 12 guided payment evidence"
+    formula: |
+      Apply the canonical 2025 one-original, single-filer ordinary Box 1 method.
+      For a part-year resident, collect one actual benefit payment's reference,
+      paid-or-accrued date, exact amount, and confirmation that this one payment
+      accounts for the entire original Box 1. Match the positive whole-dollar
+      amount to the verified current Form 1099-G and allocate it using the
+      confirmed Ohio domicile dates. For a full-year nonresident, derive known
+      zero Ohio unemployment from the complete outside timeline. Derive the NRC
+      unemployment row from actual originals instead of collecting the same
+      amounts again. Confirm and replay only after the evidence, owner, original,
+      and canonical return inputs reconcile. Bind part-year payment evidence to
+      the exact original statement and the current owner's tax ID and birth
+      date. Persist only the fingerprint for this binding. A replacement for the
+      same amount or a different owner cannot reuse it. Removing the primary
+      owner clears the payment evidence. Saved evidence replays without
+      refreshing the original. Other methods and annual filing gates are held.
+      https://codes.ohio.gov/ohio-revised-code/section-5747.20
+    testRef: "tests/guided-interview/guided-ohio-residency.test.ts::requires actual unemployment evidence before Ohio wizard progression and replays saved originals"
 businessRuleValidation:
   - rule: "actual-collector-confirmation-recovery"
     description: "Visible actual data edits invalidate confirmation; explicit removal preserves missing state instead of inventing full-year residency. No hidden zero defaults."
