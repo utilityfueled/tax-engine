@@ -61,11 +61,18 @@ it('denies only future estate trust originals while preserving fiscal compatibil
  for(const year of [2024,2025,undefined]){const x=packet('trust',year);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).agi.toFixed()).toBe('86000');await post(x,200);}
 });
 it('holds known cross year COD and HSA compositions without rewriting canonical income',async()=>{
- // These are source-composition holds, not a claim that reporting year always equals income-recognition year.
+ // Cancellation income can require facts beyond the original statement's reporting year.
  for(const kind of ['cod','sa']as const)for(const year of [2024,2026])for(const amount of ['0','1000']){
-  const x=packet(kind,year,amount),before=structuredClone(x),result=calculateFederalTax(TaxYearInputSchema.parse(x));
-  expect(result.agi.toFixed()).toBe(amount==='0'?'85000':'86000');expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow('source-reconciled cross-year COD or HSA treatment');
-  await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).agi.toFixed()).toBe(result.agi.toFixed());
+  const x=packet(kind,year,amount),before=structuredClone(x);
+  if(kind==='sa'){
+   const expected=`Form 1099-SA source year ${year} must match the 2025 return`;
+   expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+   expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow(expected);await post(x,400);expect(x).toEqual(before);
+  }else{
+   const result=calculateFederalTax(TaxYearInputSchema.parse(x));
+   expect(result.agi.toFixed()).toBe(amount==='0'?'85000':'86000');expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow('source-reconciled cross-year COD or HSA treatment');
+   await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).agi.toFixed()).toBe(result.agi.toFixed());
+  }
  }
 
 });
@@ -74,8 +81,9 @@ it('denies duplicate conflicting originals in either order',async()=>{
   const x=packet(kind,2025),bad=packet(kind,2026),rows=reversed?[original(bad,kind),original(x,kind)]:[original(x,kind),original(bad,kind)];
   if(kind==='cod')x.form1099C=rows as Input['form1099C'];else if(kind==='sa')x.form1099SA=rows as NonNullable<Input['form1099SA']>;else if(kind==='rrb')x.formRRB1099=rows as NonNullable<Input['formRRB1099']>;else x.scheduleK1Form1041=rows as Input['scheduleK1Form1041'];
   const before=structuredClone(x);
-  if(kind==='rrb'){
-   const assertPaymentYearHold=()=>expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow('Form RRB-1099 source year 2026 must match the 2025 return');
+  if(kind==='rrb'||kind==='sa'){
+   const form=kind==='rrb'?'Form RRB-1099':'Form 1099-SA';
+   const assertPaymentYearHold=()=>expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(`${form} source year 2026 must match the 2025 return`);
    assertPaymentYearHold();await post(x,400);expect(x).toEqual(before);assertPaymentYearHold();
   }else{
    const result=calculateFederalTax(TaxYearInputSchema.parse(x));await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).totalTax.toFixed()).toBe(result.totalTax.toFixed());

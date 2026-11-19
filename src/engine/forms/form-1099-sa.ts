@@ -229,13 +229,17 @@ function canSafelyDefaultUnattributedSupportToPrimary(taxpayer?: Taxpayer): bool
   return taxpayer === undefined || taxpayer.spouse === undefined;
 }
 
-export function calculateForm1099SA(forms: Form1099SA[] = []): Form1099SAResult {
+export function calculateForm1099SA(forms: Form1099SA[] = [], returnYear?: number): Form1099SAResult {
   const audit = new AuditTrail();
   // Trustee-to-trustee transfers are not reportable Form 1099-SA distributions.
   // Ignore them defensively in case an internal caller bypassed schema validation.
   const hsaForms = forms.filter(
     (form) => form.accountType === "hsa" && form.trusteeToTrusteeTransfer !== true
   );
+  if (returnYear !== undefined) {
+    const mismatch = hsaForms.find(form => form.taxYear !== undefined && form.taxYear !== returnYear);
+    if (mismatch) throw new Error(`Form 1099-SA source year ${mismatch.taxYear} must match the ${returnYear} return`);
+  }
   const ownerAttributions = hsaForms.map((form) => resolveOwnerAttribution(form));
   const attributableOwners = ownerAttributions.filter(
     (owner): owner is Form8889Input["accountOwner"] => owner !== undefined

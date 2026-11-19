@@ -351,7 +351,7 @@ export function calculateSchedule1(
       ? `Taxable COD income from ${form1099CForms.length} Form 1099-C document(s) after IRC §108 exclusions`
       : "No Form 1099-C cancellation of debt income reported");
 
-  const form1099SA = calculateForm1099SA(input.form1099SA ?? []);
+  const form1099SA = calculateForm1099SA(input.form1099SA, input.taxpayer.taxYear);
   const normalizedForm8889 = input.form8889ByOwner === undefined
     ? normalizeForm8889InputWithDocumentSupport(input.form8889, form1099SA, input.taxpayer, input.w2s)
     : undefined;

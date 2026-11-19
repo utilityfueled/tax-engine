@@ -49,7 +49,9 @@ it('preserves actual private verified admission and independent source gates',as
  const response=await handler.POST(new Request('https://tax.example/api/workspace/tax-explanation',{method:'POST',headers:{'content-type':'application/json',origin:'https://tax.example','X-Tax-Engine-Workspace-Owner':'hosted-owner:'+actor.id},body:JSON.stringify({version:1,confirmed:true,workspaceId:workspace.id,workspaceRevision:workspace.updatedAt,taxYear:2025,taxInput,providerRequest})}));
  expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toContain('private');expect(response.headers.get('cache-control')).toContain('no-store');expect(fetchFn).not.toHaveBeenCalled();expect(accounting).toHaveBeenCalledTimes(1);
  const body=await response.text();expect(body).not.toContain('PRIVATE-DEATH-CUSTODIAN');expect(body).not.toContain(simpleW2Fixture.taxpayer.primary.ssn);expect(taxInput).toEqual(before);
- expect(()=>calculateVerifiedAiAudit(scope,{...taxInput,form1099SA:[death({taxYear:2024})]})).toThrow('source-reconciled');
+ const stale={...taxInput,form1099SA:[death({taxYear:2024})]};
+ expect(()=>calculateFederalTax(TaxYearInputSchema.parse(stale))).toThrow('Form 1099-SA source year 2024 must match the 2025 return');
+ expect(()=>calculateVerifiedAiAudit(scope,stale)).toThrow('Form 1099-SA source year 2024 must match the 2025 return');
  expect(()=>calculateVerifiedAiAudit(scope,{...taxInput,taxpayer:{...taxInput.taxpayer,taxYear:2026}})).toThrow();
  expect(Form1099SASchema.safeParse({...death(),deathDistributionTiming:'year_of_death'}).success).toBe(false);
 });

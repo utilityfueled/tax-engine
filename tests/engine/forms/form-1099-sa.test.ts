@@ -4,9 +4,57 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm1099SA, mergeForm1099SAIntoForm8889Input } from "@/engine/forms/form-1099-sa.js";
-import { Form1099SASchema } from "@/models/inputs.js";
+import { calculateSchedule1 } from "@/engine/schedules/schedule-1.js";
+import { Form1099SASchema, TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
+
+function distributionReturn(taxYear: number | undefined, distributionCode: "1" | "2", grossDistribution = "1000") {
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    form1099SA: [{
+      taxYear, payer: "HSA Bank", distributionCode, grossDistribution,
+      earningsOnExcessContributions: distributionCode === "2" ? "25" : "0", accountHolder: "primary", accountType: "hsa",
+    }],
+    form8889: { accountOwner: "primary", coverageByMonth: Array(12).fill("self_only"), contributionsMade: "0", qualifiedMedicalExpenses: "0" },
+  });
+}
+
+it.each([
+  [2024, "1", "1000"], [2026, "1", "1000"], [2024, "2", "1000"], [2026, "2", "1000"], [2024, "1", "0"],
+] as const)("holds an HSA statement for another calendar year (%i, code %s, amount %s)", (taxYear, code, amount) => {
+  const input = distributionReturn(taxYear, code, amount);
+  const error = `Form 1099-SA source year ${taxYear} must match the 2025 return`;
+  expect(() => calculateFederalTax(input)).toThrow(error);
+});
+
+it("holds a wrong-year HSA source in standalone Schedule 1", () => {
+  expect(() => calculateSchedule1(distributionReturn(2024, "2")))
+    .toThrow("Form 1099-SA source year 2024 must match the 2025 return");
+});
+
+it.each([2025, undefined])("preserves matching and undated HSA distributions (%s)", taxYear => {
+  const input = distributionReturn(taxYear, "1");
+  const result = calculateFederalTax(input);
+  expect(input.form1099SA?.[0]?.taxYear).toBe(taxYear);
+  expect(result.form8889?.line14a.toFixed()).toBe("1000");
+  expect(result.form8889?.line16.toFixed()).toBe("1000");
+  expect(result.allLines.find(line => line.form === "Sched 2" && line.line === "17c")?.value.toFixed()).toBe("200");
+  expect(calculateSchedule1(input).hsaTaxableDistributions.toFixed()).toBe("1000");
+  expect(calculateFederalTax(distributionReturn(taxYear, "2")).schedule1?.totalOtherIncome.toFixed()).toBe("25");
+});
+
+it("preserves context-free HSA summaries and does not route out-of-scope MSA statements", () => {
+  const input = distributionReturn(2024, "1");
+  expect(calculateForm1099SA(input.form1099SA).hsaGrossDistributions.toFixed()).toBe("1000");
+
+  for (const accountType of ["archer_msa", "ma_msa"]) {
+    const parsed = TaxYearInputSchema.parse({ ...input, form1099SA: input.form1099SA?.map(form => ({ ...form, accountType })) });
+    expect(calculateFederalTax(parsed).form8889?.line14a.toFixed()).toBe("0");
+    expect(calculateSchedule1(parsed).totalOtherIncome.toFixed()).toBe("0");
+  }
+});
 
 describe("Form 1099-SA HSA distribution aggregation", () => {
   const result = calculateForm1099SA([

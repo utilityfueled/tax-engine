@@ -33,6 +33,11 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-form-1099-sa.test.ts::buildForm1099SAReferenceSummary keeps the packet artifact reference-only and limited to supported HSA outputs"
 
 lines:
+  - line: "statement-year"
+    description: "Bind HSA distribution statements to the return calendar year"
+    formula: "When calculating a return or Schedule 1, reject a supplied Form 1099-SA HSA statement calendar year different from the return year before using any distribution amounts. Preserve matching or undated legacy statements. The actual distribution statement year is separate from the contribution year and the year of death. Existing distribution codes, death timing, and owner requirements still apply."
+    irsRef: "2025 Instructions for Form 8889, lines 14a and 14b; https://www.irs.gov/instructions/i8889"
+    testRef: "tests/engine/forms/form-1099-sa.test.ts::holds an HSA statement for another calendar year (%i, code %s, amount %s)"
   - line: "1"
     description: "HSA gross distributions reported on Form 8889 Line 14a"
     formula: "Sum ordinary HSA Box 1, including surviving-spouse inherited accounts, plus current death-year Box 4 for nonspouse/estate death distributions. Code 6 is intrinsically after the year of death and contributes no current Box 4 inclusion, even without optional timing metadata. Explicit after-year-of-death code 4 likewise contributes no current Box 4 inclusion; unknown legacy code 4 timing is not reclassified. Attribute only through actual primary/spouse source tags; beneficiary relationship never establishes the return owner. Preserve missing tags as unattributed and require actual owners for 2026 calculations and document previews. Reject stale spouse ownership when no spouse exists rather than moving amounts to primary."

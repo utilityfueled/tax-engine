@@ -979,7 +979,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Form 8814 Line 9 also adds to ordinary dividends (qualified dividends are a subset)
   const totalDividends = preliminaryScheduleB.totalOrdinaryDividends.plus(form8814QualifiedDividends);
 
-  const form1099SA = calculateForm1099SA(input.form1099SA ?? []);
+  const form1099SA = calculateForm1099SA(input.form1099SA, year);
   audit.merge(form1099SA.lines);
   // ── Form 8606 calculation ──────────────────────────────────────────
   // Actual source packets bind each owner's prior basis and every IRA account
