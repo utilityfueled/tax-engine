@@ -1,0 +1,40 @@
+form: "Form 8863 final 2026 physical candidate"
+fullName: "Education Credits final annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf"
+revision: "Created 4/28/26, IRS final index posted 11/17/2026"
+retrievedAt: "2026-11-19T05:03:31Z"
+notes: |
+  Disabled physical candidate for the final annual form. The printed warning
+  requires an SSN valid for employment and issued before the return due date,
+  including extensions. One Part III is required per student. The final
+  annual instructions and parent form are separate qualification dependencies.
+lines:
+  - line: "revision"
+    description: "Pin the final two-page annual PDF"
+    formula: "Require SHA-256 290771de5dbbbede2de9e7cb2ba8a7d51a08aa10e89b4ed74cfdbdb631af167f, 107826 bytes, two US Letter pages and the 2026 title."
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::pins the final annual PDF"
+  - line: "physical-locations"
+    description: "Bind all 77 AcroForm leaves to printed locations"
+    formula: >-
+      Verify page, type, rectangle and checkbox on-state for each leaf.
+      Distinguish the split SSNs, split decimal factors, nine individual
+      EIN digits per institution, and independent Yes and No boxes.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::locates every annual field on its printed page"
+  - line: "printed-transfers"
+    description: "Pin the printed references between Parts I, II, III and the parent return"
+    formula: >-
+      Line 1 sums line 30 across students. Line 10 sums line 31 across
+      students. Lines 3 and 14 normally receive Form 1040 or 1040-SR line 11a.
+      Line 8 transfers to parent line 29. Lines 9 and 18 feed the Credit Limit
+      Worksheet. Line 19 receives worksheet line 7 and transfers to Schedule
+      3 line 3. Each student uses either lines 27 through 30 or line 31.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::records the printed transfers"
+  - line: "saved-diagnostic"
+    description: "Exercise the saved annual fields with synthetic placements"
+    formula: "Reopen both switch positions for each checkbox and check nonempty appearances and stored values for all text leaves."
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::retains diagnostic values and appearances after save"
+  - line: "closed-exports"
+    description: "Keep public review and filing disabled"
+    formula: "The physical map has no route or export registration. Neither the 2025 nor the 2026 qualified template registry accepts these bytes."
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::keeps public exports closed"

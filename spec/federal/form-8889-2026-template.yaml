@@ -1,0 +1,51 @@
+form: "Form 8889 final 2026 physical candidate"
+fullName: "Final 2026 Health Savings Accounts (HSAs) physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
+revision: "Created 4/30/26, IRS final index posted 11/18/2026"
+retrievedAt: "2026-11-19T05:03:41Z"
+notes: |
+  The archived annual PDF and the current IRS final PDF matched byte for byte.
+  The IRS current instructions endpoint served 2025 instructions at retrieval.
+  The separately published 2026 instructions were a draft. This source contract
+  only maps printed cells and leaves calculations and export routing to their
+  existing contracts in form-8889.yaml and form-8889-source.yaml.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual source"
+    formula: "Require SHA-256 e206d84f0ce3b2a4add7a97e5de8f873b11bd0a16e34e7cd98f9c4dcc87a178d, 70785 bytes, one letter-size page, annual PDF title and printed Created 4/30/26."
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-locations"
+    description: "Map every terminal field and page widget"
+    formula: >-
+      Require 27 unique fields with one page-one widget apiece. Match the
+      fully qualified names, exact widget rectangle, type and original native
+      on-state for the two header fields, 22 amount fields and three checkboxes.
+      Self-only and family boxes use /1 and /2 respectively. The line 17a
+      exception box uses /1. All three start at /Off.
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::matches every leaf and page widget to its printed location"
+  - line: "annual-printed-references"
+    description: "Record annual line 3 limits and the printed downstream destinations"
+    formula: >-
+      For the printed full-year, same-coverage case under age 55, line 3 lists
+      $4,400 for self-only coverage and $8,750 for family coverage. Lines 16
+      and 20 reference Schedule 1 line 8f. Line 17b references Schedule 2
+      line 13c and line 21 references Schedule 2 line 13d.
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::records the final printed limits and transfer destinations"
+  - line: "saved-diagnostics"
+    description: "Reopen marked synthetic diagnostic specimens"
+    formula: >-
+      Retain every diagnostic text value with a nonempty appearance, including
+      zero and whole-dollar amounts. Verify both coverage options and the
+      line 17a exception in on and off states in field values and appearances.
+      Use a fictional header and a redacted identifier. Retain the review
+      notice on the page.
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::round-trips diagnostic amounts and checkbox states"
+  - line: "closed-exports"
+    description: "Keep review and filing gates closed for 2026"
+    formula: >-
+      Require an independent review before qualifying the annual form.
+      Reject the 2026 bytes in the historical 2025 slot, the 2025 bytes in the
+      2026 slot, and mismatched input and calculation years; keep the existing
+      2025 review pin and the 2026 review and filing gates in effect.
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::keeps the annual and historical export gates in effect"

@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19: final education-credit and HSA templates
+
+The disabled 2026 physical candidates for [Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) and [Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) map 77 and 27 widgets respectively. The official annual and current-source bytes match for each form. A separate PDF reader and rendered pages confirm printed positions and checkbox states. The archived SHA-256 values are pinned in the form specs and tests.
+
+The two candidates and the existing fillers passed 92 combined tests on Node 26.13.1. Both specs validated with complete test references, the regenerated inventory matched, and scoped lint and type-check passed. The 2026 form instructions, final parent forms and qualified review remain separate requirements for exporter activation.
+
 ## November 17 continuation: browser source admission and actual diagnostics
 
 Stripe same-event evidence is saved in `85e48353`; the three inert-fixture source-audit correction is saved and pushed in `933b1a85`. Root verified the three exact bytes and that every other browser budget field remains unchanged; 159 orchestration/native controls and 13 fixture controls pass. Web run `44159693087`, Docker `44159693045` and CI `44159692992` are the live successors. Prior Web `44147020790` stopped before browser collection; it supplies no Ohio case outcome.
