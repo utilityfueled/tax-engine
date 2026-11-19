@@ -556,6 +556,24 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestOhioNonresidentUnemployment": {
+        "taxYear": 2025,
+        "authority": ["https://codes.ohio.gov/ohio-revised-code/section-5747.20", "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf", "https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36"],
+        "canonicalOnly": true,
+        "ordinarySameOwnerBox1": "1000",
+        "june30ResidentBenefitCredit": "1420",
+        "july1NonresidentBenefitCredit": "1396",
+        "fullYearNonresidentCredit": "1885",
+        "serializedReplayPassed": true,
+        "fullScopeTestsPassed": 485,
+        "fullScopeTestFiles": 9,
+        "specReferences": 21,
+        "independentBroaderTestsPassed": 278,
+        "independentFinalTestsPassed": 72,
+        "browserAuditSha256": "20667235663832799dddfac0924aeec51301b0f4f7a4428b602fcca496710e9e",
+        "fractionalSharedNrcReconciliationHeld": true,
+        "public2026FilingGated": true
+      },
       "latestChildTaxCreditRelationship": {
         "appSource": "d52a596b26004fa387a0c786f8203e95df4479d9",
         "archiveSha256": "53ab0509b053328865109092d88814ce8029ad2b120325ebc5c63a07592a5abb",
@@ -576,6 +594,14 @@
           "filesPassed": 2155,
           "postgresVersion": "16.16",
           "logSha256": "8305b56ab8db590d99be26f8b0a4324f4460e08f5fd4f6f296fe606c21001d87"
+        },
+        "exactLocalCoverage": {
+          "testsPassed": 29477,
+          "filesPassed": 2155,
+          "branchCoveragePct": 88.33,
+          "branchGatePct": 85,
+          "postgresStoppedNormally": true,
+          "logSha256": "df532b502becfe286829675dfaa46cf8309003322dba6624444c33145a76dad9"
         },
         "browserAuditSha256": "f2a83c2dacb5c01c9c8e87879b92b3cc992cc2e25fadf6560585c0cb23446aa6"
       },

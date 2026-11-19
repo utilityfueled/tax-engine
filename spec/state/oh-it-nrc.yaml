@@ -67,6 +67,30 @@ lines:
     label: "Unemployment"
     formula: "Actual resident portion only."
     testRef: "tests/engine/state/oh-it-nrc.test.ts::matches independently sourced complete20line actual nonbusiness worksheet"
+  - line: "canonical-unemployment-source"
+    label: "2025 actual ordinary unemployment on IT NRC line 12"
+    formula: |
+      Under R.C. 5747.20(B)(6) and (C) and the 2025 Ohio IT NRC line 12
+      instructions, allocate ordinary unemployment to Ohio when paid or accrued
+      during Ohio domicile. For a 2025 single filer using the canonical ordinary
+      nonresident or part-year method, bind one current same-owner Form 1099-G
+      with positive whole-dollar Box 1 to the federal Schedule 1 line 7 amount.
+      Classify Box 1 once as unemployment in the federal source reconciliation
+      and remove it from the federal other-income category. Report the resident
+      portion on IT NRC line 12, Column B, when Part B applies. A part-year claim needs one
+      actual paid-or-accrued date in the return year, a source reference linked
+      to the original Form 1099-G source identity, and explicit confirmation
+      that the payment covers the entire original Box 1 amount exactly.
+      Derive the Ohio amount from the actual domicile timeline and reject
+      conflicting owner allocations. A full-year nonresident has zero Ohio
+      unemployment; payment evidence is optional and any supplied evidence must
+      match. Hold other Box 1 programs, multiple forms or payments, repayments,
+      contribution balances, other source boxes, state withholding, unsupported
+      source combinations, and fractional Box 1 amounts for separate methods.
+      Current resident-only behavior and annual filing gates are unchanged.
+      https://codes.ohio.gov/ohio-revised-code/section-5747.20
+      https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36
+    testRef: "tests/engine/state/oh-residency-source.test.ts::allocates one actual Ohio NRC unemployment payment by domicile date"
   - line: "13"
     label: "Other nonbusiness income"
     formula: "Actual resident portion only; exclude deductions15,18,28,29."

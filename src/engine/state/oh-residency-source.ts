@@ -40,6 +40,55 @@ function withoutFacts(input: TaxYearInput) {
     const { ohioResidency: _, ohioPayments: _payments, ohioSchoolDistrict: _school, ohioReturnHeaderSources: _header, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
     return source;
 }
+/** Spec: state/oh-it-nrc.yaml, canonical-unemployment-source. */
+function ordinaryUnemployment(input: TaxYearInput, federal: TaxReturnResult, facts: OhioResidencyFacts): Decimal {
+    const originals = input.form1099G ?? [];
+    const payment = facts.unemploymentPaymentSource;
+    if (!payment && !originals.some(form => d(form.unemploymentCompensation).gt(0))) return new Decimal(0);
+    const [form] = originals;
+    const [owner] = facts.owners;
+    if (facts.taxYear !== 2025 || input.taxpayer.filingStatus !== 'single' || facts.owners.length !== 1
+        || owner?.accountHolder !== 'primary' || originals.length !== 1 || !form
+        || facts.businessSources || input.ohioSchoolDistrict) {
+        fail('one actual ordinary 2025 unemployment source is required');
+    }
+    const box1 = d(form.unemploymentCompensation);
+    const otherAmounts = [
+        form.currentYearRepaid, form.priorYearRepaid, form.unrecoveredAfterTaxContributions,
+        form.stateOrLocalTaxRefund, form.stateLocalIncomeTaxRefund, form.rtaaPayments, form.taxableGrants,
+        form.agriculturePayments, form.marketGain, form.familyLeaveBenefits, form.stateWithheld,
+    ];
+    if (form.accountHolder !== owner.accountHolder || form.taxYear !== facts.taxYear || !form.sourceId?.trim()
+        || form.programType !== 'government-unemployment' || form.sourceFactsComplete !== true
+        || form.sourceFactsConfirmed !== true || form.actualReceiptConfirmed !== true
+        || form.tradeOrBusinessRefund !== false || form.stateTaxReporting !== 'none'
+        || form.refundPaymentBasis || form.priorYearRepaymentSource || form.contributionProgramId !== undefined
+        || !box1.gt(0) || !box1.isInteger() || otherAmounts.some(value => !d(value).isZero())) {
+        fail('unemployment requires an ordinary same-owner whole-dollar Box 1 without other source amounts');
+    }
+    const federalLine7 = federal.allLines.filter(line => line.form === 'Sched 1' && line.line === '7');
+    if (federalLine7.length !== 1 || !federalLine7[0]?.value.eq(box1)) {
+        fail('unemployment does not reconcile to current federal Schedule 1 line 7');
+    }
+    if (!payment && owner.status === 'part_year_resident') fail('actual complete dated unemployment payment evidence is required');
+    let resident = new Decimal(0);
+    if (payment) {
+        const date = payment.paidOrAccruedOn;
+        const stamp = Date.parse(`${date}T00:00:00Z`);
+        const period = owner.periods.find(period => period.from <= date && period.to >= date);
+        if (!date.startsWith(`${facts.taxYear}-`) || !Number.isFinite(stamp) || new Date(stamp).toISOString().slice(0, 10) !== date
+            || !period || payment.originalSourceId !== form.sourceId.trim() || !d(payment.amount).eq(box1)) {
+            fail('unemployment payment date, source, or amount does not reconcile');
+        }
+        if (period.domicileState === 'OH') resident = box1;
+    }
+    const allocation = owner.amounts?.unemployment;
+    if (!allocation || !d(allocation.federalAmount).eq(box1) || !d(allocation.residentAmount).eq(resident)
+        || !d(allocation.nonresidentOhioAmount).isZero()) {
+        fail('unemployment allocation contradicts the actual original and domicile');
+    }
+    return box1;
+}
 const brand = Symbol('prepared Ohio original review');
 export interface PreparedOhioResidencyReview {
     readonly [brand]: true;
@@ -107,6 +156,10 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         fail('actual school district residency sources require their separate method');
     if (!input.ohioSchoolDistrict && ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0)))
         fail('actual local/school withholding or residence requires separate district reconciliation');
+    const full = facts.owners.every(o => o.status === 'full_year_resident');
+    if (facts.unemploymentPaymentSource && (full || facts.reciprocalWageSources || facts.residentCreditSources)) {
+        fail('unemployment payment evidence requires the ordinary nonresident or part-year method');
+    }
     if (facts.residentCreditSources) {
         if (ohio.otherStateTaxes !== undefined || ohio.residentCredit !== undefined)
             fail('actual resident-credit sources reject caller credit or other-state tax rows');
@@ -127,7 +180,6 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     const businessSource = facts.businessSources ? calculateOhioCanonicalBusinessSource({taxInput:input,federalResult:result,residencyFacts:facts}) : undefined;
     const business = businessSource ? readOhioCanonicalBusinessSource(businessSource,facts,result.agi) : undefined;
     const effectiveOhio = business ? {...ohio,qualifyingBusinessIncome:business.worksheet.businessIncomeBeforeDeductionCap} : ohio;
-    const full = facts.owners.every(o => o.status === 'full_year_resident');
     if (!full) {
 
         if ((!business && input.scheduleC) || input.scheduleF || (input.scheduleK1?.length ?? 0) || (input.form1099Nec?.length ?? 0) || (input.rentalProperties?.length ?? 0) || (input.scheduleK1Form1041?.length ?? 0))
@@ -150,8 +202,10 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
             add(b.accountHolder, 'interestDividends', d(b.interestIncome).plus(d(b.usSavingsBondInterest)));
         for (const b of input.form1099Div ?? [])
             add(b.accountHolder, 'interestDividends', d(b.ordinaryDividends));
+        const unemployment = ordinaryUnemployment(input, fresh, facts);
+        if (unemployment.gt(0)) add('primary', 'unemployment', unemployment);
         if(business) add('primary','federalAdjustments',business.deductibleHalf);
-        const expected: Record<OhioNrcCategory, Decimal> = { wages: result.totalWages, capitalGains: result.capitalGainLoss, rentsRoyalties: new Decimal(0), gambling: new Decimal(0), interestDividends: result.totalInterest.plus(result.totalDividends), pensions: result.iraDistributionsTaxable.plus(result.pensionDistributionsTaxable), unemployment: new Decimal(0), otherIncome: result.otherIncome.minus(business?.worksheet.columnA ?? new Decimal(0)).plus(result.socialSecurityBenefitsTaxable), federalAdjustments: result.adjustmentsToIncome };
+        const expected: Record<OhioNrcCategory, Decimal> = { wages: result.totalWages, capitalGains: result.capitalGainLoss, rentsRoyalties: new Decimal(0), gambling: new Decimal(0), interestDividends: result.totalInterest.plus(result.totalDividends), pensions: result.iraDistributionsTaxable.plus(result.pensionDistributionsTaxable), unemployment, otherIncome: result.otherIncome.minus(unemployment).minus(business?.worksheet.columnA ?? new Decimal(0)).plus(result.socialSecurityBenefitsTaxable), federalAdjustments: result.adjustmentsToIncome };
         for (const category of ohioNrcCategories) {
             if (!roundDollar(categoryTotals[category]).eq(expected[category]))
                 fail(`actual ${category} needs a separately qualified original classification`);

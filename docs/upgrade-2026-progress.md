@@ -1,5 +1,28 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Ohio nonresident and part-year unemployment
+
+The canonical 2025 IT NRC reconciles one ordinary whole-dollar Form 1099-G
+Box 1 with the same owner's original and federal Schedule 1 line 7. A part-year
+filer needs a complete originally documented payment or accrual date and
+amount. The validated domicile on that date determines the Ohio amount in
+IT NRC line 12 Column B. A full-year nonresident has zero Ohio unemployment.
+The tests confirm the original moves to the unemployment category once and
+verify the state result after serializing and reloading the source packet.
+[Ohio Revised Code §5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[2025 IT NRC worksheet](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf) ·
+[Line 12 instructions](https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36).
+
+The independent examples put a $1,000 benefit at the June 30 and July 1
+domicile boundary. They yield credits of $1,420 and $1,396, respectively. The
+full-year nonresident control yields $1,885. Both the source reconciliation
+and competing school-error regressions failed before correction. Final tests
+passed 485 cases across nine files, with 21 spec links, production lint and
+typecheck. Independent checks passed 278 cases and a final 72-case rerun. The
+isolated exact browser source audit passed. Fractional Box 1, other benefit
+programs, repayments, mixed-source cohorts and guided collection need separate
+qualification. The 2026 filing gate remains closed.
+
 ## November 19 Child Tax Credit relationship checks
 
 The guided interview and the Schedule 8812 eligibility calculation now hold
@@ -20,7 +43,10 @@ verifies the public federal calculation remains gated. The broader suite passed
 the engine and web typechecks, production lint, 63 scoped spec references and
 the full browser source audit. The tracked-only `d52a596b` archive passed all
 nine static and build checks on Node 26.13.1. With synthetic loopback
-PostgreSQL 16.16, the full unit command passed 29,477 tests in 2,155 files.
+PostgreSQL 16.16, unit and coverage each passed 29,477 tests in 2,155 files.
+Branch coverage reached 88.33% against the unchanged 85% gate. Running the two
+commands serially avoided the earlier concurrent run's worker timeouts. The
+owned PostgreSQL instance stopped normally.
 
 The follow-up reproduced a $2,200 CTC on actual 2025 Form 1040 line 19 for
 the raw relationships `grandparent`, `grandmother` and `other qualifying relative`.

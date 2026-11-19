@@ -1,9 +1,16 @@
 # Current 2026 upgrade status
 
+The 2025 Ohio canonical return now reconciles one documented unemployment
+payment for a part-year resident or full-year nonresident. Part-year
+allocation follows the actual date and domicile. The 485 scoped tests include
+the June 30 and July 1 boundary and a saved-source replay.
+[Ohio evidence](upgrade-2026-progress.md#november-19-ohio-nonresident-and-part-year-unemployment).
+
 The Child Tax Credit checks hold contradictory relationship answers in the
 guided and direct calculation paths, including explicit parent and grandparent
 labels in raw API returns. The `d52a596b` archive passed nine static and build
-checks and 29,477 unit tests. The raw label follow-up passed 201 focused tests.
+checks and 29,477 tests each in unit and coverage, with 88.33% branch coverage.
+The raw label follow-up passed 201 focused tests.
 The internal ordinary Form 8889 projection at `7fe1a426` uses the final IRS
 blank for its verified HSA cohort.
 [Child credit evidence](upgrade-2026-progress.md#november-19-child-tax-credit-relationship-checks) ·
@@ -30,7 +37,8 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestChildTaxCreditRawRelationship`, `latestChildTaxCreditRelationship`,
+Resume with `latestOhioNonresidentUnemployment`,
+`latestChildTaxCreditRawRelationship`, `latestChildTaxCreditRelationship`,
 `latestForm8889OrdinaryProjection`,
 `latestItemizedCharityElection` and `latestBrowserRequestAssertions` under
 `activeContinuation.nov19TaxAndBrowserContinuation` in
