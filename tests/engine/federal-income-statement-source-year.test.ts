@@ -33,18 +33,25 @@ const originals = [
     form: "Sched C", line: "1", withholdingLine: "25b",
   },
   {
+    label: "Form 1099-K", collection: "form1099K", box: "grossAmount", amount: "3020.15",
+    form: "Form 1099-K", line: "1a", withholdingLine: "25b",
+  },
+  {
     label: "Form W-2G", collection: "formW2G", box: "reportableWinnings", amount: "2530.45",
     form: "Sched 1", line: "8b", withholdingLine: "25c",
   },
 ] as const;
 
 function parsedReturn(source: (typeof originals)[number], year: number, statementYear?: number) {
+  const issuer = source.collection === "form1099K"
+    ? { pse: "Synthetic payment processor" }
+    : { payer: "Synthetic annual statement payer" };
   return TaxYearInputSchema.parse({
     ...simpleW2Fixture,
     taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
     w2s: [{ ...simpleW2Fixture.w2s[0], taxYear: year, socialSecurityTips: "0", accountHolder: "primary" }],
     [source.collection]: [{
-      payer: "Synthetic annual statement payer", taxYear: statementYear, accountHolder: "primary",
+      ...issuer, taxYear: statementYear, accountHolder: "primary",
       [source.box]: source.amount, federalWithheld: "125.51",
     }],
     scheduleC: source.collection === "form1099Nec"
@@ -79,6 +86,7 @@ for (const source of originals) {
         expect(line("1040", "1a")).toBe("85000");
         expect(line("1040", "25a")).toBe("12750");
         expect(line("1040", "25d")).toBe("12875.51");
+        if (source.collection === "form1099K") expect(result.agi.toString()).toBe("85000");
       },
     );
   });

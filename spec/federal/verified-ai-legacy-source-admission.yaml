@@ -111,7 +111,7 @@ lines:
 
   - line: "oid-k-calendar-contradiction"
     description: "Known calendar-year OID and payment-settlement originals cannot certify another return year"
-    formula: "For confirmed explanations, inspect actual taxYear on Form1099OID and Form1099K alongside existing direct calendar originals. Reject known past/future years, including income-only, withholding-only and zero-impact originals, before accounting or provider dispatch. Preserve canonical historical arithmetic and every existing verified source-method gate. The original calendar year is distinct from continuous-use form revision and prior carry/worksheet histories."
+    formula: "For confirmed explanations, inspect actual taxYear on Form1099OID and Form1099K alongside existing direct calendar originals. Reject known past/future years, including income-only, withholding-only and zero-impact originals, before accounting or provider dispatch. The canonical federal return also holds an explicitly mismatched Form1099K before applying amounts. Preserve arithmetic for admitted originals and every existing verified source-method gate. The original calendar year is distinct from continuous-use form revision and prior carry/worksheet histories."
     testRef: "tests/apps/web/verified-ai-legacy-source-admission.test.ts::denies a known mismatched OID or K calendar original %s before confirmed accounting"
   - line: "oid-k-calendar-preservation"
     description: "Unknown remains unknown and matching original years conserve the existing income and payments"

@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Form 1099-K calendar-year binding
+
+The ordinary federal return holds an explicitly earlier or later Form 1099-K before using the statement's amounts. The check preserves matching originals and older undated records. A matching $3,020.15 original with $125.51 in Box 4 retains that gross reconciliation and credits the withholding once on Form 1040 Line 25b. The statement alone leaves adjusted gross income at $85,000. The spec also corrects the issuer threshold restored by Public Law 119-21 and the reporting of personal-item gains. [IRS Form 1099-K instructions](https://www.irs.gov/instructions/i1099k) · [IRS general FAQs](https://www.irs.gov/newsroom/form-1099-k-faqs-general-information) · [IRS reporting guidance](https://www.irs.gov/businesses/what-to-do-with-form-1099-k).
+
+The spec-backed cases reproduced four missing holds. The wider check then surfaced five legacy tests that expected arithmetic on explicitly wrong-year statements. The corrected expectations retain the separate OID behavior and preserve generic private responses with zero provider or accounting dispatch. The affected run passed 1,288 tests in 34 files. Independent engineering review passed the 48 direct cases and the 55-test verification lane. All three typechecks, spec validation and inventory passed. Scoped lint reported zero errors and nine warnings.
+
 ## November 19 current protected Preview workspace lifecycle
 
 The exact `c0219541` archive matched all 6,484 Git blobs and six internal links. Its one protected Preview reached READY with the intended project and source label, no production alias, and test billing at build and runtime. The existing synthetic actor passed all nine checks. A new empty PostgreSQL workspace was absent before creation, saved with a fresh revision, reopened and removed. Cleanup verified absence, preserved the earlier rows and cleared the signed-in session. Archive SHA-256 `3a880776e7132bf3d300eda1e8ed811acd2e01e0080a4205498566142d403b1d`. Bounded result SHA-256 `e1ee06736472c57f6f590d2e1d143b589b4b9be7c201beda36d9e2e9d59ec1d9`.

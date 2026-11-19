@@ -84,8 +84,8 @@ lines:
     description: "Use the printed calendar year on ordinary annual income statements"
     formula: >-
       For ordinary reporting, match an explicit Form 1099-INT, 1099-DIV,
-      1099-MISC, 1099-NEC or W-2G statement year to the selected return
-      before using the statement's income or withholding. Use the payer's
+      1099-MISC, 1099-NEC, 1099-K or W-2G statement year to the selected
+      return before using the statement's income or withholding. Use the payer's
       printed calendar year rather than the form revision. Preserve an
       omitted legacy year as unknown. Household payments, recoveries and
       carryovers use the dates and periods of their own worksheets.
@@ -94,8 +94,10 @@ lines:
       IRS Instructions for Forms 1099-INT and 1099-OID
       (https://www.irs.gov/instructions/i1099int), Form 1099-DIV
       (https://www.irs.gov/instructions/i1099div), Forms 1099-MISC and 1099-NEC,
-      For Calendar Year (https://www.irs.gov/instructions/i1099mec), and
-      Forms W-2G and 5754 (https://www.irs.gov/instructions/iw2g).
+      For Calendar Year (https://www.irs.gov/instructions/i1099mec),
+      Form 1099-K, Specific Instructions and Boxes 1a and 4
+      (https://www.irs.gov/instructions/i1099k), and Forms W-2G and 5754
+      (https://www.irs.gov/instructions/iw2g).
     testRef: "tests/engine/federal-income-statement-source-year.test.ts::holds a mismatched original statement for %i (source %i)"
 
   - line: "1"

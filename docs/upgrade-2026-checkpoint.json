@@ -300,6 +300,21 @@
         "worksheetTaxableAmount": "4800",
         "worksheetFederalWithheld": "125"
       },
+      "nov19Form1099KCalendarYear": {
+        "parent": "ba53cbcf",
+        "initialMissingHolds": 4,
+        "legacyExpectationFailures": 5,
+        "affectedTestsPassed": 1288,
+        "affectedFilesPassed": 34,
+        "independentFocusedTestsPassed": 48,
+        "independentFollowUpTestsPassed": 55,
+        "typeChecksPassed": 3,
+        "specReferencesValidated": 9639,
+        "inventoryCheckPassed": true,
+        "lintErrors": 0,
+        "lintWarnings": 9,
+        "fullVerification": "pending"
+      },
       "nov19QsbsBrowserPdfSubprocess": {
         "parent": "06396eb6",
         "commit": "c0219541",

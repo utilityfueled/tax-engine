@@ -6,20 +6,22 @@ irsReference: "https://www.irs.gov/forms-pubs/about-form-1099-k"
 notes: |
   Form 1099-K reports gross payment card and third-party network transactions
   to the IRS. Payment settlement entities (PSEs) such as Venmo, PayPal, Square,
-  Stripe, and credit card processors issue this form when the aggregate gross
-  amount of reportable payment transactions exceeds the reporting threshold.
-
-  For tax year 2025, the reporting threshold is $5,000 in aggregate gross
-  payments (Notice 2024-85 transition rule; the original ARPA $600 threshold
-  was further delayed). Prior to 2024, the threshold was $20,000 AND 200+
-  transactions.
+  Stripe, and credit card processors report payments for the calendar year.
+  Section 70432 of Public Law 119-21 retroactively restored the third-party
+  network reporting threshold. The issuer generally must file when gross
+  payments exceed $20,000 and the count exceeds 200 transactions. Payment
+  card transactions have no federal reporting minimum. An issuer may furnish
+  a statement below the third-party threshold and must file when the federal
+  backup-withholding rules require it. A recipient's tax treatment depends on
+  the underlying activity. See https://www.irs.gov/newsroom/form-1099-k-faqs-general-information.
 
   Form 1099-K does NOT represent additional income — it is a reporting
   mechanism for income that should already appear elsewhere on the return:
   - Self-employment income → Schedule C Line 1 (gross receipts)
   - Farm income → Schedule F
   - Rental income → Schedule E
-  - Personal item sales → Schedule 1 Line 8z (gain over basis only)
+  - Personal item gains → Form 8949 and Schedule D
+    (https://www.irs.gov/businesses/what-to-do-with-form-1099-k)
   - Other business/investment activity → appropriate schedule
 
   The IRS matches 1099-K amounts against the return. Discrepancies between
@@ -30,14 +32,14 @@ notes: |
   - Box 1b: Card not present transactions (subset of Box 1a)
   - Box 4: Federal income tax withheld (backup withholding at 24% per IRC §3406)
   - Box 5a–5l: Gross amount by month (informational)
-  - Box 6: State / Payer's state number
-  - Box 7: State income (for state return)
+  - Box 6: State
+  - Box 7: Payer's state identification number
   - Box 8: State income tax withheld
 
   Engine behavior:
   - Accepts one or more 1099-K documents as input
   - Aggregates Box 1a gross amounts by income type (business, farm, rental, other)
-  - Routes Box 4 federal withholding to Form 1040 Line 25d
+  - Includes Box 4 federal withholding on Form 1040 Line 25b and in the Line 25d total
   - Provides a reconciliation summary showing total 1099-K gross versus
     income reported on the return, so the taxpayer can verify completeness
   - Does NOT double-count income: 1099-K amounts inform Schedule C gross
