@@ -557,7 +557,7 @@ const singleEducationFixture: TaxYearInput = {
   donations: [],
   rentalProperties: [],
   educationExpenses: {
-    aocStudents: [{ name: "Alex Rivera", qualifiedExpenses: "4000" }],
+    aocStudents: [{ name: "Alex Rivera", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
     llcExpenses: "0",
   },
   adjustments: {
@@ -1083,7 +1083,7 @@ const allCreditsFixture: TaxYearInput = {
     qualifyingIndividuals: 1,
   },
   educationExpenses: {
-    aocStudents: [{ name: "Ella Park", qualifiedExpenses: "3500" }],
+    aocStudents: [{ name: "Ella Park", priorYearsClaimed: 0, qualifiedExpenses: "3500" }],
     llcExpenses: "0",
   },
   adjustments: {

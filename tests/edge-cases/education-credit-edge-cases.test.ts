@@ -745,7 +745,7 @@ describe("Education Credit — reduces federal tax liability (federal pipeline)"
     const withCredit: TaxYearInput = {
       ...simpleW2Fixture,
       educationExpenses: {
-        aocStudents: [{ name: "Student A", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Student A", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
         llcExpenses: "0",
       },
     };
@@ -784,7 +784,7 @@ describe("Education Credit — reduces federal tax liability (federal pipeline)"
         },
       ],
       educationExpenses: {
-        aocStudents: [{ name: "Student B", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Student B", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
         llcExpenses: "0",
       },
     };
@@ -922,7 +922,7 @@ describe("Education Credit — combined with CTC in federal pipeline", () => {
     const withEducation: TaxYearInput = {
       ...baseReturn,
       educationExpenses: {
-        aocStudents: [{ name: "College Student", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "College Student", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
         llcExpenses: "0",
       },
     };

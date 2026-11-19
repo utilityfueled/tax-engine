@@ -26,7 +26,7 @@ describe("Form 1040 payment and penalty routing", () => {
     expect(r.allLines.find(l=>l.form==="1040"&&l.line==="38")?.value.eq(r.estimatedTaxPenalty)).toBe(true);
   });
   it("keeps refundable AOC on line 29 and out of line 31", () => {
-    const r=calculateFederalTax(TaxYearInputSchema.parse({...simpleW2Fixture, educationExpenses:{aocStudents:[{name:"Actual student",qualifiedExpenses:"4000"}],llcExpenses:"0"}}));
+    const r=calculateFederalTax(TaxYearInputSchema.parse({...simpleW2Fixture, educationExpenses:{aocStudents:[{name:"Actual student",priorYearsClaimed:0,qualifiedExpenses:"4000"}],llcExpenses:"0"}}));
     expect(r.allLines.find(l=>l.form==="1040"&&l.line==="29")?.value.toString()).toBe("500");
     expect(r.allLines.find(l=>l.form==="1040"&&l.line==="31")?.value.toString()).toBe("0");
   });

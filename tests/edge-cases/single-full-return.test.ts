@@ -748,7 +748,7 @@ describe("Single filer - education credits (AOTC)", () => {
     ],
     educationExpenses: {
       aocStudents: [
-        { name: "Test Filer", qualifiedExpenses: "4000" },
+        { name: "Test Filer", priorYearsClaimed: 0, qualifiedExpenses: "4000" },
       ],
       llcExpenses: "0",
     },

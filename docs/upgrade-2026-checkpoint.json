@@ -238,6 +238,9 @@
       },
       "nov19AnnualStatementDiagnosticFollowUp": {
         "parent": "7ea62c3f",
+        "commit": "47c1fdaf",
+        "previousUnitTestsPassed": 29363,
+        "previousUnitTestsFailed": 17,
         "previousCoverageTestsPassed": 29363,
         "previousCoverageTestsFailed": 17,
         "previousCoverageSuitesFailed": 7,
@@ -245,6 +248,19 @@
         "independentTestsPassed": 201,
         "form8880StandaloneControlsReviewed": true,
         "fullCombinedVerification": "pending"
+      },
+      "nov19AotcPriorClaimHistory": {
+        "parent": "47c1fdaf",
+        "patchSha256": "68c53d51e780855f0364860e95000e8e7f94635418066dc99ad567c293a0bbdb",
+        "affectedSuitesPassed": 145,
+        "affectedTestsPassed": 2695,
+        "independentTestsPassed": 133,
+        "independentBoundaryProbesPassed": 6,
+        "independentFinalFocusedTestsPassed": 13,
+        "staticAndBuildChecksPassed": 9,
+        "specReferencesValidated": 9634,
+        "published2026CandidateAlreadyPinned": true,
+        "humanQualification": "pending"
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",

@@ -72,7 +72,7 @@ const hohFixture: TaxYearInput = {
   form1095A: [],
   donations: [],
   educationExpenses: {
-    aocStudents: [{ name: "Maria Garcia", qualifiedExpenses: "4000" }],
+    aocStudents: [{ name: "Maria Garcia", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
     llcExpenses: "0",
   },
   dependentCare: {

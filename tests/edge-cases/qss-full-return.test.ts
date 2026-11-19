@@ -628,7 +628,7 @@ describe("QSS with education credits — AOTC and LLC", () => {
     form1095A: [],
     donations: [],
     educationExpenses: {
-      aocStudents: [{ name: "David Hernandez", qualifiedExpenses: "4000" }],
+      aocStudents: [{ name: "David Hernandez", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
       llcExpenses: "5000",
     },
   };

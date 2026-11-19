@@ -4179,6 +4179,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form8863 = calculateForm8863({
       ...education,
       taxYear: year,
+      requireAocPriorClaimHistory: year === 2025,
       primarySsnEligible: education.primarySsnEligible ?? input.taxpayer.primary.employmentValidSsnIssuedByDueDate,
       spouseSsnEligible: education.spouseSsnEligible ?? input.taxpayer.spouse?.employmentValidSsnIssuedByDueDate,
       primaryTinEligible: education.primaryTinEligible ?? input.taxpayer.primary.tinIssuedByDueDate,

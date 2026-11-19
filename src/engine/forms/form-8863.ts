@@ -33,6 +33,7 @@ export interface Form8863Input {
   magi: Decimal;
   filingStatus: FilingStatus;
   taxYear?: number;
+  requireAocPriorClaimHistory?: boolean;
   taxLiabilityLimit?: Decimal;
   primarySsnEligible?: boolean;
   spouseSsnEligible?: boolean;
@@ -137,30 +138,42 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
     required(input.aocBanInEffect, "AOC ban facts"); required(input.form8862Required, "Form8862 requirement");
   }
   if (input.form8862Required && input.form8862Completed !== true && input.aocStudents.some(s => s.qualifiedExpenses.gt(0))) throw new Error("Form8863 required Form8862 must be completed before AOC claim");
-  const aocPerStudent = input.aocStudents.map((student) => {
+  const upper = new Decimal(joint ? 180000 : 90000);
+  const range = new Decimal(joint ? 20000 : 10000);
+  const remaining = zeroFloor(upper.minus(input.magi));
+  const factor = claimantEligible ? Decimal.min(1,remaining.div(range)) : new Decimal(0);
+  const aocPerStudent = input.aocStudents.map((student, index) => {
     const sourceEligible = studentEligible(student, strict && claimantEligible);
     if (strict && claimantEligible && student.qualifiedExpenses.gt(0)) {
       for (const field of ["priorYearsClaimed", "completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) required(student[field], `student facts: ${field}`);
       if (!student.institutionEin || !/^\d{9}$/.test(student.institutionEin.replaceAll("-", ""))) throw new Error("Form8863 actual institution EIN required for AOC");
     }
-    if (student.priorYearsClaimed !== undefined && (!Number.isInteger(student.priorYearsClaimed) || student.priorYearsClaimed < 0)) throw new Error("Form8863 prior claim years must be a nonnegative integer");
-    const eligible = claimantEligible && sourceEligible && input.aocBanInEffect !== true && (strict || input.primaryTinEligible !== false)
-      && (student.priorYearsClaimed ?? 0) < 4 && student.completedFirstFourYearsBeforeYear !== true && student.enrolledAtLeastHalfTime !== false && student.pursuingDegreeOrCredential !== false && student.felonyDrugConviction !== true;
-    const line27 = eligible ? roundDollar(Decimal.min(student.qualifiedExpenses, 4000)) : new Decimal(0);
+    const priorYears = student.priorYearsClaimed;
+    if (priorYears !== undefined && (!Number.isInteger(priorYears) || priorYears < 0)) throw new Error("Form8863 prior claim years must be a nonnegative integer");
+    const eligibleApartFromHistory = claimantEligible && sourceEligible && input.aocBanInEffect !== true
+      && (strict || input.primaryTinEligible !== false) && student.completedFirstFourYearsBeforeYear !== true
+      && student.enrolledAtLeastHalfTime !== false && student.pursuingDegreeOrCredential !== false && student.felonyDrugConviction !== true;
+    const adjustedExpenses = roundDollar(Decimal.min(student.qualifiedExpenses, 4000));
+    if (input.requireAocPriorClaimHistory && priorYears === undefined && eligibleApartFromHistory && adjustedExpenses.gt(0) && factor.gt(0)) {
+      throw new Error(`Form 8863 requires actual prior AOC claim history for student ${index + 1}`);
+    }
+    const meetsHistoryLimit = priorYears === undefined ? !input.requireAocPriorClaimHistory : priorYears < 4;
+    const eligible = eligibleApartFromHistory && meetsHistoryLimit;
+    const line27 = eligible ? adjustedExpenses : new Decimal(0);
     const line28 = zeroFloor(line27.minus(2000));
     const line29 = roundDollar(line28.times("0.25"));
     const credit = line28.isZero() ? line27 : new Decimal(2000).plus(line29);
     audit.record("Form 8863", "27", `Adjusted AOC expenses for ${student.name}`, line27, "min(actual adjusted qualified expenses,4000), if eligible");
     audit.record("Form 8863", "28", `Second-tier expenses for ${student.name}`, line28, "max(0,line27-2000)");
     audit.record("Form 8863", "29", `Second-tier credit for ${student.name}`, line29, "round(line28*0.25)");
-    audit.record("Form 8863", "30", `AOC for ${student.name}`, credit, eligible ? "100% of first $2K + 25% of next $2K" : "Ineligible under actual AOC qualification facts", {"Qualified expenses":student.qualifiedExpenses,"Prior AOC years claimed":new Decimal(student.priorYearsClaimed ?? 0),"Current-year AOC eligible":eligible ? "yes" : "no"});
+    audit.record("Form 8863", "30", `AOC for ${student.name}`, credit, eligible ? "100% of first $2K + 25% of next $2K" : "Ineligible under actual AOC qualification facts", {
+      "Qualified expenses": student.qualifiedExpenses,
+      "Prior AOC years claimed": priorYears === undefined ? "Unknown" : new Decimal(priorYears),
+      "Current-year AOC eligible": eligible ? "yes" : "no",
+    });
     return {name:student.name,tentativeCredit:credit};
   });
   const aocTotalTentative = aocPerStudent.reduce((total,s)=>total.plus(s.tentativeCredit), new Decimal(0));
-  const upper = new Decimal(joint ? 180000 : 90000);
-  const range = new Decimal(joint ? 20000 : 10000);
-  const remaining = zeroFloor(upper.minus(input.magi));
-  const factor = claimantEligible ? Decimal.min(1,remaining.div(range)) : new Decimal(0);
   const aocAfterPhaseOut = roundDollar(aocTotalTentative.times(factor));
   const refundEligible = refundableEligible(input, strict, aocAfterPhaseOut.gt(0));
   const aocRefundable = refundEligible ? roundDollar(aocAfterPhaseOut.times("0.40")) : new Decimal(0);

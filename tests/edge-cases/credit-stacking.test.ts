@@ -624,7 +624,7 @@ describe("Credit stacking - all refundable credits (ACTC + AOC refundable + PTC)
         medicareWithheld: "435",
       }],
       educationExpenses: {
-        aocStudents: [{ name: "Student Doe", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Student Doe", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
       },
       form1095A: [{
         marketplace: "Healthcare.gov",
@@ -1001,7 +1001,7 @@ describe("Credit stacking - CTC + ODC + education credits combined", () => {
         medicareWithheld: "1740",
       }],
       educationExpenses: {
-        aocStudents: [{ name: "College Kid", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "College Kid", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
       },
     };
     const result = calculateFederalTax(fixture);
@@ -1581,7 +1581,7 @@ describe("Credit stacking - nonrefundable credits hard-capped at tax liability",
         exemptInterestDividends: "0",
       }],
       educationExpenses: {
-        aocStudents: [{ name: "Student Doe", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Student Doe", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
       },
       dependentCare: {
         expenses: "5000",
@@ -1747,7 +1747,7 @@ describe("Credit stacking - all six credit types combined in one return", () => 
         exemptInterestDividends: "0",
       }],
       educationExpenses: {
-        aocStudents: [{ name: "Teen Doe", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Teen Doe", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
       },
       dependentCare: {
         expenses: "6000",

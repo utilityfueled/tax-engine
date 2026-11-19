@@ -444,7 +444,7 @@ describe("Integration - Schedule 3 credits flow into federal return", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       educationExpenses: {
-        aocStudents: [{ name: "Student", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Student", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
         llcExpenses: "0",
       },
     };
@@ -469,7 +469,7 @@ describe("Integration - Schedule 3 credits flow into federal return", () => {
         },
       },
       educationExpenses: {
-        aocStudents: [{ name: "Student", qualifiedExpenses: "4000" }],
+        aocStudents: [{ name: "Student", priorYearsClaimed: 0, qualifiedExpenses: "4000" }],
         llcExpenses: "0",
       },
     };

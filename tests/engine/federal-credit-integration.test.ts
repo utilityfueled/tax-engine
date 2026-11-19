@@ -88,7 +88,7 @@ describe("Personal credit return integration",()=>{
     expect(allowed.form8863?.lines.find(l=>l.line==="3")?.value.toString()).toBe("85000");
     expect(allowed.form8863?.aocRefundable.toString()).toBe("500");
     expect(allowed.form8863?.totalNonrefundable.toString()).toBe("750");
-    const low=calculateFederalTax(fixture(2025,{educationExpenses:{aocStudents:[{name:"Student",qualifiedExpenses:"4000"}]}}));
+    const low=calculateFederalTax(fixture(2025,{educationExpenses:{aocStudents:[{name:"Student",priorYearsClaimed:0,qualifiedExpenses:"4000"}]}}));
     expect(low.form8863?.totalNonrefundable.toString()).toBe("0");
     expect(low.form8863?.lines.find(l=>l.line==="19")?.value.toString()).toBe("0");
   });

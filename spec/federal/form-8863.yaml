@@ -5,14 +5,14 @@ irsReference: "https://www.irs.gov/instructions/i8863"
 notes: |
   Applies 2025 final instructions and IRC25A, with the enacted 2026 employment-SSN
   requirement verified at https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits.
-  The 2026 draft https://www.irs.gov/pub/irs-dft/f8863--dft.pdf is line-layout evidence,
-  never filing qualification. All monetary arithmetic uses Decimal. Printed lines
+  Official 2026 Form 8863 confirms the prior-claim question. All monetary
+  arithmetic uses Decimal. Printed lines
   round to dollars; phase-out factor retains Decimal precision (at least 3 places).
   One credit per student, actual paid net qualified expenses after assistance,
   refunds and other benefits. Unknown 2026 eligibility/source facts fail closed.
-  Legacy 2025 omissions remain an unqualified compatibility preview; known
-  ineligibility applies in either year. Final 2026 forms and independent review
-  remain required. Schedule3-A public-benefit limitation is not qualified.
+  Other legacy 2025 omissions remain an unqualified compatibility preview;
+  known ineligibility applies in either year. 2026 mapping qualification and
+  independent review remain required. Schedule3-A public-benefit limitation is not qualified.
   Review PDF mapping copies the persisted calculation audit; it must not rerun
   credit calculations with omitted eligibility or liability facts. One Part III
   page is required per actual AOC or LLC student. Unknown eligibility answers,
@@ -108,6 +108,24 @@ lines:
     description: "Student identity, institution and eligibility facts"
     formula: "Actual student TIN/role, school records and eligibility answers; never infer from dollar amounts or fabricate addresses/EINs"
     testRef: "tests/engine/forms/form-8863-2026.test.ts::requires actual 2026 student facts and allows only one credit per student"
+  - line: "23-return-claim-history"
+    description: "Require actual prior AOC claim history for a potentially eligible 2025 return"
+    formula: >-
+      Hold an otherwise eligible 2025 AOC student with positive rounded expenses
+      and remaining income phase-out allowance until the actual number of prior
+      years in which anyone claimed AOC for the student is known. Accept an
+      explicit zero. Four or more prior years disqualify the student. If another
+      known fact already prevents this AOC, the missing count does not withhold
+      the return or an independently eligible Lifetime Learning Credit. Preserve
+      unknown history as unknown in the Line 30 audit, distinct from zero.
+    irsRef: >-
+      26 U.S.C. §25A(b)(2)(A) (https://uscode.house.gov/us/usc/t26/s25A/).
+      Final 2025 Form 8863 line 23 (https://www.irs.gov/pub/irs-prior/f8863--2025.pdf)
+      and 2025 instructions (https://www.irs.gov/instructions/i8863#line23).
+      Final 2026 Form 8863 line 23 retains the same question
+      (https://www.irs.gov/pub/irs-pdf/f8863.pdf, Form 8863 (2026), created 4/28/26,
+      verified 2026-11-19).
+    testRef: "tests/engine/federal-education-claim-history.test.ts::holds a parsed 2025 claim when actual prior AOC history is unknown"
   - line: "27-30"
     description: "Per-student AOC expense calculation"
     formula: "27=min(adjusted expenses,4000);28=max(0,27-2000);29=round(28*0.25);30=27 when28=0 otherwise2000+29"

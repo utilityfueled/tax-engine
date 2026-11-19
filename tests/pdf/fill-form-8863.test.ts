@@ -185,6 +185,7 @@ const mfjPhaseOutFixture: TaxYearInput = {
       {
         name: "Anna Johnson",
         qualifiedExpenses: "3500",
+        priorYearsClaimed: 0,
       },
     ],
     llcExpenses: "8000",
@@ -249,6 +250,7 @@ const phasedOutFixture: TaxYearInput = {
       {
         name: "Mia Lee",
         qualifiedExpenses: "4000",
+        priorYearsClaimed: 0,
       },
     ],
   },
@@ -512,7 +514,7 @@ describe("Form 8863 audited source and multi-student mapping", () => {
   it("leaves unknown source answers blank and prints actual identity and institutions", async () => {
     const input = structuredClone(singleAOCFixture);
     input.educationExpenses!.aocStudents[0] = {
-      name: "Jake Miller", qualifiedExpenses: "4000", studentTaxId: "444-55-6666",
+      name: "Jake Miller", qualifiedExpenses: "0", studentTaxId: "444-55-6666",
       enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, completedFirstFourYearsBeforeYear: false,
       institutions: [{ name: "Example College", address: "123 Campus Way, Denver CO 80202", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false }],
     };
