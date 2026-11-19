@@ -1,0 +1,49 @@
+form: "Form 5329 final 2026 physical candidate"
+fullName: "Additional Taxes on Qualified Plans and Other Tax-Favored Accounts annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf"
+revision: "Created 11/12/26, IRS final index posted 11/17/2026"
+retrievedAt: "2026-11-19T05:11:10Z"
+notes: |
+  This disabled physical map describes the final blank form. The IRS current
+  instructions were still for 2025 at retrieval. Annual instructions,
+  tax-engine and source support, final parent forms, and qualified review
+  remain required before activating the output.
+lines:
+  - line: "revision"
+    description: "Pin the final three-page annual PDF"
+    formula: "Require SHA-256 ebc438f7a940285815d43980a59c6cd5fed3ac76c4aab0e85ce0895df53fca2e, 113310 bytes, three US Letter pages, the 2026 title and printed Created 11/12/26."
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::pins the exact final annual PDF"
+  - line: "physical-locations"
+    description: "Bind the 85 AcroForm leaves on three pages"
+    formula: >-
+      Verify page, type, rectangle and on-state. Page 1 has split city/state/ZIP,
+      the amended-return box, separate line 2 exception-code and amount fields,
+      and the amounts through line 25. Page 2 holds lines 26 through 51.
+      Page 3 holds lines 52a through 63 and the paid preparer inputs.
+      Printed handwritten signature and date lines have no fillable widgets.
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::locates all three pages and every unique field"
+  - line: "printed-transfers"
+    description: "Map the new print positions and Schedule 2 references"
+    formula: >-
+      The form sends lines 4, 8 and 63 to Schedule 2 line 5; lines 17, 25, 33,
+      41, 49, 51, 55 and 61 go to Schedule 2 line 18. Line 55 can also go to
+      Form 1041 Schedule G line 8. Part X applies when the beneficiary is
+      under age 18 at year-end and 2026 nonexempt contributions exceeded
+      $5,000. It prints zero on line 56 for 2026, takes current excess on
+      line 57 and adds lines 56 and 57 on line 58. Line 59 uses corrective
+      distributions of excess contributions excluding earnings under
+      section 530A(d)(5). Line 60 is the nonnegative difference and line 61
+      prints 6% of the smaller of line 60 and the December 31 account value.
+      Part XI prints the
+      excess-distribution earnings from Form 1099-R box 7d on line 62 and
+      100% of that amount on line 63. These are printed references only.
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::records the changed parent and retirement source references"
+  - line: "saved-diagnostic"
+    description: "Check text values and both positions of each checkbox after save"
+    formula: "Reopen synthetic placements, verify all stored text values and appearance streams, and check the amended-return and self-employed native checkbox states."
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::retains stored values and native appearances after save"
+  - line: "closed-exports"
+    description: "Keep public review and filing disabled"
+    formula: "No export registration. The 2026 source fails 2025 and 2026 review authorization and cannot be used for filing."
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::keeps every export gate closed"

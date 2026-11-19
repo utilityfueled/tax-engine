@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 19: penalty and retirement-credit templates, Philadelphia, browser
+
+The disabled final [Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf) and [Form 8880](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf) candidates bind 85 and 23 widgets. Independent PDF-reader and printed-layout checks confirmed the locations and parent references. The 5329 source has new Parts X and XI and transfers to Schedule 2 lines 5 and 18. Its separate instructions remain for 2025. Form 8880 includes final annual instructions and the fillable worksheet on page 2. Native line 9 accepts the single fractional digit after the preprinted decimal prefix. The two candidates and existing adjacent fillers passed 43 tests, 10 spec references, inventory validation, type-check and strict scoped lint on Node 26.13.1. Review and filing gates remain closed.
+
+Philadelphia's [employer-certified salary draft](upgrade-2026-pa-philadelphia-salary-allocation-work.md) shipped in `2b08b632` after an independent location-conflict regression check. The final Pennsylvania, public API and spec test cohort passed 2,580 tests. A full shared-tree run overlapped the fixture revision and also encountered a sandbox-denied loopback TLS setup. Frozen-revision checks remain required.
+
+In [Web 44257480038](https://github.com/utilityfueled/tax-engine/actions/runs/44257480038) on `6577945e`, self-host browser recorded 650 passed and five skipped, while the container recorded 646 passed, four failed and five skipped. All four were original 30-second Ohio case timeouts across two specs. Build and Compose smoke/recovery passed. The timeout cause and combined container qualification remain open.
+
 ## November 19: final education-credit and HSA templates
 
 The disabled 2026 physical candidates for [Form 8863](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) and [Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) map 77 and 27 widgets respectively. The official annual and current-source bytes match for each form. A separate PDF reader and rendered pages confirm printed positions and checkbox states. The archived SHA-256 values are pinned in the form specs and tests.

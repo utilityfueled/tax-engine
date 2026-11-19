@@ -1,0 +1,54 @@
+form: "Form 8880 final 2026 physical candidate"
+fullName: "Final 2026 Credit for Qualified Retirement Savings Contributions physical field source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf"
+revision: "Created 3/16/26; IRS final archive posted 2026-11-17 22:12:04"
+notes: |
+  Archived annual and current final PDFs matched byte for byte at retrieval.
+  Final 2026 instructions and the fillable Credit Limit Worksheet are included
+  on page 2 of the same PDF. The IRS about page links this combined product;
+  there is no separate current i8880.pdf (HTTP 404). This physical-only contract
+  neither changes tax calculations nor enables review or filing exports.
+lines:
+  - line: "revision"
+    description: "Pin the final combined annual form and instructions"
+    formula: "Require 86366 bytes, SHA-256 a85be44f0743eb3c4df9cb7523b452553275fc6725e6cf9ad28b63c7354a4802, title 2026 Form 8880, two 611.976 by 791.968 point pages."
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::pins the final combined annual source"
+  - line: "physical-locations"
+    description: "Locate all 23 canonical fields and all page widgets"
+    formula: >-
+      Require two header fields, separate taxpayer/spouse cells for lines 1-6,
+      lines 7-12 and three page-two Credit Limit Worksheet cells. All are text.
+      Match fully qualified names, page references, rectangle and MaxLen metadata.
+      Line 9 stores only one fractional digit after the printed x 0. prefix;
+      preserve MaxLen 1, using 5, 2, 1 or 0 rather than a complete decimal string.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::matches every canonical field and page widget to its printed location"
+  - line: "annual-printed-references"
+    description: "Record final printed annual facts without implementing calculations"
+    formula: >-
+      Lines 1-2 list 2026 contributions; line 3 adds them, line 4 covers certain
+      distributions after 2023 through the return due date, line 5 is the positive
+      difference or zero, and line 6 caps each column at 2000. Line 7 adds columns.
+      Line 8 references Form 1040/1040-SR/1040-NR line 11a. Line 9 uses the printed
+      status/rate table. Line 10 multiplies lines 7 and 9. Worksheet lines 1/2
+      reference Form 1040 line 18 and Schedule 3 lines 1-3, 6d and 6l. Worksheet
+      line 3 subtracts worksheet line 2 from line 1 and transfers to line 11;
+      if zero or less, stop and do not file. Line 12 takes the smaller of lines
+      10 and 11 and transfers to Schedule 3 line 4. Physical metadata only.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::records the annual printed references and rate table"
+  - line: "saved-diagnostics"
+    description: "Reopen synthetic values with nonempty matching appearances"
+    formula: >-
+      Preserve every logical and effective widget text value, zero and distinct
+      diagnostic whole amounts in both columns and worksheet cells; test every
+      line 9 digit 5/2/1/0 with its native one-character constraint intact.
+      Reject a complete 0.5 string in that native cell. Retain interactive fields
+      and review notices on both pages; use only fictional header identifiers.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::round-trips all diagnostic values and native rate digits with appearances"
+  - line: "closed-exports"
+    description: "Keep annual review and filing gates closed"
+    formula: >-
+      Candidate is frozen, disabled and independent-review-pending. Reject 2026
+      bytes in the 2025 slot, historical bytes in the unqualified 2026 slot,
+      mismatched years and 2026 review/filing exports; retain the historical pin.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::keeps annual and historical export gates closed"

@@ -141,7 +141,14 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "7cfa03ed93fb5c357d29e0ee3f2ddd303f08d9d2",
+    "latestPushedSource": "2b08b632",
+    "nov19TaxAndBrowserContinuation": {
+      "resume": "Read only this object and the November 19 paragraphs at the top of the progress ledger. Resolve exact committed or remote source with git; each new package requires actual checks. Keep the release gates.",
+      "sourcePackages": "ba4d55ce: 2026 Form 8863/8889, 92 tests. 2b08b632: employer-certified Philadelphia whole-day straight-salary allocation, 2580 final PA/public/spec tests. Form 5329/8880 package: 43 tests on pinned Node and physical review only.",
+      "actualBrowser": "6577945e Web 44257480038: managed/self-host 650 pass, 0 fail, 5 skip; container 646 pass, 4 fail, 5 skip. Four original 30s Ohio timeouts. Build and Compose smoke/recovery passed. Cause open.",
+      "conditionalWork": "Continue ordinary browser, tax, provider/accounting and recovery qualification. No new vulnerability reproduction work. Defer the unpublished backport edits. Production builds must be observed suppressed before each main push.",
+      "open": "Final parent and PA/OH forms, independent qualified tax review, outstanding AI qualification, final staging and self-host gates."
+    },
     "providerContinuation": "V3 actual PASSED:2realcalls/129queries, Decimalcost0.0005246, oneaccepted/onerejected, exactpurchased1000/2/998, duplicate+settlementreplay+control checks pass; pool/import/hooksclosed, supervisedexit0/noTERM/bothEOF/reaped/groupAbsent. Known183calls/$0.27285490; full.05reservation+oldunknownholds retained, conservativeceiling.47348230. Root+independentactualreviewpassed (29dbb1f4), including exactusagecostrecomputation/durablejournal/all135pins. No sale/model/fullcleanupqualification.",
     "new212Ledger": "docs/upgrade-2026-new212-container-timing-20261117.md",
     "providerLedger": "docs/upgrade-2026-signed-credit-provider-20261117.md",

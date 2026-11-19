@@ -1,0 +1,378 @@
+{
+  "source": {
+    "archiveUrl": "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf",
+    "currentUrl": "https://www.irs.gov/pub/irs-pdf/f8880.pdf",
+    "sha256": "a85be44f0743eb3c4df9cb7523b452553275fc6725e6cf9ad28b63c7354a4802",
+    "bytes": 86366,
+    "retrievedAt": "2026-11-19T05:12:45.163526+00:00",
+    "currentMatchesArchive": true,
+    "finalIndexUrl": "https://www.irs.gov/downloads/irs-prior",
+    "finalIndexPosted": "2026-11-17 22:12:04",
+    "revision": "Created 3/16/26",
+    "instructions": "Final annual instructions included on page 2 of these exact bytes; IRS about page links combined PDF, no separate current instructions link. Current i8880.pdf returned HTTP 404."
+  },
+  "printed": {
+    "line8": "Form 1040, 1040-SR, or 1040-NR line 11a",
+    "line12": "Schedule 3 (Form 1040) line 4",
+    "worksheet1": "Form 1040, 1040-SR, or 1040-NR line 18",
+    "worksheet2": "Schedule 3 lines 1 through 3, 6d, and 6l",
+    "line6Cap": "2000",
+    "line9Prefix": "x 0 .",
+    "line9Digits": [
+      "5",
+      "2",
+      "1",
+      "0"
+    ],
+    "rateTable": [
+      [
+        "---",
+        "24250",
+        "0.5",
+        "0.5",
+        "0.5"
+      ],
+      [
+        "24250",
+        "26250",
+        "0.5",
+        "0.5",
+        "0.2"
+      ],
+      [
+        "26250",
+        "36375",
+        "0.5",
+        "0.5",
+        "0.1"
+      ],
+      [
+        "36375",
+        "39375",
+        "0.5",
+        "0.2",
+        "0.1"
+      ],
+      [
+        "39375",
+        "40250",
+        "0.5",
+        "0.1",
+        "0.1"
+      ],
+      [
+        "40250",
+        "48500",
+        "0.5",
+        "0.1",
+        "0.0"
+      ],
+      [
+        "48500",
+        "52500",
+        "0.2",
+        "0.1",
+        "0.0"
+      ],
+      [
+        "52500",
+        "60375",
+        "0.1",
+        "0.1",
+        "0.0"
+      ],
+      [
+        "60375",
+        "80500",
+        "0.1",
+        "0.0",
+        "0.0"
+      ],
+      [
+        "80500",
+        "---",
+        "0.0",
+        "0.0",
+        "0.0"
+      ]
+    ]
+  },
+  "locations": {
+    "name": {
+      "name": "topmostSubform[0].Page1[0].f1_1[0]",
+      "page": 1,
+      "rect": [
+        36.0,
+        683.968,
+        460.05,
+        697.969
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "ssn": {
+      "name": "topmostSubform[0].Page1[0].f1_2[0]",
+      "page": 1,
+      "rect": [
+        460.8,
+        683.968,
+        576.0,
+        697.969
+      ],
+      "type": "/Tx",
+      "maxLength": 11
+    },
+    "line1a": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow1[0].f1_3[0]",
+      "page": 1,
+      "rect": [
+        432.0,
+        587.967,
+        503.25,
+        599.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line1b": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow1[0].f1_4[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        587.967,
+        576.0,
+        599.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line2a": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow2[0].f1_5[0]",
+      "page": 1,
+      "rect": [
+        432.0,
+        563.966,
+        503.25,
+        575.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line2b": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow2[0].f1_6[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        563.966,
+        576.0,
+        575.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line3a": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow3[0].f1_7[0]",
+      "page": 1,
+      "rect": [
+        432.0,
+        551.967,
+        503.25,
+        563.966
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line3b": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow3[0].f1_8[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        551.967,
+        576.0,
+        563.966
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line4a": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow4[0].f1_9[0]",
+      "page": 1,
+      "rect": [
+        432.0,
+        515.967,
+        503.25,
+        527.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line4b": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow4[0].f1_10[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        515.967,
+        576.0,
+        527.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line5a": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow5[0].f1_11[0]",
+      "page": 1,
+      "rect": [
+        432.0,
+        503.968,
+        503.25,
+        515.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line5b": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow5[0].f1_12[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        503.968,
+        576.0,
+        515.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line6a": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow6[0].f1_13[0]",
+      "page": 1,
+      "rect": [
+        432.0,
+        491.969,
+        503.25,
+        503.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line6b": {
+      "name": "topmostSubform[0].Page1[0].Table_Ln1-6[0].BodyRow6[0].f1_14[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        491.969,
+        576.0,
+        503.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line7": {
+      "name": "topmostSubform[0].Page1[0].f1_15[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        479.97,
+        576.0,
+        491.969
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line8": {
+      "name": "topmostSubform[0].Page1[0].f1_16[0]",
+      "page": 1,
+      "rect": [
+        410.4,
+        467.968,
+        481.65,
+        479.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line9": {
+      "name": "topmostSubform[0].Page1[0].f1_17[0]",
+      "page": 1,
+      "rect": [
+        554.4,
+        359.968,
+        576.0,
+        371.967
+      ],
+      "type": "/Tx",
+      "maxLength": 1
+    },
+    "line10": {
+      "name": "topmostSubform[0].Page1[0].f1_18[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        251.968,
+        576.0,
+        263.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line11": {
+      "name": "topmostSubform[0].Page1[0].f1_19[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        239.969,
+        576.0,
+        251.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "line12": {
+      "name": "topmostSubform[0].Page1[0].f1_20[0]",
+      "page": 1,
+      "rect": [
+        504.0,
+        215.968,
+        576.0,
+        227.967
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "worksheet1": {
+      "name": "topmostSubform[0].Page2[0].Col2[0].Pg2Worksheet[0].f2_1[0]",
+      "page": 2,
+      "rect": [
+        518.4,
+        138.971,
+        576.0,
+        150.97
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "worksheet2": {
+      "name": "topmostSubform[0].Page2[0].Col2[0].Pg2Worksheet[0].f2_2[0]",
+      "page": 2,
+      "rect": [
+        518.4,
+        112.969,
+        576.0,
+        124.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    },
+    "worksheet3": {
+      "name": "topmostSubform[0].Page2[0].Col2[0].Pg2Worksheet[0].f2_3[0]",
+      "page": 2,
+      "rect": [
+        518.4,
+        76.969,
+        576.0,
+        88.968
+      ],
+      "type": "/Tx",
+      "maxLength": null
+    }
+  }
+}
