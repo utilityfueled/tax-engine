@@ -94,7 +94,8 @@ it('retains explicitly bound zero components when an optional duplicate original
 it('rejects an explicitly conflicting original year before general-method fallback', () => {
   const input = distributionOnlyPeriodInput();
   dividend(input).taxYear = 2026;
-  expect(() => calculateFederalTax(input)).toThrow(/distribution-only original year/);
+  expect(() => calculateFederalTax(input)).toThrow('Form 1099-DIV source year 2026 must match the 2025 return');
+  expect(() => getForm2210DistributionOnlyBounds(input)).toThrow(/distribution-only original year/);
 });
 
 it.each([

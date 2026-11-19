@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { mergeW2RetirementContributionsIntoForm8880Input } from "@/engine/forms/form-8880.js";
 import { parseInput } from "@/ingest/loader.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
@@ -166,17 +167,26 @@ describe("Form 8880 sources on parsed 2025 returns", () => {
       form8880: {},
     });
 
-    expect(() => calculateFederalTax(input)).toThrow(/fallback requires a 2025 W-2/);
+    expect(() => mergeW2RetirementContributionsIntoForm8880Input(
+      input.form8880, input.w2s, input.taxpayer.filingStatus, input.taxpayer.taxYear,
+    )).toThrow(/fallback requires a 2025 W-2/);
+    expect(() => calculateFederalTax(input)).toThrow("Form W-2 source year 2024 must match the 2025 return");
   });
 
   it("uses an explicit eligible total without a 2025 W-2 fallback", () => {
     const input = parseInput({
       ...simpleW2Fixture,
-      w2s: [{ ...singleW2, taxYear: 2024, box12CodeD: "1800" }],
+      w2s: [{ ...singleW2, taxYear: 2025, box12CodeD: "1800" }],
       form8880: { primaryElectiveDeferrals: "700" },
     });
 
-    expect(calculateFederalTax(input).form8880?.line2a.toFixed()).toBe("700");
+    const { form8880 } = calculateFederalTax(input);
+    expect(form8880?.line2a.toFixed()).toBe("700");
+    expect(form8880?.line12.toFixed()).toBe("350");
+    expect(() => calculateFederalTax(parseInput({
+      ...input,
+      w2s: [{ ...input.w2s[0], taxYear: 2024 }],
+    }))).toThrow("Form W-2 source year 2024 must match the 2025 return");
   });
 
   // spec/federal/form-8880.yaml, 4-confirmed-current-receipt-2025

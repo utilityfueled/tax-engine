@@ -34,7 +34,7 @@ lines:
     testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::uses original W-2 deferrals only when the confirmed contribution is omitted"
   - line: "2 source guards"
     description: "Reject an earlier or unconfirmed W-2 year and ambiguous Code G"
-    formula: "A nonzero retirement Box 12 fallback needs the actual 2026 W-2 and an unambiguous contribution code."
+    formula: "A nonzero retirement Box 12 fallback needs the actual 2026 W-2 and an unambiguous contribution code. Federal calculation also holds any explicitly mismatched W-2 before determining Line 2."
     testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::refuses W-2 fallback from the wrong year or ambiguous Code G"
   - line: "4"
     description: "Use the confirmed distribution reduction for each contributor"

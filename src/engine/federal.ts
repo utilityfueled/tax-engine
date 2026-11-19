@@ -231,14 +231,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   assertFederalPaymentDates(input);
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
-    if (w2.taxYear !== undefined && w2.taxYear !== input.taxpayer.taxYear) {
-      throw new Error(`Form W-2 source year ${w2.taxYear} must match the ${input.taxpayer.taxYear} return`);
-    }
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
     if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
   });
   const returnYear = input.taxpayer.taxYear;
   for (const [formName, statements] of [
+    ["Form W-2", input.w2s],
     ["Form 1099-INT", input.form1099Int],
     ["Form 1099-DIV", input.form1099Div],
     ["Form 1099-MISC", input.form1099Misc],
@@ -247,6 +245,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   ] as const) {
     const mismatch = statements.find(statement => statement.taxYear !== undefined && statement.taxYear !== returnYear);
     if (mismatch) {
+      // A corrected statement cannot make an unavailable rule pack usable.
+      getConstants(returnYear);
       throw new Error(`${formName} source year ${mismatch.taxYear} must match the ${returnYear} return`);
     }
   }

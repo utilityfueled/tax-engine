@@ -94,7 +94,7 @@ lines:
 
   - line: "2-w2-source-year"
     description: "Apply the 2025 source-year requirement to W-2 fallback contributions"
-    formula: "Hold the fallback when a contributing W-2 explicitly identifies a different tax year. Accept historical W-2 inputs without a source-year tag."
+    formula: "Hold the fallback when a contributing W-2 explicitly identifies a different tax year. Federal calculation also holds any mismatched W-2 before determining Line 2. Accept historical W-2 inputs without a source-year tag."
     irsRef: "2025 Form 8880 instructions for Line 2"
     testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::holds the omitted Line 2 fallback for an explicitly different W-2 year"
 

@@ -31,12 +31,12 @@ it('retains supplied W2G calendar years without fabricating missing originals',(
   expect(input.formW2G[0].taxYear).toBe(taxYear);
  }
 });
-it('rejects known W2G year contradictions while retaining historical arithmetic',()=>{
+it('rejects known W2G year contradictions in calculation and audit',()=>{
  for(const year of [2024,2026])for(const [winnings,withheld]of [['0','0'],['1000','0'],['0','1000']]as const){
-  const input=inputWithW2G(year,winnings,withheld),before=structuredClone(input),result=calculateFederalTax(TaxYearInputSchema.parse(input));
-  expect(result.agi.toFixed()).toBe(winnings==='1000'?'86000':'85000');
-  expect(result.totalWithholding.toFixed()).toBe(withheld==='1000'?'13750':'12750');
-  expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('matching-year direct income originals');expect(input).toEqual(before);
+  const input=inputWithW2G(year,winnings,withheld),before=structuredClone(input);
+  const expectedYearError=`Form W-2G source year ${year} must match the 2025 return`;
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(expectedYearError);
+  expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow(expectedYearError);expect(input).toEqual(before);
  }
 });
 it('denies contradictory W2G originals at actual authenticated POST before dispatch',async()=>{
@@ -49,8 +49,9 @@ it('rejects conflicting duplicate W2G years in either order',async()=>{
  for(const year of [2024,2026])for(const reversed of [false,true]){
   const input=inputWithW2G(2025),bad=inputWithW2G(year);
   input.formW2G=reversed?[...bad.formW2G,...input.formW2G]:[...input.formW2G,...bad.formW2G];
-  const result=calculateFederalTax(TaxYearInputSchema.parse(input));expect(result.agi.toFixed()).toBe('87000');expect(result.totalWithholding.toFixed()).toBe('14750');
-  await post(input,400);
+  const before=structuredClone(input);
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(`Form W-2G source year ${year} must match the 2025 return`);
+  await post(input,400);expect(input).toEqual(before);
  }
 });
 it('preserves matching and missing W2G years without changing amounts or identity privacy',async()=>{

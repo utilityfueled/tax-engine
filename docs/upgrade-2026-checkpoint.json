@@ -227,6 +227,7 @@
       },
       "nov19FederalAnnualIncomeSourceYears": {
         "parent": "eb3223b5",
+        "commit": "7ea62c3f",
         "isolatedPatchSha256": "38e1e8288ac9203cc8d3539a4d0b2b18f39d55ce3be699f9eb97d40419242b45",
         "originals": ["W-2G", "1099-INT", "1099-DIV", "1099-MISC", "1099-NEC"],
         "initialWrongYearFailures": 20,
@@ -234,6 +235,16 @@
         "independentFocusedTestsPassed": 46,
         "combinedFocusedTestsPassed": 161,
         "legacyMissingYearPreserved": true
+      },
+      "nov19AnnualStatementDiagnosticFollowUp": {
+        "parent": "7ea62c3f",
+        "previousCoverageTestsPassed": 29363,
+        "previousCoverageTestsFailed": 17,
+        "previousCoverageSuitesFailed": 7,
+        "focusedTestsPassed": 272,
+        "independentTestsPassed": 201,
+        "form8880StandaloneControlsReviewed": true,
+        "fullCombinedVerification": "pending"
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",

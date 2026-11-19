@@ -71,6 +71,7 @@ lines:
       and ask for the statement for the selected year. Preserve an omitted
       legacy year as unknown. Guided entry carries an actual entered year
       through to the federal input.
+    notes: Validate linked actual W-2 rows first. For a remaining annual statement mismatch, retain the unavailable-rule-pack diagnostic when applicable.
     irsRef: >-
       IRS General Instructions for Forms W-2 and W-3, Calendar year basis
       (https://www.irs.gov/pub/irs-prior/iw2w3--2025.pdf and
@@ -88,6 +89,7 @@ lines:
       printed calendar year rather than the form revision. Preserve an
       omitted legacy year as unknown. Household payments, recoveries and
       carryovers use the dates and periods of their own worksheets.
+    notes: The ordinary return checks the year before downstream worksheet calculations. Specialized source validators still reject mismatched originals when used independently.
     irsRef: >-
       IRS Instructions for Forms 1099-INT and 1099-OID
       (https://www.irs.gov/instructions/i1099int), Form 1099-DIV

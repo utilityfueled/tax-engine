@@ -19,7 +19,7 @@ sources:
   - "https://www.irs.gov/pub/irs-prior/i8606--2025.pdf"
   - "https://www.irs.gov/pub/irs-prior/p575--2025.pdf"
   - "https://www.irs.gov/publications/p936"
-notes: Prospective software source-admission contract only. Preserve historical engine previews and existing validated tax methods. A server-calculated receipt verifies arithmetic and scope, not actual-world truth or filing readiness.
+notes: Prospective software source-admission contract. Preserve existing validated tax methods and historical engine previews where the federal calculation accepts the original source. A server-calculated receipt verifies arithmetic and scope, not actual-world truth or filing readiness.
 lines:
   - line: "source-preview-separation"
     description: A confirmed explanation must not silently discard the historical mortgage source qualification or treat unknown retirement taxability as a complete source.
@@ -93,7 +93,7 @@ lines:
     testRef: "tests/apps/web/verified-ai-legacy-source-admission.test.ts::denies a known mismatched %s direct-income original at confirmed POST"
   - line: "withholding-only-year"
     description: "A zero-gross original may still affect current payments"
-    formula: "Reject an explicitly mismatched direct-original year before accounting even when gross income is zero and federal withholding is positive. Canonical historical preview remains unchanged."
+    formula: "Reject an explicitly mismatched direct-original year before accounting even when gross income is zero and federal withholding is positive. Federal calculation also rejects mismatched W2,1099INT,1099DIV,1099MISC and1099NEC originals."
     testRef: "tests/apps/web/verified-ai-legacy-source-admission.test.ts::denies a withholding-only mismatched %s original before confirmed accounting"
   - line: "direct-year-preservation"
     description: "Missing years remain unknown rather than being inferred or rejected by a recursive date scanner"
@@ -102,7 +102,7 @@ lines:
 
   - line: "misc-nec-calendar-contradiction"
     description: "Known MISC and NEC calendar originals cannot certify a different return year"
-    formula: "For confirmed explanations, reject known past/future taxYear on actual MISC other income or MISC/NEC withholding-only originals before provider dispatch or accounting. Preserve canonical historical arithmetic and every existing positive NEC receipt/source gate. This does not infer an original year or recursively inspect source histories. Responses remain private no-store and reveal no source identities."
+    formula: "Reject known past/future taxYear on actual MISC other income or MISC/NEC withholding-only originals in federal calculation and before confirmed explanation dispatch or accounting. Preserve every existing positive NEC receipt/source gate. This does not infer an original year or recursively inspect source histories. Responses remain private no-store and reveal no source identities."
     testRef: "tests/apps/web/verified-ai-legacy-source-admission.test.ts::denies a known mismatched MISC or withholding-only NEC original %s before confirmed accounting"
   - line: "misc-nec-year-preservation"
     description: "Matching and omitted original years preserve the established methods"
@@ -141,15 +141,15 @@ lines:
     testRef: "tests/apps/web/verified-ai-w2g-year.test.ts::retains supplied W2G calendar years without fabricating missing originals"
   - line: "w2g-confirmed-year"
     description: "Known inconsistent W2G originals cannot certify a confirmed current explanation"
-    formula: "Reject an explicitly supplied W2G calendar taxYear differing from taxpayer.taxYear before confirmed explanation dispatch, including zero income and withholding-only rows. Preserve historical canonical arithmetic and all other source gates. No date-won-to-payment-year inference and no K1 fiscal-year comparison."
-    testRef: "tests/apps/web/verified-ai-w2g-year.test.ts::rejects known W2G year contradictions while retaining historical arithmetic"
+    formula: "Reject an explicitly supplied W2G calendar taxYear differing from taxpayer.taxYear in federal calculation and before confirmed explanation dispatch, including zero income and withholding-only rows. Preserve all other source gates. No date-won-to-payment-year inference and no K1 fiscal-year comparison."
+    testRef: "tests/apps/web/verified-ai-w2g-year.test.ts::rejects known W2G year contradictions in calculation and audit"
   - line: "w2g-private-post"
     description: "The actual authenticated handler rejects calendar contradictions privately before provider or accounting"
     formula: "Actual confirmed POST returns400 private no-store for past or future W2G calendar originals, irrespective of amount. No original payer or taxpayer identity is exposed; no source mutation."
     testRef: "tests/apps/web/verified-ai-w2g-year.test.ts::denies contradictory W2G originals at actual authenticated POST before dispatch"
   - line: "w2g-duplicate-year"
     description: "A matching-year duplicate cannot conceal a known contradictory calendar source"
-    formula: "Inspect every actual W2G original in either order, without deduping or altering historical numeric results."
+    formula: "Inspect every actual W2G original in either order. Any contradictory source year holds the calculation, including if another original in the same return matches."
     testRef: "tests/apps/web/verified-ai-w2g-year.test.ts::rejects conflicting duplicate W2G years in either order"
   - line: "w2g-year-compatibility"
     description: "Matching and absent historical calendar originals preserve their existing preview and confirmed behavior"

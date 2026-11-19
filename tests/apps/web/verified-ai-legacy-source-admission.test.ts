@@ -152,7 +152,8 @@ it.each(['w2','interest','dividend'] as const)('denies a known mismatched %s dir
  if(kind==='w2')taxInput.w2s[0].taxYear=2024;
  else if(kind==='interest')taxInput.form1099Int=[{taxYear:2024,payer:'Fictional source-year bank',interestIncome:'1000'}];
  else taxInput.form1099Div=[{taxYear:2024,payer:'Fictional source-year dividend',ordinaryDividends:'1000'}];
- expect(calculateFederalTax(TaxYearInputSchema.parse(taxInput)).agi.toFixed()).toBe(kind==='w2'?'85000':'86000');
+ const formName={w2:'Form W-2',interest:'Form 1099-INT',dividend:'Form 1099-DIV'}[kind];
+ expect(()=>calculateFederalTax(TaxYearInputSchema.parse(taxInput))).toThrow(`${formName} source year 2024 must match the 2025 return`);
  const actor={id:'synthetic-direct-owner',label:'Synthetic',email:'direct-fixture@example.test'},workspace=createWorkspaceRecord('direct-original-year');workspace.returnSummary.targetTaxYear=2025;
  const providerRequest=buildProviderWorkspaceRequest(workspace,{task:'workspace-help',question:'Explain taxable income.',now:'2026-11-14T12:00:00Z'}),fetchFn=vi.fn(()=>{throw Error('No external transport');}),accounting=vi.fn();
  const handler=createTaxExplanationRouteHandlers({env:{TAX_ENGINE_DEPLOYMENT_MODE:'hosted',NODE_ENV:'production',TAX_ENGINE_APP_URL:'https://tax.example'},resolveActor:vi.fn().mockResolvedValue(actor),getEntitlementByOwnerId:vi.fn().mockResolvedValue({subscription:{planId:'starter'},entitlement:{workspaceAccess:true}}),rateLimitStore:new Map(),fetchFn,accounting});
@@ -198,9 +199,11 @@ it.each([
  ['misc-withholding-past','misc-withholding',2024],['misc-withholding-future','misc-withholding',2026],
  ['nec-withholding-past','nec-withholding',2024],['nec-withholding-future','nec-withholding',2026],
 ] as const)('denies a known mismatched MISC or withholding-only NEC original %s before confirmed accounting',async(_label,kind,taxYear)=>{
- const input=miscNecYearFixture(kind,taxYear),preview=calculateFederalTax(TaxYearInputSchema.parse(input));
- expect(preview.agi.toFixed()).toBe(kind==='misc-income'?'86000':'85000');
- expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('matching-year direct income originals');
+ const input=miscNecYearFixture(kind,taxYear);
+ const formName=kind==='nec-withholding'?'Form 1099-NEC':'Form 1099-MISC';
+ const expectedYearError=`${formName} source year ${taxYear} must match the 2025 return`;
+ expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(expectedYearError);
+ expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow(expectedYearError);
  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);
  expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');
  const text=await response.text();expect(JSON.parse(text)).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});

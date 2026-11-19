@@ -1,7 +1,7 @@
 /** Spec: spec/federal/form-8880-2026-sources.yaml. */
 import { describe, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { calculateForm8880 } from "@/engine/forms/form-8880.js";
+import { calculateForm8880, mergeW2RetirementContributionsIntoForm8880Input } from "@/engine/forms/form-8880.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
 import { mixedCapitalServicesFixture } from "../fixtures/form-2555-mixed-capital-services.js";
@@ -122,17 +122,30 @@ describe("Confirmed annual Form 8880 sources", () => {
   });
 
   it("refuses W-2 fallback from the wrong year or ambiguous Code G", () => {
-    for (const delta of [
-      { taxYear: 2025, box12CodeD: "2000" },
-      { taxYear: undefined, box12CodeD: "2000" },
-      { box12CodeG: "2000" },
+    for (const { source, worksheetError, federalError } of [
+      {
+        source: { taxYear: 2025, box12CodeD: "2000" },
+        worksheetError: /requires an original 2026 W-2/,
+        federalError: /Form W-2 source year 2025 must match the 2026 return/,
+      },
+      {
+        source: { taxYear: undefined, box12CodeD: "2000" },
+        worksheetError: /requires an original 2026 W-2/,
+      },
+      {
+        source: { box12CodeG: "2000" },
+        worksheetError: /confirmed eligible contribution total.*Code G/,
+      },
     ]) {
       const input = TaxYearInputSchema.parse({
         ...raw,
-        w2s: [{ ...raw.w2s[0], ...delta }],
+        w2s: [{ ...raw.w2s[0], ...source }],
         form8880: { sourceFacts2026: confirmed },
       });
-      expect(() => calculateFederalTax(input)).toThrow(/2026 W-2|Code G/);
+      expect(() => mergeW2RetirementContributionsIntoForm8880Input(
+        input.form8880, input.w2s, input.taxpayer.filingStatus, input.taxpayer.taxYear,
+      )).toThrow(worksheetError);
+      expect(() => calculateFederalTax(input)).toThrow(federalError ?? worksheetError);
     }
     const withActualEligibleTotal = calculateFederalTax(TaxYearInputSchema.parse({
       ...raw,

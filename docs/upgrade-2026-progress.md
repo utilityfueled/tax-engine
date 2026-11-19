@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 annual statement diagnostic follow-up
+
+The combined coverage run on `7ea62c3f` passed 29,363 tests and exposed 17 failures in seven suites. The follow-up preserves the linked Ohio W-2 and unavailable-rule-pack errors before the general year hold. Form 2210 and Form 8880 still check their own source requirements when invoked directly. A confirmed Saver's Credit amount of $700 produces a $350 credit with a matching W-2, while the same amount with a wrong-year W-2 leaves the federal return held. Existing confirmed-explanation tests retain their wrong-year inputs and check the earlier federal rejection as well as the existing endpoint behavior. Source-audit hashes changed with the federal source. Browser deadlines and coverage thresholds stayed in force.
+
+Ten focused suites passed all 272 tests. Independent review reran 201 tests and separately verified the same-year $700 contribution and $350 credit and the distinct 2025 and 2026 Form 8880 worksheet holds. The replacement full unit, coverage and browser results are tracked separately.
+
 ## November 19 federal annual income statement years
 
 The federal entry point holds an explicitly wrong printed year on Forms W-2G, 1099-INT, 1099-DIV, 1099-MISC and 1099-NEC before using their income or withholding. Current-original year checks preserve unknown legacy years and keep household payments, recoveries, carryovers and estimated payments on their own reporting dates. Controls cover 2025 and draft 2026, including actual self-employment income reported on Form 1099-NEC. [IRS Form W-2G instructions](https://www.irs.gov/instructions/iw2g), [IRS Form 1099-INT instructions](https://www.irs.gov/instructions/i1099int), [IRS Form 1099-DIV instructions](https://www.irs.gov/instructions/i1099div), [IRS Forms 1099-MISC and 1099-NEC instructions](https://www.irs.gov/instructions/i1099mec).
