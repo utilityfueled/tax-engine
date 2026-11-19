@@ -18,7 +18,23 @@ the qualifying half-sibling fixture. The 2026 check exercises eligibility and
 verifies the public federal calculation remains gated. The broader suite passed
 201 tests across eight files. Independent review and 11 tests passed, as did
 the engine and web typechecks, production lint, 63 scoped spec references and
-the full browser source audit.
+the full browser source audit. The tracked-only `d52a596b` archive passed all
+nine static and build checks on Node 26.13.1. With synthetic loopback
+PostgreSQL 16.16, the full unit command passed 29,477 tests in 2,155 files.
+
+The follow-up reproduced a $2,200 CTC on actual 2025 Form 1040 line 19 for
+the raw relationships `grandparent`, `grandmother` and `other qualifying relative`.
+It now holds explicit parent and grandparent labels and the full phrase
+`other qualifying relative`, using whole-label case and whitespace normalization.
+Independent review found the initial normalization also held legacy bare `Other`
+values. The final regression preserves title-case or padded bare values and
+keeps the exact lowercase `other` category held. Confirmed ODC still yields
+$500, and the qualifying sibling and descendant controls still yield $2,200.
+Independent checks passed 11 tests and all 16 Form 8812 spec references. The
+broader suite passed 201 tests. The root check passed 39 tests and the full
+spec and browser audits. Public 2026 calculation remains gated.
+[IRC §24](https://uscode.house.gov/us/usc/t26/s24/) ·
+[IRC §152](https://uscode.house.gov/us/usc/t26/s152/).
 
 ## November 19 ordinary Form 8889 review projection
 
@@ -65,6 +81,10 @@ stopped before collecting cases because the browser manifest still had the old
 Schedule A source hash. The follow-up refreshes that hash and the dependent
 audit digest. The full source audit and 78 runner controls passed. Browser
 deadlines, worker and retry counts, and request limits remain at their prior values.
+The managed local rerun used the `294b3fe8` application with the two corrected
+manifests from `a65780e7`. It passed 650 runnable cases with zero failures and
+five original hosted skips. The loopback listener closed. Its browser log
+SHA-256 is `f4c4cec42e11f307637b339abf9d9012bf6f228771eccc2d4fb330568b389d06`.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44618726257) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44618726273) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44618726188) ·

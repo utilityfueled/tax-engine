@@ -26,31 +26,40 @@ describe('actual household child-credit admission',()=>{
     const youngest=fixture();youngest.taxpayer.dependents[0]!.dateOfBirth='2009-01-01';expect(calculate(youngest).childTaxCredit.toFixed()).toBe('2200');
   });
   it('rejects one dependent claimed for both CTC and ODC',()=>{const x=fixture();bothCredits(x);expect(()=>calculate(x)).toThrow();});
-  it('rejects explicit relative categories before 2025 line 19 and 2026 Schedule 8812', () => {
+  it('rejects explicit nonchild relationship labels before 2025 line 19 and 2026 Schedule 8812', () => {
     const line19 = (input: TaxYearInput) => calculate(input).allLines
       .find(line => line.form === '1040' && line.line === '19')?.value.toFixed();
 
-    for (const relationship of ['parent', 'other']) {
+    const contradictoryRelationships = [
+      'parent', 'other', 'grandparent', 'grandmother', 'other qualifying relative',
+      'mother', 'father', 'grand parent', 'grandfather', 'parent or grandparent',
+      '  Other\tQualifying  Relative  ',
+    ];
+    for (const relationship of contradictoryRelationships) {
       const input = fixture();
       input.taxpayer.dependents = [{ ...child, relationship }];
       const annual = { ...input, taxpayer: { ...input.taxpayer, taxYear: 2026 } };
-      expect(() => line19(input)).toThrow(/relationship.*Child Tax Credit/i);
-      expect(() => calculateChildCreditEligibility(annual)).toThrow(/relationship.*Child Tax Credit/i);
+      expect(() => line19(input), relationship).toThrow(/relationship.*Child Tax Credit/i);
+      expect(() => calculateChildCreditEligibility(annual), relationship).toThrow(/relationship.*Child Tax Credit/i);
 
       const odc = { ...child, relationship, qualifiesForCTC: false, qualifiesForODC: true, odcTinEligible: true,
-        dateOfBirth: relationship === 'parent' ? '1955-05-01' : child.dateOfBirth };
+        dateOfBirth: '1955-05-01' };
       input.taxpayer.dependents = [odc];
       annual.taxpayer.dependents = [odc];
       expect(line19(input)).toBe('500');
       expect(calculateChildCreditEligibility(annual)).toEqual({ qualifyingChildren: 0, otherDependents: 1 });
     }
 
-    const freeForm = fixture();
-    freeForm.taxpayer.dependents = [{ ...child, relationship: 'half-sister' }];
-    expect(line19(freeForm)).toBe('2200');
-    freeForm.taxpayer.taxYear = 2026;
-    expect(calculateChildCreditEligibility(freeForm)).toEqual({ qualifyingChildren: 1, otherDependents: 0 });
-    expect(() => calculate(freeForm)).toThrow(/not (?:available|ready)|incomplete/i);
+    for (const relationship of [
+      'half-sister', ' HALF BROTHER ', 'Granddaughter', 'child of my sister', 'Other', ' other ',
+    ]) {
+      const input = fixture();
+      input.taxpayer.dependents = [{ ...child, relationship }];
+      expect(line19(input), relationship).toBe('2200');
+      input.taxpayer.taxYear = 2026;
+      expect(calculateChildCreditEligibility(input)).toEqual({ qualifyingChildren: 1, otherDependents: 0 });
+      expect(() => calculate(input)).toThrow(/not (?:available|ready)|incomplete/i);
+    }
   });
   it('rejects contradictory household facts at the actual confirmed explanation POST',async()=>{
     const actor={id:'synthetic-owner',label:'Synthetic',email:'fixture@example.test'};

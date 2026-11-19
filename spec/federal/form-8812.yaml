@@ -122,10 +122,10 @@ lines:
     testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 2026 claimed child's age"
 
   - line: "claimed-child-relationship"
-    description: "Reject an explicit application relationship category that conflicts with line 4"
-    formula: "For 2025 and 2026, the exact application categories parent and other identify a parent, grandparent, or other qualifying relative. Reject an affirmative CTC claim with either category before counting qualifying children. Keep existing free-form relationship handling and independently confirmed ODC claims."
+    description: "Reject explicit parent, grandparent, and other qualifying relative labels that conflict with line 4"
+    formula: "For 2025 and 2026, an affirmative CTC claim conflicts with the exact lowercase guided token 'other'. Compare the remaining whole relationship labels after trimming, folding case, and collapsing whitespace. Reject parent, mother, father, grandparent, grand parent, grandmother, grandfather, parent or grandparent, and other qualifying relative. Preserve existing handling for free-form labels such as title-case or padded Other, half-siblings, and other qualifying-child relationships, and independently confirmed ODC claims."
     irsRef: "IRC 24(c)(1) and 152(c)(2); https://uscode.house.gov/us/usc/t26/s24/; https://uscode.house.gov/us/usc/t26/s152/"
-    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects explicit relative categories before 2025 line 19 and 2026 Schedule 8812"
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects explicit nonchild relationship labels before 2025 line 19 and 2026 Schedule 8812"
 
   - line: "source-nontaxable-combat-pay"
     description: "Add actual section 112 combat pay to line 18a and record it separately on line 18b"

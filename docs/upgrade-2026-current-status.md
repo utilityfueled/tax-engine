@@ -1,10 +1,19 @@
 # Current 2026 upgrade status
 
-The latest tax package, `294b3fe8`, preserves unknown nonitemizer-only charity
-answers on explicitly itemized 2026 returns. GitHub unit and coverage each
-passed 29,472 tests with 88.32% branch coverage. The browser source hashes have
-been corrected after a preflight failure. Automatic production builds are
-disabled. The 2026 public release still needs qualification.
+The Child Tax Credit checks hold contradictory relationship answers in the
+guided and direct calculation paths, including explicit parent and grandparent
+labels in raw API returns. The `d52a596b` archive passed nine static and build
+checks and 29,477 unit tests. The raw label follow-up passed 201 focused tests.
+The internal ordinary Form 8889 projection at `7fe1a426` uses the final IRS
+blank for its verified HSA cohort.
+[Child credit evidence](upgrade-2026-progress.md#november-19-child-tax-credit-relationship-checks) ·
+[Form 8889 evidence](upgrade-2026-progress.md#november-19-ordinary-form-8889-review-projection).
+
+The charitable election fix at `294b3fe8` preserves unknown nonitemizer-only
+charity answers on explicitly itemized 2026 returns. GitHub unit and coverage
+each passed 29,472 tests with 88.32% branch coverage. With the corrected source
+hashes from `a65780e7`, the managed local browser run passed 650 cases with five
+original hosted skips. Automatic production builds are disabled.
 [Charitable election evidence](upgrade-2026-progress.md#november-19-explicit-itemization-and-charitable-recipient-answers).
 
 The guided recovery commit, `fa718e69`, checks that a local guided edit
@@ -21,8 +30,9 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestItemizedCharityElection`, `latestBrowserRequestAssertions`
-and `latestLocalGuidedRecovery` under
+Resume with `latestChildTaxCreditRawRelationship`, `latestChildTaxCreditRelationship`,
+`latestForm8889OrdinaryProjection`,
+`latestItemizedCharityElection` and `latestBrowserRequestAssertions` under
 `activeContinuation.nov19TaxAndBrowserContinuation` in
 [the checkpoint](upgrade-2026-checkpoint.json) and the first entries in
 [the progress log](upgrade-2026-progress.md). Read the named package only.

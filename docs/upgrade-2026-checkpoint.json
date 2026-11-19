@@ -557,6 +557,8 @@
         "cleanupErrors": 0
       },
       "latestChildTaxCreditRelationship": {
+        "appSource": "d52a596b26004fa387a0c786f8203e95df4479d9",
+        "archiveSha256": "53ab0509b053328865109092d88814ce8029ad2b120325ebc5c63a07592a5abb",
         "authority": ["https://uscode.house.gov/us/usc/t26/s24/", "https://uscode.house.gov/us/usc/t26/s152/"],
         "heldExplicitCategories": ["parent", "other"],
         "incompleteLegacyOtherCtcRequiresActualRelationship": true,
@@ -568,7 +570,28 @@
         "actualForm1040Line19Year": 2025,
         "hypothetical2026EligibilityOnly": true,
         "public2026CalculationGated": true,
+        "exactStaticAndBuildChecksPassed": 9,
+        "exactLocalUnit": {
+          "testsPassed": 29477,
+          "filesPassed": 2155,
+          "postgresVersion": "16.16",
+          "logSha256": "8305b56ab8db590d99be26f8b0a4324f4460e08f5fd4f6f296fe606c21001d87"
+        },
         "browserAuditSha256": "f2a83c2dacb5c01c9c8e87879b92b3cc992cc2e25fadf6560585c0cb23446aa6"
+      },
+      "latestChildTaxCreditRawRelationship": {
+        "reproducedOn": "d52a596b",
+        "beforeActual2025Line19": "2200",
+        "reproducedRawLabels": ["grandparent", "grandmother", "other qualifying relative"],
+        "heldLabels": ["parent", "mother", "father", "grandparent", "grand parent", "grandmother", "grandfather", "parent or grandparent", "other qualifying relative"],
+        "heldExactGuidedToken": "other",
+        "preservedLegacyBareOtherVariants": true,
+        "broaderTestsPassed": 201,
+        "independentTestsPassed": 11,
+        "rootTargetedTestsPassed": 39,
+        "independentForm8812References": 16,
+        "public2026CalculationGated": true,
+        "browserAuditSha256": "6bb2ddb71cfa5e493f4aad7041ad5a056edc743a5ec13ecedbf22459b1b5917b"
       },
       "latestForm8889OrdinaryProjection": {
         "formYear": 2026,
@@ -614,7 +637,15 @@
         },
         "correctedBrowserAuditSha256": "1d02b6af21daad0644f7fb43bf320022cc20b2045744190ffa6a2c94555499ba",
         "browserAuditControlsPassed": 78,
-        "browserAuditControlsLogSha256": "417d6e6e8b17745788bee229671920daf6652481de1b3e89bd60616db84f16bc"
+        "browserAuditControlsLogSha256": "417d6e6e8b17745788bee229671920daf6652481de1b3e89bd60616db84f16bc",
+        "correctedManagedLocal": {
+          "runsAppAtAppSourceWithManifestChangesFrom": "a65780e7",
+          "passed": 650,
+          "failed": 0,
+          "originalHostedSkips": 5,
+          "loopbackListenerClosed": true,
+          "logSha256": "f4c4cec42e11f307637b339abf9d9012bf6f228771eccc2d4fb330568b389d06"
+        }
       },
       "latestBrowserRequestAssertions": {
         "source": "7459c23d6148f272468efb7265d67bf2a837af9c",
