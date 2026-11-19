@@ -30,3 +30,11 @@ in `.local/upgrade-evidence/nov17-official-annual-continuation/`.
 The `receipts.json` SHA-256 is
 `5b4532f2d681bb81da2cdc23defab7a0cda29e77e08639643fa133fbbfb83fb5`.
 This is an engineering source observation; it is not independent human review.
+
+## November 19 endpoint recheck
+
+Twenty-two bounded official requests produced 11 successful responses and 11 HTTP 404 responses. The current federal Form 1040, annual instructions and Tax/EIC tables still identify tax year 2025. The 2026 Form 1040 remains a draft. The Pennsylvania and Ohio controls still identify tax year 2025 and the tested 2026 annual form, instructions and residency-schedule URLs returned 404. These observations cover the recorded URLs. [IRS current Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) · [IRS 2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) · [Pennsylvania income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio filing forms](https://tax.ohio.gov/individual/file-now/file-now-page)
+
+The current Form 1045 and its instructions and Form 1095-A and its instructions all identify 2026. The 1045 instructions refer readers to Form 172 for the NOL calculation, leaving the §1202 interpretation open. [Form 1045 instructions](https://www.irs.gov/pub/irs-pdf/i1045.pdf) · [Form 172 instructions](https://www.irs.gov/pub/irs-pdf/i172.pdf) · [Form 1095-A instructions](https://www.irs.gov/pub/irs-pdf/i1095a.pdf)
+
+Private `nov19-annual-official-status` receipts SHA-256 `2f5119df127712151c8fa6c8ef93cb41a538dbdba3c9edae796ca66d2b9923ed` and Pennsylvania receipts SHA-256 `52e817fe9466b21c74c27cc489a8be236a0d361fdd82e107423ad4404b5f3a2b`.
