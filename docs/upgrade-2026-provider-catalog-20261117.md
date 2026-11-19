@@ -38,3 +38,9 @@ The superseding independent accounting review also passes:
 `dec1090f91df45d7411c52943dc5bb27e63da9179bc1a28c504b41eec845a31c`.
 It binds the later actual receipt and normal controller closure and independently
 recomputes the two costs and conservative exposure with Decimal.
+
+## November 19 public documentation recheck
+
+The published selected-model prices and retirement dates match the November 17 source refresh. Gemini 3.8 Flash standard text stays at $0.75 input, $3.75 output and $0.075 cache read per million tokens through December 31. On January 1, 2027 those prices become $1.50, $7.50 and $0.15, and cache storage becomes $1 per million token-hours. The published Gemini lifecycle lists no shutdown date for the two selected IDs. [Google pricing](https://aistudio.google.com/docs/pricing) · [Google model lifecycle](https://aistudio.google.com/docs/deprecations)
+
+OpenAI still lists December 11, 2026 as the retirement date for the GPT-5 Mini alias and snapshot, with GPT-6.1 Terra listed as its replacement. The original comparison baseline is retained. The November 19 observation used public documentation. The November 17 account metadata, actual provider receipts and outstanding review gates retain their original scope. [OpenAI pricing](https://developers.openai.com/api/docs/pricing) · [OpenAI model lifecycle](https://developers.openai.com/api/docs/deprecations)
