@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 19 exact ARM64 build and first recovery start
+
+The isolated ARM64 controller verified the retained exact `c0760d2b` image, built and inspected the exact `49f79555` image, and invoked the ordinary synthetic Compose recovery helper. The first `Compose up` using the retained previous image exited 125 at `start-previous`. No recovery phase completed. The controller then removed its own source directory, normally stopped the isolated VM, restarted the prior default VM, and verified restored routes, connection defaults and original container states. No forced stop or resource setting change occurred. Earlier attempts stopped before any VM or route change when checking literal archive symlinks and the host temp-directory route. The current result leaves recovery qualification open.
+
+## November 19 exact managed browser completion
+
+The unchanged managed browser command on frozen `49f79555` completed eight windows, 650 passes, five original skips and zero failures, with normal server cleanup. Its result summary SHA-256 is `ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`. The earlier strict AMD64 timing failures remain part of the release evidence. The later Form 1098 and Form 1099-R changes still need combined verification.
+
 ## November 19 original pension checkbox facts
 
 Ordinary 2026 pension calculations that rely directly on Form 1099-R Box 2a now require the original Box 2b and Box 7b checkboxes to be known and unchecked. This includes the separately guarded Code A ordinary reporting election. Missing flags stay unknown through original JSON intake. Previously serialized literal `false` values have no provenance that identifies a parser default. Confirmed zero and $9,000.01 remain distinct from an omitted amount. The Simplified Method, supported no-current-tax routes, standalone Form 4972 and historical controls passed. All 1,470 focused tests and engine and web typechecks passed. [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
