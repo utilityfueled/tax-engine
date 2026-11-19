@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Marketplace coverage-year binding
+
+Form 8962 now holds an explicitly wrong-year Form 1095-A before using the advance payments. A wrong-year original or correction previously changed a synthetic 2025 return by $602. The check uses the coverage year and preserves corrections furnished later, the legacy 2025 undated path and the 2026 complete-source requirement. A matching $1,000.50 statement still produces $1,001 on Form 8962 Line 25 and $603 in repayment on the qualifying synthetic example. [IRS Form 1095-A instructions](https://www.irs.gov/instructions/i1095a) · [IRS Form 8962 instructions](https://www.irs.gov/instructions/i8962).
+
+Seven cases reproduced missing holds before the change. All 372 affected tests across 52 suites passed, including verified AI rejection before accounting or provider dispatch. Independent review passed 63 focused tests and verified void, duplicate, rounding and 2026 source requirements. Type checks, spec inventory and browser source audit passed. Exact full verification is pending.
+
 ## November 19 independent Linux ARM64 rehearsal
 
 Commit `01832cec` adds a manually dispatched native Linux ARM64 workflow on a free standard public GitHub runner. It verifies the runner, Docker daemon, image architecture and immutable image IDs. Actionlint and four image-admission controls passed, and independent review caught the need to pull the pinned runner base before smoke inspects it. [GitHub standard runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories).

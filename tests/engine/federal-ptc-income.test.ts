@@ -9,6 +9,35 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 import { syntheticChildElection } from "../fixtures/form-8814-election.js";
+
+function legacyMarketplaceReturn(taxYear: number | undefined, statementStatus: "original" | "corrected") {
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    form1095A: [{
+      taxYear, statementStatus, marketplace: "Actual Marketplace", policyNumber: "ACTUAL-1",
+      monthlyPremiums: [{ month: 1, enrolleePremium: "1000", slcsp: "1000", advancePremiumTaxCredit: "1000.50" }],
+    }],
+  });
+}
+
+it.each([
+  [2024, "original"], [2024, "corrected"], [2026, "original"], [2026, "corrected"],
+] as const)("holds a Form 1095-A from a different coverage year before reconciling advance credit (%i %s)", (taxYear, status) => {
+  expect(() => calculateFederalTax(legacyMarketplaceReturn(taxYear, status)))
+    .toThrow("Form 8962 source statement tax year does not match");
+});
+
+it.each([[undefined, "original"], [2025, "corrected"]] as const)(
+  "preserves undated legacy and matching corrected Marketplace statements (%s %s)", (taxYear, status) => {
+    const input = legacyMarketplaceReturn(taxYear, status);
+    const result = calculateFederalTax(input);
+    expect(input.form1095A[0]?.monthlyPremiums[0]?.advancePremiumTaxCredit).toBe("1000.50");
+    expect(result.form8962?.advancePTCTotal.toFixed()).toBe("1001");
+    expect(result.form8962?.excessAPTCRepayment.toFixed()).toBe("603");
+    expect(result.totalTax.minus(calculateFederalTax({ ...input, form1095A: [] }).totalTax).toFixed()).toBe("603");
+  },
+);
+
 it("uses canonical tax-exempt interest and nontaxable benefits instead of a favorable source override", () => {
   for (const year of [2025, 2026]) {
     const months = Array.from({ length: 12 }, (_, index) => ({ month: index + 1, enrolleePremium: "500", slcsp: "700", advancePremiumTaxCredit: "300", coverageEligible: true, incomeBasedSepEnrollment: false }));

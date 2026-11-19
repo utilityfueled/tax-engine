@@ -300,21 +300,15 @@ it.each([
 ] as const)('denies a known mismatched benefits education or Marketplace original %s before confirmed accounting',async(_label,kind,year)=>{
  const input=benefitsCalendarFixture(kind,year),before=structuredClone(input);
  const yearError=kind.startsWith('ssa-') ? `Form SSA-1099 source year ${year} must match the 2025 return`
-  : kind==='student-interest' ? `Form 1098-E source year ${year} must match the 2025 return` : undefined;
- if(yearError){
-  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(yearError);
- }else{
-  const preview=calculateFederalTax(TaxYearInputSchema.parse(input)),baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
-  expect(preview.agi.minus(baseline.agi).toFixed()).toBe('0');
-  expect(preview.totalWithholding.minus(baseline.totalWithholding).toFixed()).toBe('0');
-  if(kind==='marketplace-aptc')expect(preview.totalTax.minus(baseline.totalTax).toFixed()).toBe('602');
- }
+  : kind==='student-interest' ? `Form 1098-E source year ${year} must match the 2025 return`
+  : 'Form 8962 source statement tax year does not match';
+ expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(yearError);
  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);
  expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('private');expect(response.headers.get('cache-control')).toContain('no-store');
  const text=await response.text();expect(JSON.parse(text)).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});
  for(const value of [input.taxpayer.primary.ssn,'Fictional calendar beneficiary','Fictional calendar loan servicer','private-calendar-policy'])expect(text).not.toContain(value);
  expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();expect(input).toEqual(before);
- expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow(yearError??'matching-year direct income originals');
+ expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow(yearError);
 });
 it('preserves matched and missing benefits education and Marketplace years with amount conservation',async()=>{
  const baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
@@ -343,8 +337,7 @@ it('denies zero-impact conflicting and malformed benefits education and Marketpl
    }else if(kind==='student-interest'){
     expect(()=>calculateFederalTax(TaxYearInputSchema.parse(zero))).toThrow(`Form 1098-E source year ${year} must match the 2025 return`);
    }else{
-    const preview=calculateFederalTax(TaxYearInputSchema.parse(zero)),baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
-    expect(preview.agi.eq(baseline.agi)).toBe(true);expect(preview.totalWithholding.eq(baseline.totalWithholding)).toBe(true);expect(preview.totalTax.eq(baseline.totalTax)).toBe(true);
+    expect(()=>calculateFederalTax(TaxYearInputSchema.parse(zero))).toThrow('Form 8962 source statement tax year does not match');
    }
    const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(zero);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
   }

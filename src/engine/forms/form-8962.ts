@@ -154,7 +154,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
     // The schema records missingness before legacy amount defaults are applied.
     const source = form as typeof form & { taxYear?: number; sourceFactsComplete?: boolean };
     if (verified && (source.sourceFactsComplete !== true || !form.marketplace.trim() || !form.policyNumber.trim())) throw new Error("Form 8962 original source statement facts are incomplete");
-    if (verified && source.taxYear !== year) throw new Error("Form 8962 source statement tax year does not match");
+    if ((verified || source.taxYear !== undefined) && source.taxYear !== year) throw new Error("Form 8962 source statement tax year does not match");
     const identity = marketplacePolicyIdentity(form.marketplace, form.policyNumber);
     if (policyIds.has(identity)) throw new Error("Form 8962 duplicate policy statement; replace corrected statements instead of adding them");
     policyIds.add(identity);

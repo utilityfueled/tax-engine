@@ -410,6 +410,19 @@
           "completeRun": { "commit": "2fd3fe00", "runId": 44557882785, "stepTimeoutMinutes": 75, "jobTimeoutMinutes": 90, "result": "in progress" }
         }
       },
+      "nov19MarketplaceCoverageYear": {
+        "parent": "a1f4d065",
+        "initialMissingHolds": 7,
+        "affectedTestsPassed": 372,
+        "affectedFilesPassed": 52,
+        "independentFocusedTestsPassed": 63,
+        "scopedSpecReferencesValidated": 123,
+        "inventoryCheckPassed": true,
+        "browserAuditMatched": true,
+        "typeChecksPassed": 3,
+        "lintPassed": true,
+        "fullVerification": "pending"
+      },
       "nov19QsbsBrowserPdfSubprocess": {
         "parent": "06396eb6",
         "commit": "c0219541",

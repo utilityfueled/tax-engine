@@ -18,6 +18,11 @@ notes: >-
   establish coverage, residency, below-poverty or separate-filing exceptions.
   A verified 2026 computation requires the actual facts in ptc-source-facts.yaml.
 lines:
+  - line: "source-coverage-year"
+    description: "Bind Form 1095-A to the return for its actual coverage year"
+    formula: "Reject a supplied Form 1095-A coverage year different from the return year before aggregating its coverage months. A correction replaces the affected coverage year's statement even when furnished after that year. Preserve undated unverified 2025 statements and the actual year requirement for verified worksheets."
+    irsRef: "Form 1095-A instructions, When To File and Correction to Information Reported; 2025 Form 8962 instructions, Form 1095-A"
+    testRef: "tests/engine/federal-ptc-income.test.ts::holds a Form 1095-A from a different coverage year before reconciling advance credit (%i %s)"
   - line: "1"
     description: "Actual tax family size"
     formula: "Use confirmed Form 8962 tax-family worksheet, never count all household members or every entered dependent automatically."
