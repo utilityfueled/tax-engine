@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 cross-version protected Preview workspace
+
+The exact current `7f55ca05` Preview and previous `6766f450` Preview used separate authenticated sessions for the same approved synthetic actor. The current build created a unique empty workspace and saved it with a revision check. The previous build reopened the exact row and updated it using the current revision. The current build then read back the previous save with the exact new revision. Both saves changed only the update timestamp.
+
+All twelve checks passed across 22 hosted requests. Both builds showed the fixture absent after cleanup, retained all prior workspace rows, and returned a null session after sign-out. This exercises cross-version application compatibility on shared Preview storage. Deployment activation rollback remains open. The result SHA-256 is `c098406b84074dfa83c446b0146f55eb9abf614a731541d3bc76068d5c801103`.
+
 ## November 19 persistent Preview migration and restore
 
 Exact `7f55ca05` passed the independently reviewed 11-table migration and recovery rehearsal on the persistent, Preview-only PostgreSQL 18.7 primary. The binding admitted a fresh synthetic namespace. It matched all 6,488 tracked source entries and six internal symlinks. The transaction rollback restored the 19 synthetic rows across all tables. A scoped archive captured those rows, and restore reproduced the normalized catalog, exact decimal cost, cancellation, issuance replay, receipts, test billing mode and immutable triggers. The migration hooks reapplied twice with idempotent results and fresh workspace revisions.
