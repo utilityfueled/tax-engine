@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 exact current core checks and protected Preview workspace lifecycle
+
+Frozen `e0cc9467` passed the full unit and coverage commands with 29,205 tests passing and 75 planned skips in each. Coverage was 87.88% branches against the 85% gate. Three typechecks, both spec checks, both builds, lint and the offline model-evaluation manifest check passed. Lint reported zero errors and 12,102 warnings. The frozen source archive SHA-256 was `59ddc00c4b3493b73ce4f90e0e943424b7da4bd42e8be9f75f8175db010d4a9b`. The matched managed browser run continued separately.
+
+The same 6,477-entry tracked archive reached READY on the original protected Preview project with test billing. Provider metadata confirmed the exact source label, Preview target and absence of production aliases. One existing authorized test account created, revisioned, reopened and deleted a synthetic PostgreSQL workspace. The fixture was absent and the prior list matched after cleanup. Sign-out left a null session. All nine runner assertions passed. This is an ordinary hosted workspace result for that source.
+
 ## November 19 ordinary ARM64 recovery pass
 
 The isolated ARM64 target used the verified retained `c0760d2b` and `49f79555` images. The original named local Compose connection passed its two provider checks. The ordinary rehearsal then passed the previous version, upgrade, database restart, database dump and restore, rollback and re-upgrade phases. Database, browser facts and original document fingerprints agreed across all six phases. The synthetic restore preserved two tenants' workspaces, credit issuance and replay idempotency, receipt binding, migration state and exact provider cost. Encrypted browser recovery preserved the original document, unknown year and exact cents and verified fixture deletion. Normal cleanup restored the default VM, socket routes, connection defaults and baseline resources. Controller receipt SHA-256 `795e8ccd33979a3330ebf89aa64d8e2d6b57361aa8f4c3e548f2a0119ea17cb7`. Rehearsal output SHA-256 `a557f9dcf708ec5ed148570d4b1b908fe48ae1e4a14cc21db0957bf07ddfd2a8`. This verifies ordinary recovery for the exact ARM64 image. Platform-wide release qualification is still open.
