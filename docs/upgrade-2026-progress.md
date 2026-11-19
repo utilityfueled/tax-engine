@@ -1,5 +1,35 @@
 # 2026 upgrade implementation evidence
 
+## November 19 explicit itemization and charitable recipient answers
+
+Application source `294b3fe8` accepts a documented 2026 direct cash gift on an
+explicitly itemized return when the two §170(p) answers are unknown. Ordinary
+gift validation still applies. The Schedule A worksheet reports the comparison
+when all required facts are present. Automatic, standard and explicitly
+nonitemized elections still require the applicable facts.
+[IRC §170(p)](https://uscode.house.gov/us/usc/119-134/t26/s170/) ·
+[IRS IR-2026-135](https://www.irs.gov/newsroom/irs-reminder-permanent-charitable-contribution-deduction-begins-for-returns-filed-next-year-for-taxpayers-who-do-not-itemize).
+
+The spec-linked failure reproduced through guided validation and the canonical
+bridge. At $10,000 AGI the synthetic $1,500.25 gift produces $1,450 on Schedule A.
+The initial fix omitted the comparison even with complete answers. The broader
+suite caught that regression, and the final fix preserves the $1,000 comparison
+for the complete fixture. Independent engineering review and 962 affected
+tests passed. All nine exact-source static and build checks passed.
+
+GitHub unit and coverage each passed 29,472 tests across 2,155 suites. Branch
+coverage was 88.32% against 85%. The Docker workflow passed. The concurrent
+local full runs recorded test and worker timeouts. Their temporary PostgreSQL
+cluster stopped normally. The cloud managed, AMD64 and ARM64 browser jobs
+stopped before collecting cases because the browser manifest still had the old
+Schedule A source hash. The follow-up refreshes that hash and the dependent
+audit digest. The full source audit and 78 runner controls passed. Browser
+deadlines, worker and retry counts, and request limits remain at their prior values.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44618726257) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44618726273) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44618726188) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44619006597).
+
 ## November 19 browser request checks and trace overhead
 
 The strict AMD64 trace on `fa718e69` showed that the desktop local

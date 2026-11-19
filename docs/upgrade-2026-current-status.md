@@ -1,11 +1,13 @@
 # Current 2026 upgrade status
 
-The latest reviewed tax package requires original brokerage disposition dates
-to reconcile to the return year. The annual statement checks remain in place.
-Automatic production builds are disabled. The 2026 public release still needs
-qualification.
+The latest tax package, `294b3fe8`, preserves unknown nonitemizer-only charity
+answers on explicitly itemized 2026 returns. GitHub unit and coverage each
+passed 29,472 tests with 88.32% branch coverage. The browser source hashes have
+been corrected after a preflight failure. Automatic production builds are
+disabled. The 2026 public release still needs qualification.
+[Charitable election evidence](upgrade-2026-progress.md#november-19-explicit-itemization-and-charitable-recipient-answers).
 
-The latest application commit, `fa718e69`, checks that a local guided edit
+The guided recovery commit, `fa718e69`, checks that a local guided edit
 saved before switching to advanced mode. The regression restores the corrected
 $43,000 AGI from encrypted backup. A separate regression covers a rejected
 restart. The exact app passed 29,471 tests each in unit and coverage, nine
@@ -19,7 +21,8 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestBrowserRequestAssertions` and `latestLocalGuidedRecovery` under
+Resume with `latestItemizedCharityElection`, `latestBrowserRequestAssertions`
+and `latestLocalGuidedRecovery` under
 `activeContinuation.nov19TaxAndBrowserContinuation` in
 [the checkpoint](upgrade-2026-checkpoint.json) and the first entries in
 [the progress log](upgrade-2026-progress.md). Read the named package only.

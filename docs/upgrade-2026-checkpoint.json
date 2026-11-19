@@ -556,6 +556,35 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestItemizedCharityElection": {
+        "appSource": "294b3fe808b559522355ef685b7c4bc3285af4b3",
+        "archiveSha256": "8c1390b67b5ebb7e15e36895d2368ba2a0e2bf7c64044a689f63c1dad7bdfacd",
+        "redLogSha256": "f8b0661f3f2161c09b88dc7813ddd46f865aa95a514996cd3eb50706081162d2",
+        "targetedPassed": 962,
+        "targetedSuites": 202,
+        "targetedLogSha256": "9cabbf850b0d30a1be6797e18e12689e91a8fc627dfad2f3d7a1215c9e670bb0",
+        "independentEngineeringReviewPassed": true,
+        "staticChecksPassed": 9,
+        "localFullCommands": { "unitPassed": false, "coveragePassed": false, "postgresStoppedNormally": true, "observation": "test and worker timeouts" },
+        "github": {
+          "ci": 44618726257,
+          "ciJobsPassed": 6,
+          "docker": 44618726273,
+          "dockerPassed": true,
+          "testsPassedPerJob": 29472,
+          "testFilesPassedPerJob": 2155,
+          "branchCoveragePct": 88.32,
+          "coverageGatePct": 85,
+          "unitLogSha256": "5c352925a98828420824ba35e21b73244939a897e26d188fbb28f624d9b51f77",
+          "coverageLogSha256": "32b5b003de7e9e4d7f61a7a40db465a5cdd8e79f76dbd8f98493a96ff88e0bdd",
+          "web": 44618726188,
+          "arm64": 44619006597,
+          "browserStatus": "all three browser jobs stopped before cases with a stale Schedule A source hash"
+        },
+        "correctedBrowserAuditSha256": "1d02b6af21daad0644f7fb43bf320022cc20b2045744190ffa6a2c94555499ba",
+        "browserAuditControlsPassed": 78,
+        "browserAuditControlsLogSha256": "417d6e6e8b17745788bee229671920daf6652481de1b3e89bd60616db84f16bc"
+      },
       "latestBrowserRequestAssertions": {
         "source": "7459c23d6148f272468efb7265d67bf2a837af9c",
         "appSource": "fa718e691309097346439fcd33a4e93ce2271e0e",
