@@ -9,7 +9,8 @@ The latest application commit, `fa718e69`, checks that a local guided edit
 saved before switching to advanced mode. The regression restores the corrected
 $43,000 AGI from encrypted backup. A separate regression covers a rejected
 restart. The exact app passed 29,471 tests each in unit and coverage, nine
-static and build checks, and the protected Preview workspace lifecycle.
+static and build checks, 650 local browser cases, and the protected Preview
+workspace lifecycle.
 [Guided save and reset evidence](upgrade-2026-progress.md#november-19-local-guided-save-and-reset-recovery).
 
 Resume with the `latestLocalGuidedRecovery` entry under

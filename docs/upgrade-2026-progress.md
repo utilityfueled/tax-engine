@@ -21,6 +21,19 @@ unit and coverage runs. Branch coverage reached 88.32% against the 85%
 gate. PostgreSQL 16.16 stopped normally. All nine static and build
 checks passed, as did the [Docker job](https://github.com/utilityfueled/tax-engine/actions/runs/44594837918).
 
+The exact local managed browser run passed 650 cases across eight windows
+with five planned skips and verified server shutdown. Its summary SHA-256 is
+`ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`.
+
+A focused Chromium run on the same production build confirmed the failed
+save alert, the blocked transition, byte-identical old storage during the
+fault, and the successful $43,000 save and transition after retry. An initial
+assertion failed when the currency control added a comma on blur. The
+corrected assertion passed and the local app stopped normally. The initial
+and corrected result hashes are
+`5a471b767f19ac4387bf6f99242ca5978ae4e1052747bf2a8bb91d45fe32e79a` and
+`d6a4fa76229b144c70966b59683fc47ee0bda0ec51db12a3333ab34b9a2aabad`.
+
 The protected exact-source Preview reached READY at 19:24 UTC with test
 billing, the expected project and source, and no production alias. Its
 nine synthetic workspace checks passed, including save, reopen, deletion,
@@ -32,9 +45,14 @@ The source and deployment binding SHA-256 is
 The prior `7f55ca05` cloud managed browser job passed 648 cases and had
 two bounded saved-PDF inspection timeouts and five planned skips. Its
 strict AMD64 job passed 635 cases, failed 15 and had five planned skips.
-Both failures remain recorded at the original limits.
+Its native Linux ARM64 job passed image smoke, isolated Compose recovery
+and container cleanup. Strict ARM64 browser checks passed 639 cases,
+failed 11 at the unchanged 30-second deadline and had five planned skips.
+Ten deadlines were Ohio flows and one was the Pennsylvania married
+payment flow. The RRTA cases passed on ARM64.
 [Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44585135521/job/135775914721) ·
-[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44585135521/job/135775914023).
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44585135521/job/135775914023) ·
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44585365582/job/135793510908).
 
 ## November 19 cross-version protected Preview workspace
 

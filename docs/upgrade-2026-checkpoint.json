@@ -576,12 +576,42 @@
           "workspaceReceiptSha256": "706a81242d5f4ea14299035c541e7a7a863f528dbb6ed31247f7dc52b4a9616d",
           "exactBindingSha256": "f3d04caed1cf39086a3ddc2f6aad46709169bcf53ce7f1172b9b6ce446d7e975"
         },
+        "localManagedBrowser": {
+          "passed": 650,
+          "failed": 0,
+          "plannedSkips": 5,
+          "windows": 8,
+          "serverCleanup": true,
+          "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"
+        },
+        "chromiumSaveFault": {
+          "status": "pass",
+          "failedWriteChecked": true,
+          "savedDraftPreservedByteForByte": true,
+          "retrySavedCorrectedWages": true,
+          "serverCleanup": true,
+          "initialDisplayAssertionResultSha256": "5a471b767f19ac4387bf6f99242ca5978ae4e1052747bf2a8bb91d45fe32e79a",
+          "correctedResultSha256": "d6a4fa76229b144c70966b59683fc47ee0bda0ec51db12a3333ab34b9a2aabad"
+        },
         "exactStage": ".local/upgrade-evidence/nov19-guided-save-exact",
         "github": {
           "ci": 44594838377,
           "web": 44594838219,
           "docker": 44594837918,
           "arm64": 44595399791
+        },
+        "previousExactCloudBrowser": {
+          "source": "7f55ca05",
+          "managed": { "job": 135775914721, "passed": 648, "failed": 2, "plannedSkips": 5 },
+          "amd64": { "job": 135775914023, "passed": 635, "failed": 15, "plannedSkips": 5 },
+          "arm64": {
+            "job": 135793510908,
+            "passed": 639,
+            "failed": 11,
+            "plannedSkips": 5,
+            "smokeComposeCleanupPassed": true,
+            "logSha256": "5367c58af461c7c08d56f6ff72feb8bd77e813d2d1a97a05c781b8a7f9a44ae1"
+          }
         }
       },
       "latestBrokerDateFormats": {
