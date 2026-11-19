@@ -1119,7 +1119,7 @@ export const Form1099RSchema = z.object({
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse IRA ownership on shared returns
   grossDistribution: decimal, // Box 1
   taxableAmount: decimal.optional(), // Box 2a
-  taxableAmountNotDetermined: z.boolean().default(false), // Box 2b checkbox
+  taxableAmountNotDetermined: z.boolean().optional(), // Box 2b checkbox; absence is unknown.
   iraBasisConfirmedZero: z.boolean().optional(), // Confirmed complete traditional IRA owner records, never inferred from Box 2a
   eligibleGovernmental457bPlan: z.boolean().default(false), // Validated eligible governmental section 457(b) distribution for Form 5329 defaulting
   eligibleGovernmental457bTransferredFromQualifiedPlanTaxableAmount: optionalDecimal, // Taxable portion attributable to prior qualified-plan transfers that can still stay on Form 5329 Part I
@@ -1156,7 +1156,7 @@ export const Form1099RSchema = z.object({
   qualifiedPublicSafetyEmployeeOrPrivateSectorFirefighterExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 01 for qualified public safety employees or private-sector firefighters on supported non-IRA code 1 distributions
   qualifiedDomesticRelationsOrderExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 06 for a non-IRA qualified-plan distribution paid under a QDRO
   terminalIllnessExceptionApplies: z.boolean().default(false), // Validated Form 5329 exception 20 for a non-IRA qualified-plan code 1 distribution made to a terminally ill individual
-  iraSepSimple: z.boolean().default(false), // IRA/SEP/SIMPLE checkbox
+  iraSepSimple: z.boolean().optional(), // IRA/SEP/SIMPLE checkbox; absence is unknown.
   disabilityPensionBeforeMinimumRetirementAge: z.boolean().default(false), // Validated Form 1040 Line 1 reroute for code 3 disability pensions
   militaryPensionOrSurvivorBenefit: z.boolean().default(false), // Validated NJ exclusion for U.S. military pensions and survivor benefits
 }).superRefine((value, ctx) => {

@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19 original pension checkbox facts
+
+Ordinary 2026 pension calculations that rely directly on Form 1099-R Box 2a now require the original Box 2b and Box 7b checkboxes to be known and unchecked. This includes the separately guarded Code A ordinary reporting election. Missing flags stay unknown through original JSON intake. Previously serialized literal `false` values have no provenance that identifies a parser default. Confirmed zero and $9,000.01 remain distinct from an omitted amount. The Simplified Method, supported no-current-tax routes, standalone Form 4972 and historical controls passed. All 1,470 focused tests and engine and web typechecks passed. [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
 ## November 19 original lender and loan account facts
 
 The 2026 Schedule A source worksheet now holds reported mortgage interest when the linked statement ID or lender is blank. When one source supplies a loan account reference, the original Form 1098 and the worksheet must agree. A single statement per lender and borrower can leave both references unknown. Multiple statements in that group must identify distinct accounts. The ordinary Schedule A tests preserved $30,000 for both valid single-statement presentations and $8,000 for two distinct, reconciled accounts. The historical 2025 control retained $30,000. Seven regressions failed before the fix. All 126 targeted mortgage and adjacent tests, engine typecheck, scoped lint and spec validation passed. [IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098) · [Schedule A instructions](https://www.irs.gov/instructions/i1040sca).

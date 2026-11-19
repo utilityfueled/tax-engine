@@ -1,7 +1,7 @@
 // Spec: spec/federal/form-1099-r.yaml. Test-only draft constants.
 import { describe, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { ordinaryIraBasisFixture } from "../fixtures/ira-basis.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
@@ -89,15 +89,42 @@ describe("2026 original pension source facts", () => {
   const pension = {
     payer: "Fictional pension", taxYear: 2026, accountHolder: "primary" as const,
     grossDistribution: "12000.12", distributionCode: "7", iraSepSimple: false,
-    federalWithheld: "99.09",
+    taxableAmountNotDetermined: false, federalWithheld: "99.09",
   };
-  function calculate(changes: Partial<NonNullable<TaxYearInput["form1099R"]>[number]>, year = 2026) {
-    return calculateFederalTax({
+  function pensionInput(changes: Partial<NonNullable<TaxYearInput["form1099R"]>[number]>, year = 2026) {
+    return {
       ...simpleW2Fixture,
       taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
       form1099R: [{ ...pension, taxYear: year, ...changes }],
-    });
+    };
   }
+
+  function calculate(changes: Partial<NonNullable<TaxYearInput["form1099R"]>[number]>, year = 2026) {
+    return calculateFederalTax(pensionInput(changes, year));
+  }
+
+  it("holds unknown ordinary pension checkbox facts before or after parsing", () => {
+    for (const unknown of [
+      { taxableAmountNotDetermined: undefined },
+      { iraSepSimple: undefined },
+      { iraSepSimple: undefined, taxableAmountNotDetermined: undefined },
+    ]) {
+      const input = pensionInput({ taxableAmount: "9000.01", ...unknown });
+      expect(() => calculateFederalTax(input)).toThrow(/confirmed unchecked.*Box 2b.*Box 7b/i);
+      const restored = TaxYearInputSchema.parse(JSON.parse(JSON.stringify(input)));
+      expect(() => calculateFederalTax(restored)).toThrow(/confirmed unchecked.*Box 2b.*Box 7b/i);
+    }
+  });
+
+  it("keeps confirmed ordinary pension amounts and historical omitted checkboxes", () => {
+    for (const taxableAmount of ["0", "9000.01"]) {
+      const result = calculateFederalTax(TaxYearInputSchema.parse(pensionInput({ taxableAmount })));
+      expect(result.pensionDistributionsTaxable.eq(taxableAmount)).toBe(true);
+      expect(result.form1099R?.federalWithholding.eq("99.09")).toBe(true);
+      const historical = pensionInput({ taxableAmount, iraSepSimple: undefined, taxableAmountNotDetermined: undefined }, 2025);
+      expect(calculateFederalTax(TaxYearInputSchema.parse(historical)).pensionDistributionsTaxable.eq(taxableAmount)).toBe(true);
+    }
+  });
 
   it.each([
     {}, { employeeContributions: "2000.11" },
@@ -155,6 +182,13 @@ describe("2026 original pension source facts", () => {
   });
 
   describe("2026 qualified lump-sum reporting decision", () => {
+    it("holds a lump-sum ordinary election with unknown Box 2b", () => {
+      const input = pensionInput({ distributionCode: "7A", qualifiedLumpSumReporting: "ordinary_pension",
+        taxableAmount: "9000.01", taxableAmountNotDetermined: undefined });
+      expect(() => calculateFederalTax(input)).toThrow(/Code A.*confirmed unchecked Box 2b/);
+      const restored = TaxYearInputSchema.parse(JSON.parse(JSON.stringify(input)));
+      expect(() => calculateFederalTax(restored)).toThrow(/Code A.*confirmed unchecked Box 2b/);
+    });
     const ordinaryLumpSum = { distributionCode: "7A", qualifiedLumpSumReporting: "ordinary_pension" as const };
 
     it("requires current-year non-IRA original evidence for the ordinary decision", () => {

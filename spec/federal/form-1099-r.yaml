@@ -255,38 +255,45 @@ lines:
       Before aggregating non-IRA Form 1099-R income, require the original Box 7a
       distribution code. Reject an explicitly different source year. For a
       positive gross distribution, use the known Box 2a amount, including zero,
-      only when the payer determined it, or use the complete supported Simplified
-      Method worksheet including known prior-year recovery. Do not infer the
-      taxable amount from gross, Box 5 or a missing amount on a Code G direct
-      rollover. Code G can identify a taxable direct rollover to a Roth IRA.
+      on the ordinary pension path only with the original Box 2b taxable amount
+      not determined and Box 7b IRA/SEP/SIMPLE checkboxes both confirmed unchecked.
+      Omission of either checkbox is unknown. The separate supported Simplified
+      Method uses its complete worksheet, including known prior-year recovery.
+      Do not infer the taxable amount from gross, Box 5 or a missing amount on a
+      Code G direct rollover. Code G can identify a taxable direct rollover to a Roth IRA.
       Retain the separately identified no-current-tax branches for prior-year
       Code P, tax-free Code 6, Code H, and a validated qualified Code B distribution.
       Historical methods continue to follow their existing year-specific rules.
-    irsRef: "2026 Instructions for Forms 1099-R and 5498, Boxes 2a, 2b, 5 and 7a; Publication 575, Taxation of Periodic Payments and Rollovers"
+    notes: "Earlier serialized false values carry no provenance about whether the source checkbox was observed or defaulted. The model preserves those stored values and preserves omission as unknown for new or still-omitted values."
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Boxes 2a, 2b, 5, 7a and 7b; Publication 575, Taxation of Periodic Payments and Rollovers"
     inputs:
       - "Return tax year and original Form 1099-R year when supplied"
-      - "Form 1099-R Boxes 1, 2a, 2b, 5 and 7a"
+      - "Form 1099-R Boxes 1, 2a, 2b, 5, 7a and 7b"
       - "Completed Simplified Method inputs or validated qualified Roth account distribution, where applicable"
-    testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 original pension source facts"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::holds unknown ordinary pension checkbox facts before or after parsing"
+    testRefs:
+      - "tests/engine/federal-pension-sources-2026.test.ts::2026 original pension source facts"
+      - "tests/engine/federal-pension-sources-2026.test.ts::keeps confirmed ordinary pension amounts and historical omitted checkboxes"
 
   - line: "2026-lump-sum-election"
     description: "Resolve the ordinary reporting decision for original Form 1099-R Code A"
     formula: >-
       Code A with Code 4 or 7 identifies a potentially eligible qualified
       lump-sum distribution. Bind the explicit ordinary Form 1040 reporting
-      decision to a confirmed 2026 original with the IRA box unchecked and
-      a known Box 2a. An explicit zero is a known amount. A blank Box 2a or
-      an amount marked undetermined needs its separate lump-sum taxability
-      method. The ordinary periodic-payment worksheet cannot supply it.
+      decision to a confirmed 2026 original with Boxes 2b and 7b both confirmed
+      unchecked and a known Box 2a. An explicit zero is a known amount.
+      Missing or undetermined Box 2a facts require the separate lump-sum
+      taxability method. The ordinary periodic-payment worksheet cannot supply it.
       A retained ordinary lump-sum decision on a statement without Code A
       must be reconciled with the actual source before calculation.
       Missing decisions and actual Form 4972 elections require the separate
       worksheet and cannot silently enter ordinary pension income. Code A
       alone or with an incompatible code is not a valid source combination.
-    irsRef: "2026 Instructions for Forms 1099-R and 5498, Box 7a Code A; 2026 Form 4972 Parts I–III; Form 1040 instructions, Lines 5a, 5b and 16"
+    irsRef: "2026 Instructions for Forms 1099-R and 5498, Boxes 2b, 7a Code A and 7b; 2026 Form 4972 Parts I–III; Form 1040 instructions, Lines 5a, 5b and 16"
     testRef: "tests/engine/federal-pension-sources-2026.test.ts::2026 qualified lump-sum reporting decision"
     testRefs:
       - "tests/engine/federal-pension-sources-2026.test.ts::requires current-year non-IRA original evidence for the ordinary decision"
+      - "tests/engine/federal-pension-sources-2026.test.ts::holds a lump-sum ordinary election with unknown Box 2b"
       - "tests/engine/federal-pension-sources-2026.test.ts::holds an unknown lump-sum Box 2a even with periodic pension worksheet inputs"
       - "tests/engine/federal-pension-sources-2026.test.ts::requires reconciliation of a retained lump-sum choice on a non-Code A statement"
 

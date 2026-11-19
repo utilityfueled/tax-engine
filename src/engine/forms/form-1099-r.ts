@@ -552,8 +552,8 @@ function assert2026PensionTaxability(form: Form1099R): void {
       throw new Error("2026 Form 1099-R Box 3 on a source other than Code A requires a separate method");
     }
   }
-  if (qualifiedLumpSum && (taxable === undefined || form.taxableAmountNotDetermined)) {
-    throw new Error("2026 Form 1099-R Code A requires a determined Box 2a for ordinary reporting");
+  if (qualifiedLumpSum && (taxable === undefined || form.taxableAmountNotDetermined !== false)) {
+    throw new Error("2026 Form 1099-R Code A requires a determined Box 2a and confirmed unchecked Box 2b for ordinary reporting");
   }
 
   if (isPriorYearTaxableDistribution(form)) return;
@@ -571,7 +571,12 @@ function assert2026PensionTaxability(form: Form1099R): void {
     const payments = form.simplifiedMethodPaymentsReceivedThisYear;
     if (form.simplifiedMethodCostInPlan?.trim() && cost.isFinite() && cost.gte(0) && priorRecovery?.trim() && d(priorRecovery).isFinite()
       && d(priorRecovery).gte(0) && payments !== undefined && Number.isInteger(payments) && payments >= 0) return;
-  } else if (gross.isZero() || (taxable !== undefined && !form.taxableAmountNotDetermined)) {
+  } else if (gross.isZero()) {
+    return;
+  } else if (taxable !== undefined && !form.taxableAmountNotDetermined) {
+    if (form.taxableAmountNotDetermined !== false || form.iraSepSimple !== false) {
+      throw new Error("2026 ordinary Form 1099-R pension requires confirmed unchecked Box 2b and Box 7b");
+    }
     return;
   }
   throw new Error("2026 Form 1099-R pension requires a determined Box 2a or a complete supported Simplified Method worksheet");
@@ -786,7 +791,7 @@ function usesSimplifiedMethodForTaxableAmount(form: Form1099R): boolean {
     return false;
   }
 
-  return form.taxableAmount === undefined || form.taxableAmountNotDetermined;
+  return form.taxableAmount === undefined || form.taxableAmountNotDetermined === true;
 }
 
 function hasValidatedSimplifiedMethodInputs(form: Form1099R): boolean {
