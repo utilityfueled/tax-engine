@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Ohio resident capital gain draft
+
+The ordinary Ohio dispatcher admits a source-backed draft for a single full-year resident with one Ohio W-2 and one confirmed long-term secondary-market sale of corporate stock. The draft joins the printed broker security and issuer identifiers to the executed sale agreement and the qualifying entity's payroll. Independent review confirmed the draft holds when another issuer's payroll is supplied or a statement is marked withholding-only for an open short sale. In the valid fixture, normal parsing and a JSON reload preserve the $100,000 qualifying capital gain deduction, $250,000 business income deduction and $2,438 Ohio tax. Only the parser's named zero and empty prior-year defaults are accepted alongside the explicit carryover evidence. Payment status remains unknown. Exact isolated checks passed 3,704 tests, all 9,611 spec references, inventory validation and engine and web typechecks. [Ohio Revised Code §5747.79](https://codes.ohio.gov/ohio-revised-code/section-5747.79) · [Ohio Revised Code §5747.01](https://codes.ohio.gov/ohio-revised-code/section-5747.01) · [IRS Form 1099-B instructions](https://www.irs.gov/pub/irs-pdf/i1099b.pdf)
+
+## November 19: combined verification and managed browser CI
+
+Frozen `e13589b1` passed full local unit and coverage runs with 29,149 tests passing and 75 skipping in each run. Branch coverage was 87.86% against the 85% minimum. Its managed browser run passed 650 with five planned skips across eight windows and normal server shutdown. Summary SHA-256 `ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`. Frozen `59e8f71a` passed contract typecheck, engine and web builds, and full lint with zero errors and 12,102 warnings.
+
+Managed browser CI for `f2311eef` reported 650 passes, zero failures, and five planned skips. The strict runtime image started successfully. Its browser phase reported 640 passes, five planned skips, and ten 30-second Ohio workflow timeouts across the part-year business, reciprocal wage, resident-credit and part-year school district tests. Strict container qualification remains open. [Managed browser CI](https://github.com/utilityfueled/tax-engine/actions/runs/44467417463/job/135368433795) · [Strict container CI](https://github.com/utilityfueled/tax-engine/actions/runs/44467417463/job/135368434182)
+
 ## November 19: Help Center support claims
 
 The Help Center now describes estimates and review-only downloads for supported 2025 drafts, and fact entry and saving for 2026. The rendered help regression failed against the earlier filing wording. The exact replacement passed 36 help and browser-orchestration controls, and the broader support cohort passed 51 tests. Web typecheck and scoped lint passed.

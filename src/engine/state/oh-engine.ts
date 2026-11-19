@@ -1,4 +1,5 @@
 import {calculateOhio2026EarnedSchoolDraft,type Ohio2026EarnedSchoolDraftResult} from './oh-2026-earned-school-draft.js';
+import { calculateOhio2026ResidentCapitalGainDraft, type Ohio2026ResidentCapitalGainDraftResult } from './oh-2026-resident-capital-gain-draft.js';
 import { calculateOhio2026BusinessDraft, type Ohio2026BusinessDraftResult } from './oh-2026-business-draft.js';
 import { calculateOhio2026OrdinarySource, calculateOhio2026PaReciprocalEmployeeSource, calculateOhio2026VaResidentCreditEmployeeSource } from "./oh-2026-ordinary-source.js";
 import { calculateOhio2026ReturnDraft, type Ohio2026ReturnDraftResult } from "./oh-2026-return-draft.js";
@@ -34,12 +35,13 @@ export function calculateOhioResidentReturnFromFederal(
 /** Explicit finite2026 draft; never fabricates a full federal return or opens filing.
  * Spec: state/oh-2026-return-draft.yaml. Historical FromFederal is unchanged.
  */
-export type Ohio2026DraftFromSourcesResult<T> = T extends {methodId:'oh-2026-earned-school-employee-draft-v1'} ? Ohio2026EarnedSchoolDraftResult : T extends { employmentOriginals: unknown }
+export type Ohio2026DraftFromSourcesResult<T> = T extends { methodId: 'oh-2026-resident-capital-gain-draft-v1' } ? Ohio2026ResidentCapitalGainDraftResult : T extends {methodId:'oh-2026-earned-school-employee-draft-v1'} ? Ohio2026EarnedSchoolDraftResult : T extends { employmentOriginals: unknown }
   ? Ohio2026ReturnDraftResult : T extends { methodId: 'oh-2026-canonical-business-draft-v1' }
-    ? Ohio2026BusinessDraftResult : Ohio2026ReturnDraftResult | Ohio2026BusinessDraftResult;
+    ? Ohio2026BusinessDraftResult : Ohio2026ReturnDraftResult | Ohio2026BusinessDraftResult | Ohio2026ResidentCapitalGainDraftResult;
 export function calculateOhio2026ReturnDraftFromSources<T>(input: { taxInput: TaxYearInput; sources: T }): Ohio2026DraftFromSourcesResult<T>;
-export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYearInput; sources: unknown }): Ohio2026ReturnDraftResult | Ohio2026BusinessDraftResult | Ohio2026EarnedSchoolDraftResult {
+export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYearInput; sources: unknown }): Ohio2026ReturnDraftResult | Ohio2026BusinessDraftResult | Ohio2026EarnedSchoolDraftResult | Ohio2026ResidentCapitalGainDraftResult {
   const method = input.sources !== null && typeof input.sources === 'object' && 'methodId' in input.sources ? input.sources.methodId : undefined;
+  if (method === 'oh-2026-resident-capital-gain-draft-v1') return calculateOhio2026ResidentCapitalGainDraft(input.taxInput, input.sources);
   if(method==='oh-2026-earned-school-employee-draft-v1')return calculateOhio2026EarnedSchoolDraft(input.taxInput,input.sources);
   if (method === 'oh-2026-canonical-business-draft-v1') return calculateOhio2026BusinessDraft(input.taxInput, input.sources);
   const context = method === 'oh-2026-pa-reciprocal-employee-draft-v1'

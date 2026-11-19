@@ -228,6 +228,8 @@ export const Form1099DivSchema = z.object({
 
 export const CapitalTransactionSchema = z.object({
   description: z.string(),
+  securityIdentifier: z.string().trim().min(1).max(200).optional(), // Actual original broker-row security identifier (e.g. printed CUSIP); omission remains unknown.
+  issuerIdentity: z.string().trim().min(1).max(120).optional(), // Actual original row's issuer identity, distinct from the broker/payer; no inferred issuer or tax classification.
   dateAcquired: z.string(), // YYYY-MM-DD or "VARIOUS"
   dateSold: z.string(), // YYYY-MM-DD
   proceeds: decimal,

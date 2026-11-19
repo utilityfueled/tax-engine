@@ -1,0 +1,116 @@
+form: "Ohio 2026 resident equity-sale draft"
+fullName: "Source-bound single full-year resident A34 before business deduction"
+taxYear: 2026
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.79"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.02"
+  - "https://uscode.house.gov/us/usc/t26/s1202/"
+  - "https://www.irs.gov/instructions/i1040sd"
+notes: |
+  Authority checked November19,2026. This separate explicit dispatcher method
+  admits one single adult under65, one ordinary C-corporation W2 of at least
+  $50000, one positive long-term direct C-corporation stock sale, full-year Ohio
+  domicile and confirmed no taxing school district throughout the year.
+  Completed original income/adjustment, Ohio adjustment/credit/tax inventories
+  and household facts are required. Documentary source confirmations do not
+  authenticate documents, establish identities independently, or replace a
+  completed federal material-participation assessment. No inferred address,
+  business classification, source-year, issuer, owner or transaction identity.
+  Secondary-market cash purchase, continuous unchanged shares, and completed
+  no1202(f)/(h) exception assessment establish non-original-issue stock under
+  1202(c)(1)(B); absence of a1202 packet alone is not proof. Other acquisitions,
+  QSBS, pass-throughs, installments, other sales and uncertain netting stay held.
+  Require the actual2025 completed capital-loss carryover worksheet, three
+  explicit zero prior capital-loss fields, and a matching current federal source
+  snapshot; no carryover defaults. Original Form8949 and ScheduleD are evaluated
+  afresh with the isolated2026 constants, not a fabricated full federal return.
+  Federal ordinary long-term character is distinct from Ohio business income:
+  the A34 material-participation interval also establishes5747.01(B)(2).
+  A34 is deducted first, A28 only from the remaining business gain; both are
+  added back exactly once for MAGI. No venture/A35 route is inferred.
+  This finite integration admits whole-dollar wages, proceeds, basis and A34
+  deduction only; fractional annual rounding is unresolved, not silently lost.
+  No-child W2>=50000 excludes federal/Ohio EIC; statutory MAGI less exemptions
+  >=30000 excludes personal-exemption credit. Other credits/taxes require
+  completed absence sources; single under65 excludes joint/senior credits.
+  Existing baseline supplies exemptions and separate business/nonbusiness tax.
+  No full federal tax, payments, penalties, interest, amount due, refund, filing,
+  UI or export qualification is asserted; payment fields remain unknown/null.
+  The IRS ScheduleD instruction URL currently serves2025. Current Ohio statutes,
+  the2026 isolated constants and the unchanged federal source-form functions
+  support this bounded arithmetic only; final2026 annual form qualification is
+  explicitly outstanding, not borrowed from the2025 publication.
+  Original transaction securityIdentifier and issuerIdentity are optional model
+  descriptors with no tax behavior outside this method. Here both are required:
+  a printed nine-character CUSIP and exact original legal issuer identity.
+  No case folding, Unicode compatibility folding or fuzzy name join establishes
+  issuer identity. A separately affirmative completed executed sale-agreement
+  original must match that broker-row security/issuer, owner, year, disposition,
+  proceeds and shares sold. Its issuer reference and every A34 entity reference
+  must equal JSON.stringify(['CUSIP',originalSecurityIdentifier,originalIssuerIdentity]).
+  Changing all mutable documentary wrappers cannot substitute another issuer's
+  payroll while retaining the original broker row. These checked source claims
+  still do not authenticate an intentionally fabricated original document.
+  Withholding-only open short-sale statements cannot establish this completed
+  positive stock disposition, even when the federal withholding amount is zero.
+  Normal parseInput/reparse and JSON reload may add only the enumerated current
+  PriorYearCarryforwardSchema defaults: suspendedPassiveLosses, suspendedPTPLosses,
+  foreignTaxCreditCarryforwardByYear, qbiAggregationElections,
+  charitableCarryforwardByYear, suspendedBusinessInterest are empty arrays;
+  foreignTaxCreditCarryforward,charitableCarryforward,
+  generalBusinessCreditCarryforward,priorYearTax,priorYearAGI are exact string0.
+  These parser representations are admitted as inert defaults, not evidence of
+  any historical fact or a substitute for the required original capital-loss
+  worksheet. That original remains strict, and all three current capital-loss
+  fields must still be explicit zero. Missing original capital evidence,
+  nonzero/nonempty defaults, other history and unknown extra keys remain held.
+lines:
+  - line: "parsed-entry"
+    description: "Accept the canonical parsed source path and its exact inert defaults"
+    formula: "parseInput of complete originals with current matching original snapshots yields the same2438 draft as typed originals; reparse and JSON reload preserve it without rebuilding or inventing forms"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::admits normal parsed reparse and serialized source inputs with the original capital evidence"
+  - line: "parsed-history-hold"
+    description: "Do not turn a permissive history parser into capital source evidence"
+    formula: "Enumerated exact0/empty current defaults only; nonzero/nonempty or other history held; strict original carryover packet and three actual capital-loss zero inputs remain required for typed and parsed entry"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::holds nonzero parsed history and missing or expanded original carryover evidence"
+  - line: "original-issuer-join"
+    description: "Bind separately affirmative original agreement and every A34 issuer to the original broker security"
+    formula: "Exact printed original CUSIP and issuerIdentity bind the executed original sale agreement, owner,2026 date,proceeds,unitsSold and all A34 entity references; retaining the broker while replacing every mutable issuer/payroll wrapper is incomplete"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects coherent replacement of every issuer wrapper while the original broker security is unchanged"
+  - line: "open-short-sale-hold"
+    description: "A withholding-only open short sale is not the admitted completed disposition"
+    formula: "Any withholdingOnlyOpenShortSale marker alongside a positive transaction remains incomplete; absence is required for this finite ordinary-sale method"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects a withholding-only open short-sale marker alongside the positive sale"
+  - line: "independent-original-joins"
+    description: "Independently reject each missing or contradictory broker agreement and A34 join"
+    formula: "No original security, issuer, executed agreement confirmation, matching owner,date,proceeds,units or unique anchored A34 issuer may be omitted or replaced; exact issuer equality without broad normalization"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::requires every independently affirmative broker agreement and A34 issuer binding"
+  - line: "source"
+    description: "Bind the actual owner issuer sale and complete current federal input"
+    formula: "Exact original transaction and statement identity, owner taxpayer snapshot, canonical A34 owner/entity/sale/date bindings and current complete input snapshot; no extra retained original categories"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects stale and contradictory owner issuer sale and federal sources"
+  - line: "federal"
+    description: "Compute sole ordinary long-term gain from the existing federal forms"
+    formula: "Form8949 total long-term gain equals ScheduleD line16 equals reported A34 capital gain; W2 box1 plus that gain is federal AGI; no other income adjustments carryovers or exclusions"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::uses the original federal forms and classifies the material participant gain as business income"
+  - line: "carry-and-1202"
+    description: "Require source-established zero carryovers and ineligible secondary purchase"
+    formula: "Completed2025 loss carryover worksheet and current three explicit zero carry fields; actual secondary-market cash purchase, no original issue or1202(f)/(h) exception, unchanged continuous shares; otherwise incomplete"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects unresolved carryovers special gains and unsupported acquisitions"
+  - line: "A34-A28"
+    description: "Apply A34 before the single-filer business income deduction"
+    formula: "D=fresh existing A34 method; remainingBusiness=ScheduleD gain-D; BID=min(250000,remainingBusiness); OhioAGI=federalAGI-D-BID; taxableBusiness=remainingBusiness-BID"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::applies the gain cap and business deduction boundary without deducting either twice"
+  - line: "MAGI"
+    description: "Add back both completed statutory deductions for the baseline"
+    formula: "MAGI=OhioAGI+A34+BID=federalAGI in this source-complete cohort; baseline exemption and separate3percent business tax use actual completed inputs"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::preserves MAGI exemption thresholds and separate business tax"
+  - line: "resident"
+    description: "Retain full-year actual resident and no-school boundaries"
+    formula: "Exactly one current primary full-year OH period Jan1-Dec31, category amounts reconcile wages and capital gain once, nonresident amounts zero, no other adjustments or school/other-state sources"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects incomplete household residency employment and school sources"
+  - line: "hold"
+    description: "Close every payment filing export and unrelated dispatch gate"
+    formula: "Admission supplies only source-bound income and baseline draft tax; every payment/settlement/refund/penalty remains null, filing/export false, no raw identity or original documents in audit; old dispatcher methods unchanged"
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::keeps payment and filing gates closed without echoing identities or mutating inputs"
