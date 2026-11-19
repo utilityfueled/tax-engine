@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Form 1099-R pension taxable-amount evidence
+
+A positive, explicitly dated 2025 pension statement with Code 1 or 7, an unchecked IRA/SEP/SIMPLE box, a checked Box 2b and a missing Box 2a now needs a supported taxable-amount worksheet when the calculator would otherwise estimate from the gross distribution. The documented Simplified Method control uses the original $6,000 distribution and $125 federal withholding and calculates $4,800 taxable. Code 1 then produces $480 of additional tax on Form 5329. The 2025 instructions direct taxpayers with a partially taxable pension and no payer-determined amount to the General Rule or the applicable Simplified Method. [2025 Form 1040 instructions, lines 5a and 5b](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28).
+
+Two scoped regressions failed on the Box 7 predecessor. The Box 2a and Box 7 suites passed all 18 tests, and the 127 affected suites passed 3,529 tests. Independent review passed 178 tests and four boundary and precedence probes. The combined snapshot passed 199 focused tests and all nine static and build checks. The cases exercise an explicit taxable amount, incomplete worksheet evidence, and a supported worksheet. The broad final-source checks are tracked separately.
+
 ## November 19 actual Form 1099-R Box 7
 
 The 2025 calculation now holds a positive, explicitly dated Form 1099-R with a recorded unchecked IRA/SEP/SIMPLE box and blank or missing Box 7. The source year is validated first. In the synthetic Code 1 case, the confirmed code retains $6,000 taxable and $125 withheld and supplies the $600 additional tax on Form 5329. The confirmed Code G rollover still excludes the distribution. The narrowly scoped hold neither infers the account type from the unchecked box nor changes amounts for known codes. [2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15) · [2025 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2025.pdf#page=1).
@@ -16,7 +22,7 @@ The source-first regression reproduced the omitted-history award and the audit's
 
 The combined coverage run on `7ea62c3f` passed 29,363 tests and exposed 17 failures in seven suites. The follow-up preserves the linked Ohio W-2 and unavailable-rule-pack errors before the general year hold. Form 2210 and Form 8880 still check their own source requirements when invoked directly. A confirmed Saver's Credit amount of $700 produces a $350 credit with a matching W-2, while the same amount with a wrong-year W-2 leaves the federal return held. Existing confirmed-explanation tests retain their wrong-year inputs and check the earlier federal rejection as well as the existing endpoint behavior. Source-audit hashes changed with the federal source. Browser deadlines and coverage thresholds stayed in force.
 
-Ten focused suites passed all 272 tests. Independent review reran 201 tests and separately verified the same-year $700 contribution and $350 credit and the distinct 2025 and 2026 Form 8880 worksheet holds. The replacement covered all 29,380 tests with 88.28% branch coverage. The replacement full unit and browser results are tracked separately.
+Ten focused suites passed all 272 tests. Independent review reran 201 tests and separately verified the same-year $700 contribution and $350 credit and the distinct 2025 and 2026 Form 8880 worksheet holds. The replacement passed all 29,380 tests in the unit and coverage runs, with 88.28% branch coverage. The replacement full browser results are tracked separately.
 
 ## November 19 federal annual income statement years
 

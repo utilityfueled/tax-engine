@@ -247,6 +247,7 @@
         "focusedTestsPassed": 272,
         "independentTestsPassed": 201,
         "form8880StandaloneControlsReviewed": true,
+        "successorUnitTestsPassed": 29380,
         "successorCoverageTestsPassed": 29380,
         "successorBranchCoveragePercent": "88.28",
         "previousManagedBrowser": { "passed": 650, "failed": 0, "plannedSkips": 5, "windows": 8 },
@@ -268,6 +269,7 @@
       },
       "nov19PensionBox7ActualSource": {
         "parent": "8c479cc5",
+        "commit": "11b8d330",
         "patchSha256": "69675d88ff7e61049a527b3b38d7a6015b65f1e9a8db7038ed1adcfdb7165164",
         "initialMissingCodeFailures": 3,
         "focusedTestsPassed": 8,
@@ -277,6 +279,20 @@
         "combinedStaticAndBuildChecksPassed": 9,
         "independentTestsPassed": 168,
         "independentBoundaryProbesPassed": 5
+      },
+      "nov19PensionBox2aActualSource": {
+        "parent": "11b8d330",
+        "patchSha256": "6af4f3afbfeca5d6b697eb5ad4d27b73f1cef4e87f0d8d714a4d6e4c16b7a86d",
+        "initialUnresolvedTaxabilityFailures": 2,
+        "bothPensionSuitesPassed": 18,
+        "affectedSuitesPassed": 127,
+        "affectedTestsPassed": 3529,
+        "combinedFocusedTestsPassed": 199,
+        "combinedStaticAndBuildChecksPassed": 9,
+        "independentTestsPassed": 178,
+        "independentBoundaryProbesPassed": 4,
+        "worksheetTaxableAmount": "4800",
+        "worksheetFederalWithheld": "125"
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",

@@ -266,6 +266,23 @@ lines:
       (https://www.irs.gov/pub/irs-prior/f5329--2025.pdf#page=1).
     testRef: "tests/engine/federal-pension-box7-2025.test.ts::holds a dated 2025 Form 1099-R when Box 7 is $name"
 
+  - line: "2025-box2a-ordinary"
+    description: "Require a supported taxable-amount method for an undetermined 2025 pension distribution"
+    formula: >-
+      For an explicitly dated positive 2025 original with a recorded unchecked
+      IRA/SEP/SIMPLE box and Code 1 or 7, hold the ordinary federal return when
+      Box 2b is checked, Box 2a is missing and the existing resolver can produce
+      only a historical preview. A complete supported Simplified Method
+      worksheet supplies the taxable amount. Preserve printed Box 2a amounts,
+      including zero, supported code-specific treatment and legacy undated or
+      unconfirmed inputs.
+    irsRef: >-
+      2025 Form 1040 instructions, lines 5a and 5b, page 28
+      (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28).
+      For a partially taxable pension whose payer left the taxable amount blank,
+      use the General Rule or the applicable Simplified Method.
+    testRef: "tests/engine/federal-pension-box2a-2025.test.ts::holds a dated 2025 Code $code pension with checked Box 2b and omitted Box 2a"
+
   - line: "2026-pension-source"
     description: "Form 1040 Lines 1h, 5a and 5b require known non-IRA distribution sources for tax year 2026"
     formula: >-

@@ -362,9 +362,19 @@ export function calculateForm1099R(
     && forms.some(form => form.taxYear !== undefined && form.taxYear !== options.taxYear)) {
     throw new Error(`Form 1099-R source year must match the ${options.taxYear} return`);
   }
-  if (options.taxYear === 2025 && forms.some(form => form.taxYear === 2025
-    && form.iraSepSimple === false && d(form.grossDistribution).gt(0) && !form.distributionCode?.trim())) {
-    throw new Error("2025 Form 1099-R requires the actual Box 7 distribution code");
+  if (options.taxYear === 2025) {
+    const datedDistributions = forms.filter(form => form.taxYear === 2025
+      && form.iraSepSimple === false && d(form.grossDistribution).gt(0));
+    if (datedDistributions.some(form => !form.distributionCode?.trim())) {
+      throw new Error("2025 Form 1099-R requires the actual Box 7 distribution code");
+    }
+    if (datedDistributions.some(form => {
+      const code = form.distributionCode?.trim();
+      return (code === "1" || code === "7") && form.taxableAmountNotDetermined === true
+        && form.taxableAmount === undefined && resolveTaxableAmountBeforeQcdSource(form).source === "historical-preview";
+    })) {
+      throw new Error("2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet");
+    }
   }
   const audit = new AuditTrail();
   const iraForms = forms.filter(isIraForm1099RDistribution);
