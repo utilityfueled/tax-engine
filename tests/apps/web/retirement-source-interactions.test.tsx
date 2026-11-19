@@ -26,6 +26,28 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
 
+it("keeps a saved QCD worksheet visible and requires source confirmation after an edit", async () => {
+  const initial = {
+    ...completeRetirementSource,
+    sourceTaxYear: "2026",
+    distributionCode: "7",
+    isIraSepSimple: true,
+    qcdSource: { recipientName: "Original charity" },
+  };
+  await render([initial], async ({ latest, container, change }) => {
+    expect(container.querySelector("legend")?.textContent).toContain("Qualified charitable distribution");
+    await change("Charity named on the transfer and acknowledgment", "Corrected charity");
+    expect(latest()[0]).toMatchObject({ qcdSource: { recipientName: "Corrected charity" }, sourceFactsConfirmed: null });
+    await change("Distribution code (Box 7a)", "4");
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "single", 2026)).toThrow(/reconcile this QCD worksheet/i);
+    const remove = [...container.querySelectorAll("button")].find(button => button.textContent === "Remove QCD worksheet");
+    expect(remove).toBeDefined();
+    await act(async () => remove?.click());
+    expect(latest()[0]).toMatchObject({ qcdSource: undefined, sourceFactsConfirmed: null });
+  });
+});
+
 it("records the qualified lump-sum reporting choice and clears it after a code edit", async () => {
   const method = "Qualified lump-sum reporting method";
   const source = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "4A" };

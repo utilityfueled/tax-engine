@@ -1040,6 +1040,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/ira-qcd-adjustment",
+      "enginePath": "src/engine/forms/form-1099-r.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-r-qcd-2026.test.ts::reconciles the published 2026 QCD adjustment",
+        "tests/engine/forms/form-1099-r-qcd-2026.test.ts::carries the verified QCD into the parsed federal return",
+        "tests/guided-interview/guided-retirement-source-facts.test.ts::forwards the actual 2026 QCD worksheet without inventing Box 2a"
+      ],
+      "note": "Ordinary federal source calculation and guided intake evidence. Professional tax review, state-method qualification and annual filing output remain required."
+    },
+    {
       "key": "federal/ira-return-integration",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

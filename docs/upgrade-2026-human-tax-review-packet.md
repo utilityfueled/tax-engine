@@ -261,3 +261,22 @@ Competing origins, surviving excess and NOL-linked attribution remain refused.
 Before review begins, pin the actual supplied source. Qualified review must distinguish original carry consumed
 as paid from deduction claimed, preserve original years, and assess the complete
 ordinary method rather than treating a passed endpoint as general approval.
+
+## November 19 Marketplace and IRA review material
+
+Review Form 1095-A source replacement on `5a4377f7`. The synthetic original
+and corrected statements concern the same policy. Using the corrected statement
+alone produces $425 on Form 8962 line 25. The two statements together formerly
+produced $825. A separate Worksheet E control produces $408 with the matching
+source designation. Check the rule for voided forms, corrected replacements and
+the effect of a stale copy in the Worksheet E or marriage inputs. [2026 Form 1095-A](https://www.irs.gov/pub/irs-pdf/f1095a.pdf)
+
+Review the ordinary zero-basis traditional IRA QCD worksheet independently.
+The IRS example reports $6,500 transferred, $4,000 of unused deducted
+contributions and a $2,500 exclusion. Verify the per-owner annual cap, the
+ordering of the cap and contribution adjustment, the resulting $4,000 of
+taxable IRA income, the transfer-date age boundary and the treatment of an actual
+Code 7 statement that omits the optional QCD code. Check overlap with the cash
+charitable deduction when a receipt could describe the same transfer. The full
+return keeps current-year IRA deduction coordination, separate Form 8606 methods
+and specialized recipient or asset cases outside this ordinary path. [IRC §408(d)(8)](https://uscode.house.gov/us/usc/t26/s408/), [IRS Publication 590-B](https://www.irs.gov/publications/p590b), [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf), [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r)

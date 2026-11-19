@@ -3,10 +3,10 @@ import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precisio
 import {statePaymentFactErrors}from './guided-state-facts';
 import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { amountError, hasEnteredAmount } from "./guided-required-facts";
+import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
-import { isGuidedQualifiedLumpSum, isStartedRetirement, retirementSourceInput } from "./guided-retirement-source-inputs";
+import { isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, retirementSourceInput, type GuidedRetirementQcdSource } from "./guided-retirement-source-inputs";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -30,6 +30,7 @@ export interface RetirementSourceData {
   localTaxWithheld?: string;
   localDistribution?: string;
   iraBasisConfirmedZero?: boolean | null;
+  qcdSource?: GuidedRetirementQcdSource;
   qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
   eligibleGovernmental457bPlan?: boolean | null;
   governmental457bTransferredTaxableAmount?: string;
@@ -98,8 +99,29 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }
     const code = entry.distributionCode.trim().toUpperCase();
     const qualifiedLumpSum = isGuidedQualifiedLumpSum(entry);
+    const qcdStatement = isGuidedQcdStatement(entry);
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
-    else if (!qualifiedLumpSum && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    else if (!qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    const qcd = entry.qcdSource;
+    if (qcd && !qcdStatement) fail("qcd-source", "Reconcile this QCD worksheet with the original retirement statement year and distribution code.");
+    if (qcdStatement) {
+      if (!qcd) fail("qcd-source", "Enter the actual QCD transfer and owner adjustment worksheet.");
+      else {
+        if (basisBound || entry.isIraSepSimple !== true || entry.iraBasisConfirmedZero !== true) fail("qcd-basis", "This QCD worksheet requires an actual ordinary traditional IRA with zero nondeductible owner basis.");
+        for (const [field, label] of retirementQcdTextFields) if (!qcd[field]?.trim()) fail(`qcd-${field}`, `Enter the ${label.toLowerCase()}.`);
+        if (!isActualDate(qcd.distributionDate) || !qcd.distributionDate?.startsWith(`${entry.sourceTaxYear}-`)) fail("qcd-date", "Enter the actual QCD transfer date in this return year.");
+        for (const [field, label] of retirementQcdAmounts) {
+          const problem = amountError(qcd[field], label.toLowerCase());
+          if (problem) fail(`qcd-${field}`, problem);
+        }
+        if (!amountError(qcd.transferAmount, "transfer amount") && !amountError(entry.grossDistribution, "gross distribution")) {
+          const transfer = parseGuidedCurrency(qcd.transferAmount);
+          if (transfer.lte(0) || transfer.gt(parseGuidedCurrency(entry.grossDistribution))) fail("qcd-transferAmount", "Reconcile the positive QCD transfer amount with the gross distribution.");
+        }
+        for (const [field, label] of retirementQcdConfirmations) if (qcd[field] !== true) fail(`qcd-${field}`, `Confirm this QCD fact from actual records. ${label}`);
+      }
+      if (entry.taxableAmountNotDetermined !== true && !hasEnteredAmount(entry.taxableAmount)) fail("qcd-box2a", "Enter the printed Box 2a amount or confirm that Box 2b was checked.");
+    }
     if (qualifiedLumpSum) {
       if (entry.isIraSepSimple !== false) fail("lump-sum-source", "The Code A reporting decision requires an actual non-IRA source.");
       if (entry.qualifiedLumpSumReporting === "form_4972") fail("lump-sum-reporting", "The separate Form 4972 calculation is required for this election.");
@@ -108,7 +130,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (code.includes("D") && (entry.isIraSepSimple !== false || entry.eligibleGovernmental457bPlan !== false)) fail("nonqualified-plan", "Code D identifies a nonqualified source; reconcile the actual IRA and governmental-plan classifications.");
     if (entry.requiresIraConfirmation) fail("isIraSepSimple", "Reconfirm the actual IRA checkbox; older versions prefilled an unchecked answer.");
     if (entry.requiresCodeConfirmation) fail("code", "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.");
-    const needsConfirmedTaxableAmount = qualifiedLumpSum || (requireTaxableAmount && !boundIra);
+    const needsConfirmedTaxableAmount = qualifiedLumpSum || (requireTaxableAmount && !boundIra && !qcdStatement);
     for (const [field, label] of [["grossDistribution", "gross distribution"], ...(needsConfirmedTaxableAmount || hasEnteredAmount(entry.taxableAmount) ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {
       const message = amountError(entry[field] as string | undefined, label); if (message) fail(field, message);
     }
@@ -158,7 +180,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       } else fail(`${location}-reporting`, reporting === "multiple" ? `Multiple ${location} retirement records need their separate source allocations.` : `Confirm actual ${location} reporting on the source form.`);
     }
     if (!reconciledOriginals.has(index) && entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
-    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
+    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
     if (entry.sourceFactsConfirmed !== true) fail("confirmation", "Confirm the complete retirement source facts after the last edit.");
   });
   return errors;

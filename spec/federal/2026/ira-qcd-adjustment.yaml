@@ -1,0 +1,97 @@
+form: "IRA qualified charitable distribution adjustment"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p590b"
+references:
+  - "https://uscode.house.gov/us/usc/t26/s408/"
+  - "https://www.irs.gov/publications/p590b"
+  - "https://www.irs.gov/instructions/i1099r"
+  - "https://www.irs.gov/pub/irs-drop/n-25-67.pdf"
+  - "https://www.irs.gov/irb/2024-33_IRB"
+lines:
+  - line: "eligible-cash-transfers"
+    description: "Establish actual current-year transfers from each IRA owner"
+    formula: >-
+      For the ordinary zero-basis traditional IRA method, use actual documented
+      current-year cash transfers from the trustee directly to the eligible
+      charity. Bind the IRA owner, original Form 1099-R, eligible recipient,
+      payment date, age eligibility and acknowledgment. Require the transfer to
+      be otherwise taxable and to fit within the original distribution. Code Y
+      records intended treatment and supplies no amount or eligibility by itself.
+      The 2026 ordinary route accepts payer-designated Y7 and separately
+      documented Code 7. Require actual source year, owner, IRA classification,
+      zero traditional IRA basis, custodian and account, transfer identity,
+      confirmation of the recipient and acknowledgment, and a valid payment
+      date. Reconcile the original date when supplied and the owner's actual
+      date of birth on the full return. A legacy amount cannot qualify a 2026
+      distribution. Hold inherited, unavailable-FMV, split-interest and
+      supported-basis coordination for a separate method. Historical results
+      retain their existing behavior.
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::holds Code Y without an actual owner worksheet"
+  - line: "current-owner-exclusion"
+    description: "Calculate the exclusion using each owner's actual adjustment worksheet"
+    formula: >-
+      For each owner, cap the aggregate supported otherwise taxable transfers at
+      the $111,000 indexed 2026 annual limit in IRS Notice 2025-67. Add the unused prior-year post-age-70½ deductible
+      IRA contributions to actual current-year post-age-70½ deducted
+      contributions. Apply that amount against the capped aggregate once, with a
+      zero floor. Include the denied part in taxable IRA distributions. Jim's
+      published 2026 example uses 6,500 in current transfers and 4,000 in unused
+      historical deductions, leaving 2,500 excluded and 4,000 taxable.
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::reconciles the published 2026 QCD adjustment"
+  - line: "owner-coordination"
+    description: "Apply one annual cap and one adjustment to each actual IRA owner"
+    formula: "Combine transfers from the same owner's supported accounts before applying the limit and the contribution adjustment. The spouses' limits and contribution histories apply to their own distributions. Contradictory history copies or duplicate transfers require reconciliation."
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::applies each owner adjustment once across multiple statements"
+  - line: "original-transfer-reconciliation"
+    description: "Reconcile original distributions and distinct documented transfers"
+    formula: >-
+      Require one explicit transfer reference per supplied original distribution.
+      Hold duplicate references or indistinguishable duplicate transfer
+      facts even with different references. Require a positive transfer within
+      the otherwise taxable original distribution. Hold a partial Y7
+      distribution for separate source reconciliation. For ordinary Code 7,
+      any remainder stays taxable. Require each history amount explicitly,
+      including known zero. A one-statement resolver cannot compute an owner
+      exclusion.
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::rejects a duplicated underlying transfer with relabeled evidence"
+  - line: "original-statement-uniqueness"
+    description: "Count the same original IRA statement once"
+    formula: >-
+      Require reconciliation of repeated original payer, account, owner and
+      year records before computing taxable distributions. A new transfer
+      reference, a different partial transfer amount or removal of the QCD
+      worksheet does not make another copy of the same statement a new source.
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::holds a duplicate original Code 7 statement with different or absent transfer details"
+  - line: "return-integration"
+    description: "Carry the reconciled owner exclusion into the ordinary federal return"
+    formula: >-
+      Reuse the same excluded and taxable amounts for Form 1040 and Schedule 1
+      derived income. Hold an ordinary 2026 return when an overlapping Form
+      8606 method could replace the source-bound taxable IRA amount. Do not
+      route a Code Y or unsupported manual amount through historical defaults.
+      A standalone confirmed owner worksheet can include actual current-year
+      deductions. Hold that combination on the full return until the existing
+      Pub. 590-B IRA deduction and distribution coordination can compute the
+      same allowed current-year deduction. The supported full return also
+      requires no positive competing traditional IRA deduction entry. A direct
+      cash receipt matching a source-qualified owner's QCD recipient and date
+      requires reconciliation when any of that owner's transfers are excluded.
+      Apply that readiness rule to both itemized and nonitemized elections.
+      Separate cash receipts keep their ordinary computation.
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::carries the verified QCD into the parsed federal return"
+  - line: "deduction-overlap"
+    description: "Check that excluded transfers are not re-entered as deductible cash gifts"
+    formula: >-
+      Section 408(d)(8)(E) disallows a section 170 deduction for any excluded
+      qualified charitable distribution. A potentially duplicated positive cash
+      receipt under either deduction election requires independent reconciliation.
+    testRef: "tests/engine/forms/form-1099-r-qcd-2026.test.ts::holds an overlapping deductible cash gift for either election"
+  - line: "guided-worksheet-admission"
+    description: "Preserve actual source data and require a complete worksheet"
+    formula: >-
+      Bind the supported current-year trustee transfer and owner adjustment
+      worksheet to the original statement. Preserve a blank Box 2a when Box 2b
+      establishes that the payer did not determine the taxable amount. Hold an
+      incomplete packet and require fresh confirmation after edits. Calculate
+      taxable income from the confirmed ordinary zero-basis sources.
+    testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::forwards the actual 2026 QCD worksheet without inventing Box 2a"

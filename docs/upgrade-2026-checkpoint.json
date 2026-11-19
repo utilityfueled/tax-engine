@@ -185,6 +185,7 @@
       "latestKnownRemoteOrdinaryCi": { "source": "6e21266e", "run": 44492030631, "passedJobs": 6, "failedJobs": 0 },
       "nov19MarketplaceStatementStatus": {
         "parent": "87f89faf",
+        "commit": "5a4377f7",
         "sourceManifestSha256": "35cd3691878f0323a36c7bb6c60270e399edc4fda6b331bc00b9202fb3afd801",
         "coreExitReceiptSha256": "ab83a6e7be344378d126a0fa6df6071481d6b3aa421a514698795ade5cbbf16d",
         "unitTestsPassed": 29295,
@@ -195,7 +196,23 @@
         "staticChecksPassed": 9,
         "independentEngineeringTestsPassed": 67,
         "localFocusedBrowserCasesPassed": 8,
+        "localFullBrowser": { "passes": 650, "failures": 0, "plannedSkips": 5, "windows": 8 },
+        "remoteRuns": { "ci": 44513850774, "web": 44513851004, "docker": 44513850788, "dockerPassed": true },
         "open": ["Full remote Web", "Qualified independent tax review"]
+      },
+      "nov19OrdinaryIraQcd": {
+        "parent": "5a4377f7",
+        "finalSourceManifestSha256": "443be8ef492b23bc09e18499b5d43f1a99d6998bc89204d73a6b347ad3b9df66",
+        "coreSourceManifestSha256": "da8a1a6b2c818ac709fc12c0cc51acbe79ccb522560665f8fbf59459daec1f83",
+        "unitTestsPassed": 29332,
+        "coverageTestsPassed": 29332,
+        "branchesPercent": 88.28,
+        "branchGatePercent": 85,
+        "postgresVersion": "16.16",
+        "staticChecksPassed": 9,
+        "independentEngineeringTestsPassed": 116,
+        "localFocusedBrowserCasesPassed": 3,
+        "open": ["Full remote Web", "State methods", "Qualified independent tax review"]
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",

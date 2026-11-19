@@ -8,7 +8,8 @@
  */
 
 import Decimal from "decimal.js";
-import type { Form1099R } from "@/models/inputs.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
+import type { Form1099R, TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -88,6 +89,172 @@ function hasStandaloneQualifiedRothDistributionCode(form: Form1099R): boolean {
   return normalizedCodes.length === 1 && (normalizedCodes[0] === "J" || normalizedCodes[0] === "T");
 }
 
+type QcdOwner = NonNullable<Form1099R["accountHolder"]>;
+
+interface RetirementAggregationOptions {
+  qcdAnnualLimit?: Decimal;
+  taxYear?: number;
+  hasValidatedIraBasisSources?: boolean;
+  hasJointSpouse?: boolean;
+  qcdReturnContext?: Pick<TaxYearInput, "taxpayer" | "form8606" | "form8606ByOwner" | "iraBasisSources"
+    | "adjustments" | "iraDeductionWorksheet" | "donations">;
+}
+
+function hasQcdClaim(form: Form1099R): boolean {
+  return form.qcdSource !== undefined || hasQualifiedCharitableDistributionCode(form)
+    || !d(form.qualifiedCharitableDistribution).isZero();
+}
+
+function actualCalendarDate(value: string | undefined): Date | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) return;
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value) return date;
+}
+
+function qcdAgeEligible(dateOfBirth: string | undefined, transferDate: Date): boolean {
+  const birth = actualCalendarDate(dateOfBirth);
+  if (!birth) return false;
+  const year = birth.getUTCFullYear() + 70;
+  const month = birth.getUTCMonth() + 6;
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const attainment = new Date(Date.UTC(year, month, Math.min(birth.getUTCDate(), lastDay)));
+  return transferDate >= attainment;
+}
+
+function sameOriginalQcdStatement(source: Form1099R, other: Form1099R): boolean {
+  if (other.iraSepSimple !== true || other.taxYear !== source.taxYear || other.accountHolder !== source.accountHolder
+    || other.accountReference?.trim().toLowerCase() !== source.accountReference?.trim().toLowerCase()) return false;
+  const sourceTin = source.payerTin?.replace(/[-\s]/gu, "");
+  const otherTin = other.payerTin?.replace(/[-\s]/gu, "");
+  if (sourceTin && otherTin) return sourceTin === otherTin;
+  return other.payer.trim().toLowerCase() === source.payer.trim().toLowerCase();
+}
+
+function resolve2026QcdSources(
+  forms: Form1099R[],
+  options: RetirementAggregationOptions,
+) {
+  const input = options.qcdReturnContext;
+  if (input?.form8606 !== undefined || input?.form8606ByOwner !== undefined || input?.iraBasisSources !== undefined) {
+    throw new Error("2026 Form 1099-R QCD with Form 8606 requires separate IRA basis coordination");
+  }
+  if (input && (d(input.adjustments?.iraDeduction).gt(0) || d(input.iraDeductionWorksheet?.primaryContributions).gt(0)
+    || d(input.iraDeductionWorksheet?.spouseContributions).gt(0))) {
+    throw new Error("2026 Form 1099-R QCD with a current IRA deduction requires separate Pub. 590-B coordination");
+  }
+  const includedForms = new Set<Form1099R>();
+  const transferReferences = new Set<string>();
+  const underlyingTransfers = new Set<string>();
+  const byOwner = new Map<QcdOwner, { worksheet: string; prior: Decimal; current: Decimal; transfers: Decimal }>();
+
+  for (const form of forms.filter(hasQcdClaim)) {
+    const source = form.qcdSource;
+    const code = getUpperDistributionCode(form).replace(/\s+/gu, "");
+    if (code !== "Y7" && code !== "7") {
+      throw new Error("2026 Form 1099-R QCD Code Y outside ordinary Y7 and non-Code-7 methods require a separate method");
+    }
+    if (!source) {
+      throw new Error("2026 Form 1099-R QCD requires an actual owner worksheet and transfer source; a manual QCD amount is insufficient");
+    }
+    if (!d(form.qualifiedCharitableDistribution).isZero()) {
+      throw new Error("2026 Form 1099-R QCD cannot combine the actual owner worksheet with a manual QCD amount");
+    }
+    if (form.iraSepSimple !== true) throw new Error("2026 Form 1099-R QCD requires the actual IRA classification");
+    if (options.hasValidatedIraBasisSources || form.returnedContributionByDueDate || form.excessContributionReturnedWithoutEarnings
+      || form.qualifiedRothDistribution || !d(form.rothConversionAmount).isZero() || !d(form.rothIraRolledOverAmount).isZero()
+      || !d(form.capitalGainIncluded).isZero()) {
+      throw new Error("2026 Form 1099-R QCD with IRA basis, conversion or another distribution classification requires a separate method");
+    }
+    // For ordinary Y7, apply the same original IRA evidence requirements as Code 7.
+    assert2026IraTaxability({ ...form, distributionCode: "7" }, false, options.hasJointSpouse === true);
+    const owner = form.accountHolder;
+    if (owner === undefined) throw new Error("2026 Form 1099-R QCD requires an actual return owner");
+    const payer = form.payer.trim();
+    const account = form.accountReference?.trim();
+    const transfer = source.transferReference?.trim();
+    const recipient = source.recipientName?.trim();
+    const worksheet = source.adjustmentWorksheetReference?.trim();
+    if (!payer || !account || !transfer || !recipient || !worksheet) {
+      throw new Error("2026 Form 1099-R QCD requires the actual payer, IRA account, recipient, transfer reference and owner worksheet reference");
+    }
+    if (source.ordinaryTraditionalIraConfirmed !== true || source.ageRequirementConfirmed !== true
+      || source.directTrusteeTransferConfirmed !== true || source.eligibleRecipientAndAcknowledgmentConfirmed !== true
+      || source.allOwnerTransfersAndContributionsConfirmed !== true) {
+      throw new Error("2026 Form 1099-R QCD requires all eligibility, acknowledgment and owner worksheet confirmations");
+    }
+    const transferDate = actualCalendarDate(source.distributionDate);
+    if (!transferDate || transferDate.getUTCFullYear() !== 2026
+      || (form.distributionDate !== undefined && form.distributionDate !== source.distributionDate)) {
+      throw new Error("2026 Form 1099-R QCD requires a valid distribution date matching the original date when supplied");
+    }
+    if (input && !qcdAgeEligible(input.taxpayer[owner]?.dateOfBirth, transferDate)) {
+      throw new Error("2026 Form 1099-R QCD owner must have attained age 70½ by the actual distribution date");
+    }
+    const amount = d(source.transferAmount);
+    const beforeQcd = resolveTaxableAmountBeforeQcd(form);
+    if (!amount.isFinite() || !amount.gt(0) || amount.gt(beforeQcd) || (code === "Y7" && !amount.eq(beforeQcd))) {
+      throw new Error("2026 Form 1099-R QCD transfer amount must reconcile to the otherwise taxable original distribution");
+    }
+    const prior = d(source.unusedPriorDeductedContributions);
+    const current = d(source.currentDeductedContributions);
+    if (!source.unusedPriorDeductedContributions?.trim() || !source.currentDeductedContributions?.trim()
+      || !prior.isFinite() || prior.lt(0) || !current.isFinite() || current.lt(0)) {
+      throw new Error("2026 Form 1099-R QCD requires both actual nonnegative contribution amounts, including known zero");
+    }
+    if (input && current.gt(0)) {
+      throw new Error("2026 Form 1099-R QCD with a current IRA deduction requires separate Pub. 590-B coordination");
+    }
+    const underlyingTransfer = JSON.stringify([owner, payer.toLowerCase(), account.toLowerCase(), source.distributionDate,
+      amount.toString()]);
+    if (transferReferences.has(transfer.toLowerCase()) || underlyingTransfers.has(underlyingTransfer)) {
+      throw new Error("2026 Form 1099-R QCD has a duplicate original transfer");
+    }
+    transferReferences.add(transfer.toLowerCase());
+    underlyingTransfers.add(underlyingTransfer);
+    includedForms.add(form);
+
+    const summary = byOwner.get(owner);
+    if (summary && (summary.worksheet !== worksheet || !summary.prior.eq(prior) || !summary.current.eq(current))) {
+      throw new Error("2026 Form 1099-R QCD has inconsistent copies of the same owner worksheet");
+    }
+    byOwner.set(owner, { worksheet, prior, current, transfers: (summary?.transfers ?? d(0)).plus(amount) });
+  }
+
+  for (const source of includedForms) {
+    if (forms.filter(other => sameOriginalQcdStatement(source, other)).length > 1) {
+      throw new Error("2026 QCD requires reconciliation of a duplicate original Form 1099-R statement");
+    }
+  }
+
+  const limit = FEDERAL_2026_CONSTANTS.qcd.annualLimit;
+  const ownerAmounts = [...byOwner].map(([owner, summary]) => {
+    const capped = Decimal.min(summary.transfers, limit);
+    const adjusted = Decimal.max(0, capped.minus(summary.prior).minus(summary.current));
+    return { owner, ...summary, capped, adjusted };
+  });
+  if (input) {
+    const ownersTakingExclusions = new Set(ownerAmounts.filter(summary => summary.adjusted.gt(0)).map(summary => summary.owner));
+    const cashReceiptKeys = new Set(input.donations
+      .filter(donation => donation.type === "cash" && donation.qualifiedOrganization !== false && d(donation.amount).gt(0))
+      .map(donation => JSON.stringify([donation.organization.trim().toLowerCase(), donation.dateOfDonation])));
+    for (const form of includedForms) {
+      const source = form.qcdSource;
+      if (form.accountHolder !== undefined && ownersTakingExclusions.has(form.accountHolder)
+        && cashReceiptKeys.has(JSON.stringify([source?.recipientName?.trim().toLowerCase(), source?.distributionDate]))) {
+        throw new Error("2026 Form 1099-R QCD and an overlapping cash gift must reconcile to distinct sources before a deduction");
+      }
+    }
+  }
+
+  return {
+    includedForms,
+    ownerAmounts,
+    limit,
+    totalTransfers: sum(...ownerAmounts.map(summary => summary.transfers)),
+    exclusion: sum(...ownerAmounts.map(summary => summary.adjusted)),
+  };
+}
+
 function resolveQualifiedCharitableDistributionLimit(
   iraForms: Form1099R[],
   qcdAnnualLimit?: Decimal
@@ -156,14 +323,23 @@ function resolveQualifiedCharitableDistributionLimit(
 
 export function calculateForm1099R(
   forms: Form1099R[] = [],
-  options: {
-    qcdAnnualLimit?: Decimal;
-    taxYear?: number;
-    hasValidatedIraBasisSources?: boolean;
-    hasJointSpouse?: boolean;
-  } = {}
+  options: RetirementAggregationOptions = {},
 ): Form1099RResult {
-  if (options.taxYear === 2026) {
+  const hasActualQcdSources = forms.some(form => form.qcdSource !== undefined);
+  const use2026Rules = options.taxYear === 2026 || (options.taxYear === undefined
+    && (hasActualQcdSources || forms.some(form => form.taxYear === 2026 && hasQcdClaim(form))));
+  if (hasActualQcdSources && !use2026Rules) {
+    throw new Error("Actual Form 1099-R QCD worksheets require the matching 2026 return");
+  }
+  const qcdReturn = options.qcdReturnContext;
+  if (use2026Rules && qcdReturn && [
+    qcdReturn.form8606, qcdReturn.form8606ByOwner?.primary, qcdReturn.form8606ByOwner?.spouse,
+  ].some(form => !d(form?.qualifiedCharitableDistributions).isZero())) {
+    throw new Error("2026 QCD manual Form 8606 numbers require separate reconciliation with the actual owner worksheet");
+  }
+  const currentQcd = use2026Rules && forms.some(hasQcdClaim) ? resolve2026QcdSources(forms, options) : undefined;
+
+  if (use2026Rules) {
     for (const form of forms) {
       if (form.trumpAccount === true) throw new Error("2026 Form 1099-R Trump account distributions require a separate method");
       if (form.excessContributionEarnings !== undefined && !d(form.excessContributionEarnings).isZero()) {
@@ -175,6 +351,7 @@ export function calculateForm1099R(
       if (form.qualifiedLumpSumReporting === "ordinary_pension" && !getUpperDistributionCode(form).includes("A")) {
         throw new Error("2026 Form 1099-R ordinary lump-sum reporting decision requires Code A");
       }
+      if (currentQcd?.includedForms.has(form)) continue;
       if (isIraForm1099RDistribution(form)) {
         assert2026IraTaxability(form, options.hasValidatedIraBasisSources === true, options.hasJointSpouse === true);
       } else {
@@ -191,8 +368,8 @@ export function calculateForm1099R(
   const pensionForms = forms.filter((form) => !isIraForm1099RDistribution(form) && !isDisabilityPensionTaxableAsWages(form));
 
   const qcdLimitResolution = resolveQualifiedCharitableDistributionLimit(
-    iraForms,
-    options.qcdAnnualLimit
+    currentQcd ? [] : iraForms,
+    options.qcdAnnualLimit,
   );
   const uncappedIraQualifiedCharitableDistributions =
     qcdLimitResolution.uncappedQualifiedCharitableDistributions;
@@ -208,12 +385,14 @@ export function calculateForm1099R(
   // Each IRA owner may exclude up to the annual limit in QCDs per year.
   // Excess QCDs beyond the limit are taxable IRA income.
   const qcdAnnualLimit = options.qcdAnnualLimit;
-  const iraQualifiedCharitableDistributions = qcdLimitResolution.qualifiedCharitableDistributions;
+  const iraQualifiedCharitableDistributions = currentQcd?.exclusion ?? qcdLimitResolution.qualifiedCharitableDistributions;
   const qcdExcess = qcdLimitResolution.qcdExcess;
 
-  // Per-form taxable amounts already subtracted each form's QCD.  Add back the
-  // aggregate excess so the capped QCD is the only exclusion that flows through.
-  const iraTaxable = sum(...iraForms.map(resolveForm1099RTaxableAmount)).plus(qcdExcess);
+  // The current owner worksheet excludes only its net allowable amount.
+  // Historical per-statement amounts instead add back their cap excess.
+  const iraTaxable = currentQcd
+    ? sum(...iraForms.map(resolveTaxableAmountBeforeQcd)).minus(currentQcd.exclusion)
+    : sum(...iraForms.map(resolveForm1099RTaxableAmount)).plus(qcdExcess);
   const pensionSimplifiedMethodForms = pensionForms.filter(usesSimplifiedMethodForTaxableAmount);
 
   // ── Payer-level Simplified Method aggregation (Pub 575) ──────────
@@ -280,7 +459,10 @@ export function calculateForm1099R(
     new Decimal(0),
     pensionTaxableBeforePublicSafetyOfficerExclusion.minus(pensionPublicSafetyOfficerPremiumExclusion)
   );
-  const iraGrossReported = shouldReportGross(iraForms)
+  const shouldReportIraGross = currentQcd ? currentQcd.exclusion.gt(0) || shouldReportGross(
+    iraForms.filter(form => !currentQcd.includedForms.has(form))
+  ) : shouldReportGross(iraForms);
+  const iraGrossReported = shouldReportIraGross
     ? sum(...iraForms.map((form) => d(form.grossDistribution)))
     : new Decimal(0);
   const pensionGrossReported = (
@@ -296,7 +478,7 @@ export function calculateForm1099R(
     "1",
     "IRA gross distributions reported on Form 1040 Line 4a",
     iraGrossReported,
-    shouldReportGross(iraForms)
+    shouldReportIraGross
       ? "Sum Box 1 for IRA/SEP/SIMPLE Forms 1099-R because at least one IRA distribution is not fully taxable, is a direct rollover, is a validated Roth conversion, or is a Roth IRA distribution that must stay visible on Form 1040 Line 4a"
       : "Blank on Form 1040 Line 4a because all IRA distributions are fully taxable or absent",
     {
@@ -309,7 +491,9 @@ export function calculateForm1099R(
     "2",
     "IRA taxable distributions reported on Form 1040 Line 4b",
     iraTaxable,
-    qcdExcess.greaterThan(0) && qcdLimitResolution.ownerAwareLimitApplication !== undefined
+    currentQcd
+      ? "Include otherwise taxable IRA distributions, less only the allowable 2026 QCD after each owner's indexed cap and contribution adjustment (IRC §408(d)(8)(A))"
+      : qcdExcess.greaterThan(0) && qcdLimitResolution.ownerAwareLimitApplication !== undefined
       ? `Sum taxable IRA/SEP/SIMPLE distributions from Box 2a, taxable earnings on validated current-year IRA contributions returned by the due date, validated excess-contribution returns without earnings, or Box 1 unless direct rollover, then subtract excludable QCD amounts capped separately per known IRA owner at annual limit $${qcdAnnualLimit} (IRC §408(d)(8)(A)); $${qcdExcess} excess QCD added back to taxable`
       : qcdExcess.greaterThan(0)
       ? `Sum taxable IRA/SEP/SIMPLE distributions from Box 2a, taxable earnings on validated current-year IRA contributions returned by the due date, validated excess-contribution returns without earnings, or Box 1 unless direct rollover, then subtract excludable QCD amounts capped at annual limit $${qcdAnnualLimit} (IRC §408(d)(8)(A)); $${qcdExcess} excess QCD added back to taxable`
@@ -317,6 +501,17 @@ export function calculateForm1099R(
     {
       "IRA forms": iraForms.length.toString(),
       "Qualified charitable distributions (capped)": iraQualifiedCharitableDistributions,
+      ...(currentQcd ? {
+        "Documented QCD transfers": currentQcd.totalTransfers,
+        "QCD annual limit per IRA owner": currentQcd.limit,
+        "Documented QCD transfers remaining taxable": currentQcd.totalTransfers.minus(currentQcd.exclusion),
+        ...Object.fromEntries(currentQcd.ownerAmounts.flatMap(summary => [
+          [`QCD ${summary.owner} transfers after owner limit`, summary.capped],
+          [`QCD ${summary.owner} unused prior deducted contributions`, summary.prior],
+          [`QCD ${summary.owner} current deducted contributions`, summary.current],
+          [`QCD ${summary.owner} allowed exclusion`, summary.adjusted],
+        ])),
+      } : {}),
       ...(qcdExcess.greaterThan(0) ? {
         "Uncapped qualified charitable distributions": uncappedIraQualifiedCharitableDistributions,
         "QCD annual limit": qcdAnnualLimit ?? new Decimal(0),
@@ -474,6 +669,9 @@ function shouldReportGross(
 }
 
 export function resolveForm1099RTaxableAmount(form: Form1099R): Decimal {
+  if (form.qcdSource !== undefined || (form.taxYear === 2026 && hasQcdClaim(form))) {
+    throw new Error("2026 Form 1099-R QCD taxable amount requires the complete owner worksheet");
+  }
   const qualifiedCharitableDistribution = resolveQualifiedCharitableDistribution(form);
   const taxableAmountBeforeQcd = resolveTaxableAmountBeforeQcd(form);
 

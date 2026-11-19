@@ -75,7 +75,7 @@ describe("2026 ordinary IRA owner facts", () => {
     expect(() => calculateFederalTax(input)).toThrow(/original distribution/);
   });
 
-  it.each(["Q", "G", "Y7", "N", "R", "1P"])("preserves separately identified Code %s with no current taxable amount", (distributionCode) => {
+  it.each(["Q", "G", "N", "R", "1P"])("preserves separately identified Code %s with no current taxable amount", (distributionCode) => {
     const result = calculate({ distributionCode });
     expect(result.iraDistributionsTaxable.isZero()).toBe(true);
   });

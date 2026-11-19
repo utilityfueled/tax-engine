@@ -352,7 +352,7 @@ lines:
     testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Line 5 - withholding aggregates across forms"
 
   - line: "qcdCap"
-    description: "QCD annual limit enforcement"
+    description: "Historical QCD annual limit enforcement; use 2026/ira-qcd-adjustment.yaml for 2026"
     formula: "If aggregate QCD exclusion across IRA Forms 1099-R exceeds the annual per-individual limit ($108,000 for 2025 under IRC §408(d)(8)(A), SECURE 2.0 Act §307, IRS Notice 2025-67 (2025 comparison amount)), cap the exclusion at the annual limit for each known IRA owner separately when all IRA Forms 1099-R are owner-attributed, otherwise cap the combined exclusion at one annual limit, and add any excess back to IRA taxable income on Line 4b; the capped QCD amount replaces the uncapped amount in the result so downstream consumers see only the allowable exclusion"
     irsRef: "IRC §408(d)(8)(A); SECURE 2.0 Act §307; IRS Notice 2025-67 (2025 comparison amount)"
     inputs:

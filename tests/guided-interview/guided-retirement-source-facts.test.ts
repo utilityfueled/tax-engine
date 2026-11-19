@@ -4,6 +4,7 @@ import { expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { Form1099RSchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
+import { calculateForm1099R } from "@/engine/forms/form-1099-r";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
 import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { completeRetirementSource, startCompleteInterview } from "./complete-facts";
@@ -50,6 +51,52 @@ it("keeps unsupported source and basis facts saved and requires actual 2026 sour
     expect(buildTaxInputFromGuidedData(state), JSON.stringify(change)).toBeNull();
     expect(state.sectionData["income-retirement"].entries[0]).toMatchObject(change);
   }
+});
+
+it("forwards the actual 2026 QCD worksheet without inventing Box 2a", () => {
+  const qcdSource = {
+    transferReference: "Trustee confirmation 42",
+    distributionDate: "2026-10-30",
+    recipientName: "Community charity",
+    ordinaryTraditionalIraConfirmed: true,
+    ageRequirementConfirmed: true,
+    directTrusteeTransferConfirmed: true,
+    eligibleRecipientAndAcknowledgmentConfirmed: true,
+    transferAmount: "6,500.00",
+    adjustmentWorksheetReference: "Owner's Pub. 590-B worksheet",
+    allOwnerTransfersAndContributionsConfirmed: true,
+    unusedPriorDeductedContributions: "4,000.00",
+    currentDeductedContributions: "0",
+  };
+  const statement = {
+    ...completeRetirementSource,
+    sourceTaxYear: "2026",
+    distributionCode: "Y7",
+    isIraSepSimple: true,
+    iraBasisConfirmedZero: true,
+    grossDistribution: "6,500.00",
+    taxableAmount: "",
+    taxableAmountConfirmed: null,
+    taxableAmountNotDetermined: true,
+    trumpAccount: false,
+    excessContributionEarnings: "0",
+    qcdSource,
+  };
+  const inputs = buildRetirementInputs([statement], "single", 2026);
+  expect(inputs).toMatchObject([{
+    taxableAmount: undefined,
+    taxableAmountNotDetermined: true,
+    qcdSource: { ...qcdSource, transferAmount: "6500.00", unusedPriorDeductedContributions: "4000.00" },
+  }]);
+  const calculated = calculateForm1099R(inputs.map(input => Form1099RSchema.parse(input)), { taxYear: 2026 });
+  expect(calculated.iraQualifiedCharitableDistributions.toFixed(2)).toBe("2500.00");
+  expect(calculated.iraTaxable.toFixed(2)).toBe("4000.00");
+  expect(buildRetirementInputs([{ ...statement, distributionCode: "7" }], "single", 2026)[0]).toHaveProperty("qcdSource");
+  expect(() => buildRetirementInputs([{ ...statement, distributionCode: "7Y" }], "single", 2026)).toThrow(/worksheet/i);
+  expect(() => buildRetirementInputs([{ ...statement, qcdSource: undefined }], "single", 2026)).toThrow(/QCD.*worksheet/i);
+  expect(() => buildRetirementInputs([{ ...statement, qcdSource: { ...qcdSource, currentDeductedContributions: "" } }], "single", 2026)).toThrow(/current.*deducted/i);
+  expect(() => buildRetirementInputs([{ ...statement, qcdSource: { ...qcdSource, distributionDate: "2026-02-30" } }], "single", 2026)).toThrow(/transfer date/i);
+  expect(() => buildRetirementInputs([{ ...statement, sourceFactsConfirmed: null }], "single", 2026)).toThrow(/confirm/i);
 });
 
 it("counts actual local withholding in the allocation once and rejects duplicate or contradictory sources", () => {

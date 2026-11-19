@@ -710,6 +710,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     taxYear: year,
     qcdAnnualLimit: constants.qcd.annualLimit,
     hasValidatedIraBasisSources: iraBasisSources !== undefined,
+    qcdReturnContext: year === 2026 ? input : undefined,
     hasJointSpouse: filingStatus === "married_filing_jointly" && input.taxpayer.spouse !== undefined,
   });
   audit.merge(form1099R.lines);
@@ -1991,6 +1992,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Schedule 1 — formal line-by-line for audit trail
   const educatorBondSources = calculateEducatorBondSources(input);
   const sched1Context = {
+    form1099R: year === 2026 ? form1099R : undefined,
     educatorBondSources,
     schedCNetProfit: schedCNetProfit,
     schedFNetProfit: schedFNetProfit,

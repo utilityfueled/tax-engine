@@ -1109,6 +1109,21 @@ export const CodExclusionSchema = z.object({
   basisOfDepreciableRealProperty: optionalDecimal,
 });
 
+const Form1099RQcdSourceSchema = z.object({
+  transferReference: z.string().optional(), // Original trustee transfer and charity record
+  distributionDate: z.string().optional(),
+  recipientName: z.string().optional(),
+  ordinaryTraditionalIraConfirmed: z.boolean().optional(),
+  ageRequirementConfirmed: z.boolean().optional(),
+  directTrusteeTransferConfirmed: z.boolean().optional(),
+  eligibleRecipientAndAcknowledgmentConfirmed: z.boolean().optional(),
+  transferAmount: decimal.optional(),
+  adjustmentWorksheetReference: z.string().optional(),
+  allOwnerTransfersAndContributionsConfirmed: z.boolean().optional(),
+  unusedPriorDeductedContributions: decimal.optional(),
+  currentDeductedContributions: decimal.optional(),
+}).strict();
+
 export const Form1099RSchema = z.object({
   taxYear: z.number().int().optional(), // Preserve actual source year; ordinary basis binding requires an exact match.
   trumpAccount: z.boolean().optional(), // Actual2026 Box7c; absence is unknown.
@@ -1130,7 +1145,8 @@ export const Form1099RSchema = z.object({
   rothIraRolledOverAmount: optionalDecimal, // Validated Roth IRA amount rolled over to another Roth IRA for Form 8606 Line 19 exclusion support
   returnedContributionByDueDate: z.boolean().default(false), // Current-year IRA contribution returned by due date; Box 2a is taxable earnings only
   excessContributionReturnedWithoutEarnings: z.boolean().default(false), // Traditional IRA excess contribution returned after the due date with no earnings
-  qualifiedCharitableDistribution: optionalDecimal, // Excludable QCD amount routed to charity from an IRA
+  qualifiedCharitableDistribution: optionalDecimal, // Historical excludable QCD amount routed to charity from an IRA
+  qcdSource: Form1099RQcdSourceSchema.optional(), // Actual 2026 ordinary QCD and owner worksheet; missing facts remain unknown.
   federalWithheld: optionalDecimal, // Box 4
   stateWithheld: optionalDecimal, // Box 14
   stateTaxWithheld: optionalDecimal, // State withholding carried to NY IT-1099-R / IT-201 line 72

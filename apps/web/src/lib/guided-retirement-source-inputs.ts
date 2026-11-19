@@ -1,12 +1,42 @@
 import type { RetirementEntryData } from './guided-interview-flow';
 import { parseGuidedCurrency } from './guided-currency';
 
+export const retirementQcdTextFields = [
+  ['transferReference', 'Local reference for the actual IRA trustee transfer'],
+  ['recipientName', 'Charity named on the transfer and acknowledgment'],
+  ['adjustmentWorksheetReference', 'Local reference for the completed owner QCD adjustment worksheet'],
+] as const;
+
+export const retirementQcdAmounts = [
+  ['transferAmount', 'Amount sent directly to the charity'],
+  ['unusedPriorDeductedContributions', 'Unused prior-year deducted IRA contributions after age 70½'],
+  ['currentDeductedContributions', 'Current-year deducted IRA contributions after age 70½'],
+] as const;
+
+export const retirementQcdConfirmations = [
+  ['ordinaryTraditionalIraConfirmed', 'Was this a distribution from the owner’s ordinary traditional IRA?'],
+  ['ageRequirementConfirmed', 'Was the IRA owner at least 70½ on the transfer date?'],
+  ['directTrusteeTransferConfirmed', 'Did the IRA trustee pay the charity directly?'],
+  ['eligibleRecipientAndAcknowledgmentConfirmed', 'Do the records establish an eligible charity and its acknowledgment?'],
+  ['allOwnerTransfersAndContributionsConfirmed', 'Have you reconciled all of this owner’s transfers and deducted contributions on the worksheet?'],
+] as const;
+
+export type GuidedRetirementQcdSource =
+  Partial<Record<(typeof retirementQcdTextFields)[number][0] | 'distributionDate', string>> &
+  Partial<Record<(typeof retirementQcdAmounts)[number][0], string>> &
+  Partial<Record<(typeof retirementQcdConfirmations)[number][0], boolean | null>>;
+
 export function isGuidedQualifiedLumpSum(entry: RetirementEntryData): boolean {
   return entry.sourceTaxYear === '2026' && /^(?:[47]A|A[47])$/.test(entry.distributionCode.trim().toUpperCase());
 }
 
+export function isGuidedQcdStatement(entry: RetirementEntryData): boolean {
+  const code = entry.distributionCode.trim().toUpperCase();
+  return entry.sourceTaxYear === '2026' && (code === 'Y7' || (code === '7' && entry.qcdSource !== undefined));
+}
+
 export function isStartedRetirement(entry: RetirementEntryData): boolean {
-  return Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
+  return entry.qcdSource !== undefined || Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
 }
 function amount(value: string | undefined): string | undefined {
   if (!value?.trim()) return undefined;
@@ -15,6 +45,7 @@ function amount(value: string | undefined): string | undefined {
 }
 /** Original source values only. Never replace unknown Box2a with computed tax. */
 export function retirementSourceInput(entry: RetirementEntryData) {
+  const qcd = entry.qcdSource;
   return {
     taxYear: /^\d{4}$/.test(entry.sourceTaxYear ?? '') ? Number(entry.sourceTaxYear) : undefined,
     payer: entry.payer.trim(), payerTin: entry.payerTin?.trim(), accountHolder: entry.accountHolder || undefined,
@@ -22,6 +53,20 @@ export function retirementSourceInput(entry: RetirementEntryData) {
     grossDistribution: amount(entry.grossDistribution), taxableAmount: amount(entry.taxableAmount), federalWithheld: amount(entry.federalWithheld),
     iraSepSimple: entry.isIraSepSimple ?? undefined, distributionCode: entry.distributionCode.trim().toUpperCase(),
     qualifiedLumpSumReporting: isGuidedQualifiedLumpSum(entry) ? entry.qualifiedLumpSumReporting ?? undefined : undefined,
+    ...(qcd && { qcdSource: {
+      transferReference: qcd.transferReference?.trim(),
+      distributionDate: qcd.distributionDate,
+      recipientName: qcd.recipientName?.trim(),
+      ordinaryTraditionalIraConfirmed: qcd.ordinaryTraditionalIraConfirmed ?? undefined,
+      ageRequirementConfirmed: qcd.ageRequirementConfirmed ?? undefined,
+      directTrusteeTransferConfirmed: qcd.directTrusteeTransferConfirmed ?? undefined,
+      eligibleRecipientAndAcknowledgmentConfirmed: qcd.eligibleRecipientAndAcknowledgmentConfirmed ?? undefined,
+      transferAmount: amount(qcd.transferAmount),
+      adjustmentWorksheetReference: qcd.adjustmentWorksheetReference?.trim(),
+      allOwnerTransfersAndContributionsConfirmed: qcd.allOwnerTransfersAndContributionsConfirmed ?? undefined,
+      unusedPriorDeductedContributions: amount(qcd.unusedPriorDeductedContributions),
+      currentDeductedContributions: amount(qcd.currentDeductedContributions),
+    } }),
     capitalGainIncluded: isGuidedQualifiedLumpSum(entry) ? amount(entry.capitalGainIncluded) : undefined,
     iraBasisConfirmedZero: entry.isIraSepSimple === true ? entry.iraBasisConfirmedZero ?? undefined : undefined,
     taxableAmountNotDetermined: entry.taxableAmountNotDetermined ?? undefined, employeeContributions: amount(entry.employeeContributions),

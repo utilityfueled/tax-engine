@@ -20,7 +20,7 @@ import {
   type Form8889Result,
 } from "@/engine/forms/form-8889.js";
 import { calculateForm1099SA, mergeForm1099SAIntoForm8889Input } from "@/engine/forms/form-1099-sa.js";
-import { calculateForm1099R } from "@/engine/forms/form-1099-r.js";
+import { calculateForm1099R, type Form1099RResult } from "@/engine/forms/form-1099-r.js";
 import { calculateForm4797, type Form4797Result } from "@/engine/forms/form-4797.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-security-benefits-worksheet.js";
 import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
@@ -32,6 +32,8 @@ import type { EducatorBondSourceContext } from "@/engine/forms/educator-bond-sou
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
 export interface Schedule1Input {
+  /** Reuse retirement income already reconciled on the full 2026 return. */
+  form1099R?: Form1099RResult;
   /** Internal exact ownership, independently reconciled to the completed Form8815 by the caller. */
   educatorBondSources?: EducatorBondSourceContext;
   /** Completed canonical return amount after actual source and MAGI coordination. */
@@ -680,8 +682,12 @@ export function calculateSchedule1(
   audit.record("Sched 1", "19a", "Alimony paid", alimonyPaid, "Pre-2019 divorce/separation agreements only");
 
   // ── Income components shared by IRA and student loan MAGI ─────────
-  const form1099R = calculateForm1099R(input.form1099R ?? [], {
+  const currentReturn = input.taxpayer.taxYear === 2026;
+  const form1099R = extra?.form1099R ?? calculateForm1099R(input.form1099R ?? [], {
     qcdAnnualLimit: constants.qcd.annualLimit,
+    taxYear: currentReturn ? input.taxpayer.taxYear : undefined,
+    hasJointSpouse: filingStatus === "married_filing_jointly" && input.taxpayer.spouse !== undefined,
+    qcdReturnContext: currentReturn ? input : undefined,
   });
   const magiWages = sum(
     ...input.w2s.map((w2) => d(w2.wages)),

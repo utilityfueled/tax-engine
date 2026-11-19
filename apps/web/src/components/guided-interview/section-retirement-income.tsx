@@ -9,6 +9,7 @@ import { CurrencyField } from "./currency-field";
 import { RetirementSourceFields } from "./retirement-source-fields";
 import { IraBasisSourceFields } from "./ira-basis-source-fields";
 import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
+import { isGuidedQcdStatement } from "@/lib/guided-retirement-source-inputs";
 
 function RetirementCard({
   index,
@@ -25,6 +26,7 @@ function RetirementCard({
   removable: boolean;
   basisMode?: boolean;
 }) {
+  const qcdMode = isGuidedQcdStatement(entry);
   return (
     <div className="guided-w2-card">
       <div className="guided-w2-card-header">
@@ -64,11 +66,11 @@ function RetirementCard({
           required
         />
         <CurrencyField
-          label={basisMode ? "Printed taxable amount (Box 2a)" : "Taxable amount (Box 2a)"}
-          hint={basisMode ? "Copy only the amount printed on the original form. Leave it blank when Box 2b is checked and the source gives no taxable amount; the owner basis worksheet calculates taxability." : "Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."}
+          label={basisMode || qcdMode ? "Printed taxable amount (Box 2a)" : "Taxable amount (Box 2a)"}
+          hint={basisMode || qcdMode ? "Copy only the amount printed on the original form. Leave it blank when Box 2b is checked and the source gives no taxable amount. The owner worksheet calculates taxability." : "Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."}
           value={entry.taxableAmount}
           onChange={(v) => onUpdate("taxableAmount", v)}
-          required={!basisMode}
+          required={!basisMode && !qcdMode}
         />
         <CurrencyField
           label="Federal tax withheld (Box 4)"

@@ -1,6 +1,6 @@
 # Current 2026 upgrade status
 
-The latest reviewed tax package records Form 1095-A corrections and voids.
+The latest reviewed tax package reconciles ordinary 2026 IRA charitable transfers.
 Automatic production builds are disabled. The 2026 public release still needs
 qualification.
 
@@ -13,10 +13,11 @@ The [execution brief](upgrade-2026-execution-brief.md) remains the complete scop
 
 | Package | Verified state and next action |
 | --- | --- |
-| Global checks | Exact `6e21266e` passed 29,286 tests in both unit and coverage, 88.26% branch coverage against the 85% gate, and all nine static checks. All six matching CI jobs and the Docker CI build passed. [Ordinary CI](https://github.com/utilityfueled/tax-engine/actions/runs/44492030631), [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44492030984). |
+| Global checks | Exact `5a4377f7` passed 29,295 tests in both unit and coverage, 88.27% branch coverage against the 85% gate, all nine static checks, and its Docker CI build. All six prior `6e21266e` CI jobs passed. [Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/44513850774), [Current Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44513850788). |
 | Marketplace statements | The current package holds voided forms and duplicate policy statements. It carries confirmed correction status through ordinary, shared, marriage, and health coordination inputs. Unit and coverage each passed 29,295 tests with 88.27% branch coverage. Independent engineering review passed 67 tests, all nine static checks passed, and eight targeted browser cases passed on the local production build. [Implementation evidence](upgrade-2026-progress.md#november-19-form-1095-a-correction-and-void-handling). |
+| IRA charitable distributions | The ordinary 2026 federal method reconciles the original statement and trustee transfer before applying the annual cap and the contribution adjustment per owner. The published example produces $2,500 excluded and $4,000 taxable. Unit and coverage each passed 29,332 tests with 88.28% branch coverage, and three targeted browser cases passed. Professional and state-method qualification remain open. [Implementation evidence](upgrade-2026-progress.md#november-19-ordinary-2026-ira-charitable-distributions). |
 | Federal facts and PA/OH | Both states cover resident, part-year and nonresident targets. The recent federal changes require linked Form 1098 lender and account facts, original Form 1099-R checkbox facts, and territory deduction allocation. `4ae1b8e6` adds the source-bound Ohio resident A34 draft. Final forms and qualified independent tax review remain required. |
-| Browser | Exact `6e21266e` passed 650 local managed and 650 native ARM64 cases, each with five planned skips. Its remote managed job hit two RRTA inspection deadlines and strict AMD64 hit eight Ohio deadlines. The original limits are in force. [Current remote Web](https://github.com/utilityfueled/tax-engine/actions/runs/44492030573). |
+| Browser | Marketplace commit `5a4377f7` passed 650 local managed cases with five planned skips. Earlier `6e21266e` also passed 650 native ARM64 cases with five planned skips. Its remote managed job hit two RRTA inspection deadlines and strict AMD64 hit eight Ohio deadlines. The original limits are in force. [Current remote Web](https://github.com/utilityfueled/tax-engine/actions/runs/44513851004), [Prior completed run](https://github.com/utilityfueled/tax-engine/actions/runs/44492030573). |
 | SQLite | Investigation deferred. The historical sanitizer and ABI gates are open. Preserve the unrelated local changes. [Prior evidence](upgrade-2026-progress.md). |
 | glibc | Investigation deferred. The paired-profile and release gates require their own exact evidence. [Prior ledger](upgrade-2026-glibc-ifunc-profile-20261117.md). |
 | RRTA privacy | Original and compound candidates failed the unchanged 10% threshold; buffered-numeric composition failed its 2% incremental screen. No adoption or repeated negative run. The four-second privacy limit and independent parser remain. [Ledger](upgrade-2026-rrta-python-paired-20261117.md). |

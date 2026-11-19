@@ -2,17 +2,20 @@
 
 import type { RetirementEntryData } from "@/lib/guided-interview-flow";
 import { retirementSourceAmounts } from "@/lib/guided-retirement-facts";
-import { isGuidedQualifiedLumpSum } from "@/lib/guided-retirement-source-inputs";
+import { isGuidedQcdStatement, isGuidedQualifiedLumpSum, retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields } from "@/lib/guided-retirement-source-inputs";
 import { CurrencyField } from "./currency-field";
 
 function Fact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={event => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
-function Text({ label, value, onChange }: { label: string; value: string | undefined; onChange: (value: string) => void }) {
-  return <label className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" value={value ?? ""} onChange={event => onChange(event.target.value)} /></label>;
+function Text({ label, value, onChange, type = "text" }: { label: string; value: string | undefined; onChange: (value: string) => void; type?: "text" | "date" }) {
+  return <label className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" type={type} value={value ?? ""} onChange={event => onChange(event.target.value)} /></label>;
 }
 
 export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void; basisMode?: boolean }) {
+  const qcdStatement = isGuidedQcdStatement(entry);
+  const ordinaryQcdEligibleCode = entry.sourceTaxYear === "2026" && entry.isIraSepSimple === true && entry.distributionCode.trim() === "7";
+  const qcd = entry.qcdSource;
   return <>
     <Text label="Retirement statement tax year" value={entry.sourceTaxYear} onChange={value => onUpdate("sourceTaxYear", value)} />
     <Text label="Payer TIN shown on the retirement form" value={entry.payerTin} onChange={value => onUpdate("payerTin", value)} />
@@ -31,7 +34,7 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
       </select>
     </label>}
     <Fact label="Is taxable amount not determined checked in Box 2b?" value={entry.taxableAmountNotDetermined} onChange={value => onUpdate("taxableAmountNotDetermined", value)} />
-    {!basisMode && <Fact label="Have you established the actual taxable amount from the source and applicable basis records?" value={entry.taxableAmountConfirmed} onChange={value => onUpdate("taxableAmountConfirmed", value)} />}
+    {!basisMode && !qcdStatement && <Fact label="Have you established the actual taxable amount from the source and applicable basis records?" value={entry.taxableAmountConfirmed} onChange={value => onUpdate("taxableAmountConfirmed", value)} />}
     {retirementSourceAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={entry[field] ?? ""} onChange={value => onUpdate(field, value)} required />)}
     {!basisMode && entry.isIraSepSimple === true && <Fact label="Do actual owner records establish zero nondeductible IRA basis?" value={entry.iraBasisConfirmedZero} onChange={value => onUpdate("iraBasisConfirmedZero", value)} />}
     <Fact label="Is this an eligible governmental section 457(b) distribution?" value={entry.eligibleGovernmental457bPlan} onChange={value => onUpdate("eligibleGovernmental457bPlan", value)} />
@@ -55,7 +58,16 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
       <CurrencyField label="Retirement local tax withheld (Box 17)" value={entry.localTaxWithheld ?? ""} onChange={value => onUpdate("localTaxWithheld", value)} required />
       <CurrencyField label="Retirement local distribution (Box 19)" value={entry.localDistribution ?? ""} onChange={value => onUpdate("localDistribution", value)} required />
     </>}
-    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label="Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?" value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
+    {(qcdStatement || qcd !== undefined) && <fieldset className="guided-form-grid">
+      <legend>Qualified charitable distribution worksheet</legend>
+      {retirementQcdTextFields.map(([field, label]) => <Text key={field} label={label} value={qcd?.[field]} onChange={value => onUpdate("qcdSource", { ...qcd, [field]: value })} />)}
+      <Text label="Actual IRA trustee transfer date" type="date" value={qcd?.distributionDate} onChange={value => onUpdate("qcdSource", { ...qcd, distributionDate: value })} />
+      {retirementQcdAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={qcd?.[field] ?? ""} onChange={value => onUpdate("qcdSource", { ...qcd, [field]: value })} required />)}
+      {retirementQcdConfirmations.map(([field, label]) => <Fact key={field} label={label} value={qcd?.[field]} onChange={value => onUpdate("qcdSource", { ...qcd, [field]: value })} />)}
+      {qcd && <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("qcdSource", undefined)}>Remove QCD worksheet</button>}
+    </fieldset>}
+    {ordinaryQcdEligibleCode && !qcd && !basisMode && <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("qcdSource", {})}>Enter a QCD worksheet</button>}
+    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label={qcdStatement ? "Is another retirement worksheet beyond this QCD worksheet needed?" : "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?"} value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
     <Fact label="Have you checked all retirement source and taxability facts after the last edit?" value={entry.sourceFactsConfirmed} onChange={value => onUpdate("sourceFactsConfirmed", value)} />
     <p className="guided-hint">Keep unknown amounts blank. Enter zero only when the source or completed worksheet establishes zero. Special distributions and unresolved basis, rollover or multi-state allocations stay saved for review until their source worksheets are supported.</p>
   </>;

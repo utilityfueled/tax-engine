@@ -9201,6 +9201,31 @@
       "knownGaps": []
     },
     {
+      "key": "federal/ira-qcd-adjustment",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p590b",
+      "specPath": "spec/federal/2026/ira-qcd-adjustment.yaml",
+      "enginePath": "src/engine/forms/form-1099-r.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-r-qcd-2026.test.ts::reconciles the published 2026 QCD adjustment",
+        "tests/engine/forms/form-1099-r-qcd-2026.test.ts::carries the verified QCD into the parsed federal return",
+        "tests/guided-interview/guided-retirement-source-facts.test.ts::forwards the actual 2026 QCD worksheet without inventing Box 2a"
+      ],
+      "implementationNote": "Ordinary federal source calculation and guided intake evidence. Professional tax review, state-method qualification and annual filing output remain required.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/ira-return-integration",
       "jurisdiction": "federal",
       "taxYear": 2026,
