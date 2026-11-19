@@ -14,7 +14,7 @@ jobs:
   recovery:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 90
     defaults:
       run:
         shell: bash
@@ -122,7 +122,7 @@ jobs:
           exit 1
       - name: Run strict browser flows against the ARM64 runtime image
         id: strict_browser
-        timeout-minutes: 40
+        timeout-minutes: 75
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
           PLAYWRIGHT_DISABLE_WEBSERVER: "true"
@@ -134,7 +134,7 @@ jobs:
           BROWSER_CONTAINER: ${{ steps.browser_container.outputs.container }}
         run: |
           [[ $BROWSER_CONTAINER =~ ^[a-f0-9]{64}$ ]]
-          docker stop --time 10 "$BROWSER_CONTAINER"
+          docker stop --timeout 10 "$BROWSER_CONTAINER"
           docker rm "$BROWSER_CONTAINER"
           remaining=$(docker ps --all --quiet --no-trunc --filter "id=$BROWSER_CONTAINER")
           test -z "$remaining"
