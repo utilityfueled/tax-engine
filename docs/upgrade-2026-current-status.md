@@ -1,6 +1,6 @@
 # Current 2026 upgrade status
 
-Reviewed source through `e0cc9467` is on `main`. Automatic production builds are
+The latest reviewed tax change on `main` is `6e21266e`. Automatic production builds are
 disabled. The 2026 public release still needs qualification.
 
 Resume with `activeContinuation.nov19TaxAndBrowserContinuation` in
@@ -12,9 +12,9 @@ The [execution brief](upgrade-2026-execution-brief.md) remains the complete scop
 
 | Package | Verified state and next action |
 | --- | --- |
-| Global checks | Exact `e0cc9467` passed unit and coverage with 29,205 passes and 75 planned skips each, 87.88% branch coverage against the 85% gate, and all nine static checks. The full local managed browser run also passed 650 cases with five planned skips. Earlier `49f79555` also passed six [CI jobs](https://github.com/utilityfueled/tax-engine/actions/runs/44478475858) and [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44478475856). |
+| Global checks | Exact `e0cc9467` passed unit and coverage with 29,205 passes and 75 planned skips each, 87.88% branch coverage against the 85% gate, and all nine static checks. Full local and remote managed browser runs for that source each passed 650 cases with five planned skips. Its six matching remote CI jobs also passed. The new `6e21266e` charitable recipient guard passed 103 targeted tax tests and 37 browser audit checks. Earlier `49f79555` also passed six [CI jobs](https://github.com/utilityfueled/tax-engine/actions/runs/44478475858) and [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44478475856). |
 | Federal facts and PA/OH | Both states cover resident, part-year and nonresident targets. The recent federal changes require linked Form 1098 lender and account facts, original Form 1099-R checkbox facts, and territory deduction allocation. `4ae1b8e6` adds the source-bound Ohio resident A34 draft. Final forms and qualified independent tax review remain required. |
-| Browser | Exact `e0cc9467` passed all eight local windows with normal cleanup. The latest completed [remote Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44478475900) on `49f79555` retained two managed RRTA inspection deadlines and ten strict AMD64 Ohio deadlines. The [matching `e0cc9467` remote run](https://github.com/utilityfueled/tax-engine/actions/runs/44485088928) is in progress. |
+| Browser | Exact `e0cc9467` passed all eight local and remote managed windows. Its [strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44485088928/job/135426427216) passed 648 cases with five planned skips and two original desktop Ohio part-year school deadlines. The full native UI attempt halted before any cases, and the default VM was restored. |
 | SQLite | Investigation deferred. The historical sanitizer and ABI gates are open. Preserve the unrelated local changes. [Prior evidence](upgrade-2026-progress.md). |
 | glibc | Investigation deferred. The paired-profile and release gates require their own exact evidence. [Prior ledger](upgrade-2026-glibc-ifunc-profile-20261117.md). |
 | RRTA privacy | Original and compound candidates failed the unchanged 10% threshold; buffered-numeric composition failed its 2% incremental screen. No adoption or repeated negative run. The four-second privacy limit and independent parser remain. [Ledger](upgrade-2026-rrta-python-paired-20261117.md). |
