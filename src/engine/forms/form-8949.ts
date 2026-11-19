@@ -119,6 +119,18 @@ function reportingBox(transaction: CapitalTransaction): ReportingBox {
   return short ? (transaction.basisReportedToIRS ? 'A' : 'B') : (transaction.basisReportedToIRS ? 'D' : 'E');
 }
 
+const month = '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+const day = '\\d{1,2}';
+const year = '(?:\\d{4}|\\d{2})';
+const separator = '\\s*[./,-]?\\s*';
+const namedMonthDate = new RegExp([
+  `\\b${day}${separator}${month}${separator}${year}\\b`,
+  `\\b${month}${separator}${day}${separator}${year}\\b`,
+  `\\b${year}${separator}${month}${separator}${day}\\b`,
+  `^${month}${separator}(?:${day}|${year})$`,
+].join('|'), 'i');
+const spacedNumericDate = /\b(?:\d{4}\s+\d{1,2}\s+\d{1,2}|\d{1,2}\s+\d{1,2}\s+\d{4})\b/;
+
 export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const audit = new AuditTrail();
   for (const form of input.form1099B) {
@@ -131,8 +143,10 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
       if (date && Number(date[1]) !== input.taxpayer.taxYear) {
         throw new Error('Form 1099-B disposition year must match the return year; reconcile the actual Box 1c date.');
       }
-      const dateLike = !date && (/^(?:\d{4}|\d{6}|\d{8})$/.test(value) || /\d\s*[-/.]\s*\d/.test(value)
-        || /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?=\s|\d|[.,/-]|$).*\d/i.test(value));
+      const dateLike = !date && (
+        /^(?:\d{4}|\d{6}|\d{8})$/.test(value) || /\d\s*[-/.]\s*\d/.test(value)
+        || spacedNumericDate.test(value) || namedMonthDate.test(value)
+      );
       if (date || dateLike) {
         const parsed = date ? new Date(`${value}T00:00:00Z`) : undefined;
         if (!parsed || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {

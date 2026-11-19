@@ -51,7 +51,9 @@ it('preserves matching closings cross-year acquisitions and unknown summary date
   }
   const legacy = parseInput({ ...simpleW2Fixture, form1099B: [{ broker: 'Legacy broker', transactions: [trade] }] });
   expect(calculateFederalTax(legacy).agi.toFixed()).toBe('86000.1');
-  for (const dateAcquired of ['2023-01-03', 'VARIOUS']) for (const dateSold of ['2025-06-10', '', 'VARIOUS', 'unknown', 'See attached 2025 summary', '5 transactions (see attached 2025 summary)']) {
+  const dates = ['2025-06-10', '', 'VARIOUS', 'unknown', 'See attached 2025 summary',
+    'See May brokerage summary for 2025', '5 transactions (see attached 2025 summary)'];
+  for (const dateAcquired of ['2023-01-03', 'VARIOUS']) for (const dateSold of dates) {
     const input = fixture(), transaction = required(required(input.form1099B[0]).transactions[0]);
     Object.assign(transaction, { dateAcquired, dateSold });
     const before = JSON.stringify(input), result = calculateForm8949(input);
@@ -68,6 +70,13 @@ it('preserves matching closings cross-year acquisitions and unknown summary date
   expect(calculateForm8949(closed).totalShortTermGainLoss.toFixed()).toBe('1000.1');
   const wrongHeader = fixture(2025, 2024);
   expect(() => calculateFederalTax(wrongHeader)).toThrow('Broker withholding source year must match the actual return year');
+});
+
+it.each(['31DEC2024', '2024 06 10'])('holds the noncanonical original broker date %s', dateSold => {
+  const input = fixture(2025, 2025, dateSold);
+  const calendarHold = 'Form 1099-B disposition date requires an actual canonical calendar date';
+  expect(() => calculateForm8949(input)).toThrow(calendarHold);
+  expect(() => calculateFederalTax(input)).toThrow(calendarHold);
 });
 
 it('holds noncanonical and impossible date-like original broker dispositions', () => {
