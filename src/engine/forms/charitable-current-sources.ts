@@ -16,6 +16,7 @@ export function eligibleCurrentCharitableDonations(input: TaxYearInput): TaxYear
     if (!raw.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Current donation date must belong to the return tax year; prior gifts require actual carry history");
     if (typeof source.qualifiedOrganization !== "boolean") throw new Error("Charitable recipient qualification is unknown");
     if (!source.qualifiedOrganization) return false;
+    if (typeof source.organization !== "string" || !source.organization.trim()) throw new Error("Charitable contribution requires the actual recipient name");
     resolveCharitableRecipient(source);
     return true;
   });

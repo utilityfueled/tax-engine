@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 current charitable gifts require the actual recipient
+
+The shared federal charitable-source check now requests the organization name before using a positive gift with confirmed qualification. Empty or whitespace-only names hold the itemized deduction for 2025 and 2026 and the 2026 nonitemizer deduction. The guard preserves confirmed zero, known-ineligible and unknown-qualification records as well as the original name when supplied. The spec records the underlying substantiation requirements. [IRC §170](https://uscode.house.gov/us/usc/t26/s170/), [IRS Publication 526](https://www.irs.gov/publications/p526).
+
+All six named-recipient regressions failed before the guard and passed afterward. An independent repeat passed 103 tests across eight suites. The spec validator found 9,623 valid references. Inventory, typecheck and scoped lint passed. Browser audit pins bind the changed engine file; test IDs, deadlines and skip decisions are unchanged.
+
 ## November 19 exact current ARM64 recovery pass
 
 The isolated ARM64 rehearsal built the frozen `e0cc9467` archive once and reused the verified `49f79555` image. All 51 controller steps and six phases passed. The previous run, upgrade, database restart, database dump and restore, rollback, and re-upgrade preserved the same database, browser facts and source-document checksums. The synthetic PostgreSQL restore verified 11 tables, two workspaces and exact credit accounting. The browser restore verified encrypted originals, original bytes, unknown tax year, exact cents and deletion.

@@ -1,5 +1,14 @@
 // Spec: spec/federal/charitable-current-sources.yaml
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
+
+// Supply the indexed constants for this focused calculation test without opening the release gate.
+vi.mock("@/models/constants.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/models/constants.js")>();
+  const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
+  return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
+});
+
+import { calculateFederalTax } from "@/index.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { calculateScheduleA } from "@/engine/schedules/schedule-a.js";
 import { getConstants } from "@/models/constants.js";
@@ -7,21 +16,47 @@ import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { d } from "@/utils/decimal.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 import { charitableCarryoverFixture } from "../../fixtures/charitable-carryover.js";
-function fixture(year: number, type: "cash" | "property", qualifiedOrganization: boolean | undefined) {
+function fixture(year: number, type: "cash" | "property", qualifiedOrganization: boolean | undefined, organization = "Synthetic recipient") {
   return TaxYearInputSchema.parse({ ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
-    donations: [{ organization: "Synthetic recipient", type, amount: "20000.49", costBasis: "20000.49", dateOfDonation: `${year}-04-15`,
+    donations: [{ organization, type, amount: "20000.49", costBasis: "20000.49", dateOfDonation: `${year}-04-15`,
       qualifiedOrganization, isPrivateFoundation: false, isLongTermCapitalGain: false, supportingOrganization: false, donorAdvisedFund: false }] });
 }
+const recipientReturns = [
+  { year: 2025, election: "itemized", itemizedGift: "20000", standardGift: "0" },
+  { year: 2026, election: "itemized", itemizedGift: "19575", standardGift: "0" },
+  { year: 2026, election: "standard", itemizedGift: "19575", standardGift: "1000" },
+] as const;
+it.each(recipientReturns.flatMap(result => [
+  { ...result, missingName: "blank", organization: "" },
+  { ...result, missingName: "whitespace-only", organization: " \t\n " },
+]))("requires the actual current charitable recipient for a $year $election return with a $missingName name", ({
+  year, election, itemizedGift, standardGift, organization,
+}) => {
+  const named = fixture(year, "cash", true, " Actual Synthetic Recipient ");
+  named.deductionElection = election;
+  const original = structuredClone(named);
+  const result = calculateFederalTax(named);
+  expect(result.deductionUsed).toBe(election);
+  expect(result.scheduleA?.charitableTotal.toFixed()).toBe(itemizedGift);
+  expect(result.nonitemizerCharitableDeduction.toFixed()).toBe(standardGift);
+  expect(named).toEqual(original);
+  const unnamed = fixture(year, "cash", true, organization);
+  unnamed.deductionElection = election;
+  expect(() => calculateFederalTax(unnamed)).toThrow(/actual.*recipient name/i);
+});
 it("preserves false and unknown current charity qualification in both years", () => {
   for (const year of [2025, 2026]) for (const type of ["cash", "property"] as const) {
-    const input = fixture(year, type, false), original = structuredClone(input);
+    const input = fixture(year, type, false, " \t "), original = structuredClone(input);
     const constants = year === 2025 ? getConstants(2025) : FEDERAL_2026_CONSTANTS;
     const result = calculateScheduleA(input, d("100000"), "single", constants);
     expect(result.charitableTotal.toString()).toBe("0");
     expect(result.charitableCarryforward.toString()).toBe("0");
     expect(result.nonitemizerCharitableDeduction.toString()).toBe("0");
     expect(input).toEqual(original);
-    expect(() => calculateScheduleA(fixture(year, type, undefined), d("100000"), "single", constants)).toThrow(/qualification.*unknown|unknown.*qualification/i);
+    expect(() => calculateScheduleA(fixture(year, type, undefined, ""), d("100000"), "single", constants)).toThrow(/qualification.*unknown|unknown.*qualification/i);
+    const zero = fixture(year, type, undefined, "");
+    zero.donations[0].amount = "0";
+    expect(calculateScheduleA(zero, d("100000"), "single", constants).charitableTotal.isZero()).toBe(true);
     expect(calculateScheduleA(fixture(year, type, true), d("100000"), "single", constants).charitableTotal.gt(0)).toBe(true);
   }
 });

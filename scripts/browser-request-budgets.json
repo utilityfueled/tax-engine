@@ -728,7 +728,7 @@
     "src/engine/forms/charitable-carryover.ts": "339745c4bcfcfc2f58f7725a2968d5ebf3df5a60f0e45186b5d2f57a6fc257d6",
     "src/engine/forms/charitable-category-use.ts": "b11a9d2b87181661e4167561e9780cbb19d480d125b748451454d9cf3129a405",
     "src/engine/forms/charitable-contribution-worksheet.ts": "6b4dbf53e44f6e2e4d4018682d91ad0c592af55ba2f71109ad7ed870206782e9",
-    "src/engine/forms/charitable-current-sources.ts": "e282a73e91278c664aa88c4c874be8f21076568ab33139a0a18e8c9b79bae8fe",
+    "src/engine/forms/charitable-current-sources.ts": "b4f396f904c4ed60ee1babebaa50432af9b0b28357ee5fe028ec1958ca29526c",
     "src/engine/forms/charitable-determined-floor.ts": "a4c8d9042bb3fd85770349c6bdced2002ae19e44286a8a9f997784ae1a226b16",
     "src/engine/forms/charitable-determined-nol.ts": "6e728001b684d6785af012cad5e19e067cb47cae34d3842f69f50f1187591d2d",
     "src/engine/forms/charitable-filing-unit-history.ts": "191e9e5457b57ee4d09d8d1224363843e26e82553bddf0f1e3ea724afd5e341d",
