@@ -556,6 +556,23 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestForm8889OrdinaryProjection": {
+        "formYear": 2026,
+        "blankSha256": "e206d84f0ce3b2a4add7a97e5de8f873b11bd0a16e34e7cd98f9c4dcc87a178d",
+        "blankSource": "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf",
+        "publication969": "https://www.irs.gov/publications/p969",
+        "candidateSourceSha256": "850a36af00a8b32aedf95f9633e1e153f50774205634dc66228cef242a639418",
+        "independentEngineeringReview": "found January eligibility contradiction; preserved failing regression and verified correction",
+        "firstDayRedLogSha256": "a12f66de74581ef78ae66cc48bf25203413372c6fae7c09434df3fb18257f491",
+        "targetedTestsPassed": 153,
+        "targetedSuitesPassed": 6,
+        "targetedLogSha256": "3398df98343d1b1b0971e7ff621e0866b4cc41568856de16d06a11823ffa5e7e",
+        "specReferences": 9654,
+        "browserAuditSha256": "f762907aedf9352fa93dc2fd028160350f9de3083bbe3c506d1b404997165fdf",
+        "publicReviewEnabled": false,
+        "filingQualified": false,
+        "qualifiedIndependentTaxReviewComplete": false
+      },
       "latestItemizedCharityElection": {
         "appSource": "294b3fe808b559522355ef685b7c4bc3285af4b3",
         "archiveSha256": "8c1390b67b5ebb7e15e36895d2368ba2a0e2bf7c64044a689f63c1dad7bdfacd",

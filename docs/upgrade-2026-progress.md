@@ -1,5 +1,25 @@
 # 2026 upgrade implementation evidence
 
+## November 19 ordinary Form 8889 review projection
+
+The internal 2026 projection fills the pinned final IRS blank for a single
+confirmed HSA owner under 55 with actual full-year eligibility and stable
+coverage. It reconciles personal and employer contributions, owner-attributed
+W-2 code W, 1099-SA Box 1 distributions, and qualified payments. It renders
+the printed lines for both self-only and family examples. The review stamp
+and no-identifier output are verified after reopening the saved PDF. The
+candidate stays outside public review and filing routing.
+[2026 Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) ·
+[Publication 969](https://www.irs.gov/publications/p969).
+
+Independent engineering review reproduced an eligibility contradiction when the
+owner's birth date was after January 1. The regression failed before the
+correction. The final package passed 153 tests across six suites, typecheck,
+strict scoped lint, the full browser source audit, and spec validation with
+9,654 linked lines and zero broken references. The archived 2025 and 2026
+forms now have separate citations. Final 2026 instructions and the final
+parent return are still needed for qualification.
+
 ## November 19 explicit itemization and charitable recipient answers
 
 Application source `294b3fe8` accepts a documented 2026 direct cash gift on an

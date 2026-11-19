@@ -3,13 +3,35 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, it } from "vitest";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
-import { FORM_8889_2026_CANDIDATE as candidate } from "@/pdf/mappings/2026/form-8889-candidate.js";
+import { FORM_8889_2026_CANDIDATE as candidate, fillForm88892026OrdinaryCandidate } from "@/pdf/mappings/2026/form-8889-candidate.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
 const blank = new URL("../../forms/blank/2026/f8889.pdf", import.meta.url);
 const historicalBlank = new URL("../../forms/blank/2025/f8889.pdf", import.meta.url);
 const officialSha256 = "e206d84f0ce3b2a4add7a97e5de8f873b11bd0a16e34e7cd98f9c4dcc87a178d";
+
+const ordinary = TaxYearInputSchema.parse({
+  ...simpleW2Fixture,
+  taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+  form8889: {
+    accountOwner: "primary", coverageByMonth: Array(12).fill("self_only"),
+    contributionsMade: "2199.49", qualifiedMedicalExpenses: "350.14",
+  },
+  w2s: [{ ...simpleW2Fixture.w2s[0], taxYear: 2026, accountHolder: "primary", box12CodeW: "1200.51" }],
+  form1099SA: ["500.26", "350.39"].map(grossDistribution => ({
+    payer: "Fictional HSA Trustee", taxYear: 2026, accountHolder: "primary", accountType: "hsa",
+    distributionCode: "1", grossDistribution,
+  })),
+});
+const evidence = {
+  taxYear: 2026, accountOwner: "primary", fullYearEligibilityConfirmed: true, ordinaryActivityConfirmed: true,
+  coverage: "self_only",
+  personalContributions: "2199.49", employerContributions: "1200.51",
+  grossDistributions: "850.65", qualifiedMedicalExpenses: "350.14",
+} as const;
 
 // Native suffix, rectangle in PDF points, and checkbox on-state when present.
 const locations = {
@@ -156,6 +178,97 @@ describe("Final 2026 Form 8889 physical candidate", () => {
       const notice = Buffer.from(decodePDFRawStream(noticeStreams[0]).decode()).toString("ascii");
       expect(notice).toContain(Buffer.from(REVIEW_PDF_NOTICE).toString("hex").toUpperCase());
     }
+  });
+
+  it("renders ordinary contributions and partly taxable distributions", async () => {
+    const rendered = await fillForm88892026OrdinaryCandidate(ordinary, evidence, await readFile(blank));
+    const saved = await PDFDocument.load(await rendered.save());
+    const form = saved.getForm();
+    // $4,400 - $1,200.51 = $3,199.49; $2,199.49 is deductible.
+    // $500.26 + $350.39 - $350.14 = $500.51; 20% is $100.102.
+    const expected = {
+      line2: "2199", line3: "4400", line4: "0", line5: "4400", line6: "4400", line8: "4400",
+      line9: "1201", line10: "0", line11: "1201", line12: "3199", line13: "2199",
+      line14a: "851", line14b: "0", line14c: "851", line15: "350", line16: "501", line17b: "100",
+    } as const;
+    for (const [line, expectedValue] of Object.entries(expected)) {
+      const field = form.getTextField(candidate.fields[line as keyof typeof expected]);
+      expect(field.getText(), line).toBe(expectedValue);
+      expect(field.acroField.getWidgets()[0].getAppearances()?.normal).toBeInstanceOf(PDFRawStream);
+    }
+    for (const field of ["name", "ssn", "line7", "line18", "line19", "line20", "line21"] as const) {
+      expect(form.getTextField(candidate.fields[field]).getText(), field).toBeUndefined();
+    }
+    expect(form.getCheckBox(candidate.fields.selfOnly).acroField.getValue().toString()).toBe("/1");
+    expect(form.getCheckBox(candidate.fields.family).isChecked()).toBe(false);
+    expect(form.getCheckBox(candidate.fields.line17a).isChecked()).toBe(false);
+    expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+  });
+
+  it("renders a fully qualified family distribution as an explicit zero", async () => {
+    const spouse = TaxYearInputSchema.parse({
+      ...ordinary, taxpayer: { ...ordinary.taxpayer, filingStatus: "married_filing_jointly", spouse: ordinary.taxpayer.primary },
+      form8889: undefined,
+      form8889ByOwner: { spouse: { coverageByMonth: Array(12).fill("family"), contributionsMade: "8750", qualifiedMedicalExpenses: "850.65" } },
+      w2s: [], form1099SA: ordinary.form1099SA?.map(statement => ({ ...statement, accountHolder: "spouse" })),
+    });
+    const doc = await fillForm88892026OrdinaryCandidate(spouse, {
+      ...evidence, accountOwner: "spouse", personalContributions: "8750", employerContributions: "0",
+      coverage: "family", qualifiedMedicalExpenses: "850.65",
+    }, await readFile(blank));
+    const saved = (await PDFDocument.load(await doc.save())).getForm();
+    expect(saved.getCheckBox(candidate.fields.family).acroField.getValue().toString()).toBe("/2");
+    expect(saved.getCheckBox(candidate.fields.selfOnly).isChecked()).toBe(false);
+    expect(saved.getTextField(candidate.fields.line3).getText()).toBe("8750");
+    expect(saved.getTextField(candidate.fields.line13).getText()).toBe("8750");
+    expect(saved.getTextField(candidate.fields.line16).getText()).toBe("0");
+    expect(saved.getTextField(candidate.fields.line17b).getText()).toBe("0");
+  });
+
+  it("rejects unknown and unsupported ordinary candidate facts", async () => {
+    const current = await readFile(blank);
+    const worksheet = ordinary.form8889;
+    if (!worksheet) throw new Error("Expected the ordinary fixture to include its HSA worksheet");
+    const withForm = (changes: Partial<typeof worksheet>) => ({
+      ...ordinary, form8889: { ...worksheet, ...changes },
+    });
+    const withStatements = (changes: Partial<NonNullable<typeof ordinary.form1099SA>[number]>) => ({
+      ...ordinary, form1099SA: ordinary.form1099SA?.map(statement => ({ ...statement, ...changes })),
+    });
+    for (const [input, source, reason] of [
+      [ordinary, { ...evidence, ordinaryActivityConfirmed: false }, /confirmed/],
+      [ordinary, { ...evidence, fullYearEligibilityConfirmed: false }, /confirmed/],
+      [ordinary, { ...evidence, taxYear: 2025 }, /2026/],
+      [ordinary, { ...evidence, accountOwner: "spouse" }, /owner/],
+      [ordinary, { ...evidence, coverage: "family" }, /coverage/],
+      [ordinary, { ...evidence, qualifiedMedicalExpenses: "" }, /amount/],
+      [ordinary, { ...evidence, personalContributions: "-1" }, /amount/],
+      [ordinary, { ...evidence, qualifiedMedicalExpenses: "400.00" }, /worksheet/],
+      [ordinary, { ...evidence, personalContributions: "2200.00" }, /worksheet/],
+      [ordinary, { ...evidence, employerContributions: "1234" }, /W-2/],
+      [ordinary, { ...evidence, grossDistributions: "850.64" }, /1099-SA/],
+      [withForm({ distributionsReceived: "900" }), evidence, /1099-SA/],
+      [withForm({ distributionsReceived: "0" }), evidence, /1099-SA/],
+      [withForm({ rolloverDistributions: "1" }), evidence, /ordinary/],
+      [withForm({ lastMonthRuleContributions: "10" }), evidence, /ordinary/],
+      [withForm({ medicareMonths: [1] }), evidence, /eligible/],
+      [withForm({ coverageByMonth: Array(11).fill("self_only").concat("family") }), evidence, /coverage/],
+      [withForm({ contributionsMade: "3199.50" }), { ...evidence, personalContributions: "3199.50" }, /limit/],
+      [{ ...ordinary, taxpayer: { ...ordinary.taxpayer, primary: { ...ordinary.taxpayer.primary, dateOfBirth: "2026-02-01" } } }, evidence, /eligible on January 1/],
+      [withForm({ qualifiedMedicalExpenses: "900" }), { ...evidence, qualifiedMedicalExpenses: "900" }, /qualified/],
+      [withStatements({ taxYear: undefined }), evidence, /1099-SA/],
+      [withStatements({ taxYear: 2025 }), evidence, /1099-SA/],
+      [withStatements({ accountHolder: undefined }), evidence, /1099-SA/],
+      [withStatements({ distributionCode: "3" }), evidence, /1099-SA/],
+      [{ ...ordinary, w2s: ordinary.w2s.map(w2 => ({ ...w2, accountHolder: undefined })) }, evidence, /W-2/],
+      [{ ...ordinary, taxpayer: { ...ordinary.taxpayer, primary: { ...ordinary.taxpayer.primary, dateOfBirth: "1971-12-31" } } }, evidence, /under 55/],
+    ] as const) {
+      await expect(fillForm88892026OrdinaryCandidate(input, source, current)).rejects.toThrow(reason);
+    }
+    await expect(fillForm88892026OrdinaryCandidate(ordinary, evidence, await readFile(historicalBlank))).rejects.toThrow(/template revision/);
+    const changed = Buffer.from(current);
+    changed[0] ^= 1;
+    await expect(fillForm88892026OrdinaryCandidate(ordinary, evidence, changed)).rejects.toThrow(/template revision/);
   });
 
   it("keeps the annual and historical export gates in effect", async () => {

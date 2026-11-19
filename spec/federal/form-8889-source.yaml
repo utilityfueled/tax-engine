@@ -3,9 +3,12 @@ fullName: "Actual HSA contribution method and recapture sources"
 taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i8889"
 notes: |
-  Sources refreshed 2026-10-25: Form 8889 instructions, Publication 969,
-  and the final 2025 Form 8889 lines 18-21. Review is automated and agent-derived;
-  independent professional and final 2026 form qualification remain pending.
+  Sources refreshed 2026-10-25: 2025 Form 8889 instructions
+  (https://www.irs.gov/pub/irs-prior/i8889--2025.pdf), Publication 969,
+  and the final 2025 Form 8889 lines 18-21. The final 2026 form confirms
+  the same printed recapture operands and rate. Review is automated and
+  agent-derived. Independent professional and final 2026 form qualification
+  remain pending.
   An explicit monthly-method choice does not assume future testing-period
   eligibility. Unknown 2026 choice cannot silently increase the deduction.
   Historical 2025 omitted choice retains the prior preview behavior; this is
@@ -29,5 +32,5 @@ lines:
   - line: "recapture-tax"
     description: "Apply the additional tax to both recapture sources"
     formula: "Line 21 = (line 18 + line 19) * 0.10, with the death/disability exception applied before the sum."
-    irsRef: "2025 Form 8889 printed lines 18-21; https://www.irs.gov/pub/irs-pdf/f8889.pdf"
+    irsRef: "Printed lines 18-21: 2025 https://www.irs.gov/pub/irs-prior/f8889--2025.pdf and 2026 https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
     testRef: "tests/engine/forms/form-8889-source.test.ts::taxes both recapture sources using the printed line 20 base"

@@ -7,9 +7,10 @@ retrievedAt: "2026-11-19T05:03:41Z"
 notes: |
   The archived annual PDF and the current IRS final PDF matched byte for byte.
   The IRS current instructions endpoint served 2025 instructions at retrieval.
-  The separately published 2026 instructions were a draft. This source contract
-  only maps printed cells and leaves calculations and export routing to their
-  existing contracts in form-8889.yaml and form-8889-source.yaml.
+  The separately published 2026 instructions were a draft. The internal
+  candidate uses only established calculation logic and the final printed
+  form for the ordinary case below. The exact blank is required at render time.
+  The public export and filing gates stay closed.
 lines:
   - line: "revision"
     description: "Pin the official final annual source"
@@ -41,6 +42,45 @@ lines:
       Use a fictional header and a redacted identifier. Retain the review
       notice on the page.
     testRef: "tests/pdf/form-8889-2026-candidate.test.ts::round-trips diagnostic amounts and checkbox states"
+  - line: "1–13 ordinary contributions"
+    description: "Bind the current confirmed owner, full-year eligibility, and actual contribution totals"
+    formula: >-
+      Require an explicit 2026 source confirmation for one owner under 55 at
+      year-end and twelve eligible months of the same self-only or family
+      coverage. The confirmation covers the ordinary case, including no Archer
+      MSA, funding distribution, excess, testing-period recapture, or special
+      allocation. Reconcile the actual owner contribution total with the
+      worksheet and the employer total with current, attributed W-2 box 12
+      code W. Hold over-limit totals and conflicting worksheet or support facts.
+      Lines 3, 5, 6, and 8 use the printed annual limit; lines 9 and 11 use
+      the employer total; line 12 subtracts line 11 from line 8; line 13 is
+      the lesser of lines 2 and 12. Do not populate inapplicable line 7.
+    irsRef: "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::renders ordinary contributions and partly taxable distributions"
+  - line: "14a–17b ordinary distributions"
+    description: "Bind dated ordinary Form 1099-SA originals and qualified HSA payments"
+    formula: >-
+      Require explicitly attributed 2026 code 1 HSA originals with positive
+      gross distributions and no special distribution facts. Reconcile the
+      confirmed gross amount to Box 1 totals and the confirmed qualified HSA
+      payments to the worksheet. Qualified payments are between zero and gross.
+      Lines 14a and 14c equal gross, line 14b is zero, line 15 is the qualified
+      amount, line 16 is their difference and line 17b is twenty percent of
+      line 16. Line 17a is unchecked. Round computed amounts for display only.
+      Leave identification and inapplicable Part III fields blank; mark the
+      internal document for review. A blank with a different digest is rejected.
+    irsRef: "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::renders a fully qualified family distribution as an explicit zero"
+  - line: "ordinary source stops"
+    description: "Reject unknown, unsupported or conflicting facts before rendering"
+    formula: >-
+      Hold missing confirmations, missing contribution or qualified-payment
+      amounts, owner or year mismatches, ineligible or changing coverage,
+      nonordinary activities, incomplete distributions and the incorrect blank.
+      An owner born after January 1 cannot meet actual January first-day
+      eligibility even with a full-year confirmation.
+    irsRef: "IRC 223(c)(1); Publication 969, Qualifying for an HSA Contribution, https://www.irs.gov/publications/p969"
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::rejects unknown and unsupported ordinary candidate facts"
   - line: "closed-exports"
     description: "Keep review and filing gates closed for 2026"
     formula: >-
