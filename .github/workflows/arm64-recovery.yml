@@ -1,0 +1,100 @@
+name: Native ARM64 Recovery Rehearsal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-arm64-recovery
+  cancel-in-progress: false
+
+jobs:
+  recovery:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      TAX_ENGINE_DEPLOYMENT_MODE: self-host
+      TAX_ENGINE_TEST_POSTGRES_BIN: /usr/lib/postgresql/16/bin
+      PREVIOUS_REVISION: d32cb8cf3d607c643c4c7f7e1b845fcace61563f
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify native runner and source
+        run: |
+          test "$(uname -sm)" = 'Linux aarch64'
+          test "$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}')" = linux/arm64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git rev-parse HEAD 'HEAD^{tree}'
+          git archive "$GITHUB_SHA" | sha256sum
+          df -h .
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
+      - name: Install and verify PostgreSQL 16 recovery tools
+        run: |
+          suite="$(lsb_release -cs)-pgdg"
+          key=/usr/share/keyrings/tax-engine-pgdg.asc
+          curl --fail --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee "$key" >/dev/null
+          sudo tee /etc/apt/sources.list.d/tax-engine-pgdg.sources >/dev/null <<EOF
+          Types: deb
+          URIs: https://apt.postgresql.org/pub/repos/apt
+          Suites: $suite
+          Components: main
+          Signed-By: $key B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+          EOF
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client-16
+          for tool in pg_dump pg_restore; do
+            version="$("$TAX_ENGINE_TEST_POSTGRES_BIN/$tool" --version)"
+            printf '%s\n' "$version"
+            pattern="^${tool} [(]PostgreSQL[)] 16[.]([1-9][0-9]*)([[:blank:]]|$)"
+            if [[ ! $version =~ $pattern ]] || (( BASH_REMATCH[1] < 16 )); then
+              echo "$tool must be PostgreSQL 16.16 or a later 16.x release" >&2
+              exit 1
+            fi
+          done
+      - name: Pull the pinned runtime base used by the smoke test
+        run: docker pull node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc
+      - name: Build and verify both native images
+        id: images
+        run: |
+          previous_source=$(mktemp -d)
+          trap 'rm -rf -- "$previous_source"' EXIT
+          git archive "$PREVIOUS_REVISION" | tar -x -C "$previous_source"
+          docker build --label "org.opencontainers.image.revision=$PREVIOUS_REVISION" --tag tax-engine:arm64-previous "$previous_source"
+          docker build --label "org.opencontainers.image.revision=$GITHUB_SHA" --tag tax-engine:arm64-candidate .
+
+          verify_image() {
+            local tag="$1" revision="$2" image
+            image=$(docker image inspect --format '{{.Id}}' "$tag")
+            [[ $image =~ ^sha256:[a-f0-9]{64}$ ]] || return 1
+            test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")" = linux/arm64 || return 1
+            test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = "$revision" || return 1
+            printf '%s\n' "$image"
+          }
+          previous=$(verify_image tax-engine:arm64-previous "$PREVIOUS_REVISION")
+          candidate=$(verify_image tax-engine:arm64-candidate "$GITHUB_SHA")
+          test "$previous" != "$candidate"
+          printf 'previous=%s\ncandidate=%s\n' "$previous" "$candidate" >> "$GITHUB_OUTPUT"
+          printf 'Previous %s\nCandidate %s\n' "$previous" "$candidate"
+      - name: Smoke test the candidate image
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
+        run: node scripts/smoke-container.mjs "$CANDIDATE_IMAGE_ID"
+      - name: Exercise isolated Compose upgrade and recovery
+        env:
+          PREVIOUS_IMAGE_ID: ${{ steps.images.outputs.previous }}
+          CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
+        run: node --import tsx scripts/rehearse-self-host-release.mjs "$PREVIOUS_IMAGE_ID" "$CANDIDATE_IMAGE_ID"
