@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 19 ordinary ARM64 recovery pass
+
+The isolated ARM64 target used the verified retained `c0760d2b` and `49f79555` images. The original named local Compose connection passed its two provider checks. The ordinary rehearsal then passed the previous version, upgrade, database restart, database dump and restore, rollback and re-upgrade phases. Database, browser facts and original document fingerprints agreed across all six phases. The synthetic restore preserved two tenants' workspaces, credit issuance and replay idempotency, receipt binding, migration state and exact provider cost. Encrypted browser recovery preserved the original document, unknown year and exact cents and verified fixture deletion. Normal cleanup restored the default VM, socket routes, connection defaults and baseline resources. Controller receipt SHA-256 `795e8ccd33979a3330ebf89aa64d8e2d6b57361aa8f4c3e548f2a0119ea17cb7`. Rehearsal output SHA-256 `a557f9dcf708ec5ed148570d4b1b908fe48ae1e4a14cc21db0957bf07ddfd2a8`. This verifies ordinary recovery for the exact ARM64 image. Platform-wide release qualification is still open.
+
+All six remote CI jobs also passed on `49f79555`. The separate strict `4ae1b8e6` diagnostic finished with 642 passes, five planned skips and eight failures, including seven original 30-second Ohio deadlines and one pre-fix Help locator collision. Four sampled Ohio resident-credit originals-entry phases lasted 14.0–21.4 seconds. The samples establish a costly phase while leaving individual operation costs unresolved. [Remote CI](https://github.com/utilityfueled/tax-engine/actions/runs/44478475858) · [Strict browser](https://github.com/utilityfueled/tax-engine/actions/runs/44474753669/job/135392477066).
+
+Independent engineering review confirmed all 48 ARM64 controller steps, six recovery phases, both exact image bindings and normal restoration. The current `e0cc9467` full unit command separately passed 29,205 tests with 75 planned skips. Remaining combined checks are in progress.
+
+Two fixed local ARM64 comparisons found that omitting one redundant draft clone saved a median 3.3–5.1 milliseconds per 191-edit sequence. All 52 pairs showed a saving, but one reordered legacy-shaped object changed JSON key order. The small improvement did not justify changing the application for this browser deadline.
+
 ## November 19 browser source-audit refresh
 
 Frozen `92ed89d1` passed all nine static checks. Its managed browser command stopped at preflight because the intake and fixture changes needed four new source hashes. The updated audit verified the complete source closure. Playwright collection matched all 655 case IDs, deadlines and expected statuses, and all eight window plans from the passing `49f79555` run. The budget file retains its 20-request, 60-second windows, and collection retains two workers, zero retries and the five originally skipped hosted cases.
