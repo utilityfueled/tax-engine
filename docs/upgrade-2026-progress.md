@@ -6,6 +6,8 @@ The shared federal charitable-source check now requests the organization name be
 
 All six named-recipient regressions failed before the guard and passed afterward. An independent repeat passed 103 tests across eight suites. The spec validator found 9,623 valid references. Inventory, typecheck and scoped lint passed. Browser audit pins bind the changed engine file; test IDs, deadlines and skip decisions are unchanged.
 
+Exact `6e21266e` then passed all 29,286 tests in both the unit and coverage suites with a disposable PostgreSQL 16.16 fixture. Branch coverage was 88.26% against the 85% gate. The nine static checks and normal test database stop passed. The first run's 32 failures per suite came from its disposable database URL and shell prerequisites. A separate rerun corrected both harness settings and kept the original tests and negative logs.
+
 ## November 19 exact current ARM64 recovery pass
 
 The isolated ARM64 rehearsal built the frozen `e0cc9467` archive once and reused the verified `49f79555` image. All 51 controller steps and six phases passed. The previous run, upgrade, database restart, database dump and restore, rollback, and re-upgrade preserved the same database, browser facts and source-document checksums. The synthetic PostgreSQL restore verified 11 tables, two workspaces and exact credit accounting. The browser restore verified encrypted originals, original bytes, unknown tax year, exact cents and deletion.
@@ -13,6 +15,8 @@ The isolated ARM64 rehearsal built the frozen `e0cc9467` archive once and reused
 Independent engineering review verified both image bindings, the completed phase records and normal cleanup. The default VM returned with the same 21 inactive container records. The isolated VM stopped normally and retained its original network with zero containers and volumes. The result SHA-256 was `11bcd003ca9eefe66a59f00a281f4bb4c07777b2f6d0ce5e0c29f6a08a41537b`. The six-phase receipt SHA-256 was `1dee50212ce172b1fd7b7d13c7fed73ee1e9e4e92596f48be8fa231ee692b844`. This fulfills the ordinary ARM64 recovery check for the frozen source.
 
 A separate full native browser attempt stopped before any browser case. Its wrapper required the Docker-compatible spelling of a container name while the Podman CLI reported the bare name. A recovery-only routine verified and removed the disposable container, stopped the isolated VM normally and restored the original default VM and socket routes. All 25 recovery steps and independent engineering review passed. The failed native attempt and restoration receipt hashes begin `f9ab2327cdaf` and `e3c5f26a67ae` respectively.
+
+The name compatibility fix passed the live native runtime provenance check. The browser command then stopped before cases because the fresh staged checkout lacked the configured Python path for pypdf. The controller removed its disposable container and restored the default VM normally. The separate result SHA-256 begins `c0d9c29a813b`. The full native UI result remains open.
 
 ## November 19 exact current local checks and protected Preview workspace lifecycle
 
