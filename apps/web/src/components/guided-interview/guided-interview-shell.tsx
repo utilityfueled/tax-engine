@@ -69,6 +69,7 @@ import {
   emptyRetirementEntry,
   emptyScheduleCExpenses,
   emptyW2Entry,
+  getGuidedFlowStorageKey,
   getSectionData,
   getVisitedSectionStatus,
   goToNextSection,
@@ -82,7 +83,7 @@ import {
   startInterview,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
-import { getBrowserStorage } from "@/lib/browser-storage";
+import { getBrowserStorage, requireBrowserStorage } from "@/lib/browser-storage";
 import { SegmentationScreen } from "./segmentation-screen";
 import { SectionPersonalInfo } from "./section-personal-info";
 import { SectionW2Income } from "./section-w2-income";
@@ -1254,6 +1255,7 @@ export function GuidedInterviewShell({
 }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const draftTarget = guidedDraft === undefined ? workspace.id : guidedDraft;
+  const pendingLocalDraft = useRef<{ target: string; savedRaw: string | null } | null>(null);
   const [flowState, setFlowState] = useState<GuidedFlowState>(() => {
     const browserStorage = getBrowserStorage();
     const stored = browserStorage && draftTarget ? loadGuidedFlowState(browserStorage, draftTarget) : null;
@@ -1261,6 +1263,9 @@ export function GuidedInterviewShell({
   });
 
   useEffect(() => {
+    if (pendingLocalDraft.current?.target === draftTarget) return;
+    pendingLocalDraft.current = null;
+    setSaveError(null);
     const browserStorage = getBrowserStorage();
     const stored = browserStorage && draftTarget ? loadGuidedFlowState(browserStorage, draftTarget) : null;
     setFlowState(stored ?? { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
@@ -1274,21 +1279,39 @@ export function GuidedInterviewShell({
     setFlowState((current) => resumeInterviewAtSection(current, resumeSectionId));
   }, [resumeSectionId]);
 
-  // Persist state on every change
-  const handleFlowStateChange = useCallback((next: GuidedFlowState) => {
+  const handleFlowStateChange = useCallback((next: GuidedFlowState, operation: "save" | "restart" = "save") => {
+    const restart = operation === "restart";
     try {
       beforeGuidedWrite?.();
+      const local = typeof draftTarget === "string";
+      const storage = local ? requireBrowserStorage() : getBrowserStorage();
+      if (storage && draftTarget) {
+        const savedRaw = local ? storage.getItem(getGuidedFlowStorageKey(draftTarget)) : null;
+        const pending = pendingLocalDraft.current;
+        if (pending?.target === draftTarget && pending.savedRaw !== savedRaw) {
+          setSaveError("The saved interview changed in another tab. Reload before continuing.");
+          return false;
+        }
+        const saved = restart ? clearGuidedFlowState(storage, draftTarget) : saveGuidedFlowState(storage, draftTarget, next);
+        // The hosted draft cache is best effort. Its workspace sync runs separately.
+        if (local && !saved) {
+          if (restart) {
+            setSaveError("Could not reset guided answers in browser storage. Try again.");
+            return false;
+          }
+          pendingLocalDraft.current = { target: draftTarget, savedRaw };
+          setFlowState(next);
+          setSaveError("Could not save guided answers to browser storage. The changes are still open here. Try again before leaving.");
+          return false;
+        }
+      }
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Could not save guided answers.");
+      setSaveError(error instanceof Error ? error.message : restart ? "Could not reset guided answers." : "Could not save guided answers.");
       return false;
     }
+    pendingLocalDraft.current = null;
     setSaveError(null);
     setFlowState(next);
-    const browserStorage = getBrowserStorage();
-
-    if (browserStorage && draftTarget) {
-      saveGuidedFlowState(browserStorage, draftTarget, next);
-    }
     return true;
   }, [beforeGuidedWrite, draftTarget]);
 
@@ -1307,23 +1330,13 @@ export function GuidedInterviewShell({
   }
 
   function handleRestart() {
-    try {
-      beforeGuidedWrite?.();
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Could not reset guided answers.");
-      return;
-    }
-    setSaveError(null);
-    const browserStorage = getBrowserStorage();
-
-    if (browserStorage && draftTarget) {
-      clearGuidedFlowState(browserStorage, draftTarget);
-    }
-    setFlowState({ ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear });
+    const resetFlowState = { ...initialFlowState, taxYear: workspace.returnSummary.targetTaxYear };
+    handleFlowStateChange(resetFlowState, "restart");
   }
 
   const syncAndExit = useCallback(async (nextFlowState: GuidedFlowState) => {
-    if (nextFlowState !== flowState && !handleFlowStateChange(nextFlowState)) return;
+    const pending = pendingLocalDraft.current?.target === draftTarget;
+    if ((nextFlowState !== flowState || pending) && !handleFlowStateChange(nextFlowState)) return;
     try {
       if (onSyncToWorkspace) {
         const syntheticDocs = buildGuidedSyntheticDocuments(nextFlowState);
@@ -1335,7 +1348,7 @@ export function GuidedInterviewShell({
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Could not save guided answers.");
     }
-  }, [flowState, handleFlowStateChange, onSyncToWorkspace, onExitGuided]);
+  }, [draftTarget, flowState, handleFlowStateChange, onSyncToWorkspace, onExitGuided]);
 
   const handleSyncAndExit = () => syncAndExit(flowState);
   const handleFinishReview = () => syncAndExit(currentSection?.id === "final-review" ? goToNextSection(flowState) : flowState);

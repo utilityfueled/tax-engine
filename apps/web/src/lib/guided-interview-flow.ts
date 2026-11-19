@@ -2753,12 +2753,13 @@ function clearLegacyGuidedFlowState(storage: Storage): void {
   }
 }
 
-export function saveGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget, state: GuidedFlowState): void {
+export function saveGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget, state: GuidedFlowState): boolean {
   try {
     storage.setItem(getGuidedFlowStorageKey(target), JSON.stringify(state));
     if (typeof target === "string") clearLegacyGuidedFlowState(storage);
+    return true;
   } catch {
-    // Storage full or unavailable — silently ignore
+    return false;
   }
 }
 
@@ -2812,12 +2813,13 @@ export function loadGuidedFlowState(storage: Storage, target: GuidedFlowStorageT
   }
 }
 
-export function clearGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget): void {
+export function clearGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget): boolean {
   try {
     storage.removeItem(getGuidedFlowStorageKey(target));
     if (typeof target === "string") clearLegacyGuidedFlowState(storage);
+    return true;
   } catch {
-    // Silently ignore
+    return false;
   }
 }
 
