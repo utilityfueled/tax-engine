@@ -7,6 +7,8 @@ notes: |
   guided household sources before payment entry only; no target source injection.
   Normal90s browser budget,2 configured workers and explicit--retries=0 qualification
   stay unchanged. No PDF/upload/provider request, filing or2026 qualification.
+  Check every captured request URL and body for every private marker with
+  synchronous assertions. Retain the separate protected-route counts.
 lines:
   - line: "visible-payment-originals"
     description: "Originate complete actual accounts and receipt inventories visibly"

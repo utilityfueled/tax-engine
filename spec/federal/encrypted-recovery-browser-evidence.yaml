@@ -11,6 +11,9 @@ notes: |
   No arbitrary plaintext field or unknown key is admitted. Authenticated plaintext
   must equal the actual pre-backup workspace, raw guided answers/mode and originals.
   Zero user or provider credentials; these controls use only fictional local returns.
+  The full local browser lifecycle checks every captured request for backup
+  passwords, PDF bytes, and prohibited destinations. Synchronous assertions
+  preserve those checks within the original browser deadline.
 lines:
   - line: "stale-guided-editor"
     description: "Reject edits from a guided tab after a local return is deleted or reset"

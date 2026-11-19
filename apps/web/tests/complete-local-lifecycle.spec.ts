@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Locator } from '@playwright/test';
+import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -260,9 +261,17 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await evidence('after-deletion.json', { original: await stored(page, id), restored: await stored(page, restoredId), cached: await cachedFiles(page) });
   const origin = new URL(page.url()).origin;
   for (const request of requests) {
-    expect(request.body).not.toContain(backupPassword); expect(request.body).not.toContain('incorrect-synthetic-password'); expect(request.body).not.toContain('%PDF-');
-    if (request.body.includes(original.ssn)) { expect(new URL(request.url).origin).toBe(origin); expect(new URL(request.url).pathname).toBe('/api/workspace/filled-return'); }
-    if (request.url.startsWith('http')) expect(new URL(request.url).origin).toBe(origin);
+    assert(!request.body.includes(backupPassword), 'A request contained the backup password.');
+    assert(!request.body.includes('incorrect-synthetic-password'), 'A request contained the rejected backup password.');
+    assert(!request.body.includes('%PDF-'), 'A request contained PDF bytes.');
+    const containsTaxpayerId = request.body.includes(original.ssn);
+    if (containsTaxpayerId || request.url.startsWith('http')) {
+      const destination = new URL(request.url);
+      assert(destination.origin === origin, 'A request left the application origin.');
+      if (containsTaxpayerId) {
+        assert(destination.pathname === '/api/workspace/filled-return', 'A request sent the taxpayer ID to an unexpected route.');
+      }
+    }
   }
   await evidence('requests.json', requests);
   await evidence('keyboard-actions.json', keyboardActions);

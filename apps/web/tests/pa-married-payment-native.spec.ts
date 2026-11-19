@@ -1,6 +1,7 @@
 // Spec: spec/state/pa-married-payment-native-browser.yaml. No target source injection after entry.
 import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Page,type TestInfo} from '@playwright/test';
+import assert from 'node:assert/strict';
 import {paMarriedPaymentNativeBrowserFixture} from '../../../tests/fixtures/pa-married-payment-native-browser';
 import {buildSectionRoute,type GuidedFlowState} from '../src/lib/guided-interview-flow';
 import {buildTaxInputFromGuidedData} from '../src/lib/guided-interview-bridge';
@@ -95,7 +96,12 @@ for(const width of [1280,390])test.describe(`Native separate PA payment original
   const current=structuredClone(source(await saved(page,id)));expect(current.owners).toEqual(confirmed.owners);expect(current.originalFederalSources).toEqual(confirmed.originalFederalSources);
   await page.goto('/');await page.goto(`/returns/${id}`);expect(source(await saved(page,id))).toEqual(current);await expect(control(page,'Payment account 1 receipt 1 source reference')).toHaveValue(editReference);await assertResults(page,await saved(page,id));
   const privateMarkers=['fictional-browser-payment-private-',f.input.taxpayer.primary.ssn,f.input.taxpayer.primary.ssn.replace(/\D/gu,''),required(f.input.taxpayer.spouse).ssn,required(f.input.taxpayer.spouse).ssn.replace(/\D/gu,''),f.target.sourceReference,editReference,...f.target.accounts.flatMap(account=>[account.sourceReference,account.priorCredit.sourceReference,...account.receipts.flatMap(row=>[row.sourceReference,row.original.confirmationNumber])])];
-  for(const request of requests)for(const marker of privateMarkers)expect(request.url+'\n'+request.body).not.toContain(marker);
+  for (const request of requests) {
+    const content = request.url + '\n' + request.body;
+    for (const marker of privateMarkers) {
+      assert(!content.includes(marker), 'A request contained a private source marker.');
+    }
+  }
   const counts=Object.fromEntries(protectedScopes.map(([name,match])=>[name,requests.filter(row=>match.test(new URL(row.url).pathname)).length]));expect(counts).toEqual({filledReturn:0,provider:0,businessExpenseAnalysis:0,selfEmploymentIncomeAnalysis:0});expect(downloads).toEqual([]);expect(errors).toEqual([]);
   await info.attach('payment-request-counts.json',{body:JSON.stringify({...counts,observed:requests.map(row=>new URL(row.url).pathname)}),contentType:'application/json'});
  });
