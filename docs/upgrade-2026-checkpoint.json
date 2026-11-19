@@ -247,10 +247,14 @@
         "focusedTestsPassed": 272,
         "independentTestsPassed": 201,
         "form8880StandaloneControlsReviewed": true,
+        "successorCoverageTestsPassed": 29380,
+        "successorBranchCoveragePercent": "88.28",
+        "previousManagedBrowser": { "passed": 650, "failed": 0, "plannedSkips": 5, "windows": 8 },
         "fullCombinedVerification": "pending"
       },
       "nov19AotcPriorClaimHistory": {
         "parent": "47c1fdaf",
+        "commit": "8c479cc5",
         "patchSha256": "68c53d51e780855f0364860e95000e8e7f94635418066dc99ad567c293a0bbdb",
         "affectedSuitesPassed": 145,
         "affectedTestsPassed": 2695,
@@ -261,6 +265,18 @@
         "specReferencesValidated": 9634,
         "published2026CandidateAlreadyPinned": true,
         "humanQualification": "pending"
+      },
+      "nov19PensionBox7ActualSource": {
+        "parent": "8c479cc5",
+        "patchSha256": "69675d88ff7e61049a527b3b38d7a6015b65f1e9a8db7038ed1adcfdb7165164",
+        "initialMissingCodeFailures": 3,
+        "focusedTestsPassed": 8,
+        "affectedSuitesPassed": 126,
+        "affectedTestsPassed": 3519,
+        "combinedFocusedTestsPassed": 189,
+        "combinedStaticAndBuildChecksPassed": 9,
+        "independentTestsPassed": 168,
+        "independentBoundaryProbesPassed": 5
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",

@@ -362,6 +362,10 @@ export function calculateForm1099R(
     && forms.some(form => form.taxYear !== undefined && form.taxYear !== options.taxYear)) {
     throw new Error(`Form 1099-R source year must match the ${options.taxYear} return`);
   }
+  if (options.taxYear === 2025 && forms.some(form => form.taxYear === 2025
+    && form.iraSepSimple === false && d(form.grossDistribution).gt(0) && !form.distributionCode?.trim())) {
+    throw new Error("2025 Form 1099-R requires the actual Box 7 distribution code");
+  }
   const audit = new AuditTrail();
   const iraForms = forms.filter(isIraForm1099RDistribution);
   const disabilityPensionForms = forms.filter(isDisabilityPensionTaxableAsWages);

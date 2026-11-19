@@ -249,6 +249,23 @@ lines:
       - "For the 1998-or-later joint-life table, combined age 140 still yields 260 expected payments but combined age 141 drops to 210 on the next bracket"
     testRef: "tests/engine/forms/form-1099-r.test.ts::Form 1099-R Lines 3 and 4 - validated qualified designated Roth account code B distributions stay gross on 5a and zero on 5b even when Box 2a is blank"
 
+  - line: "2025-box7-ordinary"
+    description: "Require the actual Box 7 code for a dated positive 2025 distribution on the ordinary pension path"
+    formula: >-
+      After validating the source year for a 2025 return, hold an explicitly
+      dated 2025 original with positive Box 1 and a recorded unchecked
+      IRA/SEP/SIMPLE box if Box 7 is absent, empty, or whitespace only. Some
+      Roth IRA and recharacterization distributions also have an unchecked
+      box. The code determines classification and can affect Form 5329.
+      Preserve the existing methods for known codes and the direct legacy
+      worksheet preview without a return-year context.
+    irsRef: >-
+      2025 Instructions for Forms 1099-R and 5498, Box 7 and Table 1
+      (https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15).
+      2025 Form 5329 Part I, line 4
+      (https://www.irs.gov/pub/irs-prior/f5329--2025.pdf#page=1).
+    testRef: "tests/engine/federal-pension-box7-2025.test.ts::holds a dated 2025 Form 1099-R when Box 7 is $name"
+
   - line: "2026-pension-source"
     description: "Form 1040 Lines 1h, 5a and 5b require known non-IRA distribution sources for tax year 2026"
     formula: >-

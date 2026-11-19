@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 actual Form 1099-R Box 7
+
+The 2025 calculation now holds a positive, explicitly dated Form 1099-R with a recorded unchecked IRA/SEP/SIMPLE box and blank or missing Box 7. The source year is validated first. In the synthetic Code 1 case, the confirmed code retains $6,000 taxable and $125 withheld and supplies the $600 additional tax on Form 5329. The confirmed Code G rollover still excludes the distribution. The narrowly scoped hold neither infers the account type from the unchecked box nor changes amounts for known codes. [2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15) · [2025 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2025.pdf#page=1).
+
+Three regressions reproduced the omitted, empty and whitespace-only code failure. Eight focused and 3,519 affected tests passed. The combined snapshot passed 189 focused tests and all nine static and build checks. Independent review passed 168 tests and five boundary probes, including zero activity, unknown checkbox, the standalone legacy preview and earlier year rejection. The 2026 branches retain their existing source requirements. The current browser audit updates only the changed pension source hash and its dependent digest.
+
 ## November 19 actual American Opportunity Tax Credit claim history
 
 A parsed 2025 federal return now asks for the actual prior AOTC claim count when the student's credit could still apply. The count includes returns filed by anyone for that student. With $4,000 of eligible expenses, the synthetic return yields $2,500 with zero or three earlier years and $0 with four. Missing stays unknown in the audit. Known disqualification, expenses that round to zero, and full phase-out leave the calculation available, including a separately eligible Lifetime Learning Credit. The existing confirmed 2026 method is unchanged. The published 2026 Form 8863 already matches the repository's disabled physical candidate and retains the four-prior-year question. [2025 Form 8863 instructions](https://www.irs.gov/instructions/i8863#line23) · [Published 2026 Form 8863](https://www.irs.gov/pub/irs-pdf/f8863.pdf).
@@ -10,7 +16,7 @@ The source-first regression reproduced the omitted-history award and the audit's
 
 The combined coverage run on `7ea62c3f` passed 29,363 tests and exposed 17 failures in seven suites. The follow-up preserves the linked Ohio W-2 and unavailable-rule-pack errors before the general year hold. Form 2210 and Form 8880 still check their own source requirements when invoked directly. A confirmed Saver's Credit amount of $700 produces a $350 credit with a matching W-2, while the same amount with a wrong-year W-2 leaves the federal return held. Existing confirmed-explanation tests retain their wrong-year inputs and check the earlier federal rejection as well as the existing endpoint behavior. Source-audit hashes changed with the federal source. Browser deadlines and coverage thresholds stayed in force.
 
-Ten focused suites passed all 272 tests. Independent review reran 201 tests and separately verified the same-year $700 contribution and $350 credit and the distinct 2025 and 2026 Form 8880 worksheet holds. The replacement full unit, coverage and browser results are tracked separately.
+Ten focused suites passed all 272 tests. Independent review reran 201 tests and separately verified the same-year $700 contribution and $350 credit and the distinct 2025 and 2026 Form 8880 worksheet holds. The replacement covered all 29,380 tests with 88.28% branch coverage. The replacement full unit and browser results are tracked separately.
 
 ## November 19 federal annual income statement years
 
