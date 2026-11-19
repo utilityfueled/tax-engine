@@ -482,6 +482,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       input.form8880, year, filingStatus === "married_filing_jointly", Boolean(input.taxpayer.spouse), input.standardDeductionFacts,
     )
     : undefined;
+  if (year === 2025 && input.form8880 && !input.form8880.sourceFacts2026
+    && input.form1099R?.some(form => form.taxYear === year && !form.iraSepSimple
+      && form.distributionCode?.trim() === "1" && d(form.grossDistribution).gt(0))) {
+    const { primaryRecentDistributions, spouseRecentDistributions } = input.form8880;
+    const line4Totals = filingStatus === "married_filing_jointly"
+      ? [primaryRecentDistributions, spouseRecentDistributions]
+      : [primaryRecentDistributions];
+    if (line4Totals.some(total => total === undefined || d(total).lt(0))) {
+      throw new Error("2025 Form 8880 requires confirmed nonnegative testing-period Line 4 totals for each filing column");
+    }
+  }
   const audit = new AuditTrail();
   const principalResidence = calculateCodPrincipalResidenceReduction(input);
   if (principalResidence) audit.merge(principalResidence.lines);

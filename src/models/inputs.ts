@@ -1896,13 +1896,13 @@ const Form8880LegacySchema = z.object({
   primaryElectiveDeferrals: decimal.optional(), // Line 2 column (a)
   primaryIraContributions: optionalDecimal, // Line 2 column (a) IRA portion
   primaryAbleContributions: optionalDecimal, // Line 2 column (a) ABLE portion
-  primaryRecentDistributions: optionalDecimal, // Line 4 column (a)
+  primaryRecentDistributions: decimal.optional(), // Confirmed Line 4 column (a)
   primaryIsFullTimeStudent: z.boolean().default(false),
   primaryCanBeClaimedAsDependent: z.boolean().default(false),
   spouseElectiveDeferrals: decimal.optional(), // Line 2 column (b)
   spouseIraContributions: optionalDecimal, // Line 2 column (b) IRA portion
   spouseAbleContributions: optionalDecimal, // Line 2 column (b) ABLE portion
-  spouseRecentDistributions: optionalDecimal, // Line 4 column (b)
+  spouseRecentDistributions: decimal.optional(), // Confirmed Line 4 column (b)
   spouseIsFullTimeStudent: z.boolean().default(false),
   spouseCanBeClaimedAsDependent: z.boolean().default(false),
   supportedW2PrimaryElectiveDeferrals: optionalDecimal, // Engine trace: supported W-2 Box 12 retirement-contribution defaults for Line 2a
@@ -6859,16 +6859,18 @@ export const TaxYearInputSchema = z.object({
   }
 }).overwrite((value) => {
   const { form8880, taxpayer } = value;
-  if (!form8880 || taxpayer.taxYear === 2025 || taxpayer.taxYear === 2026) {
+  if (!form8880 || form8880.sourceFacts2026 || taxpayer.taxYear === 2025 || taxpayer.taxYear === 2026) {
     return value;
   }
-  // Preserve the prior defaults for other years. In 2025 omission enables the Box 12 fallback.
+  // Preserve the earlier defaults. A 2025 return needs to distinguish omission from zero.
   return {
     ...value,
     form8880: {
       ...form8880,
       primaryElectiveDeferrals: form8880.primaryElectiveDeferrals ?? "0",
       spouseElectiveDeferrals: form8880.spouseElectiveDeferrals ?? "0",
+      primaryRecentDistributions: form8880.primaryRecentDistributions ?? "0",
+      spouseRecentDistributions: form8880.spouseRecentDistributions ?? "0",
     },
   };
 });

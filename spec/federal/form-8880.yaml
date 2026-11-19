@@ -10,7 +10,7 @@ notes: |
   traditional and Roth IRA contributions, designated-beneficiary ABLE
   contributions, elective deferrals, voluntary after-tax employee
   contributions, and the form's recent-distribution reduction by taking a
-  validated per-person reduction amount for Line 4 instead of rebuilding every
+  validated final amount for each Line 4 column instead of rebuilding the
   distribution-year lookback inside this slice.
   The 2025 form layout differs from older versions: IRA and ABLE contributions
   are entered on Line 1, elective deferrals move to Line 2, the post-reduction
@@ -122,7 +122,7 @@ lines:
     irsRef: "Form 8880, Line 4, column (a)"
     inputs:
       - "Primary taxpayer validated recent-distribution reduction amount"
-    notes: "This slice takes the already-validated reduction amount directly instead of rebuilding the full multi-year distribution lookback from raw documents."
+    notes: "Use the confirmed testing-period total after exclusions. On a joint return this includes the spouse's covered distributions for years the same couple filed jointly."
     testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 4a - recent distributions reduce the primary taxpayer contribution base"
 
   - line: "4b"
@@ -131,7 +131,24 @@ lines:
     irsRef: "Form 8880, Line 4, column (b)"
     inputs:
       - "Spouse validated recent-distribution reduction amount"
+    notes: "On a joint return this includes the primary taxpayer's covered distributions for years the same couple filed jointly. The two column totals can differ when a prior distribution year was filed separately."
     testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 4b - recent distributions reduce the spouse contribution base"
+
+  - line: "4-confirmed-current-receipt-2025"
+    description: "Require confirmed 2025 Line 4 amounts when the return includes an original early employer-plan distribution statement"
+    formula: >-
+      When a 2025 return requests Form 8880 and supplies an actual 2025
+      non-IRA Form 1099-R with Box 7 Code 1 alone and a positive gross
+      distribution, require a confirmed nonnegative testing-period total
+      for Line 4a and, on a joint return, for Line 4b. An explicit zero is a
+      valid confirmed amount after exclusions. Review distributions received
+      after 2022 and before the 2025 return due date including extensions.
+      Include each covered distribution in both columns when the same couple
+      files jointly in the distribution year and in 2025. Apply the IRS
+      exclusions before confirming the final totals. The original Form 1099-R
+      triggers confirmation without establishing the Line 4 amount.
+    irsRef: "2025 Form 8880 Line 4, testing-period exclusions, and joint filing exception; 2025 Form 1099-R instructions Table 1, Code 1"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::requires complete confirmed reductions for an original 2025 early employer-plan receipt"
 
   - line: "5a"
     description: "Primary taxpayer contributions after recent-distribution reduction"

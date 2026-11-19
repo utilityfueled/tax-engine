@@ -149,6 +149,7 @@
       "standardRuns": { "source": "f2311eef", "web": 44467417463, "ci": 44467417355, "docker": 44467417232 },
       "frozenLocal": "b765af11: unit and coverage each 29034 pass, 75 skip, zero failures. Branch 87.82% against unchanged 85% gate.",
       "ohioBusinessPayment": "Exact narrow NR/PY C-only first Ohio return with $300 and inclusive $500 timed original settlement, verified source inventory and no taxing district. Three independent-source collision controls red then green. 502 focused tests and 11 of 11 spec references. Filing and school financials unavailable.",
+      "historicalSaverLine4": "Independently reproduced $300 incorrect credit versus $100 with complete joint Line 4; confirmed columns required for dated positive non-IRA Code 1 receipt. Explicit zero permitted. Exact 570 focused tests and 38 spec references. Ordinary explicitly mismatched Form 1099-R years tracked separately.",
       "conditionalWork": "Continue ordinary browser, tax, provider/accounting and recovery qualification. No new vulnerability reproduction work. Defer the unpublished backport edits. Production builds must be observed suppressed before each main push.",
       "open": "Final parent and PA/OH forms, independent qualified tax review, outstanding AI qualification, final staging and self-host gates."
     },

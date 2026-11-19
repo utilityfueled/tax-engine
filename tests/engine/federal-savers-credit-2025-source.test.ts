@@ -49,6 +49,17 @@ const jointReturn = {
   ],
 };
 
+const earlyEmployerPlanReceipt = {
+  taxYear: 2025,
+  accountHolder: "primary",
+  payer: "Former Employer 401(k)",
+  grossDistribution: "1000",
+  taxableAmount: "1000",
+  federalWithheld: "0",
+  distributionCode: "1",
+  iraSepSimple: false,
+};
+
 describe("Form 8880 sources on parsed 2025 returns", () => {
   // spec/federal/form-8880.yaml, 6-age-cutoff-2025
   it.each([
@@ -168,6 +179,67 @@ describe("Form 8880 sources on parsed 2025 returns", () => {
     expect(calculateFederalTax(input).form8880?.line2a.toFixed()).toBe("700");
   });
 
+  // spec/federal/form-8880.yaml, 4-confirmed-current-receipt-2025
+  it.each([
+    { label: "both omitted", reductions: {} },
+    { label: "both omitted and Box 2a zero", reductions: {}, taxableAmount: "0" },
+    { label: "primary only", reductions: { primaryRecentDistributions: "1000" } },
+    { label: "spouse only", reductions: { spouseRecentDistributions: "1000" } },
+    {
+      label: "negative amount",
+      reductions: { primaryRecentDistributions: "1000", spouseRecentDistributions: "-0.01" },
+    },
+  ])("requires complete confirmed reductions for an original 2025 early employer-plan receipt with $label", ({ reductions, taxableAmount = "1000" }) => {
+    const input = parseInput({ ...jointReturn, form1099R: [{ ...earlyEmployerPlanReceipt, taxableAmount }], form8880: reductions });
+
+    expect(() => calculateFederalTax(input)).toThrow(/confirmed nonnegative.*Line 4 totals/);
+  });
+
+  it("uses the confirmed joint Line 4 totals for a covered 2025 receipt", () => {
+    const input = parseInput({
+      ...jointReturn,
+      form1099R: [earlyEmployerPlanReceipt],
+      form8880: { primaryRecentDistributions: "1000", spouseRecentDistributions: "1000" },
+    });
+    const { agi, form8880 } = calculateFederalTax(input);
+
+    expect(agi.toFixed()).toBe("61000");
+    expect([form8880?.line4a.toFixed(), form8880?.line4b.toFixed(), form8880?.line12.toFixed()]).toEqual(["1000", "1000", "100"]);
+  });
+
+  it("uses only the primary Line 4 total on a non-joint 2025 return", () => {
+    const input = parseInput({
+      ...simpleW2Fixture,
+      w2s: [singleW2],
+      form1099R: [earlyEmployerPlanReceipt],
+      form8880: { primaryElectiveDeferrals: "2000", primaryRecentDistributions: "1000" },
+    });
+    const { form8880 } = calculateFederalTax(input);
+
+    expect([form8880?.line4a.toFixed(), form8880?.line4b.toFixed(), form8880?.line12.toFixed()]).toEqual(["1000", "0", "500"]);
+  });
+
+  it("accepts confirmed zeros after exclusions even when a 2025 employer-plan statement reports a gross receipt", () => {
+    const input = parseInput({
+      ...jointReturn,
+      form1099R: [{ ...earlyEmployerPlanReceipt, taxableAmount: "0" }],
+      form8880: { primaryRecentDistributions: "0", spouseRecentDistributions: "0" },
+    });
+    const { form8880 } = calculateFederalTax(input);
+
+    expect([form8880?.line4a.toFixed(), form8880?.line4b.toFixed(), form8880?.line12.toFixed()]).toEqual(["0", "0", "300"]);
+  });
+
+  it("keeps the Line 4 intake for a separately coded nontaxable direct rollover", () => {
+    const input = parseInput({
+      ...jointReturn,
+      form1099R: [{ ...earlyEmployerPlanReceipt, taxableAmount: "0", distributionCode: "G" }],
+      form8880: {},
+    });
+
+    expect(calculateFederalTax(input).form8880?.line12.toFixed()).toBe("300");
+  });
+
   it("keeps the prior omitted-input defaults when parsing an older year", () => {
     const input = parseInput({
       ...simpleW2Fixture,
@@ -177,5 +249,7 @@ describe("Form 8880 sources on parsed 2025 returns", () => {
 
     expect(input.form8880?.primaryElectiveDeferrals).toBe("0");
     expect(input.form8880?.spouseElectiveDeferrals).toBe("0");
+    expect(input.form8880 && "primaryRecentDistributions" in input.form8880 && input.form8880.primaryRecentDistributions).toBe("0");
+    expect(input.form8880 && "spouseRecentDistributions" in input.form8880 && input.form8880.spouseRecentDistributions).toBe("0");
   });
 });

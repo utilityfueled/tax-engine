@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: historical Form 8880 distribution confirmation
+
+An original 2025 positive non-IRA employer-plan Code 1 receipt now requires a confirmed Form 8880 Line 4 total for each applicable column. Explicit zero after exclusions is valid. In the independently reproduced joint case, $1,000 in each column yields a $100 credit, compared with the $300 produced when both totals were omitted. The package retains the current-year rule for direct rollovers, leaves earlier-year facts to their separate confirmation, and corrects a direct age test to cover both sides of the January 1 cutoff. The exact package passed 570 focused tests and 38 spec references. Separate controls identified a remaining mismatched-statement-year admission issue in ordinary Form 1099-R, tracked as its own change. [IRS Form 8880 for 2025](https://www.irs.gov/pub/irs-prior/f8880--2025.pdf)
+
 ## November 19: Ohio business balance-payment draft
 
 The narrow single nonresident and part-year resident Schedule C-only draft now accepts an exact, timely original IT 1040 balance payment through $500 when the source records establish no Ohio taxing-school-district residency and a complete payment inventory. The $300 and $500 examples retain their return balance due and report the actual payment and outstanding balance separately. An independent review reproduced admission of competing resident-credit and reciprocal-wage packets. Three failing controls verified the gap, and the corrected payment branch rejects those packets. The exact package passed 502 focused tests and all 11 spec references. School financials and filing remain unavailable. [Ohio Revised Code §5747.09](https://codes.ohio.gov/ohio-revised-code/section-5747.09) · [Ohio Revised Code §5747.08](https://codes.ohio.gov/ohio-revised-code/section-5747.08)

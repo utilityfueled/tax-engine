@@ -7,17 +7,8 @@ import { describe, expect, it } from "vitest";
 import { calculateForm8880 } from "@/engine/forms/form-8880.js";
 
 describe("Form 8880 saver's credit edge cases", () => {
-  it("treats a taxpayer who turns 18 on December 31 as eligible but keeps a younger taxpayer ineligible", () => {
-    const eligibleAtYearEnd = calculateForm8880({
-      filingStatus: "single",
-      agi: "20000",
-      taxYear: 2025,
-      primaryDateOfBirth: "2007-12-31",
-      primaryElectiveDeferrals: "2000",
-      taxLiabilityBeforeCredit: "1000",
-      priorNonrefundableCredits: "0",
-    });
-    const stillUnder18 = calculateForm8880({
+  it("applies the January 1, 2008 age cutoff to the direct 2025 calculation", () => {
+    const eligibleAtCutoff = calculateForm8880({
       filingStatus: "single",
       agi: "20000",
       taxYear: 2025,
@@ -26,13 +17,22 @@ describe("Form 8880 saver's credit edge cases", () => {
       taxLiabilityBeforeCredit: "1000",
       priorNonrefundableCredits: "0",
     });
+    const ineligibleAfterCutoff = calculateForm8880({
+      filingStatus: "single",
+      agi: "20000",
+      taxYear: 2025,
+      primaryDateOfBirth: "2008-01-02",
+      primaryElectiveDeferrals: "2000",
+      taxLiabilityBeforeCredit: "1000",
+      priorNonrefundableCredits: "0",
+    });
 
-    expect(eligibleAtYearEnd.line5a.toNumber()).toBe(2000);
-    expect(eligibleAtYearEnd.line6a.toNumber()).toBe(2000);
-    expect(eligibleAtYearEnd.line12.toNumber()).toBe(1000);
-    expect(stillUnder18.line5a.toNumber()).toBe(2000);
-    expect(stillUnder18.line6a.toNumber()).toBe(0);
-    expect(stillUnder18.line12.toNumber()).toBe(0);
+    expect(eligibleAtCutoff.line5a.toNumber()).toBe(2000);
+    expect(eligibleAtCutoff.line6a.toNumber()).toBe(2000);
+    expect(eligibleAtCutoff.line12.toNumber()).toBe(1000);
+    expect(ineligibleAfterCutoff.line5a.toNumber()).toBe(2000);
+    expect(ineligibleAfterCutoff.line6a.toNumber()).toBe(0);
+    expect(ineligibleAfterCutoff.line12.toNumber()).toBe(0);
   });
 
   it("floors the eligible contribution amount at zero when recent distributions exceed current-year contributions", () => {
