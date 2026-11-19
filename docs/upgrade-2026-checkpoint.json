@@ -202,6 +202,7 @@
       },
       "nov19OrdinaryIraQcd": {
         "parent": "5a4377f7",
+        "commit": "fbe677c4",
         "finalSourceManifestSha256": "443be8ef492b23bc09e18499b5d43f1a99d6998bc89204d73a6b347ad3b9df66",
         "coreSourceManifestSha256": "da8a1a6b2c818ac709fc12c0cc51acbe79ccb522560665f8fbf59459daec1f83",
         "unitTestsPassed": 29332,
@@ -213,6 +214,15 @@
         "independentEngineeringTestsPassed": 116,
         "localFocusedBrowserCasesPassed": 3,
         "open": ["Full remote Web", "State methods", "Qualified independent tax review"]
+      },
+      "nov19W2SourceYear": {
+        "parent": "fbe677c4",
+        "isolatedPatchSha256": "34684bb2a994455195780d3180841d335a475339e1be2d5266f1e730a9f43188",
+        "initialWrongYearFailures": 4,
+        "isolatedTestsPassed": 521,
+        "independentFocusedTestsPassed": 9,
+        "combinedFocusedTestsPassed": 121,
+        "legacyMissingYearPreserved": true
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",

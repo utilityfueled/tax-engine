@@ -231,6 +231,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   assertFederalPaymentDates(input);
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
+    if (w2.taxYear !== undefined && w2.taxYear !== input.taxpayer.taxYear) {
+      throw new Error(`Form W-2 source year ${w2.taxYear} must match the ${input.taxpayer.taxYear} return`);
+    }
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
     if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
   });

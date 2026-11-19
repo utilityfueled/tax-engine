@@ -18,3 +18,12 @@ it("preserves actual reporting years tips overtime and unknown fields", () => {
   business.necEntries[0]!.sourceTaxYear = ""; business.necEntries[0]!.cashTips = ""; business.necEntries[0]!.qualifiedOvertimeCompensation = ""; business.necEntries[0]!.treasuryTippedOccupationCodes = undefined;
   expect(buildNecInputs(business.necEntries)[0]).toMatchObject({ taxYear: undefined, cashTips: undefined, qualifiedOvertimeCompensation: undefined, treasuryTippedOccupationCodes: undefined });
 });
+
+it.each([2025, 2026])("preserves and verifies the ordinary guided W-2 year for %i", returnYear => {
+  const current = { ...completeW2Entry, sourceTaxYear: String(returnYear) };
+  const wrongYear = { ...completeW2Entry, sourceTaxYear: String(returnYear - 1) };
+  expect(w2FactErrors([current], "single", returnYear)).toEqual({});
+  expect(buildW2Inputs([current])[0]?.taxYear).toBe(returnYear);
+  expect(w2FactErrors([wrongYear], "single", returnYear)).toHaveProperty("w2-0-sourceTaxYear");
+  expect(buildW2Inputs([completeW2Entry])[0]?.taxYear).toBeUndefined();
+});

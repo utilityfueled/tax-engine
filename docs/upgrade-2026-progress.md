@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 federal W-2 source year
+
+The federal entry point now holds an explicitly wrong-year wage statement before wages or withholding reach Form 1040. Tests exercise prior- and following-year originals on both 2025 and draft 2026 returns. Matching-year and undated legacy controls still produce $85,000 of wages and $12,750 withheld. The guided path continues to store the actual supplied year. The IRS bases Form W-2 on the calendar year in which wages were paid. [IRS Form W-2 instructions](https://www.irs.gov/instructions/iw2w3).
+
+Four targeted mismatch tests reproduced the defect. The isolated corrected source passed 521 focused and adjacent tests. A separate review independently reran the nine targeted tests. The source applied on top of the IRA package passed 121 tests, typecheck, the strict spec check and the coverage inventory check. Browser test selection and limits were preserved when the federal source pin changed.
+
 ## November 19 ordinary 2026 IRA charitable distributions
 
 The federal method uses the actual traditional IRA statement, owner and trustee transfer, along with the completed owner contribution adjustment worksheet. It accepts ordinary 2026 Y7 and separately documented Code 7, preserves an unknown printed Box 2a, and checks the owner's age on the transfer date. It applies the $111,000 annual cap and unused deducted contributions once per owner. The IRS example produces $2,500 excluded and $4,000 taxable on $6,500 transferred. A full return with $85,000 of wages produces $89,000 of AGI. [IRC §408(d)(8)](https://uscode.house.gov/us/usc/t26/s408/), [IRS Publication 590-B](https://www.irs.gov/publications/p590b), [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf), [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
