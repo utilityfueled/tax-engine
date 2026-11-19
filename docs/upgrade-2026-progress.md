@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 federal annual income statement years
+
+The federal entry point holds an explicitly wrong printed year on Forms W-2G, 1099-INT, 1099-DIV, 1099-MISC and 1099-NEC before using their income or withholding. Current-original year checks preserve unknown legacy years and keep household payments, recoveries, carryovers and estimated payments on their own reporting dates. Controls cover 2025 and draft 2026, including actual self-employment income reported on Form 1099-NEC. [IRS Form W-2G instructions](https://www.irs.gov/instructions/iw2g), [IRS Form 1099-INT instructions](https://www.irs.gov/instructions/i1099int), [IRS Form 1099-DIV instructions](https://www.irs.gov/instructions/i1099div), [IRS Forms 1099-MISC and 1099-NEC instructions](https://www.irs.gov/instructions/i1099mec).
+
+The isolated regression run confirmed 20 wrong-year failures with 26 passing controls. The corrected package passed 697 focused and adjacent tests, and independent review passed 46 focused tests. The combined Marketplace, IRA and source-year changes passed 161 related tests, all 9,633 spec references, the inventory check, typecheck and lint. The full combined unit, coverage and browser checks are tracked separately.
+
 ## November 19 federal W-2 source year
 
 The federal entry point now holds an explicitly wrong-year wage statement before wages or withholding reach Form 1040. Tests exercise prior- and following-year originals on both 2025 and draft 2026 returns. Matching-year and undated legacy controls still produce $85,000 of wages and $12,750 withheld. The guided path continues to store the actual supplied year. The IRS bases Form W-2 on the calendar year in which wages were paid. [IRS Form W-2 instructions](https://www.irs.gov/instructions/iw2w3).

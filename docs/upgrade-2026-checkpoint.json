@@ -217,11 +217,22 @@
       },
       "nov19W2SourceYear": {
         "parent": "fbe677c4",
+        "commit": "eb3223b5",
         "isolatedPatchSha256": "34684bb2a994455195780d3180841d335a475339e1be2d5266f1e730a9f43188",
         "initialWrongYearFailures": 4,
         "isolatedTestsPassed": 521,
         "independentFocusedTestsPassed": 9,
         "combinedFocusedTestsPassed": 121,
+        "legacyMissingYearPreserved": true
+      },
+      "nov19FederalAnnualIncomeSourceYears": {
+        "parent": "eb3223b5",
+        "isolatedPatchSha256": "38e1e8288ac9203cc8d3539a4d0b2b18f39d55ce3be699f9eb97d40419242b45",
+        "originals": ["W-2G", "1099-INT", "1099-DIV", "1099-MISC", "1099-NEC"],
+        "initialWrongYearFailures": 20,
+        "isolatedTestsPassed": 697,
+        "independentFocusedTestsPassed": 46,
+        "combinedFocusedTestsPassed": 161,
         "legacyMissingYearPreserved": true
       },
       "latestCurrentCombinedArm64": {

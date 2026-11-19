@@ -237,6 +237,19 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
     if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
   });
+  const returnYear = input.taxpayer.taxYear;
+  for (const [formName, statements] of [
+    ["Form 1099-INT", input.form1099Int],
+    ["Form 1099-DIV", input.form1099Div],
+    ["Form 1099-MISC", input.form1099Misc],
+    ["Form 1099-NEC", input.form1099Nec],
+    ["Form W-2G", input.formW2G ?? []],
+  ] as const) {
+    const mismatch = statements.find(statement => statement.taxYear !== undefined && statement.taxYear !== returnYear);
+    if (mismatch) {
+      throw new Error(`${formName} source year ${mismatch.taxYear} must match the ${returnYear} return`);
+    }
+  }
   if (claimOfRightStage(input)) return calculateFederalTaxForSources(input);
   const claim = calculateClaimOfRightSources(input);
   if (!claim) return compareAutomaticReitCashDeduction(input, calculateFederalTaxForSources(input));

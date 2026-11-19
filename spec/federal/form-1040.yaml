@@ -79,6 +79,23 @@ lines:
       (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf).
     testRef: "tests/engine/federal-w2-source-year.test.ts::holds explicitly wrong-year W-2 wages and withholding for a %i return (source %i)"
 
+  - line: "ordinary-income-statement-source-year"
+    description: "Use the printed calendar year on ordinary annual income statements"
+    formula: >-
+      For ordinary reporting, match an explicit Form 1099-INT, 1099-DIV,
+      1099-MISC, 1099-NEC or W-2G statement year to the selected return
+      before using the statement's income or withholding. Use the payer's
+      printed calendar year rather than the form revision. Preserve an
+      omitted legacy year as unknown. Household payments, recoveries and
+      carryovers use the dates and periods of their own worksheets.
+    irsRef: >-
+      IRS Instructions for Forms 1099-INT and 1099-OID
+      (https://www.irs.gov/instructions/i1099int), Form 1099-DIV
+      (https://www.irs.gov/instructions/i1099div), Forms 1099-MISC and 1099-NEC,
+      For Calendar Year (https://www.irs.gov/instructions/i1099mec), and
+      Forms W-2G and 5754 (https://www.irs.gov/instructions/iw2g).
+    testRef: "tests/engine/federal-income-statement-source-year.test.ts::holds a mismatched original statement for %i (source %i)"
+
   - line: "1"
     description: "Wages, salaries, tips, etc."
     formula: "Sum of all W-2 Box 1 values plus any supported Form 4137 unreported tip income that must be included in wages on Form 1040 line 1, plus any supported Form 8919 line 6 employee wages that must be included in wages on Form 1040 line 1, plus any non-IRA Form 1099-R disability pension amounts that are taxable as wages because the taxpayer had not reached minimum retirement age on the date received; if validated retired-public-safety-officer accident, health, or long-term care insurance premiums were paid directly from the disability pension, reduce the disability-pension wage amount by the smaller of those validated premiums, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported pension-line exclusion, or the disability-pension taxable amount"
