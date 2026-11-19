@@ -243,6 +243,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ["Form 1099-NEC", input.form1099Nec],
     ["Form W-2G", input.formW2G ?? []],
     ["Form 1099-K", input.form1099K ?? []],
+    ["Form RRB-1099", input.formRRB1099 ?? []],
   ] as const) {
     const mismatch = statements.find(statement => statement.taxYear !== undefined && statement.taxYear !== returnYear);
     if (mismatch) {
@@ -250,6 +251,13 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       getConstants(returnYear);
       throw new Error(`${formName} source year ${mismatch.taxYear} must match the ${returnYear} return`);
     }
+  }
+  const mismatchedSsa = input.formSSA1099?.find(original =>
+    original.sourceTaxYear !== undefined && original.sourceTaxYear !== returnYear,
+  );
+  if (mismatchedSsa) {
+    getConstants(returnYear);
+    throw new Error(`Form SSA-1099 source year ${mismatchedSsa.sourceTaxYear} must match the ${returnYear} return`);
   }
   if (claimOfRightStage(input)) return calculateFederalTaxForSources(input);
   const claim = calculateClaimOfRightSources(input);

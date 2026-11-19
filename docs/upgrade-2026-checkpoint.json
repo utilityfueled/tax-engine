@@ -302,6 +302,7 @@
       },
       "nov19Form1099KCalendarYear": {
         "parent": "ba53cbcf",
+        "commit": "89aacbe9",
         "initialMissingHolds": 4,
         "legacyExpectationFailures": 5,
         "affectedTestsPassed": 1288,
@@ -313,6 +314,27 @@
         "inventoryCheckPassed": true,
         "lintErrors": 0,
         "lintWarnings": 9,
+        "staticAndBuildChecksPassed": 9,
+        "unitTestsPassed": 29419,
+        "coverageVerification": "pending",
+        "ciRun": 44538588768,
+        "webRun": 44538590239,
+        "dockerRun": 44538589599,
+        "dockerPassed": true
+      },
+      "nov19BenefitsPaymentYear": {
+        "parent": "89aacbe9",
+        "initialMissingHolds": 8,
+        "affectedTestsPassed": 1596,
+        "affectedFilesPassed": 34,
+        "independentFocusedTestsPassed": 527,
+        "independentRrbIngressTestsPassed": 7,
+        "typeChecksPassed": 3,
+        "specReferencesValidated": 9640,
+        "inventoryCheckPassed": true,
+        "browserAuditMatched": true,
+        "lintErrors": 0,
+        "existingLintWarnings": 207,
         "fullVerification": "pending"
       },
       "nov19QsbsBrowserPdfSubprocess": {

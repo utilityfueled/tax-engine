@@ -124,7 +124,7 @@ lines:
 
   - line: "benefits-education-marketplace-calendar"
     description: "Known actual SSA benefit, student-interest and Marketplace statement calendar years must match a confirmed return"
-    formula: "Inspect only actual sourceTaxYear on FormSSA1099 and taxYear on Form1098E and Form1095A. Reject a known past/future original year before confirmed accounting or dispatch, including benefits, withholding, deductions, advance-credit repayment and zero-impact rows. The original statement year is distinct from benefit lump-sum history, loan vintage, carry vintages, refund expense years and other legitimate prior-year worksheet sources. Preserve canonical preliminary arithmetic; do not infer a missing year or amend any source."
+    formula: "Inspect only actual sourceTaxYear on FormSSA1099 and taxYear on Form1098E and Form1095A. Reject a known past/future original year before confirmed accounting or dispatch, including benefits, withholding, deductions, advance-credit repayment and zero-impact rows. The canonical federal return also holds explicitly mismatched SSA1099 and RRB1099 payment statements before applying amounts. The original statement year is distinct from benefit lump-sum history, loan vintage, carry vintages, refund expense years and other legitimate prior-year worksheet sources. Preserve arithmetic for admitted sources and leave missing years unknown."
     testRef: "tests/apps/web/verified-ai-legacy-source-admission.test.ts::denies a known mismatched benefits education or Marketplace original %s before confirmed accounting"
   - line: "benefits-education-marketplace-preservation"
     description: "Matching and missing direct calendar years retain existing source-method and annual gates"
@@ -184,7 +184,7 @@ lines:
 
   - line: "rrb-header-calendar"
     description: "The RRB statement reports actual payment-year benefits and withholding"
-    formula: "A known top-level RRB1099 taxYear must equal the selected return year at confirmed ingress even for zero or withholding-only rows. Earlier entitlement-year payments can belong to a current statement; do not recursively compare benefit histories."
+    formula: "A known top-level RRB1099 taxYear must equal the selected return year for canonical calculation and at confirmed ingress, even for zero or withholding-only rows. Earlier entitlement-year payments can belong to a current statement; do not recursively compare benefit histories."
     testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::denies known RRB calendar contradictions before provider or accounting"
 
   - line: "trust-header-future-only"

@@ -46,9 +46,10 @@ it('retains four supplied actual headers without manufacturing absent years',()=
 });
 it('denies known RRB calendar contradictions before provider or accounting',async()=>{
  for(const year of [2024,2026])for(const [benefits,withheld]of [['1000','0'],['0','1000'],['0','0']]){
-  const x=packet('rrb',year,benefits,withheld),before=structuredClone(x),result=calculateFederalTax(TaxYearInputSchema.parse(x));
-  expect(result.agi.toFixed()).toBe(benefits==='0'?'85000':'85850');expect(result.totalWithholding.toFixed()).toBe(withheld==='0'?'12750':'13750');
-  expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow('matching-year direct income originals');await post(x,400);expect(x).toEqual(before);
+  const x=packet('rrb',year,benefits,withheld),before=structuredClone(x);
+  const expected=`Form RRB-1099 source year ${year} must match the 2025 return`;
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+  expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow(expected);await post(x,400);expect(x).toEqual(before);
  }
 });
 it('denies only future estate trust originals while preserving fiscal compatibility',async()=>{
@@ -72,7 +73,13 @@ it('denies duplicate conflicting originals in either order',async()=>{
  for(const kind of ['cod','sa','rrb','trust']as const)for(const reversed of [false,true]){
   const x=packet(kind,2025),bad=packet(kind,2026),rows=reversed?[original(bad,kind),original(x,kind)]:[original(x,kind),original(bad,kind)];
   if(kind==='cod')x.form1099C=rows as Input['form1099C'];else if(kind==='sa')x.form1099SA=rows as NonNullable<Input['form1099SA']>;else if(kind==='rrb')x.formRRB1099=rows as NonNullable<Input['formRRB1099']>;else x.scheduleK1Form1041=rows as Input['scheduleK1Form1041'];
-  const before=structuredClone(x),result=calculateFederalTax(TaxYearInputSchema.parse(x));await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).totalTax.toFixed()).toBe(result.totalTax.toFixed());
+  const before=structuredClone(x);
+  if(kind==='rrb'){
+   const assertPaymentYearHold=()=>expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow('Form RRB-1099 source year 2026 must match the 2025 return');
+   assertPaymentYearHold();await post(x,400);expect(x).toEqual(before);assertPaymentYearHold();
+  }else{
+   const result=calculateFederalTax(TaxYearInputSchema.parse(x));await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).totalTax.toFixed()).toBe(result.totalTax.toFixed());
+  }
  }
 });
 it('preserves current missing and ordinary source economics privately',async()=>{

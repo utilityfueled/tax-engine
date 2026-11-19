@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 SSA and railroad retirement payment years
+
+The ordinary federal return now holds explicitly wrong-year SSA-1099 and RRB-1099 statements before using benefits or withholding. Matching and undated statements retain $850 in taxable benefits and $125.51 in withholding on the synthetic payment-year fixtures. The current SSA statement still carries a lawful earlier-year lump-sum worksheet. Sources are [IRS Publication 915](https://www.irs.gov/publications/p915) and the [Railroad Retirement Board's statement guidance](https://rrb.gov/Benefits/IncomeTax/TXL-1099).
+
+Eight calculation cases reproduced the missing holds before implementation. The affected run exposed three stale expectations across two verified AI suites and a separate stale diagnostic in the follow-up. The revised tests retain the route privacy, accounting, dispatch and input-preservation assertions. All 1,596 affected tests across 34 files passed. Independent engineering review reran 527 related tests and seven RRB ingress tests successfully. Spec validation checked 9,640 entries, inventory and three type checks passed, the browser audit matched, and scoped lint reported zero errors and 207 existing warnings. The exact full run is pending.
+
 ## November 19 Form 1099-K calendar-year binding
 
 The ordinary federal return holds an explicitly earlier or later Form 1099-K before using the statement's amounts. The check preserves matching originals and older undated records. A matching $3,020.15 original with $125.51 in Box 4 retains that gross reconciliation and credits the withholding once on Form 1040 Line 25b. The statement alone leaves adjusted gross income at $85,000. The spec also corrects the issuer threshold restored by Public Law 119-21 and the reporting of personal-item gains. [IRS Form 1099-K instructions](https://www.irs.gov/instructions/i1099k) · [IRS general FAQs](https://www.irs.gov/newsroom/form-1099-k-faqs-general-information) · [IRS reporting guidance](https://www.irs.gov/businesses/what-to-do-with-form-1099-k).

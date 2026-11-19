@@ -258,6 +258,21 @@ lines:
       - "Validated Simplified Method inputs override the all-taxable fallback when Box 2b says taxable amount not determined"
     testRef: "tests/engine/federal.test.ts::Form 1040 Lines 5a and 5b - retired public safety officer premiums reduce taxable pension income up to the annual cap"
 
+  - line: "social-security-statement-source-year"
+    description: "Bind Social Security and equivalent railroad benefits to the statement's payment year"
+    formula: >-
+      Match an explicit SSA-1099 payment year or RRB-1099 statement year to
+      the federal return before using Box 5 benefits or federal withholding.
+      Preserve an omitted statement year as unknown. A current statement may
+      include delayed benefits attributable to earlier years. Keep those earlier
+      years on the separate Publication 915 lump-sum election worksheets.
+    irsRef: >-
+      IRS Publication 915, Worksheet A and Lump-Sum Election
+      (https://www.irs.gov/publications/p915), and Railroad Retirement Board
+      Form RRB-1099 statement explanation
+      (https://rrb.gov/Benefits/IncomeTax/TXL-1099).
+    testRef: "tests/engine/federal-benefit-statement-source-year.test.ts::holds a mismatched benefit statement for %i (source %i)"
+
   - line: "6a"
     description: "Social Security benefits"
     formula: "Sum SSA-1099 Box 5 and RRB-1099 tier 1 equivalent Box 5 amounts for taxpayer and spouse"

@@ -7776,6 +7776,7 @@ describe("Retirement distributions through federal pipeline", () => {
       formSSA1099: [
         {
           recipient: "Jane Doe",
+          sourceTaxYear: 2025,
           netBenefits: "11000",
           federalWithheld: "0",
         },
