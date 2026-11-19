@@ -1893,13 +1893,13 @@ export const Form8801Schema = z.preprocess(value => {
 }));
 
 const Form8880LegacySchema = z.object({
-  primaryElectiveDeferrals: optionalDecimal, // Line 1 column (a)
+  primaryElectiveDeferrals: decimal.optional(), // Line 2 column (a)
   primaryIraContributions: optionalDecimal, // Line 2 column (a) IRA portion
   primaryAbleContributions: optionalDecimal, // Line 2 column (a) ABLE portion
   primaryRecentDistributions: optionalDecimal, // Line 4 column (a)
   primaryIsFullTimeStudent: z.boolean().default(false),
   primaryCanBeClaimedAsDependent: z.boolean().default(false),
-  spouseElectiveDeferrals: optionalDecimal, // Line 1 column (b)
+  spouseElectiveDeferrals: decimal.optional(), // Line 2 column (b)
   spouseIraContributions: optionalDecimal, // Line 2 column (b) IRA portion
   spouseAbleContributions: optionalDecimal, // Line 2 column (b) ABLE portion
   spouseRecentDistributions: optionalDecimal, // Line 4 column (b)
@@ -6857,6 +6857,20 @@ export const TaxYearInputSchema = z.object({
       }
     }
   }
+}).overwrite((value) => {
+  const { form8880, taxpayer } = value;
+  if (!form8880 || taxpayer.taxYear === 2025 || taxpayer.taxYear === 2026) {
+    return value;
+  }
+  // Preserve the prior defaults for other years. In 2025 omission enables the Box 12 fallback.
+  return {
+    ...value,
+    form8880: {
+      ...form8880,
+      primaryElectiveDeferrals: form8880.primaryElectiveDeferrals ?? "0",
+      spouseElectiveDeferrals: form8880.spouseElectiveDeferrals ?? "0",
+    },
+  };
 });
 
 export type TaxYearInput = z.infer<typeof TaxYearInputSchema>;

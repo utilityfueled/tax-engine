@@ -91,7 +91,8 @@ const SUPPORTED_W2_RETIREMENT_CONTRIBUTION_FIELDS = [
 export function mergeW2RetirementContributionsIntoForm8880Input(
   input: Form8880Input | undefined,
   w2s: W2[] = [],
-  filingStatus?: FilingStatus
+  filingStatus?: FilingStatus,
+  taxYear?: number
 ): Form8880Input | undefined {
   if (!input) {
     return undefined;
@@ -110,11 +111,14 @@ export function mergeW2RetirementContributionsIntoForm8880Input(
   const totalW2Deferrals = (owner: "primary" | "spouse", enteredTotal: string | undefined) => {
     const statements = w2s.filter(w2 =>
       shouldIncludeSupportedW2RetirementContribution(w2, owner, isJointReturn, hasTaggedRetirementContributions));
-    if (input.sourceFacts2026 && enteredTotal === undefined) {
-      if (statements.some(w2 => w2.taxYear !== 2026)) {
+    if (enteredTotal === undefined && (input.sourceFacts2026 || taxYear === 2025)) {
+      if (input.sourceFacts2026 && statements.some(w2 => w2.taxYear !== 2026)) {
         throw new Error("Form 8880 retirement contribution fallback requires an original 2026 W-2");
       }
-      if (statements.some(w2 => d(w2.box12CodeG).gt(0))) {
+      if (taxYear === 2025 && statements.some(w2 => w2.taxYear !== undefined && w2.taxYear !== 2025)) {
+        throw new Error("Form 8880 retirement contribution fallback requires a 2025 W-2 when the source year is entered");
+      }
+      if (statements.some(w2 => taxYear === 2025 ? !d(w2.box12CodeG).isZero() : d(w2.box12CodeG).gt(0))) {
         throw new Error("Form 8880 requires the confirmed eligible contribution total when W-2 Code G is present");
       }
     }
@@ -404,8 +408,10 @@ function isEligibleSaverCreditPerson(
     return false;
   }
 
-  // The final 2026 form expressly includes January 1, 2009.
-  return (taxYear === 2026 && dateOfBirth === "2009-01-01") || getAgeAtYearEnd(dateOfBirth, taxYear) >= 18;
+  // An eighteenth birthday on January 1 of the following year meets the age test on these forms.
+  return (taxYear === 2025 && dateOfBirth === "2008-01-01")
+    || (taxYear === 2026 && dateOfBirth === "2009-01-01")
+    || getAgeAtYearEnd(dateOfBirth, taxYear) >= 18;
 }
 
 function getAgeAtYearEnd(dateOfBirth: string, taxYear: number): number {

@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: historical Form 8880 correction
+
+The 2025 return includes contributors born January 1, 2008 and preserves the difference between omitted deferrals and an entered zero. Omitted amounts can use eligible W-2 contributions with the correct owner. A mismatched stated year or ambiguous Code G holds the fallback until the eligible amount is confirmed. Independent controls reproduced five initial failures and four additional source-guard failures. The final 511-test cohort and 37 spec references passed. Sources are the [2025 Form 8880 and its instructions](https://www.irs.gov/pub/irs-prior/f8880--2025.pdf) and [2025 W-2 instructions](https://www.irs.gov/pub/irs-prior/fw2--2025.pdf).
+
 ## November 19: confirmed Form 8880 facts and modified AGI
 
 The 2026 return path now requires contributor eligibility and completed testing-period distribution facts. It holds conflicting dependency records and verifies any W-2 used for the contribution fallback is current and attributed. Code G requires a separately confirmed eligible total. Form 8880 line 8 starts with signed AGI and restores the actual net Form 2555 income adjustment, housing deduction and confirmed net territory adjustments under [26 USC §25B](https://uscode.house.gov/us/usc/119-124/t26/s25B/). The exact checks passed 541 tests, inventory and six spec references, type-check, build and scoped lint. Independent review verified the source guards and signed amount path. Public 2026 calculation, review and filing qualification remain closed.

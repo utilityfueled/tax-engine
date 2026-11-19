@@ -1,7 +1,7 @@
 form: "Form 8880"
 fullName: "Credit for Qualified Retirement Savings Contributions"
 taxYear: 2025
-irsReference: "https://www.irs.gov/forms-pubs/about-form-8880"
+irsReference: "https://www.irs.gov/pub/irs-prior/f8880--2025.pdf"
 
 notes: |
   This slice implements Form 8880 for tax year 2025 using validated retirement
@@ -29,13 +29,17 @@ notes: |
   the current engine.
   In the supported federal engine path, Line 2 can also default from attached
   W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE
-  when the explicit Line 2 input is omitted. On joint returns, those defaults
-  require owner-tagged W-2 records so the taxpayer and spouse columns stay
-  attributable to the correct person; untagged joint-return retirement W-2
-  amounts stay manual instead of being guessed into either spouse column.
-  Taxpayer eligibility rules for age 18 or older, not a dependent, and not a
-  full-time student are applied per person on Line 6 after the Line 5
-  reduction amount is computed.
+  when the corresponding explicit Line 2 input is omitted. Parsing preserves
+  omission and keeps explicit zero as an override. On joint returns, those
+  defaults require owner-tagged W-2 records to attribute contributions to
+  the correct person. Untagged joint-return retirement amounts stay manual.
+  A nonzero W-2 Box 12 Code G amount may include employer contributions.
+  If the W-2 would supply a column's fallback, a confirmed eligible Line 2
+  total is required for that column. A W-2 supplying the fallback must also
+  be from 2025 if its source year is supplied.
+  In 2025, each contributor must have been born on or before January 1,
+  2008 to meet the Line 6 age requirement. Dependency and full-time student
+  exclusions continue to apply per person.
 
 lines:
   - line: "1a"
@@ -75,6 +79,24 @@ lines:
       - "Owner-tagged attached W-2 Box 12 retirement-contribution codes D, E, F, G, H, S, AA, BB, and EE for the spouse when Line 2b is omitted"
     notes: "The supported spouse-column default is available only on joint returns and only from owner-tagged W-2 records; untagged joint-return retirement contributions stay manual so the engine does not guess which spouse made them."
     testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 2b - owner-tagged W-2 Box 12 retirement contributions default into the spouse column when Line 2b is omitted"
+
+  - line: "2-parsed-w2-fallback"
+    description: "Preserve contribution input presence through 2025 return parsing"
+    formula: "For each applicable column, use the explicit Line 2 amount if supplied, including zero. Otherwise use the supported W-2 Box 12 contributions attributable to that person."
+    irsRef: "2025 Form 8880 instructions for Line 2"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::applies the parsed Form 8880 Line 2 Box 12 fallback independently for each column"
+
+  - line: "2-code-g-source"
+    description: "Require the eligible Line 2 total when a contributing W-2 reports Code G"
+    formula: "For a column without an explicit eligible Line 2 total, hold the calculation if a W-2 supplying the fallback has nonzero Code G. With a confirmed eligible total, apply it directly, including zero."
+    irsRef: "2025 Form 8880 Line 2 and 2025 Form W-2 Box 12 Code G employee instructions"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::requires the confirmed Line 2 total for a 2025 W-2 with Code G"
+
+  - line: "2-w2-source-year"
+    description: "Apply the 2025 source-year requirement to W-2 fallback contributions"
+    formula: "Hold the fallback when a contributing W-2 explicitly identifies a different tax year. Accept historical W-2 inputs without a source-year tag."
+    irsRef: "2025 Form 8880 instructions for Line 2"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::holds the omitted Line 2 fallback for an explicitly different W-2 year"
 
   - line: "3a"
     description: "Primary taxpayer total current-year contributions"
@@ -137,23 +159,23 @@ lines:
 
   - line: "6a"
     description: "Primary taxpayer eligible contributions after age, dependency, student, and dollar caps"
-    formula: "If the primary taxpayer is age 18 or older at the end of the tax year, is not a dependent, and is not a full-time student, enter the smaller of $2,000 or Line 5a; otherwise $0"
-    irsRef: "Form 8880, Line 6, column (a)"
+    formula: "If the primary taxpayer was born on or before January 1, 2008, is not a dependent, and is not a full-time student, enter the smaller of $2,000 or Line 5a; otherwise $0"
+    irsRef: "2025 Form 8880 caution and Who Can Take This Credit instructions; Line 6, column (a)"
     inputs:
       - "Form 8880 Line 5a"
       - "Primary taxpayer date of birth"
       - "Primary taxpayer dependent status"
       - "Primary taxpayer student status"
     edgeCases:
-      - "A taxpayer who turns age 18 on December 31 is eligible for the credit"
-      - "A taxpayer who is still age 17 on December 31 is not eligible for the credit"
+      - "A taxpayer born exactly January 1, 2008 meets the 2025 age requirement"
+      - "A taxpayer born January 2, 2008 fails the 2025 age requirement"
       - "Recent distributions larger than current-year contributions floor the eligible amount at $0 before the $2,000 cap is tested"
     testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 6a - ineligible taxpayers and the $2,000 cap limit the primary taxpayer column"
 
   - line: "6b"
     description: "Spouse eligible contributions after age, dependency, student, and dollar caps"
-    formula: "If filing jointly and the spouse is age 18 or older at the end of the tax year, is not a dependent, and is not a full-time student, enter the smaller of $2,000 or Line 5b; otherwise $0"
-    irsRef: "Form 8880, Line 6, column (b)"
+    formula: "If filing jointly and the spouse was born on or before January 1, 2008, is not a dependent, and is not a full-time student, enter the smaller of $2,000 or Line 5b; otherwise $0"
+    irsRef: "2025 Form 8880 caution and Who Can Take This Credit instructions; Line 6, column (b)"
     inputs:
       - "Form 8880 Line 5b"
       - "Spouse date of birth"
@@ -163,6 +185,12 @@ lines:
     edgeCases:
       - "The spouse column stays at $0 when the spouse is a dependent or a full-time student even if the primary taxpayer is eligible"
     testRef: "tests/engine/forms/form-8880.test.ts::Form 8880 Line 6b - joint-return spouse contributions are capped at $2,000 only when the spouse is eligible"
+
+  - line: "6-age-cutoff-2025"
+    description: "Apply the 2025 Form 8880 birth-date eligibility cutoff"
+    formula: "January 1, 2008 qualifies for the age test. A later birth date fails the age test."
+    irsRef: "2025 Form 8880 caution and Who Can Take This Credit instructions"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::applies the January 1, 2008 birth cutoff on a parsed 2025 return"
 
   - line: "7"
     description: "Total eligible contributions"

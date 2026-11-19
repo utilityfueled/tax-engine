@@ -4141,7 +4141,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const normalizedForm8880Input = mergeW2RetirementContributionsIntoForm8880Input(
     input.form8880,
     input.w2s,
-    filingStatus
+    filingStatus,
+    year
   );
   const form8880 = normalizedForm8880Input
     ? calculateForm8880({
