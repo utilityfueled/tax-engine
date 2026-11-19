@@ -1,8 +1,14 @@
 # 2026 upgrade implementation evidence
 
+## November 19: Ohio business balance-payment draft
+
+The narrow single nonresident and part-year resident Schedule C-only draft now accepts an exact, timely original IT 1040 balance payment through $500 when the source records establish no Ohio taxing-school-district residency and a complete payment inventory. The $300 and $500 examples retain their return balance due and report the actual payment and outstanding balance separately. An independent review reproduced admission of competing resident-credit and reciprocal-wage packets. Three failing controls verified the gap, and the corrected payment branch rejects those packets. The exact package passed 502 focused tests and all 11 spec references. School financials and filing remain unavailable. [Ohio Revised Code §5747.09](https://codes.ohio.gov/ohio-revised-code/section-5747.09) · [Ohio Revised Code §5747.08](https://codes.ohio.gov/ohio-revised-code/section-5747.08)
+
 ## November 19: browser source audit restored
 
-The exact `b06960c0` source archive reproduced a browser preflight failure with its old manifest. The refreshed manifest pins four revised files and five new files. The two revised audit files admit the same 655 browser cases, five skips and eight request batches in both managed and strict-container list-only mode. The browser deadlines, selectors and request limits retain their previous values. All 37 Node and 61 Vitest controls passed. Actual browser execution of the replacement remains required.
+The exact `b06960c0` source archive reproduced a browser preflight failure with its old manifest. The refreshed manifest in `f2311eef` pins four revised files and five new files. The two revised audit files admit the same 655 browser cases, five skips and eight request batches in both managed and strict-container list-only mode. The browser deadlines, selectors and request limits retain their previous values. All 37 Node and 61 Vitest controls passed. Actual successor runs are [Web 44467417463](https://github.com/utilityfueled/tax-engine/actions/runs/44467417463), [CI 44467417355](https://github.com/utilityfueled/tax-engine/actions/runs/44467417355) and [Docker 44467417232](https://github.com/utilityfueled/tax-engine/actions/runs/44467417232).
+
+The separate frozen `b765af11` local unit and coverage runs each passed 29,034 tests with 75 skipped and no failures. Branch coverage was 87.82% against the unchanged 85% gate. Newer source requires its own checks.
 
 ## November 19: historical Form 8880 correction
 

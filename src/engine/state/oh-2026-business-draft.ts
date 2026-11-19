@@ -12,6 +12,8 @@ import { calculateScheduleSE } from '@/engine/schedules/schedule-se.js';
 import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource } from './oh-business-source.js';
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
+import { calculateOhio2026ActualBalancePayment, validateOhio2026ActualBalancePaymentSources } from './oh-2026-payment-source.js';
+import { AuditTrail } from '@/utils/audit.js';
 
 export interface Ohio2026BusinessDraftResult extends Omit<Ohio2026ReturnDraftResult, 'ruleVersion' | 'withholding' | 'underpaymentPenalty' | 'latePaymentInterest' | 'amountDue' | 'refund'> {
   ruleVersion: 'oh-2026-canonical-business-draft-v1';
@@ -22,8 +24,10 @@ export interface Ohio2026BusinessDraftResult extends Omit<Ohio2026ReturnDraftRes
   ohioApportionmentRatio: Decimal;
   ohioApportionedBusinessIncome: Decimal;
   ohioBusinessIncomeAfterDeduction: Decimal;
-  withholding: null; payments: null; schoolDistrictTax: null;
-  underpaymentPenalty: null; latePaymentInterest: null; amountDue: null; refund: null;
+  withholding: Decimal | null;
+  /** Estimated/extension/prior-credit prepayments only; actual balance settlement is separate. */
+  payments: Decimal | null; schoolDistrictTax: null;
+  underpaymentPenalty: Decimal | null; latePaymentInterest: Decimal | null; amountDue: Decimal | null; refund: Decimal | null;
 }
 function stable(value: unknown): unknown {
   if (Decimal.isDecimal(value)) return value.toString();
@@ -49,16 +53,24 @@ export function calculateOhio2026BusinessDraft(input: TaxYearInput, raw: unknown
   if (!/^\d{9}$/.test(person.ssn.replace(/\D/g, '')) || !Number.isFinite(born)
     || new Date(born).toISOString().slice(0, 10) !== person.dateOfBirth
     || person.dateOfBirth <= '1962-01-01' || person.dateOfBirth > '2008-12-31') fail('actual adult under65 identity and birth date required');
-  const allowed = new Set(['taxpayer', 'standardDeductionFacts', 'scheduleC', 'ohioResidency']);
+  const allowed = new Set(['taxpayer', 'standardDeductionFacts', 'scheduleC', 'ohioResidency', 'ohioPayments']);
   const emptyArrays = new Set(['w2s', 'form1099Int', 'form1099Div', 'form1099B', 'form1099Nec', 'form1099Misc', 'scheduleK1', 'form1098', 'form1095A', 'donations']);
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined || allowed.has(key)) continue;
     if (emptyArrays.has(key) && Array.isArray(value) && value.length === 0) continue;
     fail('retained other federal income adjustment credit payment or election needs its separate method');
   }
-  const { ohioResidency: _residency, ...originals } = input;
+  const { ohioResidency: _residency, ohioPayments: _payments, ...originals } = input;
   if (digest(source.originalFederalSources) !== digest(originals)
     || input.ohioResidency !== undefined && digest(input.ohioResidency) !== digest(facts)) fail('full current original snapshot or retained residency changed');
+  if (input.ohioPayments !== undefined) {
+    // RC5747.09(A) combines state and school liability. A state-only balance
+    // cannot establish the small-balance exception when school liability is unknown.
+    if (facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency') fail('confirmed no taxing-school-district residency required for state-only small-balance payment');
+    if (facts.residentCreditSources || facts.reciprocalWageSources) fail('separate resident credit or reciprocal wage packet requires its own current payment method');
+    const payments = validateOhio2026ActualBalancePaymentSources(input);
+    if (digest(payments.originalFederalSources) !== digest(originals)) fail('actual payment current original federal snapshot changed');
+  }
   const c = input.scheduleC;
   if (!c || !ScheduleCInputSchema.strict().safeParse(c).success || c.accountingMethod !== 'cash') fail('current ordinary cash-service C required');
   if (!c.expenses || Object.keys(BusinessExpensesSchema.shape).some(key => {
@@ -95,7 +107,23 @@ export function calculateOhio2026BusinessDraft(input: TaxYearInput, raw: unknown
     ohioAgi: actual.ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: facts, businessSource: context,
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category, category === 'federalAdjustments' ? actual.deductibleHalf : '0'])) });
-  return { taxYear: 2026, ruleVersion: source.methodId, baselineRuleVersion: baseline.ruleVersion,
+  const incomeTax = baseline.taxAfterJointCredit.minus(nrc.line20);
+  // Only the completed C-only source inventory above proves raw/reportable
+  // withholding zero. Never project zero from missing W2/payment sources.
+  const actualBalancePayment = input.ohioPayments === undefined ? undefined
+    : calculateOhio2026ActualBalancePayment(input, incomeTax, new Decimal(0), '0');
+  const paymentAudit = new AuditTrail();
+  if (actualBalancePayment) {
+    paymentAudit.record('OH2026 business payment draft', 'withholding', 'Source-confirmed no business-only withholding', new Decimal(0), 'Complete admitted C-only original inventory; no other income or withholding sources');
+    paymentAudit.record('OH2026 business payment draft', 'payments', 'Source-confirmed no estimated or prior-credit prepayments', new Decimal(0), 'Complete actual payment inventory; balance receipt reported separately');
+    paymentAudit.record('OH2026 business payment draft', 'underpayment-penalty', 'No installment underpayment obligation', new Decimal(0), 'RC5747.09(A),(B); combined liability at most500 with confirmed no taxing-school-district residency');
+    paymentAudit.record('OH2026 business payment draft', 'late-interest', 'No overdue tax interval', new Decimal(0), 'Actual exact full balance receipt by Apr15,2027 and timely filing chronology; RC5747.08(G)');
+    paymentAudit.record('OH2026 business payment draft', 'amount-due', 'Return balance due, separately settled', incomeTax, 'Unchanged income tax after NRC minus source-confirmed zero withholding and prepayments');
+    paymentAudit.record('OH2026 business payment draft', 'actual-balance-payment', 'Actual timely balance payment applied', actualBalancePayment.actualBalancePaymentApplied, 'Matching original IT1040 account/year receipt equals fresh return balance exactly');
+    paymentAudit.record('OH2026 business payment draft', 'outstanding-tax-balance', 'Source-qualified account outstanding tax balance', actualBalancePayment.outstandingTaxBalance, 'Fresh balance minus exact applied receipt; no external account observation');
+    paymentAudit.record('OH2026 business payment draft', 'refund', 'No overpayment or refund', new Decimal(0), 'Actual receipt equals fresh positive return balance; all other balance elections excluded');
+  }
+  return { ...(actualBalancePayment ? { actualBalancePayment } : {}), taxYear: 2026, ruleVersion: source.methodId, baselineRuleVersion: baseline.ruleVersion,
     calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false,
     sourceCommitment: digest({ input, raw, canonicalCommitment: context.sourceCommitment }),
     federalAgi, ohioAgi: actual.ohioAgi, deductibleHalfSelfEmploymentTax: actual.deductibleHalf,
@@ -105,10 +133,12 @@ export function calculateOhio2026BusinessDraft(input: TaxYearInput, raw: unknown
     ohioApportionedBusinessIncome: worksheet.columnC, ohioBusinessIncomeAfterDeduction: worksheet.ohioBusinessAfterDeduction,
     exemptions: baseline.exemptions, taxBeforeCredits: baseline.totalTax,
     personalExemptionCredit: new Decimal(0), jointFilingCredit: baseline.jointFilingCredit, earnedIncomeCredit: new Decimal(0),
-    nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax: baseline.taxAfterJointCredit.minus(nrc.line20),
-    withholding: null, payments: null, schoolDistrictTax: null, underpaymentPenalty: null, latePaymentInterest: null, amountDue: null, refund: null,
+    nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax,
+    withholding: actualBalancePayment ? new Decimal(0) : null, payments: actualBalancePayment ? new Decimal(0) : null, schoolDistrictTax: null,
+    underpaymentPenalty: actualBalancePayment ? new Decimal(0) : null, latePaymentInterest: actualBalancePayment ? new Decimal(0) : null,
+    amountDue: actualBalancePayment ? incomeTax : null, refund: actualBalancePayment ? new Decimal(0) : null,
     limitations: ['Finite ordinary single NR/PY business draft only; not a complete2026 federal or Ohio return.',
-      'Payments, school financials, penalties, interest and settlement are unknown; no native or final form qualification.',
+      actualBalancePayment ? 'Finite first Ohio return with confirmed no taxing-school-district residency and actual timely IT1040 balance at most500; amount due remains the return balance. Outstanding balance is receipt arithmetic, not an external account observation. School financials remain unavailable; no native or final form qualification.' : 'Payments, school financials, penalties, interest and settlement are unknown; no native or final form qualification.',
       'Low-income EIC, other credits/adjustments, losses, alternative factors and broader business cohorts require separate actual methods.'],
-    lines: [...baseline.lines, ...nrc.lines] };
+    lines: [...baseline.lines, ...nrc.lines, ...paymentAudit.getLines()] };
 }

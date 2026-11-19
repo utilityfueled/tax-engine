@@ -4,6 +4,8 @@ import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engin
 import { calculateFederalTax } from '@/engine/federal.js';
 import { OHIO_TAX_CONSTANTS, TAX_CONSTANTS } from '@/models/constants.js';
 import { ohio2026BusinessDraftFixture, rebindOhio2026BusinessDraft } from '../../fixtures/oh-2026-business-draft.js';
+import { ohioResidentCreditFixture } from '../../fixtures/oh-resident-credit-sources.js';
+import { reciprocalOhioWageFixture } from '../../fixtures/oh-reciprocal-wage-sources.js';
 const examples = [
   ['100000','7065','92935','92935','0','1900','0','0.0000','0','0'],
   ['400000','16796','383204','250000','133204','1900','3939','1.0000','3939','0'],
@@ -124,4 +126,126 @@ it('rejects offsetting cents and unsupported resident categories before NRC doll
   Object.assign(owner(p).amounts.wages,{federalAmount:'0.01',residentAmount:'0.01'});
   Object.assign(owner(p).amounts.capitalGains,{federalAmount:'-0.01'});
   expect(()=>run(p)).toThrow(/original/);
+});
+
+// Spec: actual-payment-* rows in spec/state/oh-2026-business-draft.yaml.
+// Independent example: equal .26 property/sales factors => Ohio business260000,
+// less BID250000 =>10000; NRC trunc4((725170-10000)/725170)=.9862;
+// round(21755*.9862)=21455; unchanged return tax300, separately settled300.
+function paidBusiness(status: 'nonresident' | 'part_year_resident' = 'nonresident', factor: 'small' | 'limit' | 'large' | 'zero' = 'small') {
+  const p = ohio2026BusinessDraftFixture('1000000', status);
+  const property = factor === 'small' ? '5200' : factor === 'limit' ? '5332.96' : factor === 'large' ? '5400' : '5000';
+  const sales = factor === 'small' ? '260000' : factor === 'limit' ? '266648' : factor === 'large' ? '270000' : '250000';
+  row(p).property.ownedBeginning.ohio = property; row(p).property.ownedEnd.ohio = property;
+  known(row(p).sales.rows[0]).ohioBenefitReceipt = sales;
+  known(p.sources.residencyFacts.businessSources.receiptOriginals[0]).ohioBenefitReceipt = sales;
+  const person = p.input.taxpayer.primary;
+  p.input.ohioPayments = {
+    taxYear: 2026, sourceReference: 'PRIVATE-BUSINESS-PAYMENT-REVIEW', sourceFactsConfirmed: true,
+    originalFederalSources: structuredClone(p.input), calendarYearConfirmed: true,
+    allPaymentsIncludedConfirmed: true, withholdingTreatment: 'equal_quarters', paymentRows: [],
+    priorReturn: {status: 'no_return', sourceReference: 'PRIVATE-NO-PRIOR-RETURN'},
+    priorCreditCarryforward: {status: 'none', sourceReference: 'PRIVATE-NO-PRIOR-CARRY'},
+    remainingTaxPayment: {status: 'actual_payment', sourceReference: 'PRIVATE-BUSINESS-BALANCE', sourceFactsConfirmed: true,
+      date: '2027-04-15', amountAppliedToTax: '300', accountHolder: 'primary', original: {
+        accountName: person.firstName + ' ' + person.lastName, accountSsn: person.ssn, taxYear: 2026,
+        returnType: 'it1040', kind: 'balance', date: '2027-04-15', amount: '300', confirmationNumber: 'PRIVATE-BUSINESS-RECEIPT-001',
+      }},
+    currentTiming: {kind: 'filed', filedDate: '2027-04-15', asOfDate: '2027-04-15'},
+    filingExtension: {kind: 'none'}, paymentExtension: {kind: 'none'}, returnKind: 'original', specialMethod: 'regular',
+    balanceFacts: {sourceReference: 'PRIVATE-COMPLETE-BALANCE-REVIEW', useTax: '0', outgoingCarryforward: '0', donations: '0'},
+  };
+  return p;
+}
+const paymentFacts = (p: Packet) => known(p.input.ohioPayments);
+function balanceReceipt(p: Packet) {
+  const pay = paymentFacts(p).remainingTaxPayment;
+  if (pay.status !== 'actual_payment') throw new Error('Fictional actual receipt required');
+  return pay;
+}
+it.each((['nonresident', 'part_year_resident'] as const).map(status => ({status})))('settles a source-confirmed business balance for $status without changing return due', ({status}) => {
+  const p = paidBusiness(status), original = JSON.stringify(p), v = run(p);
+  expect(v.ohioApportionmentRatio.toFixed()).toBe('0.26');
+  expect(v.ohioBusinessIncomeAfterDeduction.toFixed()).toBe('10000');
+  expect(v.nonresidentRatio.toFixed(4)).toBe('0.9862'); expect(v.nonresidentCredit.toFixed()).toBe('21455');
+  expect(v.incomeTax.toFixed()).toBe('300'); expect(v.amountDue?.toFixed()).toBe('300');
+  expect(v.actualBalancePayment?.actualBalancePaymentApplied.toFixed()).toBe('300');
+  expect(v.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');
+  expect(v.actualBalancePayment?.actualPaymentDate).toBe('2027-04-15');
+  for (const key of ['withholding', 'payments', 'underpaymentPenalty', 'latePaymentInterest', 'refund'] as const) expect(v[key]?.toFixed()).toBe('0');
+  expect(v.schoolDistrictTax).toBeNull(); expect(v.calculationStatus).toBe('incomplete');
+  expect(v.reviewStatus).toBe('independent-review-pending'); expect(v.filingQualified).toBe(false);
+  expect(v.lines.find(line => line.line === 'amount-due')?.value.toFixed()).toBe('300');
+  expect(v.lines.find(line => line.line === 'actual-balance-payment')?.value.toFixed()).toBe('300');
+  expect(v.lines.find(line => line.line === 'outstanding-tax-balance')?.value.toFixed()).toBe('0');
+  const safe = JSON.stringify(v);
+  for (const secret of [p.input.taxpayer.primary.ssn, p.input.taxpayer.primary.lastName, paymentFacts(p).sourceReference, balanceReceipt(p).original.confirmationNumber]) expect(safe).not.toContain(secret);
+  expect(JSON.stringify(p)).toBe(original);
+  const other = structuredClone(p); balanceReceipt(other).original.confirmationNumber += '-same-cash';
+  expect(run(other).sourceCommitment).not.toBe(v.sourceCommitment);
+  expect(() => calculateFederalTax(p.input)).toThrow(/incomplete; calculation is unavailable/);
+});
+const rejectedBusinessPayments: Array<{label: string; mutate: (p: Packet) => void}> = [
+  {label: 'unknown school residency', mutate: p => {delete (p.sources.residencyFacts as Partial<typeof p.sources.residencyFacts>).schoolDistrictStatus;}},
+  {label: 'taxing school residency', mutate: p => {p.sources.residencyFacts.schoolDistrictStatus = 'actual_district_sources_required';}},
+  {label: 'wrong owner name', mutate: p => {balanceReceipt(p).original.accountName = 'OTHER PRIVATE OWNER';}},
+  {label: 'wrong owner SSN', mutate: p => {balanceReceipt(p).original.accountSsn = '000-00-0001';}},
+  {label: 'wrong payment owner', mutate: p => {balanceReceipt(p).accountHolder = 'spouse';}},
+  {label: 'wrong receipt year', mutate: p => {balanceReceipt(p).original.taxYear = 2025;}},
+  {label: 'wrong inventory year', mutate: p => {paymentFacts(p).taxYear = 2025;}},
+  {label: 'wrong return', mutate: p => {Object.assign(balanceReceipt(p).original, {returnType: 'sd100'});}},
+  {label: 'estimated receipt', mutate: p => {Object.assign(balanceReceipt(p).original, {kind: 'estimated'});}},
+  {label: 'late payment', mutate: p => {balanceReceipt(p).date = '2027-04-16'; balanceReceipt(p).original.date = '2027-04-16';}},
+  {label: 'receipt after observation', mutate: p => {paymentFacts(p).currentTiming.asOfDate = '2027-04-14';}},
+  {label: 'late filed return', mutate: p => {paymentFacts(p).currentTiming = {kind: 'filed', filedDate: '2027-04-16', asOfDate: '2027-04-16'};}},
+  {label: 'expected payment', mutate: p => {paymentFacts(p).remainingTaxPayment = {status: 'expected_payment', sourceReference: 'PRIVATE-EXPECTED', sourceFactsConfirmed: true, date: '2027-04-15', amountAppliedToTax: '300'};}},
+  {label: 'no actual payment', mutate: p => {paymentFacts(p).remainingTaxPayment = {status: 'no_remaining_tax', sourceReference: 'PRIVATE-NONE', sourceFactsConfirmed: true};}},
+  {label: 'partial receipt', mutate: p => {balanceReceipt(p).amountAppliedToTax = '299'; balanceReceipt(p).original.amount = '299';}},
+  {label: 'overpayment receipt', mutate: p => {balanceReceipt(p).amountAppliedToTax = '301'; balanceReceipt(p).original.amount = '301';}},
+  {label: 'receipt cash rounds to balance', mutate: p => {balanceReceipt(p).amountAppliedToTax = '300.01'; balanceReceipt(p).original.amount = '300.01';}},
+  {label: 'receipt differs from applied', mutate: p => {balanceReceipt(p).original.amount = '299';}},
+  {label: 'balance above500', mutate: p => {Object.assign(p, paidBusiness('nonresident', 'large')); balanceReceipt(p).amountAppliedToTax = '600'; balanceReceipt(p).original.amount = '600';}},
+  {label: 'zero balance', mutate: p => {Object.assign(p, paidBusiness('nonresident', 'zero'));}},
+  {label: 'estimated payment inventory', mutate: p => {const original = balanceReceipt(p).original; paymentFacts(p).paymentRows.push({sourceId: 'PRIVATE-ESTIMATE', sourceReference: 'PRIVATE-ESTIMATE', accountHolder: 'primary', taxYear: 2026, returnType: 'it1040', kind: 'estimated', date: '2026-04-15', amount: '1', appliedToThisReturnConfirmed: true, original: {...original, kind: 'estimated', date: '2026-04-15', amount: '1'}});}},
+  {label: 'prior credit', mutate: p => {paymentFacts(p).priorCreditCarryforward = {status: 'actual_credit', sourceReference: 'PRIVATE-PRIOR', electedAmount: '1', availableForThisReturn: '1', accountHolder: 'primary', accountSsn: p.input.taxpayer.primary.ssn, appliedToThisReturnConfirmed: true};}},
+  {label: 'balance election', mutate: p => {paymentFacts(p).balanceFacts.donations = '1';}},
+  {label: 'unconfirmed payment inventory', mutate: p => {Object.assign(paymentFacts(p), {allPaymentsIncludedConfirmed: false});}},
+  {label: 'unconfirmed income inventory', mutate: p => {p.sources.residencyFacts.allFederalSourcesIncludedConfirmed = false;}},
+  {label: 'stale payment federal snapshot', mutate: p => {paymentFacts(p).originalFederalSources = {...paymentFacts(p).originalFederalSources, wages: '0'};}},
+  {label: 'additional retained withholding', mutate: p => {Object.assign(p.input, {stateTaxWithheld: '0'});}},
+];
+it.each(rejectedBusinessPayments)('rejects actual business payment $label', ({mutate}) => {
+  const p = paidBusiness(); mutate(p); const before = JSON.stringify(p);
+  expect(() => run(p)).toThrow(); expect(JSON.stringify(p)).toBe(before);
+});
+
+const competingCredit = { residentCreditSources: ohioResidentCreditFixture().facts.residentCreditSources };
+const competingWages = { reciprocalWageSources: reciprocalOhioWageFixture().facts.reciprocalWageSources };
+it.each([
+  { label: 'resident credit', sources: competingCredit },
+  { label: 'reciprocal wages', sources: competingWages },
+  { label: 'both packets', sources: { ...competingCredit, ...competingWages } },
+])('rejects competing residency facts for a settled business draft: $label', ({sources}) => {
+  const p = paidBusiness('part_year_resident');
+  Object.assign(p.sources.residencyFacts, sources);
+  expect(() => run(p)).toThrow(/separate resident credit or reciprocal wage packet/);
+});
+
+it.each(['nonresident', 'part_year_resident'] as const)('admits exact500 but retains zero and above500 balances outside the payment method for %s', status => {
+  // Equal .266648 factors =>Ohio16648 after BID; trunc4(708522/725170)=.9770;
+  // round(21755*.9770)=21255, tax500. Equal .27 factors =>tax600.
+  const p = paidBusiness(status, 'limit');
+  balanceReceipt(p).amountAppliedToTax = '500'; balanceReceipt(p).original.amount = '500';
+  const v = run(p);
+  expect(v.incomeTax.toFixed()).toBe('500'); expect(v.amountDue?.toFixed()).toBe('500');
+  expect(v.actualBalancePayment?.actualBalancePaymentApplied.toFixed()).toBe('500');
+  expect(v.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');
+  for (const [factor, tax] of [['large', '600'], ['zero', '0']] as const) {
+    const other = paidBusiness(status, factor);
+    delete other.input.ohioPayments;
+    expect(run(other).incomeTax.toFixed()).toBe(tax);
+    const paid = paidBusiness(status, factor);
+    balanceReceipt(paid).amountAppliedToTax = tax; balanceReceipt(paid).original.amount = tax;
+    expect(() => run(paid)).toThrow(/positive|500/);
+  }
 });

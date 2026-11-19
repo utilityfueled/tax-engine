@@ -11,6 +11,8 @@ sources:
   - https://codes.ohio.gov/ohio-revised-code/section-5747.022
   - https://codes.ohio.gov/ohio-revised-code/section-5747.05
   - https://codes.ohio.gov/ohio-revised-code/section-5747.21
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.08
+  - https://codes.ohio.gov/ohio-revised-code/section-5747.09
   - https://codes.ohio.gov/ohio-revised-code/section-5747.71
   - https://www.irs.gov/irb/2025-45_IRB
   - https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf
@@ -31,9 +33,33 @@ lines:
     testRef: "tests/engine/state/oh-2026-business-draft.test.ts::allocates an actual PY personal deduction from its original domicile date"
   - line: "unknown-financials"
     description: "Explicitly incomplete financial settlement and protected gates"
-    formula: "Withholding, payments, school financials, underpayment, late interest, due and refund remain null. No final return, filing, native, full federal or form qualification."
+    formula: "Absent the separately admitted actual balance receipt, withholding, payments, school financials, underpayment, late interest, due and refund remain null. School financials stay null in both branches. No final return, filing, native, full federal or form qualification."
     testRef: "tests/engine/state/oh-2026-business-draft.test.ts::keeps every unimplemented financial field null, never zero"
   - line: "source-category-reconciliation"
     description: "Every actual source category must reconcile, not merely its offsetting total"
     formula: "The completed finite current C-only source review proves no other federal income categories. Pass expected categories to the existing NRC validator; opposing invented wages and capital loss cannot cancel into admissibility."
     testRef: "tests/engine/state/oh-2026-business-draft.test.ts::rejects opposing nonexistent federal source categories even when their total cancels"
+  - line: "actual-payment-admission"
+    description: "Current original IT1040 receipt and complete business-only payment inventory"
+    formula: "After every existing complete C-only federal, withholding, factor and residency admission, require confirmed no taxing-school-district residency throughout relevant periods. Bind Ohio payment originalFederalSources to the same current payment-free federal originals; reuse the verified2026 actual-payment validator for matching primary identity/year, original IT1040 balance receipt, actual timely payment and filing chronology, confirmed complete inventory, no estimated/extension/prior-credit payments, use tax, donations or carry elections. Unknown is never zero."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::settles a source-confirmed business balance for $status without changing return due"
+  - line: "actual-payment-settlement"
+    description: "Separate return balance due, actual settlement and outstanding balance"
+    formula: "Existing business-only inventory proves original/reportable withholding zero. Income tax is unchanged after NRC. Admit only 0<incomeTax<=500 and exact unrounded receipt amount=incomeTax through the shared helper. Return amountDue=incomeTax, actualBalancePaymentApplied=receipt amount, outstandingTaxBalance=0; prepayments, withholding, installment penalty, late-payment interest and refund=0. Payments means estimated/extension/prior-credit prepayments only; actual balance payment is separate. School tax remains null; no export or filing qualification. RC5747.09(A),(B),(C),5747.08(G)."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::settles a source-confirmed business balance for $status without changing return due"
+  - line: "actual-payment-rejections"
+    description: "Fail closed outside the finite timely small-balance method"
+    formula: "Reject unknown or actual school-district sources, wrong owner/year/return/kind, late or future receipt, expected/partial/overpayment/rounded-cent receipt, zero balance or balance above500, estimates, prior carry, balance elections, stale federal snapshots, unconfirmed inventories and added income/withholding. Do not infer installments, credits, refunds or settlement."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::rejects actual business payment $label"
+  - line: "actual-payment-source-exclusivity"
+    description: "A settled C-only draft excludes competing residency packets"
+    formula: "Reject actual-payment admission if a separate resident credit or reciprocal wage packet is supplied, even when the C-only numbers otherwise reconcile. Those packets require their own current source composition."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::rejects competing residency facts for a settled business draft: $label"
+  - line: "actual-payment-gates-and-privacy"
+    description: "Finite draft only, with original privacy and financial unknowns retained"
+    formula: "Keep calculationStatus incomplete, review pending and filingQualified false. No input mutation, raw source references, name, SSN or receipt confirmation in results; input/source changes bind sourceCommitment. Existing no-payment draft values and limitations remain unchanged."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::settles a source-confirmed business balance for $status without changing return due"
+  - line: "actual-payment-threshold"
+    description: "Inclusive500 statutory threshold and positive-balance restriction"
+    formula: "Independent equal .266648 property/sales factors give Ohio business16648 after BID, NRC ratio.9770 and credit21255 against21755 tax: exact500 admitted. Equal.27 gives600 and equal.25 gives0; both rejected by this payment branch while unchanged tax-only drafts remain available. NR and PY covered."
+    testRef: "tests/engine/state/oh-2026-business-draft.test.ts::admits exact500 but retains zero and above500 balances outside the payment method for %s"
