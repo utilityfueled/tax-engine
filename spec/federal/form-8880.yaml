@@ -84,13 +84,13 @@ lines:
     description: "Preserve contribution input presence through 2025 return parsing"
     formula: "For each applicable column, use the explicit Line 2 amount if supplied, including zero. Otherwise use the supported W-2 Box 12 contributions attributable to that person."
     irsRef: "2025 Form 8880 instructions for Line 2"
-    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::applies the parsed Form 8880 Line 2 Box 12 fallback independently for each column"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::applies the parsed Form 8880 Line 2 Box 12 fallback independently for each column when $label"
 
   - line: "2-code-g-source"
     description: "Require the eligible Line 2 total when a contributing W-2 reports Code G"
     formula: "For a column without an explicit eligible Line 2 total, hold the calculation if a W-2 supplying the fallback has nonzero Code G. With a confirmed eligible total, apply it directly, including zero."
     irsRef: "2025 Form 8880 Line 2 and 2025 Form W-2 Box 12 Code G employee instructions"
-    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::requires the confirmed Line 2 total for a 2025 W-2 with Code G"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::requires the confirmed Line 2 total for a 2025 W-2 with Code G amount %s"
 
   - line: "2-w2-source-year"
     description: "Apply the 2025 source-year requirement to W-2 fallback contributions"
@@ -148,7 +148,7 @@ lines:
       exclusions before confirming the final totals. The original Form 1099-R
       triggers confirmation without establishing the Line 4 amount.
     irsRef: "2025 Form 8880 Line 4, testing-period exclusions, and joint filing exception; 2025 Form 1099-R instructions Table 1, Code 1"
-    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::requires complete confirmed reductions for an original 2025 early employer-plan receipt"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::requires complete confirmed reductions for an original 2025 early employer-plan receipt with $label"
 
   - line: "5a"
     description: "Primary taxpayer contributions after recent-distribution reduction"
@@ -207,7 +207,7 @@ lines:
     description: "Apply the 2025 Form 8880 birth-date eligibility cutoff"
     formula: "January 1, 2008 qualifies for the age test. A later birth date fails the age test."
     irsRef: "2025 Form 8880 caution and Who Can Take This Credit instructions"
-    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::applies the January 1, 2008 birth cutoff on a parsed 2025 return"
+    testRef: "tests/engine/federal-savers-credit-2025-source.test.ts::applies the January 1, 2008 birth cutoff on a parsed 2025 return for %s"
 
   - line: "7"
     description: "Total eligible contributions"

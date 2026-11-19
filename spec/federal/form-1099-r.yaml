@@ -163,7 +163,7 @@ lines:
     description: "Match an explicitly dated Form 1099-R to the ordinary return year"
     formula: "When the ordinary caller supplies a return year, reject a statement that explicitly identifies a different year before routing its income or withholding. Existing legacy callers may supply an undated statement. A matching-year Code P statement contributes its Box 4 withholding while its prior-year taxable amount stays out of ordinary current-year income."
     irsRef: "2025 Form 1099-R instructions, Corrective Distributions and Table 1 Code P; 2025 Form 1040 instructions, Line 25b (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf)"
-    testRef: "tests/engine/forms/form-1099-r.test.ts::rejects an explicitly mismatched Form 1099-R statement year"
+    testRef: "tests/engine/forms/form-1099-r.test.ts::rejects an explicitly mismatched Form 1099-R statement year for $label"
 
   - line: "1"
     description: "IRA gross distributions reported on Form 1040 Line 4a"

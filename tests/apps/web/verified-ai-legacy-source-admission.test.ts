@@ -128,7 +128,7 @@ it('denies an invalid actual Box7 combination at the authenticated POST before d
 
 it.each([[2024,'7'],[2026,'7'],[2026,'P1']] as const)('denies an explicit mismatched retirement original %s at confirmed POST',async(originalYear,distributionCode)=>{
  const taxInput={...retirement(),form1099R:[{...retirement().form1099R[0],taxYear:originalYear,taxableAmount:'7000',distributionCode,iraSepSimple:false}]};
- const preview=calculateFederalTax(TaxYearInputSchema.parse(taxInput));expect(preview.agi.toFixed()).toBe(distributionCode==='P1'?'85000':'92000');
+ expect(()=>calculateFederalTax(TaxYearInputSchema.parse(taxInput))).toThrow('Form 1099-R source year must match the 2025 return');
  const actor={id:'synthetic-year-owner',label:'Synthetic',email:'year-fixture@example.test'};
  const workspace=createWorkspaceRecord('original-year-triage');workspace.returnSummary.targetTaxYear=2025;
  const providerRequest=buildProviderWorkspaceRequest(workspace,{task:'workspace-help',question:'Explain taxable income.',now:'2026-11-14T12:00:00Z'});

@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: full-suite historical test wiring
+
+The full `c1fe19bd` test run found five failures. Two checks require exact parameterized test names in the Form 8880 and Form 1099-R specs. Three confirmed hosted-route tests still expected the old federal preview to accept a stale original. The corrected tests assert early federal rejection and keep the same route response, cache, accounting and provider-call assertions. All 1,144 focused tests, the whole spec and inventory checks, and the browser source audit passed. The successor has a separate full run.
+
 ## November 19: local encrypted recovery and current CI
 
 The production-mode managed browser runner passed both current `151ad6f9` local recovery cases at desktop and mobile widths. It used the registered public IRS W-2 sample and fictional return data through upload, review, encrypted backup, deletion, restore, reopening and final deletion. The first archive omitted the untracked official sample directory and stopped before building. The completed run restored the 15 registered samples, passed both cases without retries or skips, and recorded successful runtime cleanup. Summary SHA-256 `50ed521edb37ac3746297c54c0064f1f4e5186aa140805018e056c76e6dc0b5f`. This is managed local evidence for that revision. Current `c1fe19bd` launched [Web 44468761088](https://github.com/utilityfueled/tax-engine/actions/runs/44468761088), [CI 44468761125](https://github.com/utilityfueled/tax-engine/actions/runs/44468761125) and [Docker 44468761091](https://github.com/utilityfueled/tax-engine/actions/runs/44468761091).
