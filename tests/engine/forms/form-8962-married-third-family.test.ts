@@ -31,6 +31,19 @@ it('reconciles original monthly advance credit once without a premium tax credit
   expect(result.excessAPTCRepayment.toFixed()).toBe('408');
   expect(JSON.stringify(input)).toBe(before);
 });
+it('holds mismatched and voided Worksheet E statement status in the federal return', () => {
+  const input = TaxYearInputSchema.parse(marriedThirdFamilyFixture());
+  const source = present(input.form1095A[0]);
+  const original = present(present(input.form8962?.sharedPolicyAllocations?.policies?.[0]).original);
+  source.statementStatus = 'corrected';
+  expect(() => calculateFederalTax(input)).toThrow(/snapshot/i);
+  original.statementStatus = 'corrected';
+  expect(present(calculateFederalTax(input).form8962).advancePTCTotal.toFixed()).toBe('408');
+  original.statementStatus = 'voided';
+  expect(() => calculateFederalTax(input)).toThrow(/voided/i);
+  source.statementStatus = 'voided';
+  expect(() => calculateForm8962SharedPolicy(input)).toThrow(/voided/i);
+});
 it('rejects incomplete or conflicting original family and agreement sources', () => {
   const cases: Array<(input: ReturnType<typeof marriedThirdFamilyFixture>) => void> = [
     input => { input.form8962.sharedPolicyAllocations.marriedThirdFamily.sourceFactsConfirmed = false; },

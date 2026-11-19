@@ -35,6 +35,14 @@ it("collects actual policy and coverage answers without inferred amounts", async
     for (const [label,value] of [["Month","1"],["Eligible enrollment premium","500"],["Corrected household SLCSP premium","550.25"],["Reconciled advance credit","0"],["Coverage is eligible for the credit","false"],["Income-based special enrollment applies","false"],["QSEHRA is affordable","false"],["QSEHRA permitted benefit","0"]]) await change(`Coverage month 1: ${label}`,value!);
     await change("Marketplace sources checked after the last edit", "true");
     expect(latest?.sourceFactsConfirmed).toBe(true); expect(latest?.policies[0]?.monthlyPremiums[0]?.enrolleePremium).toBe("9007199254740993.01");
+    expect(latest?.policies[0]?.statementStatus).toBeUndefined();
+    await change("Policy 1: Form 1095-A boxes", "corrected");
+    expect(latest?.policies[0]?.statementStatus).toBe("corrected");
+    expect(latest?.sourceFactsConfirmed).toBeNull();
+    await change("Policy 1: Form 1095-A boxes", "voided");
+    expect(latest?.policies[0]?.statementStatus).toBe("voided");
+    await change("Policy 1: Form 1095-A boxes", "");
+    expect(latest?.policies[0]?.statementStatus).toBeUndefined();
     expect(latest?.monthlyReconciliation[0]).toMatchObject({ coverageEligible: false, advancePremiumTaxCredit: "0", qsehraMonthlyPermittedBenefit: "0" });
     await change("Policy 1 month 1: Original advance credit", ""); expect(latest?.sourceFactsConfirmed).toBeNull(); expect(latest?.policies[0]?.monthlyPremiums[0]?.advancePremiumTaxCredit).toBe("");
     await change("Coverage month 1: Coverage is eligible for the credit", ""); expect(latest?.monthlyReconciliation[0]?.coverageEligible).toBeNull();

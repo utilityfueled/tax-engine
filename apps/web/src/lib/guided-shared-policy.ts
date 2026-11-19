@@ -1,5 +1,6 @@
 import { Form1095ASchema, Form8962Schema, type Form7206Input } from "@/models/inputs";
 import { calculateForm8962SharedPolicy, type Form8962AllocationInput } from "@/engine/forms/form-8962-shared-policy";
+import { assertMarketplaceStatementUsable } from "@/models/form-8962-shared-policy";
 import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import type { MarketplacePolicyData, PremiumTaxCreditData, MarketplaceCoverageMonthData } from "./guided-premium-tax-credit-facts";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -174,6 +175,7 @@ function person(value: { firstName?: string; lastName?: string; ssn?: string } |
 const statuses = { single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately", hoh: "head_of_household", qss: "qualifying_surviving_spouse" } as const;
 
 export function normalizeMarketplacePolicy(policy: MarketplacePolicyData, taxYear: number, shared = false) {
+  assertMarketplaceStatementUsable(policy.statementStatus);
   const year = whole(policy.taxYear, "original statement year");
   if (year !== taxYear) throw new Error("An original Marketplace statement has a different tax year.");
   const covered = policy.coveredIndividuals?.map(entry => {
@@ -183,6 +185,7 @@ export function normalizeMarketplacePolicy(policy: MarketplacePolicyData, taxYea
   });
   if (shared && !covered?.length) throw new Error("Enter every original covered person for the shared policy.");
   return Form1095ASchema.parse({ taxYear: year, marketplace: text(policy.marketplace, "Marketplace"), policyNumber: text(policy.policyNumber, "policy number"),
+    statementStatus: policy.statementStatus,
     recipientName: shared ? text(policy.recipientName, "original recipient name") : policy.recipientName,
     recipientSsn: shared ? identity(policy.recipientSsn, "original recipient SSN") : policy.recipientSsn,
     coveredIndividuals: covered,

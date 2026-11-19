@@ -183,6 +183,20 @@
       "latestIntakeCombinedVerification": { "source": "e0cc9467", "unitAndCoveragePassedEach": 29205, "skipsEach": 75, "failuresEach": 0, "branchCoverage": 87.88, "branchGate": 85, "staticChecksPassed": 9, "managedBrowser": { "passed": 650, "failed": 0, "plannedSkips": 5, "windows": 8, "workers": 2, "retries": 0, "normalCleanup": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356" }, "ciRun": 44485088788, "dockerRun": 44485088895, "webRun": 44485088928 },
       "latestCurrentProtectedWorkspaceLifecycle": { "source": "e0cc9467", "target": "protected preview", "billingMode": "test", "storageMode": "hosted-postgres", "trackedEntries": 6477, "allNineAssertionsPassed": true, "priorRowsPreserved": true, "fixtureAbsentAfterCleanup": true, "postSignOutSessionNull": true, "productionAliasAssigned": false, "archiveSha256": "59ddc00c4b3493b73ce4f90e0e943424b7da4bd42e8be9f75f8175db010d4a9b" },
       "latestKnownRemoteOrdinaryCi": { "source": "6e21266e", "run": 44492030631, "passedJobs": 6, "failedJobs": 0 },
+      "nov19MarketplaceStatementStatus": {
+        "parent": "87f89faf",
+        "sourceManifestSha256": "35cd3691878f0323a36c7bb6c60270e399edc4fda6b331bc00b9202fb3afd801",
+        "coreExitReceiptSha256": "ab83a6e7be344378d126a0fa6df6071481d6b3aa421a514698795ade5cbbf16d",
+        "unitTestsPassed": 29295,
+        "coverageTestsPassed": 29295,
+        "branchesPercent": 88.27,
+        "branchGatePercent": 85,
+        "postgresVersion": "16.16",
+        "staticChecksPassed": 9,
+        "independentEngineeringTestsPassed": 67,
+        "localFocusedBrowserCasesPassed": 8,
+        "open": ["Full remote Web", "Qualified independent tax review"]
+      },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",
         "priorSource": "e0cc9467",

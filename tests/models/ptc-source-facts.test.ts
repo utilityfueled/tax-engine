@@ -32,4 +32,13 @@ describe("Premium tax credit source facts",()=>{
   expect(Form1095ASchema.safeParse({...statement,monthlyPremiums:[month,month]}).success).toBe(false);
   expect(Form1095ASchema.safeParse({...statement,monthlyPremiums:[]}).success).toBe(false);
  });
+ it("preserves actual statement status and leaves omitted status unknown", () => {
+  const statement = {taxYear: 2026, marketplace: "Actual marketplace", policyNumber: "POLICY1", monthlyPremiums: [month]};
+  for (const statementStatus of ["original", "corrected", "voided"]) {
+   expect(Form1095ASchema.parse({...statement, statementStatus})).toMatchObject({statementStatus, monthlyPremiums: [{advancePremiumTaxCredit: "300"}]});
+  }
+  expect(Form1095ASchema.parse(statement).statementStatus).toBeUndefined();
+  expect(Form1095ASchema.parse({...statement, statementStatus: "voided", monthlyPremiums: []})).toMatchObject({sourceFactsComplete: false, statementStatus: "voided", monthlyPremiums: []});
+  expect(Form1095ASchema.safeParse({...statement, statementStatus: "unrecognized"}).success).toBe(false);
+ });
 });

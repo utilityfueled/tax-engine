@@ -49,3 +49,24 @@ lines:
       statements replace originals and are not double counted as another policy.
     irsRef: "Form 1095-A Parts I and III; Form 8962 correct and voided statement instructions"
     testRef: "tests/models/ptc-source-facts.test.ts::derives statement completeness before defaults and rejects duplicate source months"
+  - line: "statement-status"
+    description: "Preserve the actual VOID or CORRECTED designation of Form 1095-A"
+    formula: >-
+      Record original (neither box checked), corrected, or voided when confirmed
+      from the statement. Keep an unreported designation unknown, including in
+      existing records. Retain the amounts for source review and allow a void
+      record with no monthly amounts. A form marked void
+      cannot supply premiums, benchmark, or advance credits. Resolve the void
+      in the selected statement set by removing both that statement and its
+      superseded original. A corrected statement supplies its own amounts after
+      the superseded original is removed. Duplicate policy identities require
+      reconciliation before computation. Compare the Marketplace identifier
+      case-insensitively after trimming and preserve the case of the assigned
+      policy number.
+    irsRef: "2026 IRS Form 1095-A recipient instructions, VOID and CORRECTED boxes, https://www.irs.gov/pub/irs-pdf/f1095a.pdf"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::holds voided statements and uses only the selected corrected statement"
+  - line: "statement-status-snapshots"
+    description: "Bind statement status across Marketplace source worksheets"
+    formula: "Copied originals for shared allocation (including Worksheet E), alternative marriage calculation, and coverage-family coordination must match the selected statement status. A voided designation in either record blocks the method."
+    irsRef: "2026 Form 1095-A recipient instructions; Form 8962 Part IV and Part V; Publication 974"
+    testRef: "tests/engine/forms/form-8962-shared-policy.test.ts::binds corrected statement status to the shared-policy original"

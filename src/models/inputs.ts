@@ -43,7 +43,7 @@ import { Form982AttributeSourcesSchema } from "@/models/cod-attribute-sources.js
 import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
-import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
+import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema, MarketplaceStatementStatusSchema } from "@/models/form-8962-shared-policy.js";
 import { MarketplaceCoverageFamilySchema } from "@/models/marketplace-coverage-family.js";
 import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
 import { K1CharitableReturnSourcesSchema } from "@/models/k1-charitable-return-sources.js";
@@ -2672,6 +2672,7 @@ export const Form1095ASchema = z.preprocess(value => {
 }, z.object({
   sourceFactsComplete: z.boolean().optional(),
   taxYear: z.number().int().optional(),
+  statementStatus: MarketplaceStatementStatusSchema.optional(),
   marketplace: z.string(),
   policyNumber: z.string(),
   recipientName: z.string().optional(),
@@ -2684,7 +2685,10 @@ export const Form1095ASchema = z.preprocess(value => {
     // Only a source-backed method with separate actual benchmarks may use it.
     slcsp: nonnegativePremium.nullable(),
     advancePremiumTaxCredit: nonnegativePremium.optional().default("0"),
-  })).min(1).refine(uniqueCoverageMonths, "Duplicate1095A source months must be reconciled"),
+  })).refine(uniqueCoverageMonths, "Duplicate1095A source months must be reconciled"),
+}).refine(statement => statement.statementStatus === "voided" || statement.monthlyPremiums.length > 0, {
+  path: ["monthlyPremiums"],
+  message: "Form 1095-A requires at least one actual source month",
 }));
 
 export const Form8962Schema = z.object({

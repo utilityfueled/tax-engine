@@ -1,6 +1,6 @@
 /** Spec: spec/federal/form-8962-married-third-family.yaml. Finite Pub974 WorksheetE originals. */
 import Decimal from 'decimal.js';
-import { Form8962MarriedThirdFamilySchema, MarketplaceOriginalPolicySchema } from '@/models/form-8962-shared-policy.js';
+import { assertMarketplaceStatementUsable, Form8962MarriedThirdFamilySchema, MarketplaceOriginalPolicySchema } from '@/models/form-8962-shared-policy.js';
 import type { Form8962AllocationInput, Form8962SharedPolicyResult } from './form-8962-shared-policy.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
@@ -90,6 +90,7 @@ export function calculateForm8962MarriedThirdFamily(input: Form8962AllocationInp
   'no competing two-family, output-share or benchmark method');
   const normalize = (original: typeof policy.original) => {
     const raw = MarketplaceOriginalPolicySchema.parse(original);
+    assertMarketplaceStatementUsable(raw.statementStatus);
     requireFact(raw.taxYear === year && raw.coveredIndividuals?.length && raw.monthlyPremiums?.length, 'complete original policy year and rows');
     const ids = new Set<string>(), months = new Set<number>();
     const people = raw.coveredIndividuals.map(person => {
@@ -103,7 +104,7 @@ export function calculateForm8962MarriedThirdFamily(input: Form8962AllocationInp
     }).sort((a, b) => a.month - b.month);
     const coveredMonths = new Set(people.flatMap(person => Array.from({ length: person.last - person.first + 1 }, (_, index) => person.first + index)));
     requireFact(rows.length === coveredMonths.size && rows.every(row => coveredMonths.has(row.month)), 'every actual covered month on the original policy');
-    return { year, marketplace: text(raw.marketplace, 'Marketplace'), policyNumber: text(raw.policyNumber, 'policy number'),
+    return { year, statementStatus: raw.statementStatus, marketplace: text(raw.marketplace, 'Marketplace'), policyNumber: text(raw.policyNumber, 'policy number'),
       recipientId: ssn(raw.recipientSsn), recipientName: name(raw.recipientName), people, rows };
   };
   const original = normalize(actual);

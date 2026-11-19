@@ -2,6 +2,7 @@
 import Decimal from 'decimal.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
 import type { TaxYearInput } from '@/models/inputs.js';
+import { assertMarketplaceStatementUsable, marketplacePolicyIdentity } from '@/models/form-8962-shared-policy.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
@@ -41,6 +42,7 @@ function money(value: string | null | undefined): Decimal {
   return amount;
 }
 function original(source: Original | TaxYearInput['form1095A'][number], year: number, shared: boolean) {
+  assertMarketplaceStatementUsable(source.statementStatus);
   if (source.taxYear !== year) throw new Error('Marriage original policy year does not reconcile');
   if (!source.coveredIndividuals?.length || !source.monthlyPremiums?.length) throw new Error('Marriage requires all original covered people and months');
   const seenPeople = new Set<string>(), seenMonths = new Set<number>();
@@ -59,7 +61,7 @@ function original(source: Original | TaxYearInput['form1095A'][number], year: nu
   for (const person of people) for (let m = person.first; m <= person.last; m++) {
     if (!seenMonths.has(m)) throw new Error('Marriage original covered person has an unknown source month');
   }
-  return {taxYear: year, marketplace: text(source.marketplace, 'Marketplace'), policyNumber: text(source.policyNumber, 'policy number'),
+  return {taxYear: year, statementStatus: source.statementStatus, marketplace: text(source.marketplace, 'Marketplace'), policyNumber: text(source.policyNumber, 'policy number'),
     recipientName: name(source.recipientName), recipientId: identity(source.recipientSsn), people, months};
 }
 
@@ -131,7 +133,7 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
     seenPolicies.add(index); text(row.sourceReference, 'original policy reference');
     const source = original(actual,year,Boolean(allocation));
     if (JSON.stringify(source) !== JSON.stringify(original(row.original,year,Boolean(allocation)))) throw new Error('Marriage original policy snapshot is stale or conflicting');
-    const policyKey = `${source.marketplace}\u0000${source.policyNumber}`;
+    const policyKey = marketplacePolicyIdentity(source.marketplace, source.policyNumber);
     if (policyIdentities.has(policyKey)) throw new Error('Marriage duplicate actual policy statements require reconciliation');
     policyIdentities.add(policyKey);
     const family = coverageFamilies?.find(plan => plan.policyIndexes.includes(index));

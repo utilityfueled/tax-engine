@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MarketplaceCoveredIndividualSchema } from './form-8962-shared-policy.js';
+import { MarketplaceOriginalPolicySchema } from './form-8962-shared-policy.js';
 
 // Original facts have no defaults. Missing identity, consent or money is unknown.
 const amount = z.string().regex(/^-?\d+(?:\.\d+)?$/).optional();
@@ -19,12 +19,7 @@ export const Form8962MarriageSourcesSchema = z.object({
   policies: z.array(z.object({
     sourceId: z.string().optional(), sourceReference: z.string().optional(),
     fullMonthCoverageConfirmed: z.boolean().optional(), allCoveredIndividualsEligibleForPtcConfirmed: z.boolean().optional(),
-    original: z.object({
-      taxYear: z.number().int().optional(), marketplace: z.string().optional(), policyNumber: z.string().optional(),
-      recipientName: z.string().optional(), recipientSsn: z.string().optional(),
-      coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
-      monthlyPremiums: z.array(z.object({month: z.number().int().optional(), enrolleePremium: amount, slcsp: amount.nullable(), advancePremiumTaxCredit: amount})).optional(),
-    }).optional(),
+    original: MarketplaceOriginalPolicySchema.optional(),
   })).optional(),
   benchmarks: z.array(z.object({
     owner: owner.optional(), month: z.number().int().optional(), slcsp: amount,

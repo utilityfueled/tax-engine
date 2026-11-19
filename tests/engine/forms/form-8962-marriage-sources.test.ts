@@ -41,6 +41,17 @@ it('rejects stale original policy identities amounts and coverage periods', () =
     (input:Fixture)=>{input.form1095A[0].recipientSsn='999-88-7777';},
   ]) { const input=marriageSourcesFixture();mutate(input);expect(()=>calculateForm8962MarriageSources(input)).toThrow(); }
 });
+it('uses only the matching nonvoided alternative marriage source', () => {
+  const input = marriageSourcesFixture(2026);
+  const expected = calculateForm8962MarriageSources(input);
+  const original = known(sources(input).policies[0].original);
+  input.form1095A[0].statementStatus = 'corrected';
+  expect(() => calculateForm8962MarriageSources(input)).toThrow(/original|snapshot/i);
+  original.statementStatus = 'corrected';
+  expect(calculateForm8962MarriageSources(input)).toEqual(expected);
+  original.statementStatus = 'voided';
+  expect(() => calculateForm8962MarriageSources(input)).toThrow(/voided/i);
+});
 it('separates alternative family membership from the actual policy recipient', () => {
   const input=marriageSourcesFixture(),packet=sources(input).packet;
   known(packet.dependents)[0].qualifiesForPrimary=true;known(packet.dependents)[0].alternativeFamilyOwner='primary';

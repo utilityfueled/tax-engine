@@ -6,6 +6,7 @@ import { AuditTrail } from '@/utils/audit.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
 import { calculateForm8962MarriedThirdFamily } from './form-8962-married-third-family.js';
 import { d, sum } from '@/utils/decimal.js';
+import { assertMarketplaceStatementUsable, marketplacePolicyIdentity } from '@/models/form-8962-shared-policy.js';
 
 type HouseholdPerson = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 /** Consumed actual source fields only; guided validation needs no invented return context. */
@@ -61,6 +62,7 @@ function money(value: string | null | undefined): Decimal {
   return amount;
 }
 function normalizedOriginal(original: Original, year: number) {
+  assertMarketplaceStatementUsable(original.statementStatus);
   if (original.taxYear !== year) throw new Error('Form8962 allocation original source year does not match');
   const people = original.coveredIndividuals;
   if (!people?.length) throw new Error('Form8962 allocation requires every original covered person');
@@ -84,7 +86,7 @@ function normalizedOriginal(original: Original, year: number) {
   for (const person of covered) for (let m = person.firstMonth; m <= person.lastMonth; m++) {
     if (!seenMonths.has(m)) throw new Error('Form8962 allocation covered person has a missing source month');
   }
-  return { taxYear: year, marketplace: text(original.marketplace, 'Marketplace'), policyNumber: text(original.policyNumber, 'policy number'),
+  return { taxYear: year, statementStatus: original.statementStatus, marketplace: text(original.marketplace, 'Marketplace'), policyNumber: text(original.policyNumber, 'policy number'),
     recipientName: name(original.recipientName, 'original recipient name'), recipientSsn: ssn(original.recipientSsn, 'original recipient SSN'),
     coveredIndividuals: covered, monthlyPremiums: rows };
 }
@@ -338,7 +340,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     const original = normalizedOriginal(source, year), snapshot = normalizedOriginal(policy.original, year);
     if (JSON.stringify(original) !== JSON.stringify(snapshot)) throw new Error('Form8962 allocation snapshot does not reconcile with the actual original policy');
     originals.set(index, original);
-    const identity = JSON.stringify([original.marketplace, original.policyNumber]);
+    const identity = marketplacePolicyIdentity(original.marketplace, original.policyNumber);
     if (seenIdentities.has(identity)) throw new Error('Form8962 allocation policy identity is duplicated');
     seenIdentities.add(identity);
     validated.push({ policy, index, original });

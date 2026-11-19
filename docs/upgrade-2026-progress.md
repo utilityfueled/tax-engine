@@ -1,10 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Form 1095-A correction and void handling
+
+The Marketplace guide records the actual statement designation and revokes source confirmation when the designation changes. The canonical contract preserves an unreported designation as unknown. A selected voided form blocks calculation until that form and its superseded original are removed. A corrected form contributes its own amounts after the superseded original is removed. The duplicate check trims identifiers and compares Marketplace names without regard to capitalization, while preserving policy-number case. Shared policy, Worksheet E, alternative marriage, and coverage-family copies must match the selected statement designation. [2026 Form 1095-A](https://www.irs.gov/pub/irs-pdf/f1095a.pdf), [2025 Form 1095-A](https://www.irs.gov/pub/irs-prior/f1095a--2025.pdf).
+
+The initial tests reproduced missing status data, voided statements reaching calculation, stale source copies, and case-only duplicates. Independent engineering review found that a case-only duplicate reported $825 on Form 8962 line 25 when the corrected statement alone reports $425. A voided Worksheet E copy still produced $408. The corrected package passed the independent 67-test cohort. A matching Worksheet E replacement and an existing unknown-status control each produce $408. The stale and voided copies block both the direct and federal routes.
+
+All nine static checks passed, including the engine and web builds and 9,623 spec references. The browser source audit passed. Eight existing Marketplace browser cases passed on the managed production build after the exact official sample-document folder was restored to the test snapshot. The earlier browser attempt stopped at source admission while that folder was absent.
+
+The clean unit and coverage runs each passed 29,295 tests in 2,145 suites with PostgreSQL 16.16. V8 reported 88.27% branch coverage against the unchanged 85% gate. The earlier run used PostgreSQL 16.14 and failed four version-specific checks in each lane. Its unit run also hit an existing passenger-source UI timeout. The successful rerun used the required server version and the CI worker counts. The suites used the same 23-file source manifest `35cd3691878f0323a36c7bb6c60270e399edc4fda6b331bc00b9202fb3afd801`. Full remote Web and professional tax review remain open.
+
 ## November 19 current charitable gifts require the actual recipient
 
 The shared federal charitable-source check now requests the organization name before using a positive gift with confirmed qualification. Empty or whitespace-only names hold the itemized deduction for 2025 and 2026 and the 2026 nonitemizer deduction. The guard preserves confirmed zero, known-ineligible and unknown-qualification records as well as the original name when supplied. The spec records the underlying substantiation requirements. [IRC §170](https://uscode.house.gov/us/usc/t26/s170/), [IRS Publication 526](https://www.irs.gov/publications/p526).
 
-All six named-recipient regressions failed before the guard and passed afterward. An independent repeat passed 103 tests across eight suites. The spec validator found 9,623 valid references. Inventory, typecheck and scoped lint passed. Browser audit pins bind the changed engine file while preserving the test IDs, deadlines and skip decisions.
+All six named-recipient regressions failed before the guard and passed afterward. An independent repeat passed 103 tests across eight suites. The clean revision's spec validator found 9,620 valid references. Inventory, typecheck and scoped lint passed. Browser audit pins bind the changed engine file while preserving the test IDs, deadlines and skip decisions.
 
 Exact `6e21266e` then passed all 29,286 tests in both the unit and coverage suites with a disposable PostgreSQL 16.16 fixture. Branch coverage was 88.26% against the 85% gate. The nine static checks and normal test database stop passed. The first run's 32 failures per suite came from its disposable database URL and shell prerequisites. A separate rerun corrected both harness settings and kept the original tests and negative logs.
 

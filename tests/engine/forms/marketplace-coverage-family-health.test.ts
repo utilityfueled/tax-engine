@@ -22,6 +22,17 @@ describe('actual coverage-family health premium sources', () => {
       (f: ReturnType<typeof coverageFamilyHealthInput>) => { f.input.taxpayer.spouse!.ssn = '222-33-4444'; },
     ]) { const fixture = coverageFamilyHealthInput(); change(fixture); expect(() => calculateMarketplaceCoverageFamilyHealth(fixture.input)).toThrow(); }
   });
+  it('uses only the matching nonvoided coverage-family statement', () => {
+    const { input, coverageFamilySources } = coverageFamilyHealthInput();
+    const expected = calculateMarketplaceCoverageFamilyHealth(input);
+    const original = coverageFamilySources.policies[0].original;
+    input.form1095A[0].statementStatus = 'corrected';
+    expect(() => calculateMarketplaceCoverageFamilyHealth(input)).toThrow(/stale|contradictory/i);
+    original.statementStatus = 'corrected';
+    expect(calculateMarketplaceCoverageFamilyHealth(input)).toEqual(expected);
+    original.statementStatus = 'voided';
+    expect(() => calculateMarketplaceCoverageFamilyHealth(input)).toThrow(/voided/i);
+  });
   it('keeps known-zero noncoverage advances distinct from unknown and positive advances', () => {
     const missing = coverageFamilyHealthInput(); delete missing.input.form7206!.plans![0].payments![0].personAmounts![1].advancePremiumTaxCredit;
     expect(() => calculateMarketplaceCoverageFamilyHealth(missing.input)).toThrow(/advance|unknown/i);

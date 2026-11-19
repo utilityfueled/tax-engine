@@ -2,6 +2,7 @@
  * Spec: spec/federal/marketplace-coverage-family-health.yaml. */
 import type Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
+import { assertMarketplaceStatementUsable } from '@/models/form-8962-shared-policy.js';
 import { d, sum } from '@/utils/decimal.js';
 import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { calculateMarketplaceOutsideCashSources, type MarketplaceOutsideCashPayment } from './marketplace-outside-cash-sources.js';
@@ -43,6 +44,7 @@ function paymentDate(value: string | undefined, year: number): void {
 }
 type Original = NonNullable<NonNullable<NonNullable<TaxYearInput['form7206']>['plans']>[number]['coverageFamilySources']>['policies'];
 function original(value: NonNullable<Original>[number]['original'], year: number) {
+  assertMarketplaceStatementUsable(value?.statementStatus);
   if (!value || value.taxYear !== year || !value.coveredIndividuals?.length || !value.monthlyPremiums?.length) throw new Error('Coverage-family original policy sources are incomplete or have a conflicting year.');
   const people = value.coveredIndividuals.map(row => ({ name: name(row.name), ssn: ssn(row.ssn), firstMonth: month(row.firstMonth), lastMonth: month(row.lastMonth) })).sort((a,b) => a.ssn.localeCompare(b.ssn));
   const months = value.monthlyPremiums.map(row => ({ month: month(row.month), enrolleePremium: amount(row.enrolleePremium).toFixed(),
@@ -50,7 +52,7 @@ function original(value: NonNullable<Original>[number]['original'], year: number
   if (new Set(people.map(row => row.ssn)).size !== people.length || new Set(months.map(row => row.month)).size !== months.length
     || people.some(row => row.firstMonth > row.lastMonth)) throw new Error('Coverage-family original policy has duplicated or contradictory people or months.');
   for (const person of people) for (let m = person.firstMonth; m <= person.lastMonth; m++) if (!months.some(row => row.month === m)) throw new Error('Coverage-family original policy omits a covered month.');
-  return { taxYear: year, marketplace: text(value.marketplace, 'Marketplace'), policyNumber: text(value.policyNumber, 'policy number'),
+  return { taxYear: year, statementStatus: value.statementStatus, marketplace: text(value.marketplace, 'Marketplace'), policyNumber: text(value.policyNumber, 'policy number'),
     recipientName: name(value.recipientName), recipientSsn: ssn(value.recipientSsn), coveredIndividuals: people, monthlyPremiums: months };
 }
 /** A completed other return is source evidence, not a current-return credit override.

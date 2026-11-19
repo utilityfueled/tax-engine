@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus } from "@/models/constants.js";
+import { assertMarketplaceStatementUsable, marketplacePolicyIdentity } from "@/models/form-8962-shared-policy.js";
 import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateForm8962SharedPolicy, type Form8962AllocationInput, type Form8962SharedPolicyResult } from "./form-8962-shared-policy.js";
@@ -105,6 +106,7 @@ interface Month {
 export function calculateForm8962(input: Form8962Input): Form8962Result {
   const year = input.taxYear ?? 2025;
   if (year !== 2025 && year !== 2026) throw new Error("Form 8962 supports tax year 2025 or 2026 only");
+  for (const statement of input.form1095A) assertMarketplaceStatementUsable(statement.statementStatus);
   const facts = input.facts;
   if (year === 2026 && !facts) throw new Error("Form 8962 2026 requires actual household and monthly coverage facts");
   const verified = facts !== undefined;
@@ -153,7 +155,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
     const source = form as typeof form & { taxYear?: number; sourceFactsComplete?: boolean };
     if (verified && (source.sourceFactsComplete !== true || !form.marketplace.trim() || !form.policyNumber.trim())) throw new Error("Form 8962 original source statement facts are incomplete");
     if (verified && source.taxYear !== year) throw new Error("Form 8962 source statement tax year does not match");
-    const identity = JSON.stringify([form.marketplace.trim(), form.policyNumber.trim()]);
+    const identity = marketplacePolicyIdentity(form.marketplace, form.policyNumber);
     if (policyIds.has(identity)) throw new Error("Form 8962 duplicate policy statement; replace corrected statements instead of adding them");
     policyIds.add(identity);
     const seen = new Set<number>();

@@ -31,6 +31,33 @@ function first<T>(items: readonly T[]): T {
 const value = (result: ReturnType<typeof calculateForm8962>, line: string) => result.lines.find(entry => entry.line === line)?.value.toString();
 
 describe("Form 8962 2026 source-backed reconciliation", () => {
+  it("holds voided statements and uses only the selected corrected statement", () => {
+    const original = fixture({ months: 1 });
+    const corrected = fixture({ months: 1, aptc: "425" });
+    const statement = first(corrected.form1095A);
+    expect(() => calculateForm8962({ ...corrected, form1095A: [{ ...statement, statementStatus: "voided" }] })).toThrow(/voided/i);
+    expect(() => calculateForm8962({
+      ...corrected,
+      form1095A: [{ ...first(original.form1095A), statementStatus: "original" }, { ...statement, statementStatus: "corrected" }],
+    })).toThrow(/duplicate policy/i);
+    const result = calculateForm8962({ ...corrected, form1095A: [{ ...statement, statementStatus: "corrected" }] });
+    expect(value(result, "25")).toBe("425");
+    expect(result.advancePTCTotal.eq("425")).toBe(true);
+  });
+
+  it("rejects a superseded statement when only the Marketplace name case differs", () => {
+    const original = fixture({ months: 1 });
+    const corrected = fixture({ months: 1, aptc: "425" });
+    const combined = fixture({ months: 1, premium: "1200", aptc: "825" });
+    combined.form1095A = [
+      { ...first(original.form1095A), statementStatus: "original" },
+      { ...first(corrected.form1095A), marketplace: " FEDERAL MARKETPLACE ", statementStatus: "corrected" },
+    ];
+    expect(() => calculateForm8962(combined)).toThrow(/duplicate policy/i);
+    combined.form1095A[1].policyNumber = "source-1";
+    expect(calculateForm8962(combined).advancePTCTotal.eq("825")).toBe(true);
+  });
+
   it("uses actual household income and regional prior-year poverty guidelines", () => {
     const regional = [ ["contiguous", "21150"], ["alaska", "26430"], ["hawaii", "24320"] ] as const;
     for (const [fplRegion, poverty] of regional) {

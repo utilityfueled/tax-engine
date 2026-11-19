@@ -37,6 +37,22 @@ it("preserves original policy amounts and rejects unknown or duplicate source fa
   expect(input(huge).form1095A?.[0]?.monthlyPremiums[0]?.enrolleePremium).toBe("9007199254740993.01");
   const empty = { ...emptyPremiumTaxCreditFacts }; expect(() => input(empty)).toThrow();
 });
+it("carries selected statement status and blocks a voided policy", () => {
+  const data = actualPremiumTaxCredit();
+  expect(input(data).form1095A?.[0]?.statementStatus).toBeUndefined();
+  data.policies[0]!.statementStatus = "corrected";
+  const selected = input(data).form1095A?.[0];
+  expect(selected?.statementStatus).toBe("corrected");
+  expect(selected?.monthlyPremiums[0]?.advancePremiumTaxCredit).toBe("300");
+  data.policies[0]!.statementStatus = "voided";
+  expect(() => input(data)).toThrow(/voided.*superseded/i);
+});
+it("recognizes a duplicated corrected policy despite Marketplace capitalization", () => {
+  const data = actualPremiumTaxCredit();
+  data.policies.push({ ...structuredClone(data.policies[0]!), marketplace: " ACTUAL MARKETPLACE ", statementStatus: "corrected" });
+  data.monthlyReconciliation = data.monthlyReconciliation.map(row => ({ ...row, enrolleePremium: "1000", advancePremiumTaxCredit: "600" }));
+  expect(() => input(data)).toThrow(/duplicate Marketplace policy/i);
+});
 it("reconciles monthly coverage without summing policy benchmarks or inferring eligibility", () => {
   const data = actualPremiumTaxCredit();
   data.policies.push({ taxYear: "2025", marketplace: "Other Marketplace", policyNumber: "second", monthlyPremiums: [{ month: "1", enrolleePremium: "100", slcsp: "900", advancePremiumTaxCredit: "0" }] });

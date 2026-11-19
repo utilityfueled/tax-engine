@@ -2,12 +2,23 @@ import { z } from 'zod';
 
 // Source fields have no defaults: a blank original or absent agreement remains unknown.
 const amount = z.string().regex(/^-?\d+(?:\.\d+)?$/).optional();
+export const MarketplaceStatementStatusSchema = z.enum(['original', 'corrected', 'voided']);
+
+export function assertMarketplaceStatementUsable(status: z.infer<typeof MarketplaceStatementStatusSchema> | undefined): void {
+  if (status === 'voided') throw new Error('Remove the voided Form 1095-A and its superseded original.');
+}
+
+export function marketplacePolicyIdentity(marketplace: string, policyNumber: string): string {
+  return JSON.stringify([marketplace.trim().toLowerCase(), policyNumber.trim()]);
+}
+
 export const MarketplaceCoveredIndividualSchema = z.object({
   name: z.string().optional(), ssn: z.string().optional(),
   firstMonth: z.number().int().optional(), lastMonth: z.number().int().optional(),
 });
 export const MarketplaceOriginalPolicySchema = z.object({
   taxYear: z.number().int().optional(), marketplace: z.string().optional(), policyNumber: z.string().optional(),
+  statementStatus: MarketplaceStatementStatusSchema.optional(),
   recipientName: z.string().optional(), recipientSsn: z.string().optional(),
   coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
   monthlyPremiums: z.array(z.object({ month: z.number().int().optional(),

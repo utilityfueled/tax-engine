@@ -36,6 +36,18 @@ it('binds original source identity year households and every covered enrollee', 
   for (const mutate of mutations) { const input = sharedPolicyFixture(); mutate(input); expect(() => calculateForm8962SharedPolicy(input)).toThrow(); }
 });
 
+it('binds corrected statement status to the shared-policy original', () => {
+  const input = sharedPolicyFixture();
+  const expected = calculateForm8962SharedPolicy(input);
+  const original = input.form8962!.sharedPolicyAllocations!.policies![0].original!;
+  input.form1095A[0].statementStatus = 'corrected';
+  expect(() => calculateForm8962SharedPolicy(input)).toThrow(/snapshot/i);
+  original.statementStatus = 'corrected';
+  expect(calculateForm8962SharedPolicy(input)).toEqual(expected);
+  original.statementStatus = 'voided';
+  expect(() => calculateForm8962SharedPolicy(input)).toThrow(/voided/i);
+});
+
 it('preserves zero full and varying agreements with exact cents and explicit method gates', () => {
   const input = sharedPolicyFixture(), policy = input.form8962!.sharedPolicyAllocations!.policies![0];
   policy.monthlyAllocations = policy.monthlyAllocations!.map(row => ({ ...row, fraction: row.month! < 5 ? '0' : row.month! < 9 ? '1' : '0.33' }));

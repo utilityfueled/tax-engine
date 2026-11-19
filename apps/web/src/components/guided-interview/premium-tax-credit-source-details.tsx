@@ -1,7 +1,7 @@
 "use client";
 import type { HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 
-import { emptyMarketplaceCoverageMonth, emptyMarketplaceMonth, emptyPremiumTaxCreditFacts, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
+import { emptyMarketplaceCoverageMonth, emptyMarketplaceMonth, emptyPremiumTaxCreditFacts, type MarketplacePolicyData, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
@@ -57,7 +57,12 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
         <TextFact label={`${prefix}: Statement tax year`} value={policy.taxYear} onChange={taxYear => set({ taxYear })} />
         <TextFact label={`${prefix}: Marketplace name`} value={policy.marketplace} onChange={marketplace => set({ marketplace })} />
         <TextFact label={`${prefix}: Policy number`} value={policy.policyNumber} onChange={policyNumber => set({ policyNumber })} />
+        <Choice label={`${prefix}: Form 1095-A boxes`} value={policy.statementStatus ?? ""}
+          choices={[["original", "Neither box checked"], ["corrected", "CORRECTED checked"], ["voided", "VOID checked"]]}
+          onChange={value => set({ statementStatus: (value || undefined) as MarketplacePolicyData["statementStatus"] })} />
       </div>
+        {policy.statementStatus === "voided" && <p className="guided-hint">Remove this statement and its superseded original before calculating the credit.</p>}
+        {policy.statementStatus === "corrected" && <p className="guided-hint">Use this statement and remove the superseded original for this policy.</p>}
         {(data.allocationRequired === true || data.alternativeMarriageCalculationElected === true || data.selfEmployedHealthInsuranceCoordinationRequired === true || policy.recipientName !== undefined || policy.recipientSsn !== undefined || policy.coveredIndividuals !== undefined) && <SharedPolicyOriginalDetails policy={policy} prefix={prefix} onChange={set} />}
         {policy.monthlyPremiums.map((row, rowIndex) => {
           const label = `${prefix} month ${rowIndex + 1}`;

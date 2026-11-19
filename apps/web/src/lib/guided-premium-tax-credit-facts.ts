@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { buildHealthInsuranceInput } from "./guided-health-insurance-facts";
 import { bindGuidedMarriageSources, type MarriagePolicyData } from "./guided-marriage-policy";
 import { Form8962Schema, type TaxYearInput, type Form7206Input } from "@/models/inputs";
+import { marketplacePolicyIdentity } from "@/models/form-8962-shared-policy";
 import type { FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { normalizeMarketplacePolicy, resolveGuidedSharedPolicy, type SharedPolicyAllocationData } from "./guided-shared-policy";
@@ -9,6 +10,7 @@ import { normalizeMarketplacePolicy, resolveGuidedSharedPolicy, type SharedPolic
 export interface MarketplaceMonthData { month: string; enrolleePremium: string; slcsp: string; advancePremiumTaxCredit: string }
 export interface MarketplacePolicyData {
   taxYear: string; marketplace: string; policyNumber: string; monthlyPremiums: (MarketplaceMonthData & { slcspReportedBlank?: boolean | null })[];
+  statementStatus?: TaxYearInput["form1095A"][number]["statementStatus"];
   recipientName?: string; recipientSsn?: string;
   coveredIndividuals?: { name: string; ssn: string; firstMonth: string; lastMonth: string }[];
 }
@@ -92,7 +94,7 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
   const identities = new Set<string>();
   const sourceMonths = new Map<number, { premium: Decimal; advance: Decimal }>();
   for (const policy of policies) {
-    const identity = JSON.stringify([policy.marketplace, policy.policyNumber]);
+    const identity = marketplacePolicyIdentity(policy.marketplace, policy.policyNumber);
     if (identities.has(identity)) throw new Error("Duplicate Marketplace policy: replace superseded statements instead of adding them.");
     identities.add(identity);
     for (const row of policy.monthlyPremiums) {
