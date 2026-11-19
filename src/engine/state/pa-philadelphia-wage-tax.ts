@@ -4,6 +4,7 @@
  */
 
 import Decimal from "decimal.js";
+import { z } from "zod";
 import { d, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { CalculatedLine } from "@/models/outputs.js";
@@ -60,6 +61,62 @@ export interface PhiladelphiaWageTaxInput {
   withholding: Decimal;
 }
 
+const sourceReference = z.string().trim().min(1);
+const date2026 = z.iso.date().refine(date => date.startsWith("2026-"));
+const sourceMoney = z.custom<Decimal>(value =>
+  Decimal.isDecimal(value) && value.isFinite() && value.gte(0) && value.decimalPlaces() <= 2,
+);
+const original = {
+  taxYear: z.literal(2026),
+  taxpayerRef: sourceReference,
+  sourceRef: sourceReference,
+};
+
+const salaryWageTaxInput = z.strictObject({
+  taxYear: z.literal(2026),
+  residencyStatus: z.literal("nonresident"),
+  salarySource: z.strictObject({
+    residence: z.strictObject({ ...original, fullYearOutsidePhiladelphia: z.literal(true) }),
+    w2: z.strictObject({
+      ...original,
+      employerRef: sourceReference,
+      singleOriginalLocalRow: z.literal(true),
+      localityName: z.string().trim().refine(name => name.toLowerCase() === "philadelphia"),
+      localWages: sourceMoney.refine(amount => amount.gt(0)),
+      localWithholding: sourceMoney.refine(amount => amount.gt(0)),
+    }),
+    certification: z.strictObject({
+      ...original,
+      employerRef: sourceReference,
+      signed: z.literal(true),
+      completeWorkdaysAndPayroll: z.literal(true),
+      straightSalaryOnly: z.literal(true),
+      wholeWorkdaysOnly: z.literal(true),
+      philadelphiaBaseOfOperations: z.literal(true),
+      regularPhiladelphiaWorksite: z.literal(true),
+      noExpenseDeduction: z.literal(true),
+      noIncomeBasedRelief: z.literal(true),
+      actualWorkdaysPreJuly: z.number().int().min(0).max(181),
+      actualWorkdaysPostJuly: z.number().int().min(0).max(184),
+      requiredOutsideWorkdays: z.array(z.strictObject({ workedOn: date2026, locationRef: sourceReference })),
+    }),
+    payroll: z.array(z.strictObject({
+      sourceRef: sourceReference,
+      paidOn: date2026,
+      grossSalary: sourceMoney.refine(amount => amount.gt(0)),
+      philadelphiaWithholding: sourceMoney,
+    })).min(1),
+    workdays: z.array(z.strictObject({
+      workedOn: date2026,
+      paymentRef: sourceReference,
+      locationRef: sourceReference,
+      kind: z.enum(["philadelphia", "convenience_remote", "employer_required_outside"]),
+    })).min(1),
+  }),
+});
+
+export type Philadelphia2026SalaryWageTaxInput = z.input<typeof salaryWageTaxInput>;
+
 export interface PhiladelphiaWageTaxResult {
   residencyStatus: PhiladelphiaWageTaxResidencyStatus;
   taxableCompensationPreJuly: Decimal;
@@ -78,15 +135,114 @@ export interface PhiladelphiaWageTaxResult {
   lines: CalculatedLine[];
 }
 
+function isPreJuly(date: string): boolean {
+  return date < "2026-07-01";
+}
+
+function readSalaryWageTaxInput(
+  request: Philadelphia2026SalaryWageTaxInput,
+  audit: AuditTrail,
+): PhiladelphiaWageTaxInput {
+  const parsed = salaryWageTaxInput.safeParse(request);
+  if (!parsed.success) throw new Error("Philadelphia 2026 salary source requires complete original records");
+
+  const { residence, w2, certification, payroll, workdays } = parsed.data.salarySource;
+  if (residence.taxpayerRef !== w2.taxpayerRef || certification.taxpayerRef !== w2.taxpayerRef
+    || certification.employerRef !== w2.employerRef) {
+    throw new Error("Philadelphia 2026 salary source owner and employer must match");
+  }
+
+  const payments = new Map(payroll.map(payment => [payment.sourceRef, payment]));
+  const actualWorkdays = new Set<string>();
+  const usedPayments = new Set<string>();
+  const locationIsOutsidePhiladelphia = new Map<string, boolean>();
+  const certifiedOutside = new Map(certification.requiredOutsideWorkdays.map(day => [day.workedOn, day.locationRef]));
+  if (payments.size !== payroll.length || certifiedOutside.size !== certification.requiredOutsideWorkdays.length) {
+    throw new Error("Philadelphia 2026 salary source contains duplicate payment or certification records");
+  }
+
+  const Exact = Decimal.clone({ precision: 40, rounding: Decimal.ROUND_HALF_UP });
+  const preJuly = { gross: new Exact(0), worked: 0, requiredOutside: 0 };
+  const postJuly = { gross: new Exact(0), worked: 0, requiredOutside: 0 };
+  let withholding = new Exact(0);
+  for (const payment of payroll) {
+    const half = isPreJuly(payment.paidOn) ? preJuly : postJuly;
+    half.gross = half.gross.plus(payment.grossSalary);
+    withholding = withholding.plus(payment.philadelphiaWithholding);
+  }
+  if (!preJuly.gross.plus(postJuly.gross).eq(w2.localWages) || !withholding.eq(w2.localWithholding)) {
+    throw new Error("Philadelphia 2026 salary source payroll must reconcile to the original W-2 local row");
+  }
+
+  for (const workday of workdays) {
+    const { workedOn, paymentRef, locationRef, kind } = workday;
+    const payment = payments.get(paymentRef);
+    if (!payment || workedOn > payment.paidOn || isPreJuly(workedOn) !== isPreJuly(payment.paidOn)
+      || actualWorkdays.has(workedOn)) {
+      throw new Error("Philadelphia 2026 salary source requires unique workdays linked to payments in the same half");
+    }
+    const outsidePhiladelphia = kind !== "philadelphia";
+    const priorGeography = locationIsOutsidePhiladelphia.get(locationRef);
+    if (priorGeography !== undefined && priorGeography !== outsidePhiladelphia) {
+      throw new Error("Philadelphia 2026 salary source classifies the same location both inside and outside the city");
+    }
+    locationIsOutsidePhiladelphia.set(locationRef, outsidePhiladelphia);
+    const requiredOutside = kind === "employer_required_outside";
+    const certifiedLocation = certifiedOutside.get(workedOn);
+    if (requiredOutside ? certifiedLocation !== locationRef : certifiedLocation !== undefined) {
+      throw new Error("Philadelphia 2026 salary source workdays must match the signed employer certification");
+    }
+    actualWorkdays.add(workedOn);
+    usedPayments.add(paymentRef);
+    const half = isPreJuly(payment.paidOn) ? preJuly : postJuly;
+    half.worked += 1;
+    if (requiredOutside) half.requiredOutside += 1;
+  }
+  if (usedPayments.size !== payroll.length || preJuly.worked !== certification.actualWorkdaysPreJuly
+    || postJuly.worked !== certification.actualWorkdaysPostJuly
+    || preJuly.requiredOutside + postJuly.requiredOutside !== certifiedOutside.size) {
+    throw new Error("Philadelphia 2026 salary source workdays must reconcile to payments and certified totals");
+  }
+
+  const allocatedSalary = ({ gross, worked, requiredOutside }: typeof preJuly) =>
+    worked === 0 ? gross : cents(gross.times(worked - requiredOutside).div(worked));
+  const taxableCompensationPreJuly = allocatedSalary(preJuly);
+  const taxableCompensationPostJuly = allocatedSalary(postJuly);
+  audit.record(
+    "PA-Philadelphia-Wage-Tax",
+    "2026-nonresident-salary-draft",
+    "Philadelphia straight-salary allocation, 2026 review draft",
+    taxableCompensationPreJuly.plus(taxableCompensationPostJuly),
+    "Each payment half uses its gross salary × (worked days − required outside days) ÷ worked days, rounded to cents.",
+    {
+      preJulyGross: preJuly.gross,
+      preJulyWorkdays: new Decimal(preJuly.worked),
+      preJulyRequiredOutsideDays: new Decimal(preJuly.requiredOutside),
+      postJulyGross: postJuly.gross,
+      postJulyWorkdays: new Decimal(postJuly.worked),
+      postJulyRequiredOutsideDays: new Decimal(postJuly.requiredOutside),
+    },
+  );
+  return {
+    taxYear: 2026,
+    residencyStatus: "nonresident",
+    taxableCompensationPreJuly,
+    taxableCompensationPostJuly,
+    scheduleSPApproved: false,
+    withholding,
+  };
+}
+
 export function calculatePhiladelphiaWageTax(
-  input: PhiladelphiaWageTaxInput,
+  request: PhiladelphiaWageTaxInput | Philadelphia2026SalaryWageTaxInput,
 ): PhiladelphiaWageTaxResult {
+  const audit = new AuditTrail();
+  const input = "salarySource" in request ? readSalaryWageTaxInput(request, audit) : request;
   const constants = PHILADELPHIA_WAGE_TAX_CONSTANTS[input.taxYear];
   if (!constants) {
     throw new Error(`Philadelphia Wage Tax constants not available for tax year ${input.taxYear}`);
   }
 
-  const audit = new AuditTrail();
   const periodRates = constants[input.residencyStatus];
   const taxableCompensationPreJuly = cents(zeroFloor(d(input.taxableCompensationPreJuly)));
   const taxableCompensationPostJuly = cents(zeroFloor(d(input.taxableCompensationPostJuly)));

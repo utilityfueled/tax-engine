@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import {
   calculatePhiladelphiaWageTax,
+  type Philadelphia2026SalaryWageTaxInput,
   type PhiladelphiaWageTaxInput,
 } from "@/engine/state/pa-philadelphia-wage-tax.js";
 
@@ -21,6 +22,66 @@ function makeInput(overrides: Partial<PhiladelphiaWageTaxInput> = {}): Philadelp
     scheduleSPApproved: false,
     withholding: d(0),
     ...overrides,
+  };
+}
+
+function makeSalaryInput(): Philadelphia2026SalaryWageTaxInput {
+  return {
+    taxYear: 2026,
+    residencyStatus: "nonresident",
+    salarySource: {
+      residence: {
+        taxYear: 2026,
+        taxpayerRef: "private-owner",
+        sourceRef: "private-residence",
+        fullYearOutsidePhiladelphia: true,
+      },
+      w2: {
+        taxYear: 2026,
+        taxpayerRef: "private-owner",
+        employerRef: "private-employer",
+        sourceRef: "private-w2",
+        singleOriginalLocalRow: true,
+        localityName: "Philadelphia",
+        localWages: d("27000.00"),
+        localWithholding: d("925.50"),
+      },
+      certification: {
+        taxYear: 2026,
+        taxpayerRef: "private-owner",
+        employerRef: "private-employer",
+        sourceRef: "private-certified-work",
+        signed: true,
+        completeWorkdaysAndPayroll: true,
+        straightSalaryOnly: true,
+        wholeWorkdaysOnly: true,
+        philadelphiaBaseOfOperations: true,
+        regularPhiladelphiaWorksite: true,
+        noExpenseDeduction: true,
+        noIncomeBasedRelief: true,
+        actualWorkdaysPreJuly: 5,
+        actualWorkdaysPostJuly: 4,
+        requiredOutsideWorkdays: [
+          { workedOn: "2026-06-30", locationRef: "private-client-site" },
+          { workedOn: "2026-07-01", locationRef: "private-home-site" },
+        ],
+      },
+      payroll: [
+        { sourceRef: "private-june-pay", paidOn: "2026-06-30", grossSalary: d("15000"), philadelphiaWithholding: d("514.50") },
+        { sourceRef: "private-july-pay", paidOn: "2026-07-09", grossSalary: d("12000"), philadelphiaWithholding: d("411.00") },
+      ],
+      workdays: [
+        { workedOn: "2026-06-24", paymentRef: "private-june-pay", locationRef: "private-office", kind: "philadelphia" },
+        { workedOn: "2026-06-25", paymentRef: "private-june-pay", locationRef: "private-office", kind: "philadelphia" },
+        { workedOn: "2026-06-26", paymentRef: "private-june-pay", locationRef: "private-office", kind: "philadelphia" },
+        { workedOn: "2026-06-29", paymentRef: "private-june-pay", locationRef: "private-home-site", kind: "convenience_remote" },
+        { workedOn: "2026-06-30", paymentRef: "private-june-pay", locationRef: "private-client-site", kind: "employer_required_outside" },
+        { workedOn: "2026-07-01", paymentRef: "private-july-pay", locationRef: "private-home-site", kind: "employer_required_outside" },
+        { workedOn: "2026-07-07", paymentRef: "private-july-pay", locationRef: "private-office", kind: "philadelphia" },
+        { workedOn: "2026-07-08", paymentRef: "private-july-pay", locationRef: "private-office", kind: "philadelphia" },
+        { workedOn: "2026-07-09", paymentRef: "private-july-pay", locationRef: "private-home-site", kind: "convenience_remote" },
+      ],
+    },
   };
 }
 
@@ -208,5 +269,100 @@ describe("Philadelphia actual 2026 effective periods", () => {
       }
       expect(result.standardTax.toFixed(2)).toBe(taxYear === 2025 ? "2247.00" : "2242.50");
     }
+  });
+
+  it("Philadelphia 2026 allocates salary using documented required outside days and actual payment halves", () => {
+    // Spec: 2026-nonresident-salary-allocation.
+    const result = calculatePhiladelphiaWageTax(makeSalaryInput());
+
+    expect(result.taxableCompensationPreJuly.toFixed(2)).toBe("12000.00");
+    expect(result.taxableCompensationPostJuly.toFixed(2)).toBe("9000.00");
+    expect(result.finalTax.toFixed(2)).toBe("719.85");
+    expect(result.withholding.toFixed(2)).toBe("925.50");
+    expect(result.overpayment.toFixed(2)).toBe("205.65");
+    expect(result.balanceDue.toFixed(2)).toBe("0.00");
+  });
+
+  it("Philadelphia 2026 accepts a confirmed empty half and rounds a recurring day fraction to cents", () => {
+    const input = makeSalaryInput();
+    const { salarySource } = input;
+    salarySource.payroll = [{
+      sourceRef: "private-july-pay",
+      paidOn: "2026-07-09",
+      grossSalary: d("10000.01"),
+      philadelphiaWithholding: d("342.50"),
+    }];
+    salarySource.workdays = salarySource.workdays.slice(5, 8);
+    salarySource.certification.actualWorkdaysPreJuly = 0;
+    salarySource.certification.actualWorkdaysPostJuly = 3;
+    salarySource.certification.requiredOutsideWorkdays.shift();
+    salarySource.w2.localWages = d("10000.01");
+    salarySource.w2.localWithholding = d("342.50");
+
+    const result = calculatePhiladelphiaWageTax(input);
+    expect(result.taxableCompensationPreJuly.toFixed(2)).toBe("0.00");
+    expect(result.taxableCompensationPostJuly.toFixed(2)).toBe("6666.67");
+    expect(result.finalTax.toFixed(2)).toBe("228.33");
+    expect(result.overpayment.toFixed(2)).toBe("114.17");
+  });
+
+  it.each<[string, (input: Philadelphia2026SalaryWageTaxInput) => void]>([
+    ["wrong calculation year", input => Object.assign(input, { taxYear: 2025 })],
+    ["resident calculation", input => Object.assign(input, { residencyStatus: "resident" })],
+    ["missing residence confirmation", ({ salarySource }) => Object.assign(salarySource.residence, { fullYearOutsidePhiladelphia: undefined })],
+    ["different W-2 employer", ({ salarySource }) => { salarySource.w2.employerRef = "another-employer"; }],
+    ["different taxpayer", ({ salarySource }) => { salarySource.residence.taxpayerRef = "another-owner"; }],
+    ["different source year", ({ salarySource }) => Object.assign(salarySource.w2, { taxYear: 2025 })],
+    ["not a Philadelphia local row", ({ salarySource }) => Object.assign(salarySource.w2, { localityName: "Pittsburgh" })],
+    ["missing certification signature", ({ salarySource }) => Object.assign(salarySource.certification, { signed: undefined })],
+    ["incomplete records", ({ salarySource }) => Object.assign(salarySource.certification, { completeWorkdaysAndPayroll: false })],
+    ["no Philadelphia base of operations", ({ salarySource }) => Object.assign(salarySource.certification, { philadelphiaBaseOfOperations: false })],
+    ["administrative office assignment only", ({ salarySource }) => Object.assign(salarySource.certification, { regularPhiladelphiaWorksite: false })],
+    ["other compensation", ({ salarySource }) => Object.assign(salarySource.certification, { straightSalaryOnly: false })],
+    ["partial workdays", ({ salarySource }) => Object.assign(salarySource.certification, { wholeWorkdaysOnly: false })],
+    ["an employee business expense deduction", ({ salarySource }) => Object.assign(salarySource.certification, { noExpenseDeduction: false })],
+    ["unresolved income-based reduction", ({ salarySource }) => Object.assign(salarySource.certification, { noIncomeBasedRelief: undefined })],
+    ["conflicting certified date", ({ salarySource }) => { salarySource.certification.requiredOutsideWorkdays[0].workedOn = "2026-06-29"; }],
+    ["conflicting certified location", ({ salarySource }) => { salarySource.certification.requiredOutsideWorkdays[0].locationRef = "different-location"; }],
+    ["duplicate employer certification date", ({ salarySource }) => {
+      salarySource.certification.requiredOutsideWorkdays.push(salarySource.certification.requiredOutsideWorkdays[0]);
+    }],
+    ["a certified date absent from the workday record", ({ salarySource }) => {
+      salarySource.certification.requiredOutsideWorkdays.push({ workedOn: "2026-07-02", locationRef: "private-client-site" });
+    }],
+    ["unknown workday classification", ({ salarySource }) => Object.assign(salarySource.workdays[0], { kind: undefined })],
+    ["a location classified as inside and outside Philadelphia", ({ salarySource }) => {
+      salarySource.workdays[0].locationRef = "private-client-site";
+    }],
+    ["a missing ordinary workday", ({ salarySource }) => { salarySource.workdays.shift(); }],
+    ["duplicate workday", ({ salarySource }) => { salarySource.workdays.push(salarySource.workdays[0]); }],
+    ["duplicate payroll reference", ({ salarySource }) => { salarySource.payroll.push(salarySource.payroll[0]); }],
+    ["invalid pay date", ({ salarySource }) => { salarySource.payroll[0].paidOn = "2026-06-31"; }],
+    ["pay date before linked service", ({ salarySource }) => { salarySource.payroll[0].paidOn = "2026-06-27"; }],
+    ["pay date in a different rate period", ({ salarySource }) => { salarySource.payroll[0].paidOn = "2026-07-01"; }],
+    ["workday without an actual payment", ({ salarySource }) => { salarySource.workdays[0].paymentRef = "missing-pay"; }],
+    ["a payment without workdays", ({ salarySource }) => {
+      salarySource.payroll.push({ ...salarySource.payroll[0], sourceRef: "unused-payment" });
+      salarySource.w2.localWages = d("42000");
+      salarySource.w2.localWithholding = d("1440");
+    }],
+    ["unreconciled wage cents", ({ salarySource }) => { salarySource.w2.localWages = d("27000.01"); }],
+    ["unreconciled withheld cents", ({ salarySource }) => { salarySource.w2.localWithholding = d("925.49"); }],
+    ["unknown withheld amount", ({ salarySource }) => Object.assign(salarySource.payroll[0], { philadelphiaWithholding: undefined })],
+    ["sub-cent source amount", ({ salarySource }) => { salarySource.payroll[0].grossSalary = d("15000.001"); }],
+    ["non-finite source cash", ({ salarySource }) => { salarySource.payroll[0].grossSalary = d("Infinity"); }],
+    ["unrelated scalar overrides", input => Object.assign(input, { withholding: d("1000"), scheduleSPApproved: true })],
+  ])("Philadelphia 2026 denies incomplete or conflicting salary evidence: %s", (_description, change) => {
+    const input = makeSalaryInput();
+    change(input);
+    expect(() => calculatePhiladelphiaWageTax(input)).toThrow(/Philadelphia 2026 salary source/);
+  });
+
+  it("Philadelphia 2026 labels the salary allocation draft and keeps source references private", () => {
+    // Spec: 2026-nonresident-salary-draft.
+    const result = calculatePhiladelphiaWageTax(makeSalaryInput());
+    expect(result.lines.find(line => line.line === "2026-nonresident-salary-draft")?.description).toContain("2026 review draft");
+    expect(JSON.stringify(result.lines)).not.toContain("private-");
+    expect(calculatePhiladelphiaWageTax(makeInput()).lines).toHaveLength(11);
   });
 });

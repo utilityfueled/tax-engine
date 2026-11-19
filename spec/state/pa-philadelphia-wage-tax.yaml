@@ -6,7 +6,8 @@ reference: "https://www.phila.gov/services/business-self-employment/business-tax
 notes: |
   Philadelphia imposes a city wage tax on:
     - residents on taxable compensation regardless of where earned, and
-    - nonresidents on taxable compensation for services performed in Philadelphia.
+    - nonresidents on in-city services and on voluntary remote services for a
+      Philadelphia-based employer when the employee can regularly work in the city.
 
   This module covers the supported annual reconciliation slices for tax years 2025 and 2026:
     - actual taxable compensation paid January 1 through June 30 of the selected year
@@ -25,9 +26,9 @@ notes: |
     - Residents: 3.74% through June 30, 2026; 3.735% on and after July 1, 2026
     - Nonresidents: 3.43% through June 30, 2026; 3.425% on and after July 1, 2026
     - The approved Schedule SP reduced rate remains 1.5%.
-  Actual compensation must already be classified by payment period and the
-  selected city residency status. This module does not infer days, prorate annual
-  wages, establish remote-work exclusions, or supply a mixed-residency method.
+  The scalar method accepts compensation already classified by payment period
+  and city residency status. The 2026 straight-salary draft can instead use
+  actual employer, residency, payroll, workday and W-2 records.
   Missing/false SP approval retains the existing standard-rate semantics; a new
   selected launch state does not establish approval or filing qualification.
   No municipal blank form, guide auto-origination or readiness gate is enabled.
@@ -140,3 +141,58 @@ lines:
     description: "Audit descriptions and rate explanations identify the actual calculation year"
     formula: "Use the selected input.taxYear in period descriptions and rate explanations; 2025 remains 2025 and 2026 must not describe 2025 periods"
     testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia audit labels follow the selected year without changing historical rates"
+
+  - line: "2026-nonresident-salary-allocation"
+    description: "Allocate regular salary for a full-year city nonresident with a Philadelphia work base"
+    formula: |
+      Use a single employer's complete signed workday and payroll records, an
+      actual full-year outside-city residence record, and one original W-2
+      Philadelphia local row. For each payment half, compute that half's gross
+      salary times (all worked days less employer-required out-of-city days)
+      divided by all worked days, then round that compensation to cents for
+      the existing reconciliation. In-city and employee-convenience remote
+      workdays are taxable. Each shift is a whole, actually worked day. Use
+      the actual pay date and require all linked workdays to be on or before
+      the payment in the same calendar half. A confirmed empty half contributes zero.
+      Apply the paid-half standard rates and subtract the result from actual
+      Philadelphia withholding for the draft settlement.
+    sources:
+      - "https://www.phila.gov/media/20200131115216/Philadelphia-Income-Tax-Regulations-compiled-2020-january.pdf"
+      - "https://www.phila.gov/media/20231024112123/UPDATED-Wage-Tax-policy-guidance-for-non-resident-employees.pdf"
+      - "https://www.phila.gov/services/payments-assistance-taxes/taxes/business-taxes/business-taxes-by-type/wage-tax-employers/"
+      - "https://www.phila.gov/services/payments-assistance-taxes/taxes/refunds/request-a-wage-tax-refund/"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 allocates salary using documented required outside days and actual payment halves"
+
+  - line: "2026-nonresident-salary-sources"
+    description: "Reconcile actual employer, employee, workday and Philadelphia wage and withholding evidence"
+    formula: |
+      Bind the same taxpayer, employer and tax year across original records.
+      Require actual ordinary straight salary and complete and signed employer
+      certification of a Philadelphia base of operations and the regular
+      option of a Philadelphia worksite,
+      explicit workday classifications, consistent in-city or outside-city
+      geography per work location, agreement with the certified counts
+      of actual workdays for both halves, and date-and-location agreement
+      with the certified required outside assignments. Require unique payroll
+      references and workdays, known amounts at cent precision, each day
+      linked to an actual payment and each payment linked to workdays. The
+      certified full-year payroll gross and city withholding must reconcile
+      independently to the supported single original Philadelphia W-2 local
+      wage and withholding row. Zero withholding is permitted on an individual
+      payment; this Wage Tax method requires positive annual city withholding.
+      One outside location may be required on one date and optional on another.
+      Work performed in a different half from payment, partial shifts, mixed
+      residency, special compensation, expense deductions and positive or
+      unresolved income-based relief are outside the source method.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 denies incomplete or conflicting salary evidence: %s"
+
+  - line: "2026-nonresident-salary-draft"
+    description: "Use the statutory wage allocation for review with the existing payment-period calculation"
+    formula: |
+      The source method has an explicit 2026 review-draft audit. Source IDs
+      and private taxpayer, address and employer information stay out of the
+      audit. The statutory working-day ratio determines the draft allocation;
+      the final 2026 petition presentation and its line-rounding rules
+      require separate qualification. Continue supporting the existing scalar
+      interface without a source packet.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 labels the salary allocation draft and keeps source references private"
