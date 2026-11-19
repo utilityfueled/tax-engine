@@ -14,6 +14,26 @@ notes: |
   basis reporting or from a digital-asset flag alone.
 
 lines:
+  - line: "original-b-disposition-year"
+    description: "Reconcile every explicit original1099-B Box1c disposition date before calculating capital gain"
+    formula: "For each original form1099B transaction whose sourceDocumentType is1099-b or historically omitted, an explicit YYYY-MM-DD dateSold must have the selected return year. Inspect every row, including zero gains and matching statement headers; an absent header does not erase an explicit disposition date. Hold either year mismatch for actual source reconciliation; never drop a row or infer a year from furnishing/correction. Compare a trimmed date view without rewriting the original. Acquisition dates may be earlier years or VARIOUS."
+    irsRef: "2025 Instructions1099-B Box1c and Instructions8949 Column(c)"
+    testRef: "tests/engine/forms/form-8949-disposition-year.test.ts::holds every explicit original broker disposition outside the return year"
+  - line: "original-b-disposition-preservation"
+    description: "Preserve current-year closing dates and legacy unknown or summary dates without manufacturing facts"
+    formula: "Matching valid canonical disposition dates retain exact proceeds/basis/adjustments and source immutability. Box1c is a short sale closing delivery date, not its opening/acquisition year. Blank or named summary/unknown text remains the existing unverified representation, including named summary text with a year or leading transaction count; a leading digit alone is not an actual date. This guard does not qualify summaries or infer an actual date. Date-like full digit dates/years, numeric separators or calendar-month strings require reconciliation. Original statement-year and withholding admission checks remain unchanged."
+    irsRef: "2025 Instructions1099-B Short sales and Box1c; Instructions8949 Exceptions1/2 and Column(c)"
+    testRef: "tests/engine/forms/form-8949-disposition-year.test.ts::preserves matching closings cross-year acquisitions and unknown summary dates"
+  - line: "original-b-disposition-calendar"
+    description: "Hold invalid or noncanonical date-like Box1c originals for reconciliation"
+    formula: "A date-like original B value must be exactly YYYY-MM-DD in its trimmed view and round-trip as the same finite UTC calendar day. Reject alternate numeric formats, timestamps, unpadded dates and impossible month/day/leap dates rather than parsing or coercing them. Canonical-shaped different-year dates retain the earlier disposition-year diagnostic. Calendar validation does not alter the original or acquisition-date semantics, and is not applied to separate reporting methods."
+    irsRef: "2025 Instructions1099-B Box1c; Instructions8949 Column(c)"
+    testRef: "tests/engine/forms/form-8949-disposition-year.test.ts::holds noncanonical and impossible date-like original broker dispositions"
+  - line: "separate-capital-source-methods"
+    description: "Keep digital-asset nonstatement and Section1256 source methods separate"
+    formula: "Do not apply the original1099-B date check to explicitly1099-DA or not-reported rows, derived QOF inclusion or Form6781 mark-to-market aggregates. Their existing source/actual-event validators and annual gates remain intact; no new exemption or trust flag is accepted."
+    irsRef: "2025 Instructions1099-B Boxes8–11; Instructions8949 ScheduleD and original reporting categories"
+    testRef: "tests/engine/forms/form-8949-disposition-year.test.ts::preserves separate digital nonstatement and section1256 methods"
   # ── Part I: Short-Term ───────────────────────────────────
   - line: "Part I Box A"
     description: "Short-term transactions with basis reported to IRS"

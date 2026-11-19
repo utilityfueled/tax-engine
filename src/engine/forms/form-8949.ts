@@ -121,6 +121,26 @@ function reportingBox(transaction: CapitalTransaction): ReportingBox {
 
 export function calculateForm8949(input: TaxYearInput): Form8949Result {
   const audit = new AuditTrail();
+  for (const form of input.form1099B) {
+    for (const transaction of form.transactions) {
+      if ((transaction.sourceDocumentType ?? '1099-b') !== '1099-b') continue;
+      // Box1c is the actual disposition/short-sale closing date, not the
+      // statement furnishing date. Preserve unknown summary text as unknown.
+      const value = transaction.dateSold.trim();
+      const date = /^(\d{4})-\d{2}-\d{2}$/.exec(value);
+      if (date && Number(date[1]) !== input.taxpayer.taxYear) {
+        throw new Error('Form 1099-B disposition year must match the return year; reconcile the actual Box 1c date.');
+      }
+      const dateLike = !date && (/^(?:\d{4}|\d{6}|\d{8})$/.test(value) || /\d\s*[-/.]\s*\d/.test(value)
+        || /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?=\s|\d|[.,/-]|$).*\d/i.test(value));
+      if (date || dateLike) {
+        const parsed = date ? new Date(`${value}T00:00:00Z`) : undefined;
+        if (!parsed || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+          throw new Error('Form 1099-B disposition date requires an actual canonical calendar date; reconcile the original Box 1c.');
+        }
+      }
+    }
+  }
   const capitalInput = normalizeDigitalAssetCapitalInput(input);
   const section1202 = calculateSection1202Sources(input);
   const brokerExclusions = new Map<string, Decimal>();
