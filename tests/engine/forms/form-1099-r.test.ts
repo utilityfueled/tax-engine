@@ -9,6 +9,52 @@ import { calculateForm1099R } from "@/engine/forms/form-1099-r.js";
 import { Form1099RSchema } from "@/models/inputs.js";
 
 describe("Form 1099-R retirement distribution aggregation", () => {
+  const statement = {
+    payer: "Retirement Plan Administrator",
+    grossDistribution: "1000",
+    taxableAmount: "1000",
+    federalWithheld: "125",
+    distributionCode: "7",
+    iraSepSimple: false,
+  };
+
+  // spec/federal/form-1099-r.yaml, statement-year
+  it.each([
+    { label: "2024 pension", taxYear: 2024 },
+    { label: "2026 pension", taxYear: 2026 },
+    { label: "2024 IRA", taxYear: 2024, iraSepSimple: true },
+    { label: "2026 Code P correction", taxYear: 2026, distributionCode: "P" },
+  ])("rejects an explicitly mismatched Form 1099-R statement year for $label", ({ label: _label, ...fields }) => {
+    const form = Form1099RSchema.parse({ ...statement, ...fields });
+
+    expect(() => calculateForm1099R([form], { taxYear: 2025 })).toThrow(/source year must match the 2025 return/);
+  });
+
+  it.each([2025, undefined])("aggregates ordinary income and withholding on the 2025 return with statement year %s", (taxYear) => {
+    const form = Form1099RSchema.parse({ ...statement, taxYear });
+    const result = calculateForm1099R([form], { taxYear: 2025 });
+
+    expect(result.pensionTaxable.toFixed()).toBe("1000");
+    expect(result.federalWithholding.toFixed()).toBe("125");
+  });
+
+  it.each([true, false])("keeps withholding on the matching 2025 Code P statement with IRA status %s", (iraSepSimple) => {
+    const form = Form1099RSchema.parse({ ...statement, taxYear: 2025, iraSepSimple, distributionCode: "P" });
+    const result = calculateForm1099R([form], { taxYear: 2025 });
+
+    expect([result.iraGrossReported, result.iraTaxable, result.pensionGrossReported, result.pensionTaxable].map(amount => amount.toFixed()))
+      .toEqual(["0", "0", "0", "0"]);
+    expect(result.federalWithholding.toFixed()).toBe("125");
+  });
+
+  it("keeps year-independent calls available for an explicitly dated statement", () => {
+    const form = Form1099RSchema.parse({ ...statement, taxYear: 2024 });
+    const result = calculateForm1099R([form]);
+
+    expect(result.pensionTaxable.toFixed()).toBe("1000");
+    expect(result.federalWithholding.toFixed()).toBe("125");
+  });
+
   it("Form 1099-R Box 7 - Roth code Q and code T entries reject extra distribution codes", () => {
     const codeQ = Form1099RSchema.safeParse({
       payer: "Roth IRA Custodian",

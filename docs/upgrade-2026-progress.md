@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: Form 1099-R statement-year admission
+
+Ordinary federal retirement income and withholding now reject an explicitly mismatched legacy statement year. An independent parsed return reproduced $21,000 of AGI on $20,000 of 2025 wages when a $1,000 statement from another year was supplied. Both earlier and later dated statements now hold that return. A matching-year Code P statement still leaves prior-year corrective income outside current income and preserves $125 of current Box 4 withholding. The clarified spec pins the archived 2025 source, preserves the undated legacy method and retains the existing stronger 2026 source checks. Four focused regressions failed before the fix. The exact package passed 627 focused tests, and the broader implementation and independent runs passed 791 and 157 tests respectively. [IRS Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf) · [IRS Form 1040 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf)
+
 ## November 19: historical Form 8880 distribution confirmation
 
 An original 2025 positive non-IRA employer-plan Code 1 receipt now requires a confirmed Form 8880 Line 4 total for each applicable column. Explicit zero after exclusions is valid. In the independently reproduced joint case, $1,000 in each column yields a $100 credit, compared with the $300 produced when both totals were omitted. The package retains the current-year rule for direct rollovers, leaves earlier-year facts to their separate confirmation, and corrects a direct age test to cover both sides of the January 1 cutoff. The exact package passed 570 focused tests and 38 spec references. Separate controls identified a remaining mismatched-statement-year admission issue in ordinary Form 1099-R, tracked as its own change. [IRS Form 8880 for 2025](https://www.irs.gov/pub/irs-prior/f8880--2025.pdf)

@@ -1,7 +1,7 @@
 form: "Form 1099-R"
 fullName: "Distributions From Pensions, Annuities, Retirement or Profit-Sharing Plans, IRAs, Insurance Contracts, etc."
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i1099r"
+irsReference: "https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf"
 
 notes: |
   This worksheet aggregates Form 1099-R data into the Form 1040 retirement
@@ -101,7 +101,12 @@ notes: |
   reported with distribution code P, the Form 1099-R instructions treat the
   amount as taxable on the prior-year return, so this current-year aggregation
   excludes that gross and taxable amount from Form 1040 Lines 4a and 4b or 5a
-  and 5b while still preserving current-year Box 4 withholding.
+  and 5b while still preserving Box 4 withholding for the statement year.
+  Ordinary aggregation requires an explicitly dated statement to match the
+  return year when the caller supplies a year. A later-year Code P statement
+  may substantiate a corrective amount taxable in an earlier year. That
+  payer-verified corrective amount needs separate prior-year recognition,
+  without carrying the later statement's withholding into the earlier return.
   For tax year 2025, this slice also supports the new optional Box 7 code Y
   for qualified charitable distributions (QCDs). When code Y is present, the
   distribution is treated as IRA reporting even if the IRA/SEP/SIMPLE checkbox
@@ -154,6 +159,12 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-form-1099-r.test.ts::fillForm1099RReference keeps the packet artifact reference-only and limited to supported federal line outputs"
 
 lines:
+  - line: "statement-year"
+    description: "Match an explicitly dated Form 1099-R to the ordinary return year"
+    formula: "When the ordinary caller supplies a return year, reject a statement that explicitly identifies a different year before routing its income or withholding. Existing legacy callers may supply an undated statement. A matching-year Code P statement contributes its Box 4 withholding while its prior-year taxable amount stays out of ordinary current-year income."
+    irsRef: "2025 Form 1099-R instructions, Corrective Distributions and Table 1 Code P; 2025 Form 1040 instructions, Line 25b (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf)"
+    testRef: "tests/engine/forms/form-1099-r.test.ts::rejects an explicitly mismatched Form 1099-R statement year"
+
   - line: "1"
     description: "IRA gross distributions reported on Form 1040 Line 4a"
     formula: "If any IRA/SEP/SIMPLE distribution that is taxable on the current-year return is not fully taxable, is reported with a direct-rollover code, includes an excludable qualified charitable distribution, is validated as a traditional/SEP/SIMPLE IRA amount converted to a Roth IRA, is a Roth IRA distribution reported with Box 7 code J, Q, or T, is a Box 7 code Y qualified charitable distribution, is a Box 7 code S SIMPLE IRA distribution, or is an IRA recharacterization reported with Box 7 code N or R, sum Box 1 for all such IRA Forms 1099-R; for Box 7 code S, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the code definition itself identifies a SIMPLE IRA distribution, and for Box 7 codes J, Q, T, N, R, and Y, treat the amount as IRA reporting even when the IRA/SEP/SIMPLE checkbox is blank because the Form 1099-R instructions do not require that box for Roth IRA distributions, IRA recharacterizations, or code Y qualified charitable distributions; exclude validated code P prior-year taxable returns of contributions or excess deferrals from this current-year gross aggregation; otherwise report $0 to represent a blank line"

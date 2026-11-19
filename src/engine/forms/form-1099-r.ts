@@ -181,6 +181,9 @@ export function calculateForm1099R(
         assert2026PensionTaxability(form);
       }
     }
+  } else if (options.taxYear !== undefined
+    && forms.some(form => form.taxYear !== undefined && form.taxYear !== options.taxYear)) {
+    throw new Error(`Form 1099-R source year must match the ${options.taxYear} return`);
   }
   const audit = new AuditTrail();
   const iraForms = forms.filter(isIraForm1099RDistribution);
