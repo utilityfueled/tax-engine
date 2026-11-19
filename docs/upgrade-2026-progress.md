@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: browser source audit restored
+
+The exact `b06960c0` source archive reproduced a browser preflight failure with its old manifest. The refreshed manifest pins four revised files and five new files. The two revised audit files admit the same 655 browser cases, five skips and eight request batches in both managed and strict-container list-only mode. The browser deadlines, selectors and request limits retain their previous values. All 37 Node and 61 Vitest controls passed. Actual browser execution of the replacement remains required.
+
 ## November 19: historical Form 8880 correction
 
 The 2025 return includes contributors born January 1, 2008 and preserves the difference between omitted deferrals and an entered zero. Omitted amounts can use eligible W-2 contributions with the correct owner. A mismatched stated year or ambiguous Code G holds the fallback until the eligible amount is confirmed. Independent controls reproduced five initial failures and four additional source-guard failures. The final 511-test cohort and 37 spec references passed. Sources are the [2025 Form 8880 and its instructions](https://www.irs.gov/pub/irs-prior/f8880--2025.pdf) and [2025 W-2 instructions](https://www.irs.gov/pub/irs-prior/fw2--2025.pdf).
