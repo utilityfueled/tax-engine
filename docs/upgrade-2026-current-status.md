@@ -1,6 +1,6 @@
 # Current 2026 upgrade status
 
-Reviewed source through `b6bfc3b0` is on `main`. Automatic production builds are
+Reviewed source through `92ed89d1` is on `main`. Automatic production builds are
 disabled. The 2026 public release still needs qualification.
 
 Resume with `activeContinuation.nov19TaxAndBrowserContinuation` in
@@ -14,7 +14,7 @@ The [execution brief](upgrade-2026-execution-brief.md) remains the complete scop
 | --- | --- |
 | Global checks | Frozen `49f79555` passed full unit and coverage with 29,187 passes and 75 skips each. Branch coverage was 87.88% against the unchanged 85% gate. All nine static checks passed. [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44478475856) passed. The later Form 1098 and Form 1099-R changes have targeted checks. Combined validation is pending. |
 | Federal facts and PA/OH | Both states cover resident, part-year and nonresident targets. The recent federal changes require linked Form 1098 lender and account facts, original Form 1099-R checkbox facts, and territory deduction allocation. `4ae1b8e6` adds the source-bound Ohio resident A34 draft. Final forms and qualified independent tax review remain required. |
-| Browser | Frozen `49f79555` passed 650 managed cases with five planned skips, zero failures and normal cleanup. Strict `f2311eef` produced 640 passes, ten Ohio 30-second timeouts and five planned skips. The equivalent managed local Ohio cases passed. [Strict CI](https://github.com/utilityfueled/tax-engine/actions/runs/44467417463/job/135368434182) · [Timing diagnostic](https://github.com/utilityfueled/tax-engine/actions/runs/44474753669). |
+| Browser | Frozen `49f79555` passed 650 managed cases with five planned skips, zero failures and normal cleanup. Strict `f2311eef` produced 640 passes, ten Ohio 30-second timeouts and five planned skips. The equivalent managed local Ohio cases passed. Remote matched `4ae1b8e6` also hit two original RRTA inspection deadlines, alongside its known Help locator failure. [Strict CI](https://github.com/utilityfueled/tax-engine/actions/runs/44467417463/job/135368434182) · [Remote matched browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44474753669/job/135392477134). |
 | SQLite | Investigation deferred. The historical sanitizer and ABI gates are open. Preserve the unrelated local changes. [Prior evidence](upgrade-2026-progress.md). |
 | glibc | Investigation deferred. The paired-profile and release gates require their own exact evidence. [Prior ledger](upgrade-2026-glibc-ifunc-profile-20261117.md). |
 | RRTA privacy | Original and compound candidates failed the unchanged 10% threshold; buffered-numeric composition failed its 2% incremental screen. No adoption or repeated negative run. The four-second privacy limit and independent parser remain. [Ledger](upgrade-2026-rrta-python-paired-20261117.md). |

@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 shared NIIT and foreign-tax fixture correction
+
+Frozen `92ed89d1` recorded 29,202 passes, 75 planned skips and three failures in each of the unit and coverage commands. The NIIT and foreign-tax tests shared one synthetic annuity statement that supplied a payer-determined taxable amount but omitted the actual unchecked Box 2b fact. The fixture-only `4555f852` declares that original checkbox. The original assertions, expected values and normal engine admission gates are unchanged. All 98 targeted tests passed after the correction.
+
+The matched remote managed job on `4ae1b8e6` completed with 647 passes, five planned skips, the known Help locator collision and two timeouts at the original RRTA PDF-inspection limit. The Help text was corrected in `49f79555`. Both desktop and mobile RRTA timeouts remain open under the unchanged inspection budget. [Remote managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44474753669/job/135392477134).
+
 ## November 19 independent joint-return mortgage follow-up
 
 Independent engineering review reproduced a duplicate Form 1098 in which changing the worksheet's second payment role from primary to joint or spouse made identical lender and account facts count twice. The 2026 worksheet now checks lender and account identity across all payment roles. The parsed statement lacks independent payer-of-record identity. Distinct verified references preserve the $8,000 joint-return result, and the 2025 control still returns $8,000. Five new tests failed before the adjustment. All 132 targeted tests, engine typecheck, scoped lint and all 9,622 spec references passed. [IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098).
