@@ -67,6 +67,12 @@ lines:
     irsRef: "2025 Instructions for Forms1098E/1098T, borrower and Box2"
     testRef: "tests/engine/workspace-engine-input.test.ts::preserves actual student loan source metadata without reversing legacy Box2"
 
+  - line: "source-year"
+    description: "Bind lender statements to the federal return calendar year"
+    formula: "Before federal aggregation, reject any Form 1098-E with a supplied statement tax year different from the return year. Preserve matching statements and the historical undated path. The source-verified worksheet still requires its actual statement year and borrower facts."
+    irsRef: "2025 Instructions for Forms 1098-E and 1098-T, Form 1098-E Box 1"
+    testRef: "tests/engine/forms/form-1098-e.test.ts::holds mismatched Form 1098-E years before the Schedule 1 deduction (%i)"
+
   - line: "agg"
     description: "Aggregation: sum Box 1 across all Form 1098-E statements plus any manual studentLoanInterest"
     formula: "totalStudentLoanInterest = SUM(max(0, form1098E[].studentLoanInterestReceived)) + max(0, adjustments.studentLoanInterest)"

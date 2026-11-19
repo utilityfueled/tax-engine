@@ -10,7 +10,7 @@
 import { describe, test, expect } from "vitest";
 import { calculateForm1098E } from "@/engine/forms/form-1098-e.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput, Form1098E } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput, type Form1098E } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 import Decimal from "decimal.js";
 
@@ -169,6 +169,26 @@ describe("Form 1098-E aggregation", () => {
 // ═══════════════════════════════════════════════════════
 
 describe("Form 1098-E federal integration", () => {
+  test.each([2024, 2026])("holds mismatched Form 1098-E years before the Schedule 1 deduction (%i)", taxYear => {
+    const input = TaxYearInputSchema.parse(makeInput({
+      form1098E: [{ ...make1098E("Navient", "1800"), taxYear }],
+    }));
+
+    expect(() => calculateFederalTax(input)).toThrow(`Form 1098-E source year ${taxYear} must match the 2025 return`);
+  });
+
+  test.each([undefined, 2025])("preserves matched and undated Form 1098-E deductions (%s)", taxYear => {
+    const input = TaxYearInputSchema.parse(makeInput({
+      form1098E: [{ ...make1098E("Navient", "1800"), taxYear }],
+    }));
+    const result = calculateFederalTax(input);
+
+    expect(input.form1098E[0]?.taxYear).toBe(taxYear);
+    expect(findLine(result, "Sched 1", "21")?.value.toFixed()).toBe("1800");
+    expect(result.agi.toFixed()).toBe("48200");
+    expect(calculateFederalTax({ ...input, form1098E: [] }).agi.toFixed()).toBe("50000");
+  });
+
   test("single 1098-E routes to Schedule 1 Line 21 deduction", () => {
     const result = calculateFederalTax(makeInput({
       form1098E: [make1098E("Navient", "1800")],

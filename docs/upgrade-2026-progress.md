@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Form 1098-E calendar-year binding
+
+The ordinary federal return now holds an explicitly wrong-year Form 1098-E before aggregating student-loan interest. A matching or undated $1,800 statement reduces the synthetic $50,000 adjusted gross income to $48,200. The spec continues to require the reconciled borrower worksheet where the year-specific method calls for one. The 2025 Box 1 instructions tie the amount to interest the lender received in the calendar year. [IRS 2025 Form 1098-E instructions](https://www.irs.gov/pub/irs-prior/i1098et--2025.pdf).
+
+Five cases reproduced absent holds before implementation. All 411 affected tests across 12 files passed after the fix, with 102 independent focused passes. Confirmed AI still rejects stale positive and zero amounts and mixed-year duplicates before any accounting or provider dispatch. Three type checks, the inventory and exact browser audit passed. Scoped lint found zero errors and 44 existing warnings. The exact full run is pending.
+
 ## November 19 SSA and railroad retirement payment years
 
 The ordinary federal return now holds explicitly wrong-year SSA-1099 and RRB-1099 statements before using benefits or withholding. Matching and undated statements retain $850 in taxable benefits and $125.51 in withholding on the synthetic payment-year fixtures. The current SSA statement still carries a lawful earlier-year lump-sum worksheet. Sources are [IRS Publication 915](https://www.irs.gov/publications/p915) and the [Railroad Retirement Board's statement guidance](https://rrb.gov/Benefits/IncomeTax/TXL-1099).
@@ -10,7 +16,11 @@ Eight calculation cases reproduced the missing holds before implementation. The 
 
 The ordinary federal return holds an explicitly earlier or later Form 1099-K before using the statement's amounts. The check preserves matching originals and older undated records. A matching $3,020.15 original with $125.51 in Box 4 retains that gross reconciliation and credits the withholding once on Form 1040 Line 25b. The statement alone leaves adjusted gross income at $85,000. The spec also corrects the issuer threshold restored by Public Law 119-21 and the reporting of personal-item gains. [IRS Form 1099-K instructions](https://www.irs.gov/instructions/i1099k) · [IRS general FAQs](https://www.irs.gov/newsroom/form-1099-k-faqs-general-information) · [IRS reporting guidance](https://www.irs.gov/businesses/what-to-do-with-form-1099-k).
 
-The spec-backed cases reproduced four missing holds. The wider check then surfaced five legacy tests that expected arithmetic on explicitly wrong-year statements. The corrected expectations retain the separate OID behavior and preserve generic private responses with zero provider or accounting dispatch. The affected run passed 1,288 tests in 34 files. Independent engineering review passed the 48 direct cases and the 55-test verification lane. All three typechecks, spec validation and inventory passed. Scoped lint reported zero errors and nine warnings.
+The spec-backed cases reproduced four missing holds. The wider check then surfaced five legacy tests that expected arithmetic on explicitly wrong-year statements. The corrected expectations retain the separate OID behavior and preserve generic private responses with zero provider or accounting dispatch. The affected run passed 1,288 tests in 34 files. Independent engineering review passed the 48 direct cases and the 55-test verification lane. Exact `89aacbe9` passed 29,419 tests each in unit and coverage, with 88.28% branch coverage against the 85% gate. All nine static and build checks, normal PostgreSQL cleanup and GitHub's exact Docker run passed. Scoped lint reported zero errors and nine warnings.
+
+## November 19 official annual forms check
+
+The current final IRS Form 1040 and Pennsylvania PA-40 still identify the 2025 filing year. The 2026 IRS Form 1040 carries a draft watermark. Ohio has published its 2026 nonbusiness bracket and MAGI guidance, already represented in the 2026 Ohio spec. The Ohio public catalog checked here still lists the 2025 annual IT 1040 package. Final-year physical qualification stays open. [IRS current Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) · [IRS 2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) · [Pennsylvania individual tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio 2026 guidance](https://tax.ohio.gov/individual/who-must-file/whats-new) · [Ohio forms catalog](https://tax.ohio.gov/business/get-a-form/tax-forms).
 
 ## November 19 current protected Preview workspace lifecycle
 

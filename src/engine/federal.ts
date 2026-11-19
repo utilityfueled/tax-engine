@@ -244,6 +244,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     ["Form W-2G", input.formW2G ?? []],
     ["Form 1099-K", input.form1099K ?? []],
     ["Form RRB-1099", input.formRRB1099 ?? []],
+    ["Form 1098-E", input.form1098E ?? []],
   ] as const) {
     const mismatch = statements.find(statement => statement.taxYear !== undefined && statement.taxYear !== returnYear);
     if (mismatch) {
