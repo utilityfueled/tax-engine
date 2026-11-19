@@ -556,6 +556,45 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestBrokerDateFormats": {
+        "source": "7f55ca05",
+        "archiveSha256": "2ca4257a798c43dd2f0ac6d54fc5f3b35c65eb1de2b6466f3b9f19ec298244e0",
+        "focusedPasses": 393,
+        "manifestAndRegressionControls": 33,
+        "nodeDiagnosticPasses": 37,
+        "fullLocal": {"unitPasses": 29469, "coveragePasses": 29469, "branchCoverage": 88.29, "staticPasses": 9, "normalPostgresStop": true},
+        "ciRun": 44585135675,
+        "webRun": 44585135521,
+        "dockerRun": 44585135623,
+        "linuxArm64Run": 44585365582,
+        "protectedPreview": {
+          "status": "READY; exact source and project confirmed",
+          "trackedEntries": 6488,
+          "literalInternalSymlinks": 6,
+          "productionAliasAssigned": false,
+          "testBilling": true,
+          "workspaceChecksPassed": 9,
+          "workspaceReceiptSha256": "706a81242d5f4ea14299035c541e7e7a863f528dbb6ed31247f7dc52b4a9616d",
+          "recoveryRequestsAccepted": 1,
+          "recoveryMessagesDelivered": 1,
+          "resetLinkUsed": false,
+          "mailReceiptSha256": "dd8bcbbe179b4f5bf29c3c30e3d5598f7a71f7f5a0f977a94b1511dfdedec4fb"
+        }
+      },
+      "latestLegacyBrokerCompatibility": {
+        "source": "2d920a8f",
+        "archiveSha256": "12018327db79f4e126b5b949b0096c72f6cf8a18833fa9822f66d9f90670e13f",
+        "precedingSource": "93fc00be",
+        "precedingFailure": "Pennsylvania diversified-income original annual projection crashed when legacy direct dateSold was absent; reproduced before repair.",
+        "affectedPasses": 361,
+        "nodeDiagnosticPasses": 37,
+        "specRefsResolved": 9649,
+        "fullLocal": {"unitPasses": 29467, "coveragePasses": 29467, "branchCoverage": 88.29, "normalPostgresStop": true},
+        "precedingCoverageCI": {"job": 135760102313, "passes": 29466, "failures": 1},
+        "ciRun": 44584228980,
+        "webRun": 44584229334,
+        "dockerRun": 44584229220
+      },
       "latestBrokerDisposition": {
         "source": "93fc00be",
         "archiveSha256": "af630206f9be90524a3c2fe9031a88430ac4bd8f88433f6e1961e80f51426232",
