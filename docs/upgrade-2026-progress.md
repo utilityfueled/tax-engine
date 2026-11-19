@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19 exact static checks and protected Preview email delivery
+
+On frozen `49f79555`, engine, contracts and web typechecks, spec validation, inventory validation, engine and web builds, lint and the offline model-evaluation manifest check all exited successfully. Lint recorded zero errors and 12,102 warnings. The protected Preview from the same archive accepted one recovery-email request for the existing authorized test mailbox. An ID-only mailbox check observed zero matching messages at baseline and one new matching message after the request. The evidence covers delivery. The reset link was left unused and no account credentials changed.
+
 ## November 19 current unit, coverage and Preview workspace rehearsal
 
 Frozen `49f79555` passed the full unit and coverage commands with 29,187 tests passing and 75 skipping in each. Branch coverage was 87.88% against the 85% minimum. A preceding `22d9b9aa` run recorded a denied loopback TLS bind and unit timeouts during concurrent execution. The latest checks ran sequentially with loopback access and the original deadlines.
