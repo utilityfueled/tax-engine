@@ -1,0 +1,67 @@
+form: "Form 8880 2026 verified inputs"
+fullName: "2026 retirement savings credit source facts and modified AGI"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf"
+instructions: "https://www.irs.gov/publications/p590a"
+notes: |
+  Form 8880 and its 2026 instructions share the same PDF. Sections
+  25B(c)–(e) and 152(f)(2) govern eligibility, the distribution reduction,
+  and income exclusions. The annual return path requires positively
+  confirmed 2026 facts. Historical contracts and release gates remain in place.
+lines:
+  - line: "2026 ownership and completeness"
+    description: "Require the actual year and primary and applicable spouse facts"
+    formula: >-
+      To request this credit on the 2026 return, confirm each participant's
+      eligibility and testing-period distribution facts, including explicit
+      zeros. Use a spouse column only on an actual joint return with a
+      taxpayer spouse. The actual return controls the filing status, AGI,
+      year and dates of birth. Hold a difference between a recorded
+      standard-deduction dependency fact and the credit dependency
+      input until the filer resolves each rule from the original facts.
+      Preserve the established pre-2026 input behavior.
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::requires complete annual facts at schema and calculation boundaries"
+  - line: "2"
+    description: "Keep omitted and explicitly zero elective deferrals distinct"
+    formula: >-
+      When no contribution amount has been separately entered, use the
+      supported original current-year W-2 Box 12 retirement contributions.
+      An explicit entered zero remains zero. Require an actual W-2 owner
+      on a joint return when a contributing W-2 is used for the credit.
+      Code G commingles §457(b) elective and other contributions. Require
+      the actual eligible employee total and plan qualification when Code G
+      would otherwise be part of an inferred total.
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::uses original W-2 deferrals only when the confirmed contribution is omitted"
+  - line: "2 source guards"
+    description: "Reject an earlier or unconfirmed W-2 year and ambiguous Code G"
+    formula: "A nonzero retirement Box 12 fallback needs the actual 2026 W-2 and an unambiguous contribution code."
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::refuses W-2 fallback from the wrong year or ambiguous Code G"
+  - line: "4"
+    description: "Use the confirmed distribution reduction for each contributor"
+    formula: >-
+      The supplied figure is the reviewed Line 4 total for that contributor,
+      covering tax years 2024 through 2026 and any later receipts before
+      the applicable 2026 return due date including extensions, after
+      required exclusions. Each contributor includes their own distributions.
+      Cross-attribute a spouse's distributions to the other spouse only when
+      the same couple files jointly in both 2026 and the year of receipt.
+      Zero is an affirmed result, never a replacement for absent information.
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::uses confirmed testing-period reductions and student months"
+  - line: "6"
+    description: "Apply contributor-specific student and dependency facts"
+    formula: >-
+      Exclude a contributor with at least five qualifying calendar months
+      of 2026. Count a month if any part includes full-time enrollment at a
+      qualifying school or qualifying full-time on-farm training. Exclude
+      a contributor when the section 151 dependent deduction is allowed to
+      another taxpayer. Apply the 2026 birth-date threshold and cap after
+      the required facts are known.
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::uses confirmed testing-period reductions and student months"
+  - line: "8"
+    description: "Calculate line 8 without the income exclusions in sections 911, 931 and 933"
+    formula: >-
+      Restore signed Form 2555 line 45 and the line 50 housing deduction to
+      signed Form 1040 line 11a. Restore American Samoa and Puerto Rico net
+      AGI effects separately, after reversing associated deduction changes.
+      Use Decimal and retain signed amounts and source adjustments in the audit.
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::restores the statutory exclusions before selecting the credit rate"

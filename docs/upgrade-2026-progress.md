@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: confirmed Form 8880 facts and modified AGI
+
+The 2026 return path now requires contributor eligibility and completed testing-period distribution facts. It holds conflicting dependency records and verifies any W-2 used for the contribution fallback is current and attributed. Code G requires a separately confirmed eligible total. Form 8880 line 8 starts with signed AGI and restores the actual net Form 2555 income adjustment, housing deduction and confirmed net territory adjustments under [26 USC §25B](https://uscode.house.gov/us/usc/119-124/t26/s25B/). The exact checks passed 541 tests, inventory and six spec references, type-check, build and scoped lint. Independent review verified the source guards and signed amount path. Public 2026 calculation, review and filing qualification remain closed.
+
 ## November 19: Form 8880 rate table and eligibility date
 
 The draft 2026 federal calculation now uses its own Form 8880 rate table and the January 1, 2009 eligibility cutoff for each contributor. Synthetic checks cover every filing status, each ceiling at the exact amount and one cent above, and both contributor columns. The federal integration probe injects the still-disabled annual constants and verifies $200 through Schedule 3 and Form 1040. The reviewer checked the final annual form and [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf). The 506 adjacent tests, 27 Form 8880 spec links, type-check and scoped lint passed. The 2026 source facts and modified AGI are tracked separately.

@@ -23,6 +23,7 @@ import { MACRSAssetBasisSourcesSchema, resolveMACRSAssetBasisSources } from "./m
 import { MACRSDispositionSourcesSchema, resolveMACRSDispositionSources } from "./macrs-disposition-sources.js";
 import { W2StateLocalSourcesSchema } from "./w2-state-local.js";
 import { OhioResidencyFactsSchema } from "./ohio-residency.js";
+import { Form8880AnnualSchema, readForm8880AnnualSources } from "./form-8880-sources.js";
 import { OhioPaymentFactsSchema } from "./ohio-payments.js";
 import { PAResidencySourcesSchema } from "./pa-residency.js";
 import { PAReciprocitySourcesSchema } from "./pa-reciprocity.js";
@@ -1891,7 +1892,7 @@ export const Form8801Schema = z.preprocess(value => {
   }).optional(),
 }));
 
-export const Form8880Schema = z.object({
+const Form8880LegacySchema = z.object({
   primaryElectiveDeferrals: optionalDecimal, // Line 1 column (a)
   primaryIraContributions: optionalDecimal, // Line 2 column (a) IRA portion
   primaryAbleContributions: optionalDecimal, // Line 2 column (a) ABLE portion
@@ -1906,7 +1907,10 @@ export const Form8880Schema = z.object({
   spouseCanBeClaimedAsDependent: z.boolean().default(false),
   supportedW2PrimaryElectiveDeferrals: optionalDecimal, // Engine trace: supported W-2 Box 12 retirement-contribution defaults for Line 2a
   supportedW2SpouseElectiveDeferrals: optionalDecimal, // Engine trace: supported W-2 Box 12 retirement-contribution defaults for Line 2b
+  sourceFacts2026: z.never().optional(),
 });
+
+export const Form8880Schema = z.union([Form8880AnnualSchema, Form8880LegacySchema]);
 
 export const HsaCoverageSchema = z.enum(["none", "self_only", "family"]);
 
@@ -6670,6 +6674,19 @@ export const TaxYearInputSchema = z.object({
     illinois: IllinoisStateReturnInputSchema.optional(),
   }).optional(),
 }).superRefine((value, ctx) => {
+  if (value.form8880) {
+    const { taxYear, filingStatus, spouse } = value.taxpayer;
+    try {
+      readForm8880AnnualSources(
+        value.form8880, taxYear, filingStatus === "married_filing_jointly",
+        spouse !== undefined, value.standardDeductionFacts,
+      );
+    }
+    catch (error) {
+      if (!(error instanceof Error)) throw error;
+      ctx.addIssue({ code: "custom", path: ["form8880", "sourceFacts2026"], message: error.message });
+    }
+  }
   // Do not silently consume or ignore standalone passenger facts in a full return.
   if (value.form4562?.passengerFirstYearSources !== undefined || value.scheduleC?.sourceFacts?.passengerFirstYear !== undefined) {
     try { calculateScheduleCPassengerSources(value,value.scheduleC); }

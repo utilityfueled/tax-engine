@@ -42,6 +42,7 @@ import type {
   TaxYearInput,
   W2,
 } from "@/models/inputs.js";
+import { readForm8880AnnualSources } from "@/models/form-8880-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { assertFederalPaymentDates } from "./forms/federal-payment-date-sources.js";
@@ -476,6 +477,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Spouse moving expenses require the spouse on an actual joint return.");
   }
   const filingStatus = input.taxpayer.filingStatus as FilingStatus;
+  const saverCreditSources = input.form8880
+    ? readForm8880AnnualSources(
+      input.form8880, year, filingStatus === "married_filing_jointly", Boolean(input.taxpayer.spouse), input.standardDeductionFacts,
+    )
+    : undefined;
   const audit = new AuditTrail();
   const principalResidence = calculateCodPrincipalResidenceReduction(input);
   if (principalResidence) audit.merge(principalResidence.lines);
@@ -4139,12 +4145,26 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   );
   const form8880 = normalizedForm8880Input
     ? calculateForm8880({
+      ...normalizedForm8880Input,
       filingStatus,
       agi,
       taxYear: year,
       primaryDateOfBirth: input.taxpayer.primary.dateOfBirth,
       spouseDateOfBirth: input.taxpayer.spouse?.dateOfBirth,
-      ...normalizedForm8880Input,
+      ...(saverCreditSources && {
+        primaryRecentDistributions: saverCreditSources.primary.testingPeriodDistributionReduction,
+        primaryIsFullTimeStudent: saverCreditSources.primary.qualifyingStudentMonths >= 5,
+        primaryCanBeClaimedAsDependent: saverCreditSources.primary.dependentDeductionAllowedToAnotherTaxpayer,
+        spouseRecentDistributions: saverCreditSources.spouse?.testingPeriodDistributionReduction,
+        spouseIsFullTimeStudent: (saverCreditSources.spouse?.qualifyingStudentMonths ?? 0) >= 5,
+        spouseCanBeClaimedAsDependent: saverCreditSources.spouse?.dependentDeductionAllowedToAnotherTaxpayer,
+        agiRestorations: {
+          foreignIncomeReduction: form2555IncomeReduction,
+          foreignHousingDeduction: form2555HousingDeduction,
+          americanSamoa: d(saverCreditSources.americanSamoaAgiRestoration),
+          puertoRico: d(saverCreditSources.puertoRicoAgiRestoration),
+        },
+      }),
       taxLiabilityBeforeCredit: taxBeforeCredits,
       priorNonrefundableCredits: sum(foreignTaxCredit, dependentCareCredit, elderlyOrDisabledCredit, educationNonrefundable),
     })

@@ -108,9 +108,17 @@ describe("2026 Form 8880 thresholds and federal integration", () => {
       }],
       form8880: {
         primaryElectiveDeferrals: "2000",
-        primaryRecentDistributions: "0",
-        primaryIsFullTimeStudent: false,
-        primaryCanBeClaimedAsDependent: false,
+        sourceFacts2026: {
+          taxYear: 2026,
+          testingPeriodComplete: true,
+          primary: {
+            qualifyingStudentMonths: 0,
+            dependentDeductionAllowedToAnotherTaxpayer: false,
+            testingPeriodDistributionReduction: "0",
+          },
+          americanSamoaAgiRestoration: "0",
+          puertoRicoAgiRestoration: "0",
+        },
       },
     });
     const result = calculateFederalTax(input);

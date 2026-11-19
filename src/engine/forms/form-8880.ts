@@ -1,6 +1,6 @@
 /**
  * Form 8880 saver's credit.
- * Specs: spec/federal/form-8880.yaml and spec/federal/form-8880-2026.yaml
+ * Specs: spec/federal/form-8880.yaml, form-8880-2026.yaml and form-8880-2026-sources.yaml
  */
 
 import Decimal from "decimal.js";
@@ -14,6 +14,12 @@ import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 export interface Form8880CalculationInput {
   filingStatus: FilingStatus;
   agi: string | Decimal;
+  agiRestorations?: {
+    foreignIncomeReduction: Decimal;
+    foreignHousingDeduction: Decimal;
+    americanSamoa: Decimal;
+    puertoRico: Decimal;
+  };
   taxYear: number;
   primaryDateOfBirth: string;
   spouseDateOfBirth?: string;
@@ -92,21 +98,31 @@ export function mergeW2RetirementContributionsIntoForm8880Input(
   }
 
   const isJointReturn = filingStatus === "married_filing_jointly";
+  if (input.sourceFacts2026 && isJointReturn
+    && (input.primaryElectiveDeferrals === undefined || input.spouseElectiveDeferrals === undefined) && w2s.some(w2 =>
+    !w2.accountHolder && getSupportedW2RetirementContributionAmount(w2).gt(0))) {
+    throw new Error("Form 8880 for 2026 requires ownership of each retirement contribution reported on a W-2");
+  }
   const hasTaggedRetirementContributions = w2s.some(
     (w2) => w2.accountHolder !== undefined && getSupportedW2RetirementContributionAmount(w2).greaterThan(0)
   );
 
-  const supportedW2PrimaryElectiveDeferrals = sum(
-    ...w2s
-      .filter((w2) => shouldIncludeSupportedW2RetirementContribution(w2, "primary", isJointReturn, hasTaggedRetirementContributions))
-      .map(getSupportedW2RetirementContributionAmount)
-  );
+  const totalW2Deferrals = (owner: "primary" | "spouse", enteredTotal: string | undefined) => {
+    const statements = w2s.filter(w2 =>
+      shouldIncludeSupportedW2RetirementContribution(w2, owner, isJointReturn, hasTaggedRetirementContributions));
+    if (input.sourceFacts2026 && enteredTotal === undefined) {
+      if (statements.some(w2 => w2.taxYear !== 2026)) {
+        throw new Error("Form 8880 retirement contribution fallback requires an original 2026 W-2");
+      }
+      if (statements.some(w2 => d(w2.box12CodeG).gt(0))) {
+        throw new Error("Form 8880 requires the confirmed eligible contribution total when W-2 Code G is present");
+      }
+    }
+    return sum(...statements.map(getSupportedW2RetirementContributionAmount));
+  };
+  const supportedW2PrimaryElectiveDeferrals = totalW2Deferrals("primary", input.primaryElectiveDeferrals);
   const supportedW2SpouseElectiveDeferrals = isJointReturn
-    ? sum(
-      ...w2s
-        .filter((w2) => shouldIncludeSupportedW2RetirementContribution(w2, "spouse", isJointReturn, hasTaggedRetirementContributions))
-        .map(getSupportedW2RetirementContributionAmount)
-    )
+    ? totalW2Deferrals("spouse", input.spouseElectiveDeferrals)
     : new Decimal(0);
 
   return {
@@ -159,7 +175,10 @@ export function calculateForm8880(input: Form8880CalculationInput): Form8880Resu
   const line6a = primaryEligible ? Decimal.min(MAX_ELIGIBLE_CONTRIBUTION, line5a) : new Decimal(0);
   const line6b = spouseEligible ? Decimal.min(MAX_ELIGIBLE_CONTRIBUTION, line5b) : new Decimal(0);
   const line7 = line6a.plus(line6b);
-  const line8 = zeroFloor(d(input.agi));
+  const agiRestorations = input.taxYear === 2026 ? input.agiRestorations : undefined;
+  const line8 = input.taxYear === 2026
+    ? sum(d(input.agi), ...Object.values(agiRestorations ?? {}))
+    : zeroFloor(d(input.agi));
   const rateTableYear = input.taxYear === 2026 ? 2026 : 2025;
   const line9 = getApplicableCreditRate(input.filingStatus, line8, rateTableYear);
   const line10 = roundDollar(line7.times(line9));
@@ -253,8 +272,19 @@ export function calculateForm8880(input: Form8880CalculationInput): Form8880Resu
     "Line 6a": line6a,
     "Line 6b": line6b,
   });
-  audit.record("Form 8880", "8", "Form 1040 line 11a amount used for the rate table", line8,
-    "Form 1040 line 11a used directly in the supported engine path");
+  if (agiRestorations) {
+    audit.record("Form 8880", "8", "Adjusted gross income for the rate table", line8,
+      "Form 1040 line 11a plus signed income adjustments under §25B(e)", {
+        "Form 1040 line 11a": d(input.agi),
+        "Form 2555 income reduction": agiRestorations.foreignIncomeReduction,
+        "Form 2555 housing deduction": agiRestorations.foreignHousingDeduction,
+        "American Samoa AGI restoration": agiRestorations.americanSamoa,
+        "Puerto Rico AGI restoration": agiRestorations.puertoRico,
+      });
+  } else {
+    audit.record("Form 8880", "8", "Form 1040 line 11a amount used for the rate table", line8,
+      "Form 1040 line 11a used directly in the supported engine path");
+  }
   audit.record("Form 8880", "9", "Applicable credit rate", line9,
     `${rateTableYear} Form 8880 rate table based on Line 8 and filing status`,
     {
