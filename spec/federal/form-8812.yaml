@@ -121,6 +121,12 @@ lines:
     irsRef: "https://uscode.house.gov/us/usc/t26/s24/; https://www.irs.gov/pub/irs-drop/rr-03-72.pdf; https://www.irs.gov/pub/irs-prior/f1040s8--2026.pdf, lines 4 and 6"
     testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 2026 claimed child's age"
 
+  - line: "claimed-child-relationship"
+    description: "Reject an explicit application relationship category that conflicts with line 4"
+    formula: "For 2025 and 2026, the exact application categories parent and other identify a parent, grandparent, or other qualifying relative. Reject an affirmative CTC claim with either category before counting qualifying children. Keep existing free-form relationship handling and independently confirmed ODC claims."
+    irsRef: "IRC 24(c)(1) and 152(c)(2); https://uscode.house.gov/us/usc/t26/s24/; https://uscode.house.gov/us/usc/t26/s152/"
+    testRef: "tests/engine/forms/child-credit-household-admission.test.ts::rejects explicit relative categories before 2025 line 19 and 2026 Schedule 8812"
+
   - line: "source-nontaxable-combat-pay"
     description: "Add actual section 112 combat pay to line 18a and record it separately on line 18b"
     formula: "For a qualifying-child claim in 2025 or 2026, use the sum of actual original W-2 Box 12 code Q amounts when the return reports combat pay, has a military combat-pay indicator, or carries a positive legacy ACTC election amount. Confirm the amount or absence on every W-2 in that case. A positive code Q needs the matching return year and a valid recipient for the filing status. Use the full exact section 112 amount once in ACTC earned income, including when the EIC calculation excludes it. Keep it out of wages and AGI. A positive legacy election amount requires actual code Q sources that reconcile to it, or correction of the old amount. A legacy zero does not override original code Q. Leave line 18b unaudited when no source is available."

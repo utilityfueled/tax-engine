@@ -40,6 +40,25 @@ describe("guided child credit identity facts", () => {
       ]) expect(input(incomplete, year)).toBeNull();
     }
   });
+
+  it("rejects explicit relative categories for CTC and preserves independently confirmed ODC", () => {
+    for (const year of [2025, 2026]) {
+      for (const relationship of ["parent", "other"] as const) {
+        const facts = actualFacts();
+        facts.dependents = [{ ...completeDependent, relationship }];
+        expect(personalFactErrors(facts, "single", year)["dependent-0-relationship"]).toMatch(/relationship.*Child Tax Credit/i);
+        expect(input(facts, year)).toBeNull();
+
+        facts.dependents = [{ ...completeDependent, relationship,
+          dateOfBirth: relationship === "parent" ? "1955-05-01" : completeDependent.dateOfBirth,
+          qualifiesForCTC: false, qualifiesForODC: true, odcTinEligible: true }];
+        expect(input(facts, year)?.taxpayer.dependents[0]).toMatchObject({
+          relationship, qualifiesForCTC: false, qualifiesForODC: true, odcTinEligible: true,
+        });
+      }
+    }
+  });
+
   it("forwards known false and exact possession amounts without converting eligibility", () => {
     const facts = actualFacts();
     facts.employmentValidSsnIssuedByDueDate = false;

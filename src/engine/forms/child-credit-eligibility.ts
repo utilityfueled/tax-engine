@@ -1,6 +1,7 @@
 /** Actual identity eligibility for Schedule 8812; spec/federal/form-8812.yaml. */
 import { z } from "zod";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { isQualifyingRelativeCategory } from "@/utils/child-credit-relationship.js";
 
 const birthDate = z.iso.date();
 
@@ -37,6 +38,9 @@ export function calculateChildCreditEligibility(input: TaxYearInput): {qualifyin
   const parentsCtcEligible = parentsTinEligible && (strict ? ssnKnownEligible : !ssnKnownIneligible);
   let qualifyingChildren = 0;
   for (const child of ctcClaims) {
+    if (isQualifyingRelativeCategory(child.relationship)) {
+      throw new Error("The supplied dependent relationship conflicts with the Child Tax Credit claim");
+    }
     const knownBirthDate = birthDate.safeParse(child.dateOfBirth).success;
     if (strict || (taxpayer.taxYear === 2025 && knownBirthDate)) {
       const year = taxpayer.taxYear;

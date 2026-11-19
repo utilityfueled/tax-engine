@@ -1,3 +1,4 @@
+import { isQualifyingRelativeCategory } from "@/utils/child-credit-relationship";
 import { standardDeductionFactErrors } from "./guided-standard-deduction-facts";
 import { eicClaimantFactErrors } from "./guided-eic-eligibility";
 import { allowsBlankEicChildIdentifier } from "./guided-eic-separated-spouse";
@@ -42,6 +43,9 @@ export function dependentFactErrors(entry: DependentEntryData, index: number, ta
   if (!hasTaxId(entry.ssn) && !(actualBlankEicIdentifier && entry.ssn === '' && entry.qualifiesForCTC === false && entry.qualifiesForODC === false)) errors[`${key}-ssn`] = `Dependent ${index + 1} needs their actual taxpayer ID or a confirmed original blank in the EIC self-only source records`;
   if (!isActualBirthDate(entry.dateOfBirth, taxYear)) errors[`${key}-dateOfBirth`] = `Dependent ${index + 1} needs a valid birth date`;
   if (!entry.relationship) errors[`${key}-relationship`] = `Choose the relationship for dependent ${index + 1}`;
+  if (entry.qualifiesForCTC && isQualifyingRelativeCategory(entry.relationship)) {
+    errors[`${key}-relationship`] = "Confirm a qualifying relationship for the Child Tax Credit or correct the credit answer.";
+  }
   if (!isResidencyMonths(entry.monthsLivedWithYou)) errors[`${key}-monthsLivedWithYou`] = `Enter 0–12 residency months for dependent ${index + 1}`;
   for (const field of ["qualifiesForCTC", "qualifiesForODC", "qualifiesForEIC"] as const) {
     if (typeof entry[field] !== "boolean") errors[`${key}-${field}`] = `Confirm ${field.slice(12)} eligibility for dependent ${index + 1}`;

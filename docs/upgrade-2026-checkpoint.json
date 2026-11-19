@@ -556,6 +556,20 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestChildTaxCreditRelationship": {
+        "authority": ["https://uscode.house.gov/us/usc/t26/s24/", "https://uscode.house.gov/us/usc/t26/s152/"],
+        "heldExplicitCategories": ["parent", "other"],
+        "incompleteLegacyOtherCtcRequiresActualRelationship": true,
+        "redTestsBeforeFix": 2,
+        "targetedTestsPassed": 201,
+        "targetedSuitesPassed": 8,
+        "independentTargetedTestsPassed": 11,
+        "scopedSpecReferences": 63,
+        "actualForm1040Line19Year": 2025,
+        "hypothetical2026EligibilityOnly": true,
+        "public2026CalculationGated": true,
+        "browserAuditSha256": "f2a83c2dacb5c01c9c8e87879b92b3cc992cc2e25fadf6560585c0cb23446aa6"
+      },
       "latestForm8889OrdinaryProjection": {
         "formYear": 2026,
         "blankSha256": "e206d84f0ce3b2a4add7a97e5de8f873b11bd0a16e34e7cd98f9c4dcc87a178d",

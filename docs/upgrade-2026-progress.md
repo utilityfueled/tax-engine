@@ -1,5 +1,25 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Child Tax Credit relationship checks
+
+The guided interview and the Schedule 8812 eligibility calculation now hold
+a Child Tax Credit claim paired with the explicit parent, grandparent or other
+qualifying-relative category. The raw API also holds the exact `parent` and
+`other` values on a CTC claim. A return with an older `other` value needs the
+actual qualifying relationship before calculation. Confirmed Credit for Other
+Dependents claims and supported free-form qualifying-child relationships
+continue through the existing calculation.
+[IRC §24(c)](https://uscode.house.gov/us/usc/t26/s24/) ·
+[IRC §152(c)(2)](https://uscode.house.gov/us/usc/t26/s152/).
+
+Both regression tests failed before implementation. The corrected 2025 engine
+returns $500 on Form 1040 line 19 for the confirmed ODC fixture and $2,200 for
+the qualifying half-sibling fixture. The 2026 check exercises eligibility and
+verifies the public federal calculation remains gated. The broader suite passed
+201 tests across eight files. Independent review and 11 tests passed, as did
+the engine and web typechecks, production lint, 63 scoped spec references and
+the full browser source audit.
+
 ## November 19 ordinary Form 8889 review projection
 
 The internal 2026 projection fills the pinned final IRS blank for a single
