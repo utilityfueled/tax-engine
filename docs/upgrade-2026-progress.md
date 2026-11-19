@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: Form 8880 rate table and eligibility date
+
+The draft 2026 federal calculation now uses its own Form 8880 rate table and the January 1, 2009 eligibility cutoff for each contributor. Synthetic checks cover every filing status, each ceiling at the exact amount and one cent above, and both contributor columns. The federal integration probe injects the still-disabled annual constants and verifies $200 through Schedule 3 and Form 1040. The reviewer checked the final annual form and [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf). The 506 adjacent tests, 27 Form 8880 spec links, type-check and scoped lint passed. The 2026 source facts and modified AGI are tracked separately.
+
 ## November 19: penalty and retirement-credit templates, Philadelphia, browser
 
 The disabled final [Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf) and [Form 8880](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf) candidates bind 85 and 23 widgets. Independent PDF-reader and printed-layout checks confirmed the locations and parent references. The 5329 source has new Parts X and XI and transfers to Schedule 2 lines 5 and 18. Its separate instructions remain for 2025. Form 8880 includes final annual instructions and the fillable worksheet on page 2. Native line 9 accepts the single fractional digit after the preprinted decimal prefix. The two candidates and existing adjacent fillers passed 43 tests, 10 spec references, inventory validation, type-check and strict scoped lint on Node 26.13.1. Review and filing gates remain closed.

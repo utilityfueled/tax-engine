@@ -1,0 +1,54 @@
+form: "Form 8880"
+fullName: "2026 Credit for Qualified Retirement Savings Contributions"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf"
+sourceRevision: "Final 2026 Form 8880 and IRS Notice 2025-67 under IRC §25B(b)"
+retrievedAt: "2026-11-19"
+reviewStatus: "independent-qualified-tax-review-pending"
+sources:
+  - "https://www.irs.gov/pub/irs-drop/n-25-67.pdf"
+notes: |
+  This 2026 supplement adopts the annual rate table and date-of-birth
+  cutoff. The existing Form 8880 method supplies contribution, distribution
+  and nonrefundable tax-limit calculations. In the cohort without exclusions
+  or deductions for foreign earned income, foreign housing, Puerto Rico or
+  American Samoa, Line 8 is the supplied Line 11a amount. A refigured Line 8
+  requires separate source handling.
+lines:
+  - line: "9"
+    description: "Applicable credit rate by 2026 filing status and Line 8 amount"
+    formula: |
+      For married filing jointly, the inclusive upper limits for 50%, 20%
+      and 10% are $48,500, $52,500 and $80,500. For head of household they
+      are $36,375, $39,375 and $60,375. For single, married filing separately
+      and qualifying surviving spouse they are $24,250, $26,250 and $40,250.
+      Compare the supplied Line 8 amount as Decimal without rounding it again.
+      An amount above the 10% upper limit receives 0%. Audit the chosen annual
+      table. Preserve historical calculator results and the existing table for
+      other years.
+    testRef: "tests/engine/federal-savers-credit-2026.test.ts::applies the 2026 Form 8880 bands at and one cent above every ceiling for %s"
+
+  - line: "9-historical"
+    description: "Preserve the 2025 credit rates"
+    formula: "For 2025, compare against the existing inclusive thresholds for its 50%, 20% and 10% bands and audit the historical rate table."
+    testRef: "tests/engine/federal-savers-credit-2026.test.ts::retains the 2025 Form 8880 bands and audit for %s"
+
+  - line: "6a-6b-age"
+    description: "Apply the 2026 date-of-birth cutoff separately to the eligible contribution columns"
+    formula: |
+      Apply the age criterion to both the primary taxpayer and the spouse
+      column of an actual joint return. A contributor born on or before
+      January 1, 2009 satisfies the 2026 age criterion. Exclude a contributor
+      born after that date. Preserve the other eligibility criteria and the
+      $2,000 per-person ceiling.
+    testRef: "tests/engine/federal-savers-credit-2026.test.ts::uses the January 1, 2009 cutoff in both Form 8880 contributor columns"
+
+  - line: "12-federal-handoff"
+    description: "Carry the calculated 2026 saver’s credit into the normal federal return"
+    formula: |
+      For the ordinary federal path, pass the return's year and AGI to Form
+      8880. Multiply the eligible contribution by the applicable credit rate
+      and use the existing remaining-tax limit. Send the allowed credit to
+      Schedule 3 line 4 and Form 1040 line 20. The isolated integration test
+      supplies the 2026 federal rule data through the existing test seam.
+    testRef: "tests/engine/federal-savers-credit-2026.test.ts::uses the return year for Form 8880 and carries the credit into Form 1040"

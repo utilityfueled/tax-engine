@@ -1,12 +1,13 @@
 /**
  * Form 8880 saver's credit.
- * Spec: spec/federal/form-8880.yaml
+ * Specs: spec/federal/form-8880.yaml and spec/federal/form-8880-2026.yaml
  */
 
 import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { Form8880Input, W2 } from "@/models/inputs.js";
+import { freezeRuleData } from "@/models/rule-pack-metadata.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 
@@ -57,6 +58,18 @@ export interface Form8880Result {
 }
 
 const MAX_ELIGIBLE_CONTRIBUTION = new Decimal(2000);
+const RATE_THRESHOLDS = freezeRuleData({
+  2025: {
+    joint: [d("47500"), d("51000"), d("79000")],
+    headOfHousehold: [d("35625"), d("38250"), d("59250")],
+    other: [d("23750"), d("25500"), d("39500")],
+  },
+  2026: {
+    joint: [d("48500"), d("52500"), d("80500")],
+    headOfHousehold: [d("36375"), d("39375"), d("60375")],
+    other: [d("24250"), d("26250"), d("40250")],
+  },
+} as const);
 const SUPPORTED_W2_RETIREMENT_CONTRIBUTION_FIELDS = [
   "box12CodeD",
   "box12CodeE",
@@ -147,7 +160,8 @@ export function calculateForm8880(input: Form8880CalculationInput): Form8880Resu
   const line6b = spouseEligible ? Decimal.min(MAX_ELIGIBLE_CONTRIBUTION, line5b) : new Decimal(0);
   const line7 = line6a.plus(line6b);
   const line8 = zeroFloor(d(input.agi));
-  const line9 = getApplicableCreditRate(input.filingStatus, line8);
+  const rateTableYear = input.taxYear === 2026 ? 2026 : 2025;
+  const line9 = getApplicableCreditRate(input.filingStatus, line8, rateTableYear);
   const line10 = roundDollar(line7.times(line9));
   const taxLiabilityBeforeCredit = zeroFloor(d(input.taxLiabilityBeforeCredit));
   const priorNonrefundableCredits = zeroFloor(d(input.priorNonrefundableCredits));
@@ -242,7 +256,7 @@ export function calculateForm8880(input: Form8880CalculationInput): Form8880Resu
   audit.record("Form 8880", "8", "Form 1040 line 11a amount used for the rate table", line8,
     "Form 1040 line 11a used directly in the supported engine path");
   audit.record("Form 8880", "9", "Applicable credit rate", line9,
-    "2025 Form 8880 rate table based on Line 8 and filing status",
+    `${rateTableYear} Form 8880 rate table based on Line 8 and filing status`,
     {
       "Line 8": line8,
       "Filing status": input.filingStatus,
@@ -314,50 +328,39 @@ function shouldIncludeSupportedW2RetirementContribution(
   return true;
 }
 
-function getApplicableCreditRate(filingStatus: FilingStatus, line8Amount: Decimal): Decimal {
-  const thresholds = getRateThresholds(filingStatus);
+function getApplicableCreditRate(
+  filingStatus: FilingStatus,
+  line8Amount: Decimal,
+  rateTableYear: keyof typeof RATE_THRESHOLDS,
+): Decimal {
+  const [fiftyPercentMax, twentyPercentMax, tenPercentMax] = getRateThresholds(filingStatus, rateTableYear);
 
-  if (line8Amount.lessThanOrEqualTo(thresholds.fiftyPercentMax)) {
-    return new Decimal(0.5);
+  if (line8Amount.lessThanOrEqualTo(fiftyPercentMax)) {
+    return d("0.5");
   }
 
-  if (line8Amount.lessThanOrEqualTo(thresholds.twentyPercentMax)) {
-    return new Decimal(0.2);
+  if (line8Amount.lessThanOrEqualTo(twentyPercentMax)) {
+    return d("0.2");
   }
 
-  if (line8Amount.lessThanOrEqualTo(thresholds.tenPercentMax)) {
-    return new Decimal(0.1);
+  if (line8Amount.lessThanOrEqualTo(tenPercentMax)) {
+    return d("0.1");
   }
 
   return new Decimal(0);
 }
 
-function getRateThresholds(filingStatus: FilingStatus): {
-  fiftyPercentMax: Decimal;
-  twentyPercentMax: Decimal;
-  tenPercentMax: Decimal;
-} {
+function getRateThresholds(filingStatus: FilingStatus, rateTableYear: keyof typeof RATE_THRESHOLDS) {
+  const table = RATE_THRESHOLDS[rateTableYear];
   switch (filingStatus) {
     case "married_filing_jointly":
-      return {
-        fiftyPercentMax: new Decimal(47500),
-        twentyPercentMax: new Decimal(51000),
-        tenPercentMax: new Decimal(79000),
-      };
+      return table.joint;
     case "head_of_household":
-      return {
-        fiftyPercentMax: new Decimal(35625),
-        twentyPercentMax: new Decimal(38250),
-        tenPercentMax: new Decimal(59250),
-      };
+      return table.headOfHousehold;
     case "single":
     case "married_filing_separately":
     case "qualifying_surviving_spouse":
-      return {
-        fiftyPercentMax: new Decimal(23750),
-        twentyPercentMax: new Decimal(25500),
-        tenPercentMax: new Decimal(39500),
-      };
+      return table.other;
   }
 }
 
@@ -371,7 +374,8 @@ function isEligibleSaverCreditPerson(
     return false;
   }
 
-  return getAgeAtYearEnd(dateOfBirth, taxYear) >= 18;
+  // The final 2026 form expressly includes January 1, 2009.
+  return (taxYear === 2026 && dateOfBirth === "2009-01-01") || getAgeAtYearEnd(dateOfBirth, taxYear) >= 18;
 }
 
 function getAgeAtYearEnd(dateOfBirth: string, taxYear: number): number {
