@@ -7,6 +7,7 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
   return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
 });
 import { calculateFederalTax } from "@/engine/federal.js";
+import { calculateFederalTax as calculatePublicFederalTax, parseInput } from "@/index.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { mortgageInput, mortgageLoan } from "../fixtures/mortgage-source.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
@@ -21,6 +22,16 @@ const actualMortgage = (interest: string) => {
   if (!source.mortgageInterestWorksheet) throw new Error("Missing synthetic mortgage worksheet");
   return {form1098:source.form1098.map(form=>({...form,taxYear:2026})),mortgageInterestWorksheet:{...source.mortgageInterestWorksheet,sourceTaxYear:2026}};
 };
+const reitCashReturn = (amount: string) => ({
+  ...base,
+  w2s: [],
+  form1099Div: [{ payer: "Synthetic REIT", ordinaryDividends: "1000000", section199ADividends: "1000000" }],
+  donations: [{
+    organization: "Synthetic public charity", type: "cash", amount, dateOfDonation: "2026-01-01",
+    qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, recipientCategory: "fifty-percent",
+  }],
+});
+
 describe("2026 federal itemized limitation integration", () => {
   it("reduces itemized deductions after the charitable floor without changing AGI", () => {
     const input = TaxYearInputSchema.parse({ ...base, donations: [{ organization: "Synthetic public charity", type: "cash", amount: "103500", dateOfDonation: "2026-01-01", qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, isPrivateFoundation: false }] });
@@ -53,5 +64,103 @@ describe("2026 federal itemized limitation integration", () => {
     expect(result.deductionUsed).toBe("standard");
     expect(result.form8995A?.qbiDeduction.toString()).toBe("196780");
     expect(result.taxableIncome.toString()).toBe("787120");
+  });
+
+  // spec/federal/itemized-deduction-limit.yaml, automatic-reit-cash-election
+  it.each([
+    { gift: "23100", election: undefined, method: "standard", tax: "277296", qbi: "196580", taxable: "786320", itemizedBalance: "-277362" },
+    { gift: "25000", election: "automatic", method: "itemized", tax: "276837", qbi: "196000", taxable: "785081", itemizedBalance: "-276837" },
+  ])("selects the better completed automatic return for a $gift eligible cash gift", ({ gift, election, method, tax, qbi, taxable, itemizedBalance }) => {
+    const raw = { ...reitCashReturn(gift), deductionElection: election };
+    const input = parseInput(raw);
+    const original = structuredClone(input);
+    const automatic = calculatePublicFederalTax(input);
+    const elected = calculatePublicFederalTax(parseInput({ ...raw, deductionElection: method }));
+
+    expect(automatic.deductionUsed).toBe(method);
+    expect(automatic.totalTax.toFixed()).toBe(tax);
+    expect(automatic.form8995A?.qbiDeduction.toFixed()).toBe(qbi);
+    expect(automatic.taxableIncome.toFixed()).toBe(taxable);
+    const { allLines, ...result } = automatic;
+    const { allLines: electedLines, ...electedResult } = elected;
+    expect(result).toEqual(electedResult);
+    expect(allLines.slice(0, -1)).toEqual(electedLines);
+    const comparison = allLines.at(-1);
+    expect(comparison).toMatchObject({ form: "Deduction Selection", line: "automatic-comparison" });
+    expect(String(comparison?.inputs["Itemized refund less amount owed"])).toBe(itemizedBalance);
+    expect(String(comparison?.inputs["Standard refund less amount owed"])).toBe("-277296");
+    expect(comparison?.value.toFixed()).toBe(`-${tax}`);
+    expect(calculateFederalTax(structuredClone(original))).toEqual(automatic);
+    expect(input).toEqual(original);
+  });
+
+  // spec/federal/itemized-deduction-limit.yaml, automatic-reit-dividend-precision
+  it.each([
+    {
+      scenario: "matching cents", boxes: [["1000000.01", "1000000.01"]],
+      ordinary: "1000000.01", line17: "1000000", method: "standard", balance: "277296",
+    },
+    {
+      scenario: "an exact half dollar", boxes: [["1000000.50", "1000000.50"]],
+      ordinary: "1000000.50", line17: "1000001", method: "standard", balance: "277296",
+    },
+    {
+      scenario: "two statements that together reach half a dollar",
+      boxes: [["600000.25", "600000.25"], ["400000.25", "400000.25"]],
+      ordinary: "1000000.50", line17: "1000001", method: "standard", balance: "277296",
+    },
+    {
+      scenario: "a raw box mismatch that rounds to the same dollar", boxes: [["1000000.01", "1000000.00"]],
+      ordinary: "1000000.01", line17: "1000000", method: "itemized", balance: "277362",
+    },
+  ])("reconciles REIT dividend source precision for $scenario", ({ boxes, ordinary, line17, method, balance }) => {
+    const raw = {
+      ...reitCashReturn("23100"), form1099Div: boxes.map(([ordinaryDividends, section199ADividends], index) => ({
+        payer: `Synthetic REIT ${index + 1}`, ordinaryDividends, section199ADividends,
+      })),
+    };
+    const elected = calculatePublicFederalTax(parseInput({ ...raw, deductionElection: method }));
+    const automatic = calculatePublicFederalTax(parseInput(raw));
+
+    expect(elected.amountOwed.toFixed()).toBe(balance);
+    expect(automatic.totalDividends.toFixed(2)).toBe(ordinary);
+    expect(automatic.form8995A?.qualifiedReitDividends.toFixed()).toBe(line17);
+    expect(automatic.deductionUsed).toBe(method);
+    expect(automatic.amountOwed.toFixed()).toBe(balance);
+    expect(automatic.allLines.some(line => line.line === "automatic-comparison")).toBe(method === "standard");
+  });
+
+  // spec/federal/itemized-deduction-limit.yaml, explicit-reit-cash-election
+  it.each([
+    { election: "itemized", deduction: "17122", reduction: "978", charity: "0", qbi: "196380", tax: "277362" },
+    { election: "standard", deduction: "16100", reduction: "0", charity: "1000", qbi: "196580", tax: "277296" },
+  ])("honors the explicit $election election without an automatic comparison", ({ election, deduction, reduction, charity, qbi, tax }) => {
+    const input = parseInput({ ...reitCashReturn("23100"), deductionElection: election });
+    const result = calculatePublicFederalTax(input);
+
+    expect(result.deductionUsed).toBe(election);
+    expect(result.deductionAmount.toFixed()).toBe(deduction);
+    expect(result.itemizedDeductionReduction?.toFixed()).toBe(reduction);
+    expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe(charity);
+    expect(result.form8995A?.qbiDeduction.toFixed()).toBe(qbi);
+    expect(result.totalTax.toFixed()).toBe(tax);
+    expect(result.allLines.some(line => line.line === "automatic-comparison")).toBe(false);
+  });
+
+  it("keeps a return with dated Form 2210 withholding outside the comparison", () => {
+    const input = parseInput({ ...reitCashReturn("23100"), form2210: { ...form2210, withholdingMethod: "actual-dates", withholdingPayments: [] } });
+    const result = calculatePublicFederalTax(input);
+
+    expect(result.deductionUsed).toBe("itemized");
+    expect(result.form2210?.withholdingMethod).toBe("actual-dates");
+    expect(result.allLines.some(line => line.line === "automatic-comparison")).toBe(false);
+  });
+
+  it("keeps current excess charitable gifts outside the comparison", () => {
+    const result = calculatePublicFederalTax(parseInput(reitCashReturn("650000")));
+
+    expect(result.deductionUsed).toBe("itemized");
+    expect(result.carryforwards.charitableContributions.gt(0)).toBe(true);
+    expect(result.allLines.some(line => line.line === "automatic-comparison")).toBe(false);
   });
 });

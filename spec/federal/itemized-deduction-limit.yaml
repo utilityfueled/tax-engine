@@ -10,8 +10,40 @@ lines:
     testRef: "tests/engine/forms/itemized-deduction-limit.test.ts::2026 itemized deduction limitation"
   - line: "federal-coordination"
     description: "Apply after QBI and select the actual deduction"
-    formula: "Compute QBI with unreduced itemized deductions; apply section 68 using AGI less QBI and Schedule 1-A. If reduced itemized is not greater than standard plus eligible nonitemizer gifts, select standard and recompute QBI using that path. 2025 unchanged. NOL coordination remains explicitly unsupported for 2026."
+    formula: "Compute QBI with unreduced itemized deductions; apply section 68 using AGI less QBI and Schedule 1-A. In the existing automatic amount comparison, if reduced itemized is not greater than standard plus eligible nonitemizer gifts, select standard and recompute QBI using that path. Apply the separate complete-return comparison when the narrow automatic REIT and cash case qualifies."
     testRef: "tests/engine/federal-itemized-2026.test.ts::2026 federal itemized limitation integration"
+  - line: "automatic-reit-cash-election"
+    description: "Compare both completed 2026 returns for the admitted automatic election"
+    formula: >-
+      For a standard-eligible 2026 single filer with an automatic election,
+      consider a standard-deduction replay when the original route itemizes
+      with a positive section 68 reduction, current qualified REIT dividends
+      are the only income and section 199A source, and itemized deductions
+      consist only of current eligible cash gifts with a positive section
+      170(p) candidate. Require no charitable history or carryforward,
+      prior-year carry worksheet, claim-of-right, NOL, or Marketplace method.
+      Require the verified prior-year zero-liability exception and regular
+      equal-installment penalty method without special Form 2210 facts.
+      Recompute each route's tax, QBI, credits, and payments from the same
+      originals. Prefer the higher refund minus amount owed and keep the
+      original itemizer on a tie. Retain the complete selected result and
+      append one audit line recording both balances and the automatic choice.
+    irsRef: "IRC sections 63(e), 68(a) and (b), 170(b)(1)(I) and (p), and 199A(a) and (e)(1); draft 2026 Schedule A lines 13–18"
+    testRef: 'tests/engine/federal-itemized-2026.test.ts::selects the better completed automatic return for a $gift eligible cash gift'
+  - line: "automatic-reit-dividend-precision"
+    description: "Reconcile the original REIT dividend cents with Form 8995-A line 17"
+    formula: >-
+      Require exact equality of Form 1099-DIV boxes 1a and 5 on each
+      statement, and reconcile their exact aggregate with federal ordinary
+      dividends. Sum all statements with cents, then round that aggregate
+      once to whole dollars for comparison with Form 8995-A line 17.
+    irsRef: "Form 1040 instructions, Rounding Off to Whole Dollars; Form 8995-A line 17"
+    testRef: 'tests/engine/federal-itemized-2026.test.ts::reconciles REIT dividend source precision for $scenario'
+  - line: "explicit-reit-cash-election"
+    description: "Honor explicit choices on the same current REIT and cash sources"
+    formula: "When the taxpayer explicitly elects itemized or standard, use the elected eligible route and its own QBI amount without the automatic balance comparison."
+    irsRef: "IRC section 63(e); IRC section 199A(e)(1)"
+    testRef: 'tests/engine/federal-itemized-2026.test.ts::honors the explicit $election election without an automatic comparison'
   - line: "amt-coordination"
     description: "Disregard the overall limitation for AMT"
     formula: "When itemizing, subtract the section 68 reduction from regular taxable income in computing AMTI. IRC 56(b)(1)(E) makes section 68 inapplicable for AMT."

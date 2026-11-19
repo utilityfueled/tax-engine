@@ -26,6 +26,7 @@ import Decimal from "decimal.js";
 import { reportSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
+import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
 import type {
   Form1099B,
   Form1099Div,
@@ -233,8 +234,9 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
     if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
   });
-  const claim = claimOfRightStage(input) ? undefined : calculateClaimOfRightSources(input);
-  if (!claim) return calculateFederalTaxForSources(input);
+  if (claimOfRightStage(input)) return calculateFederalTaxForSources(input);
+  const claim = calculateClaimOfRightSources(input);
+  if (!claim) return compareAutomaticReitCashDeduction(input, calculateFederalTaxForSources(input));
   if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true)) throw new Error("Repaid earlier-year income with Marketplace worksheets needs a separate method");
   if (claim.eligibleAmount.isZero()) return { ...calculateFederalTaxForSources(input), claimOfRight: { ...claim, method: "not_deductible" } };
   // Both stages must complete, so a single entered worksheet figure cannot match both.
@@ -244,6 +246,56 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (deduction.deductionUsed !== "itemized" && claim.availableCredit.isZero()) return { ...credit, claimOfRight: { ...claim, method: "no_benefit" } };
   return claimOfRightNetRefund(credit).gt(claimOfRightNetRefund(deduction))
     ? { ...credit, claimOfRight: { ...claim, method: "credit" } } : { ...deduction, claimOfRight: { ...claim, method: "deduction" } };
+}
+
+/** Spec: itemized-deduction-limit.yaml, automatic-reit-cash-election. */
+function compareAutomaticReitCashDeduction(input: TaxYearInput, itemized: TaxReturnResult): TaxReturnResult {
+  if (itemized.taxYear !== 2026 || itemized.filingStatus !== "single"
+    || (input.deductionElection ?? "automatic") !== "automatic" || itemized.deductionUsed !== "itemized"
+    || !itemized.standardDeductionWorksheet?.eligibleForStandardDeduction || !itemized.itemizedDeductionReduction?.gt(0)
+    || input.priorYear || input.charitableCarryoverSources || input.k1CharitableSources || input.qbiLossSources
+    || input.netOperatingLoss || input.form172 || input.form982NolSources
+    || input.form1095A.length || input.form8962 || input.form7206) return itemized;
+
+  const qbi = itemized.form8995A;
+  // Schedule B retains cents, while Form 8995-A line 17 rounds the aggregate.
+  if (!qbi?.qualifiedReitDividends.gt(0) || qbi.businesses.length || qbi.ptpBusinesses.length
+    || !qbi.cooperativeDPAD.isZero() || input.scheduleK1.length || input.scheduleK1Form1041.length
+    || input.form1099Div.some(statement => !d(statement.ordinaryDividends).eq(d(statement.section199ADividends)))
+    || !sum(...input.form1099Div.map(statement => d(statement.ordinaryDividends))).eq(itemized.totalDividends)
+    || !roundDollar(itemized.totalDividends).eq(qbi.qualifiedReitDividends)
+    || !itemized.totalIncome.eq(itemized.totalDividends)
+    || [itemized.totalWages, itemized.totalInterest, itemized.taxExemptInterest, itemized.qualifiedDividends,
+      itemized.iraDistributionsGross, itemized.pensionDistributionsGross, itemized.socialSecurityBenefitsGross,
+      itemized.capitalGainLoss, itemized.otherIncome, itemized.adjustmentsToIncome].some(amount => !amount.isZero())) return itemized;
+
+  const charity = itemized.scheduleA;
+  if (!charity?.charitableCurrentCash.gt(0) || !charity.totalItemized.eq(charity.charitableCurrentCash)
+    || !charity.nonitemizerCharitableDeduction.gt(0) || !itemized.carryforwards.charitableContributions.isZero()
+    || !input.donations.length || !input.donations.every(donation => donation.type === "cash"
+      && donation.qualifiedOrganization === true && donation.supportingOrganization === false
+      && donation.donorAdvisedFund === false && resolveCharitableRecipient(donation).percentageCategory === "fifty-percent")) return itemized;
+
+  const penaltyFacts = input.form2210;
+  const penalty = itemized.form2210;
+  if (penaltyFacts?.priorYearTaxStatus !== "no-tax-liability" || penaltyFacts.calculationMethod !== "regular"
+    || penaltyFacts.withholdingMethod !== "equal-installments" || penaltyFacts.farmerOrFisher !== false
+    || penaltyFacts.waiverRequested || penaltyFacts.returnFiledDate || penaltyFacts.returnPaidInFullDate || input.scheduleH
+    || penaltyFacts.withholdingPayments?.length || penaltyFacts.priorYearCreditPayments?.length || penaltyFacts.returnPayments?.length
+    || !penalty?.sourceFactsVerified || !penalty.safeHarborMet || !penalty.requiredAnnualPayment.isZero()
+    || !penalty.penalty.isZero() || penalty.requiresForm2210) return itemized;
+
+  const standard = calculateFederalTaxForSources({ ...input, deductionElection: "standard" });
+  const itemizedBalance = itemized.refund.minus(itemized.amountOwed);
+  const standardBalance = standard.refund.minus(standard.amountOwed);
+  const useStandard = standardBalance.gt(itemizedBalance);
+  const winner = useStandard ? standard : itemized;
+  const audit = new AuditTrail();
+  audit.record("Deduction Selection", "automatic-comparison", "Automatic selection by completed return balance",
+    useStandard ? standardBalance : itemizedBalance,
+    useStandard ? "Standard return has the higher refund less amount owed" : "Itemized return has the higher refund less amount owed or ties",
+    { "Itemized refund less amount owed": itemizedBalance, "Standard refund less amount owed": standardBalance });
+  return { ...winner, allLines: [...winner.allLines, ...audit.getLines()] };
 }
 
 function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
