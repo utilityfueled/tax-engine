@@ -407,11 +407,20 @@
           "recoveryPassed": true,
           "logSha256": "53330f66a1dbd09d854bddb4f1a2d202ba2d6a15fff622d3c1d76645d936f914",
           "result": "failed, outer step timeout before aggregate receipt",
-          "completeRun": { "commit": "2fd3fe00", "runId": 44557882785, "stepTimeoutMinutes": 75, "jobTimeoutMinutes": 90, "result": "in progress" }
+          "completeRun": {
+            "commit": "2fd3fe00", "runId": 44557882785, "jobId": 135678803388, "stepTimeoutMinutes": 75, "jobTimeoutMinutes": 90,
+            "windows": 8, "cases": 655, "passed": 640, "failed": 10, "originalSkips": 5,
+            "failureGroups": { "ohioPartYearBusiness": 2, "ohioReciprocity": 1, "ohioResidentCredit": 2, "ohioPartYearSchool": 4, "pennsylvaniaMarriedPayment": 1 },
+            "smokePassed": true, "composePhasesPassed": 6, "containerRemovalPassed": true,
+            "summarySha256": "f4560ed78f799e8b29f5f989b4d71f8a57735ffdb0d87b90734bdb5b35ac7112",
+            "logSha256": "fadd0093d94e0eab0dc46361df768603bc4c716e4554ae27a52ef0e469c6e21b",
+            "result": "failed at unchanged per-case deadlines; full suite completed"
+          }
         }
       },
       "nov19MarketplaceCoverageYear": {
         "parent": "a1f4d065",
+        "commit": "3265ae7a",
         "initialMissingHolds": 7,
         "affectedTestsPassed": 372,
         "affectedFilesPassed": 52,
@@ -421,7 +430,81 @@
         "browserAuditMatched": true,
         "typeChecksPassed": 3,
         "lintPassed": true,
-        "fullVerification": "pending"
+        "staticAndBuildChecksPassed": 9,
+        "unitAndCoverageTestsPassedEach": 29445,
+        "branchCoveragePercent": "88.28",
+        "postgresStopPassed": true,
+        "ciRun": 44559008214,
+        "ciJobsPassed": 6,
+        "webRun": 44559008229,
+        "dockerRun": 44559008669,
+        "dockerPassed": true,
+        "managedBrowserVerification": {
+          "local": { "passed": 650, "failed": 0, "originalSkips": 5, "windows": 8, "cleanupPassed": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356" },
+          "remote": { "jobId": 135682816773, "passed": 650, "failed": 0, "originalSkips": 5 }
+        },
+        "strictAmd64Browser": { "jobId": 135682815831, "passed": 643, "failed": 7, "originalSkips": 5, "defaultDeadlineMs": 30000, "composeRecoveryPassed": true, "rollbackPassed": true, "teardownPassed": true, "browserContainerRemovalPassed": true }
+      },
+      "nov19OriginalIssueDiscountYear": {
+        "parent": "3265ae7a",
+        "commit": "3530f94f",
+        "initialMissingHolds": 9,
+        "affectedTestsPassed": 411,
+        "affectedFilesPassed": 29,
+        "independentFocusedTestsPassed": 6,
+        "scopedSpecReferencesValidated": 19,
+        "typecheckPassed": true,
+        "lintErrors": 0,
+        "archiveSha256": "634e37861ee80b54ca5cb35a8b9fa7616ba62fb21e62dae34d65d6ee729afe7c",
+        "exactStaticAndBuildChecksPassed": 9,
+        "ciRun": 44563810044,
+        "webRun": 44563809840,
+        "dockerRun": 44563810075,
+        "initialExactLocalCore": { "passesEach": 29450, "failuresEach": 1, "failure": "stale browser diagnostic audit digest", "postgresStopPassed": true },
+        "diagnosticDigestCorrection": {
+          "commit": "26c6eb4f",
+          "archiveSha256": "fec88d984aaa225ef74847bd544021fb6766331b31cd1a467f1d6b972b8b0154",
+          "focusedVitestPassed": 27,
+          "focusedNodeControlsPassed": 37,
+          "exactStaticAndBuildChecksPassed": 9,
+          "unitAndCoverageTestsPassedEach": 29451,
+          "branchCoveragePercent": "88.28",
+          "postgresStopPassed": true,
+          "localManagedBrowser": { "passed": 650, "failed": 0, "originalSkips": 5, "windows": 8, "cleanupPassed": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356" },
+          "ciRun": 44564945355,
+          "ciJobsPassed": 6,
+          "webRun": 44564945157,
+          "remoteManagedBrowser": { "jobId": 135704016543, "passed": 650, "failed": 0, "originalSkips": 5 },
+          "strictAmd64Browser": { "jobId": 135704016987, "passed": 642, "failed": 8, "originalSkips": 5, "failureGroups": { "ohioPartYearBusiness": 2, "ohioResidentCredit": 2, "ohioPartYearSchool": 4 } },
+          "dockerRun": 44564945040,
+          "dockerPassed": true
+        }
+      },
+      "nov19HsaDistributionYear": {
+        "parent": "26c6eb4f", "commit": "473fe088",
+        "initialMissingHolds": 8, "affectedTestsPassed": 938, "affectedFilesPassed": 32,
+        "independentTestsPassed": 1037, "scopedSpecReferencesValidated": 14,
+        "browserAuditVitestPassed": 27, "browserAuditNodeControlsPassed": 37,
+        "typecheckPassed": true, "lintErrors": 0,
+        "ciRun": 44569929024, "webRun": 44569929053, "dockerRun": 44569929084
+      },
+      "nov19CancelledDebtActualDischargeYear": {
+        "parent": "473fe088", "commit": "6766f450",
+        "initialMissingHolds": 2, "standaloneVerifiedResidenceExclusionRegression": 1,
+        "affectedTestsPassed": 1174, "affectedFilesPassed": 8, "independentTestsPassed": 10,
+        "browserAuditVitestPassed": 27, "browserAuditNodeControlsPassed": 37,
+        "specReferencesPassed": true, "typecheckPassed": true, "lintErrors": 0,
+        "archiveSha256": "1b08ecc554bc42c9cc7be59bbc6895473a85b2259bebae97dcc1f87bf06a4df4",
+        "exactStaticAndBuildChecksPassed": 9, "unitAndCoverageTestsPassedEach": 29463,
+        "branchCoveragePercent": "88.28", "postgresStopPassed": true,
+        "localManagedBrowser": { "passed": 650, "failed": 0, "originalSkips": 5, "windows": 8, "cleanupPassed": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356" },
+        "ciRun": 44571198186, "webRun": 44571197923, "dockerRun": 44571198024, "dockerPassed": true,
+        "protectedPreview": {
+          "exactSourceBound": true, "ready": true, "productionAliasAssigned": false,
+          "testBillingConfigured": true, "trackedBlobs": 6487, "trackedInternalLinks": 6,
+          "workspaceChecksPassed": 9, "ownedCleanupPassed": true, "priorRowsPreserved": true,
+          "resultSha256": "706a81242d5f4ea14299035c541e7e7a863f528dbb6ed31247f7dc52b4a9616d"
+        }
       },
       "nov19QsbsBrowserPdfSubprocess": {
         "parent": "06396eb6",
