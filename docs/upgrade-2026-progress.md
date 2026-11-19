@@ -1,5 +1,19 @@
 # 2026 upgrade implementation evidence
 
+## November 19 current unit, coverage and Preview workspace rehearsal
+
+Frozen `49f79555` passed the full unit and coverage commands with 29,187 tests passing and 75 skipping in each. Branch coverage was 87.88% against the 85% minimum. A preceding `22d9b9aa` run recorded a denied loopback TLS bind and unit timeouts during concurrent execution. The latest checks ran sequentially with loopback access and the original deadlines.
+
+The protected `49f79555` Preview passed one ordinary workspace lifecycle with the existing synthetic user. The test proved fresh absence, created an empty PostgreSQL workspace, saved using the returned revision, reopened the saved record, and deleted its disposable fixture using the current revision. The prior workspace list matched, the fixture was absent, and the signed-out session was null. The exact Preview archive contained 6,476 tracked entries and had SHA-256 `073c25a8f20a6a9768bed5a206cdd9875491fd465a1708873994f04e24d0d827`. Billing was set to test mode. Separate required Preview gates include email delivery, provider and credit reconciliation, outages and rollback.
+
+## November 19 Help Center browser follow-up
+
+The matched 30-second managed run at `4ae1b8e6` completed 655 cases with 649 passes, five planned skips and one Help failure. The FAQ repeated the Getting Started step label, causing the existing locator to match two elements. All Ohio cases passed under the matched deadline in this local runtime. `49f79555` revised only the duplicate wording and updated the associated source hashes. All 18 original Help browser cases passed at 30 seconds with zero retries, and all three support-claim tests passed.
+
+## November 19 protected Preview session and workspace list
+
+The protected tax-engine Preview built the verified `22d9b9aa` archive of 6,476 tracked entries. The provider reported a ready Preview on the intended project with the exact source label and no production alias. Health and support returned HTTP 200. The existing synthetic test account signed in, matched its session actor, received an owner-scoped workspace list, signed out and confirmed a null session. The Preview used test billing mode. Full workspace lifecycle, mail recovery and billing reconciliation require separate evidence.
+
 ## November 19 federal territory deduction guard
 
 Ordinary 2026 federal calculations now hold when current source facts disclose a Puerto Rico or American Samoa exclusion and the deduction allocation is unavailable. The check covers the standard, itemized and automatic paths, reconciles overlapping Schedule A and Schedule 1-A amounts, and preserves Schedule 8812 source diagnostics. In the independent example, $505,000 taxable gross income and $100,000 excluded income reduce $12,000 in general property tax to $10,017 before applying the SALT cap. Future support needs taxable and worldwide gross-income totals and the attribution of each expense. The 2025 calculations, linked historical SALT recovery, prior-year-only vehicle MAGI and standalone credit calculations passed their controls. Exact isolated checks passed 2,072 tests, all 9,616 spec references, inventory checks and engine and web typechecks. Independent review passed 1,093 focused tests. [IRS Publication 570](https://www.irs.gov/publications/p570) · [26 U.S.C. §164](https://uscode.house.gov/us/usc/t26/s164/)

@@ -1,29 +1,26 @@
 # Current 2026 upgrade status
 
-The goal is active and unqualified. Reviewed source packages are pushed to `main`.
-Automatic production builds are disabled. Production deployment, filing and model
-promotion remain unauthorized.
+Reviewed source through `49f79555` is on `main`. Automatic production builds are
+disabled. The 2026 public release still needs qualification.
 
-Resume here. Read only `activeContinuation.liveRuns`, `nextActions` and the named
-package needed next in [the checkpoint](upgrade-2026-checkpoint.json). Keep resume
-reads below 2,000 tokens. Do not print the whole checkpoint or reload completed
-investigations. One watcher owns each run; do not redispatch it.
-On compaction, keep the resume summary below 2,000 tokens: current commit, live
-run IDs and owners, dirty owned files, next action and evidence paths. Link
-historical records instead of copying them.
+Resume with `activeContinuation.nov19TaxAndBrowserContinuation` in
+[the checkpoint](upgrade-2026-checkpoint.json) and the first entries in
+[the progress log](upgrade-2026-progress.md). Read the named package only.
+Keep a single watcher for each run. After compaction, retain the source commit,
+live run IDs, dirty owned files, next action and evidence paths.
 The [execution brief](upgrade-2026-execution-brief.md) remains the complete scope.
 
 | Package | Verified state and next action |
 | --- | --- |
-| Global checks | CI at `40df910c` passed all six jobs: 29,019 tests and 88.20% branch coverage. The 85% gate is unchanged. CI at `7f189699` also passed all six jobs; CI at `f9a3d1f7` also passed all six jobs; CI at `91dbc3a5` also passed all six jobs. CI at `32f623a8` and `7cfa03ed` is active. |
-| Federal facts and PA/OH | All three residency types remain in scope for both states. Source-bound cases pass; full enabled scenarios, independent expected outputs and applicable final 2026 forms remain required. |
-| Strict browser | Web `44235730238` at `40df910c` failed: 648 passed, two failed, five skipped. Two part-year Ohio school cases reached the original 30-second deadline. No request/server/CPU cause is established. Web `44238476326` at `7f189699` failed 636/14/5: twelve 30-second deadlines and two four-second privacy deadlines. Web at `f9a3d1f7` failed 648/2/5 in both modes, at original privacy/school deadlines. Both `91dbc3a5` browser modes stopped before cases on one missing fixture pin; the [repair](upgrade-2026-browser-fixture-accounting-20261118.md) is committed, but run `44251314094` at `32f623a8` stopped before cases on its dependent diagnostic audit digest. The one-field follow-up passes all 37 retained controls; run `7cfa03ed` has passed that check and is running browser cases; final results remain pending. Preserve stopped [timing investigations](upgrade-2026-original-entry-timing-20261117.md). |
-| SQLite | Run `44235763098` at `40df910c` failed after both full suites passed (5,552,180 baseline and 5,552,194 candidate tests). The filtered regression encountered missing prerequisite setup before the five intended cases; the sanitizer build stopped on Lemon hash-table leaks. Runtime sanitizer and ABI outcomes remain unavailable. Root owns the fixture repair; the Lemon agent owns a separate ownership fix. Original gates remain. |
-| glibc | Run `44227921612` failed six strict XPASS; candidate/CVE/allocator/ABI checks never ran. Exporter fix `1663f9e1` passes 54 Python and 10 Node controls. The [default-off mandatory-PASS profile](upgrade-2026-glibc-mandatory-pass-20261118.md) passes 108/54 Python and 51 Node controls plus independent reviews; fresh paired native run `44248166149` at `91dbc3a5` is active. No waiver or retroactive qualification. [Ledger](upgrade-2026-glibc-ifunc-profile-20261117.md). |
+| Global checks | Current `49f79555` passed full unit and coverage with 29,187 passes and 75 skips each. Branch coverage was 87.88% against the unchanged 85% gate. [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44478475856) passed. Current full managed browser and remaining CI are running. |
+| Federal facts and PA/OH | Both states cover resident, part-year and nonresident targets. `4ae1b8e6` adds the source-bound Ohio resident A34 draft. `22d9b9aa` requires actual territory deduction allocation for affected 2026 federal returns. Remaining cohorts need the applicable final forms and qualified independent tax review. |
+| Strict browser | Frozen `e13589b1` local and `f2311eef` managed CI each passed 650 with five planned skips. Strict `f2311eef` produced 640 passes, ten Ohio 30-second timeouts and five planned skips. The equivalent managed local deadline on `4ae1b8e6` produced 649 passes, five skips and one Help label failure. The Ohio cases passed. [Strict CI](https://github.com/utilityfueled/tax-engine/actions/runs/44467417463/job/135368434182) · [Timing diagnostic](https://github.com/utilityfueled/tax-engine/actions/runs/44474753669). |
+| SQLite | Investigation deferred. The historical sanitizer and ABI gates are open. Preserve the unrelated local changes. [Prior evidence](upgrade-2026-progress.md). |
+| glibc | Investigation deferred. The paired-profile and release gates require their own exact evidence. [Prior ledger](upgrade-2026-glibc-ifunc-profile-20261117.md). |
 | RRTA privacy | Original and compound candidates failed the unchanged 10% threshold; buffered-numeric composition failed its 2% incremental screen. No adoption or repeated negative run. The four-second privacy limit and independent parser remain. [Ledger](upgrade-2026-rrta-python-paired-20261117.md). |
-| Hosted billing | Signed-credit evidence: 1,000 cents issued, two one-cent settlements, 998 retained. Two real provider calls cost $0.0005246. Current isolated controls and cleanup pass; historical cleanup and public-sale qualification remain separate. [Ledger](upgrade-2026-signed-credit-provider-20261117.md). |
+| Hosted billing | Protected `49f79555` passed owner-bound PostgreSQL workspace creation, revisioned save, reopen, cleanup and sign-out. The prior workspace list matched after cleanup. Earlier billing on `c0760d2b` verified 1,000 cents issued, two one-cent settlements and 998 retained. Current mail recovery, reconciliation, outages and rollback remain open. [Signed billing ledger](upgrade-2026-signed-credit-provider-20261117.md). |
 | AI evaluation | Known usage: 183 calls/$0.27285490; conservative reserved ceiling: $0.47348230. Independent labels, held-out review, repeated qualification and selected-provider evidence remain required. |
-| Runtime security and recovery | [Raw-base removal run](upgrade-2026-postgres-minimal-runtime-20261118.md) `44238508493` passed independent package/ELF/scan review: packages 155→150, ELFs 1,042→1,038, SQLite provider/consumer 1→0. Eight active and one suppressed Critical findings remain. The [DB recovery stage](upgrade-2026-postgres-minimal-db-20261118.md) passed source controls; independent adoption review passed and native run `44243730083` at `f9a3d1f7` passed independent actual review of both init matrices, recovery and recorded cleanup. The [same-source composite](upgrade-2026-minimal-composite-20261118.md) is committed after split source reviews; run `44251370387` at `32f623a8` passed package/runtime but failed the independent scanner import with unknown termination reason and cleanup HOLD; final composite/DB stage was skipped. Lower layers and final AMD64/ARM64 recovery/release remain open. |
+| Runtime security and recovery | ARM64 self-host proof on `c0760d2b` covered six recovery phases and 650 browser passes with five planned skips. The ordinary next revision rehearsal is being prepared for its isolated target. Prior advisory gates remain open. [ARM64 evidence](upgrade-2026-arm64-c076-actual-20261117.md) · [Prior runtime ledger](upgrade-2026-postgres-minimal-runtime-20261118.md). |
 
 [External actions](upgrade-2026-external-actions.md): qualified human tax and AI
 reviews, independent security/privacy review and accountable advisory ownership,
