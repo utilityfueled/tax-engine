@@ -13,7 +13,12 @@ static and build checks, 650 local browser cases, and the protected Preview
 workspace lifecycle.
 [Guided save and reset evidence](upgrade-2026-progress.md#november-19-local-guided-save-and-reset-recovery).
 
-Resume with the `latestLocalGuidedRecovery` entry under
+The current browser tests at `7459c23d` use synchronous request
+assertions in two lifecycle files. All four affected cases passed locally
+with the same 30-second deadline. Strict cloud qualification continues.
+[Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
+
+Resume with `latestBrowserRequestAssertions` and `latestLocalGuidedRecovery` under
 `activeContinuation.nov19TaxAndBrowserContinuation` in
 [the checkpoint](upgrade-2026-checkpoint.json) and the first entries in
 [the progress log](upgrade-2026-progress.md). Read the named package only.

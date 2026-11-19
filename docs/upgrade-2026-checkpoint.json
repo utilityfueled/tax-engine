@@ -556,6 +556,23 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestBrowserRequestAssertions": {
+        "source": "7459c23d6148f272468efb7265d67bf2a837af9c",
+        "appSource": "fa718e691309097346439fcd33a4e93ce2271e0e",
+        "affectedBrowserCasesPassed": 4,
+        "targetedTestDeadlineMs": 30000,
+        "workers": 2,
+        "retries": 0,
+        "focusedManifestTestsPassed": 44,
+        "browserLogSha256": "4f84c151531ca0a45a34d38271932f5b6baa57f53e5e5381a9cacd23143712a0",
+        "traceObservationSha256": "eb01639270ced521eb71e603171f10d99c4e805a125f200f63ab55ee12d595fa",
+        "github": {
+          "ci": 44607164094,
+          "web": 44607163698,
+          "docker": 44607163920,
+          "arm64": 44607264786
+        }
+      },
       "latestLocalGuidedRecovery": {
         "source": "fa718e691309097346439fcd33a4e93ce2271e0e",
         "archiveSha256": "6ebcda09d822d2f445c0ee3e052a64b2385893b4e0d6054d6a616188671b7832",
@@ -596,9 +613,36 @@
         "exactStage": ".local/upgrade-evidence/nov19-guided-save-exact",
         "github": {
           "ci": 44594838377,
+          "ciPassedJobs": 6,
+          "ciReceiptSha256": "4a03f6dcbd765ae36cc9ef537635bc414c1f889d63f4dfe7e148bea8818c4b44",
           "web": 44594838219,
+          "managedBrowser": {
+            "job": 135810216209,
+            "passed": 650,
+            "failed": 0,
+            "plannedSkips": 5,
+            "logSha256": "0a9633cc8554f9bacc2d889c8796b33621c9611e9564d3f4172446fcbbd31dd3"
+          },
+          "strictAmd64": {
+            "job": 135810215495,
+            "passed": 634,
+            "failed": 16,
+            "plannedSkips": 5,
+            "composeRecoveryRollbackCleanupPassed": true,
+            "logSha256": "36c81f3c08c3d06b7f917319105b32b0a02d4a70d47c0190f7e1e9fc33e4ef35"
+          },
           "docker": 44594837918,
-          "arm64": 44595399791
+          "arm64": 44595399791,
+          "strictArm64": {
+            "job": 135826645815,
+            "passed": 640,
+            "failed": 10,
+            "plannedSkips": 5,
+            "ohioDeadlineFailures": 9,
+            "pennsylvaniaDeadlineFailures": 1,
+            "smokeComposeCleanupPassed": true,
+            "logSha256": "57d3f26883a1e61e0da12aaaeb810678645392a9855866194206de97b64fe62a"
+          }
         },
         "previousExactCloudBrowser": {
           "source": "7f55ca05",

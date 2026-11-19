@@ -1,5 +1,31 @@
 # 2026 upgrade implementation evidence
 
+## November 19 browser request checks and trace overhead
+
+The strict AMD64 trace on `fa718e69` showed that the desktop local
+lifecycle completed browser operations before its final request checks
+emitted 1,450 Playwright matcher events. The matcher tail ran from 29.445
+to 30.114 seconds from the first trace event. The Pennsylvania
+married-payment trace emitted 3,990 matcher events from 30.519 to
+31.669 seconds. Both tails recorded zero matcher errors. The Pennsylvania
+browser operations had already taken 30.519 seconds in that trace.
+[Exact AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44594838219/job/135810215495).
+
+Commit `7459c23d` keeps the exact request predicates and evidence, and
+uses synchronous assertions with fixed failure messages. Application code,
+test case membership, deadlines, workers and retry counts are unchanged.
+Independent review confirmed predicate equivalence for both files. On the
+held production build, all four affected cases passed at 30 seconds
+with two workers, zero retries and tracing enabled. The owned server
+stopped normally. All 44 focused manifest and scheduler tests passed,
+as did spec validation, inventory, lint and the full browser source audit.
+The local browser log SHA-256 is
+`4f84c151531ca0a45a34d38271932f5b6baa57f53e5e5381a9cacd23143712a0`.
+The trace observation SHA-256 is
+`eb01639270ced521eb71e603171f10d99c4e805a125f200f63ab55ee12d595fa`.
+[Successor Web](https://github.com/utilityfueled/tax-engine/actions/runs/44607163698) ·
+[Successor native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44607264786).
+
 ## November 19 local guided save and reset recovery
 
 Commit `fa718e69` keeps a local guided edit open when browser storage rejects
@@ -24,6 +50,20 @@ checks passed, as did the [Docker job](https://github.com/utilityfueled/tax-engi
 The exact local managed browser run passed 650 cases across eight windows
 with five planned skips and verified server shutdown. Its summary SHA-256 is
 `ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`.
+All six exact-source GitHub CI jobs passed. The GitHub managed browser job
+also passed 650 cases with five planned skips.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44594838377) ·
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44594838219/job/135810216209).
+The exact strict AMD64 browser job passed 634 cases, failed 16 and reported
+five planned skips. Compose upgrade, recovery, rollback and container
+cleanup passed. The browser failures were 14 test deadlines at 30 seconds
+and two RRTA saved-PDF inspection deadlines at four seconds. The earlier
+15 cases recurred. The desktop local lifecycle was the one additional
+timeout. [Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44594838219/job/135810215495).
+The exact native ARM64 job passed image smoke, isolated Compose upgrade
+and recovery, and container removal. Its strict browser run passed 640
+cases with five planned skips and ten 30-second deadlines across nine
+Ohio cases and one Pennsylvania married-payment case. [Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44595399791/job/135826645815).
 
 A focused Chromium run on the same production build confirmed the failed
 save alert, the blocked transition, byte-identical old storage during the
