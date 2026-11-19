@@ -11,7 +11,7 @@
 import { describe, test, expect } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateScheduleB } from "@/engine/schedules/schedule-b.js";
-import type { TaxYearInput, Form1099OID } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput, type Form1099OID } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 import Decimal from "decimal.js";
 
@@ -44,6 +44,28 @@ function makeOID(payer: string, overrides: Partial<Form1099OID> = {}): Form1099O
 // ═══════════════════════════════════════════════════════
 
 describe("Form 1099-OID Schedule B integration", () => {
+  test.each([
+    [2024, "1000.10", "125"], [2026, "1000.10", "125"], [2024, "0", "0"], [2026, "0", "0"],
+  ] as const)("holds amounts from the wrong stated calendar year (%i, %s interest, %s withheld)", (taxYear, originalIssueDiscount, federalWithheld) => {
+    const input = TaxYearInputSchema.parse(makeInput({
+      form1099OID: [makeOID("Actual discount broker", { taxYear, originalIssueDiscount, federalWithheld })],
+    }));
+
+    expect(() => calculateFederalTax(input)).toThrow("Form 1099-OID source year does not match the return.");
+  });
+
+  test.each([2025, undefined])("preserves matched and undated unverified statements (%s)", taxYear => {
+    const input = TaxYearInputSchema.parse(makeInput({
+      form1099OID: [makeOID("Actual discount broker", { taxYear, originalIssueDiscount: "1000.10", federalWithheld: "125" })],
+    }));
+    const result = calculateFederalTax(input);
+
+    expect(input.form1099OID[0]?.taxYear).toBe(taxYear);
+    expect(result.form1099OID?.sourceFactsVerified).toBe(false);
+    expect(findLine(result, "1040", "2b")?.value.toFixed(2)).toBe("1000.10");
+    expect(findLine(result, "1040", "25b")?.value.toFixed()).toBe("125");
+  });
+
   test("Box 1 OID flows to Schedule B Part I as interest income", () => {
     const result = calculateFederalTax(makeInput({
       form1099OID: [makeOID("Treasury Direct", { originalIssueDiscount: "1200" })],

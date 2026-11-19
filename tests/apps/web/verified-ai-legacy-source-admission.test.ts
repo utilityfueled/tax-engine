@@ -239,20 +239,15 @@ it.each([
  ['k-withholding-past','k-withholding',2024],['k-withholding-future','k-withholding',2026],
 ] as const)('denies a known mismatched OID or K calendar original %s before confirmed accounting',async(_label,kind,taxYear)=>{
  const input=oidKYearFixture(kind,taxYear),before=structuredClone(input);
- const yearError=kind.startsWith('k-') ? `Form 1099-K source year ${taxYear} must match the 2025 return` : undefined;
- if(yearError){
-  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(yearError);
- }else{
-  const preview=calculateFederalTax(TaxYearInputSchema.parse(input)),baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
-  expect(preview.agi.minus(baseline.agi).toFixed()).toBe(kind==='oid-income'?'1000':'0');
-  expect(preview.totalWithholding.minus(baseline.totalWithholding).toFixed()).toBe(kind.endsWith('withholding')?'1000':'0');
- }
+ const yearError=kind.startsWith('k-') ? `Form 1099-K source year ${taxYear} must match the 2025 return`
+  : 'Form 1099-OID source year does not match the return.';
+ expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(yearError);
  const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);
  expect(response.status).toBe(400);expect(response.headers.get('cache-control')).toContain('no-store');
  const text=await response.text();expect(JSON.parse(text)).toEqual({error:'Complete and confirm matching-year taxpayer facts before requesting a calculation explanation.'});
  for(const privateValue of [input.taxpayer.primary.ssn,'Fictional calendar OID payer','Fictional calendar settlement payer'])expect(text).not.toContain(privateValue);
  expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();expect(input).toEqual(before);
- expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow(yearError??'matching-year direct income originals');
+ expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow(yearError);
 });
 it('preserves matching and missing OID and K originals with income and withholding conservation',async()=>{
  const baseline=calculateFederalTax(TaxYearInputSchema.parse(simpleW2Fixture));
@@ -272,13 +267,14 @@ it('denies zero-impact OID and K year contradictions and conflicting duplicate y
  for(const kind of ['oid-income','k-income'] as const){
   const zero=oidKYearFixture(kind,2024);
   if(kind==='oid-income')zero.form1099OID=zero.form1099OID.map(row=>({...row,originalIssueDiscount:'0'}));else zero.form1099K=zero.form1099K.map(row=>({...row,grossAmount:'0'}));
-  if(kind==='k-income')expect(()=>calculateFederalTax(TaxYearInputSchema.parse(zero))).toThrow('Form 1099-K source year 2024 must match the 2025 return');
-  else expect(calculateFederalTax(TaxYearInputSchema.parse(zero)).agi.toFixed()).toBe('85000');
+  const yearError=kind==='k-income' ? 'Form 1099-K source year 2024 must match the 2025 return'
+   : 'Form 1099-OID source year does not match the return.';
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(zero))).toThrow(yearError);
   const denied=await confirmedMiscNecYearRequest(zero);expect(denied.response.status).toBe(400);expect(denied.accounting).not.toHaveBeenCalled();expect(denied.fetchFn).not.toHaveBeenCalled();
   for(const reversed of [false,true]){
    const input=oidKYearFixture(kind,2025),foreign=oidKYearFixture(kind,2024);
    if(kind==='oid-income')input.form1099OID=reversed?[...foreign.form1099OID,...input.form1099OID]:[...input.form1099OID,...foreign.form1099OID];else input.form1099K=reversed?[...foreign.form1099K,...input.form1099K]:[...input.form1099K,...foreign.form1099K];
-   if(kind==='k-income')expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow('Form 1099-K source year 2024 must match the 2025 return');
+   expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(yearError);
    const {response,fetchFn,accounting}=await confirmedMiscNecYearRequest(input);expect(response.status).toBe(400);expect(fetchFn).not.toHaveBeenCalled();expect(accounting).not.toHaveBeenCalled();
   }
  }

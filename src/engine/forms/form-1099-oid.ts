@@ -53,6 +53,7 @@ export function calculateForm1099OID(forms: Form1099OID[], taxYear = 2025): Form
     const source: Form1099OIDSourceResult = { ...amounts(), payer: form.payer, sourceId, sourceFactsVerified: verified, stateWithholding: [] };
     const record = (line: string, label: string, value: Decimal, formula: string) => audit.record("Form 1099-OID", `${sourceId}:${line}`, label, value, formula);
     if (!verified) {
+      if (form.taxYear !== undefined && form.taxYear !== taxYear) throw new Error("Form 1099-OID source year does not match the return.");
       // Historical aliases were labeled inconsistently. Preserve their old preview behavior, never promote it to verified facts.
       const oid = zeroFloor(legacy(form.originalIssueDiscount, "legacy OID").minus(legacy(form.acquisitionPremium, "legacy acquisition premium")));
       const interest = zeroFloor(legacy(form.otherPeriodicInterest, "legacy interest").minus(legacy(form.bondPremium, "legacy bond premium")));
