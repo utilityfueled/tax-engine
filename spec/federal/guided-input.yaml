@@ -161,9 +161,11 @@ lines:
     testRef: "tests/guided-interview/document-fact-fidelity.test.ts::does not infer document year from a filename or transaction date"
   - line: "2026-eligibility-facts"
     description: "Preserve explicit organization and education identity eligibility facts"
-    formula: "For 2026 nonitemizer gifts collect qualified recipient, supporting organization and donor-advised-fund answers. Preserve qualified-appreciated-stock status for private-foundation property. Education captures taxpayer/spouse/student SSN eligibility and institutional EIN; unknown remains unknown and blocks the affected calculation. A positive 2026 Lifetime Learning aggregate without student identity and eligibility is incomplete; an explicit zero is not a credit claim."
+    formula: "Collect the actual recipient qualification in 2026. For the nonitemizer candidate also collect supporting-organization and donor-advised-fund answers. Preserve these two answers as unknown with an explicit itemized election. Preserve qualified-appreciated-stock status for private-foundation property. Education captures taxpayer/spouse/student SSN eligibility and institutional EIN; unknown remains unknown and blocks the affected calculation. A positive 2026 Lifetime Learning aggregate without student identity and eligibility is incomplete; an explicit zero is not a credit claim."
     irsRef: "Publication 505 (2026), education credit SSN requirements and nonitemizer charitable contributions; IRC 170"
     testRef: "tests/guided-interview/guided-required-facts.test.ts::requires actual 2026 charity and education eligibility facts"
+    testRefs:
+      - "tests/guided-interview/guided-current-charitable-receipt-categories.test.ts::keeps nonitemizer recipient answers unknown for explicitly itemized cash gifts"
   - line: "payment-categories"
     description: "Classify payments by their actual source and year"
     formula: "Keep federal estimated payments, extension payments and prior-year refund credits separate. Require actual payment dates and the immediately preceding source tax year for applied refunds. Preserve explicit zero. Reconcile a saved other-payment total to classified entries before using it; never silently drop it or infer a payment type."

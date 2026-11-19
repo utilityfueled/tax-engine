@@ -412,7 +412,14 @@ export function calculateScheduleA(
   if (priorNolLimit?.ledger === "alternative" && !alternativePriorCharity) throw new Error("Prior alternative charitable history is required");
   const priorCharityInput = priorNolLimit?.ledger === "alternative" ? { ...input, priorYear: undefined,
     charitableCarryoverSources: alternativePriorCharity } : input;
-  if (input.taxpayer.taxYear === 2026) {
+  const is2026 = input.taxpayer.taxYear === 2026;
+  const missingNonitemizerRecipientFacts = is2026 && eligibleDonations.some(donation => donation.type === "cash"
+    && (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined));
+  if (missingNonitemizerRecipientFacts && input.deductionElection !== "itemized") {
+    throw new Error("Nonitemizer charitable recipient qualification is unknown");
+  }
+  // Itemized returns can retain a fully sourced comparison without requiring it.
+  if (is2026 && !missingNonitemizerRecipientFacts) {
     let eligibleCash = k1Charitable?.nonitemizedEligibleCash ?? ZERO;
     for (const donation of eligibleDonations) {
       const amount = d(donation.amount);
@@ -422,7 +429,6 @@ export function calculateScheduleA(
       if (!donation.dateOfDonation.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Donation date must be in the return tax year");
       const recipient = resolveCharitableRecipient(donation);
       if (donation.type !== "cash" || amount.isZero()) continue;
-      if (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined) throw new Error("Nonitemizer charitable recipient qualification is unknown");
       if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && recipient.percentageCategory === "fifty-percent") eligibleCash = eligibleCash.plus(amount);
     }
     if (currentNolLimit?.category === "cash_60") eligibleCash = min(eligibleCash, currentNolLimit.amount);

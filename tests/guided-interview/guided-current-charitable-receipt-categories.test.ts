@@ -13,6 +13,42 @@ import {currentCategoryFixture} from '../fixtures/current-charitable-categories.
 import {simpleW2Fixture} from '../fixtures/simple-w2.js';
 import {actualGuidedCharitableCarryover} from '../fixtures/guided-charitable-carryover';
 import {completeW2Entry,startCompleteInterview} from './complete-facts';
+
+it('keeps nonitemizer recipient answers unknown for explicitly itemized cash gifts', () => {
+  const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', federalWithheld: '1000' }] };
+  state.sectionData.deductions = {
+    ...emptyDeductionData,
+    method: 'itemized',
+    charitableContributions: '1500.25',
+    donationEntries: [{
+      ...emptyDonationEntry,
+      organization: 'Synthetic qualified public charity',
+      type: 'cash',
+      amount: '1500.25',
+      date: '2026-05-01',
+      qualifiedOrganization: true,
+      recipientCategory: 'fifty-percent',
+    }],
+  };
+
+  expect(validateSection(state, 'deductions').status).toBe('complete');
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(input.deductionElection).toBe('itemized');
+  expect(input.donations[0].supportingOrganization).toBeUndefined();
+  expect(input.donations[0].donorAdvisedFund).toBeUndefined();
+
+  const result = calculateScheduleA(input, d('10000'), 'single', FEDERAL_2026_CONSTANTS);
+  expect(result.charitableTotal.toFixed()).toBe('1450');
+  expect(result.nonitemizerCharitableDeduction.toFixed()).toBe('0');
+  const confirmedDonation = { ...input.donations[0], supportingOrganization: false, donorAdvisedFund: false };
+  const confirmed = calculateScheduleA({ ...input, donations: [confirmedDonation] }, d('10000'), 'single', FEDERAL_2026_CONSTANTS);
+  expect(confirmed.nonitemizerCharitableDeduction.toFixed()).toBe('1000');
+  expect(() => calculateScheduleA({ ...input, deductionElection: 'automatic' }, d('10000'), 'single', FEDERAL_2026_CONSTANTS))
+    .toThrow('Nonitemizer charitable recipient qualification is unknown');
+});
+
 it('preserves the full ordinary receipt packet and closed year boundaries',async()=>{
  const state=startCompleteInterview({filingStatus:'mfs',incomeTypes:['w2-wages'],lifeEvents:[],stateCode:null});state.taxYear=2026;
  const personal=state.sectionData['personal-info'];if(!personal?.standardDeductionFacts)throw Error('Missing actual source');personal.standardDeductionFacts.spouseItemizes=true;

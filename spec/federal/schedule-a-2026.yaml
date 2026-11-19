@@ -7,7 +7,7 @@ reviewStatus: "independent-review-pending"
 lines:
   - line: "legacy-audit"
     description: "2026 charitable worksheets do not alter legacy audit identity"
-    formula: "Emit the nonitemizer charitable worksheet audit only for 2026. Preserve 2025 Schedule A and SALT worksheet identifiers."
+    formula: "Emit the nonitemizer charitable worksheet audit for a completed 2026 candidate. Preserve 2025 Schedule A and SALT worksheet identifiers."
     testRef: "tests/edge-cases/schedule-a-edge-cases.test.ts::audit lines identify Schedule A and its SALT worksheet separately"
   - line: "legacy-wagering-precision"
     description: "2025 preserves its preexisting precise source comparison"
@@ -36,12 +36,19 @@ lines:
       cash contributions). Required explicit recipient qualification under
       170(b)(1)(A); supporting organizations, donor-advised funds and private
       foundations excluded. No carryover, noncash gifts, or 0.5% floor.
-      Standard deduction plus this candidate is compared with itemized deductions.
-      Only the selected standard path receives this below-AGI deduction.
-      2025 candidate is zero. Unknown eligibility, wrong-year dates or negative
-      donation amounts reject rather than infer eligibility.
-    irsRef: "IRC 170(p), 63(b), https://uscode.house.gov/us/usc/119-120/t26/s170/"
+      Automatic selection compares the standard deduction plus this candidate
+      with itemized deductions. The selected nonitemizing path can receive this
+      below-AGI deduction. Retain the worksheet candidate on a 2026 itemized
+      election when the required eligibility answers are complete. If a qualified
+      cash receipt lacks a supporting-organization or donor-advised-fund answer,
+      allow an explicit itemized election with a zero candidate and omit the
+      uncalculated comparison audit. Common donation source validation still
+      applies. The 2025 candidate is zero. Other 2026 elections require actual
+      eligibility answers for all qualified cash receipts.
+    irsRef: "IRC 170(p), 63(b); https://uscode.house.gov/us/usc/119-134/t26/s170/; IRS IR-2026-135, https://www.irs.gov/newsroom/irs-reminder-permanent-charitable-contribution-deduction-begins-for-returns-filed-next-year-for-taxpayers-who-do-not-itemize"
     testRef: "tests/engine/schedules/schedule-a-2026.test.ts::2026 nonitemizer charitable deduction"
+    testRefs:
+      - "tests/guided-interview/guided-current-charitable-receipt-categories.test.ts::keeps nonitemizer recipient answers unknown for explicitly itemized cash gifts"
   - line: "11-14-itemized-charity"
     description: "2026 itemized contributions use the category worksheet"
     formula: "Route current direct and reported K-1 contributions through the 2026 category/floor worksheet. Preserve category and tax year on new carryforward entries. Historical aggregate or vintage carryovers reject pending supported reviewed transition treatment. The nonitemizer candidate remains independent of this floor."
