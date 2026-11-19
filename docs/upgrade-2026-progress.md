@@ -4,9 +4,13 @@
 
 The shared federal charitable-source check now requests the organization name before using a positive gift with confirmed qualification. Empty or whitespace-only names hold the itemized deduction for 2025 and 2026 and the 2026 nonitemizer deduction. The guard preserves confirmed zero, known-ineligible and unknown-qualification records as well as the original name when supplied. The spec records the underlying substantiation requirements. [IRC §170](https://uscode.house.gov/us/usc/t26/s170/), [IRS Publication 526](https://www.irs.gov/publications/p526).
 
-All six named-recipient regressions failed before the guard and passed afterward. An independent repeat passed 103 tests across eight suites. The spec validator found 9,623 valid references. Inventory, typecheck and scoped lint passed. Browser audit pins bind the changed engine file; test IDs, deadlines and skip decisions are unchanged.
+All six named-recipient regressions failed before the guard and passed afterward. An independent repeat passed 103 tests across eight suites. The spec validator found 9,623 valid references. Inventory, typecheck and scoped lint passed. Browser audit pins bind the changed engine file while preserving the test IDs, deadlines and skip decisions.
 
 Exact `6e21266e` then passed all 29,286 tests in both the unit and coverage suites with a disposable PostgreSQL 16.16 fixture. Branch coverage was 88.26% against the 85% gate. The nine static checks and normal test database stop passed. The first run's 32 failures per suite came from its disposable database URL and shell prerequisites. A separate rerun corrected both harness settings and kept the original tests and negative logs.
+
+The same `6e21266e` revision passed 650 managed browser cases locally with five planned skips and normal cleanup across all eight windows. The browser summary SHA-256 was `ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`. The matching Docker CI build passed. [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44492030984).
+
+Matching GitHub Web results remained below the release gate. Managed Web passed 648 cases with five planned skips and two original RRTA PDF-inspection timeouts. Strict AMD64 passed 642 cases with five planned skips and eight Ohio workflows at the original 30-second limit. The recurring deadlines appeared at different actions in the same scenarios across revisions. The logs establish the failure positions. Attribution to individual slow steps remains unresolved. [Managed Web](https://github.com/utilityfueled/tax-engine/actions/runs/44492030573/job/135449810229), [strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44492030573/job/135449809760).
 
 ## November 19 exact current ARM64 recovery pass
 
@@ -16,7 +20,9 @@ Independent engineering review verified both image bindings, the completed phase
 
 A separate full native browser attempt stopped before any browser case. Its wrapper required the Docker-compatible spelling of a container name while the Podman CLI reported the bare name. A recovery-only routine verified and removed the disposable container, stopped the isolated VM normally and restored the original default VM and socket routes. All 25 recovery steps and independent engineering review passed. The failed native attempt and restoration receipt hashes begin `f9ab2327cdaf` and `e3c5f26a67ae` respectively.
 
-The name compatibility fix passed the live native runtime provenance check. The browser command then stopped before cases because the fresh staged checkout lacked the configured Python path for pypdf. The controller removed its disposable container and restored the default VM normally. The separate result SHA-256 begins `c0d9c29a813b`. The full native UI result remains open.
+The name compatibility fix passed the live native runtime provenance check. The browser command then stopped before cases because the fresh staged checkout lacked the configured Python path for pypdf. The controller removed its disposable container and restored the default VM normally. The separate result SHA-256 begins `c0d9c29a813b`.
+
+With the pinned pypdf path verified before startup, the exact retained ARM64 `e0cc9467` image passed 650 native browser cases with five original skips, eight completed windows, two workers and zero retries. The 30-second active test deadline remained in force. All 42 controller steps passed and the default VM and original routes were restored. The result SHA-256 was `fdad23004ddfe2d4913c43c78c019eb47f424831af442c6ffa40e23b561a404e`.
 
 ## November 19 exact current local checks and protected Preview workspace lifecycle
 
