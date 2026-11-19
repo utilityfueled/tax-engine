@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { taxpayerFacts2025 } from './guided-fixtures';
 import { actualGuidedQsbs } from '../../../tests/fixtures/guided-qsbs';
 import { actualGuidedScheduleD } from '../../../tests/fixtures/guided-schedule-d-sources';
+
+const runFile = promisify(execFile);
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
   test.describe(`QSBS review at ${viewport.width}px`, () => {
@@ -36,10 +38,9 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       expect((await response).status()).toBe(200);
       const download = await downloaded; const path = await download.path();
       if (!path) throw new Error('Missing synthetic review download');
-      const bytes = await readFile(path);
-      const text = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c',
-        "import io,sys;from pypdf import PdfReader;print(' '.join(p.extract_text() or '' for p in PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages))"],
-      { input: bytes, encoding: 'utf8' });
+      const { stdout: text } = await runFile(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c',
+        "import sys;from pypdf import PdfReader;print(' '.join(p.extract_text() or '' for p in PdfReader(sys.argv[1]).pages))", path],
+      { encoding: 'utf8', timeout: 30_000 });
       expect(text).toContain('Synthetic eligible corporation');
       expect(text).toContain('(500)'); expect(text).toContain('1100');
       for (const privateValue of ['111223333', '111-22-3333', 'Private original issuer packet']) expect(text).not.toContain(privateValue);
