@@ -556,7 +556,24 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestScheduleAPropertyTaxSourceYear": {
+        "authority": ["https://uscode.house.gov/us/usc/t26/s164/", "https://www.irs.gov/publications/p530"],
+        "actual2025CanonicalAndInternal2026RedTests": 2,
+        "targetedTestsPassed": 198,
+        "targetedSuitesPassed": 8,
+        "independentTestsPassed": 164,
+        "independentCanonicalElectionScenariosPassed": 8,
+        "scheduleASpecReferences": 61,
+        "fullSpecReferences": 9658,
+        "combinedOhioFederalSmokeTestsPassed": 35,
+        "existingLintWarnings": 1,
+        "holdsExplicitWrongYearPositive": true,
+        "legacyUndatedAndExplicitZeroPreserved": true,
+        "public2026FilingGated": true,
+        "browserAuditSha256": "ec82e7cc13ca735fe0e19729847b730c0e36340c66ca4284706d0456cdb9c21d"
+      },
       "latestOhioNonresidentUnemployment": {
+        "appSource": "4a87cc53c639b25a72baee52bb6d30bd2d780b7d",
         "taxYear": 2025,
         "authority": ["https://codes.ohio.gov/ohio-revised-code/section-5747.20", "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf", "https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36"],
         "canonicalOnly": true,

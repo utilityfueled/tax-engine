@@ -1,5 +1,10 @@
 # Current 2026 upgrade status
 
+Schedule A now holds positive property tax sourced to an explicitly different
+Form 1098 year. Both the actual 2025 return and the internal 2026 worksheet
+reproduced the issue. The fix passed 198 focused tests and independent checks.
+[Property-tax evidence](upgrade-2026-progress.md#november-19-schedule-a-property-tax-source-year).
+
 The 2025 Ohio canonical return now reconciles one documented unemployment
 payment for a part-year resident or full-year nonresident. Part-year
 allocation follows the actual date and domicile. The 485 scoped tests include
@@ -37,7 +42,7 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestOhioNonresidentUnemployment`,
+Resume with `latestScheduleAPropertyTaxSourceYear`, `latestOhioNonresidentUnemployment`,
 `latestChildTaxCreditRawRelationship`, `latestChildTaxCreditRelationship`,
 `latestForm8889OrdinaryProjection`,
 `latestItemizedCharityElection` and `latestBrowserRequestAssertions` under

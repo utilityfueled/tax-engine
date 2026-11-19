@@ -1,5 +1,23 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Schedule A property-tax source year
+
+Schedule A holds a positive real-estate tax on an explicitly wrong-year Form
+1098 before it can feed line 5b, SALT or deduction selection. Matching-year
+amounts, legacy undated amounts, separately reported qualified payments and
+an explicit wrong-year zero keep their existing treatment. For escrow, the
+deduction follows the lender's actual payment to the taxing authority.
+[IRC §164](https://uscode.house.gov/us/usc/t26/s164/) ·
+[IRS Publication 530](https://www.irs.gov/publications/p530).
+
+The actual 2025 return and the internal 2026 Schedule A worksheet both
+reproduced the issue before the fix. The 198-case regression suite covers
+cent-level inputs and the $40,400 SALT cap. Independent checks passed 164
+cases and eight additional canonical 2025 scenarios across automatic and
+explicit standard deduction choices. Both source specs and the full browser
+audit passed. The scoped lint run retained one existing warning. The 2026
+worksheet remains behind the existing filing gate.
+
 ## November 19 Ohio nonresident and part-year unemployment
 
 The canonical 2025 IT NRC reconciles one ordinary whole-dollar Form 1099-G

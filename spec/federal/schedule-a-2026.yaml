@@ -18,6 +18,13 @@ lines:
     formula: "Add validated additional state/local income tax payments to line 5a before sales-tax comparison. Add separately supplied qualified real estate tax payments to line 5b; personal property taxes stay on line 5c. Each additional amount excludes values already reported on source forms and rejects negative amounts. Applicable for 2025 and 2026."
     irsRef: "https://www.irs.gov/instructions/i1040sca, lines 5a-5c"
     testRef: "tests/engine/federal-salt-facts.test.ts::Direct SALT facts retain categories"
+  - line: "5b-property-tax-year"
+    description: "Keep mortgage-sourced real estate taxes in their actual year"
+    formula: "Apply the Schedule A line 5b year check to each positive Form 1098 property tax amount before adding separate qualified payments, rounding or applying the SALT cap. Reject an explicit year different from the return year, including when the mismatch is less than a dollar or the deduction would already be capped. Preserve the amount from matching-year or existing undated sources."
+    irsRef: "IRC §164(a), https://uscode.house.gov/us/usc/t26/s164/; IRS Pub. 530, Deductible Real Estate Taxes and Escrow accounts, https://www.irs.gov/publications/p530"
+    testRef: "tests/engine/schedules/schedule-a-property-tax-year.test.ts::holds positive property tax from other-year mortgage statements on the 2026 Schedule A worksheet"
+    testRefs:
+      - "tests/engine/schedules/schedule-a-property-tax-year.test.ts::keeps matching and legacy undated mortgage amounts on the 2026 worksheet up to and beyond the SALT cap"
   - line: "8d-mortgage-insurance"
     description: "Restored qualified mortgage insurance deduction"
     formula: "Use explicitly allocated current-year premiums for qualified providers, acquisition debt and qualified residences under contracts issued after 2006. Reduce the combined eligible amount by 10% for each $1,000 or fraction of AGI over $100,000 (MFS $500 over $50,000), floored at zero. Preserve 2025 zero deduction."

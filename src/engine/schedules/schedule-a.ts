@@ -242,10 +242,14 @@ export function calculateScheduleA(
   audit.record("Sched A", "5c", "Personal property taxes", personalPropertyTaxes,
     "Vehicle registration, etc.");
 
-  const propertyTaxes = input.form1098.reduce(
-    (acc, f) => acc.plus(d(f.propertyTax)),
-    additionalRealEstateTaxes
-  );
+  const returnYear = input.taxpayer.taxYear;
+  const propertyTaxes = input.form1098.reduce((total, statement) => {
+    const paid = d(statement.propertyTax);
+    if (statement.taxYear !== undefined && statement.taxYear !== returnYear && paid.gt(0)) {
+      throw new Error(`Form 1098 property tax source year ${statement.taxYear} must match the ${returnYear} return`);
+    }
+    return total.plus(paid);
+  }, additionalRealEstateTaxes);
   audit.record("Sched A", "5b", "Real estate taxes", propertyTaxes,
     "Sum Form 1098 property tax + other qualified real estate tax payments");
 
