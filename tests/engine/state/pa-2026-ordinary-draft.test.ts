@@ -24,6 +24,160 @@ it('PA2026 draft preserves exact cents known zero and complete withholding',()=>
  const under=pa2026OrdinaryDraftFixture();under.input.w2s[0].stateTaxWithheld='2302.49';rebindPA2026Draft(under);expect(()=>calculatePA2026OrdinaryDraft(under.input,under.facts,under.sources)).toThrow(/withholding/i);
  const half=pa2026OrdinaryDraftFixture();half.input.w2s[0].stateTaxWithheld='2302.50';rebindPA2026Draft(half);expect(calculatePA2026OrdinaryDraft(half.input,half.facts,half.sources).pa.pa40.stateWithholding.toFixed()).toBe('2303');
 });
+
+function paidNonresident(status: 'nonresident' | 'part_year' = 'nonresident') {
+  const f = pa2026OrdinaryDraftFixture(status);
+  const owner = f.input.taxpayer.primary;
+  f.input.w2s[0].stateTaxWithheld = '0';
+  f.sources.otherStateTaxes.jurisdictions[0].completeThroughDate = '2027-04-15';
+  const receipt = {
+    accountName: owner.firstName + ' ' + owner.lastName,
+    accountSsn: owner.ssn,
+    taxYear: 2026,
+    returnType: 'pa40',
+    kind: 'balance',
+    date: '2027-04-15',
+    amount: '276',
+    confirmationNumber: 'FICTIONAL-PA-2026-REMITTANCE',
+  };
+  f.facts.timing = {
+    ...f.facts.timing,
+    kind: 'filed',
+    date: '2027-04-15',
+    asOfDate: '2027-04-15',
+    remainingTaxPayment: {
+      status: 'actual_payment',
+      sourceReference: 'Private original April balance remittance',
+      date: '2027-04-15',
+      amountAppliedToTax: '276',
+      original: receipt,
+    },
+  };
+  rebindPA2026Draft(f);
+  const estimatedTaxReview2026 = {
+    sourceTaxYear: 2026,
+    sourceFactsConfirmed: true,
+    allDeterminationPeriodsAndChangesReviewedConfirmed: true,
+    owner: {firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn},
+    originalPAResidencySources: structuredClone(f.input.paResidencySources),
+    periods: ['2026-04-01', '2026-06-01', '2026-09-01', '2026-12-31'].map(throughDate => ({
+      throughDate,
+      sourceReference: 'Private contemporaneous pay and work schedule ending ' + throughDate,
+      maximumExpectedPATaxableWages: '9000',
+    })),
+  };
+  return {...f, receipt, sources: {...f.sources, estimatedTaxReview2026}};
+}
+
+function changePAWages(f: ReturnType<typeof paidNonresident>, wages: string, paidAmount: string) {
+  f.input.w2s[0].stateWages = wages;
+  Object.assign(f.input.paResidencySources.wages[0].payroll[0], {
+    paServicesCompensation: wages,
+    outsidePAServicesCompensation: new Decimal('75000').minus(wages).toFixed(),
+  });
+  f.receipt.amount = paidAmount;
+  f.facts.timing.remainingTaxPayment.amountAppliedToTax = paidAmount;
+  rebindPA2026Draft(f);
+  f.sources.estimatedTaxReview2026.originalPAResidencySources = structuredClone(f.input.paResidencySources);
+}
+
+it('PA2026 draft reconciles a timely actual nonresident small balance separately from return tax', () => {
+  const f = paidNonresident();
+  const before = JSON.stringify(f);
+  const r = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+  expect(r.pa.residencyStatus).toBe('nonresident');
+  expect(new Decimal('9000').times('0.0307').toFixed()).toBe('276.3');
+  expect(r.pa.pa40.taxLiability.toFixed()).toBe('276');
+  expect(r.pa.pa40.stateWithholding.toFixed()).toBe('0');
+  expect(r.pa.pa40.totalAmountDue.toFixed()).toBe('276');
+  expect(r.pa.rev1630.penaltyRequired).toBe(false);
+  expect(r.pa.rev1630.totalInterest.toFixed()).toBe('0');
+  expect(r.actualBalancePayment?.actualBalancePaymentApplied.toFixed()).toBe('276');
+  expect(r.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');
+  expect(r.readiness.filingEligible).toBe(false);
+  expect(r.readiness.fullFederalCalculated).toBe(false);
+  expect(() => calculatePAOrdinaryReturn(f.input, f.facts, f.sources)).toThrow(/incomplete/);
+  expect(JSON.stringify(r)).not.toContain(f.receipt.confirmationNumber);
+  expect(JSON.stringify(f)).toBe(before);
+});
+
+it('PA2026 draft accepts a confirmed $429 balance below both 2026 estimate boundaries', () => {
+  const f = paidNonresident();
+  changePAWages(f, '13990', '429');
+  for (const period of f.sources.estimatedTaxReview2026.periods) period.maximumExpectedPATaxableWages = '13990';
+  const r = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+  expect(r.pa.pa40.totalAmountDue.toFixed()).toBe('429');
+  expect(r.pa.rev1630.totalInterest.toFixed()).toBe('0');
+  expect(r.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');
+});
+
+it.each([
+  ['missing proof', /withholding/],
+  ['stale owner', /owner/],
+  ['stale year', /completion source shape/],
+  ['stale payroll reference', /originals are stale/],
+  ['competing retained estimate review', /retained estimate review differs/],
+  ['incomplete review', /completion source shape/],
+  ['missing period', /completion source shape/],
+  ['later projection', /completion source shape/],
+  ['missing projection source', /completion source shape/],
+  ['expected income at threshold', /expected.*14,000/],
+  ['expected rounded tax at threshold', /expected.*430/],
+  ['actual income at threshold', /actual.*14,000/],
+  ['actual reported balance at threshold', /actual.*430/],
+  ['expected receipt', /actual.*receipt/],
+  ['expected filing', /actual filed return/],
+  ['late receipt', /dated successor/],
+  ['wrong receipt owner', /owner/],
+  ['wrong receipt year', /identity\/date\/amount/],
+  ['receipt not exact tax due', /fresh printed tax due/],
+  ['partial withholding', /zero PA withholding/],
+  ['part-year resident', /nonresident/],
+  ['stale original W-2 year', /current W-2|year/],
+] as const)('PA2026 draft rejects unsupported nonresident small balance evidence (%s)', (kind, reason) => {
+  const f = paidNonresident(kind === 'part-year resident' ? 'part_year' : 'nonresident');
+  const review = f.sources.estimatedTaxReview2026;
+  const timing = f.facts.timing;
+  if (kind === 'missing proof') {
+    const {estimatedTaxReview2026: _review, ...completion} = f.sources;
+    expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, completion)).toThrow(reason);
+    return;
+  }
+  if (kind === 'stale owner') review.owner.ssn = '333-22-1111';
+  if (kind === 'stale year') review.sourceTaxYear = 2025;
+  if (kind === 'stale payroll reference') f.input.paResidencySources.wages[0].payroll[0].sourceReference = 'Replacement original';
+  if (kind === 'competing retained estimate review') {
+    const retained = structuredClone(f.sources);
+    retained.estimatedTaxReview2026.periods[0].maximumExpectedPATaxableWages = '14000';
+    Reflect.set(f.input, 'paOrdinaryReturnCompletionSources', retained);
+  }
+  if (kind === 'incomplete review') review.allDeterminationPeriodsAndChangesReviewedConfirmed = false;
+  if (kind === 'missing period') review.periods.pop();
+  if (kind === 'later projection') review.periods[0].throughDate = '2026-04-02';
+  if (kind === 'missing projection source') review.periods[0].sourceReference = ' ';
+  if (kind === 'expected income at threshold') review.periods[0].maximumExpectedPATaxableWages = '14000';
+  if (kind === 'expected rounded tax at threshold') review.periods[0].maximumExpectedPATaxableWages = '13999';
+  if (kind === 'actual income at threshold' || kind === 'actual reported balance at threshold') {
+    changePAWages(f, kind === 'actual income at threshold' ? '14000' : '13999', '430');
+  }
+  if (kind === 'expected receipt') {
+    timing.remainingTaxPayment.status = 'expected_payment';
+    delete timing.remainingTaxPayment.original;
+  }
+  if (kind === 'expected filing') timing.kind = 'expected';
+  if (kind === 'late receipt') f.receipt.date = timing.remainingTaxPayment.date = '2027-04-16';
+  if (kind === 'wrong receipt owner') f.receipt.accountSsn = '333-22-1111';
+  if (kind === 'wrong receipt year') f.receipt.taxYear = 2025;
+  if (kind === 'receipt not exact tax due') f.receipt.amount = timing.remainingTaxPayment.amountAppliedToTax = '275.99';
+  if (kind === 'partial withholding' || kind === 'stale original W-2 year') {
+    if (kind === 'partial withholding') f.input.w2s[0].stateTaxWithheld = '1';
+    else f.input.w2s[0].taxYear = 2025;
+    rebindPA2026Draft(f);
+    review.originalPAResidencySources = structuredClone(f.input.paResidencySources);
+  }
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(reason);
+});
+
 it('PA2026 draft checks retained death facts before income-based EIC proofs', () => {
   for (const status of ['resident', 'part_year', 'nonresident'] as const) {
     const f = pa2026OrdinaryDraftFixture(status);

@@ -30,12 +30,45 @@ lines:
       worldwideSP, source-linked credits/payment/use-tax/local obligations through
       the existing ordinary composer. This first draft requires no other income,
       expenses/benefits, reciprocal or specialized packet, and reported PA withholding
-      at least fresh PA40 tax. Known zero retained; absence never establishes zero.
+      at least fresh PA40 tax, except for the confirmed nonresident balance below.
+      Known zero retained; absence never establishes zero.
       Preserve existing per-class roundDollar then PA40 roundDollar(x*0.0307),
       SP statutory unchanged nominal thresholds, one payment disposition, and all
       original source-currentness/owner/year/duplicate/source-precision guards.
       REV1630 zero net tax exits before unsourced2027 interest is needed.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves exact cents known zero and complete withholding"
+  - line: "nonresident-actual-small-balance"
+    description: "Reconcile the exact timely PA-40 balance paid by a nonresident wage earner with no estimated installments due"
+    formula: |
+      Require the existing single living nonresident class, one original
+      owner-attributed 2026 W-2 with exact zero PA withholding, and exact
+      worldwide wages above $70,244.
+      Require a confirmed owner- and year-matched review bound to the unchanged
+      PA residency/payroll originals. Retain contemporaneous sources of the
+      maximum reasonably expected PA wages during the four determination
+      periods ending April 1, June 1, September 1 and December 31, 2026.
+      Confirm all periods and changes were reviewed. Treat all expected PA
+      wages as unwithheld for this limited review. Each expectation and actual
+      PA compensation must be strictly below $14,000. Each projected tax at
+      3.07% and the actual return balance must be below $430 before and after
+      the applicable whole-dollar calculation. Leave the exact boundary to
+      its own method. No estimate, extension, carryforward, use tax or other
+      credit sources may affect this balance.
+      Require an original timely filed return and the exact matching original
+      2026 PA-40 balance receipt dated April 15, 2027. Verify fresh printed tax
+      due and zero estimated underpayment interest before settlement. Preserve
+      return tax due and report the receipt applied and outstanding balance
+      separately. An expected payment never establishes settlement, and the
+      receipt does not make this draft filing eligible.
+    sources:
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s"
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u332s"
+      - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft reconciles a timely actual nonresident small balance separately from return tax"
+  - line: "nonresident-small-balance-source-limits"
+    description: "Reject stale projections, unknown or mismatched receipts, and the $14,000 or $430 boundaries"
+    formula: "Require affirmative contemporaneous projection coverage, agreement with any retained projection source, exact current originals and a complete timely receipt. Earlier thresholds and the 2025 REV-1630 do not establish this 2026 boundary."
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft rejects unsupported nonresident small balance evidence (%s)"
   - line: "source-currentness"
     description: "Existing actual guided captures bind unchanged originals without creating confirmation"
     formula: |

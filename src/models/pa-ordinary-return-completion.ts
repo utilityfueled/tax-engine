@@ -7,9 +7,27 @@ import {z} from 'zod';
 import {PAResidentCreditSourcesSchema} from './pa-resident-credit-sources.js';
 import {PADigitalTaxRefundSourcesSchema} from './pa-digital-tax-refund-sources.js';
 const answer=z.boolean().nullable(),reference=z.string(),originals=z.array(z.record(z.string(),z.unknown()));
+const estimatePeriod = z.strictObject({
+ sourceReference: reference.regex(/\S/u),
+ maximumExpectedPATaxableWages: z.string().regex(/^\d+(?:\.\d+)?$/u),
+});
+const estimateReview2026 = z.strictObject({
+ sourceTaxYear: z.literal(2026),
+ sourceFactsConfirmed: z.literal(true),
+ allDeterminationPeriodsAndChangesReviewedConfirmed: z.literal(true),
+ owner: z.strictObject({firstName:z.string(),lastName:z.string(),ssn:z.string()}),
+ originalPAResidencySources: z.record(z.string(),z.unknown()),
+ periods: z.tuple([
+  estimatePeriod.extend({throughDate: z.literal('2026-04-01')}),
+  estimatePeriod.extend({throughDate: z.literal('2026-06-01')}),
+  estimatePeriod.extend({throughDate: z.literal('2026-09-01')}),
+  estimatePeriod.extend({throughDate: z.literal('2026-12-31')}),
+ ]),
+});
 export const PAOrdinaryReturnCompletionSourcesSchema=z.object({
  sourceTaxYear:z.number().int().nullable(),sourceReference:reference,sourceFactsConfirmed:answer,
  eitcChildInventory:PA2026EicChildInventorySchema.optional(),
+ estimatedTaxReview2026:estimateReview2026.optional(),
  originalFederalSources:z.record(z.string(),z.unknown()),owner:z.object({firstName:z.string(),lastName:z.string(),ssn:z.string()}).strict(),
  otherStateTaxes:z.object({status:z.enum(['unknown','none_paid','actual_payments']),sourceReference:reference,allJurisdictionsAndPaymentsReviewedConfirmed:answer,residentCreditSources:PAResidentCreditSourcesSchema.optional(),refundedDigitalSources:PADigitalTaxRefundSourcesSchema.optional(),refundedRoyaltySources:PARoyaltyTaxRefundSourcesSchema.optional(),pendingOIDOHSources:PAOIDPendingOHAccountSchema.optional(),jurisdictions:z.array(z.object({state:z.string(),sourceReference:reference,sourceTaxYear:z.number().int().nullable(),accountName:z.string(),accountSsn:z.string(),completeThroughDate:z.string(),taxPaid:z.string(),incomeTaxWithheld:z.string()}).strict())}).strict(),
  restrictedCredits:z.object({status:z.enum(['unknown','none_available','actual_awards']),sourceReference:reference,allAwardsTransfersCarryforwardsReviewedConfirmed:answer,originalAwards:originals,originalTransfers:originals,originalCarryforwards:originals}).strict(),
@@ -17,7 +35,10 @@ export const PAOrdinaryReturnCompletionSourcesSchema=z.object({
  nrk1:z.object({status:z.enum(['unknown','none_received','actual_statements']),sourceReference:reference,allReceivedStatementsReviewedConfirmed:answer,originalStatements:originals}).strict(),
  local:z.object({status:z.enum(['unknown','separate_return_required']),sourceReference:reference,allResidentAndWorkJurisdictionsReviewedConfirmed:answer,jurisdictions:z.array(z.object({name:z.string(),sourceReference:reference,returnRequired:answer}).strict())}).strict(),
  lateFilingRelief:z.object({status:z.enum(['unknown','no_actual_relief_records','actual_relief']),sourceReference:reference,allActualReliefSourcesReviewedConfirmed:answer,originalAgencyRelief:originals}).strict(),
-}).strict().superRefine((data,context)=>{if(data.eitcChildInventory!==undefined&&data.sourceTaxYear!==2026)context.addIssue({code:'custom',path:['eitcChildInventory'],message:'The distinct no-child inventory is only supported for the actual2026 completion source year'});});
+}).strict().superRefine((data,context)=>{
+ if(data.eitcChildInventory!==undefined&&data.sourceTaxYear!==2026)context.addIssue({code:'custom',path:['eitcChildInventory'],message:'The distinct no-child inventory is only supported for the actual2026 completion source year'});
+ if(data.estimatedTaxReview2026!==undefined&&data.sourceTaxYear!==2026)context.addIssue({code:'custom',path:['estimatedTaxReview2026'],message:'Estimated tax review requires an actual 2026 completion source'});
+});
 export type PAOrdinaryReturnCompletionSources=z.infer<typeof PAOrdinaryReturnCompletionSourcesSchema>;
 
 export const PA_COMPLETION_RECORD_KINDS=['restricted_award','restricted_transfer','restricted_carryforward','care_payment','nrk1_statement','agency_relief'] as const;

@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19: Pennsylvania nonresident balance-payment draft
+
+The source-bound single nonresident draft accepts an actual timely original PA-40 balance for one current W-2 with zero PA withholding. The review must document each statutory determination period below both $14,000 in projected Pennsylvania taxable wages and $430 in computed tax. The $276 and $429 examples preserve their return amounts due and separately show the exact payments and zero outstanding balances. A $430 balance, stale source facts, and partial or late receipts remain outside this draft. The exact package passed 3,480 Pennsylvania, strict spec and browser controls. The broader consumer cohort passed 3,515 tests and a separate engineer checked the statute and settlement. Filing stays closed. [Pennsylvania §325](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s) · [2026 REV-413(I)](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf)
+
 ## November 19: full-suite historical test wiring
 
 The full `c1fe19bd` test run found five failures. Two checks require exact parameterized test names in the Form 8880 and Form 1099-R specs. Three confirmed hosted-route tests still expected the old federal preview to accept a stale original. The corrected tests assert early federal rejection and keep the same route response, cache, accounting and provider-call assertions. All 1,144 focused tests, the whole spec and inventory checks, and the browser source audit passed. The successor has a separate full run.

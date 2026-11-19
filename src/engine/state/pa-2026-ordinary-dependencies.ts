@@ -8,6 +8,7 @@ import {meetsEicChildlessAgeTest} from '@/utils/eic-age.js';
 import {StandardDeductionFactsSchema,type TaxYearInput} from '@/models/inputs.js';
 import {FEDERAL_2026_INDEXED} from '@/models/federal-2026-indexed.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';
+import {PA_CONSTANTS} from './pa-40.js';
 import type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
 import type {PAOrdinaryReturnProjection} from './pa-ordinary-return-facts.js';
 import type {PAResidencySourcesResult} from './pa-residency-sources.js';
@@ -79,12 +80,38 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const care=sources.care;
  if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||care.careSources!==undefined)fail('complete actual no-care/no-benefit originals are required');
  if(Object.values(p.facts.sp.categories).some(row=>row.status!=='known_none'||row.entries.length))fail('other worldwide SP income requires its actual successor');
- if(sources.otherStateTaxes.status!=='none_paid'||p.facts.payments.rows.length||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('only actual withholding-covered ordinary sources are supported');
+ if(sources.otherStateTaxes.status!=='none_paid'||p.facts.payments.rows.length||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');
  if(p.timing.date>'2027-04-15'||p.timing.filingExtension!=='none'||p.timing.paymentExtension!=='none')fail('late or extended timing requires its actual successor');
- if(roundDollar(p.paWithholding).lt(income.taxBeforeCredits))fail('reported PA withholding must cover fresh PA tax without an unsourced interest dependency');
  const child=sources.eitcChildInventory===undefined?undefined:validatePA2026EicChildInventory(input,sources.eitcChildInventory);
  const eitc=FEDERAL_2026_INDEXED.eitc;
  const maximum=Money.max(...Object.values(eitc.completedPhaseOutSingleHoH),...Object.values(eitc.completedPhaseOutMFJ));
+ const estimateReview=sources.estimatedTaxReview2026;
+ const retainedEstimateReview=input.paOrdinaryReturnCompletionSources?.estimatedTaxReview2026;
+ if (retainedEstimateReview !== undefined && stable(retainedEstimateReview) !== stable(estimateReview)) {
+  fail('retained estimate review differs from the supplied completion sources');
+ }
+ if (estimateReview) {
+  if (income.residencyStatus !== 'nonresident' || p.paFilingChoice !== 'S' || input.taxpayer.spouse
+    || input.w2s.length !== 1 || input.w2s[0].taxYear !== 2026 || input.w2s[0].accountHolder !== 'primary'
+    || !wages.gt(maximum) || child) fail('small balance requires one current W-2 for the actual single nonresident high-wage owner');
+  if (!p.paWithholding.isZero()) fail('small balance requires exact zero PA withholding');
+  if (stable(estimateReview.owner) !== stable(sources.owner)) fail('estimate review owner differs from the actual return owner');
+  if (stable(estimateReview.originalPAResidencySources) !== stable(input.paResidencySources)) fail('estimate review PA originals are stale');
+  const rate=PA_CONSTANTS[2026].taxRate;
+  // REV-413(I) and section 325 apply to reasonably expected unwithheld income.
+  // Treat the whole PA projection as unwithheld and keep away from both reporting boundaries.
+  for (const period of estimateReview.periods) {
+   const expected=amount(period.maximumExpectedPATaxableWages);
+   if (expected.gte('14000')) fail('expected PA wages must be below $14,000 throughout the determination periods');
+   if (roundDollar(new Money(roundDollar(expected)).times(rate)).gte('430')) fail('expected rounded PA tax must be below $430 throughout the determination periods');
+  }
+  if (income.compensation.gte('14000')) fail('actual PA wages must be below $14,000');
+  if (!income.taxBeforeCredits.gt(0) || income.taxBeforeCredits.gte('430')
+    || new Money(income.compensation).times(rate).gte('430')) fail('actual positive PA balance must be below $430');
+  if (p.timing.kind !== 'filed' || p.timing.remainingTaxPayment.status !== 'actual_payment') fail('small balance requires an actual filed return and original payment receipt');
+ } else if (roundDollar(p.paWithholding).lt(income.taxBeforeCredits)) {
+  fail('reported PA withholding must cover fresh PA tax without an unsourced interest dependency');
+ }
  const reportedWageAgi=roundDollar(wages),childlessCutoff=new Money(eitc.completedPhaseOutSingleHoH[0]);
  const proof: PA2026OrdinaryDependencyProof = {
   methodVersion: 'pa-2026-ordinary-dependencies-v1',
