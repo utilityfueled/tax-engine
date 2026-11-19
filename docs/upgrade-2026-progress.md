@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19 original lender and loan account facts
+
+The 2026 Schedule A source worksheet now holds reported mortgage interest when the linked statement ID or lender is blank. When one source supplies a loan account reference, the original Form 1098 and the worksheet must agree. A single statement per lender and borrower can leave both references unknown. Multiple statements in that group must identify distinct accounts. The ordinary Schedule A tests preserved $30,000 for both valid single-statement presentations and $8,000 for two distinct, reconciled accounts. The historical 2025 control retained $30,000. Seven regressions failed before the fix. All 126 targeted mortgage and adjacent tests, engine typecheck, scoped lint and spec validation passed. [IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098) · [Schedule A instructions](https://www.irs.gov/instructions/i1040sca).
+
 ## November 19 exact static checks and protected Preview email delivery
 
 On frozen `49f79555`, engine, contracts and web typechecks, spec validation, inventory validation, engine and web builds, lint and the offline model-evaluation manifest check all exited successfully. Lint recorded zero errors and 12,102 warnings. The protected Preview from the same archive accepted one recovery-email request for the existing authorized test mailbox. An ID-only mailbox check observed zero matching messages at baseline and one new matching message after the request. The evidence covers delivery. The reset link was left unused and no account credentials changed.

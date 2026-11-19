@@ -147,6 +147,7 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
   } else {
     if (facts.sourceTaxYear !== year || facts.sourceFactsConfirmed !== true || facts.allHomeDebtIncluded !== true || !facts.sourceReference.trim()) throw new Error("Mortgage source year, complete debt and confirmation are required");
     const ids = new Set<string>(), linked = new Set<string>(), homes = new Map<string, string>();
+    const reportedAccounts = new Map<string, Set<string | undefined>>();
     const formIds = forms.map(form => form.sourceId).filter(id => id !== undefined);
     if (new Set(formIds).size !== formIds.length) throw new Error("Mortgage Form1098 source identity is duplicated");
     for (const loan of facts.loans) {
@@ -165,6 +166,22 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
         linked.add(loan.form1098SourceId);
         const form = forms.find(item => item.sourceId === loan.form1098SourceId);
         if (!form || form.sourceFactsComplete !== true || form.taxYear !== year || form.lender !== loan.lenderName || form.mortgageOriginationDate !== origin) throw new Error("Mortgage actual Form1098 source is incomplete or mismatched");
+        if (year === 2026) {
+          if (!form.lender.trim() || !loan.form1098SourceId.trim()) throw new Error("Mortgage actual Form1098 lender and statement identity are required");
+          const account = loan.loanAccountReference?.trim();
+          const reportedAccount = form.loanAccountReference?.trim();
+          if ((account !== undefined || reportedAccount !== undefined) && (!account || account !== reportedAccount)) {
+            throw new Error("Mortgage Form1098 loan account reference is incomplete or mismatched");
+          }
+          const lenderAndBorrower = JSON.stringify([form.lender.trim().toLowerCase(), loan.accountHolder]);
+          const accounts = reportedAccounts.get(lenderAndBorrower) ?? new Set<string | undefined>();
+          const accountKey = account?.toLowerCase();
+          if (accounts.size > 0 && (accountKey === undefined || accounts.has(undefined) || accounts.has(accountKey))) {
+            throw new Error("Mortgage Form1098 statements from the same lender and borrower require distinct actual loan account references");
+          }
+          accounts.add(accountKey);
+          reportedAccounts.set(lenderAndBorrower, accounts);
+        }
         if (!paid.plus(others).eq(amount(form.mortgageInterestReceived, "Box1"))) throw new Error("Mortgage paid shares must reconcile to actual Box1");
         if (!pointPaid.plus(pointOthers).eq(amount(form.pointsPaid, "Box6"))) throw new Error("Mortgage paid points must reconcile to actual Box6");
       } else unreportedLenders.push({ name: loan.lenderName, address: loan.lenderAddress, taxId: loan.lenderTaxId });

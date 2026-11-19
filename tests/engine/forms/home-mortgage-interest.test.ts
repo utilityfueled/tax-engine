@@ -13,7 +13,63 @@ import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 import { mortgageInput, mortgageLoan } from "../../fixtures/mortgage-source.js";
 const value = (result: ReturnType<typeof calculateHomeMortgageInterest>, line: string) => result.lines.find(item => item.form === "Pub936 Table1" && item.line === line)?.value.toString();
 
+function reportedMortgageInput(
+  year: 2025 | 2026,
+  loans: ReturnType<typeof mortgageLoan>[],
+  statementAccounts: Array<string | undefined> = [],
+) {
+  const input = mortgageInput(loans);
+  return TaxYearInputSchema.parse({
+    ...input,
+    taxpayer: { ...input.taxpayer, taxYear: year },
+    form1098: input.form1098.map((form, index) => ({
+      ...form, taxYear: year, loanAccountReference: statementAccounts[index],
+    })),
+    mortgageInterestWorksheet: { ...input.mortgageInterestWorksheet, sourceTaxYear: year },
+  });
+}
+
 describe("Pub936 actual mortgage sources", () => {
+  it("reconciles actual 2026 lender, statement and singleton account identity", () => {
+    for (const [worksheetAccount, statementAccount] of [[undefined, undefined], [" loan-01 ", "loan-01"]]) {
+      const input = reportedMortgageInput(2026, [mortgageLoan({ loanAccountReference: worksheetAccount })], [statementAccount]);
+      expect(input.form1098[0].loanAccountReference).toBe(statementAccount);
+      expect(input.mortgageInterestWorksheet?.loans[0].loanAccountReference).toBe(worksheetAccount);
+      const scheduleA = calculateScheduleA(input, new Decimal("100000"), "single", FEDERAL_2026_CONSTANTS);
+      expect(scheduleA.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toString()).toBe("30000");
+    }
+  });
+  it.each([
+    ["a whitespace lender on both sources", { lenderName: " \t " }, undefined, /Form1098.*lender/i],
+    ["a whitespace statement ID on both sources", { form1098SourceId: " \t " }, undefined, /Form1098.*statement/i],
+    ["a worksheet-only account", { loanAccountReference: "loan-01" }, undefined, /Form1098.*account/i],
+    ["a statement-only account", {}, "loan-01", /Form1098.*account/i],
+    ["blank account references", { loanAccountReference: " \t " }, "", /Form1098.*account/i],
+    ["contradictory accounts", { loanAccountReference: "loan-01" }, "loan-02", /Form1098.*account/i],
+  ] as const)("holds 2026 reported interest for %s", (_label, overrides, statementAccount, diagnostic) => {
+    const input = reportedMortgageInput(2026, [mortgageLoan(overrides)], [statementAccount]);
+    expect(() => calculateScheduleA(input, new Decimal("100000"), "single", FEDERAL_2026_CONSTANTS)).toThrow(diagnostic);
+  });
+  it("distinguishes actual 2026 accounts from the same lender and borrower", () => {
+    const first = mortgageLoan({
+      interestPaid: "4000", balance: { method: "highest_balance", amount: "100000", sourceReference: "Actual annual maximum" },
+    });
+    const second = { ...first, sourceId: "loan-two", form1098SourceId: "1098-two", lenderName: "SYNTHETIC mortgage lender " };
+    const linked = (accounts: [string | undefined, string | undefined], secondLender = second.lenderName) => reportedMortgageInput(2026, [
+      { ...first, loanAccountReference: accounts[0] },
+      { ...second, lenderName: secondLender, loanAccountReference: accounts[1] },
+    ], accounts);
+    expect(calculateHomeMortgageInterest(linked(["account-01", "account-02"])).line8a.toString()).toBe("8000");
+    expect(calculateHomeMortgageInterest(linked([undefined, undefined], "Independent lender")).line8a.toString()).toBe("8000");
+    for (const accounts of [[undefined, undefined], ["account-01", undefined], [undefined, "account-02"], ["account-01", " ACCOUNT-01 "]] as const) {
+      expect(() => calculateHomeMortgageInterest(linked([...accounts]))).toThrow(/Form1098.*distinct.*account/i);
+    }
+  });
+  it("preserves 2025 reported mortgage interest under the historical account contract", () => {
+    const input = reportedMortgageInput(2025, [mortgageLoan({ loanAccountReference: "legacy worksheet reference" })]);
+    const federal = calculateFederalTax(input);
+    expect(federal.scheduleA?.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toString()).toBe("30000");
+  });
   it("binds actual loan sources and rejects unknown or contradictory source amounts", () => {
     const input = mortgageInput();
     expect(calculateHomeMortgageInterest(input).sourceFactsVerified).toBe(true);
