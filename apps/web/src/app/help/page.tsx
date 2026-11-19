@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 const faqItems = [
   {
     q: "How does Viva La Tax work?",
-    a: "Upload tax documents such as W-2s and 1099s or enter your information step by step. For supported 2025 cases, the engine assembles draft federal and state returns and shows how it calculated the results. You can save 2026 facts for later review.",
+    a: "Upload tax documents such as W-2s and 1099s or answer the guided questions. For supported 2025 cases, the engine assembles draft federal and state returns and shows how it calculated the results. You can save 2026 facts for later review.",
   },
   {
     q: "Is this really free?",
