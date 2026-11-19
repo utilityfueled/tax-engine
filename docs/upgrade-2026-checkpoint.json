@@ -556,6 +556,43 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestBrokerDisposition": {
+        "source": "93fc00be",
+        "archiveSha256": "af630206f9be90524a3c2fe9031a88430ac4bd8f88433f6e1961e80f51426232",
+        "focusedPasses": 1176,
+        "independentRelatedPasses": 201,
+        "manifestPasses": 27,
+        "nodeDiagnosticPasses": 37,
+        "ciRun": 44580664196,
+        "webRun": 44580664319,
+        "dockerRun": 44580664199,
+        "linuxArm64Run": 44580727106,
+        "arm64Selection": "The Mac clears disk at 553 GiB but its default VM is stopped. The existing local controller requires an already-running default VM. Use the exact standard GitHub native Linux lane and leave Mac VMs undisturbed."
+      },
+      "completedCodStatementRemote": {
+        "source": "6766f450",
+        "ciRun": 44571198186,
+        "ciJobsPassed": 6,
+        "unitPasses": 29463,
+        "remoteManaged": {
+          "job": 135726395549,
+          "passes": 648,
+          "failures": 2,
+          "plannedSkips": 5,
+          "failure": "two RRTA saved-PDF inspection deadlines",
+          "logSha256": "d64381aaba1e1de8176ae56b266bd340dd7fc6b4c7d6dcf02e87a0fb5fbbc9aa"
+        },
+        "remoteStrictAmd64": {
+          "job": 135726395978,
+          "passes": 645,
+          "failures": 5,
+          "plannedSkips": 5,
+          "failure": "unchanged 30-second deadlines for one Ohio business, one Ohio resident-credit and three Ohio school-district cases",
+          "allSixRecoveryPhasesPassed": true,
+          "containerRemoved": true,
+          "logSha256": "99fd88fdd072d0ca019780be9d81c4060c105b462109c252a11829d9946ad43c"
+        }
+      },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",
         "priorSource": "e0cc9467",
