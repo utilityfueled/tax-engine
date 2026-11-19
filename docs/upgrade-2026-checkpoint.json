@@ -566,7 +566,10 @@
         "ciRun": 44585135675,
         "webRun": 44585135521,
         "dockerRun": 44585135623,
+        "dockerOutcome": "success",
         "linuxArm64Run": 44585365582,
+        "localManagedBrowser": {"passes": 650, "failures": 0, "plannedSkips": 5, "windows": 8, "normalCleanup": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"},
+        "currentPreviewSchemaPreflight": {"readOnly": true, "solePreviewAttachment": true, "version": "18.7", "identityMatches": true, "freshNamespaceAbsent": true, "schemaCreateAllowed": true, "receiptSha256": "e51ae3bb1d6907dc40f34b56429f1bb6dee88d5e04d70626eb76aa44fd019f2f"},
         "protectedPreview": {
           "status": "READY; exact source and project confirmed",
           "trackedEntries": 6488,
