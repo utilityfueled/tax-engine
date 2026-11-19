@@ -173,14 +173,15 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
           if ((account !== undefined || reportedAccount !== undefined) && (!account || account !== reportedAccount)) {
             throw new Error("Mortgage Form1098 loan account reference is incomplete or mismatched");
           }
-          const lenderAndBorrower = JSON.stringify([form.lender.trim().toLowerCase(), loan.accountHolder]);
-          const accounts = reportedAccounts.get(lenderAndBorrower) ?? new Set<string | undefined>();
+          // Form1098 has no payer-of-record identity to corroborate the worksheet payment role.
+          const lender = form.lender.trim().toLowerCase();
+          const accounts = reportedAccounts.get(lender) ?? new Set<string | undefined>();
           const accountKey = account?.toLowerCase();
           if (accounts.size > 0 && (accountKey === undefined || accounts.has(undefined) || accounts.has(accountKey))) {
-            throw new Error("Mortgage Form1098 statements from the same lender and borrower require distinct actual loan account references");
+            throw new Error("Mortgage Form1098 statements from the same lender require distinct actual loan account references");
           }
           accounts.add(accountKey);
-          reportedAccounts.set(lenderAndBorrower, accounts);
+          reportedAccounts.set(lender, accounts);
         }
         if (!paid.plus(others).eq(amount(form.mortgageInterestReceived, "Box1"))) throw new Error("Mortgage paid shares must reconcile to actual Box1");
         if (!pointPaid.plus(pointOthers).eq(amount(form.pointsPaid, "Box6"))) throw new Error("Mortgage paid points must reconcile to actual Box6");

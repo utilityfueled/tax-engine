@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19 independent joint-return mortgage follow-up
+
+Independent engineering review reproduced a duplicate Form 1098 in which changing the worksheet's second payment role from primary to joint or spouse made identical lender and account facts count twice. The 2026 worksheet now checks lender and account identity across all payment roles. The parsed statement lacks independent payer-of-record identity. Distinct verified references preserve the $8,000 joint-return result, and the 2025 control still returns $8,000. Five new tests failed before the adjustment. All 132 targeted tests, engine typecheck, scoped lint and all 9,622 spec references passed. [IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098).
+
 ## November 19 exact ARM64 build and first recovery start
 
 The isolated ARM64 controller verified the retained exact `c0760d2b` image, built and inspected the exact `49f79555` image, and invoked the ordinary synthetic Compose recovery helper. The first `Compose up` using the retained previous image exited 125 at `start-previous`. No recovery phase completed. The controller then removed its own source directory, normally stopped the isolated VM, restarted the prior default VM, and verified restored routes, connection defaults and original container states. No forced stop or resource setting change occurred. Earlier attempts stopped before any VM or route change when checking literal archive symlinks and the host temp-directory route. The current result leaves recovery qualification open.

@@ -8,7 +8,7 @@ import { calculateScheduleA } from "@/engine/schedules/schedule-a.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { getConstants } from "@/models/constants.js";
-import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
+import { complexMFJFixture, simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 import { mortgageInput, mortgageLoan } from "../../fixtures/mortgage-source.js";
 const value = (result: ReturnType<typeof calculateHomeMortgageInterest>, line: string) => result.lines.find(item => item.form === "Pub936 Table1" && item.line === line)?.value.toString();
@@ -17,16 +17,34 @@ function reportedMortgageInput(
   year: 2025 | 2026,
   loans: ReturnType<typeof mortgageLoan>[],
   statementAccounts: Array<string | undefined> = [],
+  jointReturn = false,
 ) {
   const input = mortgageInput(loans);
   return TaxYearInputSchema.parse({
     ...input,
-    taxpayer: { ...input.taxpayer, taxYear: year },
+    taxpayer: jointReturn
+      ? { ...input.taxpayer, taxYear: year, filingStatus: "married_filing_jointly", spouse: complexMFJFixture.taxpayer.spouse }
+      : { ...input.taxpayer, taxYear: year },
     form1098: input.form1098.map((form, index) => ({
       ...form, taxYear: year, loanAccountReference: statementAccounts[index],
     })),
     mortgageInterestWorksheet: { ...input.mortgageInterestWorksheet, sourceTaxYear: year },
   });
+}
+
+function jointReportedMortgageInput(
+  year: 2025 | 2026,
+  secondHolder: "joint" | "spouse",
+  accounts: readonly [string | undefined, string | undefined],
+) {
+  const first = mortgageLoan({
+    interestPaid: "4000", balance: { method: "highest_balance", amount: "100000", sourceReference: "Actual annual maximum" },
+    loanAccountReference: accounts[0],
+  });
+  const second = {
+    ...first, sourceId: "loan-two", form1098SourceId: "1098-two", accountHolder: secondHolder, loanAccountReference: accounts[1],
+  };
+  return reportedMortgageInput(year, [first, second], [...accounts], true);
 }
 
 describe("Pub936 actual mortgage sources", () => {
@@ -65,10 +83,30 @@ describe("Pub936 actual mortgage sources", () => {
       expect(() => calculateHomeMortgageInterest(linked([...accounts]))).toThrow(/Form1098.*distinct.*account/i);
     }
   });
+  it.each([
+    ["primary and joint", "joint", ["account-01", "account-01"]],
+    ["primary and spouse", "spouse", ["account-01", " ACCOUNT-01 "]],
+    ["primary and joint with missing references", "joint", [undefined, undefined]],
+    ["primary and joint with only one account reference", "joint", ["account-01", undefined]],
+    ["primary and spouse with missing references", "spouse", [undefined, undefined]],
+  ] as const)("holds indistinguishable 2026 reported accounts for %s", (_label, secondHolder, accounts) => {
+    const input = jointReportedMortgageInput(2026, secondHolder, accounts);
+    expect(() => calculateScheduleA(input, new Decimal("100000"), "married_filing_jointly", FEDERAL_2026_CONSTANTS))
+      .toThrow(/Form1098.*distinct.*account/i);
+  });
+  it("distinguishes original 2026 accounts across joint-return payment roles", () => {
+    for (const secondHolder of ["joint", "spouse"] as const) {
+      const input = jointReportedMortgageInput(2026, secondHolder, ["account-01", "account-02"]);
+      const scheduleA = calculateScheduleA(input, new Decimal("100000"), "married_filing_jointly", FEDERAL_2026_CONSTANTS);
+      expect(scheduleA.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toString()).toBe("8000");
+    }
+  });
   it("preserves 2025 reported mortgage interest under the historical account contract", () => {
     const input = reportedMortgageInput(2025, [mortgageLoan({ loanAccountReference: "legacy worksheet reference" })]);
     const federal = calculateFederalTax(input);
     expect(federal.scheduleA?.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toString()).toBe("30000");
+    const joint = jointReportedMortgageInput(2025, "joint", [undefined, undefined]);
+    expect(calculateHomeMortgageInterest(joint).line8a.toString()).toBe("8000");
   });
   it("binds actual loan sources and rejects unknown or contradictory source amounts", () => {
     const input = mortgageInput();
