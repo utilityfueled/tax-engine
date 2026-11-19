@@ -571,6 +571,52 @@
           "web": 44607163698,
           "docker": 44607163920,
           "arm64": 44607264786
+        },
+        "remoteResults": {
+          "ciJobsPassed": 6,
+          "dockerPassed": true,
+          "testsPassedPerJob": 29471,
+          "testFilesPassedPerJob": 2155,
+          "branchCoveragePct": 88.32,
+          "coverageGatePct": 85,
+          "unitJob": 135853819227,
+          "unitLogSha256": "80e775900610fd903dda12fa6c2c498e3104aa810ef5d73653e1103731e22c8c",
+          "coverageJob": 135853819446,
+          "coverageLogSha256": "18fad3f4e61b2cd791a84f9fe59f6a7881c12ff2c78e9f6be58292828c1789f4",
+          "managedBrowser": {
+            "job": 135853820256,
+            "passed": 650,
+            "failed": 0,
+            "originalSkips": 5,
+            "logSha256": "377f134353bbe063c4bf5de92d9ce181c50e0ba0f70717d8c768acfa2351b8d4"
+          },
+          "strictAmd64": {
+            "job": 135853820864,
+            "passed": 646,
+            "failed": 4,
+            "originalSkips": 5,
+            "ohioBusinessDeadlineFailures": 1,
+            "ohioSchoolDeadlineFailures": 3,
+            "changedCasesPassed": 4,
+            "smokePassed": true,
+            "composePhasesPassed": 6,
+            "independentArchiveImportPassed": true,
+            "browserContainerRemoved": true,
+            "logSha256": "1350f45b2f9d508ed58b6adf6185a793ec8ffab4b96e05a3009bd58887ab347b"
+          },
+          "strictArm64": {
+            "job": 135857870145,
+            "passed": 640,
+            "failed": 10,
+            "originalSkips": 5,
+            "ohioDeadlineFailures": 9,
+            "pennsylvaniaDeadlineFailures": 1,
+            "changedCasesPassed": 3,
+            "smokePassed": true,
+            "composePhasesPassed": 6,
+            "browserContainerRemoved": true,
+            "logSha256": "11dc0d137cfa1c6752a50a71c98356d0ee2fd8c8a8ff6f45da1e132d375d203f"
+          }
         }
       },
       "latestLocalGuidedRecovery": {

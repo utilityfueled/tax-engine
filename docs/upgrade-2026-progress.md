@@ -26,6 +26,31 @@ The trace observation SHA-256 is
 [Successor Web](https://github.com/utilityfueled/tax-engine/actions/runs/44607163698) ·
 [Successor native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44607264786).
 
+The exact successor passed all six CI jobs and the Docker workflow. The unit
+and coverage jobs each passed 29,471 tests across 2,155 files. Coverage reached
+88.32% branches against the unchanged 85% gate. The managed browser run passed
+650 cases with five original skips.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44607164094) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44607163920) ·
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44607163698/job/135853820256).
+
+Strict AMD64 passed 646 cases with five original skips and four 30-second
+deadlines. All four cases changed by this commit passed. The remaining
+deadlines affected the desktop NEW212 case and three Ohio part-year school
+district cases. Independent trace review found cumulative form-entry time
+and different late operations in the failed cases.
+Image smoke, all six Compose recovery phases, independent image archive
+import and browser-container removal passed.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44607163698/job/135853820864).
+
+Strict native Linux ARM64 passed 640 cases with five original skips and ten
+30-second deadlines. Nine were Ohio cases across business, reciprocal refunds,
+resident credits and part-year school district returns. The Pennsylvania
+married-payment desktop case reached the deadline on ARM64. The other three
+changed cases passed. Image smoke, six Compose recovery phases and browser
+container removal passed. Both strict browser lanes remain open.
+[Strict ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44607264786/job/135857870145).
+
 ## November 19 local guided save and reset recovery
 
 Commit `fa718e69` keeps a local guided edit open when browser storage rejects
