@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+## November 19 browser source-audit refresh
+
+Frozen `92ed89d1` passed all nine static checks. Its managed browser command stopped at preflight because the intake and fixture changes needed four new source hashes. The updated audit verified the complete source closure. Playwright collection matched all 655 case IDs, deadlines and expected statuses, and all eight window plans from the passing `49f79555` run. The budget file retains its 20-request, 60-second windows, and collection retains two workers, zero retries and the five originally skipped hosted cases.
+
 ## November 19 shared NIIT and foreign-tax fixture correction
 
 Frozen `92ed89d1` recorded 29,202 passes, 75 planned skips and three failures in each of the unit and coverage commands. The NIIT and foreign-tax tests shared one synthetic annuity statement that supplied a payer-determined taxable amount but omitted the actual unchecked Box 2b fact. The fixture-only `4555f852` declares that original checkbox. The original assertions, expected values and normal engine admission gates are unchanged. All 98 targeted tests passed after the correction.
