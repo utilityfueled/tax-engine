@@ -5,7 +5,15 @@ to reconcile to the return year. The annual statement checks remain in place.
 Automatic production builds are disabled. The 2026 public release still needs
 qualification.
 
-Resume with `activeContinuation.nov19TaxAndBrowserContinuation` in
+The latest application commit, `fa718e69`, checks that a local guided edit
+saved before switching to advanced mode. The regression restores the corrected
+$43,000 AGI from encrypted backup. A separate regression covers a rejected
+restart. The exact app passed 29,471 tests each in unit and coverage, nine
+static and build checks, and the protected Preview workspace lifecycle.
+[Guided save and reset evidence](upgrade-2026-progress.md#november-19-local-guided-save-and-reset-recovery).
+
+Resume with the `latestLocalGuidedRecovery` entry under
+`activeContinuation.nov19TaxAndBrowserContinuation` in
 [the checkpoint](upgrade-2026-checkpoint.json) and the first entries in
 [the progress log](upgrade-2026-progress.md). Read the named package only.
 Keep a single watcher for each run. After compaction, retain the source commit,

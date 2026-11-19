@@ -1,5 +1,41 @@
 # 2026 upgrade implementation evidence
 
+## November 19 local guided save and reset recovery
+
+Commit `fa718e69` keeps a local guided edit open when browser storage rejects
+its write. Entering advanced mode retries the edited draft before syncing the
+workspace. A newer saved draft from another tab prevents the retry. Start
+Again keeps the completed interview open if the browser rejects draft removal.
+
+Two regressions use the real guided controls and saved workspace. The first
+corrects a synthetic W-2 from $42,000 to $43,000, rejects the first draft write,
+retries it, and restores the corrected AGI from encrypted backup. The second
+checks a rejected draft removal and retry. Both failed before their fixes.
+Independent engineering review, 288 focused tests, spec validation, the spec
+inventory, web typecheck and scoped lint passed. The verified exact-source
+archive contains 6,489 tracked entries, including six internal links. Its SHA-256 is
+`6ebcda09d822d2f445c0ee3e052a64b2385893b4e0d6054d6a616188671b7832`.
+
+The exact source passed 29,471 local tests in 2,155 suites in each of the
+unit and coverage runs. Branch coverage reached 88.32% against the 85%
+gate. PostgreSQL 16.16 stopped normally. All nine static and build
+checks passed, as did the [Docker job](https://github.com/utilityfueled/tax-engine/actions/runs/44594837918).
+
+The protected exact-source Preview reached READY at 19:24 UTC with test
+billing, the expected project and source, and no production alias. Its
+nine synthetic workspace checks passed, including save, reopen, deletion,
+preservation of existing rows and sign-out. The lifecycle receipt SHA-256
+is `706a81242d5f4ea14299035c541e7a7a863f528dbb6ed31247f7dc52b4a9616d`.
+The source and deployment binding SHA-256 is
+`f3d04caed1cf39086a3ddc2f6aad46709169bcf53ce7f1172b9b6ce446d7e975`.
+
+The prior `7f55ca05` cloud managed browser job passed 648 cases and had
+two bounded saved-PDF inspection timeouts and five planned skips. Its
+strict AMD64 job passed 635 cases, failed 15 and had five planned skips.
+Both failures remain recorded at the original limits.
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44585135521/job/135775914721) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44585135521/job/135775914023).
+
 ## November 19 cross-version protected Preview workspace
 
 The exact current `7f55ca05` Preview and previous `6766f450` Preview used separate authenticated sessions for the same approved synthetic actor. The current build created a unique empty workspace and saved it with a revision check. The previous build reopened the exact row and updated it using the current revision. The current build then read back the previous save with the exact new revision. Both saves changed only the update timestamp.

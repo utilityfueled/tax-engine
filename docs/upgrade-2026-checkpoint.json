@@ -556,6 +556,34 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestLocalGuidedRecovery": {
+        "source": "fa718e691309097346439fcd33a4e93ce2271e0e",
+        "archiveSha256": "6ebcda09d822d2f445c0ee3e052a64b2385893b4e0d6054d6a616188671b7832",
+        "focused": "288 passed across eight suites; spec, inventory, web typecheck, lint, and independent engineering review passed",
+        "fullLocal": {
+          "unitPassed": 29471,
+          "coveragePassed": 29471,
+          "suites": 2155,
+          "branchCoveragePercent": "88.32",
+          "branchGatePercent": "85",
+          "staticChecksPassed": 9,
+          "postgres": "16.16 stopped normally"
+        },
+        "failureControls": "A rejected W-2 draft retains the unsaved edit and holds sync. Retry restores corrected $43,000 AGI from encrypted backup. An other-tab update is preserved, and rejected restart retains the completed draft.",
+        "protectedPreview": {
+          "readyVerifiedUtc": "2026-11-19T19:24:08Z",
+          "workspaceChecksPassed": 9,
+          "workspaceReceiptSha256": "706a81242d5f4ea14299035c541e7a7a863f528dbb6ed31247f7dc52b4a9616d",
+          "exactBindingSha256": "f3d04caed1cf39086a3ddc2f6aad46709169bcf53ce7f1172b9b6ce446d7e975"
+        },
+        "exactStage": ".local/upgrade-evidence/nov19-guided-save-exact",
+        "github": {
+          "ci": 44594838377,
+          "web": 44594838219,
+          "docker": 44594837918,
+          "arm64": 44595399791
+        }
+      },
       "latestBrokerDateFormats": {
         "source": "7f55ca05",
         "archiveSha256": "2ca4257a798c43dd2f0ac6d54fc5f3b35c65eb1de2b6466f3b9f19ec298244e0",
