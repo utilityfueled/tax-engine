@@ -41,7 +41,12 @@ jobs:
         with:
           node-version-file: .node-version
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pnpm test:setup
       - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
+      - run: pnpm sample-docs:fetch
       - name: Install and verify PostgreSQL 16 recovery tools
         run: |
           suite="$(lsb_release -cs)-pgdg"
@@ -98,3 +103,54 @@ jobs:
           PREVIOUS_IMAGE_ID: ${{ steps.images.outputs.previous }}
           CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
         run: node --import tsx scripts/rehearse-self-host-release.mjs "$PREVIOUS_IMAGE_ID" "$CANDIDATE_IMAGE_ID"
+      - name: Start the local candidate for the full browser suite
+        id: browser_container
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
+        run: |
+          container=$(docker run --detach --name tax-engine-browser-ci --read-only --cap-drop ALL \
+            --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --tmpfs /app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777 \
+            --publish 127.0.0.1:3109:3000 --env TAX_ENGINE_DEPLOYMENT_MODE=self-host \
+            --env TAX_ENGINE_APP_URL=http://127.0.0.1:3109 "$CANDIDATE_IMAGE_ID")
+          printf 'container=%s\n' "$container" >> "$GITHUB_OUTPUT"
+          test "$(docker inspect --format '{{.Image}}' "$container")" = "$CANDIDATE_IMAGE_ID"
+          for ((attempt=1; attempt<=60; attempt++)); do
+            if curl --fail --silent --max-time 2 http://127.0.0.1:3109/api/health; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Run strict browser flows against the ARM64 runtime image
+        id: strict_browser
+        timeout-minutes: 40
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
+          PLAYWRIGHT_DISABLE_WEBSERVER: "true"
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
+        run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure
+      - name: Stop and remove the rehearsal browser container
+        if: ${{ always() && steps.browser_container.outputs.container != '' }}
+        env:
+          BROWSER_CONTAINER: ${{ steps.browser_container.outputs.container }}
+        run: |
+          [[ $BROWSER_CONTAINER =~ ^[a-f0-9]{64}$ ]]
+          docker stop --time 10 "$BROWSER_CONTAINER"
+          docker rm "$BROWSER_CONTAINER"
+          remaining=$(docker ps --all --quiet --no-trunc --filter "id=$BROWSER_CONTAINER")
+          test -z "$remaining"
+      - name: Record the browser summary in the run log
+        if: ${{ always() && steps.strict_browser.outcome != 'skipped' }}
+        env:
+          BROWSER_OUTCOME: ${{ steps.strict_browser.outcome }}
+        run: |
+          summaries=()
+          if [[ -d apps/web/test-results ]]; then
+            mapfile -d '' -t summaries < <(find apps/web/test-results -maxdepth 2 -name summary.json -print0)
+          fi
+          if (( ${#summaries[@]} != 1 )); then
+            echo 'Exactly one browser summary was required for successful qualification.'
+            test "$BROWSER_OUTCOME" != success
+            exit
+          fi
+          jq -c '{status, cleanup, batchesCompleted, caseCount, failed, skipped}' "${summaries[0]}"
+          sha256sum "${summaries[0]}"
