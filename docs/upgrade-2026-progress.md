@@ -1,8 +1,10 @@
 # 2026 upgrade implementation evidence
 
-## November 19 exact current core checks and protected Preview workspace lifecycle
+## November 19 exact current local checks and protected Preview workspace lifecycle
 
-Frozen `e0cc9467` passed the full unit and coverage commands with 29,205 tests passing and 75 planned skips in each. Coverage was 87.88% branches against the 85% gate. Three typechecks, both spec checks, both builds, lint and the offline model-evaluation manifest check passed. Lint reported zero errors and 12,102 warnings. The frozen source archive SHA-256 was `59ddc00c4b3493b73ce4f90e0e943424b7da4bd42e8be9f75f8175db010d4a9b`. The matched managed browser run continued separately.
+Frozen `e0cc9467` passed the full unit and coverage commands with 29,205 tests passing and 75 planned skips in each. Coverage was 87.88% branches against the 85% gate. Three typechecks, both spec checks, both builds, lint and the offline model-evaluation manifest check passed. Lint reported zero errors and 12,102 warnings. The frozen source archive SHA-256 was `59ddc00c4b3493b73ce4f90e0e943424b7da4bd42e8be9f75f8175db010d4a9b`.
+
+The local managed browser run used the sample documents and Python PDF support with the original two workers, zero retries and eight test windows. It passed 650 of 655 cases with the five original skips and verified normal cleanup. The summary SHA-256 was `ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`. The exact-source remote managed and strict AMD64 jobs retain separate results.
 
 The same 6,477-entry tracked archive reached READY on the original protected Preview project with test billing. Provider metadata confirmed the exact source label, Preview target and absence of production aliases. One existing authorized test account created, revisioned, reopened and deleted a synthetic PostgreSQL workspace. The fixture was absent and the prior list matched after cleanup. Sign-out left a null session. All nine runner assertions passed. This is an ordinary hosted workspace result for that source.
 
