@@ -1,5 +1,11 @@
 # 2026 upgrade implementation evidence
 
+## November 19 exact current ARM64 recovery pass
+
+The isolated ARM64 rehearsal built the frozen `e0cc9467` archive once and reused the verified `49f79555` image. All 51 controller steps and six phases passed. The previous run, upgrade, database restart, database dump and restore, rollback, and re-upgrade preserved the same database, browser facts and source-document checksums. The synthetic PostgreSQL restore verified 11 tables, two workspaces and exact credit accounting. The browser restore verified encrypted originals, original bytes, unknown tax year, exact cents and deletion.
+
+Independent engineering review verified both image bindings, the completed phase records and normal cleanup. The default VM returned with the same 21 inactive container records. The isolated VM stopped normally and retained its original network with zero containers and volumes. The result SHA-256 was `11bcd003ca9eefe66a59f00a281f4bb4c07777b2f6d0ce5e0c29f6a08a41537b`. The six-phase receipt SHA-256 was `1dee50212ce172b1fd7b7d13c7fed73ee1e9e4e92596f48be8fa231ee692b844`. This fulfills the ordinary ARM64 recovery check for the frozen source.
+
 ## November 19 exact current local checks and protected Preview workspace lifecycle
 
 Frozen `e0cc9467` passed the full unit and coverage commands with 29,205 tests passing and 75 planned skips in each. Coverage was 87.88% branches against the 85% gate. Three typechecks, both spec checks, both builds, lint and the offline model-evaluation manifest check passed. Lint reported zero errors and 12,102 warnings. The frozen source archive SHA-256 was `59ddc00c4b3493b73ce4f90e0e943424b7da4bd42e8be9f75f8175db010d4a9b`.
