@@ -26,6 +26,8 @@ import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-
 import { calculateIraReturnWorksheet } from "@/engine/forms/ira-return-worksheet.js";
 import { calculateForm1099G, type Form1099GResult } from "@/engine/forms/form-1099-g.js";
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
+import { calculateCodPrincipalResidenceReduction } from "@/engine/forms/cod-principal-residence.js";
+import { calculateCodNolReduction } from "@/engine/forms/cod-nol-reductions.js";
 import { calculateForm5329Hsa, type Form5329HsaResult } from "@/engine/forms/form-5329-hsa.js";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses.js";
 import type { EducatorBondSourceContext } from "@/engine/forms/educator-bond-sources.js";
@@ -339,8 +341,18 @@ export function calculateSchedule1(
 
   // Line 8c: Cancellation of debt income (Form 1099-C / Form 982)
   const form1099CForms = input.form1099C ?? [];
+  const principalResidence = calculateCodPrincipalResidenceReduction(input);
+  if (form1099CForms.some(form => form.taxYear !== undefined && form.taxYear !== input.taxpayer.taxYear)) {
+    // The reporting header is not the actual cancellation date. Preserve only
+    // the existing complete source methods that independently validate that date.
+    const actualDischargeVerified = principalResidence !== undefined
+      || (input.form982NolSources !== undefined && calculateCodNolReduction(input).sourceFactsVerified === true);
+    if (!actualDischargeVerified) {
+      throw new Error("Form 1099-C statement year requires actual cancellation-year source reconciliation");
+    }
+  }
   const form1099CResult = form1099CForms.length > 0
-    ? calculateForm1099C(form1099CForms, input.codExclusion, filingStatus, constants)
+    ? calculateForm1099C(form1099CForms, principalResidence?.codExclusion ?? input.codExclusion, filingStatus, constants)
     : undefined;
   if (form1099CResult) {
     audit.merge(form1099CResult.lines);

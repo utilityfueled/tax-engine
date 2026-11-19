@@ -9,6 +9,8 @@ import {createTaxExplanationRouteHandlers} from '@/lib/transient-tax-explanation
 import {createWorkspaceRecord} from '@/lib/workspace-storage';
 import {buildProviderWorkspaceRequest} from '@/lib/provider-workspace-request';
 import {simpleW2Fixture} from '../../fixtures/simple-w2';
+import {principalResidenceCodInput} from '../../fixtures/cod-principal-residence';
+import {actualPartialPersonalCodInput} from '../../fixtures/cod-partial-personal';
 type Input=typeof simpleW2Fixture;
 type Kind='cod'|'sa'|'rrb'|'trust';
 const scope={ownerScope:'independent-owner',workspaceId:'source-review',workspaceRevision:'review-revision'};
@@ -69,19 +71,29 @@ it('holds known cross year COD and HSA compositions without rewriting canonical 
    expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
    expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow(expected);await post(x,400);expect(x).toEqual(before);
   }else{
-   const result=calculateFederalTax(TaxYearInputSchema.parse(x));
-   expect(result.agi.toFixed()).toBe(amount==='0'?'85000':'86000');expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow('source-reconciled cross-year COD or HSA treatment');
-   await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).agi.toFixed()).toBe(result.agi.toFixed());
+   const expected='Form 1099-C statement year requires actual cancellation-year source reconciliation';
+   expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+   expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow(expected);
+   await post(x,400);expect(x).toEqual(before);expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
   }
  }
-
+ for(const raw of [principalResidenceCodInput(),actualPartialPersonalCodInput()])for(const header of [2024,2026]){
+  const x=TaxYearInputSchema.parse({...raw,form1099C:raw.form1099C.map(row=>({...row,taxYear:header}))}),before=structuredClone(x);
+  expect(calculateFederalTax(x).schedule1?.cancelledDebtIncome.toFixed()).toBe(raw.form1099C[0].amountDischarged==='100000'?'50000':'8000');
+  expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow('source-reconciled cross-year COD or HSA treatment');
+  await post(x,400);expect(x).toEqual(before);
+ }
 });
 it('denies duplicate conflicting originals in either order',async()=>{
  for(const kind of ['cod','sa','rrb','trust']as const)for(const reversed of [false,true]){
   const x=packet(kind,2025),bad=packet(kind,2026),rows=reversed?[original(bad,kind),original(x,kind)]:[original(x,kind),original(bad,kind)];
   if(kind==='cod')x.form1099C=rows as Input['form1099C'];else if(kind==='sa')x.form1099SA=rows as NonNullable<Input['form1099SA']>;else if(kind==='rrb')x.formRRB1099=rows as NonNullable<Input['formRRB1099']>;else x.scheduleK1Form1041=rows as Input['scheduleK1Form1041'];
   const before=structuredClone(x);
-  if(kind==='rrb'||kind==='sa'){
+  if(kind==='cod'){
+   const expected='Form 1099-C statement year requires actual cancellation-year source reconciliation';
+   expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+   await post(x,400);expect(x).toEqual(before);expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+  }else if(kind==='rrb'||kind==='sa'){
    const form=kind==='rrb'?'Form RRB-1099':'Form 1099-SA';
    const assertPaymentYearHold=()=>expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(`${form} source year 2026 must match the 2025 return`);
    assertPaymentYearHold();await post(x,400);expect(x).toEqual(before);assertPaymentYearHold();

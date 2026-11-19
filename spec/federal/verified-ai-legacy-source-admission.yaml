@@ -194,7 +194,7 @@ lines:
 
   - line: "cod-sa-crossyear-unreconciled"
     description: "Cross-year debt cancellation and HSA originals require a separately source-reconciled composition"
-    formula: "Known1099C or1099SA header mismatch is conservatively held only at confirmed explanation ingress as unsupported source-unreconciled cross-year composition. It is NOT a categorical tax-law contradiction:1099C identifiable-event reporting year may differ from actual discharge year; nonspouse inheritedHSA FMV may be taxable in death year despite later distribution. No new event/year inference, no new cross-year method; preserve canonical calculations and existing current/missing-year methods."
+    formula: "Ordinary1099SA explicitly mismatched payment years hold before amounts. Ordinary1099C explicitly mismatched statement headers require actual cancellation-year reconciliation before COD aggregation, except when the existing complete QPR or Form982 NOL source validator independently validates the actual discharge packet. A COD reporting header is not its actual discharge year; no new event/year inference or caller trust flag is admitted. Confirmed explanation ingress still requires matching known original headers even for those existing source-validated COD methods. Preserve current/missing-year economics, complete-source safeguards and the earlier unavailable2026 annual gate."
     testRef: "tests/apps/web/verified-ai-four-original-headers.test.ts::holds known cross year COD and HSA compositions without rewriting canonical income"
 
   - line: "four-headers-duplicates"
