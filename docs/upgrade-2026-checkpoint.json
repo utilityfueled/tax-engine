@@ -570,6 +570,26 @@
         "linuxArm64Run": 44585365582,
         "localManagedBrowser": {"passes": 650, "failures": 0, "plannedSkips": 5, "windows": 8, "normalCleanup": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"},
         "currentPreviewSchemaPreflight": {"readOnly": true, "solePreviewAttachment": true, "version": "18.7", "identityMatches": true, "freshNamespaceAbsent": true, "schemaCreateAllowed": true, "receiptSha256": "e51ae3bb1d6907dc40f34b56429f1bb6dee88d5e04d70626eb76aa44fd019f2f"},
+        "currentPreviewSchemaRehearsal": {
+          "source": "7f55ca05",
+          "scope": "isolated synthetic schema on persistent Preview-only PostgreSQL 18.7",
+          "tables": 11,
+          "syntheticRows": 19,
+          "rollbackRestored": true,
+          "normalizedCatalogRestored": true,
+          "decimalRestored": true,
+          "issuanceReplayIdempotent": true,
+          "modeAndReceiptsRestored": true,
+          "migrationHooksReappliedTwice": true,
+          "namespaceAbsentAfter": true,
+          "ownedSessionsRemaining": 0,
+          "applicationRowsAccessed": false,
+          "connections": 5,
+          "queries": 354,
+          "nativeCommands": 7,
+          "receiptSha256": "71e6c41e284a21af3e41b4abf273afd4b12502b51b79fe7aa571b7448fcbb02d",
+          "launchSha256": "6f3eecb1a0833d3204334235540811cacc3e6396c4f1a084c12ab27e077323a0"
+        },
         "protectedPreview": {
           "status": "READY; exact source and project confirmed",
           "trackedEntries": 6488,
@@ -609,6 +629,9 @@
         "webRun": 44580664319,
         "dockerRun": 44580664199,
         "linuxArm64Run": 44580727106,
+        "remoteManaged": {"job": 135760113998, "passes": 650, "failures": 0, "plannedSkips": 5, "logSha256": "5623add81d370c4cbdd34ec7b6a0a2cad7cefb1088ee91d24e343610b7240607"},
+        "remoteArm64": {"job": 135760330262, "passes": 640, "failures": 10, "plannedSkips": 5, "smokeAndSixRecoveryPhasesPassed": true, "containerRemoved": true, "logSha256": "044cc866d94b2a1b2ec1dce8a7a9dd7a726714a8afc65fb0e81508a3a2fb7147"},
+        "remoteAmd64": {"job": 135760113224, "passes": 635, "failures": 15, "plannedSkips": 5, "wholeCaseTimeouts": 13, "rrtaInspectionTimeouts": 2, "smokeAndSixRecoveryPhasesPassed": true, "containerRemoved": true, "logSha256": "9d7b1d6364597871e2e7521cea29136acccb5abeb605560d750b796e857fb8f0"},
         "arm64Selection": "The Mac clears disk at 553 GiB but its default VM is stopped. The existing local controller requires an already-running default VM. Use the exact standard GitHub native Linux lane and leave Mac VMs undisturbed."
       },
       "completedCodStatementRemote": {
