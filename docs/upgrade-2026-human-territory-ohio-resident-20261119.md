@@ -1,6 +1,6 @@
 # Independent 2026 review assignments for November 19
 
-All four assignments are open. No qualified human reviewer is assigned. Give reviewers the case facts and a blank worksheet first. Ask each reviewer to record their authority, source revisions, method, line results, assumptions, uncertainties and dated disposition before sharing the engineering comparison. Use fictional records only.
+All seven assignments are open. No qualified human reviewer is assigned. Give reviewers the case facts and a blank worksheet first. Ask each reviewer to record their authority, source revisions, method, line results, assumptions, uncertainties and dated disposition before sharing the engineering comparison. Use fictional records only.
 
 ## Federal territory deduction allocation
 
@@ -22,6 +22,18 @@ A joint return includes two Forms 1098 from the same lender, each reporting $4,0
 
 A Form 1099-R marked Code 7 reports $12,000 gross and $9,000.01 in Box 2a. Compare both original boxes 2b and 7b observed unchecked with either box missing from the intake. Repeat with a known zero in Box 2a and with Code A ordinary reporting. Identify what is needed to rely on the stated amount, distinguish the 2026 IRA and pension lines, and decide how to reconfirm a restored checkbox value lacking evidence that it was observed. Identify any further review needed for a supported Simplified Method or standalone Form 4972 election. [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) · [IRS Publication 575](https://www.irs.gov/publications/p575).
 
+## Federal IRA charitable transfer and prior deductions
+
+An eligible IRA owner directs the trustee to transfer $6,500 to an eligible public charity in 2026. Form 1099-R reports a $6,500 gross distribution. The separate history shows $4,000 of unused deductible IRA contributions subject to the age-based QCD adjustment. The taxpayer has $85,000 in wages and no other income or IRA distribution. Derive the gross and taxable IRA entries and their effect on adjusted gross income. Identify the original evidence and the allowance, if any, for a separate charitable deduction. Then vary the owner on the trustee record and present an identical second copy of the statement. Identify which facts must be resolved for either variation. [IRS Publication 590-B](https://www.irs.gov/publications/p590b) · [2026 Forms 1099-R and 5498 instructions](https://www.irs.gov/instructions/i1099r).
+
+## Federal education credit and prior claims
+
+A single 30-year-old claimant with $50,000 of wages and $4,000 of otherwise eligible net expenses satisfies the enrollment, degree, institutional, taxpayer identification and other non-history requirements for the 2025 American Opportunity Tax Credit. Derive the reporting outcome for zero, three and four prior years in which someone claimed the credit for this student. Reconcile the refundable and nonrefundable portions. Describe the evidence required when prior claim history is unknown. Repeat the analysis when a distinct student qualifies for the Lifetime Learning Credit. [2025 Form 8863 and instructions](https://www.irs.gov/instructions/i8863#line23).
+
+## Federal employer pension distribution code and taxable amount
+
+Compare two fictional 2025 employer-plan annuities with $6,000 gross, $125 federal withholding, an unchecked IRA/SEP/SIMPLE box and no payer-determined Box 2a amount. Box 2b is checked. The Code 1 recipient is age 35, has $36,000 in documented plan cost and claims no early-distribution exception. The Code 7 recipient is age 65 and has $26,000 in documented plan cost. Both single-life annuities use the Simplified Method, began January 15, 2025, made 12 payments in 2025 and have no earlier recovered cost. Derive the pension and withholding entries and any additional tax. Compare an omitted distribution code and a missing worksheet with the documented cases. Identify the fact or method that must be substantiated at each hold. [2025 Form 1040 instructions, lines 5a and 5b](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28) · [2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15) · [2025 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2025.pdf#page=1).
+
 ## Record the independent decisions
 
 | Assignment | Reviewer and qualification | Date and authority revisions | Worksheet and disposition |
@@ -30,6 +42,9 @@ A Form 1099-R marked Code 7 reports $12,000 gross and $9,000.01 in Box 2a. Compa
 | Ohio resident business sale | Unassigned | Pending | Pending |
 | Federal mortgage statement identity | Unassigned | Pending | Pending |
 | Federal original pension checkboxes | Unassigned | Pending | Pending |
+| Federal IRA charitable transfer and prior deductions | Unassigned | Pending | Pending |
+| Federal education credit and prior claims | Unassigned | Pending | Pending |
+| Federal employer pension distribution code and taxable amount | Unassigned | Pending | Pending |
 
 <details>
 <summary>Engineering comparison for use after the independent worksheet</summary>

@@ -1,10 +1,38 @@
 # 2026 upgrade implementation evidence
 
+## November 19 current protected Preview workspace lifecycle
+
+The exact `c0219541` archive matched all 6,484 Git blobs and six internal links. Its one protected Preview reached READY with the intended project and source label, no production alias, and test billing at build and runtime. The existing synthetic actor passed all nine checks. A new empty PostgreSQL workspace was absent before creation, saved with a fresh revision, reopened and removed. Cleanup verified absence, preserved the earlier rows and cleared the signed-in session. Archive SHA-256 `3a880776e7132bf3d300eda1e8ed811acd2e01e0080a4205498566142d403b1d`. Bounded result SHA-256 `e1ee06736472c57f6f590d2e1d143b589b4b9be7c201beda36d9e2e9d59ec1d9`.
+
+Password reset completion, final billing events, dependency outages and hosted rollback remain open.
+
+## November 19 QSBS browser PDF subprocess
+
+The managed `47c1fdaf` browser run completed 649 cases, failed one and recorded five planned skips. The desktop QSBS PDF inspection stalled with the original Python child reading the PDF from standard input. Stopping that child let the controller preserve the failure and close its server. The mobile case passed.
+
+The separate `47c1fdaf` GitHub container run passed image recovery. Its strict browser run returned 635 passes, 15 failures and five planned skips. The failures included 30-second browser timeouts and two existing saved-PDF inspection deadlines. The managed job on that run stopped during Playwright dependency installation. [Prior GitHub Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44520663325).
+
+Commit `c0219541` passes the downloaded file path to the same `pypdf` extraction asynchronously and caps the child at 30 seconds. The two scoped browser cases, 61 browser-runner tests, two source-fixture accounting tests, and lint passed. Independent review verified every original content assertion, both case identities, and the existing browser budgets and deadlines.
+
+Exact `c0219541` passed all nine local static and build checks. Local and GitHub unit and coverage each passed 29,411 tests with 88.28% branch coverage and normal PostgreSQL shutdown. The full local production-mode browser controller passed 650 cases with five planned skips in eight windows and verified that its server closed. The managed GitHub browser job also passed 650 cases with five planned skips. All six primary CI jobs and Docker CI passed. [Remote CI](https://github.com/utilityfueled/tax-engine/actions/runs/44527370791) · [Remote Web](https://github.com/utilityfueled/tax-engine/actions/runs/44527370975) · [Docker CI](https://github.com/utilityfueled/tax-engine/actions/runs/44527370892).
+
+The strict AMD64 runtime-image run passed 646 cases, with four Ohio part-year journeys reaching the original 30-second deadline and five planned skips. The four failures were one business journey and three school district journeys. Their traces recorded 768 to 988 browser calls per journey. Calls continued near the deadline at different points, including review requests and later actions. The traces leave the cause open. Compose upgrade/recovery/rollback, the independent native image store import, immutable SBOM generation and source verification, and browser container removal passed in the same job. Strict runtime browser qualification remains open. [Exact GitHub container job](https://github.com/utilityfueled/tax-engine/actions/runs/44527370975/job/135571394508).
+
+The exact local production build reran both Ohio spec files with the original 30-second deadline, two workers and zero retries. All six cases passed, including the four that timed out on GitHub. The local controller verified its server closed. This focused run leaves the full AMD64 result open.
+
+## November 19 final-source ARM64 recovery preflight
+
+The exact `06396eb6` archive contains 6,484 tracked entries. The offline check matched all 19 recovery runtime files to the previously exercised release harness. Independent review checked the single isolated build, normal stops and restoration, and both default Podman stores' initial and final inventories. The actual preflight stopped at `HOST_CAPACITY` with 492.10 GiB free against the existing 512 GiB floor. The default VM stayed running and the isolated VM stayed stopped. The cleanup receipt recorded zero errors. The six-phase workload was never reached on this source.
+
+The exact attempt receipt SHA-256 is `4cfd14b0d8cee74a744d43b1fc3782091d68e80bd8611c892793ca719825b6b0`. A read-only APFS check found only 14.53 GiB immediately reclaimable from the measured reproducible test and build copies after accounting for shared extents. The mounted temporary directory shares the same available space. Earlier ARM64 recovery evidence is recorded against `6e21266e`. Rerunning `06396eb6` requires at least 512 GiB available and a fresh preflight.
+
 ## November 19 Form 1099-R pension taxable-amount evidence
 
 A positive, explicitly dated 2025 pension statement with Code 1 or 7, an unchecked IRA/SEP/SIMPLE box, a checked Box 2b and a missing Box 2a now needs a supported taxable-amount worksheet when the calculator would otherwise estimate from the gross distribution. The documented Simplified Method control uses the original $6,000 distribution and $125 federal withholding and calculates $4,800 taxable. Code 1 then produces $480 of additional tax on Form 5329. The 2025 instructions direct taxpayers with a partially taxable pension and no payer-determined amount to the General Rule or the applicable Simplified Method. [2025 Form 1040 instructions, lines 5a and 5b](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28).
 
 Two scoped regressions failed on the Box 7 predecessor. The Box 2a and Box 7 suites passed all 18 tests, and the 127 affected suites passed 3,529 tests. Independent review passed 178 tests and four boundary and precedence probes. The combined snapshot passed 199 focused tests and all nine static and build checks. The cases exercise an explicit taxable amount, incomplete worksheet evidence, and a supported worksheet. The broad final-source checks are tracked separately.
+
+Exact `06396eb6` passed 29,411 tests each in unit and coverage, with 88.28% branches against the 85% threshold and normal PostgreSQL 16.16 teardown. The preceding exact `8c479cc5` education revision passed 29,393 tests each and 88.28% branches.
 
 ## November 19 actual Form 1099-R Box 7
 

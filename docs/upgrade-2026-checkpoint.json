@@ -251,7 +251,7 @@
         "successorCoverageTestsPassed": 29380,
         "successorBranchCoveragePercent": "88.28",
         "previousManagedBrowser": { "passed": 650, "failed": 0, "plannedSkips": 5, "windows": 8 },
-        "fullCombinedVerification": "pending"
+        "successorManagedBrowser": { "passed": 649, "failed": 1, "plannedSkips": 5, "windows": 8, "failure": "QSBS desktop PDF subprocess stalled" }
       },
       "nov19AotcPriorClaimHistory": {
         "parent": "47c1fdaf",
@@ -264,6 +264,8 @@
         "independentFinalFocusedTestsPassed": 13,
         "staticAndBuildChecksPassed": 9,
         "specReferencesValidated": 9634,
+        "unitAndCoverageTestsPassedEach": 29393,
+        "branchCoveragePercent": "88.28",
         "published2026CandidateAlreadyPinned": true,
         "humanQualification": "pending"
       },
@@ -282,6 +284,7 @@
       },
       "nov19PensionBox2aActualSource": {
         "parent": "11b8d330",
+        "commit": "06396eb6",
         "patchSha256": "6af4f3afbfeca5d6b697eb5ad4d27b73f1cef4e87f0d8d714a4d6e4c16b7a86d",
         "initialUnresolvedTaxabilityFailures": 2,
         "bothPensionSuitesPassed": 18,
@@ -291,8 +294,61 @@
         "combinedStaticAndBuildChecksPassed": 9,
         "independentTestsPassed": 178,
         "independentBoundaryProbesPassed": 4,
+        "unitAndCoverageTestsPassedEach": 29411,
+        "branchCoveragePercent": "88.28",
+        "postgresStopPassed": true,
         "worksheetTaxableAmount": "4800",
         "worksheetFederalWithheld": "125"
+      },
+      "nov19QsbsBrowserPdfSubprocess": {
+        "parent": "06396eb6",
+        "commit": "c0219541",
+        "targetedBrowserCasesPassed": 2,
+        "runnerTestsPassed": 61,
+        "sourceFixtureTestsPassed": 2,
+        "lintPassed": true,
+        "childTimeoutMs": 30000,
+        "originalBrowserDeadlines": true,
+        "unitAndCoverageTestsPassedEach": 29411,
+        "branchCoveragePercent": "88.28",
+        "postgresStopPassed": true,
+        "staticAndBuildChecksPassed": 9,
+        "fullBrowser": { "passed": 650, "failed": 0, "plannedSkips": 5, "windows": 8, "serverClosed": true },
+        "browserSummarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356",
+        "browserSourceBuildSha256": "e6f25f6b6f6fd07fc51394470421e4e41afbd6faedb9f04da5d444cdc627f3de",
+        "remoteCi": { "jobsPassed": 6, "unitAndCoverageTestsPassedEach": 29411, "branchCoveragePercent": "88.28", "postgresStopPassed": true },
+        "remoteManagedBrowser": { "jobId": 135571394417, "passed": 650, "failed": 0, "plannedSkips": 5, "windows": 8 },
+        "remoteStrictAmd64": { "jobId": 135571394508, "passed": 646, "failed": 4, "plannedSkips": 5, "deadlineMs": 30000, "failedCohort": "Ohio part-year", "reviewedTraceCount": 4, "traceTimingSha256": "20a13eabd665d492137f4af1e73bbec8a17aedd71e65815fb74babf6794b3199", "composeRecoveryPassed": true, "independentArchiveImportPassed": true, "sbomSourceConfirmed": true, "containerRemoved": true },
+        "localStrictOhioFollowUp": { "passed": 6, "failed": 0, "skipped": 0, "workers": 2, "retries": 0, "deadlineMs": 30000, "serverClosed": true, "summarySha256": "b96db32187206971cf0b8021a945db011e11ec88cd728aa26f37d7b6038e309c" },
+        "remoteDockerPassed": true,
+        "remoteRuns": { "ci": 44527370791, "web": 44527370975, "docker": 44527370892 }
+      },
+      "nov19CurrentProtectedPreviewWorkspace": {
+        "source": "c0219541",
+        "scope": "Protected Preview, billing test mode, no production alias",
+        "storageMode": "hosted-postgres",
+        "trackedBlobs": 6484,
+        "trackedInternalLinks": 6,
+        "archiveSha256": "3a880776e7132bf3d300eda1e8ed811acd2e01e0080a4205498566142d403b1d",
+        "resultSha256": "e1ee06736472c57f6f590d2e1d143b589b4b9be7c201beda36d9e2e9d59ec1d9",
+        "checksPassed": 9,
+        "fixtureAbsentAfterCleanup": true,
+        "priorRowsPreserved": true,
+        "postSignOutSessionNull": true
+      },
+      "nov19CurrentOrdinaryArm64Preflight": {
+        "source": "06396eb6",
+        "priorSource": "e0cc9467",
+        "exactTrackedEntries": 6484,
+        "comparedRecoveryFiles": 19,
+        "archiveSha256": "355b9ae9b2938eb31c66a5a5d027dbe9c6d887a7ca47daa695109b170f109554",
+        "resultSha256": "4cfd14b0d8cee74a744d43b1fc3782091d68e80bd8611c892793ca719825b6b0",
+        "status": "blocked-host-capacity-before-vm-transition",
+        "freeGiBObserved": "492.10",
+        "minFreeGiB": "512",
+        "measuredScratchReclaimableGiB": "14.53",
+        "vmTransitions": 0,
+        "cleanupErrors": 0
       },
       "latestCurrentCombinedArm64": {
         "source": "6e21266e",
