@@ -2437,33 +2437,37 @@ function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<stri
 }
 
 /** Mandatory actual OH source replay, independent of state return calculation. */
-function guidedOhioActualSourceErrors(state: GuidedFlowState): Record<string, string> {
+function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: TaxYearInput | null): Record<string, string> {
   if (state.segmentation.stateCode !== "OH") return {};
   const data = state.sectionData["state-return"], errors: Record<string, string> = {};
   if (!data?.ohioResidency) errors.ohioResidency = "Complete and explicitly confirm the actual Ohio residency records.";
   if (!data?.ohioPayments) errors.ohioPayments = "Complete and explicitly confirm the actual Ohio payment records.";
   try {
-    const raw = buildTaxInputFromGuidedData(state);
-    const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
-    if (!parsed?.success) throw new Error("Complete the actual current federal owner, year and source originals before confirming Ohio sources.");
-    try { buildGuidedOhioResidencyFacts(data?.ohioResidency, parsed.data); }
+    let input = currentInput;
+    if (!input) {
+      const raw = buildTaxInputFromGuidedData(state);
+      const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
+      if (!parsed?.success) throw new Error("Complete the actual current federal owner, year and source originals before confirming Ohio sources.");
+      input = parsed.data;
+    }
+    try { buildGuidedOhioResidencyFacts(data?.ohioResidency, input); }
     catch (error) { errors.ohioResidency = error instanceof Error ? error.message : "Reconcile the actual Ohio residency sources."; }
-    try { buildGuidedOhioPaymentFacts(data?.ohioPayments, parsed.data); }
+    try { buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
     catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
     if(data?.ohioResidency?.residentCreditSources){
-      try{buildGuidedOhioResidentCreditSources(parsed.data,data.ohioResidency.residentCreditSources,buildGuidedOhioResidencyFacts(data.ohioResidency,parsed.data),buildGuidedOhioPaymentFacts(data.ohioPayments,parsed.data));}
+      try{buildGuidedOhioResidentCreditSources(input,data.ohioResidency.residentCreditSources,buildGuidedOhioResidencyFacts(data.ohioResidency,input),buildGuidedOhioPaymentFacts(data.ohioPayments,input));}
       catch(error){errors.ohioResidentCredit=error instanceof Error?error.message:'Complete and explicitly confirm the actual Virginia return and completed account sources.';}
     }
     if(data?.ohioReturnHeaderSources){
-      try{buildGuidedOhioReturnHeaderSources(parsed.data,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict);}
+      try{buildGuidedOhioReturnHeaderSources(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict);}
       catch(error){errors.ohioReturnHeader=error instanceof Error?error.message:'Complete and explicitly confirm the actual residential, Finder and county originals.';}
     }
     if(data?.ohioReciprocalWages){
-      try{buildGuidedOhioReciprocalWages(parsed.data,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments);}
+      try{buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments);}
       catch(error){errors.ohioReciprocalWages=error instanceof Error?error.message:'Complete and explicitly confirm the actual reciprocal wage originals.';}
     }
     if(data?.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict){
-      try{buildGuidedOhioSchoolDistrictFacts(parsed.data,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments);}
+      try{buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments);}
       catch(error){errors.ohioSchoolDistrict=error instanceof Error?error.message:'Complete and explicitly confirm the actual school district records.';}
     }
   } catch (error) { errors["ohio-current-originals"] = error instanceof Error ? error.message : "Complete actual federal originals before confirming Ohio sources."; }
@@ -2528,7 +2532,10 @@ export function validateSection(state: GuidedFlowState, sectionId: InterviewSect
 
 // Constructed and consumed only inside evaluateGuidedRenderState below. Public
 // validation never accepts a projection supplied by its caller.
-interface CurrentRenderProjection { stateSourcesValidated: boolean }
+interface CurrentRenderProjection {
+  stateSourcesValidated: boolean;
+  currentInput: TaxYearInput | null;
+}
 function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectionId, projection?: CurrentRenderProjection): SectionValidationResult {
   switch (sectionId) {
     case "personal-info":
@@ -2611,7 +2618,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       return validateRequiredFacts({
         ...zeroIncomeMiscSourceFactErrors(state),
         ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "PA" ? {} : guidedPAOrdinaryReturnSourceErrors(state)),
-        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {} : guidedOhioActualSourceErrors(state)),
+        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {} : guidedOhioActualSourceErrors(state, projection?.currentInput)),
         ...statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode),
         ...guidedOhioInterestFactErrors(state),
       });
@@ -2908,7 +2915,7 @@ export function evaluateGuidedRenderState(actual: GuidedFlowState) {
     && input.paMarriedOrdinarySources === undefined && !data?.ohioReciprocalWages
     && !data?.paMarriedOrdinarySources && state.segmentation.filingStatus !== 'mfj';
   const paInput = buildPAOrdinarySourceInputUsing(state, () => input);
-  const projection: CurrentRenderProjection = {stateSourcesValidated: ordinary && fresh.sourceReplaySucceeded};
+  const projection: CurrentRenderProjection = {stateSourcesValidated: ordinary && fresh.sourceReplaySucceeded, currentInput: input};
   const analysis = state.phase === "segmentation" ? null : analyzeGuidedRenderUsing(state, section => getVisitedSectionStatusUsing(state, section,
     () => validateSectionUsing(state, section, projection)));
   const originalInput = input === null ? null : structuredClone(input);
