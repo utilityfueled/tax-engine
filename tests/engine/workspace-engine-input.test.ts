@@ -655,12 +655,18 @@ describe("workspace engine input", () => {
     ]);
   });
 
-  it("blocks unqualified legacy financial input from confirmed Form 1095-A fixture facts", () => {
+  it("keeps the historical Form 1095-A alias and saved fixture match free of invented financial facts", () => {
     const documents = [createPremiumTaxCreditDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
       createPremiumTaxCreditSeededReturn({})
     );
+
+    expect(structuredFacts.map(({ factId, kind, machineValue }) => ({ factId, kind, machineValue })))
+      .toEqual([
+        { factId: "premium-tax-credit-review", kind: "document-detected", machineValue: undefined },
+        { factId: "premium-tax-credit-review", kind: "interview-answer", machineValue: undefined }
+      ]);
 
     const previewInput = buildWorkspaceEngineInput(
       documents,
@@ -670,8 +676,6 @@ describe("workspace engine input", () => {
     );
 
     expect(previewInput).toBeNull();
-    expect(structuredFacts.some(fact => fact.machineValue)).toBe(true);
-    // This legacy summary lacks actual source qualification; it remains evidence.
   });
 
   it("uses the separately supplied actual retirement owner without changing missing source ownership", () => {

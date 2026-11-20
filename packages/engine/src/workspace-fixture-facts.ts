@@ -208,25 +208,6 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       }
     }
   ],
-  "irs-1095-a-2025": [
-    {
-      idSuffix: "fixture-premium-tax-credit-review",
-      factId: "premium-tax-credit-review",
-      label: "Marketplace coverage and premium tax credit review",
-      value: "Official fixture Marketplace coverage: Form 1095-A annual enrollment premiums $7,200, annual SLCSP premiums $7,800, and annual advance premium tax credit $6,000 across 12 covered months.",
-      machineValue: {
-        entryKind: "1095-a-summary",
-        marketplace: "Official fixture Health Insurance Marketplace",
-        policyNumber: "OFFICIAL-ACA-2025",
-        monthlyPremiums: Array.from({ length: 12 }, (_, index) => ({
-          month: index + 1,
-          enrolleePremium: "600",
-          slcsp: "650",
-          advancePremiumTaxCredit: "500"
-        }))
-      } satisfies WorkspaceStructuredFactMachineValue1095ASummary
-    }
-  ],
   "irs-1098-e-2025": [
     {
       idSuffix: "fixture-student-loan-interest",

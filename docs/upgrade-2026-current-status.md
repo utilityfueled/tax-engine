@@ -1,5 +1,13 @@
 # Current 2026 upgrade status
 
+The IRS archived blank Form 1095-A now contributes only the manual review
+prompt under its historical 2025 filename alias. A browser run on the earlier
+revision reproduced synthetic premiums on that blank. Saved workspace facts
+are rebuilt from their original documents. Reopening a return clears the fake
+amounts from the live view. The next normal save clears them from the stored
+record. The review prompt and any saved response are retained.
+[Marketplace evidence](upgrade-2026-progress.md#november-20-marketplace-filename-and-saved-workspaces).
+
 The latest application revision with a verified protected Preview is
 `012e6ee1` on `main`. Exact unit and coverage runs each passed 29,556
 tests at 88.37% branch coverage. All six exact GitHub CI jobs, both builds,

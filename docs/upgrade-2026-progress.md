@@ -8764,3 +8764,28 @@ Full CI365 coverage subsequently failed1/29,015 tests: retained Ohio strict sour
 ## November17 continuation: preserve original awaited-entry contract
 
 Full365coverage failuree261673f remainsfailed. The wrapper now preserves the exact originalawait typeOriginals call; oldCItest is unchanged andpasses4/4.35phasecontrols, lint, exact655plain/enabledcollection andrequestaudits pass; original6d52sourceinverse unchanged, only4derivedhashfields refreshed. Fixmanifest573ed7ce; budget251216bd is pushedseparately. FullnewsourceCI/runtime remainpending; do notclaim365measurementsfornewerHEAD.
+
+## November 20 Marketplace filename and saved workspaces
+
+An independent Chromium run on `c3d87e32` found that the official archived
+blank under `f1095a--2025.pdf` kept the pending manual review prompt and
+incorrectly produced synthetic monthly premiums in the saved workspace. The
+same PDF under an unregistered filename and a corrected 2026 PDF under the
+2025 alias did not produce amounts.
+[IRS archived blank](https://www.irs.gov/pub/irs-prior/f1095a--2025.pdf).
+
+The engine no longer assigns synthetic Marketplace amounts from the historical
+sample ID. An independent source review traced the local and hosted workspace
+rebuild and confirmed that detected facts and the manual review prompt still
+use their existing paths. The spec-referenced regression failed before the
+fix. The corrected implementation passed 88 focused workspace and 149 federal
+Marketplace/health tests, lint, and spec validation.
+
+The independent Node 26.13.1 and Chromium 156.0.8078.4 run passed all three
+actual PDF upload, save, reopen and reload scenarios. The agreeing 2025 alias
+kept its pending prompt. The original implementation also saved a legacy
+return for the migration check. The corrected app removed the synthetic facts
+from the live view on reopen and from the stored record on the next normal
+save. No case produced structured money, inferred checkbox status or an
+engine preview. The first failure and corrected run are recorded under
+`activeContinuation.nov20Form1095AFilenameFacts` in the checkpoint.

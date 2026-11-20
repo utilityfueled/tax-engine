@@ -1,12 +1,25 @@
 {
   "activeContinuation": {
+    "nov20Form1095AFilenameFacts": {
+      "firstFailureRevision": "c3d87e32",
+      "firstFailure": "Archived blank under its agreeing alias persisted fixture-derived premiums with a manual prompt",
+      "correctedRuntimeBlob": "2354fa8242d7ce1528a3351a23ade6536851c95d",
+      "scopedWorkspaceTestsPassed": 88,
+      "federalMarketplaceTestsPassed": 149,
+      "chromiumUploadReopenCasesPassed": 3,
+      "legacyReopenClearsLiveFacts": true,
+      "legacyNextSaveClearsStoredFacts": true,
+      "independentCodeReview": "passed",
+      "firstFailureReceipt": ".local/upgrade-evidence/nov20-1095a-chromium-reopen.DtVwRj97/receipt.json",
+      "correctedReceipt": ".local/upgrade-evidence/nov20-1095a-chromium-corrected.hstNYqCC/receipt.json"
+    },
     "nov20Form1095ASourceMetadata": {
       "officialNormalUploadVariantsPassed": 14,
       "focusedReferenceAndApplicationTestsPassed": 1047,
       "focusedEngineTestsPassed": 96,
       "workspaceBrowserCasesPassed": 36,
       "specReferencesPassed": 9696,
-      "metadataOnly": true,
+      "printedYearDetectorMetadataOnly": true,
       "manualStatementStatusRequired": true,
       "archived2025SampleSha256": "df83be599d3bdcda826862aa5125868c2f481191a53c8417ed5fba91eccc7473",
       "privateEvidence": ".local/upgrade-evidence/nov20-1095a-metadata-current",
