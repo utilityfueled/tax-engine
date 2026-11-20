@@ -30,7 +30,10 @@ export interface PreparedUploadableFile {
 interface ExtractedTextItem {
   str?: string;
   transform?: number[];
+  width?: number;
 }
+
+type NecCopyBBox1a = { amount: string | null };
 
 let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | null = null;
 
@@ -76,7 +79,40 @@ function groupPageText(items: ExtractedTextItem[]) {
     .join("\n");
 }
 
-export async function extractPdfTextFromFile(file: File) {
+function readNecCopyBBox1a(items: ExtractedTextItem[]): NecCopyBBox1a | null {
+  const positioned = items.flatMap(({ str, transform, width }) => {
+    const [scaleX, skewY, skewX, scaleY, x, y] = transform ?? [];
+    const text = str?.trim();
+    return text && Number.isFinite(x) && Number.isFinite(y)
+      && typeof width === "number" && Number.isFinite(width) && width >= 0
+      ? [{ text, x, y, width, horizontal: scaleX > 0 && scaleY > 0 && skewX === 0 && skewY === 0 }]
+      : [];
+  });
+  const onRow = (y: number) => positioned.filter(item => Math.abs(item.y - y) <= 1);
+  const label = (y: number, left: number, right: number) => onRow(y)
+    .filter(item => item.horizontal && item.x >= left && item.x <= right)
+    .sort((a, b) => a.x - b.x)
+    .map(item => item.text).join(" ");
+
+  // Coordinates are in PDF points for the official December 2026 Copy B.
+  if (label(729.78, 397, 468) !== "Form 1099-NEC"
+    || label(712.44, 396, 469) !== "(Rev. December 2026)"
+    || label(669.77, 539, 578) !== "Copy B"
+    || label(649.77, 517, 578) !== "For Recipient"
+    || label(676, 297, 410) !== "1a Nonemployee compensation"
+    || label(640, 297, 387) !== "1b Cash tips"
+    || label(650.86, 300, 307) !== "$") return null;
+
+  const left = 309.6;
+  const right = 494.8;
+  const entries = onRow(650.86).filter(item => item.x < right && item.x + item.width >= left);
+  const entry = entries[0];
+  if (entries.length !== 1 || !entry.horizontal || entry.width === 0 || entry.x < left || entry.x + entry.width > right
+    || !/^(?:\d+|\d{1,3}(?:,\d{3})+)\.\d{2}$/.test(entry.text)) return { amount: null };
+  return { amount: normalizeAmount(entry.text) };
+}
+
+async function readPdf(file: File, detectNecCopyB: boolean) {
   const pdfjs = await loadPdfJs();
   const buffer = await file.arrayBuffer();
   const data = new Uint8Array(buffer);
@@ -84,16 +120,26 @@ export async function extractPdfTextFromFile(file: File) {
   try {
     const pdf = await task.promise;
     const pageTexts: string[] = [];
+    let necCopyBBox1a: NecCopyBBox1a | null = null;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
       const textContent = await page.getTextContent();
-      pageTexts.push(groupPageText(textContent.items as ExtractedTextItem[]));
+      const items = textContent.items as ExtractedTextItem[];
+      pageTexts.push(groupPageText(items));
+      if (detectNecCopyB && pdf.numPages === 1 && page.rotate === 0
+        && page.view.join(",") === "0,0,612,792") {
+        necCopyBBox1a = readNecCopyBBox1a(items);
+      }
       page.cleanup();
     }
-    return pageTexts.join("\n\n");
+    return { text: pageTexts.join("\n\n"), necCopyBBox1a };
   } finally {
     await task.destroy();
   }
+}
+
+export async function extractPdfTextFromFile(file: File) {
+  return (await readPdf(file, false)).text;
 }
 
 function normalizeParsingText(text: string) {
@@ -309,11 +355,15 @@ function sourceFormCount(text: string, form: string): number {
   return [...text.matchAll(new RegExp(`\\bForm\\s+${form}\\b`, "gi"))].length;
 }
 
-/** A missing box cannot borrow a later box's amount. Conflicting copies remain unknown. */
-function sourceBoxAmount(text: string, boxLabel: string): string | undefined {
+function sourceBoxAmounts(text: string, boxLabel: string): string[] {
   const pattern = new RegExp(`(?:^|\\n)[ \\t]*${boxLabel}\\s*\\$?\\s*([\\d,]+\\.\\d{2})(?!\\d)`, "gi");
   const amounts = [...text.matchAll(pattern)].map((match) => normalizeAmount(match[1] ?? "")).filter((amount): amount is string => amount !== null);
-  const distinct = [...new Set(amounts)];
+  return [...new Set(amounts)];
+}
+
+/** A missing box cannot borrow a later box's amount. Conflicting copies remain unknown. */
+function sourceBoxAmount(text: string, boxLabel: string): string | undefined {
+  const distinct = sourceBoxAmounts(text, boxLabel);
   return distinct.length === 1 ? distinct[0] : undefined;
 }
 
@@ -344,7 +394,18 @@ function completeInterestSource(entry: WorkspaceStructuredFactMachineValue1099In
   return Boolean(entry.payer) && [entry.earlyWithdrawalPenalty, entry.federalWithheld, entry.usSavingsBondInterest, entry.taxExemptInterest].every((value) => value !== undefined);
 }
 
-function parseUploaded1099NecText(text: string): ParsedUploadedDocument | null {
+function necInlineSourceFields(text: string) {
+  const tins = [...new Set([...text.matchAll(/^Payer(?:'s)?\s+TIN:[ \t]*(\d{2}-?\d{7})\b/gim)].map(match => match[1]))];
+  const states = [...new Set([...text.matchAll(/(?:^|\n)[ \t]*6\s+State(?:\/|\s+and\s+)Payer(?:'s)?\s+state\s+(?:no\.?|number)[ \t]*(?:\n[ \t]*)?([A-Z]{2})\b/gi)].map(match => match[1].toUpperCase()))];
+  return {
+    payer: sourcePayer(text),
+    ...(tins.length === 1 ? { payerTin: tins[0] } : {}),
+    ...knownSourceAmounts({ federalWithheld: sourceBoxAmount(text, "4\\s+Federal [Ii]ncome [Tt]ax [Ww]ithheld"), stateWithheld: sourceBoxAmount(text, "5\\s+State [Tt]ax [Ww]ithheld"), stateIncome: sourceBoxAmount(text, "7\\s+State [Ii]ncome") }),
+    ...(states.length === 1 ? { state: states[0], stateTaxReporting: "single" as const } : states.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
+  };
+}
+
+function parseUploaded1099NecText(text: string, copyBBox1a: NecCopyBBox1a | null): ParsedUploadedDocument | null {
   // IRS cover pages can mention NEC revisions while the actual statement is for another form.
   const headings = text.match(/^[ \t]*(?:20\d{2}[ \t]+)?(?:Form[ \t]+)?1099[- ]?NEC(?:[ \t]+20\d{2})?[ \t]*$/gim);
   // PDF.js joins both TIN labels with box 1 on the archived 2025 form.
@@ -358,17 +419,16 @@ function parseUploaded1099NecText(text: string): ParsedUploadedDocument | null {
     seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"] as SeededFactId[],
   };
   if (headings.length > 1) return { ...base, notes: "Multiple Forms 1099-NEC need separate source records and recipient confirmation.", detectedFacts: [] };
-  const compensation = sourceBoxAmount(text, "1(?:a)?\\s+Nonemployee [Cc]ompensation");
-  if (compensation === undefined) return { ...base, detectedFacts: [] };
-  const payer = sourcePayer(text);
-  const tins = [...new Set([...text.matchAll(/^Payer(?:'s)?\s+TIN:[ \t]*(\d{2}-?\d{7})\b/gim)].map(match => match[1]))];
-  const states = [...new Set([...text.matchAll(/(?:^|\n)[ \t]*6\s+State(?:\/|\s+and\s+)Payer(?:'s)?\s+state\s+(?:no\.?|number)[ \t]*(?:\n[ \t]*)?([A-Z]{2})\b/gi)].map(match => match[1].toUpperCase()))];
+  const inlineAmounts = sourceBoxAmounts(text, "1(?:a)?\\s+Nonemployee [Cc]ompensation");
+  const compensation = copyBBox1a ? copyBBox1a.amount : inlineAmounts[0];
+  if (compensation == null || inlineAmounts.some(amount => amount !== compensation)) {
+    return { ...base, detectedFacts: [] };
+  }
   const machineValue: WorkspaceStructuredFactMachineValue1099NecSummary = {
-    entryKind: "1099-nec-summary", sourceFactsVersion: 2, payer, nonemployeeCompensation: compensation,
-    ...(tins.length === 1 ? { payerTin: tins[0] } : {}),
-    ...knownSourceAmounts({ federalWithheld: sourceBoxAmount(text, "4\\s+Federal [Ii]ncome [Tt]ax [Ww]ithheld"), stateWithheld: sourceBoxAmount(text, "5\\s+State [Tt]ax [Ww]ithheld"), stateIncome: sourceBoxAmount(text, "7\\s+State [Ii]ncome") }),
-    ...(states.length === 1 ? { state: states[0], stateTaxReporting: "single" as const } : states.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
+    entryKind: "1099-nec-summary", sourceFactsVersion: 2, nonemployeeCompensation: compensation,
+    ...(copyBBox1a ? { payer: "" } : necInlineSourceFields(text)),
   };
+  const { payer } = machineValue;
   return { ...base, label: payer ? `${payer} 1099-NEC` : base.label, detectedFacts: [{ idSuffix: "parsed-1099-nec-summary", factId: "nonemployee-compensation", label: "Nonemployee compensation source", value: `Parsed actual NEC compensation $${formatAmountLabel(compensation)}; business and recipient facts still require confirmation.`, confidence: "high", machineValue }] };
 }
 
@@ -573,6 +633,10 @@ function parseUploadedMarketplaceStatement(text: string): ParsedUploadedDocument
 }
 
 export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUploadedDocument | null {
+  return parseDocumentText(text, fileName, null);
+}
+
+function parseDocumentText(text: string, fileName: string, necCopyBBox1a: NecCopyBBox1a | null): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
 
@@ -603,7 +667,7 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
   const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
     ?? parseUploaded1099IntText(normalizedText, fileName)
-    ?? parseUploaded1099NecText(normalizedText)
+    ?? parseUploaded1099NecText(normalizedText, necCopyBBox1a)
     ?? parseUploaded1099DAText(normalizedText, fileName)
     ?? (/1095.?c/i.test(signalText)
       ? buildReviewedDocument(
@@ -662,8 +726,8 @@ export async function detectUploadedDocumentFromFile(
   }
 
   try {
-    const extractedText = await extractPdfTextFromFile(file);
-    return parseUploadedDocumentText(extractedText, file.name);
+    const { text, necCopyBBox1a } = await readPdf(file, true);
+    return parseDocumentText(text, file.name, necCopyBBox1a);
   } catch {
     return null;
   }

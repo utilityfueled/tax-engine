@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { degrees, PDFDocument, StandardFonts } from "pdf-lib";
 import { extractPdfTextFromFile, prepareUploadableFiles } from "../../../apps/web/src/lib/uploaded-document-detection";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
 import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
@@ -83,6 +83,65 @@ describe("PDF.js 6 text extraction with synthetic documents", () => {
     expect(fallback.seededReturn.interviewQuestions.length).toBeGreaterThan(0);
     expect(fallback.structuredFacts.filter(fact => fact.machineValue)).toEqual([]);
   });
+  // Spec: spec/federal/workspace-guided-year.yaml#nec-copy-b-box-1a-pdf.
+  it("binds the separated printed NEC Copy B amount to Box 1a", async () => {
+    const receipt: { text: string; x: number; y: number; rotation?: number } = { text: "3,210.09", x: 323, y: 650.86 };
+    const cases = [
+      { name: "filled", entries: [receipt], expected: "3210.09" },
+      { name: "explicit zero", entries: [{ ...receipt, text: "0.00" }], expected: "0.00" },
+      { name: "blank", entries: [] },
+      { name: "neighboring box", entries: [{ ...receipt, y: 614.86 }] },
+      { name: "wrong column", entries: [{ ...receipt, x: 100 }] },
+      { name: "crosses box edge", entries: [{ ...receipt, x: 482 }] },
+      { name: "two values", entries: [receipt, { ...receipt, text: "17.00", x: 400 }] },
+      { name: "rotated second value", entries: [receipt, { ...receipt, text: "17.00", x: 400, rotation: 2 }] },
+      { name: "split value", entries: [{ ...receipt, text: "31" }, { ...receipt, text: "20.09", x: 370 }] },
+      { name: "conflicting inline value", entries: [receipt, { ...receipt, text: "99.01", x: 475, y: 676 }] },
+      { name: "two conflicting inline amounts", entries: [
+        receipt, { ...receipt, text: "99.01", x: 475, y: 676 },
+        { ...receipt, text: "1 Nonemployee compensation $ 88.02", x: 54, y: 400 },
+      ] },
+      { name: "ignore other box from the flattened row", entries: [receipt, { ...receipt, text: "77.77", x: 520, y: 496 }], expected: "3210.09" },
+      { name: "unrecognized revision", entries: [receipt], revision: "(Rev. December 2025)" },
+      { name: "multi-page", entries: [receipt], extraPage: true },
+    ];
+    for (const { name, entries, expected, revision = "(Rev. December 2026)", extraPage } of cases) {
+      const pdf = await PDFDocument.create();
+      const page = pdf.addPage([612, 792]);
+      const font = await pdf.embedFont(StandardFonts.Helvetica);
+      for (const [text, x, y] of [
+        ["Form 1099-NEC", 398.64, 729.78],
+        [revision, 397.94, 712.44],
+        ["For calendar year", 403, 700],
+        ["1a Nonemployee compensation", 299.2, 676],
+        ["Copy B", 541.36, 669.77],
+        ["State or province", 54, 664],
+        ["$", 301.12, 650.86],
+        ["For Recipient", 518.52, 649.77],
+        ["1b Cash tips", 299.2, 640],
+        ["$", 300.62, 614.86],
+        ["4 Federal income tax withheld", 299.2, 496],
+      ] as const) {
+        page.drawText(text, { x, y, size: 8, font });
+      }
+      for (const { text, x, y, rotation } of entries) {
+        page.drawText(text, { x, y, size: 11, font, rotate: degrees(rotation ?? 0) });
+      }
+      if (extraPage) pdf.addPage();
+
+      const files = await prepareUploadableFiles([
+        new File([new Uint8Array(await pdf.save())], "recipient-statement.pdf", { type: "application/pdf" }),
+      ]);
+      const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord(name), files);
+      expect(workspace.documents[0], name).toMatchObject({ kind: "1099-nec", taxYear: null });
+      expect(workspace.structuredFacts.flatMap(fact => fact.machineValue ? [fact.machineValue] : []), name)
+        .toEqual(expected ? [{
+          entryKind: "1099-nec-summary", sourceFactsVersion: 2, payer: "", nonemployeeCompensation: expected,
+        }] : []);
+      expect(workspace.enginePreview, name).toBeNull();
+    }
+  });
+
   it("preserves monetary/date text and page order without a provider", async () => {
     const file = new File([await syntheticDocument()], "synthetic.pdf", { type: "application/pdf" });
     const text = await extractPdfTextFromFile(file);
