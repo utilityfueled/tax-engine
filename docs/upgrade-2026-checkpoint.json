@@ -36,6 +36,7 @@
       "previousManagedSource": "539c9bed",
       "previousManagedPassAndSkip": [650, 5],
       "exactEducationBrowserCasesPassed": 37,
+      "exactManagedBrowserPassAndSkip": [650, 5],
       "exactProtectedPreviewChecksPassed": 12,
       "exactProtectedPreviewResultSha256": "fa8ef906556b63861e34d40b2ab1d83ded018177d30bbe4792771efd286f5c55",
       "exactProtectedPreviewEvidence": ".local/upgrade-evidence/nov20-preview-8201-current"

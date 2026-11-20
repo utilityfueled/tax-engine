@@ -8982,6 +8982,7 @@ Branch coverage was 88.45%. Both builds, three type checks, lint, the
 specification and the inventory passed. The preceding exact `539c9bed`
 managed suite passed 650 cases with five original skips. All 37 scoped
 education browser cases passed on `8201d316` at the existing deadlines.
+The exact full managed run also passed 650 cases with five original skips.
 The protected test-mode Preview passed all 12 checks, including
 bidirectional workspace reopen, exact deletion and sign-out, with the
 same authorized synthetic actor. The exact ARM64 rehearsal is queued.
