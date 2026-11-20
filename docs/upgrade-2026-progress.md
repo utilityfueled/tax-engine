@@ -144,8 +144,18 @@ Four Batch 7 phase records had matching source, image and record-hash receipts.
 Entering the original Ohio resident-credit records took 15.22 to 18.15 seconds
 of wall time across those observations. The inspected browser main thread used
 7.56 to 8.23 seconds during that phase. The difference ranged from 6.99 to 10.10
+seconds. Correlating the same four records with their test results yields three
+failed cases and one timed-out case, with total durations of 26.62 to 32.67
 seconds. The measurement covers this entry phase and one thread. The source of
 the difference and the full-suite deadlines remain unresolved.
+
+A local Node measurement on the tracked `f231820a` archive used the ordinary
+Ohio resident-credit fixture at early, nearly complete and confirmed draft
+stages. After warmup, each stage ran 120 samples per operation. The slowest
+95th percentile across stages was 0.368 ms for the draft update, 0.011 ms for
+serialization, 0.005 ms for review issue collection and 0.671 ms for preview
+calculation. This measures the in-process calls on the Mac. Browser rendering,
+browser storage, test protocol and Linux container timing are outside its scope.
 
 ## November 19 full application checks and ARM64 recovery
 

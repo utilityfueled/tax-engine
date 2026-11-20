@@ -152,6 +152,13 @@
       "fullLocalManagedBrowser": {"passes": 650, "failures": 0, "plannedHostedSkips": 5, "windows": 8, "workers": 2, "retries": 0, "deadlineMs": 30000, "serverClosed": true},
       "officialSourceRecheck": {"indexedValuesMatched": ["standard deduction", "child tax credit and refundable limit", "QBI thresholds", "Social Security wage base"], "currentForm1040": 2025, "form1040For2026": "draft"},
       "githubApplicationRuns": {"CI": 44673842123, "Web": 44673842082, "DockerPassed": 44673842085},
+      "localOhioSourceEntryBenchmark": {
+        "runtime": "macOS Node 26.13.1 in tracked archive",
+        "draftStages": ["early", "nearly complete", "confirmed"],
+        "samplesPerStageAndOperation": 120,
+        "maximumP95Milliseconds": {"draftUpdate": 0.368, "serialization": 0.011, "reviewIssueCollection": 0.005, "previewCalculation": 0.671},
+        "evidence": ".local/upgrade-evidence/nov20-applied-refund/oh-source-local-benchmark.jsonl"
+      },
       "progress": "docs/upgrade-2026-progress.md#november-19-applied-federal-overpayment-credits"
     },
     "nov20CapitalLossWorksheetOwnership": {
@@ -184,6 +191,7 @@
         "strictBaseline": { "passed": 642, "failed": 8, "plannedHostedSkips": 5 },
         "batches": [{ "number": 6, "artifact": 14602488653, "passed": 0, "timedOut": 1, "otherFailures": 9, "missingProfiles": 3 }, { "number": 7, "artifact": 14603220530, "passed": 7, "timedOut": 3, "otherFailures": 5, "missingProfiles": 3 }],
         "phase": { "boundRecords": 4, "wallSecondsRange": [15.22, 18.15], "inspectedThreadSecondsRange": [7.56, 8.23], "differenceSecondsRange": [6.99, 10.10], "scope": "Original Ohio resident-credit entry phase of the inspected browser main thread" },
+        "correlatedPhaseRecords": {"failed": 3, "timedOut": 1, "caseWallSecondsRange": [26.622, 32.666], "evidence": ".local/upgrade-evidence/nov20-capital-loss-below-cap/linux-phase-batch7-correlated-outcomes.json"},
         "cleanupPassed": true,
         "runtimeQualified": false
       },
