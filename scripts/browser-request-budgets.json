@@ -1505,6 +1505,7 @@
     "src/pdf/mappings/2026/form-8863-candidate.ts": "f3c042e4d76f1dda1825ef2b81b33c1e2b7ce15d87545ac0a3a3a5609c6cfbfa",
     "src/pdf/mappings/2026/form-8880-candidate.ts": "6c61b99033b8dd065a35cadc74bbb3b76bc0d9ed75f02032d2a2cb8fbc12dea3",
     "src/pdf/mappings/2026/form-8889-candidate.ts": "850a36af00a8b32aedf95f9633e1e153f50774205634dc66228cef242a639418",
+    "src/pdf/mappings/2026/form-8919-candidate.ts": "14dc44b51c85fa49a5475dfd6573e9c52a927e86a2db4f6cea388063c90f59cc",
     "src/pdf/mappings/2026/schedule-8812-candidate.ts": "2d5dd180e0719435d5e13e5c79578a5edda1ca096a2371bdaea434ee4dad77e0",
     "src/pdf/mappings/2026/schedule-c-candidate.ts": "b2a53d5bfadc3708a1c6f3ceb1a7f22e9628c93504d9d8cb1ab487c190b8b2be",
     "src/pdf/mappings/2026/schedule-c-mileage-projection.ts": "1e4b9dcf95a0ea369030846ab545997d517cb2b2635bfc036f65ceb766909cd0",
