@@ -1243,7 +1243,7 @@ export function GuidedInterviewShell({
 }: {
   workspace: ReturnWorkspaceRecord;
   onExitGuided: () => void;
-  onUploadDocuments?: (files: File[]) => Promise<string>;
+  onUploadDocuments?: (files: File[], taxYear: number | null) => Promise<string>;
   /** Called when the user wants to sync guided data into the workspace and switch to advanced mode */
   onSyncToWorkspace?: (
     syntheticDocuments: ReturnType<typeof buildGuidedSyntheticDocuments>,
@@ -1355,6 +1355,9 @@ export function GuidedInterviewShell({
 
   const handleSyncAndExit = () => syncAndExit(flowState);
   const handleFinishReview = () => syncAndExit(currentSection?.id === "final-review" ? goToNextSection(flowState) : flowState);
+  const uploadGuidedDocuments = onUploadDocuments
+    ? (files: File[]) => onUploadDocuments(files, flowState.taxYear ?? null)
+    : undefined;
 
   return (
     <div className="guided-interview-shell">
@@ -1387,7 +1390,7 @@ export function GuidedInterviewShell({
         expectedHostedOwnerScopeKey={documentAnalysisOwnerScopeKey}
         currentSectionId={currentSection?.id ?? null}
         currentSectionLabel={currentSection?.label ?? (flowState.phase === "segmentation" ? "guided setup" : null)}
-        onUploadDocuments={onUploadDocuments}
+        onUploadDocuments={uploadGuidedDocuments}
       />
 
       {flowState.phase === "segmentation" && (
@@ -1395,7 +1398,7 @@ export function GuidedInterviewShell({
           onComplete={handleSegmentationComplete}
           workspace={workspace}
           taxYear={flowState.taxYear}
-          onUploadDocuments={onUploadDocuments}
+          onUploadDocuments={uploadGuidedDocuments}
         />
       )}
 
@@ -1410,7 +1413,7 @@ export function GuidedInterviewShell({
           workspace={workspace}
           documentCacheWorkspaceId={documentCacheWorkspaceId}
           documentAnalysisOwnerScopeKey={documentAnalysisOwnerScopeKey}
-          onUploadDocuments={onUploadDocuments}
+          onUploadDocuments={uploadGuidedDocuments}
           onFinish={handleFinishReview}
         />
       )}

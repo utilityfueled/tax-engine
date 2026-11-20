@@ -38,6 +38,7 @@ import { HostedWorkspaceWriteRejectedError } from "./hosted-workspace-revision";
 import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "./workspace-document-file-cache";
+import { isGuidedSyntheticDocument } from "./workspace-status-copy";
 
 // The preview helper is cached so refresh calls can avoid repeating the
 // dynamic import work when a caller explicitly asks for a recomputed preview.
@@ -1159,11 +1160,20 @@ function hasWageOrNecOriginal(file: UploadableFile, fixture: FixtureMatch | null
   ));
 }
 
-function getFutureYearSampleUploads(files: UploadableFile[]): FutureYearSampleUpload[] {
+function isSupportedGuided2026Original(file: UploadableFile) {
+  const original = file.detectedDocument;
+  return original?.taxYear === 2026 && original.detectedFacts?.some(({ machineValue }) =>
+    (original.kind === "w2" && machineValue?.entryKind === "w2-summary")
+    || (original.kind === "1099-nec" && machineValue?.entryKind === "1099-nec-summary")
+  );
+}
+
+function getFutureYearSampleUploads(files: UploadableFile[], allowGuided2026Originals: boolean): FutureYearSampleUpload[] {
   return files.flatMap((file) => {
     const matched = matchFixture(file.name);
     const original = file.detectedDocument && (file.detectedDocument.kind === "training-scenario" || hasWageOrNecOriginal(file, matched)) ? file.detectedDocument : null;
     if (original?.kind === "unknown") return [];
+    if (allowGuided2026Originals && isSupportedGuided2026Original(file)) return [];
     // Actual cover metadata overrides a historical filename, including unknown.
     const fixture = original ? {
       id: matched?.id ?? (original.kind === "training-scenario" ? "uploaded-training-guide" : "uploaded-original"), label: original.label,
@@ -1181,8 +1191,8 @@ function getFutureYearSampleUploads(files: UploadableFile[]): FutureYearSampleUp
   });
 }
 
-export function getFutureYearSampleUploadMessage(files: UploadableFile[]) {
-  const futureYearSampleUploads = getFutureYearSampleUploads(files);
+export function getFutureYearSampleUploadMessage(files: UploadableFile[], allowGuided2026Originals = false) {
+  const futureYearSampleUploads = getFutureYearSampleUploads(files, allowGuided2026Originals);
 
   if (futureYearSampleUploads.length === 0) {
     return null;
@@ -1195,6 +1205,24 @@ export function getFutureYearSampleUploadMessage(files: UploadableFile[]) {
   }
 
   return `${futureYearSampleUploads.length} official sample documents are for tax years after ${latestEngineTargetYear}, so they can't drive this return yet. Remove them and upload ${latestEngineTargetYear} tax documents instead.`;
+}
+
+function hasDifferentOriginalYear(source: Pick<WorkspaceDocumentRecord, "kind" | "taxYear"> | null | undefined, guidedTaxYear: number) {
+  return source?.taxYear != null && source.taxYear !== guidedTaxYear
+    && source.kind !== "training-scenario" && source.kind !== "unknown";
+}
+
+function assertWorkspaceUploadAllowed(workspace: ReturnWorkspaceRecord, files: UploadableFile[], guidedTaxYear?: number | null) {
+  const allowGuided2026Originals = guidedTaxYear === 2026 && files.some(isSupportedGuided2026Original);
+  if (allowGuided2026Originals && (
+    workspace.documents.some(document => !isGuidedSyntheticDocument(document) && document.matchedFixtureId == null
+      && hasDifferentOriginalYear(document, guidedTaxYear))
+    || files.some(file => hasDifferentOriginalYear(file.detectedDocument, guidedTaxYear))
+  )) {
+    throw new Error("An original is for a different tax year than this 2026 guided interview. Upload originals for different tax years in separate returns.");
+  }
+  const message = getFutureYearSampleUploadMessage(files, allowGuided2026Originals);
+  if (message) throw new Error(message);
 }
 
 const financialSampleKinds = new Set<SupportedDocumentKind>([
@@ -1406,11 +1434,12 @@ export function ingestFiles(storage: Storage, workspaceId: string, files: Upload
 }
 
 async function storeWorkspaceUploadOriginals(workspace: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[],
-  originalMode: "self-host" | "hosted", cacheWorkspaceId: string) {
+  originalMode: "self-host" | "hosted", cacheWorkspaceId: string, guidedTaxYear?: number | null) {
   const failure = "Could not save the uploaded document. Please try again.";
   if (prepared.length !== files.length || files.length === 0 || files.some((file, index) => (
     file.name !== prepared[index]?.name || file.size !== prepared[index]?.size
   ))) throw new Error(failure);
+  assertWorkspaceUploadAllowed(workspace, prepared, guidedTaxYear);
   const nextWorkspace = ingestFilesIntoWorkspace(workspace, prepared, originalMode);
   const uploads = nextWorkspace.documents.slice(-files.length).map((document, index) => {
     const file = files[index];
@@ -1423,8 +1452,8 @@ async function storeWorkspaceUploadOriginals(workspace: ReturnWorkspaceRecord, p
 
 /** Hosted shells reference browser-owned originals. Wait for the durable transaction before publishing the shell. */
 export async function ingestHostedDocumentFiles(workspace: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[],
-  cacheWorkspaceId: string, persist: (workspace: ReturnWorkspaceRecord) => Promise<ReturnWorkspaceRecord>) {
-  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(workspace, prepared, files, "hosted", cacheWorkspaceId);
+  cacheWorkspaceId: string, persist: (workspace: ReturnWorkspaceRecord) => Promise<ReturnWorkspaceRecord>, guidedTaxYear?: number | null) {
+  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(workspace, prepared, files, "hosted", cacheWorkspaceId, guidedTaxYear);
   try {
     return await persist(nextWorkspace);
   } catch (error) {
@@ -1440,14 +1469,14 @@ export async function ingestHostedDocumentFiles(workspace: ReturnWorkspaceRecord
 }
 
 /** Save originals before adding metadata to an existing local return. */
-export async function ingestLocalDocumentFiles(storage: Storage, expected: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[]) {
+export async function ingestLocalDocumentFiles(storage: Storage, expected: ReturnWorkspaceRecord, prepared: UploadableFile[], files: File[], guidedTaxYear?: number | null) {
   const failure = "Could not save the uploaded document. Please try again.";
   const changed = "This return changed during the upload. Reopen it and try again.";
   const workspaceId = expected.id;
   const initial = parseStorage(storage.getItem(STORAGE_KEY)).workspaces[workspaceId];
   if (!initial) throw new Error(changed);
   const current = requireCurrentLocalWorkspace(storage, expected);
-  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(current, prepared, files, "self-host", workspaceId);
+  const { nextWorkspace, newDocumentIds } = await storeWorkspaceUploadOriginals(current, prepared, files, "self-host", workspaceId, guidedTaxYear);
 
   let failureMessage = failure;
   try {

@@ -66,7 +66,6 @@ import {
   clearWorkspaceRecord,
   confirmLocalDocumentTaxYear,
   confirmWorkspaceDocumentTaxYear,
-  getFutureYearSampleUploadMessage,
   ingestHostedDocumentFiles,
   ingestLocalDocumentFiles,
   removeDocumentFromWorkspace,
@@ -683,7 +682,7 @@ export function ReturnWorkspaceScreen({
     });
   }, [guidedDraft, workspace]);
 
-  async function uploadFiles(files: File[]) {
+  async function uploadFiles(files: File[], guidedTaxYear?: number | null) {
     if (files.length === 0) {
       return "";
     }
@@ -693,19 +692,17 @@ export function ReturnWorkspaceScreen({
       const browserStorage = localWorkspaceEditingEnabled ? requireBrowserStorage() : null;
       if (browserStorage) requireCurrentLocalWorkspace(browserStorage, workspace);
       const preparedFiles = await prepareUploadableFiles(files);
-      const futureYearSampleUploadMessage = getFutureYearSampleUploadMessage(preparedFiles);
-      if (futureYearSampleUploadMessage) throw new Error(futureYearSampleUploadMessage);
 
       if (!browserStorage) {
         if (!documentCacheWorkspaceId || !workspaceRevision) throw new Error("Reopen your saved return before uploading documents.");
-        const savedWorkspace = await ingestHostedDocumentFiles(workspace, preparedFiles, files, documentCacheWorkspaceId, persistHostedWorkspace);
+        const savedWorkspace = await ingestHostedDocumentFiles(workspace, preparedFiles, files, documentCacheWorkspaceId, persistHostedWorkspace, guidedTaxYear);
         const message = `${savedWorkspace.summary.totalDocuments} documents processed. Raw files stay local and are not stored in durable hosted storage.`;
 
         setStorageMessage(message);
         return message;
       }
 
-      const nextWorkspace = await ingestLocalDocumentFiles(browserStorage, workspace, preparedFiles, files);
+      const nextWorkspace = await ingestLocalDocumentFiles(browserStorage, workspace, preparedFiles, files, guidedTaxYear);
       const message = `${nextWorkspace.summary.totalDocuments} docs stored locally.`;
 
       setWorkspace(nextWorkspace);
@@ -730,14 +727,6 @@ export function ReturnWorkspaceScreen({
     }).finally(() => {
       event.target.value = "";
     });
-  }
-
-  async function handleGuidedUpload(files: File[]) {
-    try {
-      return await uploadFiles(files);
-    } finally {
-      // Guided mode uses a separate hidden file input, so there is nothing to reset here.
-    }
   }
 
   function resetWorkspaceUi() {
@@ -1570,7 +1559,7 @@ export function ReturnWorkspaceScreen({
             setGuidedMode(false);
             setGuidedResumeSectionId(null);
           }}
-          onUploadDocuments={handleGuidedUpload}
+          onUploadDocuments={uploadFiles}
           resumeSectionId={guidedResumeSectionId}
           onSyncToWorkspace={async (syntheticDocuments, factAnswers, guidedFlowState) => {
             if (localWorkspaceEditingEnabled) {
@@ -1604,7 +1593,7 @@ export function ReturnWorkspaceScreen({
       <ReturnHelpDock
         workspace={workspace}
         mode="workspace"
-        onUploadDocuments={handleGuidedUpload}
+        onUploadDocuments={uploadFiles}
         deploymentMode={effectiveDeploymentMode}
         expectedHostedOwnerScopeKey={localWorkspaceEditingEnabled ? undefined : ownerScopeKey}
         getTaxExplanationInput={persistedGuidedFlowState?.phase === "complete" && persistedGuidedFlowState.taxYear === 2025 ? getTaxExplanationInput : undefined}
