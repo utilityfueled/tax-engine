@@ -25,8 +25,23 @@ type checks, both builds, lint, and the inventory passed. The initial
 browser run rejected a stale source hash before executing cases.
 `3663cf3e` changes one hash among 2,022 files and passes the existing
 source audit with the request contracts and test limits intact.
-[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/44778266235) ·
-[Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44778266228).
+That revision's remote managed job stopped at the separate timing-contract
+preflight. `f1e6f6a8` updates its companion audit digest and passes all
+35 timing-contract tests with the original deadlines and case counts.
+[Intermediate managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44778266228/job/136433794188) ·
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/44779201707) ·
+[Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726).
+
+Both complete local suites on the exact application passed 29,589 tests
+across 2,166 files, using Node 26.13.1 and PostgreSQL 16.16. Branch
+coverage was 88.45% (85,601 of 96,769), and both rehearsal databases
+stopped cleanly. The tracked `f1e6f6a8` archive differs from that
+verified application only in three evidence documents and the two browser
+test manifests. The guarded Vercel Preview was Ready on that exact
+source with test billing. It passed all 12 established synthetic
+workspace checks across two revisions, including save, reopen,
+deletion, fresh absence and both sign-outs. This run covers functional
+workspace persistence. Hosted billing qualification remains open.
 
 The prior application `8201d316` now has all six exact GitHub CI jobs
 passed. Its exact strict ARM64 run advanced to browser journeys.

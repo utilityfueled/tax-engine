@@ -16,7 +16,20 @@
       "exactVerification": ".local/upgrade-evidence/nov20-nec-8486-exact",
       "browserAuditedCiWorkflow": 44778266235,
       "browserAuditedWebWorkflow": 44778266228,
-      "browserAuditedDockerWorkflow": 44778266279
+      "browserAuditedDockerWorkflow": 44778266279,
+      "intermediateManagedTimingContractJob": 136433794188,
+      "timingContractDigestSource": "f1e6f6a8",
+      "timingContractTestsPassed": 35,
+      "exactUnitAndCoverageTestsPassedEach": 29589,
+      "exactUnitAndCoverageFilesPassedEach": 2166,
+      "exactBranchCoveragePercent": 88.45,
+      "bothLocalPostgresDatabasesStopped": true,
+      "currentCiWorkflow": 44779201707,
+      "currentWebWorkflow": 44779201726,
+      "currentDockerWorkflow": 44779201537,
+      "protectedPreviewSource": "f1e6f6a8",
+      "protectedPreviewWorkspaceChecksPassed": 12,
+      "protectedPreviewEvidence": ".local/upgrade-evidence/nov20-preview-nec-current"
     },
     "nov20StrictArm64AndOhioComparison": {
       "nativeSource": "a74dda05",
