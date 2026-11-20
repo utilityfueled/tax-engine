@@ -1,5 +1,27 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Form 1095-A upload year and archive sample
+
+The normal upload reads the printed Form 1095-A year from an official
+form anchor. Missing or conflicting print evidence leaves the year
+unknown. The visible VOID and CORRECTED labels do not establish
+which box is marked. The upload therefore carries no premium amounts,
+checkbox status, or confirmation into Form 8962.
+
+Fourteen real PDF.js upload variants passed for the official 2025 and
+2026 forms, including single-page statements and conflicting filenames.
+The 2025 sample now downloads from the IRS prior-year archive. The
+previous rolling URL returned 2026 bytes. A readable 2026 form remains
+2026 even under a historical sample name, and a matching 2025 sample
+retains its existing manual interview prompt.
+
+The combined reference and application checks passed 1,047 tests.
+Another 96 focused engine checks and 36 actual workspace browser
+cases passed. All 9,696 spec references and the inventory passed.
+[Final 2026 form](https://www.irs.gov/pub/irs-pdf/f1095a.pdf) ·
+[IRS instructions](https://www.irs.gov/instructions/i1095a) ·
+[Archived 2025 form](https://www.irs.gov/pub/irs-prior/f1095a--2025.pdf).
+
 ## November 20 exact 012e6ee1 local verification
 
 The full unit and coverage suites each passed 29,556 tests in 2,161
@@ -9,7 +31,18 @@ databases shut down normally. Branch coverage was 88.37%, above the
 inventory and 9,693 spec references also passed. Six workspace recovery
 cases and two RRTA review cases passed at the existing 30-second
 browser deadlines. The frozen offline AI evaluation artifacts matched.
-The exact Docker image job passed.
+All six exact GitHub CI jobs and the exact Docker image job passed.
+The complete local managed browser suite passed 650 cases with five
+original skips and closed its local server. The exact GitHub managed
+browser job also passed 650 cases and retained five skips.
+
+Strict Linux AMD64 passed 640 cases, reached ten 30-second deadlines and
+retained five skips. ARM64 passed 641 cases, reached nine unchanged
+deadlines and retained five skips. All 19 deadline failures were in Ohio
+business, reciprocal, resident-credit or part-year school district
+cases. The earlier Pennsylvania desktop failure did not recur. Both
+architectures passed smoke, Compose recovery and cleanup. AMD64 also
+passed archive import.
 
 The protected test-mode Preview reached READY with no production alias.
 All 12 workspace checks passed across exact `012e6ee1` and prior
@@ -76,7 +109,8 @@ Exact scoped macOS runs passed the ten Ohio cases.
 The first exact Linux unit run passed 29,548 tests and had one five-second
 timeout in the combined Pennsylvania mixed-residency PDF test. The same test
 passed in Linux coverage and the exact local unit run. The original Linux
-unit job was retried once with its existing settings.
+unit job passed its one retry with existing settings. All six original
+exact-source CI jobs then passed.
 
 The saved-PDF test now strictly inspects each distinct byte sequence once,
 while retaining every original file, result row, privacy marker and

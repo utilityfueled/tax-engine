@@ -1,5 +1,17 @@
 {
   "activeContinuation": {
+    "nov20Form1095ASourceMetadata": {
+      "officialNormalUploadVariantsPassed": 14,
+      "focusedReferenceAndApplicationTestsPassed": 1047,
+      "focusedEngineTestsPassed": 96,
+      "workspaceBrowserCasesPassed": 36,
+      "specReferencesPassed": 9696,
+      "metadataOnly": true,
+      "manualStatementStatusRequired": true,
+      "archived2025SampleSha256": "df83be599d3bdcda826862aa5125868c2f481191a53c8417ed5fba91eccc7473",
+      "privateEvidence": ".local/upgrade-evidence/nov20-1095a-metadata-current",
+      "sourceProbeEvidence": ".local/upgrade-evidence/nov20-1095a-normal-import-probe"
+    },
     "nov20ScheduleEicExactVerification": {
       "sourceCommit": "012e6ee1",
       "unitTestsPassed": 29556,
@@ -32,6 +44,12 @@
         "docker": 44740038194
       },
       "dockerCompletedSuccessfully": true,
+      "exactGithubCiJobsPassed": 6,
+      "exactFullManagedMacBrowser": { "passed": 650, "failed": 0, "skipped": 5, "serverClosed": true },
+      "exactGithubManagedBrowserJobPassed": true,
+      "exactFullManagedLinuxBrowser": { "passed": 650, "failed": 0, "skipped": 5 },
+      "strictAmd64Browser": { "passed": 640, "failedOhioDeadlines": 10, "skipped": 5, "deadlineMs": 30000, "composeRecoveryPassed": true, "archiveImportPassed": true },
+      "strictArm64Browser": { "passed": 641, "failedOhioDeadlines": 9, "skipped": 5, "deadlineMs": 30000, "composeRecoveryPassed": true },
       "privateEvidence": ".local/upgrade-evidence/nov20-final-schedule-eic"
     },
     "nov20AnnualCandidatesAndGuidedRehearsal": {
@@ -92,6 +110,7 @@
         "strictArm64": { "passed": 641, "failed": 9, "skipped": 5, "caseDeadlineMs": 30000, "composeRecoveryPassed": true }
       },
       "exactCiFirstAttempt": { "jobsPassed": 5, "jobsFailed": 1, "unitTestsPassed": 29548, "paMixedResidencyPdfDeadlineMs": 5000 },
+      "exactCiUnitRetry": { "runId": 44725543701, "attempt": 2, "jobsPassed": 6, "conclusion": "success", "unitSettingsUnchanged": true },
       "paMixedResidencyPdfInspectionTestCommit": "3a1f8156",
       "nativeBrowserQueryTestCommit": "3b279e35",
       "nativeBrowserQueryLocalCasesPassed": 16,

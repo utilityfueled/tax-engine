@@ -281,7 +281,7 @@ export const officialSampleDocumentFixtures: OfficialSampleDocumentFixture[] = [
     id: "irs-1095-a-2025",
     kind: "1095-a",
     title: "2025 Form 1095-A",
-    aliases: ["irs-1095-a-2025", "f1095a"],
+    aliases: ["irs-1095-a-2025", "f1095a--2025"],
     taxYearHint: 2025
   },
   {

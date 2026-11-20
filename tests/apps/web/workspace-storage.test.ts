@@ -448,7 +448,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
 
     const workspace = ingestFiles(storage, "premium-tax-credit", [
-      { name: "f1095a.pdf", size: 23 }
+      { name: "f1095a--2025.pdf", size: 23 }
     ]);
 
     expect(workspace.summary.totalDocuments).toBe(1);
@@ -462,7 +462,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-1095-a-2025:f1095a.pdf:23"]
+        sourceDocumentIds: ["irs-1095-a-2025:f1095a--2025.pdf:23"]
       }
     ]);
     expect(workspace.seededReturn.interviewQuestions).toEqual([
@@ -473,7 +473,7 @@ describe("workspace storage", () => {
         status: "pending",
         answeredAt: null,
         answerText: null,
-        sourceDocumentIds: ["irs-1095-a-2025:f1095a.pdf:23"]
+        sourceDocumentIds: ["irs-1095-a-2025:f1095a--2025.pdf:23"]
       }
     ]);
     expect(workspace.returnSummary.items).toEqual([
@@ -483,11 +483,14 @@ describe("workspace storage", () => {
         status: "needs-answer",
         engineTargets: ["Form 1095-A", "Form 8962", "Schedule 2 Line 2", "Schedule 3 Line 10"],
         relatedFactIds: ["premium-tax-credit-review"],
-        sourceDocumentIds: ["irs-1095-a-2025:f1095a.pdf:23"],
+        sourceDocumentIds: ["irs-1095-a-2025:f1095a--2025.pdf:23"],
         answeredFactCount: 0,
         factCount: 1
       }
     ]);
+    const ambiguous = ingestFiles(storage, "ambiguous-marketplace-name", [{ name: "f1095a.pdf", size: 23 }]);
+    expect(ambiguous.documents[0]).toMatchObject({kind: "unknown", taxYear: null, matchedFixtureId: null, seededFactIds: [], detectedFacts: []});
+    expect(ambiguous.seededReturn.interviewQuestions).toEqual([]);
   });
 
   it("classifies Form 1099-G uploads into a government-payments interview item", () => {

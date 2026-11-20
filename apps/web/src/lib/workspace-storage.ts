@@ -1185,8 +1185,13 @@ export function getFutureYearSampleUploadMessage(files: UploadableFile[]) {
 
 function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): WorkspaceDocumentRecord {
   const filenameFixture = matchFixture(file.name);
+  // Actual Marketplace metadata must not acquire a historical sample's year or
+  // seeded facts merely because the original upload is named f1095a.pdf.
   // A real guide cover cannot become a taxpayer form through its filename.
-  const matchedFixture = file.detectedDocument?.kind === "training-scenario" && filenameFixture?.kind !== "training-scenario"
+  const matchedFixture = (file.detectedDocument?.kind === "1095-a"
+    && (filenameFixture?.kind !== "1095-a" || file.detectedDocument.taxYear == null
+      || file.detectedDocument.taxYear !== filenameFixture.taxYearHint))
+    || (file.detectedDocument?.kind === "training-scenario" && filenameFixture?.kind !== "training-scenario")
     ? null : filenameFixture;
 
   if (matchedFixture) {

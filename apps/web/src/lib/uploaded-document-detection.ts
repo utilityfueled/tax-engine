@@ -544,6 +544,30 @@ export function extractExplicitDocumentTaxYear(text: string): number | null {
   return years.size === 1 ? [...years][0] : null;
 }
 
+function parseUploadedMarketplaceStatement(text: string): ParsedUploadedDocument | null {
+  // The official2025 PDF includes an informational page before the statement.
+  if (!/^Health Insurance Marketplace Statement[ \t]*$/m.test(text)
+    || !/^Form[ \t]+1095-A[ \t]*$/m.test(text)) return null;
+
+  // PDF.js extracts the decorative header as "20 26". Use an actual printed
+  // four-digit form anchor instead, never a filename or creation date.
+  const footer = [...text.matchAll(/\bCat\.\s+No\.\s+60703Q[ \t]+Form[ \t]+1095-A[ \t]*\((20\d{2})\)(?:[ \t]+Created[ \t]+\d{1,2}\/\d{1,2}\/\d{2,4})?[ \t]*$/gm)];
+  const pageTwo = [...text.matchAll(/^Form[ \t]+1095-A[ \t]*\((20\d{2})\)[ \t]+Page[ \t]+2[ \t]*$/gm)];
+  const years = new Set([...footer, ...pageTwo].map(match => Number(match[1])));
+  for (const pattern of [/\b(?:tax\s+year|(?:for\s+)?calendar\s+year)\s*[:-]?\s*(20\d{2})\b/gi, /\b(20\d{2})\s+(?:Form\s+)?(?:W-?2|1099-[A-Z]+|1098-[A-Z]+|1095-[A-Z]+)\b/gi, /\bForm[ \t]+1095-A[ \t]*\((20\d{2})\)/g]) {
+    for (const match of text.matchAll(pattern)) years.add(Number(match[1]));
+  }
+  return {
+    taxYear: (footer.length > 0 || pageTwo.length > 0) && years.size === 1 ? [...years][0] : null,
+    kind: "1095-a",
+    coverage: "needs-review",
+    label: "Form 1095-A needs source review",
+    notes: "Only the explicit printed statement year is retained when its source anchors agree. Confirm original monthly amounts and the actual VOID or CORRECTED checkbox designation in the Marketplace guided flow before calculation.",
+    seededFactIds: [],
+    detectedFacts: [],
+  };
+}
+
 export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
@@ -568,6 +592,9 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
       detectedFacts: [],
     };
   }
+
+  const marketplace = parseUploadedMarketplaceStatement(normalizedText);
+  if (marketplace) return marketplace;
 
   const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)

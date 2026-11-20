@@ -2,18 +2,20 @@
 
 The latest application revision with a verified protected Preview is
 `012e6ee1` on `main`. Exact unit and coverage runs each passed 29,556
-tests at 88.37% branch coverage. Both builds, all three type checks, lint,
-9,693 spec references, the inventory, the exact Docker job and eight
+tests at 88.37% branch coverage. All six exact GitHub CI jobs, both builds,
+all three type checks, lint, 9,693 spec references, the inventory, Docker and eight
 scoped browser cases passed. The protected test-mode Preview passed
-all 12 workspace lifecycle checks. Full exact Linux browser results
-are tracked in the run links.
+all 12 workspace lifecycle checks. The complete managed browser suites
+passed 650 cases each on macOS and Linux. The strict Linux browser runs
+reached ten Ohio deadlines on AMD64 and nine on ARM64.
 [Exact application and Preview evidence](upgrade-2026-progress.md#november-20-exact-012e6ee1-local-verification).
 
 On previous application `29988f04`, local unit and coverage runs each
 passed 29,549 tests at 88.37% branch coverage. The first exact CI
 attempt passed five jobs. The unit job had one Pennsylvania PDF test reach
-its five-second deadline. Test-only commit `3a1f8156` retained that deadline
-and passed all 94 scoped PDF tests.
+its five-second deadline. The unchanged unit-job retry passed, bringing
+the exact run to six successful jobs. Test-only commit `3a1f8156`
+retained that deadline and passed all 94 scoped PDF tests.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44725543701) ·
 [Web and AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44725543747) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44725578957).
@@ -59,7 +61,7 @@ AMD64 runner.
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC, Form 7206 and Form 8829 blanks are pinned as disabled candidates. The current final Form 1040, annual instructions and Tax/EIC tables still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Current `012e6ee1` and earlier `cf43e9ea` passed all 12 protected Preview education workspace checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted billing qualification remains open. [Current Preview](upgrade-2026-progress.md#november-20-exact-012e6ee1-local-verification) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Exact `29988f04` AMD64 and ARM64 passed image smoke, Compose recovery and cleanup. Full strict browser deadlines remain open on both architectures. Focused Ohio comparisons previously passed in both runtime modes on Linux. [Runtime evidence](upgrade-2026-progress.md#november-20-exact-29988f04-browser-results) · [Earlier comparison](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |
+| Self-host recovery | Exact `012e6ee1` AMD64 and ARM64 passed image smoke, Compose recovery and cleanup. Strict AMD64 passed 640 cases and ARM64 passed 641. Nineteen Ohio case runs reached their existing deadline. The Pennsylvania desktop case passed on both. [Runtime evidence](upgrade-2026-progress.md#november-20-exact-012e6ee1-local-verification) · [Earlier scoped comparison](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 Read `activeContinuation.nov20ScheduleEicExactVerification`,

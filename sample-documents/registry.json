@@ -68,8 +68,8 @@
     "title": "2025 Form 1095-A",
     "taxYearHint": 2025,
     "sourcePage": "https://www.irs.gov/form1095a",
-    "downloadUrl": "https://www.irs.gov/pub/irs-pdf/f1095a.pdf",
-    "notes": "Official IRS Form 1095-A PDF used for Marketplace statement coverage and Form 8962 preview support."
+    "downloadUrl": "https://www.irs.gov/pub/irs-prior/f1095a--2025.pdf",
+    "notes": "Official IRS 2025 Form 1095-A archive for Marketplace statement review."
   },
   {
     "id": "irs-1098-e-2025",

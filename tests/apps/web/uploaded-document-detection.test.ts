@@ -3,6 +3,7 @@ import {
   parseUploadedDocumentText,
   parseUploadedW2Text,
 } from "../../../apps/web/src/lib/uploaded-document-detection";
+import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
 
 const sampleW2Text = `
 2025 W-2 and EARNINGS SUMMARY
@@ -42,6 +43,39 @@ OH 52-5111787
 `;
 
 describe("uploaded document detection", () => {
+  // Spec: spec/federal/workspace-guided-year.yaml#marketplace-upload-year-boundaries.
+  it("retains explicit Marketplace statement years without inferring checked status", () => {
+    const cover = "VOID OMB No. 1545-2232\nHealth Insurance Marketplace Statement\nForm 1095-A\nCORRECTED\nDepartment of the Treasury 20 26";
+    const footer = "Cat. No. 60703Q Form 1095-A (2026) Created 5/12/26";
+    const pageTwo = "Form 1095-A (2026) Page 2";
+    for (const [text, taxYear] of [
+      [`${cover}\n${footer}\n\n${pageTwo}`, 2026],
+      [`${cover}\n${footer}`, 2026],
+      [`${cover}\n${pageTwo}`, 2026],
+      [cover, null],
+      [`${cover}\n${footer}\n${pageTwo.replace("2026", "2025")}`, null],
+      [`${cover}\n${footer}\n${pageTwo}\nTax year 2025`, null],
+      [`${cover}\n${footer}\n${pageTwo}\n2025 Form 1095-A`, null],
+      [`${cover}\n${footer}\n${pageTwo}\nForm 1095-A (2025)`, null],
+      [`${cover}\n${footer}\n${pageTwo}\n2025 W-2`, null],
+      [`${cover}\n${footer.replace("2026", "2025")}\n${pageTwo.replace("2026", "2025")}`, 2025],
+      [`${cover}\n${footer}\n${pageTwo}\nIssued 01/01/2025`, 2026],
+      [`${"Official recipient information. ".repeat(100)}\n${cover}\n${footer.replace("2026", "2025")}\n${pageTwo.replace("2026", "2025")}`, 2025],
+    ] as const) {
+      const parsed = parseUploadedDocumentText(text, "f1095a-2025-01-01.pdf");
+      expect(parsed).toMatchObject({kind: "1095-a", taxYear, coverage: "needs-review", seededFactIds: [], detectedFacts: []});
+      expect(parsed).not.toHaveProperty("statementStatus");
+      const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord("source-year"), [{name: "f1095a--2025.pdf", size: 1, detectedDocument: parsed}]);
+      if (taxYear === 2025) {
+        expect(workspace.documents[0]).toMatchObject({kind: "1095-a", taxYear: 2025, matchedFixtureId: "irs-1095-a-2025", seededFactIds: ["premium-tax-credit-review"], detectedFacts: []});
+        expect(workspace.seededReturn.interviewQuestions).toEqual([expect.objectContaining({id: "premium-tax-credit-review", status: "pending", answerText: null})]);
+      } else {
+        expect(workspace.documents[0]).toMatchObject({kind: "1095-a", taxYear, coverage: "needs-review", matchedFixtureId: null, seededFactIds: [], detectedFacts: []});
+      }
+    }
+    expect(parseUploadedDocumentText("A reference mentions Form 1095-A (2026)", "f1095a.pdf")).toBeNull();
+    expect(parseUploadedDocumentText("2026 Health Insurance Marketplace Statement", "f1095a.pdf")).toBeNull();
+  });
   it("preserves actual Box 7 tips without inventing zero from other payroll boxes", () => {
     const unknown = parseUploadedW2Text(sampleW2Text);
     expect(unknown?.detectedFacts[0].machineValue).not.toHaveProperty("socialSecurityTips");

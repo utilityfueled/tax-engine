@@ -10,6 +10,16 @@ describe("sample tax document registry", () => {
     }
   });
 
+  // Spec: spec/federal/workspace-guided-year.yaml#marketplace-sample-year.
+  it("pins the 2025 Marketplace sample and aliases to the explicit prior year", () => {
+    const id = "irs-1095-a-2025";
+    const sample = registry.find((entry) => entry.id === id);
+    const fixture = officialSampleDocumentFixtures.find((entry) => entry.id === id);
+
+    expect(sample?.downloadUrl).toBe("https://www.irs.gov/pub/irs-prior/f1095a--2025.pdf");
+    expect(fixture?.aliases).toEqual([id, "f1095a--2025"]);
+  });
+
   it("contains unique ids and supported document kinds", () => {
     const ids = new Set<string>();
     const supportedKinds = new Set([

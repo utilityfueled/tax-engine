@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { extractPdfTextFromFile } from "../../../apps/web/src/lib/uploaded-document-detection";
+import { extractPdfTextFromFile, prepareUploadableFiles } from "../../../apps/web/src/lib/uploaded-document-detection";
+import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
+import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
+import { startCompleteInterview } from "../../guided-interview/complete-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -15,6 +18,42 @@ async function syntheticDocument() {
 }
 
 describe("PDF.js 6 text extraction with synthetic documents", () => {
+  // Spec: spec/federal/workspace-guided-year.yaml#marketplace-upload-year.
+  it("keeps Marketplace PDF source years and statement designations manual through normal upload", async () => {
+    // Mirror the official2026 text layout; checkbox appearances are not source text.
+    for (const status of ["original", "corrected", "voided"] as const) {
+      const pdf = await PDFDocument.create();
+      const font = await pdf.embedFont(StandardFonts.Helvetica);
+      const page = pdf.addPage();
+      ["VOID OMB No. 1545-2232", "Health Insurance Marketplace Statement", "Form 1095-A", "CORRECTED", "Department of the Treasury 20 26"].forEach((text, index) => page.drawText(text, {x: 40, y: 780 - index * 20, size: 10, font}));
+      page.drawText("Cat. No. 60703Q Form 1095-A (2026) Created 5/12/26", {x: 40, y: 40, size: 9, font});
+      const form = pdf.getForm();
+      for (const [name, y] of [["voided", 780], ["corrected", 720]] as const) {
+        const box = form.createCheckBox(name); box.addToPage(page, {x: 20, y, width: 10, height: 10});
+        if (status === name) box.check();
+      }
+      pdf.addPage().drawText("Form 1095-A (2026) Page 2", {x: 40, y: 780, size: 10, font});
+      const file = new File([new Uint8Array(await pdf.save())], "f1095a--2025.pdf", {type: "application/pdf"});
+      const prepared = await prepareUploadableFiles([file]);
+      expect(prepared[0]?.detectedDocument).toMatchObject({kind: "1095-a", taxYear: 2026, coverage: "needs-review", seededFactIds: [], detectedFacts: []});
+      const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord(`marketplace-${status}`), prepared);
+      expect(workspace.documents[0]).toMatchObject({kind: "1095-a", taxYear: 2026, coverage: "needs-review", matchedFixtureId: null, seededFactIds: [], detectedFacts: []});
+      expect(workspace.structuredFacts).toEqual([]);
+      expect(workspace.enginePreview).toBeNull();
+      const flow = startCompleteInterview({filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null});
+      const mismatched = reconcileWorkspaceGuidedState(workspace, flow);
+      expect(mismatched.returnSummary.blockers.some(row => row.id === "guided:conflicting-source-years")).toBe(true);
+      flow.taxYear = 2026;
+      const sameYear = reconcileWorkspaceGuidedState(workspace, flow);
+      expect(sameYear.returnSummary.status).not.toBe("ready-to-recompute");
+      expect(sameYear.enginePreview).toBeNull();
+      expect(sameYear.documents[0]?.detectedFacts).toEqual([]);
+    }
+    const legacy = ingestFilesIntoWorkspace(createWorkspaceRecord("filename-only"), [{name: "f1095a--2025.pdf", size: 23}]);
+    expect(legacy.documents[0]).toMatchObject({taxYear: 2025, matchedFixtureId: "irs-1095-a-2025"});
+    const ambiguous = ingestFilesIntoWorkspace(createWorkspaceRecord("unknown-filename"), [{name: "f1095a.pdf", size: 23}]);
+    expect(ambiguous.documents[0]).toMatchObject({taxYear: null, kind: "unknown", matchedFixtureId: null, seededFactIds: [], detectedFacts: []});
+  });
   it("preserves monetary/date text and page order without a provider", async () => {
     const file = new File([await syntheticDocument()], "synthetic.pdf", { type: "application/pdf" });
     const text = await extractPdfTextFromFile(file);
