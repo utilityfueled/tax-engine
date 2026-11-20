@@ -292,6 +292,8 @@ export function calculateSchedule1(
   assertStatementYear("Form 1099-INT", input.form1099Int, returnYear);
   assertStatementYear("Form 1099-DIV", input.form1099Div, returnYear);
   assertStatementYear("Form 1099-MISC", input.form1099Misc, returnYear);
+  assertStatementYear("Form SSA-1099", (input.formSSA1099 ?? []).map(form => ({ taxYear: form.sourceTaxYear })), returnYear);
+  assertStatementYear("Form RRB-1099", input.formRRB1099 ?? [], returnYear);
   const filingStatus = input.taxpayer.filingStatus;
 
   // ── Part I: Additional Income ─────────────────────────

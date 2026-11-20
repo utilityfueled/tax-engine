@@ -260,15 +260,17 @@ lines:
     testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 20 - single active participant mid-phase-out computes partial IRA deduction from worksheet"
 
   - line: "20-and-21-income-statement-years"
-    description: "Reconcile the wage and investment statement calendar years used in the modified AGI worksheets"
-    formula: "Before computing a standalone Schedule 1, hold Forms W-2, 1099-INT, 1099-DIV and 1099-MISC when the supplied reporting year differs from the return year. Keep matching and undated legacy records. A wrong-year amount must not change modified AGI or the resulting deduction."
-    irsRef: "Publication 970, student loan interest deduction modified AGI; Publication 590-A, traditional IRA deduction modified AGI"
+    description: "Reconcile the wage, investment and benefit statement calendar years used in the modified AGI worksheets"
+    formula: "Before computing a standalone Schedule 1, hold Forms W-2, 1099-INT, 1099-DIV, 1099-MISC, SSA-1099 and RRB-1099 when the supplied reporting year differs from the return year. Keep matching and undated legacy records. A wrong-year amount must not change modified AGI or the resulting deduction."
+    irsRef: "Publications 970 and 590-A, modified AGI for student loan interest and IRA contributions; Publication 915, current-year Box 5 benefits"
     sources:
       - "https://www.irs.gov/publications/p970"
       - "https://www.irs.gov/publications/p590a"
+      - "https://www.irs.gov/publications/p915"
     testRef: "tests/engine/schedules/schedule-1.test.ts::holds wrong-year statements used in standalone Schedule 1 modified AGI"
     testRefs:
       - "tests/engine/schedules/schedule-1.test.ts::uses matching and legacy undated income in standalone Schedule 1 modified AGI"
+      - "tests/engine/schedules/schedule-1.test.ts::includes matching and undated net benefits in student loan modified AGI"
 
   - line: "21"
     description: "Student loan interest deduction"

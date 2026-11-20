@@ -19,6 +19,8 @@ describe("Schedule 1 modified AGI statement years", () => {
       ["Form 1099-INT", { form1099Int: [{ payer: "Bank", taxYear: 2024, interestIncome: "15000" }] }],
       ["Form 1099-DIV", { form1099Div: [{ payer: "Broker", taxYear: 2024, ordinaryDividends: "15000" }] }],
       ["Form 1099-MISC", { form1099Misc: [{ payer: "Sponsor", taxYear: 2024, otherIncome: "15000" }] }],
+      ["Form SSA-1099", { formSSA1099: [{ sourceTaxYear: 2024, netBenefits: "6000" }] }],
+      ["Form RRB-1099", { formRRB1099: [{ taxYear: 2024, netSocialSecurityEquivalentBenefitPortion: "4000" }] }],
     ];
 
     for (const [formName, facts] of statements) {
@@ -40,6 +42,18 @@ describe("Schedule 1 modified AGI statement years", () => {
     });
 
     expect(result.studentLoanInterest.toString()).toBe("1250");
+  });
+
+  it("includes matching and undated net benefits in student loan modified AGI", () => {
+    const { input } = makeFixture({ studentLoanInterest: "2500" });
+    const result = calculateSchedule1({
+      ...input,
+      formSSA1099: [{ sourceTaxYear: 2025, netBenefits: "6000" }],
+      formRRB1099: [{ netSocialSecurityEquivalentBenefitPortion: "4000" }],
+    });
+    const worksheet = result.lines.find(line => line.line === "21");
+    expect(worksheet?.inputs?.["Supported modified AGI before student loan deduction"]?.toString()).toBe("93500");
+    expect(result.studentLoanInterest.toString()).toBe("1083");
   });
 });
 
