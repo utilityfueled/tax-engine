@@ -1,5 +1,52 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Schedule E royalty statement years
+
+Standalone Schedule E now holds a nonzero royalty amount from Form
+1099-MISC Box 2 when the statement's explicit calendar year differs from
+the known return year. The rule applies to the historical raw-input path.
+The complete property ledger already checks the year against the matched
+original. Matching and undated records retained the exact combined
+$1,024.96 in the 2025 and internal 2026 test cases. Callers without a return
+year retained their existing behavior. [IRS Schedule E line 4 instructions](https://www.irs.gov/instructions/i1040se) ·
+[IRS draft 2026 Schedule E instructions](https://www.irs.gov/pub/irs-dft/i1040se--dft.pdf).
+
+Commit `27696ad4` passed 228 tests across nine suites including Schedule E,
+its royalty source calculation, Schedule D, and review PDF boundaries.
+The failing test reproduced the omission before implementation. All 46
+Schedule E spec references and the root type check passed. Scoped lint had
+zero errors and reported existing test warnings. The browser audit checks
+the updated source fingerprint with the same request and runtime limits.
+
+## November 19 Ohio unemployment payments across a move
+
+Ohio IT NRC line 12 uses unemployment paid or accrued while the recipient
+was an Ohio resident. The 2025 ordinary single-taxpayer path accepts source
+records for two or more dated payments from one Form 1099-G. It requires
+distinct original receipt references, confirmed coverage of all payments and
+an exact Decimal reconciliation to Box 1 and federal Schedule 1 line 7. The
+guided interview preserves the original statement and owner binding on
+reopen. Existing single-payment records still work. The new schedule applies
+to the existing whole-dollar Ohio review cohort.
+[Ohio IT 1040 instructions, page 36](https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36) ·
+[Ohio Revised Code §5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20).
+
+Application commit `e07d51f5` passed 197 focused tests across seven files.
+The IT NRC and guided specs have 48 and two verified test references. The
+isolated build, root and contract type checks, generated inventory check,
+37 browser harness controls and fingerprint check passed. Scoped lint had
+no errors and reported existing test warnings. Browser request limits,
+workers and deadlines were retained. Desktop and mobile Chromium exercised
+the new fields in the built app, entered both receipts by keyboard and date
+controls, confirmed the original, reopened the saved values, and continued
+the interview. In the calculation fixture, the $400 June 30 payment was
+outside Ohio residency and the $600 July 1 payment was inside. IT NRC line 12
+was $600, line 17 was $40,600, line 18 was 0.5980, the Schedule of Credits
+amount was $1,406, and IT 1040 line 10 was $945. The full-year nonresident
+control had zero on line 12. Negative controls cover stale originals,
+duplicate references, missing confirmation, dates and payment totals.
+The Ohio 2026 public qualification gate remains closed.
+
 ## November 19 standalone statement calendar years
 
 Standalone Schedule C now holds a Form 1099-NEC whose explicit reporting year

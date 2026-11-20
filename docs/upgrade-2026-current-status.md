@@ -1,10 +1,19 @@
 # Current 2026 upgrade status
 
+The 2025 Ohio part-year guided interview can collect dated receipts across
+a move for one Form 1099-G. Desktop and mobile Chromium entered both
+payments, confirmed and reopened the saved evidence, and continued the
+interview. The 197 focused tests passed. The fixture allocates only the $600
+received during Ohio residency to IT NRC line 12.
+[Ohio payment schedule evidence](upgrade-2026-progress.md#november-19-ohio-unemployment-payments-across-a-move).
+
 Standalone Schedules B and C now hold explicit wrong-year Forms 1099-INT,
-1099-DIV and 1099-NEC. Schedule 1 applies the calendar-year rule to its wage,
+1099-DIV and 1099-NEC. Standalone Schedule E checks explicit Form 1099-MISC royalty
+years against a known return year. Schedule 1 applies the calendar-year rule to its wage,
 interest, dividend and miscellaneous income sources. Matching and legacy
 undated records retain their exact amounts. The fixes were pushed to `main`
-after focused verification. [Statement-year evidence](upgrade-2026-progress.md#november-19-standalone-statement-calendar-years).
+after focused verification. [Statement-year evidence](upgrade-2026-progress.md#november-19-standalone-statement-calendar-years) ·
+[Schedule E evidence](upgrade-2026-progress.md#november-19-schedule-e-royalty-statement-years).
 
 All ten strict AMD64 browser deadline traces at `d23eabb0` show substantial
 time entering ordinary Ohio facts. Several reached review or reload. The
@@ -81,7 +90,8 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `activeContinuation.nov20StatementAndBrowserContinuation` for
+Read `activeContinuation.nov20OhioUnemploymentPaymentSchedule` for the newest
+Ohio work. Resume with `activeContinuation.nov20StatementAndBrowserContinuation` for
 the latest application source, check runs and bounded trace findings. Earlier
 packages are indexed by `latestGeminiRejectedUsageSettlement`,
 `latestGuidedOhioUnemploymentPaymentProof`,

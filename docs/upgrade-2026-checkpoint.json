@@ -142,11 +142,23 @@
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
     "latestPushedSource": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce",
+    "nov20OhioUnemploymentPaymentSchedule": {
+      "source": "e07d51f508e3df9327d575dba5382cfddf707f5e",
+      "scope": "2025 Ohio ordinary single taxpayer, one original Form 1099-G, exact whole-dollar dated receipts spanning domicile changes; documented old single-payment records preserved.",
+      "focusedTests": 197,
+      "specReferences": 50,
+      "browserHarnessControls": 37,
+      "builtLoopbackDesktopAndMobile": "Both passed receipt entry, source confirmation, autosave, reopen and progression",
+      "verifiedCalculation": { "ITNRCLine12": "600", "ITNRCLine17": "40600", "ITNRCLine18": "0.5980", "residentCredit": "1406", "IT1040Line10": "945" },
+      "evidence": ".local/upgrade-evidence/nov20-ohio-multiple-unemployment",
+      "held": "Ohio 2026 public qualification, final forms and independent qualified tax review"
+    },
     "nov20StatementAndBrowserContinuation": {
       "scope": "Standalone Schedules 1, B and C reconcile explicit information-return calendar years before calculation. The Ohio trace review made no browser or readiness changes. Cybersecurity work is owner-deferred.",
       "scheduleC": { "source": "66cd46ecefa2178561cb08e411213672090f4848", "focusedPasses": 256, "specReferences": 77 },
       "scheduleB": { "source": "8b828d7e7ab54852fb66851450681c69cfc7c913", "focusedPasses": 442, "specReferences": 13 },
       "schedule1": { "source": "aac55bcc029abe0ac37dd01fc46e5dcba7696669", "focusedPasses": 387, "specReferences": 29 },
+      "scheduleE": { "source": "27696ad43dcf3fe67f6b1c4c4a5db03d448737e9", "focusedPasses": 228, "specReferences": 46, "previousFailureReproduced": true, "scope": "Standalone raw royalty statements with a known return year" },
       "browserAuditBinding": { "source": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce", "sourceAuditPassed": true, "nodeControlsPassed": 37, "vitestControlsPassed": 148, "focusedManagedBrowserPasses": 9, "managedServerClosed": true, "githubDockerPassed": true },
       "githubRuns": { "ci": 44657864503, "docker": 44657864542, "web": 44657864570 },
       "previousGithubRuns": {
