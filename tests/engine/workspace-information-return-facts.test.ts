@@ -1,4 +1,5 @@
 // Spec: spec/federal/workspace-guided-year.yaml#information-return-sample-facts.
+import assert from 'node:assert/strict';
 import {expect, it} from 'vitest';
 import type {WorkspaceDocumentKind, SeededFactId, WorkspaceStructuredFactMachineValue} from '@tax-engine/contracts';
 import {buildWorkspaceEngineInput} from '@tax-engine/engine';
@@ -26,21 +27,48 @@ it('keeps all three manual prompts without inventing source amounts on upload or
     expect(answered.structuredFacts.every(fact=>fact.machineValue===undefined)).toBe(true);
     expect(answered.enginePreview).toBeNull();
     // Saved pre-fix summaries are rebuilt from originals, rather than trusted.
-    const stale={...answered,structuredFacts:[...answered.structuredFacts,{id:'old-invented-fixture',factId:source.factId,label:'Old synthetic summary',kind:'fixture-derived' as const,value:'Historical synthetic value',sourceType:'official-fixture' as const,confidence:'high' as const,sourceDocumentIds:[answered.documents[0]!.id],questionId:null,updatedAt:answered.updatedAt,machineValue:source.machineValue}]};
+    const [originalDocument] = answered.documents;
+    assert(originalDocument);
+    const stale = {
+      ...answered,
+      structuredFacts: [...answered.structuredFacts, {
+        id: 'old-invented-fixture',
+        factId: source.factId,
+        label: 'Old synthetic summary',
+        kind: 'fixture-derived' as const,
+        value: 'Historical synthetic value',
+        sourceType: 'official-fixture' as const,
+        confidence: 'high' as const,
+        sourceDocumentIds: [originalDocument.id],
+        questionId: null,
+        updatedAt: answered.updatedAt,
+        machineValue: source.machineValue,
+      }],
+    };
     const storage=memoryStorage();
     const restored=saveWorkspaceSnapshot(storage,stale);
-    const reopened=getWorkspace(storage,restored.id)!;
+    const reopened = getWorkspace(storage, restored.id);
+    assert(reopened);
     // Seed the actual persisted app envelope before any save/hydration call.
     const rawStorage=memoryStorage();
     rawStorage.setItem(WORKSPACE_STORAGE_KEY,JSON.stringify({workspaces:{[stale.id]:stale}}));
-    const rawBefore=JSON.parse(rawStorage.getItem(WORKSPACE_STORAGE_KEY)!);
-    expect(rawBefore.workspaces[stale.id].structuredFacts.filter((fact:{machineValue?:unknown})=>fact.machineValue).map((fact:{machineValue:unknown})=>fact.machineValue)).toEqual([source.machineValue]);
-    const directlyReopened=getWorkspace(rawStorage,stale.id)!;
+    const readStoredFacts = () => {
+      const serialized = rawStorage.getItem(WORKSPACE_STORAGE_KEY);
+      assert(serialized);
+      const {workspaces} = JSON.parse(serialized) as {workspaces: Record<string, typeof answered>};
+      const stored = workspaces[stale.id];
+      assert(stored);
+      return stored.structuredFacts;
+    };
+    expect(readStoredFacts().flatMap(fact => fact.machineValue ? [fact.machineValue] : []))
+      .toEqual([source.machineValue]);
+    const directlyReopened = getWorkspace(rawStorage, stale.id);
+    assert(directlyReopened);
     expect(directlyReopened.documents).toEqual(answered.documents.map(document=>({...document,blobStorageKey:null})));
     // A read rebuilds the returned record; the next ordinary save persists it.
-    expect(JSON.parse(rawStorage.getItem(WORKSPACE_STORAGE_KEY)!).workspaces[stale.id].structuredFacts.some((fact:{machineValue?:unknown})=>fact.machineValue)).toBe(true);
+    expect(readStoredFacts().some(fact => fact.machineValue)).toBe(true);
     saveWorkspaceSnapshot(rawStorage,directlyReopened);
-    expect(JSON.parse(rawStorage.getItem(WORKSPACE_STORAGE_KEY)!).workspaces[stale.id].structuredFacts.every((fact:{machineValue?:unknown})=>fact.machineValue===undefined)).toBe(true);
+    expect(readStoredFacts().every(fact => fact.machineValue === undefined)).toBe(true);
     const synced=syncGuidedFlowToWorkspace(stale,[],[]);
     for(const rebuilt of [restored,reopened,directlyReopened,synced]){
       expect(rebuilt.seededReturn.interviewQuestions).toEqual([expect.objectContaining({id:source.factId,status:'answered'})]);
@@ -64,7 +92,9 @@ it('preserves genuine detected information-return amounts and the calculation co
     const context=source.kind==='1098-e'?qualifiedWorkspaceLoanContext(facts,taxpayer):workspaceScenarioContext(facts,taxpayer);
     expect(buildWorkspaceEngineInput(answered.documents,answered.returnSummary,facts,taxpayer)).toBeNull();
     expect(buildWorkspaceEngineInput(answered.documents,answered.returnSummary,facts,taxpayer,context)).not.toBeNull();
-    const changed=structuredClone(facts); const actual=changed.find(fact=>fact.machineValue)!;
+    const changed = structuredClone(facts);
+    const actual = changed.find(fact => fact.machineValue);
+    assert(actual);
     actual.machineValue={...machineValue,...(source.kind==='1098-e'?{studentLoanInterestReceived:'2101'}:source.kind==='1099-r'?{grossDistribution:'22001'}:{netBenefits:'60001'})} as WorkspaceStructuredFactMachineValue;
     expect(buildWorkspaceEngineInput(answered.documents,answered.returnSummary,changed,taxpayer,context)).toBeNull();
     expect(source.machineValue).toEqual(machineValue);
