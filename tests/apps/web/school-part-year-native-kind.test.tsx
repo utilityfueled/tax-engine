@@ -13,6 +13,16 @@ function harness(count=1,tag='INPUT',labels=1){const calls:string[]=[],reads:str
  return{fn,page,calls,reads};}
 it('requires known kind before labels or native actions',async()=>{const h=harness();await expect(h.fn(h.page,'Actual','x','unknown')).rejects.toThrow();expect(h.calls).toEqual([]);expect(h.reads).toEqual([]);});
 it('rejects an expected native kind that disagrees with the actual current control',async()=>{for(const[tag,kind]of[['INPUT','select'],['SELECT','input']]){const h=harness(1,tag);await expect(h.fn(h.page,'Actual','x',kind)).rejects.toThrow();expect(h.calls).toEqual([]);}});
+it('counts exact labels without re-querying parent text',async()=>{
+ const queries:string[]=[],actions:string[]=[];
+ const field={async fill(value:string){actions.push('fill:'+value);},async press(key:string){actions.push('press:'+key);}};
+ const parent={locator(selector:string){expect(selector).toBe('input,select');return field;},getByText(){queries.push('parent-text');return span;}};
+ const span={locator(selector:string){expect(selector).toBe('..');return parent;}};
+ const page={locator(selector:string){expect(selector).toBe('label');return{getByText(label:string,options:unknown){expect(label).toBe('Actual');expect(options).toEqual({exact:true});queries.push('exact-label');return span;}};}};
+ const fn=load(fs.readFileSync(path.join(R,'apps/web/tests/helpers/known-native-control.ts'),'utf8'),(target:unknown)=>({async toHaveCount(n:number){expect(target).toBe(span);expect(n).toBe(1);}})).enterKnownNativeControl as(page:unknown,label:string,value:string,kind:string)=>Promise<void>;
+ await fn(page,'Actual','x','input');
+ expect(actions).toEqual(['fill:x','press:Tab']);expect(queries).toEqual(['exact-label']);
+});
 it('preserves independent labels and strict native actions',async()=>{for(const[tag,kind,wanted]of[['INPUT','input',['fill:x','press:Tab']],['SELECT','select',['select:x']]]as const){const h=harness(1,tag);await h.fn(h.page,'Actual','x',kind);expect(h.calls).toEqual(wanted);expect(h.reads).toEqual(['label']);}for(const labels of[0,2]){const h=harness(1,'INPUT',labels);await expect(h.fn(h.page,'Actual','x','input')).rejects.toThrow('label count');expect(h.calls).toEqual([]);}for(const count of[0,2]){const h=harness(count);await expect(h.fn(h.page,'Actual','x','input')).rejects.toThrow();expect(h.calls).toEqual([]);}});
 
 import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';

@@ -17,3 +17,7 @@ lines:
     description: "Native action strictness enforces exactly one current control"
     formula: "Keep independent exact label count. Input uses fill(value) then Tab; select uses selectOption(value), always on a freshly resolved input,select locator. Native actions reject absent/duplicate/wrong-type targets. Any rejection propagates without later actions. Preserve 30s strict test policy, workers, retries and every existing source/result assertion."
     testRef: "tests/apps/web/school-part-year-native-kind.test.tsx::preserves independent labels and strict native actions"
+  - line: "single-label-query"
+    description: "Count the current exact label-text locator directly"
+    formula: "Count exactly one result of label.getByText(label, exact:true) directly, without re-querying its parent for the same text. Keep the identical fresh parent input,select locator and strict fill then Tab or selectOption actions. Missing/duplicate labels and missing/duplicate/wrong-kind controls must still reject before any later action. All current component label/control inventories and workflow action orders remain unchanged."
+    testRef: "tests/apps/web/school-part-year-native-kind.test.tsx::counts exact labels without re-querying parent text"
