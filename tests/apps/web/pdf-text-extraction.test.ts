@@ -17,6 +17,34 @@ async function syntheticDocument() {
   return new Uint8Array(await pdf.save());
 }
 
+type CopyBEntry = { text: string; x: number; y: number; rotation?: number; size?: number };
+
+async function necCopyBFile(entries: CopyBEntry[], revision = "(Rev. December 2026)", extraPage = false) {
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([612, 792]);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  for (const [text, x, y] of [
+    ["Form 1099-NEC", 398.64, 729.78],
+    [revision, 397.94, 712.44],
+    ["For calendar year", 403, 700],
+    ["1a Nonemployee compensation", 299.2, 676],
+    ["Copy B", 541.36, 669.77],
+    ["State or province", 54, 664],
+    ["$", 301.12, 650.86],
+    ["For Recipient", 518.52, 649.77],
+    ["1b Cash tips", 299.2, 640],
+    ["$", 300.62, 614.86],
+    ["4 Federal income tax withheld", 299.2, 496],
+  ] as const) {
+    page.drawText(text, { x, y, size: 8, font });
+  }
+  for (const { text, x, y, rotation, size = 11 } of entries) {
+    page.drawText(text, { x, y, size, font, rotate: degrees(rotation ?? 0) });
+  }
+  if (extraPage) pdf.addPage();
+  return new File([new Uint8Array(await pdf.save())], "recipient-statement.pdf", { type: "application/pdf" });
+}
+
 describe("PDF.js 6 text extraction with synthetic documents", () => {
   // Spec: spec/federal/workspace-guided-year.yaml#marketplace-upload-year.
   it("keeps Marketplace PDF source years and statement designations manual through normal upload", async () => {
@@ -85,7 +113,7 @@ describe("PDF.js 6 text extraction with synthetic documents", () => {
   });
   // Spec: spec/federal/workspace-guided-year.yaml#nec-copy-b-box-1a-pdf.
   it("binds the separated printed NEC Copy B amount to Box 1a", async () => {
-    const receipt: { text: string; x: number; y: number; rotation?: number } = { text: "3,210.09", x: 323, y: 650.86 };
+    const receipt: CopyBEntry = { text: "3,210.09", x: 323, y: 650.86 };
     const cases = [
       { name: "filled", entries: [receipt], expected: "3210.09" },
       { name: "explicit zero", entries: [{ ...receipt, text: "0.00" }], expected: "0.00" },
@@ -105,33 +133,8 @@ describe("PDF.js 6 text extraction with synthetic documents", () => {
       { name: "unrecognized revision", entries: [receipt], revision: "(Rev. December 2025)" },
       { name: "multi-page", entries: [receipt], extraPage: true },
     ];
-    for (const { name, entries, expected, revision = "(Rev. December 2026)", extraPage } of cases) {
-      const pdf = await PDFDocument.create();
-      const page = pdf.addPage([612, 792]);
-      const font = await pdf.embedFont(StandardFonts.Helvetica);
-      for (const [text, x, y] of [
-        ["Form 1099-NEC", 398.64, 729.78],
-        [revision, 397.94, 712.44],
-        ["For calendar year", 403, 700],
-        ["1a Nonemployee compensation", 299.2, 676],
-        ["Copy B", 541.36, 669.77],
-        ["State or province", 54, 664],
-        ["$", 301.12, 650.86],
-        ["For Recipient", 518.52, 649.77],
-        ["1b Cash tips", 299.2, 640],
-        ["$", 300.62, 614.86],
-        ["4 Federal income tax withheld", 299.2, 496],
-      ] as const) {
-        page.drawText(text, { x, y, size: 8, font });
-      }
-      for (const { text, x, y, rotation } of entries) {
-        page.drawText(text, { x, y, size: 11, font, rotate: degrees(rotation ?? 0) });
-      }
-      if (extraPage) pdf.addPage();
-
-      const files = await prepareUploadableFiles([
-        new File([new Uint8Array(await pdf.save())], "recipient-statement.pdf", { type: "application/pdf" }),
-      ]);
+    for (const { name, entries, expected, revision, extraPage } of cases) {
+      const files = await prepareUploadableFiles([await necCopyBFile(entries, revision, extraPage)]);
       const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord(name), files);
       expect(workspace.documents[0], name).toMatchObject({ kind: "1099-nec", taxYear: null });
       expect(workspace.structuredFacts.flatMap(fact => fact.machineValue ? [fact.machineValue] : []), name)
@@ -140,6 +143,41 @@ describe("PDF.js 6 text extraction with synthetic documents", () => {
         }] : []);
       expect(workspace.enginePreview, name).toBeNull();
     }
+  });
+
+  // Spec: spec/federal/workspace-guided-year.yaml#nec-copy-b-calendar-year-pdf.
+  const copyBYear: CopyBEntry = { text: "2026", x: 423, y: 690, size: 9 };
+  it.each([
+    { name: "year with same-row payer text", entries: [copyBYear, { ...copyBYear, text: "Fictional Street", x: 54 }], expected: 2026 },
+    { name: "bare number in a different column", entries: [{ ...copyBYear, x: 106 }], expected: null },
+    { name: "bare number in a different column on the heading row", entries: [{ ...copyBYear, x: 513, y: 700 }], expected: null },
+    { name: "year crossing the box edge", entries: [{ ...copyBYear, x: 436 }], expected: null },
+    { name: "rotated year", entries: [{ ...copyBYear, rotation: 4 }], expected: null },
+    { name: "second in-box value", entries: [copyBYear, { ...copyBYear, text: "1", size: 5, x: 419, y: 693 }], expected: null },
+    { name: "same explicit year elsewhere", entries: [copyBYear, { ...copyBYear, text: "Tax year 2026", x: 54, y: 400 }], expected: 2026 },
+    { name: "contradictory explicit year elsewhere", entries: [copyBYear, { ...copyBYear, text: "Tax year 2025", x: 54, y: 400 }], expected: null },
+    { name: "a second form", entries: [copyBYear, { ...copyBYear, text: "Form 1099-NEC", x: 54, y: 400 }], expected: null },
+    { name: "earlier year printed in the box", entries: [{ ...copyBYear, text: "2025" }], expected: 2025 },
+    { name: "blank calendar year field", entries: [], expected: null },
+  ])("binds the printed NEC Copy B calendar year to its box ($name)", async ({ name, entries, expected }) => {
+    const receipt = { text: "3,210.09", x: 323, y: 650.86 };
+    const files = await prepareUploadableFiles([await necCopyBFile([receipt, ...entries])]);
+    const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord(name), files);
+    expect(workspace.documents[0]).toMatchObject({ kind: "1099-nec", taxYear: expected });
+    const amounts = workspace.structuredFacts.flatMap(fact => fact.machineValue ? [fact.machineValue] : []);
+    expect(amounts).toEqual(name === "a second form" ? [] : [expect.objectContaining({ nonemployeeCompensation: "3210.09" })]);
+    expect(workspace.enginePreview).toBeNull();
+  });
+
+  it("keeps the year unknown on a PDF containing two NEC statements", async () => {
+    const first = await necCopyBFile([]);
+    const second = await necCopyBFile([{ text: "Tax year 2025", x: 54, y: 400 }]);
+    const combined = await PDFDocument.load(await first.arrayBuffer());
+    const [secondPage] = await combined.copyPages(await PDFDocument.load(await second.arrayBuffer()), [0]);
+    combined.addPage(secondPage);
+    const file = new File([new Uint8Array(await combined.save())], "two-statements.pdf", { type: "application/pdf" });
+    const [prepared] = await prepareUploadableFiles([file]);
+    expect(prepared.detectedDocument).toMatchObject({ kind: "1099-nec", taxYear: null, detectedFacts: [] });
   });
 
   it("preserves monetary/date text and page order without a provider", async () => {

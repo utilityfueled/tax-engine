@@ -17,7 +17,13 @@ export function OhioReciprocalWagesDetails({data,onChange,originalInput,ohioResi
  function secret(label:string,path:Path){const v=read(d,path);return <label key={path.join('.')} className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" type="password" autoComplete="off" value={typeof v==='string'?v:''} onChange={event=>edit(path,event.target.value)}/></label>;}
  function year(label:string,path:Path){const v=read(d,path);return <TextFact key={path.join('.')} label={label} value={typeof v==='number'?String(v):''} onChange={next=>edit(path,/^\d+$/.test(next)?Number(next):null)}/>;}
  function bool(label:string,path:Path){const v=read(d,path);return <BooleanFact key={path.join('.')} label={label} value={typeof v==='boolean'?v:null} onChange={next=>edit(path,next)}/>;}
- function amount(label:string,path:Path){const v=read(d,path);return <CurrencyField key={path.join('.')} label={label} value={typeof v==='string'?v:''} onChange={next=>edit(path,parseCurrencyInput(next))}/>;}
+ function amount(label: string, path: Path) {
+  const stored = read(d, path);
+  return <CurrencyField key={path.join('.')} label={label} value={typeof stored === 'string' ? stored : ''} onChange={next => {
+   const normalized = parseCurrencyInput(next);
+   if (normalized !== stored) edit(path, normalized);
+  }}/>;
+ }
  function choice(label:string,path:Path,options:ReadonlyArray<readonly[string,string]>){const v=read(d,path);return <label key={path.join('.')} className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={typeof v==='string'?v:''} onChange={event=>edit(path,event.target.value)}><option value="">Choose from actual records</option>{options.map(([value,title])=><option key={value} value={value}>{title}</option>)}</select></label>;}
  function period(prefix:string,path:Path){return <>{text(`${prefix} period begins`,[...path,'from'],'date')}{text(`${prefix} period ends`,[...path,'to'],'date')}{text(`${prefix} document date`,[...path,'documentDate'],'date')}</>;}
  let confirmed=false;if(data?.sourceFactsConfirmed===true&&originalInput)try{buildGuidedOhioReciprocalWages(originalInput,data,ohioResidency,ohioPayments);confirmed=true;}catch{/* Retained confirmation cannot stand in for current source replay. */}

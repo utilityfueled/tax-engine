@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /** Spec: state/oh-reciprocal-wages-guided.yaml. Actual blank-to-confirm entry, not stored JSON injection. */
-import React,{useState} from 'react';
+import React,{act,useState} from 'react';
 import {expect,it} from 'vitest';
 import {OhioReciprocalWagesDetails} from '@/components/guided-interview/ohio-reciprocal-wages-details';
 import {buildGuidedOhioReciprocalWages,type OhioReciprocalWagesDraft} from '@/lib/guided-oh-reciprocal-wages';
@@ -31,6 +31,33 @@ it('preserves actual zero and revoked unknown sources across restored native con
  const f=guidedReciprocalWageFixture('60000.25','0'),draft=structuredClone(f.draft);draft.sourceFactsConfirmed=null;draft.serviceOriginal.totalCompensation='';const saved=JSON.parse(JSON.stringify(draft)),h=await mount(saved,f);try{
   expect(h.draft().payrollRows).toHaveLength(12);expect(required(h.draft().payrollRows[0]).ohioWithheld).toBe('0.00');expect(h.draft().serviceOriginal.totalCompensation).toBe('');expect(h.draft().sourceFactsConfirmed).toBeNull();await h.panel.click(reciprocalConfirmLabel);expect(h.draft().sourceFactsConfirmed).not.toBe(true);expect(h.draft()).toEqual(saved);expect(h.panel.control('Reciprocal payroll 1 actual Ohio withheld').value).toBe('0.00');expect(h.panel.control('Reciprocal services actual total compensation').value).toBe('');
  }finally{await h.panel.dispose();}
+});
+it('preserves reciprocal confirmation when currency formatting leaves the stored amount unchanged', async () => {
+ const f = guidedReciprocalWageFixture();
+ const h = await mount(f.draft, f);
+ const label = 'Reciprocal services actual total compensation';
+ try {
+  const field = h.panel.control(label);
+  expect(field.value).toBe('60000.25');
+  expect(h.draft().sourceFactsConfirmed).toBe(true);
+  await act(async () => field.focus());
+  await act(async () => field.blur());
+  expect(h.draft()).toBe(f.draft);
+  expect(h.draft().sourceFactsConfirmed).toBe(true);
+  await h.panel.change(label, '60,000.25');
+  expect(h.draft()).toBe(f.draft);
+
+  await h.panel.change(label, '60,000.26');
+  expect(h.draft().serviceOriginal.totalCompensation).toBe('60000.26');
+  expect(h.draft().sourceFactsConfirmed).toBeNull();
+  expect(h.draft().originalFederalSources).toEqual(f.draft.originalFederalSources);
+  await h.panel.change(label, '0');
+  expect(h.draft().serviceOriginal.totalCompensation).toBe('0');
+  await h.panel.change(label, '');
+  expect(h.draft().serviceOriginal.totalCompensation).toBe('');
+ } finally {
+  await h.panel.dispose();
+ }
 });
 it.each([['Ohio reciprocal source reference','Actual changed source reference'],['Ohio reciprocal original SSN','900-70-0999'],['Reciprocal domicile original ID','Actual changed domicile original'],['Reciprocal employer actual corporate employee classification reviewed','false'],['Reciprocal services actual total compensation',''],['Reciprocal payroll 1 actual paid date','2025-02-01'],['All actual reciprocal income originals included','']]as const)('revokes reciprocal native confirmation and retains original commitments after %s',async(label,value)=>{
  const f=guidedReciprocalWageFixture(),before=structuredClone(f.draft),h=await mount(f.draft,f);try{await h.panel.change(label,value);expect(h.draft().sourceFactsConfirmed).not.toBe(true);expect(h.draft().originalW2).toEqual(before.originalW2);expect(h.draft().originalFederalSources).toEqual(before.originalFederalSources);expect(h.draft().originalResidencySources).toEqual(before.originalResidencySources);expect(h.draft().originalPaymentSources).toEqual(before.originalPaymentSources);expect(f.draft).toEqual(before);}finally{await h.panel.dispose();}
