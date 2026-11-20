@@ -572,9 +572,23 @@
         "specReferences": 18,
         "productionModelsPromoted": false,
         "liveProviderCalls": 0,
+        "appSource": "1399cc1c4c7b3fbea886db9bdfd08922ba3dfce5",
+        "inventoryRepairSource": "d23eabb0a5af2837374930adac15296a63fa411c",
+        "inventoryRedBeforeRegeneration": true,
+        "inventorySourceAuthorityOnly": true,
+        "inventoryExactLocalCheckPassed": true,
+        "inventoryExactGitHubSpecJobPassed": 135994123598,
+        "repairedExactStaticAndBuildChecksPassed": 9,
+        "repairedExactFocusedTestsPassed": 39,
+        "repairedExactArchiveSha256": "58bc672318d2db16cbe3162c3b069ae826b68cebfc43072f804135ea240d761d",
+        "repairedExactFocusedLogSha256": "62f7fc67c6e23a77410e48a9c5817c4dca083c6a87218dbf38363eb43322fe52",
+        "inventoryOriginalFailedGitHubJob": 135983275673,
+        "inventoryOriginalFailedLogSha256": "3b182da16cd2ddb1319105c3574bc95d7445170d14a783b4202f89e26e2ecab7",
         "browserAuditSha256": "9145012c489c0d3c81cf08f4d39012b270b5adfdaf5d0ca48087b6d7096d2040"
       },
       "latestGuidedOhioUnemploymentPaymentProof": {
+        "appSource": "d33e77d5fcd08ce014d0b71778f9d1716f9c7da2",
+        "archiveSha256": "ace28436b33aa13ab5e6b67d762d50d61c68e96e48e744d7e6968f5b75494f2b",
         "taxYear": 2025,
         "scope": "single actual government Form 1099-G Box 1 paid in one source-confirmed payment",
         "redProgressionWithoutProof": true,
@@ -592,6 +606,48 @@
         "independentTestsPassed": 43,
         "independentDirectCasesPassed": 5,
         "specReferences": 2,
+        "exactStaticAndBuildChecksPassed": 9,
+        "exactLocalProbe": {
+          "desktopPassed": true,
+          "mobilePixel7Passed": true,
+          "keyboardAutosaveAndReopenPassed": true,
+          "earlierSyntheticFactsSeeded": true,
+          "ohioTaxPreview": "999",
+          "listenerClosed": true,
+          "logSha256": "5fa29afa9d21016087a431e8af918e282985f809f9321eac83d7efb578b0d88a"
+        },
+        "exactLocalUnitAndCoverage": {
+          "testsPassedEach": 29488,
+          "filesPassedEach": 2156,
+          "branchCoveragePct": 88.35,
+          "branchGatePct": 85,
+          "postgresStoppedNormally": true,
+          "unitLogSha256": "8d6759c036b937cda513ce12dbf9f38391eb4caeefe6cf1a836ecafd3eea31f5",
+          "coverageLogSha256": "6cb32fba16bdc6b1af3a86b5002022121edc555993a21b4dc5954c9e8c432909"
+        },
+        "exactManagedLocal": {
+          "passed": 650,
+          "originalSkips": 5,
+          "failed": 0,
+          "listenerClosed": true,
+          "logSha256": "bb9f0ddf7bb82162994e7105460f2e0da9d821a343f1186a1fa4c96740d03f7c"
+        },
+        "exactManagedGitHub": {
+          "job": 135972172019,
+          "passed": 650,
+          "originalSkips": 5,
+          "failed": 0,
+          "logSha256": "07ff5b0199fdc13f883186176807aff29e07a2b42379e5d386cab4b"
+        },
+        "strictAmd64GitHub": {
+          "job": 135972172120,
+          "passed": 646,
+          "originalSkips": 5,
+          "deadlines": 4,
+          "deadlineMs": 30000,
+          "smokeComposeArchiveAndCleanupPassed": true,
+          "logSha256": "3d6f56caffbd3763ce94bed7bdcfe4cfcd531d750fa8593140dcd29dfcd54712"
+        },
         "browserAuditSha256": "01a411e863c1ee7bdeb814a0860ad4ffe0b8f1a3053c27de46a12c271864a1a1"
       },
       "latestBrowserRecoveryComparison": {
@@ -627,7 +683,14 @@
           "strictAmd64Deadlines": 6,
           "strictAmd64OriginalSkips": 5,
           "strictDeadlineMs": 30000,
-          "strictAmd64LogSha256": "056b0d5e9af7651ce476f7572379c858a84e561c12ca5c371857b00b8aaa3437"
+          "strictAmd64LogSha256": "056b0d5e9af7651ce476f7572379c858a84e561c12ca5c371857b00b8aaa3437",
+          "strictArm64Run": 44632965201,
+          "strictArm64Job": 135964650432,
+          "strictArm64BrowserPassed": 639,
+          "strictArm64Deadlines": 11,
+          "strictArm64OriginalSkips": 5,
+          "strictArm64SmokeComposeAndCleanupPassed": true,
+          "strictArm64LogSha256": "50231d04488a35aec0e14753248265f9f74dce8fa29aab84dc6a8a405a94820a"
         }
       },
       "latestScheduleAPropertyTaxSourceYear": {
@@ -637,7 +700,29 @@
         "combinedUnitTestsPassed": 29485,
         "combinedUnitFilesPassed": 2156,
         "combinedUnitLogSha256": "8cbaff5b1d0aaa4f8fdf45501d0bd9032ebd8e07c5f0b26fac6013a4d3972392",
+        "combinedCoverageTestsPassed": 29485,
+        "combinedBranchCoveragePct": 88.34,
+        "combinedCoverageGatePct": 85,
+        "combinedPostgresStoppedNormally": true,
+        "combinedCoverageLogSha256": "fe15a4ba18d0b674f43bf6aa4c0b3679f841d950313695e74fae50e591414c2e",
         "combinedDockerRunPassed": 44639007528,
+        "combinedCiRunPassed": 44639007689,
+        "managedGitHub": {
+          "job": 135964852027,
+          "passed": 648,
+          "originalSkips": 5,
+          "savedPdfInspectionTimeouts": 2,
+          "logSha256": "1006fd7894a2692a867ce459ee5edba07f0092d34cb292356d2704306275d944"
+        },
+        "strictAmd64GitHub": {
+          "job": 135964851532,
+          "passed": 642,
+          "originalSkips": 5,
+          "deadlines": 8,
+          "deadlineMs": 30000,
+          "smokeComposeArchiveAndCleanupPassed": true,
+          "logSha256": "32e64816602bf263c05b6fd4a8e635a42551cf5cadca4c211b9b577e257c9caa"
+        },
         "authority": ["https://uscode.house.gov/us/usc/t26/s164/", "https://www.irs.gov/publications/p530"],
         "actual2025CanonicalAndInternal2026RedTests": 2,
         "targetedTestsPassed": 198,
@@ -716,6 +801,14 @@
         "rootTargetedTestsPassed": 39,
         "independentForm8812References": 16,
         "exactStaticAndBuildChecksPassed": 9,
+        "strictAmd64": {
+          "job": 135950715669,
+          "passed": 635,
+          "browserDeadlines": 13,
+          "savedPdfInspectionTimeouts": 2,
+          "originalHostedSkips": 5,
+          "logSha256": "f34c3f5232e7af09fb3f30963052688cd67a739777a204cfa34703b79e1943b3"
+        },
         "exactManagedLocal": {
           "passed": 650,
           "failed": 0,

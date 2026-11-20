@@ -3,13 +3,18 @@
 Hosted Gemini billing and evaluation now retain exact verified usage on
 rejected responses. Unknown prices and inconsistent counts hold for
 reconciliation. The fix passed 89 synthetic tests and independent review.
+The generated inventory follow-up passed the exact local and GitHub spec checks.
 [Gemini accounting evidence](upgrade-2026-progress.md#november-19-reported-gemini-rejection-usage).
 
 The Ohio guided interview now collects actual dated unemployment proof for
 the single-payment part-year case. It checks the statement and owner before
 reopening or confirming the return. The saved fixture produced $1,000 on
-IT NRC line 12 and a $1,396 credit. A full-year nonresident can complete the
-same ordinary cohort with a complete out-of-state domicile timeline.
+IT NRC line 12 and a $1,396 credit. Desktop and mobile Chromium on exact
+`d33e77d5` saved and reopened the $999 Ohio preview. Its unit and coverage
+commands each passed 29,488 tests, with 88.35% branch coverage. Local and
+GitHub managed browser runs passed 650 cases each. Strict AMD64 passed 646,
+with four original 30-second deadlines. A full-year nonresident uses a
+complete out-of-state domicile timeline.
 [Guided Ohio evidence](upgrade-2026-progress.md#november-19-guided-ohio-unemployment-payment-proof).
 
 Exact `43956ac0` passed 650 runnable local browser cases. The earlier strict

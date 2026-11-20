@@ -19,6 +19,16 @@ All 89 scoped tests and 18 spec references passed. Independent review passed
 45 mock tests. Web and evaluation typechecks and scoped lint passed. This
 package used synthetic responses and left the production model gates closed.
 
+The original commit `1399cc1c` missed the generated inventory's updated
+source reference. The frozen local inventory check reproduced the CI failure.
+Commit `d23eabb0` regenerates that one reference and preserves the unrelated
+local inventory entry. The exact local inventory, spec and evaluation model
+checks passed, as did the repaired GitHub spec job.
+All nine exact static and build checks and 39 focused tests passed after a
+frozen offline install with the existing package store.
+[Original failure](https://github.com/utilityfueled/tax-engine/actions/runs/44644424502/job/135983275673) ·
+[Repaired check](https://github.com/utilityfueled/tax-engine/actions/runs/44647619691/job/135994123598).
+
 ## November 19 guided Ohio unemployment payment proof
 
 The Ohio guided interview connects an eligible 2025 Form 1099-G to an
@@ -40,6 +50,21 @@ passed 84 tests, including rendered controls, with both typechecks and lint.
 The final independent review passed 43 tests and five direct reproductions,
 including a tax ID formatting edit that preserves the same owner's proof.
 
+The exact pushed `d33e77d5` production build ran in an owned local Chromium
+rehearsal. Desktop and Pixel 7 entered the four payment fields, used the
+keyboard, autosaved and reopened, and reproduced the $999 Ohio tax preview.
+The rehearsal seeded the earlier synthetic filing inputs and exercised the
+new Ohio controls in the running app. Its listener closed. All nine static
+and build checks passed. Unit and coverage each passed 29,488 tests across
+2,156 files, with 88.35% branch coverage and normal PostgreSQL shutdown.
+
+Managed browser runs locally and on GitHub each passed all 650 runnable cases
+with five original hosted skips. The local listener closed. The strict AMD64
+image passed 646, with four 30-second deadlines and the same five skips.
+Image smoke, Compose recovery, independent archive import and container
+cleanup passed. [Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44641132856/job/135972172019) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44641132856/job/135972172120).
+
 ## November 19 exact browser and recovery results
 
 Exact `43956ac0` passed all nine local static and build checks. Its managed
@@ -56,10 +81,18 @@ the same five skips. Both ran image smoke, Compose upgrade and recovery, and
 container cleanup successfully. AMD64 also passed independent archive import.
 Exact `d52a596b` passed all six CI jobs, Docker and managed browsers. Its
 strict AMD64 run passed 644, with six deadlines and five original skips.
+Its strict ARM64 run passed 639 cases, with eleven 30-second deadlines and
+five original skips. ARM64 image smoke, Compose recovery and cleanup passed.
+Exact `43956ac0` also passed remote CI, Docker and managed browsing. Its
+strict AMD64 completed 635 runnable cases, with 13 browser deadlines, two
+saved-PDF inspection timeouts and five original skips. The inspection work
+is paused at the owner's direction and remains part of the release gate.
 [Form 8889 CI](https://github.com/utilityfueled/tax-engine/actions/runs/44631210955) ·
 [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44631211136/job/135938008589) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44631260737/job/135938189799) ·
-[Child-credit AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44632834883/job/135943694338).
+[Child-credit AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44632834883/job/135943694338) ·
+[Child-credit ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44632965201/job/135964650432) ·
+[Follow-up AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44634882131/job/135950715669).
 
 Independent trace review found varying late operations. Both NEW212 traces
 show about 4.4–4.6 seconds between the completed download response and the
@@ -88,7 +121,17 @@ cases and eight additional canonical 2025 scenarios across automatic and
 explicit standard deduction choices. Both source specs and the full browser
 audit passed. The scoped lint run retained one existing warning. The exact
 combined revision `56a7ef3d` passed nine static and build checks and the
-Docker workflow. The 2026 worksheet remains behind the existing filing gate.
+Docker workflow. Exact unit and coverage runs each passed 29,485 tests
+across 2,156 files, with 88.34% branch coverage and normal PostgreSQL
+shutdown. The 2026 worksheet remains behind the existing filing gate.
+
+GitHub CI and Docker passed for this exact source. The managed browser job
+passed 648 cases, with two saved-PDF inspection timeouts and five original
+skips. Strict AMD64 passed 642, with eight 30-second deadlines and five
+original skips. Strict image smoke, Compose recovery, independent archive
+import and container cleanup passed.
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44639007490/job/135964852027) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44639007490/job/135964851532).
 
 ## November 19 Ohio nonresident and part-year unemployment
 
