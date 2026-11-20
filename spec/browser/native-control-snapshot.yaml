@@ -7,6 +7,8 @@ notes: |
   read-only protocol work; it does not establish browser actionability or timing
   qualification. All real locator actions, target facts, assertions, protected
   request limits, overall deadlines, workers and retry contracts stay intact.
+  The dynamic entry wrappers retain the snapshot protocol. The part-year School
+  wrapper uses its fixture-defined native kinds.
 lines:
   - line: "exact-current-control"
     description: "Poll a current locator snapshot before acting"
@@ -18,7 +20,7 @@ lines:
     testRef: "tests/apps/web/native-control-snapshot.test.ts::preserves ordered real actions and re-resolves replacements"
   - line: "independent-school-label"
     description: "Keep the separate school duplicate-label assertion"
-    formula: "The school helper awaits both the current-control snapshot and its original exact duplicate-label count assertion before any input action. No other source outside imports and these eight entry helper bodies changes."
+    formula: "The part-year School helper validates the fixture kind and gates actions on exactly one current label. Its native actions resolve the current input or select again, enforce target uniqueness and kind, and propagate rejection before any later action. The known-kind School path performs zero tag snapshots."
     testRef: "tests/apps/web/native-control-snapshot.test.ts::preserves the independent school label assertion"
   - line: "protocol-efficiency-boundary"
     description: "Count actual installed read-only protocol composition"
