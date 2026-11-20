@@ -600,7 +600,7 @@
     "apps/web/tests/guided-schedule-ai-investment-election.spec.ts": "9f219935539b0a4a73cdf5eb6eca2c09880e609e5f564ed0331381f617d3507b",
     "apps/web/tests/guided-schedule-ai-investment-household.spec.ts": "13f54fc464299231e22f6e2345b726451839e68f8c5ce7ea3f2d9beca944d638",
     "apps/web/tests/guided-schedule-ai.spec.ts": "691380825d67a4c6d345fcfac5a81dcb537c44ee6f953a9a17db7aaff6b218e5",
-    "apps/web/tests/guided-schedule-d-sources.spec.ts": "bb8897cf2ae68fc61d1dcf145d3c343ea13dbaad3105b0675a4f97716af77837",
+    "apps/web/tests/guided-schedule-d-sources.spec.ts": "5e447d02f1a65e0f1ba3ddc9c4dc11ff9b18be82021d60fff7a8a96dbebf0f9d",
     "apps/web/tests/guided-shared-health-other-allocations.spec.ts": "a722ee20dc914860076f615eb62fed788d44713daa1c9f729cdfe218b73e9f45",
     "apps/web/tests/guided-shared-marketplace-health.spec.ts": "f19645d55c12bcb9609b037b714bfa795aebb8d21a089f210b721d9c2de80395",
     "apps/web/tests/guided-shared-owner-marketplace-health.spec.ts": "cce0bc67a7403f0fada0e09ef431d1996d93c5535e91720b8a73d479c78b462e",

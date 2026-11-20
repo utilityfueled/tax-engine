@@ -47,7 +47,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.reload();
     await page.getByText('Capital gain character and loss carryovers (Schedule D)', { exact: true }).click();
     await expect(confirmed).toHaveValue('true');
-    await expect(prior.getByLabel('Prior loss worksheet 1 loss owner', { exact: true })).toHaveValue('primary');
+    await expect(prior.getByRole('combobox', { name: 'Prior loss worksheet 1 loss owner', exact: true })).toHaveValue('primary');
     await expect(prior.getByRole('textbox', { name: 'Prior loss worksheet 1 short-term loss', exact: true })).toHaveValue('-1,000.01');
     const loss = page.getByRole('textbox', { name: /^Prior short-term capital loss carryover/ }); await expect(loss).toHaveValue('-1,000.01');
     await page.getByText('Report a child’s interest and dividends (Form 8814)', { exact: true }).click();
