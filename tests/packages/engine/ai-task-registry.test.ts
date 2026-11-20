@@ -41,6 +41,19 @@ describe("AI task candidates and exact costs", () => {
     expect(calculateAiCost("gemini-3.8-flash", "2027-01-01T00:00:00Z", usage).providerCostUsd).toBe("10.15");
     expect(getAiPrice("gemini-3.8-flash", "2027-01-01T00:30:00+02:00").input).toBe("0.75");
   });
+  it("requires an actual calendar date and explicit timestamp offset for pricing", () => {
+    for (const at of [
+      "2026-12-31T23:30:00",
+      "2026-11-31",
+      "2026-11-31T23:00:00-05:00",
+      "2026-12-31T24:00:00Z",
+      "2027-01-01T00:00:00+24:00",
+    ]) {
+      expect(() => getAiPrice("gemini-3.8-flash", at), at).toThrow("Invalid pricing date.");
+    }
+    expect(getAiPrice("gemini-3.8-flash", "2027-01-01").input).toBe("1.50");
+    expect(getAiPrice("gemini-3.8-flash", "2026-12-31T19:00-0500").input).toBe("1.50");
+  });
   it("accounts for cache reads, both cache-write durations, long context and region", () => {
     const usage = { inputTokens: 300000, outputTokens: 1000, cachedInputTokens: 100000, cacheWrite30mTokens: 50000, cacheWrite12hTokens: 50000, regionalProcessing: true };
     // Sol: (200000 + 10000 + 125000 + 250000) * 2 + 15000 = 1185000 / 1M * 1.1.

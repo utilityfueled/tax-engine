@@ -684,7 +684,7 @@
     "packages/engine/src/ai-document-classification-catalog.ts": "081764b14cdfea1726f8109db82682bd37d8b9e45fd33f9802b730e59218d535",
     "packages/engine/src/ai-gemini-text-response.ts": "a702591ab86e351aff42531e579e4dc13639939ea5ab3d75f0a361c5772a6a65",
     "packages/engine/src/ai-income-source-box-grounding.ts": "dd4d1959b28e54958e615cb9dbb4c84f2a0f03c3d585d038005af7c3560896c2",
-    "packages/engine/src/ai-pricing.ts": "bf07e7ee3fd4d3bb358079b31e2bd56a3b55f59c9f0ab4b82ca806ea27b2a0a2",
+    "packages/engine/src/ai-pricing.ts": "264bb3f01d74a2ed4b42f6d4b8d4d10944adb8959e5c18fd0696a71f3a7da3ee",
     "packages/engine/src/ai-provider-documentation.ts": "5df69130fca5a152ba4a5f1b66fd98e203c1d133a8b34163c00ca20761132d1f",
     "packages/engine/src/ai-task-registry.ts": "a57ce7ada7f13d15ac981d11d6253a945568dd8827c0a35f38e6aef7add158cf",
     "packages/engine/src/index.ts": "123e1b8fd429c41facb43493542bad8faafaf8360f4218fac2adda25ab12ecc0",

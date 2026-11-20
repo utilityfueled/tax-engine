@@ -37,9 +37,19 @@ export const AI_PRICES: readonly AiPrice[] = Object.freeze(([
     input: "0.25", output: "2", cachedInput: "0.025", regionalUplift: "1" },
 ] satisfies AiPrice[]).map(price => Object.freeze(price)));
 
+const pricingDatePattern = /^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):\d{2}(?::\d{2}(?:\.\d+)?)?(?:[Zz]|[+-]\d{2}:?\d{2}))?$/u;
+
 export function getAiPrice(model: string, at: string): AiPrice {
-  if (!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(at) || !Number.isFinite(Date.parse(at))) throw new Error("Invalid pricing date.");
-  const utcDay = new Date(at).toISOString().slice(0, 10);
+  const calendarDay = pricingDatePattern.exec(at)?.[1];
+  if (!calendarDay) throw new Error("Invalid pricing date.");
+
+  const midnight = new Date(calendarDay);
+  const instant = new Date(at);
+  if (!Number.isFinite(midnight.getTime()) || midnight.toISOString().slice(0, 10) !== calendarDay ||
+      !Number.isFinite(instant.getTime())) {
+    throw new Error("Invalid pricing date.");
+  }
+  const utcDay = instant.toISOString().slice(0, 10);
   const price = AI_PRICES.filter(entry => entry.model === model && entry.effectiveFrom <= utcDay)
     .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
   if (!price) throw new Error(`No verified pricing for ${model} at ${at}.`);
