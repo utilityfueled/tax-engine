@@ -27,23 +27,6 @@ interface FixtureStructuredFactTemplate {
 // These values are explicit synthetic examples attached to blank IRS templates,
 // not facts extracted from a taxpayer's upload or IRS worked-example evidence.
 const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTemplate[]> = {
-  "irs-1099-int-2024": [
-    {
-      idSuffix: "fixture-interest-income",
-      factId: "taxable-interest",
-      label: "Taxable interest",
-      value: "Official fixture taxable interest: box 1 interest income $20,000 with no withholding or penalty.",
-      machineValue: {
-        entryKind: "1099-int-summary",
-        payer: "Official fixture savings bank",
-        interestIncome: "20000",
-        earlyWithdrawalPenalty: "0",
-        federalWithheld: "0",
-        taxExemptInterest: "0",
-        usSavingsBondInterest: "0"
-      } satisfies WorkspaceStructuredFactMachineValue1099IntSummary
-    }
-  ],
   "irs-1099-g-2025": [
     {
       idSuffix: "fixture-government-payments-review",
@@ -110,46 +93,6 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       factId: "capital-gain-distributions",
       label: "Capital gain distributions",
       value: "Official fixture capital gain distributions: box 2a capital gain distributions $1,000."
-    }
-  ],
-  "irs-1099-b-2025": [
-    {
-      idSuffix: "fixture-short-term-sale",
-      factId: "broker-proceeds",
-      label: "Broker sale proceeds",
-      value: "Official fixture short-term sale: proceeds $42,000, cost basis $12,000, sold 2025-06-15.",
-      machineValue: {
-        entryKind: "1099-b-transaction",
-        description: "Official fixture short-term sale",
-        dateAcquired: "2025-01-15",
-        dateSold: "2025-06-15",
-        proceeds: "42000",
-        costBasis: "12000",
-        adjustments: "0",
-        basisReportedToIRS: true,
-        holdingPeriod: "short",
-        washSale: false,
-        washSaleDisallowed: "0"
-      }
-    },
-    {
-      idSuffix: "fixture-long-term-sale",
-      factId: "broker-proceeds",
-      label: "Broker sale proceeds",
-      value: "Official fixture long-term sale: proceeds $40,000, cost basis $15,000, sold 2025-09-30.",
-      machineValue: {
-        entryKind: "1099-b-transaction",
-        description: "Official fixture long-term sale",
-        dateAcquired: "2023-02-01",
-        dateSold: "2025-09-30",
-        proceeds: "40000",
-        costBasis: "15000",
-        adjustments: "0",
-        basisReportedToIRS: true,
-        holdingPeriod: "long",
-        washSale: false,
-        washSaleDisallowed: "0"
-      }
     }
   ],
   "irs-1099-sa-2025": [

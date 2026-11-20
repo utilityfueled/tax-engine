@@ -1,5 +1,16 @@
 {
   "activeContinuation": {
+    "nov20InterestAndBrokerageFilenameFacts": {
+      "isolatedFocusedTestsPassed": 97,
+      "integratedNode26FocusedTestsPassed": 93,
+      "realBlankPdfCasesPassed": 2,
+      "realTypedAliasPdfCasesPassed": 2,
+      "independentReview": "passed",
+      "uploadOnlyInventoryEntry": "federal/workspace-investment-upload",
+      "patchSha256": "29161f1dad338cff5881b01a9721fdd37fa10ef4e652282b4f00d0af9c34042a",
+      "privateEvidence": ".local/upgrade-evidence/nov20-investment-fixture-money.oRvZMFDp",
+      "mergeEvidence": ".local/upgrade-evidence/nov20-investment-merge"
+    },
     "nov20WageAndNecFilenameFacts": {
       "focusedUnitTestsPassed": 1307,
       "actualBlankPdfCasesPassed": 3,

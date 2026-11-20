@@ -8886,3 +8886,19 @@ multi-copy NEC file and preserve all five protected-detail assertions. All
 63 guided, workspace and recovery cases passed on Node 26.13.1 with the
 existing limits. A separate rerun of the Ohio app revision passed all 14
 cases on the same pinned Node runtime.
+
+## November 20 interest and brokerage filename facts
+
+An official blank 1099-INT or 1099-B under its registry alias could
+acquire preset interest or brokerage trades. The workspace now keeps the
+manual prompts without creating amounts. Supported typed information in
+a real upload retains its own tax year and exact values under those aliases.
+
+Real PDF.js probes covered both cached IRS blanks and fictional filled
+documents. The filled source checks retained $1,200.15 interest and
+explicit zero withholding, and $1,800.01 proceeds with $1,200.25 basis.
+Independent review verified the values, unknown-year handling and existing
+calculation boundaries. Both original sample-dependent numeric scenarios
+now use explicit fictional source facts. The isolated 97 checks and
+integrated 93 Node 26 checks passed. The generated inventory entry records
+upload coverage without qualifying any filing form.

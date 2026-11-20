@@ -1,3 +1,4 @@
+import { fictionalBrokerageUpload, fictionalInterestUpload } from "../../helpers/workspace-investment-sources";
 import { workspaceScenarioContext } from "../../helpers/workspace-calculation-context";
 import { workspaceTaxpayerFixture } from "../../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
@@ -846,7 +847,7 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
     const workspaceId = "return-summary-ready";
 
-    ingestFiles(storage, workspaceId, [{ name: "f1099b--2025.pdf", size: 12 }]);
+    ingestFiles(storage, workspaceId, [fictionalBrokerageUpload(12)]);
     answerInterviewQuestion(
       storage,
       workspaceId,
@@ -877,7 +878,7 @@ describe("workspace storage", () => {
           status: "ready",
           engineTargets: ["Form 8949", "Schedule D", "Form 1040 Line 7"],
           relatedFactIds: ["broker-proceeds", "cost-basis-review"],
-          sourceDocumentIds: ["irs-1099-b-2025:f1099b--2025.pdf:12"],
+          sourceDocumentIds: ["1099-b:f1099b--2025.pdf:12"],
           answeredFactCount: 2,
           factCount: 2
         }
@@ -889,8 +890,8 @@ describe("workspace storage", () => {
       taxYear: 2025,
       filingStatus: "single",
       filingState: "TX",
-      sourceDocumentIds: ["irs-1099-b-2025:f1099b--2025.pdf:12"],
-      sourceFixtureIds: ["irs-1099-b-2025"],
+      sourceDocumentIds: ["1099-b:f1099b--2025.pdf:12"],
+      sourceFixtureIds: [],
       assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "55000",
@@ -911,9 +912,9 @@ describe("workspace storage", () => {
           value: "1475",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-short-term",
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -927,9 +928,9 @@ describe("workspace storage", () => {
           value: "1537",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-short-term",
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale",
-            "broker-proceeds:fixture-short-term-sale",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -939,12 +940,12 @@ describe("workspace storage", () => {
     });
   });
 
-  it("promotes confirmed 1099-INT and 1099-DIV fixture facts into a deterministic 2025 investment-income recompute", async () => {
+  it("promotes confirmed actual 1099-INT and sample 1099-DIV facts into a deterministic 2025 investment-income recompute", async () => {
     const storage = createMemoryStorage();
     const workspaceId = "investment-income-ready";
 
     ingestFiles(storage, workspaceId, [
-      { name: "f1099int.pdf", size: 11 },
+      fictionalInterestUpload(11),
       { name: "f1099div.pdf", size: 11 }
     ]);
     answerInterviewQuestion(
@@ -975,7 +976,7 @@ describe("workspace storage", () => {
 
     expect(workspace.summary).toEqual({
       totalDocuments: 2,
-      officialFixtureMatches: 2,
+      officialFixtureMatches: 1,
       supportedDocuments: 2,
       pendingReviewDocuments: 0,
       interviewQuestionsRemaining: 0
@@ -996,7 +997,7 @@ describe("workspace storage", () => {
           status: "ready",
           engineTargets: ["Schedule B Part I", "Form 1040 Line 2b"],
           relatedFactIds: ["taxable-interest"],
-          sourceDocumentIds: ["irs-1099-int-2024:f1099int.pdf:11"],
+          sourceDocumentIds: ["1099-int:f1099int.pdf:11"],
           answeredFactCount: 1,
           factCount: 1
         },
@@ -1019,10 +1020,10 @@ describe("workspace storage", () => {
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: [
-        "irs-1099-int-2024:f1099int.pdf:11",
+        "1099-int:f1099int.pdf:11",
         "irs-1099-div-2024:f1099div.pdf:11"
       ],
-      sourceFixtureIds: ["irs-1099-int-2024", "irs-1099-div-2024"],
+      sourceFixtureIds: ["irs-1099-div-2024"],
       assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "25000",
@@ -1043,8 +1044,8 @@ describe("workspace storage", () => {
           value: "20000",
           formula: "Schedule B Line 4",
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer"
           ]
         },
@@ -1132,8 +1133,8 @@ describe("workspace storage", () => {
           value: "25000",
           formula: "Line 9 - Line 10",
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer",
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1154,8 +1155,8 @@ describe("workspace storage", () => {
           value: "9250",
           formula: "AGI - total deductions",
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer",
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1176,8 +1177,8 @@ describe("workspace storage", () => {
           value: "528",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer",
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1198,8 +1199,8 @@ describe("workspace storage", () => {
           value: "0",
           formula: "Withholding + estimated + EIC + ACTC + refundable credits",
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer",
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1220,8 +1221,8 @@ describe("workspace storage", () => {
           value: "0",
           formula: "max(0, total payments - total tax)",
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer",
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1242,8 +1243,8 @@ describe("workspace storage", () => {
           value: "528",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
+            "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
-            "taxable-interest:fixture-interest-income",
             "taxable-interest:interview-answer",
             "ordinary-dividends:document-detected",
             "ordinary-dividends:fixture-dividend-income",
@@ -1268,8 +1269,8 @@ describe("workspace storage", () => {
     const workspaceId = "return-summary-ready-multi-doc";
 
     ingestFiles(storage, workspaceId, [
-      { name: "f1099b--2025.pdf", size: 12 },
-      { name: "f1099b--2025.pdf", size: 18 }
+      fictionalBrokerageUpload(12),
+      fictionalBrokerageUpload(18)
     ]);
     answerInterviewQuestion(
       storage,
@@ -1294,8 +1295,8 @@ describe("workspace storage", () => {
         engineTargets: ["Form 8949", "Schedule D", "Form 1040 Line 7"],
         relatedFactIds: ["broker-proceeds", "cost-basis-review"],
         sourceDocumentIds: [
-          "irs-1099-b-2025:f1099b--2025.pdf:12",
-          "irs-1099-b-2025:f1099b--2025.pdf:18"
+          "1099-b:f1099b--2025.pdf:12",
+          "1099-b:f1099b--2025.pdf:18"
         ],
         answeredFactCount: 2,
         factCount: 2
@@ -1308,10 +1309,10 @@ describe("workspace storage", () => {
       filingStatus: "single",
       filingState: "TX",
       sourceDocumentIds: [
-        "irs-1099-b-2025:f1099b--2025.pdf:12",
-        "irs-1099-b-2025:f1099b--2025.pdf:18"
+        "1099-b:f1099b--2025.pdf:12",
+        "1099-b:f1099b--2025.pdf:18"
       ],
-      sourceFixtureIds: ["irs-1099-b-2025"],
+      sourceFixtureIds: [],
       assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "110000",
@@ -1332,11 +1333,11 @@ describe("workspace storage", () => {
           value: "60000",
           formula: "Form 8949 Part I + K-1 Box 8 + K-1 1041 Box 3 + K-1 1041 Box 11C + prior ST carryforward + Form 6781 short-term + Form 6252 short-term",
           sourceFactIds: [
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-short-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-short-term",
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1350,11 +1351,11 @@ describe("workspace storage", () => {
           value: "50000",
           formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-short-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-short-term",
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1368,11 +1369,11 @@ describe("workspace storage", () => {
           value: "11960",
           formula: expect.stringContaining("Line 22"),
           sourceFactIds: [
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-short-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-short-term",
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -1386,11 +1387,11 @@ describe("workspace storage", () => {
           value: "12461",
           formula: "max(0, total tax - total payments + line 38 penalty)",
           sourceFactIds: [
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:12:verified-short-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-long-term",
+            "broker-proceeds:1099-b:f1099b--2025.pdf:18:verified-short-term",
             "broker-proceeds:document-detected",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-long-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:12",
-            "broker-proceeds:fixture-short-term-sale:irs-1099-b-2025:f1099b--2025.pdf:18",
             "broker-proceeds:interview-answer",
             "cost-basis-review:document-detected",
             "cost-basis-review:interview-answer"
@@ -2138,27 +2139,6 @@ describe("workspace storage", () => {
         sourceDocumentIds: ["irs-1099-int-2024:f1099int.pdf:11"],
         questionId: null,
         updatedAt: expect.any(String)
-      },
-      {
-        id: "taxable-interest:fixture-interest-income",
-        factId: "taxable-interest",
-        label: "Taxable interest",
-        kind: "fixture-derived",
-        value: "Official fixture taxable interest: box 1 interest income $20,000 with no withholding or penalty.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["irs-1099-int-2024:f1099int.pdf:11"],
-        questionId: null,
-        updatedAt: expect.any(String),
-        machineValue: {
-          entryKind: "1099-int-summary",
-          payer: "Official fixture savings bank",
-          interestIncome: "20000",
-          earlyWithdrawalPenalty: "0",
-          federalWithheld: "0",
-          taxExemptInterest: "0",
-          usSavingsBondInterest: "0"
-        }
       }
     ]);
     expect(answeredWorkspace.seededReturn.facts).toEqual([
@@ -2263,27 +2243,6 @@ describe("workspace storage", () => {
         sourceDocumentIds: ["irs-1099-int-2024:f1099int.pdf:11"],
         questionId: null,
         updatedAt: expect.any(String)
-      },
-      {
-        id: "taxable-interest:fixture-interest-income",
-        factId: "taxable-interest",
-        label: "Taxable interest",
-        kind: "fixture-derived",
-        value: "Official fixture taxable interest: box 1 interest income $20,000 with no withholding or penalty.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["irs-1099-int-2024:f1099int.pdf:11"],
-        questionId: null,
-        updatedAt: expect.any(String),
-        machineValue: {
-          entryKind: "1099-int-summary",
-          payer: "Official fixture savings bank",
-          interestIncome: "20000",
-          earlyWithdrawalPenalty: "0",
-          federalWithheld: "0",
-          taxExemptInterest: "0",
-          usSavingsBondInterest: "0"
-        }
       }
     ]);
     expect(reopenedWorkspace.seededReturn.interviewQuestions[0]).toEqual({

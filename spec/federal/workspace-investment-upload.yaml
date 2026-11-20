@@ -1,0 +1,13 @@
+form: "Investment document upload"
+fullName: "Keep filename-based investment review prompts separate from actual financial source data"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1099int; https://www.irs.gov/instructions/i1099b"
+lines:
+  - line: "manual-investment-sample"
+    description: "Keep Form 1099-INT and Form 1099-B sample aliases as review prompts"
+    formula: "A filename-based sample match retains its form and manual review prompts. It supplies no interest, withholding, trades, costs, dates or filing facts. Answering prompts in prose cannot produce amounts. Opening a saved workspace rebuilds structured facts from original document records and discards previous synthetic sample amounts."
+    testRef: "tests/apps/web/workspace-investment-sources.test.ts::retains investment sample prompts and discards synthetic money on upload and reopen"
+  - line: "actual-investment-source"
+    description: "Keep actual detected investment amounts when a filename resembles an IRS sample"
+    formula: "When a recognized 1099-INT or 1099-B source provides typed financial facts, keep its original amount, year, coverage and provenance even if its filename matches an investment sample alias. Financial facts still require the complete calculation context and source confirmation."
+    testRef: "tests/apps/web/workspace-investment-sources.test.ts::preserves detected investment facts under registered sample filenames"

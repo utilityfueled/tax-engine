@@ -1193,11 +1193,14 @@ export function getFutureYearSampleUploadMessage(files: UploadableFile[]) {
 
 function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): WorkspaceDocumentRecord {
   const filenameFixture = matchFixture(file.name);
+  const detectedInvestmentSource = (filenameFixture?.kind === "1099-int" || filenameFixture?.kind === "1099-b")
+    && file.detectedDocument?.detectedFacts.some(fact => fact.machineValue?.entryKind === "1099-int-summary"
+      || fact.machineValue?.entryKind === "1099-b-transaction");
   // Actual Marketplace metadata must not acquire a historical sample's year or
   // seeded facts merely because the original upload is named f1095a.pdf.
   // A real guide cover cannot become a taxpayer form through its filename.
   // Recognized W-2/NEC source facts also take precedence over sample aliases.
-  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture)
+  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture) || detectedInvestmentSource
     || (file.detectedDocument?.kind === "1095-a"
     && (filenameFixture?.kind !== "1095-a" || file.detectedDocument.taxYear == null
       || file.detectedDocument.taxYear !== filenameFixture.taxYearHint))

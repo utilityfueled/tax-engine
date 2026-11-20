@@ -1,3 +1,4 @@
+import { fictionalBrokerageSources, fictionalInterestSource } from "../helpers/workspace-investment-sources";
 import { describe, expect, it } from "vitest";
 import type {
   SeededReturnSummary,
@@ -222,14 +223,15 @@ describe("workspace structured facts", () => {
     );
   });
 
-  it("adds fixture-derived 1099-B transaction facts for supported official fixtures", () => {
+  it("adds exact transaction facts from a supplied fictional 1099-B", () => {
     const structuredFacts = buildWorkspaceStructuredFacts(
       [createDocument({
         id: "doc-1099b",
         name: "f1099b--2025.pdf",
         kind: "1099-b",
         label: "2025 Form 1099-B",
-        matchedFixtureId: "irs-1099-b-2025",
+        matchedFixtureId: null,
+        detectedFacts: fictionalBrokerageSources(),
         seededFactIds: ["broker-proceeds", "cost-basis-review"]
       })],
       {
@@ -262,31 +264,19 @@ describe("workspace structured facts", () => {
 
     expect(structuredFacts).toEqual([
       {
-        id: "broker-proceeds:document-detected",
+        id: "broker-proceeds:doc-1099b:verified-long-term",
         factId: "broker-proceeds",
-        label: "Broker sale proceeds",
+        label: "Fictional long-term sale",
         kind: "document-detected",
-        value: "Detected from 1 uploaded document(s).",
+        value: "Long-term sale independently supplied by a fictional brokerage statement.",
         sourceType: "upload",
-        confidence: "low",
-        sourceDocumentIds: ["doc-1099b"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z"
-      },
-      {
-        id: "broker-proceeds:fixture-long-term-sale",
-        factId: "broker-proceeds",
-        label: "Broker sale proceeds",
-        kind: "fixture-derived",
-        value: "Official fixture long-term sale: proceeds $40,000, cost basis $15,000, sold 2025-09-30.",
-        sourceType: "official-fixture",
         confidence: "high",
         sourceDocumentIds: ["doc-1099b"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
         machineValue: {
           entryKind: "1099-b-transaction",
-          description: "Official fixture long-term sale",
+          description: "Fictional long-term sale",
           dateAcquired: "2023-02-01",
           dateSold: "2025-09-30",
           proceeds: "40000",
@@ -299,19 +289,19 @@ describe("workspace structured facts", () => {
         }
       },
       {
-        id: "broker-proceeds:fixture-short-term-sale",
+        id: "broker-proceeds:doc-1099b:verified-short-term",
         factId: "broker-proceeds",
-        label: "Broker sale proceeds",
-        kind: "fixture-derived",
-        value: "Official fixture short-term sale: proceeds $42,000, cost basis $12,000, sold 2025-06-15.",
-        sourceType: "official-fixture",
+        label: "Fictional short-term sale",
+        kind: "document-detected",
+        value: "Short-term sale independently supplied by a fictional brokerage statement.",
+        sourceType: "upload",
         confidence: "high",
         sourceDocumentIds: ["doc-1099b"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z",
         machineValue: {
           entryKind: "1099-b-transaction",
-          description: "Official fixture short-term sale",
+          description: "Fictional short-term sale",
           dateAcquired: "2025-01-15",
           dateSold: "2025-06-15",
           proceeds: "42000",
@@ -322,6 +312,18 @@ describe("workspace structured facts", () => {
           washSale: false,
           washSaleDisallowed: "0"
         }
+      },
+      {
+        id: "broker-proceeds:document-detected",
+        factId: "broker-proceeds",
+        label: "Broker sale proceeds",
+        kind: "document-detected",
+        value: "Detected from 1 uploaded document(s).",
+        sourceType: "upload",
+        confidence: "low",
+        sourceDocumentIds: ["doc-1099b"],
+        questionId: null,
+        updatedAt: "2026-03-12T00:00:00.000Z"
       },
       {
         id: "cost-basis-review:document-detected",
@@ -338,7 +340,7 @@ describe("workspace structured facts", () => {
     ]);
   });
 
-  it("adds fixture-derived 1099-INT and 1099-DIV facts for supported official fixtures", () => {
+  it("adds supplied 1099-INT facts alongside existing dividend fixture facts", () => {
     const structuredFacts = buildWorkspaceStructuredFacts(
       [
         createDocument({
@@ -346,7 +348,8 @@ describe("workspace structured facts", () => {
           name: "f1099int.pdf",
           kind: "1099-int",
           label: "Form 1099-INT (Rev. January 2024)",
-          matchedFixtureId: "irs-1099-int-2024",
+          matchedFixtureId: null,
+          detectedFacts: [fictionalInterestSource()],
           seededFactIds: ["taxable-interest"]
         }),
         createDocument({
@@ -408,6 +411,27 @@ describe("workspace structured facts", () => {
 
     expect(structuredFacts).toEqual([
       {
+        id: "taxable-interest:doc-1099int:verified-interest",
+        factId: "taxable-interest",
+        label: "Fictional bank interest",
+        kind: "document-detected",
+        value: "Interest independently supplied by a fictional bank statement.",
+        sourceType: "upload",
+        confidence: "high",
+        sourceDocumentIds: ["doc-1099int"],
+        questionId: null,
+        updatedAt: "2026-03-12T00:00:00.000Z",
+        machineValue: {
+          entryKind: "1099-int-summary",
+          payer: "Fictional savings bank",
+          interestIncome: "20000",
+          earlyWithdrawalPenalty: "0",
+          federalWithheld: "0",
+          taxExemptInterest: "0",
+          usSavingsBondInterest: "0"
+        }
+      },
+      {
         id: "taxable-interest:document-detected",
         factId: "taxable-interest",
         label: "Taxable interest",
@@ -418,27 +442,6 @@ describe("workspace structured facts", () => {
         sourceDocumentIds: ["doc-1099int"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"
-      },
-      {
-        id: "taxable-interest:fixture-interest-income",
-        factId: "taxable-interest",
-        label: "Taxable interest",
-        kind: "fixture-derived",
-        value: "Official fixture taxable interest: box 1 interest income $20,000 with no withholding or penalty.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["doc-1099int"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z",
-        machineValue: {
-          entryKind: "1099-int-summary",
-          payer: "Official fixture savings bank",
-          interestIncome: "20000",
-          earlyWithdrawalPenalty: "0",
-          federalWithheld: "0",
-          taxExemptInterest: "0",
-          usSavingsBondInterest: "0"
-        }
       },
       {
         id: "ordinary-dividends:document-detected",

@@ -14336,6 +14336,26 @@
       ]
     },
     {
+      "key": "federal/workspace-investment-upload",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1099int; https://www.irs.gov/instructions/i1099b",
+      "specPath": "spec/federal/workspace-investment-upload.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/workspace-local-review-and-upload",
       "jurisdiction": "federal",
       "taxYear": 2026,
