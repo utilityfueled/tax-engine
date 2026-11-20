@@ -53,10 +53,14 @@ behind the earlier rehearsal.
 [Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726) ·
 [Current native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129).
 
-The prior application `8201d316` now has all six exact GitHub CI jobs
-passed. Its exact strict ARM64 run advanced to browser journeys.
+The prior application `8201d316` passed all six exact GitHub CI jobs.
+Its strict ARM64 run passed native image build, image smoke, Compose
+upgrade and recovery, and container cleanup. The browser suite passed
+642 cases with five original skips. Eight Ohio cases reached the
+existing 30-second deadline across the NEW212 business, reciprocal,
+resident credit and school district journeys.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44765989343) ·
-[Strict ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411).
+[Strict ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411/job/136425820937).
 
 ## November 20 Form 1095-A upload year and archive sample
 
