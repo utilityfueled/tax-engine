@@ -723,7 +723,7 @@
     "src/engine/assert-statement-year.ts": "7a72817731de8f1473f5fff5916571fe2a55465fd6280e74b1c3816167e8634a",
     "src/engine/child-credit-combat-pay.ts": "98ffe2a509be0a7fa40d2b4acda2d92e9c6d6e9cb5758df1977bb6979e30c0be",
     "src/engine/eic-combat-pay.ts": "9cd3968b23c3464e91d3e90bffd34af6cc7650cd4f64d3aad012ce63eb3bba67",
-    "src/engine/federal.ts": "cfd43f02679b20e96b1f0f95c18706689700d92a9748dd391685b733cb8557d6",
+    "src/engine/federal.ts": "d912868d77990668f4283878ed61cdbea71359ede4f5c485ff151b4726b7bc01",
     "src/engine/forms/alternative-charitable-net-operating-loss.ts": "55a0159a0f61a3805a43c357de62bcc3efe39c27fbcafde0a75bc9674af6a6c6",
     "src/engine/forms/alternative-tax-net-operating-loss.ts": "8a12d40d34a963aa14dcf1a37bac59c6de885eea2d5a55b1860ac7846da6b068",
     "src/engine/forms/amt-capital-gains.ts": "c942ecd34b409963727971f3b914e0647ff6b635b0c18e8546f84b5dc81a544e",

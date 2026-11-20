@@ -4218,12 +4218,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         const id = student.studentTaxId.replaceAll("-", "");
         const actual = student.studentRole === "primary" ? [input.taxpayer.primary.ssn] : student.studentRole === "spouse" ? [input.taxpayer.spouse?.ssn] : input.taxpayer.dependents.map(dep => dep.ssn);
         if (!actual.some(tin => tin?.replaceAll("-", "") === id)) throw new Error("Form8863 student identity does not match the actual return household role");
+        const isJointSpouseStudent = student.studentRole === "spouse" && filingStatus === "married_filing_jointly";
         const claimantSsnEligible = student.studentRole === "primary" ? primarySsnEligible
-          : student.studentRole === "spouse" && filingStatus === "married_filing_jointly" ? spouseSsnEligible
-            : undefined;
+          : isJointSpouseStudent ? spouseSsnEligible : undefined;
         if (claimantSsnEligible !== undefined && student.studentSsnEligible !== undefined &&
             student.studentSsnEligible !== claimantSsnEligible) {
           throw new Error(`Form 8863 ${student.studentRole} student employment-valid SSN answer conflicts with the return claimant facts`);
+        }
+        const householdTinEligible = student.studentRole === "primary" ? input.taxpayer.primary.tinIssuedByDueDate
+          : isJointSpouseStudent ? input.taxpayer.spouse?.tinIssuedByDueDate : undefined;
+        if (householdTinEligible !== undefined && student.studentTinEligible !== undefined &&
+            student.studentTinEligible !== householdTinEligible) {
+          throw new Error(`Form 8863 ${student.studentRole} student timely TIN answer conflicts with the return taxpayer record`);
         }
       }
     }
