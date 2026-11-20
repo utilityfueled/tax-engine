@@ -1,5 +1,108 @@
 # 2026 upgrade implementation evidence
 
+## November 20 matching-year guided originals
+
+`b948a284` saves an actual 2026 W-2 or 1099-NEC with a matching printed year
+and parsed financial facts in the selected 2026 guided interview. The
+2025 calculation-era guard still applies to advanced uploads and sample
+aliases. Existing and same-batch dated original conflicts stop the upload
+before writes. Local admission reads the current stored return, retains the
+rollback for changes during byte storage, and preserves the hosted revision
+check. The selected interview year directs intake. Dated originals establish
+source-year conflicts.
+Stored filename-fixture dates still have no independent source provenance.
+
+The mounted workspace tests first reproduced the 2026 rejection, stale draft
+year, two concurrent-change cases and mixed-year batch write. The revised
+source passed 1,101 scoped tests and independent engineering review. The
+unchanged browser timing contract passed all 35 cases. Chromium used the
+official Copy B with synthetic entries on the matched application sources.
+The filled PDF retained year 2026 and $3,210.09 across reopen on both a fresh
+interview and an empty saved 2025 interview switched to 2026. The blank PDF
+retained an unknown year and no amount. All three kept calculation gated.
+The commit was pushed under the verified Preview-only automatic-build guard.
+Both exact local suites passed 29,634 tests at 88.24% branch coverage, and
+all eight static checks and 9,724 spec references passed. Managed macOS
+passed 650 browser cases with five original skips. All six exact GitHub CI
+jobs and the Docker workflow passed. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44800512677)
+· [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44800512546).
+
+The exact protected Preview passed all 12 synthetic workspace lifecycle
+checks across revisions. Four authenticated, read-only billing preflight
+checks also passed, including rendering Hosted Plans and signing out. The
+preflight did not submit checkout or verify current-source Stripe receipts
+or credit effects. The available Stripe connector returned an authentication
+retry response without exposing Sandbox metadata. Qualification of current
+hosted billing remains open.
+
+Managed Linux passed 648 cases, with two RRTA saved-PDF inspection timeouts
+and five original skips. Strict AMD64 passed image smoke, Compose upgrade,
+recovery and rollback, and SBOM provenance. Its browser run passed 637 cases,
+with eleven Ohio deadlines, two RRTA saved-PDF inspection timeouts and five
+original skips. Strict ARM64 passed image smoke, Compose recovery and
+cleanup. Its browser run passed 641 cases, with nine Ohio deadlines and five
+original skips. Independent engineering review found the Ohio deadlines
+occurred at several different steps and identified no measured application
+bottleneck. The Linux browser gates remain open.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44800512505/job/136511112829)
+· [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44800512505/job/136511112891)
+· [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44800584551/job/136527432514).
+
+[Official Form 1099-NEC](https://www.irs.gov/pub/irs-pdf/f1099nec.pdf).
+
+## November 20 final Form 2106 candidate
+
+`e0b0ab70` pins the final physical 2026 Form 2106. The current and annual
+archive PDFs match at SHA-256
+`794f7d7f84fd3a878e18751622949403d8499474c807fb05b3ee2e0bd811bc1b`.
+The PDF prints `Created 8/18/26`, and the IRS directory records a November
+20 posting. PDF.js and pdf-lib agree on two pages and 87 widgets. The regular
+instructions still print 2025. Schedule 1 line 12 keeps its manual total.
+The candidate has no line map or export registration. The source tests
+first exposed the absent manifest. All 44 focused tests, strict lint on
+the affected files, root typecheck, three new spec references, the generated
+inventory, and the exact 2,023-file browser source audit then passed.
+[Official source notes](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-final-form-2106-blank).
+
+## November 20 NEC Copy B calendar year and Ohio confirmation
+
+`7bf20915` binds the year on the December 2026 Copy B to the printed
+calendar-year field. The actual IRS page accepted a synthetic year sharing a
+row with payer text. Out-of-box numbers, conflicting years and multiple NEC
+statements leave the year unknown. The separate Box 1a suggestion still
+requires confirmation. The same commit preserves confirmed Ohio reciprocal
+wages when a blur merely formats the existing amount. Changing the amount
+still clears confirmation, and blank and zero remain distinct.
+[IRS Form 1099-NEC](https://www.irs.gov/pub/irs-pdf/f1099nec.pdf).
+
+The initial calendar and duplicate-statement regressions failed before the
+fixes. The exact `7bf20915` production Chromium run passed 34 upload and
+reciprocal-wage cases at the existing 30-second limit. All eight static checks
+passed. The full suite detected a missing literal suffix on one spec test
+reference. `ef0ebdc2` corrected the reference and passed the complete literal
+reference check alongside the focused application tests.
+
+`ef0ebdc2` also recognizes the official fillable Copy B calendar-year and
+Box 1a widgets. It requires the saved and displayed values to agree with each
+other and with any printed value in the field. Whole-dollar amounts retain
+exact cents, including zero. Uncertain values stay manual at the field level.
+The unchanged flattened path still handles original page text. Independent
+engineering replay against the IRS page confirmed positive, blank, zero and
+conflicting inputs with no automatic return calculation. After the spec-first
+failures, 1,038 focused tests, 9,720 spec references, web type checks, scoped
+lint and 35 browser timing-contract cases passed. Both exact local suites
+passed all 29,623 tests at 88.46% branch coverage, with all eight static checks
+passing. Exact managed macOS Chromium passed 650 cases with five planned skips
+and zero failures. Remote browser and native checks continue. Both commits
+were pushed to `main` after verifying the Preview-only automatic-build guard.
+
+The exact Chromium check detected the filled official source as 2026.
+Both the advanced 2025 return and the selected 2026 guided interview hit
+the same global 2025 calculation-era upload restriction. The advanced
+mismatch guard passed. The matching guided source could not yet be saved
+and reopened. The follow-up is limited to source retention in the selected
+guided year with calculation and export still gated.
+
 ## November 20 printed 1099-NEC Copy B
 
 On `8486eca8`, PDF.js retains enough page coordinates to read the

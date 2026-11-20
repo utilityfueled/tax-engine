@@ -1,5 +1,29 @@
 # Current 2026 upgrade status
 
+Application `b948a284` saves a matching 2026 W-2 or NEC original in the
+user-selected 2026 guided interview. Actual Chromium verified both filled
+and blank IRS Copy B uploads across reopen, including an empty saved 2025
+interview switched to 2026. The 2026 calculation and export gates remain
+closed. Both exact local suites passed 29,634 tests at 88.24% branch coverage.
+All eight static checks, six GitHub CI jobs and the Docker workflow passed.
+The protected test-mode Preview passed 12 workspace lifecycle checks and
+four read-only billing preflight checks. Managed macOS passed 650 browser
+cases with five original skips. Managed Linux and both strict architecture
+browser runs still have deadline failures.
+[Matching-year source evidence](upgrade-2026-progress.md#november-20-matching-year-guided-originals).
+
+Application `ef0ebdc2` accepts source-supported year and Box 1a text from the
+official fillable or flattened December 2026 Form 1099-NEC Copy B. It retains
+manual confirmation of the source and independent business facts. `7bf20915`
+also preserves Ohio reciprocal-wage confirmation when focus leaves an
+unchanged monetary field. The targeted Chromium run passed 34 cases. The
+successor passed 1,038 focused tests including the corrected literal spec
+test reference. Both exact local suites passed 29,623 tests at 88.46% branch
+coverage, and all eight static checks passed. The matching 2026 guided
+interview still rejected the recognized 2026 original under the global 2025
+upload guard. The matching-year successor above corrects that behavior.
+[Source and checks](upgrade-2026-progress.md#november-20-nec-copy-b-calendar-year-and-ohio-confirmation).
+
 Application `8486eca8` reads a separated Box 1a amount on the December
 2026 Form 1099-NEC Copy B when the printed layout and the field position
 agree. The rendered IRS page with a synthetic amount returned exactly
@@ -132,8 +156,8 @@ AMD64 runner.
 | Taxpayer facts and federal law | The latest [adult student TIN reconciliation](upgrade-2026-progress.md#november-20-form-8863-adult-student-tin-reconciliation), [claimant DOB](upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date) and [K-1 source-year](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals) fixes passed. Qualified independent tax interpretations and expected outputs remain open. |
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC, Form 7206 and Form 8829 blanks are pinned as disabled candidates. The current final Form 1040, annual instructions and Tax/EIC tables still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
-| Hosted recovery | Current `f1e6f6a8` passed all 12 protected Preview workspace lifecycle checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted billing qualification remains open. [Current Preview](upgrade-2026-progress.md#november-20-printed-1099-nec-copy-b) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Current strict AMD64 passed Compose recovery, with 637 browser passes, eleven Ohio deadlines, two saved-PDF inspection timeouts and five original skips. Current strict ARM64 passed image smoke, Compose recovery and cleanup, with 640 browser passes, ten Ohio deadlines and five original skips. The managed macOS and Linux suites each passed 650 browser cases. Strict Linux runtime qualification remains open. [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726/job/136437051827) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129/job/136455005435). |
+| Hosted recovery | Current `b948a284` passed all 12 protected Preview workspace lifecycle checks and four read-only billing preflight checks. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source Stripe Sandbox checkout and exact credit qualification remain open. [Current Preview](upgrade-2026-progress.md#november-20-matching-year-guided-originals) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
+| Self-host recovery | Exact `b948a284` AMD64 and ARM64 passed image smoke and Compose recovery. Strict AMD64 browser results were 637 passed, eleven Ohio deadlines, two RRTA saved-PDF inspection timeouts and five original skips. Strict ARM64 results were 641 passed, nine Ohio deadlines and five original skips. Managed Linux had the same two RRTA inspection timeouts, with 648 passes and five original skips. Managed macOS had 650 passes and five original skips. Linux browser qualification remains open. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44800512505/job/136511112829) · [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44800512505/job/136511112891) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44800584551/job/136527432514). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 Read `activeContinuation.nov20ScheduleEicExactVerification`,

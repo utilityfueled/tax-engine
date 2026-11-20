@@ -1,5 +1,90 @@
 {
   "activeContinuation": {
+    "nov20MatchingYearGuidedOriginals": {
+      "source": "b948a284",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f1099nec.pdf",
+      "focusedTestsPassed": 1101,
+      "timingContractTestsPassed": 35,
+      "independentEngineeringReview": "Passed after resolving stale guided draft year, authoritative local read before write, and same-batch original conflict.",
+      "chromiumUploadAndReopenPassed": 3,
+      "chromiumEvidence": ".local/upgrade-evidence/nov20-guided-copy-b-admission/actual-widget-browser.jsonl",
+      "exactEvidence": ".local/upgrade-evidence/nov20-guided-copy-b-b948a284",
+      "exactLocalUnitTestsPassed": 29634,
+      "exactLocalCoverageTestsPassed": 29634,
+      "exactLocalBranchCoveragePercent": "88.24",
+      "exactLocalStaticChecksPassed": 8,
+      "exactSpecReferencesPassed": 9724,
+      "exactGitHubCIJobsPassed": 6,
+      "exactGitHubCIRun": 44800512677,
+      "exactDockerRunPassed": 44800512546,
+      "exactProtectedTestPreview": {
+        "workspaceLifecycleChecksPassed": 12,
+        "readOnlyBillingPreflightChecksPassed": 4,
+        "stripeSandboxQualificationPassed": false
+      },
+      "exactManagedMacBrowser": { "passed": 650, "failed": 0, "skipped": 5 },
+      "exactManagedLinuxBrowser": {
+        "job": 136511112829,
+        "passed": 648,
+        "rrtaSavedPdfTimeouts": 2,
+        "skipped": 5
+      },
+      "exactStrictAmd64": {
+        "job": 136511112891,
+        "imageSmokeAndComposeRecoveryPassed": true,
+        "browserPassed": 637,
+        "ohioDeadlines": 11,
+        "rrtaSavedPdfTimeouts": 2,
+        "browserSkipped": 5
+      },
+      "exactStrictArm64": {
+        "job": 136527432514,
+        "imageSmokeComposeRecoveryAndCleanupPassed": true,
+        "browserPassed": 641,
+        "ohioDeadlines": 9,
+        "browserSkipped": 5
+      },
+      "filingAndCalculationGatesChanged": false
+    },
+    "nov20Form2106Candidate": {
+      "source": "e0b0ab70",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f2106.pdf",
+      "archiveSource": "https://www.irs.gov/pub/irs-prior/f2106--2026.pdf",
+      "sha256": "794f7d7f84fd3a878e18751622949403d8499474c807fb05b3ee2e0bd811bc1b",
+      "printedRevision": "Created 8/18/26",
+      "postedDate": "2026-11-20",
+      "currentInstructionsTaxYear": 2025,
+      "pages": 2,
+      "widgets": 87,
+      "focusedPassed": 44,
+      "newSpecReferencesPassed": 3,
+      "browserAuditFiles": 2023,
+      "filingQualified": false,
+      "exportsEnabled": false
+    },
+    "nov20NecCopyBCalendarAndWidgets": {
+      "flattenedCalendarAndOhioSource": "7bf20915",
+      "fillableCopyBAndSpecRefSource": "ef0ebdc2",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f1099nec.pdf",
+      "initialBrowserPassed": 34,
+      "initialStaticChecksPassed": 8,
+      "initialFullSuiteFinding": "One parameterized test reference lacked its literal suffix. Corrected in ef0ebdc2 and rechecked with the complete literal spec-reference test.",
+      "successorFocusedPassed": 1038,
+      "successorSpecReferencesPassed": 9720,
+      "successorBrowserTimingContractsPassed": 35,
+      "officialProbe": "Independent engineering replay used the pinned IRS Copy B with synthetic fillable and flattened values. Confirmed exact whole-dollar and cent amounts, explicit zero, omitted fields and manual handling of conflicting evidence.",
+      "exactBrowserIntakeFinding": "A filled official 2026 original was correctly recognized. The 2025-era upload guard also rejected it in the explicitly selected 2026 guided facts-only interview. Reopen verification awaits the guided storage correction.",
+      "exactVerification": ".local/upgrade-evidence/nov20-nec-widgets-ef0ebdc2",
+      "exactLocalUnitTestsPassed": 29623,
+      "exactLocalCoverageTestsPassed": 29623,
+      "exactLocalBranchCoveragePercent": "88.46",
+      "exactLocalStaticChecksPassed": 8,
+      "exactManagedMacBrowserPassed": 650,
+      "exactManagedMacBrowserSkipped": 5,
+      "exactManagedMacBrowserFailed": 0,
+      "exactRemoteBrowserAndNativeChecks": "in progress",
+      "guardedPushes": "main; exact project and Preview-only automatic-build guard verified before both pushes"
+    },
     "nov20PrintedNecCopyBBox1a": {
       "source": "8486eca8",
       "browserSourceAudit": "3663cf3e",
