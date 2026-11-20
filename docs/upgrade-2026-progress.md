@@ -13,6 +13,7 @@ all 9,668 specification references, the contracts check, the engine build
 and browser source fingerprint verification. The 2026 test uses candidate
 year constants for the payment calculation while the public return stays gated.
 [IRS Form 1040 instructions, line 26](https://www.irs.gov/instructions/i1040gi).
+[Independent reviewer case](upgrade-2026-human-tax-review-packet.md#federal-overpayment-applied-to-the-next-return).
 
 The exact application passed 29,508 tests in 2,156 files in each of the normal
 and coverage runs. Branch coverage measured 88.35% against the 85% gate. Both
@@ -48,7 +49,8 @@ together. Older amount-only advanced entries retain their calculation and carry
 no source confirmation. Guided drafts retain their entered amounts and request
 the missing worksheet details before calculation.
 [IRS Schedule D instructions](https://www.irs.gov/instructions/i1040sd) ·
-[IRS Publication 550, Joint and separate returns](https://www.irs.gov/publications/p550).
+[IRS Publication 550, Joint and separate returns](https://www.irs.gov/publications/p550) ·
+[Independent reviewer cases](upgrade-2026-human-tax-review-packet.md#ownership-when-filing-status-changes).
 
 The two new spec-linked tests failed before implementation. The corrected
 guided/engine subset passed 2,041 tests in 260 files. The tracked application
@@ -120,6 +122,30 @@ same revision. The different outcomes leave the timing cause open.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44670357280) ·
 [Regular managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44670357157/job/136069578010) ·
 [Opt-in managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44671161158/job/136072201757).
+
+Both managed jobs used GitHub runner 2.338.2, Ubuntu image 20261111.196.1 and
+`pypdf` 6.10.0. Those version fields do not distinguish the results. In the
+regular strict AMD64 job, 636 cases passed, 14 failed, and five hosted-only
+cases were skipped. Container smoke, Compose upgrade/recovery/rollback and
+independent image-store import passed. Full runtime qualification remains open.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44670357157/job/136069577735).
+
+### Original batch timing on Linux
+
+The opt-in run at the same application revision passed 642 strict browser cases,
+failed eight and retained five planned skips. Both diagnostic batches completed
+with cleanup. Batch 6 sampled ten cases and recorded nine other failures and one
+timeout. Batch 7 sampled 15 cases and recorded seven passes, five other failures
+and three timeouts. Each batch had three missing profiles.
+[Batch 6 artifact](https://github.com/utilityfueled/tax-engine/actions/runs/44671161158/artifacts/14602488653) ·
+[Batch 7 artifact](https://github.com/utilityfueled/tax-engine/actions/runs/44671161158/artifacts/14603220530).
+
+Four Batch 7 phase records had matching source, image and record-hash receipts.
+Entering the original Ohio resident-credit records took 15.22 to 18.15 seconds
+of wall time across those observations. The inspected browser main thread used
+7.56 to 8.23 seconds during that phase. The difference ranged from 6.99 to 10.10
+seconds. The measurement covers this entry phase and one thread. The source of
+the difference and the full-suite deadlines remain unresolved.
 
 ## November 19 full application checks and ARM64 recovery
 

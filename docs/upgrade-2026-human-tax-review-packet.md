@@ -198,6 +198,30 @@ below are regression expectations for review. Reviewer approval is pending.
 | $16,350 | $500 | $2,500 | $3,000 | $0 | $2,400 |
 | $17,750 | $0 | $2,000 | $2,000 | $0 | $0 |
 
+### Ownership when filing status changes
+
+Use the known unused loss amounts from the preceding return. Confirm the
+proper allocation by character, the records that establish each owner's portion,
+and the evidence needed to carry a whole loss from a joint return filed by the
+same spouses. These are engineering expectations awaiting independent review.
+[Schedule D instructions](https://www.irs.gov/instructions/i1040sd) ·
+[Publication 550, Joint and separate returns](https://www.irs.gov/publications/p550).
+
+| Preceding return records | Current return | Expected amount entering Schedule D |
+| --- | --- | --- |
+| Separate 2024 worksheets show short-term losses of $250.23 and $749.77, with zero long-term loss | Joint 2025 return by both owners | $1,000 short-term loss |
+| Joint 2025 worksheet shows short-term losses of $250.23 attributable to the taxpayer and $749.77 attributable to the other spouse | Taxpayer's separate 2026 return | $250.23 short-term loss |
+
+### Federal overpayment applied to the next return
+
+Verify Form 1040 line 26 using a $125.37 estimated payment and a $7.09 overpayment
+applied from the immediately preceding return. The expected unrounded total
+is $132.46. An explicit zero applied amount leaves $125.37. Confirm the paper
+rounding point and the original evidence to use when an account correction
+changes the applied amount. The engine holds a negative reported overpayment
+and an entry tied to the wrong preceding year.
+[Form 1040 instructions, line 26](https://www.irs.gov/instructions/i1040gi).
+
 ### Review scope
 
 For each accepted method, prepare the expected calculation before using the

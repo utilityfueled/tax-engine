@@ -145,6 +145,7 @@
     "nov20AppliedFederalOverpayment": {
       "source": "f231820a25a6ab9178c9047131ee76690d4ee25d",
       "basis": "https://www.irs.gov/instructions/i1040gi",
+      "humanReviewCase": "docs/upgrade-2026-human-tax-review-packet.md#federal-overpayment-applied-to-the-next-return",
       "preFixFailure": "Negative prior overpayment accepted and deducted from current estimated payments.",
       "verification": {"focused": 30, "broader": 1689, "files": 216, "rootTypecheck": "passed", "affectedLintErrors": 0, "specReferences": 9668, "inventory": "passed", "engineBuild": "passed", "browserFingerprints": "matched"},
       "fullLocalChecks": {"unit": 29508, "coverageTests": 29508, "testFiles": 2156, "branchCoveragePercent": 88.35, "branchGatePercent": 85, "postgres": "16.16", "databasesStopped": 2, "lintErrors": 0, "existingLintWarnings": 12111, "webTypecheck": "passed", "webBuild": "passed"},
@@ -157,6 +158,7 @@
       "source": "21446bb83f9022bc676f78d7b00efc1f1475e78d",
       "browserTestCorrection": "4cda6ee8dc2035bb22e3a2c373b2af70fcd314bc",
       "basis": ["https://www.irs.gov/instructions/i1040sd", "https://www.irs.gov/publications/p550"],
+      "humanReviewCase": "docs/upgrade-2026-human-tax-review-packet.md#ownership-when-filing-status-changes",
       "verification": {"guidedAndEngine": 2041, "unit": 29507, "unitFiles": 2156, "postgres": "16.16", "postgresStopped": true, "specReferences": 9668, "affectedBrowserPassed": 6, "affectedBrowserSkipped": 0},
       "firstBrowserRun": {"passed": 4, "failed": 2, "cause": "Selector missed the reopened owner combobox; saved data was present in both snapshots."},
       "githubApplicationRuns": {"CI": 44672969443, "Web": 44672969321, "DockerPassed": 44672969350},
@@ -176,7 +178,15 @@
       "savedPdf": { "source": "68cc8815", "revision": 2025, "strict": true, "matchingAuditAndCarryforward": true, "receiptSha256": "ab29e69da1a35b90ab3c7287d3b3f6b08b76a0173741dd59053fb902e651f420" },
       "formRefresh": "The IRS final download is 2025. Its separate 2026 Schedule D is draft.",
       "githubRuns": { "ci": 44670357280, "ciPassed": true, "web": 44670357157, "managedJob": 136069578010, "managedPassed": 648, "managedRrtaPdfTimeouts": 2, "managedPlannedSkips": 5, "docker": 44670357232, "dockerPassed": true },
+      "strictAmd64": { "job": 136069577735, "passed": 636, "failed": 14, "plannedHostedSkips": 5, "containerSmoke": "passed", "composeRecovery": "passed", "independentImageImport": "passed" },
       "linuxBrowserPhaseDiagnostic": { "run": 44671161158, "source": "68cc8815", "collectionCases": 655, "originalBatchCases": [10, 15], "frozenSourceAndCollectionMatched": true, "managedJob": 136072201757, "managedPassed": 650, "managedPlannedSkips": 5, "originalFailureSuperseded": false },
+      "linuxActualTiming": {
+        "strictBaseline": { "passed": 642, "failed": 8, "plannedHostedSkips": 5 },
+        "batches": [{ "number": 6, "artifact": 14602488653, "passed": 0, "timedOut": 1, "otherFailures": 9, "missingProfiles": 3 }, { "number": 7, "artifact": 14603220530, "passed": 7, "timedOut": 3, "otherFailures": 5, "missingProfiles": 3 }],
+        "phase": { "boundRecords": 4, "wallSecondsRange": [15.22, 18.15], "inspectedThreadSecondsRange": [7.56, 8.23], "differenceSecondsRange": [6.99, 10.10], "scope": "Original Ohio resident-credit entry phase of the inspected browser main thread" },
+        "cleanupPassed": true,
+        "runtimeQualified": false
+      },
       "qualifiedHumanReview": "pending",
       "evidence": ".local/upgrade-evidence/nov20-capital-loss-below-cap"
     },
