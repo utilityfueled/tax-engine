@@ -1,0 +1,46 @@
+form: "Schedule EIC final 2026 physical candidate"
+fullName: "Earned Income Credit Qualifying Child Information final annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf"
+revision: "Created 5/28/26, IRS directory posted 11/19/2026 21:13:49"
+retrievedAt: "2026-11-20T12:47:43Z"
+notes: |
+  The regular IRS PDF is the final 2026 Schedule EIC. The printed
+  schedule refers to Form 1040, line 27a. The 2026 parent return, its
+  annual instructions and Tax/EIC tables still require final sources.
+  All values and selections in the specimen are synthetic placement
+  diagnostics. Financial and packet qualification remain open.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual blank"
+    formula: "Require SHA-256 c46a19f4dc50bfaa6d676579a529602653a4035dabdfeb6112a2a32ce4de631c, 107429 bytes, the final 2026 PDF title, and two 611.976 by 791.968 point pages."
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "header-and-lines-1-through-6"
+    description: "Bind the taxpayer header and each of the three printed child columns"
+    formula: >-
+      Locate 38 distinct single-widget fields on page one. The two header
+      fields and lines 1, 2, 3, 5 and 6 use 26 text widgets, including four
+      individual year digits per child. Lines 4a and 4b use twelve separate
+      checkboxes. Page two contains printed instructions and zero widgets.
+      Pin each field's name, page, type, rectangle and original appearance states.
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::locates each text box and checkbox in its printed child column"
+  - line: "printed-references"
+    description: "Record the printed attachment and income credit reference"
+    formula: "Attachment Sequence No. 43 accompanies Form 1040 or Form 1040-SR. The schedule points to the Form 1040 line 27a instructions for the credit."
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::records the printed attachment and credit reference"
+  - line: "line-4-checkboxes"
+    description: "Retain distinct Yes and No widgets for both questions in all columns"
+    formula: >-
+      In each pair the left Yes widget uses /1, the right No widget uses /2,
+      and each uses /Off when unselected. Alternate the two choices across two
+      specimens and verify logical field value, widget state and selected and
+      unselected appearance streams after saving and reopening.
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::reopens text and both checkbox choices with their native appearances"
+  - line: "saved-text"
+    description: "Confirm canonical placement and appearances across all child columns"
+    formula: "Save a review-marked specimen with distinct text values by child and row. Reopen and verify the canonical text and nonempty widget appearances."
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::reopens text and both checkbox choices with their native appearances"
+  - line: "closed-exports"
+    description: "Keep the candidate outside public review and filing"
+    formula: "Retain the admitted 2025 blank and its review mapping. The 2026 candidate is physically verified and has no review or filing registration."
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::keeps the physical candidate outside public exports"

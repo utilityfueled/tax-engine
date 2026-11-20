@@ -1,5 +1,37 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Ohio and Pennsylvania browser test queries
+
+`3b279e35` removes a second exact label lookup from the tested Ohio
+controls. Ten real Chromium checks preserved strict behavior on supported
+templates, including duplicate labels, duplicate controls, invalid kinds
+and a replacement between fill and Tab. The Pennsylvania test removes
+five duplicate reads while retaining a fresh read at each checkpoint.
+All 49 browser actions and 54 assertions retain their order.
+
+All 16 actual Ohio and Pennsylvania cases passed in the same scoped
+macOS run at 30 seconds per case, with two workers and zero retries.
+Both exact RRTA cases also passed an unchanged focused macOS run. The
+full Linux browser outcomes below still apply.
+
+## November 20 final Schedule EIC physical candidate
+
+Pinned the final two-page 2026 Schedule EIC. An independent download
+matched the original SHA-256. An independent PDF reader verified all 38
+field names and rectangles on page one, including 26 text widgets and
+the twelve Yes and No widgets for lines 4a and 4b. Both synthetic
+specimens reopened with canonical values and native appearances. The
+rendered review notices preserved the printed footer and second-page
+instructions.
+
+Eighty-seven scoped PDF tests, twelve Schedule EIC spec references,
+type checking, lint and regenerated inventory passed. The candidate
+has no export registration. Qualification still requires the final
+parent instructions and Tax/EIC tables, expected eligibility outcomes,
+and packet review.
+[Final source](https://www.irs.gov/pub/irs-pdf/f1040sei.pdf) ·
+[Annual source status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-final-schedule-eic).
+
 ## November 20 exact 29988f04 browser results
 
 | Runtime | Passed | Failed | Skipped | Failure |

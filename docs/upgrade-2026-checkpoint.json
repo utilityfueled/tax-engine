@@ -59,6 +59,20 @@
       },
       "exactCiFirstAttempt": { "jobsPassed": 5, "jobsFailed": 1, "unitTestsPassed": 29548, "paMixedResidencyPdfDeadlineMs": 5000 },
       "paMixedResidencyPdfInspectionTestCommit": "3a1f8156",
+      "nativeBrowserQueryTestCommit": "3b279e35",
+      "nativeBrowserQueryLocalCasesPassed": 16,
+      "originalRrtaFocusedMacCasesPassed": 2,
+      "finalScheduleEicCandidate": {
+        "sourceUrl": "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf",
+        "sourceSha256": "c46a19f4dc50bfaa6d676579a529602653a4035dabdfeb6112a2a32ce4de631c",
+        "textWidgets": 26,
+        "checkboxWidgets": 12,
+        "independentPhysicalReviewPassed": true,
+        "scopedTestsPassed": 87,
+        "scheduleEicSpecReferencesPassed": 12,
+        "exportEnabled": false,
+        "privateEvidence": ".local/upgrade-evidence/nov20-final-schedule-eic"
+      },
       "privateEvidence": ".local/upgrade-evidence/nov20-final-8829-7206",
       "formCandidateEvidence": "docs/upgrade-2026-progress.md#november-20-final-form-7206-and-form-8829-physical-candidates"
     },

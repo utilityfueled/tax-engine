@@ -1508,6 +1508,7 @@
     "src/pdf/mappings/2026/schedule-c-mileage-projection.ts": "1e4b9dcf95a0ea369030846ab545997d517cb2b2635bfc036f65ceb766909cd0",
     "src/pdf/mappings/2026/schedule-c-source-projection.ts": "c5ccff23fd168bb97bcae08932de45ed098db0d35c91457583785b0c0ec7dea7",
     "src/pdf/mappings/2026/schedule-c-wagering-projection.ts": "27b22eb2a73c691daea60e2b7ddd9dd86c875375c00a48237050f924cd5db818",
+    "src/pdf/mappings/2026/schedule-eic-candidate.ts": "3b8879a8d9a54267320daed5203c90c6fa446ee157d6e7718a7a0759bb0e28ac",
     "src/pdf/mappings/2026/schedule-r-candidate.ts": "79f789aececafe266874b83134ac2690ca5fe9884f538341a83da14a0b891810",
     "src/pdf/mappings/2026/schedule-se-candidate.ts": "7b6d8601c781b3352d259a6ebbc9ff3c203ecbadff27324b16b0ef1a7a82b61a",
     "src/pdf/nol-filing-unit-review-context.ts": "3db492f5defba69cc1342f476ddfa9e6f619d044b7286b289e50e0cc3634375b",

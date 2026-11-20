@@ -1,6 +1,7 @@
 # Current 2026 upgrade status
 
-The latest application revision is `29988f04` on `main`. The guided
+The latest application revision with a verified protected Preview is
+`29988f04` on `main`. The guided
 Pennsylvania preview avoids a duplicate calculation, and the progress rail
 recenters when navigation changes. Two Pennsylvania and six mobile/Ohio
 browser cases passed under the original 30-second limits. All six exact
@@ -58,7 +59,7 @@ AMD64 runner.
 | Package | Current evidence and remaining criterion |
 | --- | --- |
 | Taxpayer facts and federal law | The latest [claimant DOB](upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date) and [K-1 source-year](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals) fixes passed. Qualified independent tax interpretations and expected outputs remain open. |
-| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final 7206 and 8829 blanks are pinned as disabled candidates. Applicable final 2026 annual materials and qualification of their maps, scenarios and federal/state transfers are still required. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
+| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC, Form 7206 and Form 8829 blanks are pinned as disabled candidates. The current final Form 1040, annual instructions and Tax/EIC tables still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | `cf43e9ea` and `29988f04` passed all 12 protected Preview education workspace checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted recovery and billing qualification remain open. [Current Preview](upgrade-2026-progress.md#november-20-exact-29988f04-local-and-protected-preview) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
 | Self-host recovery | Exact `29988f04` AMD64 and ARM64 passed image smoke, Compose recovery and cleanup. Full strict browser deadlines remain open on both architectures. Focused Ohio comparisons previously passed in both runtime modes on Linux. [Runtime evidence](upgrade-2026-progress.md#november-20-exact-29988f04-browser-results) · [Earlier comparison](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |

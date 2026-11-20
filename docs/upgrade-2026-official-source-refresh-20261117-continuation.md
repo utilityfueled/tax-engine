@@ -63,3 +63,15 @@ qualification. [Form 7206](https://www.irs.gov/pub/irs-pdf/f7206.pdf) ·
 [Form 8829](https://www.irs.gov/pub/irs-pdf/f8829.pdf) ·
 [Regular Form 8829 instructions](https://www.irs.gov/pub/irs-pdf/i8829.pdf) ·
 [Draft Form 8829 instructions](https://www.irs.gov/pub/irs-dft/i8829--dft.pdf).
+
+## November 20 final Schedule EIC
+
+The IRS posted the final 2026 Schedule EIC on November 19. The two-page
+schedule refers to Form 1040 line 27a and has 38 widgets on its first page.
+The current final Form 1040, annual instructions and Tax/EIC tables still
+print 2025. The final Schedule EIC is pinned as a disabled candidate.
+[IRS PDF directory](https://www.irs.gov/downloads/irs-pdf?%3Border=Description&page=0) ·
+[Schedule EIC](https://www.irs.gov/pub/irs-pdf/f1040sei.pdf) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
+[Tax/EIC tables](https://www.irs.gov/pub/irs-pdf/i1040tt.pdf).
