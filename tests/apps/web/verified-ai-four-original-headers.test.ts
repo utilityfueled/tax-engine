@@ -56,9 +56,12 @@ it('denies known RRB calendar contradictions before provider or accounting',asyn
 });
 it('denies only future estate trust originals while preserving fiscal compatibility',async()=>{
  for(const year of [2026,2027])for(const [income,withheld]of [['1000','0'],['0','1000'],['0','0']]){
-  const x=packet('trust',year,income,withheld),before=structuredClone(x),result=calculateFederalTax(TaxYearInputSchema.parse(x));
+  const x=packet('trust',year,income,withheld),before=structuredClone(x);
+  const result=calculateFederalTax(TaxYearInputSchema.parse(packet('trust',2025,income,withheld)));
   expect(result.agi.toFixed()).toBe(income==='0'?'85000':'86000');expect(result.totalWithholding.toFixed()).toBe(withheld==='0'?'12750':'13750');
-  expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow('future-year K1 original');await post(x,400);expect(x).toEqual(before);
+  const expected=`Schedule K-1 (Form 1041) source year ${year} is after the 2025 return year`;
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+  expect(()=>calculateVerifiedAiAudit(scope,x)).toThrow(expected);await post(x,400);expect(x).toEqual(before);
  }
  for(const year of [2024,2025,undefined]){const x=packet('trust',year);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).agi.toFixed()).toBe('86000');await post(x,200);}
 });
@@ -98,7 +101,10 @@ it('denies duplicate conflicting originals in either order',async()=>{
    const assertPaymentYearHold=()=>expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(`${form} source year 2026 must match the 2025 return`);
    assertPaymentYearHold();await post(x,400);expect(x).toEqual(before);assertPaymentYearHold();
   }else{
-   const result=calculateFederalTax(TaxYearInputSchema.parse(x));await post(x,400);expect(x).toEqual(before);expect(calculateFederalTax(TaxYearInputSchema.parse(x)).totalTax.toFixed()).toBe(result.totalTax.toFixed());
+   const expected='Schedule K-1 (Form 1041) source year 2026 is after the 2025 return year';
+   expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
+   await post(x,400);expect(x).toEqual(before);
+   expect(()=>calculateFederalTax(TaxYearInputSchema.parse(x))).toThrow(expected);
   }
  }
 });
