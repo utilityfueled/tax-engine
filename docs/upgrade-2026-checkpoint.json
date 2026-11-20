@@ -29,7 +29,12 @@
       "currentDockerWorkflow": 44779201537,
       "protectedPreviewSource": "f1e6f6a8",
       "protectedPreviewWorkspaceChecksPassed": 12,
-      "protectedPreviewEvidence": ".local/upgrade-evidence/nov20-preview-nec-current"
+      "protectedPreviewEvidence": ".local/upgrade-evidence/nov20-preview-nec-current",
+      "managedMacBrowserPassFailureSkip": [650, 0, 5],
+      "managedMacBrowserDeadlineMs": 30000,
+      "managedMacBrowserSource": "3663cf3e",
+      "currentNativeArmSource": "bfb54128",
+      "currentNativeArmWorkflow": 44781102129
     },
     "nov20StrictArm64AndOhioComparison": {
       "nativeSource": "a74dda05",

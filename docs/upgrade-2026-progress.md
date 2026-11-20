@@ -43,6 +43,16 @@ workspace checks across two revisions, including save, reopen,
 deletion, fresh absence and both sign-outs. This run covers functional
 workspace persistence. Hosted billing qualification remains open.
 
+The complete managed macOS browser run passed 650 cases with five
+original skips, two workers, zero retries, and the existing 30-second
+deadlines. The browser input archive included the `3663cf3e` request
+manifest. The later diagnostic-only digest passed the separate
+35-test timing preflight. The current Web run advanced through that
+preflight, and the exact current native ARM64 rehearsal was queued
+behind the earlier rehearsal.
+[Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726) ·
+[Current native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129).
+
 The prior application `8201d316` now has all six exact GitHub CI jobs
 passed. Its exact strict ARM64 run advanced to browser journeys.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44765989343) ·
