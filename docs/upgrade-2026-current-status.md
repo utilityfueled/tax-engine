@@ -10,7 +10,8 @@ received during Ohio residency to IT NRC line 12.
 Standalone Schedules B and C now hold explicit wrong-year Forms 1099-INT,
 1099-DIV and 1099-NEC. Standalone Schedule E checks explicit Form 1099-MISC royalty
 years against a known return year. Schedule 1 applies the calendar-year rule to its wage,
-interest, dividend and miscellaneous income sources. Matching and legacy
+interest, dividend, miscellaneous income, Social Security and railroad
+retirement benefit sources. Matching and legacy
 undated records retain their exact amounts. The fixes were pushed to `main`
 after focused verification. [Statement-year evidence](upgrade-2026-progress.md#november-19-standalone-statement-calendar-years) ·
 [Schedule E evidence](upgrade-2026-progress.md#november-19-schedule-e-royalty-statement-years).

@@ -149,7 +149,7 @@
       "specReferences": 50,
       "browserHarnessControls": 37,
       "builtLoopbackDesktopAndMobile": "Both passed receipt entry, source confirmation, autosave, reopen and progression",
-      "verifiedCalculation": { "ITNRCLine12": "600", "ITNRCLine17": "40600", "ITNRCLine18": "0.5980", "residentCredit": "1406", "IT1040Line10": "945" },
+      "verifiedCalculation": { "ITNRCLine12": "600", "ITNRCLine17": "40600", "ITNRCLine19": "0.5980", "residentCredit": "1406", "IT1040Line10": "945" },
       "evidence": ".local/upgrade-evidence/nov20-ohio-multiple-unemployment",
       "held": "Ohio 2026 public qualification, final forms and independent qualified tax review"
     },
@@ -159,6 +159,9 @@
       "scheduleB": { "source": "8b828d7e7ab54852fb66851450681c69cfc7c913", "focusedPasses": 442, "specReferences": 13 },
       "schedule1": { "source": "aac55bcc029abe0ac37dd01fc46e5dcba7696669", "focusedPasses": 387, "specReferences": 29 },
       "scheduleE": { "source": "27696ad43dcf3fe67f6b1c4c4a5db03d448737e9", "focusedPasses": 228, "specReferences": 46, "previousFailureReproduced": true, "scope": "Standalone raw royalty statements with a known return year" },
+      "benefitSchedule1": { "source": "52bfb2ffbe428de185911b97a711f7118206801a", "focusedPasses": 185, "selectedSpecReferences": 57, "previousFailureReproduced": true, "modifiedAgi": "93500", "studentLoanInterest": "1083" },
+      "schedulesAndOhioGithubRuns": { "source": "b4698497", "ci": 44661609061, "web": 44661609297, "docker": 44661608627, "record": ".local/upgrade-evidence/nov20-schedule-e-statement-year" },
+      "exactStatementRuns": { "source": "e07c84c3", "ci": 44659038777, "web": 44659038674, "docker": 44659038708, "arm64": 44659221115 },
       "browserAuditBinding": { "source": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce", "sourceAuditPassed": true, "nodeControlsPassed": 37, "vitestControlsPassed": 148, "focusedManagedBrowserPasses": 9, "managedServerClosed": true, "githubDockerPassed": true },
       "githubRuns": { "ci": 44657864503, "docker": 44657864542, "web": 44657864570 },
       "previousGithubRuns": {

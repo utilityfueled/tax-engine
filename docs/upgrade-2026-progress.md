@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 19 Schedule 1 benefit statement years
+
+Standalone Schedule 1 now checks the actual source years of Forms SSA-1099
+and RRB-1099 before they enter modified AGI. A matching $6,000 SSA statement
+and a legacy undated $4,000 railroad statement produced $93,500 of modified
+AGI and a $1,083 student loan interest deduction. Commit `52bfb2ff` passed
+185 focused tests, all 57 references reported for the selected Schedule 1
+specs, and the root type check. The failing test reproduced the missing
+check before implementation. The federal readiness gate stays closed.
+[IRS Publication 915](https://www.irs.gov/publications/p915) ·
+[IRS Publication 970](https://www.irs.gov/publications/p970).
+
 ## November 19 Schedule E royalty statement years
 
 Standalone Schedule E now holds a nonzero royalty amount from Form
@@ -41,7 +53,7 @@ the new fields in the built app, entered both receipts by keyboard and date
 controls, confirmed the original, reopened the saved values, and continued
 the interview. In the calculation fixture, the $400 June 30 payment was
 outside Ohio residency and the $600 July 1 payment was inside. IT NRC line 12
-was $600, line 17 was $40,600, line 18 was 0.5980, the Schedule of Credits
+was $600, line 17 was $40,600, line 19 was 0.5980, the Schedule of Credits
 amount was $1,406, and IT 1040 line 10 was $945. The full-year nonresident
 control had zero on line 12. Negative controls cover stale originals,
 duplicate references, missing confirmation, dates and payment totals.
