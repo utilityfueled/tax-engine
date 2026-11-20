@@ -147,7 +147,10 @@
       "basis": "https://www.irs.gov/instructions/i1040gi",
       "preFixFailure": "Negative prior overpayment accepted and deducted from current estimated payments.",
       "verification": {"focused": 30, "broader": 1689, "files": 216, "rootTypecheck": "passed", "affectedLintErrors": 0, "specReferences": 9668, "inventory": "passed", "engineBuild": "passed", "browserFingerprints": "matched"},
-      "githubApplicationRuns": {"CI": 44673842123, "Web": 44673842082, "Docker": 44673842085},
+      "fullLocalChecks": {"unit": 29508, "coverageTests": 29508, "testFiles": 2156, "branchCoveragePercent": 88.35, "branchGatePercent": 85, "postgres": "16.16", "databasesStopped": 2, "lintErrors": 0, "existingLintWarnings": 12111, "webTypecheck": "passed", "webBuild": "passed"},
+      "fullLocalManagedBrowser": {"passes": 650, "failures": 0, "plannedHostedSkips": 5, "windows": 8, "workers": 2, "retries": 0, "deadlineMs": 30000, "serverClosed": true},
+      "officialSourceRecheck": {"indexedValuesMatched": ["standard deduction", "child tax credit and refundable limit", "QBI thresholds", "Social Security wage base"], "currentForm1040": 2025, "form1040For2026": "draft"},
+      "githubApplicationRuns": {"CI": 44673842123, "Web": 44673842082, "DockerPassed": 44673842085},
       "progress": "docs/upgrade-2026-progress.md#november-19-applied-federal-overpayment-credits"
     },
     "nov20CapitalLossWorksheetOwnership": {
@@ -172,8 +175,8 @@
       "independentWorksheetCalculation": { "cases": 4, "mixedLoss2025Line21": "-3000", "mixedLoss2026LongTermCarry": "-2400", "receiptSha256": "299b8d4be0aac7292791ec1327372e45dfe27c0a5e2b9e5234d63c034ef0f911" },
       "savedPdf": { "source": "68cc8815", "revision": 2025, "strict": true, "matchingAuditAndCarryforward": true, "receiptSha256": "ab29e69da1a35b90ab3c7287d3b3f6b08b76a0173741dd59053fb902e651f420" },
       "formRefresh": "The IRS final download is 2025. Its separate 2026 Schedule D is draft.",
-      "githubRuns": { "ci": 44670357280, "web": 44670357157, "docker": 44670357232, "dockerPassed": true },
-      "linuxBrowserPhaseDiagnostic": { "run": 44671161158, "source": "68cc8815", "collectionCases": 655, "originalBatchCases": [10, 15], "frozenSourceAndCollectionMatched": true, "originalFailureSuperseded": false },
+      "githubRuns": { "ci": 44670357280, "ciPassed": true, "web": 44670357157, "managedJob": 136069578010, "managedPassed": 648, "managedRrtaPdfTimeouts": 2, "managedPlannedSkips": 5, "docker": 44670357232, "dockerPassed": true },
+      "linuxBrowserPhaseDiagnostic": { "run": 44671161158, "source": "68cc8815", "collectionCases": 655, "originalBatchCases": [10, 15], "frozenSourceAndCollectionMatched": true, "managedJob": 136072201757, "managedPassed": 650, "managedPlannedSkips": 5, "originalFailureSuperseded": false },
       "qualifiedHumanReview": "pending",
       "evidence": ".local/upgrade-evidence/nov20-capital-loss-below-cap"
     },

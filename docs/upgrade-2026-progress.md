@@ -14,6 +14,29 @@ and browser source fingerprint verification. The 2026 test uses candidate
 year constants for the payment calculation while the public return stays gated.
 [IRS Form 1040 instructions, line 26](https://www.irs.gov/instructions/i1040gi).
 
+The exact application passed 29,508 tests in 2,156 files in each of the normal
+and coverage runs. Branch coverage measured 88.35% against the 85% gate. Both
+disposable PostgreSQL 16.16 instances shut down normally. The complete lint run
+reported zero errors and the same 12,111 warnings as `68cc8815`. The Docker
+build passed on the exact application revision.
+[Exact Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44673842085).
+
+The exact managed Chromium run completed all eight windows. It passed 650
+cases, retained five planned hosted-only skips, and recorded zero failures.
+Both RRTA review cases and the new Schedule D cases passed. The run used two
+workers, zero retries and the original deadlines. The local server shut down
+normally.
+
+The separate web type check and application build also passed. A fresh check
+against official sources matched the indexed 2026 standard deductions, child
+tax credit and refundable limit, QBI thresholds and Social Security wage base.
+The IRS current Form 1040 remains the 2025 revision and its separate 2026
+posting is a draft.
+[IRS Rev. Proc. 2025-32](https://www.irs.gov/irb/2025-45_IRB) ·
+[Social Security wage base](https://www.ssa.gov/OACT/COLA/cbb.html) ·
+[Current Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Draft 2026 Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf).
+
 ## November 19 prior-return ownership of capital loss carryovers
 
 `21446bb8` collects the preceding return year, worksheet reference, filing type,
@@ -88,6 +111,15 @@ collection and the original two batches of 10 and 15 cases. The workflow
 runs those diagnostic batches only after an original strict failure. The
 existing deadlines and release gate still apply.
 [Exact Linux diagnostic run](https://github.com/utilityfueled/tax-engine/actions/runs/44671161158).
+
+All six GitHub CI jobs passed at `68cc8815`. The regular managed GitHub browser
+job passed 648 cases, skipped the same five hosted-only cases and failed both
+railroad retirement saved-PDF inspections at the four-second deadline. The
+managed job in the opt-in workflow passed 650 and skipped the same five on the
+same revision. The different outcomes leave the timing cause open.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44670357280) ·
+[Regular managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44670357157/job/136069578010) ·
+[Opt-in managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44671161158/job/136072201757).
 
 ## November 19 full application checks and ARM64 recovery
 

@@ -1,7 +1,10 @@
 # Current 2026 upgrade status
 
 Form 1040 now rejects negative prior-return overpayment credits before totaling
-federal payments. The 1,689 focused federal, payment and penalty tests passed.
+federal payments. The exact application passed all 29,508 tests in both full
+runs, with 88.35% branch coverage against the 85% gate. The full managed
+Chromium run passed 650 cases with five planned hosted-only skips. The Docker
+build passed.
 [Applied overpayment evidence](upgrade-2026-progress.md#november-19-applied-federal-overpayment-credits).
 
 The guided Schedule D worksheet now requires the immediately preceding
