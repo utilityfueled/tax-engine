@@ -1,6 +1,6 @@
 # Independent 2026 review assignments for November 19
 
-All seven assignments are open. No qualified human reviewer is assigned. Give reviewers the case facts and a blank worksheet first. Ask each reviewer to record their authority, source revisions, method, line results, assumptions, uncertainties and dated disposition before sharing the engineering comparison. Use fictional records only.
+All assignments are open. No qualified human reviewer is assigned. Give reviewers the case facts and a blank worksheet first. Ask each reviewer to record their authority, source revisions, method, line results, assumptions, uncertainties and dated disposition before sharing the engineering comparison. Use fictional records only.
 
 ## Federal territory deduction allocation
 
@@ -34,6 +34,26 @@ A single 30-year-old claimant with $50,000 of wages and $4,000 of otherwise elig
 
 Compare two fictional 2025 employer-plan annuities with $6,000 gross, $125 federal withholding, an unchecked IRA/SEP/SIMPLE box and no payer-determined Box 2a amount. Box 2b is checked. The Code 1 recipient is age 35, has $36,000 in documented plan cost and claims no early-distribution exception. The Code 7 recipient is age 65 and has $26,000 in documented plan cost. Both single-life annuities use the Simplified Method, began January 15, 2025, made 12 payments in 2025 and have no earlier recovered cost. Derive the pension and withholding entries and any additional tax. Compare an omitted distribution code and a missing worksheet with the documented cases. Identify the fact or method that must be substantiated at each hold. [2025 Form 1040 instructions, lines 5a and 5b](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28) · [2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15) · [2025 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2025.pdf#page=1).
 
+## Ohio part-year and nonresident unemployment
+
+A single 2025 taxpayer earned $100,000 in wages. In the part-year case, the taxpayer was domiciled in Virginia through June 30 and in Ohio starting July 1. Thirty thousand dollars of wages belong to the Ohio domicile period and $10,000 of the remaining wages are Ohio-source. One same-owner government Form 1099-G has $1,000 in Box 1 and no other items, repayment or withholding. Compare an original record for the complete payment on June 30 with an otherwise identical record dated July 1. In the full-year Virginia variant, $20,000 of wages are Ohio-source. There are no other income items, Ohio additions or deductions. Derive both columns of IT NRC line 12, the Schedule of Credits transfer and the IT 1040 tax after that credit. Identify the record needed to resolve a missing date or an original belonging to another person. [Ohio Revised Code §5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) · [2025 instructions, p. 36](https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36).
+
+## Federal direct cash gift and deduction election
+
+A single 2026 taxpayer has $10,000 AGI and a documented $1,500.25 direct cash gift with no carryovers or other gifts. Assume the gift satisfies ordinary deductibility requirements. The answers about a supporting organization and a donor-advised fund are unavailable at first. Derive the Schedule A amount for an explicit itemized election. Then resolve both facts in favor of the taxpayer and derive the separate nonitemizer amount. Identify which facts and records are necessary for each result and which are necessary to compare elections. [26 U.S.C. §170](https://uscode.house.gov/us/usc/119-134/t26/s170/) · [IRS IR-2026-135](https://www.irs.gov/newsroom/irs-reminder-permanent-charitable-contribution-deduction-begins-for-returns-filed-next-year-for-taxpayers-who-do-not-itemize).
+
+## Federal Child Tax Credit relationship
+
+Compare an otherwise eligible 2025 dependent younger than 17 described as the taxpayer's half-sibling with a record claiming the Child Tax Credit for a dependent explicitly identified as a qualifying relative. Evaluate a third case with an independently confirmed Credit for Other Dependents claim on the relative. Assume the income and tax liability support the applicable nonrefundable credit, and that taxpayer and dependent identification requirements are satisfied. Derive Schedule 8812 and the Form 1040 transfer. Identify which additional fact is needed if the only relationship answer is unspecified. [26 U.S.C. §24](https://uscode.house.gov/us/usc/t26/s24/) · [26 U.S.C. §152](https://uscode.house.gov/us/usc/t26/s152/).
+
+## Federal property tax payment year
+
+A 2025 taxpayer reports $20,000.01 of qualified real-estate taxes paid from escrow in 2025 and $50.25 of separate qualified real-estate taxes paid directly in 2025. A second lender statement lists $1,200.24 of property tax but omits the payment year. Determine which evidence substantiates the second amount and derive Schedule A lines 5b and 5e if it confirms payment in 2025. Compare proof of payment in 2024 and a 2024 statement reporting zero. Consider no other SALT, an AGI below the phaseout and no Form 1098 mortgage interest. [26 U.S.C. §164](https://uscode.house.gov/us/usc/t26/s164/) · [IRS Publication 530](https://www.irs.gov/publications/p530).
+
+## Federal ordinary Form 8889
+
+The 2026 taxpayer is under 55 with self-only HSA eligibility on the first day of all 12 months. The owner made $2,199.49 of personal contributions and the sole W-2 reports $1,200.51 in Box 12 code W. Two same-owner Forms 1099-SA report normal distributions of $500.26 and $350.39. Actual qualified expenses total $350.14, with no prior reimbursement, rollover, catch-up contribution, funding distribution or penalty exception. Derive the applicable contribution, deduction, distribution and additional-tax lines, including where rounding occurs. Compare a documented case where the person was born in February of the return year despite an assertion of January 1 eligibility. List the annual instructions and parent-form transfers that still need verification. [2026 Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) · [IRS Publication 969](https://www.irs.gov/publications/p969).
+
 ## Record the independent decisions
 
 | Assignment | Reviewer and qualification | Date and authority revisions | Worksheet and disposition |
@@ -45,6 +65,11 @@ Compare two fictional 2025 employer-plan annuities with $6,000 gross, $125 feder
 | Federal IRA charitable transfer and prior deductions | Unassigned | Pending | Pending |
 | Federal education credit and prior claims | Unassigned | Pending | Pending |
 | Federal employer pension distribution code and taxable amount | Unassigned | Pending | Pending |
+| Ohio part-year and nonresident unemployment | Unassigned | Pending | Pending |
+| Federal direct cash gift and deduction election | Unassigned | Pending | Pending |
+| Federal Child Tax Credit relationship | Unassigned | Pending | Pending |
+| Federal property tax payment year | Unassigned | Pending | Pending |
+| Federal ordinary Form 8889 | Unassigned | Pending | Pending |
 
 <details>
 <summary>Engineering comparison for use after the independent worksheet</summary>
@@ -53,5 +78,10 @@ Compare two fictional 2025 employer-plan annuities with $6,000 gross, $125 feder
 - Ohio `4ae1b8e6` produces $400,000 business gain, $450,000 federal adjusted gross income and Ohio modified adjusted gross income, $100,000 business-sale deduction, $250,000 business income deduction, $50,000 remaining business income and $100,000 Ohio adjusted gross income. The $1,900 exemption leaves $48,100 of nonbusiness taxable income. The draft yields $938 of nonbusiness tax and $1,500 of business tax, for $2,438 before payments. The computed values survived reparse and a JSON round trip. Both changed-source controls held. Payment, refund and penalty stayed unknown. [Spec and source](https://github.com/utilityfueled/tax-engine/commit/4ae1b8e6) · [Fictional fixture](https://github.com/utilityfueled/tax-engine/blob/4ae1b8e6/tests/fixtures/oh-2026-resident-capital-gain.ts).
 - Mortgage `92ed89d1` admits the distinct linked accounts and preserves $8,000 on line 8a. It holds the duplicate and missing-reference cases across both payment roles because the original model does not record the payer of record. The singleton provision preserves unknown where both sources omit the reference. [Spec, implementation and fixtures](https://github.com/utilityfueled/tax-engine/commit/92ed89d1).
 - Pension `b6bfc3b0` preserves a confirmed $9,000.01 or zero amount. Omission of an applicable checkbox holds the calculation, including after JSON import. The stored value alone cannot show whether an older `false` came from the original statement or the parser. [Spec, implementation and fixtures](https://github.com/utilityfueled/tax-engine/commit/b6bfc3b0).
+- Ohio `4a87cc53` put $1,000 in the everywhere column in all three cases and $0, $1,000 and $0 in the Ohio column. The credits were $1,420, $1,396 and $1,885, with tax after credit of $931, $955 and $466 in these canonical fixtures. The guided browser fixture uses a separate wage input and verifies persistence of the payment proof. [Canonical tests](https://github.com/utilityfueled/tax-engine/blob/4a87cc53/tests/engine/state/oh-residency-source.test.ts) · [Guided sources](https://github.com/utilityfueled/tax-engine/commit/d33e77d5).
+- The `294b3fe8` fixture produced $1,450 on Schedule A and a $1,000 comparison only with complete recipient facts. [Implementation and fixtures](https://github.com/utilityfueled/tax-engine/commit/294b3fe8).
+- The `d52a596b` and `43956ac0` fixtures produced $2,200 for the half-sibling and $500 for the separate confirmed other-dependent credit. The explicit qualifying-relative and CTC pairing held before calculation. [Household tests](https://github.com/utilityfueled/tax-engine/blob/43956ac0/tests/engine/forms/child-credit-household-admission.test.ts).
+- Property-tax fixture `56a7ef3d` retained $21,250.50 on line 5b before whole-dollar transfer and $21,251 on line 5e. An explicitly wrong payment year with a positive amount held before any deduction choice. The software preserves older undated records, which do not by themselves document the payment year. [Tests](https://github.com/utilityfueled/tax-engine/blob/56a7ef3d/tests/engine/schedules/schedule-a-property-tax-year.test.ts).
+- Internal Form 8889 projection `7fe1a426` showed $4,400 on line 3, $2,199 on line 13, $851 on line 14a, $350 on line 15, $501 on line 16 and $100 on line 17b. It held the birth-date contradiction. The external filing and public review gates remain closed. [Projection tests](https://github.com/utilityfueled/tax-engine/blob/7fe1a426/tests/pdf/form-8889-2026-candidate.test.ts).
 
 </details>
