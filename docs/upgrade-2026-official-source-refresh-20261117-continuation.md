@@ -99,3 +99,14 @@ line maps stay gated.
 [Ohio forms index](https://tax.ohio.gov/business/get-a-form/tax-forms) ·
 [Ohio alert archive](https://tax.ohio.gov/individual/resources/individualincome) ·
 [Ohio annual changes](https://tax.ohio.gov/individual/who-must-file/whats-new).
+
+## November 20 final Form 2106 blank
+
+The current and annual archive copies match. The two-page form prints tax year
+2026 and `Created 8/18/26`. The IRS directory lists a November 20 posting.
+The regular instructions still identify tax year 2025. The 2026 blank is pinned
+with 87 widgets as a disabled candidate. Schedule 1 line 12 retains its
+existing manual total, and this candidate supplies no calculation or export map.
+[Current Form 2106](https://www.irs.gov/pub/irs-pdf/f2106.pdf) ·
+[Annual archive](https://www.irs.gov/pub/irs-prior/f2106--2026.pdf) ·
+[Current instructions](https://www.irs.gov/pub/irs-pdf/i2106.pdf).

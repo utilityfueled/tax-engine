@@ -1,0 +1,25 @@
+form: "Form 2106 final 2026 physical candidate"
+fullName: "Employee Business Expenses final annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f2106.pdf"
+revision: "Created 8/18/26"
+postedAt: "2026-11-20"
+retrievedAt: "2026-11-20T18:56:43Z"
+notes: |
+  The regular and annual archive IRS PDFs match. The regular instructions
+  still identify 2025. The existing Schedule 1 line 12 scope accepts a
+  validated manual total. The final 2026 blank is pinned for physical
+  identification and has no line map, calculation, or export registration.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual blank"
+    formula: "Require SHA-256 794f7d7f84fd3a878e18751622949403d8499474c807fb05b3ee2e0bd811bc1b, 108061 bytes, two 611.976 by 791.968 point pages, and the 2026 PDF title."
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-layout"
+    description: "Confirm the two official pages and their widget census"
+    formula: "Preserve 24 widgets on page one and 63 widgets on page two. Across both pages the blank contains 79 text fields and 8 checkboxes."
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::confirms the physical page and widget census"
+  - line: "closed-exports"
+    description: "Keep the candidate outside public review and filing"
+    formula: "The 2025 and 2026 review template registries reject these bytes. The candidate has no route, field map, or export registration."
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::keeps the physical candidate outside public exports"
