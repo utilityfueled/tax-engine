@@ -25,6 +25,17 @@ lines:
       - "Other business income (cash, barter, etc.)"
     testRef: "tests/engine/schedules/schedule-c.test.ts::Schedule C Line 1 - gross receipts from 1099-NEC"
 
+  - line: "1-1099-nec-source-year"
+    description: "Reconcile Form 1099-NEC calendar year before calculating Schedule C receipts"
+    formula: "Hold a supplied Form 1099-NEC with an explicit calendar year different from the return year before applying either the source total or an explicit gross-receipts amount. Keep the existing behavior for matching years and legacy rows with no calendar year. Use the reported calendar year rather than the form revision date."
+    irsRef: "Schedule C Instructions, Line 1; Form 1099-NEC, For calendar year and Box 1"
+    sources:
+      - "https://www.irs.gov/instructions/i1040sc"
+      - "https://www.irs.gov/pub/irs-pdf/f1099nec.pdf"
+    testRef: "tests/engine/schedules/schedule-c.test.ts::holds a different Form 1099-NEC calendar year in standalone Schedule C"
+    testRefs:
+      - "tests/engine/schedules/schedule-c.test.ts::keeps matching and legacy undated Form 1099-NEC receipts in standalone Schedule C"
+
   - line: "2"
     description: "Returns and allowances"
     formula: "Refunds, rebates, etc. deducted from gross receipts"

@@ -187,6 +187,11 @@ export function calculateScheduleC(
     || input.scheduleC?.standardMileage !== undefined ? input.scheduleC : undefined,
   options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
+  const returnYear = input.taxpayer.taxYear;
+  const wrongYear = input.form1099Nec.find(form => form.taxYear !== undefined && form.taxYear !== returnYear);
+  if (wrongYear) {
+    throw new Error(`Form 1099-NEC source year ${wrongYear.taxYear} must match the ${returnYear} return`);
+  }
   const audit = new AuditTrail();
   const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
   const mileage = calculateStandardMileage(input, scheduleCInput);

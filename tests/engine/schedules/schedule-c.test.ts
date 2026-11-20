@@ -45,6 +45,34 @@ describe("Schedule C Income", () => {
     expect(result.grossReceipts.toNumber()).toBe(20000);
   });
 
+  it("holds a different Form 1099-NEC calendar year in standalone Schedule C", () => {
+    for (const [returnYear, statementYear] of [[2025, 2024], [2026, 2025]] as const) {
+      const { input } = makeScheduleCFixture([
+        { payer: "Current client", taxYear: returnYear, nonemployeeCompensation: "1000.10" },
+        { payer: "Prior client", taxYear: statementYear, nonemployeeCompensation: "250.25" },
+      ]);
+      input.taxpayer = { ...input.taxpayer, taxYear: returnYear };
+      const error = `Form 1099-NEC source year ${statementYear} must match the ${returnYear} return`;
+
+      expect(() => calculateScheduleC(input)).toThrow(error);
+      expect(() => calculateScheduleC(input, { grossReceipts: "3000.30" })).toThrow(error);
+      expect(() => calculateFederalTax(input)).toThrow(returnYear === 2025 ? error : /Tax year 2026 rule pack .* is incomplete/);
+    }
+  });
+
+  it("keeps matching and legacy undated Form 1099-NEC receipts in standalone Schedule C", () => {
+    for (const taxYear of [2025, 2026]) {
+      const { input } = makeScheduleCFixture([
+        { payer: "Current client", taxYear, nonemployeeCompensation: "1000.10" },
+        { payer: "Legacy client", nonemployeeCompensation: "250.25" },
+      ]);
+      input.taxpayer = { ...input.taxpayer, taxYear };
+
+      expect(calculateScheduleC(input).grossReceipts.toString()).toBe("1250.35");
+      expect(calculateScheduleC(input, { grossReceipts: "3000.30" }).grossReceipts.toFixed(2)).toBe("3000.30");
+    }
+  });
+
   it("Schedule C Line 2 - returns and allowances", () => {
     const { input } = makeScheduleCFixture(
       [{ payer: "Client", nonemployeeCompensation: "10000", federalWithheld: "0" }]
