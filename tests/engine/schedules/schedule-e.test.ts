@@ -366,6 +366,30 @@ describe("Schedule E Part I - Rental Income", () => {
     expect(line4!.value.toNumber()).toBe(5000);
   });
 
+  it("Schedule E Line 4 - royalty statement calendar year", () => {
+    const statement = {
+      payer: "Publisher Inc",
+      royalties: "1000.05",
+      rents: "0",
+      otherIncome: "0",
+      federalWithheld: "0",
+    };
+    for (const [taxYear, otherYear] of [[2025, 2026], [2026, 2025]]) {
+      const input = { ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear } };
+      expect(() => calculateScheduleE({
+        ...input, form1099Misc: [{ ...statement, taxYear: otherYear }],
+      })).toThrow(`Form 1099-MISC source year ${otherYear} must match the ${taxYear} return`);
+      const result = calculateScheduleE({
+        ...input, form1099Misc: [{ ...statement, taxYear }, { ...statement, royalties: "24.91" }],
+      });
+      expect(result.lines.find(line => line.line === "4")?.value.toFixed(2)).toBe("1024.96");
+    }
+    const standalone = calculateScheduleE({
+      scheduleK1: [], rentalProperties: [], form1099Misc: [{ ...statement, taxYear: 2025 }],
+    });
+    expect(standalone.lines.find(line => line.line === "4")?.value.toFixed(2)).toBe("1000.05");
+  });
+
   it("Schedule E Line 26 - combines rental income and royalties", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,

@@ -4,6 +4,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
+import { assertStatementYear } from '../assert-statement-year.js';
 
 export interface RoyaltyPropertyResult {
   sourceIndex: number;
@@ -55,13 +56,17 @@ function requirePaidDate(value: string | undefined, year: number): void {
 export function calculateRoyaltyPropertySources(input: RoyaltyPropertyReturnInput): RoyaltyPropertySourcesResult {
   const audit = new AuditTrail();
   const sources = input.royaltyPropertySources;
+  const taxpayer = input.taxpayer;
   if (!sources) {
+    if (taxpayer) {
+      const royaltyStatements = input.form1099Misc.filter(form => !d(form.royalties).isZero());
+      assertStatementYear('Form 1099-MISC', royaltyStatements, taxpayer.taxYear);
+    }
     // Preserve the pre-existing raw-input contract. This is not a confirmed
     // property ledger, and cannot supply expense or physical property details.
     const grossIncome = sum(...input.form1099Misc.map(form => d(form.royalties)));
     return { properties: [], grossIncome, totalExpenses: d(0), netIncome: grossIncome, lines: [] };
   }
-  const taxpayer = input.taxpayer;
   if (!taxpayer) throw new Error('Royalty property ledger requires the actual return year and owner facts');
   const year = taxpayer.taxYear;
   if (![2025, 2026].includes(year) || sources.sourceTaxYear !== year) throw new Error('Royalty property source tax year must match the supported return year');

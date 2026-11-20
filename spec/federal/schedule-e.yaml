@@ -82,6 +82,13 @@ lines:
     notes: "Portfolio royalties flow through Part I and stay outside the Part II passive-activity pool"
     testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 4 - 1099-MISC royalties flow to Part I"
 
+  - line: "4-royalty-statement-year"
+    description: "Reconcile the original Form 1099-MISC calendar year before including Box 2 royalties"
+    formula: "Hold a nonzero Box 2 amount when an explicit original calendar year differs from a known return year"
+    irsRef: "https://www.irs.gov/instructions/i1040se"
+    notes: "Matching and historically undated statements retain their exact dollar amounts. Standalone calls with neither a return year nor a confirmed source ledger retain their existing contract."
+    testRef: "tests/engine/schedules/schedule-e.test.ts::Schedule E Line 4 - royalty statement calendar year"
+
   - line: "26"
     description: "Total rental real estate and royalty income or loss"
     formula: "Sum of all properties Line 21 + royalty income"

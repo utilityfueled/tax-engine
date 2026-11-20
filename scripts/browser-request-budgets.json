@@ -929,7 +929,7 @@
     "src/engine/forms/qbi-source-deductions.ts": "c3dc4ae475cd66c39d312386068763b3e459adf40925d7513acea3ade17817e2",
     "src/engine/forms/qof-disposition-facts.ts": "32ce1fb6ab2973af7d667364970190300275a4d46c89d857a3c1eb49ee7a7791",
     "src/engine/forms/qof-inclusion.ts": "7e7c9d2156c32ca2acaaff9e10ffc3990f1bf7691a55c7c4ab954b5550b0820b",
-    "src/engine/forms/royalty-property-sources.ts": "a669c76929f432fdbb6c3ca27e68d6fa057656ec6692eb5529c84bb6aff6c79c",
+    "src/engine/forms/royalty-property-sources.ts": "318fdd865df0580dd996ce2065ad702d11be5c44028ba51b0ae494a417eb4d79",
     "src/engine/forms/rrta-payroll-sources.ts": "b9da26aaad7baef66c698f78f033fa8516c28305c698771edaa91ea4bf5a28af",
     "src/engine/forms/savings-bond-income-ownership.ts": "af8d8b1703c6d1517e3f296b1fadb354b274f1db9b635a96c4fcd65c9893d726",
     "src/engine/forms/savings-bond-reissue-sources.ts": "f07b3aeb1ca136712639491d3f86a1e62279b5f2b1ed065c2d4aefd859ab2192",
