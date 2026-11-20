@@ -12,8 +12,14 @@ passed. Both complete local suites passed 29,589 tests at 88.45% branch
 coverage. The audit hash refresh `3663cf3e` and diagnostic digest refresh
 `f1e6f6a8` restored all 35 timing-contract checks. The exact
 `f1e6f6a8` protected test-mode Preview passed all 12 synthetic lifecycle
-checks. The complete managed macOS browser run passed 650 cases with
-five original skips. Current Linux and native ARM64 runs remain open.
+checks. The complete managed macOS and Linux browser runs each passed
+650 cases with five original skips. All six exact GitHub CI checks
+passed. Strict AMD64 passed Compose recovery and ran 637 successful
+browser cases, with eleven Ohio deadlines, two RRTA saved-PDF inspection
+timeouts and five original skips. Strict ARM64 passed image smoke,
+Compose recovery and cleanup, with 640 browser passes, ten Ohio
+deadlines and five original skips. Both strict browser gates remain
+open.
 [Copy B evidence](upgrade-2026-progress.md#november-20-printed-1099-nec-copy-b).
 
 Application `8201d316` passed 29,588 tests in both exact local suites at
@@ -127,7 +133,7 @@ AMD64 runner.
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC, Form 7206 and Form 8829 blanks are pinned as disabled candidates. The current final Form 1040, annual instructions and Tax/EIC tables still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Current `f1e6f6a8` passed all 12 protected Preview workspace lifecycle checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted billing qualification remains open. [Current Preview](upgrade-2026-progress.md#november-20-printed-1099-nec-copy-b) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Strict AMD64 and ARM64 on `8201d316` passed image smoke, Compose recovery and cleanup. AMD64 passed 648 browser cases with two Ohio deadlines. ARM64 passed 642 with eight Ohio deadlines. Both had five original skips. The current managed macOS suite passed all 650 runnable cases. Current Linux runtime qualification remains open. [Active Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726) · [Current native ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129). |
+| Self-host recovery | Current strict AMD64 passed Compose recovery, with 637 browser passes, eleven Ohio deadlines, two saved-PDF inspection timeouts and five original skips. Current strict ARM64 passed image smoke, Compose recovery and cleanup, with 640 browser passes, ten Ohio deadlines and five original skips. The managed macOS and Linux suites each passed 650 browser cases. Strict Linux runtime qualification remains open. [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726/job/136437051827) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129/job/136455005435). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 Read `activeContinuation.nov20ScheduleEicExactVerification`,

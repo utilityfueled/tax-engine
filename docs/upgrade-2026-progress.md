@@ -48,10 +48,35 @@ original skips, two workers, zero retries, and the existing 30-second
 deadlines. The browser input archive included the `3663cf3e` request
 manifest. The later diagnostic-only digest passed the separate
 35-test timing preflight. The current Web run advanced through that
-preflight, and the exact current native ARM64 rehearsal was queued
-behind the earlier rehearsal.
-[Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726) ·
-[Current native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129).
+preflight. Its managed Linux suite also passed 650 cases with five
+original skips. All six exact GitHub CI jobs passed, including 29,589
+tests in each of the unit and coverage jobs.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726/job/136437051854) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44779201707).
+
+Strict AMD64 on `f1e6f6a8` passed Compose upgrade, recovery and
+rollback and recorded 637 browser passes with five original skips.
+Eleven Ohio cases reached the 30-second journey deadline, including
+two NEW212 business, one reciprocal, four resident-credit and four
+school-district cases. The two RRTA views reached their separate
+saved-PDF inspection deadline. Both SBOM formats were generated and
+source-bound. Strict AMD64 browser qualification remains open.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44779201726/job/136437051827).
+
+Independent engineering review opened all eleven Ohio failure traces in
+runtime artifact `14656785664`. Native field actions took 10.44–19.05
+seconds per case and assertions took 3.96–6.29 seconds. All four school
+cases were still entering, confirming or checking fields when their
+deadlines expired. Other cases reached navigation, downloads or a
+subsequent filing request. The trace network streams were empty, so the
+relative application, browser and runner costs remain undetermined.
+
+The native ARM64 run on `bfb54128` passed image build, image smoke,
+Compose upgrade and recovery, and container cleanup. The strict suite
+passed 640 browser cases with five original skips. Ten Ohio cases reached
+the 30-second journey deadline, including two NEW212 business, one
+reciprocal, three resident-credit and four school-district cases.
+[Strict ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44781102129/job/136455005435).
 
 The prior application `8201d316` passed all six exact GitHub CI jobs.
 Its strict ARM64 run passed native image build, image smoke, Compose
