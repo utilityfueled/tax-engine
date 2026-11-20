@@ -1,5 +1,35 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Form 8863 claimant and student SSN reconciliation
+
+`d8a9f108` holds a 2026 return when a known employment-valid SSN answer
+conflicts between the household and Form 8863 or between a matched adult
+student and the claimant facts. Either joint spouse can supply the qualifying
+SSN. A student spouse who has a timely TIN can still receive the credit when
+the other spouse has the qualifying SSN. Dependent student facts remain
+separate. [IRS SSN guidance](https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits) ·
+[Draft Form 8863 instructions, line 21](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+Four primary and spouse claimant conflicts reproduced before the first change.
+An independent engineering review found the spouse-student conflict, and a
+fifth regression reproduced it before that change. The nine new cases and
+109 focused education tests passed on Node 26.13.1. The current IRS blank for
+2026 matched the pinned physical template byte for byte.
+[Final IRS blank](https://www.irs.gov/pub/irs-pdf/f8863.pdf).
+
+The initial full unit and coverage runs each had one failing spec reference.
+The full literal parameterized test name fixed it, and the 982 focused
+reference and behavior tests passed. Exact local unit and coverage reruns each
+passed 29,525 tests, with 88.36% branch coverage against the 85% threshold.
+All three type checks, both builds, full lint, 44 browser contracts and 9,674
+exact spec references passed. Both targeted managed Chromium education cases
+passed once the isolated checkout had its 15 pinned sample PDFs. The test
+runs exercise enacted rules with test-only constants. The public 2026
+calculation and form gates remain closed.
+[Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44711171955) ·
+[Exact browser run](https://github.com/utilityfueled/tax-engine/actions/runs/44711171830) ·
+[Exact Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44711171886).
+
 ## November 20 Form 8863 claimant birth date
 
 A synthetic federal short-year return with an impossible February 30 birth
@@ -104,6 +134,14 @@ respectively. The full strict suite still passed 646 cases with four original
 deadlines and five planned skips. Across the two paired runs, the evidence
 does not establish a container-specific cause. The full-suite gate remains open.
 [Corrected same-runner logs](https://github.com/utilityfueled/tax-engine/actions/runs/44699380902/job/136163772075).
+
+The four full-suite failure traces from that run contain 133 completed Fill and
+133 Press calls in the business case and 197 of each in every school-district
+case. Those commands took 7.636 seconds in the business case and 11.913 to
+14.796 seconds in the school-district cases. These are Playwright command
+elapsed times, which include browser and test-runner work. The traces provide
+no browser-only or application-only timing. The original input and keyboard
+checks remain in the suite.
 
 On `2e910e78`, the managed suite passed 650 cases with five original skips.
 Strict AMD64 passed 644 with six 30-second deadlines and five original

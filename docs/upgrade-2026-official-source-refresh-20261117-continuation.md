@@ -40,3 +40,13 @@ Twenty-two bounded official requests produced 11 successful responses and 11 HTT
 The current Form 1045 and its instructions and Form 1095-A and its instructions all identify 2026. The 1045 instructions refer readers to Form 172 for the NOL calculation, leaving the §1202 interpretation open. [Form 1045 instructions](https://www.irs.gov/pub/irs-pdf/i1045.pdf) · [Form 172 instructions](https://www.irs.gov/pub/irs-pdf/i172.pdf) · [Form 1095-A instructions](https://www.irs.gov/pub/irs-pdf/i1095a.pdf)
 
 Private `nov19-annual-official-status` receipts SHA-256 `2f5119df127712151c8fa6c8ef93cb41a538dbdba3c9edae796ca66d2b9923ed` and Pennsylvania receipts SHA-256 `52e817fe9466b21c74c27cc489a8be236a0d361fdd82e107423ad4404b5f3a2b`.
+
+## November 20 education form recheck
+
+The IRS posted the final 2026 Form 8863 blank on November 17. The downloaded
+blank matched the pinned candidate. The latest final instructions in the
+product index are for 2025, and the 2026 instructions dated September 11 are
+still a draft. The 2026 candidate remains disabled pending qualification.
+[IRS product index](https://www.irs.gov/forms-instructions-and-publications?find=8863+&items_per_page=25&order=picklist_revision_date_iso&sort=desc) ·
+[2026 blank](https://www.irs.gov/pub/irs-pdf/f8863.pdf) ·
+[2026 draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).

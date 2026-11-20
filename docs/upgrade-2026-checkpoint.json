@@ -1,5 +1,29 @@
 {
   "activeContinuation": {
+    "nov20Form8863HouseholdSsn": {
+      "appCommit": "d8a9f108",
+      "reproducedClaimantConflicts": 4,
+      "reproducedSpouseStudentConflicts": 1,
+      "newBehaviorTests": 9,
+      "educationFocusedTestsPassed": 109,
+      "targetedBrowserCasesPassed": 2,
+      "browserContractTestsPassed": 44,
+      "specReferencesValidated": 9674,
+      "correctedSpecReferenceControlsPassed": 982,
+      "fullUnitTestsPassed": 29525,
+      "fullCoverageTestsPassed": 29525,
+      "branchCoveragePercent": 88.36,
+      "independentEngineeringReview": "Pass after correcting the reproduced spouse-student conflict; qualified human review remains open",
+      "finalIrsBlankSha256": "290771de5dbbbede2de9e7cb2ba8a7d51a08aa10e89b4ed74cfdbdb631af167f",
+      "irsInstructionStatus": "Latest final instructions tax year 2025; 2026 instructions remain draft",
+      "sourceArchiveSha256": "68911db509c7adbb2922c0fefab312a2c9a217140869db679c84021f592e5823",
+      "exactCiRun": 44711171955,
+      "exactDockerRun": 44711171886,
+      "exactDockerPassed": true,
+      "exactWebRun": 44711171830,
+      "evidence": "docs/upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation",
+      "privateEvidence": ".local/upgrade-evidence/nov20-form-8863-household-ssn"
+    },
     "nov20Form8863ClaimantBirthDate": {
       "appCommit": "cf43e9ea",
       "regressionReproduced": true,

@@ -1,14 +1,17 @@
 # Current 2026 upgrade status
 
-The latest application revision is `cf43e9ea` on `main`. It validates the
-claimant's birth date before deriving age for the refundable American
-Opportunity Credit. Full local unit and coverage runs each passed 29,516
-tests, with 88.36% branch coverage against the 85% threshold. Both targeted
-education browser cases, all three type checks, both builds, full lint,
-inventory, 9,672 spec references and exact Docker passed.
-[Education evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date).
+The latest application revision is `d8a9f108` on `main`. Form 8863 holds
+conflicting 2026 employment-valid SSN answers from the return household,
+claimant or matched adult student. Its focused education and browser checks,
+both builds, types, lint, inventory and 9,674 spec references passed. Exact
+local unit and coverage each passed 29,525 tests with 88.36% branch coverage.
+The exact Docker check passed. Remote unit, coverage and browser jobs are
+tracked below.
+[Reconciliation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44711171955) ·
+[Exact browser jobs](https://github.com/utilityfueled/tax-engine/actions/runs/44711171830).
 
-All six exact GitHub CI jobs passed. Two saved RRTA PDF inspections timed out
+On prior application `cf43e9ea`, all six exact GitHub CI jobs passed. Two saved RRTA PDF inspections timed out
 in the full managed browser suite. Both passed an exact scoped macOS replay.
 Strict AMD64 passed smoke, Compose recovery, archive import and cleanup, with
 eight original Ohio browser deadlines.
@@ -27,7 +30,7 @@ AMD64 runner.
 | Self-host recovery | ARM64 image smoke, Compose recovery and cleanup passed at `0836c5fe`. Its strict browser suite reached 11 original deadlines. Both focused Ohio comparisons passed, with and without the container on Linux and with and without a locator change on macOS. [Runtime evidence](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
-Read the named `activeContinuation.nov20Form8863ClaimantBirthDate` and
+Read the named `activeContinuation.nov20Form8863HouseholdSsn` and
 `activeContinuation.nov20OhioBrowserDeadlineComparison` entries in the
 [checkpoint](upgrade-2026-checkpoint.json) for exact runs and evidence paths.
 Earlier verification remains in the [progress log](upgrade-2026-progress.md).
