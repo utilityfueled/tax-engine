@@ -1,5 +1,23 @@
 {
   "activeContinuation": {
+    "nov20PrintedNecCopyBBox1a": {
+      "source": "8486eca8",
+      "browserSourceAudit": "3663cf3e",
+      "auditedBrowserSourceFiles": 2022,
+      "specFirstRedReproduced": true,
+      "focusedTestsPassed": 97,
+      "specReferencesPassed": 9717,
+      "exactStaticChecksPassed": 8,
+      "independentEngineeringReview": "passed after three corrections",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f1099nec.pdf",
+      "sourceReplay": "IRS December 2026 Copy B with a synthetic overlay yielded exact 3210.09; blank and conflicts yielded no amount; withholding and tax year remained unknown",
+      "actualChromiumUploadReopenCasesPassed": 2,
+      "replayEvidence": ".local/upgrade-evidence/nov20-nec-copy-b-layout",
+      "exactVerification": ".local/upgrade-evidence/nov20-nec-8486-exact",
+      "browserAuditedCiWorkflow": 44778266235,
+      "browserAuditedWebWorkflow": 44778266228,
+      "browserAuditedDockerWorkflow": 44778266279
+    },
     "nov20StrictArm64AndOhioComparison": {
       "nativeSource": "a74dda05",
       "nativeRun": 44754625685,
@@ -35,6 +53,7 @@
       "previousArmJob": 136394543060,
       "previousArmPassDeadlineSkip": [639, 11, 5],
       "exactCiWorkflow": 44765989343,
+      "exactCiJobsPassed": 6,
       "exactWebWorkflow": 44765989442,
       "exactStrictAmd64Job": 136390615938,
       "exactStrictAmd64PassDeadlineSkip": [648, 2, 5],

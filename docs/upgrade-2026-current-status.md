@@ -1,15 +1,28 @@
 # Current 2026 upgrade status
 
+Application `8486eca8` reads a separated Box 1a amount on the December
+2026 Form 1099-NEC Copy B when the printed layout and the field position
+agree. The rendered IRS page with a synthetic amount returned exactly
+$3,210.09. Blank, contradictory and rotated controls preserved manual
+review. The adjacent-column control yielded only the Box 1a suggestion.
+Both the populated and blank official pages passed upload and reopen in
+the local production browser build.
+Ninety-seven focused tests, all eight static checks and 9,717 spec references
+passed. Browser source audit `3663cf3e` updates only the intake file hash.
+[Copy B evidence](upgrade-2026-progress.md#november-20-printed-1099-nec-copy-b).
+
 Application `8201d316` passed 29,588 tests in both exact local suites at
-88.45% branch coverage. Both builds, all three type checks, lint, spec
-references, the inventory, 37 education browser cases, and 12 protected
+88.45% branch coverage. All six exact GitHub CI jobs, both builds, all
+three type checks, lint, spec references, the inventory, 37 education
+browser cases, and 12 protected
 test-mode Preview lifecycle checks passed. The exact macOS managed suite
 passed 650 cases with five original skips. Managed Linux passed 648 with
 two RRTA saved-PDF inspection timeouts and five original skips. Strict
 AMD64 passed image smoke and Compose recovery and recorded 648 browser
 passes, two Ohio school deadlines and five original skips. The exact
 strict ARM64 rehearsal remains open.
-[Form 8863 evidence](upgrade-2026-progress.md#november-20-form-8863-adult-student-tin-reconciliation).
+[Form 8863 evidence](upgrade-2026-progress.md#november-20-form-8863-adult-student-tin-reconciliation) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44765989343).
 
 The IRS archived blank Form 1095-A now contributes only the manual review
 prompt under its historical 2025 filename alias. A browser run on the earlier

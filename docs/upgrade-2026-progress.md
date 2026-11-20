@@ -1,5 +1,38 @@
 # 2026 upgrade implementation evidence
 
+## November 20 printed 1099-NEC Copy B
+
+On `8486eca8`, PDF.js retains enough page coordinates to read the
+December 2026 Copy B Box 1a amount. The single-page letter-size form,
+revision and recipient labels, adjacent box labels, printed dollar sign,
+and exact amount placement identify the supported layout. The tax year
+remains unknown without explicit calendar-year evidence. The app
+offers Box 1a for confirmation and leaves payer, withholding, state,
+and business facts for the guided interview.
+[Official IRS Form 1099-NEC](https://www.irs.gov/pub/irs-pdf/f1099nec.pdf).
+
+The new case first failed with no detected fact. Exact source replay
+returned $3,210.09 from a synthetic entry overlaid on the IRS page
+and no amount from the blank control. Independent engineering review
+also replayed contradictory inline values, a rotated second amount,
+and an amount outside Box 4. The final parser left conflicting Box 1a
+values manual and kept the outside amount out of withholding.
+The populated and blank pages also passed upload and reopen through
+Chromium against the local production build. The populated page kept
+the exact suggestion across reload and the blank page remained manual.
+Ninety-seven focused tests, 9,717 required spec references, all three
+type checks, both builds, lint, and the inventory passed. The initial
+browser run rejected a stale source hash before executing cases.
+`3663cf3e` changes one hash among 2,022 files and passes the existing
+source audit with the request contracts and test limits intact.
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/44778266235) ·
+[Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44778266228).
+
+The prior application `8201d316` now has all six exact GitHub CI jobs
+passed. Its exact strict ARM64 run advanced to browser journeys.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44765989343) ·
+[Strict ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411).
+
 ## November 20 Form 1095-A upload year and archive sample
 
 The normal upload reads the printed Form 1095-A year from an official
