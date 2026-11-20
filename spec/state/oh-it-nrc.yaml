@@ -77,20 +77,26 @@ lines:
       with positive whole-dollar Box 1 to the federal Schedule 1 line 7 amount.
       Classify Box 1 once as unemployment in the federal source reconciliation
       and remove it from the federal other-income category. Report the resident
-      portion on IT NRC line 12, Column B, when Part B applies. A part-year claim needs one
-      actual paid-or-accrued date in the return year, a source reference linked
-      to the original Form 1099-G source identity, and explicit confirmation
-      that the payment covers the entire original Box 1 amount exactly.
+      portion on IT NRC line 12, Column B, when Part B applies. A part-year claim
+      needs one dated original receipt or a complete schedule of distinct dated
+      original receipts linked to the same Form 1099-G. Reconcile their exact
+      sum to original Box 1 before using the residency in effect on each date.
+      Require separate original record references, positive whole-dollar amounts,
+      actual return-year dates and explicit complete-schedule confirmation. Accept
+      either the original single-receipt representation or the schedule.
       Derive the Ohio amount from the actual domicile timeline and reject
       conflicting owner allocations. A full-year nonresident has zero Ohio
       unemployment; payment evidence is optional and any supplied evidence must
-      match. Hold other Box 1 programs, multiple forms or payments, repayments,
+      match. Hold other Box 1 programs, multiple forms, repayments,
       contribution balances, other source boxes, state withholding, unsupported
       source combinations, and fractional Box 1 amounts for separate methods.
       Current resident-only behavior and annual filing gates are unchanged.
       https://codes.ohio.gov/ohio-revised-code/section-5747.20
       https://dam.assets.ohio.gov/image/upload/v1735920104/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=36
     testRef: "tests/engine/state/oh-residency-source.test.ts::allocates one actual Ohio NRC unemployment payment by domicile date"
+    testRefs:
+      - "tests/engine/state/oh-residency-source.test.ts::allocates multiple receipts of the same original Form 1099-G across a domicile change"
+      - "tests/engine/state/oh-residency-source.test.ts::requires a complete unique payment schedule linked to the same Form 1099-G"
   - line: "13"
     label: "Other nonbusiness income"
     formula: "Actual resident portion only; exclude deductions15,18,28,29."

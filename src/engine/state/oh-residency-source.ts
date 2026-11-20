@@ -40,11 +40,52 @@ function withoutFacts(input: TaxYearInput) {
     const { ohioResidency: _, ohioPayments: _payments, ohioSchoolDistrict: _school, ohioReturnHeaderSources: _header, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
     return source;
 }
+export interface OhioUnemploymentReceipt {
+    sourceReference: string;
+    paidOrAccruedOn: string;
+    amount: string;
+}
+
+/** Spec: state/oh-it-nrc.yaml, canonical-unemployment-source. */
+export function allocateOhioUnemploymentReceipts(
+    receipts: readonly OhioUnemploymentReceipt[],
+    periods: readonly { from: string; to: string; domicileState: string }[],
+    taxYear: number,
+    box1: Decimal,
+): Decimal {
+    let total = new Decimal(0);
+    let resident = new Decimal(0);
+    const references = new Set<string>();
+    for (const receipt of receipts) {
+        const reference = receipt.sourceReference.trim();
+        const date = receipt.paidOrAccruedOn;
+        const stamp = Date.parse(`${date}T00:00:00Z`);
+        const period = periods.find(row => row.from <= date && row.to >= date);
+        if (!reference || references.has(reference) || !/^\d+(?:\.\d+)?$/.test(receipt.amount)
+            || !date.startsWith(`${taxYear}-`) || !Number.isFinite(stamp)
+            || new Date(stamp).toISOString().slice(0, 10) !== date || !period) {
+            throw new Error('Ohio unemployment requires distinct original receipt references and actual payment dates within the domicile periods.');
+        }
+        const amount = new Decimal(receipt.amount);
+        if (!amount.gt(0) || !amount.isInteger()) {
+            throw new Error('Ohio unemployment payments require positive whole-dollar amounts.');
+        }
+        references.add(reference);
+        total = total.plus(amount);
+        if (period.domicileState === 'OH') resident = resident.plus(amount);
+    }
+    if (!total.eq(box1)) throw new Error('Ohio unemployment payments must reconcile to Form 1099-G Box 1.');
+    return resident;
+}
+
 /** Spec: state/oh-it-nrc.yaml, canonical-unemployment-source. */
 function ordinaryUnemployment(input: TaxYearInput, federal: TaxReturnResult, facts: OhioResidencyFacts): Decimal {
     const originals = input.form1099G ?? [];
     const payment = facts.unemploymentPaymentSource;
-    if (!payment && !originals.some(form => d(form.unemploymentCompensation).gt(0))) return new Decimal(0);
+    const schedule = facts.unemploymentPaymentSchedule;
+    if (payment && schedule) fail('use one form of unemployment payment evidence');
+    const evidence = payment ?? schedule;
+    if (!evidence && !originals.some(form => d(form.unemploymentCompensation).gt(0))) return new Decimal(0);
     const [form] = originals;
     const [owner] = facts.owners;
     if (facts.taxYear !== 2025 || input.taxpayer.filingStatus !== 'single' || facts.owners.length !== 1
@@ -70,18 +111,13 @@ function ordinaryUnemployment(input: TaxYearInput, federal: TaxReturnResult, fac
     if (federalLine7.length !== 1 || !federalLine7[0]?.value.eq(box1)) {
         fail('unemployment does not reconcile to current federal Schedule 1 line 7');
     }
-    if (!payment && owner.status === 'part_year_resident') fail('actual complete dated unemployment payment evidence is required');
-    let resident = new Decimal(0);
-    if (payment) {
-        const date = payment.paidOrAccruedOn;
-        const stamp = Date.parse(`${date}T00:00:00Z`);
-        const period = owner.periods.find(period => period.from <= date && period.to >= date);
-        if (!date.startsWith(`${facts.taxYear}-`) || !Number.isFinite(stamp) || new Date(stamp).toISOString().slice(0, 10) !== date
-            || !period || payment.originalSourceId !== form.sourceId.trim() || !d(payment.amount).eq(box1)) {
-            fail('unemployment payment date, source, or amount does not reconcile');
-        }
-        if (period.domicileState === 'OH') resident = box1;
+    if (!evidence && owner.status === 'part_year_resident') fail('actual complete dated unemployment payment evidence is required');
+    if (evidence && evidence.originalSourceId !== form.sourceId.trim()) {
+        fail('unemployment payment evidence must identify the original statement');
     }
+    const resident = evidence
+        ? allocateOhioUnemploymentReceipts(schedule?.payments ?? (payment ? [payment] : []), owner.periods, facts.taxYear, box1)
+        : new Decimal(0);
     const allocation = owner.amounts?.unemployment;
     if (!allocation || !d(allocation.federalAmount).eq(box1) || !d(allocation.residentAmount).eq(resident)
         || !d(allocation.nonresidentOhioAmount).isZero()) {
@@ -157,7 +193,7 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     if (!input.ohioSchoolDistrict && ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0)))
         fail('actual local/school withholding or residence requires separate district reconciliation');
     const full = facts.owners.every(o => o.status === 'full_year_resident');
-    if (facts.unemploymentPaymentSource && (full || facts.reciprocalWageSources || facts.residentCreditSources)) {
+    if ((facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule) && (full || facts.reciprocalWageSources || facts.residentCreditSources)) {
         fail('unemployment payment evidence requires the ordinary nonresident or part-year method');
     }
     if (facts.residentCreditSources) {

@@ -128,6 +128,27 @@ it('collects the four part-year payment facts and clears the view after a same-v
         await click('Add primary owner domicile source');
         await change('primary actual Ohio residency status', 'part_year_resident');
         for (const name of [reference, date, amount, complete]) expect(control(name)?.value).toBe('');
+
+        await click('Enter multiple unemployment payments');
+        expect(control(reference)).toBeUndefined();
+        await change('Unemployment payment 1 original reference', 'Synthetic first original');
+        await change('Unemployment payment 1 date paid or accrued', '2025-06-30');
+        await change('Unemployment payment 1 amount', '400');
+        await change('Unemployment payment 2 original reference', 'Synthetic second original');
+        await change('Unemployment payment 2 date paid or accrued', '2025-07-01');
+        await change('Unemployment payment 2 amount', '600');
+        const completeSchedule = 'Do these payments account for all of Form 1099-G Box 1?';
+        await change(completeSchedule, 'true');
+        expect(latest?.unemploymentPaymentSchedule?.allPaymentsIncludedConfirmed).toBe(true);
+        expect(latest?.unemploymentPaymentSchedule?.payments.map(row => row.amount)).toEqual(['400', '600']);
+        await change('Unemployment payment 2 date paid or accrued', '2025-07-02');
+        expect(latest?.unemploymentPaymentSchedule?.allPaymentsIncludedConfirmed).toBeNull();
+        await click('Add unemployment payment');
+        expect(control('Unemployment payment 3 original reference')?.value).toBe('');
+        await click('Remove unemployment payment 3');
+        expect(control('Unemployment payment 3 original reference')).toBeUndefined();
+        await change('primary actual Ohio residency status', 'nonresident');
+        expect(latest?.unemploymentPaymentSchedule).toBeUndefined();
     }
     finally {
         await act(async () => root.unmount());

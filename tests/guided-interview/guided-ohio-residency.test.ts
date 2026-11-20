@@ -74,7 +74,7 @@ it('normalizes valid displayed grouping losslessly without manufacturing blank z
     expect(ohioResidencyFactErrors(d, 2025, 'single')).not.toEqual({});
 });
 
-function unemploymentFlow(status: 'part_year_resident' | 'nonresident') {
+function unemploymentFlow(status: 'part_year_resident' | 'nonresident', partYearBalance = '955') {
     const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages', 'unemployment'], lifeEvents: [], stateCode: 'OH' });
     state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '100000', socialSecurityWages: '100000',
         medicareWages: '100000', sourceTaxYear: '2025', stateTaxReporting: 'single', state: 'OH',
@@ -94,7 +94,7 @@ function unemploymentFlow(status: 'part_year_resident' | 'nonresident') {
         priorCreditCarryforward: { status: 'none', sourceReference: 'Synthetic account credit records' },
         currentTiming: { kind: 'expected', expectedDate: '2026-04-15', asOfDate: '2026-04-01' },
         remainingTaxPayment: { status: 'expected_payment', sourceReference: 'Synthetic planned balance payment',
-            date: '2026-04-15', sourceFactsConfirmed: true, amountAppliedToTax: status === 'nonresident' ? '466' : '955' },
+            date: '2026-04-15', sourceFactsConfirmed: true, amountAppliedToTax: status === 'nonresident' ? '466' : partYearBalance },
         filingExtension: { kind: 'none' }, paymentExtension: { kind: 'none' },
         specialFacts: { farmingFishingIncome: 'known_none', militaryDisasterRelief: 'known_none' },
         balanceFacts: { sourceReference: 'Synthetic actual balance facts', useTax: '0', outgoingCarryforward: '0', donations: '0' },
@@ -102,6 +102,40 @@ function unemploymentFlow(status: 'part_year_resident' | 'nonresident') {
     state.sectionData['state-return'] = { ...emptyStateReturnData, ohioResidency, ohioPayments };
     return { state: jumpToSection(state, 'state-return'), original, residency: ohioResidency, payments: ohioPayments };
 }
+
+it('replays a complete split unemployment payment schedule through the guided Ohio return', () => {
+    const { state, original, residency } = unemploymentFlow('part_year_resident', '945');
+    const statement = required(guidedOhioUnemploymentStatement(original), 'the current unemployment statement');
+    const schedule = {
+        originalStatementFingerprint: statement.fingerprint,
+        allPaymentsIncludedConfirmed: true,
+        payments: [
+            { sourceReference: 'Synthetic June original receipt', paidOrAccruedOn: '2025-06-30', amount: '400.00' },
+            { sourceReference: 'Synthetic July original receipt', paidOrAccruedOn: '2025-07-01', amount: '600.00' },
+        ],
+    };
+    const stateReturn = required(state.sectionData['state-return'], 'actual Ohio state drafts');
+    const invalid = { ...residency, unemploymentPaymentSchedule: { ...schedule, allPaymentsIncludedConfirmed: false } };
+    expect(() => confirmGuidedOhioResidencyFacts(original, invalid)).toThrow(/complete dated unemployment/i);
+    const edited = updateSectionData(state, 'state-return', {
+        ...stateReturn, ohioResidency: { ...residency, unemploymentPaymentSchedule: schedule },
+    });
+    const editedReturn = required(edited.sectionData['state-return'], 'edited receipt schedule');
+    const confirmed = confirmGuidedOhioResidencyFacts(original, editedReturn.ohioResidency);
+    const reopened: typeof state = JSON.parse(JSON.stringify(updateSectionData(edited, 'state-return', { ...editedReturn, ohioResidency: confirmed })));
+    const saved = required(reopened.sectionData['state-return']?.ohioResidency, 'saved receipt schedule');
+    const actual = buildGuidedOhioResidencyFacts(saved, original);
+
+    expect(saved.unemploymentPaymentSchedule).toEqual(schedule);
+    expect(actual.unemploymentPaymentSchedule?.originalSourceId).toBe(statement.sourceId);
+    expect(actual.owners[0]?.amounts?.unemployment.residentAmount).toBe('600');
+    expect(shouldPromptBeforeAdvance(reopened)).toBeNull();
+    expect(computeGuidedPreview(reopened)?.state).toMatchObject({ stateCode: 'OH' });
+
+    const replacement = structuredClone(original);
+    required(replacement.form1099G?.[0], 'replacement unemployment statement').accountReference = 'Synthetic updated statement with the same Box 1';
+    expect(() => confirmGuidedOhioResidencyFacts(replacement, saved)).toThrow(/1099-G was replaced or changed/i);
+});
 
 it('requires actual unemployment evidence before Ohio wizard progression and replays saved originals', () => {
     const { state, original, residency } = unemploymentFlow('part_year_resident');

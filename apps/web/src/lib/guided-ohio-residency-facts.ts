@@ -5,21 +5,25 @@ import type {OhioResidentCreditDraft} from './guided-ohio-resident-credit-source
 import type { TaxYearInput } from '@/models/inputs';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioNrcCategory, type OhioResidencyFacts } from '@/models/ohio-residency';
 import { calculateOhioITNRC } from '@/engine/state/oh-it-nrc';
+import { allocateOhioUnemploymentReceipts, type OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
 import {calculateFederalTax} from '@/engine/federal';
 import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter';
 import {calculateOhioCanonicalBusinessSource,readOhioCanonicalBusinessSource} from '@/engine/state/oh-business-source';
 import {buildGuidedOhioBusinessFacts,type OhioBusinessDraft} from './guided-ohio-business-facts';
-export interface OhioUnemploymentPaymentDraft {
+export interface OhioUnemploymentPaymentDraft extends OhioUnemploymentReceipt {
     originalStatementFingerprint: string;
-    sourceReference: string;
-    paidOrAccruedOn: string;
-    amount: string;
+    allPaymentsIncludedConfirmed: boolean | null;
+}
+export interface OhioUnemploymentPaymentScheduleDraft {
+    originalStatementFingerprint: string;
+    payments: OhioUnemploymentReceipt[];
     allPaymentsIncludedConfirmed: boolean | null;
 }
 export interface OhioResidencyDraft {
     residentCreditSources?: OhioResidentCreditDraft;
     businessSources?: OhioBusinessDraft;
     unemploymentPaymentSource?: OhioUnemploymentPaymentDraft;
+    unemploymentPaymentSchedule?: OhioUnemploymentPaymentScheduleDraft;
     /** Bound only by explicit confirmation; old boolean-only saves require reconfirmation. */
     originalFederalSources?: Record<string, unknown>;
     taxYear: string;
@@ -94,9 +98,12 @@ export function guidedOhioUnemploymentStatement(input: TaxYearInput | null | und
 }
 function projectUnemployment(data: OhioResidencyDraft, input?: TaxYearInput) {
     const proof = data.unemploymentPaymentSource;
+    const schedule = data.unemploymentPaymentSchedule;
+    if (proof && schedule) throw new Error('Choose one way to enter actual unemployment payments.');
+    const evidence = proof ?? schedule;
     const owner = data.owners[0];
     const allFull = data.owners.every(row => row.status === 'full_year_resident');
-    if (!proof && (allFull || input?.taxpayer.taxYear !== 2025
+    if (!evidence && (allFull || input?.taxpayer.taxYear !== 2025
         || !input.form1099G?.some(original => new Decimal(original.unemploymentCompensation).gt(0)))) return undefined;
     const original = guidedOhioUnemploymentStatement(input);
     if (!original || data.owners.length !== 1 || owner?.accountHolder !== 'primary'
@@ -107,31 +114,27 @@ function projectUnemployment(data: OhioResidencyDraft, input?: TaxYearInput) {
     }
     const amounts = { federalAmount: original.amount, residentAmount: '0', nonresidentOhioAmount: '0', sourceReference: original.reference };
     if (owner.status === 'nonresident') {
-        if (proof) throw new Error('Remove the part-year unemployment payment evidence for this full-year nonresident.');
-        return { amounts };
+        if (evidence) throw new Error('Remove the part-year unemployment payment evidence for this full-year nonresident.');
+        return { amounts, payment: undefined, paymentSchedule: undefined };
     }
-    if (proof && proof.originalStatementFingerprint !== original.fingerprint) {
+    if (evidence && evidence.originalStatementFingerprint !== original.fingerprint) {
         throw new Error('The Form 1099-G was replaced or changed, or the unemployment owner changed. Enter the payment evidence again.');
     }
-    if (!proof?.sourceReference?.trim() || !proof.paidOrAccruedOn || !proof.amount?.trim() || proof.allPaymentsIncludedConfirmed !== true) {
+    if (evidence?.allPaymentsIncludedConfirmed !== true || (schedule && schedule.payments.length < 2)
+        || (proof && (!proof.sourceReference?.trim() || !proof.paidOrAccruedOn || !proof.amount?.trim()))) {
         throw new Error('Enter and confirm the actual complete dated unemployment payment evidence.');
     }
-    const amount = normalizedAmount(proof.amount);
-    if (!/^\d+(?:\.\d+)?$/.test(amount) || !new Decimal(amount).eq(original.amount)) {
-        throw new Error('The actual unemployment payment amount must match Form 1099-G Box 1 exactly.');
-    }
-    const date = proof.paidOrAccruedOn;
-    const stamp = Date.parse(`${date}T00:00:00Z`);
-    const period = owner.periods.find(period => period.from <= date && period.to >= date);
-    if (!/^2025-\d{2}-\d{2}$/.test(date) || !Number.isFinite(stamp) || new Date(stamp).toISOString().slice(0, 10) !== date || !period) {
-        throw new Error('Enter the actual unemployment payment or accrual date within the confirmed 2025 domicile periods.');
-    }
+    const rows = (schedule?.payments ?? (proof ? [proof] : [])).map(row => ({
+        sourceReference: row.sourceReference,
+        paidOrAccruedOn: row.paidOrAccruedOn,
+        amount: normalizedAmount(row.amount),
+    }));
+    const resident = allocateOhioUnemploymentReceipts(rows, owner.periods, 2025, new Decimal(original.amount));
+    const linkage = { originalSourceId: original.sourceId, allPaymentsIncludedConfirmed: true as const };
     return {
-        amounts: { ...amounts, residentAmount: period.domicileState === 'OH' ? original.amount : '0' },
-        payment: {
-            originalSourceId: original.sourceId, sourceReference: proof.sourceReference, paidOrAccruedOn: date,
-            amount, allPaymentsIncludedConfirmed: true as const,
-        },
+        amounts: { ...amounts, residentAmount: resident.toFixed() },
+        payment: proof ? { ...linkage, ...rows[0] } : undefined,
+        paymentSchedule: schedule ? { ...linkage, payments: rows } : undefined,
     };
 }
 export function hasCurrentGuidedOhioUnemploymentEvidence(data: OhioResidencyDraft, input: TaxYearInput | null | undefined): boolean {
@@ -142,10 +145,12 @@ function raw(data: OhioResidencyDraft, input: TaxYearInput | undefined, unemploy
     if(data.businessSources&&!input)throw Error('Actual current federal originals are required to replay Ohio business sources.');
     const allFull = data.owners.length > 0 && data.owners.every(owner => owner.status === 'full_year_resident');
     // The entered child has its own strict conversion and complete-source replay after parent/payment confirmation.
-    const {residentCreditSources:_residentCredit, unemploymentPaymentSource:_unemploymentPayment, ...parent}=data;
+    const {residentCreditSources:_residentCredit, unemploymentPaymentSource:_unemploymentPayment,
+        unemploymentPaymentSchedule:_unemploymentSchedule, ...parent}=data;
     return {
         ...parent, taxYear: Number(data.taxYear),
         ...(unemployment?.payment ? { unemploymentPaymentSource: unemployment.payment } : {}),
+        ...(unemployment?.paymentSchedule ? { unemploymentPaymentSchedule: unemployment.paymentSchedule } : {}),
         ...(data.businessSources&&input?{businessSources:buildGuidedOhioBusinessFacts(data.businessSources,input)}:{}),
         allFederalSourcesIncludedConfirmed: data.allFederalSourcesIncludedConfirmed ?? undefined,
         noBusinessIncomeConfirmed: data.noBusinessIncomeConfirmed ?? undefined,

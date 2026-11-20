@@ -2,11 +2,17 @@
 import { useState } from 'react';
 import type { TaxYearInput } from '@/models/inputs';
 import { ohioNrcCategories, type OhioNrcCategory } from '@/models/ohio-residency';
-import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, guidedOhioUnemploymentStatement, hasCurrentGuidedOhioUnemploymentEvidence, type OhioResidencyDraft, type OhioUnemploymentPaymentDraft } from '@/lib/guided-ohio-residency-facts';
+import type { OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
+import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, guidedOhioUnemploymentStatement, hasCurrentGuidedOhioUnemploymentEvidence, type OhioResidencyDraft, type OhioUnemploymentPaymentDraft, type OhioUnemploymentPaymentScheduleDraft } from '@/lib/guided-ohio-residency-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
 type Owner = OhioResidencyDraft['owners'][number];
+const emptyUnemploymentReceipt = (): OhioUnemploymentReceipt => ({ sourceReference: '', paidOrAccruedOn: '', amount: '' });
+function clearUnemploymentEvidence(draft: OhioResidencyDraft) {
+    delete draft.unemploymentPaymentSource;
+    delete draft.unemploymentPaymentSchedule;
+}
 const categoryLabels: Record<OhioNrcCategory, string> = {
     wages: 'Wages and compensation', capitalGains: 'Nonbusiness capital gains and losses',
     rentsRoyalties: 'Nonbusiness rents and royalties', gambling: 'Gambling income',
@@ -59,6 +65,8 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
         && !data.businessSources && !data.residentCreditSources ? guidedOhioUnemploymentStatement(originalInput) : undefined;
     const payment = unemployment && data?.unemploymentPaymentSource?.originalStatementFingerprint === unemployment.fingerprint
         ? data.unemploymentPaymentSource : undefined;
+    const schedule = unemployment && data?.unemploymentPaymentSchedule?.originalStatementFingerprint === unemployment.fingerprint
+        ? data.unemploymentPaymentSchedule : undefined;
     const confirmed = data?.sourceFactsConfirmed === true && hasCurrentGuidedOhioUnemploymentEvidence(data, originalInput);
     function editUnemployment(change: Partial<OhioUnemploymentPaymentDraft>) {
         if (!unemployment) return;
@@ -70,6 +78,25 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                 originalStatementFingerprint: unemployment.fingerprint,
             };
         });
+    }
+    function editUnemploymentSchedule(change?: (draft: OhioUnemploymentPaymentScheduleDraft) => void) {
+        if (!unemployment) return;
+        edit(copy => {
+            const first = payment ? { sourceReference: payment.sourceReference, paidOrAccruedOn: payment.paidOrAccruedOn, amount: payment.amount }
+                : emptyUnemploymentReceipt();
+            const next = schedule && copy.unemploymentPaymentSchedule ? copy.unemploymentPaymentSchedule : {
+                originalStatementFingerprint: unemployment.fingerprint,
+                payments: [first, emptyUnemploymentReceipt()],
+                allPaymentsIncludedConfirmed: null,
+            };
+            next.allPaymentsIncludedConfirmed = null;
+            change?.(next);
+            delete copy.unemploymentPaymentSource;
+            copy.unemploymentPaymentSchedule = next;
+        });
+    }
+    function editReceipt(index: number, field: keyof OhioUnemploymentReceipt, value: string) {
+        editUnemploymentSchedule(next => { next.payments[index][field] = value; });
     }
     return <div className="guided-card">
         <h3 className="guided-card-title">Ohio domicile and income sources</h3>
@@ -97,7 +124,7 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                         <select className="guided-input" value={owner.status} onChange={event => edit(copy => {
                             const status = event.target.value as Owner['status'];
                             currentOwner(copy, key).status = status;
-                            if (key === 'primary' && status !== 'part_year_resident') delete copy.unemploymentPaymentSource;
+                            if (key === 'primary' && status !== 'part_year_resident') clearUnemploymentEvidence(copy);
                         })}>
                             <option value="">Choose actual source status</option>
                             <option value="full_year_resident">Full-year resident</option>
@@ -116,12 +143,23 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                         <legend>{key}: {categoryLabels[category]}</legend>
                         {category === 'unemployment' && key === 'primary' && unemployment && (owner.status === 'part_year_resident' || owner.status === 'nonresident') ? <>
                             <p className="guided-hint">Verified Form 1099-G Box 1: ${unemployment.amount}</p>
-                            {owner.status === 'part_year_resident' && <>
+                            {owner.status === 'part_year_resident' && (data.unemploymentPaymentSchedule ? <>
+                                {(schedule?.payments ?? [emptyUnemploymentReceipt(), emptyUnemploymentReceipt()]).map((receipt, index) => <div key={index}>
+                                    <TextFact label={`Unemployment payment ${index + 1} original reference`} value={receipt.sourceReference} onChange={value => editReceipt(index, 'sourceReference', value)} />
+                                    <TextFact label={`Unemployment payment ${index + 1} date paid or accrued`} type="date" value={receipt.paidOrAccruedOn} onChange={value => editReceipt(index, 'paidOrAccruedOn', value)} />
+                                    <CurrencyField label={`Unemployment payment ${index + 1} amount`} value={receipt.amount} onChange={value => editReceipt(index, 'amount', value)} />
+                                    {(schedule?.payments.length ?? 2) > 2 && <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule(next => { next.payments.splice(index, 1); })}>Remove unemployment payment {index + 1}</button>}
+                                </div>)}
+                                <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule(next => { next.payments.push(emptyUnemploymentReceipt()); })}>Add unemployment payment</button>
+                                <BooleanFact label="Do these payments account for all of Form 1099-G Box 1?" value={schedule?.allPaymentsIncludedConfirmed} onChange={value => editUnemploymentSchedule(next => { next.allPaymentsIncludedConfirmed = value; })} />
+                                <button type="button" className="utility-button" onClick={() => edit(clearUnemploymentEvidence)}>Remove schedule and enter one unemployment payment</button>
+                            </> : <>
                                 <TextFact label="Unemployment payment record reference" value={payment?.sourceReference ?? ''} onChange={sourceReference => editUnemployment({ sourceReference })} />
                                 <TextFact label="Unemployment payment or accrual date" type="date" value={payment?.paidOrAccruedOn ?? ''} onChange={paidOrAccruedOn => editUnemployment({ paidOrAccruedOn })} />
                                 <CurrencyField label="Actual unemployment payment amount" value={payment?.amount ?? ''} onChange={amount => editUnemployment({ amount })} />
                                 <BooleanFact label="Does this one payment account for all of Form 1099-G Box 1?" value={payment?.allPaymentsIncludedConfirmed} onChange={allPaymentsIncludedConfirmed => editUnemployment({ allPaymentsIncludedConfirmed })} />
-                            </>}
+                                <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule()}>Enter multiple unemployment payments</button>
+                            </>)}
                         </> : <>
                             <TextFact label={`${key} ${categoryLabels[category]} original source reference`} value={amounts[category].sourceReference} onChange={value => editOwner(key, row => { currentAmounts(row)[category].sourceReference = value; })} />
                             {amountFields.map(([field, label]) => <CurrencyField key={field} allowNegative={['capitalGains','rentsRoyalties','otherIncome'].includes(category)} label={`${key} ${categoryLabels[category]}: ${label}`} value={amounts[category][field]} onChange={value => editOwner(key, row => { currentAmounts(row)[category][field] = value; })} />)}
@@ -129,11 +167,11 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                     </fieldset>)}
                     <button type="button" className="utility-button" onClick={() => edit(copy => {
                         copy.owners = copy.owners.filter(row => row.accountHolder !== key);
-                        if (key === 'primary') delete copy.unemploymentPaymentSource;
+                        if (key === 'primary') clearUnemploymentEvidence(copy);
                     })}>Remove {key} owner domicile source</button>
                 </fieldset>;
             })}
-            {data.unemploymentPaymentSource && !unemployment && <button type="button" className="utility-button" onClick={() => edit(copy => { delete copy.unemploymentPaymentSource; })}>Remove unemployment payment evidence</button>}
+            {(data.unemploymentPaymentSource || data.unemploymentPaymentSchedule) && !unemployment && <button type="button" className="utility-button" onClick={() => edit(clearUnemploymentEvidence)}>Remove unemployment payment evidence</button>}
             {(needsAmounts || data.schoolDistrictStatus === 'actual_district_sources_required') && <>
                 <BooleanFact label="All actual federal income and adjustment sources included" value={data.allFederalSourcesIncludedConfirmed} onChange={value => edit(copy => { copy.allFederalSourcesIncludedConfirmed = value; })} />
                 <BooleanFact label="Actual sources contain no business income requiring Ohio apportionment" value={data.noBusinessIncomeConfirmed} onChange={value => edit(copy => { copy.noBusinessIncomeConfirmed = value; })} />

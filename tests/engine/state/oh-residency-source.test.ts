@@ -5,6 +5,7 @@ import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter.js
 import { calculateOhioResidentReturn } from '@/engine/state/oh-return.js';
 import { prepareOhioResidencyReview, resolveOhioResidencyReview } from '@/engine/state/oh-residency-source.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
+import { OhioResidencyFactsSchema } from '@/models/ohio-residency.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { simpleW2Fixture } from '../../fixtures/simple-w2.js';
 import { ohioResidencyFacts, ohioResidencyOwner } from '../../fixtures/oh-residency.js';
@@ -40,6 +41,14 @@ const unemploymentPayment = {
     originalSourceId: unemploymentForm.sourceId, sourceReference: 'Synthetic original payment record',
     allPaymentsIncludedConfirmed: true as const, paidOrAccruedOn: '2025-07-01', amount: '1000.00',
 };
+const unemploymentPaymentSchedule = {
+    originalSourceId: unemploymentForm.sourceId,
+    allPaymentsIncludedConfirmed: true,
+    payments: [
+        { sourceReference: 'Synthetic June original receipt', paidOrAccruedOn: '2025-06-30', amount: '400' },
+        { sourceReference: 'Synthetic July original receipt', paidOrAccruedOn: '2025-07-01', amount: '600' },
+    ],
+} as const;
 function unemploymentPacket(status: 'part_year_resident' | 'nonresident', residentAmount: string, originals: unknown[] = [unemploymentForm]) {
     const baseline = packet().input;
     const [wage] = baseline.w2s;
@@ -79,6 +88,57 @@ it('allocates one actual Ohio NRC unemployment payment by domicile date', () => 
         expect(state.nonresidentCreditResult?.line20.toFixed()).toBe(example.credit);
         expect(state.it1040.line10_taxAfterCredits.toFixed()).toBe(example.tax);
     }
+});
+
+it('allocates multiple receipts of the same original Form 1099-G across a domicile change', () => {
+    const partYear = unemploymentPacket('part_year_resident', '600');
+    const nonresident = unemploymentPacket('nonresident', '0');
+    for (const [fixture, residentAmount, nrcIncome, ratio, credit, tax] of [
+        [partYear, '600', '40600', '0.5980', '1406', '945'],
+        [nonresident, '0', '20000', '0.8019', '1885', '466'],
+    ] as const) {
+        const { input, facts } = fixture;
+        const canonical = TaxYearInputSchema.parse(JSON.parse(JSON.stringify({
+            ...input, ohioResidency: { ...facts, unemploymentPaymentSchedule },
+        })));
+        const federal = calculateFederalTax(canonical);
+        const state = calculateOhioResidentReturn(buildOhioResidentReturnInput(canonical, federal));
+
+        expect(federal.otherIncome.toFixed()).toBe('1000');
+        expect(state.it1040.line3_ohioAgi.toFixed()).toBe('101000');
+        expect(state.nonresidentCreditResult?.line12.toFixed()).toBe(residentAmount);
+        expect(state.nonresidentCreditResult?.line13.toFixed()).toBe('0');
+        expect(state.nonresidentCreditResult?.line17.toFixed()).toBe(nrcIncome);
+        expect(state.nonresidentCreditResult?.line19.toFixed(4)).toBe(ratio);
+        expect(state.nonresidentCreditResult?.line20.toFixed()).toBe(credit);
+        expect(state.it1040.line10_taxAfterCredits.toFixed()).toBe(tax);
+    }
+});
+
+it('requires a complete unique payment schedule linked to the same Form 1099-G', () => {
+    const { input, facts } = unemploymentPacket('part_year_resident', '600');
+    const federal = calculateFederalTax(input);
+    const [june, july] = unemploymentPaymentSchedule.payments;
+    for (const payment of [
+        { ...unemploymentPaymentSchedule, allPaymentsIncludedConfirmed: false },
+        { ...unemploymentPaymentSchedule, payments: [june] },
+    ]) {
+        expect(OhioResidencyFactsSchema.safeParse({ ...facts, unemploymentPaymentSchedule: payment }).success).toBe(false);
+    }
+    for (const payment of [
+        { ...unemploymentPaymentSchedule, originalSourceId: 'wrong statement' },
+        { ...unemploymentPaymentSchedule, payments: [june, { ...july, amount: '599' }] },
+        { ...unemploymentPaymentSchedule, payments: [june, { ...july, amount: '600.25' }] },
+        { ...unemploymentPaymentSchedule, payments: [{ ...june, amount: '0' }, { ...july, amount: '1000' }] },
+        { ...unemploymentPaymentSchedule, payments: [june, { ...july, sourceReference: june.sourceReference }] },
+        { ...unemploymentPaymentSchedule, payments: [june, { ...july, paidOrAccruedOn: '2025-06-31' }] },
+        { ...unemploymentPaymentSchedule, payments: [june, { ...july, paidOrAccruedOn: '2025-06-30' }] },
+    ]) {
+        const residency = { ...facts, unemploymentPaymentSchedule: payment };
+        expect(() => buildOhioResidentReturnInput(input, federal, { residency })).toThrow(/unemployment/i);
+    }
+    const ambiguous = { ...facts, unemploymentPaymentSchedule, unemploymentPaymentSource: unemploymentPayment };
+    expect(() => buildOhioResidentReturnInput(input, federal, { residency: ambiguous })).toThrow(/unemployment/i);
 });
 
 it('rejects unmatched Ohio NRC unemployment payment evidence or allocations', () => {

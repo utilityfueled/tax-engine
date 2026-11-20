@@ -21,10 +21,11 @@ lines:
     label: "2025 Ohio IT NRC line 12 guided payment evidence"
     formula: |
       Apply the canonical 2025 one-original, single-filer ordinary Box 1 method.
-      For a part-year resident, collect one actual benefit payment's reference,
-      paid-or-accrued date, exact amount, and confirmation that this one payment
-      accounts for the entire original Box 1. Match the positive whole-dollar
-      amount to the verified current Form 1099-G and allocate it using the
+      For a part-year resident, collect an actual dated payment or a complete
+      schedule of distinct original payment references, dates and exact amounts.
+      Require confirmation that the entered receipts account for original Box 1.
+      Match the sum of positive whole-dollar amounts to the verified current
+      Form 1099-G and allocate each receipt using the
       confirmed Ohio domicile dates. For a full-year nonresident, derive known
       zero Ohio unemployment from the complete outside timeline. Derive the NRC
       unemployment row from actual originals instead of collecting the same
@@ -37,6 +38,8 @@ lines:
       refreshing the original. Other methods and annual filing gates are held.
       https://codes.ohio.gov/ohio-revised-code/section-5747.20
     testRef: "tests/guided-interview/guided-ohio-residency.test.ts::requires actual unemployment evidence before Ohio wizard progression and replays saved originals"
+    testRefs:
+      - "tests/guided-interview/guided-ohio-residency.test.ts::replays a complete split unemployment payment schedule through the guided Ohio return"
 businessRuleValidation:
   - rule: "actual-collector-confirmation-recovery"
     description: "Visible actual data edits invalidate confirmation; explicit removal preserves missing state instead of inventing full-year residency. No hidden zero defaults."

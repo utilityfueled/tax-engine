@@ -17,6 +17,15 @@ const unemploymentPaymentSource = z.object({
     paidOrAccruedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     amount: money,
 }).strict();
+const unemploymentPaymentSchedule = z.object({
+    originalSourceId: ref,
+    allPaymentsIncludedConfirmed: z.literal(true),
+    payments: z.array(z.object({
+        sourceReference: ref,
+        paidOrAccruedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        amount: money,
+    }).strict()).min(2),
+}).strict();
 export const OhioResidencyFactsSchema = z.object({
     taxYear: z.number().int().min(2025).max(2026), sourceReference: ref, sourceFactsConfirmed: z.literal(true),
     allFederalSourcesIncludedConfirmed: z.boolean().optional(), noBusinessIncomeConfirmed: z.boolean().optional(),
@@ -25,6 +34,7 @@ export const OhioResidencyFactsSchema = z.object({
     reciprocalWageSources: OhioReciprocalWageSourcesSchema.optional(),
     residentCreditSources: OhioResidentCreditSourcesSchema.optional(),
     unemploymentPaymentSource: unemploymentPaymentSource.optional(),
+    unemploymentPaymentSchedule: unemploymentPaymentSchedule.optional(),
     originalFederalSources: z.record(z.string(), z.unknown()).optional(),
     owners: z.array(z.object({ accountHolder: z.enum(['primary', 'spouse']), status: z.enum(['full_year_resident', 'part_year_resident', 'nonresident']), sourceReference: ref,
         periods: z.array(z.object({ from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), domicileState: z.string().regex(/^[A-Z]{2}$/) }).strict()).min(1),
