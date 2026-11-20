@@ -175,7 +175,9 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  assert.equal(comparison.length,1);
  assert.equal(workflow.on.workflow_dispatch.inputs.compare_ohio_runtimes.default,false);
  assert.match(comparison[0].if,/github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes/u);
- assert.equal(comparison[0]['continue-on-error'],true);
+ assert.equal(comparison[0].id,'ohio_runtime_comparison');
+ assert.equal(comparison[0]['timeout-minutes'],18);
+ assert.equal(comparison[0]['continue-on-error'],undefined);
  assert.match(comparison[0].run,/--workers=2 --retries=0 --timeout=30000/u);
  for(const delta of [ohioInput,ohioBlock,ohioGroup,'            ohio-same-runner-*.log\n            ohio-same-runner-status.txt\n']){
   assert.equal(original.split(delta).length,2);

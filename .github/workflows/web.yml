@@ -243,9 +243,9 @@ jobs:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}
       - name: Compare focused Ohio journeys on the same runner
+        id: ohio_runtime_comparison
         if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes && (steps.container_browser.outcome == 'success' || steps.container_browser.outcome == 'failure') }}
-        timeout-minutes: 10
-        continue-on-error: true
+        timeout-minutes: 18
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
         run: |
