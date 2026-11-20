@@ -1,0 +1,28 @@
+form: "Form 8919 final 2026 physical candidate"
+fullName: "Uncollected Social Security and Medicare Tax on Wages final annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f8919.pdf"
+revision: "Created 5/14/26"
+postedAt: "2026-11-20"
+retrievedAt: "2026-11-20T22:45:29Z"
+notes: |
+  The regular and annual archive IRS PDFs match. Page two contains the annual
+  instructions. The form prints the $184,500 Social Security wage base on
+  line 7 and gives the same cap for RRTA compensation on line 8. Line 6 sends
+  wages to Form 1040 line 1g and Form 8959 line 3 when required. Line 13 sends
+  tax to Schedule 2 line 16b. These references identify the annual source.
+  Calculation, transfer mapping, independent review and export qualification
+  are outside the physical candidate.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual blank"
+    formula: "Require SHA-256 b7bfa1eb7b4b1893acdcc6399103e8cc0388e4dd64c9522e586adccdba0b42dc, 85924 bytes, two 612 by 792 point pages, and the 2026 PDF title."
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-layout"
+    description: "Confirm the official pages and their widget census"
+    formula: "Preserve 35 text fields and five checkboxes on page one. Page two contains the instructions and has no widgets."
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::confirms the physical page and widget census"
+  - line: "closed-exports"
+    description: "Keep the candidate outside public review and filing"
+    formula: "The 2025 and 2026 review template registries reject these bytes. The physical candidate has no route, field map, or export registration."
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::keeps the physical candidate outside public exports"

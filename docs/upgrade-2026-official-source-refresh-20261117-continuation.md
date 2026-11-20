@@ -110,3 +110,26 @@ existing manual total, and this candidate supplies no calculation or export map.
 [Current Form 2106](https://www.irs.gov/pub/irs-pdf/f2106.pdf) ·
 [Annual archive](https://www.irs.gov/pub/irs-prior/f2106--2026.pdf) ·
 [Current instructions](https://www.irs.gov/pub/irs-pdf/i2106.pdf).
+
+## November 20 Form 8919 and Schedule B instructions
+
+The IRS posted the final Form 8919 on November 20. The regular and annual
+archive PDFs match. The two-page form prints 2026 and `Created 5/14/26`, with
+40 widgets on page one and instructions on page two. The 2026 wage base is
+$184,500. Line 6 references Form 1040 line 1g and Form 8959 line 3 when required.
+Line 13 references Schedule 2 line 16b. The physical candidate is pinned with
+exports disabled. The annual calculation and transfers still require qualification.
+[Current Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+[Annual archive](https://www.irs.gov/pub/irs-prior/f8919--2026.pdf).
+
+The regular Schedule B instructions print tax year 2026 and November 6, 2026
+on page one. The IRS PDF directory lists them on November 20. The product
+catalog labels the instructions 2025, and the regular Schedule B blank still
+prints 2025. The three-page instructions had SHA-256
+`cb1efb3dd0da7c6ec7eaab7a8f59730c323a692ff96dba679fe94515facc73c0`
+at retrieval on November 20 at 22:46:07 UTC. The instructions can support
+annual source review while the 2026 blank and parent return remain pending.
+[Current Schedule B instructions](https://www.irs.gov/pub/irs-pdf/i1040sb.pdf) ·
+[IRS PDF directory](https://www.irs.gov/downloads/irs-pdf?page=0) ·
+[IRS product catalog](https://www.irs.gov/forms-instructions-and-publications?find=Form+1040+Schedule+B) ·
+[Current Schedule B](https://www.irs.gov/pub/irs-pdf/f1040sb.pdf).
