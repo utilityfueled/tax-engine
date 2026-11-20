@@ -11,6 +11,38 @@ import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 const d = (n: number | string) => new Decimal(n);
 
+describe("Schedule 1 modified AGI statement years", () => {
+  it("holds wrong-year statements used in standalone Schedule 1 modified AGI", () => {
+    const { input } = makeFixture({ studentLoanInterest: "2500" });
+    const statements: Array<[string, Partial<TaxYearInput>]> = [
+      ["Form W-2", { w2s: [{ ...input.w2s[0], taxYear: 2024 }] }],
+      ["Form 1099-INT", { form1099Int: [{ payer: "Bank", taxYear: 2024, interestIncome: "15000" }] }],
+      ["Form 1099-DIV", { form1099Div: [{ payer: "Broker", taxYear: 2024, ordinaryDividends: "15000" }] }],
+      ["Form 1099-MISC", { form1099Misc: [{ payer: "Sponsor", taxYear: 2024, otherIncome: "15000" }] }],
+    ];
+
+    for (const [formName, facts] of statements) {
+      expect(() => calculateSchedule1({ ...input, ...facts })).toThrow(
+        `${formName} source year 2024 must match the 2025 return`,
+      );
+    }
+  });
+
+  it("uses matching and legacy undated income in standalone Schedule 1 modified AGI", () => {
+    const { input } = makeFixture({ studentLoanInterest: "2500" });
+
+    const result = calculateSchedule1({
+      ...input,
+      w2s: [{ ...input.w2s[0], taxYear: 2025 }],
+      form1099Int: [{ payer: "Bank", taxYear: 2025, interestIncome: "2500" }],
+      form1099Div: [{ payer: "Broker", ordinaryDividends: "2500" }],
+      form1099Misc: [{ payer: "Sponsor", taxYear: 2025, otherIncome: "2500" }],
+    });
+
+    expect(result.studentLoanInterest.toString()).toBe("1250");
+  });
+});
+
 function makeFixture(
   adjustments?: TaxYearInput["adjustments"],
   extra?: Schedule1Input

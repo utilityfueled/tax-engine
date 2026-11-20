@@ -259,6 +259,17 @@ lines:
       - "Other adjustments (HSA, SE deductions) reduce IRA MAGI and can increase the deductible amount"
     testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 20 - single active participant mid-phase-out computes partial IRA deduction from worksheet"
 
+  - line: "20-and-21-income-statement-years"
+    description: "Reconcile the wage and investment statement calendar years used in the modified AGI worksheets"
+    formula: "Before computing a standalone Schedule 1, hold Forms W-2, 1099-INT, 1099-DIV and 1099-MISC when the supplied reporting year differs from the return year. Keep matching and undated legacy records. A wrong-year amount must not change modified AGI or the resulting deduction."
+    irsRef: "Publication 970, student loan interest deduction modified AGI; Publication 590-A, traditional IRA deduction modified AGI"
+    sources:
+      - "https://www.irs.gov/publications/p970"
+      - "https://www.irs.gov/publications/p590a"
+    testRef: "tests/engine/schedules/schedule-1.test.ts::holds wrong-year statements used in standalone Schedule 1 modified AGI"
+    testRefs:
+      - "tests/engine/schedules/schedule-1.test.ts::uses matching and legacy undated income in standalone Schedule 1 modified AGI"
+
   - line: "21"
     description: "Student loan interest deduction"
     formula: "Qualified student loan interest paid, limited to $2,500 before phase-out; if filing separately, $0; otherwise use the smaller of the paid interest or $2,500, compute the 2025 modified-AGI worksheet fraction as excess MAGI over the filing-status threshold divided by $15,000 ($30,000 if married filing jointly) rounded to at least three decimals and capped at 1.000, multiply the capped interest by that fraction, subtract the reduction from the capped interest, and round the final Schedule 1 Line 21 deduction to the nearest whole dollar"

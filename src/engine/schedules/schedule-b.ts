@@ -8,6 +8,7 @@
 
 import Decimal from "decimal.js";
 import { calculateForm1099OID } from "../forms/form-1099-oid.js";
+import { assertStatementYear } from "../assert-statement-year.js";
 import { calculateForm1099DASources } from '../forms/form-1099-da-sources.js';
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
@@ -51,15 +52,8 @@ export interface ScheduleBResult {
 
 export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOverride?: Decimal): ScheduleBResult {
   const returnYear = input.taxpayer.taxYear;
-  for (const [formName, statements] of [
-    ["Form 1099-INT", input.form1099Int],
-    ["Form 1099-DIV", input.form1099Div],
-  ] as const) {
-    const wrongYear = statements.find(statement => statement.taxYear !== undefined && statement.taxYear !== returnYear);
-    if (wrongYear) {
-      throw new Error(`${formName} source year ${wrongYear.taxYear} must match the ${returnYear} return`);
-    }
-  }
+  assertStatementYear("Form 1099-INT", input.form1099Int, returnYear);
+  assertStatementYear("Form 1099-DIV", input.form1099Div, returnYear);
   const audit = new AuditTrail();
   // Validates actual current transfer/redemption sources; income still enters
   // exclusively through the original statements below.

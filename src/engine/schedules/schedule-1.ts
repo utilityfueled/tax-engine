@@ -14,6 +14,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { getConstants } from "@/models/constants.js";
+import { assertStatementYear } from "../assert-statement-year.js";
 import {
   calculateForm8889,
   mergeW2Box12CodeWIntoForm8889Input,
@@ -285,7 +286,12 @@ export function calculateSchedule1(
 ): Schedule1Result {
   const audit = new AuditTrail();
   const adjustments = input.adjustments;
-  const constants = getConstants(input.taxpayer.taxYear);
+  const returnYear = input.taxpayer.taxYear;
+  const constants = getConstants(returnYear);
+  assertStatementYear("Form W-2", input.w2s, returnYear);
+  assertStatementYear("Form 1099-INT", input.form1099Int, returnYear);
+  assertStatementYear("Form 1099-DIV", input.form1099Div, returnYear);
+  assertStatementYear("Form 1099-MISC", input.form1099Misc, returnYear);
   const filingStatus = input.taxpayer.filingStatus;
 
   // ── Part I: Additional Income ─────────────────────────

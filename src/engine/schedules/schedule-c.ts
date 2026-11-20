@@ -8,6 +8,7 @@ import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-
  */
 
 import Decimal from "decimal.js";
+import { assertStatementYear } from "../assert-statement-year.js";
 import {calculateScheduleCSourceFacts} from "./schedule-c-source-facts.js";
 import { reconcileProfessionalWageringStatements } from "./schedule-c-wagering-sources.js";
 import {
@@ -187,11 +188,7 @@ export function calculateScheduleC(
     || input.scheduleC?.standardMileage !== undefined ? input.scheduleC : undefined,
   options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
-  const returnYear = input.taxpayer.taxYear;
-  const wrongYear = input.form1099Nec.find(form => form.taxYear !== undefined && form.taxYear !== returnYear);
-  if (wrongYear) {
-    throw new Error(`Form 1099-NEC source year ${wrongYear.taxYear} must match the ${returnYear} return`);
-  }
+  assertStatementYear("Form 1099-NEC", input.form1099Nec, input.taxpayer.taxYear);
   const audit = new AuditTrail();
   const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
   const mileage = calculateStandardMileage(input, scheduleCInput);
