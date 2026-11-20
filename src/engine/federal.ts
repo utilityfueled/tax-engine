@@ -1565,8 +1565,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     childCollectiblesGain: form8814IncomeCharacter.collectiblesGain,
     childUnrecapturedSection1250Gain: form8814IncomeCharacter.unrecapturedSection1250Gain,
   });
-  // Record the full carryover worksheet after Form 1040 line 15 is known.
-  audit.merge(schedD.lines.filter(line => line.form !== "Sched D" || !line.line.startsWith("carryforward-")));
+  audit.merge(schedD.lines);
   // Track wash sale carryforward for crypto dispositions (IRC §1091)
   // Include 1099-DA lot-matched dispositions so broker-reported wash sales
   // also flow through carryforward tracking.
@@ -3391,16 +3390,26 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // The capital loss worksheet uses the final, unfloored Form 1040 line 15.
   const capitalCarryforwardIncome = agi.minus(totalDeduction);
   const adjustedCarryforward = recomputeCarryforward(schedD, capitalCarryforwardIncome);
-  const capitalCarryforwardInputs = {
-    "Unfloored Form 1040 line 15": capitalCarryforwardIncome,
-    "Schedule D line 7": schedD.netShortTerm,
-    "Schedule D line 15": schedD.netLongTerm,
-    "Schedule D line 21": schedD.capitalLossDeduction,
-  };
-  audit.record("Sched D", "carryforward-short-term", "Short-term capital loss carryforward", adjustedCarryforward.carryforwardShortTerm,
-    "Capital Loss Carryover Worksheet line 8, before any Form 982 attribute reduction", capitalCarryforwardInputs);
-  audit.record("Sched D", "carryforward-long-term", "Long-term capital loss carryforward", adjustedCarryforward.carryforwardLongTerm,
-    "Capital Loss Carryover Worksheet line 13, before any Form 982 attribute reduction", capitalCarryforwardInputs);
+  if (!schedD.carryforwardShortTerm.eq(adjustedCarryforward.carryforwardShortTerm)
+    || !schedD.carryforwardLongTerm.eq(adjustedCarryforward.carryforwardLongTerm)) {
+    const inputs = {
+      "Unfloored Form 1040 line 15": capitalCarryforwardIncome,
+      "Schedule D line 7": schedD.netShortTerm,
+      "Schedule D line 15": schedD.netLongTerm,
+      "Schedule D line 21": schedD.capitalLossDeduction,
+    };
+    // Both audit views share these entries. Amend only changed values in place
+    // to preserve the order and existing evidence of unaffected returns.
+    for (const [id, worksheetLine, value] of [
+      ["carryforward-short-term", "8", adjustedCarryforward.carryforwardShortTerm],
+      ["carryforward-long-term", "13", adjustedCarryforward.carryforwardLongTerm],
+    ] as const) {
+      const line = audit.getLine("Sched D", id);
+      if (!line || line.value.eq(value)) continue;
+      Object.assign(line, { value, formula: `Capital Loss Carryover Worksheet line ${worksheetLine}, before any Form 982 attribute reduction`, inputs });
+    }
+    Object.assign(schedD, adjustedCarryforward);
+  }
 
   // ═══════════════════════════════════════════════════════════
   // Phase 4: Tax Computation (Form 1040 Line 16)

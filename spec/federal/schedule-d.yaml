@@ -80,7 +80,7 @@ lines:
   - line: "carryforward-at-or-below-limit"
     description: "Capital loss at or below the annual limit with no or partial taxable income"
     formula: "Apply the same worksheet whenever line 21 is a loss and raw Form 1040 line 15 is negative, even when lines 16 and 21 are equal. Limit actual loss use to positive taxable income before the capital loss deduction. Carry the remaining loss to the following year."
-    notes: "The full return's Schedule D audit records the worksheet results after applying raw Form 1040 line 15 and before any Form 982 attribute reduction."
+    notes: "The full return's Schedule D result and audit both use the worksheet after applying raw Form 1040 line 15 and before any Form 982 attribute reduction. Unchanged audit entries retain their order and content."
     irsRef: "2025 Schedule D instructions, Line 21, 2025-to-2026 carryover; IRS Publication 550 (2025), Capital Losses"
     testRef: "tests/engine/schedules/schedule-d.test.ts::publishes unused 2025 capital losses at or below the limit for 2026"
 

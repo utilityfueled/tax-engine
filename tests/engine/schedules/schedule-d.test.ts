@@ -899,6 +899,8 @@ describe("Schedule D - recomputeCarryforward (IRS Capital Loss Carryover Workshe
       expect(result.carryforwards.shortTermCapitalLoss.toFixed(), `wages ${wages}, short term`).toBe(shortCarry);
       expect(result.carryforwards.longTermCapitalLoss.toFixed(), `wages ${wages}, long term`).toBe(longCarry);
       expect(result.carryforwards.capitalLoss.toFixed(), `wages ${wages}, total`).toBe(d(shortCarry).plus(longCarry).toFixed());
+      expect(result.scheduleD?.carryforwardShortTerm.toFixed(), `wages ${wages}, Schedule D short term`).toBe(shortCarry);
+      expect(result.scheduleD?.carryforwardLongTerm.toFixed(), `wages ${wages}, Schedule D long term`).toBe(longCarry);
       const worksheetLines = result.allLines.filter(line => line.form === "Sched D" && line.line.startsWith("carryforward-"));
       expect(worksheetLines.map(line => [line.line, line.value.toFixed()]), `wages ${wages}, audit`).toEqual([
         ["carryforward-short-term", shortCarry], ["carryforward-long-term", longCarry],
