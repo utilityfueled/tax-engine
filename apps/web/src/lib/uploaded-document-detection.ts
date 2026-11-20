@@ -34,6 +34,7 @@ interface ExtractedTextItem {
 }
 
 type NecCopyB = { amount: string | null; taxYear: number | null };
+type W2CopyB = { wages: string | null; withheld: string | null };
 type PdfRectangle = readonly [number, number, number, number];
 type PdfAnnotation = {
   subtype?: string;
@@ -69,10 +70,9 @@ function parseNecCopyBWidgetAmount(text: string) {
   return parseNecCopyBAmount(cents);
 }
 
-function readNecCopyBWidget(
-  annotations: PdfAnnotation[], field: string, expected: PdfRectangle, parse: NecFieldParser,
+function readTextWidget(
+  annotations: PdfAnnotation[], fieldName: string, expected: PdfRectangle, parse: NecFieldParser,
 ): NecFieldEvidence {
-  const fieldName = copyBFieldPrefix + field;
   const [left, bottom, right, top] = expected;
   const candidates = annotations.filter(({ fieldName: name, rect }) => name === fieldName || (
     rect?.length === 4 && rect[0] < right && rect[2] > left && rect[1] < top && rect[3] > bottom
@@ -182,7 +182,7 @@ async function readNecCopyB(items: ExtractedTextItem[], readAnnotations: () => P
   };
   const annotations = await readAnnotations().catch(() => null);
   if (!annotations) return { amount: null, taxYear: null };
-  const widgetAmount = readNecCopyBWidget(annotations, "RightCol[0].f2_20[0]", copyBAmountRect, parseNecCopyBWidgetAmount);
+  const widgetAmount = readTextWidget(annotations, copyBFieldPrefix + "RightCol[0].f2_20[0]", copyBAmountRect, parseNecCopyBWidgetAmount);
   const printedAmount = widgetAmount === undefined
     ? fieldText(onRow(650.86), copyBAmountRect, parseNecCopyBAmount)
     : fieldText(inRect(copyBAmountRect), copyBAmountRect, parseNecCopyBWidgetAmount);
@@ -192,7 +192,7 @@ async function readNecCopyB(items: ExtractedTextItem[], readAnnotations: () => P
   let taxYear: number | null = null;
   const year = agreeNecCopyBField(
     fieldText(inRect(copyBYearRect), copyBYearRect, parseNecCopyBYear),
-    readNecCopyBWidget(annotations, "PgHeader[0].CalendarYear[0].f2_1[0]", copyBYearRect, parseNecCopyBYear),
+    readTextWidget(annotations, copyBFieldPrefix + "PgHeader[0].CalendarYear[0].f2_1[0]", copyBYearRect, parseNecCopyBYear),
   );
   if (markers.length === 1 && year !== null) {
     // Removing the printed marker keeps other explicit years in play without
@@ -205,7 +205,83 @@ async function readNecCopyB(items: ExtractedTextItem[], readAnnotations: () => P
   return { amount, taxYear };
 }
 
-async function readPdf(file: File, detectNecCopyB: boolean) {
+async function read2026W2CopyB(
+  items: ExtractedTextItem[], singleUprightLetterPage: boolean, readAnnotations: () => Promise<PdfAnnotation[]>,
+): Promise<W2CopyB | null> {
+  const panels = [
+    { name: "Top", offset: 396, firstText: 1, firstCheck: 2, wageField: "f2_09[0]", withheldField: "f2_10[0]" },
+    { name: "Bottom", offset: 0, firstText: 45, firstCheck: 6, wageField: "f2_53[0]", withheldField: "f2_54[0]" },
+  ];
+  const anchors = [
+    { text: "Wages, tips, other compensation", x: 347.652, y: 328.001 },
+    { text: "Federal income tax withheld", x: 470.83, y: 328.001 },
+    { text: "W-2", x: 57.6, y: 36.864 },
+    { text: "Wage and Tax Statement", x: 106.501, y: 41.454 },
+    { text: "2026", x: 289.441, y: 36.828 },
+    { text: "Copy B—To Be Filed With Employee’s FEDERAL Tax Return.", x: 36, y: 24.887 },
+  ];
+  const positioned = items.flatMap(({ str, transform: t, width }) => (
+    str?.trim() && t?.length === 6 && typeof width === "number"
+      ? [{ text: str.trim(), x: t[4], y: t[5], width, horizontal: t[0] > 0 && t[1] === 0 && t[2] === 0 && t[3] > 0 }]
+      : []
+  ));
+  const matches = panels.every(({ offset }) => anchors.every(({ text, x, y }) => positioned.filter(item =>
+    item.text === text && item.horizontal && Math.abs(item.x - x) <= 0.5 && Math.abs(item.y - y - offset) <= 0.5
+  ).length === 1));
+  if (!matches) return null;
+
+  const manual = { wages: null, withheld: null };
+  if (!singleUprightLetterPage || [...explicitDocumentTaxYears(groupPageText(items))].some(year => year !== 2026)) return manual;
+  const annotations = await readAnnotations().catch(() => null);
+  if (!annotations) return manual;
+
+  const visibleEntries = ([left, bottom, right, top]: PdfRectangle) => positioned.filter(item =>
+    item.y >= bottom && item.y <= top && item.x < right && item.x + item.width >= left
+  );
+  const occupied = [];
+  for (const panel of panels) {
+    const { name, offset, firstText, firstCheck } = panel;
+    const prefix = `topmostSubform[0].CopyB[0].CopyB_${name}[0].`;
+    const widgets = annotations.filter(({ subtype, rect }) =>
+      subtype === "Widget" && rect?.length === 4 && rect[1] >= offset && rect[3] <= offset + 396
+    );
+    const expected = new Set([
+      ...Array.from({ length: 44 }, (_, index) => `Tx:f2_${String(firstText + index).padStart(2, "0")}[0]`),
+      ...Array.from({ length: 3 }, (_, index) => `Btn:c2_${firstCheck + index}[0]`),
+    ]);
+    // Both original panels must retain their complete widget sets. A partly
+    // flattened panel could otherwise hide a separate employer or statement.
+    if (widgets.length !== expected.size || !widgets.every(({ fieldName, fieldType }) =>
+      fieldName?.startsWith(prefix) && expected.delete(`${fieldType}:${fieldName.split(".").at(-1)}`)
+    )) return manual;
+    if (widgets.some(({ rect, fieldType, fieldValue, textContent }) => {
+      const savedValue = typeof fieldValue === "string" && fieldValue.trim() !== ""
+        && (fieldType !== "Btn" || fieldValue !== "Off");
+      return savedValue || (Array.isArray(textContent) && textContent.length > 0)
+        || (rect?.length === 4 && visibleEntries([rect[0], rect[1], rect[2], rect[3]]).length > 0);
+    })) occupied.push(panel);
+  }
+  if (occupied.length !== 1) return manual;
+  const [{ name, offset, wageField, withheldField }] = occupied;
+  const prefix = `topmostSubform[0].CopyB[0].CopyB_${name}[0].Col_Right[0].`;
+  const readAmount = (field: string, left: number, right: number) => {
+    const rect: PdfRectangle = [left, 312.001 + offset, right, 324 + offset];
+    const amount = readTextWidget(annotations, prefix + field, rect, parseNecCopyBWidgetAmount);
+    if (amount == null) return null;
+    const [entry, ...otherEntries] = visibleEntries(rect);
+    if (!entry) return amount;
+    return otherEntries.length === 0 && entry.horizontal && entry.width > 0
+      && entry.x >= left && entry.x + entry.width <= right && parseNecCopyBWidgetAmount(entry.text) === amount
+      ? amount
+      : null;
+  };
+  return {
+    wages: readAmount("Box1_ReadOrder[0]." + wageField, 333.2, 451.6),
+    withheld: readAmount(withheldField, 455.6, 574),
+  };
+}
+
+async function readPdf(file: File, detectOriginal: boolean) {
   const pdfjs = await loadPdfJs();
   const buffer = await file.arrayBuffer();
   const data = new Uint8Array(buffer);
@@ -214,18 +290,23 @@ async function readPdf(file: File, detectNecCopyB: boolean) {
     const pdf = await task.promise;
     const pageTexts: string[] = [];
     let necCopyB: NecCopyB | null = null;
+    let w2CopyB: W2CopyB | null = null;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
       const textContent = await page.getTextContent();
       const items = textContent.items as ExtractedTextItem[];
       pageTexts.push(groupPageText(items));
-      if (detectNecCopyB && pdf.numPages === 1 && page.rotate === 0
-        && page.view.join(",") === "0,0,612,792") {
-        necCopyB = await readNecCopyB(items, () => page.getAnnotations({ intent: "any" }));
+      if (detectOriginal) {
+        const singleUprightLetterPage = pdf.numPages === 1 && page.rotate === 0 && page.view.join(",") === "0,0,612,792";
+        const readAnnotations = () => page.getAnnotations({ intent: "any" });
+        if (singleUprightLetterPage) necCopyB = await readNecCopyB(items, readAnnotations);
+        if (items.some(({ str }) => str === "Copy B—To Be Filed With Employee’s FEDERAL Tax Return.")) {
+          w2CopyB ??= await read2026W2CopyB(items, singleUprightLetterPage, readAnnotations);
+        }
       }
       page.cleanup();
     }
-    return { text: pageTexts.join("\n\n"), necCopyB };
+    return { text: pageTexts.join("\n\n"), necCopyB, w2CopyB };
   } finally {
     await task.destroy();
   }
@@ -411,10 +492,21 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
     ...(sourceState ? { state: sourceState, stateTaxReporting: "single" as const } : sourceStates.length > 1 ? { stateTaxReporting: "multiple" as const } : {}),
   };
 
+  const complete = Boolean(employerName && employerEin && sourceState)
+    && [wages, federalWithheld, socialSecurityWages, socialSecurityTips, box10DependentCareBenefits, socialSecurityWithheld, medicareWages, medicareWithheld, stateWages, stateWithheld].every(value => value !== undefined);
+  return buildParsedW2(machineValue, extractExplicitDocumentTaxYear(normalizedText), complete ? "supported" : "partially-supported");
+}
+
+function buildParsedW2(
+  machineValue: WorkspaceStructuredFactMachineValueW2Summary,
+  taxYear: number | null,
+  coverage: WorkspaceDocumentCoverage,
+): ParsedUploadedDocument {
+  const { employerName, wages, federalWithheld } = machineValue;
   return {
     kind: "w2",
-    taxYear: extractExplicitDocumentTaxYear(normalizedText),
-    coverage: employerName && employerEin && [wages, federalWithheld, socialSecurityWages, socialSecurityTips, box10DependentCareBenefits, socialSecurityWithheld, medicareWages, medicareWithheld, stateWages, stateWithheld].every(value => value !== undefined) && sourceState ? "supported" : "partially-supported",
+    taxYear,
+    coverage,
     label: employerName ? `${employerName} W-2` : "Form W-2 upload",
     notes: "Parsed W-2 wage and withholding boxes from an uploaded W-2 PDF.",
     seededFactIds: ["wages", "withholding"],
@@ -423,7 +515,7 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-summary",
         factId: "wages",
         label: "Wages",
-        value: `Parsed uploaded W-2: ${employerName || "payer identity unconfirmed"} box 1 wages $${wages === undefined ? "unknown" : formatAmountLabel(wages)} and box 2 federal withholding $${federalWithheld === undefined ? "unknown" : formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2: ${employerName || "payer identity unconfirmed"} box 1 wages $${wages === "" ? "unknown" : formatAmountLabel(wages)} and box 2 federal withholding $${federalWithheld === "" ? "unknown" : formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
         machineValue,
       },
@@ -431,11 +523,31 @@ export function parseUploadedW2Text(text: string, fileName = ""): ParsedUploaded
         idSuffix: "parsed-w2-withholding",
         factId: "withholding",
         label: "Federal withholding",
-        value: `Parsed uploaded W-2 withholding: box 2 federal income tax withheld $${federalWithheld === undefined ? "unknown" : formatAmountLabel(federalWithheld)}.`,
+        value: `Parsed uploaded W-2 withholding: box 2 federal income tax withheld $${federalWithheld === "" ? "unknown" : formatAmountLabel(federalWithheld)}.`,
         confidence: "high",
       },
     ],
   };
+}
+
+function parse2026W2CopyB({ wages, withheld }: W2CopyB): ParsedUploadedDocument {
+  if (wages === null && withheld === null) return {
+    kind: "w2",
+    taxYear: null,
+    coverage: "partially-supported",
+    label: "Form W-2 Copy B upload",
+    notes: "Review the original and confirm one statement, its year, wages and withholding.",
+    seededFactIds: ["wages", "withholding"],
+    detectedFacts: [],
+  };
+  return buildParsedW2({
+    entryKind: "w2-summary",
+    sourceFactsVersion: 2,
+    employerName: "",
+    employerEin: "",
+    wages: wages ?? "",
+    federalWithheld: withheld ?? "",
+  }, 2026, "partially-supported");
 }
 
 function sourcePayer(text: string): string {
@@ -735,7 +847,9 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
   return parseDocumentText(text, fileName, null);
 }
 
-function parseDocumentText(text: string, fileName: string, necCopyB: NecCopyB | null): ParsedUploadedDocument | null {
+function parseDocumentText(
+  text: string, fileName: string, necCopyB: NecCopyB | null, w2CopyB: W2CopyB | null = null,
+): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
 
@@ -762,6 +876,7 @@ function parseDocumentText(text: string, fileName: string, necCopyB: NecCopyB | 
 
   const marketplace = parseUploadedMarketplaceStatement(normalizedText);
   if (marketplace) return marketplace;
+  if (w2CopyB) return parse2026W2CopyB(w2CopyB);
 
   const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
@@ -826,8 +941,8 @@ export async function detectUploadedDocumentFromFile(
   }
 
   try {
-    const { text, necCopyB } = await readPdf(file, true);
-    return parseDocumentText(text, file.name, necCopyB);
+    const { text, necCopyB, w2CopyB } = await readPdf(file, true);
+    return parseDocumentText(text, file.name, necCopyB, w2CopyB);
   } catch {
     return null;
   }

@@ -1,11 +1,86 @@
 import { describe, expect, it, vi } from "vitest";
 import { AnnotationFlags, degrees, PDFDocument, PDFHexString, PDFName, StandardFonts } from "pdf-lib";
-import { extractPdfTextFromFile, prepareUploadableFiles } from "../../../apps/web/src/lib/uploaded-document-detection";
+import { detectUploadedDocumentFromFile, extractPdfTextFromFile, prepareUploadableFiles } from "../../../apps/web/src/lib/uploaded-document-detection";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
 import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
 import { startCompleteInterview } from "../../guided-interview/complete-facts";
 
 vi.mock("server-only", () => ({}));
+
+async function w2CopyB({
+  top = [null, null], bottom = [null, null], overlay, bottomEmployer, partlyFlattened = false, rotated = false, withSecondPage = false,
+}: {
+  top?: readonly (string | null)[]; bottom?: readonly (string | null)[];
+  overlay?: string; bottomEmployer?: string; partlyFlattened?: boolean; rotated?: boolean; withSecondPage?: boolean;
+}) {
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const page = pdf.addPage([612, 792]);
+  const form = pdf.getForm();
+  for (const [panel, offset, firstField, values] of [
+    ["Top", 396, 1, top],
+    ["Bottom", 0, 45, bottom],
+  ] as const) {
+    for (const [str, x, y] of [
+      ["Wages, tips, other compensation", 347.652, 328.001],
+      ["Federal income tax withheld", 470.83, 328.001],
+      ["W-2", 57.6, 36.864],
+      ["Wage and Tax Statement", 106.501, 41.454],
+      ["2026", 289.441, 36.828],
+      ["Copy B—To Be Filed With Employee’s FEDERAL Tax Return.", 36, 24.887],
+    ] as const) page.drawText(str, { x, y: y + offset, size: 7, font });
+
+    if (partlyFlattened && panel === "Bottom") {
+      page.drawText("88,222.43", { x: 338, y: 316, size: 7, font });
+      continue;
+    }
+    const prefix = `topmostSubform[0].CopyB[0].CopyB_${panel}[0].Col_Right[0].`;
+    for (let index = 0; index < 44; index++) {
+      const name = `f2_${String(firstField + index).padStart(2, "0")}[0]`;
+      const field = form.createTextField(prefix + (index === 8 ? "Box1_ReadOrder[0]." : "") + name);
+      if (index === 8 || index === 9) {
+        const value = values[index - 8];
+        if (value !== null) field.setText(value);
+        field.addToPage(page, { x: index === 8 ? 333.2 : 455.6, y: 312.001 + offset, width: 118.4, height: 11.999, borderWidth: 0 });
+      } else {
+        if (index === 2 && panel === "Bottom" && bottomEmployer) field.setText(bottomEmployer);
+        field.addToPage(page, { x: 38 + index * 4, y: 230 + offset, width: 3, height: 5, borderWidth: 0 });
+      }
+    }
+    for (let index = 0; index < 3; index++) {
+      const number = (panel === "Top" ? 2 : 6) + index;
+      const field = form.createCheckBox(prefix + `c2_${number}[0]`);
+      field.addToPage(page, { x: 38 + index * 8, y: 214 + offset, width: 5, height: 5, borderWidth: 0 });
+    }
+  }
+  if (overlay) page.drawText(overlay, { x: 339, y: 712, size: 7, font });
+  if (rotated) page.setRotation(degrees(90));
+  if (withSecondPage) pdf.addPage([612, 792]);
+  return new File([new Uint8Array(await pdf.save())], "unnamed.pdf", { type: "application/pdf" });
+}
+
+it.each([
+  { name: "top wages and explicit zero withholding", top: ["3,210.09", "0"], year: 2026, wages: "3210.09", withheld: "0.00" },
+  { name: "bottom withholding with unknown wages", bottom: [null, "18.10"], year: 2026, wages: "", withheld: "18.10" },
+  { name: "blank official layout", year: null },
+  { name: "two populated statements", top: ["3,210.09", null], bottom: [null, "18.10"], year: null },
+  { name: "second statement has a separate employer only", top: ["3,210.09", null], bottomEmployer: "Synthetic Employer", year: null },
+  { name: "second statement was flattened", top: ["3,210.09", null], partlyFlattened: true, year: null },
+  { name: "overlaid amount conflicts with widget", top: ["3,210.09", "18.10"], overlay: "555.43", year: 2026, wages: "", withheld: "18.10" },
+  { name: "overlaid amount in another statement", bottom: [null, "18.10"], overlay: "555.43", year: null },
+  { name: "rotated page", top: ["3,210.09", "18.10"], rotated: true, year: null },
+  { name: "multiple pages need manual separation", top: ["3,210.09", "18.10"], withSecondPage: true, year: null },
+])("keeps 2026 W-2 Copy B statements separate ($name)", async ({ year, wages, withheld, ...source }) => {
+  const document = await detectUploadedDocumentFromFile(await w2CopyB(source));
+  expect(document).toMatchObject({ kind: "w2", taxYear: year, coverage: "partially-supported" });
+  if (year === null) {
+    expect(document?.detectedFacts).toEqual([]);
+  } else {
+    expect(document?.detectedFacts[0]?.machineValue).toEqual({
+      entryKind: "w2-summary", sourceFactsVersion: 2, employerName: "", employerEin: "", wages, federalWithheld: withheld,
+    });
+  }
+});
 
 async function syntheticDocument() {
   const pdf = await PDFDocument.create();
