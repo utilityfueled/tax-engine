@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Ohio browser deadline comparison
+
+On macOS ARM64, the audited runner passed all 10 Ohio resident-credit,
+part-year business and part-year school-district browser cases on `309b01a4`.
+The runner used two audited request windows, configured two workers with zero
+retries and retained the existing 30-second case deadline. The unbatched
+diagnostic hit two HTTP 429 responses. The audited run passed those same cases.
+Two focused Ohio PDF workspace tests also passed in 821 ms combined.
+
+In a separate app-equivalent `a860d123` snapshot, the only experimental
+change was a shorter Playwright locator for the existing exact label-count
+assertion. The 10 fixture and helper tests passed. Both audited browser runs
+passed the same 10 cases in the same two windows. Summed case time was
+87.932 seconds on the baseline and 87.653 seconds with the locator change.
+The experiment was discarded. The seven strict AMD64 deadlines remain open.
+[Strict AMD64 evidence](#november-20-future-year-schedule-k-1-originals).
+
 ## November 20 future-year Schedule K-1 originals
 
 The federal calculator now holds an explicitly future original Schedule K-1

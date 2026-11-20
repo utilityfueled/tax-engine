@@ -1,5 +1,11 @@
 # Current 2026 upgrade status
 
+The audited macOS runner passed all 10 focused Ohio browser cases on
+`309b01a4`. A narrower label lookup saved just 0.28 seconds across the
+suite in one local comparison and was discarded. The strict AMD64
+deadlines remain unresolved.
+[Ohio timing evidence](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison).
+
 Federal calculation and standalone Schedule E now hold explicitly future
 Schedule K-1 originals before using their amounts. Earlier headers can
 cover a fiscal period ending in the return year and remain eligible for

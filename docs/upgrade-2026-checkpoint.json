@@ -1,5 +1,25 @@
 {
   "activeContinuation": {
+    "nov20OhioBrowserDeadlineComparison": {
+      "baseline": "309b01a4",
+      "experimentBase": "a860d123",
+      "runtime": "macOS ARM64",
+      "browserDeadlineMs": 30000,
+      "configuredWorkers": 2,
+      "retries": 0,
+      "requestWindowsPerRun": 2,
+      "auditedCasesPassedPerRun": 10,
+      "baselineSummedCaseMs": 87932,
+      "experimentSummedCaseMs": 87653,
+      "unbatchedDiagnosticRateLimitResponses": 2,
+      "focusedPdfCasesPassed": 2,
+      "focusedPdfTotalMs": 821,
+      "experimentUnitCasesPassed": 10,
+      "experimentDisposition": "Discarded",
+      "strictAmd64DeadlinesResolved": false,
+      "evidence": "docs/upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison",
+      "privateEvidence": ".local/upgrade-evidence/nov20-k1-source-year/performance-ohio-local-comparison.json"
+    },
     "status": "active-not-release-qualified",
     "resumeInstruction": "Start with docs/upgrade-2026-current-status.md. Query only the package key named there for the current work. Older run and action records document historical work. Keep review, release and security gates in force.",
     "branch": "main",
