@@ -8985,7 +8985,7 @@ education browser cases passed on `8201d316` at the existing deadlines.
 The exact full managed run also passed 650 cases with five original skips.
 The protected test-mode Preview passed all 12 checks, including
 bidirectional workspace reopen, exact deletion and sign-out, with the
-same authorized synthetic actor. The exact ARM64 rehearsal is queued.
+same authorized synthetic actor. The exact ARM64 rehearsal is running.
 [ARM64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411) ·
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44765989343) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44765989442).
@@ -9005,3 +9005,31 @@ credit cases on macOS, as did the exact `96a9179f` baseline. Wall time was
 The comparison supplied no measurable benefit, so the candidate stays
 outside main. Its paired observation and the ARM64 failure logs are in
 `.local/upgrade-evidence/nov20-ohio-new212-integrated-96a9`.
+
+The exact `8201d316` AMD64 image passed smoke, isolated Compose recovery
+and rollback, and cleanup. Its strict suite passed 648 cases. Two desktop
+part-year Ohio School District cases reached the original 30-second
+deadline near their final PDF requests. Five original skips were retained.
+[Exact AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44765989442/job/136390615938).
+
+In those traces, each case completed 197 fills and 197 Tab presses.
+Summed Playwright time for those actions was 11.7 and 13.5 seconds,
+including browser and test-runner work. One completed review download
+took 1.49 seconds on the same trace clock. Server timing is unavailable
+in these traces. An isolated macOS probe measured the discarded
+ordinary-return renderer at 15.57 ms median across 10 warmed calls for
+one synthetic school return. The probe did not support changing the
+renderer to address these deadlines.
+
+The exact managed Linux run also recorded 648 passes and five original
+skips. Its two failures were the desktop and mobile RRTA saved-PDF
+inspections, which reached their existing four-second limit. The exact
+managed macOS result remains 650 passes and five original skips.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44765989442/job/136390616586).
+
+The preceding `8595b42e` ARM64 build passed smoke, isolated Compose
+upgrade and recovery, and cleanup. Its strict browser result was 639
+passes, 11 failures and five original skips. The `8201d316` rehearsal
+started after that run completed.
+[Preceding ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44758991143/job/136394543060) ·
+[Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411/job/136425820937).

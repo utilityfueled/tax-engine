@@ -3,9 +3,12 @@
 Application `8201d316` passed 29,588 tests in both exact local suites at
 88.45% branch coverage. Both builds, all three type checks, lint, spec
 references, the inventory, 37 education browser cases, and 12 protected
-test-mode Preview lifecycle checks passed. The exact full managed suite
-passed 650 cases with five original skips. The strict ARM64 rehearsal
-remains open.
+test-mode Preview lifecycle checks passed. The exact macOS managed suite
+passed 650 cases with five original skips. Managed Linux passed 648 with
+two RRTA saved-PDF inspection timeouts and five original skips. Strict
+AMD64 passed image smoke and Compose recovery and recorded 648 browser
+passes, two Ohio school deadlines and five original skips. The exact
+strict ARM64 rehearsal remains open.
 [Form 8863 evidence](upgrade-2026-progress.md#november-20-form-8863-adult-student-tin-reconciliation).
 
 The IRS archived blank Form 1095-A now contributes only the manual review
