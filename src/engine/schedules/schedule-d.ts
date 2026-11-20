@@ -354,12 +354,8 @@ export function recomputeCarryforward(
   }
 
   const deductionAbs = capitalLossDeduction.abs();
-  const totalExcess = netCapitalGainLoss.abs().minus(deductionAbs);
-
-  if (!totalExcess.greaterThan(0)) {
-    return { carryforwardShortTerm: new Decimal(0), carryforwardLongTerm: new Decimal(0) };
-  }
-
+  // The worksheet also applies when line 21 equals line 16 and the
+  // unfloored Form 1040 line 15 is negative.
   // IRS Worksheet Lines 1-4: Compute the effective deduction
   // Line 1: rawTaxableIncome (can be negative)
   // Line 2: deductionAbs (capital loss deduction as positive)
@@ -381,13 +377,11 @@ export function recomputeCarryforward(
   const stReduction = effectiveDeduction.plus(ltGain);
   const stCarryAbs = zeroFloor(stLoss.minus(stReduction));
 
-  // How much of effectiveDeduction was used on ST losses (for Line 11)
-  const effectiveDeductionUsedOnST = min(effectiveDeduction, zeroFloor(stLoss.minus(ltGain)));
-  const effectiveDeductionNotUsedOnST = effectiveDeduction.minus(effectiveDeductionUsedOnST);
-
   // LT carryforward (Lines 9-13):
+  // Line 11 = max(0, effectiveDeduction - stLoss)
   // Line 12 = stGain + effectiveDeductionNotUsedOnST (Line 11)
   // Line 13 = max(0, ltLoss(Line9) - Line 12)
+  const effectiveDeductionNotUsedOnST = zeroFloor(effectiveDeduction.minus(stLoss));
   const ltReduction = stGain.plus(effectiveDeductionNotUsedOnST);
   const ltCarryAbs = zeroFloor(ltLoss.minus(ltReduction));
 

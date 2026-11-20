@@ -62,24 +62,27 @@ lines:
          - rawTaxableIncome = AGI - total deductions (before zero-floor)
          - effectiveDeduction = max(0, min(|deduction|, rawTaxableIncome + |deduction|))
          - When rawTaxableIncome ≤ -|deduction|, effectiveDeduction = 0 (deduction provided no tax benefit)
-      2. Cross-net: reduce each category's loss by opposite-category gains (Lines 5-6, 9-10)
-         - effective ST loss = max(0, |Line 7 loss| - max(0, Line 15))
-         - effective LT loss = max(0, |Line 15 loss| - max(0, Line 7))
-      3. Allocate effective deduction: ST first (Lines 7-8), then LT (Lines 11-13)
-         - ST reduction = effectiveDeduction + LT gain
-         - ST carry = max(0, effective ST loss - ST reduction)
-         - effectiveDeductionUsedOnST = min(effectiveDeduction, max(0, effective ST loss - LT gain))
-         - LT reduction = ST gain + (effectiveDeduction - effectiveDeductionUsedOnST)
-         - LT carry = max(0, effective LT loss - LT reduction)
-      4. Remaining effective loss in each category carries forward, retaining character
-    irsRef: "Schedule D Instructions, Capital Loss Carryover Worksheet; IRC §1212(b)"
+      2. Compute each category's remaining loss, retaining character and subtracting opposite-category gains once (Lines 5-13):
+         - ST carry = max(0, ST loss - (effectiveDeduction + LT gain))
+         - effectiveDeductionNotUsedOnST = max(0, effectiveDeduction - ST loss)
+         - LT carry = max(0, LT loss - (ST gain + effectiveDeductionNotUsedOnST))
+      3. Export the remaining short-term and long-term losses to the following year.
+    irsRef: "2025 Schedule D instructions, Line 21 and Capital Loss Carryover Worksheet; IRS Pub. 550 (2025), Capital Losses; IRC §1212(b)"
     edgeCases:
       - "Cross-netting: ST gain reduces LT loss carryforward (and vice versa)"
-      - "When net loss equals deduction limit exactly, carryforward is zero"
+      - "At or below the annual limit, preserve unused loss when taxable income before the zero floor is negative; current Schedule D line 21 remains unchanged"
+      - "At or below the annual limit with nonnegative taxable income before the zero floor, the loss is fully used"
       - "Both categories negative: no cross-netting, deduction allocated ST-first"
       - "Low-income taxpayer: when rawTaxableIncome < 0, some or all of the deduction was wasted (no tax benefit), so more loss carries forward"
       - "Example: $12K wages, $8K LT loss, $15K std ded → raw TI = -$6K → effective ded = $0 → full $8K carries forward"
     testRef: "tests/engine/schedules/schedule-d.test.ts::Schedule D - IRS carryover worksheet cross-netting"
+
+  - line: "carryforward-at-or-below-limit"
+    description: "Capital loss at or below the annual limit with no or partial taxable income"
+    formula: "Apply the same worksheet whenever line 21 is a loss and raw Form 1040 line 15 is negative, even when lines 16 and 21 are equal. Limit actual loss use to positive taxable income before the capital loss deduction. Carry the remaining loss to the following year."
+    notes: "The full return's Schedule D audit records the worksheet results after applying raw Form 1040 line 15 and before any Form 982 attribute reduction."
+    irsRef: "2025 Schedule D instructions, Line 21, 2025-to-2026 carryover; IRS Publication 550 (2025), Capital Losses"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::publishes unused 2025 capital losses at or below the limit for 2026"
 
   - line: "13"
     description: "Capital gain distributions"

@@ -5,6 +5,7 @@
 
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
+import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateScheduleD } from "@/engine/schedules/schedule-d.js";
 import { getConstants } from "@/models/constants.js";
 import { simpleW2Fixture, complexMFJFixture } from "../../fixtures/simple-w2.js";
@@ -870,6 +871,41 @@ describe("Schedule D - IRS carryover worksheet cross-netting", () => {
 import { recomputeCarryforward } from "@/engine/schedules/schedule-d.js";
 
 describe("Schedule D - recomputeCarryforward (IRS Capital Loss Carryover Worksheet)", () => {
+  it("publishes unused 2025 capital losses at or below the limit for 2026", () => {
+    // 2025 single standard deduction is $15,750. The IRS worksheet uses only
+    // positive income before the loss deduction, capped at the line 21 loss.
+    const cases = [
+      { wages: "12000", shortLoss: "0", longLoss: "2000", line21: "-2000", shortCarry: "0", longCarry: "-2000" },
+      { wages: "15751", shortLoss: "2000", longLoss: "0", line21: "-2000", shortCarry: "-1999", longCarry: "0" },
+      { wages: "16350", shortLoss: "500", longLoss: "2500", line21: "-3000", shortCarry: "0", longCarry: "-2400" },
+      { wages: "17750", shortLoss: "0", longLoss: "2000", line21: "-2000", shortCarry: "0", longCarry: "0" },
+    ];
+    for (const { wages, shortLoss, longLoss, line21, shortCarry, longCarry } of cases) {
+      const input = makeFixtureWithTransactions([
+        { holdingPeriod: "short", proceeds: "100", costBasis: d(shortLoss).plus(100).toFixed() },
+        { holdingPeriod: "long", proceeds: "100", costBasis: d(longLoss).plus(100).toFixed() },
+      ]);
+      const result = calculateFederalTax({
+        ...input,
+        w2s: input.w2s.map(w2 => ({ ...w2, wages })),
+        form1099B: input.form1099B.map(form => ({
+          ...form,
+          transactions: form.transactions.map(row => row.holdingPeriod === "short"
+            ? { ...row, dateAcquired: "2025-01-01" } : row),
+        })),
+      });
+      expect(result.capitalGainLoss.toFixed(), `wages ${wages}, loss`).toBe(line21);
+      expect(result.taxableIncome.toFixed(), `wages ${wages}, taxable income`).toBe("0");
+      expect(result.carryforwards.shortTermCapitalLoss.toFixed(), `wages ${wages}, short term`).toBe(shortCarry);
+      expect(result.carryforwards.longTermCapitalLoss.toFixed(), `wages ${wages}, long term`).toBe(longCarry);
+      expect(result.carryforwards.capitalLoss.toFixed(), `wages ${wages}, total`).toBe(d(shortCarry).plus(longCarry).toFixed());
+      const worksheetLines = result.allLines.filter(line => line.form === "Sched D" && line.line.startsWith("carryforward-"));
+      expect(worksheetLines.map(line => [line.line, line.value.toFixed()]), `wages ${wages}, audit`).toEqual([
+        ["carryforward-short-term", shortCarry], ["carryforward-long-term", longCarry],
+      ]);
+    }
+  });
+
   it("negative raw TI: full $8K LT loss carries forward (deduction was wasted)", () => {
     // $12K wages, $8K LTCL, $15K std ded → raw TI = ($12K-$3K) - $15K = -$6K
     // IRS Line 3: -$6K + $3K = -$3K ≤ 0 → effective deduction = $0

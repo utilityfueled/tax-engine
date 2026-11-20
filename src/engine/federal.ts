@@ -1565,7 +1565,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     childCollectiblesGain: form8814IncomeCharacter.collectiblesGain,
     childUnrecapturedSection1250Gain: form8814IncomeCharacter.unrecapturedSection1250Gain,
   });
-  audit.merge(schedD.lines);
+  // Record the full carryover worksheet after Form 1040 line 15 is known.
+  audit.merge(schedD.lines.filter(line => line.form !== "Sched D" || !line.line.startsWith("carryforward-")));
   // Track wash sale carryforward for crypto dispositions (IRC §1091)
   // Include 1099-DA lot-matched dispositions so broker-reported wash sales
   // also flow through carryforward tracking.
@@ -3281,7 +3282,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("1040", "14", "Total deductions", totalDeduction, "Line 12 + Line 13a QBI + Line 13b Schedule 1-A");
 
   // Line 15: Taxable income (preliminary, before NOL deduction)
-  const rawTaxableIncome = agi.minus(totalDeduction); // before zero-floor, needed by carryforward worksheet
+  const rawTaxableIncome = agi.minus(totalDeduction);
   const preNolTaxableIncome = zeroFloor(rawTaxableIncome);
   const amtIncomeInput = (income: Decimal, regularNolDeduction?: Decimal, alternativeTaxNolDeduction?: Decimal): Form6251IncomeInput => ({
     taxableIncome: income, regularNolDeduction, alternativeTaxNolDeduction, totalDeductions: totalDeduction,
@@ -3387,10 +3388,19 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? "AGI - total deductions - NOL deduction"
       : "AGI - total deductions");
 
-  // Recompute capital loss carryforward using the full IRS Capital Loss Carryover Worksheet.
-  // Per IRS worksheet Lines 1-4, when raw taxable income is negative, some or all of the
-  // deduction provided no tax benefit, so more loss carries forward.
-  const adjustedCarryforward = recomputeCarryforward(schedD, rawTaxableIncome);
+  // The capital loss worksheet uses the final, unfloored Form 1040 line 15.
+  const capitalCarryforwardIncome = agi.minus(totalDeduction);
+  const adjustedCarryforward = recomputeCarryforward(schedD, capitalCarryforwardIncome);
+  const capitalCarryforwardInputs = {
+    "Unfloored Form 1040 line 15": capitalCarryforwardIncome,
+    "Schedule D line 7": schedD.netShortTerm,
+    "Schedule D line 15": schedD.netLongTerm,
+    "Schedule D line 21": schedD.capitalLossDeduction,
+  };
+  audit.record("Sched D", "carryforward-short-term", "Short-term capital loss carryforward", adjustedCarryforward.carryforwardShortTerm,
+    "Capital Loss Carryover Worksheet line 8, before any Form 982 attribute reduction", capitalCarryforwardInputs);
+  audit.record("Sched D", "carryforward-long-term", "Long-term capital loss carryforward", adjustedCarryforward.carryforwardLongTerm,
+    "Capital Loss Carryover Worksheet line 13, before any Form 982 attribute reduction", capitalCarryforwardInputs);
 
   // ═══════════════════════════════════════════════════════════
   // Phase 4: Tax Computation (Form 1040 Line 16)
