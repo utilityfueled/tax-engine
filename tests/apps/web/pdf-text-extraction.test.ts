@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { degrees, PDFDocument, StandardFonts } from "pdf-lib";
+import { AnnotationFlags, degrees, PDFDocument, PDFHexString, PDFName, StandardFonts } from "pdf-lib";
 import { extractPdfTextFromFile, prepareUploadableFiles } from "../../../apps/web/src/lib/uploaded-document-detection";
 import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
 import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
@@ -19,7 +19,22 @@ async function syntheticDocument() {
 
 type CopyBEntry = { text: string; x: number; y: number; rotation?: number; size?: number };
 
-async function necCopyBFile(entries: CopyBEntry[], revision = "(Rev. December 2026)", extraPage = false) {
+type CopyBWidget = {
+  kind: "year" | "amount";
+  value: string;
+  appearance?: string;
+  name?: string;
+  moveX?: number;
+  rotation?: number;
+  flags?: number;
+  duplicate?: boolean;
+  withoutAppearance?: boolean;
+};
+
+async function necCopyBFile(
+  entries: CopyBEntry[], revision = "(Rev. December 2026)", extraPage = false,
+  options: { widgets?: CopyBWidget[]; rotation?: number } = {},
+) {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([612, 792]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -41,8 +56,25 @@ async function necCopyBFile(entries: CopyBEntry[], revision = "(Rev. December 20
   for (const { text, x, y, rotation, size = 11 } of entries) {
     page.drawText(text, { x, y, size, font, rotate: degrees(rotation ?? 0) });
   }
+  for (const input of options.widgets ?? []) {
+    // Names and rectangles transcribed from the official December 2026 Copy B.
+    const geometry = input.kind === "year"
+      ? { name: "PgHeader[0].CalendarYear[0].f2_1[0]", x: 417.6, y: 687, width: 28.8, height: 8.999 }
+      : { name: "RightCol[0].f2_20[0]", x: 309.6, y: 648, width: 185.2, height: 11.999 };
+    const field = pdf.getForm().createTextField(input.name ?? `topmostSubform[0].CopyB[0].${geometry.name}`);
+    field.setText(input.appearance ?? input.value);
+    field.addToPage(page, { ...geometry, x: geometry.x + (input.moveX ?? 0), font, borderWidth: 0 });
+    field.updateAppearances(font);
+    const [widget] = field.acroField.getWidgets();
+    if (input.flags !== undefined) widget.setFlags(input.flags);
+    if (input.rotation) widget.getOrCreateAppearanceCharacteristics().setRotation(input.rotation);
+    if (input.appearance !== undefined) field.acroField.dict.set(PDFName.of("V"), PDFHexString.fromText(input.value));
+    if (input.withoutAppearance) widget.dict.delete(PDFName.of("AP"));
+    if (input.duplicate) page.node.addAnnot(pdf.context.register(widget.dict.clone(pdf.context)));
+  }
+  if (options.rotation) page.setRotation(degrees(options.rotation));
   if (extraPage) pdf.addPage();
-  return new File([new Uint8Array(await pdf.save())], "recipient-statement.pdf", { type: "application/pdf" });
+  return new File([new Uint8Array(await pdf.save({ updateFieldAppearances: false }))], "recipient-statement.pdf", { type: "application/pdf" });
 }
 
 describe("PDF.js 6 text extraction with synthetic documents", () => {
@@ -166,6 +198,46 @@ describe("PDF.js 6 text extraction with synthetic documents", () => {
     expect(workspace.documents[0]).toMatchObject({ kind: "1099-nec", taxYear: expected });
     const amounts = workspace.structuredFacts.flatMap(fact => fact.machineValue ? [fact.machineValue] : []);
     expect(amounts).toEqual(name === "a second form" ? [] : [expect.objectContaining({ nonemployeeCompensation: "3210.09" })]);
+    expect(workspace.enginePreview).toBeNull();
+  });
+
+  // Spec: spec/federal/workspace-guided-year.yaml#nec-copy-b-acroform-pdf.
+  const yearWidget: CopyBWidget = { kind: "year", value: "2026" };
+  const amountWidget: CopyBWidget = { kind: "amount", value: "3,210.09" };
+  const copyBAmount = { text: "3210.09", x: 325, y: 650.86 };
+  it.each([
+    { name: "filled widgets", widgets: [yearWidget, amountWidget], year: 2026, amount: "3210.09" },
+    { name: "explicit zero", widgets: [yearWidget, { ...amountWidget, value: "0.00" }], year: 2026, amount: "0.00" },
+    { name: "whole-dollar zero", widgets: [yearWidget, { ...amountWidget, value: "0" }], year: 2026, amount: "0.00" },
+    { name: "grouped whole dollars with matching cents", widgets: [yearWidget, { ...amountWidget, value: "3,210" }], entries: [{ ...copyBAmount, text: "3210.00" }], year: 2026, amount: "3210.00" },
+    { name: "blank widgets", widgets: [{ ...yearWidget, value: "" }, { ...amountWidget, value: "" }], year: null, amount: null },
+    { name: "blank widgets with valid printed values", widgets: [{ ...yearWidget, value: "" }, { ...amountWidget, value: "" }], entries: [copyBYear, copyBAmount], year: 2026, amount: "3210.09" },
+    { name: "matching printed evidence", widgets: [yearWidget, amountWidget], entries: [copyBYear, copyBAmount], year: 2026, amount: "3210.09" },
+    { name: "different printed year", widgets: [yearWidget, amountWidget], entries: [{ ...copyBYear, text: "2025" }], year: null, amount: "3210.09" },
+    { name: "different printed amount", widgets: [yearWidget, amountWidget], entries: [{ ...copyBAmount, text: "1234.56", y: 657 }], year: 2026, amount: null },
+    { name: "elsewhere explicit year", widgets: [yearWidget, amountWidget], entries: [{ text: "Tax year 2025", x: 54, y: 400 }], year: null, amount: "3210.09" },
+    { name: "stale year appearance", widgets: [{ ...yearWidget, appearance: "2025" }, amountWidget], year: null, amount: "3210.09" },
+    { name: "stale amount appearance on blank value", widgets: [yearWidget, { ...amountWidget, value: "", appearance: "0.00" }], year: 2026, amount: null },
+    { name: "missing year appearance", widgets: [{ ...yearWidget, withoutAppearance: true }, amountWidget], entries: [copyBYear], year: null, amount: "3210.09" },
+    { name: "duplicate year widget", widgets: [{ ...yearWidget, duplicate: true }, amountWidget], year: null, amount: "3210.09" },
+    { name: "overlapping unrelated widget", widgets: [yearWidget, { ...yearWidget, name: "Unrelated.Year" }, amountWidget], year: null, amount: "3210.09" },
+    { name: "wrong year widget name", widgets: [{ ...yearWidget, name: "topmostSubform[0].Copy1[0].PgHeader[0].CalendarYear[0].f2_1[0]" }, amountWidget], year: null, amount: "3210.09" },
+    { name: "moved Box 1a widget", widgets: [yearWidget, { ...amountWidget, moveX: 1 }], year: 2026, amount: null },
+    { name: "rotated year widget", widgets: [{ ...yearWidget, rotation: 90 }, amountWidget], year: null, amount: "3210.09" },
+    { name: "hidden amount widget", widgets: [yearWidget, { ...amountWidget, flags: AnnotationFlags.NoView }], entries: [copyBAmount], year: 2026, amount: null },
+    { name: "rotated page", widgets: [yearWidget, amountWidget], rotation: 90, year: null, amount: null },
+    { name: "different revision", widgets: [yearWidget, amountWidget], revision: "(Rev. December 2025)", year: null, amount: null },
+  ])("binds NEC Copy B AcroForm widget values to visible original fields ($name)", async ({
+    name, widgets, entries, revision, rotation, year, amount,
+  }) => {
+    const file = await necCopyBFile(entries ?? [], revision, false, { widgets, rotation });
+    const files = await prepareUploadableFiles([file]);
+    const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord(name), files);
+    expect(workspace.documents[0]).toMatchObject({ kind: "1099-nec", taxYear: year });
+    expect(workspace.structuredFacts.flatMap(fact => fact.machineValue ? [fact.machineValue] : []))
+      .toEqual(amount === null ? [] : [{
+        entryKind: "1099-nec-summary", sourceFactsVersion: 2, payer: "", nonemployeeCompensation: amount,
+      }]);
     expect(workspace.enginePreview).toBeNull();
   });
 

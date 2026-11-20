@@ -34,6 +34,73 @@ interface ExtractedTextItem {
 }
 
 type NecCopyB = { amount: string | null; taxYear: number | null };
+type PdfRectangle = readonly [number, number, number, number];
+type PdfAnnotation = {
+  subtype?: string;
+  fieldName?: string;
+  fieldType?: string;
+  rect?: number[];
+  rotation?: number;
+  hidden?: boolean;
+  annotationFlags?: number;
+  fieldValue?: unknown;
+  hasAppearance?: boolean;
+  textContent?: unknown;
+};
+
+const copyBYearRect: PdfRectangle = [417.6, 687, 446.4, 695.999];
+const copyBAmountRect: PdfRectangle = [309.6, 648, 494.8, 659.999];
+const copyBFieldPrefix = "topmostSubform[0].CopyB[0].";
+
+// Undefined means no value was supplied. Null means the field has uncertain evidence.
+type NecFieldEvidence = string | undefined | null;
+type NecFieldParser = (text: string) => string | null;
+
+function parseNecCopyBYear(text: string) {
+  return /^20\d{2}$/.test(text) ? text : null;
+}
+
+function parseNecCopyBAmount(text: string) {
+  return /^(?:\d+|\d{1,3}(?:,\d{3})+)\.\d{2}$/.test(text) ? normalizeAmount(text) : null;
+}
+
+function parseNecCopyBWidgetAmount(text: string) {
+  const cents = /^(?:\d+|\d{1,3}(?:,\d{3})+)$/.test(text) ? `${text}.00` : text;
+  return parseNecCopyBAmount(cents);
+}
+
+function readNecCopyBWidget(
+  annotations: PdfAnnotation[], field: string, expected: PdfRectangle, parse: NecFieldParser,
+): NecFieldEvidence {
+  const fieldName = copyBFieldPrefix + field;
+  const [left, bottom, right, top] = expected;
+  const candidates = annotations.filter(({ fieldName: name, rect }) => name === fieldName || (
+    rect?.length === 4 && rect[0] < right && rect[2] > left && rect[1] < top && rect[3] > bottom
+  ));
+  if (candidates.length === 0) return undefined;
+  const [widget] = candidates;
+  const { rect } = widget;
+  // PDF annotation flags for Invisible, Hidden and NoView.
+  const hiddenFlags = 1 | 2 | 32;
+  if (candidates.length !== 1 || widget.fieldName !== fieldName || widget.subtype !== "Widget"
+    || widget.fieldType !== "Tx" || widget.rotation !== 0 || widget.hidden !== false
+    || typeof widget.annotationFlags !== "number" || (widget.annotationFlags & hiddenFlags) !== 0
+    || rect?.length !== 4 || !expected.every((coord, index) => Math.abs(coord - rect[index]) <= 0.001)
+    || typeof widget.fieldValue !== "string") return null;
+
+  const value = widget.fieldValue.trim();
+  const appearance = widget.textContent;
+  if (value === "" && (appearance === undefined || (Array.isArray(appearance) && appearance.length === 0))) return undefined;
+  if (!widget.hasAppearance || !Array.isArray(appearance) || appearance.length !== 1
+    || typeof appearance[0] !== "string") return null;
+  const parsed = parse(value);
+  return parsed === parse(appearance[0].trim()) ? parsed : null;
+}
+
+function agreeNecCopyBField(text: NecFieldEvidence, widget: NecFieldEvidence): string | null {
+  if (text === undefined) return widget ?? null;
+  return widget === undefined || widget === text ? text : null;
+}
 
 let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | null = null;
 
@@ -79,7 +146,7 @@ function groupPageText(items: ExtractedTextItem[]) {
     .join("\n");
 }
 
-function readNecCopyB(items: ExtractedTextItem[]): NecCopyB | null {
+async function readNecCopyB(items: ExtractedTextItem[], readAnnotations: () => Promise<PdfAnnotation[]>): Promise<NecCopyB | null> {
   const positioned = items.flatMap(source => {
     const { str, transform, width } = source;
     const [scaleX, skewY, skewX, scaleY, x, y] = transform ?? [];
@@ -104,19 +171,30 @@ function readNecCopyB(items: ExtractedTextItem[]): NecCopyB | null {
     || label(640, 297, 387) !== "1b Cash tips"
     || label(650.86, 300, 307) !== "$") return null;
 
-  const fieldText = (row: typeof positioned, left: number, right: number) => {
+  const inRect = ([, bottom, , top]: PdfRectangle) => positioned.filter(item => item.y >= bottom && item.y <= top);
+  const fieldText = (row: typeof positioned, [left, , right]: PdfRectangle, parse: NecFieldParser): NecFieldEvidence => {
     const entries = row.filter(item => item.x < right && item.x + item.width >= left);
+    if (entries.length === 0) return undefined;
     const entry = entries[0];
     if (entries.length !== 1 || !entry.horizontal || entry.width === 0
-      || entry.x < left || entry.x + entry.width > right) return "";
-    return entry.text;
+      || entry.x < left || entry.x + entry.width > right) return null;
+    return parse(entry.text);
   };
-  const amount = fieldText(onRow(650.86), 309.6, 494.8);
-  const year = fieldText(positioned.filter(item => item.y >= 687 && item.y <= 695.999), 417.6, 446.4);
+  const annotations = await readAnnotations().catch(() => null);
+  if (!annotations) return { amount: null, taxYear: null };
+  const widgetAmount = readNecCopyBWidget(annotations, "RightCol[0].f2_20[0]", copyBAmountRect, parseNecCopyBWidgetAmount);
+  const printedAmount = widgetAmount === undefined
+    ? fieldText(onRow(650.86), copyBAmountRect, parseNecCopyBAmount)
+    : fieldText(inRect(copyBAmountRect), copyBAmountRect, parseNecCopyBWidgetAmount);
+  const amount = agreeNecCopyBField(printedAmount, widgetAmount);
   const markers = onRow(700).filter(item => item.horizontal && item.x >= 399 && item.x <= 409
     && item.text === "For calendar year");
   let taxYear: number | null = null;
-  if (markers.length === 1 && /^20\d{2}$/.test(year)) {
+  const year = agreeNecCopyBField(
+    fieldText(inRect(copyBYearRect), copyBYearRect, parseNecCopyBYear),
+    readNecCopyBWidget(annotations, "PgHeader[0].CalendarYear[0].f2_1[0]", copyBYearRect, parseNecCopyBYear),
+  );
+  if (markers.length === 1 && year !== null) {
     // Removing the printed marker keeps other explicit years in play without
     // interpreting a bare ZIP code or account number as its field value.
     const remaining = items.filter(item => item !== markers[0].source);
@@ -124,10 +202,7 @@ function readNecCopyB(items: ExtractedTextItem[]): NecCopyB | null {
     const otherYears = explicitDocumentTaxYears(normalizeParsingText(groupPageText(remaining)));
     if ([...otherYears].every(otherYear => otherYear === proposed)) taxYear = proposed;
   }
-  return {
-    amount: /^(?:\d+|\d{1,3}(?:,\d{3})+)\.\d{2}$/.test(amount) ? normalizeAmount(amount) : null,
-    taxYear,
-  };
+  return { amount, taxYear };
 }
 
 async function readPdf(file: File, detectNecCopyB: boolean) {
@@ -146,7 +221,7 @@ async function readPdf(file: File, detectNecCopyB: boolean) {
       pageTexts.push(groupPageText(items));
       if (detectNecCopyB && pdf.numPages === 1 && page.rotate === 0
         && page.view.join(",") === "0,0,612,792") {
-        necCopyB = readNecCopyB(items);
+        necCopyB = await readNecCopyB(items, () => page.getAnnotations({ intent: "any" }));
       }
       page.cleanup();
     }
