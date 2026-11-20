@@ -31,13 +31,25 @@ both diagnostic manifest hashes.
 On Node 26.13.1, 1,980 guided tests, 62 browser diagnostics and timing
 contracts, web typecheck and scoped lint passed. Exact local unit and coverage
 each passed 29,529 tests, with 88.36% branch coverage. Both builds passed.
+All six exact GitHub CI jobs passed. The exact managed browser job passed
+650 cases and preserved five original skips.
 The first broad guided run needed the pinned PDF interpreter, and the first
 browser run could not bind loopback. With both prerequisites, six managed
 Chromium cases passed through the part-year business and school-district
 workflows, with two workers, zero retries, the original 30-second per-case
-limit and verified cleanup. The exact native ARM64 image smoke and Compose
-upgrade and recovery passed. Its strict browser suite was still running.
-Full Linux browser qualification remains open.
+limit and verified cleanup. Strict AMD64 passed 642 cases and preserved five
+planned skips. Its eight 30-second deadline failures were all among the ten
+prior `d8a9f108` failures.
+The mobile part-year business and mobile distinct resident-credit cases
+passed on this run. Compose recovery and rollback, archive import, and
+cleanup passed. Strict Linux browser qualification remains open.
+
+Exact native ARM64 passed image smoke, Compose upgrade and recovery, and
+browser-container cleanup. Its strict suite passed 639 cases and preserved
+five planned skips, with ten Ohio deadlines and one Pennsylvania desktop
+separate-payment deadline. The Pennsylvania case reached the reconfirmation
+poll after reload and a source edit. The same case reached the deadline on
+`0836c5fe` later in the reopen sequence. [Prior ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44691298960/job/136137481759).
 
 The same exact archived revision passed all six managed Chromium workspace
 recovery cases, including restoring original document bytes and private local
@@ -47,7 +59,8 @@ moved from 3.08, 2.80 and 4.17 ms to 2.64, 2.54 and 3.82 ms. The sample measures
 in-process evaluation on the Mac. Browser and Linux timing require separate
 runtime measurements.
 [Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44713489925) ·
-[Exact browser run](https://github.com/utilityfueled/tax-engine/actions/runs/44713489750) ·
+[Exact managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44713489750/job/136210844552) ·
+[Exact strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44713489750/job/136210845449) ·
 [Passed Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44713489820) ·
 [Exact ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44714431758/job/136214074097).
 
@@ -79,8 +92,13 @@ runs exercise enacted rules with test-only constants. The public 2026
 calculation and form gates remain closed.
 All six exact GitHub CI jobs passed. The exact managed browser job passed 650
 cases and preserved the five original skips.
+Strict AMD64 passed 640 cases with five original skips and ten Ohio
+30-second deadlines across part-year business, reciprocal wages, resident
+credit and school-district cases. Image smoke, Compose recovery and rollback,
+archive import, and cleanup passed.
 [Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44711171955) ·
 [Exact managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44711171830/job/136202963961) ·
+[Exact strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44711171830/job/136202963438) ·
 [Exact Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44711171886).
 
 ## November 20 Form 8863 claimant birth date
