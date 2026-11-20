@@ -75,3 +75,27 @@ print 2025. The final Schedule EIC is pinned as a disabled candidate.
 [Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
 [Instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
 [Tax/EIC tables](https://www.irs.gov/pub/irs-pdf/i1040tt.pdf).
+
+## November 20 annual availability recheck
+
+The regular copies of Form 1040, its instructions, the Tax/EIC tables, and
+the instructions for Forms 7206 and 8829 still identify tax year 2025.
+The November 19 final Schedule EIC, Form 7206 and Form 8829 blanks remain
+disabled pending annual qualification.
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Form 1040 instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
+[Tax/EIC tables](https://www.irs.gov/pub/irs-pdf/i1040tt.pdf) ·
+[Form 7206 instructions](https://www.irs.gov/pub/irs-pdf/i7206.pdf) ·
+[Form 8829 instructions](https://www.irs.gov/pub/irs-pdf/i8829.pdf).
+
+Pennsylvania still links the 2025 PA-40 and annual instructions. Ohio's
+forms index still lists the 2025 IT 1040 and SD 100 and their combined
+instructions. The indexed Ohio alerts describe the November 6 forms and
+November 13 instructions as drafts. Ohio's indexed 2026 updates confirm
+the rate and modified AGI treatment already in the 2026 spec. Direct
+retrieval of the Ohio alerts and updates pages returned 404, so the final
+line maps stay gated.
+[Pennsylvania PIT](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms index](https://tax.ohio.gov/business/get-a-form/tax-forms) ·
+[Ohio alert archive](https://tax.ohio.gov/individual/resources/individualincome) ·
+[Ohio annual changes](https://tax.ohio.gov/individual/who-must-file/whats-new).

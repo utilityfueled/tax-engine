@@ -8923,3 +8923,40 @@ The earlier `c3d87e32` exact GitHub CI run passed. Its ARM64 job passed
 smoke and isolated Compose upgrade/recovery, then recorded 639 passed
 browser cases, 11 failures and five original skips. The strict gate
 remains open. [ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44748974631).
+
+## November 20 Ohio school snapshot harness
+
+The first exact unit and coverage runs on `8595b42e` exposed seven failed
+School wrapper tests. The test harness extracted the wrapper without
+binding its known-kind helper. The unit run passed 29,569 of 29,576 tests.
+The original failure logs remain in
+`.local/upgrade-evidence/nov20-final-upload-8595`.
+
+Commit `96a9179f` binds the actual helper and fixture kinds. The seven
+dynamic wrappers retain their existing assertions. The School tests
+verify exact label counts, fresh action targets, native action failures,
+and zero tag reads. All 25 focused tests and four spec references passed
+on Node 26.13.1. Exact static verification passed lint, all three type
+checks, both builds, spec references and the inventory. The exact unit
+and coverage reruns each passed 29,579 tests in 2,165 files. Branch
+coverage was 88.45%. Both temporary PostgreSQL 16.16 servers stopped.
+The earlier `8595b42e` managed macOS suite passed all 650 cases with five
+original skips. The harness-only repair left its application code and
+browser specs identical. The guarded Preview used `96a9179f` and test
+billing. All 12 workspace lifecycle checks passed across the earlier
+and current Previews. They covered separate sessions, both directions of
+save and reopen, exact-revision deletion, subsequent absence and both
+sign-outs.
+[Harness repair](https://github.com/utilityfueled/tax-engine/commit/96a9179fab08339697f501bea6e60faa5241ad02) ·
+[Annual availability recheck](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-annual-availability-recheck).
+
+## November 20 Pennsylvania payment browser controls
+
+The existing PA payment browser test uses known native input controls for
+three fixture-defined loops. Both viewports retain the existing browser
+assertions and deadlines. An independent review checked the 71 fill-and-Tab
+actions, nine row-add clicks, unique rendered inputs and all 2,022 browser
+audit paths. Both actual Chromium cases passed on Node 26.13.1, and all
+17 focused tests, five spec references and the coverage inventory passed.
+The strict Linux runtime checks remain open.
+[PA browser change](https://github.com/utilityfueled/tax-engine/commit/c31d2100).

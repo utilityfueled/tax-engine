@@ -1,5 +1,40 @@
 {
   "activeContinuation": {
+    "nov20PennsylvaniaKnownPaymentControls": {
+      "source": "c31d2100",
+      "scopedTestsPassed": 17,
+      "specReferencesPassed": 5,
+      "nativeChromiumCasesPassed": 2,
+      "nativeChromiumViewportWidths": [1280, 390],
+      "existingBrowserFillAndTabsPreserved": 71,
+      "existingBrowserRowAddClicksPreserved": 9,
+      "browserAuditPathsVerified": 2022,
+      "evidence": ".local/upgrade-evidence/nov20-pa-payment-known-controls"
+    },
+    "nov20OhioSchoolKnownControlHarness": {
+      "earlierSource": "8595b42e",
+      "earlierExactUnitPassed": 29569,
+      "earlierExactUnitFailed": 7,
+      "harnessSource": "96a9179f",
+      "focusedTestsPassed": 25,
+      "focusedSpecReferencesPassed": 4,
+      "exactUnitPassed": 29579,
+      "exactUnitFilesPassed": 2165,
+      "exactStaticChecksPassed": 8,
+      "exactCoverageTestsPassed": 29579,
+      "exactCoverageBranchesPercent": 88.45,
+      "earlierExactManagedBrowserPassed": 650,
+      "earlierExactManagedBrowserSkipped": 5,
+      "currentHostedPreviewEvidence": ".local/upgrade-evidence/nov20-preview-96a9-current",
+      "currentHostedPreviewChecksPassed": 12,
+      "currentHostedPreviewResultSha256": "fa8ef906556b63861e34d40b2ab1d83ded018177d30bbe4792771efd286f5c55",
+      "currentCiRun": 44760577623,
+      "currentWebRun": 44760577273,
+      "currentDockerRun": 44760577211,
+      "earlierEvidence": ".local/upgrade-evidence/nov20-final-upload-8595",
+      "currentEvidence": ".local/upgrade-evidence/nov20-harness-96a9",
+      "annualSources": "upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-annual-availability-recheck"
+    },
     "nov20RemainingInformationReturnFilenameFacts": {
       "sourceForms": ["1099-DIV", "1099-G", "1099-OID", "1099-SA"],
       "isolatedFocusedTestsPassed": 120,
