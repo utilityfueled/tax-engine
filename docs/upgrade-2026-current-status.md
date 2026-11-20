@@ -3,7 +3,12 @@
 Hosted Gemini billing and evaluation now retain exact verified usage on
 rejected responses. Unknown prices and inconsistent counts hold for
 reconciliation. The fix passed 89 synthetic tests and independent review.
-The generated inventory follow-up passed the exact local and GitHub spec checks.
+The generated inventory follow-up passed the exact local and GitHub spec
+checks. Its unit and coverage runs each passed 29,493 tests with 88.35%
+branch coverage. All six GitHub CI jobs and Docker passed. Both managed
+browser runs passed 650 cases with five original hosted skips. The exact
+protected Preview passed nine workspace checks.
+Strict AMD64 passed smoke and recovery and reached ten browser deadlines.
 [Gemini accounting evidence](upgrade-2026-progress.md#november-19-reported-gemini-rejection-usage).
 
 The Ohio guided interview now collects actual dated unemployment proof for
@@ -12,9 +17,10 @@ reopening or confirming the return. The saved fixture produced $1,000 on
 IT NRC line 12 and a $1,396 credit. Desktop and mobile Chromium on exact
 `d33e77d5` saved and reopened the $999 Ohio preview. Its unit and coverage
 commands each passed 29,488 tests, with 88.35% branch coverage. Local and
-GitHub managed browser runs passed 650 cases each. Strict AMD64 passed 646,
-with four original 30-second deadlines. A full-year nonresident uses a
-complete out-of-state domicile timeline.
+GitHub managed browser runs passed 650 cases each. Strict AMD64 passed 646
+with four original 30-second deadlines. Strict ARM64 passed 639 with eleven
+original deadlines. Both images passed smoke and Compose recovery. A
+full-year nonresident uses a complete out-of-state domicile timeline.
 [Guided Ohio evidence](upgrade-2026-progress.md#november-19-guided-ohio-unemployment-payment-proof).
 
 Exact `43956ac0` passed 650 runnable local browser cases. The earlier strict
@@ -105,7 +111,7 @@ The [execution brief](upgrade-2026-execution-brief.md) remains the complete scop
 | RRTA privacy | Original and compound candidates failed the unchanged 10% threshold; buffered-numeric composition failed its 2% incremental screen. No adoption or repeated negative run. The four-second privacy limit and independent parser remain. [Ledger](upgrade-2026-rrta-python-paired-20261117.md). |
 | Hosted account and billing | Protected exact `7f55ca05` passed nine workspace checks and one recovery-email delivery. Test billing was active and no production alias was assigned. Earlier isolated billing on `c0760d2b` verified 1,000 cents issued, two one-cent settlements and 998 retained. Earlier `9b6202e7` recorded a 503 during outage and automatic retry to 200 with one receipt. The exact sole Preview PostgreSQL attachment passed an isolated 11-table migration, rollback, restore and cleanup rehearsal. Current and previous protected builds passed a cross-version workspace save and readback with cleanup. Current password reset completion, app-level billing reconciliation, outages and deployment rollback remain open. [Schema recovery](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). [Exact Preview](upgrade-2026-progress.md#november-19-brokerage-date-format-reconciliation) · [Signed billing](upgrade-2026-signed-credit-provider-20261117.md) · [Earlier Stripe retry](upgrade-2026-stripe-scheduled-retry-20261114.md). |
 | AI evaluation | Known usage: 183 calls/$0.27285490; conservative reserved ceiling: $0.47348230. Independent labels, held-out review, repeated qualification and selected-provider evidence remain required. |
-| Self-host recovery | The exact `7459c23d` native Linux ARM64 image passed smoke, six Compose recovery phases and container cleanup. Strict browser testing passed 640 cases with five original skips and ten 30-second deadlines. The Mac preflight stopped before boot at 492.10 GiB free against 512 GiB required. [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44607264786/job/135857870145). |
+| Self-host recovery | Linux ARM64 at `d33e77d5` passed smoke, six Compose recovery phases and cleanup. Its strict browser run passed 639 cases, with 11 original 30-second deadlines and five original skips. The Mac preflight found 560.76 GiB free with every Podman VM stopped. The reviewed Mac controller requires an already-running idle default VM to verify the original stores. [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44641897067/job/135989769132). |
 
 Qualified human tax and AI reviews, applicable final annual forms, and final
 hosted evidence remain open. No qualified human has accepted the tax review.

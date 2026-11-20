@@ -29,6 +29,43 @@ frozen offline install with the existing package store.
 [Original failure](https://github.com/utilityfueled/tax-engine/actions/runs/44644424502/job/135983275673) ·
 [Repaired check](https://github.com/utilityfueled/tax-engine/actions/runs/44647619691/job/135994123598).
 
+The exact repaired archive passed 29,493 tests in each of unit and coverage
+across 2,156 files. Branch coverage was 88.35% against the 85% gate. The
+local PostgreSQL 16.16 cluster stopped normally. The protected Preview
+reported the exact `d23eabb0` source, with test billing forced during the
+build and at runtime and no production alias. All nine normal workspace
+checks passed with the existing authorized synthetic account. The fixture
+was created, saved, reopened and removed. Earlier rows were preserved, and
+sign-out cleared the session. The lifecycle receipt SHA-256 is
+`706a81242d5f4ea14299035c541e7e7a863f528dbb6ed31247f7dc52b4a9616d`.
+
+The exact repaired GitHub application passed all six CI jobs and Docker.
+GitHub unit and coverage each passed 29,493 tests with 88.35% branch coverage.
+Both local and GitHub managed browser runs passed 650 cases with five original
+hosted skips. The local run used the 15 pinned public samples and pypdf 6.10.0,
+and its listener closed.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44647619691) ·
+[Exact managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44647619510/job/135994122462).
+
+The exact repaired AMD64 runtime passed image smoke, six Compose recovery
+phases, independent archive import and cleanup. Strict browsing passed 640
+cases with five original skips and ten original 30-second deadlines. Two
+part-year business cases, one reciprocal employee case, three resident-credit
+cases and four part-year school-district cases timed out. Those same groups
+account for ten of the deadlines on the separate `d33e77d5` ARM64 run. The
+strict self-hosting gate remains open.
+[Exact strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44647619510/job/135994123070).
+
+GitHub's earlier `1399cc1c` unit job recorded 29,492 passes and one 5-second
+Pennsylvania review-render deadline. Its managed browser job passed 650 cases.
+The earlier strict AMD64 image passed 634 cases, with 14 original 30-second
+deadlines and two saved-PDF inspection timeouts. Both browser jobs recorded five
+original skips. Strict smoke, Compose recovery, archive import and cleanup
+passed. The deadline and inspection gates remain in force.
+[Earlier unit job](https://github.com/utilityfueled/tax-engine/actions/runs/44644424502/job/135983275088) ·
+[Earlier managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44644424384/job/135983274054) ·
+[Earlier strict job](https://github.com/utilityfueled/tax-engine/actions/runs/44644424384/job/135983273520).
+
 ## November 19 guided Ohio unemployment payment proof
 
 The Ohio guided interview connects an eligible 2025 Form 1099-G to an
@@ -64,6 +101,12 @@ image passed 646, with four 30-second deadlines and the same five skips.
 Image smoke, Compose recovery, independent archive import and container
 cleanup passed. [Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44641132856/job/135972172019) ·
 [Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44641132856/job/135972172120).
+
+The separate native Linux ARM64 run for this same revision passed smoke,
+Compose upgrade and recovery, and container cleanup. Strict browser checks
+passed 639 cases and reached the original 30-second deadline in eleven
+cases, with five original skips. Exact GitHub CI and Docker also passed.
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44641897067/job/135989769132).
 
 ## November 19 exact browser and recovery results
 
