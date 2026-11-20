@@ -95,6 +95,14 @@ export function buildGuidedPennsylvaniaOverrides(state?: GuidedFlowState | null)
   };
 }
 
+/** Select the pending draft and reconcile the saved ledger before source validation. */
+export function readGuidedPAMarriedDraft(input: TaxYearInput, data: StateReturnData | undefined) {
+  if (data?.paMarriedOrdinarySources === undefined && input.paMarriedOrdinarySources === undefined) return undefined;
+  if (!data?.paMarriedOrdinarySources) throw Error('Actual retained married PA household packet must reconcile with the current guide.');
+  assertMarriedPASavedLedger(data);
+  return data.paMarriedOrdinarySources;
+}
+
 /** Bind current private originals before state calculation and before redaction.
  * This does not turn a source packet into a complete return or filing approval. */
 export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlowState | null, onSchoolReplay?: () => void): TaxYearInput {
@@ -121,10 +129,9 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {}),...(ohioReturnHeaderSources?{ohioReturnHeaderSources}:{})};
   }
   if (state.segmentation.stateCode === "PA") {
-    if(data?.paMarriedOrdinarySources!==undefined||input.paMarriedOrdinarySources!==undefined){
-      if(!data?.paMarriedOrdinarySources)throw Error('Actual retained married PA household packet must reconcile with the current guide.');
-      assertMarriedPASavedLedger(data);
-      return{...input,paMarriedOrdinarySources:buildGuidedPAMarriedOrdinarySources(input,data.paMarriedOrdinarySources)};
+    const draft = readGuidedPAMarriedDraft(input, data);
+    if (draft) {
+      return { ...input, paMarriedOrdinarySources: buildGuidedPAMarriedOrdinarySources(input, draft) };
     }
     if (!data?.paResidencySources) throw new Error("Actual Pennsylvania residency sources are required.");
     const bound = data.paReciprocitySources

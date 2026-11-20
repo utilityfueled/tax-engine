@@ -1,5 +1,18 @@
 # 2026 upgrade implementation evidence
 
+## November 20 single married Pennsylvania preview calculation
+
+The confirmed guided preview now calculates a joint or separate Pennsylvania
+return once when the input has no retained married packet. The same calculation
+validates the current originals. Retained canonical packets still require
+reconciliation before the draft may replace them. Separate refunds remained
+$327 and $80 after reload and reconfirmation.
+
+The regression reproduced two calculations on the prior code. All 273 scoped
+tests, web types and scoped ESLint passed. Both managed native-original
+journeys passed at 1280px and 390px on macOS under the strict 30-second case
+deadline. The full strict Linux suites still require a fresh result.
+
 ## November 20 final 2026 Publication 915 worksheet example
 
 The standalone Social Security worksheet matches the IRS's Worksheet 1
