@@ -25,8 +25,13 @@ function packet(entityType:Entity,year:number|undefined,ordinaryIncome='0',feder
 }
 it('rejects future K1 original years privately before authenticated dispatch',async()=>{
  for(const entity of ['partnership','s_corporation']as const)for(const year of [2026,2027])for(const [ordinary,withheld]of [['0','0'],['0','1000']]as const){
-  const input=packet(entity,year,ordinary,withheld),before=structuredClone(input),result=calculateFederalTax(TaxYearInputSchema.parse(input));expect(result.agi.toFixed()).toBe('85000');expect(result.totalWithholding.toFixed()).toBe(withheld==='1000'?'13750':'12750');
-  await post(input,400);expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('future-year K1 original');expect(input).toEqual(before);
+  const input=packet(entity,year,ordinary,withheld),before=structuredClone(input);
+  const valid=calculateFederalTax(TaxYearInputSchema.parse(packet(entity,2025,ordinary,withheld)));
+  expect(valid.agi.toFixed()).toBe('85000');expect(valid.totalWithholding.toFixed()).toBe(withheld==='1000'?'13750':'12750');
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow('reconcile the original period');
+  await post(input,400);
+  expect(()=>calculateVerifiedAiAudit(scope,input)).toThrow('reconcile the original period');
+  expect(input).toEqual(before);
  }
 });
 it('preserves prior matching and unknown K1 header years without inventing fiscal dates',async()=>{
@@ -36,7 +41,13 @@ it('preserves prior matching and unknown K1 header years without inventing fisca
  }
 });
 it('rejects conflicting future K1 duplicates in either order while preserving actual history',async()=>{
- for(const entity of ['partnership','s_corporation']as const)for(const reversed of [false,true]){const input=packet(entity,2024),future=packet(entity,2026);input.scheduleK1=reversed?[...future.scheduleK1,...input.scheduleK1]:[...input.scheduleK1,...future.scheduleK1];expect(calculateFederalTax(TaxYearInputSchema.parse(input)).totalWithholding.toFixed()).toBe('14750');await post(input,400);}
+ for(const entity of ['partnership','s_corporation']as const)for(const reversed of [false,true]){
+  const input=packet(entity,2024),future=packet(entity,2026);
+  expect(calculateFederalTax(TaxYearInputSchema.parse(input)).totalWithholding.toFixed()).toBe('13750');
+  input.scheduleK1=reversed?[...future.scheduleK1,...input.scheduleK1]:[...input.scheduleK1,...future.scheduleK1];
+  expect(()=>calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow('reconcile the original period');
+  await post(input,400);
+ }
  const input=packet('partnership',2024);input.scheduleK1[0].beginningBasis='1000';input.scheduleK1[0].priorSuspendedLosses={ordinary:'100'};input.scheduleK1[0].ordinaryIncome='500';const before=structuredClone(input),result=calculateFederalTax(TaxYearInputSchema.parse(input));expect(calculateVerifiedAiAudit(scope,input).entries.find(x=>x.line==='11')?.value).toBe(result.agi.toFixed());await post(input,200);expect(input).toEqual(before);
 });
 it('preserves known-year schema and unavailable 2026 qualification',async()=>{

@@ -100,6 +100,24 @@ lines:
       (https://www.irs.gov/instructions/iw2g).
     testRef: "tests/engine/federal-income-statement-source-year.test.ts::holds a mismatched original statement for %i (source %i)"
 
+  - line: "future-schedule-k1-source-year"
+    description: "Hold Schedule K-1 originals whose entity period begins after the individual return year"
+    formula: >-
+      For calendar-year individual returns, a partnership, S corporation, estate or trust
+      Schedule K-1 with an explicit original header year greater than the individual
+      return year cannot describe an entity period ending within that return year.
+      Require reconciliation before using the original's income, deductions, credits or withholding.
+      An earlier original header can reflect a fiscal period spanning years. An absent
+      header remains unknown. Preserve existing processing of these inputs and any
+      more specific source checks, without inferring the actual fiscal ending date.
+    irsRef: >-
+      IRS Partner's Instructions for Schedule K-1 (Form 1065)
+      (https://www.irs.gov/instructions/i1065sk1),
+      Shareholder's Instructions for Schedule K-1 (Form 1120-S)
+      (https://www.irs.gov/instructions/i1120ssk),
+      and 26 CFR 1.662(c)-1 (https://www.ecfr.gov/current/title-26/section-1.662(c)-1).
+    testRef: "tests/engine/federal-k1-source-year.test.ts::holds a future %s Schedule K-1 before federal reporting"
+
   - line: "1"
     description: "Wages, salaries, tips, etc."
     formula: "Sum of all W-2 Box 1 values plus any supported Form 4137 unreported tip income that must be included in wages on Form 1040 line 1, plus any supported Form 8919 line 6 employee wages that must be included in wages on Form 1040 line 1, plus any non-IRA Form 1099-R disability pension amounts that are taxable as wages because the taxpayer had not reached minimum retirement age on the date received; if validated retired-public-safety-officer accident, health, or long-term care insurance premiums were paid directly from the disability pension, reduce the disability-pension wage amount by the smaller of those validated premiums, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported pension-line exclusion, or the disability-pension taxable amount"

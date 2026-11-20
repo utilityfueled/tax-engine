@@ -10,6 +10,7 @@ import {calculateScheduleCPassengerSources} from './schedule-c-passenger-first-y
 
 import Decimal from "decimal.js";
 import type { TaxYearInput, ScheduleK1 } from "@/models/inputs.js";
+import { getFutureScheduleK1SourceIssue } from "../forms/schedule-k1-source-year.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm6198, type Form6198Result } from "@/engine/forms/form-6198.js";
@@ -292,6 +293,8 @@ function applyAtRiskLimitation(
 }
 
 export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources' | 'royaltyPropertySources' | 'form4562' | 'scheduleC'>> & {[contextField:string]:unknown} & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+  const scheduleK1SourceIssue = getFutureScheduleK1SourceIssue(input.taxpayer?.taxYear, input.scheduleK1);
+  if (scheduleK1SourceIssue) throw new Error(scheduleK1SourceIssue);
   if (input.rentalProperties?.some(property => property.form4562?.passengerFirstYearSources !== undefined)) throw new Error('Passenger worksheet requires separate rental owner/activity linkage');
   calculateScheduleCPassengerSources(input,input.scheduleC);
   if (input.k1CharitableSources && !input.taxpayer) throw new Error('K1 charitable ScheduleE requires the actual taxpayer context');

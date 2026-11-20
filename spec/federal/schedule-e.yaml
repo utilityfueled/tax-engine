@@ -9,6 +9,20 @@ notes: |
   Part II specifically handles K-1 income from partnerships and S corps.
 
 lines:
+  - line: "future-k1-source-year"
+    description: "Check explicitly future Schedule K-1 years when the taxpayer context is supplied"
+    formula: >-
+      For Part II, hold an original partnership or S corporation Schedule K-1
+      with a header year greater than the calendar-year return's year. Earlier
+      headers may reflect a fiscal period ending in the return year.
+      When the caller omits the taxpayer year or the original header, leave
+      that value unknown.
+    irsRef: >-
+      IRS Instructions for Schedule K-1 (Form 1065)
+      (https://www.irs.gov/instructions/i1065sk1) and for Schedule K-1 (Form 1120-S)
+      (https://www.irs.gov/instructions/i1120ssk).
+    testRef: "tests/engine/federal-k1-source-year.test.ts::holds future Part II income with a known Schedule E taxpayer year"
+
   # ── Part I: Rental Real Estate and Royalties ─────────────
   - line: "3"
     description: "Rents received"

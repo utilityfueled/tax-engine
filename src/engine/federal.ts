@@ -1,5 +1,6 @@
 import { calculateForm2210InvestmentElectionSources } from './forms/form-2210-investment-election.js';
 import { assertW2StateLocalSources } from "./forms/w2-state-local.js";
+import { getFutureScheduleK1SourceIssue } from "./forms/schedule-k1-source-year.js";
 import { buildForm2210OwnerSourceContext } from './forms/form-2210-owner-source.js';
 import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
 import { calculateMarketplaceActualPaidSources } from "./forms/marketplace-actual-paid-sources.js";
@@ -235,6 +236,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     if (packet !== undefined) assertW2StateLocalSources(input, index, packet);
   });
   const returnYear = input.taxpayer.taxYear;
+  const scheduleK1SourceIssue = getFutureScheduleK1SourceIssue(returnYear, input.scheduleK1, input.scheduleK1Form1041);
+  if (scheduleK1SourceIssue) {
+    getConstants(returnYear);
+    throw new Error(scheduleK1SourceIssue);
+  }
   for (const [formName, statements] of [
     ["Form W-2", input.w2s],
     ["Form 1099-INT", input.form1099Int],
