@@ -1,5 +1,51 @@
 # 2026 upgrade implementation evidence
 
+## November 19 capital loss carryover at or below the annual limit
+
+Pushed application `68cc8815` applies the 2025 Schedule D carryover worksheet
+when the unfloored Form 1040 line 15 is negative, including when Schedule D
+lines 16 and 21 show the same loss. The full-return Schedule D result and audit
+use the worksheet's short- and long-term balances before any Form 982 adjustment.
+The current year's deduction keeps the existing annual cap.
+
+Three focused pre-fix runs reproduced the missing balance, stale audit value
+and stale Schedule D sub-result. The first complete exact run on `bba74119`
+passed 29,469 tests and failed 36 existing Ohio output-commitment checks in
+four files after the audit order changed. The corrected `68cc8815` updates
+only the balances that change and preserves the original order and content
+elsewhere. All 645 focused checks passed, including each of those Ohio files.
+A separate Decimal worksheet calculation reproduced all four regression values.
+The saved 2025 Schedule D for the mixed loss displayed $500 short term,
+$2,500 long term, and $3,000 net loss and deduction. A strict pypdf check
+verified those fields and the blank's preprinted parentheses around line 21.
+That fixture carries $2,400 of long-term loss into 2026. The corrected archive
+passed all 9,666 spec references, generated inventory, three type checks, lint
+with zero errors, and browser source fingerprints. Its full `pnpm test` run
+passed 29,505 tests across 2,156 files under Node 26.13.1 with disposable
+PostgreSQL 16.16. The database shut down normally. The IRS still lists the
+2025 blank as current and the 2026 Schedule D as draft. Qualified human review
+remains pending.
+[Schedule D instructions](https://www.irs.gov/instructions/i1040sd) ·
+[IRS Publication 550](https://www.irs.gov/publications/p550) ·
+[Current Schedule D blank](https://www.irs.gov/pub/irs-pdf/f1040sd.pdf) ·
+[Draft 2026 Schedule D](https://www.irs.gov/pub/irs-dft/f1040sd--dft.pdf) ·
+[Reviewer cases](upgrade-2026-human-tax-review-packet.md#capital-loss-carryover-from-2025-into-2026).
+
+The exact local root and web builds passed. The first scoped browser attempt
+stopped before any cases because the archive lacked the official sample
+downloads. After restoring the pinned samples, both Ohio business and both
+railroad retirement desktop/mobile cases passed on the managed local build.
+The run used two workers, zero retries, the existing 30-second browser and
+four-second PDF limits, and normal cleanup. The exact GitHub Docker build passed.
+[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44670357232).
+
+The same revision was dispatched through the existing opt-in Linux browser
+phase diagnostic. The checked-out preflight reproduced the frozen 655-case
+collection and the original two batches of 10 and 15 cases. The workflow
+runs those diagnostic batches only after an original strict failure. The
+existing deadlines and release gate still apply.
+[Exact Linux diagnostic run](https://github.com/utilityfueled/tax-engine/actions/runs/44671161158).
+
 ## November 19 full application checks and ARM64 recovery
 
 Exact pushed source `5cb12a91` passed all three local type checks, both

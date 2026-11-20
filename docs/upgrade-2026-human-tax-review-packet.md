@@ -181,6 +181,25 @@ by a qualified reviewer, or as merely missing credentials.
 
 ## Required independent expected results
 
+### Capital loss carryover from 2025 into 2026
+
+Independently complete the IRS Capital Loss Carryover Worksheet for a single
+taxpayer with a $15,750 standard deduction, only the stated wages and capital
+transactions, and no other deductions or adjustments. Confirm the 2025
+Schedule D line 21 amounts and the carryover by character. The engine's entries
+below are regression expectations for review. Reviewer approval is pending.
+[2025 Schedule D instructions](https://www.irs.gov/instructions/i1040sd) ·
+[Publication 550](https://www.irs.gov/publications/p550).
+
+| 2025 wages | Short-term loss | Long-term loss | Line 21 loss | Expected 2026 short-term carry | Expected 2026 long-term carry |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| $12,000 | $0 | $2,000 | $2,000 | $0 | $2,000 |
+| $15,751 | $2,000 | $0 | $2,000 | $1,999 | $0 |
+| $16,350 | $500 | $2,500 | $3,000 | $0 | $2,400 |
+| $17,750 | $0 | $2,000 | $2,000 | $0 | $0 |
+
+### Review scope
+
 For each accepted method, prepare the expected calculation before using the
 engine output as evidence. Use the actual original synthetic sources and record
 year, owner, eligibility, dates, elections and missing facts. Preserve zero as zero

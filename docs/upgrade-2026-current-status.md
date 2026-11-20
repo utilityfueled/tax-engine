@@ -1,5 +1,13 @@
 # Current 2026 upgrade status
 
+The 2025 federal return preserves unused capital loss for 2026 when taxable
+income before the zero floor is negative, including losses at or below the
+annual limit. Full-return audit amounts match the worksheet. The mixed-loss
+fixture carries $2,400 long term and keeps the printed $3,000 deduction.
+The corrected source passes all 29,505 unit tests, including the four
+previously affected Ohio commitment files.
+[Schedule D evidence](upgrade-2026-progress.md#november-19-capital-loss-carryover-at-or-below-the-annual-limit).
+
 Local unit and coverage on `5cb12a91` passed 29,504 tests each, with 88.35%
 branch coverage against the 85% gate. The unit rerun used the original
 deadlines. All three type checks, both builds, the spec inventory and 9,665
@@ -105,8 +113,10 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Read `activeContinuation.nov20CombinedQualification` for the latest exact
-CI, runtime and diagnostic evidence.
+Read `activeContinuation.nov20CombinedQualification` for the preceding
+combined CI, runtime and diagnostic evidence.
+Read `activeContinuation.nov20CapitalLossCarryoverBelowLimit` for the newer
+Schedule D correction and its exact verification runs.
 Read `activeContinuation.nov20OhioUnemploymentPaymentSchedule` for the newest
 Ohio work. Resume with `activeContinuation.nov20StatementAndBrowserContinuation` for
 the latest application source, check runs and bounded trace findings. Earlier

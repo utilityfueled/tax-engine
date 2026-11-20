@@ -142,6 +142,23 @@
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
     "latestPushedSource": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce",
+    "nov20CapitalLossCarryoverBelowLimit": {
+      "source": "68cc8815d1ad8c4865ff306eaf400713a20cf401",
+      "basis": ["https://www.irs.gov/instructions/i1040sd", "https://www.irs.gov/publications/p550"],
+      "preFixFailures": ["Loss at or below the limit was discarded", "Full-return audit retained the preliminary zero", "Full-return Schedule D sub-result retained the preliminary zero"],
+      "focusedTestsPassed": 645,
+      "staticChecks": { "specReferences": 9666, "typechecks": 3, "inventoryPassed": true, "lintErrors": 0, "browserAuditFingerprintsPassed": true },
+      "unit": { "passed": 29505, "files": 2156, "workers": 4, "node": "26.13.1", "postgres": "16.16", "disposablePostgresStopped": true },
+      "managedLocalBrowser": { "buildsPassed": 2, "firstAttemptMissingOfficialSamples": true, "passed": 4, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "savedPdfDeadlineMs": 4000, "cleanup": true, "receiptSha256": "f73c7dc1beb63ed7c52dd7cbbab1e2562cedc3a808ae62e3c3ec04d33b14e677" },
+      "predecessor": { "source": "bba741196342250dd8ad2f4eb61b3275df1fd0e3", "unitPassed": 29469, "ohioCommitmentFailures": 36, "specReferences": 9666, "inventoryPassed": true, "lintErrors": 0, "disposablePostgresStopped": true, "githubRuns": { "ci": 44669588634, "web": 44669588593, "docker": 44669588567 } },
+      "independentWorksheetCalculation": { "cases": 4, "mixedLoss2025Line21": "-3000", "mixedLoss2026LongTermCarry": "-2400", "receiptSha256": "299b8d4be0aac7292791ec1327372e45dfe27c0a5e2b9e5234d63c034ef0f911" },
+      "savedPdf": { "source": "68cc8815", "revision": 2025, "strict": true, "matchingAuditAndCarryforward": true, "receiptSha256": "ab29e69da1a35b90ab3c7287d3b3f6b08b76a0173741dd59053fb902e651f420" },
+      "formRefresh": "The IRS final download is 2025. Its separate 2026 Schedule D is draft.",
+      "githubRuns": { "ci": 44670357280, "web": 44670357157, "docker": 44670357232, "dockerPassed": true },
+      "linuxBrowserPhaseDiagnostic": { "run": 44671161158, "source": "68cc8815", "collectionCases": 655, "originalBatchCases": [10, 15], "frozenSourceAndCollectionMatched": true, "originalFailureSuperseded": false },
+      "qualifiedHumanReview": "pending",
+      "evidence": ".local/upgrade-evidence/nov20-capital-loss-below-cap"
+    },
     "nov20CombinedQualification": {
       "source": "5cb12a91",
       "staticChecks": { "typechecks": 3, "builds": 2, "specReferences": 9665, "inventoryPassed": true },
