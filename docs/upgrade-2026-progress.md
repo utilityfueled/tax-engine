@@ -1,5 +1,18 @@
 # 2026 upgrade implementation evidence
 
+## November 20 guided progress rail on ordinary edits
+
+The Ohio entry profile identified repeated scroll and layout work from the
+progress rail during input edits. The existing mobile journey reproduced
+two programmatic recenter calls while adding and entering one estimated
+payment. The fixed journey observes zero calls during that edit and still
+observes recentering after navigating to About You. The rail also recenters
+when the ordered route changes.
+
+Both mobile layout journeys and four Ohio school-district journeys passed on
+macOS with their original 30-second case deadline and no retries. An
+independent source review passed. Full strict Linux results remain pending.
+
 ## November 20 single married Pennsylvania preview calculation
 
 The confirmed guided preview now calculates a joint or separate Pennsylvania

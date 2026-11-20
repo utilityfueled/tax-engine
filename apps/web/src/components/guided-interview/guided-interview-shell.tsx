@@ -116,6 +116,9 @@ function SectionProgressBar({
   onJump: (sectionId: InterviewSectionId) => void;
 }) {
   const progress = analysis.progress;
+  const activeSectionId = progress.currentSection?.id;
+  // The route is rebuilt on every edit. Recenter only when navigation changes.
+  const sectionOrder = progress.sections.map(section => section.id).join(",");
   const stepsRef = useRef<HTMLDivElement | null>(null);
   const stepRefs = useRef<Record<InterviewSectionId, HTMLButtonElement | null>>({} as Record<
     InterviewSectionId,
@@ -160,8 +163,7 @@ function SectionProgressBar({
 
   useEffect(() => {
     const stepsNode = stepsRef.current;
-    const currentSection = progress.sections[progress.currentSectionIndex];
-    const currentStep = currentSection ? stepRefs.current[currentSection.id] : null;
+    const currentStep = activeSectionId ? stepRefs.current[activeSectionId] : null;
     if (!stepsNode || !currentStep) return;
 
     const prefersReducedMotion =
@@ -179,8 +181,9 @@ function SectionProgressBar({
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
 
-    window.requestAnimationFrame(syncOverflowState);
-  }, [progress.currentSectionIndex, progress.sections, syncOverflowState]);
+    const frame = window.requestAnimationFrame(syncOverflowState);
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeSectionId, sectionOrder, syncOverflowState]);
 
   return (
     <div

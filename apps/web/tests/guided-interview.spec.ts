@@ -332,6 +332,25 @@ test.describe("Guided interview flow", () => {
         );
       })
       .toBe(true);
+
+    await rail.evaluate(element => {
+      const scrollTo = element.scrollTo;
+      element.dataset.programmaticScrolls = "0";
+      element.scrollTo = (...args: unknown[]) => {
+        element.dataset.programmaticScrolls = String(Number(element.dataset.programmaticScrolls) + 1);
+        Reflect.apply(scrollTo, element, args);
+      };
+    });
+    await page.getByRole("button", { name: "Add another estimated tax payment" }).click();
+    const amount = page.getByRole("textbox", { name: "Amount paid" });
+    await amount.fill("25.00");
+    await expect(amount).toHaveValue("25.00");
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    expect(await rail.getAttribute("data-programmatic-scrolls")).toBe("0");
+
+    await rail.getByRole("button", { name: "About You", exact: true }).click();
+    await expect(rail.locator('[aria-current="step"]')).toHaveText("About You");
+    await expect.poll(async () => Number(await rail.getAttribute("data-programmatic-scrolls"))).toBeGreaterThan(0);
   });
 
   test("filers who select no income types skip income sections after onboarding", async ({ page }) => {
