@@ -1,5 +1,6 @@
 import { performance } from "node:perf_hooks";
 import { z } from "zod";
+import { geminiTextResponseSchema, readGeminiTextResponse } from "../../packages/engine/src/ai-gemini-text-response";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import { evalHttpStatusSchema, evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
 import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./provider-eval-contract";
@@ -8,9 +9,7 @@ const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), 
   output_text: z.string().optional(), output: z.array(z.object({ type: z.string(), content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional() })).optional(),
   usage: z.object({ input_tokens: token, output_tokens: token, input_tokens_details: z.object({ cached_tokens: token.optional(),
     cache_write_tokens: token.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: token, ttl_12h_tokens: token }).optional() }).optional() }) });
-const googleEnvelope = z.object({ modelVersion: z.string(), responseId: z.string().optional(), candidates: z.array(z.object({ finishReason: z.string(),
-  content: z.object({ parts: z.array(z.object({ text: z.string().optional(), thought: z.boolean().optional() })) }).optional() })).max(1),
-  usageMetadata: z.object({ promptTokenCount: token, candidatesTokenCount: token, thoughtsTokenCount: token.optional(), cachedContentTokenCount: token.optional() }) });
+const googleEnvelope = geminiTextResponseSchema.extend({ modelVersion: z.string(), responseId: z.string().optional() });
 async function readBounded(response: Response) {
   if (!response.body || Number(response.headers.get("content-length")) > contract.responseByteLimit) throw new Error("Bounded response unavailable.");
   const reader = response.body.getReader(); let size = 0; const chunks: Uint8Array[] = [];
@@ -73,11 +72,8 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
         outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message" ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
         reportedModel = envelope.model;
       } else {
-        const envelope = googleEnvelope.parse(payload); const candidate = envelope.candidates[0];
-        usage = evalUsageSchema.parse({ inputTokens: envelope.usageMetadata.promptTokenCount,
-          outputTokens: envelope.usageMetadata.candidatesTokenCount + (envelope.usageMetadata.thoughtsTokenCount ?? 0), cachedInputTokens: envelope.usageMetadata.cachedContentTokenCount ?? 0 });
-        complete = candidate?.finishReason === "STOP";
-        outputText = candidate?.content?.parts.filter(part => !part.thought).map(part => part.text ?? "").join("") ?? "";
+        const envelope = googleEnvelope.parse(payload);
+        ({ completed: complete, outputText, usage } = readGeminiTextResponse(envelope));
         reportedModel = envelope.modelVersion; responseReference = envelope.responseId ?? responseReference;
       }
       let parsedOutput: unknown = null;

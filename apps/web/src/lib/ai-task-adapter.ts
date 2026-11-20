@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
+import { geminiTextResponseSchema, readGeminiTextResponse } from "@tax-engine/engine/src/ai-gemini-text-response";
 import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import { selectQualifiedAiRoute, type AiRolloutState } from "./ai-rollout";
@@ -104,13 +105,6 @@ const openAiEnvelope = z.object({
     input_tokens_details: z.object({ cached_tokens: usageCount.optional(),
       cache_write_tokens: usageCount.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: usageCount, ttl_12h_tokens: usageCount }).optional() }).optional() }),
 });
-const googleEnvelope = z.object({
-  candidates: z.array(z.object({ finishReason: z.string(),
-    content: z.object({ parts: z.array(z.object({ text: z.string().optional(), thought: z.boolean().optional() })) }) })).length(1),
-  usageMetadata: z.object({ promptTokenCount: usageCount, candidatesTokenCount: usageCount,
-    thoughtsTokenCount: usageCount.optional(), cachedContentTokenCount: usageCount.optional() }),
-});
-
 /** One attempt only. A caller may explicitly escalate once; no provider switching or hidden retries. */
 export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiTaskExecution = { mode: "production" }) {
   if (request.optedOut) return null;
@@ -196,12 +190,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
       ...(writes?.ttl_30m_tokens ? { cacheWrite30mTokens: writes.ttl_30m_tokens } : {}),
       ...(writes?.ttl_12h_tokens ? { cacheWrite12hTokens: writes.ttl_12h_tokens } : {}) };
   } else {
-    const envelope = googleEnvelope.parse(payload);
-    completed = envelope.candidates[0].finishReason === "STOP";
-    outputText = envelope.candidates[0].content.parts.filter(part => !part.thought).map(part => part.text ?? "").join("");
-    usage = { inputTokens: envelope.usageMetadata.promptTokenCount,
-      outputTokens: envelope.usageMetadata.candidatesTokenCount + (envelope.usageMetadata.thoughtsTokenCount ?? 0),
-      cachedInputTokens: envelope.usageMetadata.cachedContentTokenCount ?? 0 };
+    ({ completed, outputText, usage } = readGeminiTextResponse(geminiTextResponseSchema.parse(payload)));
   }
   } catch {
     await execution.recordUnknownAttempt?.(attempt, { providerRequestId });

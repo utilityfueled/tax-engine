@@ -1,5 +1,10 @@
 # Current 2026 upgrade status
 
+Hosted Gemini billing and evaluation now retain exact verified usage on
+rejected responses. Unknown prices and inconsistent counts hold for
+reconciliation. The fix passed 89 synthetic tests and independent review.
+[Gemini accounting evidence](upgrade-2026-progress.md#november-19-reported-gemini-rejection-usage).
+
 The Ohio guided interview now collects actual dated unemployment proof for
 the single-payment part-year case. It checks the statement and owner before
 reopening or confirming the return. The saved fixture produced $1,000 on
@@ -54,7 +59,8 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestGuidedOhioUnemploymentPaymentProof`,
+Resume with `latestGeminiRejectedUsageSettlement`,
+`latestGuidedOhioUnemploymentPaymentProof`,
 `latestBrowserRecoveryComparison`, `latestScheduleAPropertyTaxSourceYear`,
 `latestOhioNonresidentUnemployment`,
 `latestChildTaxCreditRawRelationship`, `latestChildTaxCreditRelationship`,

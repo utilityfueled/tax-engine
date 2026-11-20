@@ -556,6 +556,24 @@
         "vmTransitions": 0,
         "cleanupErrors": 0
       },
+      "latestGeminiRejectedUsageSettlement": {
+        "authority": "https://aistudio.google.com/api-reference/generate-content",
+        "sharedHostedAndEvaluationDecoder": true,
+        "candidateRejectedWithoutContentProviderUsd": "0.004365",
+        "promptBlockedWithoutCandidateProviderUsd": "0.000615",
+        "retailCentsPerKnownRejectedRequest": 1,
+        "standardAndUnspecifiedTiersOnly": true,
+        "unknownOrContradictoryUsageHeld": true,
+        "promptBlockRequiresExplicitZeroCandidateCount": true,
+        "oneDispatchNoFallback": true,
+        "scopedTestsPassed": 89,
+        "scopedFilesPassed": 6,
+        "independentTestsPassed": 45,
+        "specReferences": 18,
+        "productionModelsPromoted": false,
+        "liveProviderCalls": 0,
+        "browserAuditSha256": "9145012c489c0d3c81cf08f4d39012b270b5adfdaf5d0ca48087b6d7096d2040"
+      },
       "latestGuidedOhioUnemploymentPaymentProof": {
         "taxYear": 2025,
         "scope": "single actual government Form 1099-G Box 1 paid in one source-confirmed payment",

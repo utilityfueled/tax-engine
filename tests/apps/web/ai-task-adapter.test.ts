@@ -4,6 +4,7 @@ import { executeAiTask, type AiTaskExecution, type AiTaskRequest } from "../../.
 vi.mock("server-only", () => ({}));
 
 const schema = z.object({ summary: z.string().max(300) }).strict();
+const geminiUsage = { promptTokenCount: 1000, cachedContentTokenCount: 200, candidatesTokenCount: 100, thoughtsTokenCount: 900 };
 function request(overrides: Partial<AiTaskRequest<z.infer<typeof schema>>> = {}) {
   return { task: "workspace-summary" as const, redactedText: "One W-2 requires confirmation.",
     instructions: "Describe the next step.", schema, validateGrounding: vi.fn(), ...overrides };
@@ -57,6 +58,125 @@ describe("task-based candidate AI adapter", () => {
     expect(recordAttempt).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ providerRequestId: undefined }));
     expect(url).not.toContain("fixture-key");
     expect(JSON.parse(options.body).generationConfig).toMatchObject({ thinkingConfig: { thinkingLevel: "HIGH" }, maxOutputTokens: 4096 });
+  });
+  it("settles exact Gemini usage for rejected or missing candidate content", async () => {
+    const candidates = [
+      { finishReason: "SAFETY" },
+      { finishReason: "STOP" },
+      { finishReason: "MAX_TOKENS", content: { parts: [{ text: '{"summary":"Review the W-2."}' }] } },
+    ];
+    for (const candidate of candidates) {
+      const deps = execution();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      const validateGrounding = vi.fn();
+      deps.fetchFn.mockResolvedValueOnce(Response.json({
+        candidates: [candidate],
+        usageMetadata: geminiUsage,
+      }));
+
+      const result = await executeAiTask(request({ validateGrounding }), {
+        ...deps, provider: "google", now: () => "2026-11-19T12:00:00Z", recordAttempt, recordUnknownAttempt,
+      });
+
+      expect(result).toMatchObject({ accepted: false, value: null, requiresUserConfirmation: true,
+        accounting: { providerCostUsd: "0.004365", retailChargeCents: 1 } });
+      expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ attempt: 1 }), {
+        accepted: false, usage: { inputTokens: 1000, outputTokens: 1000, cachedInputTokens: 200 }, providerRequestId: undefined,
+      });
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
+      expect(validateGrounding).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("/models/gemini-3.8-flash:generateContent"), expect.anything());
+    }
+  });
+  it("keeps missing or malformed Gemini usage unknown after one dispatch", async () => {
+    for (const usageMetadata of [undefined, { promptTokenCount: 1000 }, { promptTokenCount: 1000, candidatesTokenCount: -1 }]) {
+      const deps = execution();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates: [{ finishReason: "SAFETY" }], usageMetadata }));
+
+      await expect(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }))
+        .rejects.toThrow("AI provider request failed; usage requires reconciliation.");
+
+      expect(recordUnknownAttempt).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ attempt: 1 }), { providerRequestId: undefined });
+      expect(recordAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("/models/gemini-3.8-flash:generateContent"), expect.anything());
+    }
+  });
+  it("reconciles reported Gemini tier and totals before settling usage", async () => {
+    for (const serviceTier of ["standard", "unspecified"]) {
+      const deps = execution();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates: [{ finishReason: "SAFETY" }],
+        usageMetadata: { ...geminiUsage, serviceTier, toolUsePromptTokenCount: 0, totalTokenCount: 2000 },
+      }));
+      const result = await executeAiTask(request(), { ...deps, provider: "google", now: () => "2026-11-19T12:00:00Z",
+        recordAttempt, recordUnknownAttempt });
+      expect(result).toMatchObject({ accepted: false, accounting: { providerCostUsd: "0.004365", retailChargeCents: 1 } });
+      expect(recordAttempt).toHaveBeenCalledOnce();
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
+
+    const invalidMetadata = [
+      { serviceTier: "flex" }, { serviceTier: "priority" }, { serviceTier: "STANDARD" }, { serviceTier: null },
+      { toolUsePromptTokenCount: 1, totalTokenCount: 2001 }, { toolUsePromptTokenCount: -1 },
+      { totalTokenCount: 2200 }, { totalTokenCount: "2000" },
+      { promptTokenCount: Number.MAX_SAFE_INTEGER, totalTokenCount: Number.MAX_SAFE_INTEGER },
+    ];
+    for (const supplied of invalidMetadata) {
+      const deps = execution();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates: [{ finishReason: "SAFETY" }],
+        usageMetadata: { ...geminiUsage, ...supplied },
+      }));
+      await expect.soft(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }), JSON.stringify(supplied))
+        .rejects.toThrow(/usage requires reconciliation/);
+      expect.soft(recordUnknownAttempt).toHaveBeenCalledOnce();
+      expect.soft(recordAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
+  });
+  it("settles reported usage on a documented Gemini prompt block", async () => {
+    const promptFeedback = { blockReason: "SAFETY" };
+    const usageMetadata = { promptTokenCount: 1000, cachedContentTokenCount: 200, candidatesTokenCount: 0, totalTokenCount: 1000 };
+    for (const candidates of [undefined, []]) {
+      const deps = execution();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates, promptFeedback, usageMetadata }));
+      const result = await executeAiTask(request(), { ...deps, provider: "google", now: () => "2026-11-19T12:00:00Z",
+        recordAttempt, recordUnknownAttempt });
+      expect(result).toMatchObject({ accepted: false, value: null,
+        accounting: { providerCostUsd: "0.000615", retailChargeCents: 1 } });
+      expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ attempt: 1 }), {
+        accepted: false, usage: { inputTokens: 1000, outputTokens: 0, cachedInputTokens: 200 }, providerRequestId: undefined,
+      });
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
+
+    const invalidBlocks = [
+      { candidates: [] }, { promptFeedback: { blockReason: "BLOCK_REASON_UNSPECIFIED" } },
+      { promptFeedback: { blockReason: "UNDOCUMENTED" } },
+      { promptFeedback, candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"summary":"ok"}' }] } }] },
+      { promptFeedback, usageMetadata: { promptTokenCount: 1000 } },
+      { promptFeedback, usageMetadata: { ...usageMetadata, candidatesTokenCount: 1, totalTokenCount: 1001 } },
+    ];
+    for (const supplied of invalidBlocks) {
+      const deps = execution();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ usageMetadata, ...supplied }));
+      await expect(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }))
+        .rejects.toThrow(/usage requires reconciliation/);
+      expect(recordUnknownAttempt).toHaveBeenCalledOnce();
+      expect(recordAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
   });
   it.each([
     ['{"summary":"SSN 123-45-6789"}', "PII"],

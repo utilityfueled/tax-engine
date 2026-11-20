@@ -84,6 +84,30 @@ describe("official evaluation transport", () => {
     expect(await transport(request("gemini-flash-high"))).toMatchObject({ usage: { inputTokens: 100, outputTokens: 50, cachedInputTokens: 10 }, payload: { probe: "ok" } });
     expect(body).toMatchObject({ generationConfig: { maxOutputTokens: 1024, thinkingConfig: { thinkingLevel: "HIGH", includeThoughts: false } } });
   });
+  it("applies Gemini billing checks to blocked evaluation responses", async () => {
+    const usageMetadata = { promptTokenCount: 100, candidatesTokenCount: 0, cachedContentTokenCount: 10,
+      totalTokenCount: 100, toolUsePromptTokenCount: 0, serviceTier: "standard" };
+    const blocked = { modelVersion: "gemini-3.8-flash", promptFeedback: { blockReason: "SAFETY" }, usageMetadata };
+    const evaluate = (payload: unknown) => createLiveProviderEvalTransport({ profileIds: ["gemini-flash-high"],
+      apiKeys: { google: "synthetic" }, fetchFn: async () => response(payload),
+    })(request("gemini-flash-high"));
+
+    for (const candidates of [undefined, []]) {
+      await expect.soft(evaluate({ ...blocked, candidates })).resolves.toMatchObject({
+        status: "incomplete", usage: { inputTokens: 100, outputTokens: 0, cachedInputTokens: 10 }, payload: null,
+      });
+    }
+    const invalidUsage = [
+      { serviceTier: "priority" }, { toolUsePromptTokenCount: 5, totalTokenCount: 105 },
+      { totalTokenCount: 99 }, { candidatesTokenCount: 1, totalTokenCount: 101 },
+    ];
+    for (const details of invalidUsage) {
+      await expect.soft(evaluate({ ...blocked, candidates: [], usageMetadata: { ...usageMetadata, ...details } }), JSON.stringify(details))
+        .resolves.toMatchObject({ status: "failed", usage: null, payload: null });
+    }
+    await expect(evaluate({ ...blocked, candidates: [], usageMetadata: { promptTokenCount: 100 } }))
+      .resolves.toMatchObject({ status: "failed", usage: null, payload: null });
+  });
   it("refuses missing keys, unselected models, oversized responses and cancellation", async () => {
     expect(() => createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: {} })).toThrow(/configured key/);
     let calls = 0;

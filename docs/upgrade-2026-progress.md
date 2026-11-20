@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## November 19 reported Gemini rejection usage
+
+The hosted adapter and evaluation transport now share the Gemini text response
+decoder. A rejected candidate can report complete standard-tier usage even
+when its content is absent. A documented prompt block can report usage with
+no candidate and an explicit zero candidate-token count. These responses
+remain rejected. The reported token counts settle at the dispatch-date price.
+[Google GenerateContent reference](https://aistudio.google.com/api-reference/generate-content).
+
+The original candidate rejection stranded the billing hold. The corrected
+synthetic candidate fixture settles exactly $0.004365 in provider cost and
+one retail cent. The synthetic prompt block settles $0.000615 and one retail
+cent. Missing or malformed required counts, unpriced service tiers, positive
+tool-use counts and inconsistent totals keep the hold for reconciliation.
+The tests confirm one dispatch and preserve output and grounding checks.
+All 89 scoped tests and 18 spec references passed. Independent review passed
+45 mock tests. Web and evaluation typechecks and scoped lint passed. This
+package used synthetic responses and left the production model gates closed.
+
 ## November 19 guided Ohio unemployment payment proof
 
 The Ohio guided interview connects an eligible 2025 Form 1099-G to an
