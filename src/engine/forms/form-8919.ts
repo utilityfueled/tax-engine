@@ -54,6 +54,7 @@ export function calculateForm8919(
   const line11 = roundDollar(line10.times(constants.selfEmploymentTax.socialSecurityRate.dividedBy(2)));
   const line12 = roundDollar(line6.times(constants.selfEmploymentTax.medicareRate.dividedBy(2)));
   const line13 = line11.plus(line12);
+  const wageBaseLabel = `${constants.taxYear} Social Security wage base`;
 
   audit.record(
     "Form 8919",
@@ -92,9 +93,9 @@ export function calculateForm8919(
     "9",
     "Remaining Social Security wage-base room",
     line9,
-    "2025 Social Security wage base - Line 8, floored at $0",
+    `${wageBaseLabel} - Line 8, floored at $0`,
     {
-      "2025 Social Security wage base": constants.selfEmploymentTax.socialSecurityWageBase,
+      [wageBaseLabel]: constants.selfEmploymentTax.socialSecurityWageBase,
       "Line 8": line8,
     }
   );

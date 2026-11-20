@@ -7,11 +7,40 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { calculateForm8919 } from "@/engine/forms/form-8919.js";
 import { getConstants } from "@/models/constants.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 
 const d = (value: number | string) => new Decimal(value);
 const c = getConstants(2025);
 
 describe("Form 8919 summary support", () => {
+  it("Form 8919 Line 9 - records the actual tax-year wage base and subtracts the confirmed amounts", () => {
+    // Forms 8919 lines 7–13 from the IRS 2025 and final 2026 copies.
+    // 175,000 + 2,500 + 1,000 + 5,000 = 183,500 already subject to tax.
+    // The 2026 wage base leaves $1,000; 6.2% = $62 and 1.45% of $10,000 = $145.
+    // The 2025 wage base is already exhausted, leaving only the $145 Medicare tax.
+    for (const [year, wageBase, remaining, tax] of [
+      [2025, "176100", "0", "145"],
+      [2026, "184500", "1000", "207"],
+    ] as const) {
+      const result = calculateForm8919({
+        wagesNotReportedOnW2: d("10000"),
+        rrtaCompensationSubjectToSocialSecurityTax: d("5000"),
+      }, year === 2026 ? FEDERAL_2026_CONSTANTS : c, {
+        socialSecurityWagesAndTipsAlreadyReported: d("175000"),
+        w2SocialSecurityTipsAlreadyReported: d("2500"),
+        form4137SocialSecurityTipsAlreadyReported: d("1000"),
+      });
+
+      expect(result.line8.toFixed()).toBe("183500");
+      expect(result.line9.toFixed()).toBe(remaining);
+      expect(result.line13.toFixed()).toBe(tax);
+      const calculation = result.lines.find(line => line.line === "9");
+      const sourceName = `${year} Social Security wage base`;
+      expect(calculation?.formula).toContain(sourceName);
+      expect(String(calculation?.inputs[sourceName])).toBe(wageBase);
+    }
+  });
+
   it("Form 8919 Line 13 - computes Social Security and Medicare tax from supported summary inputs", () => {
     const result = calculateForm8919({
       wagesNotReportedOnW2: d(10000),
