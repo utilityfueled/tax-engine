@@ -1,5 +1,78 @@
 # 2026 upgrade implementation evidence
 
+## November 19 full application checks and ARM64 recovery
+
+Exact pushed source `5cb12a91` passed all three local type checks, both
+builds, generated inventory, and all 9,665 spec references. Local coverage
+passed all 29,504 tests across 2,156 files with 88.35% branch coverage against
+the unchanged 85% gate. The first unit run passed 29,503 tests and hit the
+original five-second deadline in the passenger-entry test. That test passed
+alone. A fresh PostgreSQL 16.16 unit rerun with four Vitest workers passed all
+29,504 tests with the same deadlines. Both disposable databases shut down
+normally. All six GitHub CI jobs and the Docker build passed on the pushed
+source. GitHub coverage independently reported 88.35% branches.
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/44662094727) ·
+[Current Web](https://github.com/utilityfueled/tax-engine/actions/runs/44662094737) ·
+[Current Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44662094725).
+
+Linux ARM64 on `e07c84c3` passed native image smoke, the isolated Compose
+upgrade and recovery, and removal of the rehearsal container. The strict
+browser stage passed 640 cases, hit ten original 30-second deadlines, and
+retained five original hosted-only skips. Nine failing case names also failed
+in the earlier AMD64 run on `d23eabb0`. They cover Ohio business, reciprocal
+wages, resident credit and school district entry. The additional ARM64 case
+covers Pennsylvania's separate married payment path. The AMD64 run on the
+same `e07c84c3` revision passed all 650 managed cases with five original
+skips. Its strict runtime passed 636 cases with 14 deadlines and five
+original skips. All ten ARM64 failures repeat on that same-revision AMD64
+image. AMD64 passed smoke, Compose recovery, independent image archive
+import, and cleanup. Root cause remains open.
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/44659221115) ·
+[Same-revision AMD64 and managed runs](https://github.com/utilityfueled/tax-engine/actions/runs/44659038674) ·
+[Prior strict AMD64 comparison](https://github.com/utilityfueled/tax-engine/actions/runs/44647619510).
+
+The managed GitHub browser run on `5cb12a91` passed 648 cases with
+five original hosted-only skips. Both native railroad retirement review
+cases exhausted the existing four-second saved-PDF inspector deadline.
+Both cases passed an isolated macOS replay of the exact source with zero
+retries, the original deadline and normal cleanup. The independent
+application build succeeded. The managed workflow and strict runtime gate
+both remain open on this source.
+
+The current `5cb12a91` strict Linux AMD64 job passed smoke, Compose
+upgrade/recovery/rollback, independent image import and container cleanup.
+It passed 642 browser cases, hit eight original 30-second deadlines, and
+retained five original hosted-only skips. All eight failed on both earlier
+architectures. This run narrows the repeated cases to Ohio business,
+resident-credit and school-district entry.
+[Exact AMD64 runtime job](https://github.com/utilityfueled/tax-engine/actions/runs/44662094737).
+
+Both original NEW212 desktop and mobile cases passed an isolated AMD64
+runtime replay of `5cb12a91` with zero retries and the original 30-second
+deadlines. Each comparison produced all 40 phase records and normal cleanup.
+The reporter shows that the cases shared one active worker in both runtimes,
+including the macOS repeat and the Linux run with a two-worker ceiling.
+The Linux cases took 17.61 and 22.55 seconds end to end, with PDF response
+waits of 1.97–2.19 seconds. Locally they took 8.72 and 9.75 seconds, with
+waits of 0.98–1.11 seconds. These are elapsed intervals under different
+runtime conditions. A further macOS replay ran all 16 cases in the five
+affected test files with two active workers, zero retries, and the original
+30-second deadlines. All passed and cleanup completed. The slowest case
+took 11.63 seconds. The scoped replays leave the full-suite failures and
+qualification gates open.
+[Bounded AMD64 replay](https://github.com/utilityfueled/tax-engine/actions/runs/44665859535).
+
+The IRS final Form 1040 still prints 2025 and its 2026 candidate is marked
+draft. An annual-form check also found the existing 2025 Pennsylvania PA-40
+and Ohio IT 1040. The 2026 Form 8889 blank is available while the current
+linked instructions still identify 2025. Public 2026 filing gates stay closed.
+[IRS final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Pennsylvania PIT](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio annual return](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf) ·
+[Form 8889 blank](https://www.irs.gov/pub/irs-pdf/f8889.pdf) ·
+[Form 8889 instructions](https://www.irs.gov/pub/irs-pdf/i8889.pdf).
+
 ## November 19 Schedule 1 benefit statement years
 
 Standalone Schedule 1 now checks the actual source years of Forms SSA-1099
@@ -57,7 +130,13 @@ was $600, line 17 was $40,600, line 19 was 0.5980, the Schedule of Credits
 amount was $1,406, and IT 1040 line 10 was $945. The full-year nonresident
 control had zero on line 12. Negative controls cover stale originals,
 duplicate references, missing confirmation, dates and payment totals.
-The Ohio 2026 public qualification gate remains closed.
+The full managed macOS browser run on the same application source passed
+all 650 runnable cases, with five original hosted-only skips and verified
+cleanup across eight batches. A separate strict pypdf parse of the generated
+IT NRC reference worksheet read $600 on line 12, verified that the original
+receipt references and taxpayer identifier were absent, and checked that the
+canonical input remained byte-for-byte unchanged. The Ohio 2026 public
+qualification gate remains closed.
 
 ## November 19 standalone statement calendar years
 

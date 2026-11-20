@@ -1,10 +1,24 @@
 # Current 2026 upgrade status
 
+Local unit and coverage on `5cb12a91` passed 29,504 tests each, with 88.35%
+branch coverage against the 85% gate. The unit rerun used the original
+deadlines. All three type checks, both builds, the spec inventory and 9,665
+spec references passed. ARM64 on `e07c84c3` passed smoke, Compose recovery
+and cleanup. Ten strict browser cases reached the original deadline. The
+latest AMD64 image passed smoke, recovery and cleanup and hit eight of those
+same original deadlines.
+The current managed Linux run also hit the original saved-PDF deadline in
+the two native railroad retirement review cases. Both passed the isolated
+macOS replay with the same deadline and normal cleanup.
+[Full check and recovery evidence](upgrade-2026-progress.md#november-19-full-application-checks-and-arm64-recovery).
+
 The 2025 Ohio part-year guided interview can collect dated receipts across
 a move for one Form 1099-G. Desktop and mobile Chromium entered both
 payments, confirmed and reopened the saved evidence, and continued the
 interview. The 197 focused tests passed. The fixture allocates only the $600
-received during Ohio residency to IT NRC line 12.
+received during Ohio residency to IT NRC line 12. A separate check read that
+amount from the generated reference PDF. The full managed browser run passed
+650 runnable cases with five original hosted-only skips and cleanup.
 [Ohio payment schedule evidence](upgrade-2026-progress.md#november-19-ohio-unemployment-payments-across-a-move).
 
 Standalone Schedules B and C now hold explicit wrong-year Forms 1099-INT,
@@ -91,6 +105,8 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
+Read `activeContinuation.nov20CombinedQualification` for the latest exact
+CI, runtime and diagnostic evidence.
 Read `activeContinuation.nov20OhioUnemploymentPaymentSchedule` for the newest
 Ohio work. Resume with `activeContinuation.nov20StatementAndBrowserContinuation` for
 the latest application source, check runs and bounded trace findings. Earlier

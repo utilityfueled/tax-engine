@@ -142,6 +142,22 @@
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
     "latestPushedSource": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce",
+    "nov20CombinedQualification": {
+      "source": "5cb12a91",
+      "staticChecks": { "typechecks": 3, "builds": 2, "specReferences": 9665, "inventoryPassed": true },
+      "unit": { "firstPassed": 29503, "firstDeadlineFailures": 1, "focusedPassengerPassed": true, "repeatPassed": 29504, "repeatWorkers": 4, "unitDeadlineMs": 5000, "files": 2156, "disposablePostgresStopped": true },
+      "coverage": { "passed": 29504, "branchPercent": 88.35, "requiredPercent": 85, "disposablePostgresStopped": true },
+      "githubRuns": { "ci": 44662094727, "ciPassed": true, "githubBranchPercent": 88.35, "web": 44662094737, "docker": 44662094725, "dockerPassed": true, "new212BoundedTiming": 44665859535 },
+      "arm64": { "source": "e07c84c3", "run": 44659221115, "smoke": true, "composeRecovery": true, "containerRemoved": true, "browser": { "passed": 640, "originalDeadlineFailures": 10, "originalSkips": 5, "overlapWithPriorAMD64": 9, "priorAMD64Run": 44647619510 } },
+      "sameRevisionAmd64": { "source": "e07c84c3", "webRun": 44659038674, "managedPassed": 650, "strictPassed": 636, "strictDeadlineFailures": 14, "originalSkips": 5, "repeatingArm64CaseNames": 10, "smoke": true, "composeRecovery": true, "independentArchiveImport": true, "containerRemoved": true },
+      "currentManagedLinux": { "source": "5cb12a91", "webRun": 44662094737, "passed": 648, "failed": 2, "originalSkips": 5, "failureScope": "Both native railroad retirement review cases hit the original 4,000-ms saved-PDF inspection deadline" },
+      "managedRailroadRetirementMacReplay": { "source": "5cb12a91", "passed": 2, "failed": 0, "skipped": 0, "retries": 0, "savedPdfDeadlineMs": 4000, "cleanup": true, "summarySha256": "50ed521edb37ac3746297c54c0064f1f4e5186aa140805018e056c76e6dc0b5f" },
+      "currentAmd64": { "source": "5cb12a91", "webRun": 44662094737, "strictPassed": 642, "strictDeadlineFailures": 8, "originalSkips": 5, "priorArm64Overlap": 8, "priorAmd64Overlap": 8, "smoke": true, "composeRecovery": true, "independentArchiveImport": true, "containerRemoved": true },
+      "new212Isolated": { "source": "5cb12a91", "linuxRun": 44665859535, "linuxConfiguredWorkers": 2, "linuxActualWorkers": 1, "macActualWorkers": 1, "macTwoWorkerCeilingRepeatPassed": true, "retries": 0, "deadlineMs": 30000, "casesPassedPerRuntime": 2, "phaseRecordsPerRuntime": 40, "cleanupBoth": true, "linuxPdfResponseWaitMs": [1970.683, 2189.046], "macPdfResponseWaitMs": [976.813, 1106.212], "linuxCaseDurationMs": [17609, 22545], "macCaseDurationMs": [8721, 9746], "qualificationGateCleared": false },
+      "repeatedCasesMacScope": { "caseCount": 16, "fileCount": 5, "passed": 16, "failed": 0, "skipped": 0, "workers": 2, "batches": 2, "maxCaseMs": 11633, "caseDeadlineMs": 30000, "retries": 0, "cleanup": true, "qualificationGateCleared": false },
+      "sourceRefresh": "Current annual US 1040, Pennsylvania and Ohio finals still print 2025. The 2026 Form 8889 blank is available with current instructions still 2025.",
+      "evidence": ".local/upgrade-evidence/nov20-schedule1-benefit-years"
+    },
     "nov20OhioUnemploymentPaymentSchedule": {
       "source": "e07d51f508e3df9327d575dba5382cfddf707f5e",
       "scope": "2025 Ohio ordinary single taxpayer, one original Form 1099-G, exact whole-dollar dated receipts spanning domicile changes; documented old single-payment records preserved.",
@@ -149,6 +165,8 @@
       "specReferences": 50,
       "browserHarnessControls": 37,
       "builtLoopbackDesktopAndMobile": "Both passed receipt entry, source confirmation, autosave, reopen and progression",
+      "referencePdf": { "line12": "600", "strictParse": true, "originalReceiptReferencesAbsent": true, "inputUnchanged": true },
+      "managedMacBrowser": { "selected": 655, "passed": 650, "skipped": 5, "failed": 0, "batches": 8, "cleanup": true, "receiptSha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356" },
       "verifiedCalculation": { "ITNRCLine12": "600", "ITNRCLine17": "40600", "ITNRCLine19": "0.5980", "residentCredit": "1406", "IT1040Line10": "945" },
       "evidence": ".local/upgrade-evidence/nov20-ohio-multiple-unemployment",
       "held": "Ohio 2026 public qualification, final forms and independent qualified tax review"
