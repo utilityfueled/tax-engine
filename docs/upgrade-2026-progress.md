@@ -8848,3 +8848,21 @@ and coverage runs each passed 29,559 at 88.37% branch coverage. Strict Linux
 qualification remains open. Evidence is recorded under
 `activeContinuation.nov20OhioSchoolMutationControls` and
 `nov20Form1095ASourceMetadata`.
+
+## November 20 Ohio draft comparison
+
+A guided Ohio edit replaces the changed draft and reuses the unchanged
+drafts. Within that call, the app now skips comparing unchanged draft
+references for residence, tax payments, school, reciprocal wages, and the
+Ohio header. Replaced or removed drafts still follow the existing value
+comparison and invalidation rules.
+
+The three spec-first control cases reproduced redundant comparisons. The
+corrected edit path produced the same output as rebuilt independent drafts,
+kept inputs unchanged, and skipped two to four projections in the tested
+scenarios. Eighty-seven scoped tests, web types, and the inventory passed.
+All 14 scoped production-build macOS Chromium cases passed across business,
+reciprocal wages, resident credit, and School District. The same 30-second
+deadline, two-worker cap, and zero retries apply. Strict Linux qualification
+remains open. The contract and receipts are listed under
+`activeContinuation.nov20OhioSharedDraftComparison`.

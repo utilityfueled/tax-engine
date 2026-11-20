@@ -21,3 +21,20 @@ lines:
       Keep all previously entered periods, raw special facts, receipts and originals.
       Reconfirmation is explicit; calculation cannot silently refresh consent.
     testRef: "tests/guided-interview/state-originals-integration.test.ts::guided state source edits clear confirmation while retaining originals"
+  - line: "unchanged-ohio-source-projections"
+    description: "Skip repeated projection of identical Ohio draft references within one state update"
+    formula: |
+      A guided state edit replaces the affected draft and retains references to unrelated
+      Ohio drafts. Compare identical residency, payment, school district, reciprocal wage,
+      and return header references as unchanged without rebuilding their projections.
+      A replacement object or deletion still uses the existing comparison, including when
+      reconstructed values match. Preserve dependency invalidations, retained originals,
+      and the input data. Each update and render continues to use its current sources.
+    testRef: "tests/guided-interview/ohio-unchanged-source-comparison.test.ts::skips unchanged Ohio projections and preserves a school source edit"
+  - line: "ohio-projection-dependencies"
+    description: "A skipped projection preserves Ohio dependency invalidations"
+    formula: |
+      A changed payment source still invalidates the linked part-year business and return
+      header confirmations. Removing a payment source still invalidates dependent
+      reciprocal wage confirmation and retains its recorded values and originals.
+    testRef: "tests/guided-interview/ohio-unchanged-source-comparison.test.ts::keeps Ohio dependency invalidation for a changed or removed payment %s"

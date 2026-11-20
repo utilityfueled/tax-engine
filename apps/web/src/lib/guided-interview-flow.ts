@@ -1784,6 +1784,15 @@ function ohioReciprocalActualSourceValues(value: OhioReciprocalWagesDraft | unde
   return ohioActualSourceValues(actual);
 }
 
+function ohioDraftSourceValuesChanged<T>(
+  previous: T | undefined,
+  next: T | undefined,
+  project: (value: T | undefined) => unknown = ohioActualSourceValues,
+): boolean {
+  // An edit replaces its affected draft and shares untouched drafts within this update.
+  return previous !== next && guidedSourceValuesChanged(project(previous), project(next));
+}
+
 function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   if (!value) return value;
   const { paMarriedOrdinarySources: _married, paOrdinaryReturnFacts: _ordinary, paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
@@ -2048,10 +2057,12 @@ export function updateSectionData(
   const ohio2026SchoolChanged=incomingStateReturn&&guidedSourceValuesChanged(ohio2026SchoolActualValues(ohioStateReturn?.ohio2026SchoolSources),ohio2026SchoolActualValues(incomingStateReturn.ohio2026SchoolSources));
   const ohio2026SchoolDependenciesChanged=incomingStateReturn&&incomingStateReturn.ohio2026SchoolSources&&guidedSourceValuesChanged({...ohioStateReturn,ohio2026SchoolSources:undefined},{...incomingStateReturn,ohio2026SchoolSources:undefined});
   const invalidate2026School=Boolean(incomingStateReturn?.ohio2026SchoolSources&&(ohio2026SchoolChanged||ohio2026SchoolDependenciesChanged));
-  const ohioResidencyChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioResidency), ohioActualSourceValues(incomingStateReturn.ohioResidency));
-  const ohioPaymentsChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioPayments), ohioActualSourceValues(incomingStateReturn.ohioPayments));
-  const ohioSchoolDistrictChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioSchoolDistrict), ohioActualSourceValues(incomingStateReturn.ohioSchoolDistrict));
-  const ohioReciprocalChanged = incomingStateReturn && guidedSourceValuesChanged(ohioReciprocalActualSourceValues(ohioStateReturn?.ohioReciprocalWages), ohioReciprocalActualSourceValues(incomingStateReturn.ohioReciprocalWages));
+  const ohioResidencyChanged = incomingStateReturn && ohioDraftSourceValuesChanged(ohioStateReturn?.ohioResidency, incomingStateReturn.ohioResidency);
+  const ohioPaymentsChanged = incomingStateReturn && ohioDraftSourceValuesChanged(ohioStateReturn?.ohioPayments, incomingStateReturn.ohioPayments);
+  const ohioSchoolDistrictChanged = incomingStateReturn && ohioDraftSourceValuesChanged(ohioStateReturn?.ohioSchoolDistrict, incomingStateReturn.ohioSchoolDistrict);
+  const ohioReciprocalChanged = incomingStateReturn && ohioDraftSourceValuesChanged(
+    ohioStateReturn?.ohioReciprocalWages, incomingStateReturn.ohioReciprocalWages, ohioReciprocalActualSourceValues,
+  );
   const currentOhioBusiness=incomingStateReturn?.ohioResidency?.businessSources;
   const ohioBusinessDependenciesChanged=currentOhioBusiness&&(incomingStateReturn&&guidedSourceValuesChanged(
     ohioActualSourceValues(ohioStateReturn?.ohioResidency?{...ohioStateReturn.ohioResidency,businessSources:undefined}:undefined),
@@ -2065,7 +2076,9 @@ export function updateSectionData(
   const residentCreditChanged=currentOhioResidentCredit&&incomingStateReturn&&guidedSourceValuesChanged(ohioResidentCreditActualValues(ohioStateReturn?.ohioResidency?.residentCreditSources),ohioResidentCreditActualValues(currentOhioResidentCredit));
   const invalidateResidentCredit=Boolean(currentOhioResidentCredit&&(residentCreditChanged||residentCreditDependenciesChanged));
   const currentOhioHeader=incomingStateReturn?.ohioReturnHeaderSources;
-  const ohioHeaderChanged=incomingStateReturn&&guidedSourceValuesChanged(ohioHeaderActualSourceValues(ohioStateReturn?.ohioReturnHeaderSources),ohioHeaderActualSourceValues(currentOhioHeader));
+  const ohioHeaderChanged = incomingStateReturn && ohioDraftSourceValuesChanged(
+    ohioStateReturn?.ohioReturnHeaderSources, currentOhioHeader, ohioHeaderActualSourceValues,
+  );
   const invalidateHeader=Boolean(currentOhioHeader&&(ohioHeaderChanged||ohioResidencyChanged||ohioPaymentsChanged||ohioSchoolDistrictChanged||ohioReciprocalChanged||invalidateBusiness||invalidateResidentCredit));
   const invalidatedOhioStateReturn = incomingStateReturn && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged || invalidateBusiness || invalidateResidentCredit || invalidateHeader || invalidate2026School) ? {
     ...(invalidatedPAStateReturn ?? incomingStateReturn),

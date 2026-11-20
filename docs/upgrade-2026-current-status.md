@@ -12,8 +12,11 @@ The exact `c3d87e32` managed macOS browser run passed 650 cases with five
 original skips. Its unit and coverage runs each passed 29,559 tests at
 88.37% branch coverage. A separate test-only Ohio School District change
 passed four local cases at the existing 30-second deadline. Strict Linux
-qualification remains open.
+qualification remains open. A separate Ohio app change passed 14 local
+browser cases covering reciprocal wages, business, resident credit, and
+School District returns at the same deadline.
 [Ohio school evidence](upgrade-2026-progress.md#november-20-ohio-school-mutation-controls).
+[Ohio app evidence](upgrade-2026-progress.md#november-20-ohio-draft-comparison).
 
 The latest application revision with a verified protected Preview is
 `012e6ee1` on `main`. Exact unit and coverage runs each passed 29,556

@@ -1,5 +1,16 @@
 {
   "activeContinuation": {
+    "nov20OhioSharedDraftComparison": {
+      "runtimeParent": "524b5f31",
+      "focusedTestsPassed": 87,
+      "managedMacBrowserCasesPassed": 14,
+      "caseDeadlineMs": 30000,
+      "runnerWorkerCap": 2,
+      "retries": 0,
+      "verifiedEqualResultsAcrossRebuiltDrafts": true,
+      "strictLinuxQualified": false,
+      "privateEvidence": ".local/upgrade-evidence/nov20-ohio-shared-roots"
+    },
     "nov20OhioSchoolMutationControls": {
       "runtimeRevision": "c3d87e32",
       "focusedAuditAndControlTestsPassed": 37,
