@@ -1,5 +1,60 @@
 {
   "activeContinuation": {
+    "nov20AnnualCandidatesAndGuidedRehearsal": {
+      "applicationCommit": "29988f04",
+      "ledgerUtcCommit": "e52f9d8d",
+      "ledgerPostgresTestsPassed": 45,
+      "publication915Commit": "f3ad7e8a",
+      "publication915FocusedTestsPassed": 30,
+      "paPreviewCommit": "93186344",
+      "paFocusedTestsPassed": 273,
+      "paManagedStrictCasesPassed": 2,
+      "progressRailCommit": "4fa60fe4",
+      "progressRailManagedStrictCasesPassed": 6,
+      "officialForms": ["7206", "8829"],
+      "formCandidateFields": { "7206": 16, "8829": 58 },
+      "formCandidateAuditTestsPassed": 76,
+      "validatedSpecReferences": 9686,
+      "coverageInventoryEntries": 1092,
+      "exactLocalWorkspaceRecoveryPassed": 6,
+      "exactLocalOhioStrictCasesPassed": 10,
+      "fullExactLocal": {
+        "unitTestsPassed": 29549,
+        "coverageTestsPassed": 29549,
+        "branchCoveragePercent": 88.37,
+        "bothPostgresInstancesStopped": true,
+        "types": "all three checks passed",
+        "builds": "engine and web passed",
+        "lint": "zero errors",
+        "evidence": ".local/upgrade-evidence/nov20-exact-2998-tests"
+      },
+      "aiEvaluationArtifactCheck": {
+        "artifactsInSync": true,
+        "defaultTemplateFixtures": 240,
+        "defaultTemplateIndependentlyReviewed": 0,
+        "defaultTemplateProductionPromotion": false
+      },
+      "exactProtectedPreview": {
+        "comparisonApplication": "cf43e9ea",
+        "testBillingMode": true,
+        "previewReady": true,
+        "productionAliasAssigned": false,
+        "offlineControlsPassed": 10,
+        "actualWorkspaceChecksPassed": 12,
+        "fixtureDeletedAndAbsentOnBoth": true,
+        "bothSessionsClosed": true,
+        "bindingSha256": "b17906646d058abc183fbc3df9a8658d6df9dda4314d053a61c833758e451d8b",
+        "privateEvidence": ".local/upgrade-evidence/nov20-preview-2998-current"
+      },
+      "githubRuns": {
+        "ci": 44725543701,
+        "docker": 44725543891,
+        "web": 44725543747,
+        "arm64": 44725578957
+      },
+      "privateEvidence": ".local/upgrade-evidence/nov20-final-8829-7206",
+      "formCandidateEvidence": "docs/upgrade-2026-progress.md#november-20-final-form-7206-and-form-8829-physical-candidates"
+    },
     "nov20HostedEducationCrossRevision": {
       "previousAppCommit": "cf43e9ea",
       "currentAppCommit": "074a4fa9",

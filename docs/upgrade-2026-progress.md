@@ -1,5 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 20 exact 29988f04 local and protected Preview
+
+Exact unit and coverage runs passed 29,549 tests each at 88.37% branch
+coverage. Both disposable PostgreSQL instances stopped normally. All three
+type checks, both builds, lint, all 9,686 spec references and the inventory
+passed. Six local workspace recovery cases and all ten focused Ohio native
+journeys passed on macOS under the unchanged 30-second case deadlines.
+
+The exact application reached READY on a protected Preview with test billing.
+Using the same test account and separate sessions, the prior and current
+Previews passed all 12 fictional education workspace checks. The fixture was
+deleted by its current revision and was absent on both Previews. Both sessions
+signed out. Ten offline rehearsal controls passed. The full Linux and hosted
+billing gates require their own results.
+
 ## November 20 final Form 7206 and Form 8829 physical candidates
 
 Pinned the final 2026 IRS blanks and verified every field location. Form
