@@ -61,6 +61,24 @@ const mfsLivedWithSpouseFixture = calculateSocialSecurityBenefitsWorksheet({
 });
 
 describe("Social Security Benefits Worksheet", () => {
+  it("matches the final 2026 Publication 915 Worksheet 1 Example 1", () => {
+    // Spec: spec/federal/social-security-benefits-worksheet.yaml#pub915-2026-example-1
+    const taxablePension = d("18600");
+    const wages = d("9400");
+    const taxableInterest = d("990");
+    const result = calculateSocialSecurityBenefitsWorksheet({
+      filingStatus: "single",
+      benefitsReceived: d("5980"),
+      otherIncome: taxablePension.plus(wages).plus(taxableInterest),
+      taxExemptInterest: d(0),
+    });
+
+    expect(result.line1.toString()).toBe("5980");
+    expect(result.line3.toString()).toBe("28990");
+    expect(result.line7.toString()).toBe("31980");
+    expect(result.taxableBenefits.toString()).toBe("2990");
+  });
+
   it("reconciles actual exclusions once for both lump-sum comparison methods", () => {
     // Spec: spec/federal/social-security-benefits-worksheet.yaml#pub915-known-exclusions
     const actual = {

@@ -45,6 +45,11 @@ businessRuleValidation:
     testRef: "tests/pdf/fill-social-security-benefits-worksheet.test.ts::Social Security reference retains audited lump-sum comparison and every-page warning"
 
 lines:
+  - line: "pub915-2026-example-1"
+    description: "Final 2026 Publication 915 current-year worked example"
+    formula: "For the single filer in Worksheet 1 Example 1, combine 18600 taxable pension, 9400 wages, 990 taxable interest and 2990 (half of 5980 net Social Security benefits). The published worksheet gives 31980 provisional income and 2990 taxable benefits."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/p915.pdf#page=8, Publication 915 (2026), Catalog No. 15320P, dated November 13, 2026, posted November 19, 2026, page 8, Worksheet 1 Example 1"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::matches the final 2026 Publication 915 Worksheet 1 Example 1"
   - line: "Pub915-1-1"
     description: "Total benefits"
     formula: "Sum SSA-1099/RRB-1099 net Social Security equivalent benefits"

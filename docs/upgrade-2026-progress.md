@@ -1,5 +1,14 @@
 # 2026 upgrade implementation evidence
 
+## November 20 final 2026 Publication 915 worksheet example
+
+The standalone Social Security worksheet matches the IRS's Worksheet 1
+Example 1, including $31,980 provisional income and $2,990 taxable
+benefits. Thirty worksheet and source-schema tests passed on Node 26.13.1,
+and all 44 worksheet spec references validated. The full 2026 return path
+still requires its existing rule-pack readiness criteria.
+[Final 2026 Publication 915](https://www.irs.gov/pub/irs-pdf/p915.pdf#page=8).
+
 ## November 20 exact PostgreSQL billing at the UTC rollover
 
 Two cases use the same December 31 wall-clock time with opposing UTC offsets.
