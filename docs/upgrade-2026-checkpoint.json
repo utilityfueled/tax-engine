@@ -142,6 +142,24 @@
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
     "latestPushedSource": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce",
+    "nov20AppliedFederalOverpayment": {
+      "source": "f231820a25a6ab9178c9047131ee76690d4ee25d",
+      "basis": "https://www.irs.gov/instructions/i1040gi",
+      "preFixFailure": "Negative prior overpayment accepted and deducted from current estimated payments.",
+      "verification": {"focused": 30, "broader": 1689, "files": 216, "rootTypecheck": "passed", "affectedLintErrors": 0, "specReferences": 9668, "inventory": "passed", "engineBuild": "passed", "browserFingerprints": "matched"},
+      "githubApplicationRuns": {"CI": 44673842123, "Web": 44673842082, "Docker": 44673842085},
+      "progress": "docs/upgrade-2026-progress.md#november-19-applied-federal-overpayment-credits"
+    },
+    "nov20CapitalLossWorksheetOwnership": {
+      "source": "21446bb83f9022bc676f78d7b00efc1f1475e78d",
+      "browserTestCorrection": "4cda6ee8dc2035bb22e3a2c373b2af70fcd314bc",
+      "basis": ["https://www.irs.gov/instructions/i1040sd", "https://www.irs.gov/publications/p550"],
+      "verification": {"guidedAndEngine": 2041, "unit": 29507, "unitFiles": 2156, "postgres": "16.16", "postgresStopped": true, "specReferences": 9668, "affectedBrowserPassed": 6, "affectedBrowserSkipped": 0},
+      "firstBrowserRun": {"passed": 4, "failed": 2, "cause": "Selector missed the reopened owner combobox; saved data was present in both snapshots."},
+      "githubApplicationRuns": {"CI": 44672969443, "Web": 44672969321, "DockerPassed": 44672969350},
+      "pending": "Full native browser, final applicable annual forms and qualified human review.",
+      "progress": "docs/upgrade-2026-progress.md#november-19-prior-return-ownership-of-capital-loss-carryovers"
+    },
     "nov20CapitalLossCarryoverBelowLimit": {
       "source": "68cc8815d1ad8c4865ff306eaf400713a20cf401",
       "basis": ["https://www.irs.gov/instructions/i1040sd", "https://www.irs.gov/publications/p550"],

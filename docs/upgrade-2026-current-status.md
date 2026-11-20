@@ -1,5 +1,17 @@
 # Current 2026 upgrade status
 
+Form 1040 now rejects negative prior-return overpayment credits before totaling
+federal payments. The 1,689 focused federal, payment and penalty tests passed.
+[Applied overpayment evidence](upgrade-2026-progress.md#november-19-applied-federal-overpayment-credits).
+
+The guided Schedule D worksheet now requires the immediately preceding
+return's year and loss ownership for nonzero carryovers. Separate owner shares
+reconcile exactly on a joint return, and a separate filer claims only their own
+portion of a prior joint loss. The application passed 29,507 unit tests against
+PostgreSQL 16.16. After a test-only selector correction, all six affected
+desktop and mobile browser cases passed.
+[Carryover ownership evidence](upgrade-2026-progress.md#november-19-prior-return-ownership-of-capital-loss-carryovers).
+
 The 2025 federal return preserves unused capital loss for 2026 when taxable
 income before the zero floor is negative, including losses at or below the
 annual limit. Full-return audit amounts match the worksheet. The mixed-loss

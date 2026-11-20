@@ -1,5 +1,48 @@
 # 2026 upgrade implementation evidence
 
+## November 19 applied federal overpayment credits
+
+`f231820a` validates a prior-return credit before Form 1040 computes payments.
+The credit must be nonnegative and come from the immediately preceding return.
+An explicit zero and a valid $7.09 credit combine with the actual $125.37
+estimate without rounding the cents. The new test failed on the previously
+accepted negative amount. The six-file payment group passed 30 tests, and the
+broader federal, payment and penalty group passed 1,689 tests. Root TypeScript
+and affected lint passed. The tracked archive passed the generated inventory,
+all 9,668 specification references, the contracts check, the engine build
+and browser source fingerprint verification. The 2026 test uses candidate
+year constants for the payment calculation while the public return stays gated.
+[IRS Form 1040 instructions, line 26](https://www.irs.gov/instructions/i1040gi).
+
+## November 19 prior-return ownership of capital loss carryovers
+
+`21446bb8` collects the preceding return year, worksheet reference, filing type,
+loss owner and signed amounts in the guided Schedule D worksheet. Separate
+owner amounts reconcile by character on a current joint return. A taxpayer
+filing separately claims only their own portion of a prior joint loss. A whole
+prior joint amount requires explicit confirmation that the same couple filed
+together. Older amount-only advanced entries retain their calculation and carry
+no source confirmation. Guided drafts retain their entered amounts and request
+the missing worksheet details before calculation.
+[IRS Schedule D instructions](https://www.irs.gov/instructions/i1040sd) ·
+[IRS Publication 550, Joint and separate returns](https://www.irs.gov/publications/p550).
+
+The two new spec-linked tests failed before implementation. The corrected
+guided/engine subset passed 2,041 tests in 260 files. The tracked application
+archive passed all 29,507 tests in 2,156 files with disposable PostgreSQL
+16.16 and a normal shutdown. All 9,668 specification references, the generated
+inventory, types and both builds passed. Affected lint reported zero errors.
+The 2026 test checks a 2025 source year without enabling the public 2026 return.
+
+The first exact browser run passed four cases and missed the reopened owner
+control in two assertions. Both saved snapshots contained the expected owner,
+2024 source and signed cents. Test-only `4cda6ee8` uses that combobox's accessible
+name. All six production-mode Chromium cases then passed with the original two
+workers, zero retries and 30-second deadline. The exact `21446bb8` Docker build
+passed. Both commits were pushed with the Preview-only build guard verified.
+The full native browser suite and final annual forms still need qualification.
+[Exact Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44672969350).
+
 ## November 19 capital loss carryover at or below the annual limit
 
 Pushed application `68cc8815` applies the 2025 Schedule D carryover worksheet
