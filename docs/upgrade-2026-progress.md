@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 20 exact PostgreSQL billing at the UTC rollover
+
+Two cases use the same December 31 wall-clock time with opposing UTC offsets.
+PostgreSQL 16.16 stored pricing dates of October 24, 2026 and January 1, 2027,
+with exact provider costs of `0.00075` and `0.0015` USD. Each ledger settlement
+charged one included retail cent and released its entire hold. All 45 cases
+across the real PostgreSQL ledger, credit transaction, and issuance suites
+passed. The temporary local database stopped normally. The cases use supplied
+usage fixtures, so live provider evaluation remains open.
+
 ## November 20 hosted education workspace across two Preview revisions
 
 The protected `cf43e9ea` and `074a4fa9` Previews shared one fictional 2026

@@ -54,6 +54,25 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     const cost = await pool.query("SELECT provider_cost_usd::text FROM hosted_ai_attempts");
     expect(cost.rows[0].provider_cost_usd).toBe("0.000582");
   });
+  // Spec: federal/ai-provider-refresh.yaml, pricing-utc-day.
+  it.each([
+    { startedAt: "2026-12-31T23:30:00+01:00", effectiveFrom: "2026-10-24", providerCostUsd: "0.00075" },
+    { startedAt: "2026-12-31T23:30:00-01:00", effectiveFrom: "2027-01-01", providerCostUsd: "0.0015" },
+  ])("settles exact Gemini cost using the UTC rate for $startedAt", async ({ startedAt, effectiveFrom, providerCostUsd }) => {
+    expect(await ledger.reserve({ ...base, cycleKey: "2026-12" })).toMatchObject({ accepted: true, created: true });
+    expect(await start({ profileId: "gemini-flash-high", startedAt })).toBe(true);
+    const settled = await ledger.settle({ ...first, usage: { inputTokens: 1000, outputTokens: 0 }, accepted: true, final: true });
+    expect(settled).toMatchObject({ state: "settled", reservedCents: 0, chargedCents: 1 });
+
+    const { rows } = await pool.query(`SELECT a.pricing_effective_from, a.provider_cost_usd::text,
+      r.included_charge_cents::text, r.purchased_charge_cents::text
+      FROM hosted_ai_attempts a JOIN hosted_ai_reservations r USING (owner_id, request_id)
+      WHERE a.owner_id = $1 AND a.request_id = $2`, [first.ownerId, first.requestId]);
+    expect(rows).toEqual([{
+      pricing_effective_from: effectiveFrom, provider_cost_usd: providerCostUsd,
+      included_charge_cents: "1", purchased_charge_cents: "0",
+    }]);
+  });
   it("scopes idempotency to the owner and binds it to the content digest", async () => {
     const results = await Promise.all([ledger.reserve(base), ledger.reserve(base)]);
     expect(results.filter(value => value.created)).toHaveLength(1);
