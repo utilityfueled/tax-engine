@@ -1,5 +1,26 @@
 # 2026 upgrade implementation evidence
 
+## November 20 exact AI pricing dates
+
+`b0fdcac1` requires a real calendar day or a timestamp with an explicit UTC
+designator or numeric offset before selecting an AI rate. Before the fix,
+`2026-12-31T23:30:00` chose the earlier Gemini input rate on a UTC host
+and the later rate on a New York host. The parser also accepted November 31.
+Offset-bearing timestamps still select the rate for the corresponding UTC day.
+The spec preceded the regression. The four focused suites passed 66 tests.
+[Google Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash) ·
+[OpenAI pricing](https://developers.openai.com/api/docs/pricing).
+
+Unit and coverage each passed 29,515 tests across 2,157 files using separate
+local PostgreSQL 16.16 instances. Branch coverage was 88.36% against the existing
+85% threshold. All three type checks, generated inventory and 9,671 spec
+references passed. Full lint identified two regex style errors in the Ohio
+workflow test. `2e910e78` corrected both, passed all 35 workflow contracts and
+passed full lint with zero errors. The provider source refresh used public
+documentation and made zero billable calls.
+[Exact GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/44693045701) ·
+[Exact Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44693045791).
+
 ## November 20 Ohio browser deadline comparison
 
 On macOS ARM64, the audited runner passed all 10 Ohio resident-credit,
@@ -16,6 +37,30 @@ passed the same 10 cases in the same two windows. Summed case time was
 87.932 seconds on the baseline and 87.653 seconds with the locator change.
 The experiment was discarded. The seven strict AMD64 deadlines remain open.
 [Strict AMD64 evidence](#november-20-future-year-schedule-k-1-originals).
+
+The November 20 native Linux ARM64 run on `0836c5fe` passed image smoke,
+Compose upgrade and recovery, and container cleanup. The full browser suite
+completed all eight audited windows with 639 passes, five original skips and
+11 original 30-second deadlines. Ten deadlines were in Ohio cases and one
+was in a Pennsylvania married payment case.
+[Native ARM64 logs](https://github.com/utilityfueled/tax-engine/actions/runs/44691298960/job/136137481759).
+
+The first comparison on one Linux AMD64 runner completed ten focused
+container cases with nine passes and one deadline failure. The managed leg
+logged two case deadlines before the outer diagnostic stopped it at ten
+minutes. The same desktop Ohio part-year business case reached its 30-second
+deadline at the final filing-decision request in both modes. The managed leg
+had no terminal summary, so the run provides no complete paired timing total.
+The comparison now has an 18-minute outer budget and propagates its exit
+status. It uses the existing 30-second case deadline and audited request windows.
+[Same-runner logs](https://github.com/utilityfueled/tax-engine/actions/runs/44691064975/job/136136715274).
+
+On `2e910e78`, the managed suite passed 650 cases with five original skips.
+Strict AMD64 passed 644 with six 30-second deadlines and five original
+skips. Image smoke, Compose upgrade and rollback, independent image archive
+import and cleanup passed. All six GitHub CI jobs passed on the same source.
+[Managed browser](https://github.com/utilityfueled/tax-engine/actions/runs/44693045709/job/136143177610) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44693045709/job/136143177872).
 
 ## November 20 future-year Schedule K-1 originals
 

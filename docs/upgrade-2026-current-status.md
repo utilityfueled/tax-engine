@@ -1,9 +1,14 @@
 # Current 2026 upgrade status
 
+AI pricing now requires a valid calendar date or a timestamp with an explicit
+offset. The exact pricing commit passed 29,515 tests in both full runs and
+88.36% branch coverage. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-ai-pricing-dates).
+
 The audited macOS runner passed all 10 focused Ohio browser cases on
 `309b01a4`. A narrower label lookup saved just 0.28 seconds across the
-suite in one local comparison and was discarded. The strict AMD64
-deadlines remain unresolved.
+suite in one local comparison and was discarded. The latest strict browser
+checks reached six original deadlines on AMD64 and 11 on ARM64. Both
+container rehearsals passed image smoke, Compose recovery and cleanup.
 [Ohio timing evidence](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison).
 
 Federal calculation and standalone Schedule E now hold explicitly future

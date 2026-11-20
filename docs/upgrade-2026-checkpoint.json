@@ -1,5 +1,23 @@
 {
   "activeContinuation": {
+    "nov20ExactAiPricingDates": {
+      "appCommit": "b0fdcac1",
+      "workflowLintCorrection": "2e910e78",
+      "regressionReproduced": true,
+      "focusedTestsPassed": 66,
+      "fullUnitTestsPassed": 29515,
+      "fullCoverageTestsPassed": 29515,
+      "testFilesPerFullRun": 2157,
+      "branchCoveragePercent": 88.36,
+      "branchCoverageThresholdPercent": 85,
+      "specReferencesValidated": 9671,
+      "workflowContractsPassed": 35,
+      "exactRemoteCi": 44693045701,
+      "exactRemoteDocker": 44693045791,
+      "exactTestPostgresVersion": "16.16",
+      "evidence": "docs/upgrade-2026-progress.md#november-20-exact-ai-pricing-dates",
+      "privateEvidence": ".local/upgrade-evidence/nov20-pricing-calendar"
+    },
     "nov20OhioBrowserDeadlineComparison": {
       "baseline": "309b01a4",
       "experimentBase": "a860d123",
@@ -17,6 +35,38 @@
       "experimentUnitCasesPassed": 10,
       "experimentDisposition": "Discarded",
       "strictAmd64DeadlinesResolved": false,
+      "sameLinuxRunnerComparison": {
+        "source": "0836c5fe",
+        "run": 44691064975,
+        "job": 136136715274,
+        "containerPasses": 9,
+        "containerDeadlineFailures": 1,
+        "managedDeadlineFailuresObservedBeforeCutoff": 2,
+        "managedCompleted": false,
+        "originalOuterTimeoutMinutes": 10,
+        "updatedOuterTimeoutMinutes": 18,
+        "sharedPartYearBusinessDeadlineAtFilingRequest": true
+      },
+      "exactBrowserSuccessor": {
+        "source": "2e910e78",
+        "run": 44693045709,
+        "managedJob": 136143177610,
+        "managedPasses": 650,
+        "strictAmd64Job": 136143177872,
+        "strictAmd64Passes": 644,
+        "strictAmd64DeadlineFailures": 6,
+        "originalSkips": 5,
+        "strictAmd64SmokeRecoveryArchiveAndCleanupPassed": true
+      },
+      "nativeArm64Rehearsal": {
+        "source": "0836c5fe",
+        "run": 44691298960,
+        "job": 136137481759,
+        "smokeComposeRecoveryAndCleanupPassed": true,
+        "browserPasses": 639,
+        "originalDeadlineFailures": 11,
+        "originalSkips": 5
+      },
       "evidence": "docs/upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison",
       "privateEvidence": ".local/upgrade-evidence/nov20-k1-source-year/performance-ohio-local-comparison.json"
     },
