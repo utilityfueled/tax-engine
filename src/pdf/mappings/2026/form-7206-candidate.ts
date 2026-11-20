@@ -1,0 +1,41 @@
+/** Disabled final 2026 Form 7206 physical candidate. Spec: spec/federal/form-7206-2026-template.yaml. */
+const page1 = "topmostSubform[0].Page1[0].";
+
+export const FORM_7206_2026_CANDIDATE = Object.freeze({
+  taxYear: 2026,
+  mappingVersion: "2026.1-candidate",
+  sourceUrl: "https://www.irs.gov/pub/irs-pdf/f7206.pdf",
+  sourceRevision: "Created 4/15/26",
+  retrievedAt: "2026-11-20T10:58:54Z",
+  sha256: "863c82bd31b674d693653546a6479c34b8fa0b2e8a2a97a7a11d0d4f5030c9bb",
+  reviewStatus: "independent-review-pending",
+  filingQualified: false,
+  exportsEnabled: false,
+  printedReferences: Object.freeze({
+    line4OptionalMethodFrom: "Schedule SE (Form 1040), Part I, line 4b",
+    line5From: Object.freeze(["Schedule C (Form 1040), line 31", "Schedule F (Form 1040), line 34", "Schedule K-1 (Form 1065), box 14, code A"]),
+    line7From: "Schedule 1 (Form 1040), line 15",
+    line9From: "Schedule 1 (Form 1040), line 16",
+    line11From: "Form W-2, box 5",
+    line12From: "Form 2555, line 45",
+    line14To: "Schedule 1 (Form 1040), line 17",
+  }),
+  fields: Object.freeze({
+    name: page1 + "f1_1[0]",
+    taxpayerId: page1 + "f1_2[0]",
+    line1: page1 + "f1_3[0]",
+    line2: page1 + "f1_4[0]",
+    line3: page1 + "f1_5[0]",
+    line4: page1 + "f1_6[0]",
+    line5: page1 + "f1_7[0]",
+    line6: page1 + "f1_8[0]",
+    line7: page1 + "f1_9[0]",
+    line8: page1 + "f1_10[0]",
+    line9: page1 + "f1_11[0]",
+    line10: page1 + "f1_12[0]",
+    line11: page1 + "f1_13[0]",
+    line12: page1 + "f1_14[0]",
+    line13: page1 + "f1_15[0]",
+    line14: page1 + "f1_16[0]",
+  }),
+});

@@ -50,3 +50,16 @@ still a draft. The 2026 candidate remains disabled pending qualification.
 [IRS product index](https://www.irs.gov/forms-instructions-and-publications?find=8863+&items_per_page=25&order=picklist_revision_date_iso&sort=desc) ·
 [2026 blank](https://www.irs.gov/pub/irs-pdf/f8863.pdf) ·
 [2026 draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+## November 20 final Forms 7206 and 8829
+
+The IRS posted the final 2026 blanks for Forms 7206 and 8829 on November 19.
+Form 7206 keeps the Schedule 1 line 17 transfer and prints the 2026 long-term
+care limits. Form 8829 keeps the Schedule C line 30 transfer and carries
+separate operating-expense and depreciation amounts to 2027. The regular
+Form 8829 instructions still identify 2025. The August 19 annual instructions
+remain a draft. Both physical candidates are disabled pending annual
+qualification. [Form 7206](https://www.irs.gov/pub/irs-pdf/f7206.pdf) ·
+[Form 8829](https://www.irs.gov/pub/irs-pdf/f8829.pdf) ·
+[Regular Form 8829 instructions](https://www.irs.gov/pub/irs-pdf/i8829.pdf) ·
+[Draft Form 8829 instructions](https://www.irs.gov/pub/irs-dft/i8829--dft.pdf).

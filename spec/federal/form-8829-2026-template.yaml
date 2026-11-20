@@ -1,0 +1,47 @@
+form: "Form 8829 final 2026 physical candidate"
+fullName: "Expenses for Business Use of Your Home final annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f8829.pdf"
+revision: "Created 4/15/26, IRS final index posted 11/19/2026"
+retrievedAt: "2026-11-20T11:01:26Z"
+notes: |
+  The regular IRS PDF is the final 2026 blank. The regular instructions
+  still identify 2025. The 2026 instructions dated August 19 are a draft.
+  This physical candidate covers printed locations and destinations. The
+  existing 2025 output is a calculated reference summary. Final annual
+  instructions, actual financial review and independent qualification
+  remain required before annual use. The shared review notice overlaps
+  the printed IRS footer below line 44 on this blank. The candidate-only
+  diagnostic uses the empty top margin to preserve that footer.
+lines:
+  - line: "revision"
+    description: "Pin the official final annual blank"
+    formula: "Require SHA-256 b2b1a269a18d254818ed084f1796223b94c4ea731d81dc2cd9bebd03f9e49c24, 78882 bytes, one 611.976 by 791.968 point page, and the final 2026 PDF title."
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-locations"
+    description: "Bind the proprietor identifiers and all numbered fields"
+    formula: >-
+      Locate 58 unique single-widget AcroForm text fields on page one.
+      Preserve the left direct and right indirect fields for lines 9 through
+      12 and 16 through 23, and the single fields at lines 13, 24, 25, and
+      29 through 31. Lines 3, 7 and 41 use percentage fields. Line 6 uses a
+      decimal field after the printed point. Pin every rectangle.
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::locates every text widget on its printed row and column"
+  - line: "printed-transfers"
+    description: "Record the final printed destinations and two 2027 carryovers"
+    formula: >-
+      Line 8 starts with Schedule C line 29 and applies the printed gain and
+      loss adjustments. Line 35 carries the casualty-loss share to Form 4684.
+      Line 36 transfers to Schedule C line 30. Line 42 feeds line 30 of this
+      form. Part IV carries to 2027: line 43 is line 26 less line 27 and line
+      44 is line 32 less line 33, each floored at zero. Keep the two fields
+      distinct and use one form per home.
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::records the printed transfers and carryover year"
+  - line: "saved-diagnostic"
+    description: "Confirm all text fields can retain distinct synthetic values"
+    formula: "Mark the specimen's empty top margin for review, save the edited AcroForm and reopen it. Verify canonical values and nonempty widget appearances, including both expense columns and separate Part IV amounts."
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::reopens distinct diagnostic values and widget appearances"
+  - line: "closed-exports"
+    description: "Keep the candidate outside public review and filing"
+    formula: "Keep the historical packet reference, review template registry and 2026 export policy in effect. The physical candidate has no export registration."
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::keeps the physical candidate outside public exports"

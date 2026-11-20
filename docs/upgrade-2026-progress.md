@@ -1,5 +1,23 @@
 # 2026 upgrade implementation evidence
 
+## November 20 final Form 7206 and Form 8829 physical candidates
+
+Pinned the final 2026 IRS blanks and verified every field location. Form
+7206 has 16 fields. Its diagnostic uses the existing calculation to check
+long-term care age boundaries, separate business pages, blank and zero
+fields, and the Schedule 1 line 17 transfer. Form 8829 has 58 fields. Its
+diagnostic checks both expense columns, separate 2027 carryovers, and the
+Schedule C line 30 transfer. The review notice fits in the top margin and
+preserves the printed IRS footer. Any future public renderer needs its own
+layout qualification.
+
+The final focused run passed 16 tests across both candidates and the existing
+Form 8863 control. Both new specs and the regenerated inventory validated.
+These candidates have no public export registration. Annual calculation and
+qualified independent review remain required.
+[Form 7206](https://www.irs.gov/pub/irs-pdf/f7206.pdf) ·
+[Form 8829](https://www.irs.gov/pub/irs-pdf/f8829.pdf).
+
 ## November 20 guided progress rail on ordinary edits
 
 The Ohio entry profile identified repeated scroll and layout work from the

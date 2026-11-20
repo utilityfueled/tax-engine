@@ -1,0 +1,18 @@
+{
+  "name": {"name": "topmostSubform[0].Page1[0].f1_1[0]", "page": 1, "rect": [36, 684.468, 452.6, 697.969], "type": "/Tx"},
+  "taxpayerId": {"name": "topmostSubform[0].Page1[0].f1_2[0]", "page": 1, "rect": [454.6, 684.468, 576, 697.969], "type": "/Tx"},
+  "line1": {"name": "topmostSubform[0].Page1[0].f1_3[0]", "page": 1, "rect": [497.8, 636.469, 576, 647.968], "type": "/Tx"},
+  "line2": {"name": "topmostSubform[0].Page1[0].f1_4[0]", "page": 1, "rect": [497.8, 390.47, 576, 401.969], "type": "/Tx"},
+  "line3": {"name": "topmostSubform[0].Page1[0].f1_5[0]", "page": 1, "rect": [497.8, 378.468, 576, 389.467], "type": "/Tx"},
+  "line4": {"name": "topmostSubform[0].Page1[0].f1_6[0]", "page": 1, "rect": [497.8, 342.468, 576, 353.967], "type": "/Tx"},
+  "line5": {"name": "topmostSubform[0].Page1[0].f1_7[0]", "page": 1, "rect": [497.8, 288.468, 576, 299.967], "type": "/Tx"},
+  "line6": {"name": "topmostSubform[0].Page1[0].f1_8[0]", "page": 1, "rect": [497.8, 276.469, 576, 287.468], "type": "/Tx"},
+  "line7": {"name": "topmostSubform[0].Page1[0].f1_9[0]", "page": 1, "rect": [497.8, 252.468, 576, 263.967], "type": "/Tx"},
+  "line8": {"name": "topmostSubform[0].Page1[0].f1_10[0]", "page": 1, "rect": [497.8, 240.469, 576, 251.468], "type": "/Tx"},
+  "line9": {"name": "topmostSubform[0].Page1[0].f1_11[0]", "page": 1, "rect": [497.8, 216.468, 576, 227.967], "type": "/Tx"},
+  "line10": {"name": "topmostSubform[0].Page1[0].f1_12[0]", "page": 1, "rect": [497.8, 204.469, 576, 215.468], "type": "/Tx"},
+  "line11": {"name": "topmostSubform[0].Page1[0].f1_13[0]", "page": 1, "rect": [497.8, 180.468, 576, 191.967], "type": "/Tx"},
+  "line12": {"name": "topmostSubform[0].Page1[0].f1_14[0]", "page": 1, "rect": [497.8, 168.469, 576, 179.468], "type": "/Tx"},
+  "line13": {"name": "topmostSubform[0].Page1[0].f1_15[0]", "page": 1, "rect": [497.8, 156.47, 576, 167.469], "type": "/Tx"},
+  "line14": {"name": "topmostSubform[0].Page1[0].f1_16[0]", "page": 1, "rect": [497.8, 120.47, 576, 131.969], "type": "/Tx"}
+}

@@ -1,0 +1,51 @@
+form: "Form 7206 final 2026 physical candidate"
+fullName: "Self-Employed Health Insurance Deduction final annual physical source contract"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f7206.pdf"
+revision: "Created 4/15/26"
+retrievedAt: "2026-11-20T10:58:54Z"
+notes: |
+  Disabled physical candidate for the final annual form. Use one form per
+  trade or business under which an insurance plan is established. Calculation
+  and original-source eligibility are specified in form-7206.yaml. The
+  instructions and parent form are separate qualification dependencies.
+lines:
+  - line: "revision"
+    description: "Pin the final one-page annual PDF"
+    formula: "Require SHA-256 863c82bd31b674d693653546a6479c34b8fa0b2e8a2a97a7a11d0d4f5030c9bb, 63429 bytes, a 611.976 by 791.968 point page, and the 2026 title."
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::pins the exact final annual source"
+  - line: "physical-locations"
+    description: "Bind the name, taxpayer ID and lines 1 through 14"
+    formula: "Verify all 16 single-widget AcroForm text fields against their printed positions."
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::locates all annual fields on their printed rows"
+  - line: "printed-transfers"
+    description: "Pin the annual printed sources and destination"
+    formula: >-
+      Line 4 uses actual net profit and other earned income or Schedule SE
+      Part I line 4b for the optional method. Line 5 adds positive net profits
+      from Schedule C line 31, Schedule F line 34 or partnership Schedule K-1
+      box 14 code A and other allocable income. Lines 7 and 9 use Schedule 1
+      lines 15 and 16, respectively. Line 11 uses wages from Form W-2 box 5.
+      Line 12 uses the attributable amount from Form 2555 line 45. Line 14
+      is the lesser of lines 3 and 13 and transfers to Schedule 1 line 17.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::records the printed sources and transfer"
+  - line: "2"
+    description: "Pin the final annual qualified long-term care brackets"
+    formula: >-
+      After monthly eligibility exclusions, sum the lesser of eligible
+      premiums and the annual limit per covered person using age at year end.
+      Caps are $500 through 40, $930 at 41 through 50, $1,860 at 51 through
+      60, $4,960 at 61 through 70, and $6,200 at 71 and older.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::renders literal line 2 limits at each age boundary"
+  - line: "saved-diagnostic"
+    description: "Verify separate business pages and their transfer"
+    formula: >-
+      Reopen the two diagnostic pages. Leave line 11 blank for the sole
+      proprietor, and leave lines 4 through 10 blank for the S corporation.
+      Save actual zero inputs and results as zero. Add the per-business line
+      14 amounts once on Schedule 1 line 17 without pooling owners' limits.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::keeps owner pages separate and saves blanks apart from zeros"
+  - line: "closed-exports"
+    description: "Keep public review and filing disabled"
+    formula: "The physical map has no route or export registration. Neither the 2025 nor the 2026 qualified template registry accepts these bytes."
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::keeps public exports closed"
