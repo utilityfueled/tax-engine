@@ -50,6 +50,16 @@ export interface ScheduleBResult {
 }
 
 export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOverride?: Decimal): ScheduleBResult {
+  const returnYear = input.taxpayer.taxYear;
+  for (const [formName, statements] of [
+    ["Form 1099-INT", input.form1099Int],
+    ["Form 1099-DIV", input.form1099Div],
+  ] as const) {
+    const wrongYear = statements.find(statement => statement.taxYear !== undefined && statement.taxYear !== returnYear);
+    if (wrongYear) {
+      throw new Error(`${formName} source year ${wrongYear.taxYear} must match the ${returnYear} return`);
+    }
+  }
   const audit = new AuditTrail();
   // Validates actual current transfer/redemption sources; income still enters
   // exclusively through the original statements below.

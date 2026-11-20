@@ -36,6 +36,40 @@ function makeDividendFixture(
   };
 }
 
+describe("Schedule B statement calendar years", () => {
+  it("holds wrong-year interest and dividend statements in standalone Schedule B", () => {
+    for (const [returnYear, statementYear] of [[2025, 2024], [2026, 2025]] as const) {
+      const taxpayer = { ...simpleW2Fixture.taxpayer, taxYear: returnYear };
+      const interest = makeInterestFixture([{ payer: "Bank", taxYear: statementYear, interestIncome: "25.50" }]);
+      const dividends = makeDividendFixture([{ payer: "Broker", taxYear: statementYear, ordinaryDividends: "50.25" }]);
+
+      expect(() => calculateScheduleB({ ...interest, taxpayer })).toThrow(
+        `Form 1099-INT source year ${statementYear} must match the ${returnYear} return`,
+      );
+      expect(() => calculateScheduleB({ ...dividends, taxpayer })).toThrow(
+        `Form 1099-DIV source year ${statementYear} must match the ${returnYear} return`,
+      );
+    }
+  });
+
+  it("includes matching and legacy undated statements in standalone Schedule B", () => {
+    const result = calculateScheduleB({
+      ...simpleW2Fixture,
+      form1099Int: [
+        { payer: "Current bank", taxYear: 2025, interestIncome: "25.50", usSavingsBondInterest: "10.05" },
+        { payer: "Legacy bank", interestIncome: "5.12" },
+      ],
+      form1099Div: [
+        { payer: "Current broker", taxYear: 2025, ordinaryDividends: "50.25" },
+        { payer: "Legacy broker", ordinaryDividends: "4.75" },
+      ],
+    });
+
+    expect(result.totalInterest.toString()).toBe("40.67");
+    expect(result.totalOrdinaryDividends.toString()).toBe("55");
+  });
+});
+
 // ═══════════════════════════════════════════════════════════
 // Part I: Interest
 // ═══════════════════════════════════════════════════════════

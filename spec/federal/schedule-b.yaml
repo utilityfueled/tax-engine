@@ -10,6 +10,18 @@ notes: |
   - Any financial interest in or signature authority over a foreign financial account (Part III)
 
 lines:
+  - line: "1-and-5-statement-year"
+    description: "Reconcile the calendar years of interest and dividend statements before summing them"
+    formula: "Hold Forms 1099-INT and 1099-DIV with a supplied calendar year different from the return year before including any of their amounts. Sum matching and legacy undated statements under the existing line rules. The printed revision date does not establish the statement calendar year."
+    irsRef: "Schedule B Instructions, Lines 1 and 5; Forms 1099-INT and 1099-DIV, For calendar year"
+    sources:
+      - "https://www.irs.gov/instructions/i1040sb"
+      - "https://www.irs.gov/pub/irs-pdf/f1099int.pdf"
+      - "https://www.irs.gov/pub/irs-pdf/f1099div.pdf"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::holds wrong-year interest and dividend statements in standalone Schedule B"
+    testRefs:
+      - "tests/engine/schedules/schedule-b.test.ts::includes matching and legacy undated statements in standalone Schedule B"
+
   - line: "prior-interest-source"
     description: "Deduct actual previously reported interest included in current Treasury statements"
     formula: "Subtract confirmed priorYearInterestIncludedInCurrentStatements once on the line1 subtotal; preserve gross original Box3 and reject an adjustment above it. Verified Form8815 then reconciles its source history and remaining current interest."
