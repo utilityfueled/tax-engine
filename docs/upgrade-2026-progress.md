@@ -1,5 +1,28 @@
 # 2026 upgrade implementation evidence
 
+## November 20 exact 012e6ee1 local verification
+
+The full unit and coverage suites each passed 29,556 tests in 2,161
+files using separate disposable PostgreSQL 16.16 databases. Both
+databases shut down normally. Branch coverage was 88.37%, above the
+85% gate. Both builds, all three type checks, lint, the 1,093-entry
+inventory and 9,693 spec references also passed. Six workspace recovery
+cases and two RRTA review cases passed at the existing 30-second
+browser deadlines. The frozen offline AI evaluation artifacts matched.
+The exact Docker image job passed.
+
+The protected test-mode Preview reached READY with no production alias.
+All 12 workspace checks passed across exact `012e6ee1` and prior
+`cf43e9ea` with separate sessions and the same authorized test actor.
+The synthetic return was created, saved, reopened, deleted using the
+current revision, and confirmed absent on both Previews. Both sessions
+signed out. This verifies workspace recovery. The full hosted billing
+criterion still requires separate evidence.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44740038304) ·
+[Managed and AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44740038254) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44740037670) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44740038194).
+
 ## November 20 Ohio and Pennsylvania browser test queries
 
 `3b279e35` removes a second exact label lookup from the tested Ohio

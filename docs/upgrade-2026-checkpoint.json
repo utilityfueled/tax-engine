@@ -1,5 +1,39 @@
 {
   "activeContinuation": {
+    "nov20ScheduleEicExactVerification": {
+      "sourceCommit": "012e6ee1",
+      "unitTestsPassed": 29556,
+      "coverageTestsPassed": 29556,
+      "branchCoveragePercent": 88.37,
+      "localPostgresVersion": "16.16",
+      "bothDatabasesStopped": true,
+      "allTypeChecks": true,
+      "bothBuilds": true,
+      "lintErrors": 0,
+      "specReferencesPassed": 9693,
+      "inventoryEntries": 1093,
+      "localWorkspaceRecoveryCasesPassed": 6,
+      "localRrtaCasesPassed": 2,
+      "frozenAiArtifactsMatch": true,
+      "protectedPreview": {
+        "readyExactSource": true,
+        "productionAliasAssigned": false,
+        "priorSource": "cf43e9ea",
+        "workspaceChecksPassed": 12,
+        "fixtureDeletedAndAbsentOnBoth": true,
+        "bothSessionsClosed": true,
+        "bindingSha256": "149711ede11b5202bee8dc043d95d723f509cb85f7884606935bb338db178cd0",
+        "privateEvidence": ".local/upgrade-evidence/nov20-preview-012e-current"
+      },
+      "githubRuns": {
+        "ci": 44740038304,
+        "managedAndAmd64": 44740038254,
+        "arm64": 44740037670,
+        "docker": 44740038194
+      },
+      "dockerCompletedSuccessfully": true,
+      "privateEvidence": ".local/upgrade-evidence/nov20-final-schedule-eic"
+    },
     "nov20AnnualCandidatesAndGuidedRehearsal": {
       "applicationCommit": "29988f04",
       "ledgerUtcCommit": "e52f9d8d",

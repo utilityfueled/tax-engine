@@ -1,19 +1,16 @@
 # Current 2026 upgrade status
 
 The latest application revision with a verified protected Preview is
-`29988f04` on `main`. The guided
-Pennsylvania preview avoids a duplicate calculation, and the progress rail
-recenters when navigation changes. Two Pennsylvania and six mobile/Ohio
-browser cases passed under the original 30-second limits. All six exact
-local workspace recovery cases and all ten exact local Ohio strict cases
-passed. The disabled 2026 Forms 7206 and
-8829 candidates have independently checked PDF hashes and field geometry.
-[Application evidence](upgrade-2026-progress.md#november-20-guided-progress-rail-on-ordinary-edits) ·
-[Form evidence](upgrade-2026-progress.md#november-20-final-form-7206-and-form-8829-physical-candidates).
+`012e6ee1` on `main`. Exact unit and coverage runs each passed 29,556
+tests at 88.37% branch coverage. Both builds, all three type checks, lint,
+9,693 spec references, the inventory, the exact Docker job and eight
+scoped browser cases passed. The protected test-mode Preview passed
+all 12 workspace lifecycle checks. Full exact Linux browser results
+are tracked in the run links.
+[Exact application and Preview evidence](upgrade-2026-progress.md#november-20-exact-012e6ee1-local-verification).
 
-Exact local unit and coverage runs each passed 29,549 tests at 88.37%
-branch coverage. Both builds, all three type checks, lint, 9,686 spec
-references, and the regenerated inventory passed. The first exact CI
+On previous application `29988f04`, local unit and coverage runs each
+passed 29,549 tests at 88.37% branch coverage. The first exact CI
 attempt passed five jobs. The unit job had one Pennsylvania PDF test reach
 its five-second deadline. Test-only commit `3a1f8156` retained that deadline
 and passed all 94 scoped PDF tests.
@@ -61,11 +58,12 @@ AMD64 runner.
 | Taxpayer facts and federal law | The latest [claimant DOB](upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date) and [K-1 source-year](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals) fixes passed. Qualified independent tax interpretations and expected outputs remain open. |
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC, Form 7206 and Form 8829 blanks are pinned as disabled candidates. The current final Form 1040, annual instructions and Tax/EIC tables still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
-| Hosted recovery | `cf43e9ea` and `29988f04` passed all 12 protected Preview education workspace checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted recovery and billing qualification remain open. [Current Preview](upgrade-2026-progress.md#november-20-exact-29988f04-local-and-protected-preview) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
+| Hosted recovery | Current `012e6ee1` and earlier `cf43e9ea` passed all 12 protected Preview education workspace checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted billing qualification remains open. [Current Preview](upgrade-2026-progress.md#november-20-exact-012e6ee1-local-verification) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
 | Self-host recovery | Exact `29988f04` AMD64 and ARM64 passed image smoke, Compose recovery and cleanup. Full strict browser deadlines remain open on both architectures. Focused Ohio comparisons previously passed in both runtime modes on Linux. [Runtime evidence](upgrade-2026-progress.md#november-20-exact-29988f04-browser-results) · [Earlier comparison](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
-Read `activeContinuation.nov20AnnualCandidatesAndGuidedRehearsal`,
+Read `activeContinuation.nov20ScheduleEicExactVerification`,
+`nov20AnnualCandidatesAndGuidedRehearsal`,
 `nov20OhioIncompleteGuidedValidation` or `nov20HostedEducationCrossRevision` in the
 [checkpoint](upgrade-2026-checkpoint.json) for exact runs and evidence paths.
 Earlier verification remains in the [progress log](upgrade-2026-progress.md).
