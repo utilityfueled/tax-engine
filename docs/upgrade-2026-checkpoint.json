@@ -52,6 +52,13 @@
         "web": 44725543747,
         "arm64": 44725578957
       },
+      "exactBrowserResults": {
+        "managed": { "passed": 648, "failed": 2, "skipped": 5, "rrtaSavedPdfInspectorDeadlineMs": 4000 },
+        "strictAmd64": { "passed": 640, "failed": 10, "skipped": 5, "caseDeadlineMs": 30000, "composeRecoveryPassed": true, "archiveImportPassed": true },
+        "strictArm64": { "passed": 641, "failed": 9, "skipped": 5, "caseDeadlineMs": 30000, "composeRecoveryPassed": true }
+      },
+      "exactCiFirstAttempt": { "jobsPassed": 5, "jobsFailed": 1, "unitTestsPassed": 29548, "paMixedResidencyPdfDeadlineMs": 5000 },
+      "paMixedResidencyPdfInspectionTestCommit": "3a1f8156",
       "privateEvidence": ".local/upgrade-evidence/nov20-final-8829-7206",
       "formCandidateEvidence": "docs/upgrade-2026-progress.md#november-20-final-form-7206-and-form-8829-physical-candidates"
     },

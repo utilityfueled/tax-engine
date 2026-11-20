@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 20 exact 29988f04 browser results
+
+| Runtime | Passed | Failed | Skipped | Failure |
+| --- | ---: | ---: | ---: | --- |
+| Managed | 648 | 2 | 5 | RRTA 1280px and 390px saved-PDF inspections reached their four-second subprocess deadline after entering page text extraction. |
+| Strict AMD64 | 640 | 10 | 5 | Ohio business, reciprocal, resident-credit and part-year school district cases reached the 30-second case deadline. |
+| Strict ARM64 | 641 | 9 | 5 | Eight cases across the same Ohio scenarios and the Pennsylvania married-payments desktop case reached the 30-second case deadline. |
+
+Both strict jobs passed image smoke and Compose upgrade, restore, rollback
+and cleanup. AMD64 also passed archive import. The differing failure points
+in Ohio span fact entry, confirmation, reopen, review, workspace transition
+and a later filing-denial request. The logs establish deadline failures.
+Exact scoped macOS runs passed the ten Ohio cases.
+[Managed and AMD64 jobs](https://github.com/utilityfueled/tax-engine/actions/runs/44725543747) ·
+[ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44725578957).
+
 ## November 20 Pennsylvania PDF test inspection
 
 The first exact Linux unit run passed 29,548 tests and had one five-second

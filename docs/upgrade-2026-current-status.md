@@ -12,11 +12,21 @@ passed. The disabled 2026 Forms 7206 and
 
 Exact local unit and coverage runs each passed 29,549 tests at 88.37%
 branch coverage. Both builds, all three type checks, lint, 9,686 spec
-references, and the regenerated inventory passed. The full exact-source
-managed and Linux jobs are still pending.
+references, and the regenerated inventory passed. The first exact CI
+attempt passed five jobs. The unit job had one Pennsylvania PDF test reach
+its five-second deadline. Test-only commit `3a1f8156` retained that deadline
+and passed all 94 scoped PDF tests.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44725543701) ·
 [Web and AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44725543747) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44725578957).
+
+The full managed browser job passed 648 cases, skipped five, and hit the
+four-second saved-PDF inspector deadline on both RRTA cases. Strict AMD64
+passed 640 cases with ten Ohio deadlines. Strict ARM64 passed 641 cases
+with eight Ohio deadlines and one Pennsylvania desktop deadline. Both
+strict jobs retained five skips and passed their Compose recovery and
+cleanup steps.
+[Exact runtime evidence](upgrade-2026-progress.md#november-20-exact-29988f04-browser-results).
 
 Prior `074a4fa9` passed all six CI jobs, 650 managed browser cases, and six
 local recovery cases. Both strict Linux images passed their recovery steps.
@@ -51,7 +61,7 @@ AMD64 runner.
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final 7206 and 8829 blanks are pinned as disabled candidates. Applicable final 2026 annual materials and qualification of their maps, scenarios and federal/state transfers are still required. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | `cf43e9ea` and `29988f04` passed all 12 protected Preview education workspace checks, including save, reopen, deletion and both sign-outs. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source hosted recovery and billing qualification remain open. [Current Preview](upgrade-2026-progress.md#november-20-exact-29988f04-local-and-protected-preview) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Exact `074a4fa9` AMD64 and ARM64 passed image smoke, Compose recovery and cleanup. The strict suites reached eight and eleven original deadlines respectively. The Pennsylvania desktop case also timed out on earlier ARM64 `0836c5fe`. Focused Ohio comparisons passed in both runtime modes on Linux. [Runtime evidence](upgrade-2026-progress.md#november-20-incomplete-ohio-guided-validation) · [Earlier comparison](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |
+| Self-host recovery | Exact `29988f04` AMD64 and ARM64 passed image smoke, Compose recovery and cleanup. Full strict browser deadlines remain open on both architectures. Focused Ohio comparisons previously passed in both runtime modes on Linux. [Runtime evidence](upgrade-2026-progress.md#november-20-exact-29988f04-browser-results) · [Earlier comparison](upgrade-2026-progress.md#november-20-ohio-browser-deadline-comparison). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 Read `activeContinuation.nov20AnnualCandidatesAndGuidedRehearsal`,
