@@ -10,7 +10,7 @@ import {calculateScheduleCPassengerSources} from './schedule-c-passenger-first-y
 
 import Decimal from "decimal.js";
 import type { TaxYearInput, ScheduleK1 } from "@/models/inputs.js";
-import { getFutureScheduleK1SourceIssue } from "../forms/schedule-k1-source-year.js";
+import { getFutureScheduleK1SourceIssue } from "../assert-statement-year.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm6198, type Form6198Result } from "@/engine/forms/form-6198.js";
