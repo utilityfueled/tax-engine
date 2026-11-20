@@ -1,5 +1,17 @@
 {
   "activeContinuation": {
+    "nov20InformationReturnFilenameFacts": {
+      "sourceForms": ["1098-E", "1099-R", "SSA-1099"],
+      "focusedTestsPassed": 1103,
+      "realImportCasesPassed": 3,
+      "fakeAmountsClearedFromRebuiltWorkspaces": true,
+      "genuineDetectedValuesRemainGated": true,
+      "rawSavedReopenFocusedTestsPassed": 38,
+      "rawSavedReopenManifestSha256": "426d9cde63d41199f2fe2126eacd0c467042c3cd577a518af70816b2c68cf955",
+      "rawSavedReopenEvidence": ".local/upgrade-evidence/nov20-information-return-no-fabrication-reopen-successor",
+      "manifestSha256": "4f5addeb1de3e5bd94fb2047d220285aee761b658a32d6a2ff87c86b24fbc62a",
+      "privateEvidence": ".local/upgrade-evidence/nov20-information-return-no-fabrication"
+    },
     "nov20Form1095AFilenameFacts": {
       "firstFailureRevision": "c3d87e32",
       "firstFailure": "Archived blank under its agreeing alias persisted fixture-derived premiums with a manual prompt",

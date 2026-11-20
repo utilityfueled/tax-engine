@@ -208,51 +208,6 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       }
     }
   ],
-  "irs-1098-e-2025": [
-    {
-      idSuffix: "fixture-student-loan-interest",
-      factId: "student-loan-interest-review",
-      label: "Student loan interest review",
-      value: "Official fixture student loan interest: Form 1098-E box 1 student loan interest received $2,100, including capitalized interest.",
-      machineValue: {
-        entryKind: "1098-e-summary",
-        lender: "Official fixture loan servicer",
-        studentLoanInterestReceived: "2100",
-        includesOriginationFeesOrCapitalizedInterest: true
-      } satisfies WorkspaceStructuredFactMachineValue1098ESummary
-    }
-  ],
-  "irs-1099-r-2025": [
-    {
-      idSuffix: "fixture-retirement-distribution",
-      factId: "retirement-distribution-review",
-      label: "Retirement distribution review",
-      value: "Official fixture retirement distribution: gross distribution $22,000, taxable amount $18,000, and federal withholding $1,200 from an IRA Form 1099-R.",
-      machineValue: {
-        entryKind: "1099-r-summary",
-        payer: "Official fixture retirement custodian",
-        grossDistribution: "22000",
-        taxableAmount: "18000",
-        federalWithheld: "1200",
-        distributionCode: "7",
-        iraSepSimple: true
-      } satisfies WorkspaceStructuredFactMachineValue1099RSummary
-    }
-  ],
-  "irs-ssa-1099-2025": [
-    {
-      idSuffix: "fixture-social-security-benefits",
-      factId: "social-security-benefits-review",
-      label: "Social Security benefits review",
-      value: "Official fixture Social Security benefits: Form SSA-1099 net benefits $60,000 and federal withholding $1,500.",
-      machineValue: {
-        entryKind: "ssa-1099-summary",
-        recipient: "Official fixture beneficiary",
-        netBenefits: "60000",
-        federalWithheld: "1500"
-      } satisfies WorkspaceStructuredFactMachineValueSSA1099Summary
-    }
-  ],
   "irs-1099-sa-2025": [
     {
       idSuffix: "fixture-hsa-distribution",

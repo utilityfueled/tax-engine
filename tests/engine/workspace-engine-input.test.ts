@@ -680,6 +680,8 @@ describe("workspace engine input", () => {
 
   it("uses the separately supplied actual retirement owner without changing missing source ownership", () => {
     const documents = [createDocument({})];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "retirement-distribution-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "1099-r-summary", payer: "Explicit fictional retirement custodian", grossDistribution: "22000", taxableAmount: "18000", federalWithheld: "1200", distributionCode: "7", iraSepSimple: true}}];
     const structuredFacts = buildWorkspaceStructuredFacts(documents, createSeededReturn({}));
 
     const previewInput = buildWorkspaceEngineInput(
@@ -692,7 +694,7 @@ describe("workspace engine input", () => {
     expect(previewInput).not.toBeNull();
     expect(previewInput?.taxInput.form1099R).toHaveLength(1);
     expect(previewInput?.taxInput.form1099R?.[0]).toMatchObject({
-      payer: "Official fixture retirement custodian",
+      payer: "Explicit fictional retirement custodian",
       grossDistribution: "22000",
       taxableAmount: "18000",
       federalWithheld: "1200",
@@ -1202,6 +1204,8 @@ describe("workspace engine input", () => {
 
   it("builds Social Security preview input from confirmed SSA-1099 fixture facts", () => {
     const documents = [createSocialSecurityDocument({})];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "social-security-benefits-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "ssa-1099-summary", recipient: "Explicit fictional beneficiary", netBenefits: "60000", federalWithheld: "1500"}}];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
       createSocialSecuritySeededReturn({})
@@ -1217,7 +1221,7 @@ describe("workspace engine input", () => {
     expect(previewInput).not.toBeNull();
     expect(previewInput?.taxInput.formSSA1099).toEqual([
       {
-        recipient: "Official fixture beneficiary",
+        recipient: "Explicit fictional beneficiary",
         netBenefits: "60000",
         federalWithheld: "1500"
       }
@@ -1226,14 +1230,16 @@ describe("workspace engine input", () => {
     expect(previewInput?.sourceDocumentIds).toEqual(["doc-ssa1099"]);
     expect(previewInput?.sourceFixtureIds).toEqual(["irs-ssa-1099-2025"]);
     expect(previewInput?.sourceFactIdsByItemId["social-security-benefits"]).toEqual([
+      "social-security-benefits-review:doc-ssa1099:explicit-fictional-source",
       "social-security-benefits-review:document-detected",
-      "social-security-benefits-review:fixture-social-security-benefits",
       "social-security-benefits-review:interview-answer"
     ]);
   });
 
   it("preserves actual student loan source metadata without reversing legacy Box2", () => {
     const documents = [createStudentLoanDocument({})];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "student-loan-interest-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "1098-e-summary", lender: "Explicit fictional loan servicer", studentLoanInterestReceived: "2100", includesOriginationFeesOrCapitalizedInterest: true}}];
     const structuredFacts = buildWorkspaceStructuredFacts(documents, createStudentLoanSeededReturn({}));
     const fact = structuredFacts.find(row => row.machineValue?.entryKind === "1098-e-summary");
     expect(fact?.machineValue?.entryKind).toBe("1098-e-summary");
@@ -1249,6 +1255,8 @@ describe("workspace engine input", () => {
 
   it("builds student loan interest preview input from confirmed Form 1098-E fixture facts", () => {
     const documents = [createStudentLoanDocument({})];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "student-loan-interest-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "1098-e-summary", lender: "Explicit fictional loan servicer", studentLoanInterestReceived: "2100", includesOriginationFeesOrCapitalizedInterest: true}}];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
       createStudentLoanSeededReturn({})
@@ -1266,7 +1274,7 @@ describe("workspace engine input", () => {
     expect(previewInput?.taxInput.form1098E).toMatchObject([
       {
         sourceId: "actual-loan-statement:0", taxYear: 2025, borrowerId: "actual-primary-borrower", accountHolder: "primary", box2ExcludesOriginationFeesOrCapitalizedInterest: false,
-        lender: "Official fixture loan servicer",
+        lender: "Explicit fictional loan servicer",
         studentLoanInterestReceived: "2100",
         includesOriginationFeesOrCapitalizedInterest: true
       }
@@ -1275,8 +1283,8 @@ describe("workspace engine input", () => {
     expect(previewInput?.sourceDocumentIds).toEqual(["doc-1098e"]);
     expect(previewInput?.sourceFixtureIds).toEqual(["irs-1098-e-2025"]);
     expect(previewInput?.sourceFactIdsByItemId["student-loan-interest"]).toEqual([
+      "student-loan-interest-review:doc-1098e:explicit-fictional-source",
       "student-loan-interest-review:document-detected",
-      "student-loan-interest-review:fixture-student-loan-interest",
       "student-loan-interest-review:interview-answer"
     ]);
   });

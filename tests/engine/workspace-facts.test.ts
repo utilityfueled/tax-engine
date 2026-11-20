@@ -658,7 +658,7 @@ describe("workspace structured facts", () => {
     ]);
   });
 
-  it("adds fixture-derived SSA-1099 summary facts for supported Social Security fixtures", () => {
+  it("keeps supported Social Security fixtures as nonfinancial source metadata", () => {
     const structuredFacts = buildWorkspaceStructuredFacts(
       [createDocument({
         id: "doc-ssa1099",
@@ -700,24 +700,6 @@ describe("workspace structured facts", () => {
         sourceDocumentIds: ["doc-ssa1099"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"
-      },
-      {
-        id: "social-security-benefits-review:fixture-social-security-benefits",
-        factId: "social-security-benefits-review",
-        label: "Social Security benefits review",
-        kind: "fixture-derived",
-        value: "Official fixture Social Security benefits: Form SSA-1099 net benefits $60,000 and federal withholding $1,500.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["doc-ssa1099"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z",
-        machineValue: {
-          entryKind: "ssa-1099-summary",
-          recipient: "Official fixture beneficiary",
-          netBenefits: "60000",
-          federalWithheld: "1500"
-        }
       }
     ]);
   });

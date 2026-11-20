@@ -1090,6 +1090,8 @@ describe("workspace engine preview", () => {
         seededFactIds: ["retirement-distribution-review"]
       })
     ];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "retirement-distribution-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "1099-r-summary", payer: "Explicit fictional retirement custodian", grossDistribution: "22000", taxableAmount: "18000", federalWithheld: "1200", distributionCode: "7", iraSepSimple: true}}];
     const seededReturn = createSeededReturn({
       facts: [
         {
@@ -1932,6 +1934,8 @@ describe("workspace engine preview", () => {
         seededFactIds: ["social-security-benefits-review"]
       })
     ];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "social-security-benefits-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "ssa-1099-summary", recipient: "Explicit fictional beneficiary", netBenefits: "60000", federalWithheld: "1500"}}];
     const seededReturn = createSeededReturn({
       facts: [
         {
@@ -2012,6 +2016,8 @@ describe("workspace engine preview", () => {
         seededFactIds: ["student-loan-interest-review"]
       })
     ];
+    // Explicit fictional source values for this numerical scenario, not filename-derived facts.
+    documents[0]!.detectedFacts = [{idSuffix: "explicit-fictional-source", factId: "student-loan-interest-review", label: "Separately supplied test source", value: "Explicit fictional original amounts", confidence: "high", machineValue: {entryKind: "1098-e-summary", lender: "Explicit fictional loan servicer", studentLoanInterestReceived: "2100", includesOriginationFeesOrCapitalizedInterest: true}}];
     const seededReturn = createSeededReturn({
       facts: [
         {

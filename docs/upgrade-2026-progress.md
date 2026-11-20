@@ -8789,3 +8789,24 @@ from the live view on reopen and from the stored record on the next normal
 save. No case produced structured money, inferred checkbox status or an
 engine preview. The first failure and corrected run are recorded under
 `activeContinuation.nov20Form1095AFilenameFacts` in the checkpoint.
+
+## November 20 archived loan, retirement and Social Security uploads
+
+Actual cached Form 1098-E, Form 1099-R and IRS Publication 915 specimen
+uploads showed the same financial defaults under the corresponding registered
+filename. For example, the blank 1098-E acquired student loan interest,
+a lender and a capitalized interest answer. The normal workspace preview
+remained unavailable without qualified inputs.
+
+The three filename-based financial mappings were removed. The same uploads
+keep their manual prompts. Reopening or synchronizing a saved workspace
+rebuilds its derived facts without the defaults. Actual detected financial
+records still require source qualification and exact reconciliation. Existing
+numeric tests use explicit fictional detected facts where they previously
+depended on preset amounts. The ambiguous blank test now checks that those
+amounts stay missing. The spec-first failure, 1,103 passing focused tests,
+three real PDF import cases, root and web types, lint, and source manifest are
+recorded under `activeContinuation.nov20InformationReturnFilenameFacts`.
+A separate 38-test run opened an untouched legacy storage record for each
+form. It confirmed the stale financial entry was removed from the live
+return on reopen and from the saved record at its next normal save.
