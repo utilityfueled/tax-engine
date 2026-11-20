@@ -20,11 +20,16 @@ on:
         type: boolean
         required: false
         default: false
+      compare_ohio_runtimes:
+        description: Compare the same focused Ohio journeys in both runtime modes on one runner
+        type: boolean
+        required: false
+        default: false
   pull_request:
     branches: [main]
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && inputs.cpu_full_batches && format('web-cpu-full-batches-{0}', github.run_id) || format('web-{0}-{1}', github.ref, github.sha) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes && format('web-ohio-comparison-{0}', github.run_id) || github.event_name == 'workflow_dispatch' && inputs.cpu_full_batches && format('web-cpu-full-batches-{0}', github.run_id) || format('web-{0}-{1}', github.ref, github.sha) }}
   cancel-in-progress: true
 
 jobs:
@@ -237,6 +242,28 @@ jobs:
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
           TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}
+      - name: Compare focused Ohio journeys on the same runner
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes && (steps.container_browser.outcome == 'success' || steps.container_browser.outcome == 'failure') }}
+        timeout-minutes: 10
+        continue-on-error: true
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+        run: |
+          cases=(
+            tests/oh-business-part-year-native.spec.ts
+            tests/oh-resident-credit-native.spec.ts
+            tests/oh-school-district-part-year-native.spec.ts
+          )
+          args=(--project=chromium --workers=2 --retries=0 --timeout=30000 "${cases[@]}")
+          # Let the last full-suite request window expire before reusing the app.
+          sleep 65
+          strict=0
+          PLAYWRIGHT_DISABLE_WEBSERVER=true PLAYWRIGHT_BASE_URL=http://127.0.0.1:3109 \
+            pnpm test:web "${args[@]}" 2>&1 | tee ohio-same-runner-container.log || strict=$?
+          managed=0
+          pnpm test:web "${args[@]}" 2>&1 | tee ohio-same-runner-managed.log || managed=$?
+          printf 'container=%s\nmanaged=%s\n' "$strict" "$managed" > ohio-same-runner-status.txt
+          test "$strict" -eq 0 && test "$managed" -eq 0
       - name: Verify Docker archive in an independent native image store
         id: archive
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
@@ -446,6 +473,8 @@ jobs:
             container-source.txt
             container-candidate.txt
             container-ldd.txt
+            ohio-same-runner-*.log
+            ohio-same-runner-status.txt
             apps/web/playwright-report/
             apps/web/test-results/
       - name: Remove this job's browser container

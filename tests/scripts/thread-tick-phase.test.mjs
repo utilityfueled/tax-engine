@@ -168,6 +168,19 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  const forwarding="          TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}\n";
  assert.equal(source.split(input).length,2);assert.equal(source.split(forwarding).length,3);
  let original=source.replace(input,'').replaceAll(forwarding,'');
+ const ohioInput=/^      compare_ohio_runtimes:\n(?:^        [^\n]*\n){4}/m;
+ const ohioBlock=/^      - name: Compare focused Ohio journeys on the same runner\n[\s\S]*?(?=^      - name: Verify Docker archive)/m;
+ const ohioGroup="github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes && format('web-ohio-comparison-{0}', github.run_id) || ";
+ const comparison=workflow.jobs.container.steps.filter(step=>step.name==='Compare focused Ohio journeys on the same runner');
+ assert.equal(comparison.length,1);
+ assert.equal(workflow.on.workflow_dispatch.inputs.compare_ohio_runtimes.default,false);
+ assert.match(comparison[0].if,/github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes/u);
+ assert.equal(comparison[0]['continue-on-error'],true);
+ assert.match(comparison[0].run,/--workers=2 --retries=0 --timeout=30000/u);
+ for(const delta of [ohioInput,ohioBlock,ohioGroup,'            ohio-same-runner-*.log\n            ohio-same-runner-status.txt\n']){
+  assert.equal(original.split(delta).length,2);
+  original=original.replace(delta,'');
+ }
  // Separately reviewed lint fixes and CI retention preserve the prior workflow.
  const reviewedDeltas=[
   ["git rev-parse HEAD 'HEAD^{tree}'",'git rev-parse HEAD HEAD^{tree}'],
