@@ -38,6 +38,14 @@ workflows, with two workers, zero retries, the original 30-second per-case
 limit and verified cleanup. The exact native ARM64 image smoke and Compose
 upgrade and recovery passed. Its strict browser suite was still running.
 Full Linux browser qualification remains open.
+
+The same exact archived revision passed all six managed Chromium workspace
+recovery cases, including restoring original document bytes and private local
+answers after deletion and reload. A separate local Node sample measured 120
+incomplete renders per stage. The residency, payment and school median times
+moved from 3.08, 2.80 and 4.17 ms to 2.64, 2.54 and 3.82 ms. The sample measures
+in-process evaluation on the Mac. Browser and Linux timing require separate
+runtime measurements.
 [Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44713489925) ·
 [Exact browser run](https://github.com/utilityfueled/tax-engine/actions/runs/44713489750) ·
 [Passed Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44713489820) ·
@@ -69,8 +77,10 @@ exact spec references passed. Both targeted managed Chromium education cases
 passed once the isolated checkout had its 15 pinned sample PDFs. The test
 runs exercise enacted rules with test-only constants. The public 2026
 calculation and form gates remain closed.
+All six exact GitHub CI jobs passed. The exact managed browser job passed 650
+cases and preserved the five original skips.
 [Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44711171955) ·
-[Exact browser run](https://github.com/utilityfueled/tax-engine/actions/runs/44711171830) ·
+[Exact managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44711171830/job/136202963961) ·
 [Exact Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44711171886).
 
 ## November 20 Form 8863 claimant birth date
