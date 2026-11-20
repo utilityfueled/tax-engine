@@ -30,6 +30,13 @@ The identical application source passed 24 managed Chromium cases spanning
 guided K-1 entry, saved-review workflows and loss carryovers. The run used
 two workers, zero retries and the original 30-second deadline. The managed
 server closed normally. Full current GitHub checks are linked in the checkpoint.
+On exact `309b01a4`, the full unit and coverage runs each passed all 29,514
+tests in 2,157 files. Branch coverage was 88.35% against the 85% gate.
+Both runs used pinned pypdf 6.10.0 and independent PostgreSQL 16.16 instances.
+Both databases stopped normally. The application lint reported zero errors
+and the same 12,111 inherited warnings.
+The Docker build passed on the application-matched documentation successor.
+[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44681091819).
 [Independent reviewer case](upgrade-2026-human-tax-review-packet.md#schedule-k-1-original-header-year).
 
 ## November 19 applied federal overpayment credits
@@ -63,7 +70,9 @@ normally.
 On the same revision, GitHub's managed Linux browser job also passed. The
 strict AMD64 container job passed 648 cases with five planned skips and
 two original 30-second deadlines. Both failures were desktop Ohio part-year
-school-district original-entry cases. Runtime smoke, Compose recovery and
+school-district cases. The refund case reached the review response and download
+wait. The covered case reached the later filing-refusal request.
+Runtime smoke, Compose recovery and
 the independent archive import passed. The strict browser gate is still open.
 All six GitHub CI jobs passed, with 29,508 tests in the coverage job and
 88.35% branch coverage.
