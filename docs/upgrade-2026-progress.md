@@ -1,5 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Pennsylvania PDF test inspection
+
+The first exact Linux unit run passed 29,548 tests and had one five-second
+timeout in the combined Pennsylvania mixed-residency PDF test. The same test
+passed in Linux coverage and the exact local unit run. The original Linux
+unit job was retried once with its existing settings.
+
+The saved-PDF test now strictly inspects each distinct byte sequence once,
+while retaining every original file, result row, privacy marker and
+assertion. All 18 result rows matched the original helper, and both helpers
+rejected fixtures containing a private marker or an unflattened widget.
+Median inspection in four paired local trials fell from 0.867 to 0.557
+seconds. All 94 scoped Pennsylvania PDF tests and all eight spec references
+passed. The test retains its five-second deadline.
+
 ## November 20 exact 29988f04 local and protected Preview
 
 Exact unit and coverage runs passed 29,549 tests each at 88.37% branch

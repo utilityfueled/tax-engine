@@ -52,12 +52,13 @@ it('renders an actual move-out period without inferring December31 PA residence'
  try{await fillPAMarriedOfficialReview(redactReviewIdentifiers(f.input),f.result,blank,token);const p=snapshots[1];expect(p.statuses[F.residencyStatus]).toBe('/3');expect(p.texts[F.partYearFrom]).toBe('01/01');expect(p.texts[F.partYearTo]).toBe('06/30');expect(p.texts[F.schoolCode]).toBe('99999');expect(p.texts[F.schoolDistrictName]).toBe('');expect(p.texts[F.line1a]).toBe('21000');expect(p.texts[F.line12]).toBe('645');}finally{spy.mockRestore();}
 });
 const inspectSaved=String.raw`
+from io import BytesIO
+from pathlib import Path
 from pypdf import PdfReader
 from pypdf.generic import IndirectObject,DictionaryObject,ArrayObject,StreamObject
 import json,sys
-results=[];allstrings=[]
-for path in json.loads(sys.argv[1]):
- r=PdfReader(path,strict=True);seen=set();strings=[]
+def inspect(data):
+ r=PdfReader(BytesIO(data),strict=True);seen=set();strings=[]
  def walk(x):
   if isinstance(x,IndirectObject):
    key=(x.idnum,x.generation)
@@ -78,8 +79,20 @@ for path in json.loads(sys.argv[1]):
  for oid in r.xref_objStm:walk(IndirectObject(oid,0,r))
  texts=[page.extract_text() or '' for page in r.pages]
  for t in texts:assert t.count('FOR REVIEW ONLY - NOT FOR FILING')==1
- allstrings+=strings+texts
- results.append({'path':path,'pages':texts,'objects':len(seen),'sizes':[[float(p.mediabox.width),float(p.mediabox.height)] for p in r.pages]})
+ return {'pages':texts,'objects':len(seen),'sizes':[[float(p.mediabox.width),float(p.mediabox.height)] for p in r.pages]},strings+texts
+
+# Reuse strict inspection of an identical saved PDF while preserving each path
+# and the original order and multiplicity of strings in the privacy check.
+results=[]
+allstrings=[]
+inspections={}
+for path in json.loads(sys.argv[1]):
+ data=Path(path).read_bytes()
+ if data not in inspections:
+  inspections[data]=inspect(data)
+ row,strings=inspections[data]
+ allstrings+=strings
+ results.append({'path':path,**row})
 text='\n'.join(allstrings).lower()
 for value in json.loads(sys.argv[2]):assert value.lower() not in text,value
 print(json.dumps(results))
