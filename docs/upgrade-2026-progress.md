@@ -8960,3 +8960,47 @@ audit paths. Both actual Chromium cases passed on Node 26.13.1, and all
 17 focused tests, five spec references and the coverage inventory passed.
 The strict Linux runtime checks remain open.
 [PA browser change](https://github.com/utilityfueled/tax-engine/commit/c31d2100).
+
+## November 20 Form 8863 adult student TIN reconciliation
+
+Commit `8201d316` holds a contradiction between two explicit timely TIN
+answers for a 2026 primary or joint-spouse student with positive expenses.
+The comparison follows exact household identity matching. It preserves
+unknown answers, zero expenses, the joint-spouse SSN exception, and the
+existing treatment of dependent students and earlier years.
+[Existing IRS education identification guidance](https://www.irs.gov/credits-deductions/individuals/education-credits-aotc-and-llc) ·
+[Form 8863 draft instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+Four regression cases failed before the fix, one for each direction of
+disagreement and each adult role. All 104 focused tests passed afterward,
+with 9,716 spec references, the inventory, type checking and an independently
+verified browser audit. The review checked data consistency. The adult
+student eligibility interpretation still requires qualified tax review.
+
+The exact unit and coverage runs each passed 29,588 tests in 2,166 files.
+Branch coverage was 88.45%. Both builds, three type checks, lint, the
+specification and the inventory passed. The preceding exact `539c9bed`
+managed suite passed 650 cases with five original skips. All 37 scoped
+education browser cases passed on `8201d316` at the existing deadlines.
+The protected test-mode Preview passed all 12 checks, including
+bidirectional workspace reopen, exact deletion and sign-out, with the
+same authorized synthetic actor. The exact ARM64 rehearsal is queued.
+[ARM64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44765989343) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44765989442).
+
+## November 20 strict ARM64 and Ohio comparison
+
+The ARM64 job for `a74dda05` passed its image smoke test and isolated
+Compose upgrade and recovery. The strict browser result was 639 passed,
+11 failed at the existing 30-second deadline, and five original skips.
+The timeouts covered two NEW212, one reciprocal wage, three resident
+credit, four school district and one Pennsylvania payment case.
+[ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44754625685).
+
+A separate Ohio candidate passed all eight selected school and resident
+credit cases on macOS, as did the exact `96a9179f` baseline. Wall time was
+44.2 versus 44.3 seconds. Summed case time was 73.026 versus 72.757 seconds.
+The comparison supplied no measurable benefit, so the candidate stays
+outside main. Its paired observation and the ARM64 failure logs are in
+`.local/upgrade-evidence/nov20-ohio-new212-integrated-96a9`.
