@@ -3,6 +3,7 @@ import path from "node:path";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { createFilledW2Upload } from "./helpers/filled-w2-upload";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const sampleDocsDir = path.resolve(testDir, "../../../sample-documents/downloads");
@@ -559,23 +560,22 @@ test("1099-NEC uploads seed deterministic Schedule C follow-up prompts", async (
 
   await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-1099-nec-2025.pdf"));
 
-  await expect(page.getByText(/1 irs sample document loaded/i)).toBeVisible();
   const returnSummary = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /return summary/i })
   });
 
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
-  await expect(page.getByText("Form 1099-NEC (Rev. April 2025)", { exact: true })).toBeVisible();
-  await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Needs review");
+  await expect(page.getByText("Form 1099-NEC source review", { exact: true })).toBeVisible();
+  await expect(page.getByText(/multiple forms 1099-nec need separate source records/i)).toBeVisible();
   await expect(page.getByText(/data found: 1099-nec income classification, schedule c expense review/i)).toBeVisible();
   await expect(page.getByRole("region", { name: "Questions", exact: true }).getByText(/Confirm whether each Form 1099-NEC amount belongs on Schedule C/i)).toBeVisible();
   await expect(page.getByRole("region", { name: "Questions", exact: true }).getByText(/Confirm the business expenses, mileage, and home office records/i)).toBeVisible();
 
   await page.reload();
 
-  await expect(page.getByText("Form 1099-NEC (Rev. April 2025)", { exact: true })).toBeVisible();
-  await expect(page.getByText(/matched irs sample document/i).first()).toBeVisible();
-  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Ready to continue");
+  await expect(page.getByText("Form 1099-NEC source review", { exact: true })).toBeVisible();
+  await expect(page.getByText(/multiple forms 1099-nec need separate source records/i)).toBeVisible();
+  await expect(summaryStat(returnSummary, /^documents$/i)).toContainText("Needs review");
 });
 
 test("answered interview prompts persist across reloads and can be reopened", async ({ page }) => {
@@ -697,7 +697,7 @@ test("a stale advanced question cannot be reopened after reset", async ({ page }
   await otherTab.close();
 });
 
-test("workspace screen can send a provider-safe summary through the redaction boundary", async ({ page }, testInfo) => {
+test("workspace screen can send a provider-safe summary through the redaction boundary", async ({ page }) => {
   // The redactor also scans application-generated metadata. Use fixed synthetic
   // browser metadata so this test measures the five known source redactions.
   await page.clock.setFixedTime(new Date("2026-03-12T12:00:00Z"));
@@ -715,10 +715,9 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   await page.getByRole("button", { name: /start your tax return/i }).click();
   await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
 
-  const piiNamedW2Path = testInfo.outputPath("irs-w2-2025-jane-doe-123-45-6789.pdf");
-  await copyFile(path.join(sampleDocsDir, "irs-w2-2025.pdf"), piiNamedW2Path);
-
-  await page.locator('input[type="file"]').setInputFiles(piiNamedW2Path);
+  const filledW2 = await createFilledW2Upload();
+  const w2WithSyntheticName = { ...filledW2, name: "irs-w2-2025-jane-doe-123-45-6789.pdf" };
+  await page.locator('input[type="file"]').setInputFiles(w2WithSyntheticName);
 
   const aiSummary = page.locator("section.panel").filter({
     has: page.getByRole("heading", { name: /ai summary/i })
@@ -732,7 +731,7 @@ test("workspace screen can send a provider-safe summary through the redaction bo
   await expect(summaryStat(aiSummary, /return bundle ready/i)).toContainText("no");
   await expect(
     aiSummary.getByText(
-      /workspace has 3 active unsupported route/i
+      /workspace still needs 2 interview confirmation\(s\) before deterministic recompute can run/i
     )
   ).toBeVisible();
   await expect(aiSummary.getByText("Name (1)", { exact: true })).toBeVisible();

@@ -6,12 +6,12 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertEncryptedRecoveryOriginals } from './helpers/encrypted-recovery-review';
+import { createFilledW2Upload } from './helpers/filled-w2-upload';
 import { fillRequiredTaxpayerFacts, fillRequiredW2Facts, reachFilingStatus } from './guided-fixtures';
 
-// Explicit synthetic suggestions attached to a BLANK IRS template; never extracted taxpayer truth.
+// Fictional wages and withholding are printed on the uploaded test PDF.
 // Independent pre-output oracle: 52000 - 15750 = 36250; official2025Single table36250–36300=4115;5000-4115=885.
 const original = { firstName: 'Avery', lastName: 'Lifecycle', ssn: '900-70-0311', wages: '52000', withholding: '5000', taxable: '36250', tax: '4115', refund: '$885' };
-const sourcePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../sample-documents/downloads/irs-w2-2025.pdf');
 const backupPassword = 'synthetic-lifecycle-backup-password';
 const sha = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -99,7 +99,8 @@ for (const width of [1280, 390]) test(`complete unseeded local upload/review/rec
   const mark = (stage: string) => stageTimes.push({ stage, elapsedMS: performance.now() - started });
   const requests: { url: string; body: string }[] = [];
   page.on('request', request => requests.push({ url: request.url(), body: request.postData() ?? '' }));
-  const bytes = await readFile(sourcePath), sourceSha256 = sha(bytes);
+  const source = await createFilledW2Upload();
+  const bytes = source.buffer, sourceSha256 = sha(bytes);
   const evidence = async (name: string, value: unknown) => writeFile(testInfo.outputPath(name), JSON.stringify(value, null, 2));
   const keyboardActions: Awaited<ReturnType<typeof keyboardActivate>>[] = [];
   const activate = async (target: Locator) => { keyboardActions.push(await keyboardActivate(page, target)); };
@@ -167,21 +168,21 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   if (!id) throw new Error('Created workspace URL has no ID');
   await completeSegmentation(page); mark('segmentation-complete');
   await page.getByRole('button', { name: /switch to advanced mode/i }).click();
-  await page.locator('input[type="file"]').setInputFiles(sourcePath);
-  await expect(page.getByText(/1 irs sample document loaded/i)).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles(source);
+  await expect(page.getByRole('listitem').filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
   await page.getByRole('button', { name: /get step-by-step help/i }).click();
   await fillRequiredTaxpayerFacts(page);
   await page.getByLabel('First name', { exact: true }).fill(original.firstName);
   await page.getByLabel('Last name', { exact: true }).fill(original.lastName);
   await page.getByRole('textbox', { name: /^Social Security number/ }).fill(original.ssn);
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await page.getByRole('button', { name: /review w-2 and sample suggestions/i }).click();
-  await page.getByRole('button', { name: /insert sample values/i }).click();
-  await expect(page.getByRole('button', { name: /confirm all \d+ highlighted sample values/i })).toBeVisible();
-  await page.getByRole('button', { name: /confirm all \d+ highlighted sample values/i }).click();
-  await fillRequiredW2Facts(page);
+  await page.getByRole('button', { name: /review uploaded w-2 suggestions/i }).click();
+  await page.getByRole('button', { name: /insert detected values/i }).click();
+  await expect(page.getByRole('button', { name: /confirm all \d+ highlighted document-detected values/i })).toBeVisible();
+  await page.getByRole('button', { name: /confirm all \d+ highlighted document-detected values/i }).click();
+  await fillRequiredW2Facts(page, 'single');
   const wage = page.getByRole('textbox', { name: /^Box 1 — Wages, tips, other comp/ });
-  expect((await wage.inputValue()).replace(/,/g, '')).toBe(original.wages);
+  expect((await wage.inputValue()).replace(/,/g, '')).toBe(`${original.wages}.00`);
   await page.screenshot({ path: testInfo.outputPath('confirmed-w2.png') });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   // Use only visible sequential controls, including the actual empty-payments skip prompt.

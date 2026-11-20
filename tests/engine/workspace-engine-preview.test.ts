@@ -727,7 +727,7 @@ describe("workspace engine preview", () => {
     });
   });
 
-  it("builds a deterministic wage preview from confirmed W-2 fixture facts", () => {
+  it("builds a deterministic wage preview from explicit confirmed W-2 source facts", () => {
     const documents = [
       createDocument({
         id: "doc-w2",
@@ -738,6 +738,7 @@ describe("workspace engine preview", () => {
         seededFactIds: ["wages", "withholding"]
       })
     ];
+    documents[0].detectedFacts = [{"idSuffix": "explicit-wages", "factId": "wages", "label": "Wages", "value": "Explicit fictional W-2 source amounts", "confidence": "high", "machineValue": {"entryKind": "w2-summary", "stateTaxReporting": "none", "employerName": "Explicit fictional employer", "employerEin": "12-3456789", "wages": "52000", "socialSecurityWages": "52000", "socialSecurityTips": "0", "box10DependentCareBenefits": "0", "socialSecurityWithheld": "3224", "medicareWages": "52000", "medicareWithheld": "754", "federalWithheld": "5000"}}, {"idSuffix": "explicit-withholding", "factId": "withholding", "label": "Federal withholding", "value": "Explicit fictional W-2 withholding", "confidence": "high"}];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
       createSeededReturn({
@@ -837,11 +838,11 @@ describe("workspace engine preview", () => {
         value: "52000",
         formula: "Sum of all W-2 Box 1",
         sourceFactIds: [
+          "wages:doc-w2:explicit-wages",
           "wages:document-detected",
-          "wages:fixture-wages",
           "wages:interview-answer",
+          "withholding:doc-w2:explicit-withholding",
           "withholding:document-detected",
-          "withholding:fixture-withholding",
           "withholding:interview-answer"
         ]
       },
@@ -853,11 +854,11 @@ describe("workspace engine preview", () => {
         value: "4115",
         formula: expect.stringContaining("Line 22"),
         sourceFactIds: [
+          "wages:doc-w2:explicit-wages",
           "wages:document-detected",
-          "wages:fixture-wages",
           "wages:interview-answer",
+          "withholding:doc-w2:explicit-withholding",
           "withholding:document-detected",
-          "withholding:fixture-withholding",
           "withholding:interview-answer"
         ]
       },
@@ -869,11 +870,11 @@ describe("workspace engine preview", () => {
         value: "5000",
         formula: "Withholding + estimated + EIC + ACTC + refundable credits",
         sourceFactIds: [
+          "wages:doc-w2:explicit-wages",
           "wages:document-detected",
-          "wages:fixture-wages",
           "wages:interview-answer",
+          "withholding:doc-w2:explicit-withholding",
           "withholding:document-detected",
-          "withholding:fixture-withholding",
           "withholding:interview-answer"
         ]
       },
@@ -885,11 +886,11 @@ describe("workspace engine preview", () => {
         value: "885",
         formula: "max(0, total payments - total tax)",
         sourceFactIds: [
+          "wages:doc-w2:explicit-wages",
           "wages:document-detected",
-          "wages:fixture-wages",
           "wages:interview-answer",
+          "withholding:doc-w2:explicit-withholding",
           "withholding:document-detected",
-          "withholding:fixture-withholding",
           "withholding:interview-answer"
         ]
       }
@@ -907,6 +908,7 @@ describe("workspace engine preview", () => {
         seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"]
       })
     ];
+    documents[0].detectedFacts = [{"idSuffix": "explicit-nec", "factId": "nonemployee-compensation", "label": "Actual NEC", "value": "Explicit fictional NEC source", "confidence": "high", "machineValue": {"entryKind": "1099-nec-summary", "payer": "Explicit fictional client", "nonemployeeCompensation": "18000", "federalWithheld": "0"}}];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
       createSeededReturn({

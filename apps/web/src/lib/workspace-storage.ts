@@ -1146,14 +1146,22 @@ function matchFixture(fileName: string): FixtureMatch | null {
   return officialFixtureCatalog.find((entry) => entry.aliases.some((alias) => tokensContainAlias(nameTokens, alias))) ?? null;
 }
 
+function hasWageOrNecOriginal(file: UploadableFile, fixture: FixtureMatch | null): boolean {
+  return Boolean(file.detectedDocument && (
+    file.detectedDocument.kind === "w2" || file.detectedDocument.kind === "1099-nec"
+    || fixture?.kind === "w2" || fixture?.kind === "1099-nec"
+  ));
+}
+
 function getFutureYearSampleUploads(files: UploadableFile[]): FutureYearSampleUpload[] {
   return files.flatMap((file) => {
     const matched = matchFixture(file.name);
-    const training = file.detectedDocument?.kind === "training-scenario" ? file.detectedDocument : null;
+    const original = file.detectedDocument && (file.detectedDocument.kind === "training-scenario" || hasWageOrNecOriginal(file, matched)) ? file.detectedDocument : null;
+    if (original?.kind === "unknown") return [];
     // Actual cover metadata overrides a historical filename, including unknown.
-    const fixture = training ? {
-      id: matched?.id ?? "uploaded-training-guide", label: training.label,
-      kind: "training-scenario" as const, aliases: [], taxYearHint: training.taxYear ?? null,
+    const fixture = original ? {
+      id: matched?.id ?? (original.kind === "training-scenario" ? "uploaded-training-guide" : "uploaded-original"), label: original.label,
+      kind: original.kind, aliases: [], taxYearHint: original.taxYear ?? null,
     } : matched;
 
     if (!fixture || fixture.taxYearHint === null || fixture.taxYearHint <= latestEngineTargetYear) {
@@ -1188,7 +1196,9 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
   // Actual Marketplace metadata must not acquire a historical sample's year or
   // seeded facts merely because the original upload is named f1095a.pdf.
   // A real guide cover cannot become a taxpayer form through its filename.
-  const matchedFixture = (file.detectedDocument?.kind === "1095-a"
+  // Recognized W-2/NEC source facts also take precedence over sample aliases.
+  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture)
+    || (file.detectedDocument?.kind === "1095-a"
     && (filenameFixture?.kind !== "1095-a" || file.detectedDocument.taxYear == null
       || file.detectedDocument.taxYear !== filenameFixture.taxYearHint))
     || (file.detectedDocument?.kind === "training-scenario" && filenameFixture?.kind !== "training-scenario")

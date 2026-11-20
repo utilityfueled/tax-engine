@@ -1,9 +1,23 @@
 {
   "activeContinuation": {
+    "nov20WageAndNecFilenameFacts": {
+      "focusedUnitTestsPassed": 1307,
+      "actualBlankPdfCasesPassed": 3,
+      "actualAliasedTypedPdfsPassed": 2,
+      "guidedWorkspaceAndRecoveryBrowserCasesPassed": 63,
+      "browserNodeVersion": "26.13.1",
+      "firstCombinedBrowserFailures": 4,
+      "stateReportingValidationPreserved": true,
+      "manifestSha256": "687da0456899f56956d4f611f6bccc1ca750d24b643ec05e181bf66820b19441",
+      "privateEvidence": ".local/upgrade-evidence/nov20-w2-nec-no-fabrication",
+      "browserEvidence": ".local/upgrade-evidence/nov20-w2-nec-current-candidate"
+    },
     "nov20OhioSharedDraftComparison": {
       "runtimeParent": "524b5f31",
       "focusedTestsPassed": 87,
       "managedMacBrowserCasesPassed": 14,
+      "pinnedNode26MacRecheckCasesPassed": 14,
+      "arm64Rehearsal": "https://github.com/utilityfueled/tax-engine/actions/runs/44754625685",
       "caseDeadlineMs": 30000,
       "runnerWorkerCap": 2,
       "retries": 0,

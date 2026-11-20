@@ -8866,3 +8866,23 @@ reciprocal wages, resident credit, and School District. The same 30-second
 deadline, two-worker cap, and zero retries apply. Strict Linux qualification
 remains open. The contract and receipts are listed under
 `activeContinuation.nov20OhioSharedDraftComparison`.
+
+## November 20 W-2 and Form 1099-NEC filename facts
+
+Real blank W-2 and 1099-NEC files previously acquired monetary defaults from
+their registry filenames. A filled W-2 or 1099-NEC could also lose its actual
+detected amounts under those names. The store now retains recognized source
+identity, supported amounts and printed year. Registered filenames can still
+supply a manual review prompt when the source is unreadable. Reopening saved
+returns drops the old synthesized entries. The spec-first failures, exact
+legacy reopen, three real blank files, two alias override probes, 1,307
+focused tests and types are recorded in the checkpoint.
+
+The original browser runs exposed sample-dependent assumptions. The relevant
+guided flows now upload a fictional W-2 with printed wages and withholding,
+retain its printed Texas state reporting and still require the same $885
+estimate. The workspace checks verify separate-source review for the IRS
+multi-copy NEC file and preserve all five protected-detail assertions. All
+63 guided, workspace and recovery cases passed on Node 26.13.1 with the
+existing limits. A separate rerun of the Ohio app revision passed all 14
+cases on the same pinned Node runtime.

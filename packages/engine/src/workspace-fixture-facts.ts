@@ -27,62 +27,6 @@ interface FixtureStructuredFactTemplate {
 // These values are explicit synthetic examples attached to blank IRS templates,
 // not facts extracted from a taxpayer's upload or IRS worked-example evidence.
 const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTemplate[]> = {
-  "irs-w2-2025": [
-    {
-      idSuffix: "fixture-wages",
-      factId: "wages",
-      label: "Wages",
-      value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
-      machineValue: {
-        entryKind: "w2-summary",
-        stateTaxReporting: "none",
-        employerName: "Official fixture employer",
-        employerEin: "12-3456789",
-        wages: "52000",
-        socialSecurityWages: "52000",
-        socialSecurityTips: "0",
-        box10DependentCareBenefits: "0",
-        socialSecurityWithheld: "3224",
-        medicareWages: "52000",
-        medicareWithheld: "754",
-        federalWithheld: "5000"
-      } satisfies WorkspaceStructuredFactMachineValueW2Summary
-    },
-    {
-      idSuffix: "fixture-withholding",
-      factId: "withholding",
-      label: "Federal withholding",
-      value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000."
-    }
-  ],
-  "irs-w2-2026": [
-    {
-      idSuffix: "fixture-wages",
-      factId: "wages",
-      label: "Wages",
-      value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
-      machineValue: {
-        entryKind: "w2-summary",
-        stateTaxReporting: "none",
-        employerName: "Official fixture employer",
-        employerEin: "12-3456789",
-        wages: "52000",
-        socialSecurityWages: "52000",
-        socialSecurityTips: "0",
-        box10DependentCareBenefits: "0",
-        socialSecurityWithheld: "3224",
-        medicareWages: "52000",
-        medicareWithheld: "754",
-        federalWithheld: "5000"
-      } satisfies WorkspaceStructuredFactMachineValueW2Summary
-    },
-    {
-      idSuffix: "fixture-withholding",
-      factId: "withholding",
-      label: "Federal withholding",
-      value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000."
-    }
-  ],
   "irs-1099-int-2024": [
     {
       idSuffix: "fixture-interest-income",
@@ -224,26 +168,7 @@ const fixtureStructuredFactsByFixtureId: Record<string, FixtureStructuredFactTem
       } satisfies WorkspaceStructuredFactMachineValue1099SASummary
     }
   ],
-  "irs-1099-nec-2025": [
-    {
-      idSuffix: "fixture-nec-income",
-      factId: "nonemployee-compensation",
-      label: "1099-NEC income classification",
-      value: "Official fixture nonemployee compensation: box 1 nonemployee compensation $18,000 with no withholding.",
-      machineValue: {
-        entryKind: "1099-nec-summary",
-        payer: "Official fixture contract payer",
-        nonemployeeCompensation: "18000",
-        federalWithheld: "0"
-      } satisfies WorkspaceStructuredFactMachineValue1099NecSummary
-    },
-    {
-      idSuffix: "fixture-schedule-c-expense-review",
-      factId: "schedule-c-expense-review",
-      label: "Schedule C expense review",
-      value: "Official fixture Schedule C review: no business expenses or home office deduction are provided in the seeded fixture."
-    }
-  ]
+
 };
 
 export function buildFixtureStructuredFacts(

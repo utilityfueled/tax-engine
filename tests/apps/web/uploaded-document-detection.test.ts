@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { buildWorkspaceEngineInput } from "@tax-engine/engine";
+import { workspaceTaxpayerFixture } from "../../helpers/workspace-taxpayer";
+import { workspaceScenarioContext } from "../../helpers/workspace-calculation-context";
 import {
   parseUploadedDocumentText,
   parseUploadedW2Text,
 } from "../../../apps/web/src/lib/uploaded-document-detection";
-import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
+import { createWorkspaceRecord, ingestFilesIntoWorkspace, saveWorkspaceSnapshot, getWorkspace, WORKSPACE_STORAGE_KEY, getFutureYearSampleUploadMessage, answerWorkspaceInterviewQuestion } from "../../../apps/web/src/lib/workspace-storage";
 
 const sampleW2Text = `
 2025 W-2 and EARNINGS SUMMARY
@@ -308,4 +311,58 @@ Total: 0.40 0.70 -0.30
       detectedFacts: [],
     });
   });
+});
+
+// Spec: spec/federal/workspace-guided-year.yaml#wage-nec-sample-facts.
+it("keeps W-2 and NEC aliases manual without monetary templates on upload and persisted reopen", () => {
+  for (const name of ["fw2--2025.pdf", "fw2--2026.pdf", "f1099nec.pdf"]) {
+    const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord("manual-sample"), [{name, size: 10}]);
+    expect(workspace.seededReturn.interviewQuestions.length).toBeGreaterThan(0);
+    expect(workspace.structuredFacts.filter(fact => fact.machineValue)).toEqual([]);
+    expect(workspace.enginePreview).toBeNull();
+    let answered = workspace;
+    for (const question of workspace.seededReturn.interviewQuestions) {
+      answered = answerWorkspaceInterviewQuestion(answered, question.id, "The original source needs manual review.");
+    }
+    expect(answered.structuredFacts.filter(fact => fact.machineValue)).toEqual([]);
+    expect(answered.enginePreview).toBeNull();
+    const values = new Map<string, string>();
+    const storage = {getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => {values.set(key, value);}, removeItem: (key: string) => {values.delete(key);}};
+    const stale = {...answered, structuredFacts: [...answered.structuredFacts, {id:"old-demo-money",factId:workspace.seededReturn.facts[0].id,label:"Old demo",kind:"fixture-derived",sourceType:"official-fixture",confidence:"high",value:"Old demo money",sourceDocumentIds:[workspace.documents[0].id],questionId:null,updatedAt:workspace.updatedAt,machineValue:name.startsWith("fw2") ? {entryKind:"w2-summary",employerName:"Old demo employer",employerEin:"12-3456789",wages:"52000",federalWithheld:"5000"} : {entryKind:"1099-nec-summary",payer:"Old demo payer",nonemployeeCompensation:"18000",federalWithheld:"0"}}]};
+    storage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify({workspaces:{[workspace.id]:stale}}));
+    expect(JSON.parse(storage.getItem(WORKSPACE_STORAGE_KEY)!).workspaces[workspace.id].structuredFacts.some((fact: {machineValue?: unknown}) => fact.machineValue)).toBe(true);
+    const reopened = getWorkspace(storage, workspace.id)!;
+    expect(reopened.structuredFacts.filter(fact => fact.machineValue)).toEqual([]);
+    expect(reopened.seededReturn.interviewQuestions).toEqual(answered.seededReturn.interviewQuestions);
+    saveWorkspaceSnapshot(storage, reopened);
+    expect(JSON.parse(storage.getItem(WORKSPACE_STORAGE_KEY)!).workspaces[workspace.id].structuredFacts.some((fact: {machineValue?: unknown}) => fact.machineValue)).toBe(false);
+  }
+});
+
+// Spec: spec/federal/workspace-guided-year.yaml#wage-nec-original-precedence.
+it("preserves actual W-2 and NEC original facts over registered basenames", () => {
+  const supportedOriginal = parseUploadedDocumentText(sampleW2Text.replace("10 Dependent care benefits", "7 Social security tips\n0.00\n10 Dependent care benefits"), "fw2--2025.pdf")!;
+  expect(supportedOriginal.coverage).toBe("supported");
+  let actual = ingestFilesIntoWorkspace(createWorkspaceRecord("supported-original"), [{name:"fw2--2025.pdf",size:12,detectedDocument:supportedOriginal}]);
+  for (const question of actual.seededReturn.interviewQuestions) actual = answerWorkspaceInterviewQuestion(actual, question.id, "Actual original values confirmed separately.");
+  const taxpayer = workspaceTaxpayerFixture();
+  const context = workspaceScenarioContext(actual.structuredFacts, taxpayer);
+  expect(buildWorkspaceEngineInput(actual.documents, actual.returnSummary, actual.structuredFacts, taxpayer)).toBeNull();
+  expect(buildWorkspaceEngineInput(actual.documents, actual.returnSummary, actual.structuredFacts, taxpayer, context)).not.toBeNull();
+  const changed = structuredClone(actual.structuredFacts);
+  const wage = changed.find(fact => fact.machineValue?.entryKind === "w2-summary")!;
+  if (wage.machineValue?.entryKind !== "w2-summary") throw new Error("Missing actual wage source");
+  wage.machineValue.wages = "107175.29";
+  expect(buildWorkspaceEngineInput(actual.documents, actual.returnSummary, changed, taxpayer, context)).toBeNull();
+  const nec = "2025 Form 1099-NEC\nPayer's name: Fictional Client\n1 Nonemployee compensation\n3210.00\n4 Federal income tax withheld\n12.00";
+  for (const [name, text] of [["fw2--2025.pdf", sampleW2Text.replace("10 Dependent care benefits", "7 Social security tips\n0.00\n10 Dependent care benefits")], ["fw2--2025.pdf", sampleW2Text], ["f1099nec.pdf", nec], ["fw2--2026.pdf", sampleW2Text], ["f1099nec.pdf", sampleW2Text], ["fw2--2025.pdf", nec], ["fw2--2025.pdf", sampleW2Text.replaceAll("2025", "2026")], ["f1099nec.pdf", nec + "\nTax year 2026"], ["f1099nec.pdf", nec.replace("2025 ", "")]]) {
+    const detectedDocument = parseUploadedDocumentText(text, name)!;
+    expect(detectedDocument).not.toBeNull();
+    const file = {name, size: text.length, detectedDocument};
+    const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord("actual-original"), [file]);
+    expect(workspace.documents[0]).toMatchObject({kind:detectedDocument.kind,taxYear:detectedDocument.taxYear ?? null,coverage:detectedDocument.coverage,matchedFixtureId:null,detectedFacts:detectedDocument.detectedFacts});
+    expect(workspace.structuredFacts.filter(fact => fact.machineValue).map(fact => fact.machineValue)).toEqual(detectedDocument.detectedFacts.filter(fact => fact.machineValue).map(fact => fact.machineValue));
+    expect(workspace.enginePreview).toBeNull();
+    expect(getFutureYearSampleUploadMessage([file]) !== null).toBe((detectedDocument.taxYear ?? 0) > 2025);
+  }
 });

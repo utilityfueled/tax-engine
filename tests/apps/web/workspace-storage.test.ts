@@ -13,6 +13,7 @@ import {
   listWorkspaces,
   reopenInterviewQuestion,
   removeDocument,
+  saveWorkspaceSnapshot,
   refreshWorkspaceEnginePreview
 } from "../../../apps/web/src/lib/workspace-storage";
 
@@ -1452,7 +1453,9 @@ describe("workspace storage", () => {
     const storage = createMemoryStorage();
     const workspaceId = "supported-w2-ready";
 
-    ingestFiles(storage, workspaceId, [{ name: "fw2--2025.pdf", size: 10 }]);
+    const sourceWorkspace = ingestFiles(storage, workspaceId, [{ name: "fw2--2025.pdf", size: 10 }]);
+    sourceWorkspace.documents[0].detectedFacts = [{"idSuffix": "explicit-wages", "factId": "wages", "label": "Wages", "value": "Explicit fictional W-2 source amounts", "confidence": "high", "machineValue": {"entryKind": "w2-summary", "stateTaxReporting": "none", "employerName": "Explicit fictional employer", "employerEin": "12-3456789", "wages": "52000", "socialSecurityWages": "52000", "socialSecurityTips": "0", "box10DependentCareBenefits": "0", "socialSecurityWithheld": "3224", "medicareWages": "52000", "medicareWithheld": "754", "federalWithheld": "5000"}}, {"idSuffix": "explicit-withholding", "factId": "withholding", "label": "Federal withholding", "value": "Explicit fictional W-2 withholding", "confidence": "high"}];
+    saveWorkspaceSnapshot(storage, sourceWorkspace);
     answerInterviewQuestion(
       storage,
       workspaceId,
@@ -1514,10 +1517,10 @@ describe("workspace storage", () => {
           value: "52000",
           sourceFactIds: [
             "wages:document-detected",
-            "wages:fixture-wages",
+            "wages:irs-w2-2025:fw2--2025.pdf:10:explicit-wages",
             "wages:interview-answer",
             "withholding:document-detected",
-            "withholding:fixture-withholding",
+            "withholding:irs-w2-2025:fw2--2025.pdf:10:explicit-withholding",
             "withholding:interview-answer"
           ]
         }),
@@ -1526,10 +1529,10 @@ describe("workspace storage", () => {
           value: "5000",
           sourceFactIds: [
             "wages:document-detected",
-            "wages:fixture-wages",
+            "wages:irs-w2-2025:fw2--2025.pdf:10:explicit-wages",
             "wages:interview-answer",
             "withholding:document-detected",
-            "withholding:fixture-withholding",
+            "withholding:irs-w2-2025:fw2--2025.pdf:10:explicit-withholding",
             "withholding:interview-answer"
           ]
         }),
@@ -1538,10 +1541,10 @@ describe("workspace storage", () => {
           value: "885",
           sourceFactIds: [
             "wages:document-detected",
-            "wages:fixture-wages",
+            "wages:irs-w2-2025:fw2--2025.pdf:10:explicit-wages",
             "wages:interview-answer",
             "withholding:document-detected",
-            "withholding:fixture-withholding",
+            "withholding:irs-w2-2025:fw2--2025.pdf:10:explicit-withholding",
             "withholding:interview-answer"
           ]
         })
@@ -2098,31 +2101,7 @@ describe("workspace storage", () => {
         questionId: null,
         updatedAt: expect.any(String)
       },
-      {
-        id: "wages:fixture-wages",
-        factId: "wages",
-        label: "Wages",
-        kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
-        questionId: null,
-        updatedAt: expect.any(String),
-        machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "none",
-          employerName: "Official fixture employer",
-          employerEin: "12-3456789",
-          wages: "52000",
-          socialSecurityWages: "52000",
-          socialSecurityTips: "0",
-          box10DependentCareBenefits: "0",
-          socialSecurityWithheld: "3224",
-          medicareWages: "52000",
-          medicareWithheld: "754",
-          federalWithheld: "5000"
-        }
-      },
+
       {
         id: "wages:interview-answer",
         factId: "wages",
@@ -2147,18 +2126,7 @@ describe("workspace storage", () => {
         questionId: null,
         updatedAt: expect.any(String)
       },
-      {
-        id: "withholding:fixture-withholding",
-        factId: "withholding",
-        label: "Federal withholding",
-        kind: "fixture-derived",
-        value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
-        questionId: null,
-        updatedAt: expect.any(String)
-      },
+
       {
         id: "taxable-interest:document-detected",
         factId: "taxable-interest",
@@ -2270,31 +2238,7 @@ describe("workspace storage", () => {
         questionId: null,
         updatedAt: expect.any(String)
       },
-      {
-        id: "wages:fixture-wages",
-        factId: "wages",
-        label: "Wages",
-        kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
-        questionId: null,
-        updatedAt: expect.any(String),
-        machineValue: {
-          entryKind: "w2-summary", stateTaxReporting: "none",
-          employerName: "Official fixture employer",
-          employerEin: "12-3456789",
-          wages: "52000",
-          socialSecurityWages: "52000",
-          socialSecurityTips: "0",
-          box10DependentCareBenefits: "0",
-          socialSecurityWithheld: "3224",
-          medicareWages: "52000",
-          medicareWithheld: "754",
-          federalWithheld: "5000"
-        }
-      },
+
       {
         id: "withholding:document-detected",
         factId: "withholding",
@@ -2307,18 +2251,7 @@ describe("workspace storage", () => {
         questionId: null,
         updatedAt: expect.any(String)
       },
-      {
-        id: "withholding:fixture-withholding",
-        factId: "withholding",
-        label: "Federal withholding",
-        kind: "fixture-derived",
-        value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["irs-w2-2026:fw2--2026.pdf:10"],
-        questionId: null,
-        updatedAt: expect.any(String)
-      },
+
       {
         id: "taxable-interest:document-detected",
         factId: "taxable-interest",

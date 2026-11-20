@@ -3,6 +3,7 @@ import { copyFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
+import { createFilledW2Upload } from "./helpers/filled-w2-upload";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const sampleDocsDir = path.resolve(testDir, "../../../sample-documents/downloads");
@@ -435,7 +436,7 @@ test.describe("Guided interview flow", () => {
     await fileChooser.setFiles(w2Path);
 
     await expect(page.getByText(futureYearSampleMessage)).toBeVisible();
-    await expect(page.getByRole("button", { name: /insert sample values/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /insert (?:sample|detected) values/i })).toHaveCount(0);
     await expect(page.getByText(/1 docs stored locally\./i)).toHaveCount(0);
   });
 
@@ -446,16 +447,16 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("button", { name: /skip this section/i }).click();
     await expect(page.getByText(/w-2 #1/i)).toBeVisible();
 
-    await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
+    await page.locator('input[type="file"]').setInputFiles(await createFilledW2Upload());
 
-    await expect(page.getByRole("button", { name: /insert sample values/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /insert detected values/i })).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(
       page.getByText(/detected w-2 values are ready to review before this section will count toward your return/i)
     ).toBeVisible();
     await expect(
-      page.getByText(/2025 form w-2 already has detected values on this return\./i)
+      page.getByText(/fictional payroll employer w-2 already has detected values on this return\./i)
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /review detected w-2 values/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /skip this section/i })).toBeVisible();
@@ -677,8 +678,8 @@ test.describe("Guided interview flow", () => {
     await completeSegmentation(page);
     await page.getByRole("button", { name: /switch to advanced mode/i }).click();
 
-    await page.locator('input[type="file"]').setInputFiles(path.join(sampleDocsDir, "irs-w2-2025.pdf"));
-    await expect(page.getByText(/1 irs sample document loaded/i)).toBeVisible();
+    await page.locator('input[type="file"]').setInputFiles(await createFilledW2Upload());
+    await expect(page.getByRole("listitem").filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
 
     await page.getByRole("button", { name: /get step-by-step help/i }).click();
     await fillRequiredTaxpayerFacts(page);
@@ -691,10 +692,10 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("textbox", { name: /^zip$/i }).fill("78701");
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await page.getByRole("button", { name: /review w-2 and sample suggestions/i }).click();
-    await page.getByRole("button", { name: /insert sample values/i }).click();
-    await page.getByRole("button", { name: /confirm all \d+ highlighted sample values/i }).click();
-    await fillRequiredW2Facts(page);
+    await page.getByRole("button", { name: /review uploaded w-2 suggestions/i }).click();
+    await page.getByRole("button", { name: /insert detected values/i }).click();
+    await page.getByRole("button", { name: /confirm all \d+ highlighted document-detected values/i }).click();
+    await fillRequiredW2Facts(page, "single");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();

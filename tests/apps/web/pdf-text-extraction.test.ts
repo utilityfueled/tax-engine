@@ -54,6 +54,35 @@ describe("PDF.js 6 text extraction with synthetic documents", () => {
     const ambiguous = ingestFilesIntoWorkspace(createWorkspaceRecord("unknown-filename"), [{name: "f1095a.pdf", size: 23}]);
     expect(ambiguous.documents[0]).toMatchObject({taxYear: null, kind: "unknown", matchedFixtureId: null, seededFactIds: [], detectedFacts: []});
   });
+  // Spec: spec/federal/workspace-guided-year.yaml#wage-nec-pdf-upload.
+  it("retains actual W-2 and NEC PDF text amounts without filename demo substitution", async () => {
+    for (const kind of ["w2", "1099-nec"] as const) {
+      for (const state of ["blank", "filled", "conflicting"] as const) {
+        const pdf = await PDFDocument.create();
+        const font = await pdf.embedFont(StandardFonts.Helvetica);
+        const page = pdf.addPage();
+        const lines = kind === "w2" ? ["2026 Form W-2", "1 Wages, tips, other comp.", ...(state === "blank" ? [] : ["12345.67"]), "2 Federal income tax withheld", ...(state === "blank" ? [] : ["890.12"])] : ["2026 Form 1099-NEC", "1 Nonemployee compensation", ...(state === "blank" ? [] : ["3210.00"]), "4 Federal income tax withheld", ...(state === "blank" ? [] : ["12.00"])];
+        if (state === "conflicting") lines.push("Tax year 2025");
+        lines.forEach((text, index) => page.drawText(text, {x: 40, y: 780-index*20, size: 10, font}));
+        const name = kind === "w2" ? "fw2--2025.pdf" : "f1099nec.pdf";
+        const prepared = await prepareUploadableFiles([new File([new Uint8Array(await pdf.save())], name, {type:"application/pdf"})]);
+        const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord(`pdf-${kind}-${state}`), prepared);
+        const money = workspace.structuredFacts.filter(fact => fact.machineValue).map(fact => fact.machineValue);
+        expect(workspace.enginePreview).toBeNull();
+        if (state === "blank") {
+          expect(money).toEqual([]);
+          expect(workspace.seededReturn.interviewQuestions.length).toBeGreaterThan(0);
+        } else {
+          expect(workspace.documents[0]).toMatchObject({kind, matchedFixtureId:null, taxYear:state === "conflicting" ? null : 2026});
+          expect(money).toEqual([expect.objectContaining(kind === "w2" ? {entryKind:"w2-summary",wages:"12345.67",federalWithheld:"890.12"} : {entryKind:"1099-nec-summary",nonemployeeCompensation:"3210.00",federalWithheld:"12.00"})]);
+        }
+      }
+    }
+    const unreadable = await prepareUploadableFiles([new File(["not a PDF"], "f1099nec.pdf", {type:"application/pdf"})]);
+    const fallback = ingestFilesIntoWorkspace(createWorkspaceRecord("unreadable"), unreadable);
+    expect(fallback.seededReturn.interviewQuestions.length).toBeGreaterThan(0);
+    expect(fallback.structuredFacts.filter(fact => fact.machineValue)).toEqual([]);
+  });
   it("preserves monetary/date text and page order without a provider", async () => {
     const file = new File([await syntheticDocument()], "synthetic.pdf", { type: "application/pdf" });
     const text = await extractPdfTextFromFile(file);

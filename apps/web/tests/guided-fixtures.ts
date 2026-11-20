@@ -44,7 +44,7 @@ export const taxpayerFacts2025 = {
 } as const;
 
 /** Complete the deliberately synthetic payroll-exempt job used by UI scenarios. */
-export async function fillRequiredW2Facts(page: Page) {
+export async function fillRequiredW2Facts(page: Page, stateReporting: "none" | "single" = "none") {
   const employer = page.getByRole("textbox", { name: /^Employer name\b/ });
   if (!(await employer.inputValue())) await employer.fill("Synthetic Employer");
   const ein = page.getByRole("textbox", { name: /^Employer EIN \(Box b\)/ });
@@ -56,5 +56,5 @@ export async function fillRequiredW2Facts(page: Page) {
     const field = page.getByRole("textbox", { name: new RegExp(`^${label}`) });
     if (!(await field.inputValue())) await field.fill("0");
   }
-  await page.getByRole("combobox", { name: /^State reporting on this W-2/ }).selectOption("none");
+  await page.getByRole("combobox", { name: /^State reporting on this W-2/ }).selectOption(stateReporting);
 }

@@ -94,32 +94,7 @@ describe("workspace structured facts", () => {
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"
       },
-      {
-        id: "wages:fixture-wages",
-        factId: "wages",
-        label: "Wages",
-        kind: "fixture-derived",
-        value: "Official fixture wages: Form W-2 box 1 wages $52,000, box 2 federal withholding $5,000, and boxes 3 and 5 payroll wages $52,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["doc-1"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z",
-        machineValue: {
-          entryKind: "w2-summary",
-          employerName: "Official fixture employer",
-          employerEin: "12-3456789",
-          wages: "52000",
-          socialSecurityWages: "52000",
-          socialSecurityTips: "0",
-          box10DependentCareBenefits: "0",
-          socialSecurityWithheld: "3224",
-          medicareWages: "52000",
-          medicareWithheld: "754",
-          stateTaxReporting: "none",
-          federalWithheld: "5000"
-        }
-      },
+
       {
         id: "wages:interview-answer",
         factId: "wages",
@@ -140,18 +115,6 @@ describe("workspace structured facts", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["doc-1"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z"
-      },
-      {
-        id: "withholding:fixture-withholding",
-        factId: "withholding",
-        label: "Federal withholding",
-        kind: "fixture-derived",
-        value: "Official fixture withholding: Form W-2 box 2 federal income tax withheld $5,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
         sourceDocumentIds: ["doc-1"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"
@@ -562,7 +525,7 @@ describe("workspace structured facts", () => {
     ]);
   });
 
-  it("adds fixture-derived 1099-NEC income facts for supported simple Schedule C fixtures", () => {
+  it("keeps NEC sample review facts without synthetic compensation or expense conclusions", () => {
     const structuredFacts = buildWorkspaceStructuredFacts(
       [createDocument({
         id: "doc-1099nec",
@@ -613,24 +576,7 @@ describe("workspace structured facts", () => {
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"
       },
-      {
-        id: "nonemployee-compensation:fixture-nec-income",
-        factId: "nonemployee-compensation",
-        label: "1099-NEC income classification",
-        kind: "fixture-derived",
-        value: "Official fixture nonemployee compensation: box 1 nonemployee compensation $18,000 with no withholding.",
-        sourceType: "official-fixture",
-        confidence: "high",
-        sourceDocumentIds: ["doc-1099nec"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z",
-        machineValue: {
-          entryKind: "1099-nec-summary",
-          payer: "Official fixture contract payer",
-          nonemployeeCompensation: "18000",
-          federalWithheld: "0"
-        }
-      },
+
       {
         id: "schedule-c-expense-review:document-detected",
         factId: "schedule-c-expense-review",
@@ -639,18 +585,6 @@ describe("workspace structured facts", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["doc-1099nec"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z"
-      },
-      {
-        id: "schedule-c-expense-review:fixture-schedule-c-expense-review",
-        factId: "schedule-c-expense-review",
-        label: "Schedule C expense review",
-        kind: "fixture-derived",
-        value: "Official fixture Schedule C review: no business expenses or home office deduction are provided in the seeded fixture.",
-        sourceType: "official-fixture",
-        confidence: "high",
         sourceDocumentIds: ["doc-1099nec"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"
