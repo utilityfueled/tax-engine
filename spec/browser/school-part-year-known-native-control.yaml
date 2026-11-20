@@ -3,8 +3,9 @@ taxYear: 2025
 status: "verification-contract"
 reference: "Existing actual component field definitions and synthetic two-case official-review fixtures; no tax calculation change"
 notes: |
-  Test protocol only. Limit known-kind entry to initial enterSchool in the existing
-  two part-year school fixtures. All source values, 137 scalar actions, 11 row adds,
+  Test protocol only. Use known-kind entry for initial enterSchool and the
+  three later school source edits in the existing two part-year school fixtures.
+  All source values, 137 initial scalar actions, 11 row adds,
   98 fill/Tab pairs, 39 select actions, independent exact label counts, confirmation,
   privacy, save/reopen, geometry, PDF and filing denial checks remain intact.
   No application performance claim follows from static DOM protocol measurements.
@@ -21,3 +22,7 @@ lines:
     description: "Count the current exact label-text locator directly"
     formula: "Count exactly one result of label.getByText(label, exact:true) directly, without re-querying its parent for the same text. Keep the identical fresh parent input,select locator and strict fill then Tab or selectOption actions. Missing/duplicate labels and missing/duplicate/wrong-kind controls must still reject before any later action. All current component label/control inventories and workflow action orders remain unchanged."
     testRef: "tests/apps/web/school-part-year-native-kind.test.tsx::counts exact labels without re-querying parent text"
+  - line: "school-source-edits"
+    description: "Use the rendered fixture kinds for account and payroll edits"
+    formula: "Use the existing fixture input kind for School account reference and Part-year payroll 1 gross wages. Keep the account reference edit and the blank and restored gross wage edits at their original checkpoints. Each edit retains one exact label count and fresh fill followed by Tab, with no native tag snapshot."
+    testRef: "tests/apps/web/school-part-year-native-kind.test.tsx::uses fixture kinds for later school source edits"

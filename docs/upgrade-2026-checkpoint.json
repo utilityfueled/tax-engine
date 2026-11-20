@@ -1,5 +1,16 @@
 {
   "activeContinuation": {
+    "nov20OhioSchoolMutationControls": {
+      "runtimeRevision": "c3d87e32",
+      "focusedAuditAndControlTestsPassed": 37,
+      "strictLocalSchoolCasesPassed": 4,
+      "nativeMutationsPreserved": 3,
+      "protocolTagQueriesRemovedPerCase": 3,
+      "caseDeadlineMs": 30000,
+      "runnerWorkerCap": 2,
+      "retries": 0,
+      "privateEvidence": ".local/upgrade-evidence/nov20-school-mutation-controls"
+    },
     "nov20NecPrintedSourceIdentity": {
       "focusedTestsPassed": 63,
       "actualWholeIrsFormsPassed": 2,
@@ -36,6 +47,12 @@
       "correctedReceipt": ".local/upgrade-evidence/nov20-1095a-chromium-corrected.hstNYqCC/receipt.json"
     },
     "nov20Form1095ASourceMetadata": {
+      "applicationCommit": "c3d87e32",
+      "exactUnitTestsPassed": 29559,
+      "exactCoverageTestsPassed": 29559,
+      "exactBranchCoveragePercent": "88.37",
+      "exactLocalManagedBrowserPassed": 650,
+      "exactLocalManagedBrowserOriginalSkips": 5,
       "officialNormalUploadVariantsPassed": 14,
       "focusedReferenceAndApplicationTestsPassed": 1047,
       "focusedEngineTestsPassed": 96,

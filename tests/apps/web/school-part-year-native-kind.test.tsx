@@ -10,7 +10,7 @@ function harness(count=1,tag='INPUT',labels=1){const calls:string[]=[],reads:str
  const pw=Object.assign((_actual:unknown)=>({async toHaveCount(n:number){reads.push('label');if(labels!==n)throw Error('label count');}}),{poll(fn:()=>Promise<unknown>){return{async toBe(value:unknown){if(await fn()!==value)throw Error('snapshot count');}};}});
  const tagfn=load(fs.readFileSync(path.join(R,'apps/web/tests/helpers/native-control-snapshot.ts'),'utf8'),pw).nativeControlTag;
  const fn=load(fs.readFileSync(path.join(R,'apps/web/tests/helpers/known-native-control.ts'),'utf8'),pw,tagfn).enterKnownNativeControl as(page:unknown,label:string,value:string,kind:string)=>Promise<void>;
- return{fn,page,calls,reads};}
+ return{fn,page,calls,reads,field,pw,tagfn};}
 it('requires known kind before labels or native actions',async()=>{const h=harness();await expect(h.fn(h.page,'Actual','x','unknown')).rejects.toThrow();expect(h.calls).toEqual([]);expect(h.reads).toEqual([]);});
 it('rejects an expected native kind that disagrees with the actual current control',async()=>{for(const[tag,kind]of[['INPUT','select'],['SELECT','input']]){const h=harness(1,tag);await expect(h.fn(h.page,'Actual','x',kind)).rejects.toThrow();expect(h.calls).toEqual([]);}});
 it('counts exact labels without re-querying parent text',async()=>{
@@ -57,3 +57,19 @@ it.each([0,1]as const)('matches actual component definitions and all original ac
  await old({getByRole(_role:string,o:{name:string}){return{async click(){baselineButtons.push(o.name);}};}},packet);expect(actions).toEqual(baselineActions);expect(buttons).toEqual(baselineButtons);root.remove();
 });
 it('rejects unknown fixture labels rather than inferring a kind',()=>{for(const label of['','unknown','__proto__','constructor','School account reference '])expect(()=>schoolPartYearNativeKind(label)).toThrow('Unknown');});
+
+it('uses fixture kinds for later school source edits',async()=>{
+ const source=fs.readFileSync(path.join(R,'apps/web/tests/oh-school-district-part-year-native.spec.ts'),'utf8');
+ const start=source.indexOf('async function enter(');
+ const body=source.slice(start,source.indexOf('\nasync function ',start+1));
+ const js=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+ const h=harness();
+ const enter=Function('enterKnownNativeControl','schoolPartYearNativeKind','control','nativeControlTag','expect',js+';return enter;')(
+  h.fn,schoolPartYearNativeKind,()=>h.field,h.tagfn,h.pw,
+ ) as(page:unknown,label:string,value:string)=>Promise<void>;
+ await enter(h.page,'School account reference','updated reference');
+ await enter(h.page,'Part-year payroll 1 gross wages','');
+ await enter(h.page,'Part-year payroll 1 gross wages','40000');
+ expect(h.calls).toEqual(['fill:updated reference','press:Tab','fill:','press:Tab','fill:40000','press:Tab']);
+ expect(h.reads).toEqual(['label','label','label']);
+});

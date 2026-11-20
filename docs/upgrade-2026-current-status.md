@@ -8,6 +8,13 @@ amounts from the live view. The next normal save clears them from the stored
 record. The review prompt and any saved response are retained.
 [Marketplace evidence](upgrade-2026-progress.md#november-20-marketplace-filename-and-saved-workspaces).
 
+The exact `c3d87e32` managed macOS browser run passed 650 cases with five
+original skips. Its unit and coverage runs each passed 29,559 tests at
+88.37% branch coverage. A separate test-only Ohio School District change
+passed four local cases at the existing 30-second deadline. Strict Linux
+qualification remains open.
+[Ohio school evidence](upgrade-2026-progress.md#november-20-ohio-school-mutation-controls).
+
 The latest application revision with a verified protected Preview is
 `012e6ee1` on `main`. Exact unit and coverage runs each passed 29,556
 tests at 88.37% branch coverage. All six exact GitHub CI jobs, both builds,

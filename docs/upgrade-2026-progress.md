@@ -8830,3 +8830,21 @@ now stay unclassified and do not generate NEC or Schedule C prompts. All
 boxes. The real filled Copy B layout still leaves the flattened amount
 unparsed. The spec-first and independent findings remain in the checkpoint
 under `activeContinuation.nov20NecPrintedSourceIdentity`.
+
+## November 20 Ohio school mutation controls
+
+Three existing post-reopen edits to two fixture-proven native Ohio School
+District fields now use the helper that checks the exact accessible control
+count and keeps the element's actual fill and Tab behavior. The test no
+longer inspects the DOM tag for each of those known fields. All existing
+actions and result assertions remain. The test starts with the same two
+worker cap, no retries and a 30-second deadline.
+
+The spec-first controls, browser audit and two source-accounting checks passed
+37 tests across their runners. All four desktop/mobile cases passed in
+the production-build macOS Chromium runner. The separate full `c3d87e32`
+managed macOS run passed 650 cases with the five original skips. Exact unit
+and coverage runs each passed 29,559 at 88.37% branch coverage. Strict Linux
+qualification remains open. Evidence is recorded under
+`activeContinuation.nov20OhioSchoolMutationControls` and
+`nov20Form1095ASourceMetadata`.
