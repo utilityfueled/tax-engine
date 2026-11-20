@@ -1,5 +1,48 @@
 # 2026 upgrade implementation evidence
 
+## November 20 hosted education workspace across two Preview revisions
+
+The protected `cf43e9ea` and `074a4fa9` Previews shared one fictional 2026
+Form 1098-E workspace under the same synthetic account and separate sessions.
+The older Preview saved the pending answer metadata. The newer Preview
+reopened the exact stored row and revision, then saved the answered state.
+The older Preview reopened that updated row and revision. Reopened rows
+preserved the form year and interview status. The raw answer text and
+structured amount were absent from hosted storage, as required by the
+existing storage contract.
+
+All 12 live checks passed, including deleting the fixture by its current
+revision, rereading its absence in both Previews and signing out both sessions.
+The archived source and Preview metadata matched `074a4fa9`. One exact-code
+projection test and 24 offline rehearsal controls also passed. This rehearsal
+covers the hosted education workspace contract. Billing and the browser's
+full-fidelity local recovery require their own evidence.
+
+## November 20 incomplete Ohio guided validation
+
+`074a4fa9` reuses the federal input parsed earlier in the same render when
+validating current Ohio originals. Three part-year cases reproduced a second
+bridge call with pending residency, payment or school-district facts. They
+now each use one call, with identical navigation and preview outcomes. The
+incomplete federal-input control still reports the original validation result.
+An independent engineering review checked replay parity, retained facts and
+both diagnostic manifest hashes.
+
+On Node 26.13.1, 1,980 guided tests, 62 browser diagnostics and timing
+contracts, web typecheck and scoped lint passed. Exact local unit and coverage
+each passed 29,529 tests, with 88.36% branch coverage. Both builds passed.
+The first broad guided run needed the pinned PDF interpreter, and the first
+browser run could not bind loopback. With both prerequisites, six managed
+Chromium cases passed through the part-year business and school-district
+workflows, with two workers, zero retries, the original 30-second per-case
+limit and verified cleanup. The exact native ARM64 image smoke and Compose
+upgrade and recovery passed. Its strict browser suite was still running.
+Full Linux browser qualification remains open.
+[Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44713489925) ·
+[Exact browser run](https://github.com/utilityfueled/tax-engine/actions/runs/44713489750) ·
+[Passed Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44713489820) ·
+[Exact ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44714431758/job/136214074097).
+
 ## November 20 Form 8863 claimant and student SSN reconciliation
 
 `d8a9f108` holds a 2026 return when a known employment-valid SSN answer

@@ -1,5 +1,43 @@
 {
   "activeContinuation": {
+    "nov20HostedEducationCrossRevision": {
+      "previousAppCommit": "cf43e9ea",
+      "currentAppCommit": "074a4fa9",
+      "confirmedStage": "protected Preview with test billing configuration",
+      "fixture": "synthetic 2026 Form 1098-E interview metadata",
+      "exactProjectionTestPassed": true,
+      "offlineControlsPassed": 24,
+      "liveChecksPassed": 12,
+      "bothSessionsClosed": true,
+      "fixtureDeletedAndAbsentOnBoth": true,
+      "receiptSha256": "fa8ef906556b63861e34d40b2ab1d83ded018177d30bbe4792771efd286f5c55",
+      "evidence": "docs/upgrade-2026-progress.md#november-20-hosted-education-workspace-across-two-preview-revisions",
+      "privateEvidence": ".local/upgrade-evidence/nov20-preview-074a-education/cross-revision-actual.json"
+    },
+    "nov20OhioIncompleteGuidedValidation": {
+      "appCommit": "074a4fa9",
+      "duplicateCallRegressions": 3,
+      "incompleteFederalControlPassed": true,
+      "guidedTestsPassed": 1980,
+      "fullUnitTestsPassed": 29529,
+      "fullCoverageTestsPassed": 29529,
+      "branchCoveragePercent": 88.36,
+      "browserDiagnosticAndTimingTestsPassed": 62,
+      "managedOhioCasesPassed": 6,
+      "managedOriginalDeadlineMs": 30000,
+      "managedCleanupPassed": true,
+      "exactCiRun": 44713489925,
+      "exactDockerRun": 44713489820,
+      "exactDockerPassed": true,
+      "exactWebRun": 44713489750,
+      "exactArm64Run": 44714431758,
+      "exactArm64ImageSmokePassed": true,
+      "exactArm64ComposeRecoveryPassed": true,
+      "sourceArchiveSha256": "76e4da0c6bc4b7a0ff2c2265ac26096aaa713060eb0922fef42a238e193ddd3c",
+      "independentEngineeringReview": "Pass on scoped replay and artifact identity",
+      "evidence": "docs/upgrade-2026-progress.md#november-20-incomplete-ohio-guided-validation",
+      "privateBrowserEvidence": "apps/web/test-results/rate-window-1795167784983-19172"
+    },
     "nov20Form8863HouseholdSsn": {
       "appCommit": "d8a9f108",
       "reproducedClaimantConflicts": 4,

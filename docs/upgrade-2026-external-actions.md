@@ -11,6 +11,14 @@
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
 | Native ARM64 verification | Linux ARM64 on `0836c5fe` passed image smoke, Compose recovery and cleanup. The strict browser run passed 639 cases, preserved five planned skips and reached 11 original 30-second deadlines. Current-source strict qualification remains open. [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44691298960/job/136137481759). |
 
+The Form 8863 review also needs an independent worksheet for the joint-return
+case where the student spouse has a timely TIN and the other spouse has a
+timely employment-valid SSN. Record each spouse's eligibility and the credit
+lines, then review the conflicting claimant and student facts and the
+claimant age controls. The IRS product index currently lists a final 2026
+blank and draft 2026 instructions. [Education source and implementation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
+[Official revision status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-education-form-recheck).
+
 These inputs do not replace unfinished engineering. Final-source managed,
 hosted/native and scenario checks, remaining source-settled methods and later
 qualified AI execution continue under their existing boundaries. Routine bounded
