@@ -6,6 +6,9 @@ cover a fiscal period ending in the return year and remain eligible for
 the existing checks. The successor passed both full local runs with 29,514
 tests each, 88.35% branch coverage and 24 targeted Chromium cases. The
 generated inventory, all 9,670 spec references and three type checks passed.
+The exact GitHub CI and managed browser tests passed. The strict AMD64
+runtime passed recovery and archive import, with seven Ohio browser cases
+reaching the original deadline.
 [Schedule K-1 evidence](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals).
 Resume from `activeContinuation.nov20FutureScheduleK1Originals` in the
 [checkpoint](upgrade-2026-checkpoint.json) for the current commit, run IDs and

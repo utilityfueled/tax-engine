@@ -150,7 +150,14 @@
       "verification": {"focusedFederalPassed": 1624, "successorFocusedPassed": 97, "estateTrustFollowupPassed": 104, "affectedLintErrors": 0, "exactSpecReferences": 9670, "inventoryPassed": true, "typechecksPassed": 3, "engineBuildPassed": true, "webBuildPassed": true, "offlineModelArtifactCheckPassed": true, "verifiedAiPrivateRefusalPreserved": true},
       "managedBrowser": {"applicationSource": "0d4793abb97b41871dd970b810b30a48c6f784b1", "passed": 24, "failed": 0, "skipped": 0, "workers": 2, "retries": 0, "deadlineMs": 30000},
       "fullLocalChecks": {"source": "309b01a43cb2454f5f6dc5f51001169e97012d51", "unit": 29514, "coverageTests": 29514, "testFiles": 2157, "branchCoveragePercent": 88.35, "branchGatePercent": 85, "pypdf": "6.10.0", "postgres": "16.16", "databasesStopped": 2, "lintErrors": 0, "inheritedLintWarnings": 12111},
-      "githubApplicationRuns": {"CI": 44680826240, "Web": 44680826393, "cancelledDocker": 44680826224, "DockerPassed": 44681091819, "DockerSource": "a860d123c5c2e9d43dbe46aade964cf4e444bbcc"},
+      "githubApplicationRuns": {
+        "CI": 44680826240, "allSixCiJobsPassed": true, "unitPassed": 29514, "coveragePassed": 29514, "branchCoveragePercent": 88.35,
+        "Web": 44680826393, "managedJob": 136103531813, "managedPassed": 650, "strictJob": 136103532147, "strictPassed": 643, "strictDeadlineFailures": 7, "originalSkipsPerRun": 5,
+        "strictOhioDeadlineCohorts": {"partYearSchoolDistrict": 4, "residentCredit": 2, "partYearBusiness": 1},
+        "strictSmoke": true, "strictComposeRecovery": true, "strictArchiveImport": true, "strictRuntimeRemoved": true,
+        "managedWindowMinutes": 28.3, "strictWindowMinutes": 33.9, "strictWindowIncreasePercentRangeRounded": [12, 24], "managedRunnerImage": "20261111.196.1", "strictRunnerImage": "20261116.202.1",
+        "cancelledDocker": 44680826224, "DockerPassed": 44681091819, "DockerSource": "a860d123c5c2e9d43dbe46aade964cf4e444bbcc"
+      },
       "humanReviewCase": "docs/upgrade-2026-human-tax-review-packet.md#schedule-k-1-original-header-year",
       "evidence": ".local/upgrade-evidence/nov20-k1-source-year"
     },

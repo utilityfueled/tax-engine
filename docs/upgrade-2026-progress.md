@@ -39,6 +39,25 @@ The Docker build passed on the application-matched documentation successor.
 [Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44681091819).
 [Independent reviewer case](upgrade-2026-human-tax-review-packet.md#schedule-k-1-original-header-year).
 
+All six exact GitHub CI jobs passed. Unit and coverage each passed 29,514
+tests, with 88.35% branch coverage. Managed Chromium passed 650 cases and
+retained five planned hosted-only skips. The strict AMD64 run retained the
+same skips and passed 643 cases. Seven Ohio cases reached the original
+30-second deadline, including four part-year school-district cases,
+two resident-credit cases and one part-year business case. The strict
+image smoke, Compose upgrade and recovery, independent archive import and
+container removal passed.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44680826240) ·
+[Managed browser](https://github.com/utilityfueled/tax-engine/actions/runs/44680826393/job/136103531813) ·
+[Strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/44680826393/job/136103532147).
+
+The matched windows reported 28.3 minutes of managed test time and 33.9
+minutes of strict test time, excluding the pauses between windows. Every
+strict window took about 12% to 24% longer. Both jobs used pypdf 6.10.0
+and runner 2.338.2. The managed Ubuntu image was `20261111.196.1` and
+the strict image was `20261116.202.1`. The runtime and runner image both
+changed between these observations, so the timing cause remains open.
+
 ## November 19 applied federal overpayment credits
 
 `f231820a` validates a prior-return credit before Form 1040 computes payments.
