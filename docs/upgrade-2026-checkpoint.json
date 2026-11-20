@@ -1,5 +1,58 @@
 {
   "activeContinuation": {
+    "nov20Form8919BrowserAuditPin": {
+      "source": "2c689ee2",
+      "previousSourceMissingModulePin": "088c1377",
+      "exactBrowserAuditSourceFilesVerified": 2024,
+      "browserDiagnosticTestsPassed": 27,
+      "browserDeadlinesOrThresholdsChanged": false,
+      "strictArm64Workflow": 44835344779
+    },
+    "nov20Form8919AnnualWageBaseAudit": {
+      "source": "088c1377",
+      "official2025": "https://www.irs.gov/pub/irs-prior/f8919--2025.pdf",
+      "official2026": "https://www.irs.gov/pub/irs-prior/f8919--2026.pdf",
+      "focusedTestsPassed": 499,
+      "linkedSpecReferencesPassed": 8,
+      "browserDiagnosticTestsPassed": 27,
+      "calculationOrFilingGateChanged": false,
+      "publicTransferMapQualified": false
+    },
+    "nov20W2CopyBGuidedIntake": {
+      "source": "8ba14f4b",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/fw2.pdf",
+      "focusedTestsPassed": 67,
+      "browserDiagnosticTestsPassed": 27,
+      "linkedSpecReferencesPassed": 25,
+      "exactLocalUnitAndCoverageTestsPassedEach": 29648,
+      "exactLocalBranchCoveragePercent": "88.24",
+      "actualChromiumUploadAndReopenPassed": 5,
+      "independentEngineeringReviewPassed": true,
+      "calculationAndFilingGatesChanged": false,
+      "actualEvidence": ".local/upgrade-evidence/nov20-official-w2-copy-b/browser.jsonl"
+    },
+    "nov20LocalNativeCombinedAdmission": {
+      "source": "b948a284",
+      "offlineControlsPassed": 22,
+      "preflight": "Stopped before VM transition. One unrelated active container in the default rootless store. Before and after snapshots matched; no VM stop, boot, build, or recovery ran.",
+      "additionalCapacityConstraintGiB": 512,
+      "observedAvailableGiB": 446,
+      "qualifiesCurrentLocalArm64": false,
+      "actualEvidence": ".local/upgrade-evidence/nov20-native-b948-offline-preparation/actual/RESULT.json"
+    },
+    "nov20Form8919Candidate": {
+      "source": "14c3444d",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+      "archiveSource": "https://www.irs.gov/pub/irs-prior/f8919--2026.pdf",
+      "sha256": "b7bfa1eb7b4b1893acdcc6399103e8cc0388e4dd64c9522e586adccdba0b42dc",
+      "originalFocusedTestsPassed": 33,
+      "node26131FocusedTestsPassed": 9,
+      "focusedSpecReferencesPassed": 11,
+      "isolatedGeneratedInventoryPassed": true,
+      "enabledForReviewOrFiling": false,
+      "scheduleBInstructionsPrintedYear": 2026,
+      "scheduleBCurrentBlankPrintedYear": 2025
+    },
     "nov20MatchingYearGuidedOriginals": {
       "source": "b948a284",
       "officialSource": "https://www.irs.gov/pub/irs-pdf/f1099nec.pdf",

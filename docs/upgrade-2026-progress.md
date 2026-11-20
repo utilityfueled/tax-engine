@@ -1,5 +1,79 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Form 8919 browser-source pin
+
+The full managed browser launcher rejected `088c1377` before starting the
+runtime because the disabled Form 8919 module was missing from its source
+manifest. `2c689ee2` adds that single source hash and refreshes the dependent
+diagnostic manifest digest. The unchanged verifier accepted all 2,024 source
+hashes. All 27 diagnostic tests passed. Browser deadlines, budgets, retries
+and skips stayed the same.
+
+## November 20 Form 8919 wage-base audit
+
+`088c1377` labels the Form 8919 line 9 audit amount with the tax year of the
+rule pack used in the calculation. The regression reproduced a 2026
+calculation whose audit labeled the correct $184,500 base as 2025.
+The official 2025 and 2026 worksheets now agree with both the amounts and
+the audit years. With $183,500 of wages, tips, and RRTA compensation already
+subject to tax, plus $10,000 of Form 8919 wages, the results are $145 for 2025
+and $207 for 2026. This is an internal calculation check. The final annual
+transfer mapping and filing qualification remain open. The current final
+Schedule 2 still prints 2025 and maps Form 8919 to line 6. The 2026 draft
+agrees with final Form 8919 on line 16b.
+[Final 2025 Schedule 2](https://www.irs.gov/pub/irs-pdf/f1040s2.pdf) ·
+[Draft 2026 Schedule 2](https://www.irs.gov/pub/irs-dft/f1040s2--dft.pdf).
+
+The 499 focused engine and PDF cases, eight spec references, 27 browser
+diagnostic tests, targeted lint and engine type check passed.
+[IRS 2025 Form 8919](https://www.irs.gov/pub/irs-prior/f8919--2025.pdf) ·
+[IRS 2026 Form 8919](https://www.irs.gov/pub/irs-prior/f8919--2026.pdf).
+
+## November 20 official 2026 W-2 Copy B guided intake
+
+`8ba14f4b` recognizes the IRS Copy B's printed 2026 year and two statement
+panels. On a single intact page, one populated panel can suggest Box 1 wages
+and Box 2 federal withholding separately. Zero stays a value. Blank,
+partly flattened, rotated, multipage and two-populated-statement originals
+require manual review. Employer identity and other boxes remain unconfirmed.
+An independent engineering review reproduced the partly flattened case
+before the correction and verified the intact-widget requirement afterward.
+
+Sixty-seven scoped tests, 25 linked spec references, 27 browser diagnostic
+tests, web types, targeted lint, the isolated generated inventory and the
+production web build passed. Both exact unit and coverage suites passed
+29,648 tests, with 88.24% branch coverage. The final web build used the IRS page with fictional
+values. All five Chromium cases passed upload and reopen, including $3,210.09
+with explicit zero withholding, withholding alone with unknown wages, blank
+and two-statement manual review, and a saved 2025 guided return switched to
+2026 before upload. The engine and filing gates remained closed.
+[IRS Form W-2](https://www.irs.gov/pub/irs-pdf/fw2.pdf).
+
+The local ARM64 combined controller for earlier application `b948a284`
+passed 22 offline controls and independent engineering review. Live preflight
+then found one active container in the default VM's rootless store. The
+before-and-after VM, route and store snapshots match exactly. No stop, boot,
+build, or recovery ran. The host also had about 446 GiB available after the
+check, below that combined controller's 512 GiB requirement. This attempt
+contributes no current local ARM64 release evidence.
+
+## November 20 final Form 8919 candidate and Schedule B instructions
+
+`14c3444d` pins the IRS's final 2026 Form 8919 as a disabled physical
+candidate. The current and annual archive copies match byte for byte. The
+first page has 35 text fields and five checkboxes. The second page contains
+the instructions. The annual form prints the $184,500 wage base and routes
+line 13 to Schedule 2 line 16b. Those references await separate calculation
+and transfer-map qualification.
+
+Thirty-three focused tests and 11 spec references passed. A repeat check on
+Node 26.13.1 passed nine focused candidate and export-policy cases. The
+generated inventory passed in isolation and the commit preserved the
+unrelated working inventory edits. The 2026 Schedule B instructions print
+November 6, 2026. The IRS download catalog still labels them 2025, and the
+Schedule B blank currently prints 2025.
+[Official source notes](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-form-8919-and-schedule-b-instructions).
+
 ## November 20 matching-year guided originals
 
 `b948a284` saves an actual 2026 W-2 or 1099-NEC with a matching printed year

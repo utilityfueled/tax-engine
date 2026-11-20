@@ -1,5 +1,11 @@
 # Current 2026 upgrade status
 
+Application `8ba14f4b` imports separately evidenced wages and federal
+withholding from one populated 2026 IRS W-2 Copy B statement. Five actual
+Chromium upload-and-reopen cases passed. Blank and ambiguous originals
+remain manual, and the 2026 calculation and filing gates remain closed.
+[W-2 evidence](upgrade-2026-progress.md#november-20-official-2026-w-2-copy-b-guided-intake).
+
 Application `b948a284` saves a matching 2026 W-2 or NEC original in the
 user-selected 2026 guided interview. Actual Chromium verified both filled
 and blank IRS Copy B uploads across reopen, including an empty saved 2025
@@ -154,7 +160,7 @@ AMD64 runner.
 | Package | Current evidence and remaining criterion |
 | --- | --- |
 | Taxpayer facts and federal law | The latest [adult student TIN reconciliation](upgrade-2026-progress.md#november-20-form-8863-adult-student-tin-reconciliation), [claimant DOB](upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date) and [K-1 source-year](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals) fixes passed. Qualified independent tax interpretations and expected outputs remain open. |
-| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC, Form 7206 and Form 8829 blanks are pinned as disabled candidates. The current final Form 1040, annual instructions and Tax/EIC tables still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
+| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC and Forms 2106, 7206, 8829 and 8919 are pinned as disabled candidates. The latest Form 1040, general annual instructions and Tax/EIC tables still print 2025. Schedule B instructions now print 2026, while its blank prints 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Current `b948a284` passed all 12 protected Preview workspace lifecycle checks and four read-only billing preflight checks. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Full current-source Stripe Sandbox checkout and exact credit qualification remain open. [Current Preview](upgrade-2026-progress.md#november-20-matching-year-guided-originals) · [Stripe](upgrade-2026-stripe-scheduled-retry-20261114.md) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
 | Self-host recovery | Exact `b948a284` AMD64 and ARM64 passed image smoke and Compose recovery. Strict AMD64 browser results were 637 passed, eleven Ohio deadlines, two RRTA saved-PDF inspection timeouts and five original skips. Strict ARM64 results were 641 passed, nine Ohio deadlines and five original skips. Managed Linux had the same two RRTA inspection timeouts, with 648 passes and five original skips. Managed macOS had 650 passes and five original skips. Linux browser qualification remains open. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44800512505/job/136511112829) · [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44800512505/job/136511112891) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44800584551/job/136527432514). |
