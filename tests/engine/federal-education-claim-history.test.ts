@@ -60,6 +60,25 @@ function parsedEducationReturn(
   });
 }
 
+it("requires an actual claimant birth date for refundable AOC on a short-year return", () => {
+  const source = { ...education, aocStudents: [{ ...student, priorYearsClaimed: 0 }] };
+  const calculate = (dateOfBirth: string, expenses: typeof education = source) => {
+    const input = parsedEducationReturn(expenses);
+    return calculateFederalTax({
+      ...input,
+      taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, dateOfBirth } },
+      standardDeductionFacts: { ...input.standardDeductionFacts, shortTaxYear: true },
+    });
+  };
+
+  for (const date of ["2000-02-30", "2026-01-02", ""]) {
+    expect(() => calculate(date), date).toThrow("Form8863 claimant birth date must be an actual calendar date in or before the return year");
+  }
+  expect(calculate("2002-01-01").form8863?.totalRefundable.toString()).toBe("1000");
+  const llcOnly = calculate("2000-02-30", { ...education, aocStudents: [], llcExpenses: "5000" });
+  expect(llcOnly.form8863?.totalNonrefundable.toString()).toBe("1000");
+});
+
 function auditedPriorClaims(result: ReturnType<typeof calculateFederalTax>) {
   return result.form8863?.lines.find(line => line.line === "30")?.inputs["Prior AOC years claimed"];
 }

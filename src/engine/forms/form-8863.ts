@@ -46,6 +46,7 @@ export interface Form8863Input {
   form8862Required?: boolean;
   form8862Completed?: boolean;
   primaryAgeAtYearEnd?: number;
+  primaryDateOfBirth?: string;
   refundableAocEligible?: boolean;
   refundableAocFacts?: { fullTimeStudent: boolean; earnedIncome: Decimal; totalSupport: Decimal; parentAlive: boolean };
 }
@@ -85,11 +86,21 @@ function studentEligible(student: StudentFacts, strict: boolean): boolean {
     && !(strict && student.studentRole === "dependent" && student.studentSsnEligible === false)
     && student.studentTinEligible !== false;
 }
-function refundableEligible(input: Form8863Input, strict: boolean, hasAoc: boolean): boolean {
+function refundableEligible(input: Form8863Input, year: number, hasAoc: boolean): boolean {
   if (!hasAoc) return false;
+  const strict = year >= 2026;
   const joint = input.filingStatus === "married_filing_jointly";
-  if (strict) required(input.primaryAgeAtYearEnd, "claimant age for refundable AOC");
-  const age = input.primaryAgeAtYearEnd;
+  let age = input.primaryAgeAtYearEnd;
+  if (input.primaryDateOfBirth !== undefined) {
+    const birth = new Date(`${input.primaryDateOfBirth}T00:00:00Z`);
+    if (!Number.isFinite(birth.getTime()) || birth.toISOString().slice(0, 10) !== input.primaryDateOfBirth ||
+        input.primaryDateOfBirth > `${year}-12-31`) {
+      throw new Error("Form8863 claimant birth date must be an actual calendar date in or before the return year");
+    }
+    // A January 1 birthday is attained on December 31 of the previous year.
+    age = year - birth.getUTCFullYear() + (input.primaryDateOfBirth.endsWith("-01-01") ? 1 : 0);
+  }
+  if (strict) required(age, "claimant age for refundable AOC");
   if (age !== undefined && (!Number.isInteger(age) || age < 0 || age > 120)) throw new Error("Form8863 claimant age must be an actual whole age");
   let result: boolean | undefined;
   if (joint || (age !== undefined && age >= 24)) result = true;
@@ -175,7 +186,7 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   });
   const aocTotalTentative = aocPerStudent.reduce((total,s)=>total.plus(s.tentativeCredit), new Decimal(0));
   const aocAfterPhaseOut = roundDollar(aocTotalTentative.times(factor));
-  const refundEligible = refundableEligible(input, strict, aocAfterPhaseOut.gt(0));
+  const refundEligible = refundableEligible(input, year, aocAfterPhaseOut.gt(0));
   const aocRefundable = refundEligible ? roundDollar(aocAfterPhaseOut.times("0.40")) : new Decimal(0);
   const aocNonrefundable = aocAfterPhaseOut.minus(aocRefundable);
   let llcEligibleExpenses = input.llcExpenses;

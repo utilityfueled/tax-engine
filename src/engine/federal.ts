@@ -4207,10 +4207,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
     const educationPossession = d(education.possessionIncomeExclusion);
     if (!educationPossession.isFinite() || educationPossession.isNegative()) throw new Error("Form8863 possession exclusion must be finite and nonnegative");
-    // Age is attained on the day before the birthday; January1 births attain
-    // their next age on December31 of the preceding year.
-    const dob = input.taxpayer.primary.dateOfBirth;
-    const educationAge = /^\d{4}-\d{2}-\d{2}$/.test(dob) ? year - Number(dob.slice(0, 4)) + (dob.slice(5) === "01-01" ? 1 : 0) : undefined;
     form8863 = calculateForm8863({
       ...education,
       taxYear: year,
@@ -4218,7 +4214,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       primarySsnEligible: education.primarySsnEligible ?? input.taxpayer.primary.employmentValidSsnIssuedByDueDate,
       spouseSsnEligible: education.spouseSsnEligible ?? input.taxpayer.spouse?.employmentValidSsnIssuedByDueDate,
       primaryTinEligible: education.primaryTinEligible ?? input.taxpayer.primary.tinIssuedByDueDate,
-      primaryAgeAtYearEnd: educationAge,
+      primaryDateOfBirth: input.taxpayer.primary.dateOfBirth,
       refundableAocFacts: education.refundableAocFacts ? {...education.refundableAocFacts,earnedIncome:d(education.refundableAocFacts.earnedIncome),totalSupport:d(education.refundableAocFacts.totalSupport)} : undefined,
       aocStudents: education.aocStudents.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
       llcStudents: education.llcStudents?.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
