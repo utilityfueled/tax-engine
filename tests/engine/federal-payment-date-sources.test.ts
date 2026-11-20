@@ -20,6 +20,19 @@ const raw = (taxYear: 2025 | 2026, adjustmentFacts: object) => ({
 const run = (year: 2025 | 2026, facts = adjustments()) => calculateFederalTax(TaxYearInputSchema.parse(raw(year, facts)));
 
 describe("Actual federal payment dates and selected return application", () => {
+  it("credits only nonnegative amounts actually carried over from the preceding return", () => {
+    for (const taxYear of [2025, 2026] as const) {
+      const facts = (amount: string, sourceTaxYear = taxYear - 1) => ({
+        ...adjustments([{ ...estimate, date: `${taxYear}-04-15` }]),
+        priorYearAppliedCredits: [{ sourceTaxYear, amount, type: "federal" }],
+      });
+      expect(run(taxYear, facts("0.00")).estimatedTaxPayments.toFixed()).toBe("125.37");
+      expect(run(taxYear, facts("7.09")).estimatedTaxPayments.toFixed()).toBe("132.46");
+      expect(() => run(taxYear, facts("-0.01"))).toThrow(/prior-return applied credit.*nonnegative amount/i);
+      expect(() => run(taxYear, facts("7.09", taxYear))).toThrow(/prior-return applied credit.*source year/i);
+    }
+  });
+
   it("holds undocumented estimates and extension payments even with no installment penalty", () => {
     expect(run(2025).estimatedTaxPenalty.isZero()).toBe(true);
     expect(run(2026).estimatedTaxPenalty.isZero()).toBe(true);

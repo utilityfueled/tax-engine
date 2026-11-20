@@ -46,7 +46,7 @@ import type {
 import { readForm8880AnnualSources } from "@/models/form-8880-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
-import { assertFederalPaymentDates } from "./forms/federal-payment-date-sources.js";
+import { assertFederalPaymentSources } from "./forms/federal-payment-date-sources.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
@@ -228,7 +228,7 @@ import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
-  assertFederalPaymentDates(input);
+  assertFederalPaymentSources(input);
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
@@ -4526,9 +4526,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   );
 
   const priorReturnAppliedPayments = (input.adjustments?.priorYearAppliedCredits ?? []).filter(payment => payment.type === "federal");
-  if (priorReturnAppliedPayments.some(payment => payment.sourceTaxYear !== year - 1)) {
-    throw new Error("Federal prior-return applied credit has an invalid source year");
-  }
   const currentEstimatedPayments = input.adjustments?.estimatedTaxPayments
     ?.filter((p) => p.type === "federal")
     .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0)) ?? new Decimal(0);

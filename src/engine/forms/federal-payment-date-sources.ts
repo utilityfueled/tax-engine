@@ -5,14 +5,18 @@ import { d } from "@/utils/decimal.js";
 
 const actualDate = z.iso.date().refine(date => !date.startsWith("0000-"));
 
-export function assertFederalPaymentDates(input: Pick<TaxYearInput, "taxpayer" | "adjustments">): void {
+function isActualPaymentAmount(amount: string): boolean {
+  return typeof amount === "string" && /^\d+(?:\.\d+)?$/u.test(amount) && d(amount).isFinite();
+}
+
+export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer" | "adjustments">): void {
   const year = input.taxpayer.taxYear;
   for (const payment of [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.extensionPayments ?? [])]) {
     if (payment.type !== "federal") continue;
     if (!actualDate.safeParse(payment.date).success) {
       throw new Error("Federal estimated or extension payment requires its actual calendar date.");
     }
-    if (typeof payment.amount !== "string" || !/^\d+(?:\.\d+)?$/u.test(payment.amount) || !d(payment.amount).isFinite()) {
+    if (!isActualPaymentAmount(payment.amount)) {
       throw new Error("Federal estimated or extension payment requires a confirmed nonnegative amount.");
     }
     if (payment.application !== undefined) {
@@ -24,6 +28,15 @@ export function assertFederalPaymentDates(input: Pick<TaxYearInput, "taxpayer" |
       if (paidYear !== year && paidYear !== year + 1) {
         throw new Error("Federal payment outside the return year and following year requires its confirmed tax-year application.");
       }
+    }
+  }
+  for (const credit of input.adjustments?.priorYearAppliedCredits ?? []) {
+    if (credit.type !== "federal") continue;
+    if (credit.sourceTaxYear !== year - 1) {
+      throw new Error("Federal prior-return applied credit has an invalid source year.");
+    }
+    if (!isActualPaymentAmount(credit.amount)) {
+      throw new Error("Federal prior-return applied credit requires a confirmed nonnegative amount.");
     }
   }
 }

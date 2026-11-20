@@ -539,17 +539,19 @@ lines:
 
   - line: "26"
     description: "Estimated tax payments"
-    formula: "Sum actual federal estimated payments applied to the selected tax year and prior-return overpayments elected for that year. A federal estimate or extension row requires a valid ISO civil payment date and a nonnegative amount even when withholding establishes an exception to Form 2210. A supplied payment application must be explicitly confirmed from the actual payment record and match the selected return's tax year. A legacy row dated in the selected calendar year or the following year retains its entered return association. For a date outside those two calendar years, require a confirmed payment application to that return before crediting the payment. Never choose a tax year from a payment date."
+    formula: "Sum actual federal estimated payments applied to the selected tax year and nonnegative overpayments elected from the immediately preceding return. A federal estimate or extension row requires a valid ISO civil payment date and a nonnegative amount even when withholding establishes an exception to Form 2210. A supplied payment application must be explicitly confirmed from the actual payment record and match the selected return's tax year. A legacy row dated in the selected calendar year or the following year retains its entered return association. For a date outside those two calendar years, require a confirmed payment application to that return before crediting the payment. Never choose a tax year from a payment date."
     irsRef: "Form 1040 Instructions, Line 26"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 26 - estimated tax payments"
     testRefs:
       - "tests/engine/federal-payment-date-sources.test.ts::holds undocumented estimates and extension payments even with no installment penalty"
       - "tests/engine/federal-payment-date-sources.test.ts::keeps the actual paid date distinct from the historical tax year application"
       - "tests/engine/federal-payment-date-sources.test.ts::preserves following-year estimates and extensions and a confirmed zero"
+      - "tests/engine/federal-payment-date-sources.test.ts::credits only nonnegative amounts actually carried over from the preceding return"
     notes: |
       Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
       Line 26 and Schedule 3 line 10, distinguish estimates from payments made
-      with the extension request. The Form 2210 example (https://www.irs.gov/instructions/i2210)
+      with the extension request. A preceding return's applied overpayment may
+      explicitly be zero. The Form 2210 example (https://www.irs.gov/instructions/i2210)
       uses January 15, 2026 for the 2025 liability. Publication 505 (2026),
       chapter 2 (https://www.irs.gov/publications/p505), uses January 15, 2027
       for the fourth 2026 installment. Its early-return waiver changes the
