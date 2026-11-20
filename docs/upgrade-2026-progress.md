@@ -1,5 +1,45 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Form 8863 claimant birth date
+
+A synthetic federal short-year return with an impossible February 30 birth
+date received a refundable American Opportunity Credit. `cf43e9ea` validates
+the claimant's calendar date before deriving age for positive AOC after
+phase-out. The controls covered the existing January 1 age rule, a future
+date, missing date and an LLC-only credit. The spec preceded the failing
+regression. [IRS Form 8863 instructions](https://www.irs.gov/instructions/i8863).
+
+The 212 focused tests and both managed desktop/mobile education cases passed.
+Exact local unit and coverage each passed 29,516 tests in 2,157 files, with
+88.36% branch coverage against the 85% threshold. The generated inventory,
+9,672 spec references, three type checks, both builds and full lint passed.
+All six exact GitHub CI jobs passed. Remote unit and coverage each passed
+29,516 tests, with 88.36% branch coverage.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44700308280) ·
+[Exact Docker check](https://github.com/utilityfueled/tax-engine/actions/runs/44700308070).
+
+The protected Preview matched all 6,489 tracked files and six internal links,
+the source label and the intended staging project. It used test billing and
+had no production alias. All nine ordinary synthetic workspace checks passed,
+including save and reopen, verified removal of the test workspace, retention
+of the previous rows and sign-out. The lifecycle receipt SHA-256 is
+`706a81242d5f4ea14299035c541e7e7a863f528dbb6ed31247f7dc52b4a9616d`.
+
+Exact strict AMD64 passed image smoke, Compose upgrade, recovery and rollback,
+independent image archive import, and cleanup. The complete browser suite
+passed 642 cases and preserved five planned skips. Eight Ohio cases reached the
+original 30-second deadline: two part-year business, two resident-credit and
+four part-year school-district journeys.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44700308191/job/136166790063).
+
+The exact managed browser suite passed 648 cases with five planned skips.
+Both railroad retirement journeys reached the original four-second saved-PDF
+inspection deadline. Two local launches stopped before opening a browser
+because the sandbox denied the loopback bind. With normal loopback access,
+both exact scoped macOS Chromium cases passed with the existing limits and
+zero retries. The full managed Linux failures remain open.
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44700308191/job/136166789841).
+
 ## November 20 exact AI pricing dates
 
 `b0fdcac1` requires a real calendar day or a timestamp with an explicit UTC
@@ -54,6 +94,16 @@ had no terminal summary, so the run provides no complete paired timing total.
 The comparison now has an 18-minute outer budget and propagates its exit
 status. It uses the existing 30-second case deadline and audited request windows.
 [Same-runner logs](https://github.com/utilityfueled/tax-engine/actions/runs/44691064975/job/136136715274).
+
+The corrected comparison completed on exact `39d3b3d3`, with the workflow
+change from `0fcbc04f`. Both runtime legs passed all ten cases in the same two
+audited windows with two configured workers, zero retries and 30-second case
+deadlines. Summed case time was 208.669 seconds in the container and 213.957
+seconds in managed mode. The longest case took 28.206 and 28.818 seconds
+respectively. The full strict suite still passed 646 cases with four original
+deadlines and five planned skips. Across the two paired runs, the evidence
+does not establish a container-specific cause. The full-suite gate remains open.
+[Corrected same-runner logs](https://github.com/utilityfueled/tax-engine/actions/runs/44699380902/job/136163772075).
 
 On `2e910e78`, the managed suite passed 650 cases with five original skips.
 Strict AMD64 passed 644 with six 30-second deadlines and five original

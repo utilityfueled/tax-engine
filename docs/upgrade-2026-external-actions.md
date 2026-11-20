@@ -1,6 +1,6 @@
 # External actions needed to finish the 2026 upgrade
 
-## Current external inputs — November 19
+## Current external inputs — November 20
 
 | Input still needed | Specific review material and deliverable |
 | --- | --- |
@@ -9,7 +9,7 @@
 | Independent security/privacy reviewer and accountable advisory owner | Review exact artifacts and staging evidence; record findings, remediation or evidence-backed acceptance, owner and expiry against the [advisory ledger](upgrade-2026-advisory-refresh-20261114.md). Earlier scan counts and agent reviews supply no acceptance. |
 | Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
-| Native ARM64 verification | The exact `d33e77d5` Linux ARM64 run passed smoke, all six Compose recovery phases and cleanup. The strict browser run passed 639 cases, had five original skips and reached 11 original 30-second deadlines. Current-source strict qualification remains open. The Mac preflight found 560.76 GiB free and all VMs stopped. The reviewed Mac controller requires a running idle default VM to verify the original stores. [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44641897067/job/135989769132). |
+| Native ARM64 verification | Linux ARM64 on `0836c5fe` passed image smoke, Compose recovery and cleanup. The strict browser run passed 639 cases, preserved five planned skips and reached 11 original 30-second deadlines. Current-source strict qualification remains open. [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44691298960/job/136137481759). |
 
 These inputs do not replace unfinished engineering. Final-source managed,
 hosted/native and scenario checks, remaining source-settled methods and later

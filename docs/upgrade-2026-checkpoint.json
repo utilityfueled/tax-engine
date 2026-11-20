@@ -1,5 +1,52 @@
 {
   "activeContinuation": {
+    "nov20Form8863ClaimantBirthDate": {
+      "appCommit": "cf43e9ea",
+      "regressionReproduced": true,
+      "focusedTestsPassed": 212,
+      "targetedBrowserCasesPassed": 2,
+      "fullUnitTestsPassed": 29516,
+      "fullCoverageTestsPassed": 29516,
+      "testFilesPerFullRun": 2157,
+      "branchCoveragePercent": 88.36,
+      "branchCoverageThresholdPercent": 85,
+      "specReferencesValidated": 9672,
+      "remoteCi": {
+        "run": 44700308280,
+        "jobsPassed": 6,
+        "unitTestsPassed": 29516,
+        "coverageTestsPassed": 29516,
+        "branchCoveragePercent": 88.36
+      },
+      "remoteDocker": 44700308070,
+      "managedBrowser": {
+        "run": 44700308191,
+        "job": 136166789841,
+        "browserPasses": 648,
+        "savedRrtaPdfInspectionDeadlineFailures": 2,
+        "originalSkips": 5,
+        "exactMacFocusedRrtaPasses": 2
+      },
+      "strictAmd64": {
+        "run": 44700308191,
+        "job": 136166790063,
+        "browserPasses": 642,
+        "browserDeadlineFailures": 8,
+        "originalSkips": 5,
+        "browserDeadlineMs": 30000,
+        "smokeRecoveryArchiveAndCleanupPassed": true
+      },
+      "protectedPreview": {
+        "exactSourceAndProjectVerified": true,
+        "productionAliasAssigned": false,
+        "billingMode": "test",
+        "workspaceChecksPassed": 9,
+        "lifecycleReceiptSha256": "706a81242d5f4ea14299035c541e7e7a863f528dbb6ed31247f7dc52b4a9616d",
+        "privateEvidence": ".local/upgrade-evidence/nov20-preview-form-8863-cf43"
+      },
+      "evidence": "docs/upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date",
+      "privateEvidence": ".local/upgrade-evidence/nov20-form-8863-birth-date"
+    },
     "nov20ExactAiPricingDates": {
       "appCommit": "b0fdcac1",
       "workflowLintCorrection": "2e910e78",
@@ -46,6 +93,22 @@
         "originalOuterTimeoutMinutes": 10,
         "updatedOuterTimeoutMinutes": 18,
         "sharedPartYearBusinessDeadlineAtFilingRequest": true
+      },
+      "completedSameRunnerComparison": {
+        "run": 44699380902,
+        "job": 136163772075,
+        "source": "39d3b3d3",
+        "comparisonWorkflowCommit": "0fcbc04f",
+        "containerPasses": 10,
+        "managedPasses": 10,
+        "containerSummedCaseMs": 208669,
+        "managedSummedCaseMs": 213957,
+        "containerLongestCaseMs": 28206,
+        "managedLongestCaseMs": 28818,
+        "fullStrictPasses": 646,
+        "fullStrictDeadlineFailures": 4,
+        "fullStrictOriginalSkips": 5,
+        "summarySha256": "44a226730fc6ebe91364d08e9a3d2fc0371a2385135a0fb6a357dad4a970a5f6"
       },
       "exactBrowserSuccessor": {
         "source": "2e910e78",
