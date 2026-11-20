@@ -1,5 +1,77 @@
 # 2026 upgrade implementation evidence
 
+## November 19 standalone statement calendar years
+
+Standalone Schedule C now holds a Form 1099-NEC whose explicit reporting year
+differs from the return year, even when gross receipts were entered separately.
+Schedule B applies the same rule to Forms 1099-INT and 1099-DIV before computing
+interest and dividends. These standalone paths are also used to rebuild inputs
+for review PDFs. Schedule 1 now checks Forms W-2, 1099-INT, 1099-DIV and 1099-MISC
+before they can affect its modified AGI worksheets. Matching calendar years
+and legacy undated records retain their existing treatment. Regression tests
+reproduced each affected schedule's gap before implementation and
+verify amounts to the cent. The federal 2026 readiness gate remains closed.
+[Schedule C instructions](https://www.irs.gov/instructions/i1040sc) ·
+[Form 1099-NEC](https://www.irs.gov/pub/irs-pdf/f1099nec.pdf) ·
+[Schedule B instructions](https://www.irs.gov/instructions/i1040sb) ·
+[Form 1099-INT](https://www.irs.gov/pub/irs-pdf/f1099int.pdf) ·
+[Form 1099-DIV](https://www.irs.gov/pub/irs-pdf/f1099div.pdf) ·
+[IRS Publication 970](https://www.irs.gov/publications/p970) ·
+[IRS Publication 590-A](https://www.irs.gov/publications/p590a).
+
+Schedule C commit `66cd46ec` passed 256 tests and 77 spec references. Schedule B
+commit `8b828d7e` passed 442 tests and 13 spec references, including both
+schedules and adjacent federal and PDF controls. Scoped lint had zero errors
+and existing test warnings. Schedule 1 commit `aac55bcc` passed 387 scoped
+tests and 29 spec references. Its matching and undated income fixture reaches
+$92,500 of modified AGI and a $1,250 student loan interest deduction. Root
+typecheck and frozen inventory checks passed. The three commits were pushed
+to `main` after verifying the Preview-only build guard.
+
+The exact `8b828d7e` archive passed all eight local static and build checks.
+Unit and coverage each passed 29,497 tests with 88.35% branch coverage against
+the 85% gate. The isolated PostgreSQL 16.16 test process stopped normally.
+Exact `aac55bcc` passed the same static and build checks. Its first local unit
+run reported 29,497 passes and two five-second PDF deadlines while the prior
+coverage run and current builds overlapped. The original result is retained.
+Exact `aac55bcc` coverage passed all 29,499 tests with 88.35% branches, and the
+isolated PostgreSQL process stopped normally. Both affected PDF files passed
+all 20 tests at the original five-second deadline once the other local suites
+finished, using the corrected browser-audit archive.
+
+The `aac55bcc` managed GitHub browser job stopped at its source audit before
+running cases. `9e5c455f` binds that audit to the four changed tax-source files
+and updates the dependent diagnostic digest. The request budgets, collection,
+test deadlines and worker count match the previous audit. Exact source audit,
+37 Node controls and 148 browser diagnostic and provenance tests passed.
+The exact corrected archive passed nine focused managed browser journeys with
+two workers and verified that its loopback server closed. GitHub's Docker
+workflow passed on that revision. The full local unit rerun passed all 29,499
+tests at the original deadline, with the isolated PostgreSQL process stopped.
+[Original managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44657209890/job/136026265227) ·
+[Corrected Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44657864570) ·
+[Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/44657864542).
+
+## November 19 Ohio entry timing from exact Linux failures
+
+Reviewed all ten strict AMD64 deadline traces from exact `d23eabb0`.
+Completed Chromium `fill` and `press` commands took 7.288–16.001 seconds in
+total per case. The cohort includes two part-year business cases, one reciprocal
+case, three resident-credit cases and four school-district cases. Some cases
+reached review navigation or reload. Two were still entering original facts
+when the deadline elapsed. These are elapsed browser protocol intervals and
+do not isolate renderer CPU time or establish a single cause. Existing 30-second
+deadlines, two workers, zero retries and all source assertions were retained.
+[Strict Linux run and trace archive](https://github.com/utilityfueled/tax-engine/actions/runs/44647619510/artifacts/14593415132).
+
+A separate exact-source local Node measurement used a complete synthetic
+full-year Ohio school-district estimate fixture. Across 120 samples per stage,
+the median was 23.10 ms for guided evaluation with confirmed Ohio sources,
+1.13 ms after changing residency facts to unconfirmed, and 0.23 ms for the
+source update itself. The proof removed the Ohio preview when the facts became
+unconfirmed. The measurement excludes the browser, React, storage and tracing.
+It does not account for the observed Linux part-year intervals.
+
 ## November 19 reported Gemini rejection usage
 
 The hosted adapter and evaluation transport now share the Gemini text response

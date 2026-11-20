@@ -1,5 +1,16 @@
 # Current 2026 upgrade status
 
+Standalone Schedules B and C now hold explicit wrong-year Forms 1099-INT,
+1099-DIV and 1099-NEC. Schedule 1 applies the calendar-year rule to its wage,
+interest, dividend and miscellaneous income sources. Matching and legacy
+undated records retain their exact amounts. The fixes were pushed to `main`
+after focused verification. [Statement-year evidence](upgrade-2026-progress.md#november-19-standalone-statement-calendar-years).
+
+All ten strict AMD64 browser deadline traces at `d23eabb0` show substantial
+time entering ordinary Ohio facts. Several reached review or reload. The
+traces do not establish a single slow calculation. No browser checks changed.
+[Trace findings](upgrade-2026-progress.md#november-19-ohio-entry-timing-from-exact-linux-failures).
+
 Hosted Gemini billing and evaluation now retain exact verified usage on
 rejected responses. Unknown prices and inconsistent counts hold for
 reconciliation. The fix passed 89 synthetic tests and independent review.
@@ -70,7 +81,9 @@ with the same 30-second deadline. Strict AMD64 passed all four affected
 cases and recorded four Ohio deadlines elsewhere in the suite.
 [Trace and test evidence](upgrade-2026-progress.md#november-19-browser-request-checks-and-trace-overhead).
 
-Resume with `latestGeminiRejectedUsageSettlement`,
+Resume with `activeContinuation.nov20StatementAndBrowserContinuation` for
+the latest application source, check runs and bounded trace findings. Earlier
+packages are indexed by `latestGeminiRejectedUsageSettlement`,
 `latestGuidedOhioUnemploymentPaymentProof`,
 `latestBrowserRecoveryComparison`, `latestScheduleAPropertyTaxSourceYear`,
 `latestOhioNonresidentUnemployment`,

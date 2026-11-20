@@ -141,7 +141,42 @@
     "sqliteIndependentReviewSha256": "d0c38ff9bd3156f5b10a7059a48a3021729f7742bb6ce41ee3f145d8a726dd8f",
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
-    "latestPushedSource": "e13589b1",
+    "latestPushedSource": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce",
+    "nov20StatementAndBrowserContinuation": {
+      "scope": "Standalone Schedules 1, B and C reconcile explicit information-return calendar years before calculation. The Ohio trace review made no browser or readiness changes. Cybersecurity work is owner-deferred.",
+      "scheduleC": { "source": "66cd46ecefa2178561cb08e411213672090f4848", "focusedPasses": 256, "specReferences": 77 },
+      "scheduleB": { "source": "8b828d7e7ab54852fb66851450681c69cfc7c913", "focusedPasses": 442, "specReferences": 13 },
+      "schedule1": { "source": "aac55bcc029abe0ac37dd01fc46e5dcba7696669", "focusedPasses": 387, "specReferences": 29 },
+      "browserAuditBinding": { "source": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce", "sourceAuditPassed": true, "nodeControlsPassed": 37, "vitestControlsPassed": 148, "focusedManagedBrowserPasses": 9, "managedServerClosed": true, "githubDockerPassed": true },
+      "githubRuns": { "ci": 44657864503, "docker": 44657864542, "web": 44657864570 },
+      "previousGithubRuns": {
+        "schedule1": { "ci": 44657209986, "docker": 44657209881, "web": 44657209890, "managedBrowserJob": 136026265227, "managedBrowserResult": "Failed before running cases: old source fingerprint." },
+        "schedulesBAndC": { "ci": 44656575711, "docker": 44656575699, "web": 44656575696 }
+      },
+      "localEvidence": ".local/upgrade-evidence/nov20-statement-browser-binding",
+      "localApplicationChecks": {
+        "schedule1": { "path": ".local/upgrade-evidence/nov20-schedule1-statement-years", "staticAndBuildChecksPassed": 8, "unitPasses": 29497, "unitDeadlineFailures": 2, "coveragePasses": 29499, "branchCoveragePercent": 88.35, "postgresqlStopped": true },
+        "paperRepeat": { "source": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce", "passes": 20, "unitTimeoutMs": 5000, "afterOtherSuitesStopped": true },
+        "correctedFullUnitRepeat": { "source": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce", "unitPasses": 29499, "filesPassed": 2156, "postgresqlStopped": true },
+        "schedulesBAndC": { "path": ".local/upgrade-evidence/nov20-schedule-statement-years", "staticAndBuildChecksPassed": 8, "unitPasses": 29497, "coveragePasses": 29497, "branchCoveragePercent": 88.35, "postgresqlStopped": true }
+      },
+      "strictOhioDiagnostic": {
+        "source": "d23eabb0a5af2837374930adac15296a63fa411c",
+        "run": 44647619510,
+        "artifact": 14593415132,
+        "archiveSha256": "6fa81efabc7d098e63652a77c3c9403013b98bcd3498b4ff92a0e2ad03d753f1",
+        "timingSummarySha256": "a1444480c0ab9348f4e8fd4b747111a8f0839eb8386be19f699e9035b4e0df74",
+        "cases": 10,
+        "elapsedFillAndPressRangeMs": [7288, 16001],
+        "interpretation": "Browser protocol time, not application CPU. Incomplete evidence for a bottleneck or change.",
+        "localGuidedFunctionMeasurement": { "source": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce", "cohort": "2025 full-year Ohio school-district estimates", "samplesPerStage": 120, "confirmedEvaluationMedianMs": 23.101, "incompleteEvaluationMedianMs": 1.130, "sourceUpdateMedianMs": 0.232, "runtime": "Node without React, storage, Playwright or tracing" }
+      },
+      "nextActions": [
+        "Collect the exact local and GitHub check results. After changing an audited source path, compare request budgets and refresh only the reviewed fingerprints before pushing.",
+        "For strict Ohio, measure application work inside real entry actions before adopting a performance change. Keep the original assertion, deadline and worker contracts.",
+        "Keep qualifying PA and Ohio residency paths and federal sources while annual forms and qualified independent reviews remain unavailable. Keep filing, model promotion and production release closed."
+      ]
+    },
     "nov19TaxAndBrowserContinuation": {
       "resume": "Read only this object and the November 19 paragraphs at the top of the progress ledger. Resolve exact committed or remote source with git; each new package requires actual checks. Keep the release gates.",
       "sourcePackages": "ba4d55ce: 2026 Form 8863/8889, 92 tests. 2b08b632: Philadelphia salary allocation, 2580 tests. 46837e72: 2026 Form 5329/8880 physical maps, 43 tests. e852f79a: 2026 Form 8880 rates and cutoff, 506 tests. b765af11: confirmed facts and modified AGI, 541 tests. b06960c0: 2025 saver source and cutoff, 511 tests.",
