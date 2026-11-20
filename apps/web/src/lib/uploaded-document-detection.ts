@@ -34,7 +34,7 @@ interface ExtractedTextItem {
 }
 
 type NecCopyB = { amount: string | null; taxYear: number | null };
-type W2CopyB = { wages: string | null; withheld: string | null };
+type W2CopyB = { wages: string | null; withheld: string | null; informationalPacket?: boolean };
 type PdfRectangle = readonly [number, number, number, number];
 type PdfAnnotation = {
   subtype?: string;
@@ -291,12 +291,20 @@ async function readPdf(file: File, detectOriginal: boolean) {
     const pageTexts: string[] = [];
     let necCopyB: NecCopyB | null = null;
     let w2CopyB: W2CopyB | null = null;
+    let w2InformationalCover = false;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
       const textContent = await page.getTextContent();
       const items = textContent.items as ExtractedTextItem[];
-      pageTexts.push(groupPageText(items));
+      const pageText = groupPageText(items);
+      pageTexts.push(pageText);
       if (detectOriginal) {
+        if (pageNumber === 1 && pdf.numPages > 1) {
+          w2InformationalCover = /File Forms W-2 and W-3 Electronically for Free/.test(pageText)
+            && /www\.ssa\.gov\/bso\b/.test(pageText)
+            && /CAUTION:\s*DO NOT FILE/.test(pageText)
+            && /Copy A of this form is provided for informational purposes only\./.test(pageText);
+        }
         const singleUprightLetterPage = pdf.numPages === 1 && page.rotate === 0 && page.view.join(",") === "0,0,612,792";
         const readAnnotations = () => page.getAnnotations({ intent: "any" });
         if (singleUprightLetterPage) necCopyB = await readNecCopyB(items, readAnnotations);
@@ -306,6 +314,7 @@ async function readPdf(file: File, detectOriginal: boolean) {
       }
       page.cleanup();
     }
+    if (w2CopyB && w2InformationalCover) w2CopyB.informationalPacket = true;
     return { text: pageTexts.join("\n\n"), necCopyB, w2CopyB };
   } finally {
     await task.destroy();
@@ -530,7 +539,16 @@ function buildParsedW2(
   };
 }
 
-function parse2026W2CopyB({ wages, withheld }: W2CopyB): ParsedUploadedDocument {
+function parse2026W2CopyB({ wages, withheld, informationalPacket }: W2CopyB): ParsedUploadedDocument {
+  if (informationalPacket) return {
+    kind: "w2",
+    taxYear: 2026,
+    coverage: "partially-supported",
+    label: "2026 Form W-2 (official info-copy PDF)",
+    notes: "Use the taxpayer's original wage statement to confirm payroll facts.",
+    seededFactIds: ["wages", "withholding"],
+    detectedFacts: [],
+  };
   if (wages === null && withheld === null) return {
     kind: "w2",
     taxYear: null,

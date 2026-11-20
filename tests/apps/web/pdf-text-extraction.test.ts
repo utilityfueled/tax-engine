@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AnnotationFlags, degrees, PDFDocument, PDFHexString, PDFName, StandardFonts } from "pdf-lib";
 import { detectUploadedDocumentFromFile, extractPdfTextFromFile, prepareUploadableFiles } from "../../../apps/web/src/lib/uploaded-document-detection";
-import { createWorkspaceRecord, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
+import { createWorkspaceRecord, getFutureYearSampleUploadMessage, ingestFilesIntoWorkspace } from "../../../apps/web/src/lib/workspace-storage";
 import { reconcileWorkspaceGuidedState } from "../../../apps/web/src/lib/workspace-guided-state";
 import { startCompleteInterview } from "../../guided-interview/complete-facts";
 
@@ -9,9 +9,11 @@ vi.mock("server-only", () => ({}));
 
 async function w2CopyB({
   top = [null, null], bottom = [null, null], overlay, bottomEmployer, partlyFlattened = false, rotated = false, withSecondPage = false,
+  withInfoCover = false,
 }: {
   top?: readonly (string | null)[]; bottom?: readonly (string | null)[];
   overlay?: string; bottomEmployer?: string; partlyFlattened?: boolean; rotated?: boolean; withSecondPage?: boolean;
+  withInfoCover?: boolean;
 }) {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -56,8 +58,26 @@ async function w2CopyB({
   if (overlay) page.drawText(overlay, { x: 339, y: 712, size: 7, font });
   if (rotated) page.setRotation(degrees(90));
   if (withSecondPage) pdf.addPage([612, 792]);
+  if (withInfoCover) {
+    const cover = pdf.insertPage(0, [612, 792]);
+    for (const [index, text] of [
+      "File Forms W-2 and W-3 Electronically for Free",
+      "To electronically file, go to: www.ssa.gov/bso.",
+      "CAUTION: DO NOT FILE",
+      "Copy A of this form is provided for informational purposes only.",
+    ].entries()) cover.drawText(text, { x: 38, y: 740 - index * 20, size: 12, font });
+  }
   return new File([new Uint8Array(await pdf.save())], "unnamed.pdf", { type: "application/pdf" });
 }
+
+it("recognizes the official 2026 W-2 informational packet before original intake", async () => {
+  const [upload] = await prepareUploadableFiles([await w2CopyB({ top: ["3,210.09", "0"], withInfoCover: true })]);
+  expect(upload.detectedDocument).toMatchObject({
+    kind: "w2", taxYear: 2026, label: "2026 Form W-2 (official info-copy PDF)", detectedFacts: [],
+  });
+  expect(getFutureYearSampleUploadMessage([upload])).toContain("is an official sample document for tax year 2026");
+  expect(getFutureYearSampleUploadMessage([upload], true)).toContain("is an official sample document for tax year 2026");
+});
 
 it.each([
   { name: "top wages and explicit zero withholding", top: ["3,210.09", "0"], year: 2026, wages: "3210.09", withheld: "0.00" },
