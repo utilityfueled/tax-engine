@@ -22,6 +22,17 @@ it('collects source classifications and exact original capital records', async (
     await click('Copy current investment records for review');
     expect(latest?.longTermAssets?.[0]).toMatchObject({ sourceTaxYear: '2025', character: 'collectible', proceeds: '9007199254740993.03' });
     await change('Capital worksheet tax year', '2025'); await change('Prior short-term capital loss carryover', '-1000');
+    await click('Add prior loss worksheet'); expect(latest?.priorLossSources).toEqual([{}]);
+    await change('Prior loss worksheet 1 prior return tax year', '2024'); await change('Prior loss worksheet 1 source reference', 'prior source');
+    await change('Prior loss worksheet 1 filing type', 'joint'); await change('Prior loss worksheet 1 loss owner', 'joint');
+    await change('Did the current spouses file the prior return together for prior loss worksheet 1?', 'false');
+    await change('Prior loss worksheet 1 short-term loss', '-1000'); await change('Prior loss worksheet 1 long-term loss', '0');
+    expect(latest?.priorLossSources?.[0]).toMatchObject({ sourceTaxYear: '2024', sourceReference: 'prior source', priorReturnType: 'joint',
+      owner: 'joint', sameJointFilersConfirmed: false, shortTermCapitalLoss: '-1000', longTermCapitalLoss: '0' });
+    await change('Have you reviewed the capital source worksheet after the last edit?', 'true');
+    await change('Prior loss worksheet 1 loss owner', 'primary');
+    expect(latest?.sourceFactsConfirmed).toBeNull(); expect(latest?.priorLossSources?.[0]?.sameJointFilersConfirmed).toBeUndefined();
+    await click('Remove prior loss worksheet 1'); expect(latest?.priorLossSources).toEqual([]);
     await change('Does the return include Form 2439', 'false'); expect(latest?.form2439Present).toBe(false);
     await change('Asset 1 original tax year', '2025'); await change('Asset 1 original source reference', 'private actual source');
     await change('Have you reviewed the capital source worksheet after the last edit?', 'true'); expect(latest?.sourceFactsConfirmed).toBe(true);

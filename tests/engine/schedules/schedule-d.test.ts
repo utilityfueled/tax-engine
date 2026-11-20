@@ -8,6 +8,7 @@ import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateScheduleD } from "@/engine/schedules/schedule-d.js";
 import { getConstants } from "@/models/constants.js";
+import { assertCapitalLossCarryoverSources } from "@/engine/assert-capital-loss-carryover-sources.js";
 import { simpleW2Fixture, complexMFJFixture } from "../../fixtures/simple-w2.js";
 import { qsbsFullExclusionFundInput } from "../../fixtures/section-1202.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -48,6 +49,41 @@ function makeFixtureWithTransactions(
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule D - Net Gains/Losses", () => {
+  it("validates prior capital loss ownership and source year before netting", () => {
+    const first = {
+      sourceTaxYear: 2024, sourceReference: "Prior worksheet A", priorReturnType: "individual" as const,
+      owner: "primary" as const, shortTermCapitalLoss: "-10.23", longTermCapitalLoss: "0", sourceFactsConfirmed: true,
+    };
+    const second = {
+      ...first, sourceReference: "Prior worksheet B", owner: "spouse" as const,
+      shortTermCapitalLoss: "0", longTermCapitalLoss: "-100.77",
+    };
+    const joint = {
+      ...first, priorReturnType: "joint" as const, owner: "joint" as const,
+      sameJointFilersConfirmed: true, longTermCapitalLoss: "-100.77",
+    };
+    const current = { ...simpleW2Fixture, taxpayer: complexMFJFixture.taxpayer };
+    const losses = { suspendedPassiveLosses: [], shortTermCapitalLoss: "-10.23", longTermCapitalLoss: "-100.77" };
+    for (const rows of [[first, second], [joint]]) {
+      const result = calculateScheduleD({ ...current, priorYear: { ...losses, capitalLossSources: rows } }, "married_filing_jointly", c);
+      expect([result.netShortTerm.toFixed(), result.netLongTerm.toFixed()]).toEqual(["-10.23", "-100.77"]);
+    }
+    for (const rows of [
+      [{ ...first, sourceTaxYear: 2023 }, second], [first, { ...second, sourceReference: first.sourceReference }],
+      [joint, second], [{ ...joint, sameJointFilersConfirmed: false }], [first], [],
+    ]) {
+      expect(() => calculateScheduleD({ ...current, priorYear: { ...losses, capitalLossSources: rows } }, "married_filing_jointly", c)).toThrow(/prior capital loss/i);
+    }
+    const separate = { ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: "married_filing_separately" as const } };
+    expect(() => calculateScheduleD({ ...separate, priorYear: { ...losses, capitalLossSources: [joint] } }, "married_filing_separately", c)).toThrow(/prior capital loss/i);
+    const ownShare = { ...first, priorReturnType: "joint" as const, longTermCapitalLoss: "-100.77" };
+    const result = calculateScheduleD({ ...separate, priorYear: { ...losses, capitalLossSources: [ownShare] } }, "married_filing_separately", c);
+    expect(result.netCapitalGainLoss.toFixed()).toBe("-111");
+    const next = { taxYear: 2026, jointReturn: false };
+    expect(() => assertCapitalLossCarryoverSources({ ...losses, capitalLossSources: [{ ...ownShare, sourceTaxYear: 2025 }] }, next)).not.toThrow();
+    expect(() => assertCapitalLossCarryoverSources({ ...losses, capitalLossSources: [ownShare] }, next)).toThrow(/immediately preceding/);
+  });
+
   it("Schedule D Line 7 - net short-term gain", () => {
     const input = makeFixtureWithTransactions([
       { holdingPeriod: "short", proceeds: "10000", costBasis: "8000" },

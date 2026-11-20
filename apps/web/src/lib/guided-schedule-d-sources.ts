@@ -1,4 +1,5 @@
-import { ScheduleDSpecialGainSourcesSchema, type TaxYearInput } from '@/models/inputs.js';
+import { assertCapitalLossCarryoverSources } from '@/engine/assert-capital-loss-carryover-sources.js';
+import { CapitalLossCarryoverSourceSchema, ScheduleDSpecialGainSourcesSchema, type TaxYearInput } from '@/models/inputs.js';
 import type { BrokerageEntryData, DividendEntryData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import type { ChildElectionData } from './guided-child-election-facts';
 import { parseGuidedCurrency } from './guided-currency';
@@ -9,13 +10,24 @@ type Identity = { firstName?: string; lastName?: string; ssnLast4?: string };
 type Source = { sourceId?: string; sourceTaxYear?: string; sourceReference?: string; accountHolder?: string; payerName?: string };
 export type ScheduleDAssetSource = Source & Partial<Record<'description' | 'dateAcquired' | 'dateSold' | 'proceeds' | 'costBasis' | 'adjustments' | 'washSaleDisallowed' | 'character', string>> & { washSale?: boolean | null };
 export type ScheduleDReportedSource = Source & Partial<Record<'netLongTermCapitalGain' | 'collectiblesGain' | 'unrecapturedSection1250Gain' | 'section1202Gain', string>>;
+export interface PriorCapitalLossSourceData {
+  sourceTaxYear?: string;
+  sourceReference?: string;
+  priorReturnType?: 'individual' | 'joint';
+  owner?: 'primary' | 'spouse' | 'joint';
+  shortTermCapitalLoss?: string;
+  longTermCapitalLoss?: string;
+  sameJointFilersConfirmed?: boolean | null;
+}
 export interface ScheduleDSourceData {
   sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null; allSourcesIncluded?: boolean | null;
   primary?: Identity; spouse?: Identity; priorShortTermCapitalLoss?: string; priorLongTermCapitalLoss?: string; section1231Lookback?: string;
+  priorLossSources?: PriorCapitalLossSourceData[];
   amtBasisAndCarryoversSameAsRegularConfirmed?: boolean | null; form2439Present?: boolean | null;
   partnershipInterestDispositionPresent?: boolean | null; other1250DispositionPresent?: boolean | null;
   longTermAssets?: ScheduleDAssetSource[]; reportedGains?: ScheduleDReportedSource[];
 }
+type PriorCapitalLossInput = Pick<NonNullable<TaxYearInput['priorYear']>, 'shortTermCapitalLoss' | 'longTermCapitalLoss' | 'capitalLossSources'>;
 type InvestmentSources = { brokerageEntries: BrokerageEntryData[]; dividendEntries: DividendEntryData[]; digitalAssetEntries?: DigitalAssetEntryData[]; childElections?: ChildElectionData[]; scheduleDSources?: ScheduleDSourceData };
 const started = (entry: object) => Object.values(entry).some(value => typeof value === 'string' && value.trim() !== '');
 const normalized = (value: string | undefined) => (value ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -60,8 +72,22 @@ function sameAmount(left: string | undefined, right: string | undefined, label: 
   if (!parseGuidedCurrency(amount(left, label)).eq(amount(right, label))) throw new Error(`The actual capital ${label} changed; reconcile the original source worksheet.`);
 }
 
+function parsePriorLossSource(row: PriorCapitalLossSourceData, sourceFactsConfirmed: ScheduleDSourceData['sourceFactsConfirmed']) {
+  const worksheetYear = row.sourceTaxYear?.trim() ?? '';
+  const parsed = CapitalLossCarryoverSourceSchema.safeParse({
+    ...row,
+    sourceTaxYear: /^\d{4}$/.test(worksheetYear) ? Number(worksheetYear) : undefined,
+    shortTermCapitalLoss: amount(row.shortTermCapitalLoss, 'prior capital loss amount for short-term losses'),
+    longTermCapitalLoss: amount(row.longTermCapitalLoss, 'prior capital loss amount for long-term losses'),
+    sameJointFilersConfirmed: row.sameJointFilersConfirmed ?? undefined,
+    sourceFactsConfirmed,
+  });
+  if (!parsed.success) throw new Error('Complete the actual prior capital loss worksheet year, original reference, owner and both loss amounts.');
+  return parsed.data;
+}
+
 export function buildGuidedScheduleDInputs(investments: InvestmentSources | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData): {
-  scheduleDSpecialGainSources?: TaxYearInput['scheduleDSpecialGainSources']; priorYear?: Pick<NonNullable<TaxYearInput['priorYear']>, 'shortTermCapitalLoss' | 'longTermCapitalLoss'>;
+  scheduleDSpecialGainSources?: TaxYearInput['scheduleDSpecialGainSources']; priorYear?: PriorCapitalLossInput;
 } {
   if (!investments) return {};
   const data = investments.scheduleDSources;
@@ -86,7 +112,9 @@ export function buildGuidedScheduleDInputs(investments: InvestmentSources | unde
   identity(facts.primary, personal ? { ...personal, firstName: [personal.firstName?.trim(), middleInitial].filter(Boolean).join(' ') } : undefined);
   if (filingStatus === 'mfj') identity(facts.spouse, personal?.spouse);
   else if (facts.spouse) throw new Error('A spouse capital worksheet identity requires the actual joint return.');
-  if (parseGuidedCurrency(facts.priorShortTermCapitalLoss).gt(0) || parseGuidedCurrency(facts.priorLongTermCapitalLoss).gt(0)) throw new Error('Enter capital loss carryovers as zero or negative actual amounts.');
+  const priorYear: PriorCapitalLossInput = { shortTermCapitalLoss: facts.priorShortTermCapitalLoss, longTermCapitalLoss: facts.priorLongTermCapitalLoss };
+  if (data.priorLossSources?.length) priorYear.capitalLossSources = data.priorLossSources.map(row => parsePriorLossSource(row, facts.sourceFactsConfirmed));
+  assertCapitalLossCarryoverSources(priorYear, { taxYear, jointReturn: filingStatus === 'mfj', requireSources: true });
   if (!parseGuidedCurrency(facts.section1231Lookback).isZero() || facts.form2439Present || facts.partnershipInterestDispositionPresent || facts.other1250DispositionPresent) throw new Error('These additional capital/property source methods need their separate source worksheets; keep the actual answers saved.');
   if (!facts.amtBasisAndCarryoversSameAsRegularConfirmed) throw new Error('Different AMT basis or carryovers require their actual separate AMT source worksheet.');
   const expected = captureScheduleDRecords(investments);
@@ -109,7 +137,7 @@ export function buildGuidedScheduleDInputs(investments: InvestmentSources | unde
       }
     }
   }
-  return { scheduleDSpecialGainSources: facts, priorYear: { shortTermCapitalLoss: facts.priorShortTermCapitalLoss, longTermCapitalLoss: facts.priorLongTermCapitalLoss } };
+  return { scheduleDSpecialGainSources: facts, priorYear };
 }
 export function scheduleDSourceFactErrors(investments: InvestmentSources | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData): Record<string, string> {
   try { buildGuidedScheduleDInputs(investments, taxYear, filingStatus, personal); return {}; }

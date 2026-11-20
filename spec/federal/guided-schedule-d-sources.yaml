@@ -20,6 +20,11 @@ notes: |
   Missing special methods remain explicit software boundaries; no readiness or
   professional qualification claim is made by this collector.
 lines:
+  - line: "filed-capital-loss-provenance"
+    description: "Collect the immediately preceding return and the owner of each carried loss"
+    formula: "For nonzero short-term or long-term carry, require confirmed prior worksheet year/reference, prior return type, owner attribution and actual signed amounts. On a joint return accept both individual shares or one whole prior return filed jointly by the same couple. On an individual return accept only the taxpayer's own loss, even if the prior worksheet was joint. Reconcile both totals exactly by character. Preserve missing draft facts and known zero separately."
+    irsRef: "2025 Schedule D instructions, Capital Loss Carryover Worksheet lines 6 and 14; Publication 550, Joint and separate returns"
+    testRef: "tests/guided-interview/guided-schedule-d-sources.test.ts::collects the preceding worksheets and reconciles separate losses for a joint return"
   - line: "child-netting"
     description: "Pass actual child special character and capital loss sources"
     formula: "Actual child4000interest/6000capital with1000collectibles/20001250 and parent1000shortloss yieldsD18=0,D19=1190,netcapital3380; source amounts unchanged"

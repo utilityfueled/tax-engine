@@ -29,7 +29,7 @@ function fixture(kind: 'broker' | 'fund' = 'broker') {
         ownershipPercentage: '1', entityRecognizedGain: '100025', entityBasisIgnoringPostIssueAdditions: '10010', fundCapitalGainDistributions: '1500.50', fundSection1202Gain: '1000.25' } });
   }
   const records = captureScheduleDRecords(investments(state));
-  investments(state).scheduleDSources = { ...structuredClone(actualGuidedScheduleD), ...records, priorShortTermCapitalLoss: '0',
+  investments(state).scheduleDSources = { ...structuredClone(actualGuidedScheduleD), ...records, priorLossSources: undefined, priorShortTermCapitalLoss: '0',
     reportedGains: records.reportedGains.map(row => ({ ...row, sourceTaxYear: '2025', sourceReference: 'Original fund source' })) };
   return state;
 }

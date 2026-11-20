@@ -30,6 +30,14 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await expect(page.getByLabel('Capital worksheet tax year', { exact: true })).toHaveValue('');
     for (const [label, value] of [['Capital worksheet tax year', '2025'], ['Capital worksheet source reference', 'synthetic-private-loss-source'], ['Primary capital source first name and middle initial', 'Jane'], ['Primary capital source last name', 'Example'], ['Primary capital source taxpayer ID last four digits', '0001']]) await page.getByLabel(label, { exact: true }).fill(value);
     for (const [label, value] of [['Prior short-term capital loss carryover', '-1000.01'], ['Prior long-term capital loss carryover', '0'], ['Actual section 1231 lookback amount', '0']]) await page.getByRole('textbox', { name: new RegExp(`^${label}`) }).fill(value);
+    await page.getByRole('button', { name: 'Add prior loss worksheet', exact: true }).click();
+    const prior = page.getByRole('group', { name: 'Prior loss worksheet 1', exact: true });
+    await expect(prior.getByLabel('Prior loss worksheet 1 prior return tax year', { exact: true })).toHaveValue('');
+    for (const [label, value] of [['prior return tax year', '2024'], ['source reference', 'synthetic-private-prior-return'], ['short-term loss', '-1000.01'], ['long-term loss', '0']]) {
+      await prior.getByRole('textbox', { name: `Prior loss worksheet 1 ${label}`, exact: true }).fill(value);
+    }
+    await prior.getByRole('combobox', { name: 'Prior loss worksheet 1 filing type', exact: true }).selectOption('joint');
+    await prior.getByRole('combobox', { name: 'Prior loss worksheet 1 loss owner', exact: true }).selectOption('primary');
     for (const [label, value] of [['Are AMT asset bases and capital loss carryovers the same as regular tax?', 'true'], ['Does the return include Form 2439 undistributed gains?', 'false'], ['Was a partnership interest disposed of?', 'false'], ['Were there other section 1250 property dispositions?', 'false'], ['Does this worksheet include every actual capital source and carryover?', 'true']]) await page.getByRole('combobox', { name: label, exact: true }).selectOption(value);
     const confirmed = page.getByRole('combobox', { name: 'Have you reviewed the capital source worksheet after the last edit?', exact: true });
     const childConfirmed = page.getByRole('combobox', { name: 'Have you reviewed all child election sources?', exact: true });
@@ -39,6 +47,8 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.reload();
     await page.getByText('Capital gain character and loss carryovers (Schedule D)', { exact: true }).click();
     await expect(confirmed).toHaveValue('true');
+    await expect(prior.getByLabel('Prior loss worksheet 1 loss owner', { exact: true })).toHaveValue('primary');
+    await expect(prior.getByRole('textbox', { name: 'Prior loss worksheet 1 short-term loss', exact: true })).toHaveValue('-1,000.01');
     const loss = page.getByRole('textbox', { name: /^Prior short-term capital loss carryover/ }); await expect(loss).toHaveValue('-1,000.01');
     await page.getByText('Report a child’s interest and dividends (Form 8814)', { exact: true }).click();
     await expect(childConfirmed).toHaveValue('true');
@@ -49,6 +59,6 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.getByText('Capital gain character and loss carryovers (Schedule D)', { exact: true }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: testInfo.outputPath(`schedule-d-sources-${viewport.width}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    for (const privateValue of ['synthetic-private-capital-source', 'synthetic-private-loss-source', actualGuidedChild.ssn, taxpayerFacts2025.ssn]) expect(requests.join('\n')).not.toContain(privateValue);
+    for (const privateValue of ['synthetic-private-capital-source', 'synthetic-private-loss-source', 'synthetic-private-prior-return', actualGuidedChild.ssn, taxpayerFacts2025.ssn]) expect(requests.join('\n')).not.toContain(privateValue);
   });
 }

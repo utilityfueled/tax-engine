@@ -26,7 +26,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
           currentSectionIndex: 7, completedSections: ['personal-info', 'income-investments', 'deductions', 'credits', 'other-taxes', 'payments', 'review', 'final-review'],
           segmentation: { filingStatus: 'single', incomeTypes: ['investments'], lifeEvents: [], stateCode: null },
           sectionData: { 'personal-info': personal, 'income-investments': { interestEntries: [], dividendEntries: [], brokerageEntries: [broker], section1202Sources: qsbs,
-            scheduleDSources: { ...capital, priorShortTermCapitalLoss: '0', longTermAssets: [{ ...trade, sourceId: 'form1099B:0:transaction:0', sourceTaxYear: '2025', sourceReference: 'Original broker statement', accountHolder: 'primary', payerName: broker.broker, character: 'qsbs' }] } } },
+            scheduleDSources: { ...capital, priorLossSources: undefined, priorShortTermCapitalLoss: '0', longTermAssets: [{ ...trade, sourceId: 'form1099B:0:transaction:0', sourceTaxYear: '2025', sourceReference: 'Original broker statement', accountHolder: 'primary', payerName: broker.broker, character: 'qsbs' }] } } },
         }));
       }, { id, personal: { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-3333' }, qsbs: actualGuidedQsbs, capital: actualGuidedScheduleD });
       await page.reload();

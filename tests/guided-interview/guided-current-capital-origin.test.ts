@@ -61,11 +61,16 @@ it('reconciles signed capital carry without inferring unknown histories', () => 
 it('retains actual QSBS context and explicit unsupported capital methods', () => {
   const state = fixture(), investments = required(state.sectionData['income-investments']);
   investments.brokerageEntries = [{ ...completeBrokerageSource, broker: 'Actual broker', sourceId: 'Original broker statement', sourceTaxYear: '2025', transactions: [{ ...completeTransactionSource, description: 'Synthetic eligible corporation', dateAcquired: '2008-01-02', dateSold: '2025-06-30', proceeds: '1100.35', costBasis: '100.10', specialGainCharacter: 'qsbs' }] }];
-  investments.section1202Sources = structuredClone(actualGuidedQsbs); investments.scheduleDSources = { ...structuredClone(actualGuidedScheduleD), ...captureScheduleDRecords(investments), priorShortTermCapitalLoss: '0', priorLongTermCapitalLoss: '0' }; recordCapital(state);
+  investments.section1202Sources = structuredClone(actualGuidedQsbs); investments.scheduleDSources = { ...structuredClone(actualGuidedScheduleD), ...captureScheduleDRecords(investments), priorLossSources: undefined, priorShortTermCapitalLoss: '0', priorLongTermCapitalLoss: '0' }; recordCapital(state);
   const result = calculateFederalTax(TaxYearInputSchema.parse(required(buildTaxInputFromGuidedData(state))));
   expect(result.capitalGainLoss.toFixed()).toBe('500.125'); expect(result.form172?.regular.sourcePartI[17].toFixed()).toBe('500.125'); expect(result.form172?.regular.netOperatingLoss.toFixed()).toBe('80000'); expect(result.form172?.alternativeTax.netOperatingLoss.toFixed()).toBe('74000');
   const missing = structuredClone(state); required(missing.sectionData['income-investments']).section1202Sources = undefined; expect(buildTaxInputFromGuidedData(missing)).toBeNull();
-  const negative = structuredClone(state); required(capital(negative).priorCapitalLosses).shortTermCapitalLoss = '-700'; required(required(negative.sectionData['income-investments']).scheduleDSources).priorShortTermCapitalLoss = '-700'; expect(() => build(negative)).toThrow(/negative|1202/i);
+  const negative = structuredClone(state);
+  required(capital(negative).priorCapitalLosses).shortTermCapitalLoss = '-700';
+  const negativeWorksheet = required(required(negative.sectionData['income-investments']).scheduleDSources);
+  negativeWorksheet.priorShortTermCapitalLoss = '-700';
+  negativeWorksheet.priorLossSources = required(actualGuidedScheduleD.priorLossSources).map(row => ({ ...row, shortTermCapitalLoss: '-700' }));
+  expect(() => build(negative)).toThrow(/negative|1202/i);
   const digital = fixture(); required(digital.sectionData['income-investments']).brokerageEntries[0].transactions[0].digitalAsset = true; recordCapital(digital); expect(() => build(digital)).toThrow(/digital|method/i);
 });
 it('rejects stale original records and revokes only substantive source confirmations', () => {

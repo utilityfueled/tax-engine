@@ -104,7 +104,7 @@ it('captures original long-term DA identities beside other capital sources', () 
   const capture = captureScheduleDRecords(investments);
   expect(capture.longTermAssets).toHaveLength(2);
   expect(capture.longTermAssets[1]).toMatchObject({ sourceId: 'form1099DA:0:transaction:0', sourceReference: JSON.stringify([da.sourceId, row.sourceId]), proceeds: '100.49', costBasis: '90.24', character: 'ordinary' });
-  investments.scheduleDSources = { ...actualGuidedScheduleD, ...capture, priorShortTermCapitalLoss: '0', priorLongTermCapitalLoss: '0' };
+  investments.scheduleDSources = { ...actualGuidedScheduleD, ...capture, priorLossSources: undefined, priorShortTermCapitalLoss: '0', priorLongTermCapitalLoss: '0' };
   const built = buildTaxInputFromGuidedData(state); if (!built) throw new Error('Missing mixed capital sources');
   const result = calculateFederalTax(TaxYearInputSchema.parse(built));
   expect(result.scheduleD.netLongTerm.toFixed()).toBe('110.25');

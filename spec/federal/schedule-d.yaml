@@ -4,6 +4,11 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1040sd"
 
 lines:
+  - line: "6-and-14-source-worksheet"
+    description: "Reconcile explicitly supplied prior-return capital loss source records"
+    formula: "Use the exact prior-return signed short and long loss totals only after verifying source year, references, attribution and filing unit. Do not accept a whole joint amount on a separate return or repeat a joint amount with owner-level components. Older amount-only inputs have no verified provenance."
+    irsRef: "2025 Schedule D instructions, Capital Loss Carryover Worksheet; Publication 550, Joint and separate returns"
+    testRef: "tests/engine/schedules/schedule-d.test.ts::validates prior capital loss ownership and source year before netting"
   - line: "7"
     description: "Net short-term capital gain or loss"
     formula: "Sum of Form 8949 Part I totals + K-1 Box 8 + prior year ST carryforward + Form 6781 short-term (40% section 1256 + straddle short-term) + Form 6252 short-term installment sale capital gain"

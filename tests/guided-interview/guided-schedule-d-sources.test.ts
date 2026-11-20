@@ -36,6 +36,7 @@ it('routes actual child special gains and signed carry sources through canonical
   const state = fixture(), original = JSON.stringify(state), input = buildTaxInputFromGuidedData(state);
   expect(input).not.toBeNull(); if (!input) throw new Error('Actual sources were not forwarded');
   expect(input.priorYear?.shortTermCapitalLoss).toBe('-1000');
+  expect(input.priorYear?.capitalLossSources).toEqual([expect.objectContaining({ sourceTaxYear: 2024, owner: 'primary', sourceFactsConfirmed: true })]);
   expect(input.form8814[0]?.electionFacts?.incomeCharacter?.collectiblesGain).toBe('1000');
   const result = calculateFederalTax(TaxYearInputSchema.parse(input));
   expect(result.scheduleD.netCapitalGainLoss.toFixed()).toBe('3380');
@@ -118,4 +119,28 @@ it('binds joint identities and preserves unsupported source method answers', () 
   }
   const single = structuredClone(state); single.segmentation.filingStatus = 'single';
   expect(() => build(single)).toThrow(/spouse/);
+});
+
+it('collects the preceding worksheets and reconciles separate losses for a joint return', () => {
+  const state = fixture();
+  investments(state).childElections = [];
+  state.segmentation.filingStatus = 'mfj';
+  required(state.sectionData['personal-info']).spouse = { firstName: 'Alex', lastName: 'Example', ssn: '444-55-6666', dateOfBirth: '1991-03-12', usResidencyMonths: '12' };
+  const facts = worksheet(state);
+  facts.spouse = { firstName: 'Alex', lastName: 'Example', ssnLast4: '6666' };
+  const first = { sourceTaxYear: '2024', sourceReference: 'Primary worksheet', priorReturnType: 'individual' as const,
+    owner: 'primary' as const, shortTermCapitalLoss: '-250.23', longTermCapitalLoss: '0' };
+  const second = { ...first, sourceReference: 'Spouse worksheet', owner: 'spouse' as const, shortTermCapitalLoss: '-749.77' };
+  facts.priorLossSources = [first, second];
+  expect(build(state).priorYear?.capitalLossSources).toEqual([
+    { ...first, sourceTaxYear: 2024, sourceFactsConfirmed: true },
+    { ...second, sourceTaxYear: 2024, sourceFactsConfirmed: true },
+  ]);
+  for (const sources of [undefined, [], [first], [first, { ...second, sourceTaxYear: '2025' }], [first, { ...second, owner: undefined }]]) {
+    facts.priorLossSources = sources;
+    expect(() => build(state)).toThrow(/prior capital loss/i);
+  }
+  facts.priorShortTermCapitalLoss = '0';
+  facts.priorLossSources = undefined;
+  expect(build(state).priorYear?.capitalLossSources).toBeUndefined();
 });

@@ -22,7 +22,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({ factsVersion: 2, phase: 'interview', taxYear: 2025,
         currentSectionIndex: 1, completedSections: ['personal-info'], segmentation: { filingStatus: 'single', incomeTypes: ['investments'], lifeEvents: [], stateCode: null },
         sectionData: { 'personal-info': personal, 'income-investments': { interestEntries: [], dividendEntries: [], brokerageEntries: [broker], section1202Sources: qsbs,
-          scheduleDSources: { ...capital, priorShortTermCapitalLoss: '0', longTermAssets: [{ ...trade, sourceId: 'form1099B:0:transaction:0', sourceTaxYear: '2025', sourceReference: 'Original broker statement', accountHolder: 'primary', payerName: broker.broker, character: 'qsbs' }] } } },
+          scheduleDSources: { ...capital, priorLossSources: undefined, priorShortTermCapitalLoss: '0', longTermAssets: [{ ...trade, sourceId: 'form1099B:0:transaction:0', sourceTaxYear: '2025', sourceReference: 'Original broker statement', accountHolder: 'primary', payerName: broker.broker, character: 'qsbs' }] } } },
       }));
     }, { id, personal, qsbs: actualGuidedQsbs, capital: actualGuidedScheduleD });
     await page.reload();

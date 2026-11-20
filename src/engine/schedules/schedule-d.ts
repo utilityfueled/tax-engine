@@ -13,6 +13,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import { d, sum, zeroFloor, max, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { assertCapitalLossCarryoverSources } from "../assert-capital-loss-carryover-sources.js";
 import { calculateForm8949 } from "../forms/form-8949.js";
 import { calculateForm4797, type Form4797Result } from "../forms/form-4797.js";
 import { calculateHomeSales, type HomeSaleAggregateResult } from "../forms/home-sale-exclusion.js";
@@ -57,6 +58,10 @@ export function calculateScheduleD(
   precomputedForm4797?: Form4797Result,
   extra?: ScheduleDExtraInput
 ): ScheduleDResult {
+  assertCapitalLossCarryoverSources(input.priorYear, {
+    taxYear: input.taxpayer.taxYear,
+    jointReturn: filingStatus === "married_filing_jointly" && input.taxpayer.spouse !== undefined,
+  });
   const audit = new AuditTrail();
   const k1Charitable = extra?.k1CharitableSources ?? calculateK1CharitableReturnSources(input);
   const passiveCapital = input.k1CharitableSources?.statements?.some(row => row.capitalCharacter !== undefined)

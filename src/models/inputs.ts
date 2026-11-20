@@ -2851,10 +2851,22 @@ export const Form172OriginSourcesSchema = z.object({
   }).optional(),
 });
 
+export const CapitalLossCarryoverSourceSchema = z.object({
+  sourceTaxYear: z.number().int(),
+  sourceReference: z.string().trim().min(1),
+  priorReturnType: z.enum(['individual', 'joint']),
+  owner: z.enum(['primary', 'spouse', 'joint']),
+  shortTermCapitalLoss: decimal,
+  longTermCapitalLoss: decimal,
+  sameJointFilersConfirmed: z.boolean().optional(),
+  sourceFactsConfirmed: z.boolean(),
+});
+
 export const PriorYearCarryforwardSchema = z.object({
   capitalLossCarryforward: optionalDecimal,
   shortTermCapitalLoss: optionalDecimal,
   longTermCapitalLoss: optionalDecimal,
+  capitalLossSources: z.array(CapitalLossCarryoverSourceSchema).max(2).optional(),
   suspendedPassiveLosses: z
     .array(
       z.object({
