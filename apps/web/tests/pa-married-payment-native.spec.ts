@@ -1,4 +1,5 @@
 // Spec: spec/state/pa-married-payment-native-browser.yaml. No target source injection after entry.
+import { enterKnownNativeControl } from './helpers/known-native-control';
 import { nativeControlTag } from './helpers/native-control-snapshot';
 import {expect,test,type Page,type TestInfo} from '@playwright/test';
 import assert from 'node:assert/strict';
@@ -61,15 +62,15 @@ for(const width of [1280,390])test.describe(`Native separate PA payment original
    await enter(page,prefix+' printed taxYear','2025');await enter(page,prefix+' prior credit applied date or no date',account.originalAccount.priorCreditAppliedOn??'');
    await enter(page,prefix+' complete account checked','true');await enter(page,prefix+' no transfers offsets refunds or adjustments checked','true');
    for(const[n,row]of account.originalAccount.receipts.entries()){
-    await panel.getByRole('button',{name:`Add ${prefix} posted original receipt row`,exact:true}).click();for(const[key,value]of Object.entries(row))await enter(page,`${prefix} posted row ${n+1} ${key}`,String(value));
+    await panel.getByRole('button',{name:`Add ${prefix} posted original receipt row`,exact:true}).click();for(const[key,value]of Object.entries(row))await enterKnownNativeControl(page,`${prefix} posted row ${n+1} ${key}`,String(value),'input');
    }
    for(const[n,row]of account.receipts.entries()){
     await panel.getByRole('button',{name:`Add ${prefix} actual payment receipt`,exact:true}).click();await enter(page,`${prefix} receipt ${n+1} source reference`,row.sourceReference);
     await enter(page,`${prefix} receipt ${n+1} intended installment`,row.intendedInstallment===null?'':String(row.intendedInstallment));
-    for(const[key,value]of Object.entries(row.original))await enter(page,`${prefix} receipt ${n+1} original ${key}`,String(value));
+    for(const[key,value]of Object.entries(row.original))await enterKnownNativeControl(page,`${prefix} receipt ${n+1} original ${key}`,String(value),'input');
    }
    await enter(page,prefix+' prior credit status',account.priorCredit.status);await enter(page,prefix+' prior credit source reference',account.priorCredit.sourceReference);
-   if(account.priorCredit.originalPriorReturn){await panel.getByRole('button',{name:`Add ${prefix} original prior return election`,exact:true}).click();for(const[key,value]of Object.entries(account.priorCredit.originalPriorReturn))await enter(page,prefix+' prior original '+key,String(value));}
+   if(account.priorCredit.originalPriorReturn){await panel.getByRole('button',{name:`Add ${prefix} original prior return election`,exact:true}).click();for(const[key,value]of Object.entries(account.priorCredit.originalPriorReturn))await enterKnownNativeControl(page,prefix+' prior original '+key,String(value),'input');}
    const expected=required(f.expected.owners.find(row=>row.accountHolder===account.accountHolder)).payments;
    await enter(page,tag+' PA account original source reference',expected.sourceReference);await enter(page,tag+' all current PA payments reviewed','true');
    for(const[key,label]of [['estimatedPaymentsStatus','estimated payment history'],['extensionPaymentsStatus','extension payment history'],['priorCreditStatus','prior credit history'],['priorReturnStatus','prior return history']]as const)await enter(page,tag+' actual '+label,expected[key]);
