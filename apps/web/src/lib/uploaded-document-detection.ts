@@ -344,8 +344,12 @@ function completeInterestSource(entry: WorkspaceStructuredFactMachineValue1099In
   return Boolean(entry.payer) && [entry.earlyWithdrawalPenalty, entry.federalWithheld, entry.usSavingsBondInterest, entry.taxExemptInterest].every((value) => value !== undefined);
 }
 
-function parseUploaded1099NecText(text: string, fileName = ""): ParsedUploadedDocument | null {
-  if (!/1099[- ]?NEC\b/i.test(`${fileName}\n${text}`)) return null;
+function parseUploaded1099NecText(text: string): ParsedUploadedDocument | null {
+  // IRS cover pages can mention NEC revisions while the actual statement is for another form.
+  const headings = text.match(/^[ \t]*(?:20\d{2}[ \t]+)?(?:Form[ \t]+)?1099[- ]?NEC(?:[ \t]+20\d{2})?[ \t]*$/gim);
+  // PDF.js joins both TIN labels with box 1 on the archived 2025 form.
+  const boxOneLabel = /^[ \t]*(?:Payer's[ \t]+TIN[ \t]+Recipient's[ \t]+TIN[ \t]+)?1a?[ \t]+Nonemployee[ \t]+compensation\b/im;
+  if (!headings || !boxOneLabel.test(text)) return null;
   const base = {
     kind: "1099-nec" as const,
     coverage: "partially-supported" as const,
@@ -353,7 +357,7 @@ function parseUploaded1099NecText(text: string, fileName = ""): ParsedUploadedDo
     notes: "Confirm the actual recipient, source boxes and separate business facts in the guided interview before calculating.",
     seededFactIds: ["nonemployee-compensation", "schedule-c-expense-review"] as SeededFactId[],
   };
-  if (sourceFormCount(text, "1099-NEC") > 1) return { ...base, notes: "Multiple Forms 1099-NEC need separate source records and recipient confirmation.", detectedFacts: [] };
+  if (headings.length > 1) return { ...base, notes: "Multiple Forms 1099-NEC need separate source records and recipient confirmation.", detectedFacts: [] };
   const compensation = sourceBoxAmount(text, "1(?:a)?\\s+Nonemployee [Cc]ompensation");
   if (compensation === undefined) return { ...base, detectedFacts: [] };
   const payer = sourcePayer(text);
@@ -599,7 +603,7 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
   const parsed = parseUploadedW2Text(normalizedText, fileName)
     ?? parseUploadedComposite1099Text(normalizedText, fileName)
     ?? parseUploaded1099IntText(normalizedText, fileName)
-    ?? parseUploaded1099NecText(normalizedText, fileName)
+    ?? parseUploaded1099NecText(normalizedText)
     ?? parseUploaded1099DAText(normalizedText, fileName)
     ?? (/1095.?c/i.test(signalText)
       ? buildReviewedDocument(

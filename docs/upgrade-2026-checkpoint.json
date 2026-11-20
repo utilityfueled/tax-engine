@@ -1,5 +1,15 @@
 {
   "activeContinuation": {
+    "nov20NecPrintedSourceIdentity": {
+      "focusedTestsPassed": 63,
+      "actualWholeIrsFormsPassed": 2,
+      "actualIndependentIrsCopyPagesPassed": 8,
+      "actualProseNegativePdfsPassed": 3,
+      "registeredFilenameFallbackPreserved": true,
+      "independentReviewRetest": "passed after accepting the printed 2025 TIN and Box 1 row",
+      "detectorSha256": "33eab61692a506ee1bf807af953c715475030099c358817006dc770654769f81",
+      "privateReceipt": ".local/upgrade-evidence/nov20-nec-upload-official-copies.3rBk1vd6/receipt.json"
+    },
     "nov20InformationReturnFilenameFacts": {
       "sourceForms": ["1098-E", "1099-R", "SSA-1099"],
       "focusedTestsPassed": 1103,

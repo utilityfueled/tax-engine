@@ -8810,3 +8810,23 @@ recorded under `activeContinuation.nov20InformationReturnFilenameFacts`.
 A separate 38-test run opened an untouched legacy storage record for each
 form. It confirmed the stale financial entry was removed from the live
 return on reopen and from the saved record at its next normal save.
+
+## November 20 Form 1099-NEC printed source identification
+
+The normal PDF.js upload path no longer treats prose mentioning Form 1099-NEC
+as the form itself. It requires the printed heading and numbered compensation
+box label. The registered filename fallback remains available for the sample.
+The initial candidate rejected actual April 2025 pages where PDF.js joins
+the payer and recipient TIN labels with Box 1. Independent review reproduced
+the failure. The revised recognizer accepts that row, and an independent
+retest confirmed that both editions' Copy B pages remain recognized.
+[April 2025 IRS form](https://www.irs.gov/pub/irs-prior/f1099nec--2025.pdf) ·
+[December 2026 IRS form](https://www.irs.gov/pub/irs-pdf/f1099nec.pdf).
+
+Both full IRS PDFs and all eight isolated actual copies remained recognized
+under neutral filenames. Three unrelated documents with NEC advisory prose
+now stay unclassified and do not generate NEC or Schedule C prompts. All
+63 scoped tests passed, including exact-cent and zero values in supported
+boxes. The real filled Copy B layout still leaves the flattened amount
+unparsed. The spec-first and independent findings remain in the checkpoint
+under `activeContinuation.nov20NecPrintedSourceIdentity`.

@@ -1,12 +1,51 @@
 // Spec: spec/federal/guided-input.yaml, nec-document-source-boundary
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import { describe, expect, it } from "vitest";
-import { parseUploadedDocumentText } from "@/lib/uploaded-document-detection";
+import { parseUploadedDocumentText, prepareUploadableFiles } from "@/lib/uploaded-document-detection";
 import { collectNecSuggestions } from "@/lib/workspace-assistant";
-import { createWorkspaceRecord, ingestFiles } from "@/lib/workspace-storage";
+import { createWorkspaceRecord, ingestFiles, ingestFilesIntoWorkspace } from "@/lib/workspace-storage";
 
 const source = `Tax Year 2025\nForm 1099-NEC\nPayer: Actual design client\nPayer's TIN: 12-3456789\n1 Nonemployee compensation $ 9007199254740993.01`;
 
 describe("actual NEC document source", () => {
+  // Spec: spec/federal/guided-input.yaml#nec-document-identity.
+  it("requires an actual NEC heading and compensation box in normal PDF uploads", async () => {
+    const coverLines = [
+      "CAUTION: THIS COPY IS FOR INFORMATIONAL PURPOSES",
+      "The April 2025 revision of Form 1099-NEC reports calendar year 2025.",
+      "The December 2026 revision of Form 1099-NEC reports calendar year 2026.",
+    ];
+    const pdf = async (fileName: string, ...pages: string[][]) => {
+      const document = await PDFDocument.create();
+      const font = await document.embedFont(StandardFonts.Helvetica);
+      for (const lines of pages) {
+        const page = document.addPage();
+        lines.forEach((line, index) => page.drawText(line, { x: 36, y: 770 - 20 * index, size: 10, font }));
+      }
+      return new File([new Uint8Array(await document.save())], fileName, { type: "application/pdf" });
+    };
+    const [studentLoan, retirement, publication, genuine, priorYear] = await prepareUploadableFiles(await Promise.all([
+      pdf("unlabeled-loan.pdf", coverLines, ["Form 1098-E", "Student Loan Interest Statement"]),
+      pdf("unlabeled-distribution.pdf", coverLines, ["Form 1099-R", "1 Gross distribution $ 20.00"]),
+      pdf("overview-1099-NEC.pdf", ["Publication 915", "Tax forms include 1099-R, 1099-MISC, and 1099-NEC."]),
+      pdf("unlabeled-compensation.pdf", coverLines, ["2026 Form 1099-NEC", "Payer: Actual design client", "1a Nonemployee compensation $ 9007199254740993.01", "4 Federal income tax withheld $ 0.00"]),
+      pdf("prior-year-original.pdf", ["Form 1099-NEC", "PAYER'S TIN RECIPIENT'S TIN 1 Nonemployee compensation"]),
+    ]));
+
+    for (const upload of [studentLoan, retirement, publication]) {
+      if (!upload) throw new Error("Expected prepared PDF upload");
+      expect(upload.detectedDocument).toBeNull();
+      const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord("unrelated-source"), [upload]);
+      expect(workspace.documents[0]).toMatchObject({ kind: "unknown", seededFactIds: [], detectedFacts: [] });
+    }
+    expect(genuine?.detectedDocument).toMatchObject({ kind: "1099-nec", coverage: "partially-supported" });
+    expect(genuine?.detectedDocument?.detectedFacts[0]?.machineValue).toMatchObject({ nonemployeeCompensation: "9007199254740993.01", federalWithheld: "0.00" });
+    expect(priorYear?.detectedDocument).toMatchObject({ kind: "1099-nec", coverage: "partially-supported", detectedFacts: [] });
+
+    const fixture = ingestFilesIntoWorkspace(createWorkspaceRecord("registered-nec-sample"), [{ name: "irs-1099-nec-2025.pdf", size: 23 }]);
+    expect(fixture.documents[0]).toMatchObject({ kind: "1099-nec", taxYear: 2025, matchedFixtureId: "irs-1099-nec-2025" });
+  });
+
   it("keeps absent source withholding ownership and state facts unknown", () => {
     const parsed = parseUploadedDocumentText(source, "client.pdf");
     expect(parsed).toMatchObject({ kind: "1099-nec", taxYear: 2025, coverage: "partially-supported" });
