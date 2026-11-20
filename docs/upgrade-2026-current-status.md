@@ -1,5 +1,15 @@
 # Current 2026 upgrade status
 
+Federal calculation and standalone Schedule E now hold explicitly future
+Schedule K-1 originals before using their amounts. Earlier headers can
+cover a fiscal period ending in the return year and remain eligible for
+the existing checks. The successor passed the generated inventory, all
+9,670 spec references and three type checks.
+[Schedule K-1 evidence](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals).
+Resume from `activeContinuation.nov20FutureScheduleK1Originals` in the
+[checkpoint](upgrade-2026-checkpoint.json) for the current commit, run IDs and
+required human review.
+
 Form 1040 now rejects negative prior-return overpayment credits before totaling
 federal payments. The exact application passed all 29,508 tests in both full
 runs, with 88.35% branch coverage against the 85% gate. The full managed

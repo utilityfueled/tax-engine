@@ -1,7 +1,7 @@
 {
   "activeContinuation": {
     "status": "active-not-release-qualified",
-    "resumeInstruction": "Read docs/upgrade-2026-current-status.md first. Query only activeContinuation.liveRuns, nextActions and the single named package key needed next; do not print the entire activeContinuation object.",
+    "resumeInstruction": "Start with docs/upgrade-2026-current-status.md. Query only the package key named there for the current work. Older run and action records document historical work. Keep review, release and security gates in force.",
     "branch": "main",
     "productionPushGuard": "Live read-only VercelCLI/API check2026-11-18T01:21:32Z: exact tax-engine project and approved preview-only ignored build command match; no mutation.",
     "commits": {
@@ -142,6 +142,17 @@
     "advisoryLedger": "docs/upgrade-2026-picomatch-security-20261117.md",
     "glibcXfdAdoptionReviewSha256": "4ec8f9dba1d92a0b7a8283b3e3aa080e84ea2140955df46c21c44e37dee0944f",
     "latestPushedSource": "9e5c455fc2f496e11bcc0cfef08c39365bf3b6ce",
+    "nov20FutureScheduleK1Originals": {
+      "commits": ["7112e36fe66d23a7bcc5bd89fe8bd69cea76665c", "0d4793abb97b41871dd970b810b30a48c6f784b1", "309b01a43cb2454f5f6dc5f51001169e97012d51"],
+      "basis": ["https://www.irs.gov/instructions/i1065sk1", "https://www.irs.gov/instructions/i1120ssk", "https://www.ecfr.gov/current/title-26/section-1.662(c)-1"],
+      "scope": "Hold an explicit future entity header in federal reporting and in standalone Schedule E Part II when the return year is present. Prior, matching and unknown headers retain the existing processing.",
+      "beforeImplementation": {"expectedFailures": 4, "controlsPassed": 2},
+      "verification": {"focusedFederalPassed": 1624, "successorFocusedPassed": 97, "estateTrustFollowupPassed": 104, "affectedLintErrors": 0, "exactSpecReferences": 9670, "inventoryPassed": true, "typechecksPassed": 3, "engineBuildPassed": true, "webBuildPassed": true, "offlineModelArtifactCheckPassed": true, "verifiedAiPrivateRefusalPreserved": true},
+      "managedBrowser": {"applicationSource": "0d4793abb97b41871dd970b810b30a48c6f784b1", "passed": 24, "failed": 0, "skipped": 0, "workers": 2, "retries": 0, "deadlineMs": 30000},
+      "githubApplicationRuns": {"CI": 44680826240, "Web": 44680826393, "Docker": 44680826224},
+      "humanReviewCase": "docs/upgrade-2026-human-tax-review-packet.md#schedule-k-1-original-header-year",
+      "evidence": ".local/upgrade-evidence/nov20-k1-source-year"
+    },
     "nov20AppliedFederalOverpayment": {
       "source": "f231820a25a6ab9178c9047131ee76690d4ee25d",
       "basis": "https://www.irs.gov/instructions/i1040gi",
@@ -151,7 +162,7 @@
       "fullLocalChecks": {"unit": 29508, "coverageTests": 29508, "testFiles": 2156, "branchCoveragePercent": 88.35, "branchGatePercent": 85, "postgres": "16.16", "databasesStopped": 2, "lintErrors": 0, "existingLintWarnings": 12111, "webTypecheck": "passed", "webBuild": "passed"},
       "fullLocalManagedBrowser": {"passes": 650, "failures": 0, "plannedHostedSkips": 5, "windows": 8, "workers": 2, "retries": 0, "deadlineMs": 30000, "serverClosed": true},
       "officialSourceRecheck": {"indexedValuesMatched": ["standard deduction", "child tax credit and refundable limit", "QBI thresholds", "Social Security wage base"], "currentForm1040": 2025, "form1040For2026": "draft"},
-      "githubApplicationRuns": {"CI": 44673842123, "Web": 44673842082, "DockerPassed": 44673842085},
+      "githubApplicationRuns": {"CI": 44673842123, "ciAllJobsPassed": true, "Web": 44673842082, "DockerPassed": 44673842085, "coverageTestsPassed": 29508, "branchCoveragePercent": 88.35, "managedBrowserPassed": true, "strictBrowserPassed": 648, "strictBrowserDeadlineFailures": 2, "strictBrowserPlannedSkips": 5, "strictRuntimeSmokeAndRecoveryPassed": true},
       "localOhioSourceEntryBenchmark": {
         "runtime": "macOS Node 26.13.1 in tracked archive",
         "draftStages": ["early", "nearly complete", "confirmed"],

@@ -1,5 +1,37 @@
 # 2026 upgrade implementation evidence
 
+## November 20 future-year Schedule K-1 originals
+
+The federal calculator now holds an explicitly future original Schedule K-1
+for a partnership, S corporation, estate or trust. Standalone Schedule E
+does the same for Part II when it has the taxpayer year. A prior header
+can describe a fiscal period ending in the return year, so this check
+preserves prior, matching and unknown headers. Actual ending dates and
+additional fiscal-year scenarios require separate evidence.
+[IRS partner instructions](https://www.irs.gov/instructions/i1065sk1) ·
+[IRS shareholder instructions](https://www.irs.gov/instructions/i1120ssk) ·
+[26 CFR 1.662(c)-1](https://www.ecfr.gov/current/title-26/section-1.662(c)-1).
+
+The spec preceded the regression tests. Four cases reproduced the missing
+hold and two controls passed before the change. After `7112e36f`, 1,624
+focused tests passed and the existing verified AI route still returned
+a private 400 without provider dispatch for the same invalid input.
+The generated inventory detected the first helper as a separate form.
+`0d4793ab` moved it into the existing statement-year validation module.
+Its archived tree matches the pushed commit. All 9,670 spec references,
+the original inventory, three type checks, both builds and the offline
+provider evaluation artifact check passed. The 97 focused tests passed
+on the successor with zero affected lint errors.
+Two estate and trust fixtures in the first full run still expected the earlier
+engine behavior. Test-only `309b01a4` keeps the monetary checks on matching-year
+controls and verifies that both routes reject future sources. All 104
+affected checks passed on that follow-up.
+The identical application source passed 24 managed Chromium cases spanning
+guided K-1 entry, saved-review workflows and loss carryovers. The run used
+two workers, zero retries and the original 30-second deadline. The managed
+server closed normally. Full current GitHub checks are linked in the checkpoint.
+[Independent reviewer case](upgrade-2026-human-tax-review-packet.md#schedule-k-1-original-header-year).
+
 ## November 19 applied federal overpayment credits
 
 `f231820a` validates a prior-return credit before Form 1040 computes payments.
@@ -27,6 +59,17 @@ cases, retained five planned hosted-only skips, and recorded zero failures.
 Both RRTA review cases and the new Schedule D cases passed. The run used two
 workers, zero retries and the original deadlines. The local server shut down
 normally.
+
+On the same revision, GitHub's managed Linux browser job also passed. The
+strict AMD64 container job passed 648 cases with five planned skips and
+two original 30-second deadlines. Both failures were desktop Ohio part-year
+school-district original-entry cases. Runtime smoke, Compose recovery and
+the independent archive import passed. The strict browser gate is still open.
+All six GitHub CI jobs passed, with 29,508 tests in the coverage job and
+88.35% branch coverage.
+[Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/44673842082/job/136080851853) ·
+[Strict runtime job](https://github.com/utilityfueled/tax-engine/actions/runs/44673842082/job/136080851691) ·
+[Coverage job](https://github.com/utilityfueled/tax-engine/actions/runs/44673842123/job/136080852010).
 
 The separate web type check and application build also passed. A fresh check
 against official sources matched the indexed 2026 standard deductions, child

@@ -222,6 +222,23 @@ changes the applied amount. The engine holds a negative reported overpayment
 and an entry tied to the wrong preceding year.
 [Form 1040 instructions, line 26](https://www.irs.gov/instructions/i1040gi).
 
+### Schedule K-1 original header year
+
+For a calendar-year individual return, verify that a 2026 original entity
+period cannot supply partnership, S corporation, estate or trust amounts to
+the 2025 return. For the positive fiscal-year example, verify that an old
+printed header can describe the legitimate period from July 1, 2024 through
+June 30, 2025. The compatibility controls keep an absent header unknown and
+allow an otherwise supported matching header.
+
+Independently reconcile the synthetic positive-control AGI from $85,000 of
+wages, $125.75 of partnership ordinary income and $115.25 of estate interest.
+Review the treatment across the tax-year boundary and record any separate
+authority needed for special inclusion methods.
+[IRS partner instructions](https://www.irs.gov/instructions/i1065sk1) ·
+[IRS shareholder instructions](https://www.irs.gov/instructions/i1120ssk) ·
+[26 CFR 1.662(c)-1](https://www.ecfr.gov/current/title-26/section-1.662(c)-1).
+
 ### Review scope
 
 For each accepted method, prepare the expected calculation before using the
