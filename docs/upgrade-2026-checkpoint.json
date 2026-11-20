@@ -1,5 +1,17 @@
 {
   "activeContinuation": {
+    "nov20RemainingInformationReturnFilenameFacts": {
+      "sourceForms": ["1099-DIV", "1099-G", "1099-OID", "1099-SA"],
+      "isolatedFocusedTestsPassed": 120,
+      "integratedNode26FocusedTestsPassed": 98,
+      "integratedNode26BrowserCasesPassed": 63,
+      "independentLegacyAliasesReopened": 8,
+      "legacyFixtureMoneyFactoryRemoved": true,
+      "uploadOnlyInventoryEntry": "federal/workspace-other-1099-upload",
+      "patchSha256": "68e15f9572a13913d7dd00ccc86ee1625b1357ec9258fe7a6352b4b7b2b7a241",
+      "privateEvidence": ".local/upgrade-evidence/nov20-remaining-fixture-money.Lo1HQXuK",
+      "mergeEvidence": ".local/upgrade-evidence/nov20-other-1099-merge"
+    },
     "nov20InterestAndBrokerageFilenameFacts": {
       "isolatedFocusedTestsPassed": 97,
       "integratedNode26FocusedTestsPassed": 93,
@@ -89,6 +101,8 @@
       "exactBranchCoveragePercent": "88.37",
       "exactLocalManagedBrowserPassed": 650,
       "exactLocalManagedBrowserOriginalSkips": 5,
+      "exactGithubCi": "success",
+      "exactStrictArm64": {"passed":639,"failed":11,"originalSkips":5,"smokeAndComposeRecovery":"success"},
       "officialNormalUploadVariantsPassed": 14,
       "focusedReferenceAndApplicationTestsPassed": 1047,
       "focusedEngineTestsPassed": 96,

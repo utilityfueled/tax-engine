@@ -16,6 +16,7 @@ import {
   type WorkspaceDocumentDetectedFactRecord,
   type WorkspaceDocumentRecord,
   type WorkspaceDocumentKind,
+  type WorkspaceStructuredFactMachineValue,
   type WorkspaceGuidedCompletion,
   type WorkspaceReturnSummary
 } from "@tax-engine/contracts";
@@ -927,6 +928,11 @@ function ensureUniqueDocumentIds(documents: WorkspaceDocumentRecord[]) {
 }
 
 function normalizeStoredDocument(document: WorkspaceDocumentRecord): WorkspaceDocumentRecord {
+  if (document.kind === "1099-oid" && document.matchedFixtureId === "irs-1099-oid-2025"
+    && !document.seededFactIds.includes("taxable-interest")) {
+    return { ...document, seededFactIds: [...document.seededFactIds, "taxable-interest"] };
+  }
+
   if (document.coverage === "unsupported" && document.notes.includes("Next step:")) {
     return {
       ...document,
@@ -1191,16 +1197,24 @@ export function getFutureYearSampleUploadMessage(files: UploadableFile[]) {
   return `${futureYearSampleUploads.length} official sample documents are for tax years after ${latestEngineTargetYear}, so they can't drive this return yet. Remove them and upload ${latestEngineTargetYear} tax documents instead.`;
 }
 
+const financialSampleKinds = new Set<SupportedDocumentKind>([
+  "1099-int", "1099-b", "1099-div", "1099-g", "1099-oid", "1099-sa"
+]);
+const detectedFinancialEntryKinds = new Set<WorkspaceStructuredFactMachineValue["entryKind"]>([
+  "1099-int-summary", "1099-b-transaction", "1099-div-summary", "1099-g-summary",
+  "1099-oid-summary", "1099-sa-summary"
+]);
+
 function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): WorkspaceDocumentRecord {
   const filenameFixture = matchFixture(file.name);
-  const detectedInvestmentSource = (filenameFixture?.kind === "1099-int" || filenameFixture?.kind === "1099-b")
-    && file.detectedDocument?.detectedFacts.some(fact => fact.machineValue?.entryKind === "1099-int-summary"
-      || fact.machineValue?.entryKind === "1099-b-transaction");
+  const detectedFinancialSource = filenameFixture && financialSampleKinds.has(filenameFixture.kind)
+    && file.detectedDocument?.detectedFacts?.some(fact => fact.machineValue
+      && detectedFinancialEntryKinds.has(fact.machineValue.entryKind));
   // Actual Marketplace metadata must not acquire a historical sample's year or
   // seeded facts merely because the original upload is named f1095a.pdf.
   // A real guide cover cannot become a taxpayer form through its filename.
   // Recognized W-2/NEC source facts also take precedence over sample aliases.
-  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture) || detectedInvestmentSource
+  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture) || detectedFinancialSource
     || (file.detectedDocument?.kind === "1095-a"
     && (filenameFixture?.kind !== "1095-a" || file.detectedDocument.taxYear == null
       || file.detectedDocument.taxYear !== filenameFixture.taxYearHint))
@@ -1274,6 +1288,7 @@ function getSeededFactIds(kind: WorkspaceDocumentKind): SeededFactId[] {
     case "w2":
       return ["wages", "withholding"];
     case "1099-int":
+    case "1099-oid":
       return ["taxable-interest"];
     case "1099-g":
       return ["government-payments-review"];

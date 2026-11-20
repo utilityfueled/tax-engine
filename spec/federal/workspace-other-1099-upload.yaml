@@ -1,0 +1,17 @@
+form: "Form 1099 document upload"
+fullName: "Keep Form 1099-DIV, 1099-G, 1099-OID and 1099-SA sample aliases free of financial data"
+taxYear: 2025
+irsReference: "https://www.irs.gov/forms-pubs/about-form-1099-div; https://www.irs.gov/forms-pubs/about-form-1099-g; https://www.irs.gov/forms-pubs/about-form-1099-oid; https://www.irs.gov/forms-pubs/about-form-1099-sa"
+lines:
+  - line: "manual-sample-review"
+    description: "Require original source data for dividends, government payments, original issue discount, and HSA distributions"
+    formula: "The official sample alias identifies the form and queues applicable review prompts. The form or any prose answer supplies zero structured financial values. Reopening a saved workspace recomputes source facts and discards prior sample-derived amounts."
+    testRef: "tests/apps/web/workspace-other-1099-sources.test.ts::keeps all four sample aliases as manual review on upload and reopen"
+  - line: "oid-with-interest"
+    description: "Keep actual interest separate from an OID sample"
+    formula: "An actual Form 1099-INT activates taxable-interest review and supplies its own single interest record. An OID sample cannot add OID or duplicate the original interest record."
+    testRef: "tests/apps/web/workspace-other-1099-sources.test.ts::keeps one original interest record beside a blank OID alias"
+  - line: "typed-original"
+    description: "Preserve the detected source year and typed values"
+    formula: "If detection supplies a typed original including an actual dividend, government payment, original issue discount, or HSA distribution record, keep the detected year, coverage, and amounts under a matching sample alias. A typed source still requires confirmation and a complete calculation context."
+    testRef: "tests/apps/web/workspace-other-1099-sources.test.ts::preserves exact detected years and amounts under all four aliases"

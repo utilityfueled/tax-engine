@@ -1,3 +1,4 @@
+import { fictionalDividendSources } from "../helpers/workspace-other-1099-sources";
 import { fictionalBrokerageSources, fictionalInterestSource } from "../helpers/workspace-investment-sources";
 import { describe, expect, it } from "vitest";
 import type {
@@ -340,7 +341,7 @@ describe("workspace structured facts", () => {
     ]);
   });
 
-  it("adds supplied 1099-INT facts alongside existing dividend fixture facts", () => {
+  it("adds supplied 1099-INT and 1099-DIV source facts", () => {
     const structuredFacts = buildWorkspaceStructuredFacts(
       [
         createDocument({
@@ -357,7 +358,8 @@ describe("workspace structured facts", () => {
           name: "f1099div.pdf",
           kind: "1099-div",
           label: "Form 1099-DIV (Rev. January 2024)",
-          matchedFixtureId: "irs-1099-div-2024",
+          matchedFixtureId: null,
+          detectedFacts: fictionalDividendSources(),
           seededFactIds: [
             "ordinary-dividends",
             "qualified-dividends",
@@ -444,6 +446,28 @@ describe("workspace structured facts", () => {
         updatedAt: "2026-03-12T00:00:00.000Z"
       },
       {
+        id: "ordinary-dividends:doc-1099div:original-ordinary-dividends",
+        factId: "ordinary-dividends",
+        label: "Ordinary dividends",
+        kind: "document-detected",
+        value: "Fictional dividend statement with $4,000 ordinary dividends.",
+        sourceType: "upload",
+        confidence: "high",
+        sourceDocumentIds: ["doc-1099div"],
+        questionId: null,
+        updatedAt: "2026-03-12T00:00:00.000Z",
+        machineValue: {
+          entryKind: "1099-div-summary",
+          payer: "Fictional mutual fund",
+          ordinaryDividends: "4000",
+          qualifiedDividends: "3000",
+          capitalGainDistributions: "1000",
+          federalWithheld: "0",
+          section199ADividends: "0",
+          foreignTaxPaid: "0"
+        }
+      },
+      {
         id: "ordinary-dividends:document-detected",
         factId: "ordinary-dividends",
         label: "Ordinary dividends",
@@ -456,26 +480,16 @@ describe("workspace structured facts", () => {
         updatedAt: "2026-03-12T00:00:00.000Z"
       },
       {
-        id: "ordinary-dividends:fixture-dividend-income",
-        factId: "ordinary-dividends",
-        label: "Ordinary dividends",
-        kind: "fixture-derived",
-        value: "Official fixture dividends: ordinary dividends $4,000, qualified dividends $3,000, capital gain distributions $1,000.",
-        sourceType: "official-fixture",
+        id: "qualified-dividends:doc-1099div:original-qualified-dividends",
+        factId: "qualified-dividends",
+        label: "Qualified dividends",
+        kind: "document-detected",
+        value: "Fictional dividend statement with $3,000 qualified dividends.",
+        sourceType: "upload",
         confidence: "high",
         sourceDocumentIds: ["doc-1099div"],
         questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z",
-        machineValue: {
-          entryKind: "1099-div-summary",
-          payer: "Official fixture mutual fund",
-          ordinaryDividends: "4000",
-          qualifiedDividends: "3000",
-          capitalGainDistributions: "1000",
-          federalWithheld: "0",
-          section199ADividends: "0",
-          foreignTaxPaid: "0"
-        }
+        updatedAt: "2026-03-12T00:00:00.000Z"
       },
       {
         id: "qualified-dividends:document-detected",
@@ -490,12 +504,12 @@ describe("workspace structured facts", () => {
         updatedAt: "2026-03-12T00:00:00.000Z"
       },
       {
-        id: "qualified-dividends:fixture-qualified-dividends",
-        factId: "qualified-dividends",
-        label: "Qualified dividends",
-        kind: "fixture-derived",
-        value: "Official fixture qualified dividends: box 1b qualified dividends $3,000.",
-        sourceType: "official-fixture",
+        id: "capital-gain-distributions:doc-1099div:original-capital-gain-distributions",
+        factId: "capital-gain-distributions",
+        label: "Capital gain distributions",
+        kind: "document-detected",
+        value: "Fictional dividend statement with $1,000 capital gain distributions.",
+        sourceType: "upload",
         confidence: "high",
         sourceDocumentIds: ["doc-1099div"],
         questionId: null,
@@ -509,18 +523,6 @@ describe("workspace structured facts", () => {
         value: "Detected from 1 uploaded document(s).",
         sourceType: "upload",
         confidence: "low",
-        sourceDocumentIds: ["doc-1099div"],
-        questionId: null,
-        updatedAt: "2026-03-12T00:00:00.000Z"
-      },
-      {
-        id: "capital-gain-distributions:fixture-capital-gain-distributions",
-        factId: "capital-gain-distributions",
-        label: "Capital gain distributions",
-        kind: "fixture-derived",
-        value: "Official fixture capital gain distributions: box 2a capital gain distributions $1,000.",
-        sourceType: "official-fixture",
-        confidence: "high",
         sourceDocumentIds: ["doc-1099div"],
         questionId: null,
         updatedAt: "2026-03-12T00:00:00.000Z"

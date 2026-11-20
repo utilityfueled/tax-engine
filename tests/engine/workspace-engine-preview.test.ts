@@ -1,3 +1,4 @@
+import { fictionalGovernmentPaymentsSource, fictionalHsaDistributionSource, fictionalOidSource } from "../helpers/workspace-other-1099-sources";
 import { fictionalBrokerageSources } from "../helpers/workspace-investment-sources";
 import { workspaceTaxpayerFixture } from "../helpers/workspace-taxpayer";
 import { describe, expect, it } from "vitest";
@@ -127,8 +128,10 @@ function createInterestDocument(
     kind: "1099-oid",
     coverage: "supported",
     label: "Form 1099-OID (Rev. January 2024)",
-    notes: "Fixture",
-    matchedFixtureId: "irs-1099-oid-2025",
+    notes: "Explicit fictional original",
+    matchedFixtureId: null,
+    taxYear: 2025,
+    detectedFacts: [fictionalOidSource()],
     seededFactIds: ["taxable-interest"],
     ...overrides
   };
@@ -207,8 +210,10 @@ function createGovernmentPaymentsDocument(
     kind: "1099-g",
     coverage: "supported",
     label: "Form 1099-G (Rev. March 2024)",
-    notes: "Fixture",
-    matchedFixtureId: "irs-1099-g-2025",
+    notes: "Explicit fictional original",
+    matchedFixtureId: null,
+    taxYear: 2025,
+    detectedFacts: [fictionalGovernmentPaymentsSource()],
     seededFactIds: ["government-payments-review"],
     ...overrides
   };
@@ -1617,14 +1622,16 @@ describe("workspace engine preview", () => {
     expect(preview?.highlightedLines.some((line) => line.id === "1040:25b")).toBe(false);
   });
 
-  it("builds an HSA-distribution preview from a confirmed 1099-SA fixture", () => {
+  it("builds an HSA-distribution preview from a confirmed 1099-SA source", () => {
     const documents = [
       createDocument({
         id: "doc-1099sa",
         name: "f1099sa.pdf",
         kind: "1099-sa",
         label: "Form 1099-SA (Rev. January 2025)",
-        matchedFixtureId: "irs-1099-sa-2025",
+        matchedFixtureId: null,
+        taxYear: 2025,
+        detectedFacts: [fictionalHsaDistributionSource()],
         seededFactIds: ["hsa-distribution-review"]
       })
     ];
@@ -1676,7 +1683,7 @@ describe("workspace engine preview", () => {
     );
 
     expect(preview).not.toBeNull();
-    expect(preview?.sourceFixtureIds).toEqual(["irs-1099-sa-2025"]);
+    expect(preview?.sourceFixtureIds).toEqual([]);
     expect(preview?.metrics.totalIncome).toBe("2400");
     expect(preview?.metrics.totalTax).toBe("480");
     expect(preview?.metrics.amountOwed).toBe("480");
@@ -1862,7 +1869,7 @@ describe("workspace engine preview", () => {
     expect(preview?.highlightedLines.some((line) => line.id === "Sched 2:17c")).toBe(false);
   });
 
-  it("blocks unqualified legacy financial input from a confirmed Form 1099-OID fixture", () => {
+  it("blocks unqualified legacy financial input from a confirmed Form 1099-OID source", () => {
     const documents = [createInterestDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
@@ -1881,7 +1888,7 @@ describe("workspace engine preview", () => {
     // This legacy summary lacks actual source qualification; it remains evidence.
   });
 
-  it("builds a government-payments preview from a confirmed Form 1099-G fixture", () => {
+  it("builds a government-payments preview from a confirmed Form 1099-G source", () => {
     const documents = [createGovernmentPaymentsDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
@@ -1896,7 +1903,7 @@ describe("workspace engine preview", () => {
     );
 
     expect(preview).not.toBeNull();
-    expect(preview?.sourceFixtureIds).toEqual(["irs-1099-g-2025"]);
+    expect(preview?.sourceFixtureIds).toEqual([]);
     expect(preview?.metrics.totalIncome).toBe("6200");
     expect(preview?.metrics.agi).toBe("6200");
     expect(preview?.metrics.totalPayments).toBe("620");

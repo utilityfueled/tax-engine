@@ -1,3 +1,4 @@
+import { fictionalGovernmentPaymentsSource, fictionalOidSource } from "../helpers/workspace-other-1099-sources";
 import { describe, expect, it } from "vitest";
 import type {
   SeededReturnSummary,
@@ -174,8 +175,10 @@ function createInterestDocument(
     kind: "1099-oid",
     coverage: "supported",
     label: "Form 1099-OID (Rev. January 2024)",
-    notes: "Fixture",
-    matchedFixtureId: "irs-1099-oid-2025",
+    notes: "Explicit fictional original",
+    matchedFixtureId: null,
+    taxYear: 2025,
+    detectedFacts: [fictionalOidSource()],
     seededFactIds: ["taxable-interest"],
     ...overrides
   };
@@ -254,8 +257,10 @@ function createGovernmentPaymentsDocument(
     kind: "1099-g",
     coverage: "supported",
     label: "Form 1099-G (Rev. March 2024)",
-    notes: "Fixture",
-    matchedFixtureId: "irs-1099-g-2025",
+    notes: "Explicit fictional original",
+    matchedFixtureId: null,
+    taxYear: 2025,
+    detectedFacts: [fictionalGovernmentPaymentsSource()],
     seededFactIds: ["government-payments-review"],
     ...overrides
   };
@@ -604,7 +609,7 @@ describe("workspace engine input", () => {
     expect(buildWorkspaceEngineInput(documents, summary, facts, taxpayer)).toBeNull();
     expect(facts.some(fact => fact.machineValue?.entryKind === "1099-oid-summary")).toBe(true);
   });
-  it("blocks unqualified legacy financial input from confirmed Form 1099-OID fixture facts", () => {
+  it("blocks unqualified legacy financial input from confirmed Form 1099-OID source facts", () => {
     const documents = [createInterestDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(documents, createInterestSeededReturn({}));
 
@@ -620,7 +625,7 @@ describe("workspace engine input", () => {
     // This legacy summary lacks actual source qualification; it remains evidence.
   });
 
-  it("builds government-payments preview input from confirmed Form 1099-G fixture facts", () => {
+  it("builds government-payments preview input from confirmed Form 1099-G source facts", () => {
     const documents = [createGovernmentPaymentsDocument({})];
     const structuredFacts = buildWorkspaceStructuredFacts(
       documents,
@@ -637,7 +642,7 @@ describe("workspace engine input", () => {
     expect(previewInput).not.toBeNull();
     expect(previewInput?.taxInput.form1099G).toEqual([
       expect.objectContaining({
-        payer: "Official fixture state agency",
+        payer: "Fictional state agency",
         unemploymentCompensation: "6200",
         stateLocalIncomeTaxRefund: "1100",
         federalWithheld: "620",
@@ -647,10 +652,10 @@ describe("workspace engine input", () => {
     ]);
     expect(previewInput?.assumptions).toEqual(["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."]);
     expect(previewInput?.sourceDocumentIds).toEqual(["doc-1099g"]);
-    expect(previewInput?.sourceFixtureIds).toEqual(["irs-1099-g-2025"]);
+    expect(previewInput?.sourceFixtureIds).toEqual([]);
     expect(previewInput?.sourceFactIdsByItemId["government-payments"]).toEqual([
+      "government-payments-review:doc-1099g:original-government-payments",
       "government-payments-review:document-detected",
-      "government-payments-review:fixture-government-payments-review",
       "government-payments-review:interview-answer"
     ]);
   });

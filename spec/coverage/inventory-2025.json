@@ -14376,6 +14376,26 @@
       ]
     },
     {
+      "key": "federal/workspace-other-1099-upload",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/forms-pubs/about-form-1099-div; https://www.irs.gov/forms-pubs/about-form-1099-g; https://www.irs.gov/forms-pubs/about-form-1099-oid; https://www.irs.gov/forms-pubs/about-form-1099-sa",
+      "specPath": "spec/federal/workspace-other-1099-upload.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/workspace-upload-panel-status",
       "jurisdiction": "federal",
       "taxYear": 2025,

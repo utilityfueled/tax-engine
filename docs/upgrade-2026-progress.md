@@ -8902,3 +8902,24 @@ calculation boundaries. Both original sample-dependent numeric scenarios
 now use explicit fictional source facts. The isolated 97 checks and
 integrated 93 Node 26 checks passed. The generated inventory entry records
 upload coverage without qualifying any filing form.
+
+## November 20 dividend, government, OID and HSA filename facts
+
+The remaining preset financial values for 1099-DIV, 1099-G, 1099-OID and
+1099-SA were removed. A blank OID now asks for manual review when uploaded
+or reopened from storage. The same official blank next to an actual
+$23.45 interest document keeps exactly one financial record. Removing the
+blank OID allows the actual interest to compute once. The filled DIV
+probe keeps the original 2026 year and $170.45 amount. G, OID and SA
+currently rely on typed inputs or manual review for these facts.
+
+Removing the final mappings also allowed removal of the unused fixture
+factory. An independent replay of eight older aliases cleared the cached
+amounts and kept their manual prompts. The isolated 120 tests, integrated
+98 Node 26 tests, type checks, spec inventory and 63 actual browser cases
+passed. The upload spec entry records no filing qualification.
+
+The earlier `c3d87e32` exact GitHub CI run passed. Its ARM64 job passed
+smoke and isolated Compose upgrade/recovery, then recorded 639 passed
+browser cases, 11 failures and five original skips. The strict gate
+remains open. [ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44748974631).

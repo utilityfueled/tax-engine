@@ -8,6 +8,13 @@ amounts from the live view. The next normal save clears them from the stored
 record. The review prompt and any saved response are retained.
 [Marketplace evidence](upgrade-2026-progress.md#november-20-marketplace-filename-and-saved-workspaces).
 
+Registry filenames now provide document labels and review prompts. The
+workspace gets financial values from supported detected sources and manual
+input. Independent replay cleared stale synthetic values from eight legacy
+aliases. The combined upload corrections passed 63 guided, workspace and
+recovery browser cases on Node 26.13.1.
+[Information return evidence](upgrade-2026-progress.md#november-20-dividend-government-oid-and-hsa-filename-facts).
+
 The exact `c3d87e32` managed macOS browser run passed 650 cases with five
 original skips. Its unit and coverage runs each passed 29,559 tests at
 88.37% branch coverage. A separate test-only Ohio School District change

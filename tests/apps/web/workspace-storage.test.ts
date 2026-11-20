@@ -1,3 +1,4 @@
+import { fictionalDividendSources } from "../../helpers/workspace-other-1099-sources";
 import { fictionalBrokerageUpload, fictionalInterestUpload } from "../../helpers/workspace-investment-sources";
 import { workspaceScenarioContext } from "../../helpers/workspace-calculation-context";
 import { workspaceTaxpayerFixture } from "../../helpers/workspace-taxpayer";
@@ -940,13 +941,20 @@ describe("workspace storage", () => {
     });
   });
 
-  it("promotes confirmed actual 1099-INT and sample 1099-DIV facts into a deterministic 2025 investment-income recompute", async () => {
+  it("promotes confirmed actual 1099-INT and 1099-DIV facts into a deterministic 2025 investment-income recompute", async () => {
     const storage = createMemoryStorage();
     const workspaceId = "investment-income-ready";
 
     ingestFiles(storage, workspaceId, [
       fictionalInterestUpload(11),
-      { name: "f1099div.pdf", size: 11 }
+      {
+        name: "f1099div.pdf", size: 11,
+        detectedDocument: {
+          kind: "1099-div", taxYear: 2025, coverage: "supported", label: "Fictional Form 1099-DIV",
+          notes: "Explicit test source", seededFactIds: ["ordinary-dividends", "qualified-dividends", "capital-gain-distributions"],
+          detectedFacts: fictionalDividendSources()
+        }
+      }
     ]);
     answerInterviewQuestion(
       storage,
@@ -976,7 +984,7 @@ describe("workspace storage", () => {
 
     expect(workspace.summary).toEqual({
       totalDocuments: 2,
-      officialFixtureMatches: 1,
+      officialFixtureMatches: 0,
       supportedDocuments: 2,
       pendingReviewDocuments: 0,
       interviewQuestionsRemaining: 0
@@ -1007,7 +1015,7 @@ describe("workspace storage", () => {
           status: "ready",
           engineTargets: ["Schedule B Part II", "Form 1040 Lines 3a and 3b"],
           relatedFactIds: ["ordinary-dividends", "qualified-dividends", "capital-gain-distributions"],
-          sourceDocumentIds: ["irs-1099-div-2024:f1099div.pdf:11"],
+          sourceDocumentIds: ["1099-div:f1099div.pdf:11"],
           answeredFactCount: 3,
           factCount: 3
         }
@@ -1021,9 +1029,9 @@ describe("workspace storage", () => {
       filingState: "TX",
       sourceDocumentIds: [
         "1099-int:f1099int.pdf:11",
-        "irs-1099-div-2024:f1099div.pdf:11"
+        "1099-div:f1099div.pdf:11"
       ],
-      sourceFixtureIds: ["irs-1099-div-2024"],
+      sourceFixtureIds: [],
       assumptions: ["This preview uses the supplied complete, reviewed return facts. Each selected original document record is reconciled to its actual calculation source; abbreviated summaries do not supply missing eligibility, identity, dates or amounts."],
       metrics: {
         totalIncome: "25000",
@@ -1057,14 +1065,14 @@ describe("workspace storage", () => {
           value: "3000",
           formula: "Sum 1099-DIV Box 1b + K-1 Box 6b + K-1 1041 Box 2b + Form 8814 Line 9",
           sourceFactIds: [
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1076,14 +1084,14 @@ describe("workspace storage", () => {
           value: "4000",
           formula: "Schedule B Part II total",
           sourceFactIds: [
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1095,14 +1103,14 @@ describe("workspace storage", () => {
           value: "1000",
           formula: "Form 8949 Part II after Q adjustments + K-1 Box 9a + K-1 1041 Box 4a + K-1 1041 Box 11D + Form 4797 Line 9 + 1099-DIV Box 2a + prior LT carryforward + home sale gain + Form 6781 long-term + Form 6252 long-term",
           sourceFactIds: [
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1114,14 +1122,14 @@ describe("workspace storage", () => {
           value: "1000",
           formula: "Schedule D Line 21",
           sourceFactIds: [
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1136,14 +1144,14 @@ describe("workspace storage", () => {
             "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
             "taxable-interest:interview-answer",
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1158,14 +1166,14 @@ describe("workspace storage", () => {
             "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
             "taxable-interest:interview-answer",
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1180,14 +1188,14 @@ describe("workspace storage", () => {
             "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
             "taxable-interest:interview-answer",
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1202,14 +1210,14 @@ describe("workspace storage", () => {
             "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
             "taxable-interest:interview-answer",
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1224,14 +1232,14 @@ describe("workspace storage", () => {
             "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
             "taxable-interest:interview-answer",
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         },
@@ -1246,14 +1254,14 @@ describe("workspace storage", () => {
             "taxable-interest:1099-int:f1099int.pdf:11:verified-interest",
             "taxable-interest:document-detected",
             "taxable-interest:interview-answer",
+            "ordinary-dividends:1099-div:f1099div.pdf:11:original-ordinary-dividends",
             "ordinary-dividends:document-detected",
-            "ordinary-dividends:fixture-dividend-income",
             "ordinary-dividends:interview-answer",
+            "qualified-dividends:1099-div:f1099div.pdf:11:original-qualified-dividends",
             "qualified-dividends:document-detected",
-            "qualified-dividends:fixture-qualified-dividends",
             "qualified-dividends:interview-answer",
+            "capital-gain-distributions:1099-div:f1099div.pdf:11:original-capital-gain-distributions",
             "capital-gain-distributions:document-detected",
-            "capital-gain-distributions:fixture-capital-gain-distributions",
             "capital-gain-distributions:interview-answer"
           ]
         }
