@@ -46,3 +46,22 @@ The published selected-model prices and retirement dates match the November 17 s
 OpenAI still lists December 11, 2026 as the retirement date for the GPT-5 Mini alias and snapshot, with GPT-6.1 Terra listed as its replacement. The original comparison baseline is retained. The November 19 observation used public documentation. The November 17 account metadata, actual provider receipts and outstanding review gates retain their original scope. [OpenAI pricing](https://developers.openai.com/api/docs/pricing) · [OpenAI model lifecycle](https://developers.openai.com/api/docs/deprecations)
 
 At `25bbd2e3`, the offline benchmark is in sync and all 33 application, corpus, runner and journal tests passed. Those checks exercise the evaluation tooling without provider calls. Independent human review of expected results and held-out cases is still required for qualification.
+
+## November 20 public documentation recheck
+
+OpenAI's standard Luna, Sol and GPT-5 Mini prices remain unchanged.
+The GPT-5 Mini alias and dated snapshot still show December 11, 2026
+as the shutdown date, with GPT-6.1 Terra listed as the replacement.
+[OpenAI prices](https://developers.openai.com/api/docs/pricing) ·
+[OpenAI deprecations](https://developers.openai.com/api/docs/deprecations).
+
+Google's AI Studio pricing and release guide confirm Gemini 3.8 Flash
+standard input and output at $0.75 and $3.75 per million tokens through
+December 31, 2026 and $1.50 and $7.50 starting January 1, 2027. The
+direct AI Studio pricing page also confirms cache reads at $0.075 and
+$0.15 across that boundary. The separately retrieved Developer API
+pricing view omitted the standalone model heading. The model page
+still lists the stable release. This recheck used public sources.
+[Google AI Studio pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
+[Google release guide](https://aistudio.google.com/docs/whats-new-gemini-3.8#pricing) ·
+[Google model page](https://aistudio.google.com/docs/models/gemini-3.8-flash).
