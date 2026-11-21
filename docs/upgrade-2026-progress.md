@@ -1,5 +1,58 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Form 5329 IRA age exception
+
+Commit `7a0175e0` includes Form 5329 in a 2025 nonjoint review packet
+when a single owned, fully taxable IRA distribution is marked Code 1
+despite an actual distribution date on or after age 59½. The review
+path reconciles the computed exception 12 with the dated statement,
+the taxpayer's date of birth and confirmed zero basis. Positive tax-free
+recovery in Box 5 holds this attachment. Independent physical checks
+reopened the qualifying $6,000 PDF and verified that the conflicting
+$300 Box 5 case keeps the existing calculation and packet behavior.
+The exact combined focused run passed 280 tests.
+The same source passed all eight guided-education and recovery cases
+in production Chromium at the 30-second deadline with zero retries.
+The exact unit and coverage runs each passed 30,021 tests in 2,185
+suites, with 88.51% branch coverage and both PostgreSQL 16.16 clusters
+stopped. Core and web builds and lint passed.
+[2025 Form 5329 instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5) ·
+[2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15).
+
+## November 21 joint Form 5329 pension ownership
+
+Commit `300fbc6e` prints the 2025 terminal-illness exception on the
+Form 5329 of the spouse who received the source-bound Code 1 pension.
+Either spouse can own the qualifying record. A supplied date must be a
+valid 2025 date before age 59½. An omitted date qualifies only when the
+owner was under 59½ throughout 2025. Before using the owner-specific
+form, the packet reconciles Part I to the reported income and checks
+whether other legacy parts can still be rendered. Independent raw and
+redacted PDF checks confirmed each spouse's identity and that only the
+proper owner gets Part I. Both legacy HSA packet manifests match the
+earlier release. The exact focused run passed all 266 checks.
+[2025 IRS instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=2).
+
+## November 21 Schedule B TIPS deflation
+
+Commit `fb45efb1` lists the current-interest offset from verified TIPS
+deflation on Schedule B even below $1,500. The 2025 review PDF lists
+$600 of payer interest and a $200 OID reduction, leaving $400 on
+lines 2 and 4. Other reopened packets distinguish a full offset from
+the separate ordinary loss and unused carryforward, and show prior
+carryforward when it actually reduces current interest. The reporting
+scope requires unchanged original OID and coupon amounts and no
+separately applied premium. Mixed worksheet corrections and premium
+cases await dedicated reporting review. The 2026 tests preserve the
+same tax and Treasury amounts and the 2026 export hold.
+[IRS Publication 1212](https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=17) ·
+[26 CFR § 1.1275-7](https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol13/pdf/CFR-2025-title26-vol13-sec1-1275-7.pdf#page=5).
+
+Independent physical review, 182 exact focused tests, typechecking,
+inventory and 9,847 spec references passed. Exact unit and coverage
+runs each passed 29,992 tests in 2,183 suites, with 88.50% branch
+coverage and both PostgreSQL 16.16 clusters stopped.
+
 ## November 21 Form 5329 early pension exceptions
 
 Commit `f707241d` includes Form 5329 in 2025 review packets for
@@ -87,6 +140,17 @@ question stays open for review. Incomplete or wrong-year worksheets
 remain visible for correction or removal and keep their original year.
 The existing annual calculation and PDF gates still apply.
 [IRS Notice 2026-40, section 4.01](https://www.irs.gov/pub/irs-drop/n-26-40.pdf#page=9).
+
+The completed Web workflow built the app and passed all 650 active
+managed Linux browser cases, with five existing skips. Strict AMD64
+passed 644, failed six, and retained the same five skips at the
+30-second limit. Failures covered desktop NEW212 and both desktop
+resident-credit cases, plus three school-district journeys. The
+resident-credit cents trace recorded a 30 ms final filing rejection and
+reached its final assertions at the case deadline. Strict runtime
+qualification remains open.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44946102783/job/136973640086) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44946102783/job/136973640216).
 
 Independent source review and 216 focused tests passed. The exact
 extended Chromium tests reproduced the missing question on the prior

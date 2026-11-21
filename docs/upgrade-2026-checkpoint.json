@@ -1,5 +1,53 @@
 {
   "activeContinuation": {
+    "nov21IraForm5329AgeException": {
+      "commit": "7a0175e0245d10ddc9a3ee4ff7d382c003430539",
+      "officialSources": ["https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5", "https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15"],
+      "authorFocusedTestsPassed": 1234,
+      "combinedExactFocusedTestsPassed": 280,
+      "combinedProductionChromiumCasesPassed": 8,
+      "browserCaseLimitMs": 30000,
+      "browserRetries": 0,
+      "exactUnitTestsPassed": 30021,
+      "exactUnitSuitesPassed": 2185,
+      "exactCoverageTestsPassed": 30021,
+      "branchCoveragePercent": 88.51,
+      "postgresVersion": "16.16",
+      "bothPostgresStopsPassed": true,
+      "coreBuildPassed": true,
+      "webBuildPassed": true,
+      "fullLintErrors": 0,
+      "independentPhysicalReviewPassed": true,
+      "positiveBox5AttachmentHeld": true,
+      "filingEnabled": false
+    },
+    "nov21JointForm5329Owner": {
+      "commit": "300fbc6e8e15732d39383700f3effe4bd782b970",
+      "officialSources": ["https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=1", "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=2"],
+      "authorFocusedTestsPassed": 247,
+      "independentFocusedTestsPassed": 49,
+      "exactFocusedTestsPassed": 266,
+      "independentOwnerPdfReviewPassed": true,
+      "sameBaselineLegacyPacketManifests": true,
+      "filingEnabled": false
+    },
+    "nov21TipsDeflationOffset": {
+      "commit": "fb45efb15dd544800537348a097a702d9cd73774",
+      "officialSources": ["https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=17", "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol13/pdf/CFR-2025-title26-vol13-sec1-1275-7.pdf#page=5"],
+      "authorFocusedTestsPassed": 1226,
+      "independentFocusedTestsPassed": 138,
+      "exactFocusedTestsPassed": 182,
+      "specRefsValid": 9847,
+      "exactUnitTestsPassed": 29992,
+      "exactUnitSuitesPassed": 2183,
+      "exactCoverageTestsPassed": 29992,
+      "branchCoveragePercent": 88.50,
+      "postgresVersion": "16.16",
+      "bothPostgresStopsPassed": true,
+      "independentPhysicalReviewPassed": true,
+      "scope": "verified TIPS with original Box 2 and Box 8 amounts unchanged, and no separate applied acquisition or coupon premium",
+      "filingEnabled": false
+    },
     "nov21Form5329Code1Pensions": {
       "commit": "f707241ddc726bd33bb8eb6be146720531c08086",
       "officialSource": "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=1",
@@ -79,6 +127,8 @@
       "postgresVersion": "16.16",
       "bothPostgresStopsPassed": true,
       "remoteWebBuildPassed": true,
+      "managedLinuxBrowser": {"run": 44946102783, "job": 136973640086, "passed": 650, "failed": 0, "existingSkips": 5},
+      "strictAmd64Browser": {"run": 44946102783, "job": 136973640216, "passed": 644, "failed": 6, "existingSkips": 5, "caseLimitMs": 30000, "allFailuresAtCaseDeadline": true},
       "gateStatus": "2026 annual and PDF gates remain closed",
       "workflows": {"ci": 44946102841, "web": 44946102783, "docker": 44946102859, "nativeArm64": 44946369818}
     },
