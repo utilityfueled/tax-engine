@@ -356,7 +356,7 @@ describe("Crypto DeFi Swap - Edge Cases", () => {
         fromQuantity: "5",
         toQuantity: "15000",
         fairMarketValueAtSwap: "15000",
-        gasFee: "20",
+        gasFee: "0",
         dateSwapped: "2025-06-01",
         protocol: "Uniswap",
         isWrappingEvent: false,
@@ -436,7 +436,7 @@ describe("Crypto DeFi Swap - Edge Cases", () => {
         fromQuantity: "1",
         toQuantity: "0", // received nothing
         fairMarketValueAtSwap: "0",
-        gasFee: "10",
+        gasFee: "0",
         dateSwapped: "2025-06-01",
         protocol: "Unknown DEX",
         isWrappingEvent: false,

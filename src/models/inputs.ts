@@ -480,6 +480,18 @@ export const CryptoAirdropIncomeSchema = z.object({
 // per IRS Notice 2014-21 (virtual currency is property; exchanging one
 // property for another is a realization event under IRC §1001).
 // Wrapping events (ETH→WETH) and bridge transactions carry over basis.
+const DeFiCashFeeSourceSchema = z.strictObject({
+  executionRecordReference: z.string(),
+  paymentRecordReference: z.string(),
+  datePaid: z.iso.date(),
+  grossReceivedValueUsd: decimal,
+  cashPaidUsd: decimal,
+  materiallyDifferentAssetsConfirmed: z.boolean(),
+  taxpayerPaidUsdCashToEffectExchangeConfirmed: z.boolean(),
+  completeConsiderationWithNoOtherPaymentConfirmed: z.boolean(),
+  sourceFactsConfirmed: z.boolean(),
+});
+
 export const DeFiTokenSwapSchema = z.object({
   protocol: z.string().optional(), // DEX name (e.g., "Uniswap", "SushiSwap")
   fromAsset: z.string(), // Ticker of token disposed (e.g., "ETH")
@@ -488,7 +500,8 @@ export const DeFiTokenSwapSchema = z.object({
   toQuantity: decimal, // Quantity received
   fairMarketValueAtSwap: decimal, // Total FMV of received tokens in USD
   dateSwapped: z.string(), // YYYY-MM-DD
-  gasFee: optionalDecimal, // Gas fee in USD (capitalized into new lot basis)
+  gasFee: optionalDecimal, // Fee in USD; cashFeeSource substantiates a positive fee on a taxable exchange from 2025
+  cashFeeSource: DeFiCashFeeSourceSchema.optional(),
   isWrappingEvent: z.boolean().default(false), // ETH→WETH, BTC→WBTC (non-taxable, basis carryover)
   isBridgeTransaction: z.boolean().default(false), // Cross-chain same-asset transfer (non-taxable)
   walletSource: CryptoWalletSourceSchema.optional(),

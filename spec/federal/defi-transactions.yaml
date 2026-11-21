@@ -19,7 +19,7 @@ notes: |
   - DEX swaps (e.g., ETH→USDC on Uniswap): taxable disposition of sold token
   - Wrapped token conversions (ETH→WETH): non-taxable, basis carryover
   - Bridge transactions (ETH L1→ETH Arbitrum): non-taxable, basis carryover
-  - Gas fees on taxable swaps: capitalized into new token basis (IRC §1012)
+  - Qualified cash fees on taxable swaps from 2025: reduce proceeds (T.D. 10000)
   - Gas fees on non-taxable events: personal expense, not deductible
 
 lines:
@@ -27,8 +27,9 @@ lines:
   - line: "dex-swap-disposition"
     description: "DEX swap — taxable disposition of sold token"
     formula: |
-      Each token-to-token swap is a disposition of the fromAsset:
-      - Proceeds = fairMarketValueAtSwap (FMV of received tokens in USD)
+      Each supported taxable token exchange is a disposition of the fromAsset:
+      - Proceeds = fairMarketValueAtSwap (gross FMV of received tokens in USD),
+        reduced by a qualified cash fee under the rule below.
       - Cost basis = lot-matched basis of fromAsset (per elected method)
       - Gain/loss = proceeds - cost basis
       Flows to Form 8949 as a digital asset disposition.
@@ -42,14 +43,19 @@ lines:
   - line: "dex-swap-acquisition"
     description: "DEX swap — new lot for received token"
     formula: |
-      Basis of received token = FMV at swap time + gas fee (capitalized).
-      Per IRC §1012, cost of acquisition includes transaction costs.
+      For supported taxable exchanges on or after January 1, 2025, the basis of
+      the received asset is its gross FMV at swap time. The cash fee belongs to
+      the disposition of the transferred asset. The historical calculation
+      before that date retains FMV plus the reported gas fee.
+      Retain the exact gross basis of a cash-fee acquisition when the per-unit
+      basis repeats. Allocate later sales by units and use the exact remaining
+      basis when the lot is exhausted.
       Date acquired = date of swap.
-    irsRef: "IRC §1012"
-    edgeCases:
-      - "Zero-value tokens received: basis = gas fee only"
-      - "Gas fee in non-ETH token: convert to USD at time of transaction"
+    irsRef: "26 CFR §1.1012-1(h)(1)(iv), (2)(ii)(B), (3), (4)(i), and (5); T.D. 10000; https://www.irs.gov/irb/2024-31_irb"
     testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+    testRefs:
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap matches Treasury's cash-fee example and preserves gross replacement basis"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap preserves exact cash-fee replacement basis through later partial sales"
 
   - line: "dex-swap-holding-period"
     description: "Holding period for DEX swap dispositions"
@@ -60,7 +66,8 @@ lines:
       a term with multiple acquisition dates. For a mixed-term execution, allocate
       proceeds by the quantity in each term at the common execution price. Calculate
       the smaller quantity's share with Decimal and give the other term the residual
-      so proceeds reconcile to the original execution amount.
+      so proceeds reconcile to the original execution amount after any qualified
+      cash fee.
       Retain the full source precision of matched units and basis. A fractional
       shortfall, including one atomic unit, keeps the execution unresolved.
       Hold a partially matched sale or a matched lot without a valid acquisition
@@ -187,13 +194,34 @@ lines:
 
   # ── Gas Fee Treatment ────────────────────────────────────
   - line: "gas-fee-taxable-swap"
-    description: "Gas fee on taxable DEX swap"
+    description: "Original cash fee paid to effect a taxable exchange of different digital assets"
     formula: |
-      Gas fee paid on a taxable token swap is capitalized into the
-      cost basis of the received token per IRC §1012.
-      New lot basis = FMV of received token + gas fee.
-    irsRef: "IRC §1012; Treas. Reg. §1.263(a)-2(d)(1)"
-    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+      Use the actual execution date. Beginning January 1, 2025, a positive
+      fee requires taxpayer-confirmed original wallet FIFO execution evidence
+      and a matched original payment record. Reconcile the execution reference,
+      payment date, exact cash paid in USD, and gross execution FMV before fees.
+      The taxpayer confirms materially different assets, cash paid to effect
+      this exchange, and complete consideration with no other payment, withheld
+      asset, or separately valued transaction services. Use distinct payment
+      row references. Hold unknown or noncash fees, contradictory originals,
+      and fees exceeding gross FMV in this method. Deduct the cash fee once from
+      gross proceeds, then allocate net proceeds by units across applicable terms.
+      An explicit cash-fee execution packet cannot accompany a wrap, bridge, or
+      reverted zero-unit swap. Hold a batch with wrapping or bridging that
+      touches the acquired asset of a cash-fee exchange, including when receipt
+      into the same wallet has not been confirmed. An unscoped later sale cannot
+      use the basis of a cash-fee replacement lot whose destination is unconfirmed.
+      Preserve explicit and legacy-default zero fees, pre-effective calculations,
+      and existing wrapping, bridging, and reverted-transaction handling.
+    irsRef: "26 CFR §1.1001-7(b)(1)(ii), (iii)(C), (2)(ii)(A), (5)(ii), and (c); T.D. 10000; https://www.irs.gov/irb/2024-31_irb"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap matches Treasury's cash-fee example and preserves gross replacement basis"
+    testRefs:
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap conserves exact cash-fee net proceeds across unequal terms"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds missing, unsupported, or contradictory cash fee originals"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap preserves legacy fees before January 1, 2025 and zero fees after"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds cash fee originals on wraps, bridges, and reverts"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds transfers of cash-fee replacement assets across wallet receipt states"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds an unscoped later sale of a cash-fee replacement lot"
 
   - line: "gas-fee-nontaxable"
     description: "Gas fee on non-taxable event"

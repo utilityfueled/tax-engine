@@ -34,12 +34,15 @@ import { AuditTrail } from "@/utils/audit.js";
 import type { CharitableContributionWorksheetInput } from "./charitable-contribution-worksheet.js";
 
 const DEX_WALLET_RULE_START = "2025-01-01";
+const DEX_CASH_FEE_RULE_START = "2025-01-01";
 
 export interface TrackedLot {
   asset: string;
   dateAcquired: string;
   quantity: Decimal;
   costBasisPerUnit: Decimal;
+  /** Exact basis of the remaining units acquired by a qualified DEX exchange. */
+  exactDexBasis?: Decimal;
   source: string;
   lotId?: string;
   walletSource?: CryptoLot["walletSource"];
@@ -461,10 +464,10 @@ export interface DeFiSwapResult {
  * Process DeFi token swaps (DEX trades, wrapping events, bridge transactions).
  *
  * Taxable swaps (standard DEX trades):
- * - Disposition of fromAsset: proceeds = FMV at swap time
+ * - Disposition of fromAsset: proceeds = FMV at swap time minus qualified cash fees from 2025
  * - Cost basis = lot-matched basis of fromAsset
  * - Gain/loss = proceeds - cost basis
- * - New lot for toAsset: basis = FMV at swap + gas fee (capitalized per IRC §1012)
+ * - New lot for toAsset: gross FMV basis from 2025, historical FMV plus gas before 2025
  * - Generates Form 8949 entry
  *
  * Non-taxable events (wrapping ETH→WETH, bridging):
@@ -476,7 +479,7 @@ export interface DeFiSwapResult {
  * IRS References:
  * - IRS Notice 2014-21: virtual currency is property; exchanges are taxable
  * - IRC §1001: recognition of gain/loss on disposition of property
- * - IRC §1012: basis = cost of acquisition (includes capitalized fees)
+ * - T.D. 10000: qualified cash fees reduce the amount realized from 2025
  */
 export function processDeFiTokenSwaps(
   swaps: DeFiTokenSwap[],
@@ -491,12 +494,16 @@ export function processDeFiTokenSwaps(
   // Work on a mutable copy of lots so we can consume them
   const remainingLots = lots.map((l) => ({ ...l, quantity: l.quantity }));
   const walletExecutionReferences = new Set<string>();
-  const walletQualifiedAssets = new Set<string>();
+  const cashPaymentReferences = new Set<string>();
+  const walletQualifiedAssets = new Set(lots.filter(lot => lot.exactDexBasis !== undefined && lot.quantity.gt(0)).map(lot => lot.asset));
   for (const swap of swaps) {
     if (swap.dateSwapped < DEX_WALLET_RULE_START || !swap.walletSource || swap.isWrappingEvent || swap.isBridgeTransaction
       || !d(swap.fromQuantity).gt(0)) continue;
     walletQualifiedAssets.add(swap.fromAsset.toUpperCase());
-    if (swap.receivedIntoSameWalletConfirmed === true) walletQualifiedAssets.add(swap.toAsset.toUpperCase());
+    if (swap.receivedIntoSameWalletConfirmed === true
+      || (swap.dateSwapped >= DEX_CASH_FEE_RULE_START && swap.cashFeeSource !== undefined)) {
+      walletQualifiedAssets.add(swap.toAsset.toUpperCase());
+    }
   }
 
   for (const swap of swaps) {
@@ -508,6 +515,9 @@ export function processDeFiTokenSwaps(
     const gasFee = d(swap.gasFee);
     const protocol = swap.protocol ?? "Unknown DEX";
 
+    if (swap.cashFeeSource !== undefined && (swap.isWrappingEvent || swap.isBridgeTransaction || fromQty.isZero())) {
+      throw new Error("DEX swap cash fee evidence requires a completed taxable exchange.");
+    }
     if ((swap.isWrappingEvent || swap.isBridgeTransaction)
       && (walletQualifiedAssets.has(fromAsset) || walletQualifiedAssets.has(toAsset))) {
       throw new Error("DEX swap requires a separate lot method for overlapping wrapping or bridging in a wallet-qualified batch.");
@@ -599,12 +609,13 @@ export function processDeFiTokenSwaps(
     }
 
     // ── Taxable: Standard DEX swap ──
-    // Disposition of fromAsset: proceeds = FMV at swap time
-    // New acquisition of toAsset: basis = FMV + gas fee (capitalized)
-    const proceeds = fmv;
-    if ([fromQty, toQty, proceeds].some(value => !value.isFinite() || value.lt(0))) {
+    if ([fromQty, toQty, fmv].some(value => !value.isFinite() || value.lt(0))) {
       throw new Error("DEX swap requires finite, nonnegative execution amounts and quantities.");
     }
+    if ((!gasFee.isZero() || swap.cashFeeSource) && !isActualDexDate(swap.dateSwapped)) {
+      throw new Error("DEX swap cash fee requires an actual execution date.");
+    }
+    const cashFeeRuleApplies = swap.dateSwapped >= DEX_CASH_FEE_RULE_START;
     const walletRuleApplies = swap.dateSwapped >= DEX_WALLET_RULE_START;
     const walletSource = walletRuleApplies ? swap.walletSource : undefined;
     if (walletRuleApplies && (walletSource || swap.walletFifoConfirmed !== undefined || swap.receivedIntoSameWalletConfirmed === true)) {
@@ -615,6 +626,10 @@ export function processDeFiTokenSwaps(
         throw new Error("DEX swap requires confirmed wallet FIFO and a complete original lot pool.");
       }
     }
+    const cashFee = cashFeeRuleApplies
+      ? qualifiedDexCashFee(swap, walletSource, fmv, gasFee, toQty, cashPaymentReferences)
+      : d(0);
+    const proceeds = sumSourceMoney(fmv, cashFee.negated());
     let eligibleLots = remainingLots;
     if (walletSource) {
       const walletReference = walletSource.walletOrAccountReference.trim();
@@ -638,6 +653,9 @@ export function processDeFiTokenSwaps(
     }
     const gainOrLoss = sumSourceMoney(proceeds, costBasis.negated());
     const termAmounts = allocateDexSwapLots(matchedLots, unmatchedQuantity, fromQty, swap.dateSwapped, proceeds);
+    if (walletRuleApplies && !walletSource && matchedLots.some(lot => lot.exactDexBasis !== undefined && !lot.walletSource)) {
+      throw new Error("DEX swap cannot use cash fee replacement basis without a confirmed destination wallet.");
+    }
     if (walletRuleApplies && !walletSource && (termAmounts.length > 1 || matchedLots.some(lot => lot.walletSource))) {
       throw new Error("DEX swap requires a confirmed wallet and original execution record for mixed terms or wallet-bound lots.");
     }
@@ -655,16 +673,16 @@ export function processDeFiTokenSwaps(
     }
     taxableSwapCount++;
 
-    // New lot for received token: basis = FMV + gas (IRC §1012)
-    const newBasisTotal = fmv.plus(gasFee);
+    const newBasisTotal = cashFeeRuleApplies ? fmv : fmv.plus(gasFee);
     const newBasisPerUnit = toQty.greaterThan(0)
-      ? newBasisTotal.dividedBy(toQty)
+      ? (toQty.eq(1) ? newBasisTotal : newBasisTotal.dividedBy(toQty))
       : new Decimal(0);
     const newLot: TrackedLot = {
       asset: toAsset,
       dateAcquired: swap.dateSwapped,
       quantity: toQty,
       costBasisPerUnit: newBasisPerUnit,
+      ...(cashFee.gt(0) && { exactDexBasis: newBasisTotal }),
       source: "swap",
       ...(walletSource && swap.receivedIntoSameWalletConfirmed === true && { walletSource: { ...walletSource } }),
     };
@@ -677,7 +695,7 @@ export function processDeFiTokenSwaps(
       `Proceeds $${proceeds} - basis $${costBasis} = ${gainOrLoss.isNegative() ? "loss" : "gain"} $${gainOrLoss}`, {
         protocol, fromAsset, toAsset,
         proceeds, costBasis, gainOrLoss,
-        gasFee, newLotBasis: newBasisTotal,
+        gasFee, grossReceivedValue: fmv, cashFeeApplied: cashFee, newLotBasis: newBasisTotal,
       });
   }
 
@@ -733,10 +751,35 @@ function consumeLotsForBasis(
   return totalBasis;
 }
 
-type ConsumedLot = Pick<TrackedLot, "dateAcquired" | "quantity" | "walletSource"> & { costBasis: Decimal };
+type ConsumedLot = Pick<TrackedLot, "dateAcquired" | "quantity" | "walletSource" | "exactDexBasis"> & { costBasis: Decimal };
 
 function hasConfirmedDexWalletSource(source: TrackedLot["walletSource"]): source is NonNullable<TrackedLot["walletSource"]> {
   return Boolean(source?.sourceFactsConfirmed && source.walletOrAccountReference.trim() && source.originalRecordReference.trim());
+}
+
+function qualifiedDexCashFee(
+  swap: DeFiTokenSwap, walletSource: DeFiTokenSwap["walletSource"], grossValue: Decimal, fee: Decimal,
+  receivedQuantity: Decimal, paymentReferences: Set<string>,
+): Decimal {
+  const source = swap.cashFeeSource;
+  if (fee.isZero() && source === undefined) return fee;
+  if (!hasConfirmedDexWalletSource(walletSource)) throw new Error("DEX swap cash fee requires a confirmed wallet execution record.");
+
+  const paymentReference = source?.paymentRecordReference.trim();
+  const fromAsset = swap.fromAsset.trim().toUpperCase();
+  const toAsset = swap.toAsset.trim().toUpperCase();
+  if (!fee.isFinite() || !fee.gt(0) || source?.sourceFactsConfirmed !== true || !paymentReference
+    || source.materiallyDifferentAssetsConfirmed !== true || source.taxpayerPaidUsdCashToEffectExchangeConfirmed !== true
+    || source.completeConsiderationWithNoOtherPaymentConfirmed !== true || !receivedQuantity.gt(0)
+    || !fromAsset || !toAsset || fromAsset === toAsset
+    || source.executionRecordReference.trim() !== walletSource.originalRecordReference.trim() || source.datePaid !== swap.dateSwapped
+    || !d(source.grossReceivedValueUsd).eq(grossValue) || !d(source.cashPaidUsd).eq(fee)) {
+    throw new Error("DEX swap cash fee requires matching original gross value and USD cash payment to effect the exchange.");
+  }
+  if (fee.gt(grossValue)) throw new Error("DEX swap cash fee cannot exceed the gross value of the received assets.");
+  if (paymentReferences.has(paymentReference)) throw new Error("DEX swap has a duplicate cash fee payment record.");
+  paymentReferences.add(paymentReference);
+  return fee;
 }
 
 function selectDexWalletLots(
@@ -769,7 +812,7 @@ function selectDexWalletLots(
 }
 
 function dexLotDecimal(soldQuantity: Decimal, lots: TrackedLot[]): typeof Decimal {
-  const values = [soldQuantity, ...lots.flatMap(lot => [lot.quantity, lot.costBasisPerUnit])];
+  const values = [soldQuantity, ...lots.flatMap(lot => [lot.quantity, lot.costBasisPerUnit, lot.exactDexBasis ?? d(0)])];
   let integerDigits = 1;
   let fractionalDigits = 0;
   for (const value of values) {
@@ -782,6 +825,15 @@ function dexLotDecimal(soldQuantity: Decimal, lots: TrackedLot[]): typeof Decima
   // Allow for exact quantity differences, quantity × unit basis, and a carry when summing the products.
   const digits = 2 * (integerDigits + fractionalDigits) + String(lots.length).length;
   return digits > Decimal.precision ? Decimal.clone({ precision: digits }) : Decimal;
+}
+
+function allocateDexReplacementBasis(
+  LotDecimal: typeof Decimal, basis: Decimal, quantity: Decimal, consumed: Decimal, remaining: Decimal,
+): Decimal {
+  if (remaining.isZero()) return basis;
+  const smaller = LotDecimal.min(consumed, remaining);
+  const share = new LotDecimal(basis).times(smaller).dividedBy(quantity);
+  return consumed.lte(remaining) ? share : sumSourceMoney(basis, share.negated());
 }
 
 /**
@@ -808,11 +860,19 @@ function consumeLotsWithDateTracking(
     if (lot.quantity.isZero()) continue;
 
     const consumed = LotDecimal.min(lot.quantity, remaining);
-    const costBasis = consumed.times(lot.costBasisPerUnit);
-    totalBasis = totalBasis.plus(costBasis);
-    onDexLotConsumed?.({ dateAcquired: lot.dateAcquired, quantity: consumed, costBasis, walletSource: lot.walletSource });
+    const remainingLotQuantity = new LotDecimal(lot.quantity).minus(consumed);
+    let costBasis = consumed.times(lot.costBasisPerUnit);
+    if (onDexLotConsumed && lot.exactDexBasis !== undefined) {
+      costBasis = allocateDexReplacementBasis(LotDecimal, lot.exactDexBasis, lot.quantity, consumed, remainingLotQuantity);
+      lot.exactDexBasis = sumSourceMoney(lot.exactDexBasis, costBasis.negated());
+    }
+    totalBasis = onDexLotConsumed ? sumSourceMoney(totalBasis, costBasis) : totalBasis.plus(costBasis);
+    onDexLotConsumed?.({
+      dateAcquired: lot.dateAcquired, quantity: consumed, costBasis,
+      walletSource: lot.walletSource, exactDexBasis: lot.exactDexBasis,
+    });
     dates.push(lot.dateAcquired);
-    lot.quantity = d(new LotDecimal(lot.quantity).minus(consumed));
+    lot.quantity = d(remainingLotQuantity);
     remaining = remaining.minus(consumed);
   }
 
@@ -850,7 +910,7 @@ function allocateDexSwapLots(
     const group = terms.get(holdingPeriod);
     if (group) {
       group.quantity = group.quantity.plus(lot.quantity);
-      group.costBasis = group.costBasis.plus(lot.costBasis);
+      group.costBasis = sumSourceMoney(group.costBasis, lot.costBasis);
       if (group.dateAcquired !== lot.dateAcquired) group.dateAcquired = "VARIOUS";
     } else {
       terms.set(holdingPeriod, { ...lot });
