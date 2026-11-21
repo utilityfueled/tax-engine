@@ -7,11 +7,26 @@ import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateForm8615 } from "@/engine/forms/form-8615.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { Form8615Schema, type TaxYearInput, type Form8615Input } from "@/models/inputs.js";
+import { Form8615Schema, TaxYearInputSchema, type TaxYearInput, type Form8615Input } from "@/models/inputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { calculateTaxFromBrackets, calculateCapitalGainsTax } from "@/utils/tax-math.js";
 
 const constants = getConstants(2025);
+const ordinaryParentWorksheet = {
+  parentTaxableIncome: "200000",
+  parentFilingStatus: "single",
+  preferentialWorksheetFacts: {
+    parentTaxMethod: "ordinary",
+    parentAdjustedLine16Tax: "41063",
+    noOtherChildUsesParentReturn: true,
+    childUsesOrdinaryQdcgWorksheet: true,
+  },
+} satisfies Partial<Form8615Input>;
+const dependentDeductionFacts = {
+  primaryCanBeClaimedAsDependent: true, dependentEarnedIncome: "0", primaryBlind: false,
+  primaryDeathDate: null, dualStatusAlien: false, nonresidentAlien: false,
+  shortTaxYear: false, spouseItemizes: false, claimSpouseAdditionalDeduction: false,
+};
 
 function makeInput(overrides: Partial<Form8615Input> = {}): Form8615Input {
   return {
@@ -232,6 +247,130 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
     expect(result.netUnearnedAtParentRate.toNumber()).toBe(1500);
+  });
+
+  it("Form 8615 Worksheet 1 treats allocated child dividends as preferential at the parent rate", () => {
+    const result = calculateForm8615(makeInput({
+      ...ordinaryParentWorksheet,
+      childUnearnedIncome: "10800",
+      childQualifiedDividends: "10800",
+    }), new Decimal("9450"), "single", constants);
+
+    const amount = (line: string) => result.lines.find(row => row.line === line)?.value.toFixed();
+    expect(amount("5")).toBe("8100");
+    expect(amount("9")).toBe("42278");
+    expect(amount("10")).toBe("41063");
+    expect(amount("15")).toBe("0");
+    expect(amount("17")).toBe("0");
+    expect(result.tax.toFixed()).toBe("1215");
+  });
+
+  it.each([
+    { preferentialWorksheetFacts: undefined },
+    { otherChildrenNetUnearnedIncome: "1000" },
+    { parentCollectiblesGain: "100" },
+  ])("rejects unconfirmed Worksheet 1 compositions %o", overrides => {
+    expect(() => calculateForm8615(makeInput({
+      ...ordinaryParentWorksheet,
+      childQualifiedDividends: "2000",
+      ...overrides,
+    }), new Decimal("3650"), "single", constants)).toThrow(/confirmed 2025 Worksheet 1/);
+  });
+
+  it("rejects a child requiring Worksheet 3 and a conflicting parent's adjusted tax", () => {
+    const input = makeInput({ ...ordinaryParentWorksheet, childQualifiedDividends: "2000" });
+    expect(() => calculateForm8615(input, new Decimal("2000"), "single", constants))
+      .toThrow(/confirmed 2025 Worksheet 1/);
+    expect(() => calculateForm8615({
+      ...input,
+      preferentialWorksheetFacts: { ...ordinaryParentWorksheet.preferentialWorksheetFacts, parentAdjustedLine16Tax: "41062" },
+    }, new Decimal("3650"), "single", constants)).toThrow(/adjusted Form 1040 Line 16 tax does not reconcile/);
+  });
+
+  it.each(["qualified dividends", "net capital gain"] as const)(
+    "reconciles actual %s with Form 8615 Worksheet 1 in the federal return",
+    incomeType => {
+      const isDividend = incomeType === "qualified dividends";
+      const input = makeFederalInput({
+        ...ordinaryParentWorksheet,
+        childUnearnedIncome: "10000",
+        childQualifiedDividends: isDividend ? "5000" : "0",
+        childNetLTCG: isDividend ? "0" : "5000",
+      }, {
+        standardDeductionFacts: dependentDeductionFacts,
+        form1099Div: [{
+          payer: "Fund",
+          ordinaryDividends: isDividend ? "5000" : "0",
+          qualifiedDividends: isDividend ? "5000" : "0",
+          totalCapitalGainDistributions: isDividend ? "0" : "5000",
+          exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
+        }],
+      });
+      const result = calculateFederalTax(input);
+
+      expect(result.agi.toFixed()).toBe("10000");
+      expect(result.taxableIncome.toFixed()).toBe("8650");
+      const line9 = result.form8615?.lines.find(line => line.line === "9");
+      expect(line9?.inputs[isDividend ? "childQualifiedDividendsOnLine5" : "childNetCapitalGainOnLine5"]?.toString()).toBe("3650");
+      expect(result.form8615?.tax.toFixed()).toBe("1716");
+      expect(result.allLines).toContainEqual(expect.objectContaining({
+        form: "1040", line: "16", description: "Tax (Form 8615)", value: new Decimal("1716"),
+      }));
+      expect(() => calculateFederalTax({
+        ...input,
+        form8615: makeInput({ ...input.form8615, childUnearnedIncome: "10001" }),
+      })).toThrow(/Form 8615.*reconcile.*federal/i);
+      expect(() => calculateFederalTax({
+        ...input,
+        form8615: makeInput({ ...input.form8615, childUnearnedIncome: "0" }),
+      })).toThrow(/Form 8615.*reconcile.*federal/i);
+      expect(() => calculateFederalTax({
+        ...input,
+        form8615: makeInput({ ...input.form8615, childQualifiedDividends: "0", childNetLTCG: "0" }),
+      })).toThrow(/Form 8615.*reconcile.*federal/i);
+    },
+  );
+
+  it("keeps normal federal tax when evidenced W-2 wages and dividends produce a Line 3 stop", () => {
+    const input = makeFederalInput({ childUnearnedIncome: "2000", childQualifiedDividends: "2000" }, {
+      w2s: [{
+        employer: { name: "Employer", ein: "12-3456789" }, wages: "5000", federalWithheld: "0",
+        socialSecurityWages: "5000", socialSecurityWithheld: "310", medicareWages: "5000", medicareWithheld: "72.50",
+      }],
+      form1099Int: [],
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "2000", qualifiedDividends: "2000",
+        exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
+      }],
+      standardDeductionFacts: { ...dependentDeductionFacts, dependentEarnedIncome: "5000" },
+    });
+    const result = calculateFederalTax(input);
+
+    expect(result.taxableIncome.toFixed()).toBe("1550");
+    expect(result.form8615?.applies).toBe(false);
+    expect(result.form8615?.lines.find(line => line.line === "3")?.value.toFixed()).toBe("-700");
+    expect(result.allLines).not.toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", description: "Tax (Form 8615)",
+    }));
+  });
+
+  it("rejects an offsetting Schedule 1 loss even when federal AGI matches reported unearned income", () => {
+    const input = TaxYearInputSchema.parse(makeFederalInput({
+      ...ordinaryParentWorksheet, childUnearnedIncome: "10000", childQualifiedDividends: "5000",
+    }, {
+      standardDeductionFacts: dependentDeductionFacts,
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "5000", qualifiedDividends: "5000",
+        exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
+      }],
+      scheduleC: {
+        businessName: "Synthetic Consulting", businessCode: "541511", grossReceipts: "1000",
+        expenses: { advertising: "4000" },
+      },
+      form1099Misc: [{ payer: "Other Source", otherIncome: "3000" }],
+    }));
+    expect(calculateFederalTax({ ...input, form8615: undefined }).agi.toFixed()).toBe("10000");
+    expect(() => calculateFederalTax(input)).toThrow(/Form 8615.*reconcile.*federal/i);
   });
 
   it("Form 8615 Line 14 - remainder taxed at child's own rate", () => {
@@ -495,36 +634,26 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
   });
 
   it("Form 8615 Line 15 - child's qualified dividends exceeding Line 5 get QDCG treatment", () => {
-    // Child has $10,000 QD (all unearned), net unearned = 10000 - 2700 = 7300
-    // Child's taxable income = $12000 (includes some earned)
-    // Line 5 = min(7300, 12000) = 7300
-    // Line 14 = 12000 - 7300 = 4700
-    // QD absorbed by Line 5 = min(10000, 7300) = 7300
-    // Existing calculation's QD on Line 14 = 10000 - 7300 = 2700
     const result = calculateForm8615(
       makeInput({
+        ...ordinaryParentWorksheet,
         childUnearnedIncome: "10000",
         childQualifiedDividends: "10000",
-        parentTaxableIncome: "200000",
-        parentFilingStatus: "single",
       }),
       new Decimal(12000),
       "single",
       constants
     );
 
-    // Line 14 = 4700, with QD = 2700
+    // $2,700 residual dividends leave $2,000 ordinary. The 2025 single Tax Table gives $201.
     expect(result.childRateIncome.toNumber()).toBe(4700);
-    // Tax on line 14 should use QDCG (2700 QD at 0% rate for low income)
-    const expectedLine15 = calculateCapitalGainsTax(
-      new Decimal(4700), new Decimal(2700), new Decimal(0), "single", constants
-    );
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.tax.toNumber());
+    expect(result.taxOnChildRateIncome.toFixed()).toBe("201");
   });
 
   it("Form 8615 Line 17 - child's QDCG applies to full taxable income at child's rate", () => {
     const result = calculateForm8615(
       makeInput({
+        ...ordinaryParentWorksheet,
         childUnearnedIncome: "5000",
         childQualifiedDividends: "3000",
         childNetLTCG: "1000",
@@ -534,10 +663,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
 
-    const expectedLine17 = calculateCapitalGainsTax(
-      new Decimal(5000), new Decimal(3000), new Decimal(1000), "single", constants
-    );
-    expect(result.taxAtChildOwnRate.toNumber()).toBe(expectedLine17.tax.toNumber());
+    expect(result.taxAtChildOwnRate.toFixed()).toBe("101");
   });
 
   // ─── Filing Status Variations ─────────────────────────────
@@ -682,23 +808,13 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.tax.greaterThan(0)).toBe(true);
   });
 
-  it("Form 8615 - child with LTCG allocated between Lines 5 and 6", () => {
-    // Child: $15000 unearned, QD = $8000, LTCG = $5000
-    // Taxable = $15000
-    // Net unearned = 15000 - 2700 = 12300
-    // Line 5 = min(12300, 15000) = 12300
-    // QD absorbed by line 5 = min(8000, 12300) = 8000
-    // Remaining line 5 after QD = 12300 - 8000 = 4300
-    // LTCG absorbed = min(5000, 4300) = 4300
-    // LTCG on line 14 = 5000 - 4300 = 700
-    // Line 14 = 15000 - 12300 = 2700
+  it("Form 8615 - child with LTCG allocated between Lines 5 and 14", () => {
     const result = calculateForm8615(
       makeInput({
+        ...ordinaryParentWorksheet,
         childUnearnedIncome: "15000",
         childQualifiedDividends: "8000",
         childNetLTCG: "5000",
-        parentTaxableIncome: "200000",
-        parentFilingStatus: "single",
       }),
       new Decimal(15000),
       "single",
@@ -706,11 +822,11 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     );
 
     expect(result.childRateIncome.toNumber()).toBe(2700);
-    // Line 15 should use QDCG with the LTCG overflow
-    const expectedLine15 = calculateCapitalGainsTax(
-      new Decimal(2700), new Decimal(0), new Decimal(700), "single", constants
-    );
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.tax.toNumber());
+    const line9 = result.lines.find(line => line.line === "9");
+    expect(line9?.inputs.childQualifiedDividendsOnLine5?.toString()).toBe("6560");
+    expect(line9?.inputs.childNetCapitalGainOnLine5?.toString()).toBe("4100");
+    // The remaining $360 ordinary taxable income falls in the $350–$375 Tax Table row.
+    expect(result.taxOnChildRateIncome.toFixed()).toBe("36");
   });
 
   // ─── Integration with federal.ts ──────────────────────────
@@ -766,6 +882,11 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
         parentFilingStatus: "married_filing_jointly",
         parentQualifiedDividends: "15000",
         parentNetLTCG: "10000",
+        preferentialWorksheetFacts: {
+          ...ordinaryParentWorksheet.preferentialWorksheetFacts,
+          parentTaxMethod: "qualified-dividends-and-capital-gain",
+          parentAdjustedLine16Tax: "67444",
+        },
       }),
       new Decimal(24550),
       "single",
@@ -780,6 +901,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     // The child pays significantly more than their own-rate tax
     expect(result.tentativeTax.greaterThan(result.taxAtChildOwnRate)).toBe(true);
     expect(result.tax.toNumber()).toBe(result.tentativeTax.toNumber());
+    expect(result.tax.toFixed()).toBe("5122");
 
     expect(result.lines.map(line => line.line)).toEqual([
       "1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "13", "14", "15", "16", "17", "18",

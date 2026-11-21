@@ -313,22 +313,23 @@ describe("Form 8615 edge cases — sibling allocation", () => {
 });
 
 describe("Form 8615 edge cases — QDCG allocation between Lines 5 and 14", () => {
-  it("Form 8615 Line 15 - child QD exactly equals Line 5 so no QD flows to Line 14", () => {
-    // Child: $5000 unearned (all QD), taxable = $5000
-    // Net unearned = 5000 - 2700 = 2300
-    // Line 5 = 2300
-    // QD absorbed by Line 5 = min(2300, 2300) = 2300 (QD = net unearned portion)
-    // Wait: childQualifiedDividends = 2300, childUnearnedIncome = 5000
-    // QD absorbed by Line 5 = min(2300, 2300) = 2300 → all absorbed
-    // QD on Line 14 = 0
-    // Line 14 = 5000 - 2300 = 2700
-    // Line15 uses the published single2700–2725 table row271.
+  const confirmedParent = {
+    parentTaxableIncome: "200000",
+    parentFilingStatus: "single",
+    preferentialWorksheetFacts: {
+      parentTaxMethod: "ordinary",
+      parentAdjustedLine16Tax: "41063",
+      noOtherChildUsesParentReturn: true,
+      childUsesOrdinaryQdcgWorksheet: true,
+    },
+  } satisfies Partial<Form8615Input>;
+
+  it("allocates some qualified dividends to Line 14 even when total dividends equal Line 5", () => {
     const result = calculateForm8615(
       makeInput({
+        ...confirmedParent,
         childUnearnedIncome: "5000",
         childQualifiedDividends: "2300",
-        parentTaxableIncome: "150000",
-        parentFilingStatus: "married_filing_jointly",
       }),
       new Decimal(5000),
       "single",
@@ -336,25 +337,17 @@ describe("Form 8615 edge cases — QDCG allocation between Lines 5 and 14", () =
     );
 
     expect(result.childRateIncome.toNumber()).toBe(2700);
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(271);
+    // $1,242 residual qualified dividends leave $1,458 ordinary on Line 14.
+    expect(result.taxOnChildRateIncome.toFixed()).toBe("146");
   });
 
-  it("Form 8615 Line 15 - child has only LTCG (no QD), partially absorbed by Line 5", () => {
-    // Child: $10000 unearned, $6000 LTCG, taxable = $10000
-    // Net unearned = 10000 - 2700 = 7300
-    // Line 5 = 7300
-    // QD absorbed = 0 (no QD)
-    // Remaining Line 5 = 7300
-    // LTCG absorbed = min(6000, 7300) = 6000
-    // LTCG on Line 14 = 0
-    // Line 14 = 10000 - 7300 = 2700
+  it("allocates ordinary net capital gain without qualified dividends", () => {
     const result = calculateForm8615(
       makeInput({
+        ...confirmedParent,
         childUnearnedIncome: "10000",
         childQualifiedDividends: "0",
         childNetLTCG: "6000",
-        parentTaxableIncome: "200000",
-        parentFilingStatus: "single",
       }),
       new Decimal(10000),
       "single",
@@ -362,23 +355,16 @@ describe("Form 8615 edge cases — QDCG allocation between Lines 5 and 14", () =
     );
 
     expect(result.childRateIncome.toNumber()).toBe(2700);
-    // All LTCG is absorbed; published single2700–2725 table row271.
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(271);
+    // $1,620 residual net gain leaves $1,080 ordinary on Line 14.
+    expect(result.taxOnChildRateIncome.toFixed()).toBe("109");
   });
 
-  it("Form 8615 Line 15 - large child QD overflows Line 5 into Line 14 for QDCG treatment", () => {
-    // Child: $10000 unearned, $8000 QD, taxable = $12000
-    // Net unearned = 10000 - 2700 = 7300
-    // Line 5 = min(7300, 12000) = 7300
-    // QD absorbed by Line 5 = min(8000, 7300) = 7300
-    // QD on Line 14 = 8000 - 7300 = 700
-    // Line 14 = 12000 - 7300 = 4700
+  it("allocates large child qualified dividends across both rate worksheets", () => {
     const result = calculateForm8615(
       makeInput({
+        ...confirmedParent,
         childUnearnedIncome: "10000",
         childQualifiedDividends: "8000",
-        parentTaxableIncome: "200000",
-        parentFilingStatus: "single",
       }),
       new Decimal(12000),
       "single",
@@ -386,30 +372,17 @@ describe("Form 8615 edge cases — QDCG allocation between Lines 5 and 14", () =
     );
 
     expect(result.childRateIncome.toNumber()).toBe(4700);
-    // Line 14 has $700 QD → QDCG treatment
-    const expectedLine15 = calculateCapitalGainsTax(
-      new Decimal(4700), new Decimal(700), new Decimal(0), "single", constants
-    );
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.tax.toNumber());
+    // $2,160 residual qualified dividends leave $2,540 ordinary on Line 14.
+    expect(result.taxOnChildRateIncome.toFixed()).toBe("254");
   });
 
-  it("Form 8615 Line 15 - both QD and LTCG overflow Line 5 into Line 14", () => {
-    // Child: $5000 unearned, $3000 QD, $3000 LTCG, taxable = $8000
-    // Net unearned = 5000 - 2700 = 2300
-    // Line 5 = min(2300, 8000) = 2300
-    // QD absorbed by Line 5 = min(3000, 2300) = 2300
-    // QD on Line 14 = 3000 - 2300 = 700
-    // Remaining Line 5 after QD = 0
-    // LTCG absorbed = min(3000, 0) = 0
-    // LTCG on Line 14 = 3000
-    // Line 14 = 8000 - 2300 = 5700
+  it("proportionally allocates both qualified dividends and net capital gain", () => {
     const result = calculateForm8615(
       makeInput({
+        ...confirmedParent,
         childUnearnedIncome: "5000",
         childQualifiedDividends: "3000",
-        childNetLTCG: "3000",
-        parentTaxableIncome: "200000",
-        parentFilingStatus: "single",
+        childNetLTCG: "2000",
       }),
       new Decimal(8000),
       "single",
@@ -417,11 +390,20 @@ describe("Form 8615 edge cases — QDCG allocation between Lines 5 and 14", () =
     );
 
     expect(result.childRateIncome.toNumber()).toBe(5700);
-    // Line 14 has $700 QD + $3000 LTCG → QDCG treatment
-    const expectedLine15 = calculateCapitalGainsTax(
-      new Decimal(5700), new Decimal(700), new Decimal(3000), "single", constants
-    );
-    expect(result.taxOnChildRateIncome.toNumber()).toBe(expectedLine15.tax.toNumber());
+    const line9 = result.lines.find(line => line.line === "9");
+    expect(line9?.inputs.childQualifiedDividendsOnLine5?.toString()).toBe("1380");
+    expect(line9?.inputs.childNetCapitalGainOnLine5?.toString()).toBe("920");
+    // $1,620 residual qualified dividends and $1,080 net gain leave $3,000 ordinary.
+    expect(result.taxOnChildRateIncome.toFixed()).toBe("303");
+  });
+
+  it("rejects preferential income that exceeds the reported unearned-income source", () => {
+    expect(() => calculateForm8615(makeInput({
+      ...confirmedParent,
+      childUnearnedIncome: "5000",
+      childQualifiedDividends: "3000",
+      childNetLTCG: "3000",
+    }), new Decimal("8000"), "single", constants)).toThrow(/must fit within the verified income/);
   });
 });
 

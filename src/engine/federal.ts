@@ -3540,6 +3540,25 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     if (childItemizes && d(form8615.childDirectlyConnectedItemizedDeductions).gt(itemizedDeductions)) {
       throw new Error("Form 8615 directly connected deductions cannot exceed Schedule A line 17");
     }
+    const reportedQualifiedDividends = d(form8615.childQualifiedDividends);
+    const reportedNetCapitalGain = d(form8615.childNetLTCG);
+    const hasPreferentialSources = [qualifiedDividends, netLTCG, reportedQualifiedDividends, reportedNetCapitalGain]
+      .some(amount => amount.gt(0));
+    if (!childItemizes && hasPreferentialSources && taxableIncome.gt(0)) {
+      const otherTaxableIncome = [tipPayroll.income, form8919?.line6, form1099R.disabilityPensionWages,
+        taxableAdoptionBenefits, foreignEmploymentNotOnW2, taxableCareBenefits, movingReimbursement,
+        iraTaxable, pensionTaxable, socialSecurityBenefitsTaxable, adjustments]
+        .some(amount => amount !== undefined && !amount.isZero());
+      const schedule1Income = sched1.lines.some(line => line.form === "Sched 1" && !line.value.isZero());
+      if (!totalWages.eq(w2Agg.wages) || otherTaxableIncome || schedule1Income
+        || capitalGainLoss.lt(0) || input.form2555 || input.scheduleJ
+        || input.form8814?.length || input.scheduleK1.length || input.scheduleK1Form1041?.length
+        || section1250Gain.gt(0) || collectiblesGain.gt(0)
+        || !d(form8615.childUnearnedIncome).eq(agi.minus(totalWages))
+        || !reportedQualifiedDividends.eq(qualifiedDividends) || !reportedNetCapitalGain.eq(netLTCG)) {
+        throw new Error("Form 8615 Worksheet 1 facts must reconcile with the supported federal investment-income sources");
+      }
+    }
     form8615Result = calculateForm8615(
       form8615,
       taxableIncome,

@@ -4422,6 +4422,14 @@ export const Form8615Schema = z.object({
   parentCollectiblesGain: optionalDecimal,
   /** Line 7: Total Line 5 net unearned income of other children using the same parent's return */
   otherChildrenNetUnearnedIncome: optionalDecimal,
+  /** Actual source and method facts for the supported 2025 Line 5 Worksheet 1. */
+  preferentialWorksheetFacts: z.object({
+    parentTaxMethod: z.enum(["ordinary", "qualified-dividends-and-capital-gain"]),
+    /** Parent's Form 1040 Line 16 after the exclusions in the Form 8615 instructions. */
+    parentAdjustedLine16Tax: decimal.refine(value => d(value).isFinite() && d(value).gte(0)),
+    noOtherChildUsesParentReturn: z.literal(true),
+    childUsesOrdinaryQdcgWorksheet: z.literal(true),
+  }).optional(),
 }).refine(input => !input.childItemizesDeductions || input.childDirectlyConnectedItemizedDeductions !== undefined, {
   path: ["childDirectlyConnectedItemizedDeductions"],
   message: "Enter directly connected itemized deductions, including zero if none",

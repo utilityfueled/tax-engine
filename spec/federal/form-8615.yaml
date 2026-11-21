@@ -72,6 +72,32 @@ lines:
     irs_reference: "Form 8615 Instructions, Line 5"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 5 - net unearned income capped at child's taxable income"
 
+  - line: "5-worksheet-1"
+    description: "2025 ordinary preferential-income allocation for a nonitemizing child"
+    formula: >-
+      Admit a nonitemizing child with positive equal Lines 3 and 5, confirmed
+      ordinary QDCG treatment for the child, and no other child using the same
+      parent's return. Reconcile the parent's actual adjusted Form 1040 Line 16
+      and confirmed ordinary or QDCG method with the reported parent amounts.
+      Exclude unrecaptured Section 1250 and 28 percent gain and special tax methods.
+      Compute each reported qualified dividend and net capital gain fraction
+      against Line 1 with Decimal precision. Subtract the $2,700 threshold times
+      each fraction, flooring each result at zero and capping dividends at Line 5
+      and net gain at the remainder of Line 5. Include these allocated amounts
+      in the combined Line 9 preferential worksheet and use each residual
+      on Line 15. Use the full child preference on Line 17. Validate that the
+      reported preferential amounts fit within the child's Line 1 income.
+    notes: >-
+      The federal entry reconciles child amounts to actual federal qualified
+      dividends and positive net capital gain, and reconciles Line 1 to federal
+      AGI less ordinary W-2 wages. Require only these investment sources and
+      optional ordinary W-2 wages, without adjustments or special tax paths.
+      Reconcile the federal income sources before accepting a reported Line 3
+      stop. Apply the Lines 3 and 5 stop rules before requiring Worksheet 1
+      method facts. An unsupported composition requires a separate worksheet.
+    irs_reference: "2025 Form 8615 Instructions, 2025 Line 5 Worksheet #1 and Lines 8, 9, 10, 14, 15 and 17 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf)"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 1 treats allocated child dividends as preferential at the parent rate"
+
   - line: "6"
     description: "Parent's taxable income"
     formula: "max(0, parent's taxable income from Form 1040 Line 15)"
@@ -144,7 +170,7 @@ lines:
   - line: "15"
     description: "Tax on child's remaining income at child's own rate"
     formula: "Tax computed on Line 14 using the child's filing status and the applicable tax table or worksheet."
-    notes: "The IRS requires the Line 5 Worksheet to determine preferential amounts included on Line 14. This worksheet is outside the audit-row correction."
+    notes: "For the supported 2025 Worksheet 1 path, use the child's total qualified dividends and net capital gain less the respective amounts allocated to Line 5. Other preferential worksheets require separate methods."
     irs_reference: "Form 8615 Instructions, Line 15"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 15 - tax on child's remaining income at child's rate"
 
@@ -198,7 +224,8 @@ edge_cases:
   - description: "Child has qualified dividends allocated between Lines 5 and 14"
     rule: >
       Use the applicable IRS Line 5 Worksheet to determine each portion.
-      Qualification of this worksheet is outside the audit-row correction.
+      The supported 2025 Worksheet 1 case calculates both portions. Other
+      worksheets and special methods remain outside that case.
 
   - description: "Child's own rate is higher than parent-rate computation"
     rule: >
