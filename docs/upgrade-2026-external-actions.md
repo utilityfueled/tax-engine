@@ -44,6 +44,8 @@ the worksheet for the documented Florida-to-PA statutory resident
 case with the full-year Pennsylvania W-2 payroll. The ordinary one-move
 path holds exactly 183 days and other fact patterns that need a separate
 source method. [Pennsylvania scenarios and official sources](upgrade-2026-progress.md#november-21-pennsylvania-resident-draft-after-a-documented-florida-move).
+The latest source check found the same disagreement between the
+regulation and the Department’s one-move guidance. [November 21 authority refresh](upgrade-2026-pa-residency-sources-work.md#november-21-exact-183-day-authority-refresh).
 
 The latest annual cases also need independent expected outputs. For the
 2026 Publication 915 example, review the taxable amounts on Worksheets

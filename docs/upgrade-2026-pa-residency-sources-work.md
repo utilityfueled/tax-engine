@@ -1,5 +1,22 @@
 # Actual Pennsylvania ordinary residency sources
 
+## November 21 exact 183-day authority refresh
+
+Section 301(p) and the regulations use more than 183 days for the
+statutory-residence test. The recordkeeping rule for a nonresident with
+a permanent Pennsylvania abode uses the same strict threshold. The
+Department’s December 2025 preparation guide and specific one-move
+FAQ include day 183. The December 2006 Chief Counsel ruling applies
+the strict threshold to a temporary overseas assignment. The official
+search found no dated ruling, correction or court decision reconciling
+the specific one-move guidance, so exact day 183 remains under review.
+[Tax Reform Code §301(p)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s) ·
+[61 Pa. Code §121.3](https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter121/s121.3.html) ·
+[Recordkeeping rule](https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.5.html) ·
+[Preparation guide](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf#page=9) ·
+[One-move FAQ](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency#when-is-a-person-considered-a-part-year-resident) ·
+[PIT-06-013](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/letterrulings/pit/documents/pit-06-013.pdf).
+
 Parent approved ten dedicated paths before edits. Source/ownership/original
 receipts are in `.local/upgrade-evidence/nov02-pa-residency-sources` and
 `nov02-pa-launch`. Spec and first literal linked tests preceded product. The preserved initial

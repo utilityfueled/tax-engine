@@ -1,5 +1,22 @@
 # Current loss origins with actual QSBS exclusions
 
+## November 21 authority refresh
+
+The IRS still lists the December 2024 form and instructions as current.
+The House Code text through November 10, 2026 retains the relevant
+§172(d)(2) and (d)(4) rules. Applying those provisions without the §1202
+exclusion leaves $300 of nonbusiness capital income matched by $300 of
+allowable nonbusiness deductions, for a $100,000 loss in the retained
+example. The printed lines add a separate $200 at line 21 and yield
+$99,800. The instructions specify the capital-loss limit before the
+§1202 exclusion and give no worked reconciliation for this overlap.
+The existing hold remains pending a qualified reviewer’s controlling
+calculation and line treatment.
+[IRS form status](https://www.irs.gov/forms-pubs/about-form-172) ·
+[Form 172](https://www.irs.gov/pub/irs-pdf/f172.pdf#page=1) ·
+[Instructions](https://www.irs.gov/instructions/i172) ·
+[26 U.S.C. §172](https://uscode.house.gov/us/usc/119-142/t26/s172/).
+
 Status: bounded implementation independently reviewed and verified. The specific
 negative-net interpretation below remains disabled. This is not human tax review, filing qualification or 2026 readiness.
 
