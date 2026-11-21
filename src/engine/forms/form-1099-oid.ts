@@ -14,6 +14,11 @@ export interface Form1099OIDSourceResult extends Amounts {
   sourceId: string;
   sourceFactsVerified: boolean;
   stateWithholding: Array<{ state: string; statePayerId: string; stateWithheld: Decimal }>;
+  scheduleBInterest?: {
+    grossTaxableInterest: Decimal;
+    oidAdjustment: Decimal;
+    bondPremiumReduction: Decimal;
+  };
 }
 export interface Form1099OIDResult extends Amounts {
   taxYear: number;
@@ -85,7 +90,8 @@ export function calculateForm1099OID(forms: Form1099OID[], taxYear = 2025): Form
       const adj = form.recipientAdjustments;
       if (adj && !adj.sourceReference?.trim()) throw new Error("Form 1099-OID recipient adjustments require their actual worksheet reference.");
       const adjustment = (key: "oid" | "periodicInterest" | "acquisitionPremium" | "bondPremium" | "marketDiscount") => adj ? amount(adj[key], `recipient ${key} adjustment`, true) : d(0);
-      const grossOid = (category === "taxable" ? raw.oid : category === "treasury" ? raw.treasury : raw.exempt).plus(adjustment("oid"));
+      const originalOid = category === "taxable" ? raw.oid : category === "treasury" ? raw.treasury : raw.exempt;
+      const grossOid = originalOid.plus(adjustment("oid"));
       const coupon = amount(raw.interest.plus(adjustment("periodicInterest")), "reconciled stated interest");
       const acquisition = amount(raw.acquisition.plus(adjustment("acquisitionPremium")), "reconciled acquisition premium");
       const premium = amount(raw.premium.plus(adjustment("bondPremium")), "reconciled bond premium");
@@ -149,6 +155,17 @@ export function calculateForm1099OID(forms: Form1099OID[], taxYear = 2025): Form
         throw new Error("Form 1099-OID a premium worksheet cannot be applied without the actual amortization election.");
       }
       source.bondPremiumInterestReduction = coupon.minus(netCoupon);
+      if (category !== "tax_exempt" && !form.inflationIndexed) {
+        const reportedOid = form.oidReportedNetOfAcquisitionPremium || originalOid.isNegative() ? netOid : originalOid;
+        const oidAdjustment = netOid.minus(reportedOid);
+        if (!oidAdjustment.isZero() || source.bondPremiumInterestReduction.gt(0)) {
+          source.scheduleBInterest = {
+            grossTaxableInterest: reportedOid.plus(coupon).plus(currentMarketDiscount),
+            oidAdjustment,
+            bondPremiumReduction: source.bondPremiumInterestReduction,
+          };
+        }
+      }
       let ordinaryInterest = zeroFloor(netOid).plus(netCoupon);
       if (form.inflationIndexed) {
         const facts = form.tipsDeflationFacts;

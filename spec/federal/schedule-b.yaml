@@ -8,6 +8,7 @@ notes: |
   - Over $1,500 of taxable interest (Part I)
   - Over $1,500 of ordinary dividends (Part II)
   - A claimed education savings-bond interest exclusion (Part I, line 3)
+  - A supported recipient OID adjustment or taxable amortizable bond premium reduction from a gross Form 1099-OID (Part I, line 1)
   - Any financial interest in or signature authority over a foreign financial account (Part III)
   - A foreign trust distribution or grantor or transferor status during the return year (Part III)
 
@@ -48,12 +49,30 @@ lines:
       - "K-1 Box 5 (each partnership)"
       - "K-1 (Form 1041) Box 1 (each estate or trust)"
       - "Seller-financed mortgage interest received"
-    notes: "The audit trail should preserve payer-level listed amounts, using one reconciled taxable amount per OID instrument and retaining its source-calculator audit separately."
+    notes: "Preserve net interest by payer for downstream calculations and the separate source-calculator audit. Use the Part I reporting rows for confirmed changes to gross statements."
     edgeCases:
       - "Nominee interest — received on behalf of another"
       - "OID (Original Issue Discount) adjustments"
       - "Tax-exempt interest NOT included here (goes to 1040 Line 2a)"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 1 - list interest payers"
+
+  - line: "1-oid-premium-adjustments"
+    description: "Disclose changes from verified gross Form 1099-OID for ordinary taxable and Treasury obligations"
+    formula: "Use the original Box 1 or Box 8 OID as the payer's OID when gross OID is refigured. The signed OID adjustment is the recipient calculator's OID after actual worksheet changes and acquisition premium, minus that original box. Put the subtotal after the payers and show positive and negative OID Adjustment amounts separately. Subtract any separately reported ABP Adjustment using the taxable coupon reduction from the existing calculation. Schedule B is required for supported adjustments even below the monetary thresholds. Already-net OID does not produce an OID adjustment here. Preserve historical statements, other recipient components, TIPS, and net state and federal interest. Continue Part I rows when they exceed the form's available space."
+    irsRef: "Publication 1212, How To Report OID; 2025 and 2026 Schedule B General Instructions and Part I"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf"
+      - "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf"
+      - "https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=10"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::reports verified gross OID and elected premium reductions without changing net interest"
+    testRefs:
+      - "tests/engine/federal-oid-source-integration.test.ts::keeps already-net and historical OID on their existing Schedule B paths"
+      - "tests/engine/federal-oid-source-integration.test.ts::discloses the applied source reductions after reconciling recipient and accrual records"
+      - "tests/engine/federal-oid-source-integration.test.ts::includes Schedule B gross amounts and reductions in a 2025 review packet below $1,500"
+      - "tests/engine/federal-oid-source-integration.test.ts::carries the Schedule B subtotal and adjustments after all interest payer rows"
+      - "tests/engine/federal-oid-source-integration.test.ts::reports upward and downward OID worksheet changes from original boxes in 2025 and 2026"
+      - "tests/engine/federal-oid-source-integration.test.ts::keeps opposing OID statement changes separate below the Schedule B subtotal"
+      - "tests/engine/federal-oid-source-integration.test.ts::prints original zero OID and its positive adjustment on the 2025 review PDF"
 
   - line: "2"
     description: "Add amounts from Line 1"

@@ -273,11 +273,14 @@ export async function fillScheduleB(
   if (!sb) return doc;
 
   // ── Part I: Interest Payers ──
-  const maxInterestRows = Math.min(sb.interestPayers.length, interestPayerCapacity);
+  const interestRows = sb.interestReportingRows ?? sb.interestPayers;
+  const maxInterestRows = Math.min(interestRows.length, interestPayerCapacity);
   for (let i = 0; i < maxInterestRows; i++) {
-    const payer = sb.interestPayers[i];
+    const payer = interestRows[i];
     setTextField(form, F.interestPayerName[i], payer.name);
-    setCurrencyField(form, F.interestPayerAmount[i], payer.amount);
+    const amountField = F.interestPayerAmount[i];
+    if (sb.interestReportingRows && payer.amount.isZero()) setTextField(form, amountField, "0");
+    else setCurrencyField(form, amountField, payer.amount);
   }
   setCurrencyField(form, F.line2, sb.totalInterest);
   setCurrencyField(form, F.line3, sb.savingsBondExclusion);
@@ -304,7 +307,7 @@ export async function fillScheduleB(
     ? fillForeignAccountCountries(form, sb.foreignAccountCountries)
     : undefined;
 
-  const additionalInterest = sb.interestPayers.slice(interestPayerCapacity);
+  const additionalInterest = interestRows.slice(interestPayerCapacity);
   const additionalDividends = sb.dividendPayers.slice(dividendPayerCapacity);
   const payerStatementNeeded = additionalInterest.length > 0 || additionalDividends.length > 0;
   if (payerStatementNeeded || countryStatement) {

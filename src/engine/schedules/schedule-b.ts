@@ -3,8 +3,8 @@
  * Spec: spec/federal/schedule-b.yaml
  *
  * Supported attachment triggers include the $1,500 interest and dividend
- * thresholds, a claimed education savings-bond exclusion, and foreign
- * financial accounts or trusts.
+ * thresholds, supported gross OID or premium adjustments, a claimed education
+ * savings-bond exclusion, and foreign financial accounts or trusts.
  */
 
 import Decimal from "decimal.js";
@@ -31,6 +31,8 @@ export interface DividendPayer {
 export interface ScheduleBResult {
   /** Part I */
   interestPayers: InterestPayer[];
+  /** Gross payers, subtotal and adjustments for verified Form 1099-OID changes. */
+  interestReportingRows?: InterestPayer[];
   totalInterest: Decimal; // Line 2
   previouslyReportedSavingsBondInterest: Decimal; // Actual prior interest included in current Box 3
   savingsBondExclusion: Decimal; // Line 3
@@ -102,6 +104,7 @@ export function calculateScheduleB(
 
   const previouslyReportedSavingsBondInterest = d(input.form8815?.priorYearInterestIncludedInCurrentStatements);
   const reportedTreasuryInterest = input.form1099Int.reduce((total, form) => total.plus(d(form.usSavingsBondInterest)), new Decimal(0));
+  let previouslyReportedInterestRow: InterestPayer | undefined;
   if (!previouslyReportedSavingsBondInterest.isFinite() || previouslyReportedSavingsBondInterest.isNegative()
     || previouslyReportedSavingsBondInterest.gt(reportedTreasuryInterest)) {
     throw new Error("Previously reported interest adjustment must be finite, nonnegative and no greater than current Box 3 interest");
@@ -111,7 +114,8 @@ export function calculateScheduleB(
       || !input.savingsBondRedemptions?.length) {
       throw new Error("Previously reported interest requires actual reconciled bond and statement sources");
     }
-    interestPayers.push({ name: "U.S. savings bond interest previously reported", amount: previouslyReportedSavingsBondInterest.negated() });
+    previouslyReportedInterestRow = { name: "U.S. savings bond interest previously reported", amount: previouslyReportedSavingsBondInterest.negated() };
+    interestPayers.push(previouslyReportedInterestRow);
     audit.record("Sched B", "1-prior-interest", "Previously reported savings bond interest", previouslyReportedSavingsBondInterest.negated(),
       "Subtract only actual prior interest confirmed as included in current Treasury statements");
   }
@@ -149,12 +153,49 @@ export function calculateScheduleB(
   // One recipient-classified amount per actual OID source. Box8 is separate
   // Treasury OID; tax-exempt Box11/coupons never become taxable by position.
   const oid = calculateForm1099OID(input.form1099OID ?? [], input.taxpayer.taxYear);
+  const nonOidPayerCount = interestPayers.length;
+  const oidReportingPayers: InterestPayer[] = [];
+  let oidReduction = d(0);
+  let additionalOid = d(0);
+  let bondPremiumReduction = d(0);
   for (const source of oid.sources) {
-    if (source.taxableInterest.isZero()) continue;
-    interestPayers.push({ name: `${source.payer} (OID)`, amount: source.taxableInterest });
-    audit.record("Sched B", "1", `Interest payer - ${source.payer} (OID)`, source.taxableInterest,
-      source.sourceFactsVerified ? "Actual recipient-classified OID and stated interest after elections and matching source adjustments" : "Unverified historical OID and interest aliases after legacy netting",
-      { "Source ID": source.sourceId, "Treasury interest": source.treasuryInterest });
+    const payer = { name: `${source.payer} (OID)`, amount: source.taxableInterest };
+    if (!source.taxableInterest.isZero()) {
+      interestPayers.push(payer);
+      audit.record("Sched B", "1", `Interest payer - ${payer.name}`, source.taxableInterest,
+        source.sourceFactsVerified ? "Actual recipient-classified OID and stated interest after elections and matching source adjustments" : "Unverified historical OID and interest aliases after legacy netting",
+        { "Source ID": source.sourceId, "Treasury interest": source.treasuryInterest });
+    }
+    if (source.scheduleBInterest) {
+      const { grossTaxableInterest: grossAmount, oidAdjustment, bondPremiumReduction: premiumReduction } = source.scheduleBInterest;
+      oidReportingPayers.push({ name: payer.name, amount: grossAmount });
+      if (oidAdjustment.gt(0)) additionalOid = additionalOid.plus(oidAdjustment);
+      else oidReduction = oidReduction.minus(oidAdjustment);
+      bondPremiumReduction = bondPremiumReduction.plus(premiumReduction);
+      audit.record("Sched B", "1-oid-gross", `Gross interest payer - ${payer.name}`, grossAmount,
+        "Original taxable OID, coupon interest and includible market discount before Schedule B adjustments",
+        { "Source ID": source.sourceId });
+    } else if (!source.taxableInterest.isZero()) {
+      oidReportingPayers.push(payer);
+    }
+  }
+
+  let interestReportingRows: InterestPayer[] | undefined;
+  if (oidReduction.gt(0) || additionalOid.gt(0) || bondPremiumReduction.gt(0)) {
+    const grossPayers = interestPayers.slice(0, nonOidPayerCount).filter(payer => payer !== previouslyReportedInterestRow).concat(oidReportingPayers);
+    const subtotal = sumSavingsBondRatios(grossPayers.map(({ amount: numerator }) => ({ numerator, denominator: d(1) }))).numerator;
+    interestReportingRows = [...grossPayers, { name: "Subtotal", amount: subtotal }];
+    audit.record("Sched B", "1-subtotal", "Gross interest subtotal", subtotal, "Sum of the interest payer amounts before the listed adjustments");
+    if (previouslyReportedInterestRow) interestReportingRows.push(previouslyReportedInterestRow);
+    for (const [line, name, amount] of [
+      ["1-oid-adjustment-decrease", "OID Adjustment", oidReduction.negated()],
+      ["1-oid-adjustment-increase", "OID Adjustment", additionalOid],
+      ["1-abp-adjustment", "ABP Adjustment", bondPremiumReduction.negated()],
+    ] as const) {
+      if (amount.isZero()) continue;
+      interestReportingRows.push({ name, amount });
+      audit.record("Sched B", line, name, amount, "Apply the signed adjustment to the gross interest subtotal");
+    }
   }
 
   audit.record(
@@ -295,12 +336,14 @@ export function calculateScheduleB(
     totalInterest.greaterThan(1500) ||
     totalOrdinaryDividends.greaterThan(1500) ||
     savingsBondExclusion.gt(0) ||
+    interestReportingRows !== undefined ||
     hasForeignAccounts === true ||
     hasForeignTrust === true;
 
   return {
     previouslyReportedSavingsBondInterest,
     interestPayers,
+    ...(interestReportingRows ? { interestReportingRows } : {}),
     totalInterest,
     savingsBondExclusion,
     taxableInterest,
