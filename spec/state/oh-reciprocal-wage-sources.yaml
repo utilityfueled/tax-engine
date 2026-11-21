@@ -70,6 +70,10 @@ lines:
     label: "Only independently derived current payment metadata binds the context"
     formula: "Derive payment and residency commitments/current timing/coverage/quarter schedule/prior-history and penalty method directly from original source helper, never from a caller supplied rebind projection. Unknown/stale/changed metadata denies despite unchanged income and genuine original context."
     testRef: "tests/engine/state/oh-reciprocal-wage-sources.test.ts::denies changed finite payment identity or chronology %s"
+  - line: "current-invocation-payment-projection"
+    label: "Reuse the freshly validated reciprocal payment projection"
+    formula: "After the reciprocal source method validates its actual canonical payment packet, reuse the result at the adapter payment stage only for the same packet in that synchronous invocation. Preserve the payment-stage guards and validation for separate calls, including direct context-only calculation, changed originals and independent replays. Do not accept an external projection or change output commitments."
+    testRef: "tests/engine/state/oh-reciprocal-wage-sources.test.ts::validates the same canonical reciprocal payment packet once per adapter call for $name"
 
   - line: "actual-pa-withholding-separate"
     label: "Actual separately printed PA withholding does not establish Ohio cash"

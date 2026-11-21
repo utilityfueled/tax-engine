@@ -2,7 +2,7 @@ import { buildOhioResidentCreditSource, type OhioResidentCreditSourceContext } f
 import { buildOhioSchoolDistrictSource, type OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
-import { calculateOhioReciprocalWageSource, type OhioReciprocalWageContext } from './oh-reciprocal-wage-source.js';
+import { calculateOhioReciprocalWageSourceWithPayment, type OhioReciprocalWageContext } from './oh-reciprocal-wage-source.js';
 import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource, type OhioCanonicalBusinessContext } from './oh-business-source.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
@@ -168,6 +168,7 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     businessSource?: OhioCanonicalBusinessContext;
     canonicalQualifyingBusinessIncome?: Decimal;
     reciprocalWageSource?: OhioReciprocalWageContext;
+    reciprocalPaymentSource?: ReturnType<typeof calculateOhioReciprocalWageSourceWithPayment>['paymentSource'];
     residentCreditSource?: OhioResidentCreditSourceContext;
     /** Fresh local result only; no caller-provided or cross-invocation projection. */
     schoolDistrictSource?: OhioSchoolDistrictSourceProjection;
@@ -210,8 +211,8 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         const adjustments = calculateOhioScheduleOfAdjustments(ohio);
         if (!adjustments.line14_totalAdditions.isZero() || !adjustments.line47_totalDeductions.isZero())
             fail('reciprocal wages cannot override or suppress other actual state adjustments');
-        const reciprocalWageSource = calculateOhioReciprocalWageSource(input, result, facts);
-        return {facts, sourceDigest:digest({input:withoutFacts(input),facts}), reciprocalWageSource, ...(schoolDistrictSource ? {schoolDistrictSource} : {})};
+        const { context: reciprocalWageSource, paymentSource: reciprocalPaymentSource } = calculateOhioReciprocalWageSourceWithPayment(input, result, facts);
+        return {facts, sourceDigest:digest({input:withoutFacts(input),facts}), reciprocalWageSource, reciprocalPaymentSource, ...(schoolDistrictSource ? {schoolDistrictSource} : {})};
     }
     const businessSource = facts.businessSources ? calculateOhioCanonicalBusinessSource({taxInput:input,federalResult:result,residencyFacts:facts}) : undefined;
     const business = businessSource ? readOhioCanonicalBusinessSource(businessSource,facts,result.agi) : undefined;

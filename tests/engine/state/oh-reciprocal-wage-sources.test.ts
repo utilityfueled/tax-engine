@@ -1,16 +1,59 @@
 import {calculateOhioResidentReturn} from '@/engine/state/oh-return.js';
 /** Spec: spec/state/oh-reciprocal-wage-sources.yaml. Existing APIs only before product. */
 import Decimal from 'decimal.js';
-import {expect,it} from 'vitest';
+import {expect,it,vi} from 'vitest';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {calculateOhioResidentReturnFromFederal} from '@/engine/state/oh-engine.js';
 import {buildOhioResidentReturnInput} from '@/engine/state/oh-input-adapter.js';
+import * as paymentSources from '@/engine/state/oh-payment-source.js';
+import { calculateOhioReciprocalWageSource } from '@/engine/state/oh-reciprocal-wage-source.js';
 import {reciprocalOhioWageFixture,reciprocalW2,rebindReciprocalOuter,explicitlyReplaceReciprocalW2,type ReciprocalOhioWagePacket} from '../../fixtures/oh-reciprocal-wage-sources.js';
 function run(packet:ReciprocalOhioWagePacket,overlay:Record<string,unknown>={}){
   return calculateOhioResidentReturnFromFederal({taxInput:packet.input,federalResult:calculateFederalTax(packet.input),overlay:{residency:packet.facts,...overlay}});
 }
 function firstPayroll(packet:ReciprocalOhioWagePacket){const row=packet.facts.reciprocalWageSources.payrollRows[0];if(!row)throw new Error('Fixture requires actual payroll');return row;}
 function sourceLine(result:ReturnType<typeof run>){const value:unknown=Reflect.get(result.scheduleOfAdjustments,'line14_reciprocityWages');if(!Decimal.isDecimal(value))throw new Error('Canonical result must expose actual2025 deduction line14');return value;}
+it.each([
+  { name: 'refund', wages: '60000.25', withholding: '2000.60', printedWages: '60000', refund: '2001', ohioFirst: false },
+  { name: 'known zero', wages: '60000.50', withholding: '0.00', printedWages: '60001', refund: '0', ohioFirst: true },
+])('validates the same canonical reciprocal payment packet once per adapter call for $name', example => {
+  const packet = reciprocalOhioWageFixture(example.wages, example.withholding, example.ohioFirst);
+  const federal = calculateFederalTax(packet.input);
+  const validatePayments = vi.spyOn(paymentSources, 'buildOhioPaymentSource');
+  try {
+    const first = buildOhioResidentReturnInput(packet.input, federal);
+    const result = calculateOhioResidentReturn(first);
+    expect(sourceLine(result).toFixed()).toBe(example.printedWages);
+    expect(result.it1040.line26_refund.toFixed()).toBe(example.refund);
+    expect(validatePayments).toHaveBeenCalledTimes(1);
+
+    const changed = structuredClone(packet.input);
+    if (!changed.ohioPayments || !changed.ohioResidency) throw new Error('Actual Ohio fixtures are required.');
+    changed.ohioPayments.sourceReference += ' corrected original';
+    const next = buildOhioResidentReturnInput(changed, federal, { payments: structuredClone(changed.ohioPayments) });
+    expect(validatePayments).toHaveBeenCalledTimes(2);
+    expect(next.paymentSourceDigest).not.toBe(first.paymentSourceDigest);
+    expect(calculateOhioResidentReturn(next).it1040.line26_refund.toFixed()).toBe(example.refund);
+    expect(() => calculateOhioResidentReturn({ ...next, residencyReciprocalWageSource: first.residencyReciprocalWageSource }))
+      .toThrow(/payment identity chronology or method projection changed/);
+
+    const independent = calculateOhioReciprocalWageSource(changed, federal, changed.ohioResidency);
+    expect(validatePayments).toHaveBeenCalledTimes(3);
+    expect(independent).toEqual(next.residencyReciprocalWageSource);
+    expect(independent).not.toBe(next.residencyReciprocalWageSource);
+    expect(calculateOhioResidentReturn({ ...next, residencyReciprocalWageSource: independent }).it1040.line26_refund.toFixed()).toBe(example.refund);
+
+    expect(() => buildOhioResidentReturnInput(changed, federal, { payments: packet.payments }))
+      .toThrow(/canonical and overlay payment packets conflict/);
+    expect(validatePayments).toHaveBeenCalledTimes(3);
+    changed.ohioPayments.allPaymentsIncludedConfirmed = false;
+    expect(() => buildOhioResidentReturnInput(changed, federal)).toThrow(/complete confirmed actual payment records/);
+    expect(validatePayments).toHaveBeenCalledTimes(4);
+  } finally {
+    validatePayments.mockRestore();
+  }
+});
+
 it.each(['second','first'] as const)('computes actual reciprocal withholding refund with Ohio row %s',position=>{
   const packet=reciprocalOhioWageFixture('60000.25','2000.60',position==='first');const before=JSON.stringify(packet);const precision=Decimal.precision;
   const rows=packet.facts.reciprocalWageSources.payrollRows;

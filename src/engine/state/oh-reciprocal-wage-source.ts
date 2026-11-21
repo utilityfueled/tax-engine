@@ -52,6 +52,11 @@ export function readOhioReciprocalWageSource(context:OhioReciprocalWageContext,f
 }
 /** Finite primary single full-year PA employee method. Other cohorts remain guarded. */
 export function calculateOhioReciprocalWageSource(input:TaxYearInput,result:TaxReturnResult,facts:OhioResidencyFacts):OhioReciprocalWageContext {
+  return calculateOhioReciprocalWageSourceWithPayment(input, result, facts).context;
+}
+
+/** Return the freshly validated payment projection for the current Ohio adapter invocation. */
+export function calculateOhioReciprocalWageSourceWithPayment(input:TaxYearInput,result:TaxReturnResult,facts:OhioResidencyFacts) {
   const parsed=OhioReciprocalWageSourcesSchema.safeParse(facts.reciprocalWageSources);
   if(!parsed.success)fail('complete confirmed current ordinary employee originals required');
   const source=parsed.data,person=input.taxpayer.primary,owner=facts.owners[0],w2=input.w2s[0];
@@ -83,7 +88,8 @@ export function calculateOhioReciprocalWageSource(input:TaxYearInput,result:TaxR
   if(periods.length!==1||periods[0]?.from!=='2025-01-01'||periods[0]?.to!=='2025-12-31'||periods[0]?.domicileState!=='PA'||domicile.from!=='2025-01-01'||domicile.to!=='2025-12-31'||identity(domicile.name)!==identity(person.firstName+' '+person.lastName)||tin(domicile.ssn)!==tin(person.ssn))fail('complete actual current PA domicile originals differ');
   for(const original of [entity,services])if(original.from!=='2025-01-01'||original.to!=='2025-12-31'||tin(original.employerTin)!==tin(w2.employer.ein))fail('complete full-year employer identity and ordinary services required');
   if(identity(entity.employerName)!==identity(w2.employer.name))fail('current actual employer entity differs');
-  const payments=buildOhioPaymentSource(input,input.ohioPayments);
+  const paymentOriginal = input.ohioPayments;
+  const payments = buildOhioPaymentSource(input, paymentOriginal);
   if(payments.facts.remainingTaxPayment.status!=='no_remaining_tax'||payments.facts.paymentRows.length||!payments.estimatedPayments.isZero()||!payments.useTax.isZero()||!payments.creditCarryforward.isZero()||!payments.donations.isZero()||!payments.latePaymentInterest.isZero())fail('actual zero remaining-tax and complete account/refund elections required');
   for(const original of [domicile,entity,services])if(day(original.documentDate)>day(payments.asOfDate)||day(original.documentDate)<day('2025-01-01'))fail('actual documentary evidence must exist by current as-of');
   const values=[w2.wages,ohio.withheld.toFixed(),services.totalCompensation,...source.payrollRows.flatMap(row=>[row.wages,row.ohioWithheld])];
@@ -120,5 +126,6 @@ export function calculateOhioReciprocalWageSource(input:TaxYearInput,result:TaxR
     priorYearTaxLiability:payments.priorYearTaxLiability,priorYearTimelyFiled:payments.priorYearTimelyFiled,
     estimatedPaymentSchedule:payments.estimatedPaymentSchedule,computeUnderpaymentPenalty:true,
   };
-  contexts.set(context,{factsDigest:digest(facts),federalAgi:reported,withholding:reportedWithholding,derivedFacts:derived,paymentProjectionDigest:digest(paymentProjection)});return context;
+  contexts.set(context,{factsDigest:digest(facts),federalAgi:reported,withholding:reportedWithholding,derivedFacts:derived,paymentProjectionDigest:digest(paymentProjection)});
+  return { context, paymentSource: { original: paymentOriginal, projection: payments } };
 }

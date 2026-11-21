@@ -1093,10 +1093,12 @@ export function buildOhioResidentReturnInput(
   };
   // Spec: state/oh-school-source-same-invocation.yaml. Only this synchronous invocation owns this value.
   let currentSchoolProjection: OhioSchoolDistrictSourceProjection | undefined;
+  let currentReciprocalPayment: ReturnType<typeof buildOhioResidencySource>['reciprocalPaymentSource'];
   if(residency){
     if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
     const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
     currentSchoolProjection=verified.schoolDistrictSource;
+    currentReciprocalPayment=verified.reciprocalPaymentSource;
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
     if(verified.residentCreditSource){
       adapted.residencyResidentCreditSource=verified.residentCreditSource;
@@ -1112,7 +1114,10 @@ export function buildOhioResidentReturnInput(
   }
   if(paymentFacts){
     if(!schoolDistrictFacts&&((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency'))throw new Error('Ohio actual payment sources: actual SD/combined method is required');
-    const source=buildOhioPaymentSource(taxInput,paymentFacts);
+    // Spec: state/oh-reciprocal-wage-sources.yaml#current-invocation-payment-projection.
+    const source = currentReciprocalPayment && currentReciprocalPayment.original === paymentFacts
+      ? currentReciprocalPayment.projection
+      : buildOhioPaymentSource(taxInput, paymentFacts);
     adapted.paymentDatedSource=source.datedPayments ? source : undefined;adapted.paymentTaxCoverage=source.facts.remainingTaxPayment;adapted.paymentSourceDigest=source.sourceDigest;adapted.paymentMethodVersion=source.methodVersion;adapted.paymentTiming={kind:source.timingKind,valuationDate:source.valuationDate,asOfDate:source.asOfDate};
     adapted.ohioWithholding=roundDollar(d(adapted.ohioWithholding));adapted.estimatedPayments=roundDollar(source.estimatedPayments);adapted.estimatedPaymentSchedule=source.estimatedPaymentSchedule;adapted.priorYearTaxLiability=source.priorYearTaxLiability;adapted.priorYearTimelyFiled=source.priorYearTimelyFiled;
     adapted.useTax=roundDollar(source.useTax);adapted.creditCarryforward=roundDollar(source.creditCarryforward);adapted.donations=roundDollar(source.donations);adapted.latePaymentInterest=source.latePaymentInterest;adapted.computeUnderpaymentPenalty=true;
