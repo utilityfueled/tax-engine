@@ -32,7 +32,7 @@ import { supportedStates } from "@/lib/guided-interview-flow";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculatePAOrdinaryReturn } from "@/engine/state/pa-ordinary-return.js";
 import { preparePAOrdinaryReturnReview, isPAOrdinaryReturnResult } from "@/pdf/pa-ordinary-return-review-context.js";
-import { fillReturn } from "@/pdf/fill-return.js";
+import { fillReturn, prepareForm5329FirstHomeReview } from "@/pdf/fill-return.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
@@ -722,6 +722,8 @@ export async function buildWorkspaceFilledReturnDownload(
   const form2210Review=requiresForm2210ScheduleAiReview(resolved.taxInput,completeResult)?prepareForm2210Review(resolved.taxInput):undefined;
   const rrtaPayrollReview=requiresRRTAPayrollReview(resolved.taxInput,completeResult)
     ?prepareRRTAPayrollReview(resolved.taxInput,readGuidedRRTAPaperSources(resolved.taxInput,guidedFlowState)):undefined;
+  const form5329FirstHomeReview = resolved.taxInput.form5329FirstHomeSource
+    ? prepareForm5329FirstHomeReview(resolved.taxInput) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -748,6 +750,7 @@ export async function buildWorkspaceFilledReturnDownload(
       premiumTaxCreditReview,
       educationReview,
       savingsBondReview,
+      form5329FirstHomeReview,
       blankFormsDir,
       outputDir,
       flatten: true,

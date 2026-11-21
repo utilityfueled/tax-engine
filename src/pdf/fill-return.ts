@@ -64,6 +64,8 @@ import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, p
 import { fillForm8862 } from "./fill-form-8862.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329, findJointForm5329AttachmentOwner } from "./fill-form-5329.js";
+import { assertForm5329FirstHomeReview, prepareForm5329FirstHomeReview, requiresForm5329FirstHomeReview, type PreparedForm5329FirstHomeReview } from "./form-5329-first-home-review-context.js";
+export { prepareForm5329FirstHomeReview } from "./form-5329-first-home-review-context.js";
 import { fillForm8606 } from "./fill-form-8606.js";
 import { fillForm1098EReference } from "./fill-form-1098-e.js";
 import { fillTaxableRefundWorksheetReference } from "./fill-taxable-refund-worksheet.js";
@@ -446,6 +448,8 @@ export interface FillReturnOptions {
   educationReview?: PreparedEducationReview;
   /** Complete original bond history and MAGI sources, prepared before redaction. */
   savingsBondReview?: PreparedSavingsBondReview;
+  /** In-process proof prepared from the actual first-home records before redaction. */
+  form5329FirstHomeReview?: PreparedForm5329FirstHomeReview;
 }
 
 export interface FillReturnResult {
@@ -466,6 +470,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const firstHomeReview = options.form5329FirstHomeReview
+    ?? (requiresForm5329FirstHomeReview(input, result) ? prepareForm5329FirstHomeReview(input) : undefined);
+  const hasUnreportedFirstHomeException = firstHomeReview !== undefined && assertForm5329FirstHomeReview(input, result, firstHomeReview);
   if (result.scheduleB?.isRequired) assertScheduleBReviewCapacity(result);
   assertCashFarmCrpReview(input,result);
   const rrtaRequested=requiresRRTAPayrollReview(input,result)||options.rrtaPayrollReview!==undefined;
@@ -963,7 +970,8 @@ export async function fillReturn(
     && iraDistributionDate?.startsWith("2025-") && z.iso.date().safeParse(iraDistributionDate).success
     && z.iso.date().safeParse(iraOwnerBirthDate).success
     && !isBeforeAge59AndHalfDate(new Date(`${iraOwnerBirthDate}T00:00:00Z`), new Date(`${iraDistributionDate}T00:00:00Z`));
-  if (hasAdditionalTax5329 || hasUnreportedFullPensionException || hasUnreportedIraAgeException) {
+  if (hasAdditionalTax5329 || hasUnreportedFullPensionException || hasUnreportedIraAgeException
+    || (standalone5329 && hasUnreportedFirstHomeException)) {
     const f5329Path = join(blankFormsDir, "f5329.pdf");
     const doc5329 = await fillForm5329(input, result, f5329Path, hasAdditionalTax5329 ? undefined : "primary", educationReview);
     if (flatten) await flattenForm(doc5329.getForm());

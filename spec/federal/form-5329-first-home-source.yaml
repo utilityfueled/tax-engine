@@ -33,3 +33,16 @@ lines:
     testRefs:
       - "tests/engine/federal-first-home-ira.test.ts::preserves uncoupled legacy manual Code 09"
       - "tests/engine/federal-first-home-ira.test.ts::preserves the actual 2026 full calculation hold"
+  - line: "09-review"
+    description: "Attach the 2025 review Form 5329 for a wholly excepted Code 1 distribution"
+    formula: "When a documented primary-owned traditional IRA Code 1 first-home distribution is entirely excepted and all Part I totals reconcile with the validated source calculation, include Form 5329 with the individual's identity, the taxable distribution on Line 1, and exception 09 and its amount on Line 2. Omit any additional tax when Lines 3 and 4 are zero. Preserve the existing positive-tax, manual, and filing gates. Reconcile the original account before redacting identifiers. A prepared review must match both the render input and the exact source, Form 5329 and Schedule 2 audit amounts."
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=1"
+      - "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=2"
+      - "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5"
+    testRef: "tests/pdf/form-5329-first-home-source.test.ts::attaches Form 5329 for a fully excepted documented Code 1 first-home IRA"
+    testRefs:
+      - "tests/pdf/form-5329-first-home-source.test.ts::uses private prepared first-home proof for a physical redacted packet"
+      - "tests/pdf/form-5329-first-home-source.test.ts::keeps the positive-tax and legacy manual first-home routes"
+      - "tests/pdf/form-5329-first-home-source.test.ts::rejects stale first-home sources and exact Part I or audit mismatches before template I/O"
+      - "tests/pdf/form-5329-first-home-source.test.ts::preserves the 2026 review and filing PDF gates for first-home records"
