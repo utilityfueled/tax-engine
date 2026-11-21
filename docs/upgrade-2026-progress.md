@@ -1,5 +1,52 @@
 # 2026 upgrade implementation evidence
 
+## November 21 reciprocal payment calculation
+
+`94620a66` reuses the validated Ohio reciprocal payment projection only
+within the same adapter calculation and for its identical canonical input.
+Independent replays still validate fresh originals. Both native synthetic
+fixtures produced byte-identical complete outputs. Confirmed render hash
+inputs dropped from 48 to 44 on those fixtures, eliminating about 99 KB
+of repeated input per render. The isolated candidate passed 7,658 focused
+tests and all four existing reciprocal desktop/mobile journeys, plus
+types, web build, spec validation, inventory and browser audit. An
+independent review passed 271 tests. These checks leave the strict
+Linux qualification open.
+
+## November 21 paid estimates on the federal review return
+
+`522cf4b1` removes the erroneous Form 1040-ES voucher warning from the
+federal review cover. The saved and reopened 2025 return showed $1,234
+on Form 1040 line 26. State-only estimates no longer cause the same
+federal warning. A genuine Form 2210 case still required a partial
+packet, and filing remained closed. The exact candidate passed 1,318
+focused tests, 9,779 spec references, inventory, types and browser audit.
+An independent review passed 51 tests.
+[IRS Form 1040 line 26 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=39) ·
+[IRS Form 1040-ES payment instructions](https://www.irs.gov/pub/irs-prior/f1040es--2025.pdf#page=4).
+
+All 11 local checks passed on the same revision. Unit and coverage each
+passed 29,844 tests at 88.36% branch coverage. The managed browser suite
+passed 650 cases with five original skips. The exact
+protected Preview reached Ready without a production alias. It passed all
+12 workspace lifecycle checks, and both synthetic accounts passed four
+read-only billing checks each. The existing Viva La Tax Sandbox checkout
+destination pointed to an older Preview. Its URL was updated to the exact
+verified Preview with the existing endpoint and event selections. A
+separate read confirmed the new destination. Checkout and signed delivery
+remain unverified there. Automatic approval review rejected execution of
+the one-Session helper before it ran. The sandbox price and customer,
+postal and return behavior, and cleanup must be independently bound to
+the planned rehearsal. No Checkout Session was created by this attempt.
+[Exact Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44890499245).
+
+An intervening standard Web run on `4425ad1d` passed 648 managed Linux
+cases with two RRTA PDF inspection deadlines. Strict AMD64 passed 643
+cases with seven Ohio case deadlines. Both jobs retained five original
+skips. Strict Compose recovery and both immutable image SBOMs passed.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44887370439/job/136795501165) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44887370439/job/136795501200).
+
 ## November 21 retirement codes with a printed space
 
 `d02d3de1` keeps a confirmed Form 1099-R code such as `7 D` in the

@@ -2,6 +2,22 @@
 
 ## November 21 resumption
 
+`94620a66` removes a repeated Ohio reciprocal payment calculation while
+preserving both synthetic returns byte for byte. `522cf4b1` corrects the
+federal review cover for paid estimates. The reopened 2025 PDF showed
+$1,234 on Form 1040 line 26, and the genuine Form 2210 finding still
+made that packet partial. Both packages passed focused tests and a
+separate review. All 11 local checks passed on `522cf4b1`. Unit and
+coverage each passed 29,844 tests at 88.36% branch coverage. The browser
+suite passed 650 cases with five original skips.
+The protected test-billing Preview reached Ready, passed all 12
+workspace lifecycle checks and passed four read-only billing checks for
+each test account. The Viva La Tax Sandbox checkout destination now points
+to that exact Preview. Checkout and signed delivery still need actual
+rehearsal evidence. Approval review held the one-Session rehearsal before
+execution because its price, customer, return flow and cleanup needed
+additional binding.
+
 Start with `activeContinuation.nov21GuidedFactInputCorrections`,
 `activeContinuation.nov21CombinedReferenceAndBrowserReplay` and
 `activeContinuation.nov21ExactCheckoutAndSpecValidation` in the
