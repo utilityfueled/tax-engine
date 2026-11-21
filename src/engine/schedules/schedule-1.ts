@@ -461,6 +461,17 @@ export function calculateSchedule1(
   }
   let form5329HsaByOwner: Partial<Record<"primary" | "spouse", Form5329HsaResult>> | undefined;
   if (input.form5329HsaByOwner !== undefined) {
+    // Original personal packets identify separate actual accounts and source records.
+    // Do not let two household owners reuse a single original under different tags.
+    const personalOriginalIdentities = new Set<string>();
+    for (const facts of Object.values(input.form5329HsaByOwner)) {
+      const original = facts?.timelyPersonalContributionReturn;
+      if (!original) continue;
+      for (const identity of [`contribution:${original.contributionSourceReference.trim()}`, `distribution:${original.distributionSourceReference.trim()}`, `account:${original.payerTin.replace(/-/g, "")}|${original.accountReference.trim()}`]) {
+        if (personalOriginalIdentities.has(identity)) throw new Error("Form5329 HSA original identity cannot be reused across owners");
+        personalOriginalIdentities.add(identity);
+      }
+    }
     for (const source of input.form1099SA ?? []) {
       if (source.accountType !== "hsa") continue;
       if (source.accountHolder === undefined) throw new Error("Form5329 HSA requires an actual owner for each Form1099-SA source");
@@ -491,7 +502,7 @@ export function calculateSchedule1(
       if (!facts && ownerResult) throw new Error(`Form5329 HSA ${owner} actual sources are required`);
       if (!facts) continue;
       if (!ownerResult) throw new Error(`Form5329 HSA ${owner} requires its actual Form8889 source worksheet`);
-      const sourceResult = calculateForm5329Hsa({ taxYear: input.taxpayer.taxYear, owner, facts, form8889: ownerResult });
+      const sourceResult = calculateForm5329Hsa({ taxYear: input.taxpayer.taxYear, owner, facts, form8889: ownerResult, taxpayer: input.taxpayer, standardDeductionFacts: input.standardDeductionFacts, distributionSources: input.form1099SA, sourceForm8889: mainOwner ? input.form8889 : input.form8889ByOwner?.[owner] });
       form5329HsaByOwner[owner] = sourceResult;
       if (mainOwner) form8889 = sourceResult.correctedForm8889;
       else {

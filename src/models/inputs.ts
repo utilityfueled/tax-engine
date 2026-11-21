@@ -1560,6 +1560,11 @@ function getNormalizedDistributionCodes(code?: string): string[] {
 }
 
 export const Form1099SASchema = z.object({
+  /** Optional original identity used only by an explicit timely personal correction packet. */
+  sourceReference: z.string().optional(),
+  recipientSsn: z.string().optional(),
+  payerTin: z.string().optional(),
+  accountReference: z.string().optional(),
   /** Actual distribution-statement calendar header, not an inferred death or contribution year. */
   taxYear: z.number().int().optional(),
   payer: z.string(),
@@ -1774,7 +1779,36 @@ export const Form8606ByOwnerSchema = z.object({
   spouse: Form8606Schema.optional(),
 });
 
+/** Explicit original-to-net allocation; it never changes an unqualified legacy source. */
+export const HsaTimelyPersonalContributionReturnSchema = z.object({
+  contributionTaxYear: z.literal(2026),
+  accountOwner: z.enum(["primary", "spouse"]),
+  recipientFirstName: z.string().trim().min(1),
+  recipientLastName: z.string().trim().min(1),
+  recipientSsn: z.string(),
+  contributionSourceReference: z.string().trim().min(1),
+  distributionSourceReference: z.string().trim().min(1),
+  payerTin: z.string(),
+  accountReference: z.string().trim().min(1),
+  contributionDate: z.string(),
+  receivedDate: z.string(),
+  originalPersonalContributions: decimal,
+  returnedPrincipal: decimal,
+  postedGross: decimal,
+  postedEarnings: decimal,
+  hsaAccountConfirmed: z.literal(true),
+  personalContributionConfirmed: z.literal(true),
+  completePersonalContributionInventoryConfirmed: z.literal(true),
+  onlyCorrectionForOwner: z.literal(true),
+  postedAndNotReversed: z.literal(true),
+  allAttributableIncomeReturned: z.literal(true),
+  ordinaryCalendarYearTaxpayer: z.literal(true),
+  noSpecialRelief: z.literal(true),
+  sourceFactsConfirmed: z.literal(true),
+});
+
 export const Form5329HsaSourceSchema = z.object({
+  timelyPersonalContributionReturn: HsaTimelyPersonalContributionReturnSchema.optional(),
   sourceTaxYear: z.number().int().optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   priorYearSourceTaxYear: z.number().int().optional(),

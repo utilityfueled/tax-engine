@@ -26,6 +26,10 @@ export function calculateForm5329Hsa(params: {
   owner: "primary" | "spouse";
   facts: NonNullable<NonNullable<TaxYearInput["form5329HsaByOwner"]>["primary"]>;
   form8889: Form8889Result;
+  taxpayer?: TaxYearInput["taxpayer"];
+  standardDeductionFacts?: TaxYearInput["standardDeductionFacts"];
+  distributionSources?: TaxYearInput["form1099SA"];
+  sourceForm8889?: TaxYearInput["form8889"];
 }): Form5329HsaResult {
   const { taxYear, owner, facts, form8889 } = params;
   if (![2025, 2026].includes(taxYear) || facts.sourceTaxYear !== taxYear || facts.priorYearSourceTaxYear !== taxYear - 1) {
@@ -68,7 +72,60 @@ export function calculateForm5329Hsa(params: {
   const line44 = form8889.line16;
   const line45 = sum(line43, line44);
   const line46 = zeroFloor(line42.minus(line45));
-  const rawCurrentExcess = zeroFloor(contributions.minus(limit))
+  // An explicit origin packet proves which personal principal was already excluded
+  // from physical Form8889 line2. Legacy gross-input callers retain their contract.
+  let originalPersonalContributions = contributions;
+  const original = facts.timelyPersonalContributionReturn;
+  if (original !== undefined) {
+    const reject = (): never => { throw new Error("Form5329 HSA timely personal original allocation is missing, inconsistent or outside its qualified same-year owner scope"); };
+    const currentOwner = owner === "primary" ? params.taxpayer?.primary : params.taxpayer?.spouse;
+    const digits = (value?: string) => (value ?? "").replace(/-/g, "");
+    const name = (value?: string) => (value ?? "").trim().toUpperCase();
+    const actualDate = (value: string): boolean => /^2026-\d{2}-\d{2}$/.test(value)
+      && Number.isFinite(Date.parse(`${value}T00:00:00Z`))
+      && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+    const allOwnerSources = (params.distributionSources ?? []).filter(source => source.accountType === "hsa" && source.accountHolder === owner);
+    const sameOwnerSources = (params.distributionSources ?? []).filter(source => source.accountType === "hsa" && source.accountHolder === owner && source.distributionCode === "2");
+    const linkedSources = (params.distributionSources ?? []).filter(source => source.sourceReference?.trim() === original.distributionSourceReference.trim());
+    const source = linkedSources[0] ?? reject();
+    if (taxYear !== 2026 || params.taxpayer?.taxYear !== taxYear || original.contributionTaxYear !== taxYear || original.accountOwner !== owner
+      || (owner === "spouse" && params.taxpayer?.filingStatus !== "married_filing_jointly")
+      || !currentOwner || !/^\d{9}$/.test(digits(original.recipientSsn)) || digits(original.recipientSsn) !== digits(currentOwner.ssn)
+      || !name(original.recipientFirstName) || !name(original.recipientLastName) || name(original.recipientFirstName) !== name(currentOwner.firstName) || name(original.recipientLastName) !== name(currentOwner.lastName)
+      || params.standardDeductionFacts?.shortTaxYear !== false || params.standardDeductionFacts?.primaryDeathDate !== null || (owner === "spouse" && params.standardDeductionFacts?.spouseDeathDate !== null)
+      || !actualDate(original.contributionDate) || !actualDate(original.receivedDate) || original.receivedDate < original.contributionDate
+      || original.contributionDate < currentOwner.dateOfBirth
+      || !original.contributionSourceReference.trim() || !original.distributionSourceReference.trim() || original.contributionSourceReference.trim() === original.distributionSourceReference.trim()
+      || [original.hsaAccountConfirmed, original.personalContributionConfirmed, original.completePersonalContributionInventoryConfirmed, original.onlyCorrectionForOwner, original.postedAndNotReversed, original.allAttributableIncomeReturned, original.ordinaryCalendarYearTaxpayer, original.noSpecialRelief, original.sourceFactsConfirmed].some(value => value !== true)
+      || allOwnerSources.length !== 1 || linkedSources.length !== 1 || sameOwnerSources.length !== 1 || source !== sameOwnerSources[0] || source.taxYear !== taxYear || source.trusteeToTrusteeTransfer !== false
+      || digits(source.recipientSsn) !== digits(original.recipientSsn) || !/^\d{9}$/.test(digits(original.payerTin)) || digits(source.payerTin) !== digits(original.payerTin)
+      || !original.accountReference.trim() || source.accountReference?.trim() !== original.accountReference.trim()
+      || !reliefPrincipal.isZero() || !reliefEarnings.isZero()) reject();
+    // At most12 integer digits plus2 cents keeps the accepted reconciliation
+    // well inside the configured20-digit Decimal precision. Legacy money is unchanged.
+    const exactMoney = (value: unknown): value is string => typeof value === "string" && /^\d{1,12}(?:\.\d{1,2})?$/.test(value);
+    const sourceForm = params.sourceForm8889 ?? reject();
+    const amounts = [original.originalPersonalContributions, original.returnedPrincipal, original.postedGross, original.postedEarnings, source.grossDistribution, source.earningsOnExcessContributions, sourceForm.contributionsMade, contributions.toString()];
+    if (amounts.some(value => !exactMoney(value))) reject();
+    if (sourceForm.accountOwner !== owner || !d(sourceForm.contributionsMade).eq(contributions)) reject();
+    for (const field of ["distributionsReceived", "excludedDistributions"] as const) {
+      const value = sourceForm[field];
+      if (value !== undefined && (!exactMoney(value) || !d(value).eq(d(original.postedGross)))) reject();
+    }
+    for (const field of ["rolloverDistributions", "qualifiedMedicalExpenses", "prohibitedTransactionDistributions", "decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath", "distributionsNotSubjectToAdditionalTax", "distributionsAfterAge65", "disabilityExceptionTaxableDistributions"] as const) {
+      const value = sourceForm[field];
+      if (value !== undefined && (!exactMoney(value) || !d(value).isZero())) reject();
+    }
+    if (!form8889.line14a.eq(d(original.postedGross)) || !form8889.line14b.eq(d(original.postedGross)) || !form8889.line16.isZero()) reject();
+    originalPersonalContributions = d(original.originalPersonalContributions);
+    const principal = d(original.returnedPrincipal);
+    if (!principal.gt(0) || !originalPersonalContributions.minus(principal).eq(contributions)
+      || principal.gt(zeroFloor(originalPersonalContributions.minus(limit)))
+      || !principal.plus(d(original.postedEarnings)).eq(d(original.postedGross))
+      || !d(original.postedGross).eq(d(source.grossDistribution)) || !d(original.postedEarnings).eq(d(source.earningsOnExcessContributions))
+      || !principal.eq(form8889.supportedReturnedExcessContributionPrincipal)) reject();
+  }
+  const rawCurrentExcess = zeroFloor(originalPersonalContributions.minus(limit))
     .plus(zeroFloor(form8889.line11.minus(form8889.line8)));
   if (form8889.supportedReturnedExcessContributionPrincipal.gt(rawCurrentExcess)) throw new Error("Form5329 HSA timely correction exceeds this owner's current excess; actual origin-year allocation is required");
   const timelyCorrection = form8889.supportedReturnedExcessContributionPrincipal;
@@ -94,13 +151,13 @@ export function calculateForm5329Hsa(params: {
     ["44", "Same-owner taxable distributions", line44, "Form8889line16"],
     ["45", "Total reductions", line45, "43+44"],
     ["46", "Remaining prior excess", line46, "max(0,42-45)"],
-    ["47", "Current excess after actual corrections", line47, "Personal plus employer excess less same-owner timely and confirmed amended-return corrections"],
+    ["47", "Current excess after actual corrections", line47, original ? "max(0,verified original personal contributions-line12) + employer excess - verified same-owner personal principal" : "Personal plus employer excess less same-owner timely and confirmed amended-return corrections"],
     ["48", "Remaining excess", line48, "46+47"],
     ["49", "Additional tax", line49, "roundDollar(6%*min(48,actual same-owner year-end value))"],
   ] as const;
   for (const [line, description, value, formula] of rows) audit.record(form, line, description, value, formula, { owner });
   return { taxYear, owner, sourceFactsVerified: true,
-    requiresForm5329: line42.gt(0) || rawCurrentExcess.gt(0),
+    requiresForm5329: line42.gt(0) || (original ? line47.gt(0) : rawCurrentExcess.gt(0)),
     line42, line43, line44, line45, line46, line47, line48, line49,
     valueDec31, absorbedExcessDeduction, reliefEarnings, taxableExcessEmployerContributions, correctedForm8889, lines: audit.getLines() };
 }

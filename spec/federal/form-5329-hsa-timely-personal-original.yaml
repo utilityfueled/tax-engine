@@ -1,0 +1,49 @@
+form: "Form5329 timely personal HSA original allocation"
+fullName: "Explicit original-to-net personal correction for a same-year2026 owner"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i8889"
+notes: |
+  IRC223(f)(3) requires timely actual receipt and all attributable net income;
+  excess principal is treated as not contributed and is not deducted. The final
+  2026 Form8889 lines2/13 retain net personal contributions, and14a/14b report
+  gross returned principal plus earnings. The IRS current i1099sa revision12/2026
+  explicitly applies to2026 originals furnished early2027; current i8889 remains
+  revision2025. No final2026 i8889 or annual filing eligibility is asserted.
+  This additive original packet is only for actual2026 personal contributions
+  received back in2026 by the living ordinary calendar-year original owner.
+  Next-year receipts, losses, employer returns, other origin years and relief
+  remain outside the packet. Legacy callers without the packet retain their
+  existing gross-input reconciliation and holds.
+lines:
+  - line: "original-to-net"
+    description: "Use verified personal origin rather than treating net contributions as gross"
+    formula: "Require originalPersonalContributions minus returnedPrincipal = actual Form8889 line2 exactly. Principal must equal the same owner's source-supported code2 Box1 minus Box2 and be no greater than max(0, originalPersonalContributions minus Form8889 line12). Compute raw current personal excess from original, subtract principal once; never subtract a personal return from employer excess."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::reconciles actual original principal with net line2 before computing owner excess"
+  - line: "source-link"
+    description: "Require actual origination, current recipient, posted distribution and timely receipt"
+    formula: "Bind one uniquely referenced original contribution and one uniquely referenced code2 HSA statement to actual current recipient full name/SSN, owner,2026 header/origin, trusteeTIN/account, original contribution date and actual received2026 return date. Require posted/nonreversed, all attributable income returned, personal funding and ordinary calendar-year/no-relief confirmation; reject short/final-year household facts. Exact posted Box1/2 amounts must match the linked distribution; blanks are not zero."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::rejects missing mismatched or unqualified original allocation"
+  - line: "results"
+    description: "Keep correct physical lines and other owner's liability"
+    formula: "Original5000, returned600, net4400 and earnings25: Form8889 lines2/13=4400;14a/14b=625;16/17b=0; Form5329 primary47=0. Uncorrected spouse5000 remains600 excess and36 tax. Earnings25 are separate current other income. Explicit zero earnings stays supported."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::preserves other owner employer excess and known zero earnings"
+  - line: "legacy"
+    description: "Preserve all absent-packet source behavior"
+    formula: "Do not infer original gross from net or automatically allocate a source to an origin year. A net line2/code2 input without an original packet still holds. Existing validated gross-source callers and 9100 tests remain unchanged."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::retains the legacy gross source path and unproven net hold"
+  - line: "original-identity"
+    description: "Separate actual originals across household owners"
+    formula: "Two opted original packets cannot reuse a contribution reference, distribution reference or trustee/account identity across owners. Independent two-owner packets remain supported. The absent-packet legacy route is unchanged."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::does not reuse one original contribution or account across actual owners"
+  - line: "finite-exact-cents"
+    description: "Bound the new original and matched statement amounts before Decimal arithmetic"
+    formula: "For the opted packet only, require unsigned ordinary decimal money with at most12 integer digits and at most2 decimal places for original contributions/principal/postedgross/earnings, matched1099SA Box1/2 and reported net line2. Preserve legacy lexemes and bounds. This finite amount envelope leaves all exact original/principal/net reconciliation within configured20-digit Decimal precision; unknown-owner extra code2 sources remain rejected by the real ownership flow."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::rejects overbound and unsupported new path money and unknown extra owners"
+  - line: "part-vii-required"
+    description: "Base new-path form inclusion on residual actual excess or prior carry"
+    formula: "An opted fully returned personal excess is treated as never contributed: require PartVII only if actual line42 prior carry or line47 residual personal/employer excess is positive. Retain original absent-packet required-form behavior. A residual employer excess still requires the form."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::reconciles actual original principal with net line2 before computing owner excess"
+  - line: "physical-distribution-totals"
+    description: "Keep source-supported gross and exclusions exact"
+    formula: "The opted finite packet supports only its one HSA distribution for that owner. Hold additional same-owner distribution modes. Physical14a and14b and any explicit overrides must equal the verified posted gross; no rollover, medical, death, disability or age exception allocation may hide extra distribution income. Other owners and the absent-packet path remain separate."
+    testRef: "tests/engine/federal-hsa-timely-personal-original.test.ts::holds unreconciled distribution overrides and additional owner modes"
