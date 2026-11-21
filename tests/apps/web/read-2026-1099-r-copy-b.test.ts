@@ -33,7 +33,10 @@ function widget(field: string, rect: number[], fieldValue: string, checkboxExpor
   };
 }
 
-function fields({ gross = "3,210.09", taxable = "0.00", determined = "1", total = "Off", withheld = "18", code = "Y7", ira = "Off", corrected = "Off" } = {}) {
+function fields({
+  gross = "3,210.09", taxable = "0.00", determined = "1", total = "Off", withheld = "18",
+  code = "Y7", ira = "Off", trump = "1", excessEarnings = "123.45", corrected = "Off",
+} = {}) {
   return [
     widget("c2_1[0]", [244.8, 757.75, 254.8, 767.75], corrected, "2"),
     widget("RightCol[0].f2_19[0]", [305.2, 720, 395, 731.999], gross),
@@ -43,7 +46,8 @@ function fields({ gross = "3,210.09", taxable = "0.00", determined = "1", total 
     widget("RightCol[0].f2_22[0]", [406, 630, 495.8, 641.999], withheld),
     widget("RightCol[0].f2_25[0]", [296.2, 551.999, 344.6, 563.999], code),
     widget("RightCol[0].Box7b_ReadOrder[0].c2_4[0]", [364.4, 556.501, 374.4, 566.501], ira, "1"),
-    widget("RightCol[0].Box7c_ReadOrder[0].c2_5[0]", [411.6, 556.501, 421.6, 566.501], "1", "1"),
+    widget("RightCol[0].Box7c_ReadOrder[0].c2_5[0]", [411.6, 556.501, 421.6, 566.501], trump, "1"),
+    widget("RightCol[0].f2_26[0]", [449.2, 552.002, 495.8, 564.001], excessEarnings),
   ];
 }
 
@@ -61,7 +65,8 @@ it("retains literal 2026 Copy B evidence for manual retirement review", async ()
   const reportedBoxes = [
     "Box 1 gross distribution $3210.09", "Box 2a taxable amount $0.00", "Box 2b taxable amount not determined (Checked)",
     "Box 2b total distribution (Unchecked)", "Box 4 federal income tax withheld $18.00", "Box 7a distribution code (Y7)",
-    "Box 7b IRA/SEP/SIMPLE (Unchecked)",
+    "Box 7b IRA/SEP/SIMPLE (Unchecked)", "Box 7c Trump account (Checked)",
+    "Box 7d earnings on excess contributions $123.45",
   ];
   expect(parsed?.notes).toBe(`${reportedBoxes.join(", ")}. ${manualReview}`);
 });
@@ -82,7 +87,7 @@ it("keeps an observed blank Box 2a distinct from explicit zero and uncertain sou
 });
 
 it("withholds values when the original statement is blank, corrected or ambiguous", async () => {
-  const blank = fields({ gross: "", taxable: "", determined: "Off", withheld: "", code: "" }).slice(0, -1);
+  const blank = fields({ gross: "", taxable: "", determined: "Off", withheld: "", code: "", trump: "Off", excessEarnings: "" });
   for (const annotations of [blank, fields({ corrected: "2" }), fields().slice(1), []]) {
     expect(await read20261099RCopyB(copyB, async () => annotations))
       .toMatchObject({ kind: "1099-r", taxYear: 2026, seededFactIds: [], detectedFacts: [], notes: manualReview });
@@ -129,4 +134,29 @@ it("keeps ambiguous checkbox evidence local to its own box", async () => {
   expect(parsed?.notes).toContain("Box 2b total distribution (Checked)");
   expect(parsed?.notes).toContain("Box 7a distribution code (7)");
   expect(parsed?.notes).not.toContain("Box 7b IRA/SEP/SIMPLE");
+});
+
+it("distinguishes observed Box 7c and 7d states from missing or conflicting widgets", async () => {
+  const trumpBox = "Box 7c Trump account";
+  const earningsBox = "Box 7d earnings on excess contributions";
+  const unchecked = await read20261099RCopyB(copyB, async () => fields({ code: "1", trump: "Off", excessEarnings: "" }));
+  expect(unchecked?.notes).toContain(`${trumpBox} (Unchecked), ${earningsBox} (Blank)`);
+
+  const zero = await read20261099RCopyB(copyB, async () => fields({ excessEarnings: "0" }));
+  expect(zero?.notes).toContain(`${trumpBox} (Checked), ${earningsBox} $0.00`);
+
+  const missing = fields().slice(0, -2);
+  const missingReview = await read20261099RCopyB(copyB, async () => missing);
+  expect(missingReview?.notes).not.toContain(trumpBox);
+  expect(missingReview?.notes).not.toContain(earningsBox);
+
+  const annotations = fields().map(field => {
+    if (field.fieldName.endsWith(".c2_5[0]")) return { ...field, hasAppearance: false };
+    if (field.fieldName.endsWith(".f2_26[0]")) return { ...field, textContent: ["200.00"] };
+    return field;
+  });
+  const conflicting = await read20261099RCopyB(copyB, async () => annotations);
+  expect(conflicting?.notes).not.toContain(trumpBox);
+  expect(conflicting?.notes).not.toContain(earningsBox);
+  expect(conflicting?.notes).toContain("Box 7b IRA/SEP/SIMPLE (Unchecked)");
 });

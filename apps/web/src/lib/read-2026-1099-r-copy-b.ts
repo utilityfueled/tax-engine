@@ -162,6 +162,7 @@ export async function read20261099RCopyB(
   const code = textValue("f2_25[0]", [296.2, 551.999, 344.6, 563.999], distributionCode);
   if (!(gross || taxable || withheld || code)) return documentReview(2026);
 
+  const excessEarnings = textValue("f2_26[0]", [449.2, 552.002, 495.8, 564.001], amount);
   const status = (checked: boolean | null) => checked === null ? null : checked ? "Checked" : "Unchecked";
   return documentReview(2026, [
     ["Box 1 gross distribution", gross],
@@ -171,5 +172,7 @@ export async function read20261099RCopyB(
     ["Box 4 federal income tax withheld", withheld],
     ["Box 7a distribution code", code],
     ["Box 7b IRA/SEP/SIMPLE", status(checkbox(rightColumn + "Box7b_ReadOrder[0].c2_4[0]", [364.4, 556.501, 374.4, 566.501], "1"))],
+    ["Box 7c Trump account", status(checkbox(rightColumn + "Box7c_ReadOrder[0].c2_5[0]", [411.6, 556.501, 421.6, 566.501], "1"))],
+    ["Box 7d earnings on excess contributions", excessEarnings === undefined ? "Blank" : excessEarnings],
   ]);
 }

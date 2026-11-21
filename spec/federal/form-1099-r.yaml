@@ -318,14 +318,16 @@ lines:
       with no source values. Recognize explicit years that PDF text extraction
       splits into two digit pairs. Require an observable unchecked original
       correction checkbox before reading source boxes. Read only values from
-      their specific visible fields. Preserve an observed blank Box 2a and an
-      explicit zero separately. Read the two Box 2b checkboxes and the Box 7b
-      checkbox independently of Box 7a. Ignore ambiguous or conflicting box
-      evidence. Blank, corrected, flattened, mismatched-year, and multiple
+      their specific visible fields. In Boxes 2a and 7d, distinguish an
+      observed blank from an explicit zero or positive amount. Read the two
+      Box 2b checkboxes and the Box 7b IRA/SEP/SIMPLE and Box 7c Trump account
+      checkboxes independently of Box 7a. Retain checked and unchecked states
+      only when observed. Omit missing, ambiguous, or conflicting box evidence.
+      Blank, corrected, flattened, mismatched-year, and multiple
       statements require manual review for source values. Record extracted
       values only in the document's review notes. They never establish a
       recipient, owner, plan, taxability, return attribution, or filing readiness.
-    irsRef: "Official 2026 Form 1099-R Copy B (https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf#page=4); 2026 Instructions for Forms 1099-R and 5498, Boxes 1, 2a, 2b, 4, 7a and 7b (https://www.irs.gov/instructions/i1099r)"
+    irsRef: "Official 2026 Form 1099-R Copy B (https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf#page=4); 2026 Instructions for Forms 1099-R and 5498, Boxes 1, 2a, 2b, 4, and 7a–7d (https://www.irs.gov/instructions/i1099r)"
     inputs:
       - "Positioned PDF text and visible widgets for the original recipient statement"
     testRef: "tests/apps/web/read-2026-1099-r-copy-b.test.ts::retains literal 2026 Copy B evidence for manual retirement review"
@@ -334,6 +336,7 @@ lines:
       - "tests/apps/web/read-2026-1099-r-copy-b.test.ts::withholds values when the original statement is blank, corrected or ambiguous"
       - "tests/apps/web/read-2026-1099-r-copy-b.test.ts::recognizes the Copy B layout when its printed year is changed, missing or duplicated"
       - "tests/apps/web/read-2026-1099-r-copy-b.test.ts::treats a split explicit conflicting year as unknown"
+      - "tests/apps/web/read-2026-1099-r-copy-b.test.ts::distinguishes observed Box 7c and 7d states from missing or conflicting widgets"
 
   - line: "2026-lump-sum-election"
     description: "Resolve the ordinary reporting decision for original Form 1099-R Code A"
