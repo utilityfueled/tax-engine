@@ -39,7 +39,7 @@ lines:
       Require one night, an itemized receipt paid by this taxpayer at checkout, and documentary references for the orders, duty performed,
       tax home and distance, and confirmation that lodging was neither employer-paid, reimbursed, nor reimbursable.
       Hold cases with any other Form 2106 expenses, more trips, duplicate deductions or incomplete evidence.
-    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::holds incomplete, conflicting, or out-of-scope originals"
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::holds incomplete, conflicting, or out-of-scope originals (%s)"
   - line: "3,6A,8A,9A,10"
     description: "Show only qualifying, unreimbursed overnight lodging on the 2026 face"
     formula: >-

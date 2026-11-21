@@ -45,7 +45,7 @@ lines:
       single-domicile statutory residency and no-PA-abode cases in their
       existing methods.
     irsRef: "PA Tax Reform Code §301(p); PA Department of Revenue Determining Residency, When is a person considered a part-year resident?"
-    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 one-move draft holds annual PA presence at and above the separate-method boundary"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 one-move draft holds annual PA presence at and above the separate-method boundary (%s days, %s)"
   - line: "compensation"
     description: "Actual ordinary wage records allocated by source and actual residency period"
     formula: |
