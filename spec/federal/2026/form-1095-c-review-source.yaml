@@ -1,0 +1,55 @@
+form: "Form 1095-C Part II review source"
+taxYear: 2026
+references:
+  - "https://www.irs.gov/pub/irs-prior/f1095c--2026.pdf"
+  - "https://www.irs.gov/pub/irs-prior/i109495c--2026.pdf"
+sourceEvidence:
+  formSha256: "9352f74d93a3015c48a9971b5243e7ba5bfb0cef68ff987bc6916f2fc9957c98"
+  instructionsSha256: "e936f09b46722d23d4a1ab01e5944df34aa1e34b851135fbe8ab7feb90800ffb"
+  scope: "Disabled review candidate. No upload route, reconciliation, eligibility, Form 8962 input, or mutation."
+lines:
+  - line: "statement"
+    description: "Final 2026 physical layout, first page and confirmed unchecked status markers"
+    formula: >-
+      Require the final 2026 Part II page and agreeing printed anchors. Confirm
+      visible AcroForm field names, rectangles, and appearances for both status
+      boxes and all candidate cells. Hold missing or ambiguous widgets, conflicting
+      page text, void or corrected designations, and flattened or incompatible
+      layouts for manual review. Retain the unchecked markers and require employee
+      and employer identity confirmation outside this binding. Part I identifiers,
+      authenticity and document-set status are outside these review facts.
+    irsRef: "Form 1095-C (2026), page 1"
+    testRef: "tests/apps/web/read-2026-1095-c-review-source.test.ts::holds nonoriginal documents and uncertain physical evidence"
+  - line: 14
+    description: "Printed employee offer of coverage codes"
+    formula: >-
+      Retain the original All 12 Months or January through December cells;
+      require a known nonreserved code for every month. Do not combine annual
+      and monthly entries on the same line, even if equal. Code 1G covers all
+      months and leaves lines 15 and 16 blank.
+    irsRef: "2026 Instructions for Forms 1094-C and 1095-C, Form 1095-C line 14"
+    testRef: "tests/apps/web/read-2026-1095-c-review-source.test.ts::preserves annual and monthly cells from the pinned official PDF"
+  - line: 15
+    description: "Printed employee required contribution"
+    formula: >-
+      Keep reported amounts with two decimal digits and distinguish a physical
+      blank from an explicit 0.00.
+      Require a reported amount for line 14 codes 1B, 1C, 1D, 1E, 1J, 1K, 1L,
+      1M, 1N, 1O, 1P, 1Q, 1T and 1U; other codes leave the amount blank. Validate
+      the combination for each month without copying an annual cell into the
+      monthly source. The amount represents the reported employee contribution.
+      The household affordability calculation has its own evidence.
+    irsRef: "2026 Instructions for Forms 1094-C and 1095-C, Form 1095-C line 15"
+    testRef: "tests/apps/web/read-2026-1095-c-review-source.test.ts::holds inconsistent line and column combinations"
+  - line: 16
+    description: "Printed section 4980H code and positive enrollment evidence"
+    formula: >-
+      Preserve active codes 2A through 2H. Only an explicit 2C is recorded
+      positive evidence about the employee for the original column's period.
+      Other codes or blank leave employee enrollment unknown. Hold incompatible
+      1G or 1H with 2C and 2E without 1H. Hold 1A with 2A or 2B because the
+      qualifying offer requires a full-time employee and full-month offer.
+      No spouse or dependent enrollment or household eligibility is determined
+      from these cells.
+    irsRef: "2026 Instructions for Forms 1094-C and 1095-C, Form 1095-C lines 14 and 16"
+    testRef: "tests/apps/web/read-2026-1095-c-review-source.test.ts::keeps other line 16 codes and blanks as unresolved enrollment"
