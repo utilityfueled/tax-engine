@@ -7,14 +7,12 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { TaxYearInputSchema } from '../../../../src/models/inputs';
-import { buildSectionRoute, type GuidedFlowState, type W2EntryData } from '../../src/lib/guided-interview-flow';
-import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from '../../src/lib/guided-interview-bridge';
-import { confirmGuidedW2StateLocalSources } from '../../src/lib/guided-w2-state-local-facts';
+import { buildSectionRoute, type GuidedFlowState } from '../../src/lib/guided-interview-flow';
+import { buildTaxInputFromGuidedData } from '../../src/lib/guided-interview-bridge';
 import { snapshotGuidedOhioOriginals } from '../../src/lib/guided-ohio-residency-facts';
 import type { OhioResidentCreditDraft } from '../../src/lib/guided-ohio-resident-credit-sources';
-import { completeW2Entry } from '../../../../tests/guided-interview/complete-facts';
 import {
-  guidedResidentCreditFixture, residentCreditNativeFields, required,
+  enterGuidedResidentCreditFederalOriginals, guidedResidentCreditFixture, residentCreditNativeFields, required,
   residentCreditAddLabel, residentCreditConfirmLabel,
 } from '../../../../tests/fixtures/guided-oh-resident-credit-complete';
 
@@ -65,27 +63,7 @@ export function noCaptures(draft: OhioResidentCreditDraft) {
 export async function seedUnrelated(page: Page, cohort: Cohort) {
   const facts = guidedResidentCreditFixture(cohort), state = structuredClone(facts.state);
   delete required(state.sectionData['state-return']?.ohioResidency).residentCreditSources;
-  const person = facts.input.taxpayer.primary, address = facts.input.taxpayer.address;
-  Object.assign(required(state.sectionData['personal-info']), {
-    firstName: person.firstName, middleName: '', lastName: person.lastName, ssn: person.ssn,
-    dateOfBirth: person.dateOfBirth, stateResidency: 'full-year', addressLine1: address.street,
-    addressLine2: '', city: address.city, state: 'OH', zip: address.zip,
-  });
-  const w2 = required(facts.input.w2s[0]);
-  const entry: W2EntryData = {
-    ...structuredClone(completeW2Entry), employerName: w2.employer.name, employerEin: w2.employer.ein,
-    accountHolder: 'primary', sourceTaxYear: '2025', wages: w2.wages, federalWithheld: w2.federalWithheld,
-    stateTaxReporting: 'multiple', state: 'VA', stateWages: '60000', stateWithheld: '1200',
-    localWages: '0', localTaxWithheld: '0', localityName: '', stateLocalSources: structuredClone(required(w2.stateLocalSources)),
-  };
-  const keys = ['socialSecurityWages', 'socialSecurityTips', 'allocatedTips', 'socialSecurityWithheld',
-    'medicareWages', 'medicareWithheld', 'box10DependentCareBenefits', 'box12CodeW', 'box12CodeD',
-    'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeAA', 'box12CodeBB',
-    'box12CodeEE', 'box12CodeT'] as const;
-  Object.assign(entry, Object.fromEntries(keys.map(key => [key, required(w2[key])])));
-  state.sectionData['income-w2'] = { entries: [entry] };
-  // Sole explicit setup of unrelated complete W2 proof. No RC/helper confirmation is invoked.
-  entry.stateLocalSources = confirmGuidedW2StateLocalSources(required(buildGuidedW2SourceContext(state)), 0, entry.stateLocalSources);
+  enterGuidedResidentCreditFederalOriginals(state, facts.input);
   const original = TaxYearInputSchema.parse(required(buildTaxInputFromGuidedData(state)));
   const residency = structuredClone(facts.residency);
   delete residency.residentCreditSources;

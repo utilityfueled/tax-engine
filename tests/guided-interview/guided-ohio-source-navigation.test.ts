@@ -1,14 +1,52 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
+import { TaxYearInputSchema } from "@/models/inputs";
 import * as residence from "@/lib/guided-ohio-residency-facts";
 import * as payment from "@/lib/guided-ohio-payment-facts";
+import { confirmGuidedOhioResidentCreditSources } from "@/lib/guided-ohio-resident-credit-sources";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { validateSection, updateSectionData } from "@/lib/guided-interview-flow";
 import { guidedOhioNavigationFixture, ohioNavigationStatuses } from "../fixtures/guided-ohio-source-navigation.js";
 import { guidedPAOrdinaryPanelFixture } from "../fixtures/guided-pa-ordinary-panels.js";
+import { enterGuidedResidentCreditFederalOriginals, guidedResidentCreditFixture } from "../fixtures/guided-oh-resident-credit-complete.js";
 function blocked(state: ReturnType<typeof guidedOhioNavigationFixture>["state"]) {
  const result = validateSection(state, "state-return");
  expect(result.status).toBe("partial"); expect(result.allowSkip).toBe(false); expect(Object.keys(result.fieldErrors ?? {}).length).toBeGreaterThan(0);
 }
+
+// Spec: state/guided-ohio-source-navigation.yaml#resident-credit-parent-replay
+it("Ohio resident credit navigation reads each accepted parent once", () => {
+ const { state, input: federalOriginals } = guidedResidentCreditFixture("distinct");
+ enterGuidedResidentCreditFederalOriginals(state, federalOriginals);
+ const data = required(state.sectionData["state-return"]);
+ const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+ const residency = residence.confirmGuidedOhioResidencyFacts(input, data.ohioResidency);
+ const payments = payment.confirmGuidedOhioPaymentFacts(input, data.ohioPayments);
+ const draft = confirmGuidedOhioResidentCreditSources(input, required(residency.residentCreditSources), residency, payments);
+ residency.residentCreditSources = draft;
+ data.ohioResidency = residency;
+ data.ohioPayments = payments;
+ const original = structuredClone(state);
+ const readResidency = vi.spyOn(residence, "buildGuidedOhioResidencyFacts");
+ const readPayment = vi.spyOn(payment, "buildGuidedOhioPaymentFacts");
+ try {
+  const result = validateSection(state, "state-return");
+  expect(result.fieldErrors).toEqual({});
+  expect(result.status).toBe("complete");
+  expect([readResidency.mock.calls.length, readPayment.mock.calls.length]).toEqual([1, 1]);
+  expect(state).toEqual(original);
+ } finally {
+  readResidency.mockRestore();
+  readPayment.mockRestore();
+ }
+ for (const source of [residency, payments, draft]) {
+  source.sourceFactsConfirmed = false;
+  const result = validateSection(state, "state-return");
+  expect(result.status).toBe("partial");
+  expect(result.fieldErrors?.ohioResidentCredit).toEqual(expect.any(String));
+  source.sourceFactsConfirmed = true;
+ }
+ expect(validateSection(state, "state-return").status).toBe("complete");
+});
 // Spec: state/guided-ohio-source-navigation.yaml#mandatory-packets
 it("Ohio navigation requires residency and payment sources for all three residencies", () => {
  for (const status of ohioNavigationStatuses) {

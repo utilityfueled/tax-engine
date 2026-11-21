@@ -2524,12 +2524,21 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: Tax
       if (!parsed?.success) throw new Error("Complete the actual current federal owner, year and source originals before confirming Ohio sources.");
       input = parsed.data;
     }
-    try { buildGuidedOhioResidencyFacts(data?.ohioResidency, input); }
+    let residency: ReturnType<typeof buildGuidedOhioResidencyFacts> | undefined;
+    let payments: ReturnType<typeof buildGuidedOhioPaymentFacts> | undefined;
+    try { residency = buildGuidedOhioResidencyFacts(data?.ohioResidency, input); }
     catch (error) { errors.ohioResidency = error instanceof Error ? error.message : "Reconcile the actual Ohio residency sources."; }
-    try { buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
+    try { payments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
     catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
     if(data?.ohioResidency?.residentCreditSources){
-      try{buildGuidedOhioResidentCreditSources(input,data.ohioResidency.residentCreditSources,buildGuidedOhioResidencyFacts(data.ohioResidency,input),buildGuidedOhioPaymentFacts(data.ohioPayments,input));}
+      try {
+        buildGuidedOhioResidentCreditSources(
+          input,
+          data.ohioResidency.residentCreditSources,
+          residency ?? buildGuidedOhioResidencyFacts(data.ohioResidency, input),
+          payments ?? buildGuidedOhioPaymentFacts(data.ohioPayments, input),
+        );
+      }
       catch(error){errors.ohioResidentCredit=error instanceof Error?error.message:'Complete and explicitly confirm the actual Virginia return and completed account sources.';}
     }
     if(data?.ohioReturnHeaderSources){

@@ -1,8 +1,11 @@
 /** FICTIONAL actual source records. Literal oracles precede any native outputs. */
+import { buildGuidedW2SourceContext } from '@/lib/guided-interview-bridge';
+import type { GuidedFlowState, W2EntryData } from '@/lib/guided-interview-flow';
+import { confirmGuidedW2StateLocalSources } from '@/lib/guided-w2-state-local-facts';
 import type {TaxYearInput} from '@/models/inputs';
 import type {OhioResidencyDraft} from '@/lib/guided-ohio-residency-facts';
 import type {OhioPaymentDraft} from '@/lib/guided-ohio-payment-facts';
-import {startCompleteInterview} from '../guided-interview/complete-facts';
+import {completeW2Entry, startCompleteInterview} from '../guided-interview/complete-facts';
 import {ohioResidentCreditFixture} from './oh-resident-credit-sources';
 import {ohioResidentCreditTransactionsFixture} from './oh-resident-credit-transactions';
 export const residentCreditConfirmLabel='Confirm actual Virginia return and completed account sources';
@@ -35,6 +38,29 @@ export function guidedResidentCreditFixture(kind:ResidentCreditNativeCase='ordin
  state.sectionData['state-return']={stateEstimatedPayments:[],additionalStateWithholding:'',ohioResidency:residency,ohioPayments:payments};
  const expected=kind==='zero'?{credit:'0',tax:'2323',refund:'177'}:kind==='cents'?{credit:'1001',tax:'1322',refund:'678'}:kind==='cap'?{credit:'1394',tax:'929',refund:'1071'}:{credit:'1000',tax:'1323',refund:'677'};
  return{kind,state,input,draft,residency,payments,source,expected};
+}
+export function enterGuidedResidentCreditFederalOriginals(state: GuidedFlowState, input: TaxYearInput) {
+  const person = input.taxpayer.primary, address = input.taxpayer.address;
+  Object.assign(required(state.sectionData['personal-info']), {
+    firstName: person.firstName, middleName: '', lastName: person.lastName, ssn: person.ssn,
+    dateOfBirth: person.dateOfBirth, stateResidency: 'full-year', addressLine1: address.street,
+    addressLine2: '', city: address.city, state: 'OH', zip: address.zip,
+  });
+  const w2 = required(input.w2s[0]);
+  const entry: W2EntryData = {
+    ...structuredClone(completeW2Entry), employerName: w2.employer.name, employerEin: w2.employer.ein,
+    accountHolder: 'primary', sourceTaxYear: '2025', wages: w2.wages, federalWithheld: w2.federalWithheld,
+    stateTaxReporting: 'multiple', state: 'VA', stateWages: '60000', stateWithheld: '1200',
+    localWages: '0', localTaxWithheld: '0', localityName: '', stateLocalSources: structuredClone(required(w2.stateLocalSources)),
+  };
+  const keys = ['socialSecurityWages', 'socialSecurityTips', 'allocatedTips', 'socialSecurityWithheld',
+    'medicareWages', 'medicareWithheld', 'box10DependentCareBenefits', 'box12CodeW', 'box12CodeD',
+    'box12CodeE', 'box12CodeF', 'box12CodeG', 'box12CodeH', 'box12CodeS', 'box12CodeAA', 'box12CodeBB',
+    'box12CodeEE', 'box12CodeT'] as const;
+  Object.assign(entry, Object.fromEntries(keys.map(key => [key, required(w2[key])])));
+  state.sectionData['income-w2'] = { entries: [entry] };
+  // Sole explicit setup of unrelated complete W2 proof. No RC/helper confirmation is invoked.
+  entry.stateLocalSources = confirmGuidedW2StateLocalSources(required(buildGuidedW2SourceContext(state)), 0, entry.stateLocalSources);
 }
 export type ResidentCreditNativeField=[label:string,path:Array<string|number>,value:string];
 const words:Record<string,string>={sourceTaxYear:'source year',sourceReference:'source reference',accountHolder:'owner',originalTaxpayer:'original person',firstName:'first name',lastName:'last name',ssn:'SSN',allIncomeOriginalsIncludedConfirmed:'all income originals included',noOtherIncomeOrAdjustmentsConfirmed:'no other income or adjustments',noSpecialCompensationConfirmed:'no special compensation',taxDeductedInFederalAgi:'tax deducted in federal adjusted gross income',employerEntityOriginal:'employer record',sourceId:'record ID',documentDate:'document date',employerName:'employer name',employerTin:'employer EIN',entityType:'employer type',serviceRows:'service',servicePeriodFrom:'service begins',servicePeriodTo:'service ends',paymentDate:'payment date',serviceState:'service state',wages:'actual wages',filedReturn:'filed return',taxYear:'tax year',stateCode:'state',form:'form',filingStatus:'filing status',returnKind:'return kind',periodFrom:'period begins',periodTo:'period ends',filedDate:'actual filing date',federalAgi:'federal adjusted gross income',incomeTaxedByVirginia:'income taxed by Virginia',incomeTaxBeforeCredits:'tax before credits',nonrefundableCredits:'nonrefundable credits',netIncomeTax:'net income tax',withholding:'withholding',estimatedPayments:'estimated payments',balancePayments:'balance payments',refund:'refund',outgoingCredit:'outgoing credit',otherTaxes:'other taxes',penalties:'penalties',interest:'interest',completedReturnAndCreditWorksheetsReference:'completed return and credit worksheet reference',completedAccount:'completed account',statementDate:'statement date',unpaidTax:'unpaid tax',unappliedPayments:'unapplied payments',allPaymentsAndRefundsIncludedConfirmed:'all payments and refunds included',noPendingChangesOrRefundClaimsConfirmed:'no pending changes or refund claims',payments:'payment',refunds:'received refund',kind:'record type',date:'actual date',amount:'actual amount',transactionOriginals:'transaction originals',bankTransferOriginal:'bank transfer',agencyPostingOriginal:'agency posting',purpose:'tax purpose',taxPeriodEnd:'tax period end',achTraceNumber:'ACH credit trace number',settlementDate:'settlement date',status:'status',accountSourceReference:'account source reference',postingDate:'posting date',postingId:'posting ID'};

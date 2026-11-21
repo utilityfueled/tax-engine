@@ -7,6 +7,10 @@ notes: |
   This adds only mandatory source navigation; no tax formula, full return calculation,
   relief/farmer inference, source confirmation on read, or filing/readiness promotion.
 lines:
+  - line: "resident-credit-parent-replay"
+    description: "Use the already reconciled Ohio residency and payment records for the nested credit in the same navigation check"
+    formula: "Validate each current parent once for an accepted Ohio resident-credit draft. The nested credit must still reconcile its independent originals. Missing, changed or rejected parents and rejected credit originals must retain the existing navigation errors."
+    testRef: "tests/guided-interview/guided-ohio-source-navigation.test.ts::Ohio resident credit navigation reads each accepted parent once"
   - line: "mandatory-packets"
     description: "All three Ohio residency categories need both actual packets"
     formula: |
