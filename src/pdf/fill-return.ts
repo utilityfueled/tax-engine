@@ -61,7 +61,7 @@ import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdopt
 import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, prepareEicReview, type PreparedEicReview } from "./eic-review-context.js";
 import { fillForm8862 } from "./fill-form-8862.js";
 import { fillForm8880 } from "./fill-form-8880.js";
-import { fillForm5329 } from "./fill-form-5329.js";
+import { fillForm5329, findJointForm5329AttachmentOwner } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
 import { fillForm1098EReference } from "./fill-form-1098-e.js";
 import { fillTaxableRefundWorksheetReference } from "./fill-taxable-refund-worksheet.js";
@@ -924,6 +924,8 @@ export async function fillReturn(
   const education5329Owners = result.form1099Q?.sourceFactsVerified
     ? result.form1099Q.perRecipient.flatMap(row => row.owner !== "other" && row.taxableEarnings.gt(0) ? [row.owner] : []) : [];
   const source5329Owners = [...new Set([...hsa5329Owners, ...education5329Owners])];
+  const partIOwner = findJointForm5329AttachmentOwner(input, result.form5329);
+  if (partIOwner && !source5329Owners.includes(partIOwner)) source5329Owners.push(partIOwner);
   for (const owner of source5329Owners) {
     const doc5329 = await fillForm5329(input, result, join(blankFormsDir, "f5329.pdf"), owner, educationReview);
     if (flatten) await flattenForm(doc5329.getForm());

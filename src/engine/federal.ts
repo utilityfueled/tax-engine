@@ -148,7 +148,7 @@ import {
 } from "./forms/form-1099-r.js";
 import { calculateForm1099SA } from "./forms/form-1099-sa.js";
 import type { Form8889Result } from "./forms/form-8889.js";
-import { calculateForm5329 } from "./forms/form-5329.js";
+import { calculateForm5329, type Form5329Result } from "./forms/form-5329.js";
 import { calculateForm4797 } from "./forms/form-4797.js";
 import {
   calculateForm8880,
@@ -6623,6 +6623,47 @@ function deriveForm5329HsaDefaults(
     currentYearExcess,
     supportedReturnedExcessContributionsByDueDate,
   };
+}
+
+function parseForm5329ReviewDate(value: string): Date | undefined {
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : undefined;
+}
+
+/** Identify the owner of a fully source-derived joint Part I for 2025 review. */
+export function findJointForm5329ReviewPartIOwner(
+  input: TaxYearInput,
+  aggregate: Form5329Result | undefined,
+): "primary" | "spouse" | undefined {
+  const { taxpayer } = input;
+  if (taxpayer.taxYear !== 2025 || taxpayer.filingStatus !== "married_filing_jointly" || !taxpayer.spouse
+    || input.form5329 !== undefined || !aggregate || aggregate.line2ExceptionNumber !== "20"
+    || !aggregate.line1.gt(0) || !aggregate.line1.eq(aggregate.line2)) {
+    return undefined;
+  }
+
+  const statements = (input.form1099R ?? []).filter(form => form.taxYear === taxpayer.taxYear
+    && form.distributionCode?.trim() === "1" && form.iraSepSimple === false && !form.eligibleGovernmental457bPlan
+    && form.taxableAmountNotDetermined === false && d(form.grossDistribution).gt(0) && d(form.taxableAmount).gt(0)
+    && form.terminalIllnessExceptionApplies);
+  const owner = statements[0]?.accountHolder;
+  if (!owner || statements.some(form => form.accountHolder !== owner)) return undefined;
+
+  const birthDate = parseForm5329ReviewDate((owner === "spouse" ? taxpayer.spouse : taxpayer.primary).dateOfBirth);
+  if (!birthDate || statements.some(form => {
+    // Without a source date, age must be conclusive for the entire tax year.
+    const sourceDate = form.distributionDate === undefined ? `${taxpayer.taxYear}-12-31` : form.distributionDate;
+    const date = parseForm5329ReviewDate(sourceDate);
+    return !date || date.getUTCFullYear() !== taxpayer.taxYear || date < birthDate
+      || !isBeforeAge59AndHalfDate(birthDate, date);
+  })) return undefined;
+
+  const normalized = buildForm5329Input(undefined, taxpayer, statements);
+  if (!normalized) return undefined;
+  const ownPart = calculateForm5329(normalized);
+  return ownPart.line2ExceptionNumber === aggregate.line2ExceptionNumber
+    && (["line1", "line2", "line3", "line4"] as const).every(line => ownPart[line].eq(aggregate[line]))
+    ? owner : undefined;
 }
 
 function buildForm5329Input(

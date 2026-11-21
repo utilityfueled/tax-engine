@@ -22,6 +22,8 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { findJointForm5329ReviewPartIOwner } from "@/engine/federal.js";
+import type { Form5329Result } from "@/engine/forms/form-5329.js";
 import { calculateForm5329Hsa } from "@/engine/forms/form-5329-hsa.js";
 import { buildForm1099QReferenceSummary } from "./fill-form-1099-q.js";
 import { roundDollar } from "@/utils/decimal.js";
@@ -139,6 +141,19 @@ export const FORM_5329_FIELDS = {
 
 // ─── Fill Logic ────────────────────────────────────────────────────────────
 
+function hasUnassignedLegacyPartsAfterPartI(form: Form5329Result): boolean {
+  return [form.line5, form.line9, form.line15, form.line18, form.line23, form.line26, form.line31,
+    form.line34, form.line39, form.line42, form.line47, form.line50, form.line52,
+    form.line56, form.totalAdditionalTax].some(value => value.gt(0));
+}
+
+/** Keep the ordinary packet route when another legacy part is still unassigned. */
+export function findJointForm5329AttachmentOwner(input: TaxYearInput, aggregate: Form5329Result | undefined) {
+  return aggregate && !hasUnassignedLegacyPartsAfterPartI(aggregate)
+    ? findJointForm5329ReviewPartIOwner(input, aggregate)
+    : undefined;
+}
+
 /**
  * Fill IRS Form 5329 PDF from engine calculation results.
  * Returns the filled PDFDocument (caller saves it).
@@ -158,10 +173,12 @@ export async function fillForm5329(
   if (!owner && sourceEducation?.perRecipient.some(row => row.owner !== "other" && row.taxableEarnings.gt(0))) throw new Error("Form5329 education review requires an actual individual owner");
   if (owner === "spouse" && input.taxpayer.filingStatus !== "married_filing_jointly") throw new Error("Form5329 spouse ownership requires an actual joint return");
   const legacy = result.form5329;
-  const unassignedLegacyPart = legacy && [legacy.line1, legacy.line5, legacy.line9, legacy.line15, legacy.line18, legacy.line23,
-    legacy.line26, legacy.line31, legacy.line34, legacy.line39, legacy.line42, legacy.line47, legacy.line50, legacy.line52,
-    legacy.line56, legacy.totalAdditionalTax].some(value => value.gt(0));
-  if (owner && input.taxpayer.filingStatus === "married_filing_jointly" && unassignedLegacyPart) throw new Error("Form5329 joint review cannot assign unassigned legacy parts without actual ownership");
+  const jointOwnerReview = owner !== undefined && input.taxpayer.filingStatus === "married_filing_jointly";
+  const partIOwner = jointOwnerReview ? findJointForm5329AttachmentOwner(input, legacy) : undefined;
+  const unassignedLegacyPart = legacy && (
+    (!partIOwner && legacy.line1.gt(0)) || hasUnassignedLegacyPartsAfterPartI(legacy)
+  );
+  if (jointOwnerReview && unassignedLegacyPart) throw new Error("Form5329 joint review cannot assign unassigned legacy parts without actual ownership");
   if (education?.length && result.form5329 && (result.form5329.line5.gt(0) || result.form5329.line6.gt(0))) throw new Error("Form5329 education source conflicts with unassigned legacy PartII amounts");
   const educationLines: Array<{ line: "5" | "6" | "7" | "8"; value: Decimal }> = [];
   const preparedEducation = hasInKindEducationReviewSources(input) || educationReview
@@ -210,7 +227,7 @@ export async function fillForm5329(
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FORM_5329_FIELDS;
-  const f5329 = owner && input.taxpayer.filingStatus === "married_filing_jointly" ? undefined : result.form5329;
+  const f5329 = jointOwnerReview ? undefined : legacy;
 
   // ── Header ──
   const name = owner && individual ? `${individual.firstName} ${individual.lastName}` : input.taxpayer.spouse
@@ -225,16 +242,17 @@ export async function fillForm5329(
   }
 
   for (const line of educationLines) setCurrencyField(form, F[`line${line.line}`], roundDollar(line.value));
-  if (!f5329) return doc;
 
   // ── Part I: Early Distributions (Lines 1–4) ──
-  setCurrencyField(form, F.line1, f5329.line1);
-  if (f5329.line2ExceptionNumber) {
-    setTextField(form, F.line2ExceptionNumber, f5329.line2ExceptionNumber);
+  const partI = partIOwner && partIOwner === owner ? legacy : f5329;
+  if (partI) {
+    setCurrencyField(form, F.line1, partI.line1);
+    if (partI.line2ExceptionNumber) setTextField(form, F.line2ExceptionNumber, partI.line2ExceptionNumber);
+    setCurrencyField(form, F.line2, partI.line2);
+    setCurrencyField(form, F.line3, partI.line3);
+    setCurrencyField(form, F.line4, partI.line4);
   }
-  setCurrencyField(form, F.line2, f5329.line2);
-  setCurrencyField(form, F.line3, f5329.line3);
-  setCurrencyField(form, F.line4, f5329.line4);
+  if (!f5329) return doc;
 
   // ── Part II: Education/ABLE Distributions (Lines 5–8) ──
   if (educationLines.length === 0) {

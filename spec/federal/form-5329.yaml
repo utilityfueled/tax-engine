@@ -12,6 +12,17 @@ notes: |
   directly under the IRS instructions. The existing positive-tax review
   attachment and owner-specific Form 5329 rules still apply.
 
+  A joint 2025 review packet includes Part I on the individual owner's form
+  when explicitly owned 2025 non-IRA Code 1 pension sources substantiate the
+  entire terminal-illness exception (line 2 exception 20). A reported
+  distribution date must be a valid date in the return year and before the
+  owner reached age 59½. If the date is omitted, the owner must still be
+  under 59½ at year end. Recompute from those sources and require exact
+  agreement on lines 1 through 4 with the joint calculation. Combine the
+  proven Part I with that owner's separately verified HSA or education parts
+  on one Form 5329. Unassigned legacy parts retain the existing packet and
+  individual attachment rules.
+
   This slice implements Form 5329 Part I Lines 1-4 for the additional tax on
   early distributions from IRAs and other qualified retirement plans, Part II
   Lines 5-8 for the 10% additional tax on certain distributions from Coverdell
@@ -219,6 +230,14 @@ lines:
       - "When the same mixed traditional IRA set includes both supported Form 8606 Line 15b qualified disaster distributions and Line 15c repayment-category distributions, the Line 1 default still uses the Form 8606 taxable-share ratio and keeps the disaster exclusion allocated only to the early share"
       - "When Form 8606 Part III includes both early Roth IRA code J distributions and non-Line-1 Roth IRA code T distributions, the defaulted Line 1 amount uses only the early-distribution share of Form 8606 Line 20 plus Line 25c instead of pulling the entire mixed Part III subtotal into Part I"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 23 - eligible governmental 457(b) distributions stay off the defaulted Form 5329 penalty base except for transferred qualified-plan amounts"
+    testRefs:
+      - "tests/pdf/form-5329-joint-part-i.test.ts::prints only the $owner Form 5329 for a joint Code 1 terminal-illness exception"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::combines the spouse exception with the spouse HSA part without duplicating either owner"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::keeps a joint $name Part I unassigned"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::keeps the joint Part I unassigned when owner sources do not reconcile to the supplied result"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::holds the owner attachment when joint HSA amounts are still unassigned"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::preserves the aggregate HSA review packet when $name"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::checks the joint Part I distribution date for $name"
 
   - line: "2"
     description: "Early distributions not subject to the additional tax"
