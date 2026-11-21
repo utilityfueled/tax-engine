@@ -1,4 +1,11 @@
 /** Final 2026 Form 2555 physical candidate. See spec/federal/form-2555-2026-template.yaml. */
+import { createHash } from "node:crypto";
+import { calculateFederalTax } from "@/engine/federal.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { d } from "@/utils/decimal.js";
+import { markReviewPdf } from "../../export-policy.js";
+import { loadPdfDocumentQuietly } from "../../pdf-utils.js";
+
 function textField(page: number, number: number, subform = ""): string {
   return `topmostSubform[0].Page${page}[0].${subform}f${page}_${number}[0]`;
 }
@@ -154,3 +161,57 @@ export const FORM_2555_2026_CANDIDATE = Object.freeze({
     line50: page3(27),
   }),
 });
+
+const wageLines = ["19", "20a", "20b", "21a", "21b", "21c", "21d", "22a", "22b", "22c", "22d",
+  "22e", "22f", "22g", "23", "24", "25", "26", "27", "37", "38", "40", "41", "42", "43", "44", "45"] as const;
+
+/** Prepare a marked calculation excerpt for manual review of the ordinary wage case. */
+export async function fillForm25552026WageCandidate(bytes: Uint8Array, rawInput: TaxYearInput) {
+  const { fields, sha256, taxYear } = FORM_2555_2026_CANDIDATE;
+  if (createHash("sha256").update(bytes).digest("hex") !== sha256) throw new Error("Form 2555 candidate template differs from the final 2026 blank.");
+
+  const input = TaxYearInputSchema.parse(rawInput);
+  const facts = input.form2555;
+  const [w2] = input.w2s;
+  if (input.taxpayer.taxYear !== taxYear || facts?.taxYear !== taxYear || input.w2s.length !== 1 || w2?.taxYear !== taxYear
+    || w2.accountHolder !== "primary" || facts.accountHolder !== "primary" || facts.sourceMapping?.rows.length !== 1
+    || facts.sourceMapping.rows[0]?.sourceId !== "formW2:0") {
+    throw new Error("Form 2555 candidate requires one original primary 2026 W-2 and its source mapping.");
+  }
+  if (facts.qualifyingDays !== 365 || facts.totalDaysInYear !== 365 || facts.eligibilityConfirmed !== true
+    || facts.electionsValidConfirmed !== true || facts.claimForeignEarnedIncomeExclusion !== true) {
+    throw new Error("Form 2555 candidate requires a confirmed full-year exclusion election.");
+  }
+  if (facts.isSelfEmployed || facts.claimHousingExclusionOrDeduction !== false || !d(facts.qualifiedHousingExpenses).isZero()) {
+    throw new Error("Form 2555 candidate requires employment income without a housing claim or housing expenses.");
+  }
+  if (!facts.partIV || !d(w2.wages).gt(0) || !d(w2.wages).eq(facts.partIV.wages)
+    || Object.entries(facts.partIV).some(([key, value]) => key !== "wages" && !d(value).isZero())
+    || [facts.priorYearHousingDeductionCarryover, facts.priorYearIncomeExclusion, facts.deductionsAllocableToExcludedIncome,
+      facts.foreignEarnedIncomeTaxWorksheetDisallowedDeductions].some(value => value === undefined || !d(value).isZero())) {
+    throw new Error("Form 2555 candidate requires all Box 1 wages to be allocated abroad, with zero other receipts, carryovers and allocable deductions.");
+  }
+
+  const result = calculateFederalTax(input);
+  const computed = result.form2555;
+  const schedule1Line8d = result.allLines.find(row => row.form === "Sched 1" && row.line === "8d")?.value;
+  if (!computed?.sourceFactsVerified || !schedule1Line8d || !computed.netExclusion.gt(0)
+    || !computed.netExclusion.negated().eq(schedule1Line8d)) {
+    throw new Error("Form 2555 requires a reconciled original wage calculation and Schedule 1 line 8d.");
+  }
+  const lines = new Map(computed.lines.map(row => [row.line, row.value]));
+  if (!lines.get("39")?.eq(1)) throw new Error("Form 2555 candidate requires the audited full-year ratio.");
+
+  const document = await loadPdfDocumentQuietly(bytes);
+  const form = document.getForm();
+  for (const line of wageLines) {
+    const value = lines.get(line);
+    if (!value?.isInteger()) throw new Error(`Missing whole-dollar Form 2555 audit line ${line}.`);
+    form.getTextField(fields[`line${line}`]).setText(value.toFixed());
+  }
+  form.getTextField(fields.line39Integer).setText("1");
+  form.getTextField(fields.line39Fraction).setText("000");
+  form.getCheckBox(fields.claimHousingNo).check();
+  await markReviewPdf(document);
+  return { document, schedule1Line8d };
+}

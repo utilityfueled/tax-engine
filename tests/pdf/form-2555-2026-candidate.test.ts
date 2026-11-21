@@ -3,9 +3,18 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PDFCheckBox, PDFDocument, PDFName, PDFTextField } from "pdf-lib";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS } from "@/pdf/export-policy.js";
 import { REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+
+// The annual income-tax table gate remains active outside this PDF test.
+vi.mock("@/models/constants.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/models/constants.js")>();
+  const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
+  return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
+});
 
 const blank = new URL("../../forms/blank/2026/f2555.pdf", import.meta.url);
 const digest = "a88984fa3dd5b5846cc446032aaa2e0a6489d5efc8ac63f62632613c7e3d6b11";
@@ -111,4 +120,68 @@ it("keeps all annual export gates closed", async () => {
   expect(Object.hasOwn(REVIEW_TEMPLATE_PACKS, 2026)).toBe(false);
   expect(() => assertPdfExportAllowed(2026, 2026)).toThrow(/No qualified/u);
   expect(() => assertPdfExportAllowed(2026, 2026, "filing")).toThrow(/Filing exports are unavailable/u);
+});
+
+function ordinaryForeignWageFixture() {
+  const wages = "150000";
+  const employer = { name: "Fictional Payroll", ein: "12-3456789" };
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+    w2s: [{ ...simpleW2Fixture.w2s[0], taxYear: 2026, accountHolder: "primary", employer, wages,
+      socialSecurityWages: wages, socialSecurityWithheld: "9300", medicareWages: wages, medicareWithheld: "2175" }],
+    form2555: {
+      taxYear: 2026, accountHolder: "primary", foreignEarnedIncome: wages,
+      qualifyingDays: 365, totalDaysInYear: 365, qualifiedHousingExpenses: "0",
+      isSelfEmployed: false, sourceFactsConfirmed: true, eligibilityConfirmed: true, electionsValidConfirmed: true,
+      claimForeignEarnedIncomeExclusion: true, claimHousingExclusionOrDeduction: false, housingExpensesQualificationConfirmed: true,
+      employerProvidedForeignEarnedIncome: wages, deductionsAllocableToExcludedIncome: "0", foreignEarnedIncomeTaxWorksheetDisallowedDeductions: "0",
+      priorYearHousingDeductionCarryover: "0", priorYearIncomeExclusion: "0", incomeSourceMappingConfirmed: true,
+      partIV: { wages, businessPersonalServices: "0", partnershipPersonalServices: "0", noncashLodging: "0", noncashMeals: "0",
+        noncashCar: "0", noncashOther: "0", allowanceCostOfLiving: "0", allowanceFamily: "0", allowanceEducation: "0",
+        allowanceHomeLeave: "0", allowanceQuarters: "0", allowanceOther: "0", otherEarnedIncome: "0", section119MealsAndLodging: "0" },
+      incomeSources: { foreignEmploymentIncomeIncludedOnW2: wages, foreignEmploymentIncomeNotOnW2: "0", foreignBusinessIncomeAlreadyReported: "0",
+        foreignPartnershipIncomeAlreadyReported: "0", otherForeignIncomeAlreadyReported: "0" },
+      sourceMapping: { sourceReference: "Fictional full-year source ledger", sourceFactsConfirmed: true, allSourcesIncluded: true, oneOwnerOnlyConfirmed: true,
+        rows: [{ sourceId: "formW2:0", sourceTaxYear: 2026, accountHolder: "primary", sourceReference: "Fictional W-2 and payroll allocation",
+          payerName: employer.name, payerEin: employer.ein, foreignEarnedIncome: wages, priorYearIncomeReceived: "0" }] },
+    },
+  });
+}
+
+it("reopens a wage-only projection that matches the federal exclusion", async () => {
+  const { fillForm25552026WageCandidate, FORM_2555_2026_CANDIDATE: { fields } } = await import("@/pdf/mappings/2026/form-2555-candidate.js");
+  const { document, schedule1Line8d } = await fillForm25552026WageCandidate(await readFile(blank), ordinaryForeignWageFixture());
+  expect(schedule1Line8d.toFixed()).toBe("-132900");
+  const form = (await PDFDocument.load(await document.save())).getForm();
+  const expected = { line19: "150000", line20a: "0", line22g: "0", line24: "150000", line25: "0", line26: "150000", line27: "150000",
+    line37: "132900", line38: "365", line39Integer: "1", line39Fraction: "000", line40: "132900", line41: "150000", line42: "132900",
+    line43: "132900", line44: "0", line45: "132900" } as const;
+  for (const [key, value] of Object.entries(expected)) {
+    const field = form.getTextField(fields[key as keyof typeof expected]);
+    expect(field.getText(), key).toBe(value);
+    expect(field.acroField.getWidgets()[0].getAppearances()?.normal, key).toBeDefined();
+  }
+  expect(form.getCheckBox(fields.claimHousingNo).isChecked()).toBe(true);
+  expect(form.getCheckBox(fields.claimHousingYes).isChecked()).toBe(false);
+  for (const field of [fields.name, fields.ssn, fields.line9TaxHomeFirst, fields.line16PresenceStart, fields.line28, fields.line36, fields.line50]) {
+    expect(form.getTextField(field).getText()).toBeUndefined();
+  }
+});
+
+it("holds unsupported wage claims and changed originals", async () => {
+  const { fillForm25552026WageCandidate } = await import("@/pdf/mappings/2026/form-2555-candidate.js");
+  const bytes = await readFile(blank);
+  const original = ordinaryForeignWageFixture();
+  const form2555 = original.form2555;
+  if (!form2555) throw new Error("Missing fictional Form 2555 fixture.");
+  await expect(fillForm25552026WageCandidate(bytes, { ...original, form2555: { ...form2555, qualifyingDays: 364 } })).rejects.toThrow(/full.year/i);
+  await expect(fillForm25552026WageCandidate(bytes, { ...original, form2555: { ...form2555, claimHousingExclusionOrDeduction: true } })).rejects.toThrow(/housing/i);
+  const wageConflict = { ...original.w2s[0], wages: "150000.01" };
+  const employerConflict = { ...original.w2s[0], employer: { name: "Different payroll", ein: "98-7654321" } };
+  await expect(fillForm25552026WageCandidate(bytes, { ...original, w2s: [wageConflict] })).rejects.toThrow(/all Box 1 wages/i);
+  await expect(fillForm25552026WageCandidate(bytes, { ...original, w2s: [employerConflict] })).rejects.toThrow(/employer identity/i);
+  const modified = Uint8Array.from(bytes);
+  modified[0] ^= 1;
+  await expect(fillForm25552026WageCandidate(modified, original)).rejects.toThrow(/template/i);
 });

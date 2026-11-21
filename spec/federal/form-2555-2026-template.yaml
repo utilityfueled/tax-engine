@@ -6,9 +6,9 @@ revision: "Created 9/18/26, IRS final index posted 11/05/2026"
 retrievedAt: "2026-11-13"
 reviewStatus: "independent-qualified-tax-review-pending"
 notes: |
-  Final 2026 instructions are separately published. This candidate binds the
-  physical blank and fields only. Residence, travel, employer, source,
-  election and attachment facts must be separately qualified before use.
+  Final 2026 instructions: https://www.irs.gov/pub/irs-prior/i2555--2026.pdf.
+  Parts I–III and all required eligibility statements remain unqualified for
+  export. The narrow wage calculation below leaves those sections blank.
 lines:
   - line: "source"
     description: "Pin the final annual blank"
@@ -37,6 +37,22 @@ lines:
       boxes, exercise the boundaries of both travel tables, and preserve the
       original name and SSN fields blank. Reopen with appearances and notices.
     testRef: "tests/pdf/form-2555-2026-candidate.test.ts::reopens a marked diagnostic with distinct fields and blank identifiers"
+  - line: "19–27, 37–45"
+    description: "Project the confirmed full-year exclusion for one original W-2 without housing"
+    formula: >-
+      Bind one primary 2026 W-2 and its entire exact Box 1 amount to the
+      canonical foreign-service allocation. Require all other Part IV receipts,
+      housing, carryover, prior-service exclusion and allocable deductions to be
+      confirmed zero in the return. Use the federal audit for 19–27 and 37–45.
+      Line 37 is 132900, line 38 is 365, and line 39 is stored as 1 and 000.
+      Check No for housing. Leave Parts VI and IX blank. Apply line 45 as a
+      negative amount on Schedule 1 line 8d and verify both audited values agree.
+      Leave identifiers and undocumented eligibility and attachment fields blank.
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::reopens a wage-only projection that matches the federal exclusion"
+  - line: "wage-source"
+    description: "Require the original wage allocation and a supported claim"
+    formula: "Reject source conflicts, partial wage allocation, partial-year eligibility, housing claims and changed template bytes."
+    testRef: "tests/pdf/form-2555-2026-candidate.test.ts::holds unsupported wage claims and changed originals"
   - line: "release"
     description: "Keep annual export unavailable"
     formula: "The blank and field map stay outside the public review and filing paths."
