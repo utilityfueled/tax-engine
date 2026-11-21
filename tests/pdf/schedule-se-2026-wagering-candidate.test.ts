@@ -63,6 +63,19 @@ it('projects the current wagering profit into the final regular Schedule SE', as
   }
 });
 
+it('keeps the wagering Schedule SE fields unchanged when Schedule B Part III is answered', async () => {
+  const { projectScheduleSE2026WageringFields } = await import('@/pdf/mappings/2026/schedule-se-candidate.js');
+  const input = source();
+  const expected = projectScheduleSE2026WageringFields(input, confirmations);
+  for (const scheduleBPartThree of [
+    { hasForeignAccounts: false, hasForeignTrust: false },
+    { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ['Japan'], hasForeignTrust: true },
+  ]) {
+    const reported = TaxYearInputSchema.parse({ ...input, scheduleBPartThree });
+    expect(projectScheduleSE2026WageringFields(reported, confirmations)).toEqual(expected);
+  }
+});
+
 it('refuses other sources and a nonreconciling regular-method projection', async () => {
   const { projectScheduleSE2026WageringFields } = await import('@/pdf/mappings/2026/schedule-se-candidate.js');
   const fields = SCHEDULE_SE_2026_CANDIDATE.fields;

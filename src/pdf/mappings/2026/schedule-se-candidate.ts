@@ -66,7 +66,9 @@ interface ScheduleSEWageringConfirmations {
   completePrimaryW2OriginalsAndNoOtherCoveredPayrollConfirmed?: boolean;
 }
 
-const allowedInput = new Set<keyof TaxYearInput>(['taxpayer', 'scheduleC', 'standardDeductionFacts', 'deductionElection', 'w2s', 'formW2G']);
+const allowedInput = new Set<keyof TaxYearInput>([
+  'taxpayer', 'scheduleC', 'standardDeductionFacts', 'deductionElection', 'w2s', 'formW2G', 'scheduleBPartThree',
+]);
 const emptyDocumentCollections = new Set<keyof TaxYearInput>([
   'form1099Int', 'form1099Div', 'form1099B', 'form1099DA',
   'form1099Nec', 'form1099Misc', 'form1099G', 'form1099OID', 'form1099K',
