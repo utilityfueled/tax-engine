@@ -21,6 +21,10 @@ The same source passed all eight guided IRA and local recovery cases
 in production Chromium at 30 seconds with zero retries. The core build
 and production web build passed. Full lint reported zero errors and
 12,167 warnings.
+The exact unit and coverage runs each passed 30,044 tests across
+2,188 files, with 88.54% branch coverage and both PostgreSQL 16.16
+instances shut down cleanly. The exact ARM64 rehearsal is queued.
+[Native ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44953786499).
 [Independent tax review assignments](upgrade-2026-human-retirement-20261121.md).
 
 ## November 21 first-home IRA review export
