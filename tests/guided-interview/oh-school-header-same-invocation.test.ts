@@ -3,6 +3,7 @@ import {test,expect,vi}from 'vitest';
 import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
+import { validateSection } from '@/lib/guided-interview-flow';
 import *as bridge from '@/lib/guided-interview-bridge';
 import {TaxYearInputSchema}from '@/models/inputs';
 import {schoolPyHeaderPacket,schoolPyPaperCases}from '../fixtures/oh-school-district-part-year-official-review';
@@ -26,6 +27,34 @@ function ohio(which:0|1=0){
  const h=structuredClone(packet.header),header=confirmGuidedOhioReturnHeaderSources(original,{...h,taxYear:'2025',sourceFactsConfirmed:null,originalFederalSources:undefined,originalOhioResidencySources:undefined,originalOhioPaymentSources:undefined,confirmedHeaderSources:undefined,finderOriginal:{...h.finderOriginal,taxYear:'2025'},countyOriginal:{...h.countyOriginal,taxYear:'2025'},officialInventoryOriginal:{...h.officialInventoryOriginal,taxYear:'2025',printedPage:'51'}},residency,payments,school);
  state.sectionData['state-return']={stateEstimatedPayments:[],additionalStateWithholding:'',ohioResidency:residency,ohioPayments:payments,ohioSchoolDistrict:school,ohioReturnHeaderSources:header};return state;
 }
+
+// Spec: state/guided-ohio-source-navigation.yaml#accepted-header-school-replay
+test('Ohio navigation reuses the accepted header school replay', () => {
+ const state = ohio();
+ const originals = structuredClone(state);
+ const adapter = vi.spyOn(school, 'buildOhioSchoolDistrictSource');
+ try {
+  const validation = validateSection(state, 'state-return');
+  expect(validation.status).toBe('complete');
+  expect(validation.fieldErrors).toEqual({});
+  expect(adapter).toHaveBeenCalledTimes(1);
+  expect(state).toEqual(originals);
+ } finally {
+  adapter.mockRestore();
+ }
+
+ const data = required(state.sectionData['state-return']);
+ required(data.ohioReturnHeaderSources).sourceFactsConfirmed = false;
+ const rejectedHeader = validateSection(state, 'state-return');
+ expect(rejectedHeader.status).toBe('partial');
+ expect(rejectedHeader.fieldErrors?.ohioReturnHeader).toEqual(expect.any(String));
+ expect(rejectedHeader.fieldErrors?.ohioSchoolDistrict).toBeUndefined();
+
+ required(data.ohioSchoolDistrict).sourceFactsConfirmed = false;
+ const rejectedSchool = validateSection(state, 'state-return');
+ expect(rejectedSchool.status).toBe('partial');
+ expect(rejectedSchool.fieldErrors?.ohioSchoolDistrict).toEqual(expect.any(String));
+});
 
 
 test.each([0,1]as const)('complete current school header replay %s',(which)=>{

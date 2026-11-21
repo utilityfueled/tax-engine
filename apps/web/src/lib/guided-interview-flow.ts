@@ -2541,16 +2541,22 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: Tax
       }
       catch(error){errors.ohioResidentCredit=error instanceof Error?error.message:'Complete and explicitly confirm the actual Virginia return and completed account sources.';}
     }
-    if(data?.ohioReturnHeaderSources){
-      try{buildGuidedOhioReturnHeaderSources(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict);}
-      catch(error){errors.ohioReturnHeader=error instanceof Error?error.message:'Complete and explicitly confirm the actual residential, Finder and county originals.';}
+    const schoolDraft = data?.ohioSchoolDistrict;
+    let schoolValidatedWithHeader = false;
+    if (data?.ohioReturnHeaderSources) {
+      try {
+        buildGuidedOhioReturnHeaderSources(input, data.ohioReturnHeaderSources, data.ohioResidency, data.ohioPayments, schoolDraft);
+        schoolValidatedWithHeader = schoolDraft !== undefined;
+      } catch (error) {
+        errors.ohioReturnHeader = error instanceof Error ? error.message : 'Complete and explicitly confirm the actual residential, Finder and county originals.';
+      }
     }
     if(data?.ohioReciprocalWages){
       try{buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments);}
       catch(error){errors.ohioReciprocalWages=error instanceof Error?error.message:'Complete and explicitly confirm the actual reciprocal wage originals.';}
     }
-    if(data?.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict){
-      try{buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments);}
+    if (!schoolValidatedWithHeader && (data?.ohioResidency?.schoolDistrictStatus === 'actual_district_sources_required' || schoolDraft)) {
+      try{buildGuidedOhioSchoolDistrictFacts(input,schoolDraft,data?.ohioResidency,data?.ohioPayments);}
       catch(error){errors.ohioSchoolDistrict=error instanceof Error?error.message:'Complete and explicitly confirm the actual school district records.';}
     }
   } catch (error) { errors["ohio-current-originals"] = error instanceof Error ? error.message : "Complete actual federal originals before confirming Ohio sources."; }
