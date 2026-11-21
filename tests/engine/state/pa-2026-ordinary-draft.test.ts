@@ -2,10 +2,11 @@ import Decimal from 'decimal.js';
 import {Form1099IntSchema} from '@/models/inputs.js';
 import {it,expect} from 'vitest';
 import {calculatePAOrdinaryReturn,calculatePA2026OrdinaryDraft} from '@/engine/state/pa-ordinary-return.js';
+import {calculatePAResidencySources} from '@/engine/state/pa-residency-sources.js';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {getConstants} from '@/models/constants.js';
 import {preparePAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
-import {pa2026FloridaMoveResidentFixture,pa2026OrdinaryDraftFixture,rebindPA2026Draft} from '../../fixtures/pa-2026-ordinary-draft.js';
+import {pa2026FloridaMoveResidentFixture,pa2026OrdinaryDraftFixture,pa2026OutboundNonresidentFixture,rebindPA2026Draft} from '../../fixtures/pa-2026-ordinary-draft.js';
 import {paOrdinaryReturnFixture} from '../../fixtures/pa-ordinary-return.js';
 import {paOrdinaryLocalW2Fixture} from '../../fixtures/pa-ordinary-local-w2.js';
 import {confirmGuidedPAOrdinaryReturnFacts,buildGuidedPAOrdinaryReturnFacts,updateGuidedPAOrdinaryReturnFacts} from '../../../apps/web/src/lib/guided-pa-ordinary-return-facts.js';
@@ -43,6 +44,70 @@ it('PA2026 one-move draft accepts 182 documented PA days with the matching part-
   residency.status = 'resident';
   rebindPA2026Draft(f);
   expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/claimed residency contradicts/i);
+});
+
+// Spec: spec/state/pa-residency-sources.yaml outbound-move-statutory-nonresident.
+it('PA2026 applies the outbound statutory nonresident exception after reopen', () => {
+ const f = pa2026OutboundNonresidentFixture();
+ const saved: typeof f = JSON.parse(JSON.stringify(f));
+ const result = calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources);
+ expect(result.pa.residencyStatus).toBe('nonresident');
+ expect(result.pa.schoolDistrictCode).toBe('99999');
+ expect(result.pa.pa40.compensation.toFixed()).toBe('9000');
+ expect(result.pa.pa40.totalPATaxableIncome.toFixed()).toBe('9000');
+ expect(result.pa.pa40.taxLiability.toFixed()).toBe('276');
+ expect(result.pa.pa40.stateWithholding.toFixed()).toBe('276');
+ expect(result.pa.pa40.totalAmountDue.isZero()).toBe(true);
+ expect(result.pa.pa40.netOverpayment.isZero()).toBe(true);
+ expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ expect(() => calculatePAOrdinaryReturn(saved.input, saved.facts, saved.sources)).toThrow(/incomplete/i);
+ expect(saved).toEqual(f);
+});
+
+type OutboundMoveFixture = ReturnType<typeof pa2026OutboundNonresidentFixture>;
+it.each<[string, (f: OutboundMoveFixture) => void, RegExp]>([
+ ['31 aggregate PA days', f => { f.input.paResidencySources.residency.domicilePeriods[1].daysInPA = 11; }, /separate actual source method/i],
+ ['any PA permanent abode', f => { f.input.paResidencySources.residency.paPermanentAbodePeriods = [{ from: '2026-05-01', through: '2026-05-31' }]; }, /separate actual source method/i],
+ ['outside permanent abode starts after January 1', f => { f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods[0].from = '2026-01-02'; }, /separate actual source method/i],
+ ['two different outside-abode periods', f => { f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods = [
+  { from: '2026-01-01', through: '2026-06-30' }, { from: '2026-07-01', through: '2026-12-31' },
+ ]; }, /separate actual source method/i],
+ ['missing move proof', f => { f.input.paResidencySources.residency.moveAbandonmentNewDomicileAndPresenceConfirmed = false; }, /actual PA domicile move/i],
+ ['contradictory residency claim', f => { f.input.paResidencySources.residency.status = 'part_year'; }, /claimed residency contradicts/i],
+ ['conflicting retained selection', f => { f.input.taxpayer.stateResidency = 'part-year'; }, /conflicting retained residency/i],
+ ['contradictory year-end principal residence', f => { f.input.paResidencySources.residency.dec31PrincipalResidenceState = 'NJ'; }, /separate actual source method/i],
+ ['structured reciprocal-state abode', f => { const abode = f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods[0]; abode.state = 'NJ'; abode.sourceReference = 'Fictional original year-round New Jersey lease'; }, /actual New York state.*sole year-round outside-PA permanent abode/i],
+ ['unknown outside-abode record', f => { f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods[0].sourceReference = ' '; }, /original reference.*sole year-round outside-PA permanent abode/i],
+ ['known reciprocal income-tax residence', f => { f.input.paResidencySources.residency.outboundTaxResidencePeriods[0].noReciprocalStateIncomeTaxResidenceConfirmed = false; }, /no reciprocal.state income.tax residence.*each exact/i],
+ ['unknown reciprocal income-tax residence', f => { f.input.paResidencySources.residency.outboundTaxResidencePeriods[1].noReciprocalStateIncomeTaxResidenceConfirmed = null; }, /no reciprocal.state income.tax residence.*each exact/i],
+ ['stale income-tax residency dates', f => { f.input.paResidencySources.residency.outboundTaxResidencePeriods[1].from = '2026-07-02'; }, /no reciprocal.state income.tax residence.*each exact/i],
+ ['missing income-tax residency original', f => { f.input.paResidencySources.residency.outboundTaxResidencePeriods[0].sourceReference = ''; }, /no reciprocal.state income.tax residence.*each exact/i],
+ ['reciprocal original W-2 row', f => { f.input.w2s[0].state = 'NJ'; }, /original reciprocal.state W.2 row/i],
+])('PA2026 outbound move holds %s after reopen', (_label, change, expected) => {
+ const f = pa2026OutboundNonresidentFixture();
+ change(f);
+ rebindPA2026Draft(f);
+ const saved: typeof f = JSON.parse(JSON.stringify(f));
+ expect(() => calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources)).toThrow(expected);
+});
+
+it('PA2026 outbound method leaves the prior-year sources separately gated', () => {
+ const f = paOrdinaryReturnFixture('nonresident', 2025);
+ const source = f.input.paResidencySources;
+ source.residency.domicilePeriods = [
+  { state: 'PA', daysInPA: 20, from: '2025-01-01', through: '2025-06-30' },
+  { state: 'NY', daysInPA: 10, from: '2025-07-01', through: '2025-12-31' },
+ ];
+ source.residency.moveAbandonmentNewDomicileAndPresenceConfirmed = true;
+ expect(() => calculatePAResidencySources(f.input, source)).toThrow(/separate actual source method/i);
+});
+
+it('PA2026 outbound move holds the actual zero-payment New Jersey jurisdiction account', () => {
+ const f = pa2026OutboundNonresidentFixture();
+ f.sources.otherStateTaxes.jurisdictions.push({ ...f.sources.otherStateTaxes.jurisdictions[0],
+  state: 'NJ', sourceReference: 'Fictional original NJ tax jurisdiction account with zero remittances' });
+ const saved: typeof f = JSON.parse(JSON.stringify(f));
+ expect(() => calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources)).toThrow(/reciprocal.state.*jurisdiction account/i);
 });
 
 it('PA2026 Florida mover derives full-year wages from the actual resident source path', () => {

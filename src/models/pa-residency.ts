@@ -14,6 +14,11 @@ import {PARetirementSourcesSchema}from "./pa-retirement-sources.js";
 const answer = z.boolean().nullable();
 const sourceYear = z.number().int().nullable();
 const period = z.object({ from: z.string(), through: z.string() }).strict();
+const outsideAbode = period.extend({ state: z.string().optional(), sourceReference: z.string().optional() });
+const outboundTaxResidencePeriod = period.extend({
+  sourceReference: z.string(),
+  noReciprocalStateIncomeTaxResidenceConfirmed: answer,
+});
 const original = z.record(z.string(), z.unknown()).optional();
 const payroll = z.object({
   sourceReference: z.string(), paidOn: z.string(), serviceFrom: z.string(), serviceThrough: z.string(),
@@ -42,7 +47,8 @@ export const PAResidencySourcesSchema = z.object({
   residency: z.object({
     status: z.enum(["", "resident", "part_year", "nonresident"]), sourceReference: z.string(), factsConfirmed: answer,
     domicilePeriods: z.array(period.extend({ state: z.string(), daysInPA: z.number().int().nullable() }).strict()),
-    paPermanentAbodePeriods: z.array(period), outsidePAPermanentAbodePeriods: z.array(period),
+    paPermanentAbodePeriods: z.array(period), outsidePAPermanentAbodePeriods: z.array(outsideAbode),
+    outboundTaxResidencePeriods: z.array(outboundTaxResidencePeriod).optional(),
     moveAbandonmentNewDomicileAndPresenceConfirmed: answer,
     dec31PrincipalResidenceState: z.string(), schoolDistrictCode: z.string(), schoolDistrictName: z.string(),
   }).strict(),

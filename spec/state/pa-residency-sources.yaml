@@ -46,6 +46,38 @@ lines:
       existing methods.
     irsRef: "PA Tax Reform Code §301(p); PA Department of Revenue Determining Residency, When is a person considered a part-year resident?"
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 one-move draft holds annual PA presence at and above the separate-method boundary (%s days, %s)"
+  - line: "outbound-move-statutory-nonresident"
+    description: "Apply the annual statutory nonresident exception to a documented 2026 Pennsylvania-to-New York domicile change"
+    formula: |
+      Require one actual outbound domicile change with confirmed abandonment,
+      new domicile, physical presence and calendar-year coverage. Require one
+      documented permanent outside-PA abode covering the entire year, no PA
+      permanent abode at any time, no more than 30 confirmed PA days across
+      both periods, and an actual December 31 New York principal residence.
+      Derive nonresident for the whole year and reconcile the claimed status
+      and any retained taxpayer residency selection. Apply existing actual PA
+      source rules in both periods only when the sole outside abode has a
+      documented state matching the later New York domicile and the selected
+      owner affirmatively confirms no reciprocal-state income-tax residence
+      for each exact domicile and payroll period, with an original reference
+      for each confirmation. Preserve original, payment, physical annual-form
+      and filing checks. Unsupported move directions, years and abode facts
+      stay in their existing methods.
+    irsRef: "PA Tax Reform Code §301(p): https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s; PA Department of Revenue Determining Residency (part-year exception): https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 applies the outbound statutory nonresident exception after reopen"
+  - line: "outbound-move-guide-replay"
+    description: "Confirm and reopen the outbound nonresident exception with actual sources"
+    formula: "Bind original payroll, abode state and period-specific residence originals through the ordinary state guide and replay. Hold missing or contradictory presence or reciprocity proof on confirmation and hold changed originals or edited and unconfirmed facts after reopening. Existing drafts may leave the new fields unknown until the owner confirms actual records."
+    testRef: "tests/apps/web/guided-pa-residency-facts.test.ts::PA residency guide confirms and reopens the 2026 outbound statutory nonresident move"
+  - line: "outbound-move-guide-reciprocity"
+    description: "Collect abode and income-tax residency originals in the outbound guide"
+    formula: "For the finite outbound 2026 candidate only, capture the outside abode's actual state and original reference and two income-tax residence periods with actual dates, original references and affirmative recorded answers. Keep legacy saves editable with unknown absent fields. Edits invalidate current source confirmation."
+    testRef: "tests/apps/web/pa-residency-details.test.tsx::PA residency UI collects original outbound residence evidence without assuming answers"
+  - line: "outbound-move-reciprocal-accounts"
+    description: "Hold competing reciprocal-state records in the finite outbound method"
+    formula: "A reciprocal-state W-2 row, reciprocal employee packet or completion jurisdiction account requires the separate actual method. A zero-remittance or zero-withholding jurisdiction account does not distinguish an income-tax resident from a nonresident. Apply the hold both in the guided completion proof and on direct draft replay. Existing single-domicile and ordinary one-move cohorts use their own source rules."
+    irsRef: "PA Department of Revenue Determining Residency (reciprocal state employee compensation): https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 outbound move holds the actual zero-payment New Jersey jurisdiction account"
   - line: "compensation"
     description: "Actual ordinary wage records allocated by source and actual residency period"
     formula: |

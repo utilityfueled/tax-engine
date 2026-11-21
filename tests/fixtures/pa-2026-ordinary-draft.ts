@@ -1,6 +1,7 @@
 /** Independent literal synthetic annual sources; never production defaults. */
 import {paOrdinaryReturnFixture} from './pa-ordinary-return.js';
 import {snapshotPAOrdinaryReturnOriginals} from '@/engine/state/pa-ordinary-return-facts.js';
+import type {PAResidencySources} from '@/models/pa-residency.js';
 export function pa2026OrdinaryDraftFixture(status:'resident'|'part_year'|'nonresident'='resident'){
  const f=paOrdinaryReturnFixture(status,2026),w=f.input.w2s[0];
  delete f.input.eic;
@@ -35,4 +36,34 @@ export function pa2026FloridaMoveResidentFixture() {
  Object.assign(f.sources.otherStateTaxes.jurisdictions[0], { state: 'FL', sourceReference: 'Fictional complete Florida zero income-tax history' });
  rebindPA2026Draft(f);
  return f;
+}
+
+export function pa2026OutboundNonresidentFixture() {
+ const f = pa2026OrdinaryDraftFixture('nonresident');
+ const source = f.input.paResidencySources;
+ const outsidePAPermanentAbodePeriods: PAResidencySources['residency']['outsidePAPermanentAbodePeriods'] = [{
+  from: '2026-01-01', through: '2026-12-31', state: 'NY', sourceReference: 'Fictional original year-round New York lease',
+ }];
+ const outboundTaxResidencePeriods: PAResidencySources['residency']['outboundTaxResidencePeriods'] = [
+  { from: '2026-01-01', through: '2026-06-30', sourceReference: 'Fictional original January to June income-tax residency records', noReciprocalStateIncomeTaxResidenceConfirmed: true },
+  { from: '2026-07-01', through: '2026-12-31', sourceReference: 'Fictional original July to December income-tax residency records', noReciprocalStateIncomeTaxResidenceConfirmed: true },
+ ];
+ const residency = { ...source.residency,
+  sourceReference: 'Fictional PA-to-NY domicile change and complete 30-day PA presence worksheet',
+  domicilePeriods: [
+   { state: 'PA', daysInPA: 20, from: '2026-01-01', through: '2026-06-30' },
+   { state: 'NY', daysInPA: 10, from: '2026-07-01', through: '2026-12-31' },
+  ],
+  moveAbandonmentNewDomicileAndPresenceConfirmed: true,
+  outsidePAPermanentAbodePeriods, outboundTaxResidencePeriods,
+ };
+ source.wages[0].payroll = [
+  { sourceReference: 'Fictional original June payroll', paidOn: '2026-06-30', serviceFrom: '2026-01-01', serviceThrough: '2026-06-30',
+   grossCompensation: '45000', paServicesCompensation: '6000', outsidePAServicesCompensation: '39000' },
+  { sourceReference: 'Fictional original December payroll', paidOn: '2026-12-31', serviceFrom: '2026-07-01', serviceThrough: '2026-12-31',
+   grossCompensation: '30000', paServicesCompensation: '3000', outsidePAServicesCompensation: '27000' },
+ ];
+ const fixture = { ...f, input: { ...f.input, paResidencySources: { ...source, residency } } };
+ rebindPA2026Draft(fixture);
+ return fixture;
 }

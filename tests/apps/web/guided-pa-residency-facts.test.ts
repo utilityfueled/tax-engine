@@ -8,7 +8,7 @@ import { buildGuidedPAOrdinarySourceInput, emptyStateReturnData, startInterview,
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { calculatePA2026OrdinaryDraft } from "@/engine/state/pa-ordinary-return.js";
-import { pa2026FloridaMoveResidentFixture } from "../../fixtures/pa-2026-ordinary-draft.js";
+import { pa2026FloridaMoveResidentFixture, pa2026OutboundNonresidentFixture } from "../../fixtures/pa-2026-ordinary-draft.js";
 import { paOrdinaryResidencyFixture } from "../../fixtures/pa-residency-sources.js";
 import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts.js";
 // Spec: spec/state/pa-residency-sources.yaml guide-confirmation.
@@ -35,6 +35,77 @@ it("PA residency guide - actual typed and projected source amounts agree for all
     const confirmed = confirmGuidedPAResidencySources(input, { ...sources, sourceFactsConfirmed: null });
     expect(buildGuidedPAResidencySources(input, confirmed)).toEqual(confirmed);
   }
+});
+
+it("PA residency guide confirms and reopens the 2026 outbound statutory nonresident move", () => {
+  const f = pa2026OutboundNonresidentFixture();
+  const guide = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "PA" }, 2026);
+  const { primary, address } = f.input.taxpayer;
+  guide.sectionData["personal-info"] = { ...structuredClone(completePersonalInfo), firstName: primary.firstName, lastName: primary.lastName,
+    ssn: primary.ssn, addressLine1: address.street, city: address.city, state: address.state, zip: address.zip, stateResidency: "nonresident" };
+  guide.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, sourceTaxYear: "2026", wages: "75000", federalWithheld: "11600",
+    socialSecurityWages: "75000", socialSecurityWithheld: "4650", medicareWages: "75000", medicareWithheld: "1087.50",
+    allocatedTips: "0", box12CodeD: "0", box12CodeE: "0", box12CodeF: "0", box12CodeG: "0", box12CodeH: "0",
+    box12CodeS: "0", box12CodeAA: "0", box12CodeBB: "0", box12CodeEE: "0", box12CodeT: "0",
+    stateTaxReporting: "single", state: "PA", stateWages: "9000", stateWithheld: "276" }] };
+  const wages = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(guide));
+  const raw = { ...f.input.paResidencySources, sourceFactsConfirmed: null };
+  const unknown = { ...raw, residency: { ...raw.residency, domicilePeriods: [raw.residency.domicilePeriods[0],
+    { ...raw.residency.domicilePeriods[1], daysInPA: null }] } };
+  expect(() => confirmGuidedPAResidencySources(wages, unknown)).toThrow(/physical.presence day worksheet/i);
+  const tooManyDays = structuredClone(raw);
+  tooManyDays.residency.domicilePeriods[1].daysInPA = 11;
+  expect(() => confirmGuidedPAResidencySources(wages, tooManyDays)).toThrow(/separate actual source method/i);
+  const njAbode = structuredClone(raw);
+  Object.assign(njAbode.residency.outsidePAPermanentAbodePeriods[0], { state: "NJ", sourceReference: "Fictional original year-round New Jersey lease" });
+  expect(() => confirmGuidedPAResidencySources(wages, njAbode)).toThrow(/actual New York state.*sole year-round outside-PA permanent abode/i);
+
+  const residency = confirmGuidedPAResidencySources(wages, raw);
+  const input = { ...wages, paResidencySources: residency };
+  const facts = confirmGuidedPAOrdinaryReturnFacts(input, { ...f.facts, sourceFactsConfirmed: null });
+  const completion = confirmGuidedPAOrdinaryReturnCompletionSources(input, { ...f.sources, sourceFactsConfirmed: null }, facts);
+  const stateReturn: StateReturnData = { ...emptyStateReturnData, paResidencySources: residency, paOrdinaryReturnFacts: facts,
+    paOrdinaryReturnCompletionSources: completion };
+  guide.sectionData["state-return"] = stateReturn;
+  expect(buildGuidedPAOrdinarySourceInput(guide)).toEqual(input);
+  const saved: typeof guide = JSON.parse(JSON.stringify(guide));
+  const restored = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(saved));
+  expect(validateSection(saved, "state-return").status).toBe("complete");
+  const actual = buildGuidedStateOriginals(restored, saved);
+  expect(actual.paResidencySources?.wages[0].original).toEqual(restored.w2s[0]);
+  expect(actual.paResidencySources?.residency.outboundTaxResidencePeriods).toEqual(raw.residency.outboundTaxResidencePeriods);
+  const result = calculatePA2026OrdinaryDraft(actual, actual.paOrdinaryReturnFacts, actual.paOrdinaryReturnCompletionSources);
+  expect(result.pa.residencyStatus).toBe("nonresident");
+  expect(result.pa.pa40.compensation.toFixed()).toBe("9000");
+  expect(result.pa.pa40.taxLiability.toFixed()).toBe("276");
+  expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+
+  const edited: typeof guide = structuredClone(saved);
+  edited.sectionData["state-return"] = { ...stateReturn,
+    paResidencySources: updateGuidedPAResidencySources(residency, { sourceReference: "Edited move worksheet reference" }) };
+  expect(() => buildGuidedStateOriginals(restored, edited)).toThrow(/confirm/i);
+  const contrary = { ...restored, taxpayer: { ...restored.taxpayer, stateResidency: "part-year" as const } };
+  expect(() => buildGuidedStateOriginals(contrary, saved)).toThrow(/conflicting retained residency/i);
+
+  const oldResidency = structuredClone(residency);
+  oldResidency.residency.outsidePAPermanentAbodePeriods = [{ from: "2026-01-01", through: "2026-12-31" }];
+  delete oldResidency.residency.outboundTaxResidencePeriods;
+  const olderSaved: typeof guide = structuredClone(saved);
+  olderSaved.sectionData["state-return"] = { ...stateReturn, paResidencySources: oldResidency };
+  expect(validateSection(olderSaved, "state-return").fieldErrors?.paResidencySources).toMatch(/complete and confirm/i);
+  expect(() => buildGuidedStateOriginals(restored, olderSaved)).toThrow(/sole year-round outside-PA permanent abode/i);
+
+  const conflictingAccount = structuredClone(completion);
+  conflictingAccount.otherStateTaxes.jurisdictions.push({ ...conflictingAccount.otherStateTaxes.jurisdictions[0],
+    state: "NJ", sourceReference: "Fictional original zero-payment New Jersey jurisdiction account" });
+  const conflictingSaved: typeof guide = structuredClone(saved);
+  conflictingSaved.sectionData["state-return"] = { ...stateReturn, paOrdinaryReturnCompletionSources: conflictingAccount };
+  const unresolvedAccount = /reciprocal.state jurisdiction account.*reconcile actual income.tax residency/i;
+  expect(() => confirmGuidedPAOrdinaryReturnCompletionSources(input, conflictingAccount, facts)).toThrow(unresolvedAccount);
+  expect(validateSection(conflictingSaved, "state-return").fieldErrors?.paOrdinaryReturnCompletionSources).toMatch(unresolvedAccount);
+  expect(() => buildGuidedStateOriginals(restored, conflictingSaved)).toThrow(unresolvedAccount);
+  restored.w2s[0].stateWages = "8999";
+  expect(() => buildGuidedStateOriginals(restored, saved)).toThrow(/original/i);
 });
 
 it("PA residency guide - confirms and replays the Florida mover's original full-year resident facts", () => {

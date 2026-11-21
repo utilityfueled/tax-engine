@@ -24,7 +24,7 @@ import {calculateFederalTax} from '@/engine/federal.js';
 import {AuditTrail} from '@/utils/audit.js';
 import {ordinarySourcePrecision,publicOrdinaryMoney} from './pa-ordinary-source-precision.js';
 import {calculatePAOrdinaryReturnFacts,reconcilePAOrdinaryReturnDisposition,snapshotPAOrdinaryReturnOriginals} from './pa-ordinary-return-facts.js';
-import {calculatePAResidencySources,type PAResidencySourcesResult} from './pa-residency-sources.js';
+import {calculatePAResidencySources,validatePAOutboundNonresidentJurisdictions,type PAResidencySourcesResult} from './pa-residency-sources.js';
 import type {PAScheduleAResult} from './pa-schedule-a.js';
 import type {PAScheduleBResult} from './pa-schedule-b.js';
 import type {PAScheduleCResult} from './pa-schedule-c.js';
@@ -63,6 +63,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  const pendingBusinessAccounts=(residency.businesses??[]).flatMap(b=>b.pendingNYAccountSources===undefined?[]:[calculatePABusinessPendingAccountSources(input,b.pendingNYAccountSources,asOf)]);
  const pendingNY=pendingBusinessAccounts[0];
  const other=sources.otherStateTaxes;ref(other.sourceReference);
+ validatePAOutboundNonresidentJurisdictions(input,other.jurisdictions);
  const pendingOH=other.pendingOIDOHSources===undefined?undefined:calculatePAOIDPendingOHAccount(input,other.pendingOIDOHSources,asOf);
  if(pendingOH&&(pendingNY||other.residentCreditSources!==undefined||other.refundedDigitalSources!==undefined||other.refundedRoyaltySources!==undefined||settledInvestmentAccounts.length>0))fail('mixed pending Ohio OID and other payment methods require their actual successor');
  if(pendingOH&&other.status!=='actual_payments')fail('actual pending Ohio OID remittance requires complete actual-payments history');
