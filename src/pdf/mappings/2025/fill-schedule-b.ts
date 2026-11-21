@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Schedule B (Form 1040) — Interest and Ordinary Dividends.
  *
@@ -10,10 +10,12 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  * Part III: Foreign accounts / trusts checkboxes.
  */
 
-import { PDFDocument } from "pdf-lib";
+import { breakTextIntoLines, StandardFonts, type PDFDocument, type PDFFont } from "pdf-lib";
+import type { InterestPayer } from "@/engine/schedules/schedule-b.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
+  formatCurrency,
   loadReviewTemplate,
   setTextField,
   setCurrencyField,
@@ -129,12 +131,62 @@ const FIELDS = {
   line8No: p1("c1_2[1]"),
 } as const;
 
+const interestPayerCapacity = FIELDS.interestPayerName.length;
 const dividendPayerCapacity = FIELDS.dividendPayerName.length;
 
 export function assertScheduleBReviewCapacity(result: TaxReturnResult): void {
   const sb = result.scheduleB;
   if (sb && sb.dividendPayers.length > dividendPayerCapacity && result.form8814?.totalQualifiedDividends.gt(0)) {
     throw new Error(`Schedule B review PDF cannot include Form 8814 with more than ${dividendPayerCapacity} dividend payer rows.`);
+  }
+}
+
+/** 2025 Schedule B Lines 1 and 5 use separate payer/amount statements. */
+function appendPayerStatement(
+  doc: PDFDocument,
+  font: PDFFont,
+  returnName: string,
+  title: string,
+  payers: readonly InterestPayer[],
+): void {
+  if (!payers.length) return;
+
+  const left = 40;
+  const right = 572;
+  const rowStart = 690;
+  const rowHeight = 15;
+  const fontSize = 10;
+  const amountWidth = 126;
+  const textWidth = (text: string) => font.widthOfTextAtSize(text, fontSize);
+  const fittingSize = (text: string, width: number) => Math.min(fontSize, width / font.widthOfTextAtSize(text, 1));
+  const displayName = returnName.replace(/\s+/g, " ");
+  const nameSize = fittingSize(displayName, right - left);
+  const addPage = () => {
+    const page = doc.addPage([612, 792]);
+    page.drawText(title, { x: left, y: 750, size: 14, font });
+    page.drawText(displayName, { x: left, y: 726, size: nameSize, font });
+    page.drawText("Payer name", { x: left, y: 708, size: fontSize, font });
+    page.drawText("Amount", { x: right - textWidth("Amount"), y: 708, size: fontSize, font });
+    return page;
+  };
+  let page = addPage();
+  let y = rowStart;
+
+  for (const payer of payers) {
+    const amount = formatCurrency(payer.amount) || "0";
+    const amountSize = fittingSize(amount, amountWidth);
+    const amountX = right - font.widthOfTextAtSize(amount, amountSize);
+    // Break at character boundaries so even an unbroken source name fits.
+    const lines = breakTextIntoLines(payer.name, [""], right - left - amountWidth - 16, textWidth);
+    for (const [index, line] of (lines.length ? lines : [""]).entries()) {
+      if (y < 48) {
+        page = addPage();
+        y = rowStart;
+      }
+      page.drawText(line, { x: left, y, size: fontSize, font });
+      if (index === 0) page.drawText(amount, { x: amountX, y, size: amountSize, font });
+      y -= rowHeight;
+    }
   }
 }
 
@@ -166,7 +218,7 @@ export async function fillScheduleB(
   if (!sb) return doc;
 
   // ── Part I: Interest Payers ──
-  const maxInterestRows = Math.min(sb.interestPayers.length, F.interestPayerName.length);
+  const maxInterestRows = Math.min(sb.interestPayers.length, interestPayerCapacity);
   for (let i = 0; i < maxInterestRows; i++) {
     const payer = sb.interestPayers[i];
     setTextField(form, F.interestPayerName[i], payer.name);
@@ -199,6 +251,16 @@ export async function fillScheduleB(
     setCheckBox(form, F.line8Yes, true);
   } else {
     setCheckBox(form, F.line8No, true);
+  }
+
+  const additionalInterest = sb.interestPayers.slice(interestPayerCapacity);
+  const additionalDividends = sb.dividendPayers.slice(dividendPayerCapacity);
+  if (additionalInterest.length || additionalDividends.length) {
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    doc.getPage(0).drawText("Additional Schedule B payer rows on the following pages.", { x: 36, y: 768, size: 10, font });
+    appendPayerStatement(doc, font, name, "2025 Schedule B - Line 1 Interest Payer Continuation", additionalInterest);
+    appendPayerStatement(doc, font, name, "2025 Schedule B - Line 5 Ordinary Dividend Payer Continuation", additionalDividends);
+    await markReviewPdf(doc);
   }
 
   return doc;

@@ -121,6 +121,21 @@ lines:
     notes: "This amount goes to Form 1040 Line 3b"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 6 - total dividends to 1040"
 
+  - line: "1-and-5-2025-review-continuations"
+    description: "Retain interest and ordinary dividend payer detail beyond the 2025 review template's available rows"
+    formula: "Keep the first 14 Line 1 and first 15 Line 5 payer rows on the official template. When a line exceeds its capacity, point to the following pages and append its remaining payer names and matching whole-dollar amounts in engine order. Give each overflowing line its own statement pages and keep the full calculated totals on the official Schedule B lines."
+    irsRef: "2025 Schedule B General Instructions, separate statements for Lines 1 and 5"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf"
+      - "https://www.irs.gov/pub/irs-prior/f1040sb--2025.pdf"
+    notes: "Bundle continuation pages with the existing Schedule B review PDF so they are included when the workspace merges the packet. Print the return name and existing review notice on the continuation pages, with no SSN field. Apply the separate Form 8814 dividend-capacity rule before rendering."
+    testRef: "tests/pdf/fill-schedule-b-d-se.test.ts::retains every overflow payer in the 2025 Schedule B review packet"
+    testRefs:
+      - "tests/pdf/fill-schedule-b-d-se.test.ts::keeps a single Schedule B page at the exact ordinary payer capacities"
+      - "tests/pdf/fill-schedule-b-d-se.test.ts::continues only the Schedule B line that exceeds capacity"
+      - "tests/pdf/fill-schedule-b-d-se.test.ts::wraps a long continuation payer name and prints its rounded amount once"
+      - "tests/pdf/fill-schedule-b-d-se.test.ts::fits the complete return name within the statement header"
+
   # ── Part III: Foreign Accounts and Trusts ────────────────
   - line: "7a"
     description: "Foreign financial account indicator"

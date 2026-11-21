@@ -9,9 +9,11 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
+import { execFileSync } from "../helpers/file-stdin-exec.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { fillScheduleB, SCHEDULE_B_FIELDS } from "@/pdf/fill-schedule-b.js";
+import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { fillScheduleD, SCHEDULE_D_FIELDS } from "@/pdf/fill-schedule-d.js";
 import { fillScheduleSE, SCHEDULE_SE_FIELDS } from "@/pdf/fill-schedule-se.js";
 import { complexMFJFixture, simpleW2Fixture } from "../fixtures/simple-w2.js";
@@ -59,6 +61,27 @@ function scheduleBWithChildElection(parentPayerCount: number) {
       capitalGainDistributions: "0", electionFacts: syntheticChildElection(),
     }],
   });
+}
+
+function scheduleBWithOrdinaryPayers(interestCount: number, dividendCount: number) {
+  const number = (index: number) => String(index + 1).padStart(3, "0");
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    form1099Int: Array.from({ length: interestCount }, (_, index) => ({
+      taxYear: 2025, payer: `Bay Bank ${number(index)}`, interestIncome: String(101 + index),
+      payerTin: "96-5432108", accountReference: "SCHEDULE-B-PRIVATE-BANK-ACCOUNT",
+    })),
+    form1099Div: Array.from({ length: dividendCount }, (_, index) => ({
+      taxYear: 2025, payer: `Harbor Fund ${number(index)}`, ordinaryDividends: String(201 + index),
+      qualifiedDividends: "0", payerTin: "96-5432107", accountReference: "SCHEDULE-B-PRIVATE-FUND-ACCOUNT",
+    })),
+  });
+}
+
+function extractPdfPages(bytes: Uint8Array): string[] {
+  return JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", [
+    "-c", "import io,json,sys; from pypdf import PdfReader; print(json.dumps([p.extract_text() or '' for p in PdfReader(io.BytesIO(sys.stdin.buffer.read()), strict=True).pages]))",
+  ], { input: bytes, encoding: "utf8" }));
 }
 
 // ─── Schedule B — MFJ with interest and dividends ─────────────────────────
@@ -290,6 +313,104 @@ describe("Schedule SE PDF fill — simple filer with no SE income", () => {
 // ─── Orchestrator integration ────────────────────────────────────────────
 
 describe("fillReturn orchestrator with Schedule B, D, SE", () => {
+  // Spec: spec/federal/schedule-b.yaml, 1-and-5-2025-review-continuations.
+  it("keeps a single Schedule B page at the exact ordinary payer capacities", async () => {
+    const input = scheduleBWithOrdinaryPayers(14, 15);
+    const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+    expect(doc.getPageCount()).toBe(1);
+    expect(getFieldText(doc, SCHEDULE_B_FIELDS.interestPayerName[13])).toBe("Bay Bank 014");
+    expect(getFieldText(doc, SCHEDULE_B_FIELDS.dividendPayerName[14])).toBe("Harbor Fund 015");
+    expect(extractPdfPages(await doc.save())[0]).not.toContain("Additional Schedule B payer rows");
+  });
+
+  it("continues only the Schedule B line that exceeds capacity", async () => {
+    for (const [interestCount, dividendCount, expectedLine] of [[15, 15, 1], [14, 16, 5]] as const) {
+      const input = scheduleBWithOrdinaryPayers(interestCount, dividendCount);
+      const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+      const pages = extractPdfPages(await doc.save());
+      expect(pages).toHaveLength(2);
+      expect(pages[0]).toContain("Additional Schedule B payer rows");
+      expect(pages[1]).toContain(`2025 Schedule B - Line ${expectedLine}`);
+      expect(pages[1]).toContain("FOR REVIEW ONLY - NOT FOR FILING");
+      expect(pages[1]).toMatch(expectedLine === 1 ? /Bay Bank 015\s+115/ : /Harbor Fund 016\s+216/);
+      expect(pages[1]).not.toContain(expectedLine === 1 ? "Harbor Fund" : "Bay Bank");
+      expect(pages[1]).not.toContain("123456789");
+    }
+  });
+
+  it("wraps a long continuation payer name and prints its rounded amount once", async () => {
+    const input = scheduleBWithOrdinaryPayers(15, 0);
+    const payer = `CréditPayerStart${"W".repeat(120)}PayerEnd`;
+    input.form1099Int[14].payer = payer;
+    input.form1099Int[14].interestIncome = "114.50";
+    const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+    const [, continuation] = extractPdfPages(await doc.save());
+    expect(continuation.match(/\b115\b/g)).toHaveLength(1);
+    expect(continuation.replace("115", "").replace(/\s/g, "")).toContain(payer);
+  });
+
+  it("fits the complete return name within the statement header", async () => {
+    const input = scheduleBWithOrdinaryPayers(15, 0);
+    input.taxpayer.primary.lastName = "W".repeat(110) + "End";
+    const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+    const [text, x, size]: [string, number, number] = JSON.parse(execFileSync(
+      process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3",
+      ["-c", [
+        "import io,json,sys; from pypdf import PdfReader",
+        "runs = []",
+        "PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages[1].extract_text(visitor_text=lambda text, cm, tm, font, size: runs.append([text.strip(), tm[4], size]) if text.startswith('Jane WWW') else None)",
+        "print(json.dumps(runs[0]))",
+      ].join("\n")], { input: await doc.save(), encoding: "utf8" },
+    ));
+    expect(text).toBe(`Jane ${input.taxpayer.primary.lastName}`);
+    expect(size).toBeGreaterThan(0);
+    // In Helvetica, W is 944 units per 1,000. These glyphs alone would extend beyond the page at 10 pt.
+    expect(x + 110 * 0.944 * size).toBeLessThan(572);
+  });
+
+  it("retains every overflow payer in the 2025 Schedule B review packet", async () => {
+    const { fillReturn } = await import("@/pdf/fill-return.js");
+    const input = scheduleBWithOrdinaryPayers(66, 17);
+    const result = calculateFederalTax(input);
+    const reviewInput = redactReviewIdentifiers(input);
+    const reviewResult = redactReviewIdentifiers(result);
+    const doc = await fillScheduleB(reviewInput, reviewResult, BLANK_SB);
+    const saved = await PDFDocument.load(await doc.save());
+    const field = (suffix: string) => getFieldText(saved, `topmostSubform[0].Page1[0].${suffix}[0]`);
+    expect(field("f1_02")).toBeUndefined();
+    expect(field("f1_29")).toBe("Bay Bank 014");
+    expect(field("f1_30")).toBe("114");
+    expect(field("f1_31")).toBe("8811");
+    expect(field("f1_33")).toBe("8811");
+    expect(field("f1_62")).toBe("Harbor Fund 015");
+    expect(field("f1_63")).toBe("215");
+    expect(field("f1_64")).toBe("3553");
+
+    const outputDir = join(testOutputDir, "schedule-b-ordinary-overflow");
+    const packet = await fillReturn(reviewInput, reviewResult, {
+      blankFormsDir: "forms/blank", outputDir, flatten: true, useObjectStreams: false, pageOnlyTemporaryMerge: true,
+    });
+    const path = join(outputDir, "f1040sb-filled.pdf");
+    expect(packet.filledForms).toContain(path);
+    const pages = extractPdfPages(await readFile(path));
+    expect(pages).toHaveLength(4);
+    expect(pages[0]).toContain("Additional Schedule B payer rows");
+    expect(pages[1]).toContain("2025 Schedule B - Line 1");
+    expect(pages[2]).toContain("2025 Schedule B - Line 1");
+    expect(pages[3]).toContain("2025 Schedule B - Line 5");
+    for (const page of pages.slice(1)) {
+      expect(page).toContain("Jane Doe");
+      expect(page).toContain("FOR REVIEW ONLY - NOT FOR FILING");
+    }
+    const continuation = pages.slice(1).join("\n");
+    const rows = (payer: string) => [...continuation.matchAll(new RegExp(`${payer} (\\d{3})\\s+(\\d+)`, "g"))]
+      .map(([, position, amount]) => [Number(position), Number(amount)]);
+    expect(rows("Bay Bank")).toEqual(Array.from({ length: 52 }, (_, i) => [15 + i, 115 + i]));
+    expect(rows("Harbor Fund")).toEqual([[16, 216], [17, 217]]);
+    expect(continuation).not.toMatch(/8811|3553/);
+    expect(pages.join(" ")).not.toMatch(/123-45-6789|123456789|96-543210[78]|96543210[78]|SCHEDULE-B-PRIVATE/);
+  });
+
   it("writes the Form 8814 payer and full Line 6 in distinct saved PDF fields at capacity", async () => {
     const { fillReturn } = await import("@/pdf/fill-return.js");
     const input = scheduleBWithChildElection(14);
