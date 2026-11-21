@@ -1,5 +1,35 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Form 8615 itemized deduction threshold
+
+`9d2cfeb2` corrects the annual threshold for a child who itemizes. Form 8615
+line 2 now takes the greater of $2,700 or $1,350 plus the stated deductible
+Schedule A costs directly connected with the child's unearned income. The
+amount is required, including explicit zero, and an inconsistent itemization
+choice or a directly connected amount above Schedule A line 17 stops the
+federal calculation. Line 3 preserves the signed subtraction and the
+calculator stops when line 3 or line 5 does not call for parent-rate tax.
+[IRS instructions](https://www.irs.gov/pub/irs-prior/i8615--2025.pdf) ·
+[IRS form](https://www.irs.gov/pub/irs-prior/f8615--2025.pdf).
+
+The IRS's Eleanor facts yield $2,850 on line 2 and $13,050 on line 3. In
+the linked federal regression with $14,400 of child taxable income and
+$200,000 of single-parent taxable income, the parent-rate amount is
+$4,176 and the child's remaining income adds $136 under the Tax Table.
+Form 1040 line 16 is $4,312. Independent engineering review checked the
+threshold, sources and stop behavior. All 547 focused tests passed on
+Node 26.13.1. Type checking, scoped lint, the inventory check and all
+9,731 tracked-source spec references passed. The preferential worksheet
+for an itemizing child and the Form 8615 Schedule AI calculation require
+separate methods. [Tax Table](https://www.irs.gov/instructions/i1040gi) ·
+[Form 2210 instructions](https://www.irs.gov/instructions/i2210).
+
+The IRS regular Form 8615 PDF still prints 2025. The 2026 PDF is in the
+draft directory with the agency's draft cover. This work uses the 2025
+instructions and does not qualify a 2026 filing export.
+[Latest regular PDF](https://www.irs.gov/pub/irs-pdf/f8615.pdf) ·
+[2026 draft](https://www.irs.gov/pub/irs-dft/f8615--dft.pdf).
+
 ## November 20 original student loan and retirement statements
 
 `cdfdd050` presents literal box evidence from supported official 2026
@@ -27,12 +57,18 @@ normal upload `add`; both operations were tracked in the passing run.
 
 Both exact local suites passed 29,665 tests across 2,171 files. Branch
 coverage was 88.26%, and both owned PostgreSQL 16.16 instances stopped.
-All eight exact static checks and the exact GitHub Docker workflow passed.
+All eight exact static checks and the exact GitHub CI and Docker workflows
+passed. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44844541402) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44844541414).
 Vercel confirmed that the protected test-mode Preview was ready on
 `cdfdd050`, with no production alias. All 12 workspace checks passed,
 including save and reopen across revisions, separate sessions, sign-out,
 deletion and absence in a fresh session.
+The complete managed macOS suite passed all 650 active Chromium cases with
+five original skips, original deadlines and zero retries. The first
+launcher stopped before any case because its archive lacked 15 ignored
+public IRS PDF fixtures. The passing launcher reused verified copies of all
+15 fixtures and ran the same cases.
 
 ## November 20 Stripe Sandbox catalog and billing baseline
 

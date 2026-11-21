@@ -1,11 +1,20 @@
 # Current 2026 upgrade status
 
+Application `9d2cfeb2` corrects Form 8615 for itemizing children, checks
+the amount against the actual Schedule A deduction and preserves the
+printed stop rules. The combined federal, form, edge and PDF run passed
+547 tests on Node 26.13.1. The distinct preferential and Schedule AI
+methods remain open.
+[Form 8615 evidence](upgrade-2026-progress.md#november-20-form-8615-itemized-deduction-threshold).
+
 Application `cdfdd050` shows literal Form 1098-E and Form 1099-R
 Copy B evidence in the selected 2026 guided interview. All 22 actual
 Chromium cases passed, including year rejection, historical filenames,
 explicit zero, unconfirmed dates, and reopening the stored original.
 Both exact local suites passed 29,665 tests at 88.26% branch coverage.
-All eight static checks and the exact Docker workflow passed.
+All eight static checks and the exact CI and Docker workflows passed.
+The complete managed macOS suite passed all 650 active cases with five
+original skips.
 The protected test-mode Preview passed all 12 workspace lifecycle checks
 on this revision.
 The 2026 calculation, export and filing gates remain closed.
