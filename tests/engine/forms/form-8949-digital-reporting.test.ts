@@ -1,9 +1,60 @@
 // Spec: spec/federal/form-8949-digital-reporting.yaml.
 import { expect, it } from 'vitest';
+import { calculateFederalTax } from '@/engine/federal.js';
 import { calculateForm8949 } from '@/engine/forms/form-8949.js';
 import { calculateScheduleD } from '@/engine/schedules/schedule-d.js';
 import { getConstants } from '@/models/constants.js';
+import { TaxYearInputSchema } from '@/models/inputs.js';
 import { reportingCategoriesInput } from '../../fixtures/form-8949-reporting.js';
+import { simpleW2Fixture } from '../../fixtures/simple-w2.js';
+
+it('holds a wallet-documented swap and a liquidation that could consume the same original lot', () => {
+  const wallet = { walletOrAccountReference: 'Fixture Wallet A', sourceFactsConfirmed: true };
+  const base = {
+    ...simpleW2Fixture,
+    cryptoIncome: {
+      tokenSwaps: [{
+        fromAsset: 'ETH', fromQuantity: '1', toAsset: 'USDC', toQuantity: '1000',
+        fairMarketValueAtSwap: '1000', dateSwapped: '2025-06-01', gasFee: '0',
+        walletFifoConfirmed: true, walletSource: { ...wallet, originalRecordReference: 'Swap execution' },
+      }],
+      lots: [{
+        asset: 'ETH', dateAcquired: '2023-01-01', quantity: '1', costBasisPerUnit: '100',
+        walletSource: { ...wallet, originalRecordReference: 'Acquisition' },
+      }],
+    },
+  };
+  expect(calculateFederalTax(TaxYearInputSchema.parse(base)).scheduleD?.netLongTerm.toFixed()).toBe('900');
+
+  const combined = TaxYearInputSchema.parse({
+    ...base, cryptoIncome: { ...base.cryptoIncome, liquidations: [{
+      platform: 'Fixture lender', collateralAsset: 'ETH', collateralQuantity: '1',
+      fairMarketValueAtLiquidation: '600', dateOfLiquidation: '2025-07-01',
+    }] },
+  });
+  expect(() => calculateFederalTax(combined)).toThrow(/wallet.+separate lot method/i);
+
+  const reverted = TaxYearInputSchema.parse({ ...base, cryptoIncome: {
+    ...base.cryptoIncome,
+    liquidations: combined.cryptoIncome?.liquidations,
+    tokenSwaps: base.cryptoIncome.tokenSwaps.map(swap => ({
+      ...swap, fromQuantity: '0', toQuantity: '0', fairMarketValueAtSwap: '0',
+    })),
+  } });
+  expect(calculateFederalTax(reverted).scheduleD?.netLongTerm.toFixed()).toBe('500');
+
+  const poolEntry = TaxYearInputSchema.parse({ ...base, cryptoIncome: { ...base.cryptoIncome, lpPositions: [{
+    protocol: 'Fixture pool', poolAssets: ['ETH', 'USDC'], lpTokensReceived: '1', dateEntered: '2025-07-01',
+    underlyingAssetsDeposited: [{ asset: 'ETH', quantity: '1', costBasisPerUnit: '100' }],
+  }] } });
+  expect(() => calculateFederalTax(poolEntry)).toThrow(/wallet.+separate lot method/i);
+
+  const legacyBroker = TaxYearInputSchema.parse({ ...base, form1099DA: [{ brokerName: 'Fixture broker', transactions: [{
+    digitalAssetName: 'Ether', ticker: 'ETH', quantity: '1', proceeds: '700', costBasis: '0',
+    dateAcquired: '2023-01-01', dateSold: '2025-07-01', holdingPeriod: 'long', basisReportedToIRS: false,
+  }] }] });
+  expect(() => calculateFederalTax(legacyBroker)).toThrow(/wallet.+separate lot method/i);
+});
 
 it('routes all twelve original reporting categories without losing cents', () => {
   const input = reportingCategoriesInput();

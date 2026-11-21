@@ -60,3 +60,8 @@ lines:
     formula: "Raw1099-DA dispositions require8949detail even when original1099-B is empty or net gain is zero. A missing8949marks packet and line completeness partial; including the detail removes only that finding and never grants filing qualification."
     irsRef: "i8949 original transaction detail and Form8949 PartI/II digital categories; review packet evidence boundary"
     testRef: "tests/utils/return-readiness.test.ts::marks original digital disposition packets partial when Form8949 detail is missing"
+  - line: "wallet-lot-method-isolation"
+    description: "Hold competing digital asset methods when wallet lot consumption cannot be reconciled"
+    formula: "A post-2024 wallet-documented taxable exchange of a nonzero quantity uses its own confirmed lot pool. Hold a return that also needs liquidity-pool, liquidation or legacy Form 1099-DA lot allocation until the same originals can be consumed only once across those methods. Standalone wallet-confirmed sales retain separate Schedule D terms. A reverted zero-quantity exchange consumes no lot."
+    irsRef: "26 CFR §1.1012-1(j); Form 8949 instructions for original adjusted basis and separate holding-period categories"
+    testRef: "tests/engine/forms/form-8949-digital-reporting.test.ts::holds a wallet-documented swap and a liquidation that could consume the same original lot"

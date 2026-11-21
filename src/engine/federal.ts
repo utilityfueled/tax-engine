@@ -1413,6 +1413,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Convert 1099-DA transactions to 1099-B CapitalTransaction entries for Form 8949
   const form1099DAForms = input.form1099DA ?? [];
+  const needsLotMatching = form1099DAForms.some((form) =>
+    form.sourceFactsConfirmed !== true && form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
+  );
 
   // When the taxpayer provides lots and has 1099-DA transactions without broker-reported
   // basis, use lot matching to determine cost basis per the elected method.
@@ -1425,6 +1428,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // so that swap-created lots are available for further matching.
   let defiSwapResult: DeFiSwapResult | undefined;
   const tokenSwaps = cryptoInput?.tokenSwaps ?? [];
+  const lpPositions = cryptoInput?.lpPositions ?? [];
+  const liquidations = cryptoInput?.liquidations ?? [];
+  const hasWalletDocumentedSwap = tokenSwaps.some(swap =>
+    swap.dateSwapped >= "2025-01-01" && swap.walletSource
+    && !swap.isWrappingEvent && !swap.isBridgeTransaction && !d(swap.fromQuantity).isZero()
+  );
+  if (hasWalletDocumentedSwap && (needsLotMatching || lpPositions.length > 0 || liquidations.length > 0)) {
+    throw new Error("Wallet-documented swaps combined with other crypto lot allocations require a separate lot method.");
+  }
   if (tokenSwaps.length > 0) {
     defiSwapResult = processDeFiTokenSwaps(tokenSwaps, allLots, cryptoBasisMethod);
     audit.merge(defiSwapResult.lines);
@@ -1434,7 +1446,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Process DeFi LP positions (enter/exit) — entry is non-taxable, exit generates Form 8949
   let lpResult: LPPositionResult | undefined;
-  const lpPositions = cryptoInput?.lpPositions ?? [];
   if (lpPositions.length > 0) {
     lpResult = processDeFiLPPositions(lpPositions, allLots, cryptoBasisMethod);
     audit.merge(lpResult.lines);
@@ -1470,7 +1481,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Process crypto collateral liquidations → Form 8949
   let liquidationResult: LiquidationResult | undefined;
-  const liquidations = cryptoInput?.liquidations ?? [];
   if (liquidations.length > 0) {
     liquidationResult = processCryptoLiquidations(liquidations, allLots, cryptoBasisMethod);
     audit.merge(liquidationResult.lines);
@@ -1483,11 +1493,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     donationResult = calculateCryptoDonations(cryptoDonations, year);
     audit.merge(donationResult.lines);
   }
-
-  // Separate 1099-DA transactions needing lot matching from those with broker-reported basis
-  const needsLotMatching = form1099DAForms.some((form) =>
-    form.sourceFactsConfirmed !== true && form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
-  );
 
   // Confirmed rows carry their own basis and consume no lot, so a lot path could reuse it.
   const rowNames = (row: { ticker?: string; digitalAssetCode?: string; digitalAssetName: string }) => [row.ticker, row.digitalAssetCode, row.digitalAssetName].flatMap((name) => name?.trim() ? [name.trim().toUpperCase()] : []);
