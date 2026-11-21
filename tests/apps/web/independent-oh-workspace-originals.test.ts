@@ -1,7 +1,8 @@
 // Specs: state/oh-workspace-actual-source-export.yaml and federal/schedule-a.yaml.
 import {afterEach,it,expect,vi} from 'vitest';
-import {writeFile,mkdir} from 'node:fs/promises';
-import {join} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {writeFile,mkdir,readdir,readFile} from 'node:fs/promises';
+import {basename,join} from 'node:path';
 import {buildWorkspaceFilledReturnDownload} from '@/lib/workspace-filled-return';
 import * as source from '@/engine/state/oh-residency-source';
 import * as pdf from '@/pdf/fill-oh-reference-forms';
@@ -26,6 +27,53 @@ import {completeTreasuryRouting} from '../../fixtures/guided-state-routing-compl
 import {attachSchoolDraft,guidedSchoolDistrictFixture,required} from '../../fixtures/guided-oh-school-district-complete';
 vi.mock('server-only',()=>({}));
 afterEach(()=>vi.restoreAllMocks());
+
+function reopenPageText(bytes: Uint8Array): string[] {
+  const result = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', `
+import io, json, sys
+from pypdf import PdfReader
+reader = PdfReader(io.BytesIO(sys.stdin.buffer.read()), strict=True)
+print(json.dumps([page.extract_text() for page in reader.pages]))
+`], { input: bytes, encoding: 'utf8' });
+  return JSON.parse(result) as string[];
+}
+
+it('Ohio workspace merges generated reference pages without temporary files', async () => {
+  const { state, data, draft } = guidedSchoolDistrictFixture();
+  const w2 = required(state.sectionData['income-w2']?.entries[0]);
+  const w2Source = required(w2.stateLocalSources);
+  required(w2Source.stateRows[0]).employerStateID = '12345678';
+  w2.stateLocalSources = confirmGuidedW2StateLocalSources(required(buildGuidedW2SourceContext(state)), 0, w2Source);
+  const residency = required(data.ohioResidency);
+  confirmCurrentOhioWorkspaceOriginals(state);
+  data.ohioResidency = residency;
+  const input = explicitlyReconfirmSavedLedgerOriginals(state);
+  attachSchoolDraft(data, confirmGuidedOhioSchoolDistrictFacts(input, draft, data.ohioResidency, data.ohioPayments));
+  const originalFill = pdf.fillOhioReferenceForms;
+  const standalonePages: string[] = [];
+  const renderer = vi.spyOn(pdf, 'fillOhioReferenceForms').mockImplementation(async (...args) => {
+    const packet = await originalFill(...args);
+    const names = packet.filledForms.map(path => basename(path));
+    const temporaryFiles = await readdir(args[2]);
+    const references = names.filter(name => name.endsWith('-reference.pdf'));
+    expect(references).toEqual(expect.arrayContaining(['oh-it-1040-reference.pdf', 'oh-sd-100-reference.pdf']));
+    expect(names).toEqual(expect.arrayContaining(['oh-sd-100-review.pdf', 'oh-sd-withholding-review.pdf']));
+    expect.soft(temporaryFiles.filter(name => references.includes(name))).toEqual([]);
+    expect(temporaryFiles).toEqual(expect.arrayContaining(names.filter(name => !references.includes(name))));
+    const [input, federal, dir, overlay, token, blanks] = args;
+    const standalone = await originalFill(input, federal, join(dir, 'standalone-control'), overlay, token, blanks);
+    expect(standalone.filledForms.map(path => basename(path))).toEqual(names);
+    for (const path of standalone.filledForms) standalonePages.push(...reopenPageText(await readFile(path)));
+    return packet;
+  });
+  const output = await buildWorkspaceFilledReturnDownload(stateOriginalsReviewWorkspace(), state);
+  const combined = reopenPageText(output.contents);
+  expect(combined.slice(-standalonePages.length)).toEqual(standalonePages);
+  expect(combined.every(page => page.split('FOR REVIEW ONLY - NOT FOR FILING').length === 2)).toBe(true);
+  expect(combined.join('\n')).not.toContain(required(state.sectionData['personal-info']).ssn);
+  expect(renderer).toHaveBeenCalledOnce();
+});
+
 it.each([['full_year_resident','2323','105'],['part_year_resident','929','41'],['nonresident','465','0']]as const)('actual Ohio workspace prepared originals survive redaction for %s',async(status,tax,penalty)=>{
   const state=actualOhioWorkspaceFlow(status),before=structuredClone(state),actualFill=pdf.fillOhioReferenceForms;
   const prepared=vi.spyOn(source,'prepareOhioResidencyReviewWithFederalResult');

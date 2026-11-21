@@ -178,12 +178,11 @@ async function resolveBlankFormsDir() {
   throw new Error("Could not locate the blank PDF form templates.");
 }
 
-async function mergePdfFiles(pdfPaths: string[]) {
+async function mergePdfFiles(pdfPaths: string[], referenceDocuments?: ReadonlyMap<string, PDFDocument>) {
   const merged = await PDFDocument.create();
 
   for (const pdfPath of pdfPaths) {
-    const bytes = await readFile(pdfPath);
-    const source = await loadPdfDocumentQuietly(bytes);
+    const source = referenceDocuments?.get(pdfPath) ?? await loadPdfDocumentQuietly(await readFile(pdfPath));
     await markReviewPdf(source);
     const pages = await merged.copyPages(source, source.getPageIndices());
 
@@ -757,6 +756,7 @@ export async function buildWorkspaceFilledReturnDownload(
       pageOnlyTemporaryMerge: true,
     });
     const filledForms = [...fillResult.filledForms];
+    let ohioReferenceDocuments: ReadonlyMap<string, PDFDocument> | undefined;
 
     if (stateCode === "OH") {
       const ohioReferencePacket = await fillOhioReferenceForms(
@@ -766,8 +766,10 @@ export async function buildWorkspaceFilledReturnDownload(
         ohioSourceOverlay,
         ohioReview?.token,
         blankFormsDir,
+        { inMemoryReferences: true },
       );
       filledForms.push(...ohioReferencePacket.filledForms);
+      ohioReferenceDocuments = ohioReferencePacket.referenceDocuments;
     }
 
     const includedForms = filledForms.map((path) => basename(path));
@@ -797,7 +799,7 @@ export async function buildWorkspaceFilledReturnDownload(
     const coverPagePdf = await buildReturnSummaryCoverPage(packetSummary);
     const coverPagePath = join(outputDir, "00-experimental-summary-cover.pdf");
     await writeFile(coverPagePath, coverPagePdf);
-    const mergedPdf = await mergePdfFiles([coverPagePath, ...filledForms]);
+    const mergedPdf = await mergePdfFiles([coverPagePath, ...filledForms], ohioReferenceDocuments);
     const yearToken = workspace.returnSummary.targetTaxYear?.toString() ?? "draft";
 
     return {

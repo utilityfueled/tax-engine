@@ -41,6 +41,8 @@ const WARNING_COLOR = rgb(0.62, 0.19, 0.14);
 
 export interface OhioReferencePacketResult {
   filledForms: string[];
+  /** Generated summaries keyed by their packet path for this invocation. */
+  referenceDocuments?: ReadonlyMap<string, PDFDocument>;
 }
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
@@ -103,19 +105,16 @@ function formatValue(line: CalculatedLine) {
   return line.value.toString();
 }
 
-async function createReferencePdf(
+async function renderReferencePdf(
   {
     title,
     subtitle,
-    fileName,
     lines,
   }: {
     title: string;
     subtitle: string;
-    fileName: string;
     lines: CalculatedLine[];
   },
-  outputDir: string,
 ) {
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -206,11 +205,7 @@ async function createReferencePdf(
     y -= 6;
   }
 
-  const filePath = join(outputDir, fileName);
-  await mkdir(outputDir, { recursive: true });
-  await markReviewPdf(doc);
-  await writeFile(filePath, await doc.save());
-  return filePath;
+  return doc;
 }
 
 function shouldIncludeAdjustments(
@@ -249,6 +244,7 @@ export async function fillOhioReferenceForms(
   overlay: OhioOverlayInput = {},
   reviewContext?:PreparedOhioResidencyReview,
   blankFormsDir = join('forms','blank'),
+  options: { inMemoryReferences?: boolean } = {},
 ): Promise<OhioReferencePacketResult> {
   assertPdfExportAllowed(taxInput.taxpayer.taxYear, federalResult.taxYear);
   const hasResidency=Boolean((taxInput as TaxYearInput&{ohioResidency?:unknown;ohioPayments?:unknown}).ohioResidency??overlay.residency)||Boolean((taxInput as TaxYearInput&{ohioPayments?:unknown}).ohioPayments??overlay.payments);
@@ -286,6 +282,20 @@ export async function fillOhioReferenceForms(
   const stagedBusinessReview = businessOfficialReview ? await stageOhioBusinessOfficialReview(businessOfficialReview,blankFormsDir) : undefined;
 
   const filledForms: string[] = [];
+  const referenceDocuments = options.inMemoryReferences ? new Map<string, PDFDocument>() : undefined;
+
+  async function createReferencePdf(definition: Parameters<typeof renderReferencePdf>[0] & { fileName: string }) {
+    const doc = await renderReferencePdf(definition);
+    const filePath = join(outputDir, definition.fileName);
+    if (referenceDocuments) {
+      referenceDocuments.set(filePath, doc);
+    } else {
+      await mkdir(outputDir, { recursive: true });
+      await markReviewPdf(doc);
+      await writeFile(filePath, await doc.save());
+    }
+    return filePath;
+  }
 
   filledForms.push(
     await createReferencePdf(
@@ -295,12 +305,11 @@ export async function fillOhioReferenceForms(
         fileName: "oh-it-1040-reference.pdf",
         lines: ohioResult.it1040.lines,
       },
-      outputDir,
     ),
   );
 
   if(ohioResult.nonresidentCreditResult&&!ohioResult.nonresidentCreditResult.fullResidentOnly){
-    filledForms.push(await createReferencePdf({title:"Ohio IT NRC",subtitle:"Actual owner nonresident and part-year source allocation - reference worksheet",fileName:"oh-it-nrc-reference.pdf",lines:[...ohioResult.nonresidentCreditResult.lines,...ohioResult.lines.filter(row=>row.form==="OH-IT-NRC"&&row.line==="actual-source-commitment")]},outputDir));
+    filledForms.push(await createReferencePdf({title:"Ohio IT NRC",subtitle:"Actual owner nonresident and part-year source allocation - reference worksheet",fileName:"oh-it-nrc-reference.pdf",lines:[...ohioResult.nonresidentCreditResult.lines,...ohioResult.lines.filter(row=>row.form==="OH-IT-NRC"&&row.line==="actual-source-commitment")]}));
   }
 
   if (shouldIncludeAdjustments(ohioResult.scheduleOfAdjustments)) {
@@ -312,7 +321,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-schedule-adjustments-reference.pdf",
           lines: ohioResult.scheduleOfAdjustments.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -326,7 +334,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-it-bus-reference.pdf",
           lines: itBusResult.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -346,7 +353,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-schedule-of-withholding-reference.pdf",
           lines: withholdingLines,
         },
-        outputDir,
       ),
     );
   }
@@ -360,7 +366,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-schedule-credits-reference.pdf",
           lines: ohioResult.scheduleOfCredits.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -374,7 +379,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-lump-sum-retirement-credit-reference.pdf",
           lines: ohioResult.scheduleOfCredits.lumpSumRetirementWorksheet.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -388,7 +392,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-lump-sum-distribution-credit-reference.pdf",
           lines: lumpSumDistributionWorksheet.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -402,7 +405,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-resident-credit-reference.pdf",
           lines: ohioResult.residentCredit.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -416,7 +418,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-it-sd-2210-reference.pdf",
           lines: [...ohioResult.itsd2210.lines,...(ohioInput.paymentSourceDigest?[{form:'OH-IT/SD-2210',line:'actual-payment-source',inputs:{},description:ohioInput.paymentTaxCoverage?.status==='expected_payment'?'Expected remaining-tax payment':ohioInput.paymentTaxCoverage?.status==='actual_payment'?'Actual remaining-tax payment':'Actual no remaining tax',value:d(ohioInput.paymentTaxCoverage?.amountAppliedToTax),formula:`${ohioInput.paymentTaxCoverage?.date??'No tax remains'}; ${ohioInput.paymentMethodVersion}; original commitment ${ohioInput.paymentSourceDigest}`}]:[])],
         },
-        outputDir,
       ),
     );
   }
@@ -430,7 +431,6 @@ export async function fillOhioReferenceForms(
           fileName: "oh-sd-100-reference.pdf",
           lines: ohioResult.sd100.lines,
         },
-        outputDir,
       ),
     );
   }
@@ -439,5 +439,5 @@ export async function fillOhioReferenceForms(
   filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
   if (residentCreditOfficialReview) filledForms.push(...await fillOhioResidentCreditOfficialReview(residentCreditOfficialReview,outputDir,blankFormsDir));
   if (stagedBusinessReview) filledForms.push(...await writeOhioBusinessOfficialReview(stagedBusinessReview,outputDir));
-  return { filledForms };
+  return referenceDocuments ? { filledForms, referenceDocuments } : { filledForms };
 }
