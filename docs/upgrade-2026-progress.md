@@ -1,5 +1,34 @@
 # 2026 upgrade implementation evidence
 
+## November 21 exact checkout and credit settlement
+
+`2c576d2d` exercises the ordinary checkout and webhook handlers against
+disposable PostgreSQL 16.16. The synthetic Stripe transport accepts a
+$15 checkout, whose signed completion grants exactly 1,000 cents of
+credit. A four-cent reservation settles at one cent, leaving 999 cents
+available. The provider cost recorded for that attempt is $0.000582.
+Redelivery preserves one issuance, one purchase and one event receipt.
+The second synthetic owner's budget and ledger are unchanged. The
+reviewed exact archive passed 112 tests, including the closed public
+purchase gate, plus types, scoped lint, inventory and all 9,775 spec
+references. The owned database stopped normally.
+[Stripe Checkout fulfillment](https://docs.stripe.com/checkout/fulfillment).
+
+The Vercel lookup for `2c576d2d` found one canceled main-project
+deployment and zero matching isolated deployments. Recent isolated
+Ready records did not carry a source SHA. The local checkout test
+does not qualify the current hosted release.
+
+## November 21 exact spec-reference validation
+
+`0e545cd1` uses the same TypeScript title parser in the command-line
+validator and the full spec tests. A shortened parameterized title
+previously passed the command and failed the full suite. The regression
+test now requires the complete title and rejects mentions in comments.
+The exact archive passed 1,010 focused checks and all 9,774 spec
+references, plus types, scoped lint and inventory. The request audit and
+dependent replay manifest were updated for the changed validator hash.
+
 ## November 21 taxable DEX cash fees and remaining lot basis
 
 `e906f266` applies a documented U.S. dollar fee to the proceeds of a
@@ -17,8 +46,16 @@ verified the transaction through the federal input parser and calculator.
 The initial PostgreSQL-backed combined runs reported two failures in the
 strict spec test-reference check. `386c1086` corrects the Form 2106 and
 Pennsylvania residency links to use the full parameterized test titles.
-The corrected focused run passed 1,092 tests and all 9,776 tracked spec
-references. The full reruns use clean archives of `386c1086`.
+The corrected focused run passed 1,092 tests. The clean archive passed
+all 9,773 tracked spec references. The exact PostgreSQL-backed coverage
+suite passed all 29,835 tests at 88.36% branch coverage. The concurrent
+unit attempt passed 29,831 tests and hit four five-second deadlines.
+The deadlines remain in the record. The next full unit run uses four
+workers and exact `2c576d2d` source.
+
+The complete managed macOS browser run at `fdc4dc8d` passed all 650
+active cases with five original skips. The same eight-batch suite is
+running on `2c576d2d`.
 
 The `7ebce850` managed Linux job finished with 648 passed, two RRTA
 PDF deadlines and five original skips. The strict AMD64 job finished with
@@ -32,6 +69,13 @@ The corrected contracts passed 43 focused tests. The next run was
 dispatched on `156bd0b7`. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916/job/136757329235) ·
 [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916/job/136757328831) ·
 [Corrected timing rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44880786265).
+
+The local ARM64 controller was held at the existing 512 GiB free-space
+floor. The current machine had about 393 GiB available. An independent
+read-only check found the same 19 recovery source files and four tool
+hashes as the saved controller contract. The existing public native ARM64
+workflow started on `0a167ed2` without using the Mac VM.
+[Native ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44881255619).
 
 ## November 21 Pennsylvania resident draft after a documented Florida move
 

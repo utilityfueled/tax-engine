@@ -1,5 +1,17 @@
 {
   "activeContinuation": {
+    "nov21ExactCheckoutAndSpecValidation": {
+      "checkoutSource": "2c576d2d",
+      "specMatcherSource": "0e545cd1",
+      "checkoutExactScopedTestsPassed": 112,
+      "checkoutIndependentScopedTestsPassed": 47,
+      "specMatcherScopedTestsPassed": 1010,
+      "currentTrackedSpecReferencesPassed": 9775,
+      "checkoutFixture": { "paidCents": 1500, "creditedCents": 1000, "reservedCents": 4, "chargedCents": 1, "remainingCents": 999, "providerCostUsd": "0.000582", "issuances": 1, "purchases": 1, "eventReceipts": 1 },
+      "localSyntheticProviderOnly": true,
+      "currentSourceProtectedPreviewReadyCount": 0,
+      "mainProductionDeploymentCanceled": true
+    },
     "nov21DexCashTransactionFee": {
       "source": "e906f266",
       "officialAuthority": "https://www.irs.gov/irb/2024-31_irb",
@@ -11,14 +23,18 @@
     "nov21CombinedReferenceAndBrowserReplay": {
       "referenceCorrection": "386c1086",
       "correctedReferenceFocusedTestsPassed": 1092,
-      "trackedSpecReferencesPassed": 9776,
-      "rerunSource": "386c1086",
+      "trackedSpecReferencesPassed": 9773,
+      "coverage": { "source": "386c1086", "totalTestsPassed": 29835, "branchPercent": 88.36, "postgresStoppedNormally": true },
+      "concurrentUnitAttempt": { "source": "386c1086", "passed": 29831, "fiveSecondDeadlines": 4 },
+      "macosBrowser": { "source": "fdc4dc8d", "passed": 650, "failed": 0, "originalSkips": 5 },
+      "currentLocalRerunSource": "2c576d2d",
       "replayPinCorrection": "156bd0b7",
       "replayFocusedTestsPassed": 43,
       "verifiedFrozenSources": 9,
       "verifiedBrowserCollectionCases": 655,
       "failedTimingPredecessor": { "source": "7ebce850", "workflowId": 44874893916, "managedPassed": 648, "managedFailed": 2, "strictPassed": 637, "strictFailed": 13, "originalSkipsPerJob": 5, "verifiedReplayCases": 0 },
       "currentTimingRun": { "source": "156bd0b7", "workflowId": 44880786265 },
+      "currentNativeArmRun": { "source": "0a167ed2", "workflowId": 44881255619, "localFreeDiskGiB": 393, "localRequiredFreeDiskGiB": 512 },
       "readyCurrentProtectedPreview": false
     },
     "nov21TaxableDexExecutionYear": {

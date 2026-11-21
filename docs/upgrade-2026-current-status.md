@@ -3,14 +3,16 @@
 ## November 21 resumption
 
 Start with `activeContinuation.nov21CombinedReferenceAndBrowserReplay`
-in the checkpoint. It identifies the exact local resumption source and
-the current Linux timing run. The newest calculation packages cover a
-documented Florida-to-Pennsylvania resident move, wallet-specific DEX
-lot allocation and cash fees. The corrected spec-reference check passed.
+and `activeContinuation.nov21ExactCheckoutAndSpecValidation` in the
+checkpoint. The exact `386c1086` PostgreSQL coverage run passed 29,835
+tests at 88.36% branch coverage. The full managed browser run on
+`fdc4dc8d` passed 650 active cases and retained five original skips.
+The newer local checkout test passed its exact PostgreSQL checks.
 [Current evidence](upgrade-2026-progress.md#november-21-combined-suite-and-linux-timing-replay) ·
 [Checkpoint](upgrade-2026-checkpoint.json).
 
-Full combined results and the current Linux strict run are pending.
+Current `2c576d2d` local suites, strict Linux AMD64 and native Linux
+ARM64 rehearsals are pending.
 Completion also depends on final annual forms, qualified human tax and
 AI reviews, missing provider qualification and a current protected
 Preview. Hosted security work is deferred at the owner's direction.
