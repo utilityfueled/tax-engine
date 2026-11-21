@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { resolveDeploymentMode } from "../../../../lib/deployment-mode";
 import { resolveHostedWorkspaceActor } from "../../../../lib/hosted-auth";
 import { containsUnsafeDirectIdentifier } from "../../../../lib/provider-request-privacy";
@@ -9,28 +10,25 @@ import {
   resolveClientIdentifier
 } from "../../../../lib/rate-limit";
 import { safeParseJsonBody } from "../../../../lib/safe-body-parser";
-import type {
-  ProviderInterviewAssistRequest,
-  ProviderInterviewAssistResponse
-} from "../../../../lib/provider-interview-request";
+import type { ProviderInterviewAssistResponse } from "../../../../lib/provider-interview-request";
 import { providerRateLimitStore } from "../shared-rate-limit";
 
-function isInterviewAssistRequest(value: unknown): value is ProviderInterviewAssistRequest {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
+const interviewSummaryInput = z.object({
+  task: z.literal("interview-assist"),
+  requestId: z.string(),
+  requestedAt: z.string(),
+  interview: z.object({
+    questions: z.array(z.object({
+      id: z.string(),
+      prompt: z.string(),
+      status: z.enum(["pending", "answered"]),
+    })),
+  }),
+  redactions: z.array(z.unknown()),
+  replacementCount: z.number(),
+});
 
-  const candidate = value as Partial<ProviderInterviewAssistRequest>;
-
-  return candidate.task === "interview-assist"
-    && typeof candidate.requestId === "string"
-    && typeof candidate.requestedAt === "string"
-    && !!candidate.interview
-    && Array.isArray(candidate.redactions)
-    && typeof candidate.replacementCount === "number";
-}
-
-function buildSummary(request: ProviderInterviewAssistRequest): ProviderInterviewAssistResponse {
+function buildSummary(request: z.infer<typeof interviewSummaryInput>): ProviderInterviewAssistResponse {
   const pendingQuestions = request.interview.questions.filter((question) => question.status === "pending");
   const nextQuestion = pendingQuestions[0] ?? null;
 
@@ -95,7 +93,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isInterviewAssistRequest(parsed.data)) {
+  const input = interviewSummaryInput.safeParse(parsed.data);
+  if (!input.success) {
     return NextResponse.json(
       { error: "Invalid provider interview request." },
       { status: 400 }
@@ -109,5 +108,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json(buildSummary(parsed.data));
+  return NextResponse.json(buildSummary(input.data));
 }

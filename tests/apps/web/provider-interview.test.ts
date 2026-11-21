@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ProviderDirectIdentifier,
   ReturnWorkspaceRecord,
@@ -317,5 +317,79 @@ describe("provider interview request path", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Provider interview request contains unredacted direct identifiers."
     });
+  });
+});
+
+describe("self-host interview summary input", () => {
+  const externalFetch = vi.fn<typeof fetch>();
+
+  beforeEach(() => {
+    vi.stubEnv("TAX_ENGINE_DEPLOYMENT_MODE", "self-host");
+    for (const variable of [
+      "MODEL_PROVIDER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY",
+      "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "KV_REST_API_URL", "KV_REST_API_TOKEN",
+    ]) vi.stubEnv(variable, undefined);
+    externalFetch.mockReset();
+    vi.stubGlobal("fetch", externalFetch);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  function sendInterview(interview: unknown) {
+    return POST(new Request("http://localhost/api/provider/interview", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-real-ip": "192.0.2.17" },
+      body: JSON.stringify({
+        task: "interview-assist",
+        requestId: "local-interview",
+        requestedAt: "2026-03-12T00:00:00.000Z",
+        redactions: [],
+        replacementCount: 0,
+        interview,
+      }),
+    }));
+  }
+
+  it("returns the existing 400 for incomplete interview summary fields", async () => {
+    const incomplete = [
+      {},
+      { questions: {} },
+      { questions: [{ id: "wages", prompt: "Confirm wages." }] },
+      { questions: [{ status: "pending", prompt: "Confirm wages." }] },
+      { questions: [{ id: "wages", status: "pending" }] },
+    ];
+    for (const interview of incomplete) {
+      const response = await sendInterview(interview);
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "Invalid provider interview request." });
+    }
+    expect(externalFetch).not.toHaveBeenCalled();
+  });
+
+  it("summarizes empty and populated self-host queues without a provider", async () => {
+    const empty = await sendInterview({ questions: [] });
+    expect(empty.status).toBe(200);
+    expect(await empty.json()).toMatchObject({
+      provider: "mock-local",
+      recommendedNextQuestionId: null,
+      pendingQuestionCount: 0,
+      summary: "All queued interview confirmations are complete.",
+    });
+
+    const completedClientRequest = buildProviderInterviewAssistRequest(createWorkspace(), {
+      now: "2026-03-12T00:00:00.000Z",
+    });
+    const pending = await sendInterview(completedClientRequest.interview);
+    expect(pending.status).toBe(200);
+    expect(await pending.json()).toMatchObject({
+      provider: "mock-local",
+      recommendedNextQuestionId: "withholding",
+      pendingQuestionCount: 1,
+      summary: "Need follow-up on 1 interview confirmation(s). Start with: Confirm federal and state withholding amounts from each wage statement.",
+    });
+    expect(externalFetch).not.toHaveBeenCalled();
   });
 });

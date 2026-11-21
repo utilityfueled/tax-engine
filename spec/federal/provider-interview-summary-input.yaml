@@ -1,0 +1,18 @@
+form: "Provider interview summary input"
+reference: "packages/contracts/src/index.ts; docs/ai-routing-accounting-spec.md"
+lines:
+  - line: "summary-input"
+    description: "Validate the fields used by the deterministic interview summary"
+    formula: >-
+      Require an interview questions array. Each question supplies a string
+      identifier, a string prompt and a pending or answered status. Return the
+      existing invalid-request 400 response for incomplete summary inputs.
+      Allow the remaining client metadata without requiring it for the summary.
+    testRef: "tests/apps/web/provider-interview.test.ts::returns the existing 400 for incomplete interview summary fields"
+  - line: "local-summary"
+    description: "Summarize an empty queue or the first pending question locally"
+    formula: >-
+      In self-host mode, an empty queue returns the completion summary and a
+      populated queue reports its pending count and first pending question.
+      Minimal and complete client payloads work without provider configuration.
+    testRef: "tests/apps/web/provider-interview.test.ts::summarizes empty and populated self-host queues without a provider"

@@ -35,7 +35,7 @@
     "apps/web/src/app/api/hosted/workspaces/route.ts": "14232e61ad5f7a7dbe9e77ae11411fa5ea078ba65c564bb24cee270aa0d26bfd",
     "apps/web/src/app/api/hosted/workspaces/shared-handlers.ts": "390d21999309329f55e29c62b7aeb34b34b4ccc42b6df9bf2da02f9f82f4c822",
     "apps/web/src/app/api/provider/export-draft/route.ts": "60cccc577abe562f6b02953354a9a63d4197eb3be0bb7b9ef51e701aa52ad040",
-    "apps/web/src/app/api/provider/interview/route.ts": "de1c8ee3ed9e07851b5b5521ee6cd2325f47cf420a37fb0c94cc16645f49413f",
+    "apps/web/src/app/api/provider/interview/route.ts": "53195f8d3f2385083a74f0f71ee720249f00cf952698004116ce848cad6feb99",
     "apps/web/src/app/api/provider/shared-rate-limit.ts": "2f4b7863b44aea782fb947101781155c9d11939beff88f0bcc0715c631d1e511",
     "apps/web/src/app/api/provider/workspace/route.ts": "e2a1bbeb393325177d8d2c45e99e60c3b9bc86910db7765ffe8321638514e5e9",
     "apps/web/src/app/api/self-employment-income-analysis/route.ts": "554929542d9e239e725dde7e23ea0ea431d6d755c44801da0da28ccd033b497d",
