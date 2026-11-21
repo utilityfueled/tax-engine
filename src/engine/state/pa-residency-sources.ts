@@ -74,6 +74,7 @@ function deriveResidency(source: PAResidencySources, year: number) {
   let totalDays = 0;
   r.domicilePeriods.forEach((p, i) => { reference(p.state); if (!/^[A-Z]{2}$/.test(p.state) || !Number.isInteger(p.daysInPA) || p.daysInPA === null || p.daysInPA < 0 || p.daysInPA > periods[i].through - periods[i].from + 1) error("actual state and physical-presence day worksheet required for every domicile period"); totalDays += p.daysInPA as number; });
   let derived: PAResidencyStatus;
+  let floridaMoveResident = false;
   if (periods.length === 1) {
     if (r.domicilePeriods[0].state === "PA") derived = paAbodes.length === 0 && covers(outsideAbodes, first, last) && totalDays <= 30 ? "nonresident" : "resident";
     else if (paAbodes.length > 0 && totalDays > 183) {
@@ -82,11 +83,17 @@ function deriveResidency(source: PAResidencySources, year: number) {
     } else derived = "nonresident";
   } else {
     if (r.moveAbandonmentNewDomicileAndPresenceConfirmed !== true || r.domicilePeriods.filter(p => p.state === "PA").length !== 1) return error("one actual PA domicile move requires abandonment, new domicile and physical-presence sources");
-    // The Department's one-move guidance includes day 183. Section 301(p) uses more than 183 days.
-    if (paAbodes.length > 0 && totalDays >= 183) return error("one-move residency with a PA permanent abode and 183 or more confirmed PA days requires a separate residency method");
     const paIndex = r.domicilePeriods.findIndex(p => p.state === "PA"), pa = periods[paIndex], outside = periods[paIndex === 0 ? 1 : 0];
-    if (!covers(paAbodes, pa.from, pa.through) || paAbodes.some(p => p.from <= outside.through && p.through >= outside.from)) return error("mixed statutory-abode/part-year residency requires its separate actual source method");
-    derived = "part_year";
+    const matchingPAAbode = covers(paAbodes, pa.from, pa.through) && !paAbodes.some(p => p.from <= outside.through && p.through >= outside.from);
+    if (paAbodes.length > 0 && totalDays >= 183) {
+      // The Department's one-move guidance includes day 183. Section 301(p) uses more than 183 days.
+      floridaMoveResident = year === 2026 && totalDays > 183 && r.status === "resident" && paIndex === 1
+        && r.domicilePeriods[0].state === "FL" && r.dec31PrincipalResidenceState === "PA" && matchingPAAbode
+        && covers(outsideAbodes, outside.from, outside.through) && outsideAbodes.every(p => p.through < pa.from);
+      if (!floridaMoveResident) return error("one-move residency with a PA permanent abode and 183 or more confirmed PA days requires a separate residency method");
+    }
+    if (!matchingPAAbode) return error("mixed statutory-abode/part-year residency requires its separate actual source method");
+    derived = floridaMoveResident ? "resident" : "part_year";
   }
   if (derived !== r.status) return error("claimed residency contradicts actual domicile, abode or day sources");
   // Principal residence for the actual school-district source is not inferred from domicile.
@@ -95,12 +102,13 @@ function deriveResidency(source: PAResidencySources, year: number) {
     if (!/^\d{5}$/.test(r.schoolDistrictCode) || r.schoolDistrictCode === "99999" || !r.schoolDistrictName.trim()) return error("actual December31 PA school district source is required");
   } else if (r.schoolDistrictCode !== "99999") return error("actual outside-PA December31 principal residence uses instructed school code99999");
   const residentPeriods = derived === "resident" ? [{ from: first, through: last }] : derived === "nonresident" ? [] : periods.filter((_, i) => r.domicilePeriods[i].state === "PA");
-  return { status: derived, periods, residentPeriods };
+  return { status: derived, periods, residentPeriods, floridaMoveResident, totalDays };
 }
 
 // Exact inert values inserted by PAResidentReturnSchema around a retained OID source.
 // This does not qualify any other legacy method or replace actual source proof.
 const oidLegacySchemaZeroKeys = new Set<string>(["unreimbursedExpenses", "otherDeductions", "creditFromPriorYear", "extensionPayment", "estimatedPayments", "nonresidentTaxWithheld", "nontaxableIncome", "additionalEligibilityIncome", "spouseEligibilityIncome", "estateTrustIncome", "otherCredits", "priorYearPATaxableIncome", "priorYearTaxForgivenessCredit", "useTax", "lateFilingOrPaymentPenalty", "latePaymentInterest"]);
+const floridaMoveSourceKeys = new Set<keyof PAResidencySources>(["sourceTaxYear", "sourceReference", "sourceFactsConfirmed", "owner", "residency", "wages", "interest", "otherPAIncomeClassesConfirmedNone", "otherPAAdjustmentsConfirmedNone"]);
 
 function reconcileOIDOverride(input:TaxYearInput,source:PAResidencySources,amount:(value:unknown)=>Decimal):void {
   if(input.paNonresidentReturn!==undefined)return error('retained PA nonresident override needs its actual source integration');
@@ -156,6 +164,14 @@ function amount(value: unknown): Decimal {
 
   reconcileOIDOverride(input,source,amount);
   const residency = deriveResidency(source, year);
+  if (residency.floridaMoveResident) {
+    if (input.taxpayer.filingStatus !== "single" || input.w2s.length !== 1 || input.w2s[0].taxYear !== 2026) return error("the Florida move requires a single owner with one actual 2026 W-2");
+    if (input.taxpayer.stateResidency !== undefined && input.taxpayer.stateResidency !== "full-year") return error("reconcile the conflicting retained residency selection with the confirmed full-year PA claim");
+    if (source.residency.domicilePeriods.some(p => p.daysInPA === 0)) return error("PA services in both domicile periods require actual PA physical presence in each period");
+    const hasSpecializedSources = Object.entries(source).some(([key, value]) => !floridaMoveSourceKeys.has(key as keyof PAResidencySources)
+      && value !== undefined && (!Array.isArray(value) || value.length > 0));
+    if (source.interest.length || input.form1099Int.length || hasSpecializedSources || input.paReciprocitySources !== undefined || input.paResidentReturn !== undefined) return error("the Florida move requires complete wage-only originals and no other PA adjustments");
+  }
   const royaltySources=calculatePAOrdinaryRoyaltySources(input,source.royaltySources,residency);
   const remainingMisc=input.form1099Misc.map((original,index)=>({original,index})).filter(row=>!royaltySources.coveredOriginalIndices.includes(row.index));
   if((input.form1099OID.length||remainingMisc.length)&&source.oidAndMiscSources===undefined)return error("retained OID/MISC originals require their complete actual source method");
@@ -237,12 +253,17 @@ function amount(value: unknown): Decimal {
     }
     let gross = new Money(0), included = new Money(0), excluded = new Money(0), reciprocalExcluded = new Money(0);
     const references = new Set<string>();
+    const paidDomicilePeriods = new Set<number>();
     for (const [payrollIndex, payroll] of row.payroll.entries()) {
       reference(payroll.sourceReference); if (references.has(payroll.sourceReference.trim())) return error("duplicate payroll-source reference"); references.add(payroll.sourceReference.trim());
       const paid = day(payroll.paidOn, year), from = day(payroll.serviceFrom, year), through = day(payroll.serviceThrough, year);
       if (from > through || domicilePeriodAt(from) !== domicilePeriodAt(through) || domicilePeriodAt(paid) !== domicilePeriodAt(from)) return error("cross-period or deferred compensation requires its actual source method");
       const total = amount(payroll.grossCompensation), pa = amount(payroll.paServicesCompensation), outside = amount(payroll.outsidePAServicesCompensation);
       if (!pa.plus(outside).eq(total)) return error("actual payroll PA/outside amounts must exactly reconcile gross; no missing residual");
+      if (residency.floridaMoveResident) {
+        if (!outside.isZero()) return error("the Florida move requires original compensation entirely from PA services");
+        if (total.gt(0)) paidDomicilePeriods.add(domicilePeriodAt(paid));
+      }
       if (!residentAt(paid) && ["IN", "MD", "NJ", "OH", "VA", "WV"].includes(source.residency.domicilePeriods[domicilePeriodAt(paid)].state) && pa.gt(0)) {
         const classification = reciprocal?.segments.find(s => s.originalIndex === row.originalIndex && s.payrollIndex === payrollIndex);
         if (!classification || !classification.excludedPACompensation.plus(classification.taxablePAServices).eq(pa)) return error("reciprocal compensation requires actual employee and owner exception sources before admission");
@@ -252,6 +273,14 @@ function amount(value: unknown): Decimal {
     }
     if (!gross.eq(amount(w2.wages))) return error("actual payroll ledger does not reconcile current original W2 compensation");
     const actualRows = actualW2Rows.get(row.originalIndex as number);
+    if (residency.floridaMoveResident) {
+      if (paidDomicilePeriods.size !== residency.periods.length) return error("the Florida move requires original PA payroll in both domicile periods");
+      if (actualRows === undefined) {
+        if (w2.state !== "PA" || w2.stateWages === undefined || w2.stateTaxWithheld === undefined) return error("the Florida move requires actual PA W-2 Boxes 16 and 17");
+      } else if (actualRows.stateRows.length !== 1 || actualRows.stateRows[0].state !== "PA") {
+        return error("the Florida move requires one actual PA W-2 state row");
+      }
+    }
     const reportedPAWages = actualRows === undefined ? (w2.state === "PA" ? amount(w2.stateWages) : undefined) : actualRows.stateRows.find(state => state.state === "PA")?.wages;
     if (reportedPAWages !== undefined && !reportedPAWages.eq(included)) {
       if (!employee) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
@@ -346,6 +375,7 @@ function amount(value: unknown): Decimal {
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
   const audit = new AuditTrail();
+  if (residency.floridaMoveResident) audit.record("PA-Residency-Sources", "florida-move-residency", "Confirmed PA physical-presence days", new Money(residency.totalDays), "One Florida-to-PA domicile move, confirmed permanent PA abode and more than 183 PA days; apply the full-year PA wage basis");
   audit.record("PA-Residency-Sources", "compensation", "Actual ordinary taxable PA compensation", compensation, "Resident-period all-source plus nonresident-period actual PA services, less actual reciprocal employee exclusions; complete original payroll reconciliation");
   audit.record("PA-Residency-Sources", "interest", "Actual ordinary taxable PA bank interest", interest, "Actual dated personal bank credits during resident periods; nonresident ordinary bank credits excluded");
   audit.record("PA-Residency-Sources", "reported-compensation", "Reported ordinary PA compensation", reportedCompensation, "Aggregate exact actual compensation class, then round once to whole dollars");

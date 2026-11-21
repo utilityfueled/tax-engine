@@ -38,11 +38,12 @@ lines:
       part-year method requires fewer than 183 total PA days and retains its
       permanent-abode coverage and move evidence requirements. Hold possible
       full-year cases with a confirmed PA permanent abode and more than 183
-      total days, regardless of the selected residency. Also hold exactly
+      total days, regardless of the selected residency, except for the finite
+      Florida-to-PA full-year method in pa-2026-ordinary-draft.yaml. Hold exactly
       183 days with that abode because the statute and the Department's
       one-move guidance use different threshold wording. This branch leaves
       single-domicile statutory residency and no-PA-abode cases in their
-      existing methods and supplies no alternate full-year calculation.
+      existing methods.
     irsRef: "PA Tax Reform Code §301(p); PA Department of Revenue Determining Residency, When is a person considered a part-year resident?"
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 one-move draft holds annual PA presence at and above the separate-method boundary"
   - line: "compensation"

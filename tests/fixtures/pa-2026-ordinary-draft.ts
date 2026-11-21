@@ -18,3 +18,21 @@ export function rebindPA2026Draft(f:ReturnType<typeof paOrdinaryReturnFixture>){
  f.facts.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
  f.sources.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
 }
+
+export function pa2026FloridaMoveResidentFixture() {
+ const f = pa2026OrdinaryDraftFixture('part_year');
+ const residency = f.input.paResidencySources.residency;
+ residency.status = 'resident';
+ residency.sourceReference = 'Fictional Florida-to-PA move and permanent abodes with 200 documented PA days';
+ Object.assign(residency.domicilePeriods[0], { state: 'FL', daysInPA: 40 });
+ residency.domicilePeriods[1].daysInPA = 160;
+ f.input.taxpayer.address = { street: '10 Fictional Way', city: 'Pittsburgh', state: 'PA', zip: '15222' };
+ for (const payroll of f.input.paResidencySources.wages[0].payroll) {
+  payroll.paServicesCompensation = payroll.grossCompensation;
+  payroll.outsidePAServicesCompensation = '0';
+ }
+ Object.assign(f.input.w2s[0], { stateWages: '75000', stateTaxWithheld: '2303' });
+ Object.assign(f.sources.otherStateTaxes.jurisdictions[0], { state: 'FL', sourceReference: 'Fictional complete Florida zero income-tax history' });
+ rebindPA2026Draft(f);
+ return f;
+}
