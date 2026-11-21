@@ -1,5 +1,28 @@
 # 2026 upgrade implementation evidence
 
+## November 21 guided first-home IRA worksheet
+
+Commit `eead6b7a` collects the original statement, receipt date, binding
+contract, qualifying payment and prior lifetime use in the regular
+2025 workspace. The supported interview case uses one purchase-price
+payment by the unmarried IRA owner for the owner's main home.
+Edited statements or receipts, blank prior use, unsupported facts and
+unresolved additional retirement worksheets hold calculation.
+
+The actual workspace review PDF preserved $7,000 of taxable IRA income.
+The partial exception printed $6,000 under Code 09 and $100 additional
+tax. The independently checked full exception produced one redacted
+Form 5329 with $7,000 on lines 1 and 2, Code 09, and no additional tax.
+Saved interview facts stayed unchanged. The final integrated source
+passed 57 focused tests, core, contracts and web type checks, 9,854
+spec references, the inventory and the browser source audit. Scoped
+lint reported zero errors and 14 warnings.
+The same source passed all eight guided IRA and local recovery cases
+in production Chromium at 30 seconds with zero retries. The core build
+and production web build passed. Full lint reported zero errors and
+12,167 warnings.
+[Independent tax review assignments](upgrade-2026-human-retirement-20261121.md).
+
 ## November 21 first-home IRA review export
 
 Commit `b3f07a0b` attaches one 2025 Form 5329 for a wholly excepted,

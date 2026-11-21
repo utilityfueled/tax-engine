@@ -1,5 +1,26 @@
 {
   "activeContinuation": {
+    "nov21GuidedFirstHomeIra": {
+      "commit": "eead6b7a9f8a66c1800ee0b772b8b673d2a3897e",
+      "authorFocusedTestsPassed": 249,
+      "finalExactFocusedTestsPassed": 57,
+      "specRefsValid": 9854,
+      "allThreeTypechecksPassed": true,
+      "inventoryAndBrowserAuditPassed": true,
+      "scopedLintErrors": 0,
+      "scopedLintWarnings": 14,
+      "productionChromiumCasesPassed": 8,
+      "browserCaseLimitMs": 30000,
+      "browserRetries": 0,
+      "coreBuildPassed": true,
+      "webBuildPassed": true,
+      "fullLintErrors": 0,
+      "fullLintWarnings": 12167,
+      "normalWorkspacePartialTax": "100",
+      "independentNormalWorkspaceFullException": {"line1": "7000", "line2": "7000", "exceptionCode": "09", "additionalTax": "0", "redacted": true, "savedStatePreserved": true},
+      "humanReviewStatus": "unassigned",
+      "filingEnabled": false
+    },
     "nov21FirstHomeIraReviewExport": {
       "commit": "b3f07a0b6e06ff887078bc49944a3d8c9682969e",
       "authorFocusedTestsPassed": 1059,

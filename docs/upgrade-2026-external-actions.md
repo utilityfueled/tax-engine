@@ -16,6 +16,12 @@ requires authorization.
 | Strict Linux runtime verification | Qualify the release source on both strict architectures at the existing 30-second limit. Managed Linux on `f9cb2c54` passed 650 cases. Strict AMD64 passed 644 with six Ohio deadlines. Strict ARM64 passed image smoke, Compose recovery and cleanup, then recorded 642 browser passes and eight failures. All three runs retained five existing skips. [Managed and AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44946102783) · [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44946369818). |
 | Current Stripe Sandbox checkout and credits | The protected `069c994f` Preview passed 12 workspace lifecycle checks and four billing-page checks per synthetic account. The Viva La Tax Sandbox lists the active $19 Starter and $49 Plus monthly prices. Its enabled checkout webhook matches the bound `522cf4b1` Preview. The Vercel connector returned 403 on Preview environment metadata, so the deployed Starter price binding and synthetic customer, postal behavior, return behavior and cleanup still need verification. Then capture signed delivery and verify the exact event and Session in the scoped test records. Positive credits still require the isolated test path. [Preview and checkout evidence](upgrade-2026-progress.md#november-21-paid-estimates-on-the-federal-review-return). |
 
+The [retirement supplement](upgrade-2026-human-retirement-20261121.md)
+adds independent assignments for the IRA first-home timing and lifetime
+limit, a fully excepted Code 1 distribution, and the actual date when the
+owner reaches age 59½. Give the reviewer the original facts and blank
+worksheet before sharing engineering outputs.
+
 For Ohio extension and balance payments on federal Schedule A, obtain
 redacted original records that identify the cash-payment date, liability
 year and amount applied to income tax. A direct official payment allocation
