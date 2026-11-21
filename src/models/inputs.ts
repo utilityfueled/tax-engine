@@ -4435,7 +4435,7 @@ export const Form8615Schema = z.object({
     parentAdjustedLine16Tax: decimal.refine(value => d(value).isFinite() && d(value).gte(0)),
     noOtherChildUsesParentReturn: z.literal(true),
     childUsesOrdinaryQdcgWorksheet: z.literal(true),
-    /** Worksheet 2: deductible Schedule A expenses directly connected to QD or net capital gain, including zero. */
+    /** Worksheets 2 and 3: deductible Schedule A expenses directly connected to QD or net capital gain, including zero. */
     childPreferentialIncomeConnectedDeductions: decimal.refine(value => d(value).isFinite() && d(value).gte(0)).optional(),
   }).optional(),
 }).refine(input => !input.childItemizesDeductions || input.childDirectlyConnectedItemizedDeductions !== undefined, {

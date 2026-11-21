@@ -3546,18 +3546,22 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       .some(amount => amount.gt(0));
     let requiresSeparatePreferentialMethod = false;
     if (hasPreferentialSources && taxableIncome.gt(0)) {
+      const supportsEarlyWithdrawalPenalty = year === 2025;
+      const allowedEarlyWithdrawalPenalty = supportsEarlyWithdrawalPenalty ? sched1.earlyWithdrawalPenalty : d("0");
       const otherTaxableIncome = [tipPayroll.income, form8919?.line6, form1099R.disabilityPensionWages,
         taxableAdoptionBenefits, foreignEmploymentNotOnW2, taxableCareBenefits, movingReimbursement,
-        iraTaxable, pensionTaxable, socialSecurityBenefitsTaxable, adjustments]
+        iraTaxable, pensionTaxable, socialSecurityBenefitsTaxable]
         .some(amount => amount !== undefined && !amount.isZero());
-      const schedule1Income = sched1.lines.some(line => line.form === "Sched 1" && !line.value.isZero());
+      const otherSchedule1Items = sched1.lines.some(line => line.form === "Sched 1" && !line.value.isZero()
+        && !(supportsEarlyWithdrawalPenalty && (line.line === "18" || line.line === "26")));
       requiresSeparatePreferentialMethod = Boolean(
-        !totalWages.eq(w2Agg.wages) || otherTaxableIncome || schedule1Income
+        !totalWages.eq(w2Agg.wages) || otherTaxableIncome || otherSchedule1Items
+        || allowedEarlyWithdrawalPenalty.lt(0) || !adjustments.eq(allowedEarlyWithdrawalPenalty)
         || capitalGainLoss.lt(0) || input.form2555 || input.scheduleJ
         || input.form8814?.length || input.scheduleK1.length || input.scheduleK1Form1041?.length
         || section1250Gain.gt(0) || collectiblesGain.gt(0),
       );
-      const reconciled = d(form8615.childUnearnedIncome).eq(agi.minus(totalWages))
+      const reconciled = d(form8615.childUnearnedIncome).eq(totalIncome.minus(totalWages).minus(allowedEarlyWithdrawalPenalty))
         && reportedQualifiedDividends.eq(qualifiedDividends) && reportedNetCapitalGain.eq(netLTCG);
       // The supported income sources can verify Line 1 even before the form's stop rules.
       if ((!childItemizes || !requiresSeparatePreferentialMethod) && (requiresSeparatePreferentialMethod || !reconciled)) {

@@ -32,7 +32,13 @@ lines:
   - line: "1"
     description: "Child's unearned income"
     formula: "Sum of child's investment income: interest, dividends, capital gains, rents, royalties, and other unearned income"
-    irs_reference: "Form 8615 Instructions, Line 1"
+    notes: >-
+      For 2025 federal preferential worksheets with supported investment income
+      and optional ordinary W-2 wages, reconcile the reported amount to Form 1040
+      Line 9 less ordinary W-2 wages and any Schedule 1 Line 18 early withdrawal
+      penalty. Other adjustments and other individual Schedule 1 income lines
+      require a separate method, even when opposing Schedule 1 items net to zero.
+    irs_reference: "2025 Form 8615 Instructions, Line 1 and Child's Unearned Income Worksheet lines 1–3 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf#page=3)"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 1 - child's unearned income flows from input"
 
   - line: "2"
@@ -91,9 +97,9 @@ lines:
       reported preferential amounts fit within the child's Line 1 income.
     notes: >-
       The federal entry reconciles child amounts to actual federal qualified
-      dividends and positive net capital gain, and reconciles Line 1 to federal
-      AGI less ordinary W-2 wages. Require only these investment sources and
-      optional ordinary W-2 wages, without adjustments or special tax paths.
+      dividends and positive net capital gain and reconciles Line 1 to Form 1040
+      Line 9 less ordinary W-2 wages and any Schedule 1 Line 18 early withdrawal
+      penalty. Other adjustments and special tax paths require a separate method.
       Reconcile the federal income sources before accepting a reported Line 3
       stop. Apply the Lines 3 and 5 stop rules before requiring Worksheet 1
       method facts. An unsupported composition requires a separate worksheet.

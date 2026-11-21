@@ -405,6 +405,30 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.allLines).toContainEqual(expect.objectContaining({
       form: "1040", line: "16", value: new Decimal("101"),
     }));
+
+    const higherInterest = {
+      ...input,
+      form1099Int: [{ ...input.form1099Int[0], interestIncome: "6000" }],
+    };
+    expect(() => calculateFederalTax(higherInterest)).toThrow(/Form 8615.*reconcile.*federal/);
+
+    const correctedInput = {
+      ...higherInterest,
+      form8615: makeInput({
+        ...input.form8615,
+        ...ordinaryParentWorksheet,
+        childUnearnedIncome: "6200",
+        preferentialWorksheetFacts: {
+          ...ordinaryParentWorksheet.preferentialWorksheetFacts,
+          childPreferentialIncomeConnectedDeductions: "0",
+        },
+      }),
+    };
+    const corrected = calculateFederalTax(correctedInput);
+    expect(corrected.form8615?.netUnearnedAtParentRate.toFixed()).toBe("3350");
+    expect(corrected.allLines).toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", description: "Tax (Form 8615)", value: new Decimal("1161"),
+    }));
   });
 
   it.each([undefined, "-0.01", "2000.01"])("requires Worksheet 2 connected expenses within the Line 2 amount (%s)", amount => {
