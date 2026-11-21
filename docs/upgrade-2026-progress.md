@@ -84,7 +84,14 @@ read-only check found the same 19 recovery source files and four tool
 hashes as the saved controller contract. The existing public native ARM64
 workflow started on `0a167ed2` without using the Mac VM. It passed
 native image builds, candidate smoke and isolated Compose recovery.
-Its strict browser suite is running.
+The strict browser suite passed 642 cases, retained five original
+skips and hit eight 30-second Ohio deadlines. Both RRTA cases passed.
+The rehearsal browser container stopped and was removed successfully.
+All eight affected cases are in the two frozen AMD64 diagnostic batches.
+The logs include PDF response or download waits, draft reads and field
+or confirmation actions. One reciprocal-refund case produced a PDF
+before its deadline. Timing attribution and the strict ARM64 browser
+gate remain open.
 [Native ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44881255619).
 
 ## November 21 Pennsylvania resident draft after a documented Florida move

@@ -14,8 +14,9 @@ The newer local checkout test passed its exact PostgreSQL checks.
 All 11 required local commands passed on `2c576d2d`. The unit and
 coverage suites each passed 29,837 tests. The managed browser suite
 passed 650 active cases with five original skips. Docker build passed
-on `aa75bb2d`. The strict Linux AMD64 and native Linux ARM64 browser
-runs are pending.
+on `aa75bb2d`. Native ARM64 passed image builds, smoke, recovery and
+cleanup, with eight strict Ohio browser deadlines. The Linux AMD64
+timing rehearsal is running.
 Completion also depends on final annual forms, qualified human tax and
 AI reviews, missing provider qualification and a current protected
 Preview. Hosted security work is deferred at the owner's direction.

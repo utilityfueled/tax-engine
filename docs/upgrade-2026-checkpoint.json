@@ -36,7 +36,7 @@
       "verifiedBrowserCollectionCases": 655,
       "failedTimingPredecessor": { "source": "7ebce850", "workflowId": 44874893916, "managedPassed": 648, "managedFailed": 2, "strictPassed": 637, "strictFailed": 13, "originalSkipsPerJob": 5, "verifiedReplayCases": 0 },
       "currentTimingRun": { "source": "156bd0b7", "workflowId": 44880786265 },
-      "currentNativeArmRun": { "source": "0a167ed2", "workflowId": 44881255619, "localFreeDiskGiB": 393, "localRequiredFreeDiskGiB": 512, "remoteImageBuildSmokeAndComposeSucceeded": true },
+      "currentNativeArmRun": { "source": "0a167ed2", "workflowId": 44881255619, "localFreeDiskGiB": 393, "localRequiredFreeDiskGiB": 512, "remoteImageBuildSmokeAndComposeSucceeded": true, "browserPassed": 642, "browserFailed": 8, "browserOhioDeadlines": 8, "browserOriginalSkips": 5, "ownedContainerCleanupPassed": true },
       "readyCurrentProtectedPreview": false
     },
     "nov21TaxableDexExecutionYear": {
