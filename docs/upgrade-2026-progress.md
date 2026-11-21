@@ -1,5 +1,116 @@
 # 2026 upgrade implementation evidence
 
+## 2025 Form 8615 early withdrawal penalty reconciliation
+
+`2d97913e` verifies Form 8615 line 1 from actual Form 1040 total
+income less ordinary W-2 wages and a Schedule 1 line 18 penalty. The
+supported method requires that the penalty be the only adjustment and
+keeps the checks for separate Schedule 1 income entries. The valid
+$2,800 case stops at line 3 and leaves $101 on Form 1040 line 16.
+With a higher bank statement, an unchanged $2,800 report now fails
+reconciliation against the actual $6,200. Correcting the report
+produces $3,350 on Form 8615 line 5 and $1,161 on Form 1040 line 16.
+[IRS Child's Unearned Income Worksheet](https://www.irs.gov/pub/irs-prior/i8615--2025.pdf#page=3).
+
+All 615 combined focused tests, both type checks, 9,740 spec references,
+35 browser timing contracts, the inventory check and the TypeScript
+build passed on the isolated archive. Scoped lint had no errors and 13
+existing warnings. Other unsupported source compositions and qualified
+human tax review remain open.
+
+The exact PostgreSQL-backed coverage run passed 29,717 tests in 2,173
+files at 88.29% branch coverage. The temporary database stopped normally.
+Vercel canceled the production deployment. GitHub Actions tracks this
+application revision in [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44863960676),
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644),
+and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44863960693).
+
+## Guided federal estimated-payment application
+
+`01fcb98d` requires the actual IRS application year for a federal
+estimate paid in January of the selected return year or outside it.
+The same January 15 payment can belong to either of two consecutive
+returns. Existing saved rows retain their dates, exact amounts and
+confirmations. A row that lacks a required confirmation is incomplete
+until the taxpayer checks the payment record. Payments explicitly
+entered as extensions retain their existing date and application rules.
+[IRS Direct Pay payment types](https://www.irs.gov/payments/types-of-payments-available-to-individuals-through-direct-pay) ·
+[Form 1040 instructions](https://www.irs.gov/instructions/i1040gi).
+
+The isolated archive passed 59 focused tests, root and web type checks,
+all 9,740 spec references, the inventory check and 35 timing contracts.
+Both existing desktop and mobile production-build browser journeys
+passed with zero retries. The changed January case is covered by the
+guided component and saved-state tests. The raw engine and state
+payment entry points retain their existing behavior.
+
+## 2025 Form 8615 preferential Worksheet 3
+
+`b864c369` adds the 2025 worksheet used when positive line 5 is less
+than line 3. It uses the federal return's AGI and actual selected
+deduction. The itemizing path reuses the separately reported
+preferential-income expenses. For the itemizer with $10,000 of AGI and
+$4,000 of deductions, the worksheet puts $1,650 of qualified dividends
+and $1,100 of net capital gain on line 5 and produces $1,453 of tax.
+The standard-deduction case includes $2,500 of wages in its $22,500
+AGI and produces $1,905 of tax. Standalone calls without the federal
+context and other unsupported tax compositions still require a
+separate method. [IRS Form 8615 instructions](https://www.irs.gov/pub/irs-prior/i8615--2025.pdf).
+
+All 583 focused tests passed on the isolated source archive, along with
+all 9,740 spec references, 35 browser timing contracts, the inventory
+check and type checking. Qualified human tax review remains open.
+
+## 2025 Form 8615 Worksheet 1 for itemizers at the threshold
+
+`f23bf92c` applies Worksheet 1 when the child's actual Schedule A
+connected deductions leave line 2 at $2,700 and lines 3 and 5 are
+equal and positive. The federal fixture reports $1,350 of connected
+deductions and $2,000 on Schedule A. It puts $1,460 of qualified
+dividends and $365 of net capital gain on line 5 and $2,030 of tax on
+Form 1040 line 16. Worksheet 2 and Worksheet 3 require their own
+preferential-expense amount for an itemizer when applicable.
+[IRS Form 8615 instructions](https://www.irs.gov/pub/irs-prior/i8615--2025.pdf).
+
+All 615 combined focused tests, both type checks, 9,740 spec references,
+35 browser timing contracts and the inventory check passed.
+The exact PostgreSQL-backed coverage run passed 29,717 tests in 2,173
+files at 88.29% branch coverage. Its temporary database stopped normally.
+
+## 2025 Form 8615 preferential Worksheet 2
+
+`7d25dfa3` adds the 2025 calculation for an itemizing child with
+line 2 above $2,700 and equal positive lines 3 and 5. The return requires
+the separately reported deductible expenses connected to qualified
+dividends or net capital gain, including an explicit zero. In the
+independently derived federal fixture, $5,000 of taxable interest,
+$3,000 of qualified dividends and $2,000 of net capital gain give
+$6,650 on Form 8615 line 5, of which $2,295 is qualified dividends and
+$1,530 is net capital gain. With $2,000 on Schedule A, $500 of it connected
+to those preferential sources, the child-rate portion is $1,350 and the
+tax on Form 1040 line 16 is $1,497. [IRS Form 8615 instructions](https://www.irs.gov/pub/irs-prior/i8615--2025.pdf) ·
+[2025 IRS Tax Table](https://www.irs.gov/instructions/i1040gi).
+
+All 552 focused tests, 9,739 tracked spec references, 35 original
+browser timing contracts, the inventory check, and type checking passed.
+Exact local PostgreSQL-backed coverage passed 29,712 tests across 2,173
+files, at 88.29% branch coverage. Its temporary database stopped normally.
+Vercel listed the production deployment as canceled.
+Scoped lint reported zero errors and 13 pre-existing warnings. An
+independent engineering review reproduced the newly tested line 3 stop
+and checked the allocation and rounding. For sources outside the supported
+federal composition, a reported stop still relies on the reported line 1
+amount. This package left other worksheet and tax methods open. The
+entry above records the subsequent Worksheet 3 work. Qualified human
+tax review is still open.
+
+The IRS current form and instruction links still serve the 2025
+revisions. The 2026 draft form and draft instructions are available.
+[Current Form 8615](https://www.irs.gov/pub/irs-pdf/f8615.pdf) ·
+[Current instructions](https://www.irs.gov/pub/irs-pdf/i8615.pdf) ·
+[2026 draft form](https://www.irs.gov/pub/irs-dft/f8615--dft.pdf) ·
+[2026 draft instructions](https://www.irs.gov/pub/irs-dft/i8615--dft.pdf).
+
 ## November 20 final 2026 Form 8919 transfer destinations
 
 `b7cba0fd` records the destinations printed on the final 2026 Form 8919

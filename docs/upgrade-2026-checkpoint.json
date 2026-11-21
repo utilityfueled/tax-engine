@@ -1,5 +1,93 @@
 {
   "activeContinuation": {
+    "nov20Form8615EarlyWithdrawalSource": {
+      "source": "2d97913e",
+      "officialLine1Worksheet": "https://www.irs.gov/pub/irs-prior/i8615--2025.pdf#page=3",
+      "validStopTax": "101",
+      "correctedActiveTax": "1161",
+      "exactCombinedFocusedTestsPassed": 615,
+      "exactPostgresCoverageTestsPassed": 29717,
+      "exactCoverageFilesPassed": 2173,
+      "exactBranchCoveragePercent": 88.29,
+      "localPostgresStoppedNormally": true,
+      "trackedSpecReferencesPassed": 9740,
+      "originalTimingContractTestsPassed": 35,
+      "rootAndWebTypechecksPassed": true,
+      "inventoryCheckPassed": true,
+      "typescriptBuildPassed": true,
+      "vercelProductionDeployment": "CANCELED",
+      "githubWorkflowRunIds": {
+        "ci": 44863960676,
+        "web": 44863960644,
+        "docker": 44863960693
+      },
+      "qualifiedHumanTaxReview": false,
+      "releasePromotionQualified": false
+    },
+    "nov20Form8615Worksheet1ThresholdItemizer": {
+      "source": "f23bf92c",
+      "officialInstructions": "https://www.irs.gov/pub/irs-prior/i8615--2025.pdf",
+      "federalFixtureTax": "2030",
+      "exactCombinedFocusedTestsPassed": 615,
+      "exactPostgresCoverageTestsPassed": 29717,
+      "exactBranchCoveragePercent": 88.29,
+      "localPostgresStoppedNormally": true,
+      "trackedSpecReferencesPassed": 9740,
+      "originalTimingContractTestsPassed": 35,
+      "rootAndWebTypechecksPassed": true,
+      "qualifiedHumanTaxReview": false,
+      "releasePromotionQualified": false
+    },
+    "nov20GuidedFederalEstimatedPaymentApplication": {
+      "source": "01fcb98d",
+      "officialPaymentTypes": "https://www.irs.gov/payments/types-of-payments-available-to-individuals-through-direct-pay",
+      "exactFocusedTestsPassed": 59,
+      "localProductionBuildBrowsersPassed": 2,
+      "browserRetries": 0,
+      "originalTimingContractTestsPassed": 35,
+      "trackedSpecReferencesPassed": 9740,
+      "rootAndWebTypechecksPassed": true,
+      "inventoryCheckPassed": true,
+      "releasePromotionQualified": false
+    },
+    "nov20Form8615PreferentialWorksheet3": {
+      "source": "b864c369",
+      "officialInstructions": "https://www.irs.gov/pub/irs-prior/i8615--2025.pdf",
+      "itemizedFederalFixtureTax": "1453",
+      "standardFederalFixtureTax": "1905",
+      "exactFocusedTestsPassed": 583,
+      "trackedSpecReferencesPassed": 9740,
+      "originalTimingContractTestsPassed": 35,
+      "inventoryCheckPassed": true,
+      "typecheckPassed": true,
+      "qualifiedHumanTaxReview": false,
+      "releasePromotionQualified": false
+    },
+    "nov20Form8615PreferentialWorksheet2": {
+      "source": "7d25dfa3",
+      "officialInstructions": "https://www.irs.gov/pub/irs-prior/i8615--2025.pdf",
+      "draft2026Instructions": "https://www.irs.gov/pub/irs-dft/i8615--dft.pdf",
+      "form1040Line16IndependentFixture": "1497",
+      "exactFocusedTestsPassed": 552,
+      "exactPostgresCoverageTestsPassed": 29712,
+      "exactCoverageFilesPassed": 2173,
+      "exactBranchCoveragePercent": 88.29,
+      "localPostgresStoppedNormally": true,
+      "vercelProductionDeployment": "CANCELED",
+      "trackedSpecReferencesPassed": 9739,
+      "originalTimingContractTestsPassed": 35,
+      "inventoryCheckPassed": true,
+      "typecheckPassed": true,
+      "independentEngineeringReview": true,
+      "qualifiedHumanTaxReview": false,
+      "federalNonstandardSourceStopReconciliation": "Remains open. The calculated stop is preserved for unsupported source compositions.",
+      "githubWorkflowRunIds": {
+        "ci": 44862396532,
+        "web": 44862396307,
+        "docker": 44862396327
+      },
+      "releasePromotionQualified": false
+    },
     "nov20Final2026Form8919Destinations": {
       "source": "b7cba0fd",
       "official2026Form": "https://www.irs.gov/pub/irs-prior/f8919--2026.pdf",

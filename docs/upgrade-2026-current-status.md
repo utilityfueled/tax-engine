@@ -1,5 +1,28 @@
 # Current 2026 upgrade status
 
+Application `2d97913e` adds exact Form 8615 support for the early
+withdrawal penalty as the only adjustment in the existing 2025 source
+path. The combined tax and guided payment focused suite passed 615
+tests and both type checks. The exact PostgreSQL-backed coverage suite
+passed 29,717 tests at 88.29% branch coverage, and the temporary database
+stopped normally. Vercel canceled the production deployment.
+[Form 8615 source evidence](upgrade-2026-progress.md#2025-form-8615-early-withdrawal-penalty-reconciliation).
+
+Application `01fcb98d` verifies the IRS application year for January and
+out-of-year guided federal estimates. All 59 exact focused tests and
+both existing desktop and mobile payment journeys passed.
+[Payment evidence](upgrade-2026-progress.md#guided-federal-estimated-payment-application).
+
+Applications `7d25dfa3`, `b864c369` and `f23bf92c` calculate the
+supported 2025 Form 8615 preferential Worksheets 1, 2 and 3. The
+threshold-itemizer fixture produced $2,030 for Worksheet 1. The other
+federal fixtures produced $1,497 for Worksheet 2 and $1,453 and $1,905
+for Worksheet 3. The isolated coverage run on `7d25dfa3` passed 29,712
+tests at 88.29% branches.
+[Worksheet 2 evidence](upgrade-2026-progress.md#2025-form-8615-preferential-worksheet-2) ·
+[Worksheet 3 evidence](upgrade-2026-progress.md#2025-form-8615-preferential-worksheet-3) ·
+[Worksheet 1 itemizer evidence](upgrade-2026-progress.md#2025-form-8615-worksheet-1-for-itemizers-at-the-threshold).
+
 Application `b7cba0fd` verifies the $184,500 wage-base boundary and
 records the transfer destinations printed on the final 2026 Form 8919.
 The exact focused run passed 578 tests. At `be98b7cd`, both full suites

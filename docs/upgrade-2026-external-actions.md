@@ -25,12 +25,31 @@ The latest annual cases also need independent expected outputs. For Form
 qualified dividends and capital gain, for the $10,800 dividend example
 and the two federal $10,000 investment-income examples. Check both the
 valid Line 3 stop and the separate Schedule 1 entries that sum to zero.
+For Worksheet 2, independently derive the line 5 amounts and Form 1040
+transfer for the child with $5,000 interest, $3,000 qualified dividends,
+$2,000 net capital gain and $2,000 allowed investment interest. The
+connected portion used for Worksheet 2 is $500. Check the Line 3 stop
+with an early withdrawal penalty and the rejection of incomplete or
+contradictory worksheet facts. Derive canonical line 1 and verify the
+corrected $6,200 return and $1,161 transfer. Review the remaining stop
+limitation for compositions outside that source path.
+For Worksheet 3, derive both allowed deduction allocations and Form 1040
+line 16 for the $10,000 itemizer and the $22,500 standard-deduction child.
+Confirm the role of the actual federal AGI and selected deduction and the
+transition from Worksheet 2 to Worksheet 3 when line 5 falls below line 3.
+For the Worksheet 1 itemizer, verify assignment when line 2 stays at
+$2,700 and line 5 equals line 3, including the line 5 preferences and the
+$2,030 transfer.
 For Form 2441, derive Line A, Part II and the Schedule 3 transfer for the
 2025 separate filer with $3,000 of qualified expenses at $85,000 AGI and
 the guided filer with $40,000 of wages and $3,900 of qualified expenses.
 Check that all three living-apart requirements, explicit zero benefits
 and the distinction between the two Parts are reflected in the review.
 [Form 8615 evidence](upgrade-2026-progress.md#november-20-form-8615-preferential-worksheet-1) ·
+[Early withdrawal evidence](upgrade-2026-progress.md#2025-form-8615-early-withdrawal-penalty-reconciliation) ·
+[Worksheet 2 evidence](upgrade-2026-progress.md#2025-form-8615-preferential-worksheet-2) ·
+[Worksheet 3 evidence](upgrade-2026-progress.md#2025-form-8615-preferential-worksheet-3) ·
+[Worksheet 1 itemizer evidence](upgrade-2026-progress.md#2025-form-8615-worksheet-1-for-itemizers-at-the-threshold) ·
 [Form 2441 evidence](upgrade-2026-progress.md#november-20-form-2441-credit-only-separate-return).
 
 For the 2026 Form 8919 boundary, derive the payroll taxes and displayed
