@@ -1,5 +1,35 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Ohio school navigation and Linux timing evidence
+
+In `040196f8`, Ohio navigation uses the full school district validation
+completed by the accepted return header in the same call. The actual
+part-year fixture held two validations before the change and one afterward.
+A rejected header still allows the standalone district check and a
+rejected district keeps its own error. The navigation read leaves the
+originals untouched. The package passed 80 focused tests, both typechecks,
+the source audit and an independent three-case source review.
+
+Commit `f726a44e` adds five paired elapsed-time markers to the existing
+four Ohio part-year school browser cases. They cover entry, reopening,
+review download, saved-PDF inspection and the filing rejection control.
+Each phase logs its start before waiting. The interactions, assertions
+and original 30-second deadline are retained. Scoped lint, seven spec
+references, web typecheck and discovery of all four cases passed.
+
+On the earlier exact application revision `948547a2`, managed Linux
+passed 648 cases and failed both railroad saved-PDF privacy inspections at
+their four-second bound, after the downloads and exact response-byte
+checks passed. Strict AMD64 passed 648 cases and failed two desktop Ohio
+part-year school cases. Strict ARM64 passed 641 cases and failed nine
+Ohio cases, including all four part-year school cases. Each run retained
+five original skips. The part-year school stops span original entry,
+reopening, review download and the final filing-rejection request. The
+logs establish deadlines at different stages. The timing markers now
+support comparison on the next exact runs.
+[Managed and strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44923672388) ·
+[Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44923723355).
+
 ## November 21 original claims in canonical mortgage worksheets
 
 Commit `b9e1bce7` adds an optional original lender, loan account and actual
@@ -20,7 +50,9 @@ retain their separate validation. [IRS Publication 936](https://www.irs.gov/publ
 
 All 78 related tests and 15 scoped spec references passed. Independent
 review verified 27 engine tests. All three typechecks and the exact browser
-source audit also passed.
+source audit also passed. On the exact application snapshot, all eight
+static checks passed and all 29,929 tests passed with coverage at 88.47%
+branches.
 
 ## November 21 retained mortgage points on multiple statements
 
@@ -48,9 +80,10 @@ The save/reopen regressions, UI controls, and related engine checks passed
 snapshot passed both typechecks and the browser source audit. Independent
 code review reran seven cases and verified the duplicate and timing holds.
 The exact full unit run passed all 29,928 tests against its disposable
-PostgreSQL 16.16 database, and all eight static checks passed. The direct
-legacy completed-worksheet contract still lacks original loan identity.
-Qualified human review remains open.
+PostgreSQL 16.16 database, and all eight static checks passed. The exact
+managed browser run passed 650 executed cases with five existing skips
+and no failures. The direct legacy completed-worksheet contract still
+lacks original loan identity. Qualified human review remains open.
 
 ## November 21 Ohio navigation and 2025 education corrections
 
@@ -87,8 +120,9 @@ timeouts and one teardown rejection. The first browser production build
 hit the existing build deadline before any case ran. All 24 tests across
 those six unit files passed in an isolated run on the same source. The
 isolated full managed browser rerun then passed all 650 executed cases
-with five existing skips and no failures. Strict runtime results are
-tracked separately.
+with five existing skips and no failures. The exact GitHub CI run passed
+all six jobs, including unit tests and coverage. Strict runtime results
+are tracked separately. [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/44923672612).
 
 ## November 21 guided Schedule C review after a year change
 
