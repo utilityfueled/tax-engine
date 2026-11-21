@@ -24,16 +24,31 @@ test("encrypted backup restores original bytes and private local answers after d
     currentSectionIndex: 0, completedSections: [], sectionData: { "personal-info": { ...taxpayerFacts2025,
       firstName: "Synthetic", ssn: "900-70-0011", dateOfBirth: "1980-01-01" },
       extension: { zero: "0.00", cents: "9007199254740993.27" } } });
-  await page.evaluate(({ id, originalFlow }) => {
-    localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow);
-  }, { id, originalFlow });
+  await page.evaluate(id => {
+    const key = "tax-engine.return-workspaces.v1";
+    const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+    saved.workspaces[id].guidedCompletion = {
+      completedSectionCount: 2, totalSectionCount: 2, skippedSectionCount: 0, needsReviewSectionCount: 0,
+    };
+    localStorage.setItem(key, JSON.stringify(saved));
+  }, id);
   await page.goto("/");
   const card = page.getByRole("listitem").filter({ hasText: `Tax Return ${id}` });
   await card.getByText("Back up this return", { exact: true }).click();
   await card.getByLabel("Backup password (at least 12 characters)").fill("synthetic-recovery-password");
+  let downloadCount = 0;
+  page.on("download", () => { downloadCount += 1; });
+  await card.getByRole("button", { name: "Download encrypted backup", exact: true }).click();
+  await expect(card.getByRole("status").filter({ hasText: "guided answers are missing" })).toBeVisible();
+  expect(downloadCount).toBe(0);
+  await page.evaluate(({ id, originalFlow }) => {
+    localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow);
+  }, { id, originalFlow });
+  await card.getByLabel("Backup password (at least 12 characters)").fill("synthetic-recovery-password");
   const downloadPromise = page.waitForEvent("download");
   await card.getByRole("button", { name: "Download encrypted backup", exact: true }).click();
   const download = await downloadPromise;
+  expect(downloadCount).toBe(1);
   const archivePath = testInfo.outputPath("encrypted-recovery.json");
   await download.saveAs(archivePath);
   expect(await readFile(archivePath, "utf8")).not.toContain("900-70-0011");

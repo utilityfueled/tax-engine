@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { exportWorkspaceRecovery, importWorkspaceRecovery, type RecoveryDocumentStore } from "../../../apps/web/src/lib/workspace-recovery";
 import { deleteWorkspace, ensureWorkspace, getWorkspace, ingestFiles, listWorkspaces, WORKSPACE_STORAGE_KEY } from "../../../apps/web/src/lib/workspace-storage";
-import { getGuidedFlowStorageKey, initialFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
+import { getGuidedFlowStorageKey, initialFlowState, startInterview } from "../../../apps/web/src/lib/guided-interview-flow";
 import { getLocalRecoveryStorageKey } from "../../../apps/web/src/lib/workspace-local-recovery";
 
 function storage() {
@@ -160,6 +160,52 @@ describe("full-fidelity encrypted local recovery", () => {
     const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
     const restored = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
     expect(restored.documentCount).toBe(0); expect(f.documents.read).not.toHaveBeenCalled();
+  });
+  it.each(["generated document", "completion summary"])(
+    "refuses a complete local backup when a %s remains but the guided answers are missing",
+    async (marker) => {
+      const f = fixture();
+      const raw = requireStoredReturns(f.local);
+      const workspace = raw.workspaces.original;
+      if (marker === "generated document") {
+        workspace.documents.push({ ...workspace.documents[0], id: "guided:w2:1" });
+      } else {
+        workspace.guidedCompletion = {
+          completedSectionCount: 3, totalSectionCount: 3, skippedSectionCount: 0, needsReviewSectionCount: 0,
+        };
+      }
+      f.local.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(raw));
+      f.local.removeItem(getGuidedFlowStorageKey("original"));
+
+      await expect(exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents }))
+        .rejects.toThrow("guided answers are missing");
+      expect(f.documents.read).not.toHaveBeenCalled();
+    },
+  );
+  it.each([
+    ["only a confirmed year", { ...initialFlowState, taxYear: 2026 }],
+    ["initial setup and defaults", startInterview({ ...initialFlowState.segmentation, filingStatus: "single" }, 2026)],
+  ] as const)("refuses a complete local backup after a reset leaves %s and a saved completion summary", async (_, draft) => {
+    const f = fixture();
+    const raw = requireStoredReturns(f.local);
+    raw.workspaces.original.guidedCompletion = {
+      completedSectionCount: 3, totalSectionCount: 3, skippedSectionCount: 0, needsReviewSectionCount: 0,
+    };
+    f.local.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(raw));
+    f.local.setItem(getGuidedFlowStorageKey("original"), JSON.stringify(draft));
+
+    await expect(exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents }))
+      .rejects.toThrow("guided answers are missing");
+    expect(f.documents.read).not.toHaveBeenCalled();
+  });
+  it("round-trips an advanced-only return without a guided draft", async () => {
+    const f = fixture();
+    f.local.removeItem(getGuidedFlowStorageKey("original"));
+    const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
+    const restored = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
+    expect(restored.documentCount).toBe(1);
+    expect(f.local.getItem(getGuidedFlowStorageKey(restored.workspaceId))).toBeNull();
+    expect(f.files.get(`${restored.workspaceId}/${f.workspace.documents[0].id}`)?.size).toBe(f.file.size);
   });
   it("rejects an unscoped legacy interview rather than assigning it to a return", async () => {
     const f = fixture(); f.local.removeItem(getGuidedFlowStorageKey("original"));

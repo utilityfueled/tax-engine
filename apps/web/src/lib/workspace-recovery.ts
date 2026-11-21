@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
-import { getGuidedFlowStorageKey, type GuidedFlowStorageTarget } from "./guided-interview-flow";
+import { emptyDeductionData, getGuidedFlowStorageKey, type GuidedFlowStorageTarget } from "./guided-interview-flow";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { WORKSPACE_STORAGE_KEY, invalidateWorkspaceStorageCache } from "./workspace-storage";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import {
@@ -93,10 +94,10 @@ function readStorage(storage: Storage) {
   return raw === null ? { workspaces: {} } : z.object({ workspaces: z.record(z.string(), z.unknown()) })
     .passthrough().parse(JSON.parse(raw));
 }
-function validateGuided(raw: string | null) {
-  if (raw === null) return;
+function parseGuided(raw: string | null) {
+  if (raw === null) return null;
   // Preserve unknown fields and the original year, including a legacy missing year.
-  z.object({ phase: z.enum(["segmentation", "interview", "complete"]),
+  return z.object({ phase: z.enum(["segmentation", "interview", "complete"]),
     segmentation: z.object({ filingStatus: z.enum(["single", "mfj", "mfs", "hoh", "qss"]).nullable(),
       incomeTypes: z.array(z.string()), lifeEvents: z.array(z.string()), stateCode: z.string().nullable(),
     }).passthrough(), sectionData: object, completedSections: z.array(z.string()),
@@ -115,16 +116,20 @@ export async function exportWorkspaceRecovery(
   const workspace = workspaceSchema.parse(hosted ? hosted.workspace : readStorage(storage).workspaces[workspaceId]);
   if (workspace.id !== workspaceId) throw new Error("The stored return identity does not match.");
   const guidedFlowRaw = storage.getItem(getGuidedFlowStorageKey(hosted ? hosted.draftId : workspaceId));
-  validateGuided(guidedFlowRaw);
+  const guided = parseGuided(guidedFlowRaw);
   if (hosted && [...hosted.workspace.seededReturn.interviewQuestions, ...hosted.workspace.seededReturn.facts]
     .some(item => item.status === "answered" && !item.answerText?.trim())) {
     throw new Error("The private interview answers are missing on this browser. Use the device where you entered them to make a complete backup.");
   }
-  if (hosted && guidedFlowRaw === null && (workspace.guidedCompletion != null || workspace.documents.some(document => document.id.startsWith("guided:")))) {
-    throw new Error("The private guided answers are missing on this browser. Use the device where you entered them to make a complete backup.");
-  }
   if (!hosted && guidedFlowRaw === null && storage.getItem("tax-engine.guided-flow-state.v1") !== null) {
     throw new Error("Legacy guided answers are not linked to this return. Resolve them before creating a complete backup.");
+  }
+  const hasGuidedOutput = workspace.guidedCompletion != null || workspace.documents.some(document => document.id.startsWith("guided:"));
+  // Starting an interview populates the default deductions before any answers are saved.
+  const hasGuidedAnswers = Object.entries(guided?.sectionData ?? {}).some(([section, data]) =>
+    section !== "deductions" || guidedSourceValuesChanged(emptyDeductionData, data));
+  if (hasGuidedOutput && !hasGuidedAnswers) {
+    throw new Error("The private guided answers are missing on this browser. Use the device where you entered them or save the restarted interview before making a complete backup.");
   }
   const guidedMode = z.enum(["true", "false"]).nullable().parse(hosted ? hosted.guidedMode : storage.getItem(guidedModeKey(workspaceId)));
   const documents = options.documents ?? browserDocuments;
@@ -183,7 +188,7 @@ export async function importWorkspaceRecovery(
   }
   if (plaintext.byteLength > MAX_BYTES) throw new Error("Recovery contents exceed the 64 MiB limit.");
   const payload = payloadSchema.parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(plaintext)));
-  validateGuided(payload.guidedFlowRaw);
+  parseGuided(payload.guidedFlowRaw);
   const expected = new Map(payload.workspace.documents.filter((document) => !document.id.startsWith("guided:"))
     .map((document) => [document.id, document]));
   if (new Set(payload.workspace.documents.map((document) => document.id)).size !== payload.workspace.documents.length) {
