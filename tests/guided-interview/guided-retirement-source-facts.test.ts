@@ -9,7 +9,99 @@ import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
 import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { completeRetirementSource, startCompleteInterview } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
-import { loadGuidedFlowState } from "@/lib/guided-interview-flow";
+import { loadGuidedFlowState, validateSection } from "@/lib/guided-interview-flow";
+
+// Spec: spec/federal/guided-input.yaml, retirement-2025-simplified-method
+it("calculates 2025 single-life pensions from actual Simplified Method facts while preserving original Box 2a", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  const personal = state.sectionData["personal-info"];
+  if (!personal) throw new Error("Could not initialize guided household facts");
+  const worksheet = {
+    planReference: "Plan 42 annuity contract",
+    qualifiedPlanConfirmed: true,
+    singleLifeAnnuitantConfirmed: true,
+    statementCoversContractConfirmed: true,
+    costInPlan: "26,000.00",
+    startingDate: "2025-01-15",
+    ageAtStart: "65",
+    monthsPaid: "12",
+    priorRecovered: "0",
+  };
+  const statement = {
+    ...completeRetirementSource,
+    grossDistribution: "6000",
+    federalWithheld: "125",
+    taxableAmount: "",
+    taxableAmountNotDetermined: true,
+    taxableAmountConfirmed: null,
+    simplifiedMethod: worksheet,
+  };
+  for (const [code, cost, age, dob, additionalTax] of [
+    ["7", "26,000.00", "65", "1960-01-15", "0"],
+    ["1", "36,000.00", "35", "1990-01-15", "480"],
+  ]) {
+    personal.dateOfBirth = dob;
+    state.sectionData["income-retirement"] = { entries: [{ ...statement, distributionCode: code, simplifiedMethod: { ...worksheet, costInPlan: cost, ageAtStart: age } }] };
+    const reopened = loadGuidedFlowState({ getItem: () => JSON.stringify(state) } as unknown as Storage, "retirement");
+    expect(reopened?.sectionData["income-retirement"]).toMatchObject(state.sectionData["income-retirement"]);
+    if (!reopened) throw new Error("Could not reopen guided pension draft");
+    expect(validateSection(reopened, "income-retirement").status).toBe("complete");
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+    expect(input.form1099R?.[0]).toMatchObject({
+      taxableAmount: undefined,
+      taxableAmountNotDetermined: true,
+      simplifiedMethodCostInPlan: cost.replaceAll(",", ""),
+      simplifiedMethodAnnuityStartingDate: "2025-01-15",
+      simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: Number(age),
+      simplifiedMethodPaymentsReceivedThisYear: 12,
+      simplifiedMethodPriorYearRecovered: "0",
+    });
+    expect(input.form1099R?.[0]?.simplifiedMethodExpectedPayments).toBeUndefined();
+    expect(buildGuidedFactAnswers(reopened).find(fact => fact.factId === "retirement-distribution-review")?.answerText).toContain("Simplified Method");
+    const result = calculateFederalTax(input);
+    expect(result.pensionDistributionsGross.toFixed()).toBe("6000");
+    expect(result.pensionDistributionsTaxable.toFixed()).toBe("4800");
+    expect(result.totalWithholding.toFixed()).toBe("125");
+    expect(result.form5329?.line4.toFixed() ?? "0").toBe(additionalTax);
+  }
+  personal.dateOfBirth = "1960-01-15";
+  for (const change of [
+    { simplifiedMethod: undefined }, { distributionCode: "" }, { distributionCode: "4" },
+    { sourceFactsConfirmed: null }, { taxableAmountNotDetermined: null }, { taxableAmount: "0" }, { grossDistribution: "0" }, { additionalWorksheetRequired: true },
+    { simplifiedMethod: { ...worksheet, monthsPaid: "" } },
+    { simplifiedMethod: { ...worksheet, ageAtStart: "75" } },
+    { simplifiedMethod: { ...worksheet, qualifiedPlanConfirmed: false } },
+    { simplifiedMethod: { ...worksheet, statementCoversContractConfirmed: null } },
+    { simplifiedMethod: { ...worksheet, startingDate: "2025-02-30" } },
+    { simplifiedMethod: { ...worksheet, startingDate: "2025-12-01", monthsPaid: "12" } },
+    { simplifiedMethod: { ...worksheet, priorRecovered: "" } },
+    { simplifiedMethod: { ...worksheet, priorRecovered: "0.01" } },
+  ]) {
+    state.sectionData["income-retirement"] = { entries: [{ ...statement, ...change }] };
+    expect(buildTaxInputFromGuidedData(state), JSON.stringify(change)).toBeNull();
+  }
+  state.sectionData["income-retirement"] = { entries: [statement, { ...statement, accountReference: "other original", simplifiedMethod: { ...worksheet, planReference: " plan 42 annuity contract " } }] };
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+
+  state.sectionData["income-retirement"] = { entries: [{ ...statement, simplifiedMethod: { ...worksheet, costInPlan: "0.00" } }] };
+  const zeroCost = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(zeroCost.form1099R?.[0]?.simplifiedMethodCostInPlan).toBe("0.00");
+  expect(calculateFederalTax(zeroCost).pensionDistributionsTaxable.toFixed()).toBe("6000");
+
+  state.sectionData["income-retirement"] = { entries: [{
+    ...statement, simplifiedMethod: { ...worksheet, startingDate: "2025-12-01", monthsPaid: "1" },
+  }] };
+  const decemberStart = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(calculateFederalTax(decemberStart).pensionDistributionsTaxable.toFixed()).toBe("5900");
+
+  personal.dateOfBirth = "1936-01-15";
+  state.sectionData["income-retirement"] = { entries: [{
+    ...statement, simplifiedMethod: { ...worksheet, startingDate: "2001-01-15", priorRecovered: "25900.00" },
+  }] };
+  const nearlyRecovered = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(nearlyRecovered.form1099R?.[0]?.simplifiedMethodPriorYearRecovered).toBe("25900.00");
+  expect(calculateFederalTax(nearlyRecovered).pensionDistributionsTaxable.toFixed()).toBe("5900");
+});
 
 it("requires actual retirement source ownership and preserves zero and unknown amounts", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });

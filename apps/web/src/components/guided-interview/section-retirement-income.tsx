@@ -9,7 +9,7 @@ import { CurrencyField } from "./currency-field";
 import { RetirementSourceFields } from "./retirement-source-fields";
 import { IraBasisSourceFields } from "./ira-basis-source-fields";
 import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
-import { isGuidedQcdStatement } from "@/lib/guided-retirement-source-inputs";
+import { isGuidedQcdStatement, needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 
 function RetirementCard({
   index,
@@ -27,6 +27,7 @@ function RetirementCard({
   basisMode?: boolean;
 }) {
   const qcdMode = isGuidedQcdStatement(entry);
+  const simplifiedMethod = needsGuidedSimplifiedMethod(entry);
   return (
     <div className="guided-w2-card">
       <div className="guided-w2-card-header">
@@ -66,11 +67,11 @@ function RetirementCard({
           required
         />
         <CurrencyField
-          label={basisMode || qcdMode ? "Printed taxable amount (Box 2a)" : "Taxable amount (Box 2a)"}
-          hint={basisMode || qcdMode ? "Copy only the amount printed on the original form. Leave it blank when Box 2b is checked and the source gives no taxable amount. The owner worksheet calculates taxability." : "Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."}
+          label={basisMode || qcdMode || simplifiedMethod ? "Printed taxable amount (Box 2a)" : "Taxable amount (Box 2a)"}
+          hint={simplifiedMethod ? "Leave this blank when the original Box 2a is blank. The Simplified Method worksheet calculates the taxable amount." : basisMode || qcdMode ? "Copy only the amount printed on the original form. Leave it blank when Box 2b is checked and the source gives no taxable amount. The owner worksheet calculates taxability." : "Use the actual taxable amount established by the source and applicable basis worksheet. A blank Box 2a is unknown; do not copy the gross distribution or assume zero."}
           value={entry.taxableAmount}
           onChange={(v) => onUpdate("taxableAmount", v)}
-          required={!basisMode && !qcdMode}
+          required={!basisMode && !qcdMode && !simplifiedMethod}
         />
         <CurrencyField
           label="Federal tax withheld (Box 4)"
@@ -115,15 +116,19 @@ export function SectionRetirementIncome({
     field: K,
     value: RetirementEntryData[K],
   ) {
-    const next = entries.map((entry, i) =>
-      i === index ? {
+    const next = entries.map((entry, i) => {
+      if (i !== index) return entry;
+      const updated = {
         ...entry, sourceFactsConfirmed: null, [field]: value,
         ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}),
         ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}),
         ...((field === "sourceTaxYear" || field === "distributionCode" || field === "isIraSepSimple") && entry[field] !== value
           ? { qualifiedLumpSumReporting: null } : {}),
-      } : entry
-    );
+      };
+      const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);
+      const codeChanged = needsGuidedSimplifiedMethod(updated) && entry.distributionCode !== updated.distributionCode;
+      return methodChanged || codeChanged ? { ...updated, additionalWorksheetRequired: null } : updated;
+    });
     onEntriesChange(next);
   }
 

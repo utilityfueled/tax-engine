@@ -26,6 +26,51 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
 
+// Spec: spec/federal/guided-input.yaml, retirement-2025-simplified-method
+it("collects and reconfirms the original blank Box 2a and the actual pension worksheet", async () => {
+  const source = { ...completeRetirementSource, grossDistribution: "6000", taxableAmount: "", federalWithheld: "125" };
+  const otherWorksheet = "Is a penalty exception or another retirement worksheet needed for this pension?";
+  const box2b = "Is taxable amount not determined checked in Box 2b?";
+  const priorRecovery = "Plan cost recovered or eligible for tax-free recovery through 2024";
+  await render([source], async ({ latest, container, change }) => {
+    await change(box2b, "true");
+    expect(latest()[0]?.additionalWorksheetRequired).toBeNull();
+    expect(container.textContent).toContain("2025 Simplified Method pension worksheet");
+    expect(container.textContent).toContain("Printed taxable amount (Box 2a)");
+    expect(latest()[0]?.simplifiedMethod).toBeUndefined();
+    for (const [label, value] of [
+      ["Local reference for the actual annuity contract", "Plan 42"],
+      ["Are the payments from a qualified employee plan, qualified employee annuity or 403(b) plan?", "true"],
+      ["Is the recipient the only annuitant, receiving periodic payments for their own life?", "true"],
+      ["Does Box 1 report all 2025 periodic payments for this contract, with no other payments included?", "true"],
+      ["Actual annuity starting date", "2025-01-15"],
+      ["Annuitant age on the starting date", "65"],
+      ["Net cost in the plan at the starting date", "26000"],
+      ["Actual months covered by 2025 payments", "12"],
+      [priorRecovery, "0"],
+      [otherWorksheet, "false"],
+      [confirm, "true"],
+    ]) await change(label, value);
+    expect(buildRetirementInputs(latest(), "single", 2025)[0]).toMatchObject({ taxableAmount: undefined, simplifiedMethodPriorYearRecovered: "0" });
+
+    await change(priorRecovery, "");
+    expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "single", 2025)).toThrow(/amount recovered or eligible for tax-free recovery through 2024/);
+    await change(priorRecovery, "0");
+    expect(() => buildRetirementInputs(latest(), "single", 2025)).toThrow(/after the last edit/);
+    await change(confirm, "true");
+    expect(buildRetirementInputs(latest(), "single", 2025)[0]?.taxableAmount).toBeUndefined();
+
+    await change(box2b, "false");
+    expect(container.textContent).toContain("2025 Simplified Method pension worksheet");
+    expect(() => buildRetirementInputs(latest(), "single", 2025)).toThrow(/reconcile the saved Simplified Method/i);
+    await change(box2b, "true");
+    expect(latest()[0]?.simplifiedMethod).toMatchObject({ startingDate: "2025-01-15", costInPlan: "26000", priorRecovered: "0" });
+    expect(latest()[0]?.taxableAmount).toBe("");
+  });
+});
+
 it("keeps a saved QCD worksheet visible and requires source confirmation after an edit", async () => {
   const initial = {
     ...completeRetirementSource,

@@ -26,6 +26,29 @@ export type GuidedRetirementQcdSource =
   Partial<Record<(typeof retirementQcdAmounts)[number][0], string>> &
   Partial<Record<(typeof retirementQcdConfirmations)[number][0], boolean | null>>;
 
+export interface GuidedRetirementSimplifiedMethod {
+  planReference?: string;
+  qualifiedPlanConfirmed?: boolean | null;
+  singleLifeAnnuitantConfirmed?: boolean | null;
+  statementCoversContractConfirmed?: boolean | null;
+  costInPlan?: string;
+  startingDate?: string;
+  ageAtStart?: string;
+  monthsPaid?: string;
+  priorRecovered?: string;
+}
+
+export function needsGuidedSimplifiedMethod(entry: RetirementEntryData): boolean {
+  return entry.sourceTaxYear === '2025'
+    && entry.isIraSepSimple === false
+    && ['1', '7'].includes(entry.distributionCode.trim())
+    && entry.taxableAmountNotDetermined === true;
+}
+
+export function simplifiedMethodPlanIdentifier(entry: RetirementEntryData): string {
+  return JSON.stringify([entry.accountHolder, entry.payerTin?.replaceAll('-', ''), entry.simplifiedMethod?.planReference?.trim().toLowerCase()]);
+}
+
 export function isGuidedQualifiedLumpSum(entry: RetirementEntryData): boolean {
   return entry.sourceTaxYear === '2026' && /^(?:[47]A|A[47])$/.test(entry.distributionCode.trim().toUpperCase());
 }
@@ -36,16 +59,22 @@ export function isGuidedQcdStatement(entry: RetirementEntryData): boolean {
 }
 
 export function isStartedRetirement(entry: RetirementEntryData): boolean {
-  return entry.qcdSource !== undefined || Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
+  return entry.qcdSource !== undefined || entry.simplifiedMethod !== undefined
+    || Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
 }
 function amount(value: string | undefined): string | undefined {
   if (!value?.trim()) return undefined;
   parseGuidedCurrency(value);
   return value.trim().replaceAll(',', '');
 }
+
+export function simplifiedMethodWholeNumber(value: string | undefined): number | undefined {
+  return value && /^\d{1,2}$/.test(value.trim()) ? Number(value) : undefined;
+}
 /** Original source values only. Never replace unknown Box2a with computed tax. */
 export function retirementSourceInput(entry: RetirementEntryData) {
   const qcd = entry.qcdSource;
+  const simplifiedMethod = needsGuidedSimplifiedMethod(entry) ? entry.simplifiedMethod : undefined;
   return {
     taxYear: /^\d{4}$/.test(entry.sourceTaxYear ?? '') ? Number(entry.sourceTaxYear) : undefined,
     payer: entry.payer.trim(), payerTin: entry.payerTin?.trim(), accountHolder: entry.accountHolder || undefined,
@@ -68,6 +97,14 @@ export function retirementSourceInput(entry: RetirementEntryData) {
       currentDeductedContributions: amount(qcd.currentDeductedContributions),
     } }),
     capitalGainIncluded: isGuidedQualifiedLumpSum(entry) ? amount(entry.capitalGainIncluded) : undefined,
+    ...(simplifiedMethod && {
+      simplifiedMethodPlanIdentifier: simplifiedMethodPlanIdentifier(entry),
+      simplifiedMethodCostInPlan: amount(simplifiedMethod.costInPlan),
+      simplifiedMethodAnnuityStartingDate: simplifiedMethod.startingDate,
+      simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: simplifiedMethodWholeNumber(simplifiedMethod.ageAtStart),
+      simplifiedMethodPaymentsReceivedThisYear: simplifiedMethodWholeNumber(simplifiedMethod.monthsPaid),
+      simplifiedMethodPriorYearRecovered: amount(simplifiedMethod.priorRecovered),
+    }),
     iraBasisConfirmedZero: entry.isIraSepSimple === true ? entry.iraBasisConfirmedZero ?? undefined : undefined,
     taxableAmountNotDetermined: entry.taxableAmountNotDetermined ?? undefined, employeeContributions: amount(entry.employeeContributions),
     eligibleGovernmental457bPlan: entry.eligibleGovernmental457bPlan ?? undefined,

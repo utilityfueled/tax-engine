@@ -10,6 +10,7 @@ import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTot
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { isStartedOid, type OidEntryData } from "@/lib/guided-oid-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
+import { needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 
 import { RetroShell } from "@/components/retro-shell";
@@ -412,7 +413,9 @@ function RetirementSummary({ entries }: { entries: RetirementEntryData[] | undef
             {entry.payer || `1099-R #${i + 1}`}
           </span>
           <span className="guided-review-value">
-            {formatCurrency(entry.taxableAmount)} taxable, {formatCurrency(entry.federalWithheld)} withheld
+            {needsGuidedSimplifiedMethod(entry) && !hasEnteredAmount(entry.taxableAmount)
+              ? "Box 2a blank on the original"
+              : `${formatCurrency(entry.taxableAmount)} taxable`}, {formatCurrency(entry.federalWithheld)} withheld
           </span>
         </div>
       ))}

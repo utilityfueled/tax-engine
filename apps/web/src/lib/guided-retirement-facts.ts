@@ -6,7 +6,12 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
-import { isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, retirementSourceInput, type GuidedRetirementQcdSource } from "./guided-retirement-source-inputs";
+import {
+  isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, needsGuidedSimplifiedMethod,
+  retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, retirementSourceInput,
+  simplifiedMethodPlanIdentifier, simplifiedMethodWholeNumber,
+  type GuidedRetirementQcdSource, type GuidedRetirementSimplifiedMethod,
+} from "./guided-retirement-source-inputs";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -31,6 +36,7 @@ export interface RetirementSourceData {
   localDistribution?: string;
   iraBasisConfirmedZero?: boolean | null;
   qcdSource?: GuidedRetirementQcdSource;
+  simplifiedMethod?: GuidedRetirementSimplifiedMethod;
   qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
   eligibleGovernmental457bPlan?: boolean | null;
   governmental457bTransferredTaxableAmount?: string;
@@ -51,6 +57,38 @@ export const retirementSourceAmounts = [
   ["otherSourceAmount", "Other source amount (Box 8 / 2026 Box 8a)"],
   ["inPlanRothRolloverAmount", "Amount allocable to in-plan Roth rollover within five years (Box 10)"],
 ] as const;
+
+function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: string): string | undefined {
+  const worksheet = entry.simplifiedMethod;
+  if (!worksheet) return "Enter the actual 2025 Simplified Method pension worksheet.";
+  if (hasEnteredAmount(entry.taxableAmount)) return "This Simplified Method route requires the original Box 2a to be blank. Review the printed form and the worksheet.";
+  const grossError = amountError(entry.grossDistribution, "gross distribution");
+  if (grossError) return grossError;
+  if (parseGuidedCurrency(entry.grossDistribution).isZero()) return "Reconcile the reported payment months with the gross distribution in Box 1.";
+  if (!worksheet.planReference?.trim()) return "Enter the local reference for the actual annuity contract.";
+  if (worksheet.qualifiedPlanConfirmed !== true || entry.eligibleGovernmental457bPlan === true) return "Confirm that the pension is from a qualified employee plan, qualified employee annuity or 403(b) plan.";
+  if (worksheet.singleLifeAnnuitantConfirmed !== true || entry.qualifiedJointSurvivorAnnuity === true) return "Confirm that the recipient is the only annuitant and receives periodic payments for their own life.";
+  if (worksheet.statementCoversContractConfirmed !== true) return "Confirm that Box 1 on this original reports all 2025 periodic payments for this contract, with no other payments included.";
+  const start = worksheet.startingDate;
+  if (!start || !isActualDate(start) || start < "1998-01-01" || start > "2025-12-31") return "Enter the actual annuity starting date from 1998 through 2025.";
+  const age = simplifiedMethodWholeNumber(worksheet.ageAtStart);
+  if (age === undefined || age >= 75) return "Enter the annuitant's actual age at the starting date. This worksheet covers starts before age 75.";
+  if (dateOfBirth && isActualDate(dateOfBirth)) {
+    const ageOnStart = Number(start.slice(0, 4)) - Number(dateOfBirth.slice(0, 4)) - Number(start.slice(5) < dateOfBirth.slice(5));
+    if (age !== ageOnStart) return "Reconcile the annuitant's age at the starting date with the recipient's date of birth.";
+  }
+  const months = simplifiedMethodWholeNumber(worksheet.monthsPaid);
+  const availableMonths = start.startsWith("2025-") ? 13 - Number(start.slice(5, 7)) : 12;
+  if (months === undefined || months < 1 || months > availableMonths) return "Enter the actual months covered by 2025 annuity payments from the start of cost recovery onward.";
+  const costError = amountError(worksheet.costInPlan, "net cost in the plan at the annuity starting date");
+  if (costError) return costError;
+  const recoveryError = amountError(worksheet.priorRecovered, "amount recovered or eligible for tax-free recovery through 2024, including zero");
+  if (recoveryError) return recoveryError;
+  const recovery = parseGuidedCurrency(worksheet.priorRecovered);
+  if (recovery.gt(parseGuidedCurrency(worksheet.costInPlan)) || (start.startsWith("2025-") && !recovery.isZero())) {
+    return "Reconcile the amount recovered before 2025 with the plan cost and annuity starting date.";
+  }
+}
 
 export function retirementFactErrors(entries: RetirementEntryData[] | undefined, requireTaxableAmount = true, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext): Record<string, string> {
   const errors: Record<string, string> = {};
@@ -76,6 +114,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }catch(error){errors['retirement-withholding-reconciliation']=error instanceof Error?error.message:'Reconcile actual retirement withholding sources.';}
   }
   const sourceIds = new Set<string>();
+  const simplifiedMethodPlans = new Set<string>();
   (entries ?? []).forEach((entry, index) => {
     if (!isStartedRetirement(entry)) return;
     const boundIra = basisBound && entry.isIraSepSimple === true;
@@ -100,6 +139,20 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     const code = entry.distributionCode.trim().toUpperCase();
     const qualifiedLumpSum = isGuidedQualifiedLumpSum(entry);
     const qcdStatement = isGuidedQcdStatement(entry);
+    const needsSimplifiedMethod = needsGuidedSimplifiedMethod(entry);
+    if (needsSimplifiedMethod) {
+      const personal = basisContext?.personal;
+      const dateOfBirth = entry.accountHolder === "spouse" ? personal?.spouse?.dateOfBirth : personal?.dateOfBirth;
+      const problem = simplifiedMethodFactError(entry, dateOfBirth);
+      if (problem) fail("taxable-worksheet", problem);
+      else {
+        const plan = simplifiedMethodPlanIdentifier(entry);
+        if (simplifiedMethodPlans.has(plan)) fail("taxable-worksheet", "Reconcile multiple originals against this same annuity contract and recipient before calculating.");
+        simplifiedMethodPlans.add(plan);
+      }
+    } else if (entry.simplifiedMethod !== undefined) {
+      fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the 2025 non-IRA Code 1 or 7 statement and its Box 2b answer.");
+    }
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
     else if (!qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
     const qcd = entry.qcdSource;
@@ -130,7 +183,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (code.includes("D") && (entry.isIraSepSimple !== false || entry.eligibleGovernmental457bPlan !== false)) fail("nonqualified-plan", "Code D identifies a nonqualified source; reconcile the actual IRA and governmental-plan classifications.");
     if (entry.requiresIraConfirmation) fail("isIraSepSimple", "Reconfirm the actual IRA checkbox; older versions prefilled an unchecked answer.");
     if (entry.requiresCodeConfirmation) fail("code", "Reconfirm the saved distribution code from the actual Form 1099-R; older versions prefilled code 7.");
-    const needsConfirmedTaxableAmount = qualifiedLumpSum || (requireTaxableAmount && !boundIra && !qcdStatement);
+    const needsConfirmedTaxableAmount = qualifiedLumpSum || (requireTaxableAmount && !boundIra && !qcdStatement && !needsSimplifiedMethod);
     for (const [field, label] of [["grossDistribution", "gross distribution"], ...(needsConfirmedTaxableAmount || hasEnteredAmount(entry.taxableAmount) ? [["taxableAmount", "taxable amount; unknown amounts need their actual worksheet"]] : []), ["federalWithheld", "federal tax withheld"], ...retirementSourceAmounts] as [keyof RetirementEntryData, string][]) {
       const message = amountError(entry[field] as string | undefined, label); if (message) fail(field, message);
     }
@@ -146,7 +199,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }
     if (entry.eligibleGovernmental457bPlan === false && hasEnteredAmount(entry.governmental457bTransferredTaxableAmount) && (amountError(entry.governmental457bTransferredTaxableAmount, "457(b) transferred amount") || !parseGuidedCurrency(entry.governmental457bTransferredTaxableAmount).isZero())) fail("457-transfer", "Reconcile saved 457(b) transferred funds with the answer that this is not a governmental 457(b) plan.");
     if (entry.isIraSepSimple === true && entry.militaryPensionOrSurvivorBenefit === true) fail("military-plan", "An IRA distribution is not a U.S. military pension or survivor benefit. Reconcile the actual source classification.");
-    if (entry.isIraSepSimple === false && entry.taxableAmountNotDetermined === true) fail("taxable-worksheet", "A pension with taxable amount not determined needs the actual Simplified Method or General Rule worksheet; this ordinary route cannot use a guessed Box 2a.");
+    if (entry.isIraSepSimple === false && entry.taxableAmountNotDetermined === true && !needsSimplifiedMethod && entry.simplifiedMethod === undefined) fail("taxable-worksheet", "A pension with taxable amount not determined needs the actual Simplified Method or General Rule worksheet; this ordinary route cannot use a guessed Box 2a.");
     if (qualifiedLumpSum && entry.qualifiedLumpSumReporting === "ordinary_pension") {
       if (!amountError(entry.capitalGainIncluded, "Box 3") && !amountError(entry.taxableAmount, "Box 2a")
         && parseGuidedCurrency(entry.capitalGainIncluded).gt(parseGuidedCurrency(entry.taxableAmount))) {
@@ -180,7 +233,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       } else fail(`${location}-reporting`, reporting === "multiple" ? `Multiple ${location} retirement records need their separate source allocations.` : `Confirm actual ${location} reporting on the source form.`);
     }
     if (!reconciledOriginals.has(index) && entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
-    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
+    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed." : needsSimplifiedMethod ? "Confirm whether a penalty exception or another retirement worksheet is needed for this pension." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
     if (entry.sourceFactsConfirmed !== true) fail("confirmation", "Confirm the complete retirement source facts after the last edit.");
   });
   return errors;

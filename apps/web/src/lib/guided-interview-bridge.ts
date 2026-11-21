@@ -1204,9 +1204,14 @@ export function buildGuidedFactAnswers(
     if (filled.length > 0) {
       const totalTaxable = sourceTotal(filled.map(entry => entry.taxableAmount));
       const complete = Object.keys(retirementFactErrors(filled, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"], { data: retData.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments })).length === 0;
+      const methodNotes = [];
+      if (retData.basisSources) methodNotes.push("Form 8606 calculates taxable IRA amounts from separate-owner IRA basis history and account values. The original printed amounts are preserved.");
+      if (filled.some(entry => entry.simplifiedMethod)) methodNotes.push("The Simplified Method worksheet calculates taxable pension amounts and preserves the original blank Box 2a.");
       answers.push({
         factId: "retirement-distribution-review",
-        answerText: complete && retData.basisSources ? `${filled.length} retirement source record(s) confirmed with actual separate-owner IRA basis history and account values. Taxable IRA amounts are calculated through Form 8606; original printed amounts are preserved.` : totalTaxable === null ? `${filled.length} retirement source record(s) entered; taxable amounts still need review.` : `${filled.length} retirement source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Taxable amount entered: $${fmtNum(totalTaxable)}.`,
+        answerText: complete && methodNotes.length
+          ? `${filled.length} retirement source record(s) confirmed. ${methodNotes.join(" ")}`
+          : totalTaxable === null ? `${filled.length} retirement source record(s) entered. Taxable amounts still need review.` : `${filled.length} retirement source record(s) ${complete ? "confirmed" : "entered and need review"}. Taxable amount entered is $${fmtNum(totalTaxable)}.`,
       });
     }
   }
