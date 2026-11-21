@@ -5,7 +5,7 @@ import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { buildGuidedMortgageInputs } from '@/lib/guided-mortgage-worksheet';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
-import { emptyDeductionData, type MortgageEntryData } from '@/lib/guided-interview-flow';
+import { emptyDeductionData, loadGuidedFlowState, saveGuidedFlowState, type MortgageEntryData } from '@/lib/guided-interview-flow';
 import { completeMortgageSource, completeW2Entry, startCompleteInterview } from './complete-facts';
 
 const history = {
@@ -74,4 +74,142 @@ it('transfers actual prior points through the canonical return once', () => {
   const input = buildTaxInputFromGuidedData(state); expect(input?.form1098[0]?.pointsPaid).toBe('0');
   const result = calculateFederalTax(TaxYearInputSchema.parse(input));
   expect(result.itemizedDeductions.toFixed()).toBe('10800'); expect(result.taxableIncome.toFixed()).toBe('89200');
+});
+
+it('holds a retained original mortgage points balance claimed twice after reopening', () => {
+  const ledger = { ...payoff, originalLender: 'Actual Lender', originalAccountReference: 'Loan A', originalPoints: '3000.25',
+    unamortizedPointsAtStartOfYear: '800.25', unamortizedPointsAvailable: '800.25', deductibleAmountBeforeLimit: '800.25' };
+  const deductions = data({ accountReference: 'Loan A', originationDate: ledger.paidDate, mortgageInterest: '10000.15',
+    interestPaidByReturnAmount: '10000.15', pointsPaid: '0', pointsPaidByReturnAmount: '0',
+    pointsMethod: 'completed_amortization', pointsHistory: ledger });
+  const firstLoan = deductions.mortgageEntries[0]!;
+  const secondLoan = { ...firstLoan, accountReference: 'Loan B' };
+  const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: ['bought-home'], stateCode: null });
+  state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '100000', federalWithheld: '10000', socialSecurityWages: '100000', socialSecurityWithheld: '6200', medicareWages: '100000', medicareWithheld: '1450' }] };
+  const saved = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => saved.get(key) ?? null,
+    setItem: (key: string, value: string) => saved.set(key, value),
+    removeItem: (key: string) => saved.delete(key),
+  } as Storage;
+  const reopen = (second: MortgageEntryData) => {
+    state.sectionData.deductions = { ...deductions, mortgageEntries: [firstLoan, second] };
+    expect(saveGuidedFlowState(storage, 'fictional-mortgage-points', state)).toBe(true);
+    const reopened = loadGuidedFlowState(storage, 'fictional-mortgage-points');
+    if (!reopened) throw new Error('Expected the original saved mortgage worksheet.');
+    expect(reopened.sectionData.deductions?.mortgageEntries).toEqual([firstLoan, second]);
+    return reopened;
+  };
+  const reopenAndCalculate = (second: MortgageEntryData) => {
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen(second)));
+    expect(input.form1098.map(form => [form.loanAccountReference, form.pointsPaid])).toEqual([['Loan A', '0'], ['Loan B', '0']]);
+    const federal = calculateFederalTax(input);
+    const worksheet = federal.scheduleA.mortgageWorksheet;
+    expect(worksheet.sourceDeductions.map(source => source.interestBeforeLimit.toFixed())).toEqual(['10000.15', '10000.15']);
+    return { itemized: federal.itemizedDeductions.toFixed(), line8c: worksheet.line8c.toFixed(),
+      originalPoints: worksheet.sourceDeductions.map(source => source.pointsBeforeLimit.toFixed()) };
+  };
+
+  const singleClaim = { itemized: '20800', line8c: '800', originalPoints: ['800.25', '0'] };
+  expect(reopenAndCalculate({ ...secondLoan, pointsMethod: 'none', pointsHistory: undefined })).toEqual(singleClaim);
+  expect(reopenAndCalculate({ ...secondLoan, pointsHistory: { ...ledger, originalAccountReference: 'Loan B' } }))
+    .toEqual({ itemized: '21601', line8c: '1601', originalPoints: ['800.25', '800.25'] });
+  const renamed = { ...ledger, originalLender: ' actual lender ', originalAccountReference: ' loan a ', sourceReference: 'Copy of the original ledger' };
+  expect(reopenAndCalculate({ ...secondLoan, pointsHistory: { ...renamed, completedMethod: 'ongoing_amortization', deductibleAmountBeforeLimit: '0' } })).toEqual(singleClaim);
+  expect(reopenAndCalculate({ ...secondLoan, pointsMethod: 'ratable', pointsHistory: { ...renamed, paymentsInYear: '0' } })).toEqual(singleClaim);
+  const unknown = reopen({ ...secondLoan, pointsHistory: { ...renamed, historyConfirmed: null } });
+  expect(buildTaxInputFromGuidedData(unknown)).toBeNull();
+  expect(() => buildGuidedMortgageInputs(unknown.sectionData.deductions, 2025, 'single')).toThrow(/confirm.*original loan/i);
+  for (const pointsMethod of ['completed_amortization', 'ratable'] as const) {
+    const duplicate = reopen({ ...secondLoan, pointsMethod, pointsHistory: renamed });
+    expect(buildTaxInputFromGuidedData(duplicate)).toBeNull();
+    expect(() => buildGuidedMortgageInputs(duplicate.sectionData.deductions, 2025, 'single')).toThrow(/same original loan.*points/i);
+  }
+});
+
+it('reconciles a saved same-lender refinance with separate old and successor points', () => {
+  const deductions = data({ accountReference: 'Loan A', originationDate: payoff.paidDate, pointsPaid: '0', pointsPaidByReturnAmount: '0',
+    pointsHistory: { ...payoff, sourceReference: 'Actual old-loan payment ledger', originalLender: 'Actual Lender',
+      originalAccountReference: 'Loan A', loanTermMonths: '180', paymentsInYear: '6' } });
+  const original = deductions.mortgageEntries[0]!;
+  const completed = { ...original.pointsHistory, sourceReference: 'Actual successor worksheet', completedMethod: 'same_lender_refinancing' as const,
+    endingDate: '2025-07-01', sameLenderRefinance: true, newLoanReference: ' loan B ', newLoanTermMonths: '180',
+    sameLenderBalanceSpreadConfirmed: true, sameLenderWorksheetScope: 'successor_only' as const,
+    successorPaymentsInYear: '6', successorPaymentIntervalMonths: '1', deductibleAmountBeforeLimit: '23.33' };
+  const successor: MortgageEntryData = { ...original, accountReference: 'Loan B', lender: ' actual lender ',
+    originationDate: '2025-07-01', loanType: 'refinance', pointsMethod: 'completed_amortization', pointsHistory: completed,
+    balanceMethod: 'category_worksheet', balanceCategories: { sourceTaxYear: '2025', worksheetReference: 'Actual refinanced acquisition debt',
+      grandfatheredDebt: '0', acquisitionDebtBefore2017: '100000', acquisitionDebtAfter2017: '0', excludedDebt: '0', classificationConfirmed: true,
+      paymentsAppliedInRequiredOrderConfirmed: true, interestAllocationConfirmed: true, refinancingHistoryConfirmed: true } };
+  const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: ['bought-home'], stateCode: null });
+  state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '100000', federalWithheld: '10000', socialSecurityWages: '100000', socialSecurityWithheld: '6200', medicareWages: '100000', medicareWithheld: '1450' }] };
+  const saved = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => saved.get(key) ?? null,
+    setItem: (key: string, value: string) => saved.set(key, value),
+    removeItem: (key: string) => saved.delete(key),
+  } as Storage;
+  const reopen = (entries: MortgageEntryData[]) => {
+    state.sectionData.deductions = { ...deductions, mortgageEntries: entries };
+    expect(saveGuidedFlowState(storage, 'fictional-refinanced-points', state)).toBe(true);
+    const reopened = loadGuidedFlowState(storage, 'fictional-refinanced-points');
+    if (!reopened) throw new Error('Expected the saved refinancing worksheet.');
+    expect(reopened.sectionData.deductions?.mortgageEntries).toEqual(entries);
+    return reopened;
+  };
+  const verify = (entries: MortgageEntryData[], expectedPoints: string[], line8c = '123', itemized = '20123') => {
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen(entries)));
+    expect(input.form1098.map(form => form.pointsPaid)).toEqual(entries.map(() => '0'));
+    const federal = calculateFederalTax(input);
+    expect(federal.scheduleA.mortgageWorksheet.sourceDeductions.map(source => source.pointsBeforeLimit.toFixed())).toEqual(expectedPoints);
+    expect(federal.scheduleA.mortgageWorksheet.line8c.toFixed()).toBe(line8c);
+    expect(federal.itemizedDeductions.toFixed()).toBe(itemized);
+  };
+  verify([original, successor], ['100', '23.33']);
+  verify([successor, original], ['23.33', '100']);
+  const annual = { ...completed, sameLenderWorksheetScope: 'full_year' as const, successorPaymentsInYear: undefined,
+    successorPaymentIntervalMonths: undefined, deductibleAmountBeforeLimit: '123.33' };
+  verify([{ ...original, pointsMethod: 'none', pointsHistory: undefined }, { ...successor, pointsHistory: annual }], ['0', '123.33']);
+  verify([{ ...successor, pointsHistory: { ...annual, sameLenderWorksheetScope: undefined } }], ['123.33'], '123', '10123');
+  const zeroOld = { ...original, pointsHistory: { ...original.pointsHistory, paymentsInYear: '0' } };
+  verify([zeroOld, { ...successor, pointsHistory: annual }], ['0', '123.33']);
+  const halfCent = { ...completed, newLoanTermMonths: '160', successorPaymentsInYear: '1', deductibleAmountBeforeLimit: '4.38' };
+  verify([original, { ...successor, pointsHistory: halfCent }], ['100', '4.38'], '104', '20104');
+  const current = { ...successor, pointsPaid: '3000', pointsPaidByReturnAmount: '3000', pointsHistory: {
+    ...completed, paidDate: '2025-04-01', priorPointsDeducted: '0', unamortizedPointsAtStartOfYear: '0', unamortizedPointsAvailable: '3000', reportedOnCurrentForm1098: true,
+  } };
+  const currentControl = { ...current, pointsHistory: { ...current.pointsHistory, sameLenderWorksheetScope: undefined } };
+  expect(buildTaxInputFromGuidedData(reopen([currentControl]))?.form1098[0]?.pointsPaid).toBe('3000');
+  const excessiveSuccessor = { ...successor, pointsHistory: { ...completed, deductibleAmountBeforeLimit: '700' } };
+  for (const entries of [
+    [excessiveSuccessor], [zeroOld, successor], [{ ...successor, pointsHistory: { ...completed, deductibleAmountBeforeLimit: '0' } }],
+    [current], [{ ...original, pointsHistory: { ...original.pointsHistory, sameLenderWorksheetScope: 'successor_only' as const } }],
+  ]) {
+    const held = reopen(entries);
+    expect.soft(buildTaxInputFromGuidedData(held) === null).toBe(true);
+    expect.soft(() => buildGuidedMortgageInputs(held.sectionData.deductions, 2025, 'single')).toThrow(/successor-only/i);
+  }
+  for (const unresolved of [
+    { ...completed, deductibleAmountBeforeLimit: '700' },
+    { ...completed, successorPaymentsInYear: undefined },
+    { ...completed, successorPaymentIntervalMonths: undefined },
+    { ...completed, successorPaymentsInYear: '0' },
+    { ...completed, successorPaymentsInYear: '12' },
+    { ...completed, successorPaymentsInYear: '7', successorPaymentIntervalMonths: '2' },
+    { ...completed, newLoanTermMonths: '3' },
+    { ...completed, deductibleAmountBeforeLimit: '23.34' },
+    { ...halfCent, deductibleAmountBeforeLimit: '4.3801' },
+    { ...completed, sameLenderWorksheetScope: undefined },
+    annual,
+    { ...completed, newLoanReference: 'Other Loan' },
+    { ...completed, endingDate: '2025-07-02' },
+    { ...completed, sourceReference: original.pointsHistory!.sourceReference },
+    { ...completed, priorPointsDeducted: '2199.99', unamortizedPointsAtStartOfYear: '800.01', unamortizedPointsAvailable: '800.01' },
+    { ...completed, deductibleAmountBeforeLimit: '700.01' },
+  ]) {
+    const held = reopen([original, { ...successor, pointsHistory: unresolved }]);
+    expect.soft(buildTaxInputFromGuidedData(held) === null).toBe(true);
+    expect.soft(() => buildGuidedMortgageInputs(held.sectionData.deductions, 2025, 'single'))
+      .toThrow(/same original loan.*points.*successor|actual successor/i);
+  }
 });

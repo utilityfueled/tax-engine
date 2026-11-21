@@ -42,5 +42,23 @@ it('preserves actual mortgage points history and invalidates changed confirmatio
     await change('Actual points deduction method', 'ratable'); await change('Actual points deduction method', 'completed_amortization');
     expect(latest.mortgageEntries?.[0]?.pointsHistory?.sameLenderRefinance).toBe(false);
     expect(latest.mortgageEntries?.[0]?.pointsPaid).toBe('0');
+    await change('Actual completed points method', 'same_lender_refinancing');
+    await change('Have the actual completed points method and its pre-limit deduction been checked?', 'true');
+    await change('Which period does the completed points amount cover?', 'successor_only');
+    expect(latest.mortgageEntries?.[0]?.pointsHistory).toMatchObject({ sameLenderWorksheetScope: 'successor_only', completedMethodConfirmed: null });
+    expect(latest.mortgageEntries?.[0]?.pointsHistory?.successorPaymentsInYear).toBeUndefined();
+    expect(latest.mortgageEntries?.[0]?.pointsHistory?.successorPaymentIntervalMonths).toBeUndefined();
+    await change('Actual number of replacement-loan payments this tax year', '6');
+    await change('Actual months between replacement-loan payments', '1');
+    expect(latest.mortgageEntries?.[0]?.pointsHistory).toMatchObject({ successorPaymentsInYear: '6', successorPaymentIntervalMonths: '1' });
+    await change('Which period does the completed points amount cover?', 'full_year');
+    expect(latest.mortgageEntries?.[0]?.pointsHistory?.sameLenderWorksheetScope).toBe('full_year');
+    await change('Which period does the completed points amount cover?', 'successor_only');
+    await change('Actual completed points method', 'early_termination');
+    expect(latest.mortgageEntries?.[0]?.pointsHistory?.sameLenderWorksheetScope).toBeUndefined();
+    await change('Actual completed points method', 'same_lender_refinancing');
+    await change('Which period does the completed points amount cover?', 'successor_only');
+    await change('Actual points deduction method', 'ratable');
+    expect(latest.mortgageEntries?.[0]?.pointsHistory?.sameLenderWorksheetScope).toBeUndefined();
   } finally { await act(async () => root.unmount()); container.remove(); }
 });

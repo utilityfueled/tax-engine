@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import type { MortgageInterestWorksheet } from '@/models/inputs';
 import type { MortgageEntryData } from './guided-interview-flow';
 import { mortgagePointFacts } from './guided-mortgage-facts';
@@ -13,6 +14,8 @@ export interface MortgagePointsHistoryData {
   deductibleAmountBeforeLimit?: string; unamortizedPointsAvailable?: string; serviceFeesExcludedConfirmed?: boolean | null; reportedOnCurrentForm1098?: boolean | null;
   completedMethodConfirmed?: boolean | null; endingDate?: string; sameLenderRefinance?: boolean | null;
   newLoanReference?: string; newLoanTermMonths?: string; sameLenderBalanceSpreadConfirmed?: boolean | null;
+  sameLenderWorksheetScope?: '' | 'successor_only' | 'full_year';
+  successorPaymentsInYear?: string; successorPaymentIntervalMonths?: string;
 }
 type Points = MortgageInterestWorksheet['loans'][number]['points'];
 function money(value: string | undefined, label: string): string {
@@ -27,6 +30,25 @@ function confirmed(value: boolean | null | undefined, label: string): true {
   if (value !== true) throw new Error(`Confirm the actual mortgage points ${label} from the original records.`);
   return true;
 }
+
+export function isGuidedMortgageSuccessorAmountRatable(source: MortgagePointsHistoryData, oldAllowance: Decimal, refinanceDate: string): boolean {
+  const payments = integer(source.successorPaymentsInYear, 'successor payment count this tax year', 0, 12);
+  const interval = integer(source.successorPaymentIntervalMonths, 'successor payment interval in months', 1, 12);
+  const term = integer(source.newLoanTermMonths, 'new loan term in months', 1, 1200);
+  const coveredMonths = payments * interval;
+  const monthsFromRefinance = 13 - Number(refinanceDate.slice(5, 7));
+  if (coveredMonths > Math.min(monthsFromRefinance, term) || term % interval !== 0) return false;
+
+  const beginning = parseGuidedCurrency(source.unamortizedPointsAtStartOfYear);
+  const amount = parseGuidedCurrency(source.deductibleAmountBeforeLimit);
+  const Exact = Decimal.clone({ precision: [beginning, oldAllowance, amount].reduce((digits, value) => digits + value.toFixed().length, 8) });
+  const remaining = new Exact(beginning).minus(oldAllowance);
+  if (amount.gt(remaining)) return false;
+  // Compare exact products to avoid rounding a repeating quotient before the cent check.
+  const threshold = new Exact(amount).minus(amount.decimalPlaces() <= 2 ? '0.005' : '0');
+  return threshold.times(term).lte(remaining.times(coveredMonths));
+}
+
 /** Original history is reconciled before the existing points calculator runs. */
 export function buildGuidedMortgagePoints(entry: MortgageEntryData, taxYear: number): Points {
   const paid = parseGuidedCurrency(money(entry.pointsPaidByReturnAmount, 'actual points share'));
@@ -34,6 +56,10 @@ export function buildGuidedMortgagePoints(entry: MortgageEntryData, taxYear: num
   if (fees.gt(paid)) throw new Error('Points service fees exceed this return’s actual paid share.');
   const eligible = paid.minus(fees), source = entry.pointsHistory;
   const method = entry.pointsMethod;
+  const successorOnly = source?.sameLenderWorksheetScope === 'successor_only';
+  if (successorOnly && (method !== 'completed_amortization' || source.completedMethod !== 'same_lender_refinancing')) {
+    throw new Error('Successor-only points require a completed same-lender refinancing worksheet.');
+  }
   if (!method) throw new Error('Choose the actual mortgage points method; saved history cannot be treated as no claim.');
   if (method === 'none') {
     if (eligible.gt(0) || source) throw new Error('Reconcile the original positive points or saved points history before selecting no points claim.');
@@ -49,13 +75,15 @@ export function buildGuidedMortgagePoints(entry: MortgageEntryData, taxYear: num
   }
   if (!source || source.sourceTaxYear !== String(taxYear) || !source.sourceReference?.trim() || !source.originalLender?.trim() || !source.originalAccountReference?.trim()) throw new Error('Enter the actual points worksheet year/reference and original loan identity.');
   if (!isActualDate(source.paidDate) || typeof source.paidDate !== 'string' || source.paidDate > `${taxYear}-12-31`) throw new Error('Enter the actual original points payment date, no later than this source year.');
+  const current = source.paidDate.startsWith(`${taxYear}-`);
+  if (successorOnly && current) throw new Error('Successor-only points require an original points payment from before this tax year.');
   if (entry.loanType === 'original' && source.paidDate < entry.originationDate) throw new Error('Points paid before the represented original loan date require their actual prior-loan or refinancing history.');
   const originalPoints = money(source.originalPoints, 'actual original points excluding service fees');
   const originalPrincipal = money(source.originalPrincipal, 'actual original points loan principal');
   if (parseGuidedCurrency(originalPrincipal).lte(0)) throw new Error('Actual original points principal must be positive.');
   const prior = parseGuidedCurrency(money(source.priorPointsDeducted, 'actual points deducted before this year'));
   const beginning = parseGuidedCurrency(money(source.unamortizedPointsAtStartOfYear, 'actual beginning unamortized points'));
-  const original = parseGuidedCurrency(originalPoints), current = source.paidDate.startsWith(`${taxYear}-`);
+  const original = parseGuidedCurrency(originalPoints);
   if (current ? !prior.isZero() || !beginning.isZero() || !original.eq(eligible) : prior.gt(original) || !original.minus(prior).eq(beginning)) throw new Error('Original points, prior deductions and actual beginning history do not reconcile to the current source.');
   const cashMethod = confirmed(source.cashMethod, 'cash accounting method');
   const pointsAreInterest = confirmed(source.pointsAreInterest, 'interest qualification excluding service charges');

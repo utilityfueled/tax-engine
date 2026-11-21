@@ -35,9 +35,31 @@ lines:
     formula: "The actual800 early-payoff balance adds to10000 actual interest, producing10800 itemized deduction and89200 taxable income on100000 wages; original Box6stays0."
     irsRef: "Publication936 Mortgage ending early; ScheduleA8c and Form1040line12"
     testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::transfers actual prior points through the canonical return once"
+  - line: "retained-source-identity"
+    description: "Reconcile multiple positive claims from one original points balance"
+    formula: "Reopening a draft preserves the original lender and account. Reconcile positive claims against the same original points balance when the supported same-lender transition below is not established. Distinct original loans remain separate, including loans from the same lender. A retained balance with no deduction this year does not duplicate a positive claim."
+    irsRef: "Publication936 Deduction Allowed Ratably; Mortgage ending early"
+    testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::holds a retained original mortgage points balance claimed twice after reopening"
+  - line: "same-lender-transition"
+    description: "Separate actual old-loan and successor-only points deductions"
+    formula: >-
+      Successor-only scope requires one positive recognized ratable old-loan deduction and one linked completed
+      same-lender refinance worksheet for points originally paid before this year. Require distinct actual worksheet
+      references, matching original payment date, principal, points and prior deductions, the same lender and home,
+      distinct original and successor loan accounts, matching refinance and successor origination dates, and a saved
+      confirmation that the completed amount covers the successor period only. Subtract the exact old-loan deduction
+      from the opening balance. Bound the completed successor amount by that remainder and its ratable share from
+      actual successor payment count times months between payments divided by the new term in months. Require the
+      covered months to fit the new term and the calendar months from refinance through December, including the
+      refinance month. Allow rounding the ratable share to the nearest cent. Blank successor facts cannot use old-loan
+      facts. Six payments give100 on the old loan, then six monthly successor payments after a July refinance over a
+      new180-month term give23.33 from the remaining700. Twelve monthly successor payments cannot fit that July
+      refinance. When there is no separate positive old-loan claim, use one actual whole-year worksheet.
+    irsRef: "Publication936 Deduction Allowed Ratably; Mortgage ending early"
+    testRef: "tests/guided-interview/guided-mortgage-points-history.test.ts::reconciles a saved same-lender refinance with separate old and successor points"
   - line: "controls"
     description: "History controls do not invent past amounts"
-    formula: "A zero current Box6 still exposes source-method controls. Blank records remain unknown; method changes retain actual history, amount and qualification edits revoke loan and annual confirmation."
+    formula: "A zero current Box6 still exposes source-method controls. Blank records remain unknown. Method changes retain actual history and clear successor-only scope when leaving its refinance method. Amount, worksheet period and qualification edits revoke loan and annual confirmation. Successor-only scope collects separate actual successor payment facts without old-loan defaults."
     irsRef: "Publication936 original records and amortization history"
     testRef: "tests/apps/web/mortgage-points-history-interactions.test.tsx::preserves actual mortgage points history and invalidates changed confirmations"
   - line: "persistence"

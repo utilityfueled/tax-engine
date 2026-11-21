@@ -1,3 +1,4 @@
+import type Decimal from 'decimal.js';
 import { calculateMortgageInsurancePrepaid } from '@/engine/forms/mortgage-insurance-prepaid';
 import { mortgagePrepaidSource, mortgagePrepaidParentValues, mortgagePrepaidDraftValues, assertMortgagePrepaidSnapshot, type GuidedMortgageInsurancePrepaidData } from './guided-mortgage-insurance-prepaid';
 import { Form1098Schema, MortgageInterestWorksheetSchema } from "@/models/inputs";
@@ -7,7 +8,7 @@ import { mortgageFactErrors } from "./guided-mortgage-facts";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { buildGuidedMortgageBalance } from "./guided-mortgage-balances";
-import { buildGuidedMortgagePoints } from "./guided-mortgage-points";
+import { buildGuidedMortgagePoints, isGuidedMortgageSuccessorAmountRatable } from "./guided-mortgage-points";
 import { buildGuidedMortgageRecoveries, type MortgageRecoveryData, type RecoveryOnlyStatementData, type RecoveryMiscData } from "./guided-mortgage-recoveries";
 
 export interface MortgageWorksheetData {
@@ -38,6 +39,34 @@ const sourceIdentity = (entry: MortgageEntryData) => `${entry.lender.trim()}:${e
 function money(value: string | undefined, label: string): string {
   const error = amountError(value, label); if (error) throw new Error(error);
   return parseGuidedCurrency(value).toFixed();
+}
+
+type RetainedPointsClaim = { entry: MortgageEntryData; history: NonNullable<MortgageEntryData['pointsHistory']>; amount: Decimal };
+const normalizedReference = (value: string | undefined) => value?.trim().toLowerCase().replace(/\s+/g, ' ');
+
+function hasReconciledSameLenderRefinance(claims: RetainedPointsClaim[]): boolean {
+  if (claims.length !== 2) return false;
+  const oldLoan = claims.find(claim => claim.entry.pointsMethod === 'ratable');
+  const successor = claims.find(({ entry, history }) => entry.pointsMethod === 'completed_amortization' && history.completedMethod === 'same_lender_refinancing');
+  if (!oldLoan || !successor || successor.history.sameLenderWorksheetScope !== 'successor_only') return false;
+
+  const oldHistory = oldLoan.history;
+  const newHistory = successor.history;
+  const originalLender = normalizedReference(oldHistory.originalLender);
+  const oldAccount = normalizedReference(oldLoan.entry.accountReference);
+  const successorAccount = normalizedReference(successor.entry.accountReference);
+  if (normalizedReference(oldLoan.entry.lender) !== originalLender || normalizedReference(successor.entry.lender) !== originalLender
+    || oldAccount !== normalizedReference(oldHistory.originalAccountReference) || successorAccount === oldAccount
+    || successorAccount !== normalizedReference(newHistory.newLoanReference)
+    || normalizedReference(oldLoan.entry.propertyAddress) !== normalizedReference(successor.entry.propertyAddress)
+    || successor.entry.loanType !== 'refinance' || newHistory.endingDate !== successor.entry.originationDate
+    || oldLoan.entry.originationDate >= successor.entry.originationDate
+    || normalizedReference(oldHistory.sourceReference) === normalizedReference(newHistory.sourceReference)
+    || oldHistory.paidDate !== newHistory.paidDate) return false;
+
+  const basisFields = ['originalPoints', 'originalPrincipal', 'priorPointsDeducted', 'unamortizedPointsAtStartOfYear'] as const;
+  if (!basisFields.every(field => parseGuidedCurrency(oldHistory[field]).eq(parseGuidedCurrency(newHistory[field])))) return false;
+  return isGuidedMortgageSuccessorAmountRatable(newHistory, oldLoan.amount, successor.entry.originationDate);
 }
 
 /** Preserve raw source provenance as well as its validated canonical projection. */
@@ -102,8 +131,27 @@ function buildMortgageInputs(data: MortgageDeductionData | undefined, taxYear?: 
   form1098.push(...recoverySources.recoveryOnlyForm1098);
   const mortgageInterestWorksheet = MortgageInterestWorksheetSchema.parse({ sourceTaxYear: Number(root.sourceTaxYear), sourceReference: root.sourceReference.trim(), sourceFactsConfirmed: root.sourceFactsConfirmed, allHomeDebtIncluded: root.allHomeDebtIncluded, loans, priorYearInterestRecoveries: recoverySources.recoveries });
   const form1099Misc = recoverySources.form1099Misc;
-  calculateHomeMortgageInterest({ taxpayer: { taxYear, filingStatus: statuses[filingStatus], spouse }, form1098, mortgageInterestWorksheet, form1099Misc });
   const actual = { taxpayer:{taxYear,filingStatus:statuses[filingStatus],spouse},form1098,mortgageInterestWorksheet,form1099Misc };
+  const { sourceDeductions } = calculateHomeMortgageInterest(actual);
+  const entriesBySource = new Map(entries.map(entry => [sourceIdentity(entry), entry]));
+  const retainedPointsClaims = new Map<string, RetainedPointsClaim[]>();
+  for (const { sourceId, pointsBeforeLimit } of sourceDeductions) {
+    const entry = entriesBySource.get(sourceId);
+    const history = entry?.pointsHistory;
+    if (!entry || !history?.paidDate || history.paidDate.startsWith(`${taxYear}-`)) continue;
+    if (!pointsBeforeLimit.gt(0) && history.sameLenderWorksheetScope !== 'successor_only') continue;
+    // A servicer's current statement can have a different account from the original points ledger.
+    const originalLoan = JSON.stringify([normalizedReference(history.originalLender), normalizedReference(history.originalAccountReference)]);
+    const claims = retainedPointsClaims.get(originalLoan) ?? [];
+    claims.push({ entry, history, amount: pointsBeforeLimit });
+    retainedPointsClaims.set(originalLoan, claims);
+  }
+  for (const claims of retainedPointsClaims.values()) {
+    const requiresReconciliation = claims.length > 1 || claims.some(({ history }) => history.sameLenderWorksheetScope === 'successor_only');
+    if (requiresReconciliation && !hasReconciledSameLenderRefinance(claims)) {
+      throw new Error('Reconcile the same original loan’s retained mortgage points. Enter a separate positive old-loan deduction with the linked successor-only worksheet, or enter one completed whole-year claim.');
+    }
+  }
   const parentValues = currentPrepaidParentValues(data,taxYear,filingStatus,form1098,mortgageInterestWorksheet);
   entries.forEach(entry => {
     if (entry.insuranceAllocationMethod === 'current-original-prepaid') {

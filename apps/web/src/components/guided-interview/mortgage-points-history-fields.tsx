@@ -9,14 +9,25 @@ function Fact({ label, value, onChange }: { label: string; value: boolean | null
 }
 export function MortgagePointsHistoryFields({ entry, onChange }: { entry: MortgageEntryData; onChange: (change: Partial<MortgageEntryData>) => void }) {
   const source = entry.pointsHistory;
-  const update = (change: Partial<MortgagePointsHistoryData>) => onChange({ pointsHistory: { ...source, ...change,
+  const update = (change: Partial<MortgagePointsHistoryData>, entryChange: Partial<MortgageEntryData> = {}) => onChange({ ...entryChange, pointsHistory: { ...source, ...change,
     ...(!('historyConfirmed' in change) && !('completedMethodConfirmed' in change) ? { historyConfirmed: null, completedMethodConfirmed: null } : {}) } });
+  function changePointsMethod(pointsMethod: MortgageEntryData['pointsMethod']) {
+    if (pointsMethod !== 'completed_amortization' && source?.sameLenderWorksheetScope === 'successor_only') {
+      update({ sameLenderWorksheetScope: undefined }, { pointsMethod });
+    } else {
+      onChange({ pointsMethod });
+    }
+  }
+  function changeCompletedMethod(completedMethod: MortgagePointsHistoryData['completedMethod']) {
+    const clearScope = completedMethod !== 'same_lender_refinancing' && source?.sameLenderWorksheetScope === 'successor_only';
+    update({ completedMethod, ...(clearScope ? { sameLenderWorksheetScope: undefined } : {}) });
+  }
   const text = (key: keyof MortgagePointsHistoryData, label: string, type = 'text') => <label className="guided-field" key={key}><span className="guided-field-label">{label}</span><input className="guided-input" type={type} value={typeof source?.[key] === 'string' ? source[key] as string : ''} onChange={event => update({ [key]: event.target.value })} /></label>;
   const amount = (key: keyof MortgagePointsHistoryData, label: string) => <CurrencyField key={key} label={label} value={typeof source?.[key] === 'string' ? source[key] as string : ''} onChange={value => update({ [key]: value })} required hint="Use original records. Enter 0 only when established; past deductions are not inferred from elapsed years." />;
   const fact = (key: keyof MortgagePointsHistoryData, label: string) => <Fact key={key} label={label} value={typeof source?.[key] === 'boolean' ? source[key] as boolean : null} onChange={value => update({ [key]: value })} />;
   return <fieldset className="guided-fieldset" style={{ gridColumn: '1 / -1' }}><legend>Points deduction sources</legend>
     <p className="guided-hint">Current Box 6 and past points history are separate. Prior amortization can apply when the current statement reports zero. Keep each original amount and its actual deduction history.</p>
-    <label className="guided-field"><span className="guided-field-label">Actual points deduction method</span><select className="guided-input" value={entry.pointsMethod ?? ''} onChange={event => onChange({ pointsMethod: event.target.value as MortgageEntryData['pointsMethod'] })}><option value="">Choose actual method</option><option value="none">No points claim or history</option><option value="current_year">Qualifying current-year purchase points</option><option value="ratable">Actual ratable points history</option><option value="completed_amortization">Completed points worksheet</option></select></label>
+    <label className="guided-field"><span className="guided-field-label">Actual points deduction method</span><select className="guided-input" value={entry.pointsMethod ?? ''} onChange={event => changePointsMethod(event.target.value as MortgageEntryData['pointsMethod'])}><option value="">Choose actual method</option><option value="none">No points claim or history</option><option value="current_year">Qualifying current-year purchase points</option><option value="ratable">Actual ratable points history</option><option value="completed_amortization">Completed points worksheet</option></select></label>
     {(entry.pointsMethod === 'ratable' || entry.pointsMethod === 'completed_amortization') && <>
       {text('sourceTaxYear', 'Points worksheet tax year')}{text('sourceReference', 'Points worksheet source reference')}
       {text('originalLender', 'Original points lender')}{text('originalAccountReference', 'Original points loan reference')}{text('paidDate', 'Original points payment date', 'date')}
@@ -28,7 +39,7 @@ export function MortgagePointsHistoryFields({ entry, onChange }: { entry: Mortga
         {fact('comparableLoanTerms', 'Actual comparable-loan terms are established')}
         <p className="guided-hint">The ordinary ratable method requires a term no longer than 30 years. Comparable terms are required for a term longer than 10 years. The original principal and points must meet the Publication 936 limits.</p>
       </> : <>
-        <label className="guided-field"><span className="guided-field-label">Actual completed points method</span><select className="guided-input" value={source?.completedMethod ?? ''} onChange={event => update({ completedMethod: event.target.value as MortgagePointsHistoryData['completedMethod'] })}><option value="">Choose source worksheet method</option><option value="ongoing_amortization">Completed ongoing amortization</option><option value="early_termination">Mortgage ended without same-lender refinancing</option><option value="same_lender_refinancing">Remaining points spread over same-lender refinancing</option><option value="qualified_improvement_allocation">Completed current-year improvement and ratable allocation</option></select></label>
+        <label className="guided-field"><span className="guided-field-label">Actual completed points method</span><select className="guided-input" value={source?.completedMethod ?? ''} onChange={event => changeCompletedMethod(event.target.value as MortgagePointsHistoryData['completedMethod'])}><option value="">Choose source worksheet method</option><option value="ongoing_amortization">Completed ongoing amortization</option><option value="early_termination">Mortgage ended without same-lender refinancing</option><option value="same_lender_refinancing">Remaining points spread over same-lender refinancing</option><option value="qualified_improvement_allocation">Completed current-year improvement and ratable allocation</option></select></label>
         {amount('deductibleAmountBeforeLimit', 'Completed points deduction before the home-debt limit')}{amount('unamortizedPointsAvailable', 'Actual points available in the completed worksheet')}
         {fact('serviceFeesExcludedConfirmed', 'Does the completed worksheet exclude service fees and noninterest charges?')}
         {fact('reportedOnCurrentForm1098', 'Is this completed points amount reported on the current Form 1098?')}
@@ -38,6 +49,18 @@ export function MortgagePointsHistoryFields({ entry, onChange }: { entry: Mortga
         {source?.completedMethod === 'same_lender_refinancing' && <>
           {text('newLoanReference', 'Actual new loan source reference')}{text('newLoanTermMonths', 'Actual new loan term in months')}
           {fact('sameLenderBalanceSpreadConfirmed', 'Are the remaining points spread over the new term without early acceleration?')}
+          <label className="guided-field"><span className="guided-field-label">Which period does the completed points amount cover?</span>
+            <select className="guided-input" value={source.sameLenderWorksheetScope ?? ''} onChange={event => update({ sameLenderWorksheetScope: event.target.value as MortgagePointsHistoryData['sameLenderWorksheetScope'] })}>
+              <option value="">Choose from the completed worksheet</option>
+              <option value="successor_only">Replacement loan only, with a separate positive old-loan deduction</option>
+              <option value="full_year">Whole tax year, including both loans</option>
+            </select>
+          </label>
+          <p className="guided-hint">Use one completed whole-year worksheet if there is no separate positive old-loan deduction.</p>
+          {source.sameLenderWorksheetScope === 'successor_only' && <>
+            {text('successorPaymentsInYear', 'Actual number of replacement-loan payments this tax year')}
+            {text('successorPaymentIntervalMonths', 'Actual months between replacement-loan payments')}
+          </>}
         </>}
         <p className="guided-hint">Use an actual completed amortization or improvement worksheet. A same-lender refinance cannot accelerate the old balance. Mixed prior unreported and current reported points require their separate allocation method; do not combine them here.</p>
         {fact('completedMethodConfirmed', 'Have the actual completed points method and its pre-limit deduction been checked?')}
