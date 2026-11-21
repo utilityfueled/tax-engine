@@ -1,5 +1,49 @@
 # 2026 upgrade implementation evidence
 
+## November 21 first-home IRA review export
+
+Commit `b3f07a0b` attaches one 2025 Form 5329 for a wholly excepted,
+verified Code 1 first-home distribution. Actual raw and redacted
+PDFs show $6,000 on lines 1 and 2, exception 09, and no additional
+tax. Eight independent packet checks include combinations with HSA
+and education amounts. The workspace reconciles original facts
+before redaction. A stale source or mismatched audit cannot validate
+the packet. The final integrated source passed 61 focused tests, both
+type checks, 9,851 spec references, inventory and browser audit.
+[2025 Form 5329 instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5).
+
+## November 21 guided IRA receipt dates
+
+Commit `ed777609` carries a confirmed single-payment Code 1 IRA receipt
+date from the guided interview into the 2025 review return. The day
+before the half-birthday produces $600 of additional tax on a $6,000
+distribution. The exact half-birthday produces a saved workspace
+Form 5329 with exception 12 and zero additional tax. A new statement,
+changed birth date, or lost source scope holds the saved date until the
+taxpayer reconciles or removes it. An explicit additional-worksheet
+answer of Yes still holds the return. Independent workspace PDF review,
+287 exact focused tests and 9,850 spec references passed.
+The same source passed all eight guided IRA and recovery Chromium cases
+at the 30-second limit with zero retries.
+Coverage passed 30,034 tests in 2,186 files at 88.53% branches on
+PostgreSQL 16.16 with clean shutdown. Core and web builds passed.
+Full lint reported zero errors and 12,151 warnings.
+[2025 Form 5329 instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5).
+
+## November 21 first-home IRA source facts
+
+Commit `ec4bc71c` computes exception 09 for a confirmed primary-owned
+traditional IRA receipt that funded a qualifying first-home payment.
+The source requires known lifetime usage, actual receipt and contract
+dates, ownership history, and confirmation that the payment came from
+the matched distribution. The day-120 fixture preserves $7,000 of
+taxable IRA income and allows a $6,000 exception, leaving $100 of
+additional tax. Day 121 is outside the window. Independent cent-level
+cap checks and 243 exact focused tests passed. The 2026 calculation
+used test-only constants and the annual hold remains.
+[26 U.S.C. § 72(t)(8)](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm) ·
+[2025 Publication 590-B](https://www.irs.gov/pub/irs-prior/p590b--2025.pdf#page=27).
+
 ## November 21 Form 5329 IRA age exception
 
 Commit `7a0175e0` includes Form 5329 in a 2025 nonjoint review packet
@@ -151,6 +195,13 @@ reached its final assertions at the case deadline. Strict runtime
 qualification remains open.
 [Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44946102783/job/136973640086) ·
 [Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44946102783/job/136973640216).
+
+The completed ARM64 run on the same QOF source passed image smoke,
+Compose upgrade and recovery, and container cleanup. Strict browsers
+passed 642, failed eight, and retained five existing skips. The failures
+covered desktop NEW212, reciprocal refund, both resident-credit cases,
+and four school-district journeys.
+[Strict ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44946369818/job/136977124639).
 
 Independent source review and 216 focused tests passed. The exact
 extended Chromium tests reproduced the missing question on the prior

@@ -1,5 +1,49 @@
 {
   "activeContinuation": {
+    "nov21FirstHomeIraReviewExport": {
+      "commit": "b3f07a0b6e06ff887078bc49944a3d8c9682969e",
+      "authorFocusedTestsPassed": 1059,
+      "finalExactFocusedTestsPassed": 61,
+      "independentRawAndRedactedPhysicalCasesPassed": 8,
+      "specRefsValid": 9851,
+      "coreAndWebTypechecksPassed": true,
+      "inventoryAndBrowserAuditPassed": true,
+      "sourceReconciledBeforeRedaction": true,
+      "zeroAdditionalTaxPhysicalCase": {"line1": "6000", "exceptionCode": "09", "line2": "6000", "additionalTax": "0"},
+      "filingEnabled": false
+    },
+    "nov21GuidedIraReceiptDate": {
+      "commit": "ed77760957ddeca068be659c6d7a69ed39d731fc",
+      "authorFocusedTestsPassed": 1442,
+      "combinedExactFocusedTestsPassed": 287,
+      "specRefsValid": 9850,
+      "combinedProductionChromiumCasesPassed": 8,
+      "exactCoverageTestsPassed": 30034,
+      "exactCoverageSuitesPassed": 2186,
+      "branchCoveragePercent": 88.53,
+      "coveragePostgresVersion": "16.16",
+      "coveragePostgresStopPassed": true,
+      "coreBuildPassed": true,
+      "webBuildPassed": true,
+      "fullLintErrors": 0,
+      "browserCaseLimitMs": 30000,
+      "browserRetries": 0,
+      "independentWorkspacePdfPassed": true,
+      "savedDateReconciliationPassed": true,
+      "explicitAdditionalWorksheetHoldPreserved": true,
+      "filingEnabled": false
+    },
+    "nov21FirstHomeIraSource": {
+      "commit": "ec4bc71cc466b7cc64bf368b81108756006f519a",
+      "officialSources": ["https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm", "https://www.irs.gov/pub/irs-prior/p590b--2025.pdf#page=27"],
+      "authorFocusedTestsPassed": 1773,
+      "exactFocusedTestsPassed": 243,
+      "independentCalculationReviewPassed": true,
+      "day120Fixture": {"taxableIra": "7000", "exception": "6000", "additionalTax": "100"},
+      "scope": "confirmed canonical facts for a single actual nonjoint traditional IRA receipt and qualified payment",
+      "2026TestConstantsOnly": true,
+      "filingEnabled": false
+    },
     "nov21IraForm5329AgeException": {
       "commit": "7a0175e0245d10ddc9a3ee4ff7d382c003430539",
       "officialSources": ["https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5", "https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15"],
@@ -129,6 +173,7 @@
       "remoteWebBuildPassed": true,
       "managedLinuxBrowser": {"run": 44946102783, "job": 136973640086, "passed": 650, "failed": 0, "existingSkips": 5},
       "strictAmd64Browser": {"run": 44946102783, "job": 136973640216, "passed": 644, "failed": 6, "existingSkips": 5, "caseLimitMs": 30000, "allFailuresAtCaseDeadline": true},
+      "strictArm64Browser": {"run": 44946369818, "job": 136977124639, "passed": 642, "failed": 8, "existingSkips": 5, "caseLimitMs": 30000, "imageSmokePassed": true, "composeRecoveryPassed": true, "containerCleanupPassed": true},
       "gateStatus": "2026 annual and PDF gates remain closed",
       "workflows": {"ci": 44946102841, "web": 44946102783, "docker": 44946102859, "nativeArm64": 44946369818}
     },
