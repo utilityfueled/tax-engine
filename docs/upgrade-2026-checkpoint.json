@@ -3,9 +3,11 @@
     "nov21OhioSchoolNavigationAndLinuxTiming": {
       "navigationCommit": "040196f800a59c8933867ec117535f61d0c83717",
       "diagnosticCommit": "f726a44e269976faac0e08d8c1e6b2348dc932cd",
+      "diagnosticSourceBindings": {"commit": "63910ba767e69d57cdb38e6686f4bd207ec5b983", "failingCiRun": 44929288038, "importOverlayTestsPassed": 27, "fullBatchManifestTestsPassed": 8, "pushVerified": true},
       "checks": {"redAdapterCalls": 2, "greenAdapterCalls": 1, "focusedTestsPassed": 80, "independentTestsPassed": 3, "coreTypesPassed": true, "webTypesPassed": true, "browserAuditPassed": true, "diagnosticSpecReferencesPassed": 7, "diagnosticBrowserCasesDiscovered": 4},
       "priorExactRuntime": {"source": "948547a2679cdbb78a2e1185c246e9df9b0fe62f", "webRun": 44923672388, "arm64Run": 44923723355, "managedLinuxPassed": 648, "managedRailroadInspectionTimeouts": 2, "strictAmd64Passed": 648, "strictAmd64Failures": 2, "strictArm64Passed": 641, "strictArm64Failures": 9, "existingSkipsPerRun": 5},
-      "remaining": "Run the revised exact source; collect phase markers and establish both strict platform passes without changing the limits. No common root cause is established."
+      "revisedExactWebRuntime": {"source": "1d80a76177e14edd55f7221c4acd9a242db08798", "webRun": 44929287996, "managedJob": 136922159088, "strictAmd64Job": 136922158872, "managedLinuxPassed": 648, "strictAmd64Passed": 637, "railroadInspectionTimeoutsPerJob": 2, "strictAmd64OhioTimeouts": 11, "strictAmd64SchoolHeaderEntryTimeouts": 3, "strictAmd64SchoolHeaderConfirmationTimeouts": 1, "existingSkipsPerJob": 5},
+      "remaining": "Establish managed and both strict platform passes with the original deadlines. Determine the cause of the Ohio delays and the railroad inspection deadlines."
     },
     "nov21CanonicalRetainedPointsProvenance": {
       "commit": "b9e1bce779211a094553ecc4f1c05cb11564e0cd",

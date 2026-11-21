@@ -30,6 +30,24 @@ support comparison on the next exact runs.
 [Managed and strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44923672388) ·
 [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44923723355).
 
+The timing change left two diagnostic source hashes stale. Both diagnostic
+checks reproduced the mismatch. Commit `63910ba7` refreshed the two hashes
+and passed the 27 import-overlay tests and eight full-batch manifest tests.
+The recorded test inputs, assertions and deadlines were retained.
+[Affected CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44929288038).
+
+On `1d80a761`, managed Linux passed 648 browser cases and strict AMD64
+passed 637, with five existing skips each. Both jobs hit the four-second
+deadline in the two railroad inspections after opening the saved PDF and
+entering page-text extraction. Strict AMD64 also had 11 Ohio deadlines.
+All four managed school cases finished all five timed phases. Three strict
+school cases reached the 30-second case deadline during header entry, and
+the fourth reached it during header confirmation after finishing entry in
+6.779 seconds. These markers identify where the cases stopped and leave the
+preceding elapsed time and common cause unresolved.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44929287996/job/136922159088) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44929287996/job/136922158872).
+
 ## November 21 original claims in canonical mortgage worksheets
 
 Commit `b9e1bce7` adds an optional original lender, loan account and actual
