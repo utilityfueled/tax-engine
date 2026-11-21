@@ -2712,7 +2712,8 @@ const MortgagePointsSchema = z.discriminatedUnion("method", [
   z.object({method:z.literal("none")}),
   z.object({method:z.literal("current_year"),cashMethod:z.boolean(),establishedPractice:z.boolean(),withinUsualAmount:z.boolean(),notServiceFees:z.boolean(),ownFundsSufficient:z.boolean(),buyBuildOrImproveMainHome:z.enum(["purchase","build","improve"]),percentageOfPrincipal:z.boolean(),onSettlementStatement:z.boolean(),fullDeductionElected:z.boolean(),paidDate:z.string()}),
   z.object({method:z.literal("ratable"),originalPoints:decimal,originalPrincipal:decimal,loanTermMonths:z.number().int().positive(),paymentsInYear:z.number().int().nonnegative(),paymentIntervalMonths:z.number().int().positive(),unamortizedPointsAtStartOfYear:decimal,cashMethod:z.boolean(),comparableLoanTerms:z.boolean(),pointsAreInterest:z.boolean(),paidDate:z.string()}),
-  z.object({method:z.literal("completed_amortization"),deductibleAmountBeforeLimit:decimal,unamortizedPointsAvailable:decimal,sourceTaxYear:z.number().int(),worksheetReference:z.string().min(1),serviceFeesExcludedConfirmed:z.boolean(),reportedOnCurrentForm1098:z.boolean()}),
+  z.object({method:z.literal("completed_amortization"),deductibleAmountBeforeLimit:decimal,unamortizedPointsAvailable:decimal,sourceTaxYear:z.number().int(),worksheetReference:z.string().min(1),serviceFeesExcludedConfirmed:z.boolean(),reportedOnCurrentForm1098:z.boolean(),
+    originalPointsSource:z.object({lender:z.string().min(1),loanAccountReference:z.string().min(1),paidDate:z.string()}).optional()}),
 ]);
 /** Actual Pub936 source records. No omitted source amount or qualification is defaulted. */
 export const MortgageInterestWorksheetSchema = z.object({

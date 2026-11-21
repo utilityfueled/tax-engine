@@ -59,6 +59,17 @@ lines:
     formula: "Current-year full points require actual applicable FigureB tests and election; ratable points require cash method, secured home, term<=30years, comparable terms when>10years, principal<=250000 or points<=4/6 by15year boundary, and actual payments/term. Actual completed amortization sources retain prior balances and current allowed amount; no service fees. Apply Table1 ratio to allowed current points. Reported points enter8a; unreported/amortized prior points enter8c."
     irsRef: "Pub936 Points, FigureB, Deduction Allowed Ratably and Table1line13 instructions"
     testRef: "tests/engine/forms/home-mortgage-interest.test.ts::implements the published ratable points example and actual current purchase qualification"
+  - line: "completed-retained-points-source"
+    description: "Optional original source for a completed annual claim of retained points"
+    formula: >-
+      An opted-in completed worksheet identifies the original lender, loan account and actual date the points were
+      paid before the return year. Those points are unreported on the current Form 1098. Each original lender and
+      account may support one positive completed annual claim even if current statements or worksheet references
+      differ. When a positive opted-in claim is present, another positive unreported completed worksheet must also
+      establish its original source. Zero allowances, unrelated current reported points and entirely unannotated
+      legacy worksheets retain their previous treatment. Original identity is never inferred from a current statement.
+    irsRef: "Pub936 Deduction Allowed Ratably and Mortgage ending early"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::binds opt-in completed retained points through the public parse and federal calculation"
   - line: "recovery"
     description: "Separate prior-year interest tax-benefit recovery"
     formula: "Each actual Box4 recovery reconciles by source and origin year; include only actual completed tax-benefit worksheet taxable amount on Schedule1line8z, subtracting an already-included amount only when bound to an actual1099MISC Box3 source without exceeding it. Same-year refund reduces current eligible interest; prior-year refund does not."

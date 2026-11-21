@@ -3,12 +3,11 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { calculateHomeMortgageInterest } from "@/engine/forms/home-mortgage-interest.js";
 import { calculateDeductibleMortgageInterest } from "@/utils/tax-math.js";
-import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateScheduleA } from "@/engine/schedules/schedule-a.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { getConstants } from "@/models/constants.js";
-import { parseInput } from "@/index.js";
+import { calculateFederalTax, parseInput } from "@/index.js";
 import { complexMFJFixture, simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 import { mortgageInput, mortgageLoan } from "../../fixtures/mortgage-source.js";
@@ -212,6 +211,48 @@ describe("Pub936 actual mortgage sources", () => {
     const mfs = mortgageInput();
     mfs.taxpayer.filingStatus = "married_filing_separately";
     expect(calculateHomeMortgageInterest(mfs).mortgageInterest.toString()).toBe("15000");
+  });
+  it("binds opt-in completed retained points through the public parse and federal calculation", () => {
+    const originalPointsSource = { lender: "Original Mortgage Lender", loanAccountReference: "Original Loan A", paidDate: "2020-01-01" };
+    const completed = { method: "completed_amortization", sourceTaxYear: 2025, worksheetReference: "Actual annual points ledger",
+      deductibleAmountBeforeLimit: "800.25", unamortizedPointsAvailable: "800.25", serviceFeesExcludedConfirmed: true, reportedOnCurrentForm1098: false };
+    const input = (firstPoints: Record<string, unknown>, secondPoints: Record<string, unknown>, secondBox6 = "0") => {
+      const first = mortgageLoan({ interestPaid: "10000", loanAccountReference: "Current Loan A", points: firstPoints,
+        balance: { method: "highest_balance", amount: "100000", sourceReference: "Actual annual maximum" } });
+      const second = { ...first, sourceId: "loan-two", form1098SourceId: "1098-two", loanAccountReference: "Current Loan B",
+        points: secondPoints, pointsPaid: secondBox6 };
+      const baseline = mortgageInput([first, second]);
+      return parseInput({ ...baseline, deductionElection: "itemized", mortgageInterestWorksheet: { ...baseline.mortgageInterestWorksheet, loans: [first, second] },
+        form1098: baseline.form1098.map((form, index) => ({ ...form, loanAccountReference: index === 0 ? "Current Loan A" : "Current Loan B" })) });
+    };
+    const first = { ...completed, originalPointsSource };
+    const copy = { ...completed, worksheetReference: "Different current statement source reference",
+      originalPointsSource: { lender: " original  mortgage lender ", loanAccountReference: " original loan a ", paidDate: "2020-01-01" } };
+    expect.soft(() => calculateFederalTax(input(first, copy))).toThrow(/duplicate.*original.*points/i);
+    expect.soft(() => calculateFederalTax(input(copy, { ...first, originalPointsSource: { ...originalPointsSource, paidDate: "2021-01-01" } })))
+      .toThrow(/duplicate.*original.*points/i);
+    for (const [left, right] of [[first, completed], [completed, first]]) {
+      expect.soft(() => calculateFederalTax(input(left, right))).toThrow(/complete.*original.*points/i);
+    }
+    for (const paidDate of ["2025-01-01", "2026-02-01", "2023-02-29"]) {
+      expect.soft(() => calculateFederalTax(input({ ...first, originalPointsSource: { ...originalPointsSource, paidDate } }, { method: "none" })))
+        .toThrow(/original.*points.*(date|year)/i);
+    }
+    expect.soft(() => calculateFederalTax(input({ ...first, originalPointsSource: { ...originalPointsSource, loanAccountReference: " \t " } }, { method: "none" })))
+      .toThrow(/original.*(lender|account)/i);
+    const currentReported = { ...completed, reportedOnCurrentForm1098: true, deductibleAmountBeforeLimit: "100", unamortizedPointsAvailable: "100" };
+    expect.soft(() => calculateFederalTax(input({ method: "none" }, { ...currentReported, originalPointsSource }, "100"))).toThrow(/retained.*current Form 1098/i);
+
+    const distinct = input(first, { ...completed, originalPointsSource: { ...originalPointsSource, loanAccountReference: "Original Loan B" } });
+    expect.soft(distinct.mortgageInterestWorksheet?.loans[0]?.points).toMatchObject({ originalPointsSource });
+    const accepted = calculateFederalTax(distinct);
+    expect(accepted.scheduleA.mortgageWorksheet.sourceDeductions.map(row => row.pointsBeforeLimit.toFixed())).toEqual(["800.25", "800.25"]);
+    expect(accepted.itemizedDeductions.toFixed()).toBe("21601");
+    expect(calculateFederalTax(input(completed, completed)).itemizedDeductions.toFixed()).toBe("21601");
+    expect(calculateFederalTax(input(first, { ...copy, deductibleAmountBeforeLimit: "0" })).itemizedDeductions.toFixed()).toBe("20800");
+    expect(calculateFederalTax(input(first, { ...completed, deductibleAmountBeforeLimit: "0" })).itemizedDeductions.toFixed()).toBe("20800");
+    expect(calculateFederalTax(input({ ...first, deductibleAmountBeforeLimit: "0" }, completed)).itemizedDeductions.toFixed()).toBe("20800");
+    expect(calculateFederalTax(input(first, currentReported, "100")).itemizedDeductions.toFixed()).toBe("20900");
   });
   it("implements the published ratable points example and actual current purchase qualification", () => {
     const result = calculateHomeMortgageInterest(mortgageInput([mortgageLoan({ interestPaid: "2500", pointsPaid: "4800", balance: { method: "highest_balance", amount: "100000", sourceReference: "Source" }, points: { method: "ratable", originalPoints: "4800", originalPrincipal: "100000", loanTermMonths: 240, paymentsInYear: 3, paymentIntervalMonths: 1, unamortizedPointsAtStartOfYear: "0", cashMethod: true, comparableLoanTerms: true, pointsAreInterest: true, paidDate: "2025-10-01" } })]));

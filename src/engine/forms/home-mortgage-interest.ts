@@ -83,7 +83,7 @@ function balance(loan: Loan): { grandfathered: Decimal; old: Decimal; newer: Dec
   }
   return { grandfathered: ZERO, old: old ? avg : ZERO, newer: old ? ZERO : avg };
 }
-function points(loan: Loan, year: number): { reported: Decimal; unreported: Decimal } {
+function points(loan: Loan, year: number): { reported: Decimal; unreported: Decimal; retainedPool?: string } {
   const source = loan.points;
   const paid = amount(loan.pointsPaid, "points paid");
   const fees = amount(loan.pointsNotInterest, "points service fees");
@@ -91,6 +91,7 @@ function points(loan: Loan, year: number): { reported: Decimal; unreported: Deci
   const eligiblePaid = paid.minus(fees);
   let allowed = ZERO;
   let reported = loan.form1098SourceId !== undefined;
+  let retainedPool: string | undefined;
   if (source.method === "none") {
     if (eligiblePaid.gt(0)) throw new Error("Mortgage points require actual qualification or amortization sources");
   } else if (source.method === "current_year") {
@@ -115,9 +116,18 @@ function points(loan: Loan, year: number): { reported: Decimal; unreported: Deci
     allowed = amount(source.deductibleAmountBeforeLimit, "completed point deduction");
     if (allowed.gt(amount(source.unamortizedPointsAvailable, "available points"))) throw new Error("Mortgage completed point deduction exceeds available points");
     reported = source.reportedOnCurrentForm1098;
+    if (source.originalPointsSource) {
+      const original = source.originalPointsSource;
+      const lender = original.lender.trim().toLowerCase().replace(/\s+/g, " ");
+      const account = original.loanAccountReference.trim().toLowerCase().replace(/\s+/g, " ");
+      if (!lender || !account) throw new Error("Mortgage original retained points require both lender and loan account reference");
+      if (date(original.paidDate, "original points payment date") >= `${year}-01-01`) throw new Error("Mortgage original points must have been paid before the return year");
+      if (reported) throw new Error("Mortgage retained points cannot be reported on the current Form 1098");
+      retainedPool = JSON.stringify([lender, account]);
+    }
     if (reported && (!loan.form1098SourceId || allowed.gt(eligiblePaid))) throw new Error("Mortgage reported point deduction does not reconcile to current Box6");
   }
-  return { reported: reported ? allowed : ZERO, unreported: reported ? ZERO : allowed };
+  return { reported: reported ? allowed : ZERO, unreported: reported ? ZERO : allowed, retainedPool };
 }
 
 export type HomeMortgageInterestInput = Pick<TaxYearInput, "form1098" | "mortgageInterestWorksheet" | "form1099Misc"> & {
@@ -153,6 +163,8 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
     if (facts.sourceTaxYear !== year || facts.sourceFactsConfirmed !== true || facts.allHomeDebtIncluded !== true || !facts.sourceReference.trim()) throw new Error("Mortgage source year, complete debt and confirmation are required");
     const ids = new Set<string>(), linked = new Set<string>(), homes = new Map<string, string>();
     const reportedAccounts = new Map<string, Set<string | undefined>>();
+    const retainedCompletedPools = new Set<string>();
+    let unboundCompletedPoints = false;
     const formIds = forms.map(form => form.sourceId).filter(id => id !== undefined);
     if (new Set(formIds).size !== formIds.length) throw new Error("Mortgage Form1098 source identity is duplicated");
     for (const loan of facts.loans) {
@@ -210,11 +222,19 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
         excludedSourceInterest = excludedSourceInterest.plus(excluded);
       }
       if (loan.form1098SourceId) reportedInterest = reportedInterest.plus(interest); else unreportedInterest = unreportedInterest.plus(interest);
+      if (loan.points.method === "completed_amortization" && point.unreported.gt(0)) {
+        if (point.retainedPool === undefined) unboundCompletedPoints = true;
+        else {
+          if (retainedCompletedPools.has(point.retainedPool)) throw new Error("Duplicate original mortgage points source for a positive completed annual claim");
+          retainedCompletedPools.add(point.retainedPool);
+        }
+      }
       reportedPoints = reportedPoints.plus(point.reported); unreportedPoints = unreportedPoints.plus(point.unreported);
       sourceDeductions.push({ sourceId: loan.sourceId, interestBeforeLimit: interest,
         pointsBeforeLimit: point.reported.plus(point.unreported) });
       audit.record("Mortgage Sources", loan.sourceId, "Actual qualified interest before debt limit", interest, "Actual paid share plus its prior-paid current-year interest, less current refund, amounts deducted elsewhere and source-ineligible interest");
     }
+    if (retainedCompletedPools.size > 0 && unboundCompletedPoints) throw new Error("Complete the original loan identity for all positive unreported completed mortgage points in this worksheet");
     if (homes.size > 2 || [...homes.values()].filter(use => use === "main").length > 1 || [...homes.values()].filter(use => use === "second").length > 1) throw new Error("Mortgage source worksheet requires the actual one main and one selected second qualified home");
     if (forms.some(form => (d(form.mortgageInterestReceived).gt(0) || d(form.pointsPaid).gt(0)) && !linked.has(form.sourceId ?? ""))) throw new Error("Mortgage actual source worksheet omits a Form1098 interest or points source");
     const recoveryIds = new Set<string>(), refunds = new Map<string, Decimal>(), includedSources = new Map<number, Decimal>();
