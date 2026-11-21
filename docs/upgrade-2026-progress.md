@@ -10496,3 +10496,99 @@ passes, 11 failures and five original skips. The `8201d316` rehearsal
 started after that run completed.
 [Preceding ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44758991143/job/136394543060) ·
 [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44768766411/job/136425820937).
+
+### November 21 final Form 2555 wage calculation excerpt
+
+`4c21e5a9` binds one primary taxpayer's full original 2026 W-2 Box 1 wages
+to the federal foreign-service allocation. The marked calculation excerpt
+reopens with $150,000 of fictional wages, the $132,900 full-year exclusion,
+the printed 1.000 ratio, and a reconciled negative $132,900 entry on
+Schedule 1 line 8d. The heading, residence, travel, housing amounts and attachment
+fields outside the case are blank. The public annual export and filing gates
+remain closed pending qualified review and annual tax-table evidence.
+
+The red run reproduced the two missing behaviors. The exact package passed
+54 tests, TypeScript, the browser request source audit, and all 9,785 spec
+references. An independent technical reviewer checked the official form and
+instructions and reran all seven focused tests. This is technical review,
+with the qualified tax review still pending. The guarded push reached
+`main`, with automatic Production builds disabled at the time of the push.
+[IRS Form 2555](https://www.irs.gov/pub/irs-prior/f2555--2026.pdf) ·
+[IRS instructions](https://www.irs.gov/pub/irs-prior/i2555--2026.pdf) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/4c21e5a98568a9a0735fbf53b19e7e2b59a69c19).
+
+### November 21 final Form 1095-B positive coverage reader
+
+`dfa0854f` pins the final IRS blank and reads one confirmed Part IV row when
+the full TIN and exact displayed name match the original. Saved and reopened
+fictional statements proved separate March/April and annual cases. The only
+result is the year, row, and months reporting at least one covered day.
+Unsupported statements, including masked identifiers, DOB-only identity and
+continuation pages, return to manual review. Upload routes, eligibility,
+Form 8962 inputs and public exports have no integration with this reader.
+
+The exact package passed 44 focused tests, web typecheck, scoped ESLint,
+inventory verification, the browser request source audit and 9,788 valid
+spec references. An independent technical reviewer checked the final IRS
+recipient instructions and reran the four dedicated tests. The unrelated
+SQLite inventory entry remained unstaged through the guarded `main` push.
+[Final IRS blank and recipient instructions](https://www.irs.gov/pub/irs-prior/f1095b--2026.pdf#page=2) ·
+[IRS index](https://www.irs.gov/downloads/irs-pdf?order=field_pup_posted&sort=desc) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/dfa0854fe10098ded910a34a9f9adf7229b9d72d).
+
+### November 21 strict Linux browser failure review
+
+The retained `069c994f` reports show the affected RRTA case received HTTP
+200 and downloaded bytes that matched the response. The local Python PDF
+inspection entered page text extraction before exceeding its four-second
+limit. End-to-end privacy acceptance still needs a passing strict run.
+Ohio failures stopped during multiple interactions, including typing,
+state confirmation, PDF download and negative filing-route checks. The
+reports lacked an incorrect form value or an established common cause. Both
+deadlines are required for strict acceptance.
+
+### November 21 Ohio balance and extension source boundary
+
+A synthetic Ohio settlement supplies a $1,151 receipt total. An independent
+state replay calculates $1,123 of principal. The saved receipt has no field
+that independently ties $1,123 to the payment allocation. Five expected
+behaviors reproduced as failing in a private spec-first rehearsal, including
+the missing federal amount, the ambiguous saved aggregate, and a state claim
+of $1,124 against $1,123 of principal. January and expected-payment exclusion
+controls passed. Existing extension receipts likewise lack a tax-only split.
+Before admitting either source on Schedule A, establish the original tax
+allocation and a principal check that uses validated state inputs without
+reentering the federal calculation. [IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca).
+
+### November 21 Ohio estimated receipts on federal Schedule A
+
+`b1f5dc37` admits verified Ohio estimated payments on 2025 federal Schedule A
+line 5a by cash year. The original receipt and a matching dated legacy entry
+count once. Two distinct originals for the same amount can both count, and a
+January 2026 payment stays outside 2025. Preview and export hold when a saved
+additional income-tax total could already include the original receipt.
+
+The saved ordinary return reopens with an exact $2,800.50 deduction and
+$2,801 on the printed line. Independent tests verified the automatic
+donation case, where line 5a prints $2,400 and taxable income is $43,600,
+and a case where including the receipt changes the deduction choice to
+itemized. The Ohio school case retains its pinned state amounts and binding
+order. It records the corrected federal audit and both source replays.
+
+The author ran 484 focused tests and the independent reviewer ran 59. The
+engine, contracts and web types, both builds, audit, inventory and 9,789
+spec references passed. Lint completed with zero errors and 12,137 warnings.
+The initial broad runs failed the synthetic database prerequisites, including
+the PostgreSQL 16.16 pin. One early coverage attempt also encountered an
+output-directory collision. The four affected suites then passed all 15
+tests on the pinned local harness. Both full runs passed 29,861 tests each
+on PostgreSQL 16.16. Branch coverage reached 88.39%, above the 85% gate.
+The managed macOS run passed all ten selected
+desktop and mobile Ohio resident-credit and school-district cases with zero
+retries, failures or skips. The runner also verified cleanup. GitHub Docker
+and Web App builds passed. CI and the two Linux browser jobs continued.
+[IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/b1f5dc3770908441db126c0efcf7918af0a8c67a) ·
+[GitHub Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44904803947) ·
+[GitHub CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44904804057) ·
+[GitHub Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44904803983).

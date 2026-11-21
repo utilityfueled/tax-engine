@@ -1,5 +1,27 @@
 {
   "activeContinuation": {
+    "nov21OhioEstimatedCashOnFederalScheduleA": {
+      "commit": "b1f5dc3770908441db126c0efcf7918af0a8c67a",
+      "source": "https://www.irs.gov/instructions/i1040sca",
+      "scope": "Verified original Ohio estimated payments on 2025 Schedule A by cash year, including automatic deduction selection. Reconcile dated legacy estimates once. Hold ambiguous saved additional income-tax totals alongside a qualifying receipt.",
+      "checks": {"focusedTestsPassed": 484, "independentFocusedTestsPassed": 59, "specReferencesValid": 9789, "typesPassed": true, "buildsPassed": true, "inventoryPassed": true, "lintErrors": 0, "lintWarnings": 12137, "browserRequestAuditPassed": true, "pinnedPostgresFocusedTestsPassed": 15, "fullUnitTestsPassed": 29861, "fullCoverageTestsPassed": 29861, "branchCoveragePercent": 88.39, "macOSBrowsers": {"passed": 10, "failed": 0, "skipped": 0, "cleanupPassed": true}, "remoteWebRun": 44904803947, "remoteDockerRunPassed": 44904803983, "remoteCIRun": 44904804057},
+      "remaining": "Ohio balance and extension sources need original tax-only allocation and a source-bound, nonrecursive principal check. Exact Linux browser and current live and release qualification remain open."
+    },
+    "nov21FinalForm1095BOriginalReview": {
+      "commit": "dfa0854fe10098ded910a34a9f9adf7229b9d72d",
+      "scope": "One confirmed Part IV line 23–28 of a final 2026 original with matched displayed full TIN and name. Reports only positive coverage months, including annual coverage. Internal use only.",
+      "source": "https://www.irs.gov/pub/irs-prior/f1095b--2026.pdf#page=2",
+      "sourceSha256": "8ddccf8782981961d9591067d08161519f78605e2234ab58e94597adc49e763b",
+      "checks": {"focusedTestsPassed": 44, "independentFocusedTestsPassed": 4, "specReferencesValid": 9788, "webTypesPassed": true, "inventoryPassed": true, "scopedLintPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Production intake, identity variants and Form 8962 eligibility were outside this candidate. Existing public filing and export gates remain closed."
+    },
+    "nov21FinalForm2555WageExcerpt": {
+      "commit": "4c21e5a98568a9a0735fbf53b19e7e2b59a69c19",
+      "scope": "One confirmed original primary 2026 W-2, full-year foreign wages and no housing claim. Marked Part IV, V, VII and VIII calculation excerpt with the audited Schedule 1 line 8d transfer.",
+      "sources": ["https://www.irs.gov/pub/irs-prior/f2555--2026.pdf", "https://www.irs.gov/pub/irs-prior/i2555--2026.pdf"],
+      "checks": {"focusedTestsPassed": 54, "independentFocusedTestsPassed": 7, "specReferencesValid": 9785, "typesPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Tax-professional review, original Parts I–III eligibility and travel records, annual tax tables and public export qualification. Filing and public 2026 PDF export remain disabled."
+    },
     "nov21RentalYearAndSaverCredit": {
       "guidedRental": { "source": "f1b2e0e6", "exactFocusedPassed": 252, "implementationFocusedPassed": 1207, "browserPassed": 2, "specReferencesPassed": 9780, "savedReopenHeldUntilReconfirmed": true, "scheduleENetAfterReview": "500" },
       "form8880": { "source": "1cd93e1f", "exactFocusedPassed": 103, "implementationFocusedPassed": 73, "specReferencesPassed": 9782, "reopenedWidgets": 23, "codeD": "2500", "qualifyingContribution": "2000", "printedRateDigit": "1", "line12AndSchedule3Line4": "200", "worksheet1And3TestPreview": "2500", "worksheet2": "0", "publicAnnualDispatchAndExportsHeld": true },

@@ -16,6 +16,16 @@ requires authorization.
 | Strict Linux runtime verification | On `069c994f`, managed Linux passed 648 browser cases with two RRTA inspection deadlines. Strict AMD64 passed 639 browser cases with ten Ohio deadlines and one RRTA inspection deadline. Both retained five original skips. AMD64 Compose recovery, rollback and immutable SBOMs passed. Requalify the managed and both strict platforms under the original 30-second strict browser and four-second PDF limits. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44897306233/job/136825603320) · [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44897306233/job/136825603092) · [Prior native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44881255619). |
 | Current Stripe Sandbox checkout and credits | The protected `069c994f` Preview passed all 12 workspace lifecycle checks and all four billing-page checks for each synthetic account. The prior `522cf4b1` Preview remains the current Viva La Tax Sandbox checkout destination. Automatic approval review stopped Checkout before execution. Bind the sandbox price and synthetic customer, postal and return behavior, and cleanup before retrying. Then capture the signed delivery and verify the exact event and Session in the two test accounts' scoped database records. Positive credit-grant testing requires an isolated test path while the public purchase gate stays closed. [Current Preview](upgrade-2026-progress.md#november-21-paid-estimates-on-the-federal-review-return) · [Sandbox evidence](upgrade-2026-progress.md#november-21-ohio-schedule-w-and-historical-mortgage-controls). |
 
+For Ohio extension and balance payments on federal Schedule A, obtain a
+redacted official payment record or transcript that identifies the amount
+applied to tax, the cash-payment date and the liability year. The original
+supplies the receipt total. A separate assertion supplies the tax allocation.
+An independent replay reproduced $1,123 of tax principal against a $1,151
+receipt and exposed acceptance of a $1,124 claim. Admission requires an
+original tax-only allocation and a principal check that does not reenter
+federal calculation. [IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca) ·
+[Ohio source findings](upgrade-2026-progress.md#november-21-ohio-balance-and-extension-source-boundary).
+
 The Form 8863 review also needs an independent worksheet for the joint-return
 case where the student spouse has a timely TIN and the other spouse has a
 timely employment-valid SSN. Record each spouse's eligibility and the credit
