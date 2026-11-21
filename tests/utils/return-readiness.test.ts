@@ -55,6 +55,26 @@ function makeInput() {
 }
 
 describe("assessReturnReadiness", () => {
+  // Spec: spec/federal/form-1040.yaml line 26-review-packet.
+  it("keeps state estimated payments outside federal voucher readiness", () => {
+    const taxInput = TaxYearInputSchema.parse({
+      ...makeInput(),
+      adjustments: {
+        estimatedTaxPayments: [
+          { date: "2025-04-15", amount: "1000", type: "state", application: { taxYear: 2025, confirmed: true } },
+        ],
+      },
+    });
+    const federalResult = calculateFederalTax(taxInput);
+    expect(federalResult.estimatedTaxPayments.isZero()).toBe(true);
+    expect(federalResult.estimatedTaxPenalty.isZero()).toBe(true);
+    const assessment = assessReturnReadiness({ taxInput, federalResult, includedForms: ["f1040-filled.pdf"] });
+    expect(assessment.findings).not.toContain("Form 1040-ES vouchers are not generated for draft packets yet.");
+    expect(assessment.packetCompleteness).toBe("supported");
+    expect(assessment.filingQualified).toBe(false);
+    expect(assessment.businessRuleValidation).toBe("not-validated");
+  });
+
   // Spec: spec/federal/form-8949-digital-reporting.yaml packet-completeness.
   it("marks original digital disposition packets partial when Form8949 detail is missing", () => {
     for (const costBasis of ["90.24", "100.49"]) {

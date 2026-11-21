@@ -268,13 +268,6 @@ export function assessReturnReadiness(
     );
   }
 
-  if ((input.taxInput.adjustments?.estimatedTaxPayments?.length ?? 0) > 0) {
-    packetCompleteness = "partial";
-    findings.push(
-      "Form 1040-ES vouchers are not generated for draft packets yet.",
-    );
-  }
-
   if (
     ((input.taxInput.form1099B?.some((entry) => entry.transactions.length > 0) ?? false)
       || (input.taxInput.form1099DA?.some((entry) => entry.transactions.length > 0) ?? false))

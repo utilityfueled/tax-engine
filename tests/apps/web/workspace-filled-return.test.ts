@@ -173,23 +173,38 @@ function createWorkspace(): ReturnWorkspaceRecord {
   };
 }
 
-async function extractPdfText(contents: Uint8Array) {
+async function readSavedPdf(contents: Uint8Array, inspectLine26 = false): Promise<{ text: string; line26: string[] }> {
   const outputPath = join(tmpdir(), `workspace-filled-return-${Date.now()}-${Math.random()}.pdf`);
 
   await writeFile(outputPath, contents);
 
   try {
     const pdfTextScan = await vi.importActual<typeof import("node:child_process")>("node:child_process");
-    return pdfTextScan.execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
+    const output = pdfTextScan.execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
+import json, sys
 from pypdf import PdfReader
-reader = PdfReader(r"${outputPath}")
-print("\\n".join((page.extract_text() or "") for page in reader.pages))
-`], {
+reader = PdfReader(sys.argv[1], strict=True)
+pages = [page.extract_text() or "" for page in reader.pages]
+line26 = []
+if sys.argv[2] == "true":
+    form_page, = (i for i, text in enumerate(pages) if "2025 estimated tax payments and amount applied from 2024 return" in text)
+    def collect_line26(text, cm, tm, font, size):
+        # The final 2025 blank places the line 26 amount widget at this page origin.
+        if text.strip() and abs(cm[4] - 504) < 0.02 and abs(cm[5] - 456.001) < 0.02:
+            line26.append(text.strip())
+    reader.pages[form_page].extract_text(visitor_text=collect_line26)
+print(json.dumps({"text": "\\n".join(pages), "line26": line26}))
+`, outputPath, String(inspectLine26)], {
       encoding: "utf8",
     });
+    return JSON.parse(output);
   } finally {
     await rm(outputPath, { force: true });
   }
+}
+
+async function extractPdfText(contents: Uint8Array) {
+  return (await readSavedPdf(contents)).text;
 }
 
 async function assertPacketParity(
@@ -721,6 +736,31 @@ describe("workspace filled return download", () => {
     expect(JSON.stringify(state)).toBe(before);
   });
 
+  // Spec: spec/federal/form-1040.yaml line 26-review-packet.
+  it("reports paid federal estimates on the review return without a payment voucher warning", async () => {
+    const guidedFlowState = updateSectionData(createGuidedFlowState(), "payments", {
+      ...emptyPaymentData,
+      estimatedPayments: [
+        { date: "2025-04-15", amount: "1234.00", application: { taxYear: "2025", confirmed: true } },
+      ],
+    });
+    const taxInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(guidedFlowState));
+    const result = calculateFederalTax(taxInput);
+    expect(result.estimatedTaxPayments.toFixed(2)).toBe("1234.00");
+    expect(result.estimatedTaxPenalty.isZero()).toBe(true);
+    expect(result.form2210?.requiresForm2210).toBe(false);
+
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), guidedFlowState);
+    expect(download.includedForms).toContain("f1040-filled.pdf");
+    expect(download.includedForms.some((form) => /^f(?:1040-?es|2210)/i.test(form))).toBe(false);
+    const { text: pdfText, line26 } = await readSavedPdf(download.contents, true);
+    expect(line26).toEqual(["1234"]);
+    expect(pdfText).toContain("FOR REVIEW ONLY - NOT FOR FILING");
+    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
+    expect(pdfText).not.toContain("Form 1040-ES vouchers are not generated for draft packets yet.");
+    expect(pdfText).toContain("Packet completeness status: supported.");
+  });
+
   it("does not auto-attach Form 2210 even when the engine computes an estimated tax penalty and keeps business-rule validation disclosed as not-validated", async () => {
     const guidedFlowState = createGuidedFlowStateWithUnderpayment();
     const taxInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(guidedFlowState));
@@ -732,6 +772,7 @@ describe("workspace filled return download", () => {
     await assertPacketParity(download, {
       suppressedForms: ["f2210-filled.pdf"],
       expectedText: [
+        "Packet completeness status: partial.",
         "E-file and business-rule validation: not-validated.",
         "Form 2210 is still suppressed from the draft packet even when an estimated tax penalty is present.",
       ],

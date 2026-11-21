@@ -581,6 +581,15 @@ lines:
       eligibility for late relief. The Form 2210 timing method retains its
       separate scope and reconciliations. No federal filing or export gate is changed.
 
+  - line: "26-review-packet"
+    description: "Paid federal estimates on the workspace review return"
+    formula: "Report federal estimates already paid on Form 1040 line 26. Form 1040-ES payment vouchers are mailed separately with check or money order payments. A recorded federal or state estimated payment does not by itself make the annual federal review packet partial. Assess Form 2210 and filing qualification independently."
+    irsRef: "2025 Form 1040 Instructions, p. 39, Line 26 (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=39). 2025 Form 1040-ES, pp. 4–5, paying by check or money order with the estimated tax payment voucher (https://www.irs.gov/pub/irs-prior/f1040es--2025.pdf#page=4)."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::reports paid federal estimates on the review return without a payment voucher warning"
+    testRefs:
+      - "tests/utils/return-readiness.test.ts::keeps state estimated payments outside federal voucher readiness"
+      - "tests/apps/web/workspace-filled-return.test.ts::does not auto-attach Form 2210 even when the engine computes an estimated tax penalty and keeps business-rule validation disclosed as not-validated"
+
   - line: "31"
     description: "Schedule 3 refundable credits and other payments"
     formula: "Schedule 3 line 15 only; refundable AOC is separately reported on Form 1040 line 29"
