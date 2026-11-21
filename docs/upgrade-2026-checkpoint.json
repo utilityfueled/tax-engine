@@ -1,5 +1,65 @@
 {
   "activeContinuation": {
+    "nov21DexCashTransactionFee": {
+      "source": "e906f266",
+      "officialAuthority": "https://www.irs.gov/irb/2024-31_irb",
+      "exactFocusedTestsPassed": 202,
+      "independentFocusedTestsPassed": 176,
+      "trackedSpecReferencesPassed": 9772,
+      "treasuryExample": { "proceeds": "18", "gain": "13", "replacementBasis": "20" }
+    },
+    "nov21CombinedReferenceAndBrowserReplay": {
+      "referenceCorrection": "386c1086",
+      "correctedReferenceFocusedTestsPassed": 1092,
+      "trackedSpecReferencesPassed": 9776,
+      "rerunSource": "386c1086",
+      "replayPinCorrection": "156bd0b7",
+      "replayFocusedTestsPassed": 43,
+      "verifiedFrozenSources": 9,
+      "verifiedBrowserCollectionCases": 655,
+      "failedTimingPredecessor": { "source": "7ebce850", "workflowId": 44874893916, "managedPassed": 648, "managedFailed": 2, "strictPassed": 637, "strictFailed": 13, "originalSkipsPerJob": 5, "verifiedReplayCases": 0 },
+      "currentTimingRun": { "source": "156bd0b7", "workflowId": 44880786265 },
+      "readyCurrentProtectedPreview": false
+    },
+    "nov21TaxableDexExecutionYear": {
+      "source": "15a885ed",
+      "exactFocusedTestsPassed": 1713,
+      "independentFocusedTestsPassed": 10,
+      "trackedSpecReferencesPassed": 9772,
+      "priorYearAndInvalidDatesHold": true,
+      "matchingYearLongTermGain": "900"
+    },
+    "nov21PaDocumentedFloridaMove": {
+      "source": "dbcd8f82",
+      "officialAuthority": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency",
+      "exactFocusedTestsPassed": 3068,
+      "independentFocusedTestsPassed": 96,
+      "trackedSpecReferencesPassed": 9771,
+      "statutoryResidentFixturePaDays": 200,
+      "statutoryResidentFixturePaWages": "75000",
+      "statutoryResidentFixturePaTax": "2303",
+      "exact183Held": true,
+      "filingEnabled": false
+    },
+    "nov21FederalCompetingDigitalAssetLotMethods": {
+      "source": "6883739e",
+      "exactFocusedTestsPassed": 154,
+      "trackedSpecReferencesPassed": 9769,
+      "independentCombinedHoldVerified": true,
+      "controlledSwapLongTermGain": "900",
+      "revertedSwapSeparateLiquidationLongTermGain": "500"
+    },
+    "nov21DexWalletOriginalHoldingPeriods": {
+      "source": "fdc4dc8d",
+      "officialWalletBasisRules": "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.1012-1#p-1.1012-1(j)",
+      "exactFocusedTestsPassed": 251,
+      "independentFocusedTestsPassed": 129,
+      "independentParsedControlsPassed": 7,
+      "trackedSpecReferencesPassed": 9768,
+      "isolatedFixtureScheduleDShortTerm": "300",
+      "isolatedFixtureScheduleDLongTerm": "400",
+      "derivedCryptoExportEnabled": false
+    },
     "nov21PaOneMoveResidencyBoundary": {
       "source": "bc0d1004",
       "officialGuidance": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency",
@@ -43,7 +103,13 @@
       "branchCoveragePercent": 88.33,
       "rootAndWebBuildsPassed": true,
       "lintErrors": 0,
-      "lintWarnings": 12134
+      "lintWarnings": 12134,
+      "positiveBrowserFixturesSource": "dd48f0d9",
+      "focusedProductionBrowserCasesPassed": 10,
+      "oldFixtureFailureSource": "6ee9eff2",
+      "oldFullBrowserCasesPassed": 640,
+      "oldFullBrowserCasesFailed": 10,
+      "oldFullBrowserCasesSkipped": 5
     },
     "nov21FinalForm7206OriginalRecords": {
       "source": "db1d7c57",
@@ -73,6 +139,8 @@
       "successorTimingRehearsal": { "source": "7ebce850", "workflowId": 44874893916 },
       "successorHostedLookup": { "source": "7ebce850", "readyPreviewCount": 0, "mainProjectCanceled": 1, "isolatedProjectMatches": 0 },
       "previousRehearsal": { "source": "79369997", "workflowId": 44872318441, "managedPassed": 648, "managedFailed": 2, "strictPassed": 638, "strictFailed": 12, "originalSkipsPerJob": 5 },
+      "renterRehearsal": { "source": "e02dae90", "workflowId": 44873815015, "managedPassed": 649, "managedFailed": 1, "strictPassed": 642, "strictFailed": 8, "originalSkipsPerJob": 5 },
+      "latestHostedLookup": { "source": "dd48f0d9", "readyPreviewCount": 0, "mainProjectCanceled": 1, "isolatedProjectMatches": 0 },
       "timingTestsPassed": 42,
       "trackedSpecReferencesPassed": 9758,
       "publicLiveJobBudgetReaderMatched": true

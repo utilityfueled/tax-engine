@@ -40,10 +40,10 @@ the IRS publishes final 2026 revisions.
 
 For the Pennsylvania one-move case, independently reconcile the exact
 183-day threshold with §301(p) and the Department's guidance and provide
-the worksheet for a confirmed statutory resident who moved during the
-year. The ordinary one-move path holds the disputed boundary and the
-full-year cases requiring a separate method.
-[Case and official sources](upgrade-2026-progress.md#november-21-pennsylvania-one-move-residency-threshold).
+the worksheet for the documented Florida-to-PA statutory resident
+case with the full-year Pennsylvania W-2 payroll. The ordinary one-move
+path holds exactly 183 days and other fact patterns that need a separate
+source method. [Pennsylvania scenarios and official sources](upgrade-2026-progress.md#november-21-pennsylvania-resident-draft-after-a-documented-florida-move).
 
 The latest annual cases also need independent expected outputs. For the
 2026 Publication 915 example, review the taxable amounts on Worksheets

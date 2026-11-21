@@ -1,5 +1,21 @@
 # Current 2026 upgrade status
 
+## November 21 resumption
+
+Start with `activeContinuation.nov21CombinedReferenceAndBrowserReplay`
+in the checkpoint. It identifies the exact local resumption source and
+the current Linux timing run. The newest calculation packages cover a
+documented Florida-to-Pennsylvania resident move, wallet-specific DEX
+lot allocation and cash fees. The corrected spec-reference check passed.
+[Current evidence](upgrade-2026-progress.md#november-21-combined-suite-and-linux-timing-replay) ·
+[Checkpoint](upgrade-2026-checkpoint.json).
+
+Full combined results and the current Linux strict run are pending.
+Completion also depends on final annual forms, qualified human tax and
+AI reviews, missing provider qualification and a current protected
+Preview. Hosted security work is deferred at the owner's direction.
+[External gates](upgrade-2026-external-actions.md).
+
 Application `2d97913e` adds exact Form 8615 support for the early
 withdrawal penalty as the only adjustment in the existing 2025 source
 path. The combined tax and guided payment focused suite passed 615

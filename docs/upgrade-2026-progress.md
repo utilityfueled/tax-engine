@@ -1,5 +1,84 @@
 # 2026 upgrade implementation evidence
 
+## November 21 taxable DEX cash fees and remaining lot basis
+
+`e906f266` applies a documented U.S. dollar fee to the proceeds of a
+matching taxable exchange. The Treasury example produces $18 in proceeds,
+$13 in gain and $20 of replacement basis. The tests also follow the
+replacement basis through later partial sales and hold when the fee or
+replacement lot cannot be tied to the original execution. The exact package
+passed 202 focused tests, 9,772 spec references, all three type checks,
+inventory and scoped lint. An independent check passed 176 tests and
+verified the transaction through the federal input parser and calculator.
+[Treasury Decision 10000](https://www.irs.gov/irb/2024-31_irb).
+
+## November 21 combined suite and Linux timing replay
+
+The initial PostgreSQL-backed combined runs reported two failures in the
+strict spec test-reference check. `386c1086` corrects the Form 2106 and
+Pennsylvania residency links to use the full parameterized test titles.
+The corrected focused run passed 1,092 tests and all 9,776 tracked spec
+references. The full reruns use clean archives of `386c1086`.
+
+The `7ebce850` managed Linux job finished with 648 passed, two RRTA
+PDF deadlines and five original skips. The strict AMD64 job finished with
+637 passed, thirteen deadlines and five original skips. Eleven deadlines
+were in Ohio and two in RRTA PDF inspection. Both original replay
+artifacts recorded an available job budget and then stopped at the source
+pin check. `156bd0b7` corrected one Ohio school-district source pin. An
+independent review verified all nine pins, the same 655-case collection
+with and without instrumentation, and the exact frozen batch bounds.
+The corrected contracts passed 43 focused tests. The next run was
+dispatched on `156bd0b7`. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916/job/136757329235) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916/job/136757328831) ·
+[Corrected timing rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44880786265).
+
+## November 21 Pennsylvania resident draft after a documented Florida move
+
+`dbcd8f82` adds a finite resident review for an original-backed
+Florida-to-Pennsylvania move with more than 183 days and a permanent
+PA abode. The 200-day fixture has $75,000 of wages from physical PA
+services and $2,303 of whole-dollar tax. Both the guide replay and
+the ordinary calculation require reconciled original W-2 records
+and complete Florida zero-tax history. The path holds exactly 183
+days, reverse moves, outside work, missing completion, conflicting
+claims and unsupported adjustments or credit facts. Filing and final
+export remain held. The exact archive passed 3,068 focused tests,
+9,771 spec references, inventory, root and Web types and scoped lint.
+The final independent review passed 96 tests.
+[PA residency guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
+[Florida Department of Revenue](https://floridarevenue.com/faq/Pages/FAQDetails.aspx?FAQID=1466).
+
+## November 21 DEX mixed holding periods from documented wallets
+
+`fdc4dc8d` allocates the actual proceeds and cost basis by consumed
+units and acquisition term within a confirmed wallet. In the parsed
+federal fixture, the older lot in another wallet is excluded, leaving
+$300 of short-term gain and $400 of long-term gain on Schedule D. A
+one-wei remainder stays available for the next transaction. A one-wei
+shortfall, repeated originals or executions, and unresolved overlapping
+wraps and bridges hold the calculation. The exact source passed 251
+focused tests and 9,768 spec references. Independent review passed 129
+tests and seven parsed controls. The derived-crypto export remains held.
+[Wallet-basis rules](https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.1012-1#p-1.1012-1(j)) ·
+[Form 8949 instructions](https://www.irs.gov/instructions/i8949).
+
+`6883739e` holds combinations of a taxable documented-wallet swap with
+a liquidity pool, liquidation or legacy 1099-DA that would independently
+consume lots. The fixture previously could apply the same acquisition
+twice. The standalone swap reports $900 of long-term gain, and a reverted
+zero-quantity swap allows the independent $500 liquidation gain. The
+exact archive passed 154 focused tests, 9,769 spec references, inventory
+and root types.
+
+`15a885ed` requires a valid execution date in the return year before a
+taxable swap can add a Form 8949 or Schedule D amount. A December 2024
+execution previously added $900 to the 2025 return. It now holds alongside
+future and impossible dates. A January 2025 sale of the same 2023 lot
+reports $900 long-term. Reverted transactions remain outside the dated
+taxable path. The exact archive passed 1,713 focused tests, 9,772 spec
+references, inventory and root types. [Form 8949 instructions](https://www.irs.gov/instructions/i8949).
+
 ## November 21 Pennsylvania one-move residency threshold
 
 `bc0d1004` reconciles documented Pennsylvania days across both domicile
@@ -71,6 +150,15 @@ On exact `2e6f8e4a`, both full runs against isolated PostgreSQL 16.16 passed
 29,757 tests. Branch coverage was 88.33% against the required 85%. Root and
 Web builds passed. Repository lint reported zero errors and 12,134 warnings.
 
+The later local full browser run on `6ee9eff2` passed 640 with five
+original skips. All ten failures came from older positive
+synthetic fixtures that still used a version 2 draft. The retirement of
+the stored Form 1098-T answers suppressed the expected estimate.
+`dd48f0d9` updates the five browser fixtures with explicitly confirmed
+2025 records. Ten Chromium cases passed at the original desktop and
+mobile widths on a local production build. The legacy migration and
+direct endpoint regressions continue to use the old draft version.
+
 ## November 21 final Form 7206 from original records
 
 `db1d7c57` fills an internal review copy of the final 2026 Form 7206
@@ -124,6 +212,14 @@ inspections. The strict result also failed ten Ohio browser cases. The
 successor rehearsals remain independent of these failed attempts.
 [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44872318441/job/136749369529) ·
 [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44872318441/job/136749369654).
+
+The `e02dae90` follow-up finished at 649 passed, one failed and five
+skipped in managed Linux. Strict AMD64 finished at 642 passed, eight
+failed and five skipped. The managed failure was an RRTA review. All
+eight strict failures were Ohio browser cases. The subsequent lookup
+for `dd48f0d9` also found zero ready protected Previews in either
+project. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44873815015/job/136753977437) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44873815015/job/136753977438).
 
 ## November 21 final Form 8829 renter review candidate
 

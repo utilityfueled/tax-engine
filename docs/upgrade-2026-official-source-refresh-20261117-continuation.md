@@ -172,3 +172,23 @@ premium calculations still need their own sources and review. This
 update does not qualify a new extractor or change benefit determination.
 [Employee instructions on the final form](https://www.irs.gov/pub/irs-pdf/f1095c.pdf#page=3) ·
 [Line 14 to 16 instructions](https://www.irs.gov/pub/irs-pdf/i109495c.pdf).
+
+## November 21 selected annual products
+
+The IRS current-result endpoints still identify Form 1040, Schedule 1,
+Schedule B, Form 6251, Form 8962, and Form 8949 as 2025. The current
+Schedule B instructions are 2026. The final Form 2106 and Form 7206
+blanks identify 2026. Their currently published instructions identify
+2025. The corresponding annual export entries retain their holds.
+[IRS products](https://www.irs.gov/forms-instructions-and-publications) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Schedule 1](https://www.irs.gov/pub/irs-pdf/f1040s1.pdf) ·
+[Schedule B](https://www.irs.gov/pub/irs-pdf/f1040sb.pdf).
+
+Pennsylvania's current income tax page links to the 2025 PA-40. Ohio's
+current forms index still shows the 2025 Ohio IT 1040, with 2026 bracket
+guidance available separately. Final 2026 individual return review and
+exports remain open for both states.
+[PA income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms](https://tax.ohio.gov/home/forms/tax-forms) ·
+[Ohio bracket guidance](https://tax.ohio.gov/individual/who-must-file/whats-new).
