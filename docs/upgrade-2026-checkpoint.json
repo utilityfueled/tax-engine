@@ -1,5 +1,26 @@
 {
   "activeContinuation": {
+    "nov21OhioWithholdingAndHistoricalMortgageControls": {
+      "ohioSource": "5b875dd5",
+      "ohioOfficialInstructions": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=17",
+      "ohioFocusedTestsPassed": 68,
+      "ohioIndependentRecheckTestsPassed": 56,
+      "trackedSpecReferencesPassed": 9754,
+      "priorCombinedSource": "507c7e1e",
+      "priorUnitAndCoverageEach": { "passed": 29742, "failed": 1, "files": 2174, "postgresStoppedNormally": true },
+      "priorDockerWorkflowPassed": 44871656050,
+      "mortgageControlSource": "79369997",
+      "mortgageFocusedTestsPassed": 100,
+      "combinedUnitAndCoverageEach": { "passed": 29745, "failed": 0, "files": 2174, "postgresVersion": "16.16", "postgresStoppedNormally": true },
+      "combinedBranchCoverage": { "covered": 86974, "total": 98476, "percent": 88.31 },
+      "combinedDockerWorkflowPassed": 44872318349,
+      "isolatedReadyPreviewsInLatestFive": 4,
+      "isolatedPreviewSourceShaEstablished": false,
+      "readyPreviewForMortgageControlInEitherProject": false,
+      "checkoutSessionAndDeliveryVerified": false,
+      "priorStrictLinux": { "source": "fdc05d39", "jobId": 136734651238, "passed": 644, "ohioDeadlineFailures": 6, "skipped": 5 },
+      "localOhioCreditCalculation": { "iterations": 100, "medianMs": 23.24, "p95Ms": 27.79 }
+    },
     "nov21EmployerAndReturnYearSourceContracts": {
       "pub915": { "source": "a281ce73", "exactFocusedTestsPassed": 516, "standardTaxableBenefits": "3000", "electedTaxableBenefits": "2500" },
       "mortgageSourceYear": { "source": "cfcb4e7a", "exactFocusedTestsPassed": 148, "matchingAndUndatedDeduction": "20000.25" },

@@ -1,5 +1,54 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Ohio Schedule W and historical mortgage controls
+
+`5b875dd5` selects the 2025 ordinary Ohio review companion from the
+original Ohio W-2 Box 17. An exact $0 omits Schedule W. A $0.49 amount
+retains the source row and prints $0 after whole-dollar rounding. The
+$1,000 case still prints $1,000. This corrects the finite nonresident
+review export. The focused run passed 68 tests and the independent
+engineering recheck passed 56. Type checking, the generated inventory and
+9,754 tracked spec references passed. [Ohio 2025 instructions, page 17](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=17).
+
+The exact `507c7e1e` PostgreSQL unit and coverage runs each passed
+29,742 tests and failed one historical PMI fixture. It changed the
+return year to 2025 but still supplied a 2026 statement with interest
+and principal. Both databases stopped normally. Contract and web types,
+TypeScript and webpack builds, lint with zero errors, and the exact
+Docker workflow passed. `79369997` gives the historical control a
+matching statement year and separately asserts the original prepaid
+source restriction. The focused mortgage suites passed 100 tests.
+The exact `79369997` unit and coverage reruns each passed all 29,745
+tests in 2,174 files with PostgreSQL 16.16. Branch coverage passed at
+88.31% (86,974 of 98,476). Both temporary databases stopped normally.
+The independent exact-source Docker workflow passed.
+[Prior Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44871656050) ·
+[Successor Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44872318349).
+
+The Stripe connector confirmed that the Viva La Tax Sandbox has one
+enabled endpoint subscribed to checkout completion. The separate outage
+Sandbox has one enabled endpoint without that event. The connector
+listed four ready isolated Previews in its latest five deployments and
+did not expose their source SHA. Neither enabled endpoint matched those
+four Preview origins. Filtering both Vercel projects by the full
+`79369997` SHA found no ready Preview. The read-only check created no
+Session or delivery and supplies no current-revision reconciliation evidence.
+
+The strict AMD64 run at `fdc05d39` completed with 644 passed, six
+Ohio 30-second failures and five original skips. Both RRTA cases and
+Compose recovery passed. A local `79369997` benchmark measured the
+repeated Ohio resident-credit calculation at 23.24 ms median and
+27.79 ms p95 over 100 warm fixtures. The strict-run timing cause remains
+open. The Linux timing diagnostic continues separately.
+[Strict job](https://github.com/utilityfueled/tax-engine/actions/runs/44867594520/job/136734651238).
+
+The current IRS Form 1040 and Form 8962 endpoints still serve 2025 forms.
+The IRS's 2026 Form 8962 and its 2026 instructions still carry draft
+covers. [Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Final Form 8962](https://www.irs.gov/pub/irs-pdf/f8962.pdf) ·
+[Draft Form 8962](https://www.irs.gov/pub/irs-dft/f8962--dft.pdf) ·
+[Draft instructions](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf).
+
 ## November 21 employer and return-year source contracts
 
 `a281ce73` checks the final 2026 Publication 915 Terry Jackson example.
