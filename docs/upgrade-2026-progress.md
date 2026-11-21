@@ -10556,9 +10556,18 @@ behaviors reproduced as failing in a private spec-first rehearsal, including
 the missing federal amount, the ambiguous saved aggregate, and a state claim
 of $1,124 against $1,123 of principal. January and expected-payment exclusion
 controls passed. Existing extension receipts likewise lack a tax-only split.
-Before admitting either source on Schedule A, establish the original tax
-allocation and a principal check that uses validated state inputs without
-reentering the federal calculation. [IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca).
+The prototype used equality with recalculated principal to reject an
+unsubstantiated amount. A source review established that Schedule A follows
+the tax actually paid in the cash year, including payments for which a
+refund is expected. Ohio's published payment-history instructions show
+posted payment and confirmation identifiers. Its corrected assessment
+sample separately lists tax, interest, penalties, other charges and
+aggregate payments. A federal adapter can rely on an official tax allocation
+or a complete, unique full settlement with no earlier payments or changes.
+The existing total-only receipts still need documentary support.
+[IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca) ·
+[Ohio payment history](https://tax.ohio.gov/individual/resources/self-help-library/view-filing-payment-history) ·
+[Ohio sample assessment](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/self_help/asmt0001correctedassessment.pdf).
 
 ### November 21 Ohio estimated receipts on federal Schedule A
 
@@ -10592,3 +10601,183 @@ and Web App builds passed. CI and the two Linux browser jobs continued.
 [GitHub Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44904803947) ·
 [GitHub CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44904804057) ·
 [GitHub Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44904803983).
+
+The exact GitHub Linux Web run later passed its managed self-host browser
+job. The strict container job passed 648 cases, recorded five original
+skips and failed two 30-second desktop Ohio part-year school cases.
+`refund100` reached its second review PDF download. `covered` reached its
+subsequent direct paper-packet request. Prior strict source `522cf4b1`
+timed out on eight cases. The two current traces establish the deadline
+failures and the last observed actions. A specific cause remains open.
+[Exact strict container job](https://github.com/utilityfueled/tax-engine/actions/runs/44904803947/job/136847978012).
+
+### November 21 guided 2026 state tax refunds by payment year
+
+A saved original 2026 Form 1099-G collection accepts actual 2024 and 2025
+ordinary deduction histories for a single taxpayer under 65. The 2025
+history requires actual Schedule A SALT modified AGI. A separate current
+payment link must match one recorded state estimate by date, amount and
+state. The restored synthetic return calculates $400 taxable from the two
+historical years and applies $100 once against a $1,000 current estimate.
+The intake holds missing, duplicate, stale and conflicting source facts.
+Independent technical review found no blocking source issue. All 24 focused
+tests, web types, scoped lint, the browser source audit, inventory and
+9,792 spec references passed.
+[IRS Publication 525](https://www.irs.gov/publications/p525#en_US_2025_publink1000229426) ·
+[Final 2026 Form 1099-G](https://www.irs.gov/pub/irs-prior/f1099g--2026.pdf) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/afd8606ff5891c9a4240c14310d384c5a9f72be9).
+
+### November 21 internal 2026 Form 1095-A premium statement
+
+The pinned two-page AcroForm reader matches one confirmed policy on the
+final 2026 layout, captures Part III lines 21–32, and reconciles each
+reported annual amount on line 33. A reported zero stays distinct from a
+blank. The reader holds void, corrected, conflicting, alternate, flattened
+and XFA layouts. Synthetic AcroForm copies and independent appearance
+readback exercised the final IRS blank. The exact package passed 23 focused
+tests, web and workspace types, scoped lint, inventory, browser source
+audit and 9,795 spec references. The reader has no public intake caller.
+Marketplace-issued originals, Form 8962 review and eligibility, and
+qualified export still require evidence.
+[Final form](https://www.irs.gov/pub/irs-prior/f1095a--2026.pdf) ·
+[Final instructions](https://www.irs.gov/pub/irs-prior/i1095a--2026.pdf#page=2) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/c892f4d00b443a54c4c9b59c169728c68b001f31).
+
+### November 21 guided 2026 normal-distribution pensions
+
+The guided interview preserves the original blank Box 2a and captures the
+actual Simplified Method facts on a supported single-life, non-IRA
+normal-distribution statement. A saved 2026 Code 7 statement with $6,000
+gross, $125 withheld, $26,000 plan cost, age 65 at start, twelve months of
+payments and zero prior recovery reopens and yields $4,800 taxable in the
+standalone Form 1099-R calculation. Editing the source year clears the
+previous year's payment and recovery confirmations.
+
+Independent review found that the initial implementation accepted an older
+taxpayer's Code 1 with an undetermined taxable amount. The focused
+regression failed before the correction. The corrected 2026 route
+preserves Code 1 and holds it for payment-date and early-distribution
+review. The older 2025 path had a separately reproduced ambiguity when the
+taxpayer reached 59½ before a same-year annuity start. The 2025 fix now
+holds those cases for the original payment dates and any modified-series
+decision. The younger control still calculates $540 on Form 5329. The
+2025 date comparison matched the previous calculation across 111,114
+independently exercised dates, and 333 focused tests passed. The 2026
+follow-up passed 164 focused tests, 18 independent focused tests, web
+types, inventory and 9,795 spec references. Scoped lint reported zero
+errors and five existing warnings. Whole-return calculation and PDF
+availability continue to require annual qualification.
+[2026 IRS instructions](https://www.irs.gov/instructions/i1099r) ·
+[IRS Publication 575](https://www.irs.gov/publications/p575) ·
+[Intake commit](https://github.com/utilityfueled/tax-engine/commit/cf678a832c56a2ef69b3648cb79889fad47b728b) ·
+[2026 Code 1 follow-up](https://github.com/utilityfueled/tax-engine/commit/8f416722ddbbba54d75330e86317a4aca28afd55) ·
+[2025 date fix](https://github.com/utilityfueled/tax-engine/commit/5cb360d2ed2df20c2e63e02036b2168e5f909f6f).
+
+On exact source `c892f4d0`, the local unit and coverage runs each passed
+29,868 tests using pinned PostgreSQL 16.16. Branch coverage reached
+88.40% against the 85% gate. Exact source `8f416722` passed engine,
+contracts and web types, inventory, spec validation, both builds and lint.
+Lint reported zero errors and 12,137 warnings. The full managed macOS
+browser run passed 650 of 655 collected cases with five original skips,
+zero failures and verified cleanup. The exact browser summary SHA-256 is
+`ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`.
+Strict Linux container results remain tied to their own source revisions.
+[Earlier combined CI](https://github.com/utilityfueled/tax-engine/actions/runs/44906763800) ·
+[Pension follow-up Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44907149065).
+
+The November 21 state publication check found Pennsylvania still offering
+the 2025 PA-40 and Ohio listing a November 6 draft 2026 form packet and
+November 13 draft instructions. Ohio's published 2026 changes confirm the
+separate adjusted MAGI calculation and $332 plus 2.75% above $26,050.
+The existing Ohio draft calculation matches those rules in 68 focused
+tests. Full-year resident, part-year resident and nonresident publication
+gates for each state still require final annual products and review.
+[Pennsylvania annual products](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio publication archive](https://tax.ohio.gov/individual/resources/individualincome) ·
+[Ohio 2026 changes](https://tax.ohio.gov/individual/who-must-file/whats-new).
+
+### November 21 Ohio traditional school tax with a qualifying capital gain
+
+The internal full-year Ohio draft now admits a documented traditional
+school district with matching owner, residence, Finder address and
+effective 2026 date, published rate and whole-dollar election. The Ada
+3301 fixture has $450,000 MAGI after adding back the qualifying
+capital-gains and business deductions, less $1,900 exemptions. The
+$448,100 base gives $6,721.50 at 1.50% and a $6,722 pre-credit levy.
+The state income tax stays $2,438.
+
+Independent review reproduced acceptance of an out-of-year Finder date.
+The correction accepts only effective dates within the documented residence
+interval, including both 2026 endpoints. The corrected package passed
+275 focused tests, 15 independent targeted tests, core types, inventory,
+the browser source audit and 9,799 spec references. School payment,
+balance, final packet and filing require separate qualification.
+[Ohio MAGI statute](https://codes.ohio.gov/ohio-revised-code/section-5747.01) ·
+[School tax base](https://codes.ohio.gov/ohio-revised-code/section-5748.01) ·
+[Finder guidance](https://tax.ohio.gov/business/ohio-business-taxes/online-services/thefinderschooldistrict) ·
+[2026 district rates](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/896cf9e16caf8195c684ba8f9e1d2c73638809bf).
+
+Exact source `896cf9e1` passed 29,872 tests in each full unit and coverage
+run on PostgreSQL 16.16. Branch coverage reached 88.41%. The full local
+browser run and Linux container results are tracked by their own source
+revisions.
+
+### November 21 timely returned personal HSA contributions
+
+The source-bound standalone path reconciles the confirmed gross personal
+contribution with the returned principal and net Form 8889 line 2. A
+$5,000 contribution and $600 timely return leave $4,400 on line 2.
+The original Code 2 statement reports $625 on lines 14a and 14b.
+The $25 of returned earnings enters income once. The verified personal
+principal leaves zero residual Part VII excess. The calculation tracks
+employer and other-owner excess separately.
+
+Independent review reproduced an unreconciled line 14b override that
+erased $375 of taxable distributions. The qualified new path now
+requires the sole matched Code 2 original, bounded exact cents and both
+distribution lines to reconcile. It holds mixed and conflicting
+distributions. The final author ran 174 focused tests and the exact
+isolated replay passed 78. Types, scoped lint, source audit, inventory
+and 9,807 spec references passed. The guided intake and public annual
+release require separate qualification.
+[IRS Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) ·
+[IRS Form 5329 instructions](https://www.irs.gov/instructions/i5329) ·
+[Form 1099-SA instructions](https://www.irs.gov/instructions/i1099sa) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/1f2b0f82fc630f0dcff623214c4ea11401f8a9b6).
+
+### November 21 one federal calculation for Ohio workspace review
+
+The Ohio workspace review now prepares its federal result and review context
+in one calculation from a private copy of the confirmed originals. Full-year,
+part-year and nonresident workspace requests previously called the federal
+engine twice before rendering. The bound input and result checks and the
+independent rendering validation continue to run.
+
+The regression reproduced both calls in all three residency cases before
+the change. The author passed 59 focused tests and an isolated replay
+passed 22. Root and web types, inventory, source audit and 9,809 spec
+references passed. This change removes verified duplicate work. The strict
+container deadline result requires a new exact-source run.
+[Commit](https://github.com/utilityfueled/tax-engine/commit/47343e0c3d75d4f16dd603020d5c9d10462bdf56).
+
+### November 21 documented Pennsylvania outbound nonresident
+
+The internal 2026 Pennsylvania draft recognizes the statutory nonresident
+exception for a documented PA-to-New York move. It requires a confirmed
+year-round New York permanent abode, absence of a permanent PA abode, at most
+30 actual PA days, and original confirmations covering both payroll periods
+that establish no reciprocal-state tax residence. The verified case
+reopens with $9,000 of Pennsylvania service wages and $276 of Pennsylvania
+tax. It counts the Pennsylvania services from both periods.
+
+Independent review reproduced a conflicting New Jersey case. After the
+follow-up, a reciprocal-state jurisdiction account, stale dates or proof,
+an extra abode or a contrary residency choice hold the draft and saved
+guide. The final author run passed 207 focused tests and the independent
+and isolated runs each passed 102. Core and web types, inventory, source
+audit and 9,813 spec references passed. Final annual state filing and
+export remain subject to annual qualification.
+[PA Department of Revenue](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
+[Tax Reform Code §301(p)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/aea62a48d03f0f15461e5a0f8e122ad736ed3055).

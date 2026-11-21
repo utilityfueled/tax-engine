@@ -1,11 +1,71 @@
 {
   "activeContinuation": {
+    "nov21PaOutboundStatutoryNonresident": {
+      "commit": "aea62a48d03f0f15461e5a0f8e122ad736ed3055",
+      "scope": "Internal 2026 PA-to-New York statutory nonresident with at most 30 PA days, no PA permanent abode and bound original year-round NY abode. Requires dated source confirmation excluding reciprocal-state residence across both payroll periods. Exact fixture PA compensation $9,000 and tax $276.",
+      "sources": ["https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency", "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s", "https://www.nj.gov/treasury/taxation/pdf/pubs/tgi-ee/git6.pdf"],
+      "checks": {"focusedTestsPassed": 207, "independentFocusedTestsPassed": 102, "isolatedFocusedTestsPassed": 102, "specReferencesValid": 9813, "typesPassed": true, "inventoryPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Final 2026 annual forms, qualified public PDF and filing remain open."
+    },
+    "nov21OhioReviewSingleFederalCalculation": {
+      "commit": "47343e0c3d75d4f16dd603020d5c9d10462bdf56",
+      "scope": "One pre-render calculation from the private source snapshot produces the Ohio federal result and bound review context. Existing review input, result and independent rendering validation continue to apply.",
+      "checks": {"focusedTestsPassed": 59, "isolatedFocusedTestsPassed": 22, "specReferencesValid": 9809, "typesPassed": true, "scopedLintErrors": 0, "inventoryPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Exact strict Linux browser deadline qualification is still open."
+    },
+    "nov21HsaTimelyPersonalOriginal": {
+      "commit": "1f2b0f82fc630f0dcff623214c4ea11401f8a9b6",
+      "scope": "2026 standalone same-owner personal HSA correction with exact original gross, sole Code 2 receipt, returned principal and earnings. Binds net Form 8889 line 2 and lines 14a/14b. Part VII follows actual residual and carry. Separate employer and spouse excess remain attributable to their sources.",
+      "sources": ["https://www.irs.gov/pub/irs-prior/f8889--2026.pdf", "https://www.irs.gov/instructions/i5329", "https://www.irs.gov/instructions/i1099sa"],
+      "checks": {"focusedTestsPassed": 174, "isolatedFocusedTestsPassed": 78, "specReferencesValid": 9807, "coreTypesPassed": true, "scopedLintPassed": true, "inventoryPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Guided source intake and 2026 annual availability and exports need separate qualification."
+    },
+    "nov21OhioTraditionalSchoolCapitalGainDraft": {
+      "commit": "896cf9e16caf8195c684ba8f9e1d2c73638809bf",
+      "scope": "Internal full-year 2026 Ohio primary owner, one verified traditional taxing district, and A34 qualifying gain with the existing exact source contract. Requires an effective Finder date within residence and published district rate. Ada base $448,100, raw levy $6,721.50, elected whole-dollar levy $6,722, state income tax $2,438.",
+      "sources": ["https://codes.ohio.gov/ohio-revised-code/section-5747.01", "https://codes.ohio.gov/ohio-revised-code/section-5748.01", "https://tax.ohio.gov/business/ohio-business-taxes/online-services/thefinderschooldistrict", "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf"],
+      "checks": {"focusedTestsPassed": 275, "independentFocusedTestsPassed": 15, "specReferencesValid": 9799, "coreTypesPassed": true, "inventoryPassed": true, "browserRequestAuditPassed": true},
+      "combinedChecks": {"fullUnitTestsPassed": 29872, "fullCoverageTestsPassed": 29872, "branchCoveragePercent": 88.41, "pinnedPostgresVersion": "16.16"},
+      "remaining": "School credits, payments, balances, annual PDF and filing require independently qualified sources and final forms."
+    },
+    "nov21Guided2026NormalPension": {
+      "commit": "8f416722ddbbba54d75330e86317a4aca28afd55",
+      "initialIntakeCommit": "cf678a832c56a2ef69b3648cb79889fad47b728b",
+      "priorYearBoundaryFix": "5cb360d2ed2df20c2e63e02036b2168e5f909f6f",
+      "scope": "Confirmed 2026 normal Code 7 non-IRA single-life Simplified Method. Preserves original blank Box 2a and explicit zero prior recovery across saved data. Holds 2026 Code 1 with undetermined taxable amount for early-distribution review.",
+      "sources": ["https://www.irs.gov/instructions/i1099r", "https://www.irs.gov/publications/p575"],
+      "checks": {"focusedTestsPassed": 164, "independentFocusedTestsPassed": 18, "specReferencesValid": 9795, "webTypesPassed": true, "inventoryPassed": true, "scopedLintErrors": 0, "scopedLintWarnings": 5, "browserRequestAuditPassed": true},
+      "remaining": "Original payment dates and any modified-series decision for held early-distribution cases. Federal 2026 whole-return calculations and public filing and exports remain gated."
+    },
+    "nov21SourceIntakeCombinedChecks": {
+      "unitCoverageCommit": "c892f4d00b443a54c4c9b59c169728c68b001f31",
+      "staticCommit": "8f416722ddbbba54d75330e86317a4aca28afd55",
+      "checks": {"fullUnitTestsPassed": 29868, "fullCoverageTestsPassed": 29868, "branchCoveragePercent": 88.40, "pinnedPostgresVersion": "16.16", "typesPassed": true, "buildsPassed": true, "inventoryPassed": true, "lintErrors": 0, "lintWarnings": 12137, "remoteWebRun": 44907149065, "remoteCIRun": 44907149039},
+      "macOSBrowser": {"commit": "8f416722ddbbba54d75330e86317a4aca28afd55", "collected": 655, "passed": 650, "failed": 0, "originalSkips": 5, "cleanupPassed": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"},
+      "remaining": "Record strict Linux and hosted qualification on their exact deployed revisions."
+    },
+    "nov21FinalForm1095AOriginalReview": {
+      "commit": "c892f4d00b443a54c4c9b59c169728c68b001f31",
+      "scope": "Internal pinned two-page AcroForm parser for one confirmed original policy. Reads Part III monthly values and independently reconciles the annual amounts. Holds void, corrected, flattened, XFA and alternate layouts. Preserves blank and explicit zero.",
+      "sources": ["https://www.irs.gov/pub/irs-prior/f1095a--2026.pdf", "https://www.irs.gov/pub/irs-prior/i1095a--2026.pdf#page=2"],
+      "sourceSha256": "161686f5866e18c350c0b4397a72441b26091a2962bc4bab149433762c4efca1",
+      "checks": {"focusedTestsPassed": 23, "independentFocusedTestsPassed": 3, "independentAppearanceReadbackPassed": true, "specReferencesValid": 9795, "typesPassed": true, "inventoryPassed": true, "scopedLintPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Marketplace-issued originals, Form 8962 eligibility and the guarded public filing and export paths remain unqualified."
+    },
+    "nov21Guided2026RefundPaymentYears": {
+      "commit": "afd8606ff5891c9a4240c14310d384c5a9f72be9",
+      "scope": "Actual 2026 originals with separate 2024 and 2025 deduction histories for a single taxpayer under 65. Binds actual 2025 Schedule A SALT modified AGI and unique current state estimated payment links. Uses the existing exact canonical calculations.",
+      "sources": ["https://www.irs.gov/publications/p525#en_US_2025_publink1000229426", "https://www.irs.gov/pub/irs-prior/f1099g--2026.pdf", "https://www.irs.gov/instructions/i1040sca"],
+      "checks": {"focusedTestsPassed": 24, "independentSourceReviewPassed": true, "specReferencesValid": 9792, "webTypesPassed": true, "inventoryPassed": true, "scopedLintPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Independent tax review, full-year 2026 federal availability and public export qualification remain open."
+    },
     "nov21OhioEstimatedCashOnFederalScheduleA": {
       "commit": "b1f5dc3770908441db126c0efcf7918af0a8c67a",
       "source": "https://www.irs.gov/instructions/i1040sca",
       "scope": "Verified original Ohio estimated payments on 2025 Schedule A by cash year, including automatic deduction selection. Reconcile dated legacy estimates once. Hold ambiguous saved additional income-tax totals alongside a qualifying receipt.",
       "checks": {"focusedTestsPassed": 484, "independentFocusedTestsPassed": 59, "specReferencesValid": 9789, "typesPassed": true, "buildsPassed": true, "inventoryPassed": true, "lintErrors": 0, "lintWarnings": 12137, "browserRequestAuditPassed": true, "pinnedPostgresFocusedTestsPassed": 15, "fullUnitTestsPassed": 29861, "fullCoverageTestsPassed": 29861, "branchCoveragePercent": 88.39, "macOSBrowsers": {"passed": 10, "failed": 0, "skipped": 0, "cleanupPassed": true}, "remoteWebRun": 44904803947, "remoteDockerRunPassed": 44904803983, "remoteCIRun": 44904804057},
-      "remaining": "Ohio balance and extension sources need original tax-only allocation and a source-bound, nonrecursive principal check. Exact Linux browser and current live and release qualification remain open."
+      "remoteLinuxBrowser": {"managedPassed": true, "strictJob": 136847978012, "strictPassed": 648, "strictFailedDeadline": 2, "strictOriginalSkips": 5},
+      "remaining": "Ohio balance and extension sources need an original payment allocation or a complete, uniquely reconciled full settlement that establishes the tax paid in the cash year. Total-only receipts still hold. Strict Linux container browser qualification, current live and release qualification remain open."
     },
     "nov21FinalForm1095BOriginalReview": {
       "commit": "dfa0854fe10098ded910a34a9f9adf7229b9d72d",
