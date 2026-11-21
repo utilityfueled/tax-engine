@@ -1,9 +1,12 @@
 import { completeGuidedBusinessPA } from "../fixtures/guided-business-pa-complete";
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
-// Spec: spec/federal/guided-input.yaml, business-source-records
+// Spec: spec/federal/guided-input.yaml, business-source-records and business-return-year
 import { describe, expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildNecInputs, buildScheduleCInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyNecEntry, emptyScheduleCExpenses, emptyStateReturnData, type SelfEmploymentSectionData } from "@/lib/guided-interview-flow";
+import {
+  emptyNecEntry, emptyScheduleCExpenses, emptyStateReturnData, loadGuidedFlowState,
+  saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection, type SelfEmploymentSectionData,
+} from "@/lib/guided-interview-flow";
 import { businessFactErrors } from "@/lib/guided-business-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { calculateFederalTax } from "@/engine/federal";
@@ -46,6 +49,72 @@ describe("guided business source records", () => {
     expect(buildTaxInputFromGuidedData(state)?.scheduleC?.expenses?.supplies).toBe("100");
     state.sectionData["income-self-employment"]!.businessFacts = { ...businessFacts, allInvestmentAtRisk: false };
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  });
+  it("requires annual Schedule C reconciliation after a tax-year change and saved reopen", () => {
+    const business = {
+      necEntries: [], manualGrossReceipts: "1000.02", expenses: { ...expenses, supplies: "100.01" },
+      businessFacts, qbiMateriallyParticipated: true,
+    };
+    const confirmed = updateSectionData(setInterviewTaxYear(flow(), 2026), "income-self-employment", business);
+    expect(setInterviewTaxYear(confirmed, 2026)).toBe(confirmed);
+    expect(validateSection(confirmed, "income-self-employment").status).toBe("complete");
+
+    const switched = setInterviewTaxYear(confirmed, 2025);
+    expect(buildTaxInputFromGuidedData(switched)).toBeNull();
+    expect(validateSection(switched, "income-self-employment")).toMatchObject({
+      status: "partial",
+      fieldErrors: { incomeReconciled: expect.any(String), expensesReconciled: expect.any(String) },
+    });
+
+    const items = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => items.get(key) ?? null,
+      setItem: (key: string, value: string) => items.set(key, value),
+      removeItem: (key: string) => items.delete(key),
+    } as Storage;
+    expect(saveGuidedFlowState(storage, "fictional-schedule-c", switched)).toBe(true);
+    const reopened = loadGuidedFlowState(storage, "fictional-schedule-c");
+    if (!reopened) throw new Error("Expected the saved Schedule C review.");
+    const pending = { ...business, businessFacts: { ...businessFacts, incomeReconciled: null, expensesReconciled: null } };
+    expect(reopened.sectionData["income-self-employment"]).toMatchObject(pending);
+    expect(computeGuidedPreview(reopened)).toBeNull();
+    const incomeReviewed = updateSectionData(reopened, "income-self-employment", {
+      ...pending, businessFacts: { ...pending.businessFacts, incomeReconciled: true },
+    });
+    expect(buildTaxInputFromGuidedData(incomeReviewed)).toBeNull();
+    const reviewed = updateSectionData(incomeReviewed, "income-self-employment", business);
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reviewed));
+    expect(input.taxpayer.taxYear).toBe(2025);
+    expect(input.scheduleC).toMatchObject({ grossReceipts: "1000.02", expenses: { supplies: "100.01" } });
+    expect(computeGuidedPreview(reviewed)).not.toBeNull();
+    expect(calculateFederalTax(input).scheduleC?.netProfit.toFixed()).toBe("900.01");
+  });
+  it("retains original NEC years and false or unknown business answers across a tax-year change", () => {
+    const state = flow();
+    const business = {
+      ...state.sectionData["income-self-employment"]!,
+      necEntries: [{ ...source, sourceTaxYear: "2025", nonemployeeCompensation: "12.34" }],
+      businessFacts: { ...businessFacts, incomeReconciled: true, expensesReconciled: false },
+    };
+    const pending = setInterviewTaxYear(updateSectionData(state, "income-self-employment", business), 2026);
+    expect(pending.sectionData["income-self-employment"]).toMatchObject({
+      ...business, businessFacts: { ...business.businessFacts, incomeReconciled: null },
+    });
+    const incomeUnknown = updateSectionData(state, "income-self-employment", {
+      ...business, businessFacts: { ...businessFacts, incomeReconciled: undefined },
+    });
+    expect(setInterviewTaxYear(incomeUnknown, 2026).sectionData["income-self-employment"]?.businessFacts)
+      .toMatchObject({ incomeReconciled: undefined, expensesReconciled: null });
+    const reviewed = updateSectionData(pending, "income-self-employment", { ...business, businessFacts });
+    expect(validateSection(reviewed, "income-self-employment").fieldErrors).toHaveProperty("nec-0-sourceTaxYear");
+    expect(buildTaxInputFromGuidedData(reviewed)).toBeNull();
+
+    const incomplete = updateSectionData(reviewed, "income-self-employment", {
+      ...business, businessFacts, necEntries: [{ ...business.necEntries[0], sourceTaxYear: "2026" }],
+      expenses: { ...business.expenses, supplies: "" },
+    });
+    expect(validateSection(incomplete, "income-self-employment").fieldErrors).toHaveProperty("expense-supplies");
+    expect(buildTaxInputFromGuidedData(incomplete)).toBeNull();
   });
   it("blocks multiple businesses and unconfirmed expenses", () => {
     const state = flow();

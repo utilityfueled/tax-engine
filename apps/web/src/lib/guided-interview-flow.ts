@@ -1696,6 +1696,8 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
       education.refundableAocFacts, education.refundableAocEligible].some(answer => answer !== undefined));
   const llcSourcesEntered = !!education?.llcStudents?.length;
   const bankInterestSourcesEntered = credits?.educationDistributions?.forms?.some(row => row.bankInterestConversion);
+  const selfEmployment = state.sectionData["income-self-employment"];
+  const businessFacts = selfEmployment?.businessFacts;
   const rentals = state.sectionData["income-rental"];
   const royalties = state.sectionData["income-royalties"];
   const otherTaxes = state.sectionData["other-taxes"];
@@ -1706,6 +1708,16 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
+      ...(selfEmployment && businessFacts && (businessFacts.incomeReconciled === true || businessFacts.expensesReconciled === true) ? {
+        "income-self-employment": {
+          ...selfEmployment,
+          businessFacts: {
+            ...businessFacts,
+            ...(businessFacts.incomeReconciled === true ? { incomeReconciled: null } : {}),
+            ...(businessFacts.expensesReconciled === true ? { expensesReconciled: null } : {}),
+          },
+        },
+      } : {}),
       ...(rentals?.entries?.some(entry => entry.sourceFactsConfirmed === true) ? {
         "income-rental": {
           ...rentals,
