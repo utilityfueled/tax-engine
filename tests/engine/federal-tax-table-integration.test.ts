@@ -21,7 +21,7 @@ describe("Tax Table return routing",()=>{
     const r=calculateForm8615({childUnearnedIncome:"5000",parentTaxableIncome:"30000",parentFilingStatus:"single",otherChildrenNetUnearnedIncome:"0",childQualifiedDividends:"0",childNetLTCG:"0",parentQualifiedDividends:"0",parentNetLTCG:"0"},d("3650"),"single",getConstants(2025));
     const get=(line:string)=>r.lines.find(l=>l.line===line)?.value.toString();
     // Parent combined32300 row3641, parent30000 row3365; child1350 row136/3650row368.
-    expect([get("11"),get("12"),get("15"),get("17")]).toEqual(["3641","3365","136","368"]);
+    expect([get("9"),get("10"),get("15"),get("17")]).toEqual(["3641","3365","136","368"]);
     expect(r.tax.toString()).toBe("412");
   });
   it("keeps ScheduleJ base years on actual rate schedules",()=>{

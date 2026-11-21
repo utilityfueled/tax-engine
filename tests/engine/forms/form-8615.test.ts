@@ -234,11 +234,11 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.netUnearnedAtParentRate.toNumber()).toBe(1500);
   });
 
-  it("Form 8615 Line 6 - remainder taxed at child's own rate", () => {
+  it("Form 8615 Line 14 - remainder taxed at child's own rate", () => {
     // Child has $8000 unearned income, $2000 earned income, taxable = $8650
     // Net unearned = 8000 - 2700 = 5300
     // Line 5 = min(5300, 8650) = 5300
-    // Line 6 = 8650 - 5300 = 3350
+    // Line 14 = 8650 - 5300 = 3350
     const result = calculateForm8615(
       makeInput({ childUnearnedIncome: "8000" }),
       new Decimal(8650),
@@ -246,33 +246,47 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
     expect(result.childRateIncome.toNumber()).toBe(3350);
+    expect(result.lines.find(line => line.line === "14")?.value.toString()).toBe("3350");
   });
 
-  it("Form 8615 Line 7 - parent's taxable income from input", () => {
+  it("Form 8615 Line 6 - parent's taxable income from input", () => {
     const result = calculateForm8615(
       makeInput({ parentTaxableIncome: "200000" }),
       new Decimal(5000),
       "single",
       constants
     );
-    const line7 = result.lines.find(l => l.form === "8615" && l.line === "7");
-    expect(line7?.value.toNumber()).toBe(200000);
+    const line6 = result.lines.find(l => l.form === "8615" && l.line === "6");
+    expect(line6?.value.toNumber()).toBe(200000);
   });
 
-  it("Form 8615 Line 8 - zero when no siblings file Form 8615", () => {
+  it("Form 8615 Line 6 - floors parent's taxable income before computing the sibling allocation", () => {
+    const result = calculateForm8615(makeInput({
+      childUnearnedIncome: "22700",
+      parentTaxableIncome: "-10000",
+      parentFilingStatus: "single",
+      otherChildrenNetUnearnedIncome: "180000",
+    }), new Decimal("20000"), "single", constants);
+
+    const line = (id: string) => result.lines.find(row => row.line === id)?.value.toString();
+    // The published single-filer worksheet assigns $41,063 to $200,000 in 2025.
+    expect([line("6"), line("8"), line("9"), line("10")]).toEqual(["0", "200000", "41063", "0"]);
+    expect(result.tax.toString()).toBe("4106");
+  });
+
+  it("Form 8615 Line 7 - leaves sibling net unearned income blank when none", () => {
     const result = calculateForm8615(
       makeInput({ otherChildrenNetUnearnedIncome: "0" }),
       new Decimal(5000),
       "single",
       constants
     );
-    const line8 = result.lines.find(l => l.form === "8615" && l.line === "8");
-    expect(line8?.value.toNumber()).toBe(0);
+    expect(result.lines.filter(row => ["7", "12a", "12b"].includes(row.line))).toEqual([]);
   });
 
   // ─── Parent Rate Computation ─────────────────────────────
 
-  it("Form 8615 Line 11 - tax on combined income uses parent's rates", () => {
+  it("Form 8615 Line 9 - tax on combined income uses parent's rates", () => {
     // Parent has $150,000 taxable income, MFJ
     // Child's net unearned = 5000 - 2700 = 2300
     // Combined = 150000 + 2300 = 152300
@@ -287,15 +301,15 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
 
-    const expectedLine11 = calculateTaxFromBrackets(
+    const expectedLine9 = calculateTaxFromBrackets(
       new Decimal(152300),
       constants.taxBrackets.married_filing_jointly
     );
-    const line11 = result.lines.find(l => l.form === "8615" && l.line === "11");
-    expect(line11?.value.toNumber()).toBe(expectedLine11.toNumber());
+    const line9 = result.lines.find(l => l.form === "8615" && l.line === "9");
+    expect(line9?.value.toNumber()).toBe(expectedLine9.toNumber());
   });
 
-  it("Form 8615 Line 12 - tax on parent's income alone", () => {
+  it("Form 8615 Line 10 - tax on parent's income alone", () => {
     const result = calculateForm8615(
       makeInput({
         parentTaxableIncome: "150000",
@@ -306,15 +320,15 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
 
-    const expectedLine12 = calculateTaxFromBrackets(
+    const expectedLine10 = calculateTaxFromBrackets(
       new Decimal(150000),
       constants.taxBrackets.married_filing_jointly
     );
-    const line12 = result.lines.find(l => l.form === "8615" && l.line === "12");
-    expect(line12?.value.toNumber()).toBe(expectedLine12.toNumber());
+    const line10 = result.lines.find(l => l.form === "8615" && l.line === "10");
+    expect(line10?.value.toNumber()).toBe(expectedLine10.toNumber());
   });
 
-  it("Form 8615 Line 13 - allocable parental tax is the marginal increase", () => {
+  it("Form 8615 Line 11 - allocable parental tax is the marginal increase", () => {
     const input = makeInput({
       childUnearnedIncome: "5000",
       parentTaxableIncome: "150000",
@@ -335,7 +349,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     );
   });
 
-  it("Form 8615 Line 14 - single child gets full allocable parental tax", () => {
+  it("Form 8615 Line 13 - single child gets full allocable parental tax", () => {
     const result = calculateForm8615(
       makeInput({ otherChildrenNetUnearnedIncome: "0" }),
       new Decimal(5000),
@@ -349,7 +363,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
 
   it("Form 8615 Line 15 - tax on child's remaining income at child's rate", () => {
     // Child: $8000 unearned, taxable = $8650
-    // Net unearned = 5300, line 5 = 5300, line 6 = 3350
+    // Net unearned = 5300, line 5 = 5300, line 14 = 3350
     // Published2025 single3350–3400 row338.
     const result = calculateForm8615(
       makeInput({ childUnearnedIncome: "8000" }),
@@ -415,41 +429,45 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
 
   // ─── Sibling Allocation ────────────────────────────────────
 
-  it("Form 8615 Lines 8-14 - allocates parental tax among siblings", () => {
-    // This child: net unearned = 5000 - 2700 = 2300
-    // Other siblings: 3000 of net unearned
-    // Total Line 9 = 2300 + 3000 = 5300
-    // This child's share = allocable_tax * (2300 / 5300)
+  it("Form 8615 Lines 7–13 - records and allocates parental tax among siblings", () => {
+    // Sharon in the IRS line 12b example has $3,000 on line 5 and $6,000 on line 7.
     const result = calculateForm8615(
       makeInput({
-        childUnearnedIncome: "5000",
+        childUnearnedIncome: "5700",
         parentTaxableIncome: "200000",
         parentFilingStatus: "single",
-        otherChildrenNetUnearnedIncome: "3000",
+        otherChildrenNetUnearnedIncome: "6000",
       }),
-      new Decimal(5000),
+      new Decimal(3000),
       "single",
       constants
     );
 
-    const line8 = result.lines.find(l => l.form === "8615" && l.line === "8");
-    expect(line8?.value.toNumber()).toBe(3000);
+    const line = (id: string) => result.lines.find(row => row.line === id)?.value;
+    expect([line("7"), line("8"), line("11"), line("12a"), line("13")].map(value => value?.toString()))
+      .toEqual(["6000", "209000", "2880", "9000", "960"]);
+    expect(line("12b")?.toFixed(3)).toBe("0.333");
+    expect(line("12b")?.eq(new Decimal(1).dividedBy(3))).toBe(true);
+    expect(result.childShareOfParentalTax.toString()).toBe("960");
+  });
 
-    // Verify proportional allocation
-    const expectedShare = result.allocableParentalTax
-      .times(new Decimal(2300))
-      .dividedBy(new Decimal(5300));
-    expect(result.childShareOfParentalTax.toNumber()).toBe(
-      expectedShare.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toNumber()
-    );
-    expect(result.childShareOfParentalTax.toNumber()).toBeLessThan(
-      result.allocableParentalTax.toNumber()
-    );
+  it("Form 8615 Line 13 - rounds the sibling's exact half-dollar allocation up", () => {
+    const result = calculateForm8615(makeInput({
+      childUnearnedIncome: "2704",
+      parentTaxableIncome: "71",
+      parentFilingStatus: "single",
+      otherChildrenNetUnearnedIncome: "100",
+    }), new Decimal("1354"), "single", constants);
+
+    // Published tax table amounts of $19 and $6 yield a $13 increase.
+    // The child's exact $13 × $4 / $104 share is $0.50.
+    expect(result.allocableParentalTax.toString()).toBe("13");
+    expect(result.childShareOfParentalTax.toString()).toBe("1");
   });
 
   // ─── QDCG Interaction ─────────────────────────────────────
 
-  it("Form 8615 Lines 11-12 - parent with QDCG uses preferential rate computation", () => {
+  it("Form 8615 Lines 9–10 - parent with QDCG uses preferential rate computation", () => {
     // Parent with $10,000 qualified dividends at MFJ
     const input = makeInput({
       childUnearnedIncome: "5000",
@@ -470,19 +488,19 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       new Decimal(100000), new Decimal(10000), new Decimal(0), "married_filing_jointly", constants
     );
 
-    const line11 = result.lines.find(l => l.form === "8615" && l.line === "11");
-    expect(line11?.value.toNumber()).toBe(taxCombined.tax.toNumber());
-    const line12 = result.lines.find(l => l.form === "8615" && l.line === "12");
-    expect(line12?.value.toNumber()).toBe(taxParent.tax.toNumber());
+    const line9 = result.lines.find(l => l.form === "8615" && l.line === "9");
+    expect(line9?.value.toNumber()).toBe(taxCombined.tax.toNumber());
+    const line10 = result.lines.find(l => l.form === "8615" && l.line === "10");
+    expect(line10?.value.toNumber()).toBe(taxParent.tax.toNumber());
   });
 
   it("Form 8615 Line 15 - child's qualified dividends exceeding Line 5 get QDCG treatment", () => {
     // Child has $10,000 QD (all unearned), net unearned = 10000 - 2700 = 7300
     // Child's taxable income = $12000 (includes some earned)
     // Line 5 = min(7300, 12000) = 7300
-    // Line 6 = 12000 - 7300 = 4700
+    // Line 14 = 12000 - 7300 = 4700
     // QD absorbed by Line 5 = min(10000, 7300) = 7300
-    // QD on Line 6 = 10000 - 7300 = 2700
+    // Existing calculation's QD on Line 14 = 10000 - 7300 = 2700
     const result = calculateForm8615(
       makeInput({
         childUnearnedIncome: "10000",
@@ -495,9 +513,9 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
 
-    // Line 6 = 4700, with QD = 2700
+    // Line 14 = 4700, with QD = 2700
     expect(result.childRateIncome.toNumber()).toBe(4700);
-    // Tax on line 6 should use QDCG (2700 QD at 0% rate for low income)
+    // Tax on line 14 should use QDCG (2700 QD at 0% rate for low income)
     const expectedLine15 = calculateCapitalGainsTax(
       new Decimal(4700), new Decimal(2700), new Decimal(0), "single", constants
     );
@@ -538,8 +556,8 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
 
     const combined = new Decimal(102300);
     const expectedTax = calculateTaxFromBrackets(combined, constants.taxBrackets.single);
-    const line11 = result.lines.find(l => l.form === "8615" && l.line === "11");
-    expect(line11?.value.toNumber()).toBe(expectedTax.toNumber());
+    const line9 = result.lines.find(l => l.form === "8615" && l.line === "9");
+    expect(line9?.value.toNumber()).toBe(expectedTax.toNumber());
   });
 
   it("Form 8615 - head of household parent uses HoH tax brackets", () => {
@@ -556,8 +574,8 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
 
     const combined = new Decimal(102300);
     const expectedTax = calculateTaxFromBrackets(combined, constants.taxBrackets.head_of_household);
-    const line11 = result.lines.find(l => l.form === "8615" && l.line === "11");
-    expect(line11?.value.toNumber()).toBe(expectedTax.toNumber());
+    const line9 = result.lines.find(l => l.form === "8615" && l.line === "9");
+    expect(line9?.value.toNumber()).toBe(expectedTax.toNumber());
   });
 
   // ─── Edge Cases ────────────────────────────────────────────
@@ -625,10 +643,10 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.allocableParentalTax.toNumber()).toBe(2701);
   });
 
-  it("Form 8615 - line 6 of zero produces zero line 15 tax", () => {
+  it("Form 8615 - line 14 of zero produces zero line 15 tax", () => {
     // All child's taxable income is net unearned income
     // Unearned = 5000, taxable = 2300 (5000 - 2700 standard deduction)
-    // Net unearned = 5000 - 2700 = 2300 = taxable, so line 5 = 2300, line 6 = 0
+    // Net unearned = 5000 - 2700 = 2300 = taxable, so line 5 = 2300, line 14 = 0
     const result = calculateForm8615(
       makeInput({ childUnearnedIncome: "5000" }),
       new Decimal(2300),
@@ -654,9 +672,9 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       constants
     );
 
-    // Verify QDCG is used for parent computation
-    const line11 = result.lines.find(l => l.form === "8615" && l.line === "11");
-    expect(line11?.formula).toContain("QDCG");
+    // Verify a preferential worksheet is used for the parent computation.
+    const line9 = result.lines.find(l => l.form === "8615" && l.line === "9");
+    expect(line9?.formula).toContain("preferential tax worksheet");
 
     // The tax should be higher than without QDCG because the children's unearned
     // income stacks on top, potentially pushing ordinary income into higher brackets
@@ -672,8 +690,8 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     // QD absorbed by line 5 = min(8000, 12300) = 8000
     // Remaining line 5 after QD = 12300 - 8000 = 4300
     // LTCG absorbed = min(5000, 4300) = 4300
-    // LTCG on line 6 = 5000 - 4300 = 700
-    // Line 6 = 15000 - 12300 = 2700
+    // LTCG on line 14 = 5000 - 4300 = 700
+    // Line 14 = 15000 - 12300 = 2700
     const result = calculateForm8615(
       makeInput({
         childUnearnedIncome: "15000",
@@ -738,7 +756,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     // Taxable income = $28,000 - $3,450 = $24,550
     // Net unearned = $25,000 - $2,700 = $22,300
     // Line 5 = min($22,300, $24,550) = $22,300
-    // Line 6 = $24,550 - $22,300 = $2,250
+    // Line 14 = $24,550 - $22,300 = $2,250
     // Parent: $350,000 MFJ taxable → in 24% bracket
     const result = calculateForm8615(
       makeInput({
@@ -763,10 +781,8 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.tentativeTax.greaterThan(result.taxAtChildOwnRate)).toBe(true);
     expect(result.tax.toNumber()).toBe(result.tentativeTax.toNumber());
 
-    // Audit trail is complete
-    const allLineNumbers = result.lines.map(l => l.line);
-    for (const expected of ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"]) {
-      expect(allLineNumbers).toContain(expected);
-    }
+    expect(result.lines.map(line => line.line)).toEqual([
+      "1", "2", "3", "4", "5", "6", "8", "9", "10", "11", "13", "14", "15", "16", "17", "18",
+    ]);
   });
 });

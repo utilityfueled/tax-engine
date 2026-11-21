@@ -4404,23 +4404,23 @@ export const Form8615Schema = z.object({
     value => d(value).isFinite() && d(value).gte(0),
     "Directly connected itemized deductions must be finite and nonnegative",
   ).optional(),
-  /** Child's qualified dividends (for QDCG allocation between Lines 5 and 6) */
+  /** Child's qualified dividends (for QDCG allocation between Lines 5 and 14) */
   childQualifiedDividends: optionalDecimal,
-  /** Child's net long-term capital gain (for QDCG allocation between Lines 5 and 6) */
+  /** Child's net long-term capital gain (for QDCG allocation between Lines 5 and 14) */
   childNetLTCG: optionalDecimal,
-  /** Line 7: Parent's taxable income (from parent's Form 1040 Line 15) */
+  /** Line 6: Parent's taxable income (from parent's Form 1040 Line 15) */
   parentTaxableIncome: decimal,
   /** Parent's filing status */
   parentFilingStatus: FilingStatusSchema,
-  /** Parent's qualified dividends (for QDCG computation on Lines 11/12) */
+  /** Parent's qualified dividends (for QDCG computation on Lines 9 and 10) */
   parentQualifiedDividends: optionalDecimal,
-  /** Parent's net long-term capital gain (for QDCG computation on Lines 11/12) */
+  /** Parent's net long-term capital gain (for QDCG computation on Lines 9 and 10) */
   parentNetLTCG: optionalDecimal,
   /** Parent's unrecaptured section 1250 gain */
   parentSection1250Gain: optionalDecimal,
   /** Parent's collectibles (28% rate) gain */
   parentCollectiblesGain: optionalDecimal,
-  /** Line 8: Total net unearned income (Line 5) of all OTHER children of the same parent who file Form 8615 */
+  /** Line 7: Total Line 5 net unearned income of other children using the same parent's return */
   otherChildrenNetUnearnedIncome: optionalDecimal,
 }).refine(input => !input.childItemizesDeductions || input.childDirectlyConnectedItemizedDeductions !== undefined, {
   path: ["childDirectlyConnectedItemizedDeductions"],

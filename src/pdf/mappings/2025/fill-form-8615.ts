@@ -108,12 +108,14 @@ export function buildForm8615ReferenceSummary(
   }
 
   const lines = result.lines
-    .filter((line) => line.form === "8615" && /^\d+$/.test(line.line))
-    .sort((left, right) => Number(left.line) - Number(right.line))
+    .filter((line) => line.form === "8615" && /^(?:\d+|12[ab])$/.test(line.line))
+    .sort((left, right) => left.line.localeCompare(right.line, "en", { numeric: true }))
     .map((line) => ({
       line: line.line,
       description: line.description,
-      value: line.value.toString(),
+      value: line.line === "12b"
+        ? line.value.toFixed(Math.max(3, line.value.decimalPlaces()))
+        : line.value.toString(),
     }));
 
   return {
@@ -196,7 +198,8 @@ export async function fillForm8615Reference(
       newPage();
     }
 
-    y = drawWrappedText(page, `Line ${line.line} ${line.description}: ${formatAmountString(line.value)}`, {
+    const value = line.line === "12b" ? line.value : formatAmountString(line.value);
+    y = drawWrappedText(page, `Line ${line.line} ${line.description}: ${value}`, {
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,

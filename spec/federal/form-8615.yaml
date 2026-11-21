@@ -1,5 +1,5 @@
 # Form 8615 — Tax for Certain Children Who Have Unearned Income
-# IRS Reference: Form 8615 Instructions (2025), IRC Section 1(g)
+# IRS Reference: 2025 Form 8615 (https://www.irs.gov/pub/irs-prior/f8615--2025.pdf), Instructions and IRC Section 1(g)
 # Rev. Proc. 2024-40 Section 2.02 (2025 inflation adjustments)
 
 form: "8615"
@@ -73,75 +73,84 @@ lines:
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 5 - net unearned income capped at child's taxable income"
 
   - line: "6"
-    description: "Child's taxable income taxed at child's rate"
-    formula: "Line 4 - Line 5"
+    description: "Parent's taxable income"
+    formula: "max(0, parent's taxable income from Form 1040 Line 15)"
     irs_reference: "Form 8615 Instructions, Line 6"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 6 - remainder taxed at child's own rate"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 6 - floors parent's taxable income before computing the sibling allocation"
 
   - line: "7"
-    description: "Parent's taxable income"
-    formula: "From parent's Form 1040 Line 15"
+    description: "Net unearned income of other Form 8615 children"
+    formula: "Sum of Line 5 amounts from all other children of the same parent who file Form 8615. Leave blank if none."
     irs_reference: "Form 8615 Instructions, Line 7"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 7 - parent's taxable income from input"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 7 - leaves sibling net unearned income blank when none"
 
   - line: "8"
-    description: "Net unearned income of other Form 8615 children"
-    formula: "Sum of Line 5 amounts from all other children of the same parent who file Form 8615"
+    description: "Combined income for parental tax calculation"
+    formula: "Line 5 + Line 6 + Line 7"
     irs_reference: "Form 8615 Instructions, Line 8"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 8 - zero when no siblings file Form 8615"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Lines 7–13 - records and allocates parental tax among siblings"
 
   - line: "9"
-    description: "Total children's net unearned income"
-    formula: "Line 5 + Line 8"
+    description: "Tax on combined income at parent's rates"
+    formula: "Tax on Line 8 using the parent's filing status and the applicable tax table or worksheet."
+    notes: "Child preferential-income worksheet qualification is separate."
     irs_reference: "Form 8615 Instructions, Line 9"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Lines 8-14 - allocates parental tax among siblings"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 9 - tax on combined income uses parent's rates"
 
   - line: "10"
-    description: "Combined income for rate lookup"
-    formula: "Line 7 + Line 9"
+    description: "Tax on parent's taxable income"
+    formula: >
+      IRS Line 10 uses the parent's Form 1040 Line 16 with the form's required exclusions.
+      The supported calculation recomputes the parent's tax from Line 6, filing status
+      and reported preferential components.
     irs_reference: "Form 8615 Instructions, Line 10"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 11 - tax on combined income uses parent's rates"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 10 - tax on parent's income alone"
 
   - line: "11"
-    description: "Tax on Line 10 at parent's rates"
-    formula: >
-      Tax computed on Line 10 using the parent's filing status and applicable
-      tax computation method (QDCG worksheet if parent has qualified dividends
-      or net capital gains, otherwise tax brackets).
+    description: "Allocable parental tax"
+    formula: "Line 9 minus Line 10. The supported tax computation floors the difference at zero."
     irs_reference: "Form 8615 Instructions, Line 11"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 11 - tax on combined income uses parent's rates"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 11 - allocable parental tax is the marginal increase"
 
-  - line: "12"
-    description: "Tax on parent's taxable income only"
-    formula: "Tax computed on Line 7 using parent's filing status and applicable method"
-    irs_reference: "Form 8615 Instructions, Line 12"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 12 - tax on parent's income alone"
+  - line: "12a"
+    description: "Total net unearned income of all children"
+    formula: "Line 5 + Line 7. Skip if Line 7 is blank."
+    irs_reference: "Form 8615 Instructions, Lines 12a and 12b"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Lines 7–13 - records and allocates parental tax among siblings"
+
+  - line: "12b"
+    description: "Child's share of total net unearned income"
+    formula: >
+      Line 5 divided by Line 12a. Skip if Line 7 is blank. Report the Decimal ratio
+      at calculation precision, with at least three decimal places in the reference summary.
+    irs_reference: "2025 Form 8615, Line 12b; Form 8615 Instructions, Lines 12a and 12b"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Lines 7–13 - records and allocates parental tax among siblings"
 
   - line: "13"
-    description: "Allocable parental tax"
-    formula: "Line 11 - Line 12"
+    description: "Child's share of allocable parental tax"
+    formula: >
+      Copy Line 11 if Line 7 is blank. Otherwise, apply the Line 12b share by
+      multiplying Line 11 by Line 5 and dividing by Line 12a before rounding
+      the resulting allocation to the nearest whole dollar.
     irs_reference: "Form 8615 Instructions, Line 13"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 13 - allocable parental tax is the marginal increase"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 13 - single child gets full allocable parental tax"
 
   - line: "14"
-    description: "This child's share of allocable parental tax"
-    formula: >
-      If Line 8 = 0: Line 13.
-      Otherwise: Line 13 x (Line 5 / Line 9).
+    description: "Child's taxable income at child's own rate"
+    formula: "Line 4 minus Line 5. Use zero when those amounts are equal."
     irs_reference: "Form 8615 Instructions, Line 14"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 14 - single child gets full allocable parental tax"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 14 - remainder taxed at child's own rate"
 
   - line: "15"
-    description: "Tax on child's remaining income (Line 6) at child's rate"
-    formula: >
-      Tax computed on Line 6 using the child's filing status. Qualified dividends
-      and capital gains exceeding Line 5 flow to Line 6 for QDCG treatment.
+    description: "Tax on child's remaining income at child's own rate"
+    formula: "Tax computed on Line 14 using the child's filing status and the applicable tax table or worksheet."
+    notes: "The IRS requires the Line 5 Worksheet to determine preferential amounts included on Line 14. This worksheet is outside the audit-row correction."
     irs_reference: "Form 8615 Instructions, Line 15"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 15 - tax on child's remaining income at child's rate"
 
   - line: "16"
     description: "Tentative tax"
-    formula: "Line 14 + Line 15"
+    formula: "Line 13 + Line 15"
     irs_reference: "Form 8615 Instructions, Line 16"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 18 - final tax is the greater of tentative and child-rate tax"
 
@@ -163,33 +172,33 @@ lines:
     description: "Draft packet inclusion rule for supported Form 8615 kiddie-tax outputs"
     formula: "When Form 8615 applies, include a non-filing reference-summary PDF in the packet that lists the supported Form 8615 line outputs used to replace Form 1040 Line 16 tax."
     irs_reference: "Form 8615 Instructions, Lines 1-18; Form 1040 Instructions, Line 16"
-    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 8615, so the draft packet stays honest about the supported kiddie-tax scope."
+    notes: "The draft packet contains a reference summary. Display sibling allocation lines 12a and 12b when present, with line 12b as a ratio with at least three decimal places."
     testRef: "tests/pdf/fill-form-8615.test.ts::fillReturn includes a Form 8615 reference summary when kiddie tax applies"
 
 edge_cases:
   - description: "Net unearned income zero or negative"
     rule: "If Line 1 <= Line 2, Form 8615 does not apply; return zero."
 
-  - description: "Itemizing child uses lower threshold"
-    rule: "If the child itemizes deductions, Line 2 = $1,350 instead of $2,700."
+  - description: "Itemizing child's directly connected deductions increase the threshold"
+    rule: "Use the Line 2 itemizer formula with the applicable year's amounts."
 
   - description: "Net unearned income exceeds child's taxable income"
     rule: "Line 5 is capped at Line 4."
 
   - description: "Multiple siblings filing Form 8615"
     rule: >
-      The allocable parental tax (Line 13) is split proportionally among all
-      children based on each child's Line 5 relative to the combined Line 9.
+      The allocable parental tax on Line 11 is split proportionally among all
+      children based on each child's Line 5 relative to the combined Line 12a.
 
   - description: "Parent has qualified dividends or capital gains"
     rule: >
-      Lines 11 and 12 use the QDCG worksheet when the parent has qualified
-      dividends or net long-term capital gains.
+      Lines 9 and 10 use the applicable tax worksheet when the parent has
+      qualified dividends or net long-term capital gains.
 
-  - description: "Child has qualified dividends allocated between Lines 5 and 6"
+  - description: "Child has qualified dividends allocated between Lines 5 and 14"
     rule: >
-      Qualified dividends are first absorbed by Line 5 (parent-rate portion).
-      Any excess flows to Line 6 for QDCG treatment at the child's rate.
+      Use the applicable IRS Line 5 Worksheet to determine each portion.
+      Qualification of this worksheet is outside the audit-row correction.
 
   - description: "Child's own rate is higher than parent-rate computation"
     rule: >

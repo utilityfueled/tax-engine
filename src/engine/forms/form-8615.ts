@@ -6,9 +6,7 @@
  * whose unearned income exceeds the threshold pay tax on the net unearned
  * income at their parent's marginal rate instead of their own.
  *
- * Lines 11/12 use the parent's QDCG rates. Lines 15/17 use the child's rates.
- * The child's qualified dividends are allocated between the parent-rate portion
- * (Line 5) and the child-rate portion (Line 6).
+ * Lines 9 and 10 use the parent's rates. Lines 15 and 17 use the child's rates.
  */
 
 import Decimal from "decimal.js";
@@ -27,15 +25,15 @@ export interface Form8615Result {
   netUnearnedIncome: Decimal;
   /** Line 5: Net unearned income taxed at parent's rate */
   netUnearnedAtParentRate: Decimal;
-  /** Line 6: Child's taxable income taxed at child's rate */
+  /** Line 14: Child's taxable income taxed at child's rate */
   childRateIncome: Decimal;
-  /** Line 13: Allocable parental tax (total for all Form 8615 children) */
+  /** Line 11: Allocable parental tax (total for all Form 8615 children) */
   allocableParentalTax: Decimal;
-  /** Line 14: This child's share of allocable parental tax */
+  /** Line 13: This child's share of allocable parental tax */
   childShareOfParentalTax: Decimal;
   /** Line 15: Tax on child's remaining income at child's rate */
   taxOnChildRateIncome: Decimal;
-  /** Line 16: Tentative tax (Line 14 + Line 15) */
+  /** Line 16: Tentative tax (Line 13 + Line 15) */
   tentativeTax: Decimal;
   /** Line 17: Tax on child's full taxable income at child's own rate */
   taxAtChildOwnRate: Decimal;
@@ -110,32 +108,21 @@ export function calculateForm8615(
     throw new Error("Form 8615 for an itemizing child with preferential income requires a separate worksheet");
   }
 
-  // ── Line 6: Child's taxable income taxed at child's rate ──
-  const line6 = line4.minus(line5);
-  audit.record("8615", "6", "Child's taxable income at child's rate", line6,
-    "Line 4 - Line 5");
+  // ── Lines 6–8: Income for the parental tax calculation ──
+  const line6 = zeroFloor(d(input.parentTaxableIncome));
+  audit.record("8615", "6", "Parent's taxable income", line6, "max(0, parent's Form 1040 Line 15)");
 
-  // ── Line 7: Parent's taxable income ──
-  const line7 = d(input.parentTaxableIncome);
-  audit.record("8615", "7", "Parent's taxable income", line7, "From parent's Form 1040 Line 15");
+  const line7 = d(input.otherChildrenNetUnearnedIncome);
+  const hasOtherChildren = !line7.isZero();
+  if (hasOtherChildren) {
+    audit.record("8615", "7", "Other children's net unearned income", line7, "Sum of Line 5 from other children's Forms 8615");
+  }
 
-  // ── Line 8: Other children's net unearned income ──
-  const line8 = d(input.otherChildrenNetUnearnedIncome);
-  audit.record("8615", "8", "Other children's net unearned income", line8, "Input: other Form 8615 siblings");
+  const childUnearnedTotal = line5.plus(line7);
+  const line8 = line6.plus(childUnearnedTotal);
+  audit.record("8615", "8", "Combined income for parental tax calculation", line8, "Line 5 + Line 6 + Line 7");
 
-  // ── Line 9: Total children's net unearned income ──
-  const line9 = line5.plus(line8);
-  audit.record("8615", "9", "Total children's net unearned income", line9,
-    "Line 5 + Line 8");
-
-  // ── Line 10: Combined income for rate lookup ──
-  const line10 = line7.plus(line9);
-  audit.record("8615", "10", "Combined income for rate lookup", line10,
-    "Line 7 + Line 9");
-
-  // ── Lines 11-12: Tax at parent's rates ──
-  // Use parent's QDCG rates. The children's net unearned income is treated
-  // as ordinary income stacked above the parent's income.
+  // ── Lines 9 and 10: Tax at parent's rates ──
   const parentFilingStatus = input.parentFilingStatus as FilingStatus;
   const parentQD = d(input.parentQualifiedDividends);
   const parentLTCG = d(input.parentNetLTCG);
@@ -144,89 +131,91 @@ export function calculateForm8615(
 
   const hasParentQDCG = parentQD.greaterThan(0) || parentLTCG.greaterThan(0);
 
-  let line11: Decimal;
-  let line12: Decimal;
+  let line9: Decimal;
+  let line10: Decimal;
 
   if (hasParentQDCG) {
     // Tax on combined income using parent's QDCG rates
     const taxOnCombined = calculateCapitalGainsTax(
-      line10, parentQD, parentLTCG, parentFilingStatus, constants,
+      line8, parentQD, parentLTCG, parentFilingStatus, constants,
       { section1250Gain: parentSection1250, collectiblesGain: parentCollectibles }
     );
-    line11 = taxOnCombined.tax;
+    line9 = taxOnCombined.tax;
 
     // Tax on parent's income alone using parent's QDCG rates
     const taxOnParent = calculateCapitalGainsTax(
-      line7, parentQD, parentLTCG, parentFilingStatus, constants,
+      line6, parentQD, parentLTCG, parentFilingStatus, constants,
       { section1250Gain: parentSection1250, collectiblesGain: parentCollectibles }
     );
-    line12 = taxOnParent.tax;
+    line10 = taxOnParent.tax;
   } else {
-    // No QDCG: use ordinary brackets
-    line11 = calculateRegularIncomeTax(line10, parentFilingStatus, constants);
-    line12 = calculateRegularIncomeTax(line7, parentFilingStatus, constants);
+    line9 = calculateRegularIncomeTax(line8, parentFilingStatus, constants);
+    line10 = calculateRegularIncomeTax(line6, parentFilingStatus, constants);
   }
 
-  audit.record("8615", "11", "Tax on combined income at parent's rates", line11,
-    hasParentQDCG ? "QDCG worksheet using parent's filing status" : "Actual-year TaxTable/TaxComputationWorksheet using parent's filing status");
-  audit.record("8615", "12", "Tax on parent's income at parent's rates", line12,
-    hasParentQDCG ? "QDCG worksheet using parent's filing status" : "Actual-year TaxTable/TaxComputationWorksheet using parent's filing status");
+  const parentalTaxMethod = hasParentQDCG
+    ? "preferential tax worksheet using parent's filing status"
+    : "actual-year Tax Table or Tax Computation Worksheet using parent's filing status";
+  audit.record("8615", "9", "Tax on combined income at parent's rates", line9,
+    `Tax on Line 8 using the ${parentalTaxMethod}`);
+  audit.record("8615", "10", "Tax on parent's taxable income", line10,
+    `Tax recomputed on Line 6 using the ${parentalTaxMethod}`);
 
-  // ── Line 13: Allocable parental tax ──
-  const line13 = zeroFloor(line11.minus(line12));
-  audit.record("8615", "13", "Allocable parental tax", line13, "Line 11 - Line 12");
+  // ── Lines 11–13: Allocable parental tax and this child's share ──
+  const line11 = zeroFloor(line9.minus(line10));
+  audit.record("8615", "11", "Allocable parental tax", line11, "max(0, Line 9 - Line 10)");
 
-  // ── Line 14: This child's share ──
-  let line14: Decimal;
-  if (line8.isZero()) {
-    // Only child filing Form 8615 — gets 100%
-    line14 = line13;
-    audit.record("8615", "14", "Child's share of allocable parental tax", line14,
-      "Only child filing Form 8615: full Line 13");
-  } else {
-    // Multiple children: proportional allocation
-    line14 = line9.greaterThan(0)
-      ? roundDollar(line13.times(line5).dividedBy(line9))
+  let line13 = line11;
+  if (hasOtherChildren) {
+    const line12b = childUnearnedTotal.gt(0) ? line5.dividedBy(childUnearnedTotal) : zero;
+    audit.record("8615", "12a", "Total net unearned income of all children", childUnearnedTotal, "Line 5 + Line 7");
+    audit.record("8615", "12b", "Child's share of total net unearned income", line12b, "Line 5 / Line 12a");
+
+    // Multiply before dividing so a finite representation of the ratio cannot change a half-dollar tie.
+    line13 = childUnearnedTotal.gt(0)
+      ? roundDollar(line11.times(line5).dividedBy(childUnearnedTotal))
       : zero;
-    audit.record("8615", "14", "Child's share of allocable parental tax", line14,
-      `Line 13 x (Line 5 / Line 9) = ${line13} x (${line5} / ${line9})`);
   }
+  audit.record("8615", "13", "Child's share of allocable parental tax", line13,
+    hasOtherChildren ? "Round Line 11 × (Line 5 / Line 12a) to whole dollars" : "Copy Line 11 when Line 7 is blank");
+
+  // ── Line 14: Child's taxable income taxed at child's own rate ──
+  const line14 = line4.minus(line5);
+  audit.record("8615", "14", "Child's taxable income at child's own rate", line14, "Line 4 - Line 5");
 
   // ── Line 15: Tax on child's remaining income at child's rate ──
-  // Allocate child's qualified dividends and LTCG between Lines 5 and 6.
-  // Per Form 8615 instructions: qualified dividends and LTCG within the
-  // net unearned income (Line 5) are absorbed first; any excess flows to Line 6.
+  // Keep the existing preferential-income computation pending the IRS Line 5 Worksheet implementation.
   const childQD = d(input.childQualifiedDividends);
   const childLTCG = d(input.childNetLTCG);
 
   // Absorption: QD first, then LTCG
   const qdAbsorbedByLine5 = min(childQD, line5);
-  const qdOnLine6 = zeroFloor(childQD.minus(qdAbsorbedByLine5));
+  const qdOnLine14 = zeroFloor(childQD.minus(qdAbsorbedByLine5));
   const remainingLine5AfterQD = zeroFloor(line5.minus(qdAbsorbedByLine5));
   const ltcgAbsorbedByLine5 = min(childLTCG, remainingLine5AfterQD);
-  const ltcgOnLine6 = zeroFloor(childLTCG.minus(ltcgAbsorbedByLine5));
+  const ltcgOnLine14 = zeroFloor(childLTCG.minus(ltcgAbsorbedByLine5));
 
   let line15: Decimal;
-  const hasChildQDCGOnLine6 = qdOnLine6.greaterThan(0) || ltcgOnLine6.greaterThan(0);
+  const hasChildQDCGOnLine14 = qdOnLine14.greaterThan(0) || ltcgOnLine14.greaterThan(0);
 
-  if (line6.isZero()) {
+  if (line14.isZero()) {
     line15 = zero;
-  } else if (hasChildQDCGOnLine6) {
-    const taxOnLine6 = calculateCapitalGainsTax(
-      line6, qdOnLine6, ltcgOnLine6, childFilingStatus, constants
+  } else if (hasChildQDCGOnLine14) {
+    const taxOnLine14 = calculateCapitalGainsTax(
+      line14, qdOnLine14, ltcgOnLine14, childFilingStatus, constants
     );
-    line15 = taxOnLine6.tax;
+    line15 = taxOnLine14.tax;
   } else {
-    line15 = calculateRegularIncomeTax(line6, childFilingStatus, constants);
+    line15 = calculateRegularIncomeTax(line14, childFilingStatus, constants);
   }
   audit.record("8615", "15", "Tax on child's remaining income at child's rate", line15,
-    hasChildQDCGOnLine6
-      ? `QDCG worksheet: QD $${qdOnLine6} + LTCG $${ltcgOnLine6} on Line 6`
+    hasChildQDCGOnLine14
+      ? `Tax on Line 14, using QD $${qdOnLine14} and LTCG $${ltcgOnLine14}`
       : "Actual-year TaxTable/TaxComputationWorksheet using child's filing status");
 
   // ── Line 16: Tentative tax ──
-  const line16 = line14.plus(line15);
-  audit.record("8615", "16", "Tentative tax", line16, "Line 14 + Line 15");
+  const line16 = line13.plus(line15);
+  audit.record("8615", "16", "Tentative tax", line16, "Line 13 + Line 15");
 
   // ── Line 17: Tax on child's full taxable income at child's own rate ──
   let line17: Decimal;
@@ -253,9 +242,9 @@ export function calculateForm8615(
   return {
     netUnearnedIncome: line3,
     netUnearnedAtParentRate: line5,
-    childRateIncome: line6,
-    allocableParentalTax: line13,
-    childShareOfParentalTax: line14,
+    childRateIncome: line14,
+    allocableParentalTax: line11,
+    childShareOfParentalTax: line13,
     taxOnChildRateIncome: line15,
     tentativeTax: line16,
     taxAtChildOwnRate: line17,
