@@ -13,7 +13,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       const id = new URL(page.url()).pathname.split('/').at(-1); if (!id) throw new Error('Missing fictional return');
       await expect.poll(() => page.evaluate(id => Boolean(JSON.parse(localStorage.getItem('tax-engine.return-workspaces.v1') ?? '{}').workspaces?.[id]), id)).toBe(true);
       const original = multipleEsaFixture();
-      const state = { factsVersion: 2, taxYear: 2025,
+      const state = { factsVersion: 3, taxYear: 2025,
         segmentation: { filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null },
         sectionData: { 'personal-info': { ...taxpayerFacts2025, ...original.taxpayer.primary },
           'income-w2': { entries: [{ employerName: 'Fictional education employer', employerEin: '12-3456789', accountHolder: 'primary',

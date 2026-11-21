@@ -8,7 +8,7 @@ import { taxpayerFacts2025 } from './guided-fixtures';
 function actualCashAssistanceInterview() {
   const statement = { sourceFactsComplete: true, sourceFactsConfirmed: true, beneficiaryId: 'educator',
     recipientOwner: 'primary', taxYear: '2025', isTrusteeToTrustee: false, isQtpToRoth: false, recipientNotBeneficiary: false };
-  return { factsVersion: 2, taxYear: 2025,
+  return { factsVersion: 3, taxYear: 2025,
     segmentation: { filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null },
     sectionData: {
       'personal-info': { ...taxpayerFacts2025, firstName: 'Jane', lastName: 'Doe', ssn: '123-45-6789', dateOfBirth: '1990-01-15' },
