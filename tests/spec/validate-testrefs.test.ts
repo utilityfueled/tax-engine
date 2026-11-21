@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
-import ts from "typescript";
+import { literalTestNames } from "@/spec-validator.js";
 
 interface SpecLine {
   line: string;
@@ -39,27 +39,6 @@ function parseSpecFiles(dir: string): Array<{ file: string; spec: SpecFile }> {
   }
 
   return results;
-}
-
-function literalTestNames(content: string): Set<string> {
-  const names = new Set<string>();
-  // Only child traversal is needed. Parent links substantially increase V8
-  // coverage overhead without changing which literal test calls are found.
-  const source = ts.createSourceFile("spec-linked.test.ts", content, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
-  function baseName(expression: ts.Expression): string | undefined {
-    if (ts.isIdentifier(expression)) return expression.text;
-    if (ts.isPropertyAccessExpression(expression) || ts.isCallExpression(expression)) return baseName(expression.expression);
-    return undefined;
-  }
-  function visit(node: ts.Node): void {
-    if (ts.isCallExpression(node) && ["it", "test", "describe"].includes(baseName(node.expression) ?? "")) {
-      const label = node.arguments[0];
-      if (label && (ts.isStringLiteral(label) || ts.isNoSubstitutionTemplateLiteral(label))) names.add(label.text);
-    }
-    ts.forEachChild(node, visit);
-  }
-  visit(source);
-  return names;
 }
 
 function extractTestNames(filePath: string): Set<string> {

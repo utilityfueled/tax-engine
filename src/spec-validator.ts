@@ -10,6 +10,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { extname, join, relative, resolve } from "path";
 import { fileURLToPath } from "url";
+import ts from "typescript";
 import { parse } from "yaml";
 
 export interface SpecLine {
@@ -133,18 +134,41 @@ export function loadSpecs(inputPaths: string[] = []): LoadedSpec[] {
   });
 }
 
-// Cache for test file contents to avoid repeated reads
-const testFileCache = new Map<string, string | null>();
+export function literalTestNames(content: string): Set<string> {
+  const names = new Set<string>();
+  const source = ts.createSourceFile("spec-linked.test.ts", content, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
 
-function readTestFileContent(testFilePath: string): string | null {
+  function baseName(expression: ts.Expression): string | undefined {
+    if (ts.isIdentifier(expression)) return expression.text;
+    if (ts.isPropertyAccessExpression(expression) || ts.isCallExpression(expression)) return baseName(expression.expression);
+    return undefined;
+  }
+
+  function visit(node: ts.Node): void {
+    if (ts.isCallExpression(node) && ["it", "test", "describe"].includes(baseName(node.expression) ?? "")) {
+      const label = node.arguments[0];
+      if (label && (ts.isStringLiteral(label) || ts.isNoSubstitutionTemplateLiteral(label))) names.add(label.text);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  ts.forEachChild(source, visit);
+  return names;
+}
+
+const testFileCache = new Map<string, Set<string> | string | null>();
+const typeScriptExtensions = new Set([".ts", ".tsx", ".cts", ".mts"]);
+
+function readTestReferenceTargets(testFilePath: string): Set<string> | string | null {
   const resolvedPath = resolve(testFilePath);
   if (testFileCache.has(resolvedPath)) {
     return testFileCache.get(resolvedPath)!;
   }
   try {
     const content = readFileSync(resolvedPath, "utf-8");
-    testFileCache.set(resolvedPath, content);
-    return content;
+    const targets = typeScriptExtensions.has(extname(resolvedPath)) ? literalTestNames(content) : content;
+    testFileCache.set(resolvedPath, targets);
+    return targets;
   } catch {
     testFileCache.set(resolvedPath, null);
     return null;
@@ -166,12 +190,13 @@ export function validateTestRef(
     return { valid: false, reason: "bad-format" };
   }
 
-  const content = readTestFileContent(testFile);
-  if (content === null) {
+  const targets = readTestReferenceTargets(testFile);
+  if (targets === null) {
     return { valid: false, reason: "file-not-found" };
   }
 
-  if (!content.includes(testName)) {
+  const matches = typeof targets === "string" ? targets.includes(testName) : targets.has(testName);
+  if (!matches) {
     return { valid: false, reason: "test-not-found" };
   }
 

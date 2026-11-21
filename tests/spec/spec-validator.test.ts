@@ -149,6 +149,19 @@ describe("testRef validation", () => {
     expect(result).toEqual({ valid: false, reason: "test-not-found" });
   });
 
+  it("requires the complete literal TypeScript title including parameter placeholders", () => {
+    const tree = makeTempSpecTree();
+    const testFile = join(tree, "spec-linked.test.ts");
+    writeFileSync(testFile, [
+      '// it("commented example", () => {});',
+      'it.each([183, 184])("holds verified presence for %s days", () => {});',
+    ].join("\n"));
+
+    expect(validateTestRef(`${testFile}::holds verified presence for %s days`)).toEqual({ valid: true });
+    expect(validateTestRef(`${testFile}::holds verified presence for`)).toEqual({ valid: false, reason: "test-not-found" });
+    expect(validateTestRef(`${testFile}::commented example`)).toEqual({ valid: false, reason: "test-not-found" });
+  });
+
   it("rejects a testRef with no :: separator", () => {
     const result = validateTestRef("tests/engine/state/oh-it-1040.test.ts");
     expect(result).toEqual({ valid: false, reason: "bad-format" });

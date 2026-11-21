@@ -1534,7 +1534,7 @@
     "src/pdf/schedule-e-review-context.ts": "4cf44c4f9e3aa9598dba28d731f0dd884ab9ae0dd1894b2c677eaf2c387bcb73",
     "src/pdf/template-registry.ts": "ea352fdaff6500d1f3082583e44ad092166e88e421746c80b9e134bb8cac9eb9",
     "src/pdf/trusted-review-template-cleanup.ts": "cf20b72d3ae8b5020a5706ea293431c57cef9afb57b67eb75c59aa84577c41a5",
-    "src/spec-validator.ts": "683e79c0726652b1c3f1eb7e27fbd5e02f3e72f89119c0a07f44ad2b0665751b",
+    "src/spec-validator.ts": "8d27eb5310d461567686e7e9cf40ab68e18238cef741bb0ad24223d38ac9edcb",
     "src/utils/annual-cash-qtp.ts": "1056a52c6c8941424256d3628f082afb0beed019aa4152735b5ac766c81df7f4",
     "src/utils/audit.ts": "cf71c6abb52d66d4d2d48060327532ee70394d784048a35812195e0becf22b4d",
     "src/utils/charitable-current-receipts.ts": "72dded2453a3f4a65d7846dd47b945e079d036694fc9bb420386c1466d100bd8",

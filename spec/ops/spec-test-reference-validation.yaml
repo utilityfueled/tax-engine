@@ -1,0 +1,7 @@
+form: "Spec-Test-Reference-Validation"
+taxYear: 2026
+lines:
+  - line: "typeScriptLiteralTestTitle"
+    description: "Require the complete literal title for a TypeScript spec reference"
+    formula: "A TypeScript reference resolves only when a test, suite, or parameterized test declares the exact title. Parameterized titles include their format placeholders. A shortened title or a mention in a comment does not resolve."
+    testRef: "tests/spec/spec-validator.test.ts::requires the complete literal TypeScript title including parameter placeholders"
