@@ -13,7 +13,7 @@ requires authorization.
 | Independent security/privacy review and advisory disposition | Deferred at owner direction. Completion still requires documented review of the exact artifacts and staging evidence, with accountable owners, remediation or evidence-backed acceptance and expiry. [Advisory ledger](upgrade-2026-advisory-refresh-20261114.md). |
 | Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
-| Strict Linux runtime verification | On `069c994f`, managed Linux passed 648 browser cases with two RRTA inspection deadlines. Strict AMD64 passed 639 browser cases with ten Ohio deadlines and one RRTA inspection deadline. Both retained five original skips. AMD64 Compose recovery, rollback and immutable SBOMs passed. Requalify the managed and both strict platforms under the original 30-second strict browser and four-second PDF limits. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44897306233/job/136825603320) · [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44897306233/job/136825603092) · [Prior native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44881255619). |
+| Strict Linux runtime verification | Managed Linux passed on `b1f5dc37`. The same revision's strict AMD64 run passed 648 cases, with two Ohio deadlines and five original skips. The latest completed native ARM64 run on `0a167ed2` passed Compose upgrade, recovery and cleanup, and passed 642 browser cases with eight failures and five original skips. Prove the current source on both strict platforms under the original 30-second browser and four-second PDF limits. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44904803947) · [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44904803947/job/136847978012) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44881255619). |
 | Current Stripe Sandbox checkout and credits | The protected `069c994f` Preview passed all 12 workspace lifecycle checks and all four billing-page checks for each synthetic account. The prior `522cf4b1` Preview remains the current Viva La Tax Sandbox checkout destination. Automatic approval review stopped Checkout before execution. Bind the sandbox price and synthetic customer, postal and return behavior, and cleanup before retrying. Then capture the signed delivery and verify the exact event and Session in the two test accounts' scoped database records. Positive credit-grant testing requires an isolated test path while the public purchase gate stays closed. [Current Preview](upgrade-2026-progress.md#november-21-paid-estimates-on-the-federal-review-return) · [Sandbox evidence](upgrade-2026-progress.md#november-21-ohio-schedule-w-and-historical-mortgage-controls). |
 
 For Ohio extension and balance payments on federal Schedule A, obtain
@@ -33,6 +33,16 @@ lines, then review the conflicting claimant and student facts and the
 claimant age controls. The IRS product index currently lists a final 2026
 blank and draft 2026 instructions. [Education source and implementation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
 [Official revision status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-education-form-recheck).
+
+For the timely HSA correction, independently derive the final 2026 Form 8889
+lines 2, 3, 14a, 14b and 16, the earnings transfer, and any Form 5329 Part VII
+effect. The fictional owner is under 55, has eligible self-only coverage all
+year, and has no prior excess or other contributions. The original trustee
+record shows a $5,000 personal contribution dated February 1 and a December 15
+Code 2 distribution of $625, comprising $600 returned principal and $25
+earnings. Use the dated actual-record scenario and evaluate whether a separate
+spouse account changes any of the primary owner's amounts.
+[Source and intake evidence](upgrade-2026-progress.md#november-21-guided-originals-for-timely-hsa-contribution-returns).
 
 For the final 2026 Form 7206 fixture, independently derive the allocation
 between the same owner's Schedule C and Schedule F profits, the excluded

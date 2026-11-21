@@ -1,5 +1,26 @@
 {
   "activeContinuation": {
+    "nov21CombinedLocalHsaAndDonation": {
+      "commit": "ff689bc11341a318cd25e5c289d0d401f782b6b3",
+      "checks": {"unitTestsPassed": 29914, "coverageTestsPassed": 29914, "unitSuitesPassed": 2181, "branchCoveragePercent": 88.44, "branchGatePercent": 85, "postgresVersion": "16.16", "postgresCleanup": true, "allEightStaticChecksPassed": true, "specReferencesValid": 9824},
+      "managedMacBrowser": {"passed": 650, "failures": 0, "existingSkips": 5, "batches": 8, "cleanup": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"},
+      "remote": {"dockerWorkflowPassed": 44910663459, "remoteCI": 44910663454, "strictAmd64Workflow": 44910663492, "strictArm64Workflow": 44910704644},
+      "remaining": "Strict Linux results and other external launch gates remain open. Managed macOS browser evidence is limited to the managed application."
+    },
+    "nov21GuidedHsaActualTimelyReturn": {
+      "commit": "ff689bc11341a318cd25e5c289d0d401f782b6b3",
+      "scope": "2026 original personal HSA contribution and sole matched same-year Code 2 receipt for the actual recipient. Reconciles exact owner, account, source identities and amounts. Checks actual posted dates against the browser's local calendar both initially and on reopen. Keeps the canonical calculation deterministic.",
+      "sources": ["https://uscode.house.gov/us/usc/t26/s223/", "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf", "https://www.irs.gov/instructions/i1099sa"],
+      "checks": {"focusedTestsPassed": 280, "isolatedFocusedTestsPassed": 106, "independentFocusedTestsPassed": 17, "specReferencesValid": 9824, "typesPassed": true, "inventoryPassed": true, "browserRequestAuditPassed": true},
+      "remaining": "Independent human worksheet review and annual whole-return, export and filing readiness remain open."
+    },
+    "nov21DonationKnownIneligibleRecipient": {
+      "commit": "f78f847c28c0779d723cd7a698eeacbacb4ed990",
+      "scope": "Saved 2025 and 2026 guided noncash records for expressly unqualified recipients retain known zero/false, keep unanswered basis and holding period absent, and compute zero current Schedule A charitable deduction.",
+      "sources": ["https://uscode.house.gov/us/usc/119-118/t26/s170/", "https://www.irs.gov/publications/p526"],
+      "checks": {"isolatedFocusedTestsPassed": 362, "scopedSpecReferencesPassed": 7, "coreTypesPassed": true, "webTypesPassed": true, "regressionReproducedForBothYears": true},
+      "remaining": "2026 whole-return readiness remains gated. Remaining qualified charitable cohorts retain their required facts and independent tax review."
+    },
     "nov21ManagedOhioAndOfflineAIRechecks": {
       "managedOhio": {"commit": "aea62a48d03f0f15461e5a0f8e122ad736ed3055", "casesPassed": 2, "failed": 0, "skipped": 0, "timeoutMs": 30000, "cleanup": true, "summarySha256": "50ed521edb37ac3746297c54c0064f1f4e5186aa140805018e056c76e6dc0b5f"},
       "offlineAI": {"commit": "3ade54facef02a7063779dfebb5fcada5373e793", "artifactSyncPassed": true, "postgresVersion": "16.16", "testsPassed": 74, "skipped": 0, "providerRequests": 0, "cleanup": true},

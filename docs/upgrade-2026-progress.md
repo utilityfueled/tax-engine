@@ -10799,3 +10799,61 @@ qualification are still required.
 The earlier `b1f5dc37` remote CI completed all six jobs, including 29,861
 tests each in the unit and coverage runs and 88.39% branch coverage.
 [GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/44904804057).
+
+### November 21 saved gifts to expressly unqualified recipients
+
+The saved guided path for 2025 and 2026 now preserves unanswered noncash basis
+and holding period as absent. An actual basis of zero and an explicit short-term
+answer survive unchanged. Both years reproduced the parser failure before the
+fix. Federal 2025 and standalone 2026 Schedule A give zero current charitable
+deduction for the unqualified gifts. Marking the recipient as eligible restores
+the existing required-fact checks, and the 2026 whole-return gate stays closed.
+The isolated candidate passed 362 focused tests, seven spec references and both
+typechecks. [26 U.S.C. § 170(c)](https://uscode.house.gov/us/usc/119-118/t26/s170/) ·
+[IRS Publication 526](https://www.irs.gov/publications/p526) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/f78f847c28c0779d723cd7a698eeacbacb4ed990).
+
+### November 21 guided originals for timely HSA contribution returns
+
+The 2026 guide collects actual owner and account identity, independently
+entered source references, original contribution and returned amounts, and
+receipt dates for a sole same-year Code 2 correction. The verified case
+reopens after encrypted recovery with $4,400 net contributions and $25 in
+taxable earnings. Known zero earnings and separately sourced spouse amounts
+also survive the round trip. Independent review caught a future receipt that
+had passed validation. The follow-up rejected that receipt on save and reopen
+using the client's local calendar, including when UTC is already on the next
+day. Same-day actual receipts pass. The canonical engine remains deterministic.
+
+The final author, exact isolated and independent runs passed 280, 106 and 17
+focused tests, with core and web types, inventory, source audit and 9,824 spec
+references. Independent human worksheet review and annual whole-return/export
+readiness remain open. [26 U.S.C. § 223(f)(3)](https://uscode.house.gov/us/usc/t26/s223/) ·
+[Final 2026 Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) ·
+[Form 1099-SA instructions](https://www.irs.gov/instructions/i1099sa) ·
+[Commit](https://github.com/utilityfueled/tax-engine/commit/ff689bc11341a318cd25e5c289d0d401f782b6b3).
+
+The November 21 publication check found the final 2026 Form 8889 in the IRS
+product index with a November 18 posting. The same index still lists the 2025
+instructions. The separate 2026 draft agrees on timely receipt and the earnings
+transfer. Pennsylvania's income tax page still links the 2025 PA-40.
+[IRS 8889 product index](https://www.irs.gov/forms-instructions-and-publications?find=8889&items_per_page=25&order=posted_date&sort=desc) ·
+[Draft 2026 Form 8889 instructions](https://www.irs.gov/pub/irs-dft/i8889--dft.pdf#page=9) ·
+[Pennsylvania income tax page](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax).
+
+### November 21 combined local HSA, donation and state verification
+
+Exact `ff689bc1` passed all eleven local commands in the execution brief.
+Unit and coverage runs each passed 29,914 tests across 2,181 suites. The
+coverage run measured 88.44% branches against the 85% gate. Both isolated
+PostgreSQL 16.16 clusters shut down. All eight static checks passed, including
+9,824 valid spec references. The managed macOS browser passed 650 cases across
+eight batches, with zero failures, five existing skips and verified cleanup.
+
+The Docker workflow passed for the same revision. Exact remote CI, strict
+AMD64 and native ARM64 run links remain independently inspectable. The
+managed macOS suite establishes only the local browser result.
+[Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44910663459) ·
+[Remote CI](https://github.com/utilityfueled/tax-engine/actions/runs/44910663454) ·
+[Strict AMD64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44910663492) ·
+[Native ARM64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44910704644).
