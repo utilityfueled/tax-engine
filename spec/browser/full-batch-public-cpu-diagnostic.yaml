@@ -3,6 +3,10 @@ taxYear: 2025
 status: "nonqualifying-opt-in-diagnostic"
 notes: "Sampling wall weights are not process CPU accounting. Original full qualification and the unsampled PA gap remain."
 lines:
+  - line: "frozen-source-digests"
+    description: "Check every frozen replay source before a CI diagnostic is needed"
+    formula: "Compare each source file's SHA-256 with the individually reviewed frozen manifest. Any new source must retain the original approved case collection and request limits before updating its pin."
+    testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::each frozen replay source digest still matches the checkout"
   - line: "explicit-same-job-admission"
     description: "Remain inert unless an exact public default-branch first-attempt manual job opts in"
     formula: "Require explicit cpu_full_batches=true, full source SHA equal to checkout, original complete failed strict run in the same job, and exact current protected container. No provider credentials or Node options cross into browser children."

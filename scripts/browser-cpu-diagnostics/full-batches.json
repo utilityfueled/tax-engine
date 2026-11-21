@@ -330,7 +330,7 @@
     "apps/web/tests/oh-resident-credit-native.spec.ts": "b8b9c25aa8793a1597f84bb0af1c56028a3a83509f93212a6ee08e91b9ec886d",
     "apps/web/tests/oh-school-district-native-geometry.spec.ts": "6d9d492b43a4bdc1831c285e632ea98534d5e20a417c53a4a0178d6c3b4b8122",
     "apps/web/tests/oh-school-district-native.spec.ts": "333113c448f6dca3246f157b202e4946bcfdac867298fddc70e4bf9b89cd64ed",
-    "apps/web/tests/oh-school-district-part-year-native.spec.ts": "066fe057163f2680868f05c212fe866475bc6430135e99f352d5959117d22c32",
+    "apps/web/tests/oh-school-district-part-year-native.spec.ts": "a74ec7659080501e7089c4b44406207ac7bd2c5b1358a22af4bfb0969a25bc8a",
     "apps/web/tests/oh-school-district-remaining-balance.spec.ts": "c675deb99d32319e4170d9dd41be9fb2c02c9555b30615c2c6f9eff625784516",
     "apps/web/tests/pa-2026-childless-eic-native.spec.ts": "1eb3c3b71bb403f2f1fa88eb397b2ac2444844f79a80ac7b8c9f8b97f8fd3dfb"
   },

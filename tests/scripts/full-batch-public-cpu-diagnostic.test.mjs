@@ -1,10 +1,18 @@
 // Spec: spec/browser/full-batch-public-cpu-diagnostic.yaml
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {URL} from 'node:url';
 const moduleUrl=new URL('../../scripts/browser-cpu-diagnostics/full-batch.mjs',import.meta.url);
 const manifest=JSON.parse(await readFile(new URL('../../scripts/browser-cpu-diagnostics/full-batches.json',import.meta.url),'utf8'));
+test('each frozen replay source digest still matches the checkout', async () => {
+ const root = new URL('../../', import.meta.url);
+ for (const [file, expected] of Object.entries(manifest.sourceSha256)) {
+  const actual = createHash('sha256').update(await readFile(new URL(file, root))).digest('hex');
+  assert.equal(actual, expected, file);
+ }
+});
 const sha='a'.repeat(40),run='12345',start=Date.UTC(2026,10,17,20);
 const env=()=>({TAX_BROWSER_CPU_BATCH_DIAGNOSTICS:'1',TAX_BROWSER_CPU_BATCH:'6',TAX_BROWSER_CPU_ORIGINAL_OUTCOME:'failure',GITHUB_ACTIONS:'true',GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_RUN_ATTEMPT:'1',GITHUB_RUN_ID:run,GITHUB_REPOSITORY:'utilityfueled/tax-engine',GITHUB_JOB:'container',GITHUB_SHA:sha,GITHUB_REF:'refs/heads/main',CANDIDATE_IMAGE_ID:'sha256:'+'b'.repeat(64),PLAYWRIGHT_BASE_URL:'http://127.0.0.1:3109'});
 const event=()=>({inputs:{cpu_full_batches:'true'},repository:{private:false,fork:false,default_branch:'main'}});
