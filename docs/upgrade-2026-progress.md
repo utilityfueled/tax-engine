@@ -1,5 +1,38 @@
 # 2026 upgrade implementation evidence
 
+## November 20 official W-2 informational packet correction
+
+The full `2c689ee2` managed macOS and Linux suites each passed 646 of the
+650 active cases and retained five original skips. Four tests caught the IRS W-2 packet
+bypassing the 2025 future-year upload warning after the new standalone
+Copy B parser classified its blank fields as manual.
+
+`1a9bfd0d` recognizes the IRS informational cover together with the printed
+2026 Copy B layout. The packet contributes its source year and warning,
+with zero financial facts. This applies even if a copy inside the packet
+was filled or the filename states a different year. The four original
+browser cases passed against the exact production web build, with two
+workers, zero retries and the original deadline. All five actual standalone
+Copy B upload-and-reopen controls still passed. Independent engineering
+review confirmed the 2025 packet does not match. The 68 focused tests,
+26 linked spec references and targeted lint passed.
+[IRS Form W-2](https://www.irs.gov/pub/irs-pdf/fw2.pdf).
+
+Both exact local suites passed 29,650 tests across 2,169 files. Branch
+coverage was 88.24% (86,070 of 97,532). Both temporary PostgreSQL 16.16
+servers shut down normally. All eight exact static checks, 9,729 spec
+references, and the exact Docker workflow passed.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44838740444).
+
+The complete exact managed macOS run passed all 650 active browser cases
+and retained the five original skips. The launcher exited successfully
+with the original deadlines and zero retries.
+
+The exact protected `1a9bfd0d` Preview reached READY in test billing mode
+without a production alias. All 12 synthetic workspace lifecycle checks
+passed across the two protected revisions, including deletion and both
+sign-outs. Stripe checkout and credit effects were outside this rehearsal.
+
 ## November 20 Form 8919 browser-source pin
 
 The full managed browser launcher rejected `088c1377` before starting the
@@ -8,6 +41,19 @@ manifest. `2c689ee2` adds that single source hash and refreshes the dependent
 diagnostic manifest digest. The unchanged verifier accepted all 2,024 source
 hashes. All 27 diagnostic tests passed. Browser deadlines, budgets, retries
 and skips stayed the same.
+
+Both exact local unit and coverage suites passed 29,649 tests. Branch
+coverage was 88.24% (86,056 of 97,518). Both temporary PostgreSQL 16.16
+servers shut down normally. All eight exact static checks and 9,728 spec
+references passed. Docker passed on `effced44`, which differs from
+`2c689ee2` only in four progress documents.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44835595560).
+
+The exact protected Preview reached READY in test billing mode with no
+production alias. All 12 cross-revision synthetic workspace checks passed,
+including deletion and both sign-outs. This covers the hosted workspace
+API lifecycle. Current Stripe checkout and exact credit qualification remain
+open.
 
 ## November 20 Form 8919 wage-base audit
 
