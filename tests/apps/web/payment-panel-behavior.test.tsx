@@ -30,9 +30,16 @@ it('edits dated federal payment types without replacing unknown source facts', a
     await dom.click('Add another estimated tax payment');
     await dom.change('Date paid','2026-01-15',1);
     await dom.change('Amount paid','9007199254740993.01',1);
-    expect(buildTaxInputFromGuidedData(state)?.adjustments?.estimatedTaxPayments?.[1]?.amount).toBe('9007199254740993.01');
+    expect(validateSection(state,'payments').status).toBe('partial');
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    await dom.change('Estimated payment #2 IRS application tax year','2025');
+    await dom.change('Estimated payment #2 applies to this return','true');
+    expect(buildTaxInputFromGuidedData(state)?.adjustments?.estimatedTaxPayments?.[1]).toEqual({
+      date:'2026-01-15',amount:'9007199254740993.01',type:'federal',application:{taxYear:2025,confirmed:true},
+    });
     expect(dom.container.querySelector('[role="status"]')?.textContent).toContain('9,007,199,254,740,993.01');
     await dom.change('Amount paid','',1);
+    expect(state.sectionData.payments?.estimatedPayments[1]?.application).toEqual({taxYear:'2025',confirmed:null});
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
     await dom.click('Remove estimated payment #2');
     expect(state.sectionData.payments?.estimatedPayments).toHaveLength(1);

@@ -16,7 +16,7 @@ it("isolates exact-year confirmation by payment and revokes it after a source ed
   const root = createRoot(container);
   let latest: PaymentData = {
     ...emptyPaymentData,
-    estimatedPayments: [{ date: "2026-04-15", amount: "1000" }],
+    estimatedPayments: [{ date: "2025-04-15", amount: "1000" }],
     extensionPayments: [{ date: "2027-04-15", amount: "0" }],
   };
   function Harness() {
@@ -55,8 +55,10 @@ it("isolates exact-year confirmation by payment and revokes it after a source ed
     await change("Extension payment #1 applies to this return", "true");
     expect(allPaymentFactErrors(latest, 2025)).toEqual({});
 
-    await change("Date paid", "2027-01-15");
+    await change("Date paid", "2026-04-15");
+    expect(field("Estimated payment #1 IRS application tax year")?.value).toBe("");
     expect(field("Estimated payment #1 applies to this return")?.value).toBe("");
+    expect(allPaymentFactErrors(latest, 2025)).toHaveProperty("payment-0-application-year");
     await change("Estimated payment #1 IRS application tax year", "2025");
     await change("Estimated payment #1 applies to this return", "true");
     await change("Amount paid", "1,000");

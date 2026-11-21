@@ -1,4 +1,4 @@
-// Spec: spec/federal/guided-input.yaml, payment-categories
+// Spec: spec/federal/guided-input.yaml, payment-categories and federal-payment-application
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyPaymentData, getGuidedFlowStorageKey, loadGuidedFlowState, type PaymentData, validateSection } from "@/lib/guided-interview-flow";
@@ -32,13 +32,44 @@ describe("classified guided payments", () => {
       expect(buildTaxInputFromGuidedData(state)).toBeNull();
     }
   });
+  it("requires actual tax-year application for ambiguous federal estimates while retaining saved payment facts", () => {
+    for (const [taxYear, date] of [
+      [2025, "2025-01-16"],
+      [2025, "2026-01-15"],
+      [2026, "2026-01-15"],
+      [2025, "2026-04-15"],
+    ] as const) {
+      const payment = { date, amount: "0.00" };
+      const state = { ...stateWith({ ...emptyPaymentData, estimatedPayments: [payment] }), taxYear };
+      const snapshot = JSON.stringify(state);
+      const restored = loadGuidedFlowState({ getItem: () => snapshot } as Storage, "payments");
+      if (!restored) throw new Error("Expected the saved interview to reopen");
+      expect(restored.taxYear).toBe(taxYear);
+      expect(restored.sectionData.payments?.estimatedPayments).toEqual([payment]);
+      expect(validateSection(restored, "payments").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(restored)).toBeNull();
+
+      const confirmed = {
+        ...restored,
+        sectionData: {
+          ...restored.sectionData,
+          payments: { ...emptyPaymentData, estimatedPayments: [{ ...payment, application: { taxYear: String(taxYear), confirmed: true } }] },
+        },
+      };
+      expect(validateSection(confirmed, "payments").status).toBe("complete");
+      expect(buildTaxInputFromGuidedData(confirmed)?.adjustments?.estimatedTaxPayments).toEqual([
+        { ...payment, type: "federal", application: { taxYear, confirmed: true } },
+      ]);
+    }
+  });
+
   it("replays confirmed payment application with exact amounts for both payment categories", () => {
     const application = { taxYear: "2026", confirmed: true };
     const state = { ...stateWith({
       ...emptyPaymentData,
       estimatedPayments: [
         { date: "2028-02-29", amount: "9007199254740993.01", application },
-        { date: "2027-01-15", amount: "101.01" },
+        { date: "2027-01-15", amount: "101.01", application },
       ],
       extensionPayments: [{ date: "2028-04-15", amount: "0", application }],
     }), taxYear: 2026 };
@@ -50,7 +81,7 @@ describe("classified guided payments", () => {
     expect(buildTaxInputFromGuidedData(restored)?.adjustments).toMatchObject({
       estimatedTaxPayments: [
         { date: "2028-02-29", amount: "9007199254740993.01", type: "federal", application: { taxYear: 2026, confirmed: true } },
-        { date: "2027-01-15", amount: "101.01", type: "federal" },
+        { date: "2027-01-15", amount: "101.01", type: "federal", application: { taxYear: 2026, confirmed: true } },
       ],
       extensionPayments: [{ date: "2028-04-15", amount: "0", type: "federal", application: { taxYear: 2026, confirmed: true } }],
     });

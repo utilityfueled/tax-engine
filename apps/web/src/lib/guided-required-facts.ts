@@ -85,19 +85,22 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
   return errors;
 }
 
-export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null): boolean {
+export type FederalPaymentKind = "estimate" | "extension";
+
+export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null, kind?: FederalPaymentKind): boolean {
   if (taxYear == null || !isActualDate(date) || date.startsWith("0000-")) return false;
   const paidYear = Number(date.slice(0, 4));
+  if (kind === "estimate") return paidYear !== taxYear || date.slice(5, 7) === "01";
   return paidYear !== taxYear && paidYear !== taxYear + 1;
 }
 
-export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, taxYear?: number | null): Record<string, string> {
+export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, taxYear?: number | null, kind?: FederalPaymentKind): Record<string, string> {
   const errors: Record<string, string> = {};
   (entries ?? []).forEach((entry, index) => {
     const amount = amountError(entry.amount, "payment amount");
     if (amount) errors[`payment-${index}-amount`] = amount;
     if (!isActualDate(entry.date) || entry.date.startsWith("0000-")) errors[`payment-${index}-date`] = "Enter the actual payment date from the federal record.";
-    if (entry.application !== undefined || federalPaymentDateNeedsApplication(entry.date, taxYear)) {
+    if (entry.application !== undefined || federalPaymentDateNeedsApplication(entry.date, taxYear, kind)) {
       if (taxYear == null || entry.application?.taxYear !== String(taxYear)) {
         errors[`payment-${index}-application-year`] = "Enter this return's tax year as shown on the IRS payment confirmation or account record.";
       }
@@ -111,8 +114,8 @@ export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, 
 
 export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
-  const errors = paymentFactErrors(data.estimatedPayments, taxYear);
-  for (const [key, value] of Object.entries(paymentFactErrors(data.extensionPayments, taxYear))) errors[`extension-${key}`] = value;
+  const errors = paymentFactErrors(data.estimatedPayments, taxYear, "estimate");
+  for (const [key, value] of Object.entries(paymentFactErrors(data.extensionPayments, taxYear, "extension"))) errors[`extension-${key}`] = value;
   (data.priorYearAppliedCredits ?? []).forEach((entry, index) => {
     const error = amountError(entry.amount, "applied refund amount");
     if (error) errors[`credit-${index}-amount`] = error;

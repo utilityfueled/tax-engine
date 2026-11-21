@@ -11,7 +11,7 @@ import {
 import { CurrencyField } from "./currency-field";
 import { BooleanFact } from "./fact-fields";
 import { formatGuidedCurrency, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
-import { federalPaymentDateNeedsApplication } from "@/lib/guided-required-facts";
+import { federalPaymentDateNeedsApplication, type FederalPaymentKind } from "@/lib/guided-required-facts";
 
 function editPayment(entry: EstimatedPaymentEntry, field: "date" | "amount", value: string): EstimatedPaymentEntry {
   // CurrencyField adds grouping commas on blur without changing the reported amount.
@@ -25,13 +25,14 @@ function editPayment(entry: EstimatedPaymentEntry, field: "date" | "amount", val
   };
 }
 
-function PaymentApplicationFields({ label, entry, taxYear, onChange }: {
+function PaymentApplicationFields({ label, entry, taxYear, kind, onChange }: {
   label: string;
   entry: EstimatedPaymentEntry;
   taxYear?: number | null;
+  kind: FederalPaymentKind;
   onChange: (application: NonNullable<EstimatedPaymentEntry["application"]>) => void;
 }) {
-  if (entry.application === undefined && !federalPaymentDateNeedsApplication(entry.date, taxYear)) return null;
+  if (entry.application === undefined && !federalPaymentDateNeedsApplication(entry.date, taxYear, kind)) return null;
   const application = entry.application ?? { taxYear: "", confirmed: null };
   return <>
     <label className="guided-field">
@@ -105,7 +106,7 @@ function EstimatedPaymentCard({
           onChange={(value) => onUpdate(editPayment(entry, "amount", value))}
           required
         />
-        <PaymentApplicationFields label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear}
+        <PaymentApplicationFields label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="estimate"
           onChange={application => onUpdate({ ...entry, application })} />
       </div>
     </div>
@@ -194,7 +195,7 @@ export function SectionPayments({
             {extensions.map((entry, index) => <div key={index} className="guided-w2-card">
               <label className="guided-field"><span className="guided-field-label">Extension payment #{index + 1} date</span><input className="guided-input" type="date" value={entry.date} onChange={(event) => updatePayment("extensionPayments", index, editPayment(entry, "date", event.target.value))} /></label>
               <CurrencyField label={`Extension payment #${index + 1} amount`} value={entry.amount} onChange={amount => updatePayment("extensionPayments", index, editPayment(entry, "amount", amount))} required />
-              <PaymentApplicationFields label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear}
+              <PaymentApplicationFields label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="extension"
                 onChange={application => updatePayment("extensionPayments", index, { ...entry, application })} />
               <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, extensionPayments: extensions.filter((_, i) => i !== index) })}>Remove extension payment #{index + 1}</button>
             </div>)}

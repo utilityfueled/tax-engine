@@ -62,7 +62,7 @@ it("rejects unsupported or contradictory source history without guessing", () =>
   expect(buildEstimatedTaxFacts({ ...emptyPaymentData, estimatedTaxFacts: source }, 2025)?.withholdingPayments).toEqual([{ date: "2025-12-31", amount: "0" }]);
 });
 it("calculates the dated penalty from guided sources without a tax override", () => {
-  const state = stateWith({ ...emptyPaymentData, estimatedTaxFacts: facts(), estimatedPayments: [{ date: "2026-01-15", amount: "4000" }] });
+  const state = stateWith({ ...emptyPaymentData, estimatedTaxFacts: facts(), estimatedPayments: [{ date: "2026-01-15", amount: "4000", application: { taxYear: "2025", confirmed: true } }] });
   expect(validateSection(state, "payments").status).toBe("complete");
   const input = buildTaxInputFromGuidedData(state); expect(input).not.toBeNull();
   const result = calculateFederalTax(TaxYearInputSchema.parse(input));
@@ -116,7 +116,12 @@ it("binds actual withholding dates to canonical withholding and supports proven2
 it("applies the prior-tax high-income multiplier once to the original amount", () => {
   const source = facts(); Object.assign(source, { priorYearTaxStatus: "return-filed", priorYearFullYear: true, priorYearJointReturn: false,
     priorYearTaxComputationConfirmed: true, priorYearTaxForForm2210: "5000", priorYearAgiForForm2210: "150001" });
-  const state = stateWith({ ...emptyPaymentData, estimatedTaxFacts: source, estimatedPayments: ["2025-04-15", "2025-06-16", "2025-09-15", "2026-01-15"].map(date => ({ date, amount: "1375" })) });
+  const state = stateWith({ ...emptyPaymentData, estimatedTaxFacts: source, estimatedPayments: [
+    { date: "2025-04-15", amount: "1375" },
+    { date: "2025-06-16", amount: "1375" },
+    { date: "2025-09-15", amount: "1375" },
+    { date: "2026-01-15", amount: "1375", application: { taxYear: "2025", confirmed: true } },
+  ] });
   Object.assign(state.sectionData["income-w2"]!.entries[0], { wages: "85000", socialSecurityWages: "85000", medicareWages: "85000" });
   const input = buildTaxInputFromGuidedData(state); expect(input?.form2210?.priorYearTaxForForm2210).toBe("5000");
   const result = calculateFederalTax(TaxYearInputSchema.parse(input));

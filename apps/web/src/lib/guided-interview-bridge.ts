@@ -523,7 +523,7 @@ function federalPaymentInput(entry: PaymentData["estimatedPayments"][number]) {
 
 export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined, taxYear?: number | null) {
   if (!paymentData) return [];
-  assertKnownFacts(paymentFactErrors(paymentData.estimatedPayments, taxYear));
+  assertKnownFacts(paymentFactErrors(paymentData.estimatedPayments, taxYear, "estimate"));
   return paymentData.estimatedPayments.map(federalPaymentInput);
 }
 
