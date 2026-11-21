@@ -9,7 +9,7 @@
 | Independent security/privacy review and advisory disposition | Deferred at owner direction. Completion still requires documented review of the exact artifacts and staging evidence, with accountable owners, remediation or evidence-backed acceptance and expiry. [Advisory ledger](upgrade-2026-advisory-refresh-20261114.md). |
 | Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
-| Strict Linux runtime verification | At `1a9bfd0d`, both architectures passed Compose recovery. AMD64 passed 642 strict browser cases with eight Ohio deadlines, and ARM64 passed 641 with nine Ohio deadlines. Both retained five original skips. Four school-district cases reached the same deadline on both architectures at different steps. The local ARM64 run stopped at preflight while the default VM was running another workload, and the host had about 446 GiB available against a 512 GiB combined controller requirement. [AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573400) · [ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44838794520/job/136650654231) · [Local attempt](upgrade-2026-progress.md#november-20-official-2026-w-2-copy-b-guided-intake). |
+| Strict Linux runtime verification | The exact `be98b7cd` managed run passed 648 cases with two RRTA inspection deadlines. The strict AMD64 job passed 639 cases with ten Ohio deadlines and one RRTA inspection deadline. The earlier native `0c29105f` ARM64 job passed 640 cases with ten Ohio deadlines. All retained five original skips. The strict jobs passed Compose recovery and cleanup. Complete verification at the original 30-second browser and four-second PDF limits. [Current managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506884) · [Current AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506948) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44853971077/job/136691659960). |
 | Current Stripe Sandbox checkout and credits | The configured Starter and Plus prices match the Viva La Tax Sandbox. The second authorized actor has a canceled Starter subscription and can choose a plan. The enabled test webhook points to an older Preview. Current evidence needs checkout, signed delivery to the verified revision and a scoped read of its database for the two authorized test accounts, exact event and Session. Positive credit-grant testing requires an isolated test path while the public purchase gate stays closed. [Preview evidence](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline). |
 
 The Form 8863 review also needs an independent worksheet for the joint-return
@@ -20,11 +20,35 @@ claimant age controls. The IRS product index currently lists a final 2026
 blank and draft 2026 instructions. [Education source and implementation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
 [Official revision status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-education-form-recheck).
 
+The latest annual cases also need independent expected outputs. For Form
+8615, derive lines 1 through 17, including the proportional division of
+qualified dividends and capital gain, for the $10,800 dividend example
+and the two federal $10,000 investment-income examples. Check both the
+valid Line 3 stop and the separate Schedule 1 entries that sum to zero.
+For Form 2441, derive Line A, Part II and the Schedule 3 transfer for the
+2025 separate filer with $3,000 of qualified expenses at $85,000 AGI and
+the guided filer with $40,000 of wages and $3,900 of qualified expenses.
+Check that all three living-apart requirements, explicit zero benefits
+and the distinction between the two Parts are reflected in the review.
+[Form 8615 evidence](upgrade-2026-progress.md#november-20-form-8615-preferential-worksheet-1) ·
+[Form 2441 evidence](upgrade-2026-progress.md#november-20-form-2441-credit-only-separate-return).
+
+For the 2026 Form 8919 boundary, derive the payroll taxes and displayed
+destinations for $183,500 of Social Security wages and tips, $198,000 of
+Medicare wages and $4,000 of Form 8919 wages. Qualify the actual Schedule 2
+placement after the final 2026 schedule is published.
+[Form 8919 evidence](upgrade-2026-progress.md#november-20-final-2026-form-8919-transfer-destinations).
+
 These inputs do not replace unfinished engineering. Final-source managed,
 hosted/native and scenario checks, remaining source-settled methods and later
 qualified AI execution continue under their existing boundaries. Routine bounded
 isolated rehearsals are authorized; no repeated setup approval follows from this
 table. Filing, model promotion and production release remain closed.
+
+The latest read-only local ARM64 preflight measured 415.80 GiB free against
+the isolated controller's 512 GiB floor. The sandbox also prevented checking
+the test VM and default-store custody. The available source-bound ARM64
+rehearsal uses GitHub's native runner.
 
 OpenAI access and aggregate cost reconciliation are already evidenced. Keep the
 unknown $0.022384 reservation in the $0.29423670 known-plus-held exposure; a

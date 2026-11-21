@@ -1,5 +1,104 @@
 # 2026 upgrade implementation evidence
 
+## November 20 final 2026 Form 8919 transfer destinations
+
+`b7cba0fd` records the destinations printed on the final 2026 Form 8919
+in its source audit. Form 1040 line 1g and Form 8959 line 3 each receive
+$4,000 in the verified scenario. With $183,500 of Social Security wages
+and tips, $1,000 remains under the $184,500 wage base. The $62 Social
+Security tax and $58 Medicare tax give $120 on Form 8919 line 13, which
+the final form directs to Schedule 2 line 16b. The separate Form 8959
+tax is $18. The isolated calculation, 2025 audit control and annual rule
+pack rejection passed. Final Schedule 2 placement awaits publication.
+[Final Form 8919](https://www.irs.gov/pub/irs-prior/f8919--2026.pdf) ·
+[Draft 2026 Schedule 2](https://www.irs.gov/pub/irs-dft/f1040s2--dft.pdf).
+
+The exact package passed 578 focused tests, all 9,738 tracked spec
+references, type checking and all 35 browser timing contracts.
+Its exact unit and coverage runs each passed 29,705 tests in 2,173 files,
+with 88.29% branch coverage and two normal PostgreSQL 16.16 shutdowns.
+`be98b7cd` updates the generated inventory's 2025 Form 8919 authority to
+the same IRS archive. All eight exact static checks passed on `be98b7cd`,
+including the regenerated inventory. Its exact local suites also passed
+29,705 tests each at 88.29% branch coverage, with both temporary
+PostgreSQL instances stopped normally.
+
+Its exact protected test-mode Preview passed all 12 workspace checks.
+The synthetic return was saved and reopened across both revisions,
+deleted on `be98b7cd`, and confirmed absent from both revisions and a
+fresh session. Both synthetic sessions signed out. Independent review
+matched the retained Preview and lifecycle receipts to the exact source.
+
+The exact managed Linux run on `be98b7cd` passed 648 cases with five
+original skips. Both RRTA saved-PDF inspections reached the original
+four-second subprocess deadline. The Ohio journeys passed in this run.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506884).
+The strict AMD64 job passed image smoke, Compose upgrade, recovery and
+rollback, independent archive verification and browser-container cleanup.
+It passed 639 browser cases with five original skips. Ten Ohio journeys
+reached the original 30-second deadline, and the desktop RRTA saved-PDF
+inspection reached its four-second deadline. The RRTA timing reached page
+text extraction at 3.175 seconds. All six exact CI jobs and the Docker
+workflow passed.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506948) ·
+[CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44856080143) ·
+[Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44856080034).
+
+## November 20 guided Form 2441 living-apart facts
+
+`0c29105f` collects the three Line A answers for the supported 2025
+married-separate credit-only path. It keeps Yes, No and unanswered values
+through draft save and reopen. When Part III exists, the saved answers
+must agree with the benefit records. This path requires confirmed care
+eligibility and zero benefits, including any W-2 Box 10 amount.
+
+The synthetic guided return has $40,000 AGI and $3,900 of qualified
+expenses for one person. The $3,000 expense limit and 22% bracket produce
+$660. The review calculation records Line A as checked. All 248 focused
+tests passed, including the rendered questions and the guided-to-federal
+handoff. A separate exact-source run passed 22 focused tests,
+all 9,737 linked spec references, and all 35 original browser timing
+contract checks. [IRS instructions](https://www.irs.gov/instructions/i2441).
+
+The full unit and coverage suites each passed 29,704 tests in 2,173 files
+on the exact combined source. Branch coverage was 88.29%. Both temporary
+PostgreSQL 16.16 instances shut down normally. All eight static checks
+passed, including the rule inventory, type checks and both builds.
+
+The exact protected test-mode Preview passed all 12 workspace checks.
+The same authorized synthetic actor created and reopened the return across
+two revisions and separate sessions, saved it on both, deleted it on the
+combined revision, and verified absence across both revisions and a new
+session. Both sessions signed out.
+An independent receipt review matched the protected Preview, source and
+test results to the archived revision.
+
+The complete managed macOS Chromium suite passed all 650 active cases
+with five original skips. It used the same deadlines, two workers, zero
+retries and 15 verified IRS sample PDFs. The exact CI and Docker workflows
+passed.
+[CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44853824467) ·
+[Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44853824556).
+The exact managed Linux job also passed all 650 active cases with five
+original skips.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44853824406/job/136691180161).
+The exact native ARM64 job passed image smoke, Compose recovery and the
+owned browser-container cleanup. Its browser suite passed 640 cases and
+retained five original skips. Ten Ohio journeys reached the original
+30-second deadline, covering part-year business, a reciprocal refund,
+resident credit and part-year school district branches. The affected steps
+included input interactions, browser evaluation and API posts.
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44853971077/job/136691659960).
+The exact strict AMD64 job passed image smoke, Compose upgrade, recovery
+and rollback, independent archive verification and browser-container
+cleanup. Its browser suite passed 637 cases with five original skips.
+Eleven Ohio journeys hit the 30-second deadline and both RRTA saved-PDF
+inspections hit the four-second subprocess deadline.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44853824406/job/136691180468).
+Twelve queued or running CI and Web workflows from superseded intermediate
+commits were canceled to release runners. The `0c29105f` jobs, the native
+ARM64 rehearsal and the `be98b7cd` jobs remain the qualification runs.
+
 ## November 20 Form 2441 credit-only separate return
 
 `651ab2d2` uses the three actual living-apart facts for a married-separate
@@ -34,9 +133,14 @@ Ordinary Schedule B audit text named Form 8814 despite the absence of
 elected dividends. The resulting bytes changed the Ohio baseline
 fingerprints. `2ab355bd` restores the established text for absent or zero
 elected dividends and retains the Form 8814 detail for positive amounts.
-All 185 focused tests passed on the corrected source, including four
+The two predecessor full suites each reported 36 failures in four Ohio
+files. All 185 focused tests passed on the corrected source, including four
 Ohio compatibility suites and the election calculation and PDF tests.
 Type checking and independent review also passed.
+Later, the `2ab355bd` managed workflow stopped at the separate diagnostic
+manifest hash before browser collection. `9d70f13f` refreshed that single
+hash and all 35 timing contract tests passed.
+[Timing admission failure](https://github.com/utilityfueled/tax-engine/actions/runs/44852780741/job/136687809010).
 
 ## November 20 Form 8615 preferential Worksheet 1
 

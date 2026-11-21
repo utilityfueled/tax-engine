@@ -1,5 +1,23 @@
 # Current 2026 upgrade status
 
+Application `b7cba0fd` verifies the $184,500 wage-base boundary and
+records the transfer destinations printed on the final 2026 Form 8919.
+The exact focused run passed 578 tests. At `be98b7cd`, both full suites
+passed 29,705 tests at 88.29% branch coverage, all eight static checks
+passed, and the protected Preview passed its 12 workspace checks. Managed
+Linux and strict AMD64 hit their original RRTA inspection deadlines.
+Strict AMD64 also recorded ten Ohio deadline failures. Its Compose
+recovery, rollback, archive verification and cleanup passed. Final
+Schedule 2 placement still requires the published annual form.
+[Form 8919 evidence](upgrade-2026-progress.md#november-20-final-2026-form-8919-transfer-destinations).
+
+Application `0c29105f` adds explicit 2025 Form 2441 living-apart answers
+to the guided interview. The $660 synthetic credit, saved answers,
+benefit-source validation and existing Part III route passed focused
+checks. [Guided evidence](upgrade-2026-progress.md#november-20-guided-form-2441-living-apart-facts).
+Both full suites passed 29,704 tests at 88.29% branch coverage, along with
+all eight static checks and all 12 protected Preview workspace tests.
+
 Application `651ab2d2` calculates the supported 2025 Form 2441 credit-only
 exception for a qualifying married-separate filer. The synthetic case
 produces a $600 Schedule 3 credit and the saved review PDF checks Line A.
