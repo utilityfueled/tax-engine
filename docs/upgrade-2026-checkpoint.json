@@ -1,5 +1,40 @@
 {
   "activeContinuation": {
+    "nov21LocalBackupGuidedFacts": {
+      "commit": "1cc1ada03b7f8722aca3066055835dc32424802b",
+      "focusedTestsPassed": 54,
+      "localChromiumRecoveryCasesPassed": 6,
+      "originalCaseLimitMs": 30000,
+      "independentReviewPassed": true
+    },
+    "nov21ScheduleBForm8815": {
+      "commit": "1da95deecc547f8fcfaa7d5808042b228eb8edd9",
+      "focusedTestsPassed": 180,
+      "combinedFocusedTestsPassed": 136,
+      "combinedUnitTestsPassed": 29975,
+      "combinedUnitSuitesPassed": 2183,
+      "combinedCoverageTestsPassed": 29975,
+      "branchCoveragePercent": 88.49,
+      "postgresVersion": "16.16",
+      "bothPostgresStopsPassed": true,
+      "dockerWorkflowPassed": 44947634073,
+      "scheduleBSpecRefsValid": 19,
+      "reviewedPhysical2025Lines": {"2": "500", "3": "400", "4": "100"},
+      "independentReviewPassed": true,
+      "filingEnabled": false
+    },
+    "nov21TerminalArm64Result": {
+      "commit": "0fef1e98",
+      "run": 44939968530,
+      "job": 136962955269,
+      "imageSmokePassed": true,
+      "composeRecoveryPassed": true,
+      "containerCleanupPassed": true,
+      "strictBrowsers": {"passed": 641, "failed": 9, "existingSkips": 5, "batches": 8, "caseLimitMs": 30000},
+      "priorRunWithSameSummary": 44937275054,
+      "summarySha256": "19b1f653e2257f93200a7b32bbadb531ff0544f3ab66d4078fd76e671fc48dee",
+      "publishedBrowserArtifact": false
+    },
     "nov21QofDiscovery": {
       "commit": "f9cb2c549e70efabb832aa73faccbb8f207ea7bc",
       "officialSource": "https://www.irs.gov/pub/irs-drop/n-26-40.pdf#page=9",

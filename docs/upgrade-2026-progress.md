@@ -1,5 +1,53 @@
 # 2026 upgrade implementation evidence
 
+## November 21 complete local backups
+
+Commit `1cc1ada0` detects a saved guided summary or generated document
+without the underlying interview answers. The normal backup action
+halts before opening source files when the scoped draft is missing
+or contains only restart setup. Advanced-only returns can still
+round-trip with their original files. Compatibility checks preserved
+the hosted and unscoped legacy paths.
+
+The exact source passed 54 focused unit and audit tests and all six
+existing Chromium recovery cases. The browser reproduced a blocked
+download, restored the scoped answers, downloaded one archive, deleted
+the test workspace and restored its private answers and original
+bytes from that archive. [Self-host recovery instructions](self-hosting.md).
+
+## November 21 savings-bond Schedule B attachment
+
+Commit `1da95dee` attaches Schedule B when Form 8815 claims a positive
+education savings-bond exclusion, including below $1,500.
+Part III review uses Line 4 taxable interest after the exclusion,
+Line 6 ordinary dividends and any started foreign disclosure.
+Tests cover $1,499, $1,500 and $1,501, and an actual 2025 PDF reopened
+with $500 gross interest, $400 excluded and $100 taxable. Raw and
+redacted review outputs agree on the amounts. Filing remains gated.
+[2025 IRS instructions](https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf#page=1) ·
+[2026 IRS instructions](https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=1) ·
+[Final 2025 form](https://www.irs.gov/pub/irs-prior/f1040sb--2025.pdf).
+
+Independent source and PDF review, 180 targeted tests, all 19 Schedule
+B spec references, static checks and the browser audit passed. The
+exact combined source passed 136 focused checks and all 29,975 tests
+in 2,183 suites in both the unit and coverage runs. Branch coverage
+was 88.49% against the 85% gate. Both PostgreSQL 16.16 clusters
+stopped successfully. [Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44947634073).
+
+## November 21 terminal ARM64 result
+
+The `0fef1e98` run passed image smoke, Compose upgrade and recovery,
+and cleanup. Its strict browser gate passed 641, timed out nine, and
+retained five existing skips across eight batches. The failure list
+and summary hash match the earlier `2134c1bc` run. School timeouts
+occurred during header entry, saved reopen and download. The desktop
+NEW212 case waited for the PDF response, and both resident-credit
+failures were in payment or reconfirmation steps. The 30-second limits
+are unchanged. Neither run published a browser artifact.
+[Newer ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44939968530/job/136962955269) ·
+[Earlier ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44937275054/job/136948460404).
+
 ## November 21 guided QOF discovery
 
 Commit `f9cb2c54` asks every 2026 guided filer whether they disposed
