@@ -144,8 +144,17 @@ describe('actual original prepaid mortgage insurance source contract', () => {
     const raw = originals(); manual(raw, '1000'); withoutSources(raw);
     expect(calculate(raw).mortgageInsurancePremiums.toString()).toBe('1000');
     Reflect.deleteProperty(raw.form1098[0].mortgageInsuranceQualification, 'premiumsAllocableToYear'); expect(() => calculate(raw)).toThrow();
-    manual(raw, '1000'); raw.taxpayer.taxYear = 2025; Reflect.deleteProperty(raw, 'mortgageInterestWorksheet'); expect(calculate(raw).mortgageInsurancePremiums.toString()).toBe('0');
-    const unsupported = originals(); unsupported.taxpayer.taxYear = 2025; manual(unsupported); Reflect.deleteProperty(unsupported, 'mortgageInterestWorksheet'); expect(() => calculate(unsupported)).toThrow(/2026|year/i);
+    manual(raw, '1000');
+    raw.taxpayer.taxYear = 2025;
+    raw.form1098[0].taxYear = 2025;
+    Reflect.deleteProperty(raw, 'mortgageInterestWorksheet');
+    expect(calculate(raw).mortgageInsurancePremiums.toString()).toBe('0');
+    const unsupported = originals();
+    unsupported.taxpayer.taxYear = 2025;
+    unsupported.form1098[0].taxYear = 2025;
+    manual(unsupported);
+    Reflect.deleteProperty(unsupported, 'mortgageInterestWorksheet');
+    expect(() => calculate(unsupported)).toThrow(/original prepaid mortgage insurance sources require tax year2026/i);
     expect(() => getConstants(2026)).toThrow(/incomplete/i); expect(getRulePack(2026).filingQualified).toBe(false);
   });
   it('rejects actual parent balances contradicting the outstanding original source', () => {

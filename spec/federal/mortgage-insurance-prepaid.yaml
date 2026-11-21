@@ -24,5 +24,5 @@ lines:
     testRef: "tests/engine/forms/mortgage-insurance-prepaid.test.ts::preserves cents and actual partial AGI step"
   - line: "historical-gates"
     description: "Preserve historical manual behavior, immutable input and incomplete2026 gates"
-    formula: "2025 manual PMI remains expired; new current2026 original-source method rejects other years. No input mutation or rule-pack/filing promotion. Missing source facts never become zero."
+    formula: "2025 manual PMI remains expired with a matching 2025 Form 1098. The current2026 original-source method rejects other years, and a populated Form 1098 with a conflicting year rejects. No input mutation or rule-pack/filing promotion. Missing source facts never become zero."
     testRef: "tests/engine/forms/mortgage-insurance-prepaid.test.ts::preserves historical manual behavior and full2026 gate"
