@@ -32,6 +32,8 @@ import { ohioPaymentFixture } from "../../fixtures/oh-payments";
 import { confirmGuidedOhioResidencyFacts } from "@/lib/guided-ohio-residency-facts";
 import { confirmGuidedOhioPaymentFacts } from "@/lib/guided-ohio-payment-facts";
 
+import { guidedFirstHomeBirthDate, guidedFirstHomeRetirement, guidedFirstHomeWorksheet } from "../../fixtures/guided-first-home";
+
 vi.mock("server-only", () => ({}));
 
 afterEach(() => {
@@ -864,6 +866,54 @@ it("prints the documented guided IRA Code 1 age exception in the workspace PDF",
   const projected = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
   expect(projected.form1099R?.[0]).toMatchObject({ distributionCode: "1", distributionDate: "2025-08-01" });
   expect(calculateFederalTax(projected).form5329?.line4.toFixed()).toBe("0");
+  expect(JSON.stringify(state)).toBe(before);
+});
+
+// Spec: spec/federal/form-5329-first-home-guided.yaml, 2-4-review.
+it("prints the guided first-home IRA exception and remaining tax in the workspace PDF", async () => {
+  const state = createGuidedFlowState();
+  state.segmentation.incomeTypes.push("retirement");
+  actual(state.sectionData["personal-info"]).dateOfBirth = guidedFirstHomeBirthDate;
+  state.sectionData["income-retirement"] = { entries: [{
+    ...guidedFirstHomeRetirement, code1IraFirstHomeSource: guidedFirstHomeWorksheet,
+  }] };
+  const before = JSON.stringify(state);
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms).toContain("f5329-filled.pdf");
+  const pdfText = await extractPdfText(download.contents);
+  expect(pdfText).toContain("Additional Taxes on Qualified Plans");
+  expect(pdfText).toMatch(/\b7000\s+09\s+6000\s+1000\s+100\b/u);
+  expect(pdfText).toContain("FOR REVIEW ONLY - NOT FOR FILING");
+  expect(pdfText).toMatch(/IRA taxable distributions reported on Form 1040 Line 4b\s+Value: 7000/u);
+  expect(JSON.stringify(state)).toBe(before);
+});
+
+// Spec: spec/federal/form-5329-first-home-guided.yaml, 2-4-review.
+it("prints one redacted Form 5329 for a fully excepted guided first-home IRA", async () => {
+  const state = createGuidedFlowState();
+  state.segmentation.incomeTypes.push("retirement");
+  const primary = actual(state.sectionData["personal-info"]);
+  primary.dateOfBirth = guidedFirstHomeBirthDate;
+  state.sectionData["income-retirement"] = { entries: [{
+    ...guidedFirstHomeRetirement,
+    code1IraFirstHomeSource: { ...guidedFirstHomeWorksheet, paymentAmount: "7000", priorQualifiedDistributions: "3000" },
+  }] };
+
+  const before = JSON.stringify(state);
+  const projected = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(projected.form5329FirstHomeSource?.accountReference).toBe(guidedFirstHomeRetirement.accountReference);
+  const result = calculateFederalTax(projected);
+  expect(result.iraDistributionsTaxable.toFixed()).toBe("7000");
+  expect(result.form5329?.line4.isZero()).toBe(true);
+
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms.filter(name => name.startsWith("f5329"))).toEqual(["f5329-filled.pdf"]);
+  const pdfText = await extractPdfText(download.contents);
+  expect(pdfText).toContain("Additional Taxes on Qualified Plans");
+  expect(pdfText).toMatch(/\b7000\s+09\s+7000\b/u);
+  expect(pdfText).not.toContain(guidedFirstHomeRetirement.accountReference);
+  expect(pdfText).not.toContain(primary.ssn);
+  expect(pdfText).not.toContain(primary.ssn.replaceAll("-", ""));
   expect(JSON.stringify(state)).toBe(before);
 });
 

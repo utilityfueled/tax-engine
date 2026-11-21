@@ -1,0 +1,24 @@
+form: "Form 5329 Guided First-Home IRA Source"
+fullName: "2025 guided intake of an actual first-home IRA distribution"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5"
+notes: "The guided intake covers one nonjoint primary traditional IRA source and one purchase-price payment for the taxpayer's completed own main-home purchase while unmarried at acquisition. It uses the canonical first-home calculation and existing workspace review route."
+lines:
+  - line: "09-guided-source"
+    description: "Collect complete first-home facts from the actual payer and purchase records"
+    formula: "Reuse the sole 2025 primary Code 1 IRA actual receipt, positive fully taxable Box 1 with confirmed zero basis and Box 5, and owner under age 59 1/2 on receipt. Bind the worksheet to that payer, account, amount, actual receipt date and owner date of birth. Require a completed own main-home purchase, explicit unmarried status and no main-home ownership interest during the two years through the binding purchase contract, no former section 1034 suspension, no IRA rollover, and one positive purchase-price payment from the matched distribution. Require separately entered lifetime prior qualifying distributions, including an actual zero when applicable."
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/p590b--2025.pdf#page=27"
+      - "https://www.irs.gov/pub/irs-prior/p590b--2025.pdf#page=28"
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+    testRef: "tests/apps/web/retirement-first-home-interactions.test.tsx::collects and restores the actual first-home worksheet with no missing or inferred facts"
+  - line: "09-guided-holds"
+    description: "Hold incomplete, conflicting, stale and unsupported guided records"
+    formula: "The actual payment must be on or after receipt and contract and through calendar day 120 after receipt, including across tax years. Hold a saved worksheet if its original source or return context changed, two retirement sources are entered, or another retirement worksheet is needed or unresolved. Require confirmation after the latest edit; removal also requires the ordinary retirement worksheet answer to be confirmed again. Code 12 age relief remains available only on its independent route."
+    testRef: "tests/apps/web/retirement-first-home-interactions.test.tsx::holds stale, mixed, late or unsupported guided first-home facts"
+  - line: "2-4-review"
+    description: "Send confirmed source facts to the ordinary guided calculation and workspace review packet"
+    formula: "Use the canonical Form 5329 first-home source so exception 09 applies up to the lesser of the actual qualifying purchase payment and the remaining individual lifetime cap. Preserve IRA income and filing, year, workspace and export gates."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::prints the guided first-home IRA exception and remaining tax in the workspace PDF"
+    testRefs:
+      - "tests/apps/web/workspace-filled-return.test.ts::prints one redacted Form 5329 for a fully excepted guided first-home IRA"

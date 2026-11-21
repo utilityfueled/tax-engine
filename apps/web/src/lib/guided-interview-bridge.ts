@@ -94,7 +94,8 @@ import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment
 import { buildGuidedCashFarm, buildGuidedCashFarmBenefitOriginals } from "./guided-cash-farm-box7";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
-import { guidedCode1IraAgeFacts, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
+import { buildGuidedFirstHomeSource } from "./guided-retirement-first-home";
+import { guidedCode1IraAgeFacts, guidedCode1IraFirstHomeOriginal, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
 import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import { investmentFactErrors, isStartedInvestment, type InvestmentData, type InvestmentSourceData } from "./guided-investment-facts";
@@ -879,7 +880,15 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
   const form1099DA = buildDigitalAssetInputs(investData?.digitalAssetEntries, segmentation.filingStatus, state.taxYear, personalInfo, form1099B, { interestEntries: investData?.interestEntries, oidEntries: investData?.oidEntries, filingStatus: segmentation.filingStatus, taxYear: state.taxYear, stateCode });
-  const form1099R = buildRetirementInputs(retirementData?.entries, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData });
+  const retirementEntries = retirementData?.entries;
+  const form1099R = buildRetirementInputs(retirementEntries, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData });
+  const firstHomeEntry = retirementEntries?.find(entry => entry.code1IraFirstHomeSource !== undefined);
+  const firstHomeOwnerBirthDate = firstHomeEntry
+    ? guidedCode1IraOwnerBirthDate(retirementEntries, segmentation.filingStatus, state.taxYear, personalInfo.dateOfBirth, !!retirementData?.basisSources)
+    : undefined;
+  const form5329FirstHomeSource = firstHomeEntry?.code1IraFirstHomeSource
+    ? buildGuidedFirstHomeSource(firstHomeEntry.code1IraFirstHomeSource, guidedCode1IraFirstHomeOriginal(firstHomeEntry, firstHomeOwnerBirthDate))
+    : undefined;
   const iraBasisSources = buildGuidedIraBasisSources(retirementData?.basisSources, retirementData?.entries, state.taxYear, segmentation.filingStatus, personalInfo, adjustmentData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
   const rentalCarryovers = buildGuidedRentalCarryovers(rentalData?.entries, state.taxYear, segmentation.filingStatus, personalInfo);
@@ -1011,6 +1020,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form1099B,
     form1099DA,
     form1099R,
+    ...(form5329FirstHomeSource ? { form5329FirstHomeSource } : {}),
     iraBasisSources,
     form8960Sources: buildGuidedNiitSources(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus),
     foreignTaxElection: buildGuidedForeignTaxElection(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state), state),

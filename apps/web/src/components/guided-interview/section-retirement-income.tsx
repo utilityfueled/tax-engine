@@ -148,9 +148,12 @@ export function SectionRetirementIncome({
           simplifiedMethod: { ...entry.simplifiedMethod, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
         } : {}),
       };
+      const hasFirstHomeWorksheet = entry.code1IraFirstHomeSource !== undefined;
+      const firstHomeWorksheetChanged = field === "code1IraFirstHomeSource"
+        && hasFirstHomeWorksheet !== (value !== undefined);
       const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);
       const codeChanged = needsGuidedSimplifiedMethod(updated) && entry.distributionCode !== updated.distributionCode;
-      return methodChanged || codeChanged || code1SourceChanged || field === "code1IraAgeSource"
+      return methodChanged || codeChanged || code1SourceChanged || firstHomeWorksheetChanged || field === "code1IraAgeSource"
         ? { ...updated, additionalWorksheetRequired: null } : updated;
     });
     onEntriesChange(next);

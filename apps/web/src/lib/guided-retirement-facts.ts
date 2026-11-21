@@ -13,6 +13,7 @@ import {
   simplifiedMethodPlanIdentifier, simplifiedMethodWholeNumber,
   type GuidedRetirementQcdSource, type GuidedRetirementSimplifiedMethod,
 } from "./guided-retirement-source-inputs";
+import { buildGuidedFirstHomeSource, guidedFirstHomeOriginal, guidedFirstHomeOriginalError, type GuidedFirstHomeWorksheet } from "./guided-retirement-first-home";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -37,6 +38,7 @@ export interface RetirementSourceData {
   localDistribution?: string;
   iraBasisConfirmedZero?: boolean | null;
   code1IraAgeSource?: { singlePaymentConfirmed?: boolean | null; ownerBirthDate?: string; distributionDate?: string };
+  code1IraFirstHomeSource?: GuidedFirstHomeWorksheet;
   qcdSource?: GuidedRetirementQcdSource;
   simplifiedMethod?: GuidedRetirementSimplifiedMethod;
   qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
@@ -98,6 +100,11 @@ export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDat
       new Date(`${ownerBirthDate}T00:00:00Z`), new Date(`${distributionDate}T00:00:00Z`),
     ),
   };
+}
+
+export function guidedCode1IraFirstHomeOriginal(entry: RetirementEntryData, ownerBirthDate?: string) {
+  const age = guidedCode1IraAgeFacts(entry, ownerBirthDate);
+  return guidedFirstHomeOriginal(entry, ownerBirthDate, age?.ageException ? undefined : age?.distributionDate);
 }
 
 function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: string): string | undefined {
@@ -171,7 +178,8 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   );
   (entries ?? []).forEach((entry, index) => {
     const startedAgeSource = hasStartedGuidedCode1IraAgeSource(entry);
-    if (!isStartedRetirement(entry) && !startedAgeSource) return;
+    const firstHome = entry.code1IraFirstHomeSource;
+    if (!isStartedRetirement(entry) && !startedAgeSource && firstHome === undefined) return;
     const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
     if (!entry.payer.trim()) fail("payer", "Enter the actual retirement payer.");
@@ -297,10 +305,18 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     } else if (startedAgeSource && !ageFacts?.distributionDate) {
       fail("code1-ira-age-date", "Confirm the single Box 1 payment and enter its actual receipt date in the 2025 statement year.");
     }
+    if (firstHome !== undefined) {
+      try {
+        buildGuidedFirstHomeSource(firstHome, guidedCode1IraFirstHomeOriginal(entry, code1IraOwnerBirthDate));
+      } catch (error) {
+        fail("code1-ira-first-home", error instanceof Error ? error.message : guidedFirstHomeOriginalError);
+      }
+    }
     if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) {
       const question = boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed."
         : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed."
         : needsSimplifiedMethod ? "Confirm whether a penalty exception or another retirement worksheet is needed for this pension."
+        : firstHome !== undefined ? "Confirm whether another retirement worksheet is needed beyond this first-home IRA worksheet."
         : ageFacts?.ageException ? "Confirm whether another retirement worksheet is needed beyond the documented Code 1 age exception."
         : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.";
       fail("additional-worksheet", question);
