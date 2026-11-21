@@ -1,5 +1,31 @@
 # 2026 upgrade implementation evidence
 
+## November 21 American Opportunity Credit school EINs
+
+Commit `05d21abd` requires the actual EIN of every school supporting a
+potentially eligible positive AOTC entry in the guide, including schools
+with two explicit negative Form 1098-T receipt answers. Confirmed
+ineligibility in the available guided answers avoids the added EIN hold.
+The guide collects the source facts before the income phase-out is known.
+In the 2026 calculator, the new detailed-record checks apply to contributing
+students when Form 8863 line 7 is positive. Every supplied school must have
+an EIN and one must match the summary EIN. At single MAGI of $89,999, one
+$2,500 tentative credit rounds to zero while two round to one dollar.
+The tests preserve the Lifetime Learning Credit receipt exception.
+
+Both regressions reproduced before the fix. The independently reviewed
+package passed 191 focused tests, core and web typechecks, scoped lint,
+the coverage inventory check, and all 6,215 federal spec references. The
+2026 Form 8863 release decision still requires final instructions and
+qualified independent review.
+[26 USC §25A(g)(1)(B)](https://uscode.house.gov/us/usc/119-120/t26/s25A/) ·
+[Final 2026 Form 8863, page 2](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf#page=2) ·
+[2025 instructions](https://www.irs.gov/instructions/i8863).
+
+The initial commit left the browser audit hashes stale. Commit `988805a6`
+binds both changed sources and passed the source audit against an exact
+archive and 27 overlay checks. [Initial CI](https://github.com/utilityfueled/tax-engine/actions/runs/44936646058).
+
 ## November 21 Ohio school navigation and Linux timing evidence
 
 In `040196f8`, Ohio navigation uses the full school district validation
@@ -47,6 +73,20 @@ the fourth reached it during header confirmation after finishing entry in
 preceding elapsed time and common cause unresolved.
 [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44929287996/job/136922159088) ·
 [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44929287996/job/136922158872).
+
+Commit `0e30d9b5` removes a separate duplicate parent replay during actual
+Ohio header entry and confirmation. In both part-year fixtures, the
+current residency and payment validators each ran twice before the change
+and once afterward. The partial header still leaves state totals unavailable,
+preserves the federal AGI and school observation, and changes no saved facts.
+Explicit confirmation still captures the same originals. The school adapter
+uses validated base records, and the header receives a separate copy for
+any resident-credit child. The independent review found the original check
+order and no-district path intact. All 249 related tests, eight full-batch
+manifest checks, both typechecks, scoped lint, the browser source audit and
+3,488 state spec references passed. The duplicate work is established on
+both fixtures. The full Linux qualification is still open.
+[Baseline comparison on one Linux runner](https://github.com/utilityfueled/tax-engine/actions/runs/44935775424).
 
 ## November 21 original claims in canonical mortgage worksheets
 
