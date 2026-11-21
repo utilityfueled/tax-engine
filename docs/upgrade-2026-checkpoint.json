@@ -28,13 +28,15 @@
       "concurrentUnitAttempt": { "source": "386c1086", "passed": 29831, "fiveSecondDeadlines": 4 },
       "macosBrowser": { "source": "fdc4dc8d", "passed": 650, "failed": 0, "originalSkips": 5 },
       "currentLocalRerunSource": "2c576d2d",
+      "currentLocalChecks": { "requiredCommandsPassed": 11, "staticChecksPassed": 8, "unitTestsPassed": 29837, "coverageTestsPassed": 29837, "branchPercent": 88.36, "browserPassed": 650, "browserFailed": 0, "browserOriginalSkips": 5, "postgresStoppedNormally": true },
+      "currentDocker": { "source": "aa75bb2d", "workflowId": 44881955057, "conclusion": "success" },
       "replayPinCorrection": "156bd0b7",
       "replayFocusedTestsPassed": 43,
       "verifiedFrozenSources": 9,
       "verifiedBrowserCollectionCases": 655,
       "failedTimingPredecessor": { "source": "7ebce850", "workflowId": 44874893916, "managedPassed": 648, "managedFailed": 2, "strictPassed": 637, "strictFailed": 13, "originalSkipsPerJob": 5, "verifiedReplayCases": 0 },
       "currentTimingRun": { "source": "156bd0b7", "workflowId": 44880786265 },
-      "currentNativeArmRun": { "source": "0a167ed2", "workflowId": 44881255619, "localFreeDiskGiB": 393, "localRequiredFreeDiskGiB": 512 },
+      "currentNativeArmRun": { "source": "0a167ed2", "workflowId": 44881255619, "localFreeDiskGiB": 393, "localRequiredFreeDiskGiB": 512, "remoteImageBuildSmokeAndComposeSucceeded": true },
       "readyCurrentProtectedPreview": false
     },
     "nov21TaxableDexExecutionYear": {

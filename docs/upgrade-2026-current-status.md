@@ -11,8 +11,11 @@ The newer local checkout test passed its exact PostgreSQL checks.
 [Current evidence](upgrade-2026-progress.md#november-21-combined-suite-and-linux-timing-replay) ·
 [Checkpoint](upgrade-2026-checkpoint.json).
 
-Current `2c576d2d` local suites, strict Linux AMD64 and native Linux
-ARM64 rehearsals are pending.
+All 11 required local commands passed on `2c576d2d`. The unit and
+coverage suites each passed 29,837 tests. The managed browser suite
+passed 650 active cases with five original skips. Docker build passed
+on `aa75bb2d`. The strict Linux AMD64 and native Linux ARM64 browser
+runs are pending.
 Completion also depends on final annual forms, qualified human tax and
 AI reviews, missing provider qualification and a current protected
 Preview. Hosted security work is deferred at the owner's direction.

@@ -50,12 +50,20 @@ The corrected focused run passed 1,092 tests. The clean archive passed
 all 9,773 tracked spec references. The exact PostgreSQL-backed coverage
 suite passed all 29,835 tests at 88.36% branch coverage. The concurrent
 unit attempt passed 29,831 tests and hit four five-second deadlines.
-The deadlines remain in the record. The next full unit run uses four
-workers and exact `2c576d2d` source.
+The deadlines remain in the record. Unit and coverage reruns on clean
+`2c576d2d` archives passed all 29,837 tests each at four workers. Coverage
+was 88.36% for branches. Both owned PostgreSQL 16.16 instances stopped
+normally. All eight static checks passed on the same source, including
+all three type checks, both builds, and lint with zero errors.
 
 The complete managed macOS browser run at `fdc4dc8d` passed all 650
-active cases with five original skips. The same eight-batch suite is
-running on `2c576d2d`.
+active cases with five original skips. The exact `2c576d2d` eight-batch
+suite also passed 650 active cases with five original skips using the
+pinned Node and pypdf runtimes and the existing sample document set.
+All 11 required local commands have passing exact-source evidence.
+The official Docker workflow passed on the `aa75bb2d` documentation
+commit, which retained the same application and Docker source.
+[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44881955057).
 
 The `7ebce850` managed Linux job finished with 648 passed, two RRTA
 PDF deadlines and five original skips. The strict AMD64 job finished with
@@ -74,7 +82,9 @@ The local ARM64 controller was held at the existing 512 GiB free-space
 floor. The current machine had about 393 GiB available. An independent
 read-only check found the same 19 recovery source files and four tool
 hashes as the saved controller contract. The existing public native ARM64
-workflow started on `0a167ed2` without using the Mac VM.
+workflow started on `0a167ed2` without using the Mac VM. It passed
+native image builds, candidate smoke and isolated Compose recovery.
+Its strict browser suite is running.
 [Native ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44881255619).
 
 ## November 21 Pennsylvania resident draft after a documented Florida move
