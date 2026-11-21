@@ -31,6 +31,32 @@ function annualHealthFacts(amount: string) {
   return { base, person, plan: { ...plan, payments: [payment] }, payment, paid };
 }
 
+function ordinaryBusinessFixture(scheduleCProfit = "3000", scheduleFProfit = "3000") {
+  const { base, person, plan, payment, paid } = annualHealthFacts("900");
+  const input = TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+    w2s: [{ ...simpleW2Fixture.w2s[0], taxYear: 2026, accountHolder: "primary", wages: "2000", federalWithheld: "100",
+      socialSecurityWages: "2000", socialSecurityTips: "0", socialSecurityWithheld: "124",
+      medicareWages: "2000", medicareWithheld: "29" }],
+    scheduleC: { accountHolder: "primary", grossReceipts: scheduleCProfit },
+    scheduleF: { accountHolder: "primary", salesOfProductsRaised: scheduleFProfit },
+    form7206: { ...base, sourceTaxYear: 2026, persons: [person], plans: [{
+      ...plan, months: [{ month: 1, employerSubsidizedPlanEligible: false }, { month: 2, employerSubsidizedPlanEligible: true }],
+      payments: [payment, {
+        ...payment, sourceId: "february-premium", datePaid: "2026-02-15", coverageMonth: 2,
+        grossPremium: "600", ownerOrBusinessPaid: "600", personAmounts: [{ ...paid, amountPaid: "600" }],
+      }],
+    }] },
+  });
+  const sources = {
+    confirmed: true,
+    scheduleC: { taxYear: 2026, accountHolder: "primary" as const, netProfit: scheduleCProfit, reference: "Synthetic original Schedule C line 31" },
+    scheduleF: { taxYear: 2026, accountHolder: "primary" as const, netProfit: scheduleFProfit, reference: "Synthetic original Schedule F line 34" },
+  };
+  return { input, sources };
+}
+
 async function diagnosticPage(result: Form7206Result, business: Form7206Result["businesses"][number]) {
   const [candidate, bytes] = await Promise.all([mapping(), readFile(blank)]);
   const pdf = await PDFDocument.load(bytes);
@@ -169,6 +195,103 @@ describe("Final 2026 Form 7206 physical candidate", () => {
       line7: undefined, line8: undefined, line9: undefined, line10: undefined, line11: "600", line12: "0", line13: "600", line14: "600" });
     expect(form7206.deductionToSchedule1.toFixed()).toBe("3400");
     expect(healthSources.map(({ accountHolder, amount }) => [accountHolder, amount.toFixed()])).toEqual([["primary", "2800"], ["spouse", "600"]]);
+  });
+
+  it("reopens the ordinary Schedule C and F source projection after excluding the subsidized month", async () => {
+    const { fillForm7206OrdinaryReviewCandidate, FORM_7206_2026_CANDIDATE } =
+      await import("@/pdf/mappings/2026/form-7206-candidate.js");
+    const { input, sources } = ordinaryBusinessFixture();
+    const { document, schedule1Line17 } = await fillForm7206OrdinaryReviewCandidate(input, sources, await readFile(blank));
+    const saved = await PDFDocument.load(await document.save());
+    expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+    const form = saved.getForm();
+    // Each business earns $3,000. Half the $424 Schedule SE deduction belongs to Schedule C.
+    // $3,000 less $212 leaves $2,788, so the $900 paid and eligible January premium limits the deduction.
+    const expected = {
+      name: undefined, taxpayerId: undefined, line1: "900", line2: "0", line3: "900",
+      line4: "3000", line5: "6000", line6: "50%", line7: "212", line8: "2788", line9: "0",
+      line10: "2788", line11: undefined, line12: "0", line13: "2788", line14: "900",
+    } as const;
+    const { fields } = FORM_7206_2026_CANDIDATE;
+    expect(form.getFields()).toHaveLength(Object.keys(fields).length);
+    expect(form.hasXFA()).toBe(false);
+    for (const key of Object.keys(expected) as (keyof typeof expected)[]) {
+      const field = form.getTextField(fields[key]);
+      expect(field.getText(), key).toBe(expected[key]);
+      expect(field.acroField.getValue()?.decodeText(), key).toBe(expected[key]);
+      if (expected[key] !== undefined) {
+        const normal = field.acroField.getWidgets()[0].getAppearances()?.normal;
+        expect(normal, key).toBeInstanceOf(PDFRawStream);
+        expect(decodePDFRawStream(normal as PDFRawStream).decode().length, key).toBeGreaterThan(0);
+      }
+    }
+    expect(schedule1Line17.toFixed()).toBe("900");
+  });
+
+  it("holds mismatched ordinary 7206 originals and incomplete monthly facts", async () => {
+    const { fillForm7206OrdinaryReviewCandidate } = await import("@/pdf/mappings/2026/form-7206-candidate.js");
+    const { input, sources } = ordinaryBusinessFixture();
+    const bytes = await readFile(blank);
+    for (const [changed, proof, reason] of [
+      [{ ...input, taxpayer: { ...input.taxpayer, taxYear: 2025 } }, sources, /2026/],
+      [input, { ...sources, confirmed: false }, /confirmed/],
+      [input, { ...sources, scheduleF: { ...sources.scheduleF, taxYear: 2025 } }, /2026/],
+      [input, { ...sources, scheduleF: { ...sources.scheduleF, netProfit: "2999" } }, /profit/],
+      [TaxYearInputSchema.parse({ ...input, scheduleF: { ...input.scheduleF, accountHolder: "spouse" } }), sources, /owner/],
+      [TaxYearInputSchema.parse({ ...input, form7206: { ...input.form7206, sourceFactsConfirmed: false } }), sources, /confirm/i],
+      [TaxYearInputSchema.parse({ ...input, form7206: { ...input.form7206, plans: input.form7206?.plans?.map(plan => ({
+        ...plan, months: [{ month: 1, employerSubsidizedPlanEligible: false }, { month: 2 }],
+      })) } }), sources, /eligibility/],
+    ] as const) {
+      await expect(fillForm7206OrdinaryReviewCandidate(changed, proof, bytes).then(() => undefined)).rejects.toThrow(reason);
+    }
+    await expect(fillForm7206OrdinaryReviewCandidate(input, sources, Buffer.from("unreviewed PDF")))
+      .rejects.toThrow(/template revision/);
+  });
+
+  it("keeps exact legible percentages and holds mixed whole-dollar calculations", async () => {
+    const { fillForm7206OrdinaryReviewCandidate, FORM_7206_2026_CANDIDATE } =
+      await import("@/pdf/mappings/2026/form-7206-candidate.js");
+    const bytes = await readFile(blank);
+    for (const [cProfit, fProfit, reason] of [
+      ["3000", "6000", /exact decimal.*percentage/],
+      ["1000", "65535000", /percentage.*native text size/],
+      ["10000", "10000", /whole dollars.*line 7/],
+    ] as const) {
+      const { input, sources } = ordinaryBusinessFixture(cProfit, fProfit);
+      await expect(fillForm7206OrdinaryReviewCandidate(input, sources, bytes).then(() => undefined)).rejects.toThrow(reason);
+    }
+
+    const { input, sources } = ordinaryBusinessFixture("750", "5250");
+    const review = await fillForm7206OrdinaryReviewCandidate(input, sources, bytes);
+    const form = (await PDFDocument.load(await review.document.save())).getForm();
+    const { fields } = FORM_7206_2026_CANDIDATE;
+    const ratio = form.getTextField(fields.line6);
+    expect(ratio.getText()).toBe("12.5%");
+    const appearance = ratio.acroField.getWidgets()[0].getAppearances()?.normal as PDFRawStream;
+    expect(new TextDecoder().decode(decodePDFRawStream(appearance).decode())).toContain(" 9 Tf");
+    expect(form.getTextField(fields.line7).getText()).toBe("53");
+    expect(form.getTextField(fields.line14).getText()).toBe("697");
+    expect(review.schedule1Line17.toFixed()).toBe("697");
+  });
+
+  it("reconciles line 7 to the actual W-2 Social Security tip box near the wage cap", async () => {
+    const { fillForm7206OrdinaryReviewCandidate, FORM_7206_2026_CANDIDATE } =
+      await import("@/pdf/mappings/2026/form-7206-candidate.js");
+    const { input, sources } = ordinaryBusinessFixture("5000", "5000");
+    const bytes = await readFile(blank);
+    const payroll = { ...input.w2s[0], wages: "184500", federalWithheld: "30500", socialSecurityWages: "184400",
+      medicareWages: "184500", medicareWithheld: "2675.25" };
+    // $100 in Box 7 reaches the $184,500 cap. With Box 7 zero, $100 of SE income incurs $12 of tax after rounding.
+    for (const [tips, withheld, allocatedHalf] of [["100", "11439", "67"], ["0", "11432.80", "70"]]) {
+      const { document } = await fillForm7206OrdinaryReviewCandidate({
+        ...input, w2s: [{ ...payroll, socialSecurityTips: tips, socialSecurityWithheld: withheld }],
+      }, sources, bytes);
+      const saved = await PDFDocument.load(await document.save());
+      expect(saved.getForm().getTextField(FORM_7206_2026_CANDIDATE.fields.line7).getText()).toBe(allocatedHalf);
+    }
+    await expect(fillForm7206OrdinaryReviewCandidate({ ...input, w2s: [{ ...payroll, socialSecurityTips: undefined }] }, sources, bytes))
+      .rejects.toThrow(/Box.*7/);
   });
 
   it("keeps public exports closed", async () => {

@@ -45,6 +45,48 @@ lines:
       Save actual zero inputs and results as zero. Add the per-business line
       14 amounts once on Schedule 1 line 17 without pooling owners' limits.
     testRef: "tests/pdf/form-7206-2026-candidate.test.ts::keeps owner pages separate and saves blanks apart from zeros"
+  - line: "ordinary-c-f-physical-review"
+    description: "Project one original Schedule C medical plan with same-owner Schedule C and F profits"
+    formula: >-
+      Confirm the 2026 business sources and reconcile their documented positive
+      Schedule C line 31 and cash Schedule F line 34 to calculations from the
+      original return inputs. Require one owner and one qualified non-Marketplace
+      medical plan established under Schedule C. Use original person, payment, and
+      monthly employer-plan eligibility facts. Exclude paid premiums for months
+      when subsidized employer coverage was available as printed on line 1.
+      Use the canonical regular Schedule SE deduction. Line 4 uses Schedule C
+      profit, line 5 includes both same-owner profits, and line 7 allocates the
+      deductible half of SE tax using the line 6 ratio. Keep line 11 blank and
+      leave taxpayer identifiers blank. Line 14 reconciles to Schedule 1 line 17.
+      Save and reopen the pinned form with a visible review notice. This path
+      holds other earnings and adjustments requiring separate allocations.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::reopens the ordinary Schedule C and F source projection after excluding the subsidized month"
+  - line: "ordinary-c-f-source-controls"
+    description: "Hold mismatched originals and unconfirmed coverage before projection"
+    formula: >-
+      Hold incorrect years, unsupported owners or plans, source profit amounts
+      that differ from the canonical returns, unsupported income or adjustments,
+      and a missing or unconfirmed original monthly employer-plan eligibility fact.
+      Pin the original PDF hash before rendering.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::holds mismatched ordinary 7206 originals and incomplete monthly facts"
+  - line: "ordinary-c-f-physical-precision"
+    description: "Preserve the exact percentage and whole-dollar calculation on the printed lines"
+    formula: >-
+      Require an exact decimal line 6 percentage that fits the pinned PDF
+      widget at its native nine-point font size. Verify the percentage against
+      the original Schedule C profit and total positive Schedule C and F profit.
+      Require all rendered dollar values to be whole dollars in the canonical
+      calculation, including the allocated line 7 deduction. Hold repeating or
+      oversized percentages and fractional dollar results for a separately
+      reviewed presentation that keeps the printed lines reconciled.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::keeps exact legible percentages and holds mixed whole-dollar calculations"
+  - line: "ordinary-c-f-payroll-source"
+    description: "Retain the effect of actual Social Security tips on the line 7 allocation"
+    formula: >-
+      When W-2 payroll is present, use known Boxes 3 and 7 in the canonical
+      Schedule SE wage-base calculation. Keep a reported zero distinct from
+      missing Box 7 and project the resulting same-owner allocation on line 7.
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::reconciles line 7 to the actual W-2 Social Security tip box near the wage cap"
   - line: "closed-exports"
     description: "Keep public review and filing disabled"
     formula: "The physical map has no route or export registration. Neither the 2025 nor the 2026 qualified template registry accepts these bytes."
