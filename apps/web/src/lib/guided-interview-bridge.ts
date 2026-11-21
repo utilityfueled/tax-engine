@@ -633,6 +633,7 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined, fi
   const qualifyingIndividuals = Number.parseInt(dependentCare.qualifyingIndividuals, 10);
   if (Number.isNaN(qualifyingIndividuals) || qualifyingIndividuals < 1) return undefined;
 
+  const livingApart = filingStatus === "mfs" && taxYear === 2025 ? dependentCare.mfsLivingApart : undefined;
   return {
     expenses: toDecimalString(dependentCare.expenses),
     qualifyingIndividuals,
@@ -644,6 +645,11 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined, fi
     sourceFactsConfirmed: dependentCare.sourceFactsConfirmed as boolean,
     receivedBenefits: dependentCare.receivedBenefits as boolean,
     usesDeemedIncome: dependentCare.usesDeemedIncome as boolean,
+    ...(livingApart ? { mfsLivingApart: {
+      spouseLivedApartLast6Months: livingApart.spouseLivedApartLast6Months ?? undefined,
+      paidOverHalfHomeCost: livingApart.paidOverHalfHomeCost ?? undefined,
+      qualifyingPersonMainHomeOverHalfYear: livingApart.qualifyingPersonMainHomeOverHalfYear ?? undefined,
+    } } : {}),
     providers: dependentCare.providers?.map(provider => ({
       name: provider.name.trim(), address: provider.address.trim(),
       identifierType: provider.identifierType as "tin" | "tax_exempt" | "foreign_no_us_tin" | "employer_furnished" | "withheld",

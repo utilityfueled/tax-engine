@@ -1149,6 +1149,11 @@ export interface DependentCareData {
   sourceFactsConfirmed?: boolean | null;
   receivedBenefits?: boolean | null;
   usesDeemedIncome?: boolean | null;
+  mfsLivingApart?: {
+    spouseLivedApartLast6Months?: boolean | null;
+    paidOverHalfHomeCost?: boolean | null;
+    qualifyingPersonMainHomeOverHalfYear?: boolean | null;
+  };
   providers?: CareProviderData[];
   qualifyingPersons?: CareQualifyingPersonData[];
 }

@@ -1,14 +1,20 @@
 import Decimal from "decimal.js";
 import type { DependentCareData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { calculateGuidedCareBenefits, type CareBenefitsContext } from "./guided-dependent-care-benefits";
+import { calculateGuidedCareBenefits, careBenefitsFactErrors, type CareBenefitsContext } from "./guided-dependent-care-benefits";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
+const mfsLivingApartFields = ["spouseLivedApartLast6Months", "paidOverHalfHomeCost", "qualifyingPersonMainHomeOverHalfYear"] as const;
+
 export function careFactErrors(data: DependentCareData | undefined, filingStatus?: FilingStatus | null, benefitsContext?: CareBenefitsContext): Record<string, string> {
-  if (!data || !Object.values(data).some(value => typeof value === "boolean" || (Array.isArray(value) && value.length > 0) || (typeof value === "string" && value.trim() !== ""))) return {};
+  if (!data) return {};
+  const partII = filingStatus === "mfs" && benefitsContext?.year === 2025 ? data.mfsLivingApart : undefined;
+  if (!Object.values(data).some(value => typeof value === "boolean" || (Array.isArray(value) && value.length > 0) || (typeof value === "string" && value.trim() !== ""))
+    && !mfsLivingApartFields.some(field => typeof partII?.[field] === "boolean")) return {};
   const errors: Record<string, string> = {};
+  const partIII = benefitsContext?.data;
   let benefits: ReturnType<typeof calculateGuidedCareBenefits>;
-  if (benefitsContext?.data) {
+  if (partIII) {
     try { benefits = calculateGuidedCareBenefits(benefitsContext, filingStatus); }
     catch (error) { errors.careBenefitsRequired = error instanceof Error ? error.message : "Complete the actual care benefit records."; }
   } else if (data.receivedBenefits === true) errors.careBenefitsRequired = "Complete the actual dependent-care benefit sources and Part III worksheets before claiming the care credit.";
@@ -21,7 +27,6 @@ export function careFactErrors(data: DependentCareData | undefined, filingStatus
     if (error) errors[key] = error;
   };
   recordAmount("careExpenses", data.expenses, "dependent-care expenses");
-  if (filingStatus === "mfs" && benefits?.treatedAsUnmarried !== true) errors.careFilingStatus = "A separate-return care claim needs the Form 2441 separated-spouse exception facts; this guided branch is not yet supported.";
   if (!/^\d+$/.test(data.qualifyingIndividuals) || Number(data.qualifyingIndividuals) < 1 || Number(data.qualifyingIndividuals) > 20) errors.careIndividuals = "Enter the actual number of qualifying individuals who received care.";
   for (const field of ["primaryEarnedIncome", ...(!benefits || hasEnteredAmount(data.excludedDependentCareBenefits) ? ["excludedDependentCareBenefits" as const] : []), "priorYearExpenseCredit", ...(filingStatus === "mfj" ? ["spouseEarnedIncome" as const] : [])] as const) {
     recordAmount(`care-${field}`, data[field], field === "excludedDependentCareBenefits" ? "excluded dependent-care benefits from Form 2441 Part III"
@@ -37,6 +42,25 @@ export function careFactErrors(data: DependentCareData | undefined, filingStatus
   if (benefits && Number(data.qualifyingIndividuals) !== Number(benefitsContext?.data?.qualifyingIndividuals)) errors.carePersonCount = "Reconcile the qualifying-person count with the actual Part III facts.";
   if (benefits && data.receivedBenefits === false && benefits.requiresForm2441) errors.careBenefitConflict = "The no-benefits answer conflicts with the actual benefit sources.";
   if (data.receivedBenefits === false && !errors["care-excludedDependentCareBenefits"] && parseGuidedCurrency(data.excludedDependentCareBenefits).gt(0)) errors.careBenefitConflict = "Excluded benefits conflict with the answer that no care benefits were received.";
+  if (filingStatus === "mfs") {
+    if (partIII && mfsLivingApartFields.some(field => typeof partII?.[field] === "boolean" && partII[field] !== partIII[field])) {
+      errors.careMfsLivingApart = "Reconcile the living-apart answers for Form 2441 Parts II and III.";
+    }
+    if (benefits?.treatedAsUnmarried !== true) {
+      if (benefitsContext?.year !== 2025 || partIII) {
+        errors.careFilingStatus = "A separate-return care claim needs confirmed Form 2441 living-apart facts.";
+      } else {
+        if (!mfsLivingApartFields.every(field => partII?.[field] === true)) {
+          errors.careMfsLivingApart = "All three Form 2441 living-apart answers must be Yes to claim the separate-return credit.";
+        }
+        if (data.receivedBenefits !== false || data.eligibilityConfirmed !== true
+          || errors["care-excludedDependentCareBenefits"] || !parseGuidedCurrency(data.excludedDependentCareBenefits).isZero()) {
+          errors.careFilingStatus = "Confirm care eligibility, no dependent-care benefits received, and zero excluded benefits for the separate-return Part II claim.";
+        }
+        Object.assign(errors, careBenefitsFactErrors(undefined, benefitsContext.year, filingStatus, benefitsContext.sources));
+      }
+    }
+  }
 
   const providers = data.providers ?? [];
   if (benefits && benefitsContext?.data?.providers) {

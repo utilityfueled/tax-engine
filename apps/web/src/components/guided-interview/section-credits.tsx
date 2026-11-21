@@ -27,15 +27,23 @@ function EligibilityFact({ label, value, onChange }: { label: string; value: boo
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
 
+const mfsLivingApartQuestions = [
+  ["spouseLivedApartLast6Months", "Did you live apart from your spouse for the last six months of the year?"],
+  ["paidOverHalfHomeCost", "Did you pay more than half the cost of keeping up that home for the year?"],
+  ["qualifyingPersonMainHomeOverHalfYear", "Was your home the qualifying person's main home for more than half the year?"],
+] as const;
+
 function DependentCareSection({
   data,
   filingStatus,
+  taxYear,
   onChange,
   hasBenefitFacts,
 }: {
   data: DependentCareData;
   hasBenefitFacts?: boolean;
   filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
   onChange: (data: DependentCareData) => void;
 }) {
   const needsQualifyingIndividuals = data.expenses.trim() !== "" && data.qualifyingIndividuals === "";
@@ -81,6 +89,11 @@ function DependentCareSection({
         </label>
       </div>
       <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, eligibilityConfirmed: value })} />
+      {filingStatus === "mfs" && taxYear === 2025 && (!hasBenefitFacts || data.mfsLivingApart) && <fieldset>
+        <legend>Filing separately and living apart (Form 2441)</legend>
+        {mfsLivingApartQuestions.map(([field, label]) => <EligibilityFact key={field} label={label} value={data.mfsLivingApart?.[field]}
+          onChange={value => onChange({ ...data, sourceFactsConfirmed: false, mfsLivingApart: { ...data.mfsLivingApart, [field]: value } })} />)}
+      </fieldset>}
       <CurrencyField label="Your earned income for Form 2441 line 4" allowNegative hint="Use the completed worksheet after applicable self-employment adjustments, exclusions and student or disability rules. If you elect to include combat pay in this credit, include all of your W-2 Box 12 Code Q. This election is separate from EIC and the Part III benefit election." value={data.primaryEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, primaryEarnedIncome: value })} />
       {filingStatus === "mfj" && <CurrencyField label="Spouse's earned income for Form 2441 line 5" allowNegative hint="Use your spouse's own worksheet amount, including any substantiated deemed income. Your spouse makes their own choice about including all of their Box 12 Code Q. Enter 0 only when zero is established." value={data.spouseEarnedIncome ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, spouseEarnedIncome: value })} />}
       <CurrencyField label="Excluded dependent-care benefits from Form 2441 Part III" hint={hasBenefitFacts ? "Leave blank to use the validated Part III line 28 amount. If supplied, this amount must match it exactly." : "Confirm 0 when no benefits were received. Otherwise complete the actual dependent-care benefit details above."} value={data.excludedDependentCareBenefits ?? ""} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, excludedDependentCareBenefits: value })} />
@@ -134,6 +147,7 @@ export function SectionCredits({
             hasBenefitFacts={current.dependentCareBenefits !== undefined}
             data={current.dependentCare}
             filingStatus={filingStatus}
+            taxYear={taxYear}
             onChange={(next) => onDataChange({ ...current, dependentCare: next })}
           />
 
