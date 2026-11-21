@@ -60,10 +60,10 @@ export function calculateForm8615(
 
   // ── Line 2: Threshold deduction ──
   const { unearnedIncomeThreshold, itemizingThreshold } = constants.kiddieTax;
+  const reportedDeductions = input.childDirectlyConnectedItemizedDeductions?.trim();
+  const directlyConnectedDeductions = reportedDeductions ? d(reportedDeductions) : undefined;
   let line2 = unearnedIncomeThreshold;
   if (input.childItemizesDeductions) {
-    const reportedDeductions = input.childDirectlyConnectedItemizedDeductions?.trim();
-    const directlyConnectedDeductions = reportedDeductions ? d(reportedDeductions) : undefined;
     if (!directlyConnectedDeductions?.isFinite() || directlyConnectedDeductions.lt(0)) {
       throw new Error("Form 8615 requires a nonnegative directly connected itemized deduction amount, including zero if none");
     }
@@ -106,9 +106,6 @@ export function calculateForm8615(
   const childQD = d(input.childQualifiedDividends);
   const childLTCG = d(input.childNetLTCG);
   const hasChildPreferences = childQD.gt(0) || childLTCG.gt(0);
-  if (input.childItemizesDeductions && hasChildPreferences) {
-    throw new Error("Form 8615 for an itemizing child with preferential income requires a separate worksheet");
-  }
 
   // ── Lines 6–8: Income for the parental tax calculation ──
   const line6 = zeroFloor(d(input.parentTaxableIncome));
@@ -133,6 +130,7 @@ export function calculateForm8615(
 
   const hasParentQDCG = parentQD.greaterThan(0) || parentLTCG.greaterThan(0);
   const facts = hasChildPreferences ? input.preferentialWorksheetFacts : undefined;
+  const worksheet = input.childItemizesDeductions ? 2 : 1;
   let qdOnLine5 = zero;
   let gainOnLine5 = zero;
   if (hasChildPreferences) {
@@ -140,14 +138,33 @@ export function calculateForm8615(
       || facts.childUsesOrdinaryQdcgWorksheet !== true || hasOtherChildren || !line5.eq(line3)
       || !parentSection1250.isZero() || !parentCollectibles.isZero()
       || facts.parentTaxMethod !== (hasParentQDCG ? "qualified-dividends-and-capital-gain" : "ordinary")) {
-      throw new Error("Form 8615 child preferential income requires confirmed 2025 Worksheet 1 facts and a supported tax composition");
+      throw new Error(`Form 8615 child preferential income requires a separate worksheet or confirmed 2025 Worksheet ${worksheet} facts and a supported tax composition`);
     }
     if (childQD.lt(0) || childLTCG.lt(0) || childQD.plus(childLTCG).gt(line1)
       || parentQD.lt(0) || parentLTCG.lt(0) || parentQD.plus(parentLTCG).gt(line6)) {
       throw new Error("Form 8615 reported preferential amounts must fit within the verified income");
     }
-    qdOnLine5 = min(line5, zeroFloor(childQD.minus(line2.times(childQD.dividedBy(line1)))));
-    gainOnLine5 = min(line5.minus(qdOnLine5), zeroFloor(childLTCG.minus(line2.times(childLTCG.dividedBy(line1)))));
+    let qualifiedDividendDeductions = zero;
+    let capitalGainDeductions = zero;
+    let thresholdToAllocate = line2;
+    if (worksheet === 2) {
+      if (line2.lte(unearnedIncomeThreshold)) {
+        throw new Error("Form 8615 Worksheet 2 requires Line 2 above the unearned-income threshold");
+      }
+      const reportedPreferentialDeductions = facts.childPreferentialIncomeConnectedDeductions?.trim();
+      const preferentialDeductions = reportedPreferentialDeductions ? d(reportedPreferentialDeductions) : undefined;
+      if (!preferentialDeductions?.isFinite() || preferentialDeductions.lt(0)
+        || !directlyConnectedDeductions || preferentialDeductions.gt(directlyConnectedDeductions)) {
+        throw new Error("Form 8615 Worksheet 2 requires explicit deductible qualified-dividend and capital-gain expenses within the Line 2 connected deduction amount");
+      }
+      qualifiedDividendDeductions = preferentialDeductions.times(childQD).dividedBy(childQD.plus(childLTCG));
+      capitalGainDeductions = preferentialDeductions.minus(qualifiedDividendDeductions);
+      thresholdToAllocate = itemizingThreshold;
+    }
+    qdOnLine5 = min(line5, zeroFloor(childQD.minus(qualifiedDividendDeductions)
+      .minus(thresholdToAllocate.times(childQD.dividedBy(line1)))));
+    gainOnLine5 = min(line5.minus(qdOnLine5), zeroFloor(childLTCG.minus(capitalGainDeductions)
+      .minus(thresholdToAllocate.times(childLTCG.dividedBy(line1)))));
   }
 
   const parentPreferences = { section1250Gain: parentSection1250, collectiblesGain: parentCollectibles };
@@ -167,7 +184,7 @@ export function calculateForm8615(
   audit.record("8615", "9", "Tax on combined income at parent's rates", line9,
     hasCombinedPreferences ? "Tax on Line 8 using the applicable preferential tax worksheet and parent's filing status"
       : "Tax on Line 8 using the Tax Table or Tax Computation Worksheet and parent's filing status",
-    facts ? { childQualifiedDividendsOnLine5: qdOnLine5, childNetCapitalGainOnLine5: gainOnLine5 } : undefined);
+    facts ? { line5Worksheet: String(worksheet), childQualifiedDividendsOnLine5: qdOnLine5, childNetCapitalGainOnLine5: gainOnLine5 } : undefined);
   audit.record("8615", "10", "Tax on parent's taxable income", line10,
     facts ? "Adjusted tax from parent's Form 1040 Line 16, reconciled to stated tax sources"
       : "Tax recomputed on Line 6 using parent's applicable worksheet, table or filing status");

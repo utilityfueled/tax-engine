@@ -265,6 +265,139 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.tax.toFixed()).toBe("1215");
   });
 
+  it("Form 8615 Worksheet 2 allocates both kinds of preferential income after connected deductions", () => {
+    const input = Form8615Schema.parse(makeInput({
+      ...ordinaryParentWorksheet,
+      childUnearnedIncome: "16000",
+      childQualifiedDividends: "4000",
+      childNetLTCG: "4000",
+      childItemizesDeductions: true,
+      childDirectlyConnectedItemizedDeductions: "1650",
+      preferentialWorksheetFacts: {
+        ...ordinaryParentWorksheet.preferentialWorksheetFacts,
+        childPreferentialIncomeConnectedDeductions: "800",
+      },
+    }));
+    const result = calculateForm8615(input, new Decimal("14000"), "single", constants);
+    const amount = (line: string) => result.lines.find(row => row.line === line)?.value.toFixed();
+
+    // IRS Worksheet 2: each $4,000 preference loses $400 and 25% of $1,350.
+    expect(result.lines.find(row => row.line === "9")?.inputs).toMatchObject({
+      childQualifiedDividendsOnLine5: new Decimal("3262.50"),
+      childNetCapitalGainOnLine5: new Decimal("3262.50"),
+    });
+    expect(amount("2")).toBe("3000");
+    expect(amount("5")).toBe("13000");
+    // The tax worksheet rounds each $3,262.50 allocation to $3,263.
+    // The parent's $6,474 ordinary increment is taxed at 32%, and $6,526 at 15%.
+    expect(amount("9")).toBe("44114");
+    expect(amount("14")).toBe("1000");
+    expect(amount("15")).toBe("0");
+    // At the child's rates, the $6,000 ordinary portion uses the $6,000–$6,050 table row.
+    expect(amount("17")).toBe("603");
+    expect(amount("18")).toBe("3051");
+  });
+
+  const itemizingWorksheet = {
+    ...ordinaryParentWorksheet,
+    childItemizesDeductions: true,
+    childDirectlyConnectedItemizedDeductions: "2000",
+    childUnearnedIncome: "10000",
+    childQualifiedDividends: "3000",
+    childNetLTCG: "2000",
+    preferentialWorksheetFacts: {
+      ...ordinaryParentWorksheet.preferentialWorksheetFacts,
+      childPreferentialIncomeConnectedDeductions: "500",
+    },
+  } satisfies Partial<Form8615Input>;
+
+  it("uses Worksheet 2 on the federal return with reconciled Schedule A and investment income", () => {
+    const input = makeFederalInput(itemizingWorksheet, {
+      standardDeductionFacts: dependentDeductionFacts,
+      deductionElection: "itemized",
+      form4952: { investmentInterestExpense: "2000", grossInvestmentIncome: "5000" },
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "3000",
+        totalCapitalGainDistributions: "2000", exemptInterestDividends: "0",
+        specifiedPrivateActivityBondInterest: "0",
+      }],
+    });
+    const result = calculateFederalTax(input);
+    const form = result.form8615;
+
+    expect(result.itemizedDeductions.toFixed()).toBe("2000");
+    expect(form?.netUnearnedAtParentRate.toFixed()).toBe("6650");
+    expect(form?.childRateIncome.toFixed()).toBe("1350");
+    // Line 14 has $705 qualified dividends, $470 net gain and $175 ordinary income.
+    expect(form?.taxOnChildRateIncome.toFixed()).toBe("19");
+    expect(form?.taxAtChildOwnRate.toFixed()).toBe("303");
+    expect(result.allLines).toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", description: "Tax (Form 8615)", value: new Decimal("1497"),
+    }));
+    expect(() => calculateFederalTax({
+      ...input, form8615: { ...makeInput(itemizingWorksheet), childNetLTCG: undefined },
+    })).toThrow(/Form 8615.*reconcile.*federal/);
+    expect(() => calculateFederalTax({
+      ...input, form8615: { ...makeInput(itemizingWorksheet), childUnearnedIncome: "1000" },
+    })).toThrow(/Form 8615.*reconcile.*federal/);
+  });
+
+  it("stops at Line 3 on an itemized return with preferences and an early withdrawal penalty", () => {
+    const input = makeFederalInput({
+      childItemizesDeductions: true,
+      childDirectlyConnectedItemizedDeductions: "1500",
+      childUnearnedIncome: "2800",
+      childQualifiedDividends: "300",
+    }, {
+      standardDeductionFacts: dependentDeductionFacts,
+      deductionElection: "itemized",
+      form4952: { investmentInterestExpense: "1500", grossInvestmentIncome: "2500" },
+      form1099Int: [{ ...makeFederalInput().form1099Int[0], interestIncome: "2600", earlyWithdrawalPenalty: "100" }],
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "300", qualifiedDividends: "300",
+        exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
+      }],
+    });
+    const result = calculateFederalTax(input);
+    expect(result.form8615?.applies).toBe(false);
+    expect(result.form8615?.lines.find(row => row.line === "3")?.value.toFixed()).toBe("-50");
+    expect(result.allLines).toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", value: new Decimal("101"),
+    }));
+  });
+
+  it.each([undefined, "-0.01", "2000.01"])("requires Worksheet 2 connected expenses within the Line 2 amount (%s)", amount => {
+    const input = makeInput({
+      ...itemizingWorksheet,
+      preferentialWorksheetFacts: {
+        ...itemizingWorksheet.preferentialWorksheetFacts,
+        childPreferentialIncomeConnectedDeductions: amount,
+      },
+    });
+    expect(() => calculateForm8615(input, new Decimal("8000"), "single", constants))
+      .toThrow(/Worksheet 2 requires explicit deductible/);
+  });
+
+  it("accepts an explicitly reported zero and enforces the Worksheet 2 Line 2 and Line 5 limits", () => {
+    const input = makeInput({
+      ...itemizingWorksheet,
+      preferentialWorksheetFacts: {
+        ...itemizingWorksheet.preferentialWorksheetFacts,
+        childPreferentialIncomeConnectedDeductions: "0",
+      },
+    });
+    const result = calculateForm8615(input, new Decimal("8000"), "single", constants);
+    expect(result.lines.find(row => row.line === "9")?.inputs).toMatchObject({
+      line5Worksheet: "2",
+      childQualifiedDividendsOnLine5: new Decimal("2595"),
+      childNetCapitalGainOnLine5: new Decimal("1730"),
+    });
+    expect(() => calculateForm8615({ ...input, childDirectlyConnectedItemizedDeductions: "1350" },
+      new Decimal("8000"), "single", constants)).toThrow(/Line 2 above/);
+    expect(() => calculateForm8615(input, new Decimal("6600"), "single", constants))
+      .toThrow(/confirmed 2025 Worksheet 2/);
+  });
+
   it.each([
     { preferentialWorksheetFacts: undefined },
     { otherChildrenNetUnearnedIncome: "1000" },

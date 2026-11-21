@@ -49,8 +49,8 @@ lines:
       exceed allowed Schedule A line 17. Reject inconsistent amounts instead of
       reducing them to the limit. An itemizing child with positive qualified
       dividends or net long-term capital gain requires the separately classified
-      deductions used by the preferential-income worksheets for lines 5 and 14
-      when the form continues past line 5.
+      deductions used by the applicable Line 5 worksheet when the form
+      continues past line 5.
     irs_reference: "2025 Form 8615 Instructions, Line 2 and Eleanor example (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf); IRC §1(g)(4)(A)(ii); Rev. Proc. 2024-40 §2.02"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 2 - reproduces the IRS Eleanor example"
 
@@ -97,6 +97,35 @@ lines:
       method facts. An unsupported composition requires a separate worksheet.
     irs_reference: "2025 Form 8615 Instructions, 2025 Line 5 Worksheet #1 and Lines 8, 9, 10, 14, 15 and 17 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf)"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 1 treats allocated child dividends as preferential at the parent rate"
+
+  - line: "5-worksheet-2"
+    description: "2025 ordinary preferential-income allocation for an itemizing child"
+    formula: >-
+      Require Line 2 above $2,700 and positive equal Lines 3 and 5. Apply the
+      same child and parent tax-method and federal income-source checks as
+      Worksheet 1. Collect the amount of deductible Schedule A expenses
+      directly connected to qualified dividends or net capital gain, including
+      an explicit zero. This amount cannot exceed the total directly connected
+      deductions reported for Line 2. Multiply this amount by qualified
+      dividends divided by the sum of qualified dividends and net capital gain
+      to determine the dividend portion. Assign the remainder to net capital
+      gain. Subtract these portions from their respective incomes. Also subtract
+      $1,350 times the original qualified dividends divided by Form 8615 Line 1
+      from dividends, and $1,350 times the original net capital gain divided by
+      Line 1 from gain. Retain Decimal precision for the fractions. Floor each
+      result at zero and cap dividends at Line 5 and gain at its remaining
+      balance. Use the allocations on Line 9, their respective residuals on
+      Line 15, and the full child amounts on Line 17.
+    notes: >-
+      Itemizing cases with Line 2 equal to $2,700 remain outside the supported
+      Worksheet 1 path. Worksheets outside the supported compositions still
+      require separate work. Apply the Form 8615 stop rules before requiring
+      the deduction amount specific to Worksheet 2. Reconcile Line 1 and
+      preference amounts from supported federal sources before accepting a
+      Line 3 stop. For other income sources preserve the existing stop result
+      and require a separate method before applying a preferential worksheet.
+    irs_reference: "2025 Form 8615 Instructions, 2025 Line 5 Worksheet #2 and Lines 8, 9, 10, 14, 15 and 17 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf)"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 2 allocates both kinds of preferential income after connected deductions"
 
   - line: "6"
     description: "Parent's taxable income"
@@ -170,7 +199,7 @@ lines:
   - line: "15"
     description: "Tax on child's remaining income at child's own rate"
     formula: "Tax computed on Line 14 using the child's filing status and the applicable tax table or worksheet."
-    notes: "For the supported 2025 Worksheet 1 path, use the child's total qualified dividends and net capital gain less the respective amounts allocated to Line 5. Other preferential worksheets require separate methods."
+    notes: "For the supported 2025 Worksheets 1 and 2, use the child's total qualified dividends and net capital gain less the respective amounts allocated to Line 5."
     irs_reference: "Form 8615 Instructions, Line 15"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 15 - tax on child's remaining income at child's rate"
 
