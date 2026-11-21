@@ -20,6 +20,7 @@ interface StudentFacts {
 export interface AOCStudent extends StudentFacts {
   priorYearsClaimed?: number;
   institutionEin?: string;
+  institutions?: ReadonlyArray<{ ein?: string }>;
   completedFirstFourYearsBeforeYear?: boolean;
   enrolledAtLeastHalfTime?: boolean;
   pursuingDegreeOrCredential?: boolean;
@@ -155,9 +156,10 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   const factor = claimantEligible ? Decimal.min(1,remaining.div(range)) : new Decimal(0);
   const aocPerStudent = input.aocStudents.map((student, index) => {
     const sourceEligible = studentEligible(student, strict && claimantEligible);
+    const summaryInstitutionEin = student.institutionEin?.replaceAll("-", "");
     if (strict && claimantEligible && student.qualifiedExpenses.gt(0)) {
       for (const field of ["priorYearsClaimed", "completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) required(student[field], `student facts: ${field}`);
-      if (!student.institutionEin || !/^\d{9}$/.test(student.institutionEin.replaceAll("-", ""))) throw new Error("Form8863 actual institution EIN required for AOC");
+      if (!summaryInstitutionEin || !/^\d{9}$/.test(summaryInstitutionEin)) throw new Error("Form8863 actual institution EIN required for AOC");
     }
     const priorYears = student.priorYearsClaimed;
     if (priorYears !== undefined && (!Number.isInteger(priorYears) || priorYears < 0)) throw new Error("Form8863 prior claim years must be a nonnegative integer");
@@ -186,6 +188,18 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   });
   const aocTotalTentative = aocPerStudent.reduce((total,s)=>total.plus(s.tentativeCredit), new Decimal(0));
   const aocAfterPhaseOut = roundDollar(aocTotalTentative.times(factor));
+  if (strict && aocAfterPhaseOut.gt(0)) {
+    input.aocStudents.forEach((student, index) => {
+      if (!student.institutions || !aocPerStudent[index].tentativeCredit.gt(0)) return;
+      if (student.institutions.some(institution => !/^\d{2}-?\d{7}$/.test(institution.ein ?? ""))) {
+        throw new Error("Form 8863 requires an actual EIN for every AOTC institution");
+      }
+      const summaryInstitutionEin = student.institutionEin?.replaceAll("-", "");
+      if (!student.institutions.some(institution => institution.ein?.replaceAll("-", "") === summaryInstitutionEin)) {
+        throw new Error("Form 8863 requires a school record matching the AOTC summary EIN");
+      }
+    });
+  }
   const refundEligible = refundableEligible(input, year, aocAfterPhaseOut.gt(0));
   const aocRefundable = refundEligible ? roundDollar(aocAfterPhaseOut.times("0.40")) : new Decimal(0);
   const aocNonrefundable = aocAfterPhaseOut.minus(aocRefundable);

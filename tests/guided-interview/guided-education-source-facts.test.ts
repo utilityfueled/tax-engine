@@ -32,6 +32,24 @@ describe("guided actual education source facts", () => {
     expect(() => buildEducationInput({ ...data, education: { ...data.education, aocStudents: [{ ...aoc, studentTaxId: "999-88-7777" }] } }, 2026, "single", completePersonalInfo)).toThrow(/household/i);
     expect(() => buildEducationInput({ ...data, education: { ...data.education, canBeClaimedAsDependent: true } }, 2026, "single", completePersonalInfo)).toThrow(/reconcile/i);
   });
+  it("requires every AOTC school EIN with or without a Form 1098-T", () => {
+    const secondSchool = { ...institution, name: "Second College", ein: undefined, receivedCurrentYear1098T: false };
+    const aoc = { ...student, ...completeAocEligibility, qualifiedExpenses: "4000", priorYearsClaimed: "0" };
+    const aotc = (ein?: string) => ({ ...emptyCreditsData, education: { ...base, aocStudents: [{ ...aoc, institutions: [institution, { ...secondSchool, ein }] }] } });
+    for (const year of [2025, 2026]) {
+      expect(educationFactErrors(aotc(), year, "single", completePersonalInfo)["student-0-institutions"]).toMatch(/AOTC.*EIN/i);
+      expect(() => buildEducationInput(aotc("98-76-54321"), year, "single", completePersonalInfo)).toThrow(/EIN/);
+      const input = buildEducationInput(aotc("98-7654321"), year, "single", completePersonalInfo);
+      expect(input?.aocStudents[0]?.institutions?.[1]).toMatchObject({ ...secondSchool, ein: "98-7654321" });
+      const ineligible = { ...aotc(), education: { ...base, aocStudents: [{ ...aoc, priorYearsClaimed: "4", institutions: [institution, secondSchool] }] } };
+      expect(buildEducationInput(ineligible, year, "single", completePersonalInfo)?.aocStudents[0]?.priorYearsClaimed).toBe(4);
+    }
+    const llcStudent = { ...student, institutions: [secondSchool], courseEligibilityConfirmed: true };
+    const llc = { ...emptyCreditsData, education: { ...base, llcStudents: [llcStudent] } };
+    expect(buildEducationInput(llc, 2026, "single", completePersonalInfo)?.llcStudents?.[0]?.institutions?.[0]?.ein).toBeUndefined();
+    const llcWithStatement = { ...llc, education: { ...llc.education, llcStudents: [{ ...llcStudent, institutions: [{ ...secondSchool, receivedPriorYear1098TWithBox7: true }] }] } };
+    expect(educationFactErrors(llcWithStatement, 2026, "single", completePersonalInfo)["llc-0-institutions"]).toMatch(/EIN/);
+  });
   it("preserves actual under-24 refund facts and distinct 2025 timely TIN eligibility", () => {
     const aoc = { ...student, qualifiedExpenses: "4000", priorYearsClaimed: "0", completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false, institutionEin: "12-3456789", studentSsnEligible: undefined, studentTinEligible: false };
     const personal = { ...completePersonalInfo, dateOfBirth: "2005-02-01", employmentValidSsnIssuedByDueDate: false, tinIssuedByDueDate: false };

@@ -14,6 +14,26 @@ describe("Form8863 actual2026 facts",()=>{
   expect(calculateForm8863(make({aocStudents:[{...student(),felonyDrugConviction:true}]})).aocTotalTentative.toString()).toBe("0");
   expect(calculateForm8863(make({aocStudents:[{...student(),priorYearsClaimed:4}]})).aocTotalTentative.toString()).toBe("0");
  });
+ it("holds a missing EIN on a second supplied AOTC school", () => {
+  const firstSchool = { name: "First College", address: "1 College Road", ein: "12-3456789", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false };
+  const secondSchool = { name: "Second College", address: "2 College Road", receivedCurrentYear1098T: false, receivedPriorYear1098TWithBox7: false };
+  const input = (ein?: string) => make({ aocStudents: [{ ...student(), institutions: [firstSchool, { ...secondSchool, ein }] }] });
+  expect(() => calculateForm8863(input())).toThrow(/EIN/);
+  expect(() => calculateForm8863(input("98-76-54321"))).toThrow(/EIN/);
+  expect(calculateForm8863(input("98-7654321")).aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(() => calculateForm8863(make({ aocStudents: [{ ...student(), institutions: [], institutionEin: "12-3456789" }] }))).toThrow(/matching.*EIN/i);
+  expect(() => calculateForm8863(make({ aocStudents: [{ ...student(), institutions: [firstSchool], institutionEin: "98-7654321" }] }))).toThrow(/matching.*EIN/i);
+  const ineligible = make({ aocStudents: [{ ...student(), priorYearsClaimed: 4, institutions: [firstSchool, { ...secondSchool, ein: undefined }] }] });
+  expect(calculateForm8863(ineligible).aocAfterPhaseOut.toFixed()).toBe("0");
+  expect(calculateForm8863({ ...input(), magi: d(89999) }).aocAfterPhaseOut.toFixed()).toBe("0");
+  const additionalStudent = { ...student(), studentTaxId: "222-33-4444" };
+  const atRoundingBoundary = (ein?: string) => {
+    const facts = input(ein);
+    return { ...facts, magi: d(89999), aocStudents: [...facts.aocStudents, additionalStudent] };
+  };
+  expect(() => calculateForm8863(atRoundingBoundary())).toThrow(/EIN/);
+  expect(calculateForm8863(atRoundingBoundary("98-7654321")).aocAfterPhaseOut.toFixed()).toBe("1");
+ });
  it("permits one joint spouse SSN and requires dependent student employment eligibility",()=>{
   expect(calculateForm8863(make({filingStatus:"married_filing_jointly",primarySsnEligible:false,spouseSsnEligible:true})).aocAfterPhaseOut.toString()).toBe("2500");
   expect(calculateForm8863(make({primarySsnEligible:false})).aocAfterPhaseOut.toString()).toBe("0");

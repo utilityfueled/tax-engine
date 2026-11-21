@@ -17,11 +17,17 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
   const errors: Record<string, string> = {}, education = data?.education;
   if (!education) return errors;
   const aoc = education.aocStudents, llc = education.llcStudents ?? [];
+  const claimantMayQualifyForAoc = filingStatus !== "mfs" && education.claimedAsDependent !== true && education.aocBanInEffect !== true
+    && (education.nonresidentAlien !== true || (filingStatus === "mfj" && education.residentJointElection !== false))
+    && (taxYear === 2026
+      ? education.primarySsnEligible !== false || (filingStatus === "mfj" && education.spouseSsnEligible !== false)
+      : education.primaryTinEligible !== false);
   let totalLlc = new Decimal(0);
   const ids = new Set<string>();
-  function studentFacts(student: EducationStudentSourceData, key: string) {
+  function studentFacts(student: EducationStudentSourceData, key: string, potentiallyEligibleAoc = false) {
     if (!student.name.trim()) errors[`${key}-name`] = "Enter the actual student name.";
-    if (!validAmount(student.qualifiedExpenses)) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
+    const hasValidExpenses = validAmount(student.qualifiedExpenses);
+    if (!hasValidExpenses) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
     const id = cleanId(student.studentTaxId);
     if (!/^\d{9}$/.test(id)) errors[`${key}-id`] = "Enter the student's actual SSN, ITIN or ATIN.";
     if (ids.has(id) && id) errors[`${key}-duplicate`] = "Only one credit per student is allowed; remove the duplicate student.";
@@ -43,7 +49,17 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
     if (taxYear === 2026 && student.studentRole !== "dependent" && student.studentSsnEligible !== true && typeof student.studentTinEligible !== "boolean") errors[`${key}-tin`] = "Confirm the primary or spouse student's actual timely TIN.";
     if (taxYear !== 2026 && typeof student.studentTinEligible !== "boolean") errors[`${key}-tin`] = "Confirm the student's timely TIN for 2025; an ITIN is not an employment SSN.";
     if (!student.institutions?.length) errors[`${key}-institutions`] = "Enter the actual educational institution records.";
-    for (const institution of student.institutions ?? []) if (!institution.name.trim() || !institution.address.trim() || ((present(institution.ein) || institution.receivedCurrentYear1098T || institution.receivedPriorYear1098TWithBox7) && !/^\d{9}$/.test(cleanId(institution.ein))) || typeof institution.receivedCurrentYear1098T !== "boolean" || typeof institution.receivedPriorYear1098TWithBox7 !== "boolean") errors[`${key}-institutions`] = "Enter actual institution name, address, EIN when a Form 1098-T was received, and both receipt answers.";
+    const requireEveryEin = potentiallyEligibleAoc && hasValidExpenses && parseGuidedCurrency(student.qualifiedExpenses).gt(0);
+    for (const institution of student.institutions ?? []) {
+      const requireEin = requireEveryEin || present(institution.ein) || institution.receivedCurrentYear1098T || institution.receivedPriorYear1098TWithBox7;
+      if (!institution.name.trim() || !institution.address.trim()
+        || (requireEin && !/^\d{2}-?\d{7}$/.test(institution.ein?.trim() ?? ""))
+        || typeof institution.receivedCurrentYear1098T !== "boolean" || typeof institution.receivedPriorYear1098TWithBox7 !== "boolean") {
+        errors[`${key}-institutions`] = requireEveryEin
+          ? "For each AOTC institution, enter its actual name, address, EIN and both Form 1098-T receipt answers."
+          : "Enter actual institution name, address, EIN when a Form 1098-T was received, and both receipt answers.";
+      }
+    }
   }
   aoc.forEach((student, index) => {
     const key = `student-${index}`;
@@ -52,7 +68,12 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
     if (!validAmount(student.qualifiedExpenses)) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
     if (!/^[0-4]$/.test(student.priorYearsClaimed) || student.requiresPriorYearsConfirmation) errors[`${key}-history`] = "Confirm actual prior AOTC claim history (0–4); older prefilled zero requires reconfirmation.";
     if (student.sourceFactsConfirmed !== undefined && student.sourceFactsConfirmed !== true) errors[`${key}-source-review`] = "Review and confirm the actual AOTC education records for this student and tax year.";
-    studentFacts(student, key);
+    const enrollmentAllowsAoc = student.priorYearsClaimed !== "4" && student.completedFirstFourYearsBeforeYear !== true
+      && student.enrolledAtLeastHalfTime !== false && student.pursuingDegreeOrCredential !== false && student.felonyDrugConviction !== true;
+    const sourceFactsAllowAoc = student.institutionEligible !== false && student.expensesEligibilityConfirmed !== false
+      && student.form1098TRequirementMet !== false && student.studentTinEligible !== false
+      && !(taxYear === 2026 && student.studentRole === "dependent" && student.studentSsnEligible === false);
+    studentFacts(student, key, claimantMayQualifyForAoc && enrollmentAllowsAoc && sourceFactsAllowAoc);
     for (const field of ["completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) if (typeof student[field] !== "boolean") errors[`${key}-${field}`] = "Confirm all actual AOTC eligibility facts.";
     if (!/^\d{9}$/.test(cleanId(student.institutionEin)) || !student.institutions?.some(institution => cleanId(institution.ein) === cleanId(student.institutionEin))) errors[`${key}-ein`] = "Enter the actual AOTC institution EIN and matching institution record.";
   });
