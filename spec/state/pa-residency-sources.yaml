@@ -31,6 +31,20 @@ lines:
       full outside-abode and <=30 PA days facts; statutory residency requires
       actual PA permanent abode and >183 PA days, not presence alone.
     testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - derives all three ordinary residency classes"
+  - line: "one-move-annual-presence"
+    description: "Hold one-move originals when annual presence and a PA abode require separate residency review"
+    formula: |
+      Add confirmed PA presence across both domicile periods. The ordinary
+      part-year method requires fewer than 183 total PA days and retains its
+      permanent-abode coverage and move evidence requirements. Hold possible
+      full-year cases with a confirmed PA permanent abode and more than 183
+      total days, regardless of the selected residency. Also hold exactly
+      183 days with that abode because the statute and the Department's
+      one-move guidance use different threshold wording. This branch leaves
+      single-domicile statutory residency and no-PA-abode cases in their
+      existing methods and supplies no alternate full-year calculation.
+    irsRef: "PA Tax Reform Code §301(p); PA Department of Revenue Determining Residency, When is a person considered a part-year resident?"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 one-move draft holds annual PA presence at and above the separate-method boundary"
   - line: "compensation"
     description: "Actual ordinary wage records allocated by source and actual residency period"
     formula: |

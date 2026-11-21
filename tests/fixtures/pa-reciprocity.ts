@@ -35,7 +35,7 @@ export function paPartYearReciprocityFixture(year = 2025) {
   const f = paReciprocityFixture(year); const start = `${year}-01-01`, end = `${year}-12-31`;
   f.residencySources.residency.status = "part_year";
   f.residencySources.residency.domicilePeriods = [
-    { from: start, through: `${year}-06-30`, state: "PA", daysInPA: 180 },
+    { from: start, through: `${year}-06-30`, state: "PA", daysInPA: 160 },
     { from: `${year}-07-01`, through: end, state: "OH", daysInPA: 20 },
   ];
   f.residencySources.residency.paPermanentAbodePeriods = [{ from: start, through: `${year}-06-30` }];

@@ -17,6 +17,34 @@ it('PA2026 draft composes all actual residency sources without full federal admi
   expect(r.kind).toBe('pa-2026-ordinary-source-draft');expect(r.taxYear).toBe(2026);expect(r.pa.residencyStatus).toBe(status);expect(r.pa.pa40.totalPATaxableIncome.toFixed()).toBe(taxable);expect(r.pa.pa40.taxLiability.toFixed()).toBe(tax);expect(new Decimal(taxable).times('0.0307').toDecimalPlaces(0,Decimal.ROUND_HALF_UP).toFixed()).toBe(tax);expect(r.pa.pa40.netOverpayment.toFixed()).toBe('0');expect(r.pa.pa40.totalAmountDue.toFixed()).toBe('0');expect(r.pa.scheduleSP.eligibilityIncome.toFixed()).toBe('75000');expect(r.pa.scheduleSP.taxForgivenessCredit.toFixed()).toBe('0');expect(r.pa.rev1630.totalInterest.toFixed()).toBe('0');expect(r.pa.workingCredit.credit.toFixed()).toBe('0');expect(r.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');expect(r.dependencyProof.maximumCompletedEitcPhaseout.toFixed()).toBe('70244');expect(r).not.toHaveProperty('federal');expect(JSON.stringify(f)).toBe(before);
  }
 });
+
+it.each([
+  [183, 'part_year'], [184, 'part_year'], [200, 'part_year'], [200, 'resident'],
+] as const)('PA2026 one-move draft holds annual PA presence at and above the separate-method boundary (%s days, %s)', (days, status) => {
+  const f = pa2026OrdinaryDraftFixture('part_year');
+  const residency = f.input.paResidencySources.residency;
+  residency.status = status;
+  residency.domicilePeriods[0].daysInPA = days - 180;
+  residency.domicilePeriods[1].daysInPA = 180;
+  rebindPA2026Draft(f);
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/one-move.*183.*separate residency method/i);
+});
+
+it('PA2026 one-move draft accepts 182 documented PA days with the matching part-year claim', () => {
+  const f = pa2026OrdinaryDraftFixture('part_year');
+  const residency = f.input.paResidencySources.residency;
+  residency.domicilePeriods[0].daysInPA = 2;
+  residency.domicilePeriods[1].daysInPA = 180;
+  rebindPA2026Draft(f);
+  const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+  expect(result.pa.residencyStatus).toBe('part_year');
+  expect(result.pa.pa40.totalPATaxableIncome.toFixed()).toBe('39000');
+  expect(result.pa.pa40.taxLiability.toFixed()).toBe('1197');
+  residency.status = 'resident';
+  rebindPA2026Draft(f);
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/claimed residency contradicts/i);
+});
+
 function wage(f:ReturnType<typeof pa2026OrdinaryDraftFixture>,value:string,tax:string){const w=f.input.w2s[0],row=f.input.paResidencySources.wages[0];w.wages=value;w.stateWages=value;w.stateTaxWithheld=tax;row.payroll[0].grossCompensation=value;row.payroll[0].outsidePAServicesCompensation=value;rebindPA2026Draft(f);}
 it('PA2026 draft preserves exact cents known zero and complete withholding',()=>{
  const f=pa2026OrdinaryDraftFixture();wage(f,'70244.01','2156');const r=calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources);expect(r.dependencyProof.ordinaryWages.toFixed()).toBe('70244.01');expect(r.pa.pa40.compensation.toFixed()).toBe('70244');expect(r.pa.pa40.taxLiability.toFixed()).toBe('2156');

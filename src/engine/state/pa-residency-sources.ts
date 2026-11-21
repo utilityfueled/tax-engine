@@ -82,6 +82,8 @@ function deriveResidency(source: PAResidencySources, year: number) {
     } else derived = "nonresident";
   } else {
     if (r.moveAbandonmentNewDomicileAndPresenceConfirmed !== true || r.domicilePeriods.filter(p => p.state === "PA").length !== 1) return error("one actual PA domicile move requires abandonment, new domicile and physical-presence sources");
+    // The Department's one-move guidance includes day 183. Section 301(p) uses more than 183 days.
+    if (paAbodes.length > 0 && totalDays >= 183) return error("one-move residency with a PA permanent abode and 183 or more confirmed PA days requires a separate residency method");
     const paIndex = r.domicilePeriods.findIndex(p => p.state === "PA"), pa = periods[paIndex], outside = periods[paIndex === 0 ? 1 : 0];
     if (!covers(paAbodes, pa.from, pa.through) || paAbodes.some(p => p.from <= outside.through && p.through >= outside.from)) return error("mixed statutory-abode/part-year residency requires its separate actual source method");
     derived = "part_year";

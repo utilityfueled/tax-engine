@@ -31,7 +31,7 @@ export function paOrdinaryResidencyFixture(status: "resident" | "part_year" | "n
     residency: { status, sourceReference: "fictional-domicile-abode-and-presence", factsConfirmed: true,
       domicilePeriods: status === "part_year" ? [
         { from: start, through: `${year}-06-30`, state: "NY", daysInPA: 20 },
-        { from: `${year}-07-01`, through: end, state: "PA", daysInPA: 180 },
+        { from: `${year}-07-01`, through: end, state: "PA", daysInPA: 160 },
       ] : [{ from: start, through: end, state: status === "resident" ? "PA" : "NY", daysInPA: status === "resident" ? 350 : 20 }],
       paPermanentAbodePeriods: status === "nonresident" ? [] : [{ from: status === "part_year" ? `${year}-07-01` : start, through: end }],
       outsidePAPermanentAbodePeriods: status === "resident" ? [] : [{ from: start, through: status === "part_year" ? `${year}-06-30` : end }],
