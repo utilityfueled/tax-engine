@@ -34,6 +34,21 @@ claimant age controls. The IRS product index currently lists a final 2026
 blank and draft 2026 instructions. [Education source and implementation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
 [Official revision status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-education-form-recheck).
 
+For the 2025 Form 8863 controls, independently derive AOTC and LLC for a
+matched primary or joint-spouse student whose timely TIN status is known
+ineligible. Review the direct calculation when the student answer is
+omitted and the guided hold when two answers conflict. Record how Table 1
+applies the student and claimant conditions differently. [Final 2025 Form 8863 instructions](https://www.irs.gov/pub/irs-prior/i8863--2025.pdf#page=2) ·
+[Regression evidence](upgrade-2026-progress.md#november-21-ohio-navigation-and-2025-education-corrections).
+
+For retained mortgage points, independently derive the $800 duplicate
+payoff control and the $100 old-loan plus $23.33 successor calculation.
+Record the original balance, actual loan linkage, refinance date and
+payment periods. For older direct worksheets, obtain the actual original
+lender, loan account and points payment date before treating separate
+claims as reconciled. [IRS Publication 936](https://www.irs.gov/publications/p936#en_US_2025_publink1000229883) ·
+[Regression evidence](upgrade-2026-progress.md#november-21-retained-mortgage-points-on-multiple-statements).
+
 For the timely HSA correction, independently derive the final 2026 Form 8889
 lines 2, 3, 14a, 14b and 16, the earnings transfer, and any Form 5329 Part VII
 effect. The fictional owner is under 55, has eligible self-only coverage all

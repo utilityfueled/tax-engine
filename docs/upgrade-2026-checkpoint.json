@@ -1,5 +1,36 @@
 {
   "activeContinuation": {
+    "nov21CanonicalRetainedPointsProvenance": {
+      "commit": "b9e1bce779211a094553ecc4f1c05cb11564e0cd",
+      "source": "https://www.irs.gov/publications/p936",
+      "scope": "Optional original lender, loan account and actual prior payment date on direct completed points. Hold duplicate positive annual claims and mixed unbound positive completed claims when that evidence scope is used.",
+      "checks": {"focusedTestsPassed": 78, "independentEngineTestsPassed": 27, "scopedSpecReferencesValid": 15, "typechecksPassed": 3, "sourceAuditPassed": true, "publicParseToFederalRedBeforeFix": true},
+      "remaining": "Final exact-source verification and owner-provided actual original loan records for older canonical inputs that lack them."
+    },
+    "nov21RetainedMortgagePointsClaims": {
+      "commit": "9225bb7f8d35eb329c70421286c5203fe18ef7a5",
+      "source": "https://www.irs.gov/publications/p936#en_US_2025_publink1000229883",
+      "scope": "Hold duplicate retained guided mortgage points claims. Admit only linked old and explicitly successor-only sources with verified actual payments and Decimal term limits. Preserve the standalone annual worksheet.",
+      "checks": {"focusedTestsPassed": 96, "independentFocusedTestsPassed": 7, "scopedSpecReferencesValid": 8, "coreTypesPassed": true, "webTypesPassed": true, "sourceAuditPassed": true, "reopenedRedBeforeFix": true, "exactUnitTestsPassed": 29928, "exactStaticChecksPassed": 8},
+      "remaining": "Exact combined full verification, independent human worksheet review and the legacy raw completed input's absent loan identity."
+    },
+    "nov21OhioNavigationAnd2025StudentTin": {
+      "ohio": {
+        "commit": "38ad301a2f1ee474db76113fd957f2a96e2bb8fa",
+        "scope": "Reuse accepted same-call residency and payment originals in Ohio resident-credit navigation; preserve failed-parent messages and the nested credit source checks.",
+        "checks": {"redParentCallsEach": 2, "greenParentCallsEach": 1, "focusedTestsPassed": 71, "managedBrowserPassed": 4, "browserFailures": 0, "browserSkips": 0, "typecheckPassed": true, "lintErrors": 0, "independentSourceReviewPassed": true}
+      },
+      "education": {
+        "commit": "948547a2679cdbb78a2e1185c246e9df9b0fe62f",
+        "source": "https://www.irs.gov/pub/irs-prior/i8863--2025.pdf#page=2",
+        "scope": "Hold conflicting 2025 timely student TIN answers for matching active adults and deny the direct credit when matching household ineligibility is documented and the student answer was omitted. Preserve 2026 checks.",
+        "checks": {"focusedTestsPassed": 124, "reviewTestsPassed": 30, "independentDirectControlsPassed": 12, "specReferencesValid": 9832, "coreTypesPassed": true, "webTypesPassed": true, "regressionBeforeFix": true}
+      },
+      "pushVerified": true,
+      "productionBuildGuardVerified": true,
+      "combined": {"staticChecksPassed": 8, "coverageTestsPassed": 29926, "branchCoveragePercent": 88.45, "firstUnitTimeouts": 7, "firstUnitTeardownErrors": 1, "affectedTestsPassedInIsolation": 24, "firstBrowserBuildDeadlineStoppedBeforeCases": true, "managedBrowserPassed": 650, "managedBrowserExistingSkips": 5, "managedBrowserFailures": 0, "ciRun": 44923672612, "webRun": 44923672388, "arm64Run": 44923723355},
+      "remaining": "Full unit rerun, strict runtime qualification, qualified independent tax review, and other open release gates."
+    },
     "nov21OhioGeneratedReferencePageHandoff": {
       "commit": "ab33057298d4a9eac9d2b5d189145d92a5f91baf",
       "scope": "Workspace-only Ohio reference summaries pass generated PDF pages in memory within the same request. The standalone writer still emits marked files, and official source validation and file paths stay bound.",

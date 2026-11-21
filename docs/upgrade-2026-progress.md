@@ -1,5 +1,95 @@
 # 2026 upgrade implementation evidence
 
+## November 21 original claims in canonical mortgage worksheets
+
+Commit `b9e1bce7` adds an optional original lender, loan account and actual
+pre-return-year payment date to direct completed mortgage-points
+worksheets. The public parser preserves the fields. When a positive
+unreported annual completed claim supplies original evidence, the
+calculator checks the same evidence on the other positive unreported
+completed rows. Two annual claims tied to the same original account hold,
+even when they use different current statements or worksheet references.
+Separate original accounts remain independent.
+
+The public parse-to-federal regression reproduced a copied $800.25 claim
+on two current statements before the fix. With the original loan recorded,
+the copy now holds. The no-annotation legacy contract still computes from
+the supplied amounts, so its owners need the original sources to reconcile
+legacy claims. The guided refinance and prepaid mortgage insurance paths
+retain their separate validation. [IRS Publication 936](https://www.irs.gov/publications/p936).
+
+All 78 related tests and 15 scoped spec references passed. Independent
+review verified 27 engine tests. All three typechecks and the exact browser
+source audit also passed.
+
+## November 21 retained mortgage points on multiple statements
+
+In `9225bb7f`, the guided return reconciles retained points by the actual
+original lender and account. Before the fix, placing one $800 payoff
+worksheet on two otherwise eligible statements raised federal itemized
+deductions from $20,800 to $21,600. The duplicate claim now holds after
+save and reopen. Separate original loans from the same lender retain their
+own deductions.
+
+For a linked same-lender refinancing, the old-loan payment history and
+the completed successor worksheet can record amounts for separate periods.
+The successor worksheet must explicitly cover only the successor period
+and supply its actual payment count and interval. The guide ties the
+worksheets to the old and replacement loans, reconciles the remaining
+balance, and compares the successor claim with the actual term and payments
+using Decimal. The July case accepts $100 plus $23.33 for six monthly
+successor payments. It holds a $700 acceleration, excess or missing
+payments, and a successor-only claim without a separate positive old-loan
+claim. A single completed whole-year $123.33 worksheet remains usable.
+[IRS Publication 936, mortgage ending early](https://www.irs.gov/publications/p936#en_US_2025_publink1000229883).
+
+The save/reopen regressions, UI controls, and related engine checks passed
+96 focused tests and all 8 scoped spec references. The exact staging
+snapshot passed both typechecks and the browser source audit. Independent
+code review reran seven cases and verified the duplicate and timing holds.
+The exact full unit run passed all 29,928 tests against its disposable
+PostgreSQL 16.16 database, and all eight static checks passed. The direct
+legacy completed-worksheet contract still lacks original loan identity.
+Qualified human review remains open.
+
+## November 21 Ohio navigation and 2025 education corrections
+
+In `38ad301a`, Ohio resident-credit navigation reuses the residency and
+payment records validated during the same call. Nested credit verification
+still checks the originals, and invalid parent records keep their existing
+holds. The actual Virginia-source fixture reproduced two calls per parent
+before the fix and verified one per parent afterward. Independent source
+review, 71 focused tests, 100% spec references, typecheck, and lint with no
+errors passed. The staged managed browser run passed all four original
+desktop and mobile cases and closed its own server. This run does not
+establish strict Linux readiness.
+
+In `948547a2`, the 2025 Form 8863 guide and federal calculation now hold
+contradictory timely TIN answers for a matching primary or joint-spouse
+student. In direct calculation, a known ineligible answer for the matching
+adult produces zero credit when the student answer is absent. Surrounding
+whitespace no longer prevents the 2025 match. The regression for the direct
+path reproduces $2,500 AOTC (including $1,000 refundable) and $800 LLC as
+separate cases, each now zero under the known-ineligible facts. The saved
+guide regression holds until the contradiction is reconciled. The 2026
+employment-valid SSN and explicit student TIN requirements remain in force.
+[Final 2025 Form 8863 instructions, Table 1](https://www.irs.gov/pub/irs-prior/i8863--2025.pdf#page=2).
+
+The education checks passed 124 focused tests, both typechecks and all
+9,832 spec references. Independent code review reproduced two additional
+direct-path issues and verified the fixes with 30 focused tests and 12
+direct calculator controls. Qualified human tax review remains open.
+Both commits were pushed to public `main` after verifying the existing
+Preview-only build rule. At `948547a2`, all eight static checks passed and
+the PostgreSQL 16.16 coverage run passed all 29,926 tests at 88.45% branch
+coverage. The first concurrent local unit run had seven five-second UI
+timeouts and one teardown rejection. The first browser production build
+hit the existing build deadline before any case ran. All 24 tests across
+those six unit files passed in an isolated run on the same source. The
+isolated full managed browser rerun then passed all 650 executed cases
+with five existing skips and no failures. Strict runtime results are
+tracked separately.
+
 ## November 21 guided Schedule C review after a year change
 
 `069c994f` requires renewed income and expense reconciliations when a
