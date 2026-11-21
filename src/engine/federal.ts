@@ -4255,8 +4255,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const primarySsnEligible = education.primarySsnEligible ?? householdPrimarySsnEligible;
     const spouseSsnEligible = education.spouseSsnEligible ?? householdSpouseSsnEligible;
     if (year >= 2026 && education.possessionIncomeExclusion === undefined) throw new Error("Form8863 actual possession-income exclusion is unknown");
+    const educationStudents = [...education.aocStudents, ...(education.llcStudents ?? [])];
     if (year >= 2026) {
-      const educationStudents = [...education.aocStudents, ...(education.llcStudents ?? [])];
       if (d(education.llcExpenses).gt(0) || educationStudents.some(student => d(student.qualifiedExpenses).gt(0))) {
         if (householdPrimarySsnEligible !== undefined && education.primarySsnEligible !== undefined &&
             householdPrimarySsnEligible !== education.primarySsnEligible) {
@@ -4267,26 +4267,36 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           throw new Error("Form 8863 spouse employment-valid SSN answers conflict with the return household");
         }
       }
-      for (const student of educationStudents) {
-        if (!d(student.qualifiedExpenses).gt(0) || !student.studentTaxId) continue;
-        const id = student.studentTaxId.replaceAll("-", "");
+    }
+    function educationStudentForCalculation<Student extends (typeof educationStudents)[number]>(student: Student) {
+      const qualifiedExpenses = d(student.qualifiedExpenses);
+      if (year < 2025 || !qualifiedExpenses.gt(0) || !student.studentTaxId) return { ...student, qualifiedExpenses };
+      const studentTin = year === 2025 ? student.studentTaxId.trim() : student.studentTaxId;
+      const id = studentTin.replaceAll("-", "");
+      const isJointSpouseStudent = student.studentRole === "spouse" && filingStatus === "married_filing_jointly";
+      if (year >= 2026) {
         const actual = student.studentRole === "primary" ? [input.taxpayer.primary.ssn] : student.studentRole === "spouse" ? [input.taxpayer.spouse?.ssn] : input.taxpayer.dependents.map(dep => dep.ssn);
         if (!actual.some(tin => tin?.replaceAll("-", "") === id)) throw new Error("Form8863 student identity does not match the actual return household role");
-        const isJointSpouseStudent = student.studentRole === "spouse" && filingStatus === "married_filing_jointly";
         const claimantSsnEligible = student.studentRole === "primary" ? primarySsnEligible
           : isJointSpouseStudent ? spouseSsnEligible : undefined;
         if (claimantSsnEligible !== undefined && student.studentSsnEligible !== undefined &&
             student.studentSsnEligible !== claimantSsnEligible) {
           throw new Error(`Form 8863 ${student.studentRole} student employment-valid SSN answer conflicts with the return claimant facts`);
         }
-        const householdTinEligible = student.studentRole === "primary" ? input.taxpayer.primary.tinIssuedByDueDate
-          : isJointSpouseStudent ? input.taxpayer.spouse?.tinIssuedByDueDate : undefined;
-        if (householdTinEligible !== undefined && student.studentTinEligible !== undefined &&
-            student.studentTinEligible !== householdTinEligible) {
-          throw new Error(`Form 8863 ${student.studentRole} student timely TIN answer conflicts with the return taxpayer record`);
-        }
       }
+      const adult = student.studentRole === "primary" ? input.taxpayer.primary : isJointSpouseStudent ? input.taxpayer.spouse : undefined;
+      const adultTin = year === 2025 ? adult?.ssn.trim() : adult?.ssn;
+      const matched = adultTin?.replaceAll("-", "") === id && (year !== 2025 || /^\d{9}$/.test(id));
+      const householdTinEligible = matched ? adult?.tinIssuedByDueDate : undefined;
+      if (householdTinEligible !== undefined && student.studentTinEligible !== undefined &&
+          student.studentTinEligible !== householdTinEligible) {
+        throw new Error(`Form 8863 ${student.studentRole} student timely TIN answer conflicts with the return taxpayer record`);
+      }
+      const knownIneligible = year === 2025 && householdTinEligible === false && student.studentTinEligible === undefined;
+      return { ...student, ...(knownIneligible ? { studentTinEligible: false } : {}), qualifiedExpenses };
     }
+    const aocStudents = education.aocStudents.map(educationStudentForCalculation);
+    const llcStudents = education.llcStudents?.map(educationStudentForCalculation);
     const educationPossession = d(education.possessionIncomeExclusion);
     if (!educationPossession.isFinite() || educationPossession.isNegative()) throw new Error("Form8863 possession exclusion must be finite and nonnegative");
     form8863 = calculateForm8863({
@@ -4298,8 +4308,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       primaryTinEligible: education.primaryTinEligible ?? input.taxpayer.primary.tinIssuedByDueDate,
       primaryDateOfBirth: input.taxpayer.primary.dateOfBirth,
       refundableAocFacts: education.refundableAocFacts ? {...education.refundableAocFacts,earnedIncome:d(education.refundableAocFacts.earnedIncome),totalSupport:d(education.refundableAocFacts.totalSupport)} : undefined,
-      aocStudents: education.aocStudents.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
-      llcStudents: education.llcStudents?.map(student => ({...student,qualifiedExpenses:d(student.qualifiedExpenses)})),
+      aocStudents,
+      llcStudents,
       llcExpenses: d(education.llcExpenses),
       magi: sum(agi,form2555IncomeReduction,form2555HousingDeduction,educationPossession),
       filingStatus,

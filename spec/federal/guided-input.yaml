@@ -148,6 +148,11 @@ lines:
     formula: "AOC and LLC use actual student identifiers and household roles, net paid qualified costs, institution records, receipt/exception qualification, and year-specific timely TIN or employment-SSN answers. Reconcile any saved LLC aggregate to exact individual costs. Reject duplicate credit claims for one student. Collect taxpayer dependency/residency, prior disallowance, possession exclusion and actual under-24 refund support facts. Unknown remains unknown and a known false answer remains false."
     irsRef: "Form 8863 instructions Parts I-III and Table 1; https://www.irs.gov/instructions/i8863; Publication 505 (2026), education credit SSN requirements"
     testRef: "tests/guided-interview/guided-education-source-facts.test.ts::reconciles actual LLC students and preserves zero and false qualification"
+  - line: "education-2025-student-tin-reconciliation"
+    description: "Reconcile the same person's 2025 education and household timely TIN answers"
+    formula: "For positive expenses for the primary taxpayer or joint spouse, compare their entered student timely TIN answer with the Personal Info answer when both are known and the student TIN matches the household member. Hold contradictory answers after reopening and during guided calculation. An unknown household answer stays unknown, the existing student answer remains required, and matching explicit negative answers yield no credit. LLC requires the student's timely TIN without adding a separate claimant TIN requirement."
+    irsRef: "Form 8863 instructions, Table 1 and Who Cannot Claim a Credit; https://www.irs.gov/instructions/i8863"
+    testRef: "tests/guided-interview/guided-education-source-facts.test.ts::holds conflicting 2025 spouse student TIN answers after save and reopen"
   - line: "llc-return-year"
     description: "Confirm Lifetime Learning Credit sources for the selected tax year"
     formula: >-

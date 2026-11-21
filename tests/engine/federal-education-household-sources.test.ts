@@ -94,6 +94,7 @@ function adultStudentClaim(
   householdTin?: boolean,
   studentTin?: boolean,
   qualifiedExpenses = "4000",
+  taxYear = 2026,
 ) {
   const spouseIsStudent = role === "spouse";
   const input = claim(spouseIsStudent, spouseIsStudent, { household: !spouseIsStudent, education: !spouseIsStudent });
@@ -103,7 +104,7 @@ function adultStudentClaim(
 
   return TaxYearInputSchema.parse({
     ...input,
-    taxpayer: { ...taxpayer, [role]: { ...adult, tinIssuedByDueDate: householdTin } },
+    taxpayer: { ...taxpayer, taxYear, [role]: { ...adult, tinIssuedByDueDate: householdTin } },
     educationExpenses: {
       ...education,
       aocStudents: [{
@@ -137,4 +138,73 @@ it.each([
 ] as const)("preserves matching, unknown, and zero-expense TIN facts (%s, %s, %s)", (householdTin, studentTin, expenses, credit) => {
   const result = calculateFederalTax(adultStudentClaim("spouse", householdTin, studentTin, expenses));
   expect(result.form8863?.aocAfterPhaseOut.toString()).toBe(credit);
+});
+
+it.each([
+  ["primary", false, true],
+  ["primary", true, false],
+  ["spouse", false, true],
+  ["spouse", true, false],
+] as const)("holds conflicting 2025 timely TIN answers for the %s student (%s, %s)", (role, householdTin, studentTin) => {
+  expect(() => calculateFederalTax(adultStudentClaim(role, householdTin, studentTin, "4000", 2025)))
+    .toThrow(`Form 8863 ${role} student timely TIN answer conflicts with the return taxpayer record`);
+});
+
+it.each(["primary", "spouse"] as const)("uses a matched 2025 %s taxpayer's known negative TIN answer for both education credits", role => {
+  function testCredit(householdTin?: boolean, matchingIdentity = true) {
+    const input = adultStudentClaim(role, householdTin, undefined, "4000", 2025);
+    const education = input.educationExpenses;
+    if (!education?.aocStudents[0]) throw new Error("Expected the joint student fixture");
+    const student = { ...education.aocStudents[0], studentTaxId: matchingIdentity ? input.taxpayer[role]?.ssn.replaceAll("-", "") : "998887777" };
+    delete student.studentTinEligible;
+    const aotcInput = { ...input, educationExpenses: {
+      ...education, primaryTinEligible: true, aocStudents: [student],
+    } };
+    const llcInput = { ...input, educationExpenses: {
+      ...education, aocStudents: [], llcExpenses: "4000", llcStudents: [{ ...student, courseEligibilityConfirmed: true }],
+    } };
+    const before = structuredClone([aotcInput, llcInput]);
+    const aotc = calculateFederalTax(aotcInput).form8863;
+    const llc = calculateFederalTax(llcInput).form8863;
+    expect([aotcInput, llcInput]).toEqual(before);
+    return [aotc?.aocAfterPhaseOut.toFixed(), aotc?.totalRefundable.toFixed(), llc?.totalNonrefundable.toFixed()];
+  }
+  expect(testCredit()).toEqual(["2500", "1000", "800"]);
+  expect(testCredit(false, false)).toEqual(["2500", "1000", "800"]);
+  expect(testCredit(false)).toEqual(["0", "0", "0"]);
+});
+
+it("reconciles 2025 taxpayer and student TINs with surrounding whitespace", () => {
+  const input = adultStudentClaim("spouse", false, true, "4000", 2025);
+  const { educationExpenses: education, taxpayer } = input;
+  if (!education?.aocStudents[0] || !taxpayer.spouse) throw new Error("Expected the joint student fixture");
+  const padded = {
+    ...input,
+    taxpayer: { ...taxpayer, spouse: { ...taxpayer.spouse, ssn: ` ${taxpayer.spouse.ssn} ` } },
+    educationExpenses: { ...education, aocStudents: [{ ...education.aocStudents[0], studentTaxId: `${taxpayer.spouse.ssn.replaceAll("-", "")}  ` }] },
+  };
+  expect(() => calculateFederalTax(padded)).toThrow(/spouse student timely TIN answer conflicts/i);
+  expect(() => calculateFederalTax({ ...padded, taxpayer: { ...padded.taxpayer, taxYear: 2026 } }))
+    .toThrow(/student identity does not match the actual return household role/i);
+});
+
+it("keeps the 2026 explicit student TIN requirement when the household has an answer", () => {
+  expect(() => calculateFederalTax(adultStudentClaim("spouse", false)))
+    .toThrow(/actual student timely TIN facts required for2026/);
+});
+
+it("preserves the 2025 LLC student TIN rule without an AOTC claimant TIN requirement", () => {
+  function llc(householdTin: boolean | undefined, studentTin: boolean) {
+    const input = adultStudentClaim("spouse", householdTin, studentTin, "4000", 2025);
+    const education = input.educationExpenses;
+    if (!education?.aocStudents[0]) throw new Error("Expected the joint student fixture");
+    return calculateFederalTax({ ...input, educationExpenses: {
+      ...education, primaryTinEligible: false, aocStudents: [], llcExpenses: "4000",
+      llcStudents: [{ ...education.aocStudents[0], courseEligibilityConfirmed: true }],
+    } }).form8863?.totalNonrefundable.toFixed();
+  }
+  expect(llc(true, true)).toBe("800");
+  expect(llc(undefined, true)).toBe("800");
+  expect(llc(false, false)).toBe("0");
+  expect(() => llc(false, true)).toThrow(/spouse student timely TIN answer conflicts/i);
 });

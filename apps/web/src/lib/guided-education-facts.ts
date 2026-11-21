@@ -28,8 +28,15 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
     ids.add(id);
     if (!["primary", "spouse", "dependent"].includes(student.studentRole ?? "") || (student.studentRole === "spouse" && filingStatus && filingStatus !== "mfj")) errors[`${key}-role`] = "Choose the student's actual household role.";
     if (personal && student.studentRole) {
-      const actual = student.studentRole === "primary" ? [personal.ssn] : student.studentRole === "spouse" ? [personal.spouse?.ssn] : (personal.dependents ?? []).map(dep => dep.ssn);
+      const adult = student.studentRole === "primary" ? personal : student.studentRole === "spouse" ? personal.spouse : undefined;
+      const actual = student.studentRole === "dependent" ? (personal.dependents ?? []).map(dep => dep.ssn) : [adult?.ssn];
       if (!actual.some(tin => cleanId(tin) === id)) errors[`${key}-household`] = "Student identity must match the actual return household role.";
+      else if (taxYear === 2025 && (student.studentRole === "primary" || filingStatus === "mfj") &&
+        typeof adult?.tinIssuedByDueDate === "boolean" && typeof student.studentTinEligible === "boolean" &&
+        adult.tinIssuedByDueDate !== student.studentTinEligible && validAmount(student.qualifiedExpenses) &&
+        parseGuidedCurrency(student.qualifiedExpenses).gt(0)) {
+        errors[`${key}-tin`] = "Reconcile the student's timely TIN answer with the same person's Personal Info answer.";
+      }
     }
     for (const field of ["institutionEligible", "expensesEligibilityConfirmed", "form1098TRequirementMet"] as const) if (typeof student[field] !== "boolean") errors[`${key}-${field}`] = "Confirm actual institution, net qualified expenses and Form 1098-T requirements.";
     if (taxYear === 2026 && student.studentRole === "dependent" && typeof student.studentSsnEligible !== "boolean") errors[`${key}-ssn`] = "Confirm the dependent student's employment-valid SSN was issued by the due date.";
