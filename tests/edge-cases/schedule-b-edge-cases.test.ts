@@ -284,7 +284,7 @@ describe("Schedule B edge case - large dividend amounts", () => {
 // =================================================================
 
 describe("Schedule B edge case - foreign accounts", () => {
-  it("multiple foreign countries from different 1099-DIVs", () => {
+  it("foreign-tax countries on multiple 1099-DIVs do not answer Part III", () => {
     const input = makeFixture({
       form1099Div: [
         make1099Div({
@@ -302,10 +302,9 @@ describe("Schedule B edge case - foreign accounts", () => {
       ],
     });
     const result = calculateScheduleB(input);
-    expect(result.hasForeignAccounts).toBe(true);
-    expect(result.foreignAccountCountries).toContain("United Kingdom");
-    expect(result.foreignAccountCountries).toContain("Japan");
-    expect(result.foreignAccountCountries).toHaveLength(2);
+    expect(result.hasForeignAccounts).toBeNull();
+    expect(result.foreignAccountCountries).toEqual([]);
+    expect(result.totalOrdinaryDividends.greaterThan(1500)).toBe(true);
     expect(result.isRequired).toBe(true);
   });
 
@@ -321,10 +320,10 @@ describe("Schedule B edge case - foreign accounts", () => {
       ],
     });
     const result = calculateScheduleB(input);
-    expect(result.hasForeignAccounts).toBe(false);
+    expect(result.hasForeignAccounts).toBeNull();
   });
 
-  it("foreign trust from K-1 triggers Schedule B required", () => {
+  it("foreign partnership K-1 leaves the trust answer and Schedule B applicability unresolved", () => {
     const input = makeFixture({
       form1099Int: [
         make1099Int({ payer: "Bank", interestIncome: "100" }),
@@ -353,8 +352,9 @@ describe("Schedule B edge case - foreign accounts", () => {
       }],
     });
     const result = calculateScheduleB(input);
-    expect(result.hasForeignTrust).toBe(true);
-    expect(result.isRequired).toBe(true);
+    expect(result.hasForeignTrust).toBeNull();
+    expect(result.isRequired).toBe(false);
+    expect(result.partThreeComplete).toBe(false);
     // Total interest is low, but foreign trust alone makes it required
     expect(result.totalInterest.toNumber()).toBe(100);
   });
@@ -662,8 +662,9 @@ describe("Schedule B edge case - municipal bond tax-exempt interest", () => {
 // =================================================================
 
 describe("Schedule B edge case - Part III foreign accounts", () => {
-  it("foreign account alone triggers Schedule B required even with zero income (spec Line 7a)", () => {
+  it("confirmed foreign account triggers Schedule B required below the dividend threshold (spec Line 7a)", () => {
     const input = makeFixture({
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Switzerland"] },
       form1099Int: [],
       form1099Div: [
         make1099Div({
@@ -682,8 +683,9 @@ describe("Schedule B edge case - Part III foreign accounts", () => {
     expect(result.isRequired).toBe(true);
   });
 
-  it("duplicate foreign country from multiple 1099-DIVs — deduplicated (spec Line 7b)", () => {
+  it("deduplicates confirmed countries while keeping foreign-tax countries separate (spec Line 7b)", () => {
     const input = makeFixture({
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["United Kingdom", "United Kingdom"] },
       form1099Div: [
         make1099Div({
           payer: "UK Fund A",
@@ -706,8 +708,9 @@ describe("Schedule B edge case - Part III foreign accounts", () => {
     expect(result.foreignAccountCountries[0]).toBe("United Kingdom");
   });
 
-  it("foreign trust from K-1 with no foreign dividends — still required (spec Line 8)", () => {
+  it("confirmed foreign trust requires Schedule B even without foreign dividends (spec Line 8)", () => {
     const input = makeFixture({
+      scheduleBPartThree: { hasForeignTrust: true, hasForeignAccounts: false },
       form1099Int: [make1099Int({ payer: "Local Bank", interestIncome: "50" })],
       scheduleK1: [{
         partnershipName: "Offshore Trust",

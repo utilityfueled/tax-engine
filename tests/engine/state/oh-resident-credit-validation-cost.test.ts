@@ -97,11 +97,11 @@ it('resident encoded comparison preserves first errors and immutable originals',
   expect(JSON.stringify(f.packet)).toBe(before); expect(JSON.stringify(f.projection)).toBe(projectionBefore);
 });
 it('resident complete results and commitments retain predecessor byte fingerprints', () => {
-  // Captured on unchanged82a51fac before implementation, not tax expected values.
+  // Rebound from 5a8384ec after comparing full JSON. Only Schedule B Part III answers and their audit rows changed.
   const cases = [
-    { make: () => ohioResidentCreditFixture(), hash: 'a5e99ae662325993a2002925de694d0ef8c85762195cf0b364c3b05a864097c3', payment: 'd2aeaf3a084a69f91b8ce3620ed1e8de30295e17c32b5519596afb50f30eaa09', context: 'b63f2e873e5e39507d2a7ad930e821a9c8722215e145e9f4eceea47bdb60c6ec' },
-    { make: () => ohioResidentCreditFixture('60000.50', '1000.50'), hash: '832589d9bd27d406e8615e363a341e5014db628028d73bc840be6cb8d4bac8d1', payment: 'fe3c1e0a24a4cf35218b54e432130ac7347d53a37a78d56ded42c541c43e367b', context: '5aad973ed1050e271b7a0a956d942f35ff5b1d358e2d1dd3b132edc41ae6d1a6' },
-    { make: () => ohioResidentCreditTransactionsFixture(), hash: '1b38f632ebab1812a151b9a3fe2bcaf7f2c901d82e0cc1c86ebc4b41703144d6', payment: 'db3a90490f23d2f618ff2fbf80a69d8931b0584ed022d5bcb5e177272c4c3c05', context: 'feacd32c4437eae6a72009c1dd4023d588ff65ebc7ab9ab3712bb452cff8aabc' },
+    { make: () => ohioResidentCreditFixture(), hash: '1fd4f25ed4c2c19fa924d434f1110cba2af463d981264c7ca1c9160fa3d56cef', payment: 'd2aeaf3a084a69f91b8ce3620ed1e8de30295e17c32b5519596afb50f30eaa09', context: 'b63f2e873e5e39507d2a7ad930e821a9c8722215e145e9f4eceea47bdb60c6ec' },
+    { make: () => ohioResidentCreditFixture('60000.50', '1000.50'), hash: '846a7391ad8a4eaa3b61b7674c4542fd986ee8e44c88ce78ee6f57f590edd783', payment: 'fe3c1e0a24a4cf35218b54e432130ac7347d53a37a78d56ded42c541c43e367b', context: '5aad973ed1050e271b7a0a956d942f35ff5b1d358e2d1dd3b132edc41ae6d1a6' },
+    { make: () => ohioResidentCreditTransactionsFixture(), hash: 'bf3b791ebc7a353f4c30d56bd3d71a52d7c262599f5d9577bae5e1b2b3e3b981', payment: 'db3a90490f23d2f618ff2fbf80a69d8931b0584ed022d5bcb5e177272c4c3c05', context: 'feacd32c4437eae6a72009c1dd4023d588ff65ebc7ab9ab3712bb452cff8aabc' },
   ];
   for (const c of cases) {
     const p = c.make(), before = JSON.stringify(p), federal = calculateFederalTax(p.input), adapted = buildOhioResidentReturnInput(p.input, federal);

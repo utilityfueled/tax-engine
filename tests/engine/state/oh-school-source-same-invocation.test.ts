@@ -15,20 +15,21 @@ function hash(value:unknown){return createHash('sha256').update(JSON.stringify(v
 function record(v:unknown):Record<string,unknown>{if(v===null||typeof v!=='object'||Array.isArray(v))throw Error('Explicit original required');return v as Record<string,unknown>;}
 const cohorts=[...schoolOfficialCases.map(name=>({name:'full-'+name,make:()=>schoolOfficialFixture(name)})),...(['600','500']as const).map(v=>({name:'part-year-'+v,make:()=>schoolDistrictPartYearFixture(v)})),...(['unpaid','expected_payment','actual_payment']as const).map(v=>({name:'balance-'+v,make:()=>schoolBalanceFixture(v)})),{name:'full-nonzero-IT-elections',make:()=>{const x=schoolDistrictSourcesFixture();x.ohioPayments.balanceFacts={...x.ohioPayments.balanceFacts,useTax:'25',outgoingCarryforward:'15',donations:'10'};return x;}},{name:'full-independent-IT-estimates',make:()=>{const x=schoolDistrictEstimatedFixture();x.ohioPayments.paymentRows=structuredClone(x.ohioSchoolDistrict.payments.paymentRows).map((r,i)=>({...r,sourceId:'IT-EST-'+i,returnType:'it1040',original:{...r.original,returnType:'it1040',confirmationNumber:'IT-INDEPENDENT-EST-'+i}}));return x;}}];
 // Exact predecessor digests, with the separately asserted federal Schedule A correction below.
+// Full returns compared with 5a8384ec. Only Schedule B Part III answers and their audit lines changed.
 const baselineHashes:Readonly<Record<string,string>>={
-  "full-base": "15b9b9832bb7fc92b6fdbac7d530d4e8d227f3f3122188b91a6e8425d8a02b98",
-  "full-estimates": "91918be151e0e1d24d989c691f525c944cff87cf2f92aaa9696787f4523011be",
-  "full-outgoing": "414baacd4b130f0e0085ae938d63358809ff1d6fa1d7e608ca549e3e08f1dd78",
-  "full-prior": "c85f5b67cb2c34c2d5ab67aba12b564575636e93cdeb89325436384c271c5b80",
-  "full-zero-withholding": "9bbe92bb2ea4b0fde5f21b5a83ed7f66ced602eb0b5bb3c30578223e5597dfb4",
-  "full-municipal-first": "02218aa51e470cf8312365bf5c17c6c635bb303fcf204912c8a965ba171d28ba",
-  "part-year-600": "16925030665e0082348ab14169be497257e18a2e5917c7877a93d9794ff189d5",
-  "part-year-500": "29c9101729a474d8186a55d6de7c5b7330ee195b91bee7858291d08a35d0e802",
-  "balance-unpaid": "c851d402b69e35b482f03abedeea2b2882aeb9f2d39b7376e254bc544b7b2012",
-  "balance-expected_payment": "2319f26b1d156d1738540a8d2a48c9abd754a35d2069c675f71768723da1218c",
-  "balance-actual_payment": "870b1c81a09c23b2018c85257aa38254c99b24bcec0fcb9d0309f0f3e64e0ff7",
-  "full-nonzero-IT-elections": "eb92392e9c1483f67009492b6a6de6398083860958a42c03568bf3b234b22dcc",
-  "full-independent-IT-estimates": "5427d218dae764edea9bd87b786822123726d525a2a50d609e6d32070051ccb2"
+  "full-base": "ba528efb0305b6bb102bf37c3e4fe219a4d55d6b06cf23d0c96200bc7390c836",
+  "full-estimates": "88c7096c19cc07e35cc52c5ab70aa12414c89077dbd384a36d6f223b56d7bd02",
+  "full-outgoing": "f0cb82ccb9fce6813f91ce9a57457d7078f8b1662c822a53841d49c7344434d0",
+  "full-prior": "bd8fb8579d9bfe11a663ad7f82e4ed624e0453db6fe9e4049f1d766dab47f43d",
+  "full-zero-withholding": "d616afa6ffc034d75d6456d64b46b6c5697c6310e48e0de22ea1395ab8a4cb52",
+  "full-municipal-first": "dbf5d2f56b5bfe8262c307622f0ab8f50d9f95fdfec652991c1e42cd4aca3cbc",
+  "part-year-600": "c0e51ae1b0500b7d254c25d512972341b971d2b8fd7621585f577cfebf8b60d8",
+  "part-year-500": "412a9c187c54f8698235bfb9ac62b392e0339be9d83243ae2d76673577499435",
+  "balance-unpaid": "0f97664d4e890ca19b2513eec6a4af274e3c8d650e25b274baeb15814ceca572",
+  "balance-expected_payment": "e1a2e513f946cee4817bc985169354025ce86e21c5ce59c3c8b56c9d358b4f44",
+  "balance-actual_payment": "e00afa1c3e3f24bf3c738ad26b24eff2976c36f342c341994f0b51a13d7567d2",
+  "full-nonzero-IT-elections": "a4a4882a966aecb926fa655c455ec5a4169158f2e20578019819b8558d50a7c4",
+  "full-independent-IT-estimates": "2c618a27bd1e34a7771b390f58a60c577d5c62a2c54cd1133b85803f1fe45177"
 };
 const errorOracles=[
   {

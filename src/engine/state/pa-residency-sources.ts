@@ -413,8 +413,8 @@ function amount(value: unknown): Decimal {
   const reportedCompensation = roundDollar(compensation), reportedInterest = scheduleA.line16,reportedDividends=scheduleB.line12;
   if (employeeSources && !reportedCompensation.minus(unreimbursedEmployeeExpenses).eq(employeeNetTotal)) return error("actual per-employer versus aggregate printed compensation precision requires its separate method");
   const taxable = Money.max(0,new Money(reportedCompensation).minus(unreimbursedEmployeeExpenses)).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)).plus(Money.max(reportedCapitalGainOrLoss,0)).plus(royaltySources.reportedIncome), tax = roundDollar(taxable.times("0.0307"));
-  // The collector packet is the sole excluded key; all actual canonical facts remain privately bound.
-  const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
+  // Bind original PA facts without the collector packet or federal Schedule B disclosures.
+  const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources" && key !== "scheduleBPartThree"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
   const audit = new AuditTrail();
   if (residency.floridaMoveResident) audit.record("PA-Residency-Sources", "florida-move-residency", "Confirmed PA physical-presence days", new Money(residency.totalDays), "One Florida-to-PA domicile move, confirmed permanent PA abode and more than 183 PA days; apply the full-year PA wage basis");

@@ -50,7 +50,8 @@ export function readOhioResidentCreditSource(context:OhioResidentCreditSourceCon
  }
  return {otherStateTaxes:stored.rows.map(row=>({...row})),sourceCommitment:stored.sourceCommitment};
 }
-export function buildOhioResidentCreditSource(input:TaxYearInput,result:TaxReturnResult,facts:OhioResidencyFacts):OhioResidentCreditSourceContext {
+export function buildOhioResidentCreditSource(taxInput:TaxYearInput,result:TaxReturnResult,facts:OhioResidencyFacts):OhioResidentCreditSourceContext {
+ const {scheduleBPartThree:_disclosure,...input}=taxInput;
  const parsed=OhioResidentCreditSourcesSchema.safeParse(facts.residentCreditSources);if(!parsed.success)fail('complete current confirmed original records required');const source=parsed.data;
  const owner=facts.owners[0],person=input.taxpayer.primary,w2=input.w2s[0];
  if(input.taxpayer.taxYear!==2025||result.taxYear!==2025||facts.taxYear!==2025||input.taxpayer.filingStatus!=='single'||input.taxpayer.spouse||input.taxpayer.dependents.length||facts.owners.length!==1||owner?.accountHolder!=='primary'||owner.status!=='full_year_resident'||input.w2s.length!==1||!w2)fail('only actual2025 single primary full-year Ohio ordinary employee admitted');
@@ -58,7 +59,7 @@ export function buildOhioResidentCreditSource(input:TaxYearInput,result:TaxRetur
  if(!person.dateOfBirth||date(person.dateOfBirth)>=date('2025-01-01')||date(person.dateOfBirth)<=date('1961-01-01'))fail('actual under65 original date of birth required');
  const identity={firstName:person.firstName,lastName:person.lastName,ssn:person.ssn};
  if(!/^\d{9}$/.test(tin(person.ssn))||digest(source.originalTaxpayer)!==digest(identity)||digest(source.originalW2)!==digest(w2)||w2.accountHolder!=='primary'||w2.taxYear!==2025||!/^\d{9}$/.test(tin(w2.employer.ein))||w2.militaryService)fail('current actual complete W2 year owner identity or ordinary employer differs');
- if(!sameEncodedSourceMaterial(calculateFederalTax(input),result))fail('fresh canonical federal calculation required');
+ if(!sameEncodedSourceMaterial(calculateFederalTax(taxInput),result))fail('fresh canonical federal calculation required');
  if(owner.periods.length!==1||owner.periods[0]?.from!=='2025-01-01'||owner.periods[0]?.to!=='2025-12-31'||owner.periods[0]?.domicileState!=='OH'||(owner.stateAdditions?.length??0)||(owner.stateDeductions?.length??0))fail('complete actual Ohio domicile and no separate adjustment rows required');
  const otherArrays=['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','scheduleK1','scheduleK1Form1041','rentalProperties','homeSales','form6252','form8814','form8824','savingsBondRedemptions'] as const;
  if(otherArrays.some(key=>(input[key]?.length??0)>0)||input.scheduleC||input.scheduleF||input.netOperatingLoss||input.form172||input.cryptoIncome||input.form4797||input.form6781||input.form4137||input.form8919||input.socialSecurityLumpSumElection||input.royaltyPropertySources||input.adjustments)fail('retained other income or adjustment originals require separate composition even when zero');

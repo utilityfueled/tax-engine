@@ -44,7 +44,7 @@ export function readOhioCanonicalBusinessSource(context: OhioCanonicalBusinessCo
 }
 /** Derive projections from originals and current federal computation; draft mode is explicit. */
 export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearInput; residencyFacts: OhioResidencyFacts | unknown; federalResult?: TaxReturnResult; draft2026?: boolean }): OhioCanonicalBusinessContext {
-  const input = args.taxInput;
+  const { scheduleBPartThree: _disclosure, ...input } = args.taxInput;
   const facts = OhioResidencyFactsSchema.parse(args.residencyFacts);
   // The separately validated factual header is state evidence, not a federal original.
   const { ohioResidency: _residency, ohioPayments: _payments, ohioReturnHeaderSources: _header, ...actualFederalOriginals } = input;
@@ -79,7 +79,7 @@ export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearIn
   } else {
     const result = args.federalResult;
     if (year !== 2025 || !result || result.taxYear !== year || result.filingStatus !== 'single' || !result.scheduleC || !result.scheduleSE) fail('actual current2025 federal C and SE computation required');
-    const fresh = calculateFederalTax(input);
+    const fresh = calculateFederalTax(args.taxInput);
     if (!sameSourceMaterial(fresh, result)) fail('current federal computation differs from source result');
     cResult = result.scheduleC; seResult = result.scheduleSE; federalAgi = result.agi;
     if (!result.otherIncome.eq(cResult.netProfit) || !result.totalIncome.eq(cResult.netProfit) || !result.adjustmentsToIncome.eq(seResult.deductibleHalf)

@@ -1,4 +1,5 @@
 import {computeGuidedPreviewEvaluation} from './guided-preview-compute';
+import { buildGuidedScheduleBPartThree, scheduleBPartThreeMissingAnswer, type ScheduleBPartThreeDraft } from './guided-schedule-b-part-three';
 import { codPrincipalResidenceNavigationFactErrors, invalidateGuidedCodPrincipalResidence, type CodPrincipalResidenceData } from './guided-cod-principal-residence';
 import { invalidateMarketDiscount } from './guided-market-discount-sources';
 import {rrtaDraftValues,rrtaPaperDraftValues} from './guided-rrta-payroll-sources';
@@ -1425,6 +1426,7 @@ export interface SectionDataMap {
   "credits"?: CreditsData;
   "other-taxes"?: OtherTaxesData;
   "payments"?: PaymentData;
+  "review"?: { scheduleBPartThreeByYear?: Partial<Record<2025 | 2026, ScheduleBPartThreeDraft>> };
   "state-return"?: StateReturnData;
   [key: string]: unknown;
 }
@@ -2774,7 +2776,7 @@ export function summarizeFlowCompletion(state: GuidedFlowState): FlowCompletionS
 export function collectGuidedReviewIssues(state: GuidedFlowState): GuidedReviewIssue[] {
   const sections = getGuidedSectionRoute(state);
 
-  return sections.flatMap((section) => {
+  const issues = sections.flatMap<GuidedReviewIssue>((section) => {
     const status = getVisitedSectionStatus(state, section.id);
 
     if (status !== "skipped" && status !== "needs-review") {
@@ -2794,6 +2796,18 @@ export function collectGuidedReviewIssues(state: GuidedFlowState): GuidedReviewI
         : `Finish ${section.label}`,
     }];
   });
+  const scheduleBPartThree = buildGuidedScheduleBPartThree(state);
+  const missingAnswer = scheduleBPartThree && scheduleBPartThreeMissingAnswer(scheduleBPartThree);
+  if (missingAnswer) {
+    issues.push({
+      sectionId: "review",
+      sectionLabel: "Schedule B Part III",
+      status: "needs-review",
+      message: missingAnswer,
+      actionLabel: "Review foreign accounts and trusts",
+    });
+  }
+  return issues;
 }
 
 /**

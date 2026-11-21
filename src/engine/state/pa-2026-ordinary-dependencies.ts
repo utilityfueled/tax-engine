@@ -49,7 +49,7 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  if(input.taxpayer.filingStatus!=='single'||p.facts.filing.maritalStatus!=='unmarried'||p.facts.filing.aliveEntireYear!==true)fail('only actual single living unmarried owners are supported');
  // Empty document arrays are normalization only. They never establish the complete
  // none facts: those are independently replayed from the confirmed source packets.
- const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit']);
+ const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit','scheduleBPartThree']);
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
  for(const[key,value]of Object.entries(input))if(!roots.has(key)&&value!==undefined&&!(emptyDocumentRoots.has(key)&&Array.isArray(value)&&value.length===0))fail('retained unsupported original or federal dependency: '+key);
  if(input.standardDeductionFacts!==undefined&&!StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts).success)fail('retained standard-deduction context is unsupported');

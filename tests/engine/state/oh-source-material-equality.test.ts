@@ -33,22 +33,22 @@ const cases: Array<{ name: string; input: () => TaxYearInput; tax: string }> = [
   { name: 'school-full-year', input: () => schoolDistrictSourcesFixture(), tax: '1767' },
   { name: 'school-part-year', input: () => schoolDistrictPartYearFixture(), tax: '811' },
 ];
-// Full-output baselines rebound only after exact1768448b→835e8972 comparison: HSA audit wording and explicit zero trace additions; all monetary/source commitments unchanged.
+// Compared with 5a8384ec. Only unanswered Schedule B Part III facts and their prior audit rows changed.
 const baselineHashes: Readonly<Record<string, string>> = {
-  "july100k": "8d7197cb45b55602a254a8bf8141b0f54acb546757b1b9dbe862b3f1a4f82de5",
-  "july400k": "cbca7b397d196249895e59572545532d9a6afeadecc3829836aa7ab71aadb37a",
-  "nr100k": "9c639a03f6abd3b2e4073cb280a2fe17bffc33286de76cae1c5c848fe443b65f",
-  "nr400k": "f83bd40fe5705ef1af0538548e40b7fc4707baa53f5a49acb5766e33da976746",
-  "ordinary-full_year_resident": "4658bcafaa0a8deefb5e1c36335d782047a78873462b6145d6af1486747187ad",
-  "ordinary-nonresident": "8e316ba37bdc93f35eac54a6e5fe66f55c9120f86fbeaee307e5487d0202c319",
-  "ordinary-part_year_resident": "fef243c296cd0c8510e0ae51d83b4894ff90c49f624672f3e490a448244f2b27",
-  "py100k": "e14d7e93594b7e9b3792a92b77a32cc7f397d1b3cba8a7a7e489bdb8522e014f",
-  "py400k": "a95f98d2d009a461e30ffd1c46b3f6d8757faa9c3d668aa509825de147c2d146",
-  "reciprocal-known-zero": "da0ae7b99b0f49bdae24b9017218ce557d5b324fe7d1916c0090d1949b38f921",
-  "reciprocal-refund": "70a2d29f243fcc98105462bfcf5fb946e6870cf05690d58d9d90c6c69e44dd68",
-  "resident-credit": "a5e99ae662325993a2002925de694d0ef8c85762195cf0b364c3b05a864097c3",
-  "school-full-year": "d4ee6456a5923ba194e126c9fc351f9b64970afc855fc698ece10762e27186c1",
-  "school-part-year": "c40077d2dc4d5998439f992dccfc899b9ee7a79f3b5f7813f36cdbc049e3f471"
+  "july100k": "2ea86d5f9b28116fb9a2da29ca35dfc8d8f4946bb9e4470c170a1b4c36c1651b",
+  "july400k": "fedf32f0d1de8b98534d9fe75ec8e6c8a97cd2585df50defa16b19d1afc729b1",
+  "nr100k": "6c918cf6df45088f39d569293291d4b193276f9d799c0a015ff49957f350fd05",
+  "nr400k": "74cd81cfa92cbbc4f5f0f2da55835d1b2cdcdd462264d4fdcaa699a51aa8a94b",
+  "ordinary-full_year_resident": "6af458f9aa6bc70ca36e1985065fc3f670786543f798864f4e9497bc9d8cb1dc",
+  "ordinary-nonresident": "c6d1fec08cea72c0fbb4cc99479a2ac32df4309e58a3eba904d54c6d186601e6",
+  "ordinary-part_year_resident": "8b49a2ecff73e096dd31364684c624fba2242c47a94ee9643f28a5d2b4f34867",
+  "py100k": "d12e31c8fa3182122c78ef5b6d4ca797303e8a9f426d9b5c3fc31dc5f97b98f3",
+  "py400k": "28ef2931cb74bf1519c3be1dc878c4aa83961aca389e86d011f22c4ac8cd3d70",
+  "reciprocal-known-zero": "6862ca5ca573a530464cbac2091d1f1dc40bc11a37a9603b83585a078c6a66e8",
+  "reciprocal-refund": "6c3cf5dd5f72187d2ef0607465cefb6f42a385056be3fad143291149b2816a17",
+  "resident-credit": "1fd4f25ed4c2c19fa924d434f1110cba2af463d981264c7ca1c9160fa3d56cef",
+  "school-full-year": "ff3685e83859f4ad9f27de0304caa240c510d13ff551c32ee3943dd14338cc23",
+  "school-part-year": "64d77ca3eecae11bb20059155bcb793bfa90866790a2c4a053897bc2bf243229"
 };
 function fingerprint(value: unknown): string { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 function calculation(input: TaxYearInput) {

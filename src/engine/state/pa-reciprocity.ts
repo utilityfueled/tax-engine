@@ -173,7 +173,7 @@ export function calculatePAReciprocalCompensation(input:TaxYearInput, rawOrdinar
   const refundSupportStatus=o.refundRequested===null?"unknown_request":o.refundRequested===false?"not_requested":actualPAWithheld.isZero()?"no_PA_withholding":complete?"complete":"pending_documents";
   return {originalIndex:i,actualPAWithheld,refundSupportStatus} as PAReciprocalCompensationResult["originals"][number];
  });
- const originalInput=Object.fromEntries(Object.entries(input).filter(([key])=>!['paResidencySources','paReciprocitySources'].includes(key)));
+ const originalInput=Object.fromEntries(Object.entries(input).filter(([key])=>!['paResidencySources','paReciprocitySources','scheduleBPartThree'].includes(key)));
  const sourceCommitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:"pa-reciprocal-employee-v1",year,input:originalInput,rawOrdinary,rawProof}))));
  const audit=new AuditTrail();audit.record("PA-Reciprocity","employee-exclusion","Actual reciprocal employee compensation exclusion",totalExcludedPACompensation,"Actual employee earning/residency periods; Ohio shareholder-employee exception; source-only, no return settlement qualification");
  return {totalExcludedPACompensation,paWithheldFromCoveredOriginals,segments,originals,sourceCommitment,lines:audit.getLines()};

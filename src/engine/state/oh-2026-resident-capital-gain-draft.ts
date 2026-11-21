@@ -111,7 +111,8 @@ export interface Ohio2026ResidentCapitalGainDraftResult {
   lines: CalculatedLine[];
 }
 
-export function calculateOhio2026ResidentCapitalGainDraft(input: TaxYearInput, raw: unknown): Ohio2026ResidentCapitalGainDraftResult {
+export function calculateOhio2026ResidentCapitalGainDraft(taxInput: TaxYearInput, raw: unknown): Ohio2026ResidentCapitalGainDraftResult {
+  const { scheduleBPartThree: _scheduleB, ...input } = taxInput;
   const held: Ohio2026ResidentCapitalGainDraftResult = {
     methodId: 'oh-2026-resident-capital-gain-draft-v1', taxYear: 2026, sourceStatus: 'incomplete', calculationStatus: 'incomplete',
     filingQualified: false, exportAllowed: false, fullFederalReturnCalculated: false, sourceCommitment: null,
@@ -126,7 +127,8 @@ export function calculateOhio2026ResidentCapitalGainDraft(input: TaxYearInput, r
     requireFact(person.taxYear === 2026 && person.filingStatus === 'single' && !person.spouse && person.dependents.length === 0);
     requireFact(day(person.primary.dateOfBirth) >= '1962-01-02' && person.primary.dateOfBirth <= '2008-12-31');
     requireFact(standard.primaryCanBeClaimedAsDependent === false && standard.primaryDeathDate === null && standard.nonresidentAlien === false && standard.dualStatusAlien === false && standard.shortTaxYear === false);
-    requireFact(digest(input) === digest(source.originalTaxInput));
+    const { scheduleBPartThree: _storedScheduleB, ...storedStateInput } = source.originalTaxInput;
+    requireFact(digest(input) === digest(storedStateInput));
     for (const [key, value] of Object.entries(input)) {
       if (value === undefined || inputKeys.has(key)) continue;
       requireFact(emptyCollections.has(key) && Array.isArray(value) && value.length === 0);

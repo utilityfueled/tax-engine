@@ -20,10 +20,12 @@ const tin=(v:string)=>v.replace(/[\s-]/g,'');
 export interface Ohio2026ResidentCreditSourceContext { readonly methodId:'oh-2026-va-resident-credit-employee-draft-v1';readonly sourceCommitment:string }
 interface Projection { income:string; taxPaid:string }
 const contexts=new WeakMap<Ohio2026ResidentCreditSourceContext,{currentDigest:string;projection:Projection}>();
-export function readOhio2026ResidentCreditSource(context:Ohio2026ResidentCreditSourceContext,input:TaxYearInput,raw:unknown):Projection {
+export function readOhio2026ResidentCreditSource(context:Ohio2026ResidentCreditSourceContext,taxInput:TaxYearInput,raw:unknown):Projection {
+ const {scheduleBPartThree:_disclosure,...input}=taxInput;
  const stored=contexts.get(context);if(!stored||stored.currentDigest!==digest({input,raw}))fail('current original context is missing stale or forged');return {...stored.projection};
 }
-export function calculateOhio2026ResidentCreditSource(input:TaxYearInput,raw:unknown):Ohio2026ResidentCreditSourceContext {
+export function calculateOhio2026ResidentCreditSource(taxInput:TaxYearInput,raw:unknown):Ohio2026ResidentCreditSourceContext {
+ const {scheduleBPartThree:_disclosure,...input}=taxInput;
  const parsed=Ohio2026VaResidentCreditSourcesSchema.safeParse(raw);if(!parsed.success)fail('complete confirmed current originals required');
  const source=parsed.data.residentCreditSources, facts=input.ohioResidency, person=input.taxpayer.primary,w2=input.w2s[0],owner=facts?.owners[0];
  if(input.taxpayer.taxYear!==2026||input.taxpayer.filingStatus!=='single'||input.taxpayer.spouse||input.taxpayer.dependents.length||facts?.taxYear!==2026||facts.owners.length!==1||owner?.accountHolder!=='primary'||owner.status!=='full_year_resident'||input.w2s.length!==1||!w2)fail('single current full-year Ohio ordinary employee required');

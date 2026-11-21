@@ -28,8 +28,8 @@ const ssn=(value:string)=>value.replace(/[-\s]/gu,'');
 const normalized=(value:string)=>value.trim().replace(/\s+/gu,' ').toUpperCase();
 function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
 function day(value:unknown):string{if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/u.test(value))return fail('actual calendar date is missing');const time=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(time)||new Date(time).toISOString().slice(0,10)!==value)return fail('actual calendar date is impossible');return value;}
-/** Bind all actual household originals; only this packet is excluded to avoid self-reference. */
-export function snapshotPAMarriedOrdinaryOriginals(input:TaxYearInput):Record<string,unknown>{return structuredClone(Object.fromEntries(Object.entries(input).filter(([key])=>key!=='paMarriedOrdinarySources')));}
+/** Bind actual PA household originals without the self-referential packet or federal Schedule B disclosures. */
+export function snapshotPAMarriedOrdinaryOriginals(input:TaxYearInput):Record<string,unknown>{return structuredClone(Object.fromEntries(Object.entries(input).filter(([key])=>key!=='paMarriedOrdinarySources'&&key!=='scheduleBPartThree')));}
 export interface PAMarriedOrdinaryReturnProjection{
  accountHolder:ReturnOwner;filingChoice:'J'|'M';schoolDistrictCode:string;schoolDistrictName:string;
  residency?:{status:'resident'|'nonresident'|'part_year';residentPeriods:Array<{from:string;through:string}>};
@@ -99,7 +99,7 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
  }
  if(input.scheduleF!==undefined||input.cryptoIncome!==undefined||input.form4797!==undefined||input.form6781!==undefined||input.dependentCareBenefits!==undefined)return fail('retained business/benefit sources require their actual successor');
  if(input.dependentCare!==undefined&&sources.care?.status!=='actual_expenses')return fail('retained care originals require their complete actual married source packet');
- const permittedBlocks=new Set(['taxpayer','w2s','eic','standardDeductionFacts','deductionElection','paMarriedOrdinarySources','dependentCare']);
+ const permittedBlocks=new Set(['taxpayer','w2s','eic','standardDeductionFacts','deductionElection','paMarriedOrdinarySources','dependentCare','scheduleBPartThree']);
  for(const [key,value] of Object.entries(input))if(value!==undefined&&!permittedBlocks.has(key)&&!(Array.isArray(value)&&value.length===0))return fail('retained '+key+' sources require their actual married-source successor');
  // Legacy scalar state overrides are not actual married return source proof.
  if(input.paResidentReturn!==undefined||input.paNonresidentReturn!==undefined)return fail('retained legacy PA scalar requires its actual married-source reconciliation');

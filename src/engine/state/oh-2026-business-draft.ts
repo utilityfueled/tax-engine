@@ -39,7 +39,8 @@ function stable(value: unknown): unknown {
 const digest = (value: unknown) => bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(value)))));
 function fail(message: string): never { throw new Error(`Ohio2026 business draft actual sources: ${message}`); }
 /** Recompute every original/source stage on each call. No caller context or saved projection is proof. */
-export function calculateOhio2026BusinessDraft(input: TaxYearInput, raw: unknown): Ohio2026BusinessDraftResult {
+export function calculateOhio2026BusinessDraft(taxInput: TaxYearInput, raw: unknown): Ohio2026BusinessDraftResult {
+  const { scheduleBPartThree: _scheduleB, ...input } = taxInput;
   const parsed = Ohio2026BusinessDraftSourcesSchema.safeParse(raw);
   const taxpayer = TaxpayerSchema.strict().safeParse(input.taxpayer);
   const standard = StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts);

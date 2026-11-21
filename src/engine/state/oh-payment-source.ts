@@ -40,7 +40,8 @@ export interface OhioPaymentSourceProjection {
     asOfDate: string;
     timingKind: 'filed' | 'expected';
 }
-export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioPaymentSourceProjection {
+export function buildOhioPaymentSource(taxInput: TaxYearInput, raw: unknown): OhioPaymentSourceProjection {
+    const { scheduleBPartThree: _scheduleB, ...input } = taxInput;
     const parsed = OhioPaymentFactsSchema.safeParse(raw);
     if (!parsed.success)
         fail('complete confirmed actual payment records are required');

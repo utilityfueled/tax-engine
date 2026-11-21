@@ -32,10 +32,12 @@ export interface Ohio2026ReciprocalWageContext {
 }
 const contexts = new WeakMap<Ohio2026ReciprocalWageContext, string>();
 /** This proof supplements, never replaces, the complete current employee source admission. */
-export function readOhio2026ReciprocalWageSource(context: Ohio2026ReciprocalWageContext, input: TaxYearInput, raw: unknown): void {
+export function readOhio2026ReciprocalWageSource(context: Ohio2026ReciprocalWageContext, taxInput: TaxYearInput, raw: unknown): void {
+  const { scheduleBPartThree: _disclosure, ...input } = taxInput;
   if (contexts.get(context) !== digest({ input, sources: raw })) fail('current original context is missing stale or forged');
 }
-export function calculateOhio2026ReciprocalWageSource(input: TaxYearInput, raw: unknown): Ohio2026ReciprocalWageContext {
+export function calculateOhio2026ReciprocalWageSource(taxInput: TaxYearInput, raw: unknown): Ohio2026ReciprocalWageContext {
+  const { scheduleBPartThree: _disclosure, ...input } = taxInput;
   const parsed = Ohio2026PaReciprocalSourcesSchema.safeParse(raw);
   if (!parsed.success) fail('complete confirmed current reciprocal originals required');
   const source = parsed.data.reciprocalWageSources;

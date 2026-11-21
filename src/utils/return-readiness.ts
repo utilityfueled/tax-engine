@@ -255,6 +255,11 @@ export function assessReturnReadiness(
 
   let packetCompleteness: ReturnCompletenessStatus = "supported";
   let lineCompleteness: ReturnCompletenessStatus = "supported";
+  const scheduleB = input.federalResult.scheduleB;
+  if (scheduleB && (scheduleB.isRequired || input.taxInput.scheduleBPartThree) && !scheduleB.partThreeComplete) {
+    lineCompleteness = "partial";
+    findings.push("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+  }
   if(input.taxInput.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(input.federalResult.stateReturns?.pennsylvania)){
     packetCompleteness='partial';lineCompleteness='partial';findings.push('Married Pennsylvania owned PA40 and Schedule SP review coverage must be verified against the actual original sources. Filing and separate local returns remain unqualified.');
   }

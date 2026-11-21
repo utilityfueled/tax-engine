@@ -39,7 +39,7 @@ export function calculateOhioReturnHeaderWithSchoolAdapter(input:TaxYearInput,ra
 function calculateHeader(input:TaxYearInput,raw:unknown,proof?:OhioSourceAdapterInvocation):OhioReturnHeaderSourceResult{
  const parsed=OhioReturnHeaderSourcesSchema.safeParse(raw);if(!parsed.success)return fail('complete confirmed actual header originals are required');const source=parsed.data;
  const context=structuredClone(input);Reflect.deleteProperty(context,'ohioReturnHeaderSources');
- const currentFederal=Object.fromEntries(Object.entries(context).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key)));
+ const currentFederal=Object.fromEntries(Object.entries(context).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict','scheduleBPartThree'].includes(key)));
  const residency=OhioResidencyFactsSchema.safeParse(context.ohioResidency),payments=OhioPaymentFactsSchema.safeParse(context.ohioPayments);
  if(!residency.success||!payments.success)return fail('complete current independently confirmed domicile and payment sources are required');
  const facts=residency.data,paid=payments.data,person=context.taxpayer.primary,owner=facts.owners[0];
@@ -97,7 +97,8 @@ function calculateHeader(input:TaxYearInput,raw:unknown,proof?:OhioSourceAdapter
  const metadata=lookupOhioSchoolDistrictMetadata(2025,finder.districtCode);
  if(finder.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(finder.districtName)!==expectedDistrict||(partYearSchool?finder.schoolIncomeTax!=='reported'||metadata?.taxType!=='earned_income'||!metadata.rate.eq('0.0125'):finder.schoolIncomeTax!=='none'||metadata!==null))return fail('actual district originals require their separately supported official row');
  if(list.publication!=='ohio_2025_it1040_booklet'||list.publicationSha256!==OHIO_HEADER_2025_BOOKLET_SHA256||list.printedPage!==printedPage||list.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(list.districtName)!==expectedDistrict||list.rateDisplay!==(partYearSchool?'.0125':'-')||list.taxBaseDisplay!==(partYearSchool?'E':'-'))return fail('review the exact official 2025 district-list row matching the actual Finder original');
+ const {scheduleBPartThree:_scheduleB,...stateContext}=context;
  return{methodVersion:partYearSchool?'oh-2025-py-school-header-212-v1':partYearBusiness?'oh-2025-py-business-header-212-v1':'oh-2025-resident-header-v1',header:{schoolDistrictNumber:finder.districtCode,ohioCounty:county.countyName.trim().slice(0,4).toUpperCase(),residency:partYear?'part_year_resident':'resident'},residentDays,
- sourceCommitment:bytesToHex(sha256(new TextEncoder().encode(encoded({context,source})))),
+ sourceCommitment:bytesToHex(sha256(new TextEncoder().encode(encoded({context:stateContext,source})))),
  audit:[{rule:'actual-resident-header',description:partYear?'Current owner and complete212-day majority-year residential originals match the supported official district and county sources.':'Current owner and complete full-year residential originals match the supported official district and county sources.',status:'validated'}]};
 }

@@ -51,6 +51,22 @@ it('Ohio ordinary actual source review emits all four official companions', asyn
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+it('Ohio ordinary paper preserves official companions after answering Schedule B Part III', async () => {
+  const input = {
+    ...ohioOrdinaryOfficialReviewFixture(),
+    scheduleBPartThree: { hasForeignAccounts: false, hasForeignTrust: false },
+  };
+  const federal = calculateFederalTax(input);
+  const context = prepareOhioResidencyReview(input);
+  const dir = await mkdtemp(join(tmpdir(), 'oh-part-three-paper-'));
+  try {
+    const result = await fillOhioReferenceForms(redactReviewIdentifiers(input), federal, dir, {}, context);
+    expect(result.filledForms.map(path => basename(path)).filter(name => name.endsWith('-review.pdf')).sort()).toEqual([
+      'oh-it-1040-review.pdf', 'oh-it-nrc-review.pdf', 'oh-schedule-credits-review.pdf', 'oh-schedule-of-withholding-review.pdf',
+    ]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 it.each([['0.00', false], ['0.49', true]] as const)('Ohio ordinary paper selects Schedule W from original Ohio withholding %s', async (withheld, includesSchedule) => {
   const input = ohioOrdinaryOfficialReviewFixture(withheld);
   const federal = calculateFederalTax(input);

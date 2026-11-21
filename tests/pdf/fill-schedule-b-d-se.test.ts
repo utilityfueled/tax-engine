@@ -135,14 +135,130 @@ describe("Schedule B PDF fill — MFJ complex filer", () => {
       formatCurrency(sb.totalOrdinaryDividends),
     );
   });
+});
 
-  it("fills Part III foreign account checkboxes", () => {
-    const sb = result.scheduleB!;
-    if (sb.hasForeignAccounts) {
-      expect(isChecked(doc, SCHEDULE_B_FIELDS.line7aYes)).toBe(true);
-    } else {
-      expect(isChecked(doc, SCHEDULE_B_FIELDS.line7aNo)).toBe(true);
-    }
+describe("Schedule B PDF fill — Part III printed questions", () => {
+  function expectPrintedAnswers(saved: PDFDocument, marks: readonly string[], countries?: string, continuation?: string) {
+    const savedForm = saved.getForm();
+    const annotations = new Set(saved.getPage(0).node.Annots()?.asArray().map(ref => saved.context.lookup(ref)));
+    const checkboxes = savedForm.getFields().filter(field => field instanceof PDFCheckBox).map(field => {
+      const [widget] = field.acroField.getWidgets();
+      expect(annotations.has(widget.dict)).toBe(true);
+      const { x, y } = widget.getRectangle();
+      return { x, y, value: field.acroField.getValue().toString(), appearance: widget.getAppearanceState()?.toString() };
+    }).sort((a, b) => b.y - a.y || a.x - b.x);
+
+    // Physical Yes/No columns in the IRS form, ordered by foreign account, FBAR, and trust.
+    const rows = [133.001, 97.001, 37];
+    const columns = [539.4, 561];
+    expect(checkboxes).toEqual(rows.flatMap((y, row) => columns.map((x, column) => {
+      const mark = marks[row * columns.length + column];
+      return { x, y, value: mark, appearance: mark };
+    })));
+    expect(savedForm.getTextField("topmostSubform[0].Page1[0].f1_65[0]").getText()).toBe(countries);
+    expect(savedForm.getTextField("topmostSubform[0].Page1[0].f1_66[0]").getText()).toBe(continuation);
+  }
+
+  it("writes explicit Schedule B Part III answers to their printed PDF fields", async () => {
+    const input = TaxYearInputSchema.parse({
+      ...complexMFJFixture,
+      scheduleBPartThree: {
+        hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada", "Japan"], hasForeignTrust: false,
+      },
+    });
+    const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+    expectPrintedAnswers(
+      await PDFDocument.load(await doc.save()), ["/1", "/Off", "/1", "/Off", "/Off", "/2"], "Canada, Japan",
+    );
+  });
+
+  it.each([
+    {
+      name: "leaves unanswered questions blank",
+      facts: undefined,
+      marks: ["/Off", "/Off", "/Off", "/Off", "/Off", "/Off"],
+    },
+    {
+      name: "prints no foreign account and no foreign trust with FBAR skipped",
+      facts: { hasForeignAccounts: false, hasForeignTrust: false },
+      marks: ["/Off", "/2", "/Off", "/Off", "/Off", "/2"],
+    },
+    {
+      name: "prints foreign account yes, FBAR no, and foreign trust yes on separate rows",
+      facts: { hasForeignAccounts: true, fbarRequired: false, hasForeignTrust: true },
+      marks: ["/1", "/Off", "/Off", "/2", "/1", "/Off"],
+    },
+    {
+      name: "prints foreign account yes without inventing an FBAR answer",
+      facts: { hasForeignAccounts: true },
+      marks: ["/1", "/Off", "/Off", "/Off", "/Off", "/Off"],
+    },
+    {
+      name: "prints FBAR yes and its countries while leaving an unanswered trust blank",
+      facts: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada", "Japan"] },
+      marks: ["/1", "/Off", "/1", "/Off", "/Off", "/Off"],
+      countries: "Canada, Japan",
+    },
+    {
+      name: "uses both printed country lines for a longer reported list",
+      facts: {
+        hasForeignAccounts: true, fbarRequired: true,
+        foreignAccountCountries: [
+          "United Kingdom", "Democratic Republic of the Congo", "Federated States of Micronesia",
+          "United Arab Emirates", "Papua New Guinea", "Bosnia and Herzegovina",
+        ],
+      },
+      marks: ["/1", "/Off", "/1", "/Off", "/Off", "/Off"],
+      countries: "United Kingdom, Democratic Republic of the Congo",
+      countryContinuation: "Federated States of Micronesia, United Arab Emirates, Papua New Guinea, Bosnia and Herzegovina",
+    },
+  ])("$name", async ({ facts, marks, countries, countryContinuation }) => {
+    const input = TaxYearInputSchema.parse({ ...complexMFJFixture, scheduleBPartThree: facts });
+    const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+    expectPrintedAnswers(await PDFDocument.load(await doc.save()), marks, countries, countryContinuation);
+  });
+
+  it("attaches a review statement with the countries that do not fit on Line 7b", async () => {
+    const countries = [
+      "United Kingdom", "Democratic Republic of the Congo", "Federated States of Micronesia",
+      "United Arab Emirates", "Papua New Guinea", "Bosnia and Herzegovina", "Trinidad and Tobago",
+      "Sao Tome and Principe", "Central African Republic", "New Zealand",
+    ];
+    const input = TaxYearInputSchema.parse({
+      ...complexMFJFixture,
+      scheduleBPartThree: {
+        hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: countries,
+      },
+    });
+    const doc = await fillScheduleB(input, calculateFederalTax(input), BLANK_SB);
+    const bytes = await doc.save();
+    expectPrintedAnswers(
+      await PDFDocument.load(bytes), ["/1", "/Off", "/1", "/Off", "/Off", "/Off"],
+      "United Kingdom, Democratic Republic of the Congo", "See attached statement",
+    );
+    const pages = extractPdfPages(bytes);
+    expect(pages).toHaveLength(2);
+    expect(pages[1]).toContain("2025 Schedule B - Line 7b Foreign Account Countries");
+    expect(pages[1]).toContain("FOR REVIEW ONLY - NOT FOR FILING");
+    for (const country of countries.slice(2)) expect(pages[1]).toContain(country);
+  });
+
+  it("flags unsupported country spellings without blocking the review PDF or changing the source", async () => {
+    const countries = ["Canada", "中国", "Ελλάδα", "Україна"];
+    const input = TaxYearInputSchema.parse({
+      ...complexMFJFixture,
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: countries },
+    });
+    const result = calculateFederalTax(input);
+    const doc = await fillScheduleB(input, result, BLANK_SB);
+    const bytes = await doc.save();
+    expectPrintedAnswers(
+      await PDFDocument.load(bytes), ["/1", "/Off", "/1", "/Off", "/Off", "/Off"],
+      "Canada", "See attached statement",
+    );
+    expect(extractPdfPages(bytes)[1]).toContain("Provide printable English spellings for 3 country names on this review PDF.");
+    expect(input.scheduleBPartThree?.foreignAccountCountries).toEqual(countries);
+    expect(result.scheduleB?.foreignAccountCountries).toEqual(countries);
   });
 });
 

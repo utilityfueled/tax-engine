@@ -6652,6 +6652,19 @@ export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
 /** Complete input for a tax year */
 export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
+  scheduleBPartThree: z.object({
+    hasForeignAccounts: z.boolean().optional(),
+    fbarRequired: z.boolean().optional(),
+    foreignAccountCountries: z.array(z.string()).optional(),
+    hasForeignTrust: z.boolean().optional(),
+  }).superRefine((facts, context) => {
+    if (facts.fbarRequired !== undefined && facts.hasForeignAccounts !== true) {
+      context.addIssue({ code: "custom", path: ["fbarRequired"], message: "An FBAR answer requires an affirmative foreign account answer." });
+    }
+    if (facts.foreignAccountCountries?.length && facts.fbarRequired !== true) {
+      context.addIssue({ code: "custom", path: ["foreignAccountCountries"], message: "Foreign account countries require an affirmative FBAR answer." });
+    }
+  }).optional(),
   ohioResidency: OhioResidencyFactsSchema.optional(),
   ohioPayments: OhioPaymentFactsSchema.optional(),
   ohioReturnHeaderSources: OhioReturnHeaderSourcesSchema.optional(),

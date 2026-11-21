@@ -56,7 +56,8 @@ export function calculateOhioReciprocalWageSource(input:TaxYearInput,result:TaxR
 }
 
 /** Return the freshly validated payment projection for the current Ohio adapter invocation. */
-export function calculateOhioReciprocalWageSourceWithPayment(input:TaxYearInput,result:TaxReturnResult,facts:OhioResidencyFacts) {
+export function calculateOhioReciprocalWageSourceWithPayment(taxInput:TaxYearInput,result:TaxReturnResult,facts:OhioResidencyFacts) {
+  const {scheduleBPartThree:_disclosure,...input}=taxInput;
   const parsed=OhioReciprocalWageSourcesSchema.safeParse(facts.reciprocalWageSources);
   if(!parsed.success)fail('complete confirmed current ordinary employee originals required');
   const source=parsed.data,person=input.taxpayer.primary,owner=facts.owners[0],w2=input.w2s[0];

@@ -50,7 +50,8 @@ const contexts = new WeakMap<Ohio2026SchoolSourceContext, {
     currentDigest: string;
     projection: Ohio2026SchoolSourceProjection;
 }>();
-export function readOhio2026SchoolSource(context: Ohio2026SchoolSourceContext, input: TaxYearInput, raw: unknown): Ohio2026SchoolSourceProjection {
+export function readOhio2026SchoolSource(context: Ohio2026SchoolSourceContext, taxInput: TaxYearInput, raw: unknown): Ohio2026SchoolSourceProjection {
+    const { scheduleBPartThree: _disclosure, ...input } = taxInput;
     const actual = contexts.get(context);
     if (!actual || actual.currentDigest !== digest({ input, sources: raw }))
         fail('current context missing stale or forged');
@@ -66,7 +67,8 @@ export function calculateOhio2026SchoolDraftSource(input: TaxYearInput, raw: unk
     return qualifyOhio2026SchoolSource(input, raw, true);
 }
 
-function qualifyOhio2026SchoolSource(input: TaxYearInput, raw: unknown, allowSenior: boolean): Ohio2026SchoolSourceContext {
+function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allowSenior: boolean): Ohio2026SchoolSourceContext {
+    const { scheduleBPartThree: _disclosure, ...input } = taxInput;
     const parsed = Ohio2026SchoolSourcesSchema.safeParse(raw), taxpayer = TaxpayerSchema.strict().safeParse(input.taxpayer), resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency), standard = StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts);
     if (!parsed.success || !taxpayer.success || !resident.success || !standard.success)
         fail('complete actual source packet required');
@@ -86,7 +88,8 @@ function qualifyOhio2026SchoolSource(input: TaxYearInput, raw: unknown, allowSen
     const { ohioResidency: _residency, ohioPayments: _payments, ...originals } = input;
     if (digest(facts.originalFederalSources) !== digest(originals))
         fail('current canonical residency original snapshot differs');
-    if (digest(s.originalTaxInput) !== digest(input) || digest(s.owner.originalTaxpayer) !== digest(t.primary))
+    const { scheduleBPartThree: _storedScheduleB, ...storedStateInput } = s.originalTaxInput;
+    if (digest(storedStateInput) !== digest(input) || digest(s.owner.originalTaxpayer) !== digest(t.primary))
         fail('current complete original input or owner differs');
     const r = s.residence, f = r.finder;
     day(r.from);

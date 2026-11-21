@@ -14,7 +14,7 @@ import {assertGuidedPAResidentCreditPair,buildGuidedPAResidentCreditSources,type
 /** Persist private unknown drafts in web state; canonical builders validate before stripping. */
 export type GuidedPAOrdinaryReturnCompletionSources=PAOrdinaryReturnCompletionSources&{otherStateTaxes:PAOrdinaryReturnCompletionSources['otherStateTaxes']&{residentCreditDraft?:GuidedPAResidentCreditSources;refundedDigitalDraft?:GuidedPADigitalTaxRefundSources;refundedRoyaltySources?:GuidedPARoyaltyTaxRefundSources;refundedRoyaltyDraft?:GuidedPARoyaltyTaxRefundDraft}};
 type Sources=GuidedPAOrdinaryReturnCompletionSources;
-const excludedRoots=['paResidencySources','paReciprocitySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources'];
+const excludedRoots=['paResidencySources','paReciprocitySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','scheduleBPartThree'];
 const states=new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
 const fail=(message:string):never=>{throw new Error('PA completion sources: '+message);};
 const ref=(value:string)=>{if(!value.trim())fail('complete the actual source reference or document metadata');};
@@ -23,7 +23,7 @@ const ssn=(value:string)=>value.replace(/\D/g,'');
 function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
 function date(value:string):void{const parsed=new Date(value+'T00:00:00Z');if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10)!==value)fail('actual original date is unknown or invalid');}
 function money(value:string):Decimal{if(!/^\d+(\.\d+)?$/.test(value))return fail('actual source amount is unknown or invalid');const n=new Decimal(value);if(!n.isFinite())return fail('actual source amount is not finite');return n;}
-/** No normalization, year inference or PA replay recursion; every other canonical original is retained. */
+/** No normalization or year inference. Exclude PA replay roots and federal Schedule B disclosures. */
 export function snapshotPAOrdinaryReturnCompletionOriginals(input:TaxYearInput):Record<string,unknown>{const snapshot:Record<string,unknown>=structuredClone(input);for(const key of excludedRoots)delete snapshot[key];return snapshot;}
 export function emptyPACompletionOriginalRecord(recordKind:PACompletionOriginalRecord['recordKind']):PACompletionOriginalRecord{return {recordKind,sourceTaxYear:null,sourceReference:'',documentName:'',issuerName:'',recipientName:'',recipientTin:'',recordDate:'',originalAvailableConfirmed:null,methodStatus:'requires_source_method'};}
 /** Empty private draft, with no factual default for source year, status, amount, owner or jurisdiction. */

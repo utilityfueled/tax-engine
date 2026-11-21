@@ -40,11 +40,13 @@ export interface ScheduleBResult {
   totalOrdinaryDividends: Decimal; // Line 6 → 1040 Line 3b
 
   /** Part III */
-  hasForeignAccounts: boolean; // Line 7a
+  hasForeignAccounts: boolean | null; // Line 7a, question 1
+  fbarRequired: boolean | null; // Line 7a, question 2
   foreignAccountCountries: string[]; // Line 7b
-  hasForeignTrust: boolean; // Line 8
+  hasForeignTrust: boolean | null; // Line 8
+  partThreeComplete: boolean;
 
-  /** Whether Schedule B is required */
+  /** Whether the supplied facts establish that Schedule B is required. */
   isRequired: boolean;
 
   lines: CalculatedLine[];
@@ -258,49 +260,41 @@ export function calculateScheduleB(
 
   // ── Part III: Foreign Accounts and Trusts ─────────────
 
-  // Detect foreign accounts from 1099-DIV foreign tax info
-  const foreignCountries = new Set<string>();
-  for (const form of input.form1099Div) {
-    if (form.foreignCountry && d(form.foreignTaxPaid).greaterThan(0)) {
-      foreignCountries.add(form.foreignCountry);
-    }
+  const foreignAnswers = input.scheduleBPartThree;
+  const hasForeignAccounts = foreignAnswers?.hasForeignAccounts ?? null;
+  const fbarRequired = hasForeignAccounts === true ? foreignAnswers?.fbarRequired ?? null : null;
+  const suppliedCountries = foreignAnswers?.foreignAccountCountries?.map((country) => country.trim()) ?? [];
+  const foreignAccountCountries = fbarRequired === true && suppliedCountries.every(Boolean)
+    ? [...new Set(suppliedCountries)]
+    : [];
+  const hasForeignTrust = foreignAnswers?.hasForeignTrust ?? null;
+  const fbarAnswerApplicable = hasForeignAccounts === false
+    ? foreignAnswers?.fbarRequired === undefined
+    : fbarRequired !== null;
+  const countryAnswersComplete = fbarRequired === true
+    ? foreignAccountCountries.length > 0
+    : suppliedCountries.length === 0;
+  const partThreeComplete = hasForeignTrust !== null && fbarAnswerApplicable && countryAnswersComplete;
+
+  if (hasForeignAccounts !== null) {
+    audit.record("Sched B", "7a", "Foreign financial account", new Decimal(Number(hasForeignAccounts)), "Taxpayer's answer");
   }
-
-  const hasForeignAccounts = foreignCountries.size > 0;
-  const foreignAccountCountries = [...foreignCountries];
-
-  audit.record(
-    "Sched B",
-    "7a",
-    "Foreign financial account",
-    new Decimal(hasForeignAccounts ? 1 : 0),
-    "Detected from 1099-DIV foreign tax paid"
-  );
-
-  audit.record(
-    "Sched B",
-    "7b",
-    "Foreign account countries",
-    new Decimal(foreignAccountCountries.length),
-    foreignAccountCountries.join(", ") || "None"
-  );
-
-  // Detect foreign partnership/trust from K-1 data
-  const hasForeignTrust = input.scheduleK1.some((k1) => k1.isForeignPartnership === true);
-  audit.record(
-    "Sched B",
-    "8",
-    "Foreign trust",
-    new Decimal(hasForeignTrust ? 1 : 0),
-    hasForeignTrust ? "K-1 foreign partnership detected" : "No foreign trust/partnership"
-  );
+  if (fbarRequired !== null) {
+    audit.record("Sched B", "7a-FBAR", "FinCEN Form 114 required", new Decimal(Number(fbarRequired)), "Taxpayer's answer");
+  }
+  if (foreignAccountCountries.length) {
+    audit.record("Sched B", "7b", "Foreign account countries", new Decimal(foreignAccountCountries.length), foreignAccountCountries.join(", "));
+  }
+  if (hasForeignTrust !== null) {
+    audit.record("Sched B", "8", "Foreign trust", new Decimal(Number(hasForeignTrust)), "Taxpayer's answer");
+  }
 
   // Determine if Schedule B is required
   const isRequired =
     totalInterest.greaterThan(1500) ||
     totalOrdinaryDividends.greaterThan(1500) ||
-    hasForeignAccounts ||
-    hasForeignTrust;
+    hasForeignAccounts === true ||
+    hasForeignTrust === true;
 
   return {
     previouslyReportedSavingsBondInterest,
@@ -311,8 +305,10 @@ export function calculateScheduleB(
     dividendPayers,
     totalOrdinaryDividends,
     hasForeignAccounts,
+    fbarRequired,
     foreignAccountCountries,
     hasForeignTrust,
+    partThreeComplete,
     isRequired,
     lines: audit.getLines(),
   };

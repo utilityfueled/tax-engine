@@ -38,6 +38,10 @@ lines:
     description: Actual existing Ohio review entry emits required official pages
     formula: Existing fillOhioReferenceForms returns four additional review files for the complete finite cohort, seven official pages total. Review summaries remain distinct. Each output has exactly the expected physical pages and all pages carry the review notice.
     testRef: "tests/pdf/oh-ordinary-official-review.test.ts::Ohio ordinary actual source review emits all four official companions"
+  - line: "schedule-b-part-three"
+    description: Federal Schedule B Part III answers preserve Ohio ordinary review eligibility
+    formula: Foreign account and trust answers do not affect Ohio income or the eligibility of the existing ordinary physical review companions.
+    testRef: "tests/pdf/oh-ordinary-official-review.test.ts::Ohio ordinary paper preserves official companions after answering Schedule B Part III"
   - line: "source-binding"
     description: Original and federal result replay before output
     formula: Forged context, changed actual W2 identity or stale federal result rejects before creating output. No fake reconstructed result or private-original string may be emitted as paper proof. Existing public2026 and filing gates remain closed.

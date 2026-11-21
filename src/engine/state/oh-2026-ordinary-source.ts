@@ -58,7 +58,8 @@ export interface Ohio2026OrdinaryContext {
   readonly sourceCommitment: string;
 }
 const contexts = new WeakMap<Ohio2026OrdinaryContext, { currentDigest: string; projection: Projection }>();
-export function readOhio2026OrdinarySource(context: Ohio2026OrdinaryContext, input: TaxYearInput, sources: unknown): Projection {
+export function readOhio2026OrdinarySource(context: Ohio2026OrdinaryContext, taxInput: TaxYearInput, sources: unknown): Projection {
+  const { scheduleBPartThree: _disclosure, ...input } = taxInput;
   const stored = contexts.get(context);
   if (!stored || stored.currentDigest !== digest({ input, sources })) fail('current original context is missing stale or forged');
   return structuredClone(stored.projection);
@@ -82,7 +83,8 @@ export function calculateOhio2026EarnedSchoolEmployeeSource(input:TaxYearInput,r
  const school=calculateOhio2026SchoolDraftSource(input,parsed.data.schoolSources);
  return qualifyEmployee(input,raw,undefined,undefined,school);
 }
-function qualifyEmployee(input: TaxYearInput, raw: unknown, reciprocal?: Ohio2026ReciprocalWageContext, residentCredit?: Ohio2026ResidentCreditSourceContext, school?:Ohio2026SchoolSourceContext): Ohio2026OrdinaryContext {
+function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, reciprocal?: Ohio2026ReciprocalWageContext, residentCredit?: Ohio2026ResidentCreditSourceContext, school?:Ohio2026SchoolSourceContext): Ohio2026OrdinaryContext {
+  const { scheduleBPartThree: _disclosure, ...input } = taxInput;
   if (reciprocal) readOhio2026ReciprocalWageSource(reciprocal, input, raw);
   const paidResident = residentCredit ? readOhio2026ResidentCreditSource(residentCredit, input, raw) : undefined;
   if (reciprocal && residentCredit) fail('reciprocal and resident credit methods cannot overlap');

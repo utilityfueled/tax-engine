@@ -100,6 +100,7 @@ import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided
 import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
 import { buildOidInputs, buildPaOidSources, isStartedOid, oidFactErrors } from "./guided-oid-facts";
 import { buildDigitalAssetInputs, digitalAssetFactErrors, isStartedDigitalAsset } from "./guided-digital-asset-facts";
+import { buildGuidedScheduleBPartThree } from "./guided-schedule-b-part-three";
 
 import type {
   AdjustmentData,
@@ -933,6 +934,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
 
   const healthInsurance = buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance);
   const eic = buildGuidedEicClaimantEligibility(personalInfo, segmentation.filingStatus, state.taxYear);
+  const scheduleBPartThree = buildGuidedScheduleBPartThree(state);
   let builtForeignIncome: ReturnType<typeof buildForeignIncomeInput>;
   let input: GuidedTaxInputSources = {
     taxpayer: {
@@ -964,6 +966,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents, personalInfo?.eicSeparatedSpouseSources, personalInfo?.eicRecertificationSources),
     },
     w2s,
+    ...(scheduleBPartThree ? { scheduleBPartThree } : {}),
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: builtForeignIncome = buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     ...(form3903 === undefined ? {} : { form3903 }),

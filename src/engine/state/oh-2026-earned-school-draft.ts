@@ -29,7 +29,9 @@ export function calculateOhio2026EarnedSchoolDraft(input:TaxYearInput,raw:unknow
  const context=calculateOhio2026EarnedSchoolEmployeeSource(input,raw);
  const schoolContext=calculateOhio2026SchoolDraftSource(input,s.schoolSources),actual=readOhio2026SchoolSource(schoolContext,input,s.schoolSources);
  const proof=s.schoolPaymentSources,p=proof.payments,person=input.taxpayer.primary;
- if(!same(proof.originalTaxInput,input)||!same(proof.originalSchoolSources,s.schoolSources)||!same(proof.owner.originalTaxpayer,person)||proof.districtCode!==actual.districtCode)fail('current complete school payment originals owner district or input differs');
+ const {scheduleBPartThree:_scheduleB,...stateInput}=input;
+ const {scheduleBPartThree:_storedScheduleB,...storedStateInput}=proof.originalTaxInput;
+ if(!same(storedStateInput,stateInput)||!same(proof.originalSchoolSources,s.schoolSources)||!same(proof.owner.originalTaxpayer,person)||proof.districtCode!==actual.districtCode)fail('current complete school payment originals owner district or input differs');
  if(p.paymentRows.length||p.priorReturn.status!=='no_return'||p.priorCreditCarryforward.status!=='none'||!cash(p.account.estimatedPaymentsCredited).isZero()||!cash(p.account.priorCreditApplied).isZero()||!cash(p.refundDisposition.outgoingCarryforward).isZero())fail('separate actual no estimates prior return carry or election required');
  if(p.account.taxYear!==2026||p.account.returnType!=='sd100'||name(p.account.accountName)!==name(person.firstName+' '+person.lastName)||tin(p.account.accountSsn)!==tin(person.ssn))fail('actual school account owner year type differs');
  const timing=p.currentTiming,valuation=timing.kind==='filed'?timing.filedDate:timing.expectedDate;
@@ -61,7 +63,7 @@ export function calculateOhio2026EarnedSchoolDraft(input:TaxYearInput,raw:unknow
  ]as const)audit.record('OH2026 earned-school draft',line,label,value,formula);
 
  return {taxYear:2026,ruleVersion:'oh-2026-earned-school-employee-draft-v1',calculationStatus:'incomplete',reviewStatus:'independent-review-pending',filingQualified:false,
- sourceCommitment:bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable({input,sources:raw}))))),state,
+ sourceCommitment:bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable({input:stateInput,sources:raw}))))),state,
  school:{districtCode:actual.districtCode,taxBase:'earned',rate,rawCompensation,rawTaxLevy,rawWithholding,reportedTaxBase,taxBeforeCredits,seniorCredit,incomeTax,withholding,estimatedPayments:zero(),priorCreditApplied:zero(),underpaymentPenalty:zero(),latePaymentInterest:zero(),amountDue:zero(),refund:withholding.minus(incomeTax),externalAccountSettlement:null,roundingElection:'whole_dollars'},
  lines:[...state.lines,...audit.getLines()],limitations:['Finite single full-year ordinary wages in one actual earned district; complete separate state and school withholding coverage only.','School report arithmetic uses explicit statutory whole-dollar election; raw originals remain intact. No final2026 SD100 form identity or line-number assertion.','Actual external account settlement is unobserved. Other payments, carryovers, elections, traditional districts, multiple districts, part-year/nonresident, business and credit methods require separate actual source proofs.','Draft remains incomplete; full federal2026, final physical forms, independent human review and filing qualification remain unavailable.']};
 }

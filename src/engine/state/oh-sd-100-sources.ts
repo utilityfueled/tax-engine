@@ -31,7 +31,7 @@ function sameSourceMaterial(left: unknown, right: unknown): boolean {
   return JSON.stringify(stable(left)) === JSON.stringify(stable(right));
 }
 function sourceOriginals(input: TaxYearInput) {
-  const { ohioResidency: _r, ohioPayments: _p, ohioSchoolDistrict: _s, ohioReturnHeaderSources: _header, ...original } = input;
+  const { ohioResidency: _r, ohioPayments: _p, ohioSchoolDistrict: _s, ohioReturnHeaderSources: _header, scheduleBPartThree: _scheduleB, ...original } = input;
   return original;
 }
 function actualDate(value: string): string {

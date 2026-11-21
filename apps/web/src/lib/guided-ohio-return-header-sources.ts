@@ -54,7 +54,7 @@ function withCurrentContext<T>(input:TaxYearInput,residency:OhioResidencyDraft|u
   const facts=residency?.residentCreditSources?buildGuidedOhioResidentCreditSources(original,residency.residentCreditSources,parent,paid):parent;
   return(district,proof)=>{
    const canonical={...original,ohioResidency:facts,ohioPayments:paid,...(district?{ohioSchoolDistrict:district}:{})};
-   const federal=Object.fromEntries(Object.entries(original).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key)));
+   const federal=Object.fromEntries(Object.entries(original).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict','scheduleBPartThree'].includes(key)));
    if(district)onSchoolReplay?.();
    return use({canonical,federal,facts,paid,district},proof);
   };

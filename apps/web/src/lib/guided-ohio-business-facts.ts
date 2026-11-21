@@ -24,7 +24,7 @@ function stable(value:unknown):string{
  return JSON.stringify(value)??'null';
 }
 /** Same three self-referential guide roots as existing Ohio native snapshots. */
-function original(input:TaxYearInput):Record<string,unknown>{return structuredClone(Object.fromEntries(Object.entries(input).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key))));}
+function original(input:TaxYearInput):Record<string,unknown>{return structuredClone(Object.fromEntries(Object.entries(input).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict','scheduleBPartThree'].includes(key))));}
 const moneyKeys=new Set(['ohio','everywhere','grossReceipt','ohioBenefitReceipt','amount']);
 function normalize(value:unknown,key=''):unknown{
  if(key==='originalBusiness')return structuredClone(value);

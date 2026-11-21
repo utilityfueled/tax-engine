@@ -115,7 +115,8 @@ function baseOnly(input: TaxYearInput): void {
 export function captureGuidedOhio2026SchoolOriginals(input: TaxYearInput, draft: Ohio2026SchoolDraft): Ohio2026SchoolDraft {
     baseOnly(input);
     const next = structuredClone(draft);
-    next.originalFederalSources = structuredClone(input);
+    const { scheduleBPartThree: _scheduleB, ...stateInput } = input;
+    next.originalFederalSources = structuredClone(stateInput);
     next.owner.originalTaxpayer = structuredClone(input.taxpayer.primary);
     next.residence.originalAddress = structuredClone(input.taxpayer.address);
     next.sourceFactsConfirmed = null;
@@ -123,14 +124,15 @@ export function captureGuidedOhio2026SchoolOriginals(input: TaxYearInput, draft:
 }
 function canonical(input: TaxYearInput, draft: Ohio2026SchoolDraft): TaxYearInput {
     baseOnly(input);
-    if (!draft.originalFederalSources || !same(draft.originalFederalSources, input))
+    const { scheduleBPartThree: _scheduleB, ...stateInput } = input;
+    if (!draft.originalFederalSources || !same(draft.originalFederalSources, stateInput))
         fail('captured canonical originals missing or stale; explicitly capture current records');
     if (draft.residency.originalFederalSources !== undefined && !same(draft.residency.originalFederalSources, draft.originalFederalSources))
         fail('retained residency snapshot conflicts with captured originals; reconcile it explicitly');
     if (draft.noStateAdjustmentsConfirmed !== true)
         fail('actual known empty state-adjustment inventory required');
     const residency = OhioResidencyFactsSchema.parse({ ...structuredClone(draft.residency), taxYear: year(draft.residency.taxYear), originalFederalSources: draft.originalFederalSources });
-    return { ...input, ohioResidency: residency };
+    return { ...stateInput, ohioResidency: residency };
 }
 function packet(d: Ohio2026SchoolDraft) {
     const { residency: _residency, noStateAdjustmentsConfirmed: _adjustments, originalFederalSources: _base, confirmedSourceFacts: _sourceProof, ...s } = structuredClone(d);

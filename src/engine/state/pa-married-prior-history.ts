@@ -12,13 +12,13 @@ function stable(value:unknown):string{if(Array.isArray(value))return '['+value.m
 const name=(value:string)=>value.trim().replace(/\s+/gu,' ').toUpperCase();
 const tin=(value:string)=>value.replace(/[-\s]/gu,'');
 function day(value:string):string{if(!/^\d{4}-\d{2}-\d{2}$/u.test(value))return fail('actual date unknown');const t=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(t)||new Date(t).toISOString().slice(0,10)!==value)return fail('actual date impossible');return value;}
-/** Only captured metadata is excluded; all actual entered household facts remain. */
+/** Bind actual PA household inputs without captured metadata or federal Schedule B disclosures. */
 export function snapshotPAMarriedPriorCurrentOriginals(input:TaxYearInput,sources:PAMarriedOrdinarySources):Record<string,unknown>{
  const household=structuredClone(sources) as unknown as Record<string,unknown>;
  delete household.priorYearHistory;delete household.sourceFactsConfirmed;delete household.originalFederalSources;
  for(const row of household.owners as Array<Record<string,unknown>>)delete row.originalTaxpayer;
  for(const row of household.wages as Array<Record<string,unknown>>){delete row.original;delete row.originalRecipientSsn;}
- return {input:structuredClone(Object.fromEntries(Object.entries(input).filter(([k])=>k!=='paMarriedOrdinarySources'))),household};
+ return {input:structuredClone(Object.fromEntries(Object.entries(input).filter(([k])=>k!=='paMarriedOrdinarySources'&&k!=='scheduleBPartThree'))),household};
 }
 /** Bind the entered prior document lexemes separately from current originals. */
 export function snapshotPAMarriedPriorOriginals(input:TaxYearInput,sources:PAMarriedOrdinarySources):Record<string,unknown>{

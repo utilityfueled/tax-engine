@@ -10,7 +10,7 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
  * Part III: Foreign accounts / trusts checkboxes.
  */
 
-import { breakTextIntoLines, StandardFonts, type PDFDocument, type PDFFont } from "pdf-lib";
+import { breakTextIntoLines, StandardFonts, type PDFDocument, type PDFFont, type PDFForm } from "pdf-lib";
 import type { InterestPayer } from "@/engine/schedules/schedule-b.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -120,15 +120,18 @@ const FIELDS = {
   // ── Part II Summary ──
   line6: p1("f1_64[0]"),  // Total ordinary dividends → 1040 Line 3b
 
-  // ── Part III: Foreign Accounts ──
-  // Line 7a: Yes/No for foreign accounts (radio pair)
+  // ── Part III: Foreign Accounts and Trusts ──
+  // Line 7a, first row: financial interest or signature authority.
   line7aYes: p1("TagcorrectingSubform[0].c1_1[0]"),
   line7aNo: p1("TagcorrectingSubform[0].c1_1[1]"),
-  // Line 7b: Countries (text field)
-  line7bCountries: p1("f1_66[0]"),
-  // Line 8: Yes/No for foreign trust
-  line8Yes: p1("c1_2[0]"),
-  line8No: p1("c1_2[1]"),
+  // Line 7a, second row: whether FinCEN Form 114 is required.
+  line7aFbarYes: p1("c1_2[0]"),
+  line7aFbarNo: p1("c1_2[1]"),
+  line7bCountries: p1("f1_65[0]"),
+  line7bCountriesContinuation: p1("f1_66[0]"),
+  // Line 8: distributions from, or grantor or transferor to, a foreign trust.
+  line8Yes: p1("c1_3[0]"),
+  line8No: p1("c1_3[1]"),
 } as const;
 
 const interestPayerCapacity = FIELDS.interestPayerName.length;
@@ -138,6 +141,58 @@ export function assertScheduleBReviewCapacity(result: TaxReturnResult): void {
   const sb = result.scheduleB;
   if (sb && sb.dividendPayers.length > dividendPayerCapacity && result.form8814?.totalQualifiedDividends.gt(0)) {
     throw new Error(`Schedule B review PDF cannot include Form 8814 with more than ${dividendPayerCapacity} dividend payer rows.`);
+  }
+}
+
+function fillForeignAccountCountries(form: PDFForm, countries: readonly string[]) {
+  const { line7bCountries, line7bCountriesContinuation } = FIELDS;
+  const font = form.getDefaultFont();
+  const fontSize = 8; // Default appearance size for both country fields in the pinned template.
+  const supportedCharacters = new Set(font.getCharacterSet());
+  const printableCountries = countries.filter(country =>
+    Array.from(country).every(character => supportedCharacters.has(character.codePointAt(0) ?? -1)),
+  );
+  const usableWidth = (name: string): number => {
+    const [widget] = form.getTextField(name).acroField.getWidgets();
+    return widget.getRectangle().width - 2 * (1 + (widget.getBorderStyle()?.getWidth() ?? 0));
+  };
+  const firstWidth = usableWidth(line7bCountries);
+  let firstLine = "";
+  let firstCount = 0;
+  for (const country of printableCountries) {
+    const next = firstLine ? `${firstLine}, ${country}` : country;
+    if (font.widthOfTextAtSize(next, fontSize) > firstWidth) break;
+    firstLine = next;
+    firstCount++;
+  }
+  if (firstLine) setTextField(form, line7bCountries, firstLine);
+  const remaining = printableCountries.slice(firstCount);
+  const secondLine = remaining.join(", ");
+  const omittedCountryCount = countries.length - printableCountries.length;
+  if (omittedCountryCount === 0 && font.widthOfTextAtSize(secondLine, fontSize) <= usableWidth(line7bCountriesContinuation)) {
+    if (secondLine) setTextField(form, line7bCountriesContinuation, secondLine);
+    return;
+  }
+  setTextField(form, firstLine ? line7bCountriesContinuation : line7bCountries, "See attached statement");
+  return { remaining, omittedCountryCount };
+}
+
+function appendCountryStatement(doc: PDFDocument, font: PDFFont, countries: readonly string[], omittedCountryCount: number): void {
+  const left = 40;
+  const width = 532;
+  const size = 10;
+  const lines = countries.flatMap(country => breakTextIntoLines(country, [""], width, text => font.widthOfTextAtSize(text, size)));
+  const rowsPerPage = 43;
+  for (let start = 0; start < Math.max(lines.length, 1); start += rowsPerPage) {
+    const page = doc.addPage([612, 792]);
+    page.drawText("2025 Schedule B - Line 7b Foreign Account Countries", { x: left, y: 750, size: 14, font });
+    if (omittedCountryCount > 0) {
+      const label = omittedCountryCount === 1 ? "country name" : "country names";
+      page.drawText(`Provide printable English spellings for ${omittedCountryCount} ${label} on this review PDF.`, { x: left, y: 726, size, font });
+    }
+    lines.slice(start, start + rowsPerPage).forEach((line, index) => {
+      page.drawText(line, { x: left, y: 690 - index * 15, size, font });
+    });
   }
 }
 
@@ -237,29 +292,31 @@ export async function fillScheduleB(
   }
   setCurrencyField(form, F.line6, sb.totalOrdinaryDividends);
 
-  // ── Part III: Foreign Accounts ──
-  if (sb.hasForeignAccounts) {
-    setCheckBox(form, F.line7aYes, true);
-    if (sb.foreignAccountCountries.length > 0) {
-      setTextField(form, F.line7bCountries, sb.foreignAccountCountries.join(", "));
-    }
-  } else {
-    setCheckBox(form, F.line7aNo, true);
+  // ── Part III: Foreign Accounts and Trusts ──
+  for (const [answer, yes, no] of [
+    [sb.hasForeignAccounts, F.line7aYes, F.line7aNo],
+    [sb.fbarRequired, F.line7aFbarYes, F.line7aFbarNo],
+    [sb.hasForeignTrust, F.line8Yes, F.line8No],
+  ] as const) {
+    if (typeof answer === "boolean") setCheckBox(form, answer ? yes : no, true);
   }
-
-  if (sb.hasForeignTrust) {
-    setCheckBox(form, F.line8Yes, true);
-  } else {
-    setCheckBox(form, F.line8No, true);
-  }
+  const countryStatement = sb.fbarRequired === true && sb.foreignAccountCountries.length > 0
+    ? fillForeignAccountCountries(form, sb.foreignAccountCountries)
+    : undefined;
 
   const additionalInterest = sb.interestPayers.slice(interestPayerCapacity);
   const additionalDividends = sb.dividendPayers.slice(dividendPayerCapacity);
-  if (additionalInterest.length || additionalDividends.length) {
+  const payerStatementNeeded = additionalInterest.length > 0 || additionalDividends.length > 0;
+  if (payerStatementNeeded || countryStatement) {
     const font = await doc.embedFont(StandardFonts.Helvetica);
-    doc.getPage(0).drawText("Additional Schedule B payer rows on the following pages.", { x: 36, y: 768, size: 10, font });
-    appendPayerStatement(doc, font, name, "2025 Schedule B - Line 1 Interest Payer Continuation", additionalInterest);
-    appendPayerStatement(doc, font, name, "2025 Schedule B - Line 5 Ordinary Dividend Payer Continuation", additionalDividends);
+    if (payerStatementNeeded) {
+      doc.getPage(0).drawText("Additional Schedule B payer rows on the following pages.", { x: 36, y: 768, size: 10, font });
+      appendPayerStatement(doc, font, name, "2025 Schedule B - Line 1 Interest Payer Continuation", additionalInterest);
+      appendPayerStatement(doc, font, name, "2025 Schedule B - Line 5 Ordinary Dividend Payer Continuation", additionalDividends);
+    }
+    if (countryStatement) {
+      appendCountryStatement(doc, font, countryStatement.remaining, countryStatement.omittedCountryCount);
+    }
     await markReviewPdf(doc);
   }
 

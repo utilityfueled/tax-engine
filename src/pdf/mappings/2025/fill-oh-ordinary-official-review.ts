@@ -107,7 +107,7 @@ export async function fillOhioOrdinaryOfficialReview(
   // A domicile label or caller deduction never selects the reciprocal physical method.
   const reciprocal=adapted.residencyReciprocalWageSource!==undefined;
   // Retained originals need their own physical companions even when net zero.
-  if(Object.entries(original).some(([key,value])=>/^(?:form|schedule)/.test(key)&&value!==undefined&&value!==null&&(!Array.isArray(value)||value.length>0))||
+  if(Object.entries(original).some(([key,value])=>key!=='scheduleBPartThree'&&/^(?:form|schedule)/.test(key)&&value!==undefined&&value!==null&&(!Array.isArray(value)||value.length>0))||
     original.royaltyPropertySources||(original.rentalProperties?.length??0)>0||original.cryptoIncome||original.netOperatingLoss||original.adjustments||
     original.ohioResidency?.businessSources)return [];
   const owner=original.ohioResidency?.owners[0],w2=original.w2s[0],nrc=result.nonresidentCreditResult;

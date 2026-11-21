@@ -26,7 +26,7 @@ beforeEach(() => {
   for (const key of Object.keys(mocks.registry)) delete mocks.registry[key];
   mocks.read.mockResolvedValue(template);
   mocks.rule.mockReturnValue({ taxYear: 2025, ruleVersion: "synthetic-test", filingQualified: true });
-  mocks.calculate.mockReturnValue({ taxYear: 2025 });
+  mocks.calculate.mockReturnValue({ taxYear: 2025, scheduleB: { partThreeComplete: true } });
   complete = vi.fn();
   render = vi.fn(async () => { const doc = await PDFDocument.create(); doc.addPage(); return doc; });
   mocks.registry.synthetic = { id: "synthetic", taxYear: 2025, ruleVersion: "synthetic-test", independentTaxReview: "synthetic test only", independentSecurityReview: "synthetic test only", releaseApproval: "synthetic test only", validateCompleteInput: complete, selectForms: () => ["1040"], forms: { "1040": { id: "1040", taxYear: 2025, filename: "synthetic.pdf", sha256, finalRevision: "synthetic test only", officialSource: "https://example.invalid/synthetic", independentMappingReview: "synthetic test only", render } } };
@@ -63,6 +63,14 @@ describe("complete-data filing pipeline remains distinct from review export", ()
   it("rejects a mismatched calculation year", async () => {
     mocks.calculate.mockReturnValue({ taxYear: 2026 });
     await expect(buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic")).rejects.toThrow(/years must match/);
+  });
+  it("rejects unresolved Schedule B applicability before selecting forms", async () => {
+    const selectForms = vi.fn(() => ["1040"]);
+    mocks.registry.synthetic = { ...scenario(), selectForms };
+    mocks.calculate.mockReturnValue({ taxYear: 2025, scheduleB: { isRequired: false, partThreeComplete: false } });
+    await expect(buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic")).rejects.toThrow(/Schedule B Part III/);
+    expect(selectForms).not.toHaveBeenCalled();
+    expect(mocks.read).not.toHaveBeenCalled();
   });
   it.each([{ ids: [] }, { ids: ["1040", "1040"] }, { ids: ["missing"] }])("rejects incomplete or duplicate attachment lists $ids", async ({ ids }) => {
     mocks.registry.synthetic = { ...scenario(), selectForms: () => ids };

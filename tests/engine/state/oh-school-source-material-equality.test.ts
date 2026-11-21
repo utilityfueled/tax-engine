@@ -25,15 +25,16 @@ function copy<T>(value:T):T{
  return value;
 }
 // Full-output baselines rebound only after exact1768448b→835e8972 comparison: HSA audit wording and explicit zero trace additions; all monetary/source commitments unchanged.
+// Full returns compared with 5a8384ec. Only Schedule B Part III answers and their audit lines changed.
 const baselineHashes:Readonly<Record<string,string>>={
-  "base": "3ccd138bc11907bce4e98591cdb010d953b578e32273f9a97117147bfcde78a4",
-  "estimates": "9967ef077232525cecac9d09b5cea81244c540917418b48666989b63fdd48f23",
-  "outgoing": "8897326cdac5b33beefc65e19b70d7fc120ae3e56cc0d11ac63f2d765d0b3c15",
-  "prior": "f7445312897405e4426d02d07d7bca0bcc791d61e7bc29f947832b6d7152ace6",
-  "zero-withholding": "fdd5e54dccd817ae28083d1536f4300fa0df3a78a6145542f660e00ef8c77867",
-  "municipal-first": "06fb4f7c2fa3bbcd06e36afe921e88e26ccc0fbd322231503a2409e570b86739",
-  "part-year-header-refund100": "4c6457a71adead15b617bc43b8bf3b663a5b48c72f35fb167b971bf33a351dd2",
-  "part-year-header-covered": "4ecb41ca030de52874b6915e8fda99ea28e758ff223362c9f43e6bbc27ca0aae"
+  "base": "8be59e570c5f88dfa02dc7fd5bb0cf8f3a826913eae7b3558de924075c2f6917",
+  "estimates": "c563a9b9e2aa0c917b39edccf866789bbb13dd7cd6b33751e6d2e2865b61062b",
+  "outgoing": "461ec39e381cda7a89a70ad0e17e0e6bacba4107561faba49d07c0de4f8d9c18",
+  "prior": "424f400eea640a585971292250b4eaac6f19b2ad237ccbb14377ef08019a1d19",
+  "zero-withholding": "7c9aff663199c94ab9d0ee8d1de06ed2b50533b9033c4351b23880824c357dc3",
+  "municipal-first": "43d5d64fc7d7129ee49911f6688285b0f6122952ea676a57d8fe49419e74d0fb",
+  "part-year-header-refund100": "8dfb33014be844c29bc1bbd3b363fbded41813c43c5ebd815f74e0af0211c121",
+  "part-year-header-covered": "b472fec86b3579c1263acc3106a1e1166ff8fecdfbcc6afa524c464cd5454d48"
 };
 const cases=[...schoolOfficialCases.map(kind=>({name:kind,input:()=>schoolOfficialFixture(kind),itTax:'1767',sdTax:'1000',withheld:schoolOfficialOracles[kind].withheld,refund:schoolOfficialOracles[kind].refund})),...schoolPyPaperCases.map(c=>({name:`part-year-header-${c.name}`,input:()=>schoolPyHeaderPacket(c).withHeader,itTax:'811',sdTax:'500',withheld:c.withheld,refund:c.refund}))];
 it.each(cases.map(c=>[c.name,c] as const))('preserves complete school baseline and commitments for %s',(_name,c)=>{

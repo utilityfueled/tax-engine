@@ -41,6 +41,14 @@ it('PA married prior history applies actual prior100percent SP through public di
  expect(r.returns.map(row=>row.rev1630.totalInterest.toFixed())).toEqual(['0','0']);
  expect(r.returns.map(row=>row.rev1630.exemptReason)).toEqual(['Prior year 100% Tax Forgiveness — exempt from penalty','Prior year 100% Tax Forgiveness — exempt from penalty']);
 });
+it('keeps confirmed Pennsylvania prior-year household originals usable after editing Schedule B Part III',()=>{
+ const {input}=priorFixture();
+ const edited={...input,scheduleBPartThree:{hasForeignAccounts:false,hasForeignTrust:false}};
+ const result=calculatePAReturn(edited);
+ if(!('returns'in result))throw Error('Actual separate returns missing');
+ expect(result.returns.map(row=>row.pa40.taxDue.toFixed())).toEqual(['1535','921']);
+ expect(result.returns.map(row=>row.rev1630.totalInterest.toFixed())).toEqual(['0','0']);
+});
 it('PA married prior history applies the actual quarterly prior-tax exception',()=>{
  const f=priorFixture('safe'),r=calculatePAReturn(f.input);if(!('returns'in r))throw Error('Actual separate returns missing');
  expect(r.returns.map(row=>row.pa40.taxDue.toFixed())).toEqual(['611','305']);

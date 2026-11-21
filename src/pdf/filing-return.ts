@@ -45,6 +45,9 @@ export async function buildFilingReturn(
   scenario.validateCompleteInput(input);
   const result = calculateFederalTax(input);
   if (result.taxYear !== year) throw new Error("Filing calculation and input years must match.");
+  if (!result.scheduleB?.partThreeComplete) {
+    throw new Error("Filing exports require the applicable Schedule B Part III answers.");
+  }
   const ids = scenario.selectForms(input, result);
   if (ids.length === 0 || new Set(ids).size !== ids.length) {
     throw new Error("Filing packet requires a complete, unique attachment list.");

@@ -55,6 +55,24 @@ function makeInput() {
 }
 
 describe("assessReturnReadiness", () => {
+  it("flags incomplete required Schedule B Part III on the review cover", () => {
+    const taxInput = TaxYearInputSchema.parse({
+      ...makeInput(),
+      scheduleBPartThree: { hasForeignAccounts: true, hasForeignTrust: false },
+    });
+    const assess = () => assessReturnReadiness({
+      taxInput,
+      federalResult: calculateFederalTax(taxInput),
+      includedForms: ["f1040-filled.pdf", "f1040sb-filled.pdf"],
+    });
+    expect(assess().lineCompleteness).toBe("partial");
+    expect(assess().findings).toContain("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+    taxInput.scheduleBPartThree = { hasForeignTrust: false };
+    expect(assess().findings).toContain("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+    taxInput.scheduleBPartThree = { hasForeignAccounts: true, fbarRequired: false, hasForeignTrust: false };
+    expect(assess().findings).not.toContain("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+  });
+
   // Spec: spec/federal/form-1040.yaml line 26-review-packet.
   it("keeps state estimated payments outside federal voucher readiness", () => {
     const taxInput = TaxYearInputSchema.parse({

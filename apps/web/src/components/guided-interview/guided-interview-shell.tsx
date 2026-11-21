@@ -83,6 +83,7 @@ import {
   startInterview,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
+import { updateGuidedScheduleBPartThree } from "@/lib/guided-schedule-b-part-three";
 import { getBrowserStorage, requireBrowserStorage } from "@/lib/browser-storage";
 import { SegmentationScreen } from "./segmentation-screen";
 import { SectionPersonalInfo } from "./section-personal-info";
@@ -764,6 +765,7 @@ function SectionContent({
           state={state}
           preview={guidedPreview}
           onJumpToSection={onJumpToSection}
+          onScheduleBPartThreeChange={draft => onStateChange(updateGuidedScheduleBPartThree(state, draft))}
         />
       );
     case "state-return": {

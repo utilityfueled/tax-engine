@@ -12,8 +12,10 @@ import { isStartedOid, type OidEntryData } from "@/lib/guided-oid-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
+import type { ScheduleBPartThreeDraft } from "@/lib/guided-schedule-b-part-three";
 
 import { RetroShell } from "@/components/retro-shell";
+import { ScheduleBPartThreeDetails } from "./schedule-b-part-three-details";
 import type { GuidedPreviewMetrics } from "@/lib/guided-interview-bridge";
 import {
   type AdjustmentData,
@@ -632,11 +634,13 @@ export function SectionReview({
   state,
   preview,
   onJumpToSection,
+  onScheduleBPartThreeChange,
 }: {
   analysis?: GuidedRenderAnalysis;
   state: GuidedFlowState;
   preview: GuidedPreviewMetrics | null;
   onJumpToSection: (sectionId: InterviewSectionId) => void;
+  onScheduleBPartThreeChange?: (draft: ScheduleBPartThreeDraft) => void;
 }) {
   const sections = getGuidedSectionRoute(state);
   // Exclude the review section itself from the summary
@@ -713,6 +717,7 @@ export function SectionReview({
 
   const refund = parseGuidedDisplayAmount(preview?.refund);
   const owed = parseGuidedDisplayAmount(preview?.amountOwed);
+  const year = state.taxYear;
 
   return (
     <RetroShell title="Review & Summary" eyebrow="REVIEW">
@@ -760,6 +765,15 @@ export function SectionReview({
               </div>
             </div>
           </div>
+        )}
+
+        {(year === 2025 || year === 2026) && onScheduleBPartThreeChange && (
+          <ScheduleBPartThreeDetails
+            year={year}
+            jointReturn={state.segmentation.filingStatus === "mfj"}
+            data={state.sectionData.review?.scheduleBPartThreeByYear?.[year]}
+            onChange={onScheduleBPartThreeChange}
+          />
         )}
 
         <div className="guided-review-sections">

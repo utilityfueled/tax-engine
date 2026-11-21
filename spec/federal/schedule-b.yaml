@@ -8,6 +8,7 @@ notes: |
   - Over $1,500 of taxable interest (Part I)
   - Over $1,500 of ordinary dividends (Part II)
   - Any financial interest in or signature authority over a foreign financial account (Part III)
+  - A foreign trust distribution or grantor or transferor status during the return year (Part III)
 
 lines:
   - line: "1-and-5-statement-year"
@@ -138,28 +139,54 @@ lines:
 
   # ── Part III: Foreign Accounts and Trusts ────────────────
   - line: "7a"
-    description: "Foreign financial account indicator"
-    formula: "Boolean: did taxpayer have a financial interest in or signature authority over a foreign financial account?"
-    irsRef: "Schedule B Instructions, Part III Line 7a"
-    notes: "If yes, may need to file FinCEN Form 114 (FBAR)"
-    edgeCases:
-      - "Threshold: aggregate value exceeds $10,000 at any time during year"
-      - "Includes bank accounts, securities accounts, and other financial accounts"
-      - "FBAR filed separately (not with tax return) — deadline April 15"
-    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 7a - foreign account indicator from 1099-DIV"
+    description: "Foreign financial account and separate FinCEN Form 114 answers"
+    formula: "Preserve the taxpayer's reported financial interest or signature authority and the separate reported FBAR filing requirement when question 1 is yes. Leave omitted answers unknown. A dividend statement's foreign tax or country does not establish an account or signature authority."
+    irsRef: "2025 and 2026 Schedule B Instructions, Part III Line 7a Questions 1 and 2"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf#page=2"
+      - "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=2"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::leaves the account answer unknown when a dividend statement reports foreign tax"
+    testRefs:
+      - "tests/engine/schedules/schedule-b.test.ts::retains a confirmed account answer and a separate FBAR answer"
+      - "tests/engine/schedules/schedule-b.test.ts::keeps the Part III requirement unresolved until all applicable facts are supplied"
+      - "tests/apps/web/guided-schedule-b-part-three.test.tsx::keeps unanswered Schedule B disclosures unknown when restoring older workspaces with foreign-source income"
+      - "tests/apps/web/guided-schedule-b-part-three.test.tsx::records actual Schedule B disclosures by year and clears inapplicable follow-ups"
+      - "tests/pdf/fill-schedule-b-d-se.test.ts::writes explicit Schedule B Part III answers to their printed PDF fields"
+
+  - line: "part-three-readiness"
+    description: "Require the answers that establish the Schedule B filing requirement"
+    formula: "For taxpayer years 2025 and 2026 a complete Part III has explicit answers for foreign financial accounts and foreign trusts, the FBAR answer after an affirmative financial-account answer, and one or more nonblank countries when FBAR is required. A supplied FBAR answer without an affirmative account answer, or supplied country names without an affirmative FBAR answer, is inconsistent. A redacted Schedule B review copy can show incomplete answers with an advisory. An independently qualified filing export requires complete Part III even below the monetary reporting thresholds."
+    irsRef: "2025 and 2026 Schedule B Instructions, General Instructions and Part III"
+    testRef: "tests/utils/return-readiness.test.ts::flags incomplete required Schedule B Part III on the review cover"
+    testRefs:
+      - "tests/pdf/filing-return.test.ts::rejects unresolved Schedule B applicability before selecting forms"
+      - "tests/engine/schedules/schedule-b.test.ts::rejects contradictory Part III declarations from the direct parser"
 
   - line: "7b"
-    description: "Country of foreign account"
-    formula: "Name of country or countries where accounts are maintained"
-    irsRef: "Schedule B Instructions, Part III Line 7b"
-    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 7b - foreign account country"
+    description: "Foreign account countries when the taxpayer must file FBAR"
+    formula: "Report the supplied foreign account countries only after both line 7a answers are yes. The countries on dividend statements do not supply this list."
+    irsRef: "2025 and 2026 Schedule B Instructions, Part III Line 7b"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::uses only the taxpayer's reported FBAR countries"
 
   - line: "8"
     description: "Foreign trust indicator"
-    formula: "Boolean: did taxpayer receive a distribution from or was grantor/transferor to a foreign trust?"
-    irsRef: "Schedule B Instructions, Part III Line 8"
-    notes: "If yes, may need Forms 3520 and 3520-A"
-    testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 8 - foreign trust indicator from K-1"
+    formula: "Preserve the taxpayer's reported receipt of a foreign trust distribution or grantor or transferor status during the return year. Leave omission unknown. A foreign partnership K-1 does not establish this fact."
+    irsRef: "2025 and 2026 Schedule B Instructions, Part III Line 8"
+    notes: "An affirmative answer may require Forms 3520 and 3520-A."
+    testRef: "tests/engine/schedules/schedule-b.test.ts::leaves the trust answer unknown for a foreign partnership K-1"
+
+  - line: "part-three-state-originals"
+    description: "Keep federal Part III reporting answers independent of state worksheet originals"
+    formula: "The federal foreign account, FBAR, country and trust answers are reporting facts. PA and Ohio originals and source confirmations derive from their affected return facts and exclude this federal-only disclosure."
+    testRef: "tests/apps/web/guided-schedule-b-state-replay.test.ts::keeps confirmed Pennsylvania originals usable after editing Schedule B Part III"
+    testRefs:
+      - "tests/apps/web/guided-schedule-b-state-replay.test.ts::keeps confirmed Ohio originals usable after editing Schedule B Part III"
+      - "tests/apps/web/guided-schedule-b-state-replay.test.ts::keeps confirmed 2026 ordinary state drafts usable after editing Schedule B Part III"
+      - "tests/apps/web/guided-schedule-b-state-replay.test.ts::keeps confirmed 2026 Ohio school sources usable after editing Schedule B Part III"
+      - "tests/apps/web/guided-schedule-b-state-replay.test.ts::keeps confirmed Ohio reciprocal wages and resident credit usable after editing Schedule B Part III"
+      - "tests/apps/web/guided-schedule-b-state-replay.test.ts::preserves Pennsylvania residency and reciprocity commitments after editing Schedule B Part III"
+      - "tests/engine/state/pa-married-prior-history.test.ts::keeps confirmed Pennsylvania prior-year household originals usable after editing Schedule B Part III"
+      - "tests/apps/web/guided-schedule-b-state-replay.test.ts::preserves the Ohio business source commitment after editing Schedule B Part III"
 
   - line: "oid-return-sources"
     description: "Verified OID source routing"

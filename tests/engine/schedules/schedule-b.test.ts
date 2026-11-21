@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateScheduleB } from "@/engine/schedules/schedule-b.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../../fixtures/simple-w2.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -363,7 +363,47 @@ describe("Schedule B Part II - Ordinary Dividends", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule B Part III - Foreign Accounts", () => {
-  it("Schedule B Line 7a - foreign account indicator from 1099-DIV", () => {
+  it("rejects contradictory Part III declarations from the direct parser", () => {
+    for (const scheduleBPartThree of [
+      { hasForeignAccounts: false, fbarRequired: true, foreignAccountCountries: ["Canada"], hasForeignTrust: false },
+      { hasForeignAccounts: true, fbarRequired: false, foreignAccountCountries: ["Canada"], hasForeignTrust: false },
+      { fbarRequired: false, hasForeignTrust: false },
+    ]) {
+      expect(TaxYearInputSchema.safeParse({ ...simpleW2Fixture, scheduleBPartThree }).success).toBe(false);
+    }
+  });
+
+  it("keeps the Part III requirement unresolved until all applicable facts are supplied", () => {
+    const input = { ...simpleW2Fixture, form1099Int: [], form1099Div: [], scheduleK1: [] };
+    const unanswered = calculateScheduleB(input);
+    expect(unanswered.isRequired).toBe(false);
+    expect(unanswered.partThreeComplete).toBe(false);
+    expect(unanswered.lines.every((line) => !["7a", "7a-FBAR", "7b", "8"].includes(line.line))).toBe(true);
+
+    const inapplicable = calculateScheduleB({
+      ...input,
+      scheduleBPartThree: { hasForeignAccounts: false, fbarRequired: true, foreignAccountCountries: ["Canada"], hasForeignTrust: false },
+    });
+    expect(inapplicable.partThreeComplete).toBe(false);
+    expect(inapplicable.fbarRequired).toBeNull();
+    expect(inapplicable.foreignAccountCountries).toEqual([]);
+
+    const incomplete = calculateScheduleB({
+      ...input,
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada", " "], hasForeignTrust: false },
+    });
+    expect(incomplete.isRequired).toBe(true);
+    expect(incomplete.partThreeComplete).toBe(false);
+    expect(incomplete.foreignAccountCountries).toEqual([]);
+
+    const complete = calculateScheduleB({
+      ...input,
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada"], hasForeignTrust: false },
+    });
+    expect(complete.partThreeComplete).toBe(true);
+  });
+
+  it("leaves the account answer unknown when a dividend statement reports foreign tax", () => {
     const input = makeDividendFixture([
       {
         payer: "Intl Fund", ordinaryDividends: "2000", qualifiedDividends: "0",
@@ -374,10 +414,12 @@ describe("Schedule B Part III - Foreign Accounts", () => {
       },
     ]);
     const result = calculateScheduleB(input);
-    expect(result.hasForeignAccounts).toBe(true);
+    expect(result.hasForeignAccounts).toBeNull();
+    expect(result.fbarRequired).toBeNull();
+    expect(result.totalOrdinaryDividends.toString()).toBe("2000");
   });
 
-  it("Schedule B Line 7a - no foreign accounts when no foreign tax paid", () => {
+  it("keeps an explicit no account answer when there is no foreign tax", () => {
     const input = makeDividendFixture([
       {
         payer: "Domestic Fund", ordinaryDividends: "2000", qualifiedDividends: "0",
@@ -387,11 +429,12 @@ describe("Schedule B Part III - Foreign Accounts", () => {
         nondividendDistributions: "0", exemptInterestDividends: "0",
       },
     ]);
-    const result = calculateScheduleB(input);
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignAccounts: false } });
     expect(result.hasForeignAccounts).toBe(false);
+    expect(result.fbarRequired).toBeNull();
   });
 
-  it("Schedule B Line 7b - foreign account country", () => {
+  it("uses only the taxpayer's reported FBAR countries", () => {
     const input = makeDividendFixture([
       {
         payer: "Intl Fund", ordinaryDividends: "1000", qualifiedDividends: "0",
@@ -401,17 +444,16 @@ describe("Schedule B Part III - Foreign Accounts", () => {
         nondividendDistributions: "0", exemptInterestDividends: "0",
       },
     ]);
-    const result = calculateScheduleB(input);
-    expect(result.foreignAccountCountries).toContain("United Kingdom");
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada"] } });
+    expect(result.foreignAccountCountries).toEqual(["Canada"]);
   });
 
-  it("Schedule B Line 8 - foreign trust indicator from K-1", () => {
-    // No foreign K-1s → false
+  it("leaves the trust answer unknown when the taxpayer has supplied no answer", () => {
     const result = calculateScheduleB(simpleW2Fixture);
-    expect(result.hasForeignTrust).toBe(false);
+    expect(result.hasForeignTrust).toBeNull();
   });
 
-  it("Schedule B Line 8 - detects foreign partnership from K-1", () => {
+  it("leaves the trust answer unknown for a foreign partnership K-1", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       scheduleK1: [{
@@ -428,8 +470,8 @@ describe("Schedule B Part III - Foreign Accounts", () => {
       }],
     };
     const result = calculateScheduleB(input);
-    expect(result.hasForeignTrust).toBe(true);
-    expect(result.isRequired).toBe(true); // Foreign trust requires Schedule B
+    expect(result.hasForeignTrust).toBeNull();
+    expect(result.isRequired).toBe(false);
   });
 });
 
@@ -467,7 +509,7 @@ describe("Schedule B - required determination", () => {
     expect(result.isRequired).toBe(true);
   });
 
-  it("required when foreign accounts exist", () => {
+  it("retains a confirmed account answer and a separate FBAR answer", () => {
     const input = makeDividendFixture([
       {
         payer: "Intl Fund", ordinaryDividends: "100", qualifiedDividends: "0",
@@ -477,8 +519,11 @@ describe("Schedule B - required determination", () => {
         nondividendDistributions: "0", exemptInterestDividends: "0",
       },
     ]);
-    const result = calculateScheduleB(input);
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: false } });
     expect(result.isRequired).toBe(true);
+    expect(result.hasForeignAccounts).toBe(true);
+    expect(result.fbarRequired).toBe(false);
+    expect(result.foreignAccountCountries).toEqual([]);
   });
 
   it("complex MFJ fixture produces correct Schedule B", () => {
@@ -489,8 +534,7 @@ describe("Schedule B - required determination", () => {
     // 1099-DIV: $8,000 (no K-1 dividends)
     expect(result.totalOrdinaryDividends.toNumber()).toBe(8000);
     expect(result.isRequired).toBe(true);
-    // Foreign accounts from Vanguard 1099-DIV
-    expect(result.hasForeignAccounts).toBe(true);
+    expect(result.hasForeignAccounts).toBeNull();
   });
 });
 
@@ -500,7 +544,10 @@ describe("Schedule B - required determination", () => {
 
 describe("Schedule B - audit trail", () => {
   it("produces audit trail for all lines", () => {
-    const result = calculateScheduleB(complexMFJFixture);
+    const result = calculateScheduleB({
+      ...complexMFJFixture,
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada"], hasForeignTrust: false },
+    });
     expect(result.lines.length).toBeGreaterThanOrEqual(8);
     const lineNumbers = result.lines.map((l) => l.line);
     expect(lineNumbers).toContain("1");
@@ -510,6 +557,7 @@ describe("Schedule B - audit trail", () => {
     expect(lineNumbers).toContain("5");
     expect(lineNumbers).toContain("6");
     expect(lineNumbers).toContain("7a");
+    expect(lineNumbers).toContain("7a-FBAR");
     expect(lineNumbers).toContain("7b");
     expect(lineNumbers).toContain("8");
   });
@@ -633,8 +681,8 @@ describe("Schedule B - tax-exempt interest does not inflate taxable interest", (
   });
 });
 
-describe("Schedule B - Line 7a foreign accounts from 1099-INT payer", () => {
-  it("hasForeignAccounts is true when any 1099-DIV has foreignTaxPaid and foreignCountry", () => {
+describe("Schedule B - Dividend tax and foreign financial accounts", () => {
+  it("keeps the dividend statement country separate from account and FBAR answers", () => {
     const input = makeDividendFixture([
       {
         payer: "Deutsche Bank Fund", ordinaryDividends: "500", qualifiedDividends: "0",
@@ -651,9 +699,8 @@ describe("Schedule B - Line 7a foreign accounts from 1099-INT payer", () => {
       },
     ]);
     const result = calculateScheduleB(input);
-    expect(result.hasForeignAccounts).toBe(true);
-    expect(result.foreignAccountCountries).toContain("Germany");
-    expect(result.isRequired).toBe(true);
+    expect(result.hasForeignAccounts).toBeNull();
+    expect(result.foreignAccountCountries).toEqual([]);
   });
 });
 
@@ -661,6 +708,7 @@ describe("Schedule B - audit trail contains all line IDs", () => {
   it("audit trail includes every Schedule B line: 1, 2, 3, 4, 5, 6, 7a, 7b, 8", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
+      scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Canada"], hasForeignTrust: true },
       form1099Int: [
         { payer: "Bank", interestIncome: "2000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", taxExemptInterest: "0" },
       ],
@@ -675,7 +723,7 @@ describe("Schedule B - audit trail contains all line IDs", () => {
     };
     const result = calculateScheduleB(input);
     const lineIds = result.lines.map((l) => l.line);
-    const requiredLines = ["1", "2", "3", "4", "5", "6", "7a", "7b", "8"];
+    const requiredLines = ["1", "2", "3", "4", "5", "6", "7a", "7a-FBAR", "7b", "8"];
     for (const id of requiredLines) {
       expect(lineIds, `Expected line "${id}" in audit trail`).toContain(id);
     }
@@ -796,7 +844,7 @@ describe("Schedule B - K-1 zero values are excluded from payers list", () => {
 });
 
 describe("Schedule B - multiple foreign countries detected", () => {
-  it("two 1099-DIVs with different foreign countries lists both", () => {
+  it("uses and cleans two reported countries for FBAR", () => {
     const input = makeDividendFixture([
       {
         payer: "UK Fund", ordinaryDividends: "1000", qualifiedDividends: "0",
@@ -813,14 +861,11 @@ describe("Schedule B - multiple foreign countries detected", () => {
         nondividendDistributions: "0", exemptInterestDividends: "0",
       },
     ]);
-    const result = calculateScheduleB(input);
-    expect(result.hasForeignAccounts).toBe(true);
-    expect(result.foreignAccountCountries).toHaveLength(2);
-    expect(result.foreignAccountCountries).toContain("United Kingdom");
-    expect(result.foreignAccountCountries).toContain("Japan");
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: [" United Kingdom ", "Japan"] } });
+    expect(result.foreignAccountCountries).toEqual(["United Kingdom", "Japan"]);
   });
 
-  it("duplicate foreign country deduplicated", () => {
+  it("deduplicates reported FBAR countries", () => {
     const input = makeDividendFixture([
       {
         payer: "Fund A", ordinaryDividends: "500", qualifiedDividends: "0",
@@ -837,9 +882,8 @@ describe("Schedule B - multiple foreign countries detected", () => {
         nondividendDistributions: "0", exemptInterestDividends: "0",
       },
     ]);
-    const result = calculateScheduleB(input);
-    expect(result.foreignAccountCountries).toHaveLength(1);
-    expect(result.foreignAccountCountries[0]).toBe("Germany");
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignAccounts: true, fbarRequired: true, foreignAccountCountries: ["Germany", " Germany "] } });
+    expect(result.foreignAccountCountries).toEqual(["Germany"]);
   });
 });
 
@@ -988,7 +1032,7 @@ describe("Schedule B - required when dividends are $1,501 (one dollar above thre
 });
 
 describe("Schedule B - not required when interest and dividends each equal $1,500 exactly and no foreign", () => {
-  it("interest $1,500 and dividends $1,500 with no foreign accounts does not require Schedule B", () => {
+  it("interest $1,500 and dividends $1,500 with confirmed negative Part III does not require Schedule B", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Int: [
@@ -1004,7 +1048,7 @@ describe("Schedule B - not required when interest and dividends each equal $1,50
       ],
       scheduleK1: [],
     };
-    const result = calculateScheduleB(input);
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignAccounts: false, hasForeignTrust: false } });
     expect(result.isRequired).toBe(false);
     expect(result.hasForeignAccounts).toBe(false);
     expect(result.hasForeignTrust).toBe(false);
@@ -1012,7 +1056,7 @@ describe("Schedule B - not required when interest and dividends each equal $1,50
 });
 
 describe("Schedule B - hasForeignTrust is false when K-1 isForeignPartnership is false", () => {
-  it("K-1 with isForeignPartnership explicitly false does not set hasForeignTrust", () => {
+  it("a domestic K-1 does not answer the trust question", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       scheduleK1: [{
@@ -1039,7 +1083,7 @@ describe("Schedule B - hasForeignTrust is false when K-1 isForeignPartnership is
       }],
     };
     const result = calculateScheduleB(input);
-    expect(result.hasForeignTrust).toBe(false);
+    expect(result.hasForeignTrust).toBeNull();
   });
 });
 
@@ -1112,7 +1156,7 @@ describe("Schedule B - audit trail Line 6 value matches computed totalOrdinaryDi
 });
 
 describe("Schedule B - foreign trust triggers isRequired even when income is low", () => {
-  it("foreign partnership K-1 with minimal income still requires Schedule B via hasForeignTrust", () => {
+  it("a confirmed foreign trust answer requires Schedule B even without reportable interest", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       form1099Int: [],
@@ -1140,7 +1184,7 @@ describe("Schedule B - foreign trust triggers isRequired even when income is low
         otherDeductions: "0",
       }],
     };
-    const result = calculateScheduleB(input);
+    const result = calculateScheduleB({ ...input, scheduleBPartThree: { hasForeignTrust: true } });
     expect(result.hasForeignTrust).toBe(true);
     expect(result.totalInterest.toNumber()).toBe(0);
     expect(result.totalOrdinaryDividends.toNumber()).toBe(0);
