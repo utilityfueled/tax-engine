@@ -14,9 +14,11 @@ import { isPAMarriedOrdinaryReturnResult } from "@/engine/state/pa-return-result
 import { PAMarriedOrdinarySourcesSchema } from "@/models/pa-married-ordinary-sources";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion";
 import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right";
+import { canUseOhioEstimatesForScheduleA } from "@/engine/forms/state-tax-payment-year";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
 import { buildGuidedOhioOverlay, buildGuidedStateOriginals, readGuidedPAMarriedDraft } from "./guided-state-engine-inputs";
+import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
 import { buildGuidedPAMarriedOrdinarySources } from "./guided-pa-married-ordinary-sources";
 import {
   calculateGenericStateReturn,
@@ -199,10 +201,22 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
   try {
     const rawInput = buildTaxInputFromGuidedData(state);
     if (!rawInput) return null;
-    const taxInput = TaxYearInputSchema.parse(rawInput);
-    onInput?.(taxInput);
+    const baseInput = TaxYearInputSchema.parse(rawInput);
+    onInput?.(baseInput);
+    let taxInput = baseInput;
     let result: ReturnType<typeof calculateFederalTax>;
     try {
+      const stateData = state.sectionData["state-return"];
+      const paymentDraft = stateData?.ohioPayments;
+      if (state.segmentation.stateCode === "OH" && canUseOhioEstimatesForScheduleA(baseInput) && paymentDraft) {
+        const hasSavedOhioEstimate = baseInput.adjustments?.estimatedTaxPayments.some(payment =>
+          payment.type === "state" && payment.state?.trim().toUpperCase() === "OH");
+        const hasSourcedEstimate = (paymentDraft.sourceFactsConfirmed === true || paymentDraft.originalFederalSources !== undefined)
+          && paymentDraft.paymentRows.some(row => row.kind === "estimated");
+        if (hasSourcedEstimate || hasSavedOhioEstimate) {
+          taxInput = {...baseInput, ohioPayments: buildGuidedOhioPaymentFacts(paymentDraft, baseInput)};
+        }
+      }
       result = calculateFederalTax(taxInput);
     } catch (error) {
       onBlocked(error instanceof Error ? error.message : "This return cannot be figured yet.");

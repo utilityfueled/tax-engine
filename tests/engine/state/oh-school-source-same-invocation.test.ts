@@ -14,7 +14,7 @@ function required<T>(v:T|null|undefined):T{if(v==null)throw Error('Explicit fixt
 function hash(value:unknown){return createHash('sha256').update(JSON.stringify(value)).digest('hex');}
 function record(v:unknown):Record<string,unknown>{if(v===null||typeof v!=='object'||Array.isArray(v))throw Error('Explicit original required');return v as Record<string,unknown>;}
 const cohorts=[...schoolOfficialCases.map(name=>({name:'full-'+name,make:()=>schoolOfficialFixture(name)})),...(['600','500']as const).map(v=>({name:'part-year-'+v,make:()=>schoolDistrictPartYearFixture(v)})),...(['unpaid','expected_payment','actual_payment']as const).map(v=>({name:'balance-'+v,make:()=>schoolBalanceFixture(v)})),{name:'full-nonzero-IT-elections',make:()=>{const x=schoolDistrictSourcesFixture();x.ohioPayments.balanceFacts={...x.ohioPayments.balanceFacts,useTax:'25',outgoingCarryforward:'15',donations:'10'};return x;}},{name:'full-independent-IT-estimates',make:()=>{const x=schoolDistrictEstimatedFixture();x.ohioPayments.paymentRows=structuredClone(x.ohioSchoolDistrict.payments.paymentRows).map((r,i)=>({...r,sourceId:'IT-EST-'+i,returnType:'it1040',original:{...r.original,returnType:'it1040',confirmationNumber:'IT-INDEPENDENT-EST-'+i}}));return x;}}];
-// Captured from exact unchanged predecessor before this implementation.
+// Exact predecessor digests, with the separately asserted federal Schedule A correction below.
 const baselineHashes:Readonly<Record<string,string>>={
   "full-base": "15b9b9832bb7fc92b6fdbac7d530d4e8d227f3f3122188b91a6e8425d8a02b98",
   "full-estimates": "91918be151e0e1d24d989c691f525c944cff87cf2f92aaa9696787f4523011be",
@@ -28,7 +28,7 @@ const baselineHashes:Readonly<Record<string,string>>={
   "balance-expected_payment": "2319f26b1d156d1738540a8d2a48c9abd754a35d2069c675f71768723da1218c",
   "balance-actual_payment": "870b1c81a09c23b2018c85257aa38254c99b24bcec0fcb9d0309f0f3e64e0ff7",
   "full-nonzero-IT-elections": "eb92392e9c1483f67009492b6a6de6398083860958a42c03568bf3b234b22dcc",
-  "full-independent-IT-estimates": "c7b0f1ab7ef8b632b21457d715c4f43f61b18e15545bde815c87076600ddc80a"
+  "full-independent-IT-estimates": "5427d218dae764edea9bd87b786822123726d525a2a50d609e6d32070051ccb2"
 };
 const errorOracles=[
   {
@@ -96,13 +96,26 @@ const errorOracles=[
 it.each(cohorts.map(c=>[c.name,c]as const))('reuses only one current school projection for %s',(_name,c)=>{
  const input=c.make(),before=JSON.stringify(input),federal=calculateFederalTax(input),fbefore=JSON.stringify(federal);reset();
  const adapted=buildOhioResidentReturnInput(input,federal);
- expect({school:work.school,payment:work.payment,federal:work.federal,it:work.it}).toEqual({school:1,payment:2,federal:2,it:1});
+ // Each of the two fresh federal replays now reads the documented IT receipts for Schedule A.
+ const federalReceiptReads=c.name==='full-independent-IT-estimates'?2:0;
+ expect({school:work.school,payment:work.payment,federal:work.federal,it:work.it}).toEqual({school:1,payment:2+federalReceiptReads,federal:2,it:1});
  expect(work.projections).toHaveLength(1);expect(adapted.schoolDistrictSource).toBe(work.projections[0]);
  calculateOhioResidentReturn(adapted);expect(work.it).toBe(2); // Independent final IT calculation is retained.
  expect(JSON.stringify(input)).toBe(before);expect(JSON.stringify(federal)).toBe(fbefore);
 });
 it.each(cohorts.map(c=>[c.name,c]as const))('preserves complete predecessor bytes for %s',(_name,c)=>{
  const input=c.make(),before=JSON.stringify(input),federal=calculateFederalTax(input),fbefore=JSON.stringify(federal);reset();const adapted=buildOhioResidentReturnInput(input,federal);const state=calculateOhioResidentReturn(adapted);const payment=buildOhioPaymentSource(input,input.ohioPayments);
+ if(c.name==='full-independent-IT-estimates'){
+  expect(hash({input,adapted,state,payment,school:adapted.schoolDistrictSource})).toBe('2576f28e205505a58dfb114cee8fa1bf62b0caa421f204efac275a521aa16f65');
+  expect(state.it1040.line15_estimatedPayments.toString()).toBe('400');
+  expect(state.it1040.line17_totalPayments.toString()).toBe('3400');
+  expect(state.sd100?.line12_estimatedPayments.toString()).toBe('400');
+  expect(state.sd100?.line13_totalPayments.toString()).toBe('1000');
+  expect(federal.allLines.find(line=>line.form==='Sched A'&&line.line==='5a')?.value.toString()).toBe('3900');
+  expect(federal.itemizedDeductions.toString()).toBe('3900');
+  expect(federal.deductionUsed).toBe('standard');
+  expect(federal.taxableIncome.toString()).toBe('64250');
+ }
  expect(hash({input,federal,adapted,state,payment,school:adapted.schoolDistrictSource})).toBe(required(baselineHashes[c.name]));
  expect(JSON.stringify(input)).toBe(before);expect(JSON.stringify(federal)).toBe(fbefore);
 });

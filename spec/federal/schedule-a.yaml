@@ -322,6 +322,19 @@ lines:
     irsRef: "https://www.irs.gov/instructions/i1040sca"
     testRef: "tests/engine/forms/state-tax-payment-year.test.ts::deducts state payments by actual calendar year and preserves applied prior credits"
 
+  - line: "5a-ohio-estimated-payment-originals"
+    description: "Use confirmed Ohio estimated receipts in the 2025 itemized deduction calculation"
+    formula: "For preview and saved review, validate the canonical Ohio payment packet against the original return and actual account owner, applied return year, receipt identity, payment date and exact amount. Count each distinct original estimated payment once by its calendar payment year. A saved Ohio estimate mirror must match a distinct original by exact date and amount before using the complete original ledger. Hold missing or contradictory source evidence and preserve the original return and Ohio source replay."
+    notes: "For explicit itemization and automatic or omitted elections, a qualifying original is itself itemized deduction evidence, including when no separate Schedule A worksheet was entered. Explicit standard and nonitemized elections keep their existing behavior. A blank native draft adds no evidence. Hold positive in-year Ohio estimated payments combined with a positive additional state/local income-tax aggregate. The saved aggregate has no source components to establish whether it repeats a receipt. Preserve aggregate-only inputs and separately typed payment sources."
+    irsRef: "2025 Schedule A Instructions, Line 5a, https://www.irs.gov/instructions/i1040sca"
+    testRef: "tests/apps/web/independent-oh-workspace-originals.test.ts::uses in-year Ohio receipt originals for guided and saved Schedule A review"
+    testRefs:
+      - "tests/engine/forms/state-tax-payment-year.test.ts::reconciles distinct Ohio receipt originals without counting saved mirrors twice"
+      - "tests/apps/web/independent-oh-workspace-originals.test.ts::preserves school district replay when itemizing a confirmed Ohio estimate"
+      - "tests/apps/web/independent-oh-workspace-originals.test.ts::holds in-year Ohio estimates with an unreconciled additional income-tax total"
+      - "tests/apps/web/independent-oh-workspace-originals.test.ts::includes Ohio estimate originals with automatic itemization from confirmed donations"
+      - "tests/engine/forms/state-tax-payment-year.test.ts::automatically itemizes a qualifying Ohio estimate without a separate Schedule A worksheet"
+
   - line: "16-oid-premium"
     description: "Allowable excess bond premium"
     formula: "Add source-calculated allowable section171 excess premium to Schedule A line16 with gambling deductions, retaining unused premium carry separately. Identify audit values by both form and line; another worksheet line16 is not the Schedule A total. Count actual OID state withholding once on line5a."

@@ -129,7 +129,7 @@ function replayGuidedOhioSchoolDistrictFacts<T>(input:TaxYearInput,data:OhioScho
  const parsed=OhioSchoolDistrictFactsSchema.safeParse(originalPacket(data));
  if(!parsed.success)fail(`complete actual source facts; zero only when known (${parsed.error.issues.map(i=>i.path.join('.')).join('; ')})`);
  const current={...input,ohioResidency:residency,ohioPayments:payments,ohioSchoolDistrict:parsed.data};
- const federal=calculateFederalTax(input);
+ const federal=calculateFederalTax(current);
  if(share)return withOhioSchoolAdapterInvocation(current,federal,proof=>use(parsed.data,proof));
  buildOhioResidentReturnInput(current,federal);
  return use(parsed.data);
