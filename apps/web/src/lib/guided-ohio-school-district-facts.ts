@@ -120,11 +120,16 @@ function originalPacket(d:OhioSchoolDistrictDraft):unknown{
    currentTiming:timing.kind==='filed'?{kind:timing.kind,filedDate:timing.filedDate,asOfDate:timing.asOfDate}:{kind:timing.kind,expectedDate:timing.expectedDate,asOfDate:timing.asOfDate},refundDisposition:{...p.refundDisposition,outgoingCarryforward:normalizeSchoolCurrency(p.refundDisposition.outgoingCarryforward)}}};
  return raw;
 }
+function readCurrentSchoolParents(input: TaxYearInput, residency: OhioResidencyDraft | undefined, payments: OhioPaymentDraft | undefined) {
+ return { residency: buildGuidedOhioResidencyFacts(residency, input), payments: buildGuidedOhioPaymentFacts(payments, input) };
+}
+type CurrentSchoolParents = ReturnType<typeof readCurrentSchoolParents>;
+
 /** Pure read: neither retained snapshots nor any confirmation is refreshed here. */
-function replayGuidedOhioSchoolDistrictFacts<T>(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined,use:(facts:OhioSchoolDistrictFacts,proof?:OhioSourceAdapterInvocation)=>T,share:boolean):T{
+function replayGuidedOhioSchoolDistrictFacts<T>(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,readParents:()=>CurrentSchoolParents,use:(facts:OhioSchoolDistrictFacts,proof?:OhioSourceAdapterInvocation)=>T,share:boolean):T{
  if(!data||data.sourceFactsConfirmed!==true)fail('complete and explicitly confirm the actual school district records after the last edit');
  assertGuidedOhioOriginals(input,data.originalFederalSources);
- const residency=buildGuidedOhioResidencyFacts(residencyDraft,input),payments=buildGuidedOhioPaymentFacts(paymentDraft,input);
+ const { residency, payments } = readParents();
  if(residency.schoolDistrictStatus!=='actual_district_sources_required')fail('retained school records conflict with the current no-district residency answer');
  const parsed=OhioSchoolDistrictFactsSchema.safeParse(originalPacket(data));
  if(!parsed.success)fail(`complete actual source facts; zero only when known (${parsed.error.issues.map(i=>i.path.join('.')).join('; ')})`);
@@ -135,11 +140,15 @@ function replayGuidedOhioSchoolDistrictFacts<T>(input:TaxYearInput,data:OhioScho
  return use(parsed.data);
 }
 export function buildGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictFacts{
- return replayGuidedOhioSchoolDistrictFacts(input,data,residencyDraft,paymentDraft,facts=>facts,false);
+ return replayGuidedOhioSchoolDistrictFacts(input,data,()=>readCurrentSchoolParents(input,residencyDraft,paymentDraft),facts=>facts,false);
 }
-/** Only the immediately following synchronous header may consume this actual completed adapter. */
-export function withGuidedOhioSchoolDistrictAdapter<T>(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined,use:(facts:OhioSchoolDistrictFacts,proof?:OhioSourceAdapterInvocation)=>T):T{
- return replayGuidedOhioSchoolDistrictFacts(input,data,residencyDraft,paymentDraft,use,true);
+/** Prepare the header with its own copy before replaying the school with the current base parents. */
+export function withGuidedOhioSchoolDistrictAdapter<T>(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined,
+ prepareHeader:(parents:CurrentSchoolParents)=>(district:OhioSchoolDistrictFacts|undefined,proof?:OhioSourceAdapterInvocation)=>T):T{
+ const parents = readCurrentSchoolParents(input,residencyDraft,paymentDraft);
+ const completeHeader = prepareHeader(structuredClone(parents));
+ if (!data && parents.residency.schoolDistrictStatus !== 'actual_district_sources_required') return completeHeader(undefined);
+ return replayGuidedOhioSchoolDistrictFacts(input,data,()=>parents,completeHeader,true);
 }
 /** Explicit user action is the only authority to capture current raw private originals. */
 export function confirmGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictDraft{

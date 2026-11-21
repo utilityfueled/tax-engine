@@ -16,6 +16,10 @@ lines:
     description: Original complete guided render work-count assertion preserves all expected outputs
     formula: OH school header fresh federal seven and school two; unrelated PA four and zero unchanged
     testRef: "tests/guided-interview/guided-render-evaluation.test.ts::shares only one actual current source evaluation %s"
+  - line: "header-school-current-parents"
+    description: Validate the current residency and payment records once during header entry or confirmation
+    formula: "For one header replay with the native school district, validate the original residency and payment drafts once and use those base results in the same synchronous school replay. Validate any header resident-credit child before using the school result, preserve the standalone school replay, and keep the incomplete header out of the state totals while its separately confirmed school display remains available. Only the explicit confirmation action captures header originals."
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::replays each current parent once during incomplete entry and confirmation %s"
   - line: "unsupported-material"
     description: A source proof cannot omit unsupported defined values or normalize distinct material into an existing proof
     formula: after the original full adapter, only finite primitives, explicit finite Decimal values with original data descriptors and dense finite integer digit arrays, exact plain objects with defined data properties and exact dense ordered arrays can capture or consume authority; unsupported types, symbol keys, accessors (never invoked by proof admission), extended Decimal metadata and nonfinite numbers fall back to original full validation without an earlier error; undefined object data properties remain omitted

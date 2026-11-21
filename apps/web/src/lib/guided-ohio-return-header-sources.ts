@@ -4,8 +4,8 @@ import {OhioReturnHeaderSourcesSchema,type OhioReturnHeaderSources} from '@/mode
 import {calculateOhioReturnHeaderWithSchoolAdapter} from '@/engine/state/oh-return-header-source';
 import type {OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import type {OhioSchoolDistrictFacts} from '@/models/ohio-school-district';
-import {buildGuidedOhioResidencyFacts,type OhioResidencyDraft} from './guided-ohio-residency-facts';
-import {buildGuidedOhioPaymentFacts,type OhioPaymentDraft} from './guided-ohio-payment-facts';
+import type {buildGuidedOhioResidencyFacts,OhioResidencyDraft} from './guided-ohio-residency-facts';
+import type {buildGuidedOhioPaymentFacts,OhioPaymentDraft} from './guided-ohio-payment-facts';
 import {buildGuidedOhioResidentCreditSources} from './guided-ohio-resident-credit-sources';
 import {withGuidedOhioSchoolDistrictAdapter,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
 type Entered<T>=T extends boolean?boolean|null:T extends number?string:T extends string?string:T extends Array<infer Row>?Entered<Row>[]:T extends object?{[Key in keyof T]:Entered<T[Key]>}:T;
@@ -50,15 +50,15 @@ function withCurrentContext<T>(input:TaxYearInput,residency:OhioResidencyDraft|u
  if(input.ohioResidency?.residentCreditSources&&!residency?.residentCreditSources)return fail('retained canonical resident-credit originals require their current native child');
  if(input.ohioResidency?.businessSources&&!residency?.businessSources)return fail('retained canonical business sources cannot be dropped');
  if(input.ohioResidency?.reciprocalWageSources)return fail('retained reciprocal originals require their separate complete source composition');
- const parent=buildGuidedOhioResidencyFacts(residency,original),paid=buildGuidedOhioPaymentFacts(payments,original);
- const facts=residency?.residentCreditSources?buildGuidedOhioResidentCreditSources(original,residency.residentCreditSources,parent,paid):parent;
- const finish=(district:OhioSchoolDistrictFacts|undefined,proof?:OhioSourceAdapterInvocation)=>{
-  const canonical={...original,ohioResidency:facts,ohioPayments:paid,...(district?{ohioSchoolDistrict:district}:{})};
-  const federal=Object.fromEntries(Object.entries(original).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key)));
-  if(district)onSchoolReplay?.();
-  return use({canonical,federal,facts,paid,district},proof);
- };
- return school||facts.schoolDistrictStatus==='actual_district_sources_required'?withGuidedOhioSchoolDistrictAdapter(original,school,residency,payments,finish):finish(undefined);
+ return withGuidedOhioSchoolDistrictAdapter(original,school,residency,payments,({residency:parent,payments:paid})=>{
+  const facts=residency?.residentCreditSources?buildGuidedOhioResidentCreditSources(original,residency.residentCreditSources,parent,paid):parent;
+  return(district,proof)=>{
+   const canonical={...original,ohioResidency:facts,ohioPayments:paid,...(district?{ohioSchoolDistrict:district}:{})};
+   const federal=Object.fromEntries(Object.entries(original).filter(([key])=>!['ohioResidency','ohioPayments','ohioSchoolDistrict'].includes(key)));
+   if(district)onSchoolReplay?.();
+   return use({canonical,federal,facts,paid,district},proof);
+  };
+ });
 }
 /** Only this explicit user action captures current sources. Parent/payment/credit confirmations are never changed. */
 export function confirmGuidedOhioReturnHeaderSources(input:TaxYearInput,data:OhioReturnHeaderDraft|undefined,residency:OhioResidencyDraft|undefined,payments:OhioPaymentDraft|undefined,school?:OhioSchoolDistrictDraft):OhioReturnHeaderDraft{

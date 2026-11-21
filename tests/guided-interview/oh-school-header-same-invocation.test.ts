@@ -3,7 +3,7 @@ import {test,expect,vi}from 'vitest';
 import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
-import { validateSection } from '@/lib/guided-interview-flow';
+import { buildSectionRoute, validateSection } from '@/lib/guided-interview-flow';
 import *as bridge from '@/lib/guided-interview-bridge';
 import {TaxYearInputSchema}from '@/models/inputs';
 import {schoolPyHeaderPacket,schoolPyPaperCases}from '../fixtures/oh-school-district-part-year-official-review';
@@ -11,8 +11,10 @@ import {guidedSchoolDistrictFixture,enteredSchoolDraft}from '../fixtures/guided-
 import {confirmGuidedW2StateLocalSources}from '@/lib/guided-w2-state-local-facts';
 import {confirmGuidedOhioResidencyFacts}from '@/lib/guided-ohio-residency-facts';
 import {confirmGuidedOhioPaymentFacts}from '@/lib/guided-ohio-payment-facts';
+import * as residencyFacts from '@/lib/guided-ohio-residency-facts';
+import * as paymentFacts from '@/lib/guided-ohio-payment-facts';
 import {confirmGuidedOhioSchoolDistrictFacts}from '@/lib/guided-ohio-school-district-facts';
-import {confirmGuidedOhioReturnHeaderSources}from '@/lib/guided-ohio-return-header-sources';
+import {confirmGuidedOhioReturnHeaderSources,emptyOhioReturnHeaderDraft}from '@/lib/guided-ohio-return-header-sources';
 function required<T,>(v:T|null|undefined):T{if(v==null)throw Error('Actual diagnostic fixture missing');return v;}
 
 function ohio(which:0|1=0){
@@ -60,4 +62,40 @@ test('Ohio navigation reuses the accepted header school replay', () => {
 test.each([0,1]as const)('complete current school header replay %s',(which)=>{
  const state=ohio(which),before=structuredClone(state),f=vi.spyOn(federal,'calculateFederalTax'),sd=vi.spyOn(school,'buildOhioSchoolDistrictSource');
  try{const result=evaluateGuidedRender(state);expect(result.preview.metrics?.state).toMatchObject({stateTax:'811',stateRefund:'1189',schoolDistrict:{tax:'500',refund:which===0?'100':'0'}});expect(state).toEqual(before);expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:7,school:2});}finally{vi.restoreAllMocks();}
+});
+
+test.each([0, 1] as const)('replays each current parent once during incomplete entry and confirmation %s', (which) => {
+ const state = ohio(which);
+ const route = buildSectionRoute(state.segmentation);
+ state.currentSectionIndex = route.findIndex(section => section.id === 'state-return');
+ state.completedSections = route.slice(0, state.currentSectionIndex).map(section => section.id);
+ const data = required(state.sectionData['state-return']);
+ const confirmedHeader = required(data.ohioReturnHeaderSources);
+ data.ohioReturnHeaderSources = { ...emptyOhioReturnHeaderDraft(), taxYear: '2025', sourceReference: 'FICTIONAL-HEADER-EDIT' };
+ const before = structuredClone(state);
+ const residency = vi.spyOn(residencyFacts, 'buildGuidedOhioResidencyFacts');
+ const payments = vi.spyOn(paymentFacts, 'buildGuidedOhioPaymentFacts');
+ try {
+  const render = evaluateGuidedRender(state);
+  expect(render.analysis?.progress.currentSection?.id).toBe('state-return');
+  expect(render.preview.metrics).toMatchObject({ agi: '60000', state: null });
+  expect(render.preview.blockedBy).toBeNull();
+  expect(render.schoolDisplayObservation).toBeDefined();
+  expect(state).toEqual(before);
+  expect.soft(residency).toHaveBeenCalledTimes(1);
+  expect.soft(payments).toHaveBeenCalledTimes(1);
+
+  residency.mockClear();
+  payments.mockClear();
+  const draft = { ...confirmedHeader, sourceFactsConfirmed: null, confirmedHeaderSources: undefined };
+  const reconfirmed = confirmGuidedOhioReturnHeaderSources(required(render.originalInput), draft,
+   data.ohioResidency, data.ohioPayments, data.ohioSchoolDistrict);
+  expect(reconfirmed).toEqual(confirmedHeader);
+  expect(draft.sourceFactsConfirmed).toBeNull();
+  expect.soft(residency).toHaveBeenCalledTimes(1);
+  expect.soft(payments).toHaveBeenCalledTimes(1);
+ } finally {
+  residency.mockRestore();
+  payments.mockRestore();
+ }
 });
