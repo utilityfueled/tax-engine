@@ -9,7 +9,107 @@ function required<T>(value: T | undefined): T {
   return value;
 }
 
+function traditionalSchoolFixture() {
+  const p = fixture();
+  const address = { street: '1 Fictional Source Lane', city: 'Ada', state: 'OH', zip: '45810' };
+  p.input.taxpayer.address = address;
+  required(p.input.ohioResidency).schoolDistrictStatus = 'actual_district_sources_required';
+  rebind(p);
+  return { input: p.input, sources: { ...p.sources, noTaxingSchoolDistrictResidencyConfirmed: false, traditionalSchoolSource: {
+    sourceReference: 'Fictional traditional school worksheet', sourceFactsConfirmed: true,
+    taxYear: 2026, roundingElection: 'whole_dollars', onlySchoolDistrictResidenceConfirmed: true,
+    owner: { accountHolder: 'primary', originalTaxpayer: structuredClone(p.input.taxpayer.primary) },
+    residence: { sourceReference: 'Fictional full-year residence original', originalAddress: { ...address },
+      from: '2026-01-01', through: '2026-12-31', districtCode: '3301',
+      finder: { sourceReference: 'Fictional Finder record', taxYear: 2026, lookupDate: '2026-12-31', originalAddress: { ...address },
+        districtCode: '3301', districtName: 'Ada EVSD', rate: '0.0150', taxBase: 'traditional', officialResultMatchedConfirmed: true },
+    },
+  } } };
+}
+
 describe('Ohio2026 source-bound full-year resident A34 dispatcher', () => {
+  it('combines source-bound A34 with a full-year traditional school draft levy', () => {
+    const p = traditionalSchoolFixture();
+    const rawSnapshot = JSON.stringify(p);
+    const result = calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources });
+    expect(result.sourceStatus).toBe('admitted-draft');
+    expect(JSON.parse(JSON.stringify(result))).toMatchObject({
+      ohioAgi: '100000', modifiedAdjustedGrossIncome: '450000', exemptions: '1900', incomeTax: '2438',
+      traditionalSchool: { districtCode: '3301', taxBase: 'traditional', rate: '0.0150', taxableIncome: '448100',
+        rawTaxBeforeCredits: '6721.5', reportedTaxBeforeCredits: '6722', roundingElection: 'whole_dollars' },
+      filingQualified: false, exportAllowed: false, fullFederalReturnCalculated: false, calculationStatus: 'incomplete',
+      payments: null, refund: null, balanceDue: null, underpaymentPenalty: null, latePaymentInterest: null,
+    });
+    expect(JSON.stringify(p)).toBe(rawSnapshot);
+    const reopened: typeof p = JSON.parse(rawSnapshot);
+    expect(calculateOhio2026ReturnDraftFromSources({ taxInput: reopened.input, sources: reopened.sources })).toEqual(result);
+    reopened.input = parseInput(reopened.input);
+    rebind(reopened);
+    const reparsed = calculateOhio2026ReturnDraftFromSources({ taxInput: reopened.input, sources: reopened.sources });
+    expect(reparsed.traditionalSchool).toEqual(result.traditionalSchool);
+    expect(reparsed.incomeTax?.toFixed()).toBe('2438');
+    expect(JSON.stringify(result.lines)).not.toContain('Fictional Source Lane');
+
+    const withoutSchool = fixture();
+    const unchanged = calculateOhio2026ReturnDraftFromSources({ taxInput: withoutSchool.input, sources: withoutSchool.sources });
+    expect(unchanged.incomeTax?.toFixed()).toBe('2438');
+    expect(unchanged).not.toHaveProperty('traditionalSchool');
+  });
+
+  it('holds contradictory or incomplete traditional school originals', () => {
+    const controls: Array<(p: ReturnType<typeof traditionalSchoolFixture>) => void> = [
+      p => { p.sources.noTaxingSchoolDistrictResidencyConfirmed = true; },
+      p => { Reflect.deleteProperty(p.sources, 'traditionalSchoolSource'); },
+      p => { Reflect.deleteProperty(p.sources.traditionalSchoolSource, 'roundingElection'); },
+      p => { p.sources.traditionalSchoolSource.onlySchoolDistrictResidenceConfirmed = false; },
+      p => { p.sources.traditionalSchoolSource.taxYear = 2025; },
+      p => { p.sources.traditionalSchoolSource.residence.finder.taxYear = 2025; },
+      p => { p.sources.traditionalSchoolSource.residence.through = '2026-12-30'; },
+      p => { p.sources.traditionalSchoolSource.residence.finder.lookupDate = '2026-02-30'; },
+      p => { p.sources.traditionalSchoolSource.residence.finder.originalAddress.street = 'Changed record'; },
+      p => { p.input.taxpayer.address.street = 'Changed taxpayer address'; },
+      p => { p.sources.traditionalSchoolSource.owner.originalTaxpayer.ssn = '900-70-0999'; },
+      p => { p.sources.traditionalSchoolSource.residence.finder.rate = '0.0100'; },
+      p => { p.sources.traditionalSchoolSource.residence.finder.districtCode = '3302'; },
+      p => { p.sources.traditionalSchoolSource.residence.districtCode = '0000'; },
+      p => {
+        const residence = p.sources.traditionalSchoolSource.residence;
+        residence.districtCode = '0302';
+        Object.assign(residence.finder, { districtCode: '0302', districtName: 'Hillsdale LSD', taxBase: 'earned', rate: '0.0125' });
+      },
+      p => { required(p.input.ohioResidency).schoolDistrictStatus = 'no_ohio_taxing_district_residency'; },
+      p => { required(p.input.w2s[0]).localTaxWithheld = '1'; },
+    ];
+    for (const change of controls) {
+      const p = traditionalSchoolFixture();
+      change(p);
+      rebind(p);
+      const result = calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources });
+      expect(result.sourceStatus, String(change)).toBe('incomplete');
+      expect(result.incomeTax).toBeNull();
+      expect(result).not.toHaveProperty('traditionalSchool');
+    }
+  });
+
+  it('binds the traditional district Finder effective date to the residence interval', () => {
+    const checkDate = (lookupDate: string) => {
+      const { input, sources } = traditionalSchoolFixture();
+      sources.traditionalSchoolSource.residence.finder.lookupDate = lookupDate;
+      return calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources });
+    };
+    for (const lookupDate of ['2026-01-01', '2026-12-31']) {
+      const result = checkDate(lookupDate);
+      expect(result.sourceStatus).toBe('admitted-draft');
+      expect(result.traditionalSchool?.reportedTaxBeforeCredits.toFixed()).toBe('6722');
+    }
+    const outside = ['2025-12-31', '2027-01-01', '2099-12-31'].map(checkDate);
+    expect(outside.map(result => result.sourceStatus)).toEqual(['incomplete', 'incomplete', 'incomplete']);
+    for (const result of outside) {
+      expect(result.incomeTax).toBeNull();
+      expect(result).not.toHaveProperty('traditionalSchool');
+    }
+  });
+
   it('admits normal parsed reparse and serialized source inputs with the original capital evidence', () => {
     const p = fixture();
     const originalCarryover = JSON.stringify(p.sources.carryoverOriginal);

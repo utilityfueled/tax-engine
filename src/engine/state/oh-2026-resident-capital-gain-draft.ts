@@ -6,14 +6,17 @@ import { bytesToHex } from '@noble/hashes/utils.js';
 import { TaxpayerSchema, StandardDeductionFactsSchema, W2Schema, Form1099BSchema, CapitalTransactionSchema, type TaxYearInput } from '@/models/inputs.js';
 import { OhioResidencyFactsSchema, ohioNrcCategories } from '@/models/ohio-residency.js';
 import { Ohio2026OrdinarySourcesSchema } from '@/models/ohio-2026-return-draft.js';
+import { Ohio2026SchoolSourcesSchema } from '@/models/ohio-2026-school-sources.js';
 import { FEDERAL_2026_CONSTANTS } from '@/models/federal-2026-indexed.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { calculateForm8949 } from '@/engine/forms/form-8949.js';
 import { calculateScheduleD } from '@/engine/schedules/schedule-d.js';
 import { AuditTrail } from '@/utils/audit.js';
+import { roundDollar } from '@/utils/decimal.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhio2026QualifyingCapitalGainDraft } from './oh-2026-qualifying-capital-gain-draft.js';
+import { lookupOhio2026SchoolDistrict } from './oh-2026-school-catalog.js';
 
 const reference = z.string().trim().min(1).max(200);
 const yes = z.literal(true);
@@ -33,12 +36,19 @@ const currentCarryovers = carryovers.extend({
   suspendedBusinessInterest: emptyHistory, generalBusinessCreditCarryforward: zeroHistory,
   priorYearTax: zeroHistory, priorYearAGI: zeroHistory,
 }).strict();
+const traditionalSchoolSource = z.strictObject({
+  taxYear: z.literal(2026), sourceReference: reference, sourceFactsConfirmed: yes,
+  roundingElection: z.literal('whole_dollars'), onlySchoolDistrictResidenceConfirmed: yes,
+  owner: Ohio2026SchoolSourcesSchema.shape.owner,
+  residence: Ohio2026SchoolSourcesSchema.shape.residence,
+});
 const packet = z.strictObject({
   methodId: z.literal('oh-2026-resident-capital-gain-draft-v1'), taxYear: z.literal(2026), sourceReference: reference,
   sourceFactsConfirmed: yes, calendarYearConfirmed: yes, originalTaxInput: snapshot,
   allIncomeAndAdjustmentOriginalsIncludedConfirmed: yes, noOtherIncomeOrAdjustmentSourcesConfirmed: yes,
   noOtherOhioAdditionsOrDeductionsConfirmed: yes, noOtherOhioCreditOrTaxSourcesConfirmed: yes,
-  noOtherStateTaxOnOhioResidentIncomeConfirmed: yes, noTaxingSchoolDistrictResidencyConfirmed: yes, noQualifyingEitcChildrenConfirmed: yes,
+  noOtherStateTaxOnOhioResidentIncomeConfirmed: yes, noQualifyingEitcChildrenConfirmed: yes,
+  noTaxingSchoolDistrictResidencyConfirmed: z.boolean(), traditionalSchoolSource: traditionalSchoolSource.optional(),
   employmentOriginal: Ohio2026OrdinarySourcesSchema.shape.employmentOriginals.element,
   saleAgreementOriginal: z.strictObject({ ownerReference: reference, entityReference: reference, saleReference: reference,
     sourceReference: reference, sourceTaxYear: z.literal(2026), sourceFactsConfirmed: yes,
@@ -95,6 +105,8 @@ export interface Ohio2026ResidentCapitalGainDraftResult {
   federalAgi: Decimal | null; capitalGain: Decimal | null; qualifyingCapitalGainsAndPayrollDeduction: Decimal | null;
   businessIncomeDeduction: Decimal | null; taxableBusinessIncome: Decimal | null; ohioAgi: Decimal | null;
   modifiedAdjustedGrossIncome: Decimal | null; exemptions: Decimal | null; incomeTax: Decimal | null;
+  traditionalSchool?: { districtCode: string; taxBase: 'traditional'; rate: string; roundingElection: 'whole_dollars';
+    taxableIncome: Decimal; rawTaxBeforeCredits: Decimal; reportedTaxBeforeCredits: Decimal };
   payments: null; balanceDue: null; outstandingTaxBalance: null; refund: null; underpaymentPenalty: null; latePaymentInterest: null;
   lines: CalculatedLine[];
 }
@@ -163,10 +175,24 @@ export function calculateOhio2026ResidentCapitalGainDraft(input: TaxYearInput, r
     requireFact(same(equity.ownerReference, bound.sale.ownerReference) && same(equity.entityReference, bound.sale.entityReference) && same(equity.saleReference, bound.sale.saleReference) && same(equity.sourceReference, bound.sale.sourceReference) && bound.sale.date === sold);
     requireFact(whole(bound.sale.capitalGain).eq(gain) && whole(bound.recognition.reportedCapitalGain).eq(gain) && whole(bound.recognition.includedFederalAgi).eq(gain));
     const residency = OhioResidencyFactsSchema.parse(input.ohioResidency), owner = residency.owners[0];
-    requireFact(residency.taxYear === 2026 && residency.allFederalSourcesIncludedConfirmed === true && residency.noBusinessIncomeConfirmed === false && residency.schoolDistrictStatus === 'no_ohio_taxing_district_residency' && !residency.businessSources && !residency.reciprocalWageSources && !residency.residentCreditSources);
+    const schoolSource = source.traditionalSchoolSource;
+    requireFact(source.noTaxingSchoolDistrictResidencyConfirmed === (schoolSource === undefined));
+    const schoolStatus = schoolSource ? 'actual_district_sources_required' : 'no_ohio_taxing_district_residency';
+    requireFact(residency.taxYear === 2026 && residency.allFederalSourcesIncludedConfirmed === true && residency.noBusinessIncomeConfirmed === false && residency.schoolDistrictStatus === schoolStatus && !residency.businessSources && !residency.reciprocalWageSources && !residency.residentCreditSources);
     const { ohioResidency: _residency, ...federal } = input;
     requireFact(residency.originalFederalSources && digest(residency.originalFederalSources) === digest(federal));
     requireFact(residency.owners.length === 1 && owner && owner.accountHolder === 'primary' && owner.status === 'full_year_resident' && owner.periods.length === 1 && owner.periods[0]?.from === '2026-01-01' && owner.periods[0].to === '2026-12-31' && owner.periods[0].domicileState === 'OH');
+    const district = schoolSource && lookupOhio2026SchoolDistrict(residency.taxYear, schoolSource.residence.districtCode);
+    if (schoolSource) {
+      const { residence } = schoolSource, { finder } = residence;
+      requireFact(digest(schoolSource.owner.originalTaxpayer) === digest(person.primary));
+      const address = digest(person.address);
+      requireFact(person.address.state === 'OH' && digest(residence.originalAddress) === address && digest(finder.originalAddress) === address);
+      requireFact(residence.from === owner.periods[0].from && residence.through === owner.periods[0].to);
+      const requestedDate = day(finder.lookupDate);
+      requireFact(requestedDate >= residence.from && requestedDate <= residence.through);
+      requireFact(district?.taxBase === 'traditional' && finder.districtCode === district.code && finder.districtName === district.name && finder.taxBase === district.taxBase && finder.rate === district.rate);
+    }
     requireFact(owner.amounts && owner.stateAdditions?.length === 0 && owner.stateDeductions?.length === 0);
     for (const category of ohioNrcCategories) {
       const row = owner.amounts[category], expected = category === 'wages' ? wages : category === 'capitalGains' ? gain : new Decimal(0);
@@ -189,10 +215,23 @@ export function calculateOhio2026ResidentCapitalGainDraft(input: TaxYearInput, r
       ['A28', 'Business income deduction after A34', bid, 'min(250000, actual business gain-A34)'],
       ['OhioAGI', 'Ohio adjusted gross income', ohioAgi, 'FederalAGI-A34-A28; each once'],
     ] as const) audit.record('OH2026 resident equity draft', line, description, amount, formula);
+    let traditionalSchool: Ohio2026ResidentCapitalGainDraftResult['traditionalSchool'];
+    if (district?.taxBase === 'traditional' && schoolSource) {
+      const taxableIncome = Decimal.max(0, baseline.modifiedAdjustedGrossIncome.minus(baseline.exemptions));
+      const rawTaxBeforeCredits = taxableIncome.times(district.rate);
+      traditionalSchool = { districtCode: district.code, taxBase: district.taxBase, rate: district.rate,
+        roundingElection: schoolSource.roundingElection, taxableIncome, rawTaxBeforeCredits, reportedTaxBeforeCredits: roundDollar(rawTaxBeforeCredits) };
+      audit.record('OH2026 traditional school draft', 'school-base', 'Full-year traditional school tax base', taxableIncome,
+        'Statutory MAGI including both deduction add-backs, less completed Ohio exemptions; R.C. 5748.01(E)(1)');
+      audit.record('OH2026 traditional school draft', 'school-levy', 'Traditional school tax before credits', traditionalSchool.reportedTaxBeforeCredits,
+        'Tax base times the verified annual district rate, rounded under the documented whole-dollar election; R.C. 5703.055',
+        { 'District rate': new Decimal(district.rate), 'Unrounded levy': rawTaxBeforeCredits });
+    }
     return { ...held, sourceStatus: 'admitted-draft', sourceCommitment: digest({ input, raw }),
       incompleteReason: 'Income and baseline tax draft only; complete federal, payment, annual filing and export qualification remain unavailable.',
       federalAgi, capitalGain: gain, qualifyingCapitalGainsAndPayrollDeduction: deduction, businessIncomeDeduction: bid,
       taxableBusinessIncome, ohioAgi, modifiedAdjustedGrossIncome: baseline.modifiedAdjustedGrossIncome,
-      exemptions: baseline.exemptions, incomeTax: baseline.taxAfterJointCredit, lines: [...audit.getLines(), ...baseline.lines] };
+      exemptions: baseline.exemptions, incomeTax: baseline.taxAfterJointCredit, lines: [...audit.getLines(), ...baseline.lines],
+      ...(traditionalSchool ? { traditionalSchool } : {}) };
   } catch { return held; }
 }

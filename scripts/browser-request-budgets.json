@@ -1080,7 +1080,7 @@
     "src/engine/state/oh-2026-payment-source.ts": "f1fd4fa7a3305d69aa4e984227bcff34580ceb8821c63079e1b4cde9121ca7b3",
     "src/engine/state/oh-2026-qualifying-capital-gain-draft.ts": "d3b5fc78729aa8137a3e0aefae31d647b13026567f00055d4c920052dde6ef54",
     "src/engine/state/oh-2026-reciprocal-source.ts": "d0f345efa57f8d1bfc7d1b7ffafbded51904ae1e45ce2d7eec9e4a034e1dc2a1",
-    "src/engine/state/oh-2026-resident-capital-gain-draft.ts": "d83121a2cb8ae4d714ece41880ccc9d33a6b732047f735b79ceb3a8c388e414f",
+    "src/engine/state/oh-2026-resident-capital-gain-draft.ts": "424d0c7f4acf152a26fe1e6a611c1cc05cb1056f9191be083fa7acabe8b9c615",
     "src/engine/state/oh-2026-resident-credit-source.ts": "44a64c07e72f256bb251b74e9d1c0f65b6b9be9cd888929c84a469349d190972",
     "src/engine/state/oh-2026-resident-credit.ts": "ab422bb04c227625a8887a029b3e07dafb795329d12bbbc59e8a8c412817e514",
     "src/engine/state/oh-2026-return-draft.ts": "54c2f4b046588aabac7f86e7145c15dd5e39b35060df89012900e7dfa5c0aadf",

@@ -5,13 +5,18 @@ irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
 sources:
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.79"
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.02"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5748.01"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5703.055"
+  - "https://tax.ohio.gov/business/ohio-business-taxes/online-services/thefinderschooldistrict"
+  - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf"
   - "https://uscode.house.gov/us/usc/t26/s1202/"
   - "https://www.irs.gov/instructions/i1040sd"
 notes: |
   Authority checked November19,2026. This separate explicit dispatcher method
   admits one single adult under65, one ordinary C-corporation W2 of at least
   $50000, one positive long-term direct C-corporation stock sale, full-year Ohio
-  domicile and confirmed no taxing school district throughout the year.
+  domicile and either confirmed no taxing school district or one independently
+  documented traditional taxing district throughout the year.
   Completed original income/adjustment, Ohio adjustment/credit/tax inventories
   and household facts are required. Documentary source confirmations do not
   authenticate documents, establish identities independently, or replace a
@@ -107,9 +112,21 @@ lines:
     formula: "MAGI=OhioAGI+A34+BID=federalAGI in this source-complete cohort; baseline exemption and separate3percent business tax use actual completed inputs"
     testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::preserves MAGI exemption thresholds and separate business tax"
   - line: "resident"
-    description: "Retain full-year actual resident and no-school boundaries"
-    formula: "Exactly one current primary full-year OH period Jan1-Dec31, category amounts reconcile wages and capital gain once, nonresident amounts zero, no other adjustments or school/other-state sources"
+    description: "Retain full-year actual residency and require the matching school source branch"
+    formula: "Exactly one current primary full-year OH period Jan1-Dec31, category amounts reconcile wages and capital gain once, nonresident amounts zero and no other adjustments or other-state sources. The no-taxing-district branch remains available with its express confirmation and no school source. A taxing-district claim without complete traditional sources stays incomplete."
     testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects incomplete household residency employment and school sources"
+  - line: "traditional-school-base-and-levy"
+    description: "Compose the enrolled traditional district with the original A34 calculation"
+    formula: "For one actual 2026 full-year Ohio primary resident, require the current taxpayer address, separate residence and Finder records, actual entire-year residence in a single named district, matching traditional type and rate in the Ohio Rev. 3/26 annual schedule, and an explicit whole-dollar election. Preserve the existing A34 method's verified whole-dollar W-2, gain, and no reported local rows conditions. The school base is max(0, Ohio AGI plus A34 plus A28 minus the completed exemption), using the same statutory MAGI as the state baseline once. Multiply by the actual annual district rate, retaining the exact pre-credit levy and rounding once half up for the reported draft levy. No payments, credits, settlement, exported forms or filing status are derived."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::combines source-bound A34 with a full-year traditional school draft levy"
+  - line: "traditional-school-source-hold"
+    description: "Reject stale or incomplete traditional school sources"
+    formula: "Hold contradictory no-school answers, missing whole-dollar election, wrong years, owner or changed address, incomplete or multiple districts, unknown districts, earned districts, mismatched annual rate or unsupported local wage/payment sources. Never substitute a rate or tax base."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::holds contradictory or incomplete traditional school originals"
+  - line: "traditional-school-finder-date"
+    description: "Bind the requested Finder date to the documented residence period"
+    formula: "The Finder rate applies to the date requested for the address. Require the original requested effective date to be a valid calendar date within the matched residence period, inclusive of January 1 and December 31, 2026. A separately entered 2026 source year does not override a conflicting requested date."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::binds the traditional district Finder effective date to the residence interval"
   - line: "hold"
     description: "Close every payment filing export and unrelated dispatch gate"
     formula: "Admission supplies only source-bound income and baseline draft tax; every payment/settlement/refund/penalty remains null, filing/export false, no raw identity or original documents in audit; old dispatcher methods unchanged"
