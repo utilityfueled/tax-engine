@@ -127,7 +127,7 @@ export async function fillOhioOrdinaryOfficialReview(
   const ohioRow=oh[0];if(!ohioRow)throw new Error('Actual Ohio withholding row required.');
   // Schedule W lists only statements with actual Ohio withholding; raw cents
   // remain source facts even when the reported whole-dollar total rounds to zero.
-  const includeWithholding=!reciprocal||!ohioRow.withheld.isZero();
+  const includeWithholding=ohioRow.withheld.gt(0);
   // Printed Credits40 sums nominal lines10/36/38/39 and transfers to IT1040L9.
   // Canonical applied credits remain capped by tax; they are never mutated here.
   const printedCreditTotal=reciprocal?result.scheduleOfCredits.line10_totalFirstBatch

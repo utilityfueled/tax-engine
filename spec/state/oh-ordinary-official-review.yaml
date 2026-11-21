@@ -8,8 +8,9 @@ notes: |
   or actual dependent. Existing actual-source calculations are not changed.
   Official IT1040 bundle SHA4e6432e23df3bf181a8e9d7ee5d5bb7e2e96a6a21dd65fa39c625fb8a7e2f57c;
   NRC SHA7e2f83559370510e129a6d720e090ae08aeefffcc75083c0b91561df85639c52.
-  Complete physical review needs IT1040 pages1-2, Credits pages1-2,
-  Withholding pages1-2, NRC SectionI page1. No filing or global template gate
+  Complete physical review needs IT1040 pages1-2, Credits pages1-2 and
+  NRC SectionI page1. Withholding pages1-2 are needed when the source reports
+  positive Ohio withholding. No filing or global template gate
   promotion. Every page marked review-only; privacy removes identifiers and
   private source references. Render facts come from original-bound existing
   Ohio review context; saved scalars cannot replace originals.
@@ -41,6 +42,10 @@ lines:
     description: Original and federal result replay before output
     formula: Forged context, changed actual W2 identity or stale federal result rejects before creating output. No fake reconstructed result or private-original string may be emitted as paper proof. Existing public2026 and filing gates remain closed.
     testRef: "tests/pdf/oh-ordinary-official-review.test.ts::Ohio ordinary paper rejects conflicting source before output %s"
+  - line: "withholding-companion"
+    description: Schedule W selection uses the original Ohio withholding amount
+    formula: Printed page 17 limits the schedule to statements reporting Ohio withholding. Retain the companion if the original W-2 Ohio Box 17 is positive, including $0.49 when the reported whole-dollar amount is zero. Omit it when original Box 17 is exactly zero. IT 1040 line 14 retains whole-dollar rounding.
+    testRef: "tests/pdf/oh-ordinary-official-review.test.ts::Ohio ordinary paper selects Schedule W from original Ohio withholding %s"
   - line: "physical-values"
     description: Saved actual paper values and static privacy
     formula: Reopen saved outputs with strict pypdf; validate every expected numeric/form-status physical appearance, zero widgets/AcroForm after approved review flattening, no private SSN/EIN/source-reference in fields, metadata, xref objects or page streams. Inspect actual-size rendered pages separately before qualification.

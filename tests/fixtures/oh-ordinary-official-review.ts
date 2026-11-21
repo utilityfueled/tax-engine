@@ -3,7 +3,7 @@ import type { OhioPaymentFacts } from '@/models/ohio-payments.js';
 import type { W2StateLocalSources } from '@/models/w2-state-local.js';
 import { ohioPaymentFixture } from './oh-payments.js';
 
-export function ohioOrdinaryOfficialReviewFixture() {
+export function ohioOrdinaryOfficialReviewFixture(ohioWithholding = '1000') {
   const base = ohioPaymentFixture('nonresident');
   base.taxpayer.address = { street: '611 FICTIONAL VIRGINIA LANE', city: 'RICHMOND', state: 'VA', zip: '23219' };
   const w2 = base.w2s[0];
@@ -23,13 +23,15 @@ export function ohioOrdinaryOfficialReviewFixture() {
     stateReporting: 'multiple', localReporting: 'none', legacyScalarProjection: 'first_entered_rows',
     stateRows: [
       { printedRow: 1, sourceReference: 'PRIVATE-FICTIONAL-PAPER-VA-ROW', state: 'VA', employerStateIDStatus: 'reported', employerStateID: 'PRIVATE-VA-ORIGINAL-ID', wages: '100000', withheld: '0' },
-      { printedRow: 2, sourceReference: 'PRIVATE-FICTIONAL-PAPER-OH-ROW', state: 'OH', employerStateIDStatus: 'reported', employerStateID: 'PRIVATE-OH-ORIGINAL-ID', wages: '20000', withheld: '1000' },
+      { printedRow: 2, sourceReference: 'PRIVATE-FICTIONAL-PAPER-OH-ROW', state: 'OH', employerStateIDStatus: 'reported', employerStateID: 'PRIVATE-OH-ORIGINAL-ID', wages: '20000', withheld: ohioWithholding },
     ], localRows: [],
   };
   w2.stateLocalSources = actual;
   const payments: OhioPaymentFacts = { ...base.ohioPayments,
     sourceReference: 'PRIVATE-FICTIONAL-COMPLETE-PAPER-ACCOUNT',
-    remainingTaxPayment: { status: 'no_remaining_tax', sourceReference: 'PRIVATE-FICTIONAL-ACTUAL-ACCOUNT-NO-BALANCE', sourceFactsConfirmed: true },
+    remainingTaxPayment: ohioWithholding === '1000'
+      ? { status: 'no_remaining_tax', sourceReference: 'PRIVATE-FICTIONAL-ACTUAL-ACCOUNT-NO-BALANCE', sourceFactsConfirmed: true }
+      : base.ohioPayments.remainingTaxPayment,
   };
   const input = { ...base, ohioPayments: payments };
   const { ohioResidency: _r, ohioPayments: _p, ...original } = input;

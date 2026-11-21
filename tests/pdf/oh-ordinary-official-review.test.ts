@@ -51,6 +51,24 @@ it('Ohio ordinary actual source review emits all four official companions', asyn
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+it.each([['0.00', false], ['0.49', true]] as const)('Ohio ordinary paper selects Schedule W from original Ohio withholding %s', async (withheld, includesSchedule) => {
+  const input = ohioOrdinaryOfficialReviewFixture(withheld);
+  const federal = calculateFederalTax(input);
+  const ohio = calculateOhioResidentReturnFromFederal({ taxInput: input, federalResult: federal });
+  expect(ohio.it1040.line14_ohioWithholding.toString()).toBe('0');
+  expect(ohio.it1040.line22_totalAmountDue.toString()).toBe('465');
+  const context = prepareOhioResidencyReview(input);
+  const dir = await mkdtemp(join(tmpdir(), 'oh-actual-withholding-'));
+  try {
+    const output = await fillOhioReferenceForms(redactReviewIdentifiers(input), federal, dir, {}, context);
+    const names = output.filledForms.map(path => basename(path));
+    expect(names).toContain('oh-it-1040-review.pdf');
+    expect(names).toContain('oh-it-nrc-review.pdf');
+    expect(names).toContain('oh-schedule-credits-review.pdf');
+    expect(names.includes('oh-schedule-of-withholding-review.pdf')).toBe(includesSchedule);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 it.each(['forged context', 'changed original', 'stale federal'] as const)('Ohio ordinary paper rejects conflicting source before output %s', async kind => {
   const input = ohioOrdinaryOfficialReviewFixture(), federal = calculateFederalTax(input), context = prepareOhioResidencyReview(input);
   const dir = await mkdtemp(join(tmpdir(), 'oh-paper-denial-')), output = join(dir, 'must-not-exist');
