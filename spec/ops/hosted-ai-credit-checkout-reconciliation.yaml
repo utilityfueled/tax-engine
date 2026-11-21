@@ -1,0 +1,21 @@
+form: "Hosted-AI-Credit-Checkout-Reconciliation"
+taxYear: 2025
+reference: "https://docs.stripe.com/checkout/fulfillment"
+notes: |
+  This test uses the ordinary checkout and webhook handlers with disposable
+  loopback PostgreSQL, synthetic Stripe responses and in-process qualification.
+  It supplies local composition evidence. The public purchase gate and hosted
+  Preview qualification are separate.
+lines:
+  - line: "checkout-to-exact-settlement"
+    description: "Reconcile a synthetic paid Session across checkout, delivery and purchased credit use"
+    formula: |
+      An existing entitled test account starts a one-time USD 1500-cent checkout
+      for 1000 credit cents. Retain the original issuance bound to the exact
+      returned Session before granting credits. Deliver its signed completion
+      with the original event identity twice. The same issuance, one purchase
+      and one receipt reconcile to that Session. One synthetic completed usage
+      attempt charges one purchased cent, releases its hold, and leaves 999
+      cents available. The second account retains its original billing rows
+      and budget.
+    testRef: "tests/apps/web/hosted-ai-credit-checkout-reconciliation.test.ts::reconciles a synthetic Checkout, signed paid replay and exact purchased debit"
