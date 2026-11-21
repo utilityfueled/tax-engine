@@ -7,8 +7,8 @@ notes: |
   Archived annual and current final PDFs matched byte for byte at retrieval.
   Final 2026 instructions and the fillable Credit Limit Worksheet are included
   on page 2 of the same PDF. The IRS about page links this combined product;
-  there is no separate current i8880.pdf (HTTP 404). This physical-only contract
-  neither changes tax calculations nor enables review or filing exports.
+  there is no separate current i8880.pdf (HTTP 404). The internal projection
+  reuses the canonical federal calculation. Annual review and filing stay closed.
 lines:
   - line: "revision"
     description: "Pin the final combined annual form and instructions"
@@ -45,6 +45,37 @@ lines:
       Reject a complete 0.5 string in that native cell. Retain interactive fields
       and review notices on both pages; use only fictional header identifiers.
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::round-trips all diagnostic values and native rate digits with appearances"
+  - line: "ordinary-code-d-projection"
+    description: "Project one annual primary W-2 and the federal credit-limit worksheet"
+    formula: >-
+      Use one confirmed original 2026 employee Form W-2 for a single filer with
+      no dependents. Reconcile its primary owner, employer EIN, Box 1 wages and
+      current-year Box 12 Code D to the declared evidence. Use the ordinary 401(k)
+      deferral amount after confirming the absence of catch-up, prior-year make-up,
+      excess deferrals or competing contribution sources. Use complete 2026 Form
+      8880 eligibility and testing-period facts with zero distributions and zero
+      AGI restorations. Hold prior nonrefundable credits and require the ordinary
+      standard-deduction return to reconcile to Box 1 wages and the Form 8880
+      Line 8 amount. Project exact whole dollar primary-column and numbered
+      amounts from the canonical result and leave column (b) blank. Use only the
+      fractional digit of a positive printed rate on line 9. Use the Form 1040
+      line 18 preview for worksheet line 1, explicit zero from Schedule 3 lines
+      1–3, 6d and 6l for line 2, and their difference for line 3 and form line 11.
+      Require positive line 12 and reconcile it to Schedule 3 line 4. Redact the
+      SSN and mark both saved pages for review only. The missing annual tax table
+      holds public dispatch and exports. The fixture uses the existing draft
+      statutory-rate preview with a test-only rule-data mock.
+    irsRef: "2026 Form 8880 face and integrated instructions. IRS 2026 W-2 instructions, Box 12 (https://www.irs.gov/instructions/iw2w3). IRS Notice 2025-67, §402(g) regular deferral limit (https://www.irs.gov/pub/irs-drop/n-25-67.pdf)."
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::projects an original Code D W-2 into the saved credit and worksheet"
+  - line: "ordinary-source-holds"
+    description: "Hold incomplete, nonmatching and outside-scope sources before rendering"
+    formula: >-
+      Reject missing facts and support for an incorrect tax year, taxpayer,
+      employer, amount, contribution category or return type. Reject another W-2
+      or statement with retirement distributions, amounts outside the ordinary
+      whole-dollar method, external contribution overrides, positive prior credit,
+      a zero credit outcome, or another blank form revision.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::holds missing, conflicting and outside-scope originals"
   - line: "closed-exports"
     description: "Keep annual review and filing gates closed"
     formula: >-
