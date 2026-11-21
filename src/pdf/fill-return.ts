@@ -26,6 +26,8 @@ import { assertPreparedEducationReturn, hasInKindEducationReviewSources, prepare
 import { hasSavingsBondReviewSources, prepareSavingsBondReview, savingsBondReviewOriginalInput, type PreparedSavingsBondReview } from "./savings-bond-review-context.js";
 import { PDFDocument, PDFName } from "pdf-lib";
 import Decimal from "decimal.js";
+import { z } from "zod";
+import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { fillForm1040 } from "./fill-form-1040.js";
@@ -944,7 +946,24 @@ export async function fillReturn(
       && form.accountHolder !== "spouse" && form.iraSepSimple === false
       && !form.eligibleGovernmental457bPlan && form.taxableAmountNotDetermined !== true
       && new Decimal(form.taxableAmount ?? "0").gt(0));
-  if (hasAdditionalTax5329 || hasUnreportedFullPensionException) {
+  const iraDistribution = input.form1099R?.length === 1 ? input.form1099R[0] : undefined;
+  const iraDistributionDate = iraDistribution?.distributionDate;
+  const iraOwnerBirthDate = input.taxpayer.primary.dateOfBirth;
+  const hasUnreportedIraAgeException = standalone5329 && !hasAdditionalTax5329
+    && input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus !== "married_filing_jointly"
+    && input.form5329 === undefined && standalone5329.line2ExceptionNumber === "12"
+    && standalone5329.line1.gt(0) && standalone5329.line1.eq(standalone5329.line2)
+    && standalone5329.line1.eq(result.iraDistributionsTaxable)
+    && iraDistribution?.taxYear === 2025 && iraDistribution.accountHolder === "primary"
+    && iraDistribution.distributionCode?.trim() === "1" && iraDistribution.iraSepSimple === true
+    && iraDistribution.iraBasisConfirmedZero === true && !iraDistribution.eligibleGovernmental457bPlan
+    && d(iraDistribution.employeeContributions).isZero()
+    && iraDistribution.taxableAmountNotDetermined === false && iraDistribution.taxableAmount !== undefined
+    && standalone5329.line1.eq(iraDistribution.grossDistribution) && standalone5329.line1.eq(iraDistribution.taxableAmount)
+    && iraDistributionDate?.startsWith("2025-") && z.iso.date().safeParse(iraDistributionDate).success
+    && z.iso.date().safeParse(iraOwnerBirthDate).success
+    && !isBeforeAge59AndHalfDate(new Date(`${iraOwnerBirthDate}T00:00:00Z`), new Date(`${iraDistributionDate}T00:00:00Z`));
+  if (hasAdditionalTax5329 || hasUnreportedFullPensionException || hasUnreportedIraAgeException) {
     const f5329Path = join(blankFormsDir, "f5329.pdf");
     const doc5329 = await fillForm5329(input, result, f5329Path, hasAdditionalTax5329 ? undefined : "primary", educationReview);
     if (flatten) await flattenForm(doc5329.getForm());

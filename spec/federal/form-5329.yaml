@@ -281,7 +281,12 @@ lines:
       - "A direct exception-20 terminal-illness amount suppresses the supported attached Form 1099-R exception-20 subtotal in the same payload so the same distribution is not counted twice"
       - "When one supported exception category alone fills the capped Line 2 amount, later supported categories that contribute no remaining dollars do not add their exception numbers to the reported code"
       - "An August 31 birth reaches age 59 1/2 on February 28 in 2025, so a February 28, 2025 distribution date can default exception number 12 without rolling the half-birthday into March"
+      - "The 2025 nonjoint review packet attaches Part I with exception 12 when a single traditional IRA Form 1099-R for the primary taxpayer reports Code 1, the actual 2025 distribution date and birth date establish age 59 1/2 or older, zero IRA basis and known positive equal Boxes 1 and 2a establish full taxability, Box 5 is zero or absent, and the computed positive Lines 1 and 2 and Form 1040 taxable IRA amount match Box 2a with no manual Form 5329 input"
     testRef: "tests/engine/forms/form-5329.test.ts::Form 5329 Line 2 - supported and manual exception numbers collapse to the correct entered code"
+    testRefs:
+      - "tests/pdf/form-5329-ira-age-owner.test.ts::attaches Form 5329 for a fully taxable traditional IRA Code 1 on the exact half-birthday"
+      - "tests/pdf/form-5329-ira-age-owner.test.ts::attaches Form 5329 when the traditional IRA reports zero in Box 5"
+      - "tests/pdf/form-5329-ira-age-owner.test.ts::leaves the Form 5329 attachment off when Box 5 shows tax-free recovery"
 
   - line: "3"
     description: "Amount subject to the additional tax"
