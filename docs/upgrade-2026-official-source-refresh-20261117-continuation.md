@@ -228,3 +228,11 @@ exports remain open for both states.
 [PA income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
 [Ohio forms](https://tax.ohio.gov/home/forms/tax-forms) ·
 [Ohio bracket guidance](https://tax.ohio.gov/individual/who-must-file/whats-new).
+
+## November 21 retirement products
+
+The IRS current Form 5329 blank prints 2026 and has an existing disabled template candidate. The IRS current instructions still print 2025. The separate 2026 instructions have a draft cover. The 2026 Form 1099-R and its instructions are available, with distribution code and account flags separated into Boxes 7a through 7d. [Current Form 5329](https://www.irs.gov/pub/irs-pdf/f5329.pdf) · [Current instructions](https://www.irs.gov/instructions/i5329) · [Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i5329--dft.pdf) · [2026 Forms 1099-R and 5498 instructions](https://www.irs.gov/instructions/i1099r).
+
+Notice 2026-33 gives enacted effective-date and calculation guidance for qualified long-term-care distributions after December 29, 2025. Its 2026 calculation uses the least of the certified premium paid or assessed during the year, 10% of the plan's vested accrued benefit present value, and $2,600, subject to the actual qualifying distribution and annual aggregate. A long-term-care premium statement must be filed with the plan. The annual Form 5329 filing and review gates still require separate qualification. [IRS Notice 2026-33](https://www.irs.gov/pub/irs-drop/n-26-33.pdf).
+
+The 1099-R instructions summarize availability as after 2026. Notice 2026-33 cites the statutory start after December 29, 2025 and the $2,600 limit for 2026. The draft 5329 instructions list exception 24. Production reporting needs the final annual instructions and a documented resolution of the timing discrepancy. [2026 Forms 1099-R and 5498 instructions](https://www.irs.gov/instructions/i1099r) · [IRS Notice 2026-33](https://www.irs.gov/pub/irs-drop/n-26-33.pdf) · [Draft Form 5329 exception table](https://www.irs.gov/pub/irs-dft/i5329--dft.pdf#page=6).
