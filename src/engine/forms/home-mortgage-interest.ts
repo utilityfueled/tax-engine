@@ -138,11 +138,16 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
       const principal = amount(form.outstandingMortgagePrincipal, "historical outstanding principal");
       const origin = form.mortgageOriginationDate;
       if (origin !== undefined) date(origin, "historical origination date");
+      const interest = amount(form.mortgageInterestReceived, "historical interest");
+      const points = amount(form.pointsPaid ?? "0", "historical points");
+      if (form.taxYear !== undefined && form.taxYear !== year && (!principal.isZero() || !interest.isZero() || !points.isZero())) {
+        throw new Error(`Form 1098 source year ${form.taxYear} must match the ${year} return`);
+      }
       if (origin !== undefined && origin <= "1987-10-13") grandfathered = grandfathered.plus(principal);
       else if (origin !== undefined && origin < "2017-12-16") old = old.plus(principal);
       else newer = newer.plus(principal);
-      reportedInterest = reportedInterest.plus(amount(form.mortgageInterestReceived, "historical interest"));
-      reportedPoints = reportedPoints.plus(amount(form.pointsPaid ?? "0", "historical points"));
+      reportedInterest = reportedInterest.plus(interest);
+      reportedPoints = reportedPoints.plus(points);
     }
   } else {
     if (facts.sourceTaxYear !== year || facts.sourceFactsConfirmed !== true || facts.allHomeDebtIncluded !== true || !facts.sourceReference.trim()) throw new Error("Mortgage source year, complete debt and confirmation are required");

@@ -8,6 +8,7 @@ import { calculateScheduleA } from "@/engine/schedules/schedule-a.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { getConstants } from "@/models/constants.js";
+import { parseInput } from "@/index.js";
 import { complexMFJFixture, simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 import { mortgageInput, mortgageLoan } from "../../fixtures/mortgage-source.js";
@@ -107,6 +108,34 @@ describe("Pub936 actual mortgage sources", () => {
     expect(federal.scheduleA?.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toString()).toBe("30000");
     const joint = jointReportedMortgageInput(2025, "joint", [undefined, undefined]);
     expect(calculateHomeMortgageInterest(joint).line8a.toString()).toBe("8000");
+  });
+  it("holds explicit Form 1098 years outside the historical federal return year", () => {
+    const legacyInput = (taxYear: number | undefined, interest = "20000.25", principal = "250000", pointsPaid = "0") => parseInput({
+      ...simpleW2Fixture,
+      form1098: [{ lender: "Synthetic mortgage lender", taxYear, mortgageOriginationDate: "2019-01-03",
+        mortgageInterestReceived: interest, outstandingMortgagePrincipal: principal, pointsPaid, propertyTax: "0" }],
+    });
+
+    for (const year of [2024, 2026]) {
+      expect(() => calculateFederalTax(legacyInput(year))).toThrow(`Form 1098 source year ${year} must match the 2025 return`);
+    }
+    expect(() => calculateFederalTax(legacyInput(2024, "0"))).toThrow("Form 1098 source year 2024 must match the 2025 return");
+    expect(() => calculateFederalTax(legacyInput(2024, "0", "0", "0.01"))).toThrow("Form 1098 source year 2024 must match the 2025 return");
+
+    for (const year of [2025, undefined]) {
+      const input = legacyInput(year);
+      expect(input.form1098[0].taxYear).toBe(year);
+      const result = calculateFederalTax(input);
+      expect(result.deductionUsed).toBe("itemized");
+      expect(result.deductionAmount.toFixed(2)).toBe("20000.25");
+      expect(calculateHomeMortgageInterest(input).sourceFactsVerified).toBe(false);
+    }
+
+    for (const year of [2024, 2025, undefined]) {
+      const zero = calculateFederalTax(legacyInput(year, "0", "0"));
+      expect(zero.deductionUsed).toBe("standard");
+      expect(zero.itemizedDeductions.toString()).toBe("0");
+    }
   });
   it("binds actual loan sources and rejects unknown or contradictory source amounts", () => {
     const input = mortgageInput();
