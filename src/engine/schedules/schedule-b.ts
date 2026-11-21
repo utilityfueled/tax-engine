@@ -227,10 +227,12 @@ export function calculateScheduleB(
     }
   }
 
+  let dividendPayerCountReason = "Count of payer-level Line 5 entries from 1099-DIV, K-1, and K-1 (Form 1041) dividend sources";
   if (form8814QualifiedDividends?.greaterThan(0)) {
     dividendPayers.push({ name: "Form 8814", amount: form8814QualifiedDividends });
     audit.record("Sched B", "5", "Dividend payer - Form 8814", form8814QualifiedDividends,
       "Sum of Form 8814 Line 9 from validated child elections");
+    dividendPayerCountReason = "Count of Line 5 entries from 1099-DIV, K-1, K-1 (Form 1041), and Form 8814";
   }
 
   audit.record(
@@ -238,7 +240,7 @@ export function calculateScheduleB(
     "5-count",
     "Dividend payers listed",
     new Decimal(dividendPayers.length),
-    "Count of Line 5 entries from 1099-DIV, K-1, K-1 (Form 1041), and Form 8814"
+    dividendPayerCountReason
   );
 
   // Line 6: Total ordinary dividends
