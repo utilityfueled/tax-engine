@@ -1,6 +1,6 @@
 # External actions needed to finish the 2026 upgrade
 
-## Current external inputs — November 20
+## Current external inputs — November 21
 
 | Input still needed | Specific review material and deliverable |
 | --- | --- |
@@ -20,7 +20,16 @@ claimant age controls. The IRS product index currently lists a final 2026
 blank and draft 2026 instructions. [Education source and implementation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
 [Official revision status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-education-form-recheck).
 
-The latest annual cases also need independent expected outputs. For Form
+The latest annual cases also need independent expected outputs. For the
+2026 Publication 915 example, review the taxable amounts on Worksheets
+1, 2 and 4, the election, and the year of the publication used for the
+delayed payment. For final Form 8919, review each reason and source row,
+the continuation and single summary rules, and the owner-specific
+payroll on lines 8 through 13. Confirm the same-firm statement match for
+reason H and the treatment of a conflicting line 8 summary.
+[November 21 evidence](upgrade-2026-progress.md#november-21-employer-and-return-year-source-contracts).
+
+For Form
 8615, derive lines 1 through 17, including the proportional division of
 qualified dividends and capital gain, for the $10,800 dividend example
 and the two federal $10,000 investment-income examples. Check both the

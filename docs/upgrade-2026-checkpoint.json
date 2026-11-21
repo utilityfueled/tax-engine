@@ -1,5 +1,16 @@
 {
   "activeContinuation": {
+    "nov21EmployerAndReturnYearSourceContracts": {
+      "pub915": { "source": "a281ce73", "exactFocusedTestsPassed": 516, "standardTaxableBenefits": "3000", "electedTaxableBenefits": "2500" },
+      "mortgageSourceYear": { "source": "cfcb4e7a", "exactFocusedTestsPassed": 148, "matchingAndUndatedDeduction": "20000.25" },
+      "interviewInput": { "source": "5667ebb4", "exactFocusedTestsPassed": 35, "selfHostModelCalls": 0 },
+      "form8919": {
+        "source": "bd501815", "exactFocusedTestsPassed": 62, "exactTrackedSpecReferencesPassed": 9753,
+        "exactTypeAndInventoryChecksPassed": true, "exactBrowserTimingContractsPassed": 35,
+        "reopenedOriginalFirmCount": 6, "wages": "4000", "tax": "120", "publicExportsEnabled": false
+      },
+      "strictLinuxWorkflowWithTimingDiagnostics": 44869540473
+    },
     "nov21Final1095cEmployerCoverageReviewCandidate": {
       "source": "b06ad09b",
       "officialForm": "https://www.irs.gov/pub/irs-prior/f1095c--2026.pdf",
@@ -9,6 +20,13 @@
       "exactTrackedSpecReferencesPassed": 9747,
       "exactBrowserTimingContractsPassed": 35,
       "exactRootWebTypeAndInventoryChecksPassed": true,
+      "exactPostgresCoverageTestsPassed": 29735,
+      "exactCoverageFilesPassed": 2174,
+      "exactCoverageBranchesCovered": 86873,
+      "exactCoverageBranchesTotal": 98368,
+      "exactBranchCoveragePercent": 88.31,
+      "localCoveragePostgresStoppedNormally": true,
+      "exactDockerWorkflowPassed": 44869466861,
       "taxpayerOrEmployerIdentityVerified": false,
       "seededEligibilityOrTaxFacts": false,
       "publicIntakeEnabled": false

@@ -1,5 +1,40 @@
 # 2026 upgrade implementation evidence
 
+## November 21 employer and return-year source contracts
+
+`a281ce73` checks the final 2026 Publication 915 Terry Jackson example.
+The ordinary method gives $3,000 of taxable benefits and the prior-year
+worksheet adds zero. Worksheet 4 selects $2,500 of taxable benefits
+from $11,000 of total 2026 benefits. Worksheets 2 and 4 cite the publication for the
+payment return year. The exact archive passed 516 focused tests and
+9,748 tracked spec references. [Final 2026 IRS Publication 915](https://www.irs.gov/pub/irs-pdf/p915.pdf#page=12).
+
+`cfcb4e7a` holds an explicitly different Form 1098 year when original
+interest, points or principal affect a historical return. The original
+regression reproduced a $20,000.25 deduction using a prior-year
+statement. Matching and undated inputs preserve that amount, and all-zero
+mortgage rows still use the separate property-tax validation. The exact
+archive passed 148 focused tests and 9,749 tracked spec references.
+[2025 IRS Form 1098 instructions](https://www.irs.gov/pub/irs-prior/i1098--2025.pdf).
+
+`5667ebb4` validates the fields used by deterministic interview summaries.
+Incomplete lists and question fields receive the existing 400 response.
+Empty queues and complete client payloads work locally without provider
+configuration or model calls. The exact archive passed 35 focused tests,
+web type checking, and 9,751 tracked spec references.
+
+`bd501815` binds the internal 2026 Form 8919 PDF to confirmed firm and
+payroll records. Saved PDFs reopened with all six firms across the main
+and continuation forms, the summary on the first form, $4,000 of original
+wages and $120 of tax. Reason H requires matching original W-2 and 1099
+records. Conflicting names, owners, years and payroll overrides are held.
+Taxpayer IDs and individual firm SSNs stay blank in the review copy.
+The exact archive passed 62 focused tests, 9,753 tracked spec references,
+root type checking, generated inventory verification, and 35 browser
+timing contracts. Independent engineering review passed after resolving
+source-binding findings. Public review and filing remain gated.
+[Final 2026 Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf).
+
 ## Final 2026 Form 1095-C employer coverage review candidate
 
 `b06ad09b` checks the physical final form and preserves the original
@@ -15,6 +50,9 @@ review. The current upload path continues to classify the form for review.
 The exact archive passed 44 focused tests, root and web type checks,
 9,747 tracked spec references, inventory validation and 35 browser
 timing contracts. The inventory records this as a disabled candidate.
+The exact PostgreSQL-backed coverage run passed 29,735 tests in 2,174
+files at 88.31% branches (86,873 of 98,368), with a normal shutdown.
+The `6c566c50` Docker workflow passed. [Docker job](https://github.com/utilityfueled/tax-engine/actions/runs/44869466861).
 
 ## Final 2026 Schedule EIC original child projection
 
