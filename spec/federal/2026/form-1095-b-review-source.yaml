@@ -1,0 +1,46 @@
+form: "Form 1095-B Part IV review source"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f1095b--2026.pdf"
+references:
+  - "https://www.irs.gov/pub/irs-prior/f1095b--2026.pdf#page=2"
+sourceEvidence:
+  formSha256: "8ddccf8782981961d9591067d08161519f78605e2234ab58e94597adc49e763b"
+  firstPageContentSha256: "2b3f933f8d9806e4133eeaf67dc4805c3142873612d2c797bbbb12839a17701f"
+  printedRevision: "(2026) Created 9/16/26"
+  scope: "Internal review only. No upload, mutation, eligibility, Form 8962 input, AI, filing, or export."
+lines:
+  - line: "statement"
+    description: "First page of the final 2026 form with original status confirmed"
+    formula: >-
+      Require explicit confirmation of the original 2026 statement, the final
+      first-page dimensions, printed revision and decoded page content
+      streams, and both visible VOID and CORRECTED boxes unchecked. Hold
+      missing, conflicting, overprinted,
+      flattened, or incompatible evidence. Use the recipient instructions on
+      page 2. The page 3 continuation is outside this review candidate.
+    irsRef: "2026 Form 1095-B, pages 1–3"
+    testRef: "tests/apps/web/read-2026-1095-b-review-source.test.ts::holds documents outside the pinned original layout"
+  - line: "23–28(a)–(c)"
+    description: "One confirmed covered individual on the first page"
+    formula: >-
+      Use the independently confirmed Part IV line and match the first name,
+      middle initial, last name, and complete TIN to that line's visible
+      field values. With a TIN present, DOB must be blank. Hold masked or
+      partial TINs, DOB-only records, and mismatches for manual review. Part I
+      identifies the responsible individual and cannot establish Part IV
+      coverage. Return no name, TIN, or DOB.
+    irsRef: "2026 Form 1095-B, Instructions for Recipient, Part IV"
+    testRef: "tests/apps/web/read-2026-1095-b-review-source.test.ts::requires the selected covered person's confirmed identity"
+  - line: "23–28(d)–(e)"
+    description: "Months with at least one reported day of coverage"
+    formula: >-
+      Require the selected row's 13 visible box widgets at the pinned names
+      and locations. Reconcile the field and display states. Column (d)
+      reports at least one day of coverage in every month when checked and
+      column (e) is clear. With column (d) clear, require one through eleven
+      checked column (e) months. Hold empty or contradictory patterns. Report
+      the positive months from this row only. Unchecked months carry no
+      coverage conclusion. Day counts, full-month duration, and coverage
+      from other rows, pages, or documents are outside scope.
+    irsRef: "2026 Form 1095-B, Instructions for Recipient, Part IV"
+    testRef: "tests/apps/web/read-2026-1095-b-review-source.test.ts::reads selected and annual coverage from the saved official PDF"
