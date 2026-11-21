@@ -24,6 +24,20 @@ claimant age controls. The IRS product index currently lists a final 2026
 blank and draft 2026 instructions. [Education source and implementation evidence](upgrade-2026-progress.md#november-20-form-8863-claimant-and-student-ssn-reconciliation) ·
 [Official revision status](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-education-form-recheck).
 
+For the final 2026 Form 7206 fixture, independently derive the allocation
+between the same owner's Schedule C and Schedule F profits, the excluded
+employer-eligible month, and the Schedule 1 line 17 amount. Review line 11
+when there is no applicable pension adjustment and confirm which W-2 wage
+and tip facts are needed to allocate the self-employment tax deduction.
+[Case and official source evidence](upgrade-2026-progress.md#november-21-final-form-7206-from-original-records).
+
+For the final 2026 Form 2106 fixture, verify the reservist's overnight
+duty, distance and reimbursement facts, the January Abilene federal
+lodging cap, completed lines 3, 6A, 8A, 9A and 10, and the Schedule 1
+line 12 transfer. Recheck the annual instructions and Schedule 1 once
+the IRS publishes final 2026 revisions.
+[Case and official source evidence](upgrade-2026-progress.md#november-21-final-form-2106-reservist-lodging-records).
+
 The latest annual cases also need independent expected outputs. For the
 2026 Publication 915 example, review the taxable amounts on Worksheets
 1, 2 and 4, the election, and the year of the publication used for the

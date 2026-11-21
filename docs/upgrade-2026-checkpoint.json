@@ -1,5 +1,54 @@
 {
   "activeContinuation": {
+    "nov21Form2106OriginalReservistLodging": {
+      "source": "6ee9eff2",
+      "officialForm": "https://www.irs.gov/pub/irs-pdf/f2106.pdf",
+      "gsaAbileneLodgingRate": "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Abilene&fiscal_year=2026&state=TX",
+      "exactFocusedTestsPassed": 169,
+      "independentFocusedTestsPassed": 33,
+      "manualSchedule1TransferReconciled": "80",
+      "strictSavedPdfVerified": true,
+      "humanReviewComplete": false,
+      "publicExportEnabled": false
+    },
+    "nov21DigitalAssetCalendarHoldingPeriod": {
+      "source": "1567c09a",
+      "officialAuthority": "https://www.irs.gov/publications/p550",
+      "exactFocusedTestsPassed": 229,
+      "trackedSpecReferencesPassed": 9764,
+      "independentScheduleDBoundaryVerified": true,
+      "mixedLotQualificationComplete": false
+    },
+    "nov21Llc1098TYearControls": {
+      "source": "2e6f8e4a",
+      "officialForm": "https://www.irs.gov/pub/irs-prior/f8863--2025.pdf#page=2",
+      "exactFocusedTestsPassed": 2020,
+      "independentFocusedTestsPassed": 10,
+      "trackedSpecReferencesPassed": 9763,
+      "inventoryAndTypesPassed": true,
+      "legacyDirectReviewExportHoldVerified": true,
+      "matchingYearLlc": "800",
+      "fullPostgres16_16UnitTestsPassed": 29757,
+      "fullCoverageTestsPassed": 29757,
+      "branchCoveragePercent": 88.33,
+      "rootAndWebBuildsPassed": true,
+      "lintErrors": 0,
+      "lintWarnings": 12134
+    },
+    "nov21FinalForm7206OriginalRecords": {
+      "source": "db1d7c57",
+      "officialForm": "https://www.irs.gov/pub/irs-pdf/f7206.pdf",
+      "establishedBusinessInstructions": "https://www.irs.gov/pub/irs-pdf/i7206.pdf",
+      "exactFocusedTestsPassed": 163,
+      "trackedSpecReferencesPassed": 9762,
+      "browserTimingContractsPassed": 42,
+      "savedFieldsVerified": 16,
+      "populatedAppearancesVerified": 13,
+      "baselineDeduction": "900",
+      "independentEngineeringReviewPassed": true,
+      "humanReviewComplete": false,
+      "publicExportEnabled": false
+    },
     "nov21StrictAmd64ResultAndBudgetPreflight": {
       "strictSource": "6c566c50",
       "workflowId": 44869540473,
@@ -11,6 +60,8 @@
       "composeArchiveAndCleanupPassed": true,
       "verifiedReplayCases": 0,
       "reasonClassificationSource": "17419d32",
+      "successorTimingRehearsal": { "source": "7ebce850", "workflowId": 44874893916 },
+      "successorHostedLookup": { "source": "7ebce850", "readyPreviewCount": 0, "mainProjectCanceled": 1, "isolatedProjectMatches": 0 },
       "timingTestsPassed": 42,
       "trackedSpecReferencesPassed": 9758,
       "publicLiveJobBudgetReaderMatched": true

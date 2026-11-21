@@ -1,5 +1,80 @@
 # 2026 upgrade implementation evidence
 
+## November 21 final Form 2106 reservist lodging records
+
+`6ee9eff2` fills an internal 2026 Form 2106 review from the taxpayer's
+matched reservist orders and itemized paid lodging receipt. The fixture
+has one January duty night in Abilene, Texas, more than 100 miles from the
+tax home, and no reimbursement, meals or vehicle expense. The $80 room
+charge is below the $110 federal lodging cap. Lines 3, 6A, 8A, 9A and 10
+show $80 and reconcile to the entered Schedule 1 line 12 amount. The
+ordinary 2025 schedule test proves that transfer's existing identity.
+[Final Form 2106](https://www.irs.gov/pub/irs-pdf/f2106.pdf) ·
+[GSA lodging rate](https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Abilene&fiscal_year=2026&state=TX).
+
+The exact archive passed 169 focused tests and the independent review
+passed 33. Strict pypdf read back the saved values and appearances, and
+both pages were visually checked. The public return and export remain
+held. The current Form 2106 instructions and Schedule 1 still identify
+2025. [Form 2106 instructions](https://www.irs.gov/pub/irs-pdf/i2106.pdf) ·
+[Schedule 1](https://www.irs.gov/pub/irs-pdf/f1040s1.pdf).
+
+## November 21 digital-asset holding-period boundary
+
+`1567c09a` uses the calendar anniversary when the original purchase date
+is known. A January 31, 2024 purchase sold January 31, 2025 is short-term.
+The February 1 sale is long-term. A February 29 purchase is still
+short-term on February 28 of the next year. The previously expected
+366-day result changed after the original broker-lot fixture exposed
+the same error. Independent Schedule D calculations call the $900 gain
+short-term on the anniversary and long-term on the next day.
+The exact archive passed 229 focused tests, 9,764 spec references, the
+inventory check and root types. Mixed-lot reporting is tracked separately.
+[IRS Publication 550](https://www.irs.gov/publications/p550).
+
+## November 21 Lifetime Learning Credit source-year controls
+
+`2e6f8e4a` requires the current and prior-year Form 1098-T confirmations
+again after a return-year change. Existing student identity, institution
+and tuition entries remain available as drafts. Migration keeps the
+stored return year and retires the unbound confirmations from older LLC
+drafts. The shared tax input path also holds an unmigrated LLC draft
+submitted directly to the review export endpoint.
+
+Before the fix, the same student could retain the prior year's answers
+after switching from 2026 to 2025. With $4,000 of expenses and $50,000 of
+wages, the stale draft produced an $800 credit and a review PDF with Form
+8863. The corrected path holds the credit and export until confirmation.
+Confirmed 2025 facts still produce $800. Independent engineering checks
+verified both return and review PDF behavior, including a legacy draft
+without an LLC. The exact archive passed 2,020 scoped tests, 9,763 spec
+references, the inventory check and all three type checks. Scoped lint
+reported zero errors. [Form 8863, Part III](https://www.irs.gov/pub/irs-prior/f8863--2025.pdf#page=2).
+
+On exact `2e6f8e4a`, both full runs against isolated PostgreSQL 16.16 passed
+29,757 tests. Branch coverage was 88.33% against the required 85%. Root and
+Web builds passed. Repository lint reported zero errors and 12,134 warnings.
+
+## November 21 final Form 7206 from original records
+
+`db1d7c57` fills an internal review copy of the final 2026 Form 7206
+for one Schedule C medical plan with confirmed same-owner Schedule C
+and Schedule F earnings. The fixture has $3,000 profit per business.
+January's $900 premium qualifies, and February's $600 premium is excluded
+because the owner could participate in a subsidized employer plan. The
+worksheet records $424 of deductible self-employment tax, a 50% allocation,
+$212 on line 7, $2,788 on line 13 and $900 on line 14 and Schedule 1 line 17.
+The method uses the final 2026 blank and the 2025 instructions for the
+established-business allocation. [IRS form](https://www.irs.gov/pub/irs-pdf/f7206.pdf) ·
+[IRS instructions](https://www.irs.gov/pub/irs-pdf/i7206.pdf).
+
+Independent engineering review exercised a 12.5% allocation and a $697
+result, along with blank and held fields. Pinned pypdf 6.10.0 verified all
+16 saved fields and the 13 populated appearances. The exact archive passed
+163 focused tests, 9,762 spec references, the inventory check, root types,
+scoped ESLint and 42 timing contract tests. Public export remains gated.
+[Spec and regression references](../spec/federal/form-7206-2026-template.yaml).
+
 ## November 21 strict AMD64 result and timing preflight
 
 The `6c566c50` strict AMD64 run passed 647 cases, retained five original
@@ -17,6 +92,14 @@ identity failures at that boundary. The read-only request matched a
 separate in-progress public CI job. The exact archive passed 42 timing
 tests, 9,758 tracked spec references, lint and the unchanged browser
 source audit. The original run's three deadlines remain open.
+
+The opt-in successor rehearsal was dispatched at exact `7ebce850`. Its
+standard strict suite runs first. The original two diagnostic batches
+run only if that suite fails and the same-job budget check passes.
+[Current rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916).
+The Vercel lookup for that same SHA found one canceled main-project
+deployment and zero isolated-project deployments. A current protected
+Preview is still needed for checkout reconciliation.
 
 ## November 21 final Form 8829 renter review candidate
 
