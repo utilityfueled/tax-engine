@@ -104,6 +104,36 @@ it("calculates 2025 single-life pensions from actual Simplified Method facts whi
   expect(calculateFederalTax(nearlyRecovered).pensionDistributionsTaxable.toFixed()).toBe("5900");
 });
 
+it("holds a Code 1 pension at the owner's 2025 age threshold", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  const personal = state.sectionData["personal-info"];
+  if (!personal) throw new Error("Missing synthetic retirement owner");
+  personal.dateOfBirth = "1965-10-01";
+  const worksheet = {
+    planReference: "Confirmed pension contract",
+    qualifiedPlanConfirmed: true, singleLifeAnnuitantConfirmed: true, statementCoversContractConfirmed: true,
+    costInPlan: "31000", startingDate: "2025-07-01", ageAtStart: "59", monthsPaid: "6", priorRecovered: "0",
+  };
+  const statement = {
+    ...completeRetirementSource, sourceTaxYear: "2025", distributionCode: "1",
+    grossDistribution: "6000", taxableAmount: "", taxableAmountNotDetermined: true,
+    taxableAmountConfirmed: null, simplifiedMethod: worksheet,
+  };
+  for (const [startingDate, monthsPaid] of [["2025-07-01", "6"], ["2025-04-01", "9"]]) {
+    state.sectionData["income-retirement"] = { entries: [{ ...statement, simplifiedMethod: { ...worksheet, startingDate, monthsPaid } }] };
+    const validation = validateSection(state, "income-retirement");
+    expect(validation.status).toBe("partial");
+    expect(validation.fieldErrors["retirement-0-taxable-worksheet"]).toContain("payment dates");
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(state.sectionData["income-retirement"].entries[0]?.distributionCode).toBe("1");
+  }
+  personal.dateOfBirth = "1990-07-01";
+  state.sectionData["income-retirement"] = { entries: [{ ...statement, simplifiedMethod: { ...worksheet, ageAtStart: "35", costInPlan: "36000" } }] };
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(input.form1099R?.[0]?.distributionDate).toBeUndefined();
+  expect(calculateFederalTax(input).form5329?.line4.toFixed()).toBe("540");
+});
+
 // Spec: spec/federal/guided-input.yaml, retirement-2026-simplified-method
 it("reopens confirmed 2026 single-life pension facts without enabling the annual return or PDF", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });

@@ -3,6 +3,7 @@ import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precisio
 import {statePaymentFactErrors}from './guided-state-facts';
 import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
@@ -72,14 +73,21 @@ function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: str
   if (worksheet.statementCoversContractConfirmed !== true) return `Confirm that Box 1 on this original reports all ${year} periodic payments for this contract, with no other payments included.`;
   const start = worksheet.startingDate;
   if (!start || !isActualDate(start) || start < "1998-01-01" || start > `${year}-12-31`) return `Enter the actual annuity starting date from 1998 through ${year}.`;
+  const startsThisYear = start.startsWith(`${year}-`);
   const age = simplifiedMethodWholeNumber(worksheet.ageAtStart);
   if (age === undefined || age >= 75) return "Enter the annuitant's actual age at the starting date. This worksheet covers starts before age 75.";
   if (dateOfBirth && isActualDate(dateOfBirth)) {
     const ageOnStart = Number(start.slice(0, 4)) - Number(dateOfBirth.slice(0, 4)) - Number(start.slice(5) < dateOfBirth.slice(5));
     if (age !== ageOnStart) return "Reconcile the annuitant's age at the starting date with the recipient's date of birth.";
+    if (year === 2025 && startsThisYear && entry.distributionCode.trim() === "1") {
+      const birthDate = new Date(`${dateOfBirth}T00:00:00Z`);
+      if (isBeforeAge59AndHalfDate(birthDate, new Date(Date.UTC(year, 0, 1)))
+        && !isBeforeAge59AndHalfDate(birthDate, new Date(`${start}T00:00:00Z`))) {
+        return "Review the actual payment dates and any modified payment series for the original Code 1.";
+      }
+    }
   }
   const months = simplifiedMethodWholeNumber(worksheet.monthsPaid);
-  const startsThisYear = start.startsWith(`${year}-`);
   const availableMonths = startsThisYear ? 13 - Number(start.slice(5, 7)) : 12;
   if (months === undefined || months < 1 || months > availableMonths) return `Enter the actual months covered by ${year} annuity payments from the start of cost recovery onward.`;
   const costError = amountError(worksheet.costInPlan, "net cost in the plan at the annuity starting date");

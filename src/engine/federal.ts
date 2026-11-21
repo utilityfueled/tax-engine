@@ -59,6 +59,7 @@ import {
   calculateRegularIncomeTax,
   regularIncomeTaxSource,
 } from "@/utils/tax-math.js";
+import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age.js";
 import { calculateQBISourceDeductions, type QBIDeductionSource } from "./forms/qbi-source-deductions.js";
 import { calculateForm8812 } from "./forms/form-8812.js";
 import { calculatePersonalCreditOrdering } from "./forms/personal-credit-ordering.js";
@@ -7493,23 +7494,6 @@ function isUnderAge59AndHalfOnDate(dateOfBirth: string, comparisonDate: string):
   }
 
   return isBeforeAge59AndHalfDate(birthDate, comparison);
-}
-
-function isBeforeAge59AndHalfDate(birthDate: Date, comparisonDate: Date): boolean {
-  const age59AndHalfDate = addUtcYearsAndMonthsClamped(birthDate, 59, 6);
-
-  return comparisonDate < age59AndHalfDate;
-}
-
-function addUtcYearsAndMonthsClamped(date: Date, yearsToAdd: number, monthsToAdd: number): Date {
-  const sourceYear = date.getUTCFullYear() + yearsToAdd;
-  const sourceMonth = date.getUTCMonth() + monthsToAdd;
-  const targetYear = sourceYear + Math.floor(sourceMonth / 12);
-  const targetMonth = ((sourceMonth % 12) + 12) % 12;
-  const lastDayOfTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
-  const targetDay = Math.min(date.getUTCDate(), lastDayOfTargetMonth);
-
-  return new Date(Date.UTC(targetYear, targetMonth, targetDay));
 }
 
 function qualifiesForSupportedAge59AndHalfException(
