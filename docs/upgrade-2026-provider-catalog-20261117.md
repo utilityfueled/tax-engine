@@ -65,3 +65,14 @@ still lists the stable release. This recheck used public sources.
 [Google AI Studio pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
 [Google release guide](https://aistudio.google.com/docs/whats-new-gemini-3.8#pricing) ·
 [Google model page](https://aistudio.google.com/docs/models/gemini-3.8-flash).
+
+## November 21 public documentation recheck
+
+The supported response modes, reasoning options, standard prices and
+published transition dates still match the tracked Luna, Sol, GPT-5 Mini
+and Gemini routes. The public recheck made zero generation requests.
+The draft 240-case corpus still awaits independent human label and source
+review with the fixed 80 held-out cases. Selected Google project access
+and repeated provider measurements remain open.
+[OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations) ·
+[Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).

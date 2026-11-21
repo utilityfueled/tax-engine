@@ -38,6 +38,13 @@ line 12 transfer. Recheck the annual instructions and Schedule 1 once
 the IRS publishes final 2026 revisions.
 [Case and official source evidence](upgrade-2026-progress.md#november-21-final-form-2106-reservist-lodging-records).
 
+For the Pennsylvania one-move case, independently reconcile the exact
+183-day threshold with §301(p) and the Department's guidance and provide
+the worksheet for a confirmed statutory resident who moved during the
+year. The ordinary one-move path holds the disputed boundary and the
+full-year cases requiring a separate method.
+[Case and official sources](upgrade-2026-progress.md#november-21-pennsylvania-one-move-residency-threshold).
+
 The latest annual cases also need independent expected outputs. For the
 2026 Publication 915 example, review the taxable amounts on Worksheets
 1, 2 and 4, the election, and the year of the publication used for the

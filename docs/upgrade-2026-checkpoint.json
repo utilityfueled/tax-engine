@@ -1,5 +1,15 @@
 {
   "activeContinuation": {
+    "nov21PaOneMoveResidencyBoundary": {
+      "source": "bc0d1004",
+      "officialGuidance": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency",
+      "exactFocusedTestsPassed": 2893,
+      "independentFocusedTestsPassed": 93,
+      "trackedSpecReferencesPassed": 9767,
+      "partYear182DayTax": "1197",
+      "separateMethodRequiredAt183AndHigherWithPaAbode": true,
+      "exact183DayInterpretationComplete": false
+    },
     "nov21Form2106OriginalReservistLodging": {
       "source": "6ee9eff2",
       "officialForm": "https://www.irs.gov/pub/irs-pdf/f2106.pdf",
@@ -62,6 +72,7 @@
       "reasonClassificationSource": "17419d32",
       "successorTimingRehearsal": { "source": "7ebce850", "workflowId": 44874893916 },
       "successorHostedLookup": { "source": "7ebce850", "readyPreviewCount": 0, "mainProjectCanceled": 1, "isolatedProjectMatches": 0 },
+      "previousRehearsal": { "source": "79369997", "workflowId": 44872318441, "managedPassed": 648, "managedFailed": 2, "strictPassed": 638, "strictFailed": 12, "originalSkipsPerJob": 5 },
       "timingTestsPassed": 42,
       "trackedSpecReferencesPassed": 9758,
       "publicLiveJobBudgetReaderMatched": true

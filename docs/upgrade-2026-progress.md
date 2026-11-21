@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Pennsylvania one-move residency threshold
+
+`bc0d1004` reconciles documented Pennsylvania days across both domicile
+periods. The ordinary one-move path holds an otherwise confirmed permanent
+Pennsylvania abode at 183 or more documented Pennsylvania days. The July
+move fixture originally assigned part-year treatment with 200 days. It now
+holds for a separate residency method under either claim. The 182-day
+part-year control still gives $39,000 of taxable income and $1,197 of tax.
+The state agency's one-move wording includes day 183. The statute uses
+more than 183 for the statutory resident condition. The exact day
+remains open for independent review. Independent engineering
+checked both the ordinary draft and guide. The exact archive passed 2,893
+focused tests, 9,767 spec references, inventory, root types and scoped lint.
+[Pennsylvania residency guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
+[Tax Reform Code of 1971, §301(p)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s).
+
 ## November 21 final Form 2106 reservist lodging records
 
 `6ee9eff2` fills an internal 2026 Form 2106 review from the taxpayer's
@@ -100,6 +116,14 @@ run only if that suite fails and the same-job budget check passes.
 The Vercel lookup for that same SHA found one canceled main-project
 deployment and zero isolated-project deployments. A current protected
 Preview is still needed for checkout reconciliation.
+
+The earlier `79369997` run completed with 648 passed, two failed and
+five skipped in managed Linux. Strict AMD64 reported 638 passed, 12
+failed and five skipped. Both jobs timed out on the two RRTA saved-PDF
+inspections. The strict result also failed ten Ohio browser cases. The
+successor rehearsals remain independent of these failed attempts.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44872318441/job/136749369529) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44872318441/job/136749369654).
 
 ## November 21 final Form 8829 renter review candidate
 
