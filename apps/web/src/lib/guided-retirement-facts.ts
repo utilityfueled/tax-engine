@@ -7,7 +7,7 @@ import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-f
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import {
-  isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, needsGuidedSimplifiedMethod,
+  isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, needsGuidedSimplifiedMethod, normalizeGuidedRetirementCode,
   retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, retirementSourceInput,
   simplifiedMethodPlanIdentifier, simplifiedMethodWholeNumber,
   type GuidedRetirementQcdSource, type GuidedRetirementSimplifiedMethod,
@@ -136,7 +136,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       if (sourceIds.has(sourceId)) fail("duplicate", "Reconcile duplicate or corrected statements for this retirement account before calculating.");
       sourceIds.add(sourceId);
     }
-    const code = entry.distributionCode.trim().toUpperCase();
+    const code = normalizeGuidedRetirementCode(entry.distributionCode);
     const qualifiedLumpSum = isGuidedQualifiedLumpSum(entry);
     const qcdStatement = isGuidedQcdStatement(entry);
     const needsSimplifiedMethod = needsGuidedSimplifiedMethod(entry);

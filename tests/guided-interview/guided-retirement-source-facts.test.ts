@@ -116,6 +116,52 @@ it("requires actual retirement source ownership and preserves zero and unknown a
   expect(buildGuidedFactAnswers(state).find(fact => fact.factId === "retirement-distribution-review")?.answerText).not.toContain("confirmed");
 });
 
+// Spec: spec/federal/guided-input.yaml, retirement-distribution-code-spacing
+it("carries a printed space in confirmed retirement codes through 2025 and 2026 guided input", () => {
+  const cases = ([2025, 2026] as const).map(taxYear => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+    state.taxYear = taxYear;
+    const personal = state.sectionData["personal-info"];
+    if (!personal) throw new Error("Could not initialize guided household facts");
+    personal.dateOfBirth = "1950-02-15";
+    const statement = {
+      ...completeRetirementSource, sourceTaxYear: String(taxYear), distributionCode: "7 D",
+      grossDistribution: "1000", taxableAmount: "900.25", federalWithheld: "125",
+    };
+    state.sectionData["income-retirement"] = { entries: [statement] };
+    const reopened = loadGuidedFlowState({ getItem: () => JSON.stringify(state) } as unknown as Storage, "retirement");
+    if (!reopened) throw new Error("Could not reopen the guided retirement draft");
+    expect(reopened.sectionData["income-retirement"]?.entries[0]?.distributionCode).toBe("7 D");
+    return { taxYear, state, statement, reopened };
+  });
+  expect(cases.map(({ taxYear, reopened }) => ({ taxYear, status: validateSection(reopened, "income-retirement").status }))).toEqual([
+    { taxYear: 2025, status: "complete" }, { taxYear: 2026, status: "complete" },
+  ]);
+  for (const { taxYear, state, statement, reopened } of cases) {
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+    expect(input.form1099R?.[0]).toMatchObject({ distributionCode: "7D", taxableAmount: "900.25", federalWithheld: "125" });
+    expect(calculateForm1099R(input.form1099R, { taxYear }).pensionTaxable.toFixed(2)).toBe("900.25");
+    if (taxYear === 2025) expect(calculateFederalTax(input).totalWithholding.toFixed()).toBe("125");
+
+    state.sectionData["income-retirement"].entries = [{ ...statement, taxableAmount: "0.00" }];
+    expect(buildTaxInputFromGuidedData(state)?.form1099R?.[0]?.taxableAmount).toBe("0.00");
+    for (const change of [{ taxableAmount: "" }, { distributionCode: "" }, { distributionCode: "7 / D" }, { distributionCode: "7  D" }, { distributionCode: "7 J" }]) {
+      state.sectionData["income-retirement"].entries = [{ ...statement, ...change }];
+      expect(validateSection(state, "income-retirement").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(state), JSON.stringify(change)).toBeNull();
+    }
+  }
+});
+
+it("keeps the 2026 qualified lump-sum reporting decision for a spaced Code A pair", () => {
+  const statement = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "4 A" };
+  expect(() => buildRetirementInputs([statement], "single", 2026)).toThrow(/actual reporting method/i);
+  expect(() => buildRetirementInputs([{ ...statement, qualifiedLumpSumReporting: "form_4972" }], "single", 2026)).toThrow(/separate Form 4972/i);
+  expect(buildRetirementInputs([{ ...statement, qualifiedLumpSumReporting: "ordinary_pension" }], "single", 2026)[0])
+    .toMatchObject({ distributionCode: "4A", qualifiedLumpSumReporting: "ordinary_pension", taxableAmount: "1000" });
+  expect(() => buildRetirementInputs([{ ...statement, sourceTaxYear: "2025", qualifiedLumpSumReporting: "ordinary_pension" }], "single", 2025)).toThrow(/special worksheet/i);
+});
+
 it("forwards actual recipient and matching state withholding without inventing local identity", () => {
   const state = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["retirement"], lifeEvents: [], stateCode: "PA" });
   state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
@@ -183,8 +229,10 @@ it("forwards the actual 2026 QCD worksheet without inventing Box 2a", () => {
   const calculated = calculateForm1099R(inputs.map(input => Form1099RSchema.parse(input)), { taxYear: 2026 });
   expect(calculated.iraQualifiedCharitableDistributions.toFixed(2)).toBe("2500.00");
   expect(calculated.iraTaxable.toFixed(2)).toBe("4000.00");
+  expect(buildRetirementInputs([{ ...statement, distributionCode: "Y 7" }], "single", 2026)).toEqual(inputs);
   expect(buildRetirementInputs([{ ...statement, distributionCode: "7" }], "single", 2026)[0]).toHaveProperty("qcdSource");
   expect(() => buildRetirementInputs([{ ...statement, distributionCode: "7Y" }], "single", 2026)).toThrow(/worksheet/i);
+  expect(() => buildRetirementInputs([{ ...statement, distributionCode: "7 Y" }], "single", 2026)).toThrow(/worksheet/i);
   expect(() => buildRetirementInputs([{ ...statement, qcdSource: undefined }], "single", 2026)).toThrow(/QCD.*worksheet/i);
   expect(() => buildRetirementInputs([{ ...statement, qcdSource: { ...qcdSource, currentDeductedContributions: "" } }], "single", 2026)).toThrow(/current.*deducted/i);
   expect(() => buildRetirementInputs([{ ...statement, qcdSource: { ...qcdSource, distributionDate: "2026-02-30" } }], "single", 2026)).toThrow(/transfer date/i);

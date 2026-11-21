@@ -38,6 +38,11 @@ export interface GuidedRetirementSimplifiedMethod {
   priorRecovered?: string;
 }
 
+/** The saved source keeps any printed space between the two code characters. */
+export function normalizeGuidedRetirementCode(value: string): string {
+  return value.trim().toUpperCase().replace(/^([A-Z0-9]) ([A-Z0-9])$/, '$1$2');
+}
+
 export function needsGuidedSimplifiedMethod(entry: RetirementEntryData): boolean {
   return entry.sourceTaxYear === '2025'
     && entry.isIraSepSimple === false
@@ -50,11 +55,11 @@ export function simplifiedMethodPlanIdentifier(entry: RetirementEntryData): stri
 }
 
 export function isGuidedQualifiedLumpSum(entry: RetirementEntryData): boolean {
-  return entry.sourceTaxYear === '2026' && /^(?:[47]A|A[47])$/.test(entry.distributionCode.trim().toUpperCase());
+  return entry.sourceTaxYear === '2026' && /^(?:[47]A|A[47])$/.test(normalizeGuidedRetirementCode(entry.distributionCode));
 }
 
 export function isGuidedQcdStatement(entry: RetirementEntryData): boolean {
-  const code = entry.distributionCode.trim().toUpperCase();
+  const code = normalizeGuidedRetirementCode(entry.distributionCode);
   return entry.sourceTaxYear === '2026' && (code === 'Y7' || (code === '7' && entry.qcdSource !== undefined));
 }
 
@@ -80,7 +85,7 @@ export function retirementSourceInput(entry: RetirementEntryData) {
     payer: entry.payer.trim(), payerTin: entry.payerTin?.trim(), accountHolder: entry.accountHolder || undefined,
     accountReference: entry.accountReference?.trim() || undefined,
     grossDistribution: amount(entry.grossDistribution), taxableAmount: amount(entry.taxableAmount), federalWithheld: amount(entry.federalWithheld),
-    iraSepSimple: entry.isIraSepSimple ?? undefined, distributionCode: entry.distributionCode.trim().toUpperCase(),
+    iraSepSimple: entry.isIraSepSimple ?? undefined, distributionCode: normalizeGuidedRetirementCode(entry.distributionCode),
     qualifiedLumpSumReporting: isGuidedQualifiedLumpSum(entry) ? entry.qualifiedLumpSumReporting ?? undefined : undefined,
     ...(qcd && { qcdSource: {
       transferReference: qcd.transferReference?.trim(),
