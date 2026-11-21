@@ -170,6 +170,42 @@ in a checked month. These source facts can support the existing monthly
 evidence. The Form 8962 exception facts and the applicable household
 premium calculations still need their own sources and review. This
 update does not qualify a new extractor or change benefit determination.
+
+## November 21 publication recheck
+
+The IRS posted-date catalog now lists the final 2026 Schedule B
+instructions with a November 20 posting date, resolving the earlier
+catalog discrepancy. The regular Schedule B blank, Form 1040,
+its annual instructions, and the Tax and EIC tables still identify
+tax year 2025. The separate 2026 Form 1040 still carries a draft cover.
+[IRS posted-date catalog](https://www.irs.gov/forms-instructions-and-publications?find=&items_per_page=25&order=posted_date&page=0&sort=desc) ·
+[Schedule B blank](https://www.irs.gov/pub/irs-pdf/f1040sb.pdf) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Form 1040 instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
+[Tax and EIC tables](https://www.irs.gov/pub/irs-pdf/i1040tt.pdf) ·
+[Draft 2026 Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf).
+
+The final 2026 Form 8863 blank is available, and its current final
+instructions still identify 2025. The 2026 Schedule 2 and Form 2441
+materials checked carry draft covers. The Pennsylvania revenue site
+still links the 2025 PA-40. Ohio's forms index still lists the 2025
+IT 1040 packet. The annual filing gates remain closed.
+[Form 8863 instructions](https://www.irs.gov/pub/irs-pdf/i8863.pdf) ·
+[Draft Schedule 2](https://www.irs.gov/pub/irs-dft/f1040s2--dft.pdf) ·
+[Draft Form 2441](https://www.irs.gov/pub/irs-dft/f2441--dft.pdf) ·
+[Pennsylvania PIT](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms index](https://tax.ohio.gov/business/get-a-form).
+
+An independent engineering source comparison confirmed that the final
+2026 Publication 915 ordinary Worksheet 1 retains the same inputs,
+thresholds, percentages and filing-status branches as 2025. The
+existing specification and tests already cite the 2026 ordinary and
+lump-sum examples. Publication 915 covers the Social Security equivalent
+portion of railroad retirement benefits. Its non-equivalent and Tier 2
+discussion directs filers to Publication 575.
+[2025 Worksheet 1](https://www.irs.gov/pub/irs-prior/p915--2025.pdf#page=16) ·
+[2026 Worksheet 1](https://www.irs.gov/pub/irs-pdf/p915.pdf#page=17) ·
+[2026 railroad reporting instructions](https://www.irs.gov/pub/irs-pdf/p915.pdf#page=25).
 [Employee instructions on the final form](https://www.irs.gov/pub/irs-pdf/f1095c.pdf#page=3) ·
 [Line 14 to 16 instructions](https://www.irs.gov/pub/irs-pdf/i109495c.pdf).
 
