@@ -1,5 +1,59 @@
 {
   "activeContinuation": {
+    "nov20Form2441MfsCreditOnly": {
+      "source": "651ab2d2",
+      "officialInstructions": "https://www.irs.gov/instructions/i2441",
+      "official2025Form": "https://www.irs.gov/pub/irs-prior/f2441--2025.pdf",
+      "focusedTestsPassed": 223,
+      "exactCombinedFocusedTestsPassed": 133,
+      "trackedSpecReferencesPassed": 9736,
+      "verifiedSchedule3CreditDollars": "600",
+      "savedReviewPdfLineAChecked": true,
+      "savedReviewPdfPartIIIBlank": true,
+      "guidedFactCollectionQualified": false
+    },
+    "nov20BrowserPreflightAndScheduleBAuditCompatibility": {
+      "browserSourceManifest": "27f6214d",
+      "scheduleBAuditFix": "2ab355bd",
+      "browserDigestReplacements": 8,
+      "browserOrchestratorTestsPassed": 51,
+      "scheduleBAuditCompatibilityTestsPassed": 185,
+      "independentEngineeringReviewPassed": true,
+      "olderBrowserAdmissionFailure": 44848865423
+    },
+    "nov20Form8615PreferentialWorksheet1": {
+      "source": "f03e966b",
+      "officialInstructions": "https://www.irs.gov/pub/irs-prior/i8615--2025.pdf",
+      "focusedTestsPassed": 614,
+      "trackedSpecReferencesPassed": 9735,
+      "qualifiedDividendExampleTaxDollars": "1215",
+      "linkedFederalExampleTaxDollars": "1716",
+      "ordinaryW2AndInvestmentSourcesReconciled": true,
+      "offsettingSchedule1EntriesRejected": true,
+      "independentEngineeringReviewPassed": true,
+      "preferentialItemizationAndScheduleAiQualified": false,
+      "filingGateChanged": false
+    },
+    "nov20Form8814ScheduleBDividends": {
+      "source": "1fa4f266",
+      "focusedTestsPassed": 222,
+      "scheduleBSpecReferencesPassed": 15,
+      "physicalDividendPayerRows": 15,
+      "savedLastRowForm8814Dollars": "2300",
+      "savedScheduleBLine6Dollars": "3700",
+      "electionOverflowRejectedBeforeWriting": true,
+      "independentPhysicalMappingReviewPassed": true,
+      "filingGateChanged": false
+    },
+    "nov20Form8615PrintedAuditRows": {
+      "source": "3a0a8042",
+      "focusedTestsPassed": 538,
+      "linkedSpecReferencesPassed": 20,
+      "negativeParentIncomeExampleTaxDollars": "4106",
+      "halfDollarSiblingShareRoundsToDollars": "1",
+      "referenceOnlyGateChanged": false,
+      "independentEngineeringReviewPassed": true
+    },
     "nov20Form8615ActualItemizedDeduction": {
       "source": "9d2cfeb2",
       "officialInstructions": "https://www.irs.gov/pub/irs-prior/i8615--2025.pdf",
@@ -17,6 +71,10 @@
       "exactCIWorkflow": 44848865428,
       "exactWebWorkflow": 44848865423,
       "exactDockerWorkflow": 44848865451,
+      "exactDockerWorkflowPassed": true,
+      "exactLocalUnitAndCoverageTestsPassedEach": 29675,
+      "exactLocalUnitAndCoverageFilesPassedEach": 2171,
+      "exactLocalBranchCoveragePercent": "88.27",
       "requiresActualDeductibleExpenseIncludingZero": true,
       "signedLine3AndLine5StopVerified": true,
       "specialPreferentialAndScheduleAiMethodsQualified": false,
@@ -63,6 +121,8 @@
       "exactCIWorkflow": 44844541402,
       "exactCIWorkflowPassed": true,
       "exactWebWorkflow": 44844541516,
+      "exactManagedLinuxBrowser": { "passed": 646, "failed": 4, "skipped": 5, "ohioDeadlines": 4 },
+      "exactStrictAmd64Browser": { "passed": 648, "failed": 2, "skipped": 5, "rrtaInspectionDeadlines": 2 },
       "strictArm64Workflow": 44846062279,
       "independentEngineeringReviewPassed": true,
       "generatedCalculationInputs": 0,

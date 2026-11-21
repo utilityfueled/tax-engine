@@ -1,10 +1,38 @@
 # Current 2026 upgrade status
 
+Application `651ab2d2` calculates the supported 2025 Form 2441 credit-only
+exception for a qualifying married-separate filer. The synthetic case
+produces a $600 Schedule 3 credit and the saved review PDF checks Line A.
+All 223 focused tests and 133 combined-candidate tests passed.
+[Form 2441 evidence](upgrade-2026-progress.md#november-20-form-2441-credit-only-separate-return).
+
+Application `2ab355bd` restores prior Schedule B audit text for ordinary
+returns. The follow-up passed 185 tests, including the Ohio predecessor
+fingerprints. `27f6214d` restores browser admission for the reviewed source.
+[Browser and Schedule B evidence](upgrade-2026-progress.md#november-20-browser-preflight-and-schedule-b-audit-compatibility).
+
+Application `f03e966b` calculates the supported 2025 Form 8615 Worksheet 1
+for a nonitemizing child with ordinary qualified dividends or capital gains.
+Federal amounts must reconcile before a reported stop is accepted. All 614
+focused tests and the independent engineering review passed.
+[Worksheet 1 evidence](upgrade-2026-progress.md#november-20-form-8615-preferential-worksheet-1).
+
+Application `1fa4f266` carries Form 8814 dividends to Schedule B and fixes
+the physical 2025 review PDF total. A saved PDF passed the last-row check.
+The engine retains overflow rows and the review export reports the limit
+before writing a packet. All 222 focused tests passed.
+[Form 8814 evidence](upgrade-2026-progress.md#november-20-form-8814-and-schedule-b).
+
+Application `3a0a8042` aligns Form 8615 audit and reference PDF rows with
+the printed form, including sibling allocations and the zero floor for
+parental taxable income. All 538 focused tests passed.
+[Audit evidence](upgrade-2026-progress.md#november-20-form-8615-printed-audit-rows).
+
 Application `9d2cfeb2` corrects Form 8615 for itemizing children, checks
 the amount against the actual Schedule A deduction and preserves the
 printed stop rules. The combined federal, form, edge and PDF run passed
-547 tests on Node 26.13.1. The distinct preferential and Schedule AI
-methods remain open.
+547 tests on Node 26.13.1. The full suites passed 29,675 tests each at
+88.27% branch coverage. Preferential itemization and Schedule AI remain open.
 [Form 8615 evidence](upgrade-2026-progress.md#november-20-form-8615-itemized-deduction-threshold).
 
 Application `cdfdd050` shows literal Form 1098-E and Form 1099-R

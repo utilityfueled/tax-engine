@@ -133,3 +133,18 @@ annual source review while the 2026 blank and parent return remain pending.
 [IRS PDF directory](https://www.irs.gov/downloads/irs-pdf?page=0) ·
 [IRS product catalog](https://www.irs.gov/forms-instructions-and-publications?find=Form+1040+Schedule+B) ·
 [Current Schedule B](https://www.irs.gov/pub/irs-pdf/f1040sb.pdf).
+
+## November 20 recheck of five required federal and state forms
+
+The IRS regular PDFs for Form 1040, Schedule 2 and Form 2441 still print
+2025. All three separate 2026 PDFs carry draft covers. Pennsylvania still
+links the 2025 PA-40. Ohio's indexed agency catalog lists the 2025 IT 1040
+with a December 2025 revision. Its November alerts classify the 2026 forms
+and instructions as drafts. Direct retrieval of the Ohio catalog returned
+404, so that check used the indexed catalog and the agency alerts.
+[IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS Schedule 2](https://www.irs.gov/pub/irs-pdf/f1040s2.pdf) ·
+[IRS Form 2441](https://www.irs.gov/pub/irs-pdf/f2441.pdf) ·
+[Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms catalog](https://tax.ohio.gov/home/forms) ·
+[Ohio alerts](https://tax.ohio.gov/individual/resources/individualincome).

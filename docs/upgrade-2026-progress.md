@@ -1,5 +1,94 @@
 # 2026 upgrade implementation evidence
 
+## November 20 Form 2441 credit-only separate return
+
+`651ab2d2` uses the three actual living-apart facts for a married-separate
+filer who confirms no dependent-care benefits, zero excluded benefits and
+the remaining care eligibility requirements. If a Part III packet is
+present, its established route applies and each separately reported fact
+must agree. In the 2025 synthetic case, $3,000 of qualified care expenses
+at $85,000 AGI yields a $600 Schedule 3 credit. The saved 2025 review PDF
+checks Line A and leaves Part III blank.
+[IRS instructions](https://www.irs.gov/instructions/i2441) ·
+[2025 Form 2441](https://www.irs.gov/pub/irs-prior/f2441--2025.pdf).
+
+Three regressions failed before implementation. All 223 focused tests
+passed, plus 133 tests on the exact combined candidate, including the four
+Ohio compatibility suites. Type checking, 9,736 tracked spec references
+and the browser source manifest verifier passed. The 2026 Form 2441
+remains in the IRS draft directory.
+[Draft 2026 Form 2441](https://www.irs.gov/pub/irs-dft/f2441--dft.pdf).
+
+## November 20 browser preflight and Schedule B audit compatibility
+
+The `9d2cfeb2` managed and container Web jobs stopped before Playwright
+because four audited source digests were stale. The newer `f03e966b` tree
+had eight stale digests. An independent review found the eight changes
+limited to calculations, input validation and existing PDF paths.
+`27f6214d` refreshes the eight checksums. The exact source verifier and 51
+orchestrator tests passed with the original cases, budgets, deadlines and
+retry policy. [Early Web failure](https://github.com/utilityfueled/tax-engine/actions/runs/44848865423).
+
+The exact `f03e966b` full suites also exposed a compatibility regression.
+Ordinary Schedule B audit text named Form 8814 despite the absence of
+elected dividends. The resulting bytes changed the Ohio baseline
+fingerprints. `2ab355bd` restores the established text for absent or zero
+elected dividends and retains the Form 8814 detail for positive amounts.
+All 185 focused tests passed on the corrected source, including four
+Ohio compatibility suites and the election calculation and PDF tests.
+Type checking and independent review also passed.
+
+## November 20 Form 8615 preferential Worksheet 1
+
+`f03e966b` implements the 2025 Line 5 Worksheet 1 for a nonitemizing
+child with ordinary qualified dividends or net capital gain. The combined
+parent-rate worksheet uses the child's allocated preferences, the child's
+remaining tax uses the residual amounts, and the comparison tax uses the
+full amounts. The engine checks the parent's adjusted Form 1040 line 16
+against the declared tax method. Ordinary W-2 wages can coexist with the
+child's investments. Other unsupported income sources require a separate
+method, including Schedule 1 entries that offset to zero in AGI.
+[IRS instructions](https://www.irs.gov/pub/irs-prior/i8615--2025.pdf).
+
+All 614 focused tests passed on Node 26.13.1. A $10,800 qualified-dividend
+case calculates $1,215. The federal tests calculate $1,716 for either
+$5,000 of qualified dividends or $5,000 of capital-gain distributions,
+each with $5,000 of interest. Independent engineering review checked the
+ordinary W-2 branch, the valid stop and the two inconsistent-income
+regressions. Preferential itemization, Worksheet 3, the interim Schedule AI
+method and the 2026 draft remain outside this qualified calculation path.
+No filing gate changed.
+
+## November 20 Form 8814 and Schedule B
+
+`1fa4f266` includes elected Form 8814 line 9 dividends on Schedule B once,
+and carries the same amount to both applicable Form 1040 dividend lines.
+The filing trigger uses the combined amount and remains strictly above
+$1,500. The reviewed 2025 template has 15 dividend payer rows. The saved
+PDF showed `Form 8814` and $2,300 in the last row, with $3,700 on the
+actual line 6 field. A larger payer list remains complete in the engine.
+The election-bearing review export reports the capacity limit before
+writing any packet files.
+[IRS Form 8814 instructions](https://www.irs.gov/pub/irs-prior/i8814--2025.pdf) ·
+[2025 Schedule B](https://www.irs.gov/pub/irs-prior/f1040sb--2025.pdf).
+
+The 222 focused tests passed on Node 26.13.1, along with type checking
+and all 15 Schedule B spec references. Independent review verified all
+15 physical field pairs, the actual line 6, the unchanged country field
+and the overflow behavior. The 2026 calculation and filing gates remain
+closed.
+
+## November 20 Form 8615 printed audit rows
+
+`3a0a8042` aligns the Form 8615 audit with the official lines 6–18 and
+uses those line IDs in the 2025 reference summary. Negative parental
+taxable income enters line 6 as zero. The tested sibling case then
+calculates $4,106. The summary shows line 12b as a unitless ratio and omits
+the sibling rows when they do not apply. Independent engineering review
+verified the $0.50 allocation rounds to $1 and the reference-only gate is
+intact. The 538 focused tests and all 20 linked spec references passed.
+[IRS Form 8615](https://www.irs.gov/pub/irs-prior/f8615--2025.pdf).
+
 ## November 20 Form 8615 itemized deduction threshold
 
 `9d2cfeb2` corrects the annual threshold for a child who itemizes. Form 8615
@@ -23,6 +112,11 @@ Node 26.13.1. Type checking, scoped lint, the inventory check and all
 for an itemizing child and the Form 8615 Schedule AI calculation require
 separate methods. [Tax Table](https://www.irs.gov/instructions/i1040gi) ·
 [Form 2210 instructions](https://www.irs.gov/instructions/i2210).
+
+Both complete exact-source suites passed 29,675 tests each in 2,171 files.
+Branch coverage was 88.27%. Both temporary PostgreSQL 16.16 instances
+stopped normally. The exact Docker workflow also passed.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44848865451).
 
 The IRS regular Form 8615 PDF still prints 2025. The 2026 PDF is in the
 draft directory with the agency's draft cover. This work uses the 2025
@@ -69,6 +163,16 @@ five original skips, original deadlines and zero retries. The first
 launcher stopped before any case because its archive lacked 15 ignored
 public IRS PDF fixtures. The passing launcher reused verified copies of all
 15 fixtures and ran the same cases.
+
+Managed Linux passed 646 cases with four Ohio journeys reaching their
+30-second deadlines. Strict AMD64 passed 648 cases with two RRTA
+saved-PDF inspections reaching their four-second deadlines. Strict ARM64
+passed 641 cases, with nine Ohio journeys reaching their 30-second
+deadlines. Its isolated Compose upgrade and recovery step passed. Each
+browser run retained five original skips.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44844541516/job/136660908630) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44844541516/job/136660908641) ·
+[Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44846062279/job/136669690167).
 
 ## November 20 Stripe Sandbox catalog and billing baseline
 
