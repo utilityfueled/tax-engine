@@ -8,6 +8,7 @@ import {calculateFederalTax} from '@/engine/federal';
 import {calculateOhioResidentReturnFromFederal} from '@/engine/state/oh-engine';
 import {calculateOhioReturnHeaderSource} from '@/engine/state/oh-return-header-source';
 import {prepareOhioResidencyReview,type PreparedOhioResidencyReview} from '@/engine/state/oh-residency-source';
+import * as schoolSources from '@/engine/state/oh-sd-100-sources';
 import {fillOhioReferenceForms} from '@/pdf/mappings/2025/fill-oh-reference-forms';
 import {fillOhioSchoolDistrictOfficialReview} from '@/pdf/mappings/2025/fill-oh-school-district-official-review';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers';
@@ -122,10 +123,29 @@ print(json.dumps(reports))
 const publicCases=schoolPyPaperCases.flatMap(c=>['RAW','redacted-original-token'].map(mode=>[c.name+'-'+mode,c,mode]as const));
 it.each(publicCases)('SD PY paper existing public API emits saved actual212-day companions %s',async(name,c,mode)=>{
  const f=schoolPyHeaderPacket(c),input=f.withHeader,before=structuredClone(f),federal=calculateFederalTax(input),context=mode==='RAW'?undefined:prepareOhioResidencyReview(input),{root,cleanup}=await directory(name),request=vi.fn(()=>{throw Error('Private originals cannot transfer to provider');});vi.stubGlobal('fetch',request);
+ const buildSchoolSource = vi.spyOn(schoolSources, 'buildOhioSchoolDistrictSource');
  try{await mkdir(root,{recursive:true});const result=await fillOhioReferenceForms(mode==='RAW'?input:redactReviewIdentifiers(input),federal,root,{},context);expect(result.filledForms.map(v=>basename(v)).filter(v=>v.startsWith('oh-sd-')&&v.endsWith('-review.pdf')).sort()).toEqual(Object.keys(schoolPyPlans).sort());expect(result.filledForms.map(v=>basename(v))).toContain('oh-sd-100-reference.pdf');
  const report=JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['-c',strictSaved,root,JSON.stringify(schoolPyPlans),JSON.stringify(schoolPyPaperCells(c)),JSON.stringify(['900-74-0302','900740302','PRIVATE-',f.header.residence.originalAddress.street,'ohioReturnHeaderSources','originalFederalSources','originalOhioResidencySources']), '[]',JSON.stringify(schoolPyStatuses)],{encoding:'utf8'}))as Record<string,{pages:number;cells:number}>;
  expect(Object.values(report).reduce((a,b)=>a+b.pages,0)).toBe(4);expect(Object.values(report).reduce((a,b)=>a+b.cells,0)).toBe(165);await writeFile(join(root,'strict-source-report.json'),JSON.stringify(report,null,2));expect(request).not.toHaveBeenCalled();expect(f).toEqual(before);
- }finally{vi.unstubAllGlobals();await cleanup();}
+ expect(result.filledForms.map(path => basename(path))).not.toContain('oh-it-1040-review.pdf');
+ expect(buildSchoolSource).toHaveBeenCalledTimes(4);
+ }finally{buildSchoolSource.mockRestore();vi.unstubAllGlobals();await cleanup();}
+});
+
+it('SD PY composed review rejects missing current school originals before output', async () => {
+ const input = schoolPyHeaderPacket().canonical;
+ Reflect.deleteProperty(sdPyRequired(input.ohioSchoolDistrict), 'originalFederalSources');
+ const before = structuredClone(input);
+ const federal = calculateFederalTax(input);
+ const context = prepareOhioResidencyReview(input);
+ const { root, cleanup } = await directory('composed-missing-school-originals');
+ const output = join(root, 'must-not-exist');
+ try {
+  await expect(fillOhioReferenceForms(redactReviewIdentifiers(input), federal, output, {}, context))
+   .rejects.toThrow(/Ohio actual school district sources:.*originalFederalSources/);
+  await expect(access(output)).rejects.toThrow();
+  expect(input).toEqual(before);
+ } finally { await cleanup(); }
 });
 const conflicts=['bad header hash','wrong county','coherent bogus county','Finder address mismatch','same-cell stale parent','changed current W2 identity','changed payroll original','wrong residence date','missing federal original','forged context','serialized context','stale federal result']as const;
 it.each(conflicts)('SD PY paper source conflicts deny before physical output %s',async kind=>{

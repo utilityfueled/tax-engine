@@ -435,7 +435,11 @@ export async function fillOhioReferenceForms(
     );
   }
 
-  filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
+  // The ordinary physical review omits school packets. Use the prior canonical
+  // calculation to skip its replay when the school renderer will check the input.
+  if (!original.ohioSchoolDistrict || !taxInput.ohioSchoolDistrict) {
+    filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
+  }
   filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
   if (residentCreditOfficialReview) filledForms.push(...await fillOhioResidentCreditOfficialReview(residentCreditOfficialReview,outputDir,blankFormsDir));
   if (stagedBusinessReview) filledForms.push(...await writeOhioBusinessOfficialReview(stagedBusinessReview,outputDir));
