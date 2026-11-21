@@ -13,7 +13,7 @@ requires authorization.
 | Independent security/privacy review and advisory disposition | Deferred at owner direction. Completion still requires documented review of the exact artifacts and staging evidence, with accountable owners, remediation or evidence-backed acceptance and expiry. [Advisory ledger](upgrade-2026-advisory-refresh-20261114.md). |
 | Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
-| Strict Linux runtime verification | Managed Linux at `fdc05d39` passed. The strict AMD64 job for that revision passed 644 cases, hit six Ohio browser deadlines and kept five original skips. Both RRTA cases and Compose recovery passed. Earlier native `0c29105f` ARM64 passed 640 with ten Ohio deadlines. Complete strict verification at the original 30-second browser and four-second PDF limits. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44867594520/job/136734651433) · [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44867594520/job/136734651238) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44853971077/job/136691659960). |
+| Strict Linux runtime verification | Managed Linux at `6c566c50` passed. Strict AMD64 passed 647 cases, hit three Ohio browser deadlines and kept five original skips. Both RRTA cases and Compose recovery passed. Both optional diagnostic batches stopped before writing a budget receipt. Earlier native `0c29105f` ARM64 passed 640 with ten Ohio deadlines. Complete strict verification at the original 30-second browser and four-second PDF limits. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44869540473/job/136740738571) · [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44869540473/job/136740738334) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44853971077/job/136691659960). |
 | Current Stripe Sandbox checkout and credits | The configured Starter and Plus prices match the Viva La Tax Sandbox. The second authorized actor has a canceled Starter subscription and can choose a plan. The enabled checkout webhook points to an older Preview. The separate outage Sandbox's enabled destination lacks the checkout-completion subscription, and its ready Preview listings did not expose a source SHA. Current evidence needs checkout, signed delivery to the verified revision and a scoped read of its database for the two authorized test accounts, exact event and Session. Positive credit-grant testing requires an isolated test path while the public purchase gate stays closed. [Sandbox and Preview evidence](upgrade-2026-progress.md#november-21-ohio-schedule-w-and-historical-mortgage-controls). |
 
 The Form 8863 review also needs an independent worksheet for the joint-return
@@ -32,6 +32,13 @@ the continuation and single summary rules, and the owner-specific
 payroll on lines 8 through 13. Confirm the same-firm statement match for
 reason H and the treatment of a conflicting line 8 summary.
 [November 21 evidence](upgrade-2026-progress.md#november-21-employer-and-return-year-source-contracts).
+
+For the final 2026 Form 8829 renter fixture, independently derive
+lines 7, 8, 24, 27, 36, 43 and 44 and the Schedule C line 30 transfer.
+Review the required home-income attribution, full-year qualifying use,
+whole-dollar amounts and floor-area allocation. Confirm the year and
+character of the unallowed expense before qualification.
+[Form 8829 evidence](upgrade-2026-progress.md#november-21-final-form-8829-renter-review-candidate).
 
 For Form
 8615, derive lines 1 through 17, including the proportional division of

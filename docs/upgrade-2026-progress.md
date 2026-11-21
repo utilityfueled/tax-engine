@@ -1,5 +1,49 @@
 # 2026 upgrade implementation evidence
 
+## November 21 strict AMD64 result and timing preflight
+
+The `6c566c50` strict AMD64 run passed 647 cases, retained five original
+skips and hit three Ohio 30-second deadlines. The failing 1280px cases
+covered business part-year and two school district part-year variants.
+Both RRTA cases, Compose recovery, archive verification and owned
+container cleanup passed. Managed Linux also passed.
+[Strict job](https://github.com/utilityfueled/tax-engine/actions/runs/44869540473/job/136740738334) ·
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44869540473/job/136740738571).
+
+Both optional whole-batch artifacts contain only the generic unavailable
+result. The job-budget receipt, batch plan and profiles are absent.
+`17419d32` records a fixed reason for request, HTTP, response or
+identity failures at that boundary. The read-only request matched a
+separate in-progress public CI job. The exact archive passed 42 timing
+tests, 9,758 tracked spec references, lint and the unchanged browser
+source audit. The original run's three deadlines remain open.
+
+## November 21 final Form 8829 renter review candidate
+
+`e02dae90` fills the pinned final 2026 Form 8829 for one confirmed
+Schedule C business with all gross income from business use of the same
+rented home. The candidate requires unchanged qualifying use throughout
+2026, original whole-dollar rent and utilities allocated by the same
+floor-area percentage, and confirmation of zero other costs,
+adjustments and carryovers. The $3,000 rent and $600 utilities fixture
+allocates $360. At $100 of Schedule C profit it shows $100 on line 36,
+$260 on line 43 and $0 on line 44. Taxpayer identifiers and depreciation
+remain blank. The separate 9.375% fixture shows $338 allocated and
+$238 carried forward. Unproven attribution, sub-dollar amounts and
+percentages with no exact legible representation are held.
+
+Strict pypdf reopened the saved fields and appearances. The independent
+engineering recheck passed after the source and precision corrections.
+The exact archive passed 77 focused tests, 9,757 tracked spec references,
+type and inventory checks, and 41 browser timing contracts. Public
+exports remain gated. [Final 2026 Form 8829](https://www.irs.gov/pub/irs-pdf/f8829.pdf) ·
+[Line 8 and indirect expenses](https://www.irs.gov/pub/irs-pdf/i8829.pdf#page=2) ·
+[Publication 587](https://www.irs.gov/publications/p587).
+
+The exact `e02dae90` PostgreSQL 16.16 unit and coverage runs each
+passed 29,749 tests in 2,174 files. Branch coverage passed at 88.32%
+(87,010 of 98,507). Both temporary databases stopped normally.
+
 ## November 21 Ohio Schedule W and historical mortgage controls
 
 `5b875dd5` selects the 2025 ordinary Ohio review companion from the
@@ -21,7 +65,13 @@ source restriction. The focused mortgage suites passed 100 tests.
 The exact `79369997` unit and coverage reruns each passed all 29,745
 tests in 2,174 files with PostgreSQL 16.16. Branch coverage passed at
 88.31% (86,974 of 98,476). Both temporary databases stopped normally.
-The independent exact-source Docker workflow passed.
+The exact contract and web type checks, TypeScript and production
+webpack builds, lint with zero errors, and Docker workflow passed.
+The first managed browser attempt stopped during setup because the
+tracked archive excluded the downloaded sample PDFs. The retry fetched
+the registered official samples and passed all 650 active cases with
+five original skips, two workers, zero retries and the 30-second
+deadline. The browser runner confirmed normal managed-server cleanup.
 [Prior Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44871656050) ·
 [Successor Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44872318349).
 
