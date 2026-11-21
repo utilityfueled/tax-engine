@@ -31,6 +31,15 @@ lines:
     label: "Actual part-year school source and review boundary"
     formula: "Visible Download Review PDF returns200 review/no-store and identical saved/download bytes; actual SD1003pages+W1page included; unsupported PY IT1040 paper omitted; actual filing request400 unchanged"
     testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+  - line: "synthetic-phase-timing"
+    label: "Wall time within the existing browser journey"
+    formula: >-
+      Emit only a fixed phase name, begin/end and monotonic elapsed milliseconds for header entry, saved reopen
+      through opening the full return, review response and saved download, strict saved PDF inspection, and the
+      final filing rejection. Emit begin before work and end after successful completion so a deadline can leave
+      an unmatched begin. These wall times include waits within each marked phase and do not assign a cause to
+      delays. Use the original actions, assertions, ordering and timeout.
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
   - line: "truthful-qualified-copy"
     label: "Qualified actual method disclosure"
     formula: "Actual source panel names Ashland/Hillsdale header originals and conditional PY availability; shared summary names only qualified original-bound full-year or212/153-payroll methods, with filing unavailable. Separate approved copy-only successor is a runtime dependency; this browser package changes no product."
