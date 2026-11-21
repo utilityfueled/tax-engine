@@ -1,5 +1,13 @@
 {
   "activeContinuation": {
+    "nov21OhioGeneratedReferencePageHandoff": {
+      "commit": "ab33057298d4a9eac9d2b5d189145d92a5f91baf",
+      "scope": "Workspace-only Ohio reference summaries pass generated PDF pages in memory within the same request. The standalone writer still emits marked files, and official source validation and file paths stay bound.",
+      "checks": {"generatedRoundTripsRemovedInSchoolFixture": 4, "isolatedFocusedTestsPassed": 281, "authorFocusedTestsPassed": 194, "independentPageParityTestPassed": true, "specReferencesValid": 9825, "managedFocusedCasesPassed": 10, "managedCaseLimitMs": 30000, "managedCasesFailed": 0, "managedCasesSkipped": 0},
+      "combinedLocal": {"unitTestsPassed": 29915, "coverageTestsPassed": 29915, "branchCoveragePercent": 88.44, "postgresVersion": "16.16", "postgresCleanup": true, "allEightStaticChecksPassed": true, "managedBrowserPassed": 650, "failures": 0, "existingSkips": 5, "browserCleanup": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"},
+      "remote": {"ciWorkflow": 44913637095, "amd64Workflow": 44913637066, "arm64Workflow": 44913661806, "dockerWorkflowPassed": 44913637059},
+      "remaining": "Browser effects on the actual strict runtimes require the exact platform runs."
+    },
     "nov21CombinedLocalHsaAndDonation": {
       "commit": "ff689bc11341a318cd25e5c289d0d401f782b6b3",
       "checks": {"unitTestsPassed": 29914, "coverageTestsPassed": 29914, "unitSuitesPassed": 2181, "branchCoveragePercent": 88.44, "branchGatePercent": 85, "postgresVersion": "16.16", "postgresCleanup": true, "allEightStaticChecksPassed": true, "specReferencesValid": 9824},

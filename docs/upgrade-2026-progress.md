@@ -10857,3 +10857,41 @@ managed macOS suite establishes only the local browser result.
 [Remote CI](https://github.com/utilityfueled/tax-engine/actions/runs/44910663454) ·
 [Strict AMD64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44910663492) ·
 [Native ARM64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44910704644).
+
+### November 21 Ohio generated reference page handoff
+
+Ohio workspace review now copies the generated reference pages directly into
+the final packet. The saved-school regression established four fewer temporary
+PDF round trips. Independent reopening confirmed the same ordered page text,
+both official school documents, one review notice per page and continued
+redaction. The standalone writer and validated official documents still emit
+their marked files. The isolated suite passed 281 focused tests, and all 10
+targeted browser cases finished under the unchanged 30-second per-case limit
+with no failures or skips. The strict runtime impact remains to be measured.
+[Commit](https://github.com/utilityfueled/tax-engine/commit/ab33057298d4a9eac9d2b5d189145d92a5f91baf).
+
+The preceding `c892f4d0` and `8f416722` managed Linux runs each passed 650
+cases with five existing skips. Each exact strict AMD64 run passed 639,
+failed 11 and retained those five skips. Both failed on the same Ohio
+business, reciprocal, resident-credit and school journeys plus one railroad
+review. Most errors reached the case deadline while waiting for a response,
+download or locator. These revisions predate both Ohio review optimizations.
+[Strict c892 job](https://github.com/utilityfueled/tax-engine/actions/runs/44906763801/job/136853900723) ·
+[Strict 8f job](https://github.com/utilityfueled/tax-engine/actions/runs/44907149065/job/136855056629).
+
+The exact `47343e0c` managed Linux run passed 648 and retained five skips.
+Both railroad review viewports reached the unchanged four-second inspection
+deadline after entering page-text extraction. The two child processes reached
+that phase at 2.99 and 3.11 seconds. Replaying the same helper and saved synthetic
+PDFs six times locally passed every run. The available profile did not find an
+exact duplicate between the two parser passes. The check and limit stayed in
+place. [Managed 473 job](https://github.com/utilityfueled/tax-engine/actions/runs/44909101671/job/136860905207).
+
+All eleven required local commands passed on `ab330572`. Both unit and
+coverage runs passed 29,915 tests against isolated PostgreSQL 16.16, and both
+clusters shut down. Branch coverage held at 88.44%, with 9,825 valid spec
+references. The managed macOS browser passed 650 cases with zero failures,
+five original skips and confirmed cleanup. Platform-specific results remain
+bound to their exact run. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44913637095) ·
+[AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44913637066) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44913661806).
