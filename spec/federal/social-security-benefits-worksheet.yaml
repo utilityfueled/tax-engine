@@ -50,6 +50,13 @@ lines:
     formula: "For the single filer in Worksheet 1 Example 1, combine 18600 taxable pension, 9400 wages, 990 taxable interest and 2990 (half of 5980 net Social Security benefits). The published worksheet gives 31980 provisional income and 2990 taxable benefits."
     irsRef: "https://www.irs.gov/pub/irs-pdf/p915.pdf#page=8, Publication 915 (2026), Catalog No. 15320P, dated November 13, 2026, posted November 19, 2026, page 8, Worksheet 1 Example 1"
     testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::matches the final 2026 Publication 915 Worksheet 1 Example 1"
+  - line: "pub915-2026-terry-jackson-election"
+    description: "Final 2026 Publication 915 post-1993 lump-sum election worked example"
+    formula: "For Terry Jackson, combine 11000 in 2026 benefits and 25500 in other 2026 income. Worksheet 1 line 19 gives 3000. Worksheet 2 line 21 gives zero for the 2000 delayed payment attributable to 2025, when other income was 23000. Worksheet 4 removes that payment from 2026 benefits and gives 2500 on line 21. Select the lower amount. Form 1040 lines 6a and 6b are 11000 and 2500 respectively, with line 6c checked."
+    irsRef: "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=12, Publication 915 (2026), pages 12–15, Terry Jackson's filled-in Worksheets 1, 2 and 4"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::matches the final 2026 Publication 915 Terry Jackson lump-sum election"
+    testRefs:
+      - "tests/engine/forms/social-security-benefits-worksheet.test.ts::records the election publication for the return year rather than the year of the delayed benefits"
   - line: "Pub915-1-1"
     description: "Total benefits"
     formula: "Sum SSA-1099/RRB-1099 net Social Security equivalent benefits"
@@ -343,7 +350,10 @@ lines:
   - line: "W2-21"
     description: "Additional taxable benefits for an earlier year under the post-1993 lump-sum election"
     formula: "For each validated earlier year after 1993 included in the current year's benefit payment, compute Pub. 915 Worksheet 2 using that earlier year's total benefits plus the delayed payment received in the current year, subtract the taxable benefits previously reported or previously refigured for that earlier year, and floor the additional taxable amount at zero"
-    irsRef: "Pub. 915 (2025), Lump-Sum Election Worksheet 2, Line 21"
+    irsRef: "Publication 915 for the payment return year, Lump-Sum Election Worksheet 2, line 21"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/p915--2025.pdf#page=17"
+      - "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=18"
     inputs:
       - "Earlier-year filing status"
       - "Earlier-year total Social Security benefits actually received in that year"
@@ -358,8 +368,11 @@ lines:
 
   - line: "W4-21"
     description: "Taxable benefits under the post-1993 lump-sum election"
-    formula: "If validated post-1993 lump-sum election data is provided, subtract all earlier-year delayed payments from current-year total benefits, compute the current-year taxable-benefits amount on the remaining current-year benefits using Pub. 915 Worksheet 4, add the Worksheet 2 Line 21 additional taxable benefits for each earlier year, and use that lump-sum-election total only when it is less than standard Worksheet Line 18; otherwise keep the standard worksheet result"
-    irsRef: "Pub. 915 (2025), Lump-Sum Election Worksheet 4, Line 21"
+    formula: "If validated post-1993 lump-sum election data is provided, subtract all earlier-year delayed payments from current-year total benefits, compute the current-year taxable-benefits amount on the remaining current-year benefits using Publication 915 Worksheet 4, and add the Worksheet 2 line 21 additional taxable benefits for each earlier year. Compare with the standard taxable benefits calculated on Publication 915 Worksheet 1 line 19 or its Form 1040 instructions counterpart. Use the election only when it lowers taxable benefits."
+    irsRef: "Publication 915 for the payment return year, Lump-Sum Election Worksheet 4, line 21"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/p915--2025.pdf#page=19"
+      - "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=20"
     inputs:
       - "Current-year Social Security benefits"
       - "Current-year other income"
@@ -367,7 +380,7 @@ lines:
       - "Current-year Social Security adjustment add-backs"
       - "Current-year validated Pub. 915 exclusion-and-adjustment total"
       - "Validated earlier-year Worksheet 2 inputs for each earlier year included in the current-year payment"
-    notes: "The current-year Pub. 915 exclusion-and-adjustment amount is supported as a validated aggregate input because the current engine does not yet rebuild every Pub. 915 special exclusion directly from raw forms. The audit trail should preserve the current-year benefits net of earlier-year delayed payments, the current-year exclusion-and-adjustment total, the sum of earlier-year additional taxable benefits, the computed Worksheet 4 current-year taxable amount, the standard worksheet amount used for comparison, and whether the election was beneficial. Pre-1994 lump-sum election worksheets remain unsupported."
+    notes: "The current-year Pub. 915 exclusion-and-adjustment amount is supported as a validated aggregate input because the current engine does not yet rebuild every Pub. 915 special exclusion directly from raw forms. The audit trail should preserve the current-year benefits net of earlier-year delayed payments, the current-year exclusion-and-adjustment total, the sum of earlier-year additional taxable benefits, the computed Worksheet 4 current-year taxable amount, the standard worksheet amount used for comparison, and whether the election was beneficial. In the 2026 election audit use the final Publication 915 Worksheet 1 line numbers even when no exclusions apply, and identify the annual publication used by Worksheets 2 and 4. Pre-1994 lump-sum election worksheets remain unsupported."
     testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::Social Security Benefits Worksheet W4-21 - uses the Pub. 915 lump-sum election when it lowers current-year taxable benefits"
 
   - line: "packet"

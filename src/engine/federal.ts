@@ -2409,6 +2409,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
   const socialSecurityBenefitsWorksheet = socialSecurityBenefitsGross.greaterThan(0)
     ? calculateSocialSecurityBenefitsWorksheet({
+      taxYear: year,
       filingStatus,
       benefitsReceived: socialSecurityBenefitsGross,
       otherIncome: sum(

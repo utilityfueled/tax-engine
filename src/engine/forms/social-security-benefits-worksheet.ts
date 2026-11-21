@@ -10,6 +10,8 @@ import { AuditTrail } from "@/utils/audit.js";
 import { d, min, sum, zeroFloor } from "@/utils/decimal.js";
 
 export interface SocialSecurityBenefitsWorksheetInput {
+  /** The return year receiving the benefits, including any delayed payments. */
+  taxYear?: number;
   filingStatus: FilingStatus;
   benefitsReceived: Decimal;
   otherIncome: Decimal;
@@ -84,6 +86,16 @@ export interface SocialSecurityBenefitsWorksheetResult {
 }
 
 const EIGHTY_FIVE_PERCENT = new Decimal(0.85);
+const PUB_915_ELECTION_SOURCES: Partial<Record<number, { worksheet2: string; worksheet4: string }>> = {
+  2025: {
+    worksheet2: "https://www.irs.gov/pub/irs-prior/p915--2025.pdf#page=17",
+    worksheet4: "https://www.irs.gov/pub/irs-prior/p915--2025.pdf#page=19",
+  },
+  2026: {
+    worksheet2: "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=18",
+    worksheet4: "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=20",
+  },
+};
 
 function getBaseAmount(
   filingStatus: FilingStatus,
@@ -206,7 +218,11 @@ export function calculateSocialSecurityBenefitsWorksheet(
     throw new Error("Current-year aggregate exclusions cannot be below known actual exclusions");
   }
   const exclusionsAdjustments = aggregateExclusions ?? knownExclusions;
-  const worksheetKind = exclusionsAdjustments.greaterThan(0) ? "publication915" : "form1040";
+  const earlierYears = input.lumpSumElection?.earlierYears ?? [];
+  const electionSources = input.taxYear === undefined ? undefined : PUB_915_ELECTION_SOURCES[input.taxYear];
+  const use2026PublicationWorksheet = input.taxYear === 2026 && earlierYears.length > 0;
+  const worksheetKind = exclusionsAdjustments.greaterThan(0) || use2026PublicationWorksheet
+    ? "publication915" : "form1040";
 
   const line1 = d(input.benefitsReceived);
   const line2 = line1.dividedBy(2);
@@ -346,7 +362,7 @@ export function calculateSocialSecurityBenefitsWorksheet(
   }
 
   const standardTaxableBenefits = line18;
-  const sortedLumpSumElectionEarlierYears = (input.lumpSumElection?.earlierYears ?? [])
+  const sortedLumpSumElectionEarlierYears = earlierYears
     .slice()
     .sort((left, right) => left.taxYear - right.taxYear);
   const lumpSumElectionAdditionalBenefitsByYear = sortedLumpSumElectionEarlierYears
@@ -390,6 +406,7 @@ export function calculateSocialSecurityBenefitsWorksheet(
       earlierYear.additionalTaxableBenefits,
       "Pub. 915 Worksheet 2 Line 21: refigured taxable benefits minus the taxable benefits previously reported for that earlier year",
       {
+        ...(electionSources ? { "Publication 915 source": electionSources.worksheet2 } : {}),
         "Earlier-year filing status": earlierYearInput?.filingStatus ?? "",
         "Earlier-year lived with spouse during the year":
           earlierYearInput?.livedWithSpouseAtAnyTimeDuringYear ? "yes" : "no",
@@ -414,6 +431,7 @@ export function calculateSocialSecurityBenefitsWorksheet(
         ? "Pub. 915 Worksheet 4 Line 21 elected because it is lower than the current-year standard calculation"
         : "Pub. 915 Worksheet 4 Line 21 computed for comparison, but the current-year standard calculation remains lower or equal",
       {
+        ...(electionSources ? { "Publication 915 source": electionSources.worksheet4 } : {}),
         "Current-year benefits excluding prior-year delayed payments": currentYearBenefitsExcludingPriorYears,
         "Current-year exclusions and adjustments": currentYearExclusionsAdjustments,
         "Current-year Pub. 915 provisional income": currentYearLumpSumElectionProvisionalIncome,

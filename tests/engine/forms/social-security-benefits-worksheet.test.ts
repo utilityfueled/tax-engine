@@ -9,6 +9,29 @@ import { calculateSocialSecurityBenefitsWorksheet } from "@/engine/forms/social-
 
 const d = (value: number | string) => new Decimal(value);
 
+function terryJacksonLumpSumFixture(taxYear: 2025 | 2026) {
+  return {
+    taxYear,
+    filingStatus: "single" as const,
+    benefitsReceived: d(6000).plus(5000),
+    otherIncome: d(3500).plus(2500).plus(1500).plus(18000),
+    taxExemptInterest: d(0),
+    lumpSumElection: {
+      currentYearExclusionsAdjustments: d(0),
+      earlierYears: [{
+        taxYear: taxYear - 1,
+        filingStatus: "single" as const,
+        benefitsReceivedInEarlierYear: d(0),
+        delayedBenefitsReceivedInCurrentYear: d(2000),
+        adjustedGrossIncome: d(20000).plus(2000).plus(1000),
+        taxExemptInterest: d(0),
+        exclusionsAdjustments: d(0),
+        taxableBenefitsPreviouslyReported: d(0),
+      }],
+    },
+  };
+}
+
 const line6Fixture = calculateSocialSecurityBenefitsWorksheet({
   filingStatus: "single",
   benefitsReceived: d(24000),
@@ -77,6 +100,38 @@ describe("Social Security Benefits Worksheet", () => {
     expect(result.line3.toString()).toBe("28990");
     expect(result.line7.toString()).toBe("31980");
     expect(result.taxableBenefits.toString()).toBe("2990");
+  });
+
+  it("matches the final 2026 Publication 915 Terry Jackson lump-sum election", () => {
+    // Spec: spec/federal/social-security-benefits-worksheet.yaml#pub915-2026-terry-jackson-election
+    const result = calculateSocialSecurityBenefitsWorksheet(terryJacksonLumpSumFixture(2026));
+    expect(result.line1.toString()).toBe("11000");
+    expect(result.standardTaxableBenefits.toString()).toBe("3000");
+    expect(result.lumpSumElectionAdditionalBenefitsByYear).toEqual([{
+      taxYear: 2025,
+      refiguredTaxableBenefits: d(0),
+      additionalTaxableBenefits: d(0),
+    }]);
+    expect(result.lumpSumElectionTaxableBenefits?.toString()).toBe("2500");
+    expect(result.usedLumpSumElection).toBe(true);
+    expect(result.taxableBenefits.toString()).toBe("2500");
+    expect(result.lines.find(line => line.line === "W4-21")
+      ?.inputs["Current-year benefits excluding prior-year delayed payments"]).toEqual(d(9000));
+    expect(result.worksheetKind).toBe("publication915");
+    expect(result.lines.find(line => line.form === "Pub915 WS1" && line.line === "19")?.value).toEqual(d(3000));
+  });
+
+  it("records the election publication for the return year rather than the year of the delayed benefits", () => {
+    // Spec: spec/federal/social-security-benefits-worksheet.yaml#pub915-2026-terry-jackson-election
+    for (const [returnYear, worksheet2Page, worksheet4Page] of [[2025, 17, 19], [2026, 18, 20]] as const) {
+      const result = calculateSocialSecurityBenefitsWorksheet(terryJacksonLumpSumFixture(returnYear));
+      const worksheet2 = result.lines.find(line => line.line === `W2-21 (${returnYear - 1})`);
+      const worksheet4 = result.lines.find(line => line.line === "W4-21");
+      const publication = `https://www.irs.gov/pub/irs-prior/p915--${returnYear}.pdf`;
+      expect(worksheet2?.inputs["Publication 915 source"]).toBe(`${publication}#page=${worksheet2Page}`);
+      expect(worksheet4?.inputs["Publication 915 source"]).toBe(`${publication}#page=${worksheet4Page}`);
+      if (returnYear === 2025) expect(result.worksheetKind).toBe("form1040");
+    }
   });
 
   it("reconciles actual exclusions once for both lump-sum comparison methods", () => {
