@@ -1,5 +1,43 @@
 # 2026 upgrade implementation evidence
 
+## November 21 retirement codes with a printed space
+
+`d02d3de1` keeps a confirmed Form 1099-R code such as `7 D` in the
+saved source and uses `7D` for guided validation and calculation.
+The ordinary 2025 and 2026 fixtures preserve $900.25 of taxable income,
+$125 of withholding and an explicit zero Box 2a. Required unknown
+amounts and unsupported codes remain held. The Code A and QCD tests
+retain the applicable years, code order and worksheets.
+The isolated archive passed 992 focused tests, 9,776 spec references,
+inventory and Web types. The implementing agent ran 427 tests across
+13 suites, and a separate code review checked the retained source and
+worksheet requirements. [Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+## November 21 exact receipts after accepting an invoice
+
+`4425ad1d` preserves the Decimal sum when a filer applies an invoice
+suggestion and reconfirms receipts. The actual 2025 guided adapter
+carried $1,000.496 plus $10.00 to Schedule C as $1,010.496 and rounded
+to $1,010 at whole dollars. The former intermediate cent rounding
+produced $1,011. Whole-dollar and cent totals keep two-place storage.
+The exact archive passed 1,195 focused tests, 9,777 spec references,
+inventory, Web types and scoped lint. The implementing agent also
+passed 396 focused tests. The federal 2026 calculation remains gated by the
+incomplete annual rule pack.
+
+The exact `4425ad1d` PostgreSQL-backed unit and coverage suites each
+passed 29,840 tests, with 88.36% branch coverage. Both owned databases
+stopped normally. All eight static checks passed, including both builds,
+three type checks, both spec commands and lint. The full managed browser
+suite passed 650 cases and retained five original skips. All 11 local
+commands passed. The tracked archive built as one protected test-billing
+Preview. Vercel confirmed the exact source label and Preview target
+without assigning a production alias. All 12 workspace checks passed
+with the existing test account, including separate sessions, saves and
+cross-revision reopens in both directions, confirmed deletion, absence
+on both revisions and sign-out. This run sent no Stripe events.
+[Docker build for this revision](https://github.com/utilityfueled/tax-engine/actions/runs/44887370463).
+
 ## November 21 exact checkout and credit settlement
 
 `2c576d2d` exercises the ordinary checkout and webhook handlers against
@@ -77,6 +115,26 @@ The corrected contracts passed 43 focused tests. The next run was
 dispatched on `156bd0b7`. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916/job/136757329235) ·
 [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44874893916/job/136757328831) ·
 [Corrected timing rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44880786265).
+
+Managed Linux on `156bd0b7` passed all 650 active browser cases and
+retained five original skips. The strict AMD64 image passed Compose
+upgrade, recovery and rollback and generated both immutable image SBOMs.
+Its original browser run passed 638 cases, hit ten Ohio case deadlines
+and two RRTA four-second PDF inspection deadlines, and retained five
+original skips. The last recorded phase for both RRTA inspections was
+page text, around 2.96 seconds into the subprocess. The batch 6 timing replay
+finished all ten cases, including three timeouts and seven other failures.
+Four of the six attempted renderer samples were usable. An exact chunk
+hash identifies the repeated sampled location as SHA-256 compression. The
+batch 7 replay passed seven cases, hit six timeouts and recorded two other
+failures. Five of eight attempted renderer profiles were usable. The four
+bound original-entry records measured 15.21–24.38 seconds of elapsed time
+and 8.76–9.33 seconds on the renderer thread. They end before confirmation
+and PDF requests. The diagnostic runs leave the failed original strict
+result in place, and their measurements cannot explain all of the elapsed
+time or establish the cause of the deadlines.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44880786265/job/136775394687) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44880786265/job/136775394928).
 
 The local ARM64 controller was held at the existing 512 GiB free-space
 floor. The current machine had about 393 GiB available. An independent

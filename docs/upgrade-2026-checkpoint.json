@@ -1,5 +1,14 @@
 {
   "activeContinuation": {
+    "nov21GuidedFactInputCorrections": {
+      "retirement": { "source": "d02d3de1", "exactFocusedTestsPassed": 992, "implementationReviewTestsPassed": 427, "trackedSpecReferencesPassed": 9776, "rawCode": "7 D", "calculationCode": "7D", "taxableAmount": "900.25", "federalWithholding": "125" },
+      "invoice": { "source": "4425ad1d", "exactFocusedTestsPassed": 1195, "implementationReviewTestsPassed": 396, "trackedSpecReferencesPassed": 9777, "scheduleCReceipts": "1010.496", "wholeDollarReceipts": "1010", "formerWholeDollarReceipts": "1011" },
+      "combinedSource": "4425ad1d",
+      "combinedUnitCoverageAndStatic": { "unitTestsPassed": 29840, "coverageTestsPassed": 29840, "branchPercent": 88.36, "staticCommandsPassed": 8, "bothOwnedPostgresInstancesStoppedNormally": true },
+      "combinedMacosBrowser": { "passed": 650, "failed": 0, "originalSkips": 5, "requiredLocalCommandsPassed": 11 },
+      "docker": { "workflowId": 44887370463, "conclusion": "success" },
+      "protectedPreview": { "source": "4425ad1d", "target": "preview", "testBilling": true, "ready": true, "sourceReadbackMatches": true, "productionAliasAssigned": false, "lifecyclePassed": 12, "lifecycleFailed": 0, "cleanupAndSignOutPassed": true, "stripeEventsSent": 0 }
+    },
     "nov21ExactCheckoutAndSpecValidation": {
       "checkoutSource": "2c576d2d",
       "specMatcherSource": "0e545cd1",
@@ -35,7 +44,12 @@
       "verifiedFrozenSources": 9,
       "verifiedBrowserCollectionCases": 655,
       "failedTimingPredecessor": { "source": "7ebce850", "workflowId": 44874893916, "managedPassed": 648, "managedFailed": 2, "strictPassed": 637, "strictFailed": 13, "originalSkipsPerJob": 5, "verifiedReplayCases": 0 },
-      "currentTimingRun": { "source": "156bd0b7", "workflowId": 44880786265 },
+      "currentTimingRun": {
+        "source": "156bd0b7", "workflowId": 44880786265, "managedPassed": 650, "managedFailed": 0, "managedOriginalSkips": 5,
+        "strictPassed": 638, "strictFailed": 12, "strictOriginalSkips": 5, "strictOhioDeadlines": 10, "strictRrtaInspectionDeadlines": 2, "strictComposeRecoveryPassed": true, "strictSbomSourcePassed": true,
+        "batch6": { "completed": true, "cases": 10, "timedOut": 3, "otherFailed": 7, "usableProfiles": 4, "attemptedProfiles": 6, "qualification": "NONQUALIFYING_DIAGNOSTIC" },
+        "batch7": { "completed": true, "cases": 15, "passed": 7, "timedOut": 6, "otherFailed": 2, "usableProfiles": 5, "attemptedProfiles": 8, "boundEntryPhases": 4, "entryWallSecondsRange": [15.21, 24.38], "rendererThreadSecondsRange": [8.76, 9.33], "qualification": "NONQUALIFYING_DIAGNOSTIC" }
+      },
       "currentNativeArmRun": { "source": "0a167ed2", "workflowId": 44881255619, "localFreeDiskGiB": 393, "localRequiredFreeDiskGiB": 512, "remoteImageBuildSmokeAndComposeSucceeded": true, "browserPassed": 642, "browserFailed": 8, "browserOhioDeadlines": 8, "browserOriginalSkips": 5, "ownedContainerCleanupPassed": true },
       "readyCurrentProtectedPreview": false
     },

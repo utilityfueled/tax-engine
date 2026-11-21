@@ -2,12 +2,16 @@
 
 ## November 21 resumption
 
-Start with `activeContinuation.nov21CombinedReferenceAndBrowserReplay`
-and `activeContinuation.nov21ExactCheckoutAndSpecValidation` in the
-checkpoint. The exact `386c1086` PostgreSQL coverage run passed 29,835
-tests at 88.36% branch coverage. The full managed browser run on
-`fdc4dc8d` passed 650 active cases and retained five original skips.
-The newer local checkout test passed its exact PostgreSQL checks.
+Start with `activeContinuation.nov21GuidedFactInputCorrections`,
+`activeContinuation.nov21CombinedReferenceAndBrowserReplay` and
+`activeContinuation.nov21ExactCheckoutAndSpecValidation` in the
+checkpoint. The newest guided fixes are `d02d3de1` for printed retirement
+codes and `4425ad1d` for exact invoice receipts. On `4425ad1d`, the
+PostgreSQL unit and coverage suites each passed 29,840 tests. Branch
+coverage was 88.36%, and all eight static checks passed. Managed macOS
+passed 650 active browser cases and retained five original skips, which
+completes all 11 local checks. The exact local checkout package also
+passed against PostgreSQL using synthetic Stripe delivery.
 [Current evidence](upgrade-2026-progress.md#november-21-combined-suite-and-linux-timing-replay) ·
 [Checkpoint](upgrade-2026-checkpoint.json).
 
@@ -15,11 +19,18 @@ All 11 required local commands passed on `2c576d2d`. The unit and
 coverage suites each passed 29,837 tests. The managed browser suite
 passed 650 active cases with five original skips. Docker build passed
 on `aa75bb2d`. Native ARM64 passed image builds, smoke, recovery and
-cleanup, with eight strict Ohio browser deadlines. The Linux AMD64
-timing rehearsal is running.
+cleanup, with eight strict Ohio browser deadlines. At `156bd0b7`, managed
+Linux passed 650 browser cases. The strict AMD64 container passed Compose
+upgrade, recovery and rollback. Its original browser suite passed 638
+cases, hit ten Ohio and two RRTA inspection deadlines and retained five
+skips. Both diagnostic batches finished at the original limits. The
+strict runtime qualification remains open.
 Completion also depends on final annual forms, qualified human tax and
-AI reviews, missing provider qualification and a current protected
-Preview. Hosted security work is deferred at the owner's direction.
+AI reviews, and provider qualification. The exact protected test-billing
+Preview for `4425ad1d` reached Ready without a production alias and passed
+all 12 workspace lifecycle checks. Current Stripe delivery and credit
+evidence remains open. Hosted security work is deferred at the owner's
+direction.
 [External gates](upgrade-2026-external-actions.md).
 
 Application `2d97913e` adds exact Form 8615 support for the early
