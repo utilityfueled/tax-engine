@@ -17,6 +17,27 @@ function values(input: DraftSchedule3AInput, lines: string[]) {
 }
 
 describe("2026 draft Schedule 3-A", () => {
+  it("matches the IRS 2026 ATS scenario 14 worksheet and Form 1040 transfer", () => {
+    // IRS MeF ATS scenario 14, PDF pages 3–4. Only the synthetic tax amounts
+    // and source answers needed by this worksheet are reproduced.
+    const ats14 = {
+      taxYear: 2026, returnForm: "1040", filingStatus: "single",
+      earnedIncomeCredit: "4971", additionalChildTaxCredit: "2377",
+      refundableAmericanOpportunityCredit: "0", refundableAdoptionCredit: "0",
+      schedule3Payments: "0", totalTaxBeforeForm1062: "0", schedule2Line20: "0",
+      benefitElection: "receive", taxpayerEligibility: "yes",
+    } satisfies DraftSchedule3AInput;
+    const result = calculateDraftSchedule3A(ats14);
+
+    expect(result.status).toBe("eligible");
+    expect(result.lines.map(row => [row.line, row.value.toFixed()])).toEqual([
+      ["1a", "7348"], ["1b", "0"], ["2", "7348"], ["3", "0"],
+      ["4", "0"], ["5", "0"], ["6", "7348"], ["8", "0"],
+    ]);
+    expect(result.form1040Line32b?.toFixed()).toBe("0");
+    expect(result.form1040Line32c?.toFixed()).toBe("7348");
+  });
+
   it("reproduces the Treasury examples and stops at the liability boundary", () => {
     expect(values(source, ["1a", "1b", "2", "3", "4", "5", "6", "8"]))
       .toEqual(["2272", "0", "2272", "1451", "0", "1451", "821", "821"]);

@@ -148,3 +148,27 @@ and instructions as drafts. Direct retrieval of the Ohio catalog returned
 [Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
 [Ohio forms catalog](https://tax.ohio.gov/home/forms) ·
 [Ohio alerts](https://tax.ohio.gov/individual/resources/individualincome).
+
+## November 20 final 2026 employer coverage statement
+
+The current IRS Form 1095-C and its combined instructions both print
+2026 and carry no draft notice. The form PDF has four pages. Its SHA-256
+is `9352f74d93a3015c48a9971b5243e7ba5bfb0cef68ff987bc6916f2fc9957c98`.
+The instructions have 21 pages and SHA-256
+`e936f09b46722d23d4a1ab01e5944df34aa1e34b851135fbe8ab7feb90800ffb`.
+[Final Form 1095-C](https://www.irs.gov/pub/irs-pdf/f1095c.pdf) ·
+[Final instructions](https://www.irs.gov/pub/irs-pdf/i109495c.pdf).
+
+Line 14 identifies an offer for the employee and, depending on the code,
+for family members. Line 15 generally reports the lowest-cost self-only
+employee contribution where required, and a printed zero carries
+information that a blank does not. Line 16 code 2C documents employee
+enrollment subject to its reporting exceptions. Other codes or a blank
+do not establish nonenrollment or an affordability conclusion. Part III
+indicates at least one day of self-insured coverage for a named person
+in a checked month. These source facts can support the existing monthly
+evidence. The Form 8962 exception facts and the applicable household
+premium calculations still need their own sources and review. This
+update does not qualify a new extractor or change benefit determination.
+[Employee instructions on the final form](https://www.irs.gov/pub/irs-pdf/f1095c.pdf#page=3) ·
+[Line 14 to 16 instructions](https://www.irs.gov/pub/irs-pdf/i109495c.pdf).

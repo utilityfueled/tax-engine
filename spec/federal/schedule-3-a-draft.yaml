@@ -15,6 +15,12 @@ notes: |
   receive the benefit are separate from Form 1040 page 1's work authorization
   question, tax residency, and SSN eligibility. Do not collect documentation or
   store sensitive classifications in this draft worksheet's audit trail.
+  The IRS's tax-year-2026 MeF ATS scenario 14, PDF pages 3 and 4, supplies an
+  independent worked example for this draft worksheet. Its Schedule 3-A page
+  uses the same 6/24/26 draft. This example verifies the worksheet arithmetic
+  and transfer only. It provides no final-rule, filing, or model authorization.
+  The source SHA-256 is
+  538334418a21508b9a5c22d44883c0001563f2895542194e0a5c960a4d163482.
 lines:
   - line: "1a"
     description: "Total credits and other payments before benefit adjustment"
@@ -58,6 +64,9 @@ lines:
     description: "Draft credits and other payments after benefit adjustment"
     formula: "Line 32a minus the determined line 32b. The unaffected Schedule 3 amounts stay in line 32c, and credits that offset the applicable tax are retained."
     testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::keeps unaffected payments outside the benefit and skips when no covered credit is claimed"
+    irsRef: "https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf#page=4"
+    testRefs:
+      - "tests/engine/schedules/schedule-3-a-draft.test.ts::matches the IRS 2026 ATS scenario 14 worksheet and Form 1040 transfer"
   - line: "source-boundary"
     description: "Bounded review-only worksheet"
     formula: "Require 2026, Form 1040 or 1040-SR, a recognized filing status, and explicit finite nonnegative cent amounts with up to 12 dollar digits for every supplied source, including zero. Reject a spouse eligibility answer for a nonjoint return. Audit amounts and line references only, with no underlying classification or identifier."
