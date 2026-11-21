@@ -1,5 +1,18 @@
 {
   "activeContinuation": {
+    "nov21Final1095cEmployerCoverageReviewCandidate": {
+      "source": "b06ad09b",
+      "officialForm": "https://www.irs.gov/pub/irs-prior/f1095c--2026.pdf",
+      "officialInstructions": "https://www.irs.gov/pub/irs-prior/i109495c--2026.pdf",
+      "physicalFormSha256": "9352f74d93a3015c48a9971b5243e7ba5bfb0cef68ff987bc6916f2fc9957c98",
+      "exactFocusedTestsPassed": 44,
+      "exactTrackedSpecReferencesPassed": 9747,
+      "exactBrowserTimingContractsPassed": 35,
+      "exactRootWebTypeAndInventoryChecksPassed": true,
+      "taxpayerOrEmployerIdentityVerified": false,
+      "seededEligibilityOrTaxFacts": false,
+      "publicIntakeEnabled": false
+    },
     "nov20FinalScheduleEicOriginalProjection": {
       "source": "fdc05d39",
       "officialForm": "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf",
@@ -98,6 +111,12 @@
       "exactManagedLinuxBrowserCasesPassed": 650,
       "exactManagedLinuxBrowserOriginalSkips": 5,
       "exactManagedLinuxBrowserJobId": 136723364201,
+      "exactStrictAmd64BrowserJobId": 136723364104,
+      "exactStrictAmd64BrowserCasesPassed": 637,
+      "exactStrictAmd64BrowserOriginalSkips": 5,
+      "exactStrictAmd64Ohio30SecondDeadlines": 11,
+      "exactStrictAmd64Rrta4SecondDeadlines": 2,
+      "exactStrictAmd64ComposeAndCleanupPassed": true,
       "inventoryCheckPassed": true,
       "typescriptBuildPassed": true,
       "vercelProductionDeployment": "CANCELED",

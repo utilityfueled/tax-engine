@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## Final 2026 Form 1095-C employer coverage review candidate
+
+`b06ad09b` checks the physical final form and preserves the original
+annual or monthly entries from lines 14 through 16. It keeps an explicit
+`0.00` contribution distinct from a blank and records positive employee
+enrollment only for code `2C`. The result leaves employee and employer
+identity unconfirmed, and it carries no PTC eligibility or return input.
+Corrected, void, flattened, and contradictory originals stay in manual
+review. The current upload path continues to classify the form for review.
+[Final Form 1095-C](https://www.irs.gov/pub/irs-prior/f1095c--2026.pdf) ·
+[Final IRS instructions](https://www.irs.gov/pub/irs-prior/i109495c--2026.pdf).
+
+The exact archive passed 44 focused tests, root and web type checks,
+9,747 tracked spec references, inventory validation and 35 browser
+timing contracts. The inventory records this as a disabled candidate.
+
 ## Final 2026 Schedule EIC original child projection
 
 `fdc05d39` binds the private 2026 Schedule EIC candidate to confirmed
@@ -112,8 +128,15 @@ deadlines. The read-only source archive needed the documented
 official sample PDFs. The launcher and managed web process closed
 successfully. Managed Linux independently passed the same 650 active
 cases and five original skips. Strict Linux container verification is
-tracked separately.
+still open. The exact AMD64 job passed 637 cases, with the five planned
+skips, 11 Ohio 30-second deadlines and two RRTA four-second saved-PDF
+deadlines. Image smoke, Compose upgrade/recovery/rollback, independent
+archive import, and container removal passed. The RRTA desktop and
+mobile inspections first entered page-text extraction at 3.542 and
+3.173 seconds. The largest completed phase was content-context
+collection at 2.372 and 2.131 seconds, respectively.
 [Managed Linux browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644/job/136723364201).
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644/job/136723364104).
 Vercel canceled the production deployment. GitHub Actions tracks this
 application revision in [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44863960676),
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644),
