@@ -5,14 +5,14 @@ import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
-import { emptyRetirementEntry, type RetirementEntryData } from "@/lib/guided-interview-flow";
-import { completeRetirementSource } from "../../guided-interview/complete-facts";
+import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
+import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>) {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container); let latest = initial;
-  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
+  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus="single" taxYear={2025} primaryDateOfBirth="1966-02-01" onEntriesChange={next => { latest = next; setEntries(next); }} />; }
   async function change(label: string, value: string) {
     const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
     if (!element) throw new Error(`Missing control: ${label}`);
@@ -25,6 +25,82 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
   finally { await act(async () => root.unmount()); container.remove(); }
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
+
+// Spec: spec/federal/form-5329.yaml, Line 2, guided Code 1 age exception.
+it("requires a real Code 1 IRA receipt date and invalidates it when the original changes", async () => {
+  const source = { ...completeRetirementSource, distributionCode: "1", isIraSepSimple: true, grossDistribution: "6000", taxableAmount: "6000" };
+  const basisContext = { personal: { ...completePersonalInfo, dateOfBirth: "1966-02-01" } };
+  const onePayment = "Does Box 1 report one payment with no other distributions?";
+  const actualDate = "Date the IRA payment was received";
+  const otherWorksheet = "Is another retirement worksheet needed beyond this documented Code 1 age exception?";
+  await render([source], async ({ latest, container, change }) => {
+    expect(latest()[0]?.code1IraAgeSource).toBeUndefined();
+    expect(container.textContent).not.toContain(otherWorksheet);
+    await change(onePayment, "true");
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "single", 2025, undefined, basisContext)).toThrow(/actual.*receipt date/i);
+
+    await change(actualDate, "2025-07-31");
+    expect(container.textContent).not.toContain(otherWorksheet);
+    await change(actualDate, "2025-08-01");
+    expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+    expect(container.textContent).toContain(otherWorksheet);
+    await change(otherWorksheet, "true");
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "single", 2025, undefined, basisContext)).toThrow(/another retirement worksheet/i);
+    await change(otherWorksheet, "false");
+    await change(confirm, "true");
+    expect(buildRetirementInputs(latest(), "single", 2025, undefined, basisContext)[0]).toMatchObject({ distributionCode: "1", distributionDate: "2025-08-01" });
+
+    const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+    draft.sectionData["income-retirement"] = { entries: latest() };
+    const storage = window.sessionStorage;
+    const key = "guided-code1-ira-date-regression";
+    try {
+      expect(saveGuidedFlowState(storage, key, draft)).toBe(true);
+      const restored = loadGuidedFlowState(storage, key);
+      expect(restored?.sectionData["income-retirement"]?.entries[0]?.code1IraAgeSource)
+        .toEqual({ singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate: "2025-08-01" });
+    } finally {
+      storage.removeItem(getGuidedFlowStorageKey(key));
+    }
+
+    await change("Distribution code (Box 7)", "7");
+    expect(latest()[0]?.code1IraAgeSource).toBeUndefined();
+    expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+    expect(container.textContent).not.toContain(otherWorksheet);
+    expect(container.textContent).not.toContain(actualDate);
+  });
+});
+
+// Spec: spec/federal/form-5329.yaml, Line 2, guided Code 1 age exception.
+it("requires removal or reconciliation of a saved Code 1 receipt date after another statement is entered", async () => {
+  const source = {
+    ...completeRetirementSource, distributionCode: "1", isIraSepSimple: true, grossDistribution: "6000", taxableAmount: "6000",
+    code1IraAgeSource: { singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate: "2025-08-01" },
+  };
+  const personal = { ...completePersonalInfo, dateOfBirth: "1966-02-01" };
+  const ordinary = { ...completeRetirementSource, distributionCode: "7", accountReference: "second statement" };
+  await render([source, ordinary], async ({ latest, container, change }) => {
+    const build = () => buildRetirementInputs(latest(), "single", 2025, undefined, { personal });
+    expect(build).toThrow(/saved.*Code 1 IRA receipt date/i);
+    const removeDate = [...container.querySelectorAll("button")].find(button => button.textContent === "Remove saved IRA receipt date");
+    expect(removeDate).toBeDefined();
+    await act(async () => removeDate?.click());
+    expect(latest()[0]).toMatchObject({ additionalWorksheetRequired: null, sourceFactsConfirmed: null });
+    expect(latest()[0]?.code1IraAgeSource).toBeUndefined();
+    expect(build).toThrow(/additional worksheet|retirement worksheets/i);
+    const worksheet = "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?";
+    await change(worksheet, "true");
+    await change(confirm, "true");
+    expect(build).toThrow(/retirement worksheets/i);
+    await change("Distribution code (Box 7)", "7");
+    await change(worksheet, "false");
+    await change(confirm, "true");
+    expect(build()).toHaveLength(2);
+    expect(build()[0]?.distributionDate).toBeUndefined();
+  });
+});
 
 // Spec: spec/federal/guided-input.yaml, retirement-2025-simplified-method
 it("collects and reconfirms the original blank Box 2a and the actual pension worksheet", async () => {

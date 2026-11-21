@@ -2,6 +2,7 @@
 
 import { RetroShell } from "@/components/retro-shell";
 import {
+  type FilingStatus,
   type RetirementEntryData,
   emptyRetirementEntry,
 } from "@/lib/guided-interview-flow";
@@ -9,7 +10,14 @@ import { CurrencyField } from "./currency-field";
 import { RetirementSourceFields } from "./retirement-source-fields";
 import { IraBasisSourceFields } from "./ira-basis-source-fields";
 import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
+import { guidedCode1IraOwnerBirthDate } from "@/lib/guided-retirement-facts";
 import { isGuidedQcdStatement, needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
+
+const code1IraSourceFields: readonly (keyof RetirementEntryData)[] = [
+  "sourceTaxYear", "payer", "payerTin", "accountReference", "accountHolder", "distributionCode",
+  "grossDistribution", "taxableAmount", "taxableAmountNotDetermined", "taxableAmountConfirmed",
+  "isIraSepSimple", "iraBasisConfirmedZero", "employeeContributions", "eligibleGovernmental457bPlan",
+];
 
 function RetirementCard({
   index,
@@ -18,6 +26,7 @@ function RetirementCard({
   onRemove,
   removable,
   basisMode,
+  code1IraOwnerBirthDate,
 }: {
   index: number;
   entry: RetirementEntryData;
@@ -25,6 +34,7 @@ function RetirementCard({
   onRemove: () => void;
   removable: boolean;
   basisMode?: boolean;
+  code1IraOwnerBirthDate?: string;
 }) {
   const qcdMode = isGuidedQcdStatement(entry);
   const simplifiedMethod = needsGuidedSimplifiedMethod(entry);
@@ -94,7 +104,7 @@ function RetirementCard({
           </span>
         </label>
 
-        <RetirementSourceFields entry={entry} onUpdate={onUpdate} basisMode={basisMode} />
+        <RetirementSourceFields entry={entry} onUpdate={onUpdate} basisMode={basisMode} code1IraOwnerBirthDate={code1IraOwnerBirthDate} />
       </div>
     </div>
   );
@@ -105,12 +115,19 @@ export function SectionRetirementIncome({
   onEntriesChange,
   basisSources,
   onBasisSourcesChange,
+  filingStatus,
+  taxYear,
+  primaryDateOfBirth,
 }: {
   entries: RetirementEntryData[];
   onEntriesChange: (entries: RetirementEntryData[]) => void;
   basisSources?: GuidedIraBasisData;
   onBasisSourcesChange?: (value: GuidedIraBasisData | undefined) => void;
+  filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
+  primaryDateOfBirth?: string;
 }) {
+  const code1OwnerBirthDate = guidedCode1IraOwnerBirthDate(entries, filingStatus, taxYear, primaryDateOfBirth, !!basisSources);
   function updateEntry<K extends keyof RetirementEntryData>(
     index: number,
     field: K,
@@ -119,8 +136,10 @@ export function SectionRetirementIncome({
     const next = entries.map((entry, i) => {
       if (i !== index) return entry;
       const sourceYearChanged = field === "sourceTaxYear" && entry[field] !== value;
+      const code1SourceChanged = entry.code1IraAgeSource !== undefined && code1IraSourceFields.includes(field) && entry[field] !== value;
       const updated = {
         ...entry, sourceFactsConfirmed: null, [field]: value,
+        ...(code1SourceChanged ? { code1IraAgeSource: undefined } : {}),
         ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}),
         ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}),
         ...((field === "sourceTaxYear" || field === "distributionCode" || field === "isIraSepSimple") && entry[field] !== value
@@ -131,7 +150,8 @@ export function SectionRetirementIncome({
       };
       const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);
       const codeChanged = needsGuidedSimplifiedMethod(updated) && entry.distributionCode !== updated.distributionCode;
-      return methodChanged || codeChanged ? { ...updated, additionalWorksheetRequired: null } : updated;
+      return methodChanged || codeChanged || code1SourceChanged || field === "code1IraAgeSource"
+        ? { ...updated, additionalWorksheetRequired: null } : updated;
     });
     onEntriesChange(next);
   }
@@ -161,6 +181,7 @@ export function SectionRetirementIncome({
               index={index}
               entry={entry}
               basisMode={!!basisSources && entry.isIraSepSimple === true}
+              code1IraOwnerBirthDate={code1OwnerBirthDate}
               onUpdate={(field, value) => updateEntry(index, field, value)}
               onRemove={() => removeEntry(index)}
               removable={entries.length > 1}

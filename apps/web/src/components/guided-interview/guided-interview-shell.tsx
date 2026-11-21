@@ -625,6 +625,9 @@ function SectionContent({
       return (
         <SectionRetirementIncome
           entries={entries}
+          filingStatus={state.segmentation.filingStatus}
+          taxYear={state.taxYear}
+          primaryDateOfBirth={getSectionData(state, "personal-info")?.dateOfBirth}
           basisSources={retData?.basisSources}
           onBasisSourcesChange={basisSources => onStateChange(updateSectionData(state, "income-retirement", { ...retData, entries, basisSources }))}
           onEntriesChange={(next: RetirementEntryData[]) =>

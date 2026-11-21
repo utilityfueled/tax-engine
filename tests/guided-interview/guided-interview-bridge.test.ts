@@ -1568,6 +1568,62 @@ describe("buildTaxInputFromGuidedData — credits", () => {
 // ── Retirement income (1099-R) conversion ─────────────────────────────────
 
 describe("buildRetirementInputs", () => {
+  it("uses only a verified actual receipt date for the single original 2025 Code 1 IRA", () => {
+    const state = startInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+    const personal = state.sectionData["personal-info"]!;
+    personal.dateOfBirth = "1966-02-01";
+    const entry = {
+      ...completeRetirementSource, distributionCode: "1", isIraSepSimple: true, grossDistribution: "6000", taxableAmount: "6000",
+      code1IraAgeSource: { singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate: "2025-08-01" },
+    };
+    const context = { personal };
+    for (const distributionDate of [undefined, "2025-02-30", "2026-08-01"]) {
+      expect(() => buildRetirementInputs([{ ...entry, code1IraAgeSource: { singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate } }], "single", 2025, undefined, context))
+        .toThrow(/actual.*receipt date/i);
+    }
+    expect(() => buildRetirementInputs([{ ...entry, code1IraAgeSource: { singlePaymentConfirmed: false, ownerBirthDate: "1966-02-01", distributionDate: "2025-08-01" } }], "single", 2025, undefined, context))
+      .toThrow(/single Box 1 payment/i);
+    const ordinary = { ...entry, distributionCode: "7", code1IraAgeSource: undefined };
+    expect(buildRetirementInputs([ordinary], "single", 2025, undefined, context)[0]?.distributionDate).toBeUndefined();
+    expect(() => buildRetirementInputs([{ ...entry, distributionCode: "7" }], "single", 2025, undefined, context))
+      .toThrow(/saved.*Code 1 IRA receipt date/i);
+    expect(() => buildRetirementInputs([entry], "mfj", 2025, undefined, context))
+      .toThrow(/saved.*Code 1 IRA receipt date/i);
+    expect(() => buildRetirementInputs([{ ...entry, sourceTaxYear: "2026" }], "single", 2026, undefined, context))
+      .toThrow(/saved.*Code 1 IRA receipt date/i);
+    expect(() => buildRetirementInputs([entry], "single", 2025, undefined, {}))
+      .toThrow(/saved.*Code 1 IRA receipt date/i);
+    expect(() => buildRetirementInputs([entry], "single", 2025, undefined, { personal: { ...personal, dateOfBirth: "1966-02-02" } }))
+      .toThrow(/saved.*Code 1 IRA receipt date/i);
+
+    for (const [distributionDate, expectedCode, expectedTax] of [
+      ["2025-07-31", undefined, "600"],
+      ["2025-08-01", "12", "0"],
+    ] as const) {
+      state.sectionData["income-retirement"] = { entries: [{ ...entry, code1IraAgeSource: { singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate } }] };
+      const projected = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+      expect(projected.form1099R?.[0]).toMatchObject({ distributionCode: "1", distributionDate });
+      const result = calculateFederalTax(projected);
+      expect(result.form5329?.line2ExceptionNumber).toBe(expectedCode);
+      expect(result.form5329?.line4.toFixed()).toBe(expectedTax);
+    }
+  });
+
+  it("holds the guided projection when a second 1099-R invalidates a saved Code 1 IRA receipt date", () => {
+    const state = startInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+    const personal = state.sectionData["personal-info"]!;
+    personal.dateOfBirth = "1966-02-01";
+    const entry = {
+      ...completeRetirementSource, distributionCode: "1", isIraSepSimple: true, grossDistribution: "6000", taxableAmount: "6000",
+      code1IraAgeSource: { singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate: "2025-08-01" },
+    };
+    const secondStatement = { ...completeRetirementSource, accountReference: "another-ira" };
+    state.sectionData["income-retirement"] = { entries: [entry, secondStatement] };
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(() => buildRetirementInputs([entry, secondStatement], "single", 2025, undefined, { personal }))
+      .toThrow(/saved.*Code 1 IRA receipt date/i);
+  });
+
   it("returns empty array for undefined", () => {
     expect(buildRetirementInputs(undefined)).toEqual([]);
   });

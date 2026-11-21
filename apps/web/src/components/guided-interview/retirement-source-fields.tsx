@@ -1,7 +1,7 @@
 "use client";
 
 import type { RetirementEntryData } from "@/lib/guided-interview-flow";
-import { retirementSourceAmounts } from "@/lib/guided-retirement-facts";
+import { guidedCode1IraAgeFacts, hasStartedGuidedCode1IraAgeSource, retirementSourceAmounts } from "@/lib/guided-retirement-facts";
 import { isGuidedQcdStatement, isGuidedQualifiedLumpSum, needsGuidedSimplifiedMethod, retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, type GuidedRetirementSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 import { CurrencyField } from "./currency-field";
 
@@ -12,11 +12,13 @@ function Text({ label, value, onChange, type = "text" }: { label: string; value:
   return <label className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" type={type} value={value ?? ""} onChange={event => onChange(event.target.value)} /></label>;
 }
 
-export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void; basisMode?: boolean }) {
+export function RetirementSourceFields({ entry, onUpdate, basisMode = false, code1IraOwnerBirthDate }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void; basisMode?: boolean; code1IraOwnerBirthDate?: string }) {
   const qcdStatement = isGuidedQcdStatement(entry);
   const ordinaryQcdEligibleCode = entry.sourceTaxYear === "2026" && entry.isIraSepSimple === true && entry.distributionCode.trim() === "7";
   const qcd = entry.qcdSource;
   const needsSimplifiedMethod = needsGuidedSimplifiedMethod(entry);
+  const ageFacts = guidedCode1IraAgeFacts(entry, code1IraOwnerBirthDate);
+  const ageSource = entry.code1IraAgeSource;
   const worksheet = entry.simplifiedMethod;
   const worksheetYear = entry.sourceTaxYear === "2025" || entry.sourceTaxYear === "2026" ? Number(entry.sourceTaxYear) : undefined;
   const updateWorksheet = (change: Partial<GuidedRetirementSimplifiedMethod>) => onUpdate("simplifiedMethod", { ...worksheet, ...change });
@@ -41,6 +43,16 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
     {!basisMode && !qcdStatement && !needsSimplifiedMethod && <Fact label="Have you established the actual taxable amount from the source and applicable basis records?" value={entry.taxableAmountConfirmed} onChange={value => onUpdate("taxableAmountConfirmed", value)} />}
     {retirementSourceAmounts.map(([field, label]) => <CurrencyField key={field} label={label} value={entry[field] ?? ""} onChange={value => onUpdate(field, value)} required />)}
     {!basisMode && entry.isIraSepSimple === true && <Fact label="Do actual owner records establish zero nondeductible IRA basis?" value={entry.iraBasisConfirmedZero} onChange={value => onUpdate("iraBasisConfirmedZero", value)} />}
+    {ageFacts && <>
+      <Fact label="Does Box 1 report one payment with no other distributions?" value={ageSource?.singlePaymentConfirmed}
+        onChange={value => onUpdate("code1IraAgeSource", { singlePaymentConfirmed: value, ownerBirthDate: value === true ? code1IraOwnerBirthDate : undefined })} />
+      {ageSource?.singlePaymentConfirmed === true && <Text label="Date the IRA payment was received" type="date"
+        value={ageSource.distributionDate} onChange={distributionDate => onUpdate("code1IraAgeSource", { ...ageSource, distributionDate })} />}
+    </>}
+    {!ageFacts && hasStartedGuidedCode1IraAgeSource(entry) && <>
+      <p className="guided-hint">Reconcile the saved Code 1 IRA receipt date with the current statement and return before calculating.</p>
+      <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("code1IraAgeSource", undefined)}>Remove saved IRA receipt date</button>
+    </>}
     <Fact label="Is this an eligible governmental section 457(b) distribution?" value={entry.eligibleGovernmental457bPlan} onChange={value => onUpdate("eligibleGovernmental457bPlan", value)} />
     {entry.eligibleGovernmental457bPlan === true && <CurrencyField label="457(b) taxable amount attributable to transferred qualified-plan funds" value={entry.governmental457bTransferredTaxableAmount ?? ""} onChange={value => onUpdate("governmental457bTransferredTaxableAmount", value)} required />}
     <Fact label="Is this a U.S. military pension or survivor benefit?" value={entry.militaryPensionOrSurvivorBenefit} onChange={value => onUpdate("militaryPensionOrSurvivorBenefit", value)} />
@@ -85,7 +97,7 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
       <CurrencyField label={`Plan cost recovered or eligible for tax-free recovery ${worksheetYear ? `through ${worksheetYear - 1}` : "in prior years"}`} hint="Use line 10 of the prior-year worksheet and include amounts you could have recovered in prior years. Enter zero only if there was no prior recoverable cost." value={worksheet?.priorRecovered ?? ""} onChange={priorRecovered => updateWorksheet({ priorRecovered })} required />
       {worksheet && <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("simplifiedMethod", undefined)}>Remove Simplified Method worksheet</button>}
     </fieldset>}
-    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label={qcdStatement ? "Is another retirement worksheet beyond this QCD worksheet needed?" : needsSimplifiedMethod ? "Is a penalty exception or another retirement worksheet needed for this pension?" : "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?"} value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
+    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label={qcdStatement ? "Is another retirement worksheet beyond this QCD worksheet needed?" : needsSimplifiedMethod ? "Is a penalty exception or another retirement worksheet needed for this pension?" : ageFacts?.ageException ? "Is another retirement worksheet needed beyond this documented Code 1 age exception?" : "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?"} value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
     <Fact label="Have you checked all retirement source and taxability facts after the last edit?" value={entry.sourceFactsConfirmed} onChange={value => onUpdate("sourceFactsConfirmed", value)} />
     <p className="guided-hint">Keep unknown amounts blank. Enter zero only when the source or completed worksheet establishes zero. Special distributions and unresolved basis, rollover or multi-state allocations stay saved for review until their source worksheets are supported.</p>
   </>;

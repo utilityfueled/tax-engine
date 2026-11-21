@@ -36,6 +36,7 @@ export interface RetirementSourceData {
   localTaxWithheld?: string;
   localDistribution?: string;
   iraBasisConfirmedZero?: boolean | null;
+  code1IraAgeSource?: { singlePaymentConfirmed?: boolean | null; ownerBirthDate?: string; distributionDate?: string };
   qcdSource?: GuidedRetirementQcdSource;
   simplifiedMethod?: GuidedRetirementSimplifiedMethod;
   qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
@@ -58,6 +59,46 @@ export const retirementSourceAmounts = [
   ["otherSourceAmount", "Other source amount (Box 8 / 2026 Box 8a)"],
   ["inPlanRothRolloverAmount", "Amount allocable to in-plan Roth rollover within five years (Box 10)"],
 ] as const;
+
+export function guidedCode1IraOwnerBirthDate(
+  entries: RetirementEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null,
+  primaryDateOfBirth?: string, hasIraBasisWorksheet = false,
+): string | undefined {
+  if (taxYear !== 2025 || !filingStatus || filingStatus === "mfj" || hasIraBasisWorksheet
+    || entries?.filter(isStartedRetirement).length !== 1 || !isActualDate(primaryDateOfBirth)) return undefined;
+  return primaryDateOfBirth;
+}
+
+export function hasStartedGuidedCode1IraAgeSource(entry: RetirementEntryData): boolean {
+  return entry.code1IraAgeSource?.singlePaymentConfirmed === true || !!entry.code1IraAgeSource?.distributionDate;
+}
+
+export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDate?: string) {
+  if (hasStartedGuidedCode1IraAgeSource(entry) && entry.code1IraAgeSource?.ownerBirthDate !== ownerBirthDate) return undefined;
+  const box5 = entry.employeeContributions;
+  if (!ownerBirthDate || entry.sourceTaxYear !== "2025" || entry.accountHolder !== "primary"
+    || entry.requiresCodeConfirmation || entry.requiresIraConfirmation || entry.qcdSource || entry.simplifiedMethod
+    || normalizeGuidedRetirementCode(entry.distributionCode) !== "1" || entry.isIraSepSimple !== true
+    || entry.iraBasisConfirmedZero !== true || entry.eligibleGovernmental457bPlan !== false
+    || entry.taxableAmountNotDetermined !== false || entry.taxableAmountConfirmed !== true
+    || amountError(entry.grossDistribution, "Box 1") || amountError(entry.taxableAmount, "Box 2a")
+    || !box5 || amountError(box5, "Box 5")) return undefined;
+
+  const gross = parseGuidedCurrency(entry.grossDistribution);
+  if (!gross.gt(0) || !gross.eq(parseGuidedCurrency(entry.taxableAmount))
+    || !parseGuidedCurrency(box5).isZero()) return undefined;
+
+  const proof = entry.code1IraAgeSource;
+  const date = proof?.distributionDate;
+  const distributionDate = proof?.singlePaymentConfirmed === true && date && isActualDate(date)
+    && date.startsWith("2025-") && date >= ownerBirthDate ? date : undefined;
+  return {
+    distributionDate,
+    ageException: distributionDate !== undefined && !isBeforeAge59AndHalfDate(
+      new Date(`${ownerBirthDate}T00:00:00Z`), new Date(`${distributionDate}T00:00:00Z`),
+    ),
+  };
+}
 
 function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: string): string | undefined {
   const year = Number(entry.sourceTaxYear);
@@ -125,8 +166,12 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   }
   const sourceIds = new Set<string>();
   const simplifiedMethodPlans = new Set<string>();
+  const code1IraOwnerBirthDate = guidedCode1IraOwnerBirthDate(
+    entries, filingStatus, taxYear, basisContext?.personal?.dateOfBirth, !!basisContext?.data,
+  );
   (entries ?? []).forEach((entry, index) => {
-    if (!isStartedRetirement(entry)) return;
+    const startedAgeSource = hasStartedGuidedCode1IraAgeSource(entry);
+    if (!isStartedRetirement(entry) && !startedAgeSource) return;
     const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
     if (!entry.payer.trim()) fail("payer", "Enter the actual retirement payer.");
@@ -246,7 +291,20 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       } else fail(`${location}-reporting`, reporting === "multiple" ? `Multiple ${location} retirement records need their separate source allocations.` : `Confirm actual ${location} reporting on the source form.`);
     }
     if (!reconciledOriginals.has(index) && entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
-    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed." : needsSimplifiedMethod ? "Confirm whether a penalty exception or another retirement worksheet is needed for this pension." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
+    const ageFacts = guidedCode1IraAgeFacts(entry, code1IraOwnerBirthDate);
+    if (startedAgeSource && !ageFacts) {
+      fail("code1-ira-age-date", "Reconcile the saved Code 1 IRA receipt date with the current statement and return before calculating.");
+    } else if (startedAgeSource && !ageFacts?.distributionDate) {
+      fail("code1-ira-age-date", "Confirm the single Box 1 payment and enter its actual receipt date in the 2025 statement year.");
+    }
+    if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) {
+      const question = boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed."
+        : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed."
+        : needsSimplifiedMethod ? "Confirm whether a penalty exception or another retirement worksheet is needed for this pension."
+        : ageFacts?.ageException ? "Confirm whether another retirement worksheet is needed beyond the documented Code 1 age exception."
+        : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.";
+      fail("additional-worksheet", question);
+    }
     if (entry.sourceFactsConfirmed !== true) fail("confirmation", "Confirm the complete retirement source facts after the last edit.");
   });
   return errors;

@@ -24,7 +24,7 @@ import * as federalEngine from "../../../src/engine/federal";
 import * as rendering from "@/pdf/fill-return";
 import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
 import { actualGuidedK1PassiveDistribution } from "../../fixtures/guided-k1-passive-distribution";
-import { completeAocEligibility, completeEducationClaimant, startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
+import { completeAocEligibility, completeEducationClaimant, completeRetirementSource, startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
 import { emptyDeductionData } from "../../../apps/web/src/lib/guided-interview-flow";
 import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
 import { actual, guidedForm8862 } from "../../fixtures/guided-form-8862";
@@ -843,6 +843,28 @@ describe("workspace filled return download", () => {
     expect(download.includedForms).toContain("oh-it-1040-reference.pdf");
     expect(download.includedForms).not.toContain("oh-schedule-of-withholding-reference.pdf");
   });
+});
+
+// Spec: spec/federal/form-5329.yaml, Line 2, guided Code 1 age exception.
+it("prints the documented guided IRA Code 1 age exception in the workspace PDF", async () => {
+  const state = createGuidedFlowState();
+  state.segmentation.incomeTypes.push("retirement");
+  actual(state.sectionData["personal-info"]).dateOfBirth = "1966-02-01";
+  state.sectionData["income-retirement"] = { entries: [{
+    ...completeRetirementSource, distributionCode: "1", isIraSepSimple: true, grossDistribution: "6000", taxableAmount: "6000",
+    code1IraAgeSource: { singlePaymentConfirmed: true, ownerBirthDate: "1966-02-01", distributionDate: "2025-08-01" },
+  }] };
+
+  const before = JSON.stringify(state);
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms).toContain("f5329-filled.pdf");
+  const pdfText = await extractPdfText(download.contents);
+  expect(pdfText).toContain("Additional Taxes on Qualified Plans");
+  expect(pdfText).toMatch(/\b6000\s+12\s+6000\b/u);
+  const projected = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  expect(projected.form1099R?.[0]).toMatchObject({ distributionCode: "1", distributionDate: "2025-08-01" });
+  expect(calculateFederalTax(projected).form5329?.line4.toFixed()).toBe("0");
+  expect(JSON.stringify(state)).toBe(before);
 });
 
 // Spec: spec/federal/guided-shared-marketplace-health.yaml.

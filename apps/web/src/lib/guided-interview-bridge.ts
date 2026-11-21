@@ -94,7 +94,7 @@ import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment
 import { buildGuidedCashFarm, buildGuidedCashFarmBenefitOriginals } from "./guided-cash-farm-box7";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
-import { isStartedRetirement } from "./guided-retirement-facts";
+import { guidedCode1IraAgeFacts, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
 import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import { investmentFactErrors, isStartedInvestment, type InvestmentData, type InvestmentSourceData } from "./guided-investment-facts";
@@ -534,9 +534,14 @@ export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined
 export function buildRetirementInputs(entries: RetirementEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext) {
   if (!entries || entries.length === 0) return [];
   assertKnownFacts(retirementFactErrors(entries, false, filingStatus, taxYear, stateData, basisContext));
+  const ownerBirthDate = guidedCode1IraOwnerBirthDate(entries, filingStatus, taxYear, basisContext?.personal?.dateOfBirth, !!basisContext?.data);
   return entries
     .filter(isStartedRetirement)
-    .map(retirementSourceInput);
+    .map(entry => {
+      const source = retirementSourceInput(entry);
+      const distributionDate = guidedCode1IraAgeFacts(entry, ownerBirthDate)?.distributionDate;
+      return distributionDate === undefined ? source : { ...source, distributionDate };
+    });
 }
 
 // ── Social Security (SSA-1099) converter ─────────────────────────────────
