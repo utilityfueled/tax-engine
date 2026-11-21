@@ -6,6 +6,9 @@ import { completeRentalSource, completeNecSource, completeBusinessSection, compl
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeHsaSources, completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
 import { describe, it, expect } from "vitest";
+import { calculateFederalTax } from "@/engine/federal";
+import { TaxYearInputSchema } from "@/models/inputs";
+import { roundDollar } from "@/utils/decimal";
 import {
   buildTaxInputFromGuidedData,
   buildW2Inputs,
@@ -35,6 +38,7 @@ import {
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import {
   type GuidedFlowState,
+  acceptSelfEmploymentIncomeSuggestion,
   emptyW2Entry,
   emptyNecEntry,
   emptyScheduleCExpenses,
@@ -270,6 +274,44 @@ describe("buildScheduleCInput", () => {
     const entries = [{ ...emptyNecEntry, nonemployeeCompensation: "5000" }];
     const result = buildScheduleCInput(entries, "1750", emptyScheduleCExpenses);
     expect(result?.grossReceipts).toBe("6750");
+  });
+
+  it("preserves exact Schedule C receipts when accepting an invoice suggestion", () => {
+    const interview = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
+    const section = {
+      ...completeBusinessSection,
+      manualGrossReceipts: "1,000.496",
+      incomeDocumentAnalyses: [{
+        id: "invoice-analysis",
+        fileName: "invoice.pdf",
+        label: "Invoice",
+        uploadedAt: "2025-03-29T00:00:00.000Z",
+        summary: "Fictional invoice total.",
+        suggestions: [{
+          id: "invoice-total",
+          description: "Invoice total",
+          amount: "10.00",
+          confidence: "high" as const,
+          reason: "Labeled invoice total.",
+          applied: false,
+        }],
+      }],
+    };
+    const state = updateSectionData(interview, "income-self-employment", section);
+    const accepted = acceptSelfEmploymentIncomeSuggestion(section, "invoice-analysis", "invoice-total");
+    expect(accepted.businessFacts?.incomeReconciled).toBeNull();
+    expect(acceptSelfEmploymentIncomeSuggestion(accepted, "invoice-analysis", "invoice-total")).toBe(accepted);
+    const pending = updateSectionData(state, "income-self-employment", accepted);
+    expect(buildTaxInputFromGuidedData(pending)).toBeNull();
+
+    const reconciled = updateSectionData(pending, "income-self-employment", {
+      ...accepted,
+      businessFacts: { ...section.businessFacts, incomeReconciled: true },
+    });
+    const rawInput = buildTaxInputFromGuidedData(reconciled);
+    const result = calculateFederalTax(TaxYearInputSchema.parse(rawInput));
+    expect(result.scheduleC?.grossReceipts.toFixed()).toBe("1010.496");
+    expect(result.scheduleC && roundDollar(result.scheduleC.grossReceipts).toFixed()).toBe("1010");
   });
 
   it("includes mapped expenses", () => {

@@ -1460,7 +1460,8 @@ export const initialFlowState: GuidedFlowState = {
 };
 
 function addCurrencyStrings(left: string, right: string) {
-  return parseGuidedCurrency(left).plus(parseGuidedCurrency(right)).toFixed(2);
+  const total = parseGuidedCurrency(left).plus(parseGuidedCurrency(right));
+  return total.toFixed(Math.max(2, total.decimalPlaces()));
 }
 
 export function acceptSelfEmploymentIncomeSuggestion(
