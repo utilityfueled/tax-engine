@@ -11,8 +11,9 @@ notes: |
   line 7 and gives the same cap for RRTA compensation on line 8. Line 6 sends
   wages to Form 1040 line 1g and Form 8959 line 3 when required. Line 13 sends
   tax to Schedule 2 line 16b. These references identify the annual source.
-  Calculation, transfer mapping, independent review and export qualification
-  are outside the physical candidate.
+  The internal review projection uses reconciled original firm records and the
+  existing calculation. Independent review and public export qualification
+  remain pending.
 lines:
   - line: "revision"
     description: "Pin the official final annual blank"
@@ -22,7 +23,34 @@ lines:
     description: "Confirm the official pages and their widget census"
     formula: "Preserve 35 text fields and five checkboxes on page one. Page two contains the instructions and has no widgets."
     testRef: "tests/pdf/form-8919-2026-candidate.test.ts::confirms the physical page and widget census"
+  - line: "1-5"
+    description: "Source-bound firm rows and reason codes"
+    formula: >-
+      Require the original 2026 firm list confirmed for the calculation's explicit
+      account holder. Each unique firm supplies its name, documented federal
+      identifier, reason A, C, G or H, actual Form 1099-MISC or 1099-NEC receipt
+      status, and positive exact wages from column (f). If receipt is confirmed,
+      bind the printed firm name and identifier to the original 1099. A or C supplies the actual
+      IRS letter or correspondence date for (d); G supplies a timely actual Form
+      SS-8 filing date with no IRS reply. For H the 2026 W-2 and original Form
+      1099 records must match the same firm identifier and worker, and the
+      confirmed reclassified wages must sum to the row's exact wages.
+      Review output keeps taxpayer IDs and individual firm SSNs blank. Retain a
+      separate Form 8919 for each group of up to five firms, with summary fields
+      completed on only the first form.
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::projects six original firms and puts the summary on the first review form only"
+  - line: "6-13"
+    description: "Reconcile original wages and project calculated summary"
+    formula: >-
+      Sum original wages using Decimal at exact cents and require equality to both
+      the validated 2026 input wage amount and line 6 of the 2026 calculation.
+      Derive line 8 from known nonnegative W-2 Boxes 3 and 7 for the actual
+      household owners and actual Form 4137 payroll. Hold unsupported RRTA combinations and a conflicting
+      summary override. Fill lines 6 and 8 through 13 with the existing isolated
+      2026 calculation, leaving the preprinted $184,500 untouched. Reject
+      mismatched years, owners, original detail or template bytes.
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::rejects unbound or conflicting annual originals"
   - line: "closed-exports"
     description: "Keep the candidate outside public review and filing"
-    formula: "The 2025 and 2026 review template registries reject these bytes. The physical candidate has no route, field map, or export registration."
+    formula: "The 2025 and 2026 review template registries reject these bytes. The internal field map has no public route or export registration."
     testRef: "tests/pdf/form-8919-2026-candidate.test.ts::keeps the physical candidate outside public exports"
