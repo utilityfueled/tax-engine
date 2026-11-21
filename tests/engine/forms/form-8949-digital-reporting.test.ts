@@ -56,6 +56,23 @@ it('holds a wallet-documented swap and a liquidation that could consume the same
   expect(() => calculateFederalTax(legacyBroker)).toThrow(/wallet.+separate lot method/i);
 });
 
+it('holds taxable DEX execution dates outside the return year or calendar', () => {
+  const fixture = (dateSwapped: string) => TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    cryptoIncome: {
+      lots: [{ asset: 'ETH', dateAcquired: '2023-01-01', quantity: '1', costBasisPerUnit: '100' }],
+      tokenSwaps: [{
+        fromAsset: 'ETH', fromQuantity: '1', toAsset: 'USDC', toQuantity: '1000',
+        fairMarketValueAtSwap: '1000', dateSwapped, gasFee: '0',
+      }],
+    },
+  });
+  expect(calculateFederalTax(fixture('2025-01-01')).scheduleD?.netLongTerm.toFixed()).toBe('900');
+  for (const date of ['2024-12-31', '2026-01-01', '2025-02-30', '']) {
+    expect(() => calculateFederalTax(fixture(date))).toThrow(/DEX.*calendar.*return year/);
+  }
+});
+
 it('routes all twelve original reporting categories without losing cents', () => {
   const input = reportingCategoriesInput();
   const original = structuredClone(input);

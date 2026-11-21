@@ -1430,10 +1430,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const tokenSwaps = cryptoInput?.tokenSwaps ?? [];
   const lpPositions = cryptoInput?.lpPositions ?? [];
   const liquidations = cryptoInput?.liquidations ?? [];
-  const hasWalletDocumentedSwap = tokenSwaps.some(swap =>
-    swap.dateSwapped >= "2025-01-01" && swap.walletSource
-    && !swap.isWrappingEvent && !swap.isBridgeTransaction && !d(swap.fromQuantity).isZero()
+  const taxableTokenSwaps = tokenSwaps.filter(swap =>
+    !swap.isWrappingEvent && !swap.isBridgeTransaction && !d(swap.fromQuantity).isZero()
   );
+  for (const { dateSwapped } of taxableTokenSwaps) {
+    const date = new Date(dateSwapped);
+    if (!dateSwapped.startsWith(`${year}-`) || !Number.isFinite(date.getTime())
+      || date.toISOString().slice(0, 10) !== dateSwapped) {
+      throw new Error("Taxable DEX swaps require a valid calendar execution date in the return year.");
+    }
+  }
+  const hasWalletDocumentedSwap = year >= 2025 && taxableTokenSwaps.some(swap => swap.walletSource);
   if (hasWalletDocumentedSwap && (needsLotMatching || lpPositions.length > 0 || liquidations.length > 0)) {
     throw new Error("Wallet-documented swaps combined with other crypto lot allocations require a separate lot method.");
   }

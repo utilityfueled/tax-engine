@@ -65,3 +65,8 @@ lines:
     formula: "A post-2024 wallet-documented taxable exchange of a nonzero quantity uses its own confirmed lot pool. Hold a return that also needs liquidity-pool, liquidation or legacy Form 1099-DA lot allocation until the same originals can be consumed only once across those methods. Standalone wallet-confirmed sales retain separate Schedule D terms. A reverted zero-quantity exchange consumes no lot."
     irsRef: "26 CFR §1.1012-1(j); Form 8949 instructions for original adjusted basis and separate holding-period categories"
     testRef: "tests/engine/forms/form-8949-digital-reporting.test.ts::holds a wallet-documented swap and a liquidation that could consume the same original lot"
+  - line: "taxable-dex-disposition-year"
+    description: "Bind a taxable DEX exchange to the date and year of the actual disposal"
+    formula: "An actual nonzero taxable swap needs a valid calendar execution date inside the return year. Reject other years and invalid dates before adding any Form 8949 or Schedule D amount. Earlier acquisition dates still establish cost basis and holding period. Reverted transactions and non-taxable transfer methods follow their own facts."
+    irsRef: "IRS Form 8949 instructions, column (c); 26 CFR §1.1001-7(b)(1)(iii)"
+    testRef: "tests/engine/forms/form-8949-digital-reporting.test.ts::holds taxable DEX execution dates outside the return year or calendar"
