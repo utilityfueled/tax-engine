@@ -17,6 +17,10 @@ to that exact Preview. Checkout and signed delivery still need actual
 rehearsal evidence. Approval review held the one-Session rehearsal before
 execution because its price, customer, return flow and cleanup needed
 additional binding.
+Exact-source CI and Docker passed. Managed Linux passed 650 browser
+cases. Strict AMD64 passed Compose recovery and 642 browser cases. Eight
+Ohio cases reached the original 30-second limit. Both runs retained five
+original skips. The self-host release gate remains open.
 
 Start with `activeContinuation.nov21GuidedFactInputCorrections`,
 `activeContinuation.nov21CombinedReferenceAndBrowserReplay` and

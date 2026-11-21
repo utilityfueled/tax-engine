@@ -40,6 +40,19 @@ postal and return behavior, and cleanup must be independently bound to
 the planned rehearsal. No Checkout Session was created by this attempt.
 [Exact Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/44890499245).
 
+Exact `522cf4b1` CI passed. Managed Linux passed 650 browser cases with
+five original skips. Strict AMD64 passed Compose upgrade, recovery and
+rollback and produced both immutable SBOMs. Its browser run passed 642
+cases, hit eight Ohio 30-second deadlines and kept the five original
+skips. Two deadlines were in part-year business, two in resident credit
+and four in part-year school district. Both RRTA cases passed in each
+runner. The last awaited browser actions ranged from requests to input,
+responses and downloads. The job does not establish which activity
+consumed the preceding time.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44890499289) ·
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44890499249/job/136805047431) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44890499249/job/136805047251).
+
 An intervening standard Web run on `4425ad1d` passed 648 managed Linux
 cases with two RRTA PDF inspection deadlines. Strict AMD64 passed 643
 cases with seven Ohio case deadlines. Both jobs retained five original
