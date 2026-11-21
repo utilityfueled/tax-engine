@@ -101,14 +101,26 @@ both fixtures. The full Linux qualification is still open.
 All four managed local school cases passed with two workers, zero retries
 and the original 30-second case limit. Header entry took 1.424 to 1.528
 seconds on this host. The full unit suite on exact `2134c1bc` passed all
-29,934 tests with PostgreSQL 16.16, and its temporary database shut down
-normally. The older ARM64 run passed image smoke and isolated Compose
+29,934 tests with PostgreSQL 16.16. The coverage run passed the same
+29,934 tests and measured 88.48% branch coverage. Both temporary databases
+shut down normally. The older ARM64 run passed image smoke and isolated Compose
 upgrade and recovery. Its strict browser stage finished with 641 passes,
 nine failures and five original skips. The exact revised
 ARM64 and Web runs started separately and remain open.
 [Older ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44929369390/job/136933871759) ·
 [Revised ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44937275054) ·
 [Revised Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44937172012).
+
+On `eb33a3d3`, all six existing education browser cases passed with
+two workers, zero retries and the original 30-second deadline. The
+cases cover opening and removing student cards, explicit prior claim
+history, and Lifetime Learning Credit source entry. The calculator and
+guide tests cover the new multi-school EIN cases. On the same revision,
+all 29,935 tests passed in both the full unit and coverage runs across
+2,181 suites using PostgreSQL 16.16. Branch coverage was 88.48%.
+Both temporary databases shut down normally.
+[Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/44938160588) ·
+[Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44938160572).
 
 ## November 21 original claims in canonical mortgage worksheets
 

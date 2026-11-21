@@ -6,7 +6,7 @@
       "checks": {"initialRegressionsReproduced": 2, "focusedTestsPassed": 191, "federalSpecRefsValid": 6215, "coreTypesPassed": true, "webTypesPassed": true, "inventoryPassed": true, "scopedLintPassed": true, "independentSourceReviewPassed": true},
       "browserAuditBinding": {"commit": "988805a68997f3e71d362d70a84905ad0d6d2045", "committedSourceAuditPassed": true, "overlayChecksPassed": 27},
       "initialCiRun": 44936646058,
-      "canonical2025": {"commit": "fda15418510d4943dac1c356c0c234c82227cc29", "focusedTestsPassed": 192, "overlayChecksPassed": 27, "fullBatchChecksPassed": 8, "federalSpecRefsValid": 6216, "browserSourceAuditPassed": true},
+      "canonical2025": {"commit": "fda15418510d4943dac1c356c0c234c82227cc29", "focusedTestsPassed": 192, "overlayChecksPassed": 27, "fullBatchChecksPassed": 8, "federalSpecRefsValid": 6216, "browserSourceAuditPassed": true, "browserSource": "eb33a3d3", "localEducationBrowserCasesPassed": 6, "localUnitTestsPassed": 29935, "localCoverageTestsPassed": 29935, "localUnitSuitesPassed": 2181, "branchCoveragePercent": 88.48, "postgresVersion": "16.16", "unitPostgresCleanupPassed": true, "coveragePostgresCleanupPassed": true, "currentCiRun": 44938160588, "currentWebRun": 44938160572},
       "pushVerified": true,
       "remaining": "Monitor exact CI and retain the independent tax review and final annual instruction holds."
     },
@@ -20,7 +20,7 @@
       "revisedExactPriorArm64": {"source": "1d80a76177e14edd55f7221c4acd9a242db08798", "workflowRun": 44929369390, "job": 136933871759, "passed": 641, "failed": 9, "existingSkips": 5, "imageSmokePassed": true, "isolatedComposeRecoveryPassed": true},
       "baselineSameRunnerComparison": {"source": "63910ba767e69d57cdb38e6686f4bd207ec5b983", "workflowRun": 44935775424},
       "sameInvocationParentReplay": {"commit": "0e30d9b5047683fb4338b6c0ff2f8b079bafa8d6", "partYearFixtures": 2, "parentCallsEachBefore": 2, "parentCallsEachAfter": 1, "focusedTestsPassed": 249, "stateSpecRefsValid": 3488, "fullBatchChecksPassed": 8, "typesPassed": true, "sourceAuditPassed": true, "independentSourceReviewPassed": true},
-      "combinedChecks": {"source": "2134c1bc6b006bab8b6102c08e77b0b252a3b159", "nativeMacManagedCasesPassed": 4, "managedCaseLimitMs": 30000, "localUnitTestsPassed": 29934, "localUnitSuitesPassed": 2181, "postgresVersion": "16.16", "unitPostgresCleanupPassed": true, "webRun": 44937172012, "ciRun": 44937172016, "arm64Run": 44937275054},
+      "combinedChecks": {"source": "2134c1bc6b006bab8b6102c08e77b0b252a3b159", "nativeMacManagedCasesPassed": 4, "managedCaseLimitMs": 30000, "localUnitTestsPassed": 29934, "localCoverageTestsPassed": 29934, "branchCoveragePercent": 88.48, "localUnitSuitesPassed": 2181, "postgresVersion": "16.16", "unitPostgresCleanupPassed": true, "coveragePostgresCleanupPassed": true, "webRun": 44937172012, "ciRun": 44937172016, "arm64Run": 44937275054},
       "remaining": "Establish managed and both strict platform passes with the original deadlines. Determine the cause of the Ohio delays and the railroad inspection deadlines."
     },
     "nov21CanonicalRetainedPointsProvenance": {
