@@ -55,11 +55,12 @@ export function calculateForm8919(
   const line12 = roundDollar(line6.times(constants.selfEmploymentTax.medicareRate.dividedBy(2)));
   const line13 = line11.plus(line12);
   const wageBaseLabel = `${constants.taxYear} Social Security wage base`;
+  const is2026 = constants.taxYear === 2026;
 
   audit.record(
     "Form 8919",
-    "1040-1",
-    "Form 8919 wages added to Form 1040 line 1",
+    is2026 ? "1040-1g" : "1040-1",
+    is2026 ? "Form 8919 wages reported on Form 1040 line 1g" : "Form 8919 wages added to Form 1040 line 1",
     line6,
     "Validated supported Form 8919 wage amount"
   );
@@ -68,7 +69,9 @@ export function calculateForm8919(
     "6",
     "Employee wages subject to Form 8919 tax",
     line6,
-    "Validated supported wage amount not reported on Form W-2"
+    is2026
+      ? "Validated wages absent from Form W-2. Report on Form 1040 line 1g and Form 8959 line 3 when required."
+      : "Validated supported wage amount not reported on Form W-2"
   );
   audit.record(
     "Form 8919",
@@ -135,7 +138,7 @@ export function calculateForm8919(
     "13",
     "Total Social Security and Medicare tax on Form 8919 wages",
     line13,
-    "Line 11 + Line 12",
+    is2026 ? "Line 11 + Line 12. Report on Schedule 2 line 16b." : "Line 11 + Line 12",
     {
       "Line 11": line11,
       "Line 12": line12,

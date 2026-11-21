@@ -1,7 +1,7 @@
 form: "Form 8919"
 fullName: "Uncollected Social Security and Medicare Tax on Wages"
 taxYear: 2025
-irsReference: "https://www.irs.gov/pub/irs-pdf/f8919.pdf"
+irsReference: "https://www.irs.gov/pub/irs-prior/f8919--2025.pdf"
 
 notes: |
   This supported slice accepts validated Form 8919 summary totals instead of
@@ -104,3 +104,10 @@ lines:
       - "Form 8919 Line 12"
     notes: "The supported result flows to Schedule 2 line 6."
     testRef: "tests/engine/forms/form-8919.test.ts::Form 8919 Line 13 - computes Social Security and Medicare tax from supported summary inputs"
+
+  - line: "2026-transfer-audit"
+    description: "Annual Form 8919 wage-base boundary and source-form transfers"
+    formula: "In 2026, subtract line 8 from the $184,500 wage base and floor at zero. Apply 6.2% to the lesser of line 6 and the remaining base, and 1.45% to all line 6 wages. Line 6 supplies Form 1040 line 1g and Form 8959 line 3 when required. Line 13 adds the two taxes and identifies Schedule 2 line 16b as its destination in the Form 8919 audit."
+    notes: "The final 2026 Form 8919 authorizes these source references. Calculation uses the isolated 2026 constants. The 2025 Schedule 2 calculation and physical map continue to use line 6. Full 2026 Schedule 2 routing requires its final layout and annual qualification."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf"
+    testRef: "tests/engine/forms/form-8919.test.ts::records the final 2026 Form 8919 destinations at the annual wage-base boundary"
