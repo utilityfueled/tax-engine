@@ -1696,6 +1696,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
       education.refundableAocFacts, education.refundableAocEligible].some(answer => answer !== undefined));
   const llcSourcesEntered = !!education?.llcStudents?.length;
   const bankInterestSourcesEntered = credits?.educationDistributions?.forms?.some(row => row.bankInterestConversion);
+  const rentals = state.sectionData["income-rental"];
   const royalties = state.sectionData["income-royalties"];
   const otherTaxes = state.sectionData["other-taxes"];
   const k3Election = otherTaxes?.foreignTaxElection;
@@ -1705,6 +1706,12 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
+      ...(rentals?.entries?.some(entry => entry.sourceFactsConfirmed === true) ? {
+        "income-rental": {
+          ...rentals,
+          entries: rentals.entries.map(entry => entry.sourceFactsConfirmed === true ? { ...entry, sourceFactsConfirmed: null } : entry),
+        },
+      } : {}),
       ...(state.sectionData["income-investments"]?.digitalAssetEntries?.some(entry => entry.transactions?.some(row => row.marketDiscountFacts)) ? { "income-investments": { ...state.sectionData["income-investments"]!, digitalAssetEntries: state.sectionData["income-investments"]!.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } } : {}),
       ...(state.sectionData.adjustments?.codPrincipalResidenceSources ? { adjustments: { ...state.sectionData.adjustments, codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(state.sectionData.adjustments.codPrincipalResidenceSources) } } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
