@@ -1,5 +1,60 @@
 # 2026 upgrade implementation evidence
 
+## November 20 original student loan and retirement statements
+
+`cdfdd050` presents literal box evidence from supported official 2026
+Form 1098-E and Form 1099-R Copy B originals in the matching guided
+interview. The printed year takes precedence over a historical filename.
+The 1098-E review preserves exact Box 1 cents and shows the actual Box 2
+mark when its appearance is clear. The 1099-R review distinguishes an
+observed blank Box 2a from explicit zero and separates its two Box 2b marks,
+withholding, distribution code and IRA designation. Every value remains
+attached to the document for review. The upload supplies no calculation
+input, eligibility finding, fixture seed or filing permission.
+[IRS Form 1098-E Copy B](https://www.irs.gov/pub/irs-pdf/f1098e.pdf#page=3) ·
+[IRS Form 1099-R Copy B](https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf#page=4).
+
+Missing, duplicated or conflicting year evidence remains unidentified by
+year. The recognized form bypasses old sample seeding; uncertain boxes
+stay manual. Mixed W-2 and 1099-R pages require separate originals. The
+official W-2 informational packet retains its existing warning.
+Independent engineering review checked these conditions with actual
+IRS-derived pages. All 167 focused tests, 9,734 spec references, type
+checking, lint, the production web build and all 22 Chromium cases passed.
+Chromium verified the original bytes and persisted notes across reload.
+Its first harness instrumented only IndexedDB `put`, missing the app's
+normal upload `add`; both operations were tracked in the passing run.
+
+Both exact local suites passed 29,665 tests across 2,171 files. Branch
+coverage was 88.26%, and both owned PostgreSQL 16.16 instances stopped.
+All eight exact static checks and the exact GitHub Docker workflow passed.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44844541414).
+Vercel confirmed that the protected test-mode Preview was ready on
+`cdfdd050`, with no production alias. All 12 workspace checks passed,
+including save and reopen across revisions, separate sessions, sign-out,
+deletion and absence in a fresh session.
+
+## November 20 Stripe Sandbox catalog and billing baseline
+
+The configured tax-engine Preview price IDs matched active test-only
+monthly prices of $19 and $49 in the Viva La Tax Sandbox. The same prices
+were present in the separate outage Sandbox under different IDs. The
+protected `1a9bfd0d` Preview passed all four read-only billing checks. Its
+authorized synthetic actor displayed an active Starter subscription, 1,000
+included cents remaining and zero top-up cents remaining. Both plan cards
+offered management of the existing subscription. AI qualification remained
+pending and the page offered no top-up checkout. A second authorized actor
+passed the same four checks and displayed a canceled Starter subscription
+with both checkout choices enabled. The page supplies no lifetime purchase
+history or ledger reconciliation. The sole enabled test webhook accepts
+checkout completion and points to an older protected Preview. Current
+checkout and signed event processing remain open. The earlier scoped
+database read used Neon's Query Editor. Reconciliation requires a scoped
+read against the database bound to the current Preview, with the two
+previously authorized test accounts and the exact new Stripe event and
+Session. The historical synthetic-schema credential is no longer usable
+for that rehearsal. The webhook and test subscriptions were left intact.
+
 ## November 20 official W-2 informational packet correction
 
 The full `2c689ee2` managed macOS and Linux suites each passed 646 of the
@@ -22,11 +77,25 @@ Both exact local suites passed 29,650 tests across 2,169 files. Branch
 coverage was 88.24% (86,070 of 97,532). Both temporary PostgreSQL 16.16
 servers shut down normally. All eight exact static checks, 9,729 spec
 references, and the exact Docker workflow passed.
+All six exact GitHub CI jobs passed.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44838740467) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44838740444).
 
 The complete exact managed macOS run passed all 650 active browser cases
 and retained the five original skips. The launcher exited successfully
 with the original deadlines and zero retries.
+
+Exact managed Linux passed 648 cases with five original skips. Both
+failures were RRTA saved-PDF inspection deadlines. Strict AMD64 passed
+642 cases with five original skips and eight Ohio browser deadlines.
+It also passed Compose recovery, independent archive import and cleanup.
+Strict ARM64 passed image smoke, Compose recovery and cleanup. Its browser
+suite passed 641 cases with five original skips and nine Ohio deadlines.
+All four school-district cases timed out on both strict architectures,
+at different steps. The runs did not reproduce the W-2 regressions.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573332) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573400) ·
+[Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44838794520/job/136650654231).
 
 The exact protected `1a9bfd0d` Preview reached READY in test billing mode
 without a production alias. All 12 synthetic workspace lifecycle checks
