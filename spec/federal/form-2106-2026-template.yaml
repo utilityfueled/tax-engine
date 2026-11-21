@@ -7,9 +7,20 @@ postedAt: "2026-11-20"
 retrievedAt: "2026-11-20T18:56:43Z"
 notes: |
   The regular and annual archive IRS PDFs match. The regular instructions
-  still identify 2025. The existing Schedule 1 line 12 scope accepts a
-  validated manual total. The final 2026 blank is pinned for physical
-  identification and has no line map, calculation, or export registration.
+  still identify 2025. The internal lodging-only projection relies on the
+  final 2026 face, 26 U.S.C. §§ 62(a)(2)(E), 162(a)(2), 162(p) and 274(d),
+  and the GSA FY 2026 Abilene lodging ceiling. The 2025 final instructions
+  confirm the nonvehicle reading. The existing Schedule 1 line 12 accepts
+  a validated manual total and remains the calculation and transfer path.
+  Compare the candidate amount to that manual source while the 2026 return
+  calculation gate remains closed.
+  The projection is available only through this dedicated internal helper.
+references:
+  finalPriorInstructions: "https://www.irs.gov/pub/irs-prior/i2106--2025.pdf"
+  reservistAdjustment: "https://uscode.house.gov/us/usc/119-136/t26/s62/"
+  reservistTravel: "https://uscode.house.gov/us/usc/119-118/t26/s162/"
+  substantiation: "https://uscode.house.gov/us/usc/119-118/t26/s274/"
+  gsaLodgingCeiling: "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Abilene&fiscal_year=2026&state=TX"
 lines:
   - line: "revision"
     description: "Pin the official final annual blank"
@@ -19,7 +30,26 @@ lines:
     description: "Confirm the two official pages and their widget census"
     formula: "Preserve 24 widgets on page one and 63 widgets on page two. Across both pages the blank contains 79 text fields and 8 checkboxes."
     testRef: "tests/pdf/form-2106-2026-candidate.test.ts::confirms the physical page and widget census"
+  - line: "lodging-evidence"
+    description: "Match the taxpayer, reservist duty and original paid lodging"
+    formula: >-
+      Require one primary-only single 2026 return and original 2026 duty and lodging records with the same primary owner name as the return.
+      Require a qualifying reserve component, performance of official reserve duty, tax-home and distance evidence of more than 100 miles,
+      required overnight business travel, and matching January dates and duty/lodging location in Abilene, TX.
+      Require one night, an itemized receipt paid by this taxpayer at checkout, and documentary references for the orders, duty performed,
+      tax home and distance, and confirmation that lodging was neither employer-paid, reimbursed, nor reimbursable.
+      Hold cases with any other Form 2106 expenses, more trips, duplicate deductions or incomplete evidence.
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::holds incomplete, conflicting, or out-of-scope originals"
+  - line: "3,6A,8A,9A,10"
+    description: "Show only qualifying, unreimbursed overnight lodging on the 2026 face"
+    formula: >-
+      Line 3 is the paid room-only amount from the original itemized lodging receipt, in exact positive whole dollars through the published
+      $110 nightly GSA ceiling for Abilene in January 2026. Case amounts over the cap or with nonzero cents require separate review.
+      Line 6 column A equals line 3. Skip line 7 with no reimbursements. Lines 8A, 9A and 10 each equal line 6A.
+      Leave lines 1, 2, 4, 5, the meals column, and Part II blank. Leave the three SSN fields blank and label both pages for review.
+      Require exact reconciliation of line 10 to the existing manual Schedule 1 line 12 input for this return before projecting any fields.
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::round-trips original lodging through Form 2106 and Schedule 1 line 12"
   - line: "closed-exports"
     description: "Keep the candidate outside public review and filing"
-    formula: "The 2025 and 2026 review template registries reject these bytes. The candidate has no route, field map, or export registration."
+    formula: "The 2025 and 2026 review template registries reject these bytes. The projection has no public route or export registration."
     testRef: "tests/pdf/form-2106-2026-candidate.test.ts::keeps the physical candidate outside public exports"

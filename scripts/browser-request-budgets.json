@@ -1493,7 +1493,7 @@
     "src/pdf/mappings/2025/template-manifest.ts": "950af666631f4edd04f3c95a6e59cbc91db85bcc8278f344206a90eb62b45053",
     "src/pdf/mappings/2026/form-1040-v-candidate.ts": "2332b925bfb464389138ccd880d4507cb0d11a9fba3be53d4cfe4ba0ca890615",
     "src/pdf/mappings/2026/form-1062-candidate.ts": "9c9fdb83e19c83cb88b020363168ec06cf9a10583ca6834463332fda65fe0cfb",
-    "src/pdf/mappings/2026/form-2106-candidate.ts": "7d9c4f75837e08746031976b0610127e02869b3b362e1fc1513935378988b0fa",
+    "src/pdf/mappings/2026/form-2106-candidate.ts": "0ad19b189aec231a2b3280ba398e29c84cbcec4ac9d97648a31cc311278a0348",
     "src/pdf/mappings/2026/form-2555-candidate.ts": "d5969a9877b6ffc0bdab0b667755b2c63094ea721917ad712adc9070fe933e7b",
     "src/pdf/mappings/2026/form-3903-candidate.ts": "4878cc7fa97c8381705d497e83ccb73c70a8e084c58f4c47072faf155f0a060b",
     "src/pdf/mappings/2026/form-4952-candidate.ts": "3e8d46176058ac33b543fc39e8aebdb465be43537f1e868c0d5e50634e68900f",
