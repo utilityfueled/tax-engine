@@ -967,12 +967,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     "Sum 1099-INT Box 8 + 1099-DIV Box 12 + source-classified 1099-OID Box11 and stated interest + K-1 Box 18A + K-1 1041 Box 14A");
 
   // Lines 2b, 3a, 3b: Interest and dividends via Schedule B
-  const preliminaryScheduleB = calculateScheduleB(input);
+  const form8814QualifiedDividends = form8814?.totalQualifiedDividends ?? new Decimal(0);
+  const preliminaryScheduleB = calculateScheduleB(input, undefined, form8814QualifiedDividends);
   const totalInterestBeforeSavingsBondExclusion = preliminaryScheduleB.totalInterest;
 
-  // Qualified dividends (not on Schedule B — it only handles ordinary)
-  // Form 8814 Line 9 qualified dividends flow to BOTH Lines 3a and 3b
-  const form8814QualifiedDividends = form8814?.totalQualifiedDividends ?? new Decimal(0);
+  // Form 8814 Line 9 is part of both qualified and ordinary dividends.
   const qualifiedDividends = sum(
     divAgg.qualifiedDividends,
     k1Agg.qualifiedDividends,
@@ -982,8 +981,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("1040", "3a", "Qualified dividends", qualifiedDividends,
     "Sum 1099-DIV Box 1b + K-1 Box 6b + K-1 1041 Box 2b + Form 8814 Line 9");
 
-  // Form 8814 Line 9 also adds to ordinary dividends (qualified dividends are a subset)
-  const totalDividends = preliminaryScheduleB.totalOrdinaryDividends.plus(form8814QualifiedDividends);
+  const totalDividends = preliminaryScheduleB.totalOrdinaryDividends;
 
   const form1099SA = calculateForm1099SA(input.form1099SA, year);
   audit.merge(form1099SA.lines);
@@ -2578,7 +2576,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     });
     audit.merge(educatorExclusions.lines);
   }
-  const schedB = calculateScheduleB(input, savingsBondExclusion);
+  const schedB = calculateScheduleB(input, savingsBondExclusion, form8814QualifiedDividends);
   audit.merge(schedB.lines);
   const totalTaxableInterest = schedB.taxableInterest;
   audit.record("1040", "2b", "Taxable interest", totalTaxableInterest, "Schedule B Line 4");

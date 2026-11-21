@@ -92,6 +92,28 @@ lines:
       - "Capital gain distributions from 1099-DIV Box 2a go to Schedule D, not here"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 5 - list dividend payers"
 
+  - line: "5-child-election"
+    description: "List the qualified dividends transferred from valid child elections"
+    formula: "Add the sum of the elected Form 8814 Line 9 amounts as a Form 8814 payer on Line 5. Include the amount in Line 6 and compare those full ordinary dividends to the strict $1,500 filing threshold. Carry Line 6 to Form 1040 Line 3b once. Form 1040 Line 3a includes the same child amount as qualified dividends."
+    irsRef: "Form 8814 Additional Instructions, Line 9; Schedule B Lines 5 and 6"
+    sources:
+      - "https://www.irs.gov/instructions/i8814"
+      - "https://www.irs.gov/pub/irs-prior/f1040sb--2025.pdf"
+    testRef: "tests/engine/forms/form-8814.test.ts::reports the elected qualified dividends once on Schedule B and Form 1040"
+    testRefs:
+      - "tests/engine/forms/form-8814.test.ts::applies the $1,500 Schedule B threshold to parent and elected dividends together"
+
+  - line: "5-child-election-2025-review-pdf"
+    description: "Place elected dividends and the full total in the official 2025 review template"
+    formula: "The 2025 Schedule B template has 15 distinct dividend payer name and amount pairs. The last pair is f1_62 and f1_63, and the separate Line 6 total is f1_64. Preserve each parent payer and the Form 8814 entry when all fit. When an election-bearing Schedule B has more than 15 dividend payers in total, retain all engine rows and the computed total and explicitly reject this review PDF export before writing packet files."
+    irsRef: "2025 Schedule B, Part II, Lines 5 and 6; Form 8814 Additional Instructions, Line 9"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f1040sb--2025.pdf"
+      - "https://www.irs.gov/instructions/i8814"
+    testRef: "tests/pdf/fill-schedule-b-d-se.test.ts::writes the Form 8814 payer and full Line 6 in distinct saved PDF fields at capacity"
+    testRefs:
+      - "tests/pdf/fill-schedule-b-d-se.test.ts::rejects a review PDF when Form 8814 exceeds dividend row capacity and preserves every calculated payer"
+
   - line: "6"
     description: "Total ordinary dividends"
     formula: "Sum of all dividend amounts listed in Line 5"

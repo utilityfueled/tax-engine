@@ -119,8 +119,10 @@ lines:
     description: "Qualified dividends to report on parent's return"
     formula: "Line 6 × Line 7"
     irsRef: "Form 8814 Instructions, Line 9"
-    notes: "Reports to parent's Form 1040 Lines 3a and 3b. Labeled 'Form 8814'."
+    notes: "Reports to the parent's Form 1040 Lines 3a and 3b. If Schedule B is filed, identify the elected amount as Form 8814 on Schedule B Line 5. The combined parent and elected ordinary dividends trigger Schedule B when they exceed $1,500."
     testRef: "tests/engine/forms/form-8814.test.ts::Form 8814 Line 9 - qualified dividends allocated proportionally"
+    testRefs:
+      - "tests/engine/forms/form-8814.test.ts::reports the elected qualified dividends once on Schedule B and Form 1040"
 
   - line: "10"
     description: "Capital gain distributions to report on parent's return"

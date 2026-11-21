@@ -33,7 +33,7 @@ import { fillSchedule1 } from "./fill-schedule-1.js";
 import { fillSchedule2 } from "./fill-schedule-2.js";
 import { fillSchedule3 } from "./fill-schedule-3.js";
 import { fillScheduleA } from "./fill-schedule-a.js";
-import { fillScheduleB } from "./fill-schedule-b.js";
+import { assertScheduleBReviewCapacity, fillScheduleB } from "./fill-schedule-b.js";
 import { fillScheduleC } from "./fill-schedule-c.js";
 import { fillScheduleD } from "./fill-schedule-d.js";
 import { fillScheduleE } from "./fill-schedule-e.js";
@@ -464,6 +464,7 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  if (result.scheduleB?.isRequired) assertScheduleBReviewCapacity(result);
   assertCashFarmCrpReview(input,result);
   const rrtaRequested=requiresRRTAPayrollReview(input,result)||options.rrtaPayrollReview!==undefined;
   const rrtaOriginal=rrtaRequested?rrtaPayrollReviewOriginalInput(input,result,options.rrtaPayrollReview):undefined;

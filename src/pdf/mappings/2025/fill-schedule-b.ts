@@ -6,7 +6,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  * Schedule B uses "topmostSubform[0]" as root.
  *
  * Part I: Interest payers (up to 14 rows), total, exclusion, taxable interest.
- * Part II: Dividend payers (up to 14 rows), total ordinary dividends.
+ * Part II: Dividend payers (up to 15 rows), total ordinary dividends.
  * Part III: Foreign accounts / trusts checkboxes.
  */
 
@@ -30,7 +30,7 @@ const p1 = (n: string) => `topmostSubform[0].Page1[0].${n}`;
 // Part I: Interest (14 payer rows × 2 fields each: name + amount)
 //   Payer names: f1_03 through f1_16 (odd-indexed from ReadOrder, then sequential)
 //   Payer amounts: f1_04 through f1_30 (even-indexed)
-// Part II: Dividend (16 payer rows × 2 fields each: name + amount)
+// Part II: Dividend (15 payer rows × 2 fields each: name + amount)
 // Part III: Foreign accounts
 
 const FIELDS = {
@@ -96,7 +96,6 @@ const FIELDS = {
     p1("f1_58[0]"),
     p1("f1_60[0]"),
     p1("f1_62[0]"),
-    p1("f1_64[0]"),
   ],
   dividendPayerAmount: [
     p1("f1_35[0]"),  // Row 1 amount
@@ -114,11 +113,10 @@ const FIELDS = {
     p1("f1_59[0]"),
     p1("f1_61[0]"),
     p1("f1_63[0]"),
-    p1("f1_64[0]"),  // Last row — may double as summary on some layouts
   ],
 
   // ── Part II Summary ──
-  line6: p1("f1_65[0]"),  // Total ordinary dividends → 1040 Line 3b
+  line6: p1("f1_64[0]"),  // Total ordinary dividends → 1040 Line 3b
 
   // ── Part III: Foreign Accounts ──
   // Line 7a: Yes/No for foreign accounts (radio pair)
@@ -130,6 +128,15 @@ const FIELDS = {
   line8Yes: p1("c1_2[0]"),
   line8No: p1("c1_2[1]"),
 } as const;
+
+const dividendPayerCapacity = FIELDS.dividendPayerName.length;
+
+export function assertScheduleBReviewCapacity(result: TaxReturnResult): void {
+  const sb = result.scheduleB;
+  if (sb && sb.dividendPayers.length > dividendPayerCapacity && result.form8814?.totalQualifiedDividends.gt(0)) {
+    throw new Error(`Schedule B review PDF cannot include Form 8814 with more than ${dividendPayerCapacity} dividend payer rows.`);
+  }
+}
 
 // ─── Fill Logic ────────────────────────────────────────────────────────────
 
@@ -143,6 +150,7 @@ export async function fillScheduleB(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  assertScheduleBReviewCapacity(result);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
@@ -169,7 +177,7 @@ export async function fillScheduleB(
   setCurrencyField(form, F.line4, sb.taxableInterest);
 
   // ── Part II: Dividend Payers ──
-  const maxDivRows = Math.min(sb.dividendPayers.length, F.dividendPayerName.length);
+  const maxDivRows = Math.min(sb.dividendPayers.length, dividendPayerCapacity);
   for (let i = 0; i < maxDivRows; i++) {
     const payer = sb.dividendPayers[i];
     setTextField(form, F.dividendPayerName[i], payer.name);

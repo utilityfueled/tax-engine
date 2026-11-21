@@ -7,6 +7,7 @@ import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateForm8814, aggregateForm8814Results } from "@/engine/forms/form-8814.js";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { Form1099DivSchema } from "@/models/inputs.js";
 import type { TaxYearInput, Form8814ChildInput } from "@/models/inputs.js";
 import { getConstants } from "@/models/constants.js";
 import { syntheticChildElection } from "../../fixtures/form-8814-election.js";
@@ -298,6 +299,41 @@ describe("Form 8814 — Parents' Election To Report Child's Interest and Dividen
       expect(result.qualifiedDividends.greaterThan(0)).toBe(true);
       // Parent total dividends should also include Form 8814 Line 9
       expect(result.totalDividends.greaterThan(0)).toBe(true);
+    });
+
+    it("reports the elected qualified dividends once on Schedule B and Form 1040", () => {
+      const result = calculateFederalTax(makeParentFederalInput([{
+        taxableInterest: "0", ordinaryDividends: "5000", qualifiedDividends: "5000", capitalGainDistributions: "0",
+      }]));
+
+      expect(result.form8814?.totalQualifiedDividends.toFixed()).toBe("2300");
+      expect(result.qualifiedDividends.toFixed()).toBe("2300");
+      expect(result.totalDividends.toFixed()).toBe("2300");
+      expect(result.scheduleB?.isRequired).toBe(true);
+      expect(result.scheduleB?.dividendPayers).toEqual([{ name: "Form 8814", amount: new Decimal("2300") }]);
+      expect(result.scheduleB?.totalOrdinaryDividends.toFixed()).toBe("2300");
+    });
+
+    it("applies the $1,500 Schedule B threshold to parent and elected dividends together", () => {
+      const children = ["3300", "3100"].map(amount => ({
+        taxableInterest: "0", ordinaryDividends: amount, qualifiedDividends: amount, capitalGainDistributions: "0",
+      }));
+      for (const [secondDividend, total, isRequired] of [["400", "1500", false], ["401", "1501", true]] as const) {
+        const result = calculateFederalTax(makeParentFederalInput(children, { form1099Div: [
+          Form1099DivSchema.parse({ payer: "First Fund", taxYear: 2025, ordinaryDividends: "100", qualifiedDividends: "50" }),
+          Form1099DivSchema.parse({ payer: "Second Fund", taxYear: 2025, ordinaryDividends: secondDividend, qualifiedDividends: "0" }),
+        ] }));
+
+        expect(result.scheduleB?.dividendPayers).toEqual([
+          { name: "First Fund", amount: new Decimal("100") },
+          { name: "Second Fund", amount: new Decimal(secondDividend) },
+          { name: "Form 8814", amount: new Decimal("1000") },
+        ]);
+        expect(result.scheduleB?.totalOrdinaryDividends.toFixed()).toBe(total);
+        expect(result.scheduleB?.isRequired).toBe(isRequired);
+        expect(result.qualifiedDividends.toFixed()).toBe("1050");
+        expect(result.totalDividends.toFixed()).toBe(total);
+      }
     });
 
     it("Form 8814 capital gains flow to parent's capital gain/loss (Line 7)", () => {

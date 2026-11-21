@@ -6,12 +6,16 @@ const testOutputDir = useTemporaryPdfOutput();
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
+import { access, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import { fillScheduleB, SCHEDULE_B_FIELDS } from "@/pdf/fill-schedule-b.js";
 import { fillScheduleD, SCHEDULE_D_FIELDS } from "@/pdf/fill-schedule-d.js";
 import { fillScheduleSE, SCHEDULE_SE_FIELDS } from "@/pdf/fill-schedule-se.js";
 import { complexMFJFixture, simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { syntheticChildElection } from "../fixtures/form-8814-election.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
 
 /** Helper: get text value from a filled PDF field. */
@@ -43,6 +47,19 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
 const BLANK_SB = "forms/blank/2025/f1040sb.pdf";
 const BLANK_SD = "forms/blank/2025/f1040sd.pdf";
 const BLANK_SSE = "forms/blank/2025/f1040sse.pdf";
+
+function scheduleBWithChildElection(parentPayerCount: number) {
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture,
+    form1099Div: Array.from({ length: parentPayerCount }, (_, index) => ({
+      taxYear: 2025, payer: `Parent Fund ${index + 1}`, ordinaryDividends: "100", qualifiedDividends: "0",
+    })),
+    form8814: [{
+      taxableInterest: "0", taxExemptInterest: "0", ordinaryDividends: "5000", qualifiedDividends: "5000",
+      capitalGainDistributions: "0", electionFacts: syntheticChildElection(),
+    }],
+  });
+}
 
 // ─── Schedule B — MFJ with interest and dividends ─────────────────────────
 
@@ -273,6 +290,45 @@ describe("Schedule SE PDF fill — simple filer with no SE income", () => {
 // ─── Orchestrator integration ────────────────────────────────────────────
 
 describe("fillReturn orchestrator with Schedule B, D, SE", () => {
+  it("writes the Form 8814 payer and full Line 6 in distinct saved PDF fields at capacity", async () => {
+    const { fillReturn } = await import("@/pdf/fill-return.js");
+    const input = scheduleBWithChildElection(14);
+    const result = calculateFederalTax(input);
+    const outputDir = join(testOutputDir, "schedule-b-election-at-capacity");
+    await fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir });
+    const saved = await PDFDocument.load(await readFile(join(outputDir, "f1040sb-filled.pdf")));
+
+    // Literal official widget names independently bind the physical rows and total.
+    const field = (suffix: string) => getFieldText(saved, `topmostSubform[0].Page1[0].${suffix}[0]`);
+    expect(field("ReadOrderControl[0].f1_34")).toBe("Parent Fund 1");
+    expect(field("f1_35")).toBe("100");
+    expect(field("f1_60")).toBe("Parent Fund 14");
+    expect(field("f1_61")).toBe("100");
+    expect(field("f1_62")).toBe("Form 8814");
+    expect(field("f1_63")).toBe("2300");
+    expect(field("f1_64")).toBe("3700");
+    expect(field("f1_65")).toBeUndefined();
+  });
+
+  it("rejects a review PDF when Form 8814 exceeds dividend row capacity and preserves every calculated payer", async () => {
+    const { fillReturn } = await import("@/pdf/fill-return.js");
+    const overflow = /Schedule B review PDF cannot include Form 8814 with more than 15 dividend payer rows/;
+    for (const [parentPayerCount, total] of [[15, "3800"], [16, "3900"]] as const) {
+      const input = scheduleBWithChildElection(parentPayerCount);
+      const result = calculateFederalTax(input);
+
+      expect(result.scheduleB?.dividendPayers.map(({ name }) => name)).toEqual([
+        ...input.form1099Div.map(({ payer }) => payer), "Form 8814",
+      ]);
+      expect(result.scheduleB?.totalOrdinaryDividends.toFixed()).toBe(total);
+      expect(result.totalDividends.toFixed()).toBe(total);
+      await expect(fillScheduleB(input, result, BLANK_SB).then(() => undefined)).rejects.toThrow(overflow);
+      const outputDir = join(testOutputDir, `schedule-b-election-overflow-${parentPayerCount}`);
+      await expect(fillReturn(input, result, { blankFormsDir: "forms/blank", outputDir })).rejects.toThrow(overflow);
+      await expect(access(outputDir)).rejects.toMatchObject({ code: "ENOENT" });
+    }
+  });
+
   it("fills all applicable forms for complex filer", { timeout: 30_000 }, async () => {
     const { fillReturn } = await import("@/pdf/fill-return.js");
     const result = calculateFederalTax(complexMFJFixture);
