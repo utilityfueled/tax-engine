@@ -47,10 +47,9 @@ lines:
       On the federal return, the child's itemization fact must agree with the selected
       deduction method. The stated directly connected deductible amount must not
       exceed allowed Schedule A line 17. Reject inconsistent amounts instead of
-      reducing them to the limit. An itemizing child with positive qualified
-      dividends or net long-term capital gain requires the separately classified
-      deductions used by the applicable Line 5 worksheet when the form
-      continues past line 5.
+      reducing them to the limit. When an itemizing child continues to Worksheet
+      2 or 3, also require the portion directly connected with qualified
+      dividends and net capital gain.
     irs_reference: "2025 Form 8615 Instructions, Line 2 and Eleanor example (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf); IRC §1(g)(4)(A)(ii); Rev. Proc. 2024-40 §2.02"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 2 - reproduces the IRS Eleanor example"
 
@@ -73,12 +72,15 @@ lines:
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 5 - net unearned income capped at child's taxable income"
 
   - line: "5-worksheet-1"
-    description: "2025 ordinary preferential-income allocation for a nonitemizing child"
+    description: "2025 preferential-income allocation when Line 2 equals $2,700"
     formula: >-
-      Admit a nonitemizing child with positive equal Lines 3 and 5, confirmed
+      Require Line 2 equal to $2,700 and positive equal Lines 3 and 5, confirmed
       ordinary QDCG treatment for the child, and no other child using the same
-      parent's return. Reconcile the parent's actual adjusted Form 1040 Line 16
-      and confirmed ordinary or QDCG method with the reported parent amounts.
+      parent's return. This includes itemizers whose reported Line 2 expenses
+      yield the $2,700 threshold. The allocation uses the $2,700 threshold and
+      requires no separate preferential-income deduction amount. Reconcile the
+      parent's actual adjusted Form 1040 Line 16 and confirmed ordinary or
+      QDCG method with the reported parent amounts.
       Exclude unrecaptured Section 1250 and 28 percent gain and special tax methods.
       Compute each reported qualified dividend and net capital gain fraction
       against Line 1 with Decimal precision. Subtract the $2,700 threshold times
@@ -96,7 +98,7 @@ lines:
       stop. Apply the Lines 3 and 5 stop rules before requiring Worksheet 1
       method facts. An unsupported composition requires a separate worksheet.
     irs_reference: "2025 Form 8615 Instructions, 2025 Line 5 Worksheet #1 and Lines 8, 9, 10, 14, 15 and 17 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf)"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 1 treats allocated child dividends as preferential at the parent rate"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 1 uses only the threshold allocation for an itemizer at $2,700"
 
   - line: "5-worksheet-2"
     description: "2025 ordinary preferential-income allocation for an itemizing child"
@@ -117,10 +119,8 @@ lines:
       balance. Use the allocations on Line 9, their respective residuals on
       Line 15, and the full child amounts on Line 17.
     notes: >-
-      Itemizing cases with Line 2 equal to $2,700 remain outside the supported
-      Worksheet 1 path. Worksheets outside the supported compositions still
-      require separate work. Apply the Form 8615 stop rules before requiring
-      the deduction amount specific to Worksheet 2. Reconcile Line 1 and
+      Apply the Form 8615 stop rules before requiring the deduction amount
+      specific to Worksheet 2. Reconcile Line 1 and
       preference amounts from supported federal sources before accepting a
       Line 3 stop. For other income sources preserve the existing stop result
       and require a separate method before applying a preferential worksheet.

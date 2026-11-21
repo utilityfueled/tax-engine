@@ -138,7 +138,7 @@ export function calculateForm8615(
 
   const hasParentQDCG = parentQD.greaterThan(0) || parentLTCG.greaterThan(0);
   const facts = hasChildPreferences ? input.preferentialWorksheetFacts : undefined;
-  const worksheet = line5.lt(line3) ? 3 : input.childItemizesDeductions ? 2 : 1;
+  const worksheet = line5.lt(line3) ? 3 : line2.gt(unearnedIncomeThreshold) ? 2 : 1;
   let qdOnLine5 = zero;
   let gainOnLine5 = zero;
   if (hasChildPreferences) {
@@ -153,11 +153,8 @@ export function calculateForm8615(
       || parentQD.lt(0) || parentLTCG.lt(0) || parentQD.plus(parentLTCG).gt(line6)) {
       throw new Error("Form 8615 reported preferential amounts must fit within the verified income");
     }
-    if (worksheet === 2 && line2.lte(unearnedIncomeThreshold)) {
-      throw new Error("Form 8615 Worksheet 2 requires Line 2 above the unearned-income threshold");
-    }
     let preferentialDeductions = zero;
-    if (input.childItemizesDeductions) {
+    if (input.childItemizesDeductions && worksheet !== 1) {
       const reportedPreferentialDeductions = facts.childPreferentialIncomeConnectedDeductions?.trim();
       const expense = reportedPreferentialDeductions ? d(reportedPreferentialDeductions) : undefined;
       if (!expense?.isFinite() || expense.lt(0)

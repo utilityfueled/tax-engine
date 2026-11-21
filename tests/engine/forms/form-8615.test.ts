@@ -311,6 +311,47 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     },
   } satisfies Partial<Form8615Input>;
 
+  it("Form 8615 Worksheet 1 uses only the threshold allocation for an itemizer at $2,700", () => {
+    const input = TaxYearInputSchema.parse(makeFederalInput({
+      ...ordinaryParentWorksheet,
+      childItemizesDeductions: true,
+      childDirectlyConnectedItemizedDeductions: "1350",
+      childUnearnedIncome: "10000", childQualifiedDividends: "2000", childNetLTCG: "500",
+    }, {
+      standardDeductionFacts: dependentDeductionFacts,
+      form4952: { investmentInterestExpense: "1350", grossInvestmentIncome: "7500" },
+      donations: [{
+        organization: "Public charity", type: "cash", amount: "650", dateOfDonation: "2025-12-01",
+        qualifiedOrganization: true, isPrivateFoundation: false,
+      }],
+      form1099Int: [{ ...makeFederalInput().form1099Int[0], interestIncome: "7500" }],
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "2000", qualifiedDividends: "2000",
+        totalCapitalGainDistributions: "500",
+      }],
+    }));
+    const result = calculateFederalTax(input);
+    const form = result.form8615;
+
+    expect(result.deductionUsed).toBe("itemized");
+    expect(result.itemizedDeductions.toFixed()).toBe("2000");
+    expect(form?.lines.find(row => row.line === "2")?.value.toFixed()).toBe("2700");
+    expect(form?.netUnearnedIncome.toFixed()).toBe("7300");
+    expect(form?.netUnearnedAtParentRate.toFixed()).toBe("7300");
+    expect(form?.lines.find(row => row.line === "9")?.inputs).toMatchObject({
+      line5Worksheet: "1",
+      childQualifiedDividendsOnLine5: new Decimal("1460"),
+      childNetCapitalGainOnLine5: new Decimal("365"),
+    });
+    // The $700 remainder includes $675 in preferential income and $25 of ordinary income.
+    expect(form?.childRateIncome.toFixed()).toBe("700");
+    expect(form?.taxOnChildRateIncome.toFixed()).toBe("4");
+    expect(form?.taxAtChildOwnRate.toFixed()).toBe("553");
+    expect(result.allLines).toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", description: "Tax (Form 8615)", value: new Decimal("2030"),
+    }));
+  });
+
   it("uses Worksheet 2 on the federal return with reconciled Schedule A and investment income", () => {
     const input = makeFederalInput(itemizingWorksheet, {
       standardDeductionFacts: dependentDeductionFacts,
@@ -378,7 +419,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       .toThrow(/Worksheet 2 requires explicit deductible/);
   });
 
-  it("accepts an explicitly reported zero and enforces the Worksheet 2 Line 2 limit", () => {
+  it("accepts explicitly reported zero preferential expenses for Worksheet 2", () => {
     const input = makeInput({
       ...itemizingWorksheet,
       preferentialWorksheetFacts: {
@@ -392,8 +433,6 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       childQualifiedDividendsOnLine5: new Decimal("2595"),
       childNetCapitalGainOnLine5: new Decimal("1730"),
     });
-    expect(() => calculateForm8615({ ...input, childDirectlyConnectedItemizedDeductions: "1350" },
-      new Decimal("8000"), "single", constants)).toThrow(/Line 2 above/);
   });
 
   it("Form 8615 Worksheet 3 allocates itemized deductions using actual federal AGI and Schedule A", () => {
