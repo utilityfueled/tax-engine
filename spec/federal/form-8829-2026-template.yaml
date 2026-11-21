@@ -7,12 +7,21 @@ retrievedAt: "2026-11-20T11:01:26Z"
 notes: |
   The regular IRS PDF is the final 2026 blank. The regular instructions
   still identify 2025. The 2026 instructions dated August 19 are a draft.
-  This physical candidate covers printed locations and destinations. The
-  existing 2025 output is a calculated reference summary. Final annual
-  instructions, actual financial review and independent qualification
-  remain required before annual use. The shared review notice overlaps
-  the printed IRS footer below line 44 on this blank. The candidate-only
-  diagnostic uses the empty top margin to preserve that footer.
+  This physical candidate covers printed locations, destinations, and the
+  confirmed one-home renter projection below. The existing 2025 output
+  is a calculated reference summary. Final annual instructions, actual
+  financial review and independent qualification remain required before
+  annual use. The review notice uses the empty top margin to preserve
+  the printed IRS footer below line 44.
+  The most recent final Form 8829 instructions, page 2, distinguish all
+  Schedule C gross income from business use of the home from income earned
+  at another business location. The draft 2026 instructions retain that rule.
+  See https://www.irs.gov/pub/irs-pdf/i8829.pdf#page=2 and
+  https://www.irs.gov/pub/irs-dft/i8829--dft.pdf#page=3.
+  The same final instructions distinguish indirect expenses allocable at the
+  area percentage from expenses with a different business share. Publication
+  587 limits actual expenses to the period of qualifying business use.
+  See Part-year use in https://www.irs.gov/publications/p587.
 lines:
   - line: "revision"
     description: "Pin the official final annual blank"
@@ -41,6 +50,46 @@ lines:
     description: "Confirm all text fields can retain distinct synthetic values"
     formula: "Mark the specimen's empty top margin for review, save the edited AcroForm and reopen it. Verify canonical values and nonempty widget appearances, including both expense columns and separate Part IV amounts."
     testRef: "tests/pdf/form-8829-2026-candidate.test.ts::reopens distinct diagnostic values and widget appearances"
+  - line: "ordinary-renter-projection"
+    description: "Project actual one-home renter expenses and the 2027 carryovers"
+    formula: >-
+      Require a confirmed 2026 single rented home with unchanged qualifying
+      regular and exclusive business use throughout the year, documented
+      business and total area in whole square feet, a nonnegative Schedule C
+      line 29, and original indirect rent and utility totals supported at the
+      same area percentage for both expenses. Require whole dollar source
+      amounts for this projection so the printed inputs use the same whole
+      dollar convention as the existing calculation.
+      This case has no other expenses, gain or loss adjustments, or prior
+      carryovers. Compute lines 3 and 7 as the business area divided by the
+      total area and display them as percentages. Use Schedule C line 29 on
+      line 8. Show indirect rent on line 19 and utilities on line 21. The total
+      indirect expenses on line 23 times the business percentage give line 24.
+      Limit line 27 to the remaining income on line 15. Project line 36 to the
+      standalone copy and reconcile it to the expected Schedule C line 30.
+      Keep the two carryovers distinct, with line 43 showing unused operating
+      expenses and line 44 showing zero. Keep taxpayer identifiers, daycare,
+      depreciation, and unrelated expense fields blank in the review copy.
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::reopens a calculated one-home renter projection with a separate 2027 carryover"
+  - line: "ordinary-renter-line-8-source"
+    description: "Limit the direct Schedule C line 29 transfer to one home-based business"
+    formula: >-
+      Require affirmative confirmation and a source note that only one
+      Schedule C business uses the home and that all gross income for that
+      business is from business use of the home. Only then use the documented
+      Schedule C line 29 unadjusted in this no-adjustments case. Hold missing
+      confirmation, multiple businesses using the home, and any gross income
+      attributable to another business location.
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::holds Line 8 without documented sole business and home gross income"
+  - line: "ordinary-renter-percentage-presentation"
+    description: "Show an exact proportion at the native PDF field size"
+    formula: >-
+      Verify that the printed decimal percentage times the total area exactly
+      equals 100 times the business area. Require the percentage to fit both
+      pinned AcroForm fields at their native nine-point text size. Keep the
+      precision of the existing calculation. Hold repeating ratios and exact
+      values that do not fit, pending a reviewed presentation convention.
+    testRef: "tests/pdf/form-8829-2026-candidate.test.ts::saves a fitting exact percentage and holds repeating or oversized percentages"
   - line: "closed-exports"
     description: "Keep the candidate outside public review and filing"
     formula: "Keep the historical packet reference, review template registry and 2026 export policy in effect. The physical candidate has no export registration."

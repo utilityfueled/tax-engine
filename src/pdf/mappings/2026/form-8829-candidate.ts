@@ -1,4 +1,12 @@
 /** Disabled final 2026 Form 8829 physical candidate. Spec: spec/federal/form-8829-2026-template.yaml. */
+import { createHash } from "node:crypto";
+import { StandardFonts, rgb, type PDFDocument } from "pdf-lib";
+import { calculateForm8829 } from "@/engine/forms/form-8829.js";
+import { Form8829Schema } from "@/models/inputs.js";
+import { REVIEW_PDF_NOTICE } from "../../export-policy.js";
+import { loadPdfDocumentQuietly } from "../../pdf-utils.js";
+import { removeTrustedTemplateLegacyFormData } from "../../trusted-review-template-cleanup.js";
+
 const page = "topmostSubform[0].Page1[0].";
 const firstExpenseTable = page + "Table_Lines9-12[0].";
 const secondExpenseTable = page + "Table_Lines16-23[0].";
@@ -83,3 +91,106 @@ export const FORM_8829_2026_CANDIDATE = Object.freeze({
     line44: page + "f1_58[0]",
   }),
 });
+
+interface OriginalRenterAmount {
+  taxYear: number;
+  amount: string;
+  reference: string;
+}
+
+interface Form8829RenterReviewSources {
+  taxYear: number;
+  completedActualExpenseCaseConfirmed: boolean;
+  rentedOneHomeAllYearConfirmed: boolean;
+  regularExclusiveBusinessUseAllYearUnchangedConfirmed: boolean;
+  noOtherExpensesAdjustmentsOrCarryoversConfirmed: boolean;
+  sameBusinessPercentageForIndirectRentAndUtilitiesConfirmed: boolean;
+  floorArea: {
+    businessSquareFeet: number;
+    totalSquareFeet: number;
+    reference: string;
+  };
+  scheduleCLine29: OriginalRenterAmount & {
+    singleScheduleCBusinessUsingHomeConfirmed: boolean;
+    allGrossIncomeFromBusinessUseOfHomeConfirmed: boolean;
+    incomeSourceNote: string;
+  };
+  rent: OriginalRenterAmount;
+  utilities: OriginalRenterAmount;
+}
+
+const renterMoneyLines = [
+  "line8", "line13", "line14", "line15", "line19Indirect", "line21Indirect", "line23Indirect",
+  "line24", "line25", "line26", "line27", "line28", "line31", "line32", "line33", "line34",
+  "line36", "line43", "line44",
+] as const;
+const wholeDollarAmount = /^\d{1,12}(?:\.0{1,2})?$/;
+const percentageFontSize = 9;
+
+/** Project the confirmed ordinary renter case for internal review. */
+export async function fillForm8829RenterReviewCandidate(
+  sources: Form8829RenterReviewSources,
+  template: Uint8Array,
+): Promise<PDFDocument> {
+  const { taxYear, sha256, fields } = FORM_8829_2026_CANDIDATE;
+  const { floorArea, scheduleCLine29, rent, utilities } = sources;
+  const { businessSquareFeet, totalSquareFeet } = floorArea;
+  if (sources.taxYear !== taxYear || sources.completedActualExpenseCaseConfirmed !== true
+    || sources.rentedOneHomeAllYearConfirmed !== true || sources.regularExclusiveBusinessUseAllYearUnchangedConfirmed !== true
+    || sources.sameBusinessPercentageForIndirectRentAndUtilitiesConfirmed !== true
+    || sources.noOtherExpensesAdjustmentsOrCarryoversConfirmed !== true || !floorArea.reference.trim()
+    || !Number.isSafeInteger(businessSquareFeet) || !Number.isSafeInteger(totalSquareFeet)
+    || businessSquareFeet <= 0 || businessSquareFeet > totalSquareFeet
+    || [scheduleCLine29, rent, utilities].some(original =>
+      original.taxYear !== taxYear || !original.reference.trim() || !wholeDollarAmount.test(original.amount))) {
+    throw new Error("Form 8829 requires confirmed 2026 renter originals with whole dollar amounts and no other expenses, adjustments or carryovers.");
+  }
+  if (scheduleCLine29.singleScheduleCBusinessUsingHomeConfirmed !== true
+    || scheduleCLine29.allGrossIncomeFromBusinessUseOfHomeConfirmed !== true || !scheduleCLine29.incomeSourceNote?.trim()) {
+    throw new Error("Form 8829 line 8 requires a source note confirming one Schedule C business uses the home and all its gross income is from that use.");
+  }
+  if (createHash("sha256").update(template).digest("hex") !== sha256) {
+    throw new Error("Unreviewed Form 8829 template revision.");
+  }
+
+  const input = Form8829Schema.parse({
+    areaUsedForBusiness: businessSquareFeet,
+    totalAreaOfHome: totalSquareFeet,
+    grossIncomeLimit: scheduleCLine29.amount,
+    indirectExpenses: { rent: rent.amount, utilities: utilities.amount },
+  });
+  const result = calculateForm8829(input);
+  const percentage = result.line7.times(100).toFixed();
+  const [whole, fractional = ""] = percentage.split(".");
+  const displayedNumerator = BigInt(whole + fractional);
+  const displayScale = 10n ** BigInt(fractional.length);
+  if (displayedNumerator * BigInt(totalSquareFeet) !== 100n * BigInt(businessSquareFeet) * displayScale) {
+    throw new Error("Form 8829 requires an exact decimal business percentage on lines 3 and 7.");
+  }
+
+  const pdf = await loadPdfDocumentQuietly(template);
+  removeTrustedTemplateLegacyFormData(pdf);
+  const form = pdf.getForm();
+  const percentageFields = [form.getTextField(fields.line3), form.getTextField(fields.line7)];
+  const textWidth = form.getDefaultFont().widthOfTextAtSize(percentage, percentageFontSize);
+  for (const field of percentageFields) {
+    const [widget] = field.acroField.getWidgets();
+    // The text appearance adds one point of padding inside each border.
+    const inset = 1 + (widget.getBorderStyle()?.getWidth() ?? 0);
+    if (textWidth + 2 * inset > widget.getRectangle().width) {
+      throw new Error("Form 8829 requires the exact business percentage to fit lines 3 and 7 at the native text size.");
+    }
+    field.setFontSize(percentageFontSize);
+    field.setText(percentage);
+  }
+  for (const line of ["line1", "line2", ...renterMoneyLines] as const) {
+    form.getTextField(fields[line]).setText(result[line].toFixed());
+  }
+  // The IRS footer uses the bottom margin. Put the notice above the title.
+  const font = await pdf.embedFont(StandardFonts.HelveticaBold);
+  pdf.getPage(0).drawText(REVIEW_PDF_NOTICE, {
+    x: 36, y: 773, size: 10, font, color: rgb(0.65, 0.05, 0.05),
+  });
+  pdf.setSubject(REVIEW_PDF_NOTICE);
+  return pdf;
+}
