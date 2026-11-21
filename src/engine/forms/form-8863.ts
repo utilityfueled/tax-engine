@@ -188,15 +188,17 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   });
   const aocTotalTentative = aocPerStudent.reduce((total,s)=>total.plus(s.tentativeCredit), new Decimal(0));
   const aocAfterPhaseOut = roundDollar(aocTotalTentative.times(factor));
-  if (strict && aocAfterPhaseOut.gt(0)) {
+  if (year >= 2025 && aocAfterPhaseOut.gt(0)) {
     input.aocStudents.forEach((student, index) => {
       if (!student.institutions || !aocPerStudent[index].tentativeCredit.gt(0)) return;
       if (student.institutions.some(institution => !/^\d{2}-?\d{7}$/.test(institution.ein ?? ""))) {
         throw new Error("Form 8863 requires an actual EIN for every AOTC institution");
       }
-      const summaryInstitutionEin = student.institutionEin?.replaceAll("-", "");
-      if (!student.institutions.some(institution => institution.ein?.replaceAll("-", "") === summaryInstitutionEin)) {
-        throw new Error("Form 8863 requires a school record matching the AOTC summary EIN");
+      const summaryEin = student.institutionEin;
+      const summaryMatches = summaryEin === undefined || (/^\d{2}-?\d{7}$/.test(summaryEin) &&
+        student.institutions.some(institution => institution.ein?.replaceAll("-", "") === summaryEin.replaceAll("-", "")));
+      if (!student.institutions.length || !summaryMatches) {
+        throw new Error("Form 8863 requires actual school records matching any supplied AOTC summary EIN");
       }
     });
   }

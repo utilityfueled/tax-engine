@@ -34,6 +34,17 @@ describe("Form8863 actual2026 facts",()=>{
   expect(() => calculateForm8863(atRoundingBoundary())).toThrow(/EIN/);
   expect(calculateForm8863(atRoundingBoundary("98-7654321")).aocAfterPhaseOut.toFixed()).toBe("1");
  });
+ it("validates supplied 2025 school EINs without requiring a duplicate summary", () => {
+  const firstSchool = { ein: "12-3456789" };
+  const make2025 = (ein?: string, institutionEin?: string) => make({ taxYear: 2025,
+   requireAocPriorClaimHistory: true, aocStudents: [{ ...student(), institutionEin, institutions: [firstSchool, { ein }] }] });
+  expect(() => calculateForm8863(make2025())).toThrow(/EIN/);
+  expect(calculateForm8863(make2025("98-7654321")).aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(calculateForm8863(make2025("98-7654321", "987654321")).aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(() => calculateForm8863(make2025("98-7654321", "90-7654321"))).toThrow(/matching.*EIN/i);
+  expect(() => calculateForm8863(make2025("98-7654321", "--"))).toThrow(/matching.*EIN/i);
+  expect(() => calculateForm8863(make2025("98-7654321", "98--7654321"))).toThrow(/matching.*EIN/i);
+ });
  it("permits one joint spouse SSN and requires dependent student employment eligibility",()=>{
   expect(calculateForm8863(make({filingStatus:"married_filing_jointly",primarySsnEligible:false,spouseSsnEligible:true})).aocAfterPhaseOut.toString()).toBe("2500");
   expect(calculateForm8863(make({primarySsnEligible:false})).aocAfterPhaseOut.toString()).toBe("0");
