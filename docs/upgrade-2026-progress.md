@@ -53,6 +53,14 @@ consumed the preceding time.
 [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44890499249/job/136805047431) ·
 [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44890499249/job/136805047251).
 
+Eight retained failure traces scope the recurring delay. The two Ohio
+part-year business cases each completed 133 fills and 133 Tab presses.
+The two resident-credit entry loops consumed 17.06 and 18.43 seconds
+before confirmation. The four school-district traces diverged by viewport
+and scenario and reached different actions at the deadline. The traces
+show time accumulating across browser operations. They establish neither
+a common blocked request nor how much time belongs to application code.
+
 An intervening standard Web run on `4425ad1d` passed 648 managed Linux
 cases with two RRTA PDF inspection deadlines. Strict AMD64 passed 643
 cases with seven Ohio case deadlines. Both jobs retained five original
