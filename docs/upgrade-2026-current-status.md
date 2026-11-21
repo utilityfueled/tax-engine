@@ -11,7 +11,14 @@ Schedule 3 transfer using the test-only statutory-rate preview.
 annual reconciliations are renewed. Annual tax-table and export
 qualification remain open. All 11 local commands passed on `069c994f`.
 Both full suites passed 29,849 tests at 88.38% branch coverage. Managed
-macOS passed 650 browser cases with five original skips.
+macOS passed 650 browser cases with five original skips. Exact CI and
+Docker passed. The protected application Preview returned 200 for health
+and sign-in, passed all 12 synthetic workspace lifecycle checks and passed
+four billing-page checks for each synthetic account. Managed Linux passed 648
+browser cases and retained five original skips. Both saved-PDF RRTA inspections
+reached the four-second deadline. Strict AMD64 passed recovery and rollback,
+with 639 browser passes, ten Ohio deadlines, one RRTA deadline and five
+original skips.
 [Rental verification](upgrade-2026-progress.md#november-21-guided-rental-review-after-a-year-change) ·
 [Form 8880 verification](upgrade-2026-progress.md#november-21-final-form-8880-from-employer-deferrals) ·
 [Schedule C verification](upgrade-2026-progress.md#november-21-guided-schedule-c-review-after-a-year-change).

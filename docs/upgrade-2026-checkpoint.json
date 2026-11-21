@@ -9,7 +9,11 @@
       "combinedCoverage": { "application": "069c994f", "testsPassed": 29849, "filesPassed": 2176, "branchesPercent": 88.38, "branchGatePercent": 85, "ownedLocalPostgresStoppedNormally": true },
       "combinedUnit": { "application": "069c994f", "testsPassed": 29849, "filesPassed": 2176, "ownedLocalPostgresStoppedNormally": true },
       "combinedDocker": { "application": "069c994f", "runId": 44897306268, "result": "success" },
+      "combinedCI": { "application": "069c994f", "runId": 44897306183, "result": "success" },
       "combinedMacosBrowser": { "application": "069c994f", "passed": 650, "failed": 0, "originalSkips": 5, "officialSampleCount": 15, "requiredLocalCommandsPassed": 11 },
+      "combinedHostedPreview": { "application": "069c994f", "observedWithMainAt": "74cb1a05", "protectedReadyNoProductionAlias": true, "healthAndSignInPagePassed": 2, "workspaceLifecyclePassed": 12, "createdSyntheticRecordCleanedUp": true, "billingPageChecksPassedPerActor": [4, 4], "checkoutAttempted": false },
+      "combinedManagedLinux": { "application": "069c994f", "runId": 44897306233, "jobId": 136825603320, "passed": 648, "failed": 2, "originalSkips": 5, "unmodifiedRrtaPdfDeadlineSeconds": 4, "lastRecordedInspectorPhase": "page_text" },
+      "combinedStrictAmd64": { "application": "069c994f", "runId": 44897306233, "jobId": 136825603092, "passed": 639, "failed": 11, "originalSkips": 5, "ohioDeadlineFailures": { "partYearBusiness": 2, "reciprocal": 1, "residentCredit": 3, "schoolDistrict": 4 }, "rrtaPdfDeadlineFailures": 1, "composeRecoveryAndRollbackPassed": true, "immutableSbomsPassed": true },
       "officialSources": ["https://www.irs.gov/instructions/i1040se", "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf", "https://www.irs.gov/instructions/iw2w3", "https://www.irs.gov/pub/irs-drop/n-25-67.pdf", "https://www.irs.gov/instructions/i1040sc"]
     },
     "nov21ReciprocalPaymentAndFederalReviewPdf": {

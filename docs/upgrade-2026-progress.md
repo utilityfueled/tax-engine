@@ -27,6 +27,33 @@ on missing sample files and a temporary test-port collision. The final
 run used the existing app, tests and browser gates. All 11 local commands
 passed on the application revision.
 
+The protected `069c994f` Preview reached Ready with no production alias.
+Health and the sign-in page returned 200. Twelve checks verified the same
+synthetic actor in separate sessions, creating and saving one workspace on the
+prior Preview, reopening and saving it across both revisions, deleting the
+exact record, confirming absence on both, and signing out. The bound source
+and observed `main` differed only by the recorded docs and focused fixture
+guard. This verifies the deployed application revision. Checkout and credit
+delivery remain open. [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44897306183).
+
+Both authorized synthetic accounts passed all four ordinary billing-page
+checks on that Preview, including separate sign-out. The requests used the
+existing app flow, which can initialize its existing schema on cold start.
+The check stopped at the billing page, ahead of Checkout or credit delivery.
+
+Managed Linux passed 648 cases and retained five original skips. The desktop
+and mobile native RRTA cases both reached the original four-second deadline
+during inspection of the saved PDFs. Both recorded the page-text phase.
+[Exact managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44897306233/job/136825603320).
+
+Strict AMD64 passed 639 browser cases and retained five original skips.
+Ten Ohio cases reached the original 30-second browser deadline: two
+part-year business, one reciprocal, three resident credit and four school
+district. The desktop RRTA case reached the original four-second inspection
+deadline. Compose upgrade, recovery and rollback passed. Both generated
+SBOMs matched the immutable candidate. The self-host release gate remains
+open. [Exact strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44897306233/job/136825603092).
+
 ## November 21 final Form 8880 from employer deferrals
 
 `1cd93e1f` projects the annual saver’s credit onto the final IRS form
