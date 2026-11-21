@@ -1119,6 +1119,31 @@ describe("DeFi Token Swaps — DEX Trades", () => {
     expect(result.dispositions[0].holdingPeriod).toBe("short");
   });
 
+  it("uses the calendar anniversary across a leap day for a DEX swap", () => {
+    const classify = (dateAcquired: string, dateSwapped: string) => {
+      const lots: TrackedLot[] = [
+        { asset: "ETH", dateAcquired, quantity: d(1), costBasisPerUnit: d(3000), source: "purchase" },
+      ];
+      const swaps = [{
+        fromAsset: "ETH",
+        fromQuantity: "1",
+        toAsset: "DAI",
+        toQuantity: "3200",
+        fairMarketValueAtSwap: "3200",
+        dateSwapped,
+        gasFee: "0",
+        isWrappingEvent: false,
+        isBridgeTransaction: false,
+      }];
+      return processDeFiTokenSwaps(swaps, lots, "fifo").dispositions[0].holdingPeriod;
+    };
+
+    expect(classify("2024-01-31", "2025-01-31")).toBe("short");
+    expect(classify("2024-01-31", "2025-02-01")).toBe("long");
+    expect(classify("2024-02-29", "2025-02-28")).toBe("short");
+    expect(classify("2024-02-29", "2025-03-01")).toBe("long");
+  });
+
   it("no lots available: zero cost basis (full proceeds = gain)", () => {
     const lots: TrackedLot[] = []; // No lots
 

@@ -35,7 +35,7 @@ import {
 const d = (n: number | string) => new Decimal(n);
 
 // ═══════════════════════════════════════════════════════════
-// Holding Period Boundary (365 vs 366 days)
+// Holding Period Boundary (calendar anniversary)
 // ═══════════════════════════════════════════════════════════
 
 describe("Crypto Lot Matching - Holding Period Boundary", () => {
@@ -67,8 +67,10 @@ describe("Crypto Lot Matching - Holding Period Boundary", () => {
     expect(result.dispositions[0].gainOrLoss.toNumber()).toBe(10000);
   });
 
-  it("Holding period at exactly 366 days is long-term", () => {
-    // 2024-01-01 to 2025-01-01 = 366 days (2024 is leap year)
+  it.each([
+    ["2025-01-01", "short"],
+    ["2025-01-02", "long"],
+  ])("classifies a 2024-01-01 lot sold on %s as %s-term", (dateSold, holdingPeriod) => {
     const lots: TrackedLot[] = [
       { asset: "BTC", dateAcquired: "2024-01-01", quantity: d(1), costBasisPerUnit: d(40000), source: "purchase" },
     ];
@@ -77,7 +79,7 @@ describe("Crypto Lot Matching - Holding Period Boundary", () => {
         digitalAssetName: "Bitcoin",
         ticker: "BTC",
         dateAcquired: "2024-01-01",
-        dateSold: "2025-01-01",
+        dateSold,
         proceeds: "50000",
         costBasis: "0",
         holdingPeriod: "short" as const,
@@ -91,7 +93,7 @@ describe("Crypto Lot Matching - Holding Period Boundary", () => {
     }];
 
     const result = matchLots(transactions, lots, "fifo");
-    expect(result.dispositions[0].holdingPeriod).toBe("long");
+    expect(result.dispositions[0].holdingPeriod).toBe(holdingPeriod);
     expect(result.dispositions[0].gainOrLoss.toNumber()).toBe(10000);
   });
 

@@ -55,10 +55,21 @@ lines:
     description: "Holding period for DEX swap dispositions"
     formula: |
       Holding period of disposed token determined from lot(s) matched.
-      Long-term if held > 1 year (366+ days), short-term otherwise.
+      When the acquisition date is known, use the calendar holding-period rule below.
       Multiple lots consumed → date acquired = "VARIOUS".
     irsRef: "IRC §1222"
     testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap spanning multiple lots reports VARIOUS dateAcquired"
+
+  - line: "digital-asset-calendar-holding-period"
+    description: "Calendar anniversary for a digital asset disposition with a known acquisition date"
+    formula: |
+      Count the day after acquisition through the disposition date. A disposition on
+      or before the acquisition date's next calendar anniversary is short-term.
+      A disposition after the anniversary is long-term. An intervening February 29
+      does not change the calendar boundary. After an acquisition on February 29,
+      a disposition on February 28 in the following year is still short-term.
+    irsRef: "26 USC §1222; IRS Publication 550, Long-Term or Short-Term and Digital assets; https://www.irs.gov/publications/p550"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::uses the calendar anniversary across a leap day for a DEX swap"
 
   - line: "dex-swap-form-8949"
     description: "DEX swap Form 8949 routing"

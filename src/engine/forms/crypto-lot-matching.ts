@@ -66,15 +66,22 @@ export interface LotMatchingResult {
 
 /**
  * Determine holding period from acquisition and sale dates.
- * Long-term = held more than 1 year (366+ days).
+ * The sale date must be after the first calendar anniversary for long-term treatment.
  */
 function getHoldingPeriod(dateAcquired: string, dateSold: string): "short" | "long" {
   if (dateAcquired === "VARIOUS") return "long"; // Conservative default
   const acquired = new Date(dateAcquired);
   const sold = new Date(dateSold);
-  const diffMs = sold.getTime() - acquired.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  return diffDays > 365 ? "long" : "short";
+  const anniversaryYear = acquired.getUTCFullYear() + 1;
+  const saleYear = sold.getUTCFullYear();
+  if (saleYear > anniversaryYear) return "long";
+  if (saleYear !== anniversaryYear) return "short";
+
+  const acquisitionMonth = acquired.getUTCMonth();
+  const saleMonth = sold.getUTCMonth();
+  const afterAnniversary = saleMonth > acquisitionMonth
+    || (saleMonth === acquisitionMonth && sold.getUTCDate() > acquired.getUTCDate());
+  return afterAnniversary ? "long" : "short";
 }
 
 /**
