@@ -44,6 +44,7 @@ import type {
   TaxYearInput,
   W2,
 } from "@/models/inputs.js";
+import { Form5329FirstHomeSourceSchema } from "@/models/inputs.js";
 import { readForm8880AnnualSources } from "@/models/form-8880-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
@@ -2896,14 +2897,28 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         )
       : []),
   ];
+  const firstHome = resolveForm5329FirstHomeSource(input, iraTaxable);
   const normalizedForm5329 = buildForm5329Input(
     input.form5329,
     input.taxpayer,
     input.form1099R ?? [],
     form8606,
     schedA.medicalDeduction,
-    input.form5329HsaByOwner ? [] : allForm8889Results
+    input.form5329HsaByOwner ? [] : allForm8889Results,
+    firstHome,
   );
+  if (firstHome) {
+    const { source, taxableDistribution } = firstHome;
+    audit.record("Form 5329 first home", "09-source", "Qualified acquisition payment from the owner's IRA proceeds",
+      d(source.qualifiedPayment.amount), "Verified purchase and payment within 120 days of the owner receiving the IRA distribution",
+      {
+        "Taxable distribution": taxableDistribution,
+        "Distribution received": source.distributionReceivedDate,
+        "Binding purchase contract": source.bindingContractDate,
+        "Acquisition payment": source.qualifiedPayment.date,
+        "Prior lifetime qualifying distributions": d(source.priorQualifiedFirstTimeHomebuyerDistributions),
+      });
+  }
 
   const deductionSelection = calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
     eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
@@ -6630,6 +6645,48 @@ function parseForm5329ReviewDate(value: string): Date | undefined {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : undefined;
 }
 
+/** Bind one documented first-home purchase to its actual taxable IRA distribution. */
+function resolveForm5329FirstHomeSource(input: TaxYearInput, iraTaxable: Decimal) {
+  if (input.form5329FirstHomeSource === undefined) return undefined;
+  const source = Form5329FirstHomeSourceSchema.parse(input.form5329FirstHomeSource);
+  const { taxpayer } = input;
+  if (taxpayer.taxYear !== source.sourceTaxYear || taxpayer.filingStatus === "married_filing_jointly") {
+    throw new Error("Form 5329 first-home source requires a matching tax year and a nonjoint return");
+  }
+  if (input.form5329 || input.form8606 || input.form8606ByOwner || input.iraBasisSources) {
+    throw new Error("Form 5329 first-home source requires a separate Part I reconciliation with other retirement worksheets");
+  }
+  if (input.form1099R?.length !== 1) throw new Error("Form 5329 first-home source requires one Form 1099-R");
+  const [form] = input.form1099R;
+  const taxableDistribution = d(form.grossDistribution);
+  if (!form.payer.trim() || form.accountHolder !== source.owner || form.accountReference !== source.accountReference
+    || form.taxYear !== source.sourceTaxYear || form.distributionDate !== source.distributionReceivedDate
+    || !source.distributionReceivedDate.startsWith(`${source.sourceTaxYear}-`)) {
+    throw new Error("Form 5329 first-home source must match the actual IRA payer statement, owner, account, year and distribution date");
+  }
+  if (form.iraSepSimple !== true || form.distributionCode?.trim() !== "1" || form.eligibleGovernmental457bPlan
+    || form.trumpAccount === true || !d(form.excessContributionEarnings).isZero()
+    || form.returnedContributionByDueDate || form.excessContributionReturnedWithoutEarnings
+    || !d(form.rothConversionAmount).isZero() || form.iraBasisConfirmedZero !== true || !d(form.employeeContributions).isZero()
+    || form.taxableAmountNotDetermined !== false || !taxableDistribution.gt(0)
+    || !taxableDistribution.eq(d(form.taxableAmount)) || !taxableDistribution.eq(iraTaxable)) {
+    throw new Error("Form 5329 first-home source requires a fully taxable traditional IRA Code 1 distribution with confirmed zero basis");
+  }
+  const birthDate = parseForm5329ReviewDate(taxpayer.primary.dateOfBirth);
+  const receiptDate = new Date(`${source.distributionReceivedDate}T00:00:00Z`);
+  if (!birthDate || receiptDate < birthDate || !isBeforeAge59AndHalfDate(birthDate, receiptDate)) {
+    throw new Error("Form 5329 first-home source requires an actual birth date and an owner under age 59 1/2 on receipt");
+  }
+  const deadline = new Date(receiptDate);
+  deadline.setUTCDate(deadline.getUTCDate() + 120);
+  const { date, amount } = source.qualifiedPayment;
+  if (date < source.distributionReceivedDate || date < source.bindingContractDate || date > deadline.toISOString().slice(0, 10)) {
+    throw new Error("Form 5329 first-home source requires a payment on or after receipt and contract, through day 120 after receipt");
+  }
+  if (d(amount).gt(taxableDistribution)) throw new Error("Form 5329 first-home payment cannot exceed the matched IRA distribution");
+  return { source, taxableDistribution };
+}
+
 /** Identify the owner of a fully source-derived joint Part I for 2025 review. */
 export function findJointForm5329ReviewPartIOwner(
   input: TaxYearInput,
@@ -6672,7 +6729,8 @@ function buildForm5329Input(
   forms: Form1099R[] = [],
   form8606?: Form8606Result,
   supportedMedicalExpenseExceptionAmount: Decimal = new Decimal(0),
-  form8889Results: Form8889Result[] = []
+  form8889Results: Form8889Result[] = [],
+  firstHome?: ReturnType<typeof resolveForm5329FirstHomeSource>,
 ): Form5329Input | undefined {
   const defaults = deriveDefaultForm5329Amounts(
     forms,
@@ -6680,6 +6738,10 @@ function buildForm5329Input(
     form8606,
     supportedMedicalExpenseExceptionAmount
   );
+  if (firstHome && (!defaults.earlyDistributionsIncludedInIncome.eq(firstHome.taxableDistribution)
+    || defaults.distributionsNotSubjectToAdditionalTax.gt(0))) {
+    throw new Error("Form 5329 first-home source requires reconciliation of the taxable amount and any competing Part I exception");
+  }
   const hsaDefaults = form8889Results.length > 0
     ? deriveForm5329HsaDefaults(form8889Results)
     : {
@@ -6733,9 +6795,9 @@ function buildForm5329Input(
     qualifiedHigherEducationExpenseExceptionAmount:
       input?.qualifiedHigherEducationExpenseExceptionAmount ?? "0",
     qualifiedFirstTimeHomebuyerDistributionAmount:
-      input?.qualifiedFirstTimeHomebuyerDistributionAmount ?? "0",
+      firstHome?.source.qualifiedPayment.amount ?? input?.qualifiedFirstTimeHomebuyerDistributionAmount ?? "0",
     priorQualifiedFirstTimeHomebuyerDistributions:
-      input?.priorQualifiedFirstTimeHomebuyerDistributions ?? "0",
+      firstHome?.source.priorQualifiedFirstTimeHomebuyerDistributions ?? input?.priorQualifiedFirstTimeHomebuyerDistributions ?? "0",
     irsLevyDistributionExceptionAmount:
       input?.irsLevyDistributionExceptionAmount ?? "0",
     qualifiedReservistDistributionExceptionAmount:

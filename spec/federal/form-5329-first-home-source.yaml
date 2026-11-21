@@ -1,0 +1,35 @@
+form: "Form 5329 First-Home IRA Source"
+fullName: "Part I exception 09 for a documented purchase by the IRA owner"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5"
+notes: "Supports the same enacted calculation for 2025 and 2026 with human review. The existing manual, Roth, filing, and form-export paths follow their independent rules."
+lines:
+  - line: "09-source"
+    description: "Match one documented traditional IRA distribution and the owner's qualifying payment"
+    formula: "Match the return and statement year, primary owner, account reference, and actual receipt date on the identified payer statement. Require affirmative confirmation that the full Box 1 distribution was received in one payment on that date. Require a nonjoint return, an actual owner under age 59 1/2 on receipt, ordinary Code 1, known positive and equal Boxes 1 and 2a, Box 2b unchecked, zero IRA basis, and Box 5 zero or absent. Require a completed purchase of the owner's main home, the binding contract date, confirmed two-year residence ownership history for the buyer and any spouse at acquisition, no applicable former section 1034 suspension, and a documented qualifying payment made from those proceeds with no rollover. Require confirmation that any settlement, financing, or closing expense was usual or reasonable."
+    sources:
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+      - "https://www.irs.gov/pub/irs-prior/p590b--2025.pdf#page=28"
+      - "https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=15"
+    testRef: "tests/engine/federal-first-home-ira.test.ts::requires original IRA identity and complete homebuyer facts"
+    testRefs:
+      - "tests/engine/federal-first-home-ira.test.ts::requires confirmed same-distribution funding and ordinary closing costs"
+  - line: "09-timing"
+    description: "Use actual receipt and payment dates for the 120-day deadline"
+    formula: "The supported purchase uses one acquisition or usual settlement, financing, or closing payment on or after the binding contract and receipt dates. The last eligible payment date is the receipt date plus 120 calendar days, inclusive even in the following tax year. A late, cancelled, delayed and recontributed, or otherwise unsupported transaction needs separate review."
+    sources:
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+      - "https://www.irs.gov/pub/irs-prior/p590b--2025.pdf#page=27"
+    testRef: "tests/engine/federal-first-home-ira.test.ts::uses actual calendar dates and accepts day 120 across tax years"
+    testRefs:
+      - "tests/engine/federal-first-home-ira.test.ts::rejects unsupported purchase timing and rollover facts"
+  - line: "2-4"
+    description: "Apply exception 09 to the actual taxable distribution"
+    formula: "The Line 2 amount is the supported paid acquisition cost, limited to the verified taxable distribution and the excess of $10,000 over the recipient's known aggregate prior qualified first-home distributions. Line 3 equals Line 1 minus Line 2 and Line 4 uses the existing 10% calculation. Reject any competing Part I worksheet or unrelated exception within this source path. Preserve the IRA income inclusion and the ordinary manual path."
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5"
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+    testRef: "tests/engine/federal-first-home-ira.test.ts::applies the actual individual lifetime cap without reducing taxable IRA income"
+    testRefs:
+      - "tests/engine/federal-first-home-ira.test.ts::preserves uncoupled legacy manual Code 09"
+      - "tests/engine/federal-first-home-ira.test.ts::preserves the actual 2026 full calculation hold"

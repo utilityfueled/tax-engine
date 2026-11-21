@@ -5043,6 +5043,26 @@
       ]
     },
     {
+      "key": "federal/form-5329-first-home-source",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5",
+      "specPath": "spec/federal/form-5329-first-home-source.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-5329-hsa",
       "jurisdiction": "federal",
       "taxYear": null,

@@ -1825,6 +1825,37 @@ export const Form5329HsaByOwnerSchema = z.object({
   spouse: Form5329HsaSourceSchema.optional(),
 });
 
+export const Form5329FirstHomeSourceSchema = z.strictObject({
+  sourceTaxYear: z.union([z.literal(2025), z.literal(2026)]),
+  owner: z.literal("primary"),
+  accountReference: z.string().trim().min(1),
+  sourceFactsConfirmed: z.literal(true),
+  distributionReceivedDate: z.iso.date(),
+  singleDistributionReceiptConfirmed: z.literal(true), // The entire Box 1 was received together on this date.
+  distributionRolledOver: z.literal(false),
+  boughtOwnPrincipalResidence: z.literal(true),
+  purchaseCompleted: z.literal(true),
+  bindingContractDate: z.iso.date(),
+  maritalStatusAtAcquisition: z.enum(["unmarried", "married"]),
+  buyerHadNoPrincipalResidenceInterest: z.literal(true), // Two years ending on the binding contract date.
+  spouseHadNoPrincipalResidenceInterest: z.literal(true).optional(), // Same window when married at acquisition.
+  noFormerSection1034Suspension: z.literal(true),
+  qualifiedPayment: z.strictObject({
+    date: z.iso.date(),
+    amount: nonnegativeDollarsAndCents.refine(value => d(value).gt(0), "Enter an actual positive payment from the IRA proceeds"),
+    kind: z.enum(["purchase_price", "settlement_financing_or_closing"]),
+    paidFromMatchedDistribution: z.literal(true),
+    usualOrReasonableForAcquisition: z.literal(true).optional(),
+  }).refine(
+    payment => payment.kind === "purchase_price" || payment.usualOrReasonableForAcquisition === true,
+    { path: ["usualOrReasonableForAcquisition"], message: "Confirm usual or reasonable settlement, financing, or closing costs" },
+  ),
+  priorQualifiedFirstTimeHomebuyerDistributions: nonnegativeDollarsAndCents,
+}).refine(
+  source => (source.maritalStatusAtAcquisition === "married") === (source.spouseHadNoPrincipalResidenceInterest === true),
+  { path: ["spouseHadNoPrincipalResidenceInterest"], message: "Confirm the actual spouse's two-year ownership history when married at acquisition" },
+);
+
 export const Form5329Schema = z.object({
   earlyDistributionsIncludedInIncome: optionalDecimal, // Part I Line 1
   rothConversionRecaptureAmount: optionalDecimal, // Part I Line 1 Roth conversion or qualified-plan rollover recapture amount
@@ -6723,6 +6754,7 @@ export const TaxYearInputSchema = z.object({
   form8801: Form8801Schema.optional(),
   form8880: Form8880Schema.optional(),
   form5329: Form5329Schema.optional(),
+  form5329FirstHomeSource: Form5329FirstHomeSourceSchema.optional(),
   form5329HsaByOwner: Form5329HsaByOwnerSchema.optional(),
   form8606: Form8606Schema.optional(),
   form8606ByOwner: Form8606ByOwnerSchema.optional(),
