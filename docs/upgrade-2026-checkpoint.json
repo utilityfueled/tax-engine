@@ -1,5 +1,35 @@
 {
   "activeContinuation": {
+    "nov21Form5329Code1Pensions": {
+      "commit": "f707241ddc726bd33bb8eb6be146720531c08086",
+      "officialSource": "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=1",
+      "authorFocusedTestsPassed": 690,
+      "exactFocusedTestsPassed": 247,
+      "combinedProductionChromiumCasesPassed": 8,
+      "browserCaseLimitMs": 30000,
+      "browserRetries": 0,
+      "independentPhysicalReviewPassed": true,
+      "existingOwnerWorksheetDedupePassed": true,
+      "scope": "2025 nonjoint ordinary pension with fully applicable numbered exception and payer Box 7 code 1",
+      "filingEnabled": false
+    },
+    "nov21ScheduleBOidAdjustments": {
+      "commit": "b5b892d50abae249af8f184b06ddbe4cf8d454c8",
+      "officialSources": ["https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=10", "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=2"],
+      "authorFocusedTestsPassed": 306,
+      "exactFocusedTestsPassed": 198,
+      "specRefsValid": 9846,
+      "unitTestsPassed": 29983,
+      "unitSuitesPassed": 2183,
+      "coverageTestsPassed": 29983,
+      "branchCoveragePercent": 88.50,
+      "postgresVersion": "16.16",
+      "bothPostgresStopsPassed": true,
+      "independentPhysicalReviewPassed": true,
+      "coreAndWebBuildPassed": true,
+      "fullLintErrors": 0,
+      "filingEnabled": false
+    },
     "nov21LocalBackupGuidedFacts": {
       "commit": "1cc1ada03b7f8722aca3066055835dc32424802b",
       "focusedTestsPassed": 54,

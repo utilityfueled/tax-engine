@@ -1,5 +1,34 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Form 5329 early pension exceptions
+
+Commit `f707241d` includes Form 5329 in 2025 review packets for
+nonjoint returns with a fully excepted, taxable Code 1 ordinary
+pension distribution. The saved review form shows $9,000 on lines
+1 and 2 and exception 20, with no additional tax. The owner-specific
+education and HSA paths still use one attachment. An independent
+saved-PDF check reproduced the omission at $6,000 and verified the
+fix, payer Code 2/4 controls and the joint owner-assignment hold.
+The exact combined run passed 247 focused checks and eight production
+Chromium recovery and guided-education cases at the original deadline
+with zero retries. Filing remains gated.
+[2025 IRS instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=1).
+
+## November 21 Schedule B OID and bond premium adjustments
+
+Commit `b5b892d5` reports the original payer amount, a gross
+subtotal, signed OID adjustments and elected taxable bond premium
+reductions for confirmed ordinary non-inflation-indexed Form
+1099-OID sources. The Schedule B attachment applies below $1,500.
+Independent review reopened the 2025 continuation and verified
+row order, signs, rendered amount and watermark. 2025 and 2026
+Decimal checks preserved net federal, Treasury and state amounts.
+Both builds, lint and 9,846 spec references passed. Unit and coverage
+runs each passed 29,983 tests in 2,183 suites, with 88.50% branch
+coverage and both PostgreSQL 16.16 clusters stopped.
+[IRS Publication 1212](https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=10) ·
+[Schedule B instructions](https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=2).
+
 ## November 21 complete local backups
 
 Commit `1cc1ada0` detects a saved guided summary or generated document
