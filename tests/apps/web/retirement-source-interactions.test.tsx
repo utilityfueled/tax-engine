@@ -71,6 +71,41 @@ it("collects and reconfirms the original blank Box 2a and the actual pension wor
   });
 });
 
+// Spec: spec/federal/guided-input.yaml, retirement-2026-simplified-method
+it("requires new annual pension worksheet amounts after correcting the statement year", async () => {
+  const initial = {
+    ...completeRetirementSource, grossDistribution: "6000", taxableAmount: "", taxableAmountNotDetermined: true,
+    taxableAmountConfirmed: null,
+    simplifiedMethod: {
+      planReference: "Plan 42", qualifiedPlanConfirmed: true, singleLifeAnnuitantConfirmed: true,
+      statementCoversContractConfirmed: true, startingDate: "2025-01-15", ageAtStart: "65",
+      costInPlan: "26000", monthsPaid: "12", priorRecovered: "0",
+    },
+  };
+  await render([initial], async ({ latest, container, change }) => {
+    expect(buildRetirementInputs(latest(), "single", 2025)[0]?.simplifiedMethodPaymentsReceivedThisYear).toBe(12);
+    await change("Retirement statement tax year", "2026");
+    expect(container.textContent).toContain("2026 Simplified Method pension worksheet");
+    expect(container.textContent).toContain("Distribution code (Box 7a)");
+    expect(container.textContent).toContain("Printed taxable amount (Box 2a)");
+    expect(latest()[0]).toMatchObject({
+      sourceTaxYear: "2026", sourceFactsConfirmed: null, taxableAmount: "",
+      simplifiedMethod: { planReference: "Plan 42", startingDate: "2025-01-15", costInPlan: "26000",
+        statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
+    });
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "single", 2026)).toThrow(/all 2026 periodic payments/);
+    await change("Does Box 1 report all 2026 periodic payments for this contract, with no other payments included?", "true");
+    await change("Actual months covered by 2026 payments", "12");
+    await change("Plan cost recovered or eligible for tax-free recovery through 2025", "1200.00");
+    expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+    await change(confirm, "true");
+    expect(buildRetirementInputs(latest(), "single", 2026)[0]).toMatchObject({
+      taxYear: 2026, taxableAmount: undefined, simplifiedMethodPaymentsReceivedThisYear: 12, simplifiedMethodPriorYearRecovered: "1200.00",
+    });
+  });
+});
+
 it("keeps a saved QCD worksheet visible and requires source confirmation after an edit", async () => {
   const initial = {
     ...completeRetirementSource,

@@ -59,8 +59,9 @@ export const retirementSourceAmounts = [
 ] as const;
 
 function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: string): string | undefined {
+  const year = Number(entry.sourceTaxYear);
   const worksheet = entry.simplifiedMethod;
-  if (!worksheet) return "Enter the actual 2025 Simplified Method pension worksheet.";
+  if (!worksheet) return `Enter the actual ${year} Simplified Method pension worksheet.`;
   if (hasEnteredAmount(entry.taxableAmount)) return "This Simplified Method route requires the original Box 2a to be blank. Review the printed form and the worksheet.";
   const grossError = amountError(entry.grossDistribution, "gross distribution");
   if (grossError) return grossError;
@@ -68,9 +69,9 @@ function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: str
   if (!worksheet.planReference?.trim()) return "Enter the local reference for the actual annuity contract.";
   if (worksheet.qualifiedPlanConfirmed !== true || entry.eligibleGovernmental457bPlan === true) return "Confirm that the pension is from a qualified employee plan, qualified employee annuity or 403(b) plan.";
   if (worksheet.singleLifeAnnuitantConfirmed !== true || entry.qualifiedJointSurvivorAnnuity === true) return "Confirm that the recipient is the only annuitant and receives periodic payments for their own life.";
-  if (worksheet.statementCoversContractConfirmed !== true) return "Confirm that Box 1 on this original reports all 2025 periodic payments for this contract, with no other payments included.";
+  if (worksheet.statementCoversContractConfirmed !== true) return `Confirm that Box 1 on this original reports all ${year} periodic payments for this contract, with no other payments included.`;
   const start = worksheet.startingDate;
-  if (!start || !isActualDate(start) || start < "1998-01-01" || start > "2025-12-31") return "Enter the actual annuity starting date from 1998 through 2025.";
+  if (!start || !isActualDate(start) || start < "1998-01-01" || start > `${year}-12-31`) return `Enter the actual annuity starting date from 1998 through ${year}.`;
   const age = simplifiedMethodWholeNumber(worksheet.ageAtStart);
   if (age === undefined || age >= 75) return "Enter the annuitant's actual age at the starting date. This worksheet covers starts before age 75.";
   if (dateOfBirth && isActualDate(dateOfBirth)) {
@@ -78,15 +79,16 @@ function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: str
     if (age !== ageOnStart) return "Reconcile the annuitant's age at the starting date with the recipient's date of birth.";
   }
   const months = simplifiedMethodWholeNumber(worksheet.monthsPaid);
-  const availableMonths = start.startsWith("2025-") ? 13 - Number(start.slice(5, 7)) : 12;
-  if (months === undefined || months < 1 || months > availableMonths) return "Enter the actual months covered by 2025 annuity payments from the start of cost recovery onward.";
+  const startsThisYear = start.startsWith(`${year}-`);
+  const availableMonths = startsThisYear ? 13 - Number(start.slice(5, 7)) : 12;
+  if (months === undefined || months < 1 || months > availableMonths) return `Enter the actual months covered by ${year} annuity payments from the start of cost recovery onward.`;
   const costError = amountError(worksheet.costInPlan, "net cost in the plan at the annuity starting date");
   if (costError) return costError;
-  const recoveryError = amountError(worksheet.priorRecovered, "amount recovered or eligible for tax-free recovery through 2024, including zero");
+  const recoveryError = amountError(worksheet.priorRecovered, `amount recovered or eligible for tax-free recovery through ${year - 1}, including zero`);
   if (recoveryError) return recoveryError;
   const recovery = parseGuidedCurrency(worksheet.priorRecovered);
-  if (recovery.gt(parseGuidedCurrency(worksheet.costInPlan)) || (start.startsWith("2025-") && !recovery.isZero())) {
-    return "Reconcile the amount recovered before 2025 with the plan cost and annuity starting date.";
+  if (recovery.gt(parseGuidedCurrency(worksheet.costInPlan)) || (startsThisYear && !recovery.isZero())) {
+    return `Reconcile the amount recovered before ${year} with the plan cost and annuity starting date.`;
   }
 }
 
@@ -151,7 +153,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
         simplifiedMethodPlans.add(plan);
       }
     } else if (entry.simplifiedMethod !== undefined) {
-      fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the 2025 non-IRA Code 1 or 7 statement and its Box 2b answer.");
+      fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the 2025 or 2026 non-IRA Code 1 or 7 statement and its Box 2b answer.");
     }
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
     else if (!qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");

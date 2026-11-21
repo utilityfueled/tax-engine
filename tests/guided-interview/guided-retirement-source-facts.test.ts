@@ -5,11 +5,12 @@ import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildRetirementI
 import { Form1099RSchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
 import { calculateForm1099R } from "@/engine/forms/form-1099-r";
+import { assertPdfExportAllowed } from "@/pdf/export-policy";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
 import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { completeRetirementSource, startCompleteInterview } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
-import { loadGuidedFlowState, validateSection } from "@/lib/guided-interview-flow";
+import { loadGuidedFlowState, setInterviewTaxYear, validateSection } from "@/lib/guided-interview-flow";
 
 // Spec: spec/federal/guided-input.yaml, retirement-2025-simplified-method
 it("calculates 2025 single-life pensions from actual Simplified Method facts while preserving original Box 2a", () => {
@@ -101,6 +102,77 @@ it("calculates 2025 single-life pensions from actual Simplified Method facts whi
   const nearlyRecovered = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
   expect(nearlyRecovered.form1099R?.[0]?.simplifiedMethodPriorYearRecovered).toBe("25900.00");
   expect(calculateFederalTax(nearlyRecovered).pensionDistributionsTaxable.toFixed()).toBe("5900");
+});
+
+// Spec: spec/federal/guided-input.yaml, retirement-2026-simplified-method
+it("reopens confirmed 2026 single-life pension facts without enabling the annual return or PDF", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const personal = state.sectionData["personal-info"];
+  if (!personal) throw new Error("Could not initialize guided household facts");
+  personal.dateOfBirth = "1961-01-15";
+  const worksheet = {
+    planReference: "Plan 42 annuity contract",
+    qualifiedPlanConfirmed: true,
+    singleLifeAnnuitantConfirmed: true,
+    statementCoversContractConfirmed: true,
+    costInPlan: "26,000.00",
+    startingDate: "2026-01-15",
+    ageAtStart: "65",
+    monthsPaid: "12",
+    priorRecovered: "0.00",
+  };
+  const statement = {
+    ...completeRetirementSource, sourceTaxYear: "2026", grossDistribution: "6000", federalWithheld: "125",
+    taxableAmount: "", taxableAmountNotDetermined: true, taxableAmountConfirmed: null, simplifiedMethod: worksheet,
+  };
+  const reopen = (draft: typeof state) => {
+    const reopened = loadGuidedFlowState({ getItem: () => JSON.stringify(draft) } as unknown as Storage, "retirement");
+    if (!reopened) throw new Error("Could not reopen guided pension draft");
+    return reopened;
+  };
+  state.sectionData["income-retirement"] = { entries: [statement] };
+  const reopened = reopen(state);
+  expect(reopened.sectionData["income-retirement"]?.entries[0]).toMatchObject(statement);
+  expect(validateSection(reopened, "income-retirement").status).toBe("complete");
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+  expect(input.form1099R?.[0]).toMatchObject({
+    taxYear: 2026, distributionCode: "7", iraSepSimple: false, taxableAmount: undefined, taxableAmountNotDetermined: true,
+    simplifiedMethodCostInPlan: "26000.00", simplifiedMethodAnnuityStartingDate: "2026-01-15",
+    simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: 65, simplifiedMethodPaymentsReceivedThisYear: 12,
+    simplifiedMethodPriorYearRecovered: "0.00",
+  });
+  const source = calculateForm1099R(input.form1099R, { taxYear: 2026 });
+  expect(source.pensionGrossReported.toFixed()).toBe("6000");
+  expect(source.pensionTaxable.toFixed()).toBe("4800");
+  expect(source.federalWithholding.toFixed()).toBe("125");
+  expect(() => calculateFederalTax(input)).toThrow(/2026.*incomplete; calculation is unavailable/);
+  expect(() => assertPdfExportAllowed(input.taxpayer.taxYear, input.taxpayer.taxYear)).toThrow(/No qualified review PDF mapping is available for tax year 2026/);
+
+  for (const [change, taxable] of [
+    [{ startingDate: "2026-12-01", monthsPaid: "1" }, "5900"],
+    [{ startingDate: "2025-01-15", priorRecovered: "1200.00", ageAtStart: "64" }, "4800"],
+  ] as const) {
+    state.sectionData["income-retirement"].entries = [{ ...statement, simplifiedMethod: { ...worksheet, ...change } }];
+    const annual = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen(state)));
+    expect(calculateForm1099R(annual.form1099R, { taxYear: 2026 }).pensionTaxable.toFixed()).toBe(taxable);
+  }
+  for (const change of [
+    { sourceTaxYear: "2025" }, { distributionCode: "4" }, { taxableAmount: "0" }, { trumpAccount: true },
+    { simplifiedMethod: { ...worksheet, statementCoversContractConfirmed: null } },
+    { simplifiedMethod: { ...worksheet, priorRecovered: "" } },
+    { simplifiedMethod: { ...worksheet, priorRecovered: "0.01" } },
+    { simplifiedMethod: { ...worksheet, startingDate: "2026-12-01" } },
+    { simplifiedMethod: { ...worksheet, startingDate: "2027-01-01" } },
+  ]) {
+    state.sectionData["income-retirement"].entries = [{ ...statement, ...change }];
+    const unresolved = reopen(state);
+    expect(validateSection(unresolved, "income-retirement").status, JSON.stringify(change)).toBe("partial");
+    expect(buildTaxInputFromGuidedData(unresolved)).toBeNull();
+  }
+  const changedYear = reopen(setInterviewTaxYear(reopened, 2025));
+  expect(changedYear.sectionData["income-retirement"]?.entries[0]?.sourceTaxYear).toBe("2026");
+  expect(buildTaxInputFromGuidedData(changedYear)).toBeNull();
 });
 
 it("requires actual retirement source ownership and preserves zero and unknown amounts", () => {

@@ -118,12 +118,16 @@ export function SectionRetirementIncome({
   ) {
     const next = entries.map((entry, i) => {
       if (i !== index) return entry;
+      const sourceYearChanged = field === "sourceTaxYear" && entry[field] !== value;
       const updated = {
         ...entry, sourceFactsConfirmed: null, [field]: value,
         ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}),
         ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}),
         ...((field === "sourceTaxYear" || field === "distributionCode" || field === "isIraSepSimple") && entry[field] !== value
           ? { qualifiedLumpSumReporting: null } : {}),
+        ...(sourceYearChanged && entry.simplifiedMethod ? {
+          simplifiedMethod: { ...entry.simplifiedMethod, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
+        } : {}),
       };
       const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);
       const codeChanged = needsGuidedSimplifiedMethod(updated) && entry.distributionCode !== updated.distributionCode;

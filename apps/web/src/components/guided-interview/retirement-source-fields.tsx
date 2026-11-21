@@ -18,6 +18,7 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
   const qcd = entry.qcdSource;
   const needsSimplifiedMethod = needsGuidedSimplifiedMethod(entry);
   const worksheet = entry.simplifiedMethod;
+  const worksheetYear = entry.sourceTaxYear === "2025" || entry.sourceTaxYear === "2026" ? Number(entry.sourceTaxYear) : undefined;
   const updateWorksheet = (change: Partial<GuidedRetirementSimplifiedMethod>) => onUpdate("simplifiedMethod", { ...worksheet, ...change });
   return <>
     <Text label="Retirement statement tax year" value={entry.sourceTaxYear} onChange={value => onUpdate("sourceTaxYear", value)} />
@@ -71,17 +72,17 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false }: {
     </fieldset>}
     {ordinaryQcdEligibleCode && !qcd && !basisMode && <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("qcdSource", {})}>Enter a QCD worksheet</button>}
     {(needsSimplifiedMethod || worksheet !== undefined) && <fieldset className="guided-form-grid" style={{ gridColumn: "1 / -1" }}>
-      <legend>2025 Simplified Method pension worksheet</legend>
+      <legend>{worksheetYear ? `${worksheetYear} ` : ""}Simplified Method pension worksheet</legend>
       <p className="guided-hint" style={{ gridColumn: "1 / -1" }}>Use the plan’s annuity records and any prior-year worksheet. This path covers single-life annuities starting in 1998 or later when the annuitant was under 75.</p>
       <Text label="Local reference for the actual annuity contract" value={worksheet?.planReference} onChange={planReference => updateWorksheet({ planReference })} />
       <Fact label="Are the payments from a qualified employee plan, qualified employee annuity or 403(b) plan?" value={worksheet?.qualifiedPlanConfirmed} onChange={qualifiedPlanConfirmed => updateWorksheet({ qualifiedPlanConfirmed })} />
       <Fact label="Is the recipient the only annuitant, receiving periodic payments for their own life?" value={worksheet?.singleLifeAnnuitantConfirmed} onChange={singleLifeAnnuitantConfirmed => updateWorksheet({ singleLifeAnnuitantConfirmed })} />
-      <Fact label="Does Box 1 report all 2025 periodic payments for this contract, with no other payments included?" value={worksheet?.statementCoversContractConfirmed} onChange={statementCoversContractConfirmed => updateWorksheet({ statementCoversContractConfirmed })} />
+      <Fact label={`Does Box 1 report all ${worksheetYear ?? "current-year"} periodic payments for this contract, with no other payments included?`} value={worksheet?.statementCoversContractConfirmed} onChange={statementCoversContractConfirmed => updateWorksheet({ statementCoversContractConfirmed })} />
       <Text label="Actual annuity starting date" type="date" value={worksheet?.startingDate} onChange={startingDate => updateWorksheet({ startingDate })} />
       <Text label="Annuitant age on the starting date" value={worksheet?.ageAtStart} onChange={ageAtStart => updateWorksheet({ ageAtStart })} />
       <CurrencyField label="Net cost in the plan at the starting date" hint="The plan may report this amount in Box 9b." value={worksheet?.costInPlan ?? ""} onChange={costInPlan => updateWorksheet({ costInPlan })} required />
-      <Text label="Actual months covered by 2025 payments" value={worksheet?.monthsPaid} onChange={monthsPaid => updateWorksheet({ monthsPaid })} />
-      <CurrencyField label="Plan cost recovered or eligible for tax-free recovery through 2024" hint="Use line 10 of the prior-year worksheet and include amounts you could have recovered in prior years. Enter zero only if there was no prior recoverable cost." value={worksheet?.priorRecovered ?? ""} onChange={priorRecovered => updateWorksheet({ priorRecovered })} required />
+      <Text label={`Actual months covered by ${worksheetYear ?? "current-year"} payments`} value={worksheet?.monthsPaid} onChange={monthsPaid => updateWorksheet({ monthsPaid })} />
+      <CurrencyField label={`Plan cost recovered or eligible for tax-free recovery ${worksheetYear ? `through ${worksheetYear - 1}` : "in prior years"}`} hint="Use line 10 of the prior-year worksheet and include amounts you could have recovered in prior years. Enter zero only if there was no prior recoverable cost." value={worksheet?.priorRecovered ?? ""} onChange={priorRecovered => updateWorksheet({ priorRecovered })} required />
       {worksheet && <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("simplifiedMethod", undefined)}>Remove Simplified Method worksheet</button>}
     </fieldset>}
     {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label={qcdStatement ? "Is another retirement worksheet beyond this QCD worksheet needed?" : needsSimplifiedMethod ? "Is a penalty exception or another retirement worksheet needed for this pension?" : "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?"} value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
