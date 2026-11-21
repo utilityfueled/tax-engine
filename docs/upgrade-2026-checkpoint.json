@@ -1,5 +1,56 @@
 {
   "activeContinuation": {
+    "nov21CombinedVerification": {
+      "commit": "2fc5afb40f2b39e05af990c881c1cdbd152f31ec",
+      "unitTestsPassed": 29960,
+      "coverageTestsPassed": 29960,
+      "suites": 2183,
+      "branchCoveragePercent": 88.49,
+      "postgresVersion": "16.16",
+      "bothPostgresStopsPassed": true,
+      "trackedSpecRefsValid": 9844,
+      "typeChecksPassed": true,
+      "inventoryPassed": true,
+      "browserSourceAuditPassed": true,
+      "workflowsAtCapture": {
+        "ci": {"run": 44943504711, "status": "in_progress"},
+        "web": {"run": 44943504720, "status": "in_progress"},
+        "docker": {"run": 44943504800, "status": "success"},
+        "nativeArm64": {"run": 44943530319, "status": "pending"}
+      },
+      "strictLinuxQualified": false
+    },
+    "nov21OhioSchoolPdfReplay": {
+      "commit": "f69773162fc224177deb95169d9997b0dd171ce4",
+      "schoolBuildsBefore": 5,
+      "schoolBuildsAfter": 4,
+      "verifiedRawAndRedactedFixtures": 4,
+      "focusedTestsPassed": 189,
+      "fullBatchControlsPassed": 8,
+      "ohioSpecRefsValid": 916,
+      "nativeMacBrowserCasesPassed": 6,
+      "browserCaseLimitMs": 30000,
+      "strictLinuxQualified": false
+    },
+    "nov21ScheduleSECandidateCompatibility": {
+      "commit": "2fc5afb40f2b39e05af990c881c1cdbd152f31ec",
+      "focusedCandidateTestsPassed": 9,
+      "browserOverlayControlsPassed": 27,
+      "fullBatchControlsPassed": 8,
+      "federalSpecRefsValid": 6219,
+      "candidateReviewEnabled": false,
+      "candidateFilingEnabled": false,
+      "currentSourceArm64Run": 44943530319
+    },
+    "nov21ScheduleBPartThree": {
+      "commit": "9ad967032f6058d1fdfb64989a79058b31948818",
+      "officialSources": ["https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf#page=2", "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=2"],
+      "confirmedStateReplayChecksPassed": 943,
+      "wholeOutputStateFingerprintsCompared": 38,
+      "fullChecksBeforeFinalOhioCompanionGuard": {"unitTestsPassed": 29957, "coverageTestsPassed": 29957, "suites": 2183, "branchCoveragePercent": 88.49, "postgresVersion": "16.16", "bothPostgresStopsPassed": true, "localBrowserPassed": 6},
+      "finalSource": {"focusedTestsPassed": 214, "fullBatchControlsPassed": 8, "ohioSpecRefsValid": 914, "inventoryPassed": true, "typeChecksPassed": true, "browserAuditPassed": true},
+      "qualification": "Review output preserves actual facts and unknowns. Filing remains closed."
+    },
     "nov21AotcSchoolEin": {
       "commit": "05d21abd8d0b9b1c97e3d135bfb44b6bb87831d4",
       "sources": ["https://uscode.house.gov/us/usc/119-120/t26/s25A/", "https://www.irs.gov/pub/irs-prior/f8863--2026.pdf#page=2", "https://www.irs.gov/instructions/i8863"],

@@ -1,5 +1,90 @@
 # 2026 upgrade implementation evidence
 
+## November 21 combined verification
+
+The exact tracked archive at `2fc5afb4` passed all 29,960 tests in
+2,183 suites in both the unit and coverage runs, with 88.49% branch
+coverage. Both runs used PostgreSQL 16.16 and stopped their temporary
+instances successfully. All 9,844 tracked spec references passed,
+along with the core and web type checks, inventory and browser source
+audit. The Docker workflow passed on the same commit.
+
+At evidence capture, the CI and Web workflows were running and the
+native ARM64 rehearsal was queued. Strict Linux browser verification,
+complete hosted billing evidence and the independent launch gates
+remain open.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44943504711) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44943504720) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44943504800) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44943530319).
+
+## November 21 Ohio school PDF replay
+
+Commit `f6977316` bypasses the ordinary physical Ohio renderer after
+validation when both the original and render copies have school
+district sources. The ordinary renderer was repeating the federal
+and Ohio replay before returning no attachments. In four raw and
+redacted fixtures, school-source builds fell from five to four with
+the same saved form cells, status notes and privacy checks. Invalid
+school originals still fail before writing, and eligible non-school
+returns still produce all four ordinary attachments.
+
+The exact staged source passed 189 focused tests, eight full-batch
+controls, every Ohio spec reference, typechecking, lint and inventory.
+All six existing school and NEW212 cases passed in local Chromium
+with two workers, zero retries and the original 30-second limit.
+Strict Linux qualification remains open.
+
+## November 21 Schedule SE candidate compatibility
+
+Commit `2fc5afb4` preserves every field in the 2026 wagering Schedule
+SE candidate when a taxpayer supplies Schedule B Part III facts.
+The regression reproduced the old allowlist rejection. Both
+affirmative and negative complete disclosures now match the
+projection without Part III answers. The candidate remains disabled
+for review and filing. Both focused candidate suites passed, along
+with the browser controls, federal spec references, typechecking,
+lint and inventory.
+[Current-source ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44943530319).
+
+## November 21 Schedule B foreign reporting answers
+
+Commit `9ad96703` collects separate, year-scoped answers for foreign
+financial accounts, the FBAR question and foreign trusts. It uses
+reported countries when FBAR is required. Unanswered fields stay
+unknown. Dividend foreign tax and a foreign partnership K-1 supply
+their own tax facts without completing Part III.
+[2025 Schedule B instructions](https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf#page=2) ·
+[2026 Schedule B instructions](https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=2).
+
+The 2025 review PDF maps the two account questions and the trust
+question to three separate widget rows. Blank answers remain
+unmarked. Line 7b can use a redacted continuation and displays a
+notice if the pinned font cannot print a supplied spelling.
+The guided review identifies missing answers on a started disclosure.
+The filing boundary requires resolution even below the
+Schedule B monetary thresholds.
+
+Independent replay confirmed that the disclosure preserves PA and
+Ohio source confirmations and that a changed W-2 still invalidates
+them. A comparison of 38 whole-output fixtures against `5a8384ec`
+found only the reported Schedule B fields and their audit rows changed.
+State amounts and source commitments matched.
+
+The isolated combined run passed all 29,957 tests twice across 2,183
+suites with PostgreSQL 16.16 and measured 88.49% branch coverage.
+Both temporary databases stopped normally. Six local browser cases
+passed with the existing limits. These runs preceded the final Ohio
+companion guard. The pushed commit passed the 214 focused checks
+covering the full reporting path and that guard, plus typechecking,
+the browser controls and inventory validation. On the earlier
+`eb33a3d3`, public CI and managed Linux browsers passed. Strict AMD64
+had four Ohio deadlines. The `2134c1bc` ARM64 rehearsal passed image
+smoke and Compose recovery, then had nine strict browser failures.
+[Earlier public CI](https://github.com/utilityfueled/tax-engine/actions/runs/44938160588) ·
+[Earlier Linux browsers](https://github.com/utilityfueled/tax-engine/actions/runs/44938160572) ·
+[Earlier ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44937275054).
+
 ## November 21 American Opportunity Credit school EINs
 
 Commit `05d21abd` requires the actual EIN of every school supporting a
@@ -105,8 +190,8 @@ seconds on this host. The full unit suite on exact `2134c1bc` passed all
 29,934 tests and measured 88.48% branch coverage. Both temporary databases
 shut down normally. The older ARM64 run passed image smoke and isolated Compose
 upgrade and recovery. Its strict browser stage finished with 641 passes,
-nine failures and five original skips. The exact revised
-ARM64 and Web runs started separately and remain open.
+nine failures and five original skips. The revised ARM64 and Web runs
+retained the original browser limits.
 [Older ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44929369390/job/136933871759) ·
 [Revised ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44937275054) ·
 [Revised Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44937172012).
