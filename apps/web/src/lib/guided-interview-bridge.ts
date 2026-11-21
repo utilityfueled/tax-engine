@@ -473,9 +473,9 @@ export function buildDonationsInput(deductionData: DeductionData | undefined, ta
 
 // ── Adjustments converter ───────────────────────────────────────────────────
 
-export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []) {
+export function buildAdjustmentsInput(adjustmentData: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = [], personal?: PersonalInfoData) {
   if (!adjustmentData) return undefined;
-  assertKnownFacts(adjustmentFactErrors(adjustmentData, filingStatus, taxYear, education));
+  assertKnownFacts(adjustmentFactErrors(adjustmentData, filingStatus, taxYear, education, personal));
 
   // The HSA deduction is calculated from the actual Form 8889 facts.
   const hsaDeduction = "0";
@@ -839,7 +839,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(codNolFactErrors(state));
     assertKnownFacts(codPrincipalResidenceFactErrors(state));
     assertKnownFacts(premiumTaxCreditFactErrors(state));
-    assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
+    assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, personalInfo));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
     assertKnownFacts(educatorBondFactErrors(state));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
@@ -890,7 +890,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear, { state, originals: royaltyInputs.form1099Misc });
   } catch { return null; }
   const donations = buildDonationsInput(deductionData, state.taxYear);
-  const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
+  const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation, personalInfo);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);
   const ira = adjustmentData?.iraContributions;
   const iraDeductionWorksheet = ira ? {

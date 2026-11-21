@@ -1,6 +1,7 @@
 "use client";
 
 import type { HsaDistributionEvent, HsaDistributionSource, HsaMedicalEligibility } from "@/lib/guided-hsa-distribution-facts";
+import { correctionTextFields, correctionMoneyFields, correctionBooleanFields, type HsaTimelyExcessCorrection } from "@/lib/guided-hsa-excess-correction-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
 
@@ -19,11 +20,18 @@ export function HsaDistributionDetails({ records, labelPrefix, onChange }: { rec
     {records.map((record, index) => {
       const prefix = `${labelPrefix}, source ${index + 1}`;
       const label = (text: string) => `${prefix}: ${text}`;
+      const correction = record.excessCorrection ?? {};
+      const updateCorrection = (patch: Partial<HsaTimelyExcessCorrection>) => update(index, { excessCorrection: { ...correction, ...patch } });
+      const showsCorrection = record.distributionCode === "2" || record.excessCorrection !== undefined;
       const updateEvent = (eventIndex: number, patch: Partial<HsaDistributionEvent>) => update(index, { events: record.events.map((event, position) => position === eventIndex ? { ...event, ...patch } : event) });
       return <fieldset key={record.id} className="guided-expand-body"><legend>Form 1099-SA source {index + 1}</legend>
         <div className="guided-form-grid">
           <TextFact label={label("Actual statement tax year")} value={record.sourceTaxYear} onChange={sourceTaxYear => update(index, { sourceTaxYear })} />
           <label className="guided-field"><span className="guided-field-label">{label("Actual recipient")}</span><select className="guided-select" value={record.accountOwner} onChange={event => update(index, { accountOwner: event.target.value as HsaDistributionSource["accountOwner"] })}><option value="">Unknown</option><option value="primary">Taxpayer</option><option value="spouse">Spouse</option></select></label>
+          {showsCorrection && <>
+            <TextFact label={label("Original statement reference")} value={record.sourceReference ?? ""} onChange={sourceReference => update(index, { sourceReference })} />
+            <TextFact label={label("Original statement recipient full SSN")} value={record.recipientSsn ?? ""} onChange={recipientSsn => update(index, { recipientSsn })} />
+          </>}
           <TextFact label={label("Payer name")} value={record.payer} onChange={payer => update(index, { payer })} />
           <TextFact label={label("Payer TIN")} value={record.payerTin} onChange={payerTin => update(index, { payerTin })} />
           <TextFact label={label("Account reference")} value={record.accountReference} onChange={accountReference => update(index, { accountReference })} />
@@ -33,7 +41,16 @@ export function HsaDistributionDetails({ records, labelPrefix, onChange }: { rec
           <CurrencyField label={label("Box 2 excess-contribution earnings")} hint="Box 2 earnings are already included in Box 1. Enter actual zero only when known." value={record.earningsOnExcessContributions} onChange={earningsOnExcessContributions => update(index, { earningsOnExcessContributions })} required />
           <BooleanFact label={label("This was a trustee-to-trustee transfer")} value={record.trusteeToTrusteeTransfer} onChange={trusteeToTrusteeTransfer => update(index, { trusteeToTrusteeTransfer })} />
         </div>
-        <p className="guided-hint">A masked account reference is enough to distinguish actual statements. Direct trustee transfers are not Form 1099-SA distributions. Correction, death, prohibited-transaction and MSA sources stay saved while their separate worksheets are completed.</p>
+        <p className="guided-hint">A masked account reference is enough to distinguish actual statements. Direct trustee transfers are not Form 1099-SA distributions. Only the explicit same-year personal correction below is supported here. Other correction, death, prohibited-transaction and MSA sources stay saved while their separate worksheets are completed.</p>
+        {showsCorrection && <fieldset className="guided-expand-body"><legend>Actual timely personal contribution return</legend>
+          <p className="guided-hint">This worksheet supports one personal contribution correction received in 2026 for 2026, for an under-55 owner with full-year eligible self-only coverage and no other distributions, employer funding or prior excess. Enter the original contribution before its return here, and the net contribution after returned principal in the owner worksheet. Earnings are included in gross received and are separate income. Next-year returns, losses, extensions or correction relief need their separate treatment.</p>
+          {record.distributionCode !== "2" && <p className="guided-hint">Saved correction originals remain. Reconcile the actual reported code before calculating; changing a code does not erase these facts.</p>}
+          <div className="guided-form-grid">
+            {correctionTextFields.map(([field, text]) => <TextFact key={field} label={label(text)} type={field === "contributionDate" || field === "returnReceivedDate" ? "date" : "text"} value={correction[field] ?? ""} onChange={value => updateCorrection({ [field]: value })} />)}
+            {correctionMoneyFields.map(([field, text]) => <CurrencyField key={field} label={label(text)} value={correction[field] ?? ""} onChange={value => updateCorrection({ [field]: value })} required />)}
+            {correctionBooleanFields.map(([field, text]) => <BooleanFact key={field} label={label(text)} value={correction[field]} onChange={value => updateCorrection({ [field]: value })} />)}
+          </div>
+        </fieldset>}
         {record.events.map((event, eventIndex) => {
           const eventLabel = (text: string) => `${prefix}, distribution ${eventIndex + 1}: ${text}`;
           const updateMedical = (field: keyof HsaMedicalEligibility, value: boolean | null) => updateEvent(eventIndex, { medicalEligibility: { qualifiedExpense: null, beneficiaryEligible: null, incurredAfterHsaEstablished: null, notReimbursedElsewhere: null, notDeductedOnScheduleA: null, ...event.medicalEligibility, [field]: value } });
@@ -41,11 +58,11 @@ export function HsaDistributionDetails({ records, labelPrefix, onChange }: { rec
             <TextFact label={eventLabel("Actual distribution date")} type="date" value={event.distributionDate} onChange={distributionDate => updateEvent(eventIndex, { distributionDate })} />
             <CurrencyField label={eventLabel("Gross amount")} value={event.grossDistribution} onChange={grossDistribution => updateEvent(eventIndex, { grossDistribution })} required />
             <CurrencyField label={eventLabel("Medical costs assigned to this distribution")} hint="Use actual expenses paid or reimbursed with these dollars. Do not repeat expenses assigned to another distribution or account." value={event.medicalExpenses} onChange={medicalExpenses => updateEvent(eventIndex, { medicalExpenses })} required />
-            {medicalLabels.map(([field, text]) => <BooleanFact key={field} label={eventLabel(text)} value={event.medicalEligibility?.[field]} onChange={value => updateMedical(field, value)} />)}
+            {record.distributionCode !== "2" && medicalLabels.map(([field, text]) => <BooleanFact key={field} label={eventLabel(text)} value={event.medicalEligibility?.[field]} onChange={value => updateMedical(field, value)} />)}
             <CurrencyField label={eventLabel("Amount rolled into another HSA")} value={event.rolloverAmount} onChange={rolloverAmount => updateEvent(eventIndex, { rolloverAmount })} required />
-            <TextFact label={eventLabel("Actual receiving HSA deposit date")} type="date" value={event.rolloverReceivedDate ?? ""} onChange={rolloverReceivedDate => updateEvent(eventIndex, { rolloverReceivedDate })} />
+            {record.distributionCode !== "2" && <><TextFact label={eventLabel("Actual receiving HSA deposit date")} type="date" value={event.rolloverReceivedDate ?? ""} onChange={rolloverReceivedDate => updateEvent(eventIndex, { rolloverReceivedDate })} />
             <BooleanFact label={eventLabel("The receiving HSA has the same owner")} value={event.rolloverToSameOwnerHsa} onChange={rolloverToSameOwnerHsa => updateEvent(eventIndex, { rolloverToSameOwnerHsa })} />
-            <BooleanFact label={eventLabel("No other HSA rollover in the preceding twelve months")} value={event.noOtherRolloverInPrior12Months} onChange={noOtherRolloverInPrior12Months => updateEvent(eventIndex, { noOtherRolloverInPrior12Months })} />
+            <BooleanFact label={eventLabel("No other HSA rollover in the preceding twelve months")} value={event.noOtherRolloverInPrior12Months} onChange={noOtherRolloverInPrior12Months => updateEvent(eventIndex, { noOtherRolloverInPrior12Months })} /></>}
           </div><button type="button" className="utility-button" onClick={() => update(index, { events: record.events.filter((_, position) => position !== eventIndex) })}>{eventLabel("Remove dated distribution")}</button></fieldset>;
         })}
         <button type="button" className="utility-button" onClick={() => update(index, { events: [...record.events, { id: crypto.randomUUID(), distributionDate: "", grossDistribution: "", medicalExpenses: "", rolloverAmount: "" }] })}>{label("Add dated distribution")}</button>

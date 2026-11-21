@@ -8,6 +8,8 @@ import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-f
 import { isStartedW2 } from "./guided-w2-facts";
 import { buildHsaDistributionInputs, hsaDistributionFactErrors, type HsaDistributionSource } from "./guided-hsa-distribution-facts";
 
+import { buildHsaTimelyCorrectionOriginal, hsaCorrectionRecipient, hsaTimelyCorrectionAccountErrors } from "./guided-hsa-excess-correction-facts";
+
 export type HsaCoverageFact = "" | "none" | "self_only" | "family";
 export interface HsaAccountData {
   id: string;
@@ -69,6 +71,7 @@ export function hsaFactErrors(accounts: HsaAccountData[] | undefined, filingStat
   const owners = new Set<string>();
   const ids = new Set<string>();
   const distributionSourceIds = new Set<string>();
+  const correctionOriginalReferences = new Set<string>();
   const distributionAccountOwners = new Map<string, string>();
   for (const [index, account] of accounts.entries()) {
     const key = `hsa-${index}`;
@@ -105,10 +108,14 @@ export function hsaFactErrors(accounts: HsaAccountData[] | undefined, filingStat
     if (!errors[`${key}-priorYearExcessContributions`] && !errors[`${key}-priorYearAdditionalTax`] && parseGuidedCurrency(account.priorYearAdditionalTax).gt(0) && parseGuidedCurrency(account.priorYearExcessContributions).isZero()) add("priorTax", "A positive prior additional tax requires the actual prior excess balance; reconcile the source form.");
     if (account.hasDistributions === true && account.accountOwner) {
       const birthDate = personal ? (account.accountOwner === "spouse" ? personal.spouse?.dateOfBirth : personal.dateOfBirth) ?? "" : undefined;
-      for (const [field, message] of Object.entries(hsaDistributionFactErrors(account.distributions, account.accountOwner, year, birthDate))) add(field, message);
+      for (const [field, message] of Object.entries(hsaDistributionFactErrors(account.distributions, account.accountOwner, year, birthDate, hsaCorrectionRecipient(personal, account.accountOwner)))) add(field, message);
     }
     if (account.hasDistributions !== true && account.distributions?.length) add("savedDistributions", "Saved distribution sources remain. Reconcile the applicability answer or explicitly remove the records after checking the actual sources.");
     for (const source of account.distributions ?? []) {
+      if (source.distributionCode === "2" && source.excessCorrection) for (const identity of [`contribution:${source.excessCorrection.contributionReference?.trim()}`, `distribution:${source.excessCorrection.returnReference?.trim()}`]) {
+        if (correctionOriginalReferences.has(identity)) add("correctionOriginalCopy", "Keep each actual contribution and return original assigned to one owner only.");
+        correctionOriginalReferences.add(identity);
+      }
       if (distributionSourceIds.has(source.id)) add("distributionSourceCopy", "The same HSA source identifier appears in more than one owner worksheet; reconcile the actual recipient.");
       distributionSourceIds.add(source.id);
       const identity = [source.sourceTaxYear, source.payerTin.replace(/-/g, ""), source.accountReference.trim()].join("|");
@@ -116,7 +123,7 @@ export function hsaFactErrors(accounts: HsaAccountData[] | undefined, filingStat
       if (existingOwner && existingOwner !== account.accountOwner) add("distributionAccountCopy", "The same HSA account is assigned to different owners. Reconcile actual source ownership and use account references that distinguish separate accounts.");
       distributionAccountOwners.set(identity, account.accountOwner);
     }
-    if (account.correctionsRequired === true) add("corrections", "Returned contributions, recharacterizations or correction relief need the actual correction worksheet before calculating.");
+    for (const [field, message] of Object.entries(hsaTimelyCorrectionAccountErrors(account, personal))) add(field, message);
     if (!errors[`${key}-employerPriorYearContributions`] && !errors[`${key}-employerW2Contributions`] && parseGuidedCurrency(account.employerPriorYearContributions).gt(parseGuidedCurrency(account.employerW2Contributions))) add("priorEmployer", "Prior-year amounts cannot exceed the current W-2 code W total that includes them.");
     if (!errors[`${key}-employerW2Contributions`] && !errors[`${key}-employerFollowingYearContributions`]) {
       const employerSources = parseGuidedCurrency(account.employerW2Contributions).plus(parseGuidedCurrency(account.employerFollowingYearContributions));
@@ -149,7 +156,7 @@ export function hsaFactErrors(accounts: HsaAccountData[] | undefined, filingStat
         else {
           const funding = new Date(`${history.fundingDistributionDate}T00:00:00Z`);
           const end = new Date(Date.UTC(funding.getUTCFullYear() + 1, funding.getUTCMonth() + 1, 0)).toISOString().slice(0, 10);
-          if (history.failureDate < history.fundingDistributionDate! || history.failureDate > end) add("fundingPeriod", "The failure date must fall within the actual funding distribution's testing period.");
+          if (history.failureDate < (history.fundingDistributionDate ?? "") || history.failureDate > end) add("fundingPeriod", "The failure date must fall within the actual funding distribution's testing period.");
         }
         if (history.deathOrDisabilityException === false) { const error = amountError(history.fundingDistributionAmount, "qualified funding subject to recapture"); if (error) add("fundingAmount", error); }
       }
@@ -170,7 +177,7 @@ export function hsaFactErrors(accounts: HsaAccountData[] | undefined, filingStat
 
 export function buildHsaInputs(accounts: HsaAccountData[] | undefined, personal?: PersonalInfoData): { form8889ByOwner?: { primary?: Partial<Form8889Input>; spouse?: Partial<Form8889Input> }; form5329HsaByOwner?: TaxYearInput["form5329HsaByOwner"]; form1099SA?: TaxYearInput["form1099SA"] } {
   if (!accounts?.length) return {};
-  const errors = hsaFactErrors(accounts);
+  const errors = hsaFactErrors(accounts, undefined, undefined, undefined, personal);
   if (Object.keys(errors).length) throw new Error(`Missing required HSA source facts: ${Object.values(errors).join(" ")}`);
   const forms: { primary?: Partial<Form8889Input>; spouse?: Partial<Form8889Input> } = {};
   const excessSources: NonNullable<TaxYearInput["form5329HsaByOwner"]> = {};
@@ -181,7 +188,7 @@ export function buildHsaInputs(accounts: HsaAccountData[] | undefined, personal?
     const ordinaryLastMonth = history?.rule === "last_month_rule" || history?.rule === "both";
     const fundingRecapture = history?.rule === "qualified_funding" || history?.rule === "both";
     const money = (value?: string) => hasEnteredAmount(value) ? parseGuidedCurrency(value).toString() : undefined;
-    const distributionInput = account.hasDistributions === true ? buildHsaDistributionInputs(account.distributions ?? [], account.accountOwner, Number(account.contributionTaxYear), (account.accountOwner === "spouse" ? personal?.spouse?.dateOfBirth : personal?.dateOfBirth) ?? "") : undefined;
+    const distributionInput = account.hasDistributions === true ? buildHsaDistributionInputs(account.distributions ?? [], account.accountOwner, Number(account.contributionTaxYear), (account.accountOwner === "spouse" ? personal?.spouse?.dateOfBirth : personal?.dateOfBirth) ?? "", hsaCorrectionRecipient(personal, account.accountOwner)) : undefined;
     if (distributionInput) distributions.push(...distributionInput.form1099SA);
     excessSources[account.accountOwner] = {
       sourceTaxYear: Number(account.contributionTaxYear),
@@ -191,7 +198,8 @@ export function buildHsaInputs(accounts: HsaAccountData[] | undefined, personal?
       priorYearAdditionalTax: money(account.priorYearAdditionalTax),
       valueDec31: money(account.yearEndFairMarketValue),
       excessEmployerContributionsAlreadyInWages: money(account.excessEmployerContributionsAlreadyInWages),
-      // The actual no-corrections answer above establishes no amended-return relief.
+      // The actual no-corrections answer, or qualified original no-special-relief facts, excludes amended-return relief.
+      ...(account.distributions?.[0]?.distributionCode === "2" ? { timelyPersonalContributionReturn: buildHsaTimelyCorrectionOriginal(account.distributions[0], account.accountOwner) } : {}),
       returnedExcessContributionsUnder9100Relief: "0",
       returnedExcessContributionEarningsUnder9100Relief: "0",
     };

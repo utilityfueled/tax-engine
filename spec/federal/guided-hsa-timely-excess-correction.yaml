@@ -1,0 +1,60 @@
+form: "Guided timely HSA excess correction"
+fullName: "2026 same-year personal HSA excess returned to the original owner"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i1099sa"
+notes: |
+  The current IRS 1099-SA instructions are revised December2026 and explicitly
+  apply to 2026 information furnished in early2027; they use the April2025
+  continuous-use Form1099-SA. Current final Form8889 is2026; current published
+  Form8889 instructions remain2025. IRC223(f)(3) and those instructions require
+  receipt by the taxpayer's return due date including extensions, return of all
+  attributable income, no deduction for returned principal, and earnings income
+  in the year received. This narrow route requires both contribution and actual
+  receipt in2026 for an ordinary calendar-year taxpayer, hence before that
+  year's ordinary return deadline; it does not assume a trustee filing deadline
+  is the taxpayer deadline or qualify next-year/9100/disaster relief.
+  https://www.irs.gov/pub/irs-pdf/f8889.pdf lines2,3,14a,14b
+  https://www.irs.gov/instructions/i8889 Excess Contributions and line14b
+  https://www.law.cornell.edu/uscode/text/26/223 subsection(f)(3)
+  No annual eligibility, filing, routing or PDF readiness gate is promoted.
+lines:
+  - line: "original-and-owner"
+    description: "Bind contribution, posted correction and original1099-SA to the actual owner"
+    formula: "Require distinct original contribution/return references, actual recipient name and full SSN matching the current household owner, matching payerTIN/account, contribution designation2026, actual2026 contribution and received-return dates in order after the current owner's actual birth date, source confirmation and explicit posted/nonreversed/all-income/no-other-correction/no-special-relief facts. Saved values never supply missing facts."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::holds missing conflicting and outside-cohort originals"
+  - line: "complete-correction"
+    description: "Admit only an independently reconciled complete ordinary personal correction"
+    formula: "Only one code2 original per owner; under55, twelve eligible self-only months, not dependent, no Medicare/disqualifying coverage, employer/other funding, prior excess or additional tax, last-month/testing rule. Require original contribution minus positive returned principal = net personal contributions =4400. Require exact posted gross = principal + nonnegative known earnings =1099SA Box1 and posted earnings =Box2. One actual dated event must match receipt/gross with medical and rollover amounts zero."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::hands a complete2026 personal correction to the canonical owner calculation"
+  - line: "canonical-effect"
+    description: "Preserve ordinary owner-specific federal calculations"
+    formula: "Original5000 minus returned principal600 = net4400 Form8889 line2/13. Box1 gross625 and Box2 earnings25 produce line14a/14b625, no taxable ordinary distribution or20percent tax, no primary excess and25 earnings income. An uncorrected spouse's separate5000 remains600 excess/36 tax. Known zero earnings is distinct from blank. Never assign correction dollars to medical, rollover, age or disability exceptions."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::keeps another owners excess and known zero earnings separate"
+  - line: "saved-source"
+    description: "Retain source facts across actual guided workspace save and restore"
+    formula: "Preserve explicit original facts/unknown/zero through guided save and encrypted workspace recovery. Current household/year/owner/amount/confirmation are revalidated on every build; old or stale code2 records do not gain treatment from the code alone. Edits revoke the source and owner confirmations."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::reopens actual guided correction originals without granting stale ownership"
+  - line: "visible-originals"
+    description: "Collect every correction fact through actual guided controls"
+    formula: "Show explicit source identity/date/amount and confirmation fields for code2. Blank remains unknown, zero is entered explicitly. Editing any original revokes distribution and owner confirmation; changing code preserves and holds saved correction facts."
+    testRef: "tests/apps/web/guided-hsa-timely-excess-interactions.test.tsx::collects actual correction originals and invalidates source and owner confirmations on edits"
+  - line: "finite-canonical-source"
+    description: "Bind independent statement identity to the final canonical original packet"
+    formula: "Require separately entered1099SA source reference/full recipientSSN plus original contribution/return references and recipient identity. Preserve raw source money, unsigned at most12 integer digits and2 cents, and require sole same-owner Code2 statement/event. Map confirmed originals to timelyPersonalContributionReturn; reject missing identity context, duplicate cross-owner references, unsupported prior/employer/other distributions and changed sources."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::holds missing conflicting and outside-cohort originals"
+  - line: "encrypted-recovery"
+    description: "Restore actual native source facts through encrypted workspace recovery"
+    formula: "Save the complete guided state, export encrypted workspace recovery, restore into a separate workspace and rebuild the same canonical input. Preserve unknown versus known zero and all original source fields; stale taxpayer identity still holds after reopen."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::restores confirmed originals through encrypted workspace recovery"
+  - line: "annual-gates"
+    description: "Keep whole-return and export unavailable for2026"
+    formula: "This manual source route neither supplies annual calculation constants nor promotes the whole-return PDF mapping. Preserve production getConstants2026 incomplete error and assertPdfExportAllowed2026 hold, even with a complete correction source."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::keeps2026 whole-return and export gates closed"
+  - line: "separate-spouse-originals"
+    description: "Reconcile the actual spouse and reject reused correction originals"
+    formula: "A sole spouse Code2 correction binds to the actual joint-return spouse, not the primary identity. Two corrected owners need independently distinct contribution/return references and account/source identities. A contribution cannot predate the current actual owner's birth date."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::binds spouse correction originals independently and holds reused sources"
+  - line: "posted-as-of-review"
+    description: "Reject future originals before treating a contribution return as actually received"
+    formula: "At guided validation/build, compare both original contribution and actual received-return date to the current local civil calendar review day using local date calendar parts formatted as YYYY-MM-DD, not the UTC ISO day. A U.S. evening after UTC midnight cannot admit the next local day. A dated request or future alleged posting is not an actual received correction. Require both dates on or before that day; same-day receipt is allowed. Saved sources are revalidated, and future dates cannot be admitted by source confirmations. Keep the canonical calculation pure; do not add a clock or deadline relief there."
+    testRef: "tests/guided-interview/guided-hsa-timely-excess-correction.test.ts::holds future posted originals at the fixed guided review date and accepts its boundary"

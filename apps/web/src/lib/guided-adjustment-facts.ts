@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import { hsaFactErrors } from "./guided-hsa-facts";
 import { educatorFactErrors } from "./guided-educator-facts";
 import { studentLoanFactErrors, type StudentLoanEducationSources } from "./guided-student-loan-facts";
-import type { AdjustmentData, FilingStatus, OtherTaxesData } from "./guided-interview-flow";
+import type { AdjustmentData, FilingStatus, OtherTaxesData, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 
@@ -15,9 +15,9 @@ export function isDeductibleAlimony(data: AdjustmentData): boolean {
     && facts.post2018ModificationAppliesNewRules === false && alimonyRequirementFields.every((field) => facts[field] === true);
 }
 
-export function adjustmentFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []): Record<string, string> {
+export function adjustmentFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = [], personal?: PersonalInfoData): Record<string, string> {
   if (!data) return {};
-  const errors: Record<string, string> = { ...healthInsuranceFactErrors(data, filingStatus, taxYear), ...hsaFactErrors(data.hsaAccounts, filingStatus, taxYear), ...educatorFactErrors(data, filingStatus, taxYear), ...studentLoanFactErrors(data, filingStatus, taxYear, education) };
+  const errors: Record<string, string> = { ...healthInsuranceFactErrors(data, filingStatus, taxYear), ...hsaFactErrors(data.hsaAccounts, filingStatus, taxYear, undefined, personal), ...educatorFactErrors(data, filingStatus, taxYear), ...studentLoanFactErrors(data, filingStatus, taxYear, education) };
   for (const field of ["hsaDeduction", "studentLoanInterest", "selfEmployedHealthInsurance", "educatorExpenses", "iraDeduction", "alimonyPaid"] as const) {
     if (!hasEnteredAmount(data[field])) continue;
     const error = amountError(data[field], field);

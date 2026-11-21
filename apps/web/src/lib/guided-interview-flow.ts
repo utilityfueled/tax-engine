@@ -2578,9 +2578,9 @@ function validateDeductionsSection(data: DeductionData | undefined, taxYear?: nu
   });
 }
 
-function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = []): SectionValidationResult {
+function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, education: StudentLoanEducationSources = [], personal?: PersonalInfoData): SectionValidationResult {
   if (!data) return EMPTY_SECTION("adjustments info", true);
-  const errors = adjustmentFactErrors(data, filingStatus, taxYear, education);
+  const errors = adjustmentFactErrors(data, filingStatus, taxYear, education, personal);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
   if (data.movingExpenses || data.movingExpensesNotApplicable === true || data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.codPrincipalResidenceSources || data.k1LossSources) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
@@ -2652,7 +2652,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
         if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts, { interestEntries: state.sectionData["income-investments"]?.interestEntries, primarySsn: state.sectionData["personal-info"]?.ssn, spouseSsn: state.sectionData["personal-info"]?.spouse?.ssn });
       } catch (error) { errors.studentLoanSources = error instanceof Error ? error.message : "Reconcile the actual education sources linked to student-loan interest."; }
       Object.assign(errors, studentLoanFactErrors(state.sectionData.adjustments, state.segmentation.filingStatus, state.taxYear, loanEducation, state.segmentation.lifeEvents.includes("student-loans")));
-      return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, loanEducation);
+      return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, loanEducation, getSectionData(state, "personal-info"));
     }
     case "credits": {
       const credits = getSectionData(state, "credits");

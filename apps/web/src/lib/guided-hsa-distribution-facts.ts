@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import type { Form1099SA, Form8889Input } from "@/models/inputs";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, isActualDate } from "./guided-required-facts";
+import { hsaTimelyCorrectionErrors, type HsaTimelyExcessCorrection, type HsaCorrectionRecipient } from "./guided-hsa-excess-correction-facts";
 
 export interface HsaMedicalEligibility {
   qualifiedExpense: boolean | null;
@@ -23,6 +24,8 @@ export interface HsaDistributionEvent {
 }
 export interface HsaDistributionSource {
   id: string;
+  sourceReference?: string;
+  recipientSsn?: string;
   sourceTaxYear: string;
   accountOwner: "" | "primary" | "spouse";
   payer: string;
@@ -35,6 +38,7 @@ export interface HsaDistributionSource {
   trusteeToTrusteeTransfer: boolean | null;
   sourceFactsConfirmed: boolean | null;
   events: HsaDistributionEvent[];
+  excessCorrection?: HsaTimelyExcessCorrection;
 }
 
 const medicalFields = ["qualifiedExpense", "beneficiaryEligible", "incurredAfterHsaEstablished", "notReimbursedElsewhere", "notDeductedOnScheduleA"] as const;
@@ -44,11 +48,11 @@ function qualifiedMedical(event: HsaDistributionEvent): Decimal {
 }
 function qualifiedRollover(event: HsaDistributionEvent): Decimal {
   if (!isActualDate(event.rolloverReceivedDate) || event.rolloverToSameOwnerHsa !== true || event.noOtherRolloverInPrior12Months !== true) return new Decimal(0);
-  const days = day(event.rolloverReceivedDate!) - day(event.distributionDate);
+  const days = day(event.rolloverReceivedDate ?? "") - day(event.distributionDate);
   return days >= 0 && days <= 60 ? parseGuidedCurrency(event.rolloverAmount) : new Decimal(0);
 }
 
-export function hsaDistributionFactErrors(records: HsaDistributionSource[] | undefined, owner: "primary" | "spouse", taxYear: number, dateOfBirth?: string): Record<string, string> {
+export function hsaDistributionFactErrors(records: HsaDistributionSource[] | undefined, owner: "primary" | "spouse", taxYear: number, dateOfBirth?: string, recipient?: HsaCorrectionRecipient): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!records?.length) return { hsaDistributionSources: "Enter the actual Form 1099-SA records and distribution details for this owner." };
   if (![2025, 2026].includes(taxYear)) errors.hsaDistributionYear = "Select a supported actual return year.";
@@ -73,14 +77,15 @@ export function hsaDistributionFactErrors(records: HsaDistributionSource[] | und
     if (statements.has(fingerprint)) add("duplicate", "These records identify the same account, year and code. Reconcile original and corrected statements before counting either twice.");
     statements.add(fingerprint);
     if (record.accountType !== "hsa") add("accountType", "Confirm the actual HSA checkbox. Archer and Medicare Advantage MSAs need their separate source worksheets.");
-    if (!["1", "3"].includes(record.distributionCode)) add("code", "Contribution returns, death and prohibited-transaction codes need their separate source worksheets; preserve the reported code.");
+    if (!["1", "2", "3"].includes(record.distributionCode)) add("code", "Contribution returns, death and prohibited-transaction codes need their separate source worksheets; preserve the reported code.");
+    for (const [field, message] of Object.entries(hsaTimelyCorrectionErrors(record, taxYear, recipient))) add(field, message);
     if (record.trusteeToTrusteeTransfer !== false) add("transfer", "Confirm this is a reported distribution, not a trustee-to-trustee transfer.");
     if (record.sourceFactsConfirmed !== true) add("confirmation", "Check these source records and expense allocations after the last edit.");
     for (const field of ["grossDistribution", "earningsOnExcessContributions"] as const) {
       const error = amountError(record[field], field === "grossDistribution" ? "Box 1 gross distribution" : "Box 2 earnings, including known zero");
       if (error) add(field, error);
     }
-    if (!errors[`${prefix}-earningsOnExcessContributions`] && parseGuidedCurrency(record.earningsOnExcessContributions).gt(0)) add("earningsCode", "Positive Box 2 earnings require the actual contribution-return treatment; do not reinterpret them as ordinary distributions.");
+    if (record.distributionCode !== "2" && !errors[`${prefix}-earningsOnExcessContributions`] && parseGuidedCurrency(record.earningsOnExcessContributions).gt(0)) add("earningsCode", "Positive Box 2 earnings require the actual contribution-return treatment; do not reinterpret them as ordinary distributions.");
     if (!Array.isArray(record.events)) { add("events", "Enter actual dated distributions from the account history."); continue; }
     let total = new Decimal(0);
     let allGrossKnown = true;
@@ -116,8 +121,8 @@ export function hsaDistributionFactErrors(records: HsaDistributionSource[] | und
   return errors;
 }
 
-export function buildHsaDistributionInputs(records: HsaDistributionSource[], owner: "primary" | "spouse", taxYear: number, dateOfBirth: string): { form1099SA: Form1099SA[]; form8889: Partial<Form8889Input> } {
-  const errors = hsaDistributionFactErrors(records, owner, taxYear, dateOfBirth);
+export function buildHsaDistributionInputs(records: HsaDistributionSource[], owner: "primary" | "spouse", taxYear: number, dateOfBirth: string, recipient?: HsaCorrectionRecipient): { form1099SA: Form1099SA[]; form8889: Partial<Form8889Input> } {
+  const errors = hsaDistributionFactErrors(records, owner, taxYear, dateOfBirth, recipient);
   if (Object.keys(errors).length) throw new Error(`Missing required HSA distribution facts: ${Object.values(errors).join(" ")}`);
   const birthday65 = `${Number(dateOfBirth.slice(0, 4)) + 65}${dateOfBirth.slice(4)}`;
   let medical = new Decimal(0);
@@ -125,6 +130,7 @@ export function buildHsaDistributionInputs(records: HsaDistributionSource[], own
   let after65 = new Decimal(0);
   let disability = new Decimal(0);
   for (const record of records) for (const event of record.events) {
+    if (record.distributionCode === "2") continue;
     const eventMedical = qualifiedMedical(event);
     const eventRollover = qualifiedRollover(event);
     medical = medical.plus(eventMedical);
@@ -134,7 +140,7 @@ export function buildHsaDistributionInputs(records: HsaDistributionSource[], own
     else if (event.distributionDate >= birthday65) after65 = after65.plus(taxable);
   }
   return {
-    form1099SA: records.map(record => ({ payer: record.payer.trim(), grossDistribution: parseGuidedCurrency(record.grossDistribution).toString(), earningsOnExcessContributions: parseGuidedCurrency(record.earningsOnExcessContributions).toString(), distributionCode: record.distributionCode as "1" | "3", accountType: "hsa", accountHolder: owner, trusteeToTrusteeTransfer: false })),
+    form1099SA: records.map(record => ({ ...(record.distributionCode === "2" ? { taxYear, sourceReference: record.sourceReference?.trim(), recipientSsn: record.recipientSsn, payerTin: record.payerTin, accountReference: record.accountReference.trim() } : {}), payer: record.payer.trim(), grossDistribution: parseGuidedCurrency(record.grossDistribution).toString(), earningsOnExcessContributions: parseGuidedCurrency(record.earningsOnExcessContributions).toString(), distributionCode: record.distributionCode as "1" | "2" | "3", accountType: "hsa", accountHolder: owner, trusteeToTrusteeTransfer: false })),
     form8889: { qualifiedMedicalExpenses: medical.toString(), rolloverDistributions: rollover.toString(), distributionsAfterAge65: after65.toString(), disabilityExceptionTaxableDistributions: disability.toString() },
   };
 }
