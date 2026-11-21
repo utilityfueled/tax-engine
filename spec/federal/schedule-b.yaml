@@ -58,7 +58,7 @@ lines:
 
   - line: "1-oid-premium-adjustments"
     description: "Disclose changes from verified gross Form 1099-OID for ordinary taxable and Treasury obligations"
-    formula: "Use the original Box 1 or Box 8 OID as the payer's OID when gross OID is refigured. The signed OID adjustment is the recipient calculator's OID after actual worksheet changes and acquisition premium, minus that original box. Put the subtotal after the payers and show positive and negative OID Adjustment amounts separately. Subtract any separately reported ABP Adjustment using the taxable coupon reduction from the existing calculation. Schedule B is required for supported adjustments even below the monetary thresholds. Already-net OID does not produce an OID adjustment here. Preserve historical statements, other recipient components, TIPS, and net state and federal interest. Continue Part I rows when they exceed the form's available space."
+    formula: "Use the original Box 1 or Box 8 OID as the payer's OID when gross OID is refigured. The signed OID adjustment is the recipient calculator's OID after actual worksheet changes and acquisition premium, minus that original box. Put the subtotal after the payers and show positive and negative OID Adjustment amounts separately. Subtract any separately reported ABP Adjustment using the taxable coupon reduction from the existing calculation. Schedule B is required for supported adjustments even below the monetary thresholds. Already-net OID does not produce an OID adjustment here. Preserve historical statements, other recipient components, and net state and federal interest. Continue Part I rows when they exceed the form's available space."
     irsRef: "Publication 1212, How To Report OID; 2025 and 2026 Schedule B General Instructions and Part I"
     sources:
       - "https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf"
@@ -73,6 +73,21 @@ lines:
       - "tests/engine/federal-oid-source-integration.test.ts::reports upward and downward OID worksheet changes from original boxes in 2025 and 2026"
       - "tests/engine/federal-oid-source-integration.test.ts::keeps opposing OID statement changes separate below the Schedule B subtotal"
       - "tests/engine/federal-oid-source-integration.test.ts::prints original zero OID and its positive adjustment on the 2025 review PDF"
+
+  - line: "1-tips-deflation-adjustment"
+    description: "Disclose verified TIPS deflation that reduces current interest on the same instrument"
+    formula: "When verified TIPS deflation reduces otherwise includible interest on the same instrument, show the payer's interest before the deflation offset. Subtract the amount applied to current interest below the payer subtotal as an OID Adjustment. Include a confirmed prior carryforward when it offsets current interest. Require Schedule B for an applied offset even below the monetary thresholds and when no net interest remains. Preserve the net federal and Treasury interest calculation."
+    notes: "Apply this reporting rule when reconciled OID and coupon equal original Box 8 and Box 2, with zero applied acquisition premium and zero applied coupon premium. Worksheet changes to OID or coupon, and combined premium and deflation disclosure, require their own reconciliation between the payer amount and the adjustment rows. A separately allowable ordinary loss and unused carryforward are outside Schedule B. Positive Box 8 without a deflation offset follows existing reporting."
+    irsRef: "Publication 1212 (Rev. December 2025), pages 10 and 17; 26 CFR 1.1275-7(f)(1)(i)"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=10"
+      - "https://www.irs.gov/pub/irs-prior/p1212--2025.pdf#page=17"
+      - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol13/pdf/CFR-2025-title26-vol13-sec1-1275-7.pdf#page=5"
+    testRef: "tests/engine/federal-oid-source-integration.test.ts::prints the verified TIPS offset in a below-threshold 2025 Schedule B review packet"
+    testRefs:
+      - "tests/engine/federal-oid-source-integration.test.ts::separates current TIPS offsets from ordinary loss and carry in 2025 and 2026"
+      - "tests/engine/federal-oid-source-integration.test.ts::keeps positive TIPS OID and independent premium on their existing reporting paths"
+      - "tests/engine/federal-oid-source-integration.test.ts::keeps TIPS worksheet changes to original OID or coupon on the existing net reporting path"
 
   - line: "2"
     description: "Add amounts from Line 1"

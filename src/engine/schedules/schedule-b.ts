@@ -173,7 +173,7 @@ export function calculateScheduleB(
       else oidReduction = oidReduction.minus(oidAdjustment);
       bondPremiumReduction = bondPremiumReduction.plus(premiumReduction);
       audit.record("Sched B", "1-oid-gross", `Gross interest payer - ${payer.name}`, grossAmount,
-        "Original taxable OID, coupon interest and includible market discount before Schedule B adjustments",
+        "Taxable income from the instrument before the reported Schedule B adjustments",
         { "Source ID": source.sourceId });
     } else if (!source.taxableInterest.isZero()) {
       oidReportingPayers.push(payer);

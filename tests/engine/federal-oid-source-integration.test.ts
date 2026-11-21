@@ -12,6 +12,7 @@ import { describe,it,expect } from 'vitest';
 import Decimal from 'decimal.js';
 import { TaxYearInputSchema,Form1099OIDSchema } from '@/models/inputs.js';
 import { calculateFederalTax } from '@/engine/federal.js';
+import { calculateForm1099OID } from '@/engine/forms/form-1099-oid.js';
 import { calculateScheduleB } from '@/engine/schedules/schedule-b.js';
 import { calculateScheduleA } from '@/engine/schedules/schedule-a.js';
 import { getConstants } from '@/models/constants.js';
@@ -24,6 +25,13 @@ const audit=(r:ReturnType<typeof calculateFederalTax>,form:string,line:string)=>
 const oidWorksheet = (oid: string) => ({
  sourceReference: 'Fictional reconciled recipient OID worksheet',
  oid, periodicInterest: '0', acquisitionPremium: '0', bondPremium: '0', marketDiscount: '0',
+});
+const tipsDeflationFacts = {
+ allInstrumentInterestReportedHere: true, priorInterestInclusions: '125.06', priorOrdinaryLosses: '0', priorCarryforward: '0',
+};
+const tipsSource = (overrides: Record<string, unknown> = {}) => source({
+ payer: 'Fictional Treasury', obligationType: 'treasury', inflationIndexed: true,
+ otherPeriodicInterest: '600.37', treasuryOID: '-200.12', tipsDeflationFacts, ...overrides,
 });
 
 describe('OID actual source return integration',()=>{
@@ -253,6 +261,134 @@ describe('OID actual source return integration',()=>{
   expect(result.taxableIncome.toString()).toBe('33900');
   expect(audit(result,'1040','2b')).toBe('0');
  });
+ it('prints the verified TIPS offset in a below-threshold 2025 Schedule B review packet', async () => {
+  const input = fixture([tipsSource({ otherPeriodicInterest: '600', treasuryOID: '-200' })]);
+  input.scheduleBPartThree = { hasForeignAccounts: false, hasForeignTrust: false };
+  const result = calculateFederalTax(input);
+  expect(result.form1099OID?.sourceFactsVerified).toBe(true);
+  expect(result.form1099OID?.treasuryInterest.toFixed()).toBe('400');
+  expect(audit(result, '1040', '2b')).toBe('400');
+  const outputDir = await mkdtemp(join(tmpdir(), 'tips-deflation-schedule-b-review-'));
+  try {
+   const packet = await fillReturn(input, result, { blankFormsDir: 'forms/blank/2025', outputDir });
+   const scheduleBPath = join(outputDir, 'f1040sb-filled.pdf');
+   expect(packet.filledForms).toContain(scheduleBPath);
+   const form = (await PDFDocument.load(await readFile(scheduleBPath))).getForm();
+   const fields = SCHEDULE_B_FIELDS;
+   expect(fields.interestPayerName.slice(0, 3).map((field, index) =>
+    [form.getTextField(field).getText(), form.getTextField(fields.interestPayerAmount[index]).getText()])).toEqual([
+     ['Fictional Treasury (OID)', '600'], ['Subtotal', '600'], ['OID Adjustment', '(200)'],
+   ]);
+   expect([fields.line2, fields.line4].map(field => form.getTextField(field).getText())).toEqual(['400', '400']);
+  } finally { await rm(outputDir, { recursive: true, force: true }); }
+ });
+
+ it('separates current TIPS offsets from ordinary loss and carry in 2025 and 2026', () => {
+  for (const taxYear of [2025, 2026]) {
+   const partial = fixture([tipsSource({ taxYear })]);
+   partial.taxpayer.taxYear = taxYear;
+   const partialSchedule = calculateScheduleB(partial);
+   expect(partialSchedule.isRequired).toBe(true);
+   expect(partialSchedule.interestPayers.map(row => row.amount.toFixed())).toEqual(['400.25']);
+   expect(partialSchedule.interestReportingRows?.map(row => [row.name, row.amount.toFixed()])).toEqual([
+    ['Fictional Treasury (OID)', '600.37'], ['Subtotal', '600.37'], ['OID Adjustment', '-200.12'],
+   ]);
+   expect(partialSchedule.taxableInterest.toFixed()).toBe('400.25');
+
+   const full = fixture([tipsSource({ taxYear, treasuryOID: '-800.50' })]);
+   full.taxpayer.taxYear = taxYear;
+   const fullSchedule = calculateScheduleB(full);
+   expect(fullSchedule.isRequired).toBe(true);
+   expect(fullSchedule.interestPayers).toEqual([]);
+   expect(fullSchedule.taxableInterest.toFixed()).toBe('0');
+   expect(fullSchedule.interestReportingRows?.map(row => [row.name, row.amount.toFixed()])).toEqual([
+    ['Fictional Treasury (OID)', '600.37'], ['Subtotal', '600.37'], ['OID Adjustment', '-600.37'],
+   ]);
+   const fullSource = calculateForm1099OID(full.form1099OID!, taxYear);
+   expect(fullSource.treasuryInterest.toFixed()).toBe('0');
+   expect(fullSource.deflationOrdinaryLoss.toFixed()).toBe('125.06');
+   expect(fullSource.deflationCarryforward.toFixed()).toBe('75.07');
+
+   const separate = fixture([tipsSource({ taxYear, otherPeriodicInterest: '0', treasuryOID: '-200.13' })]);
+   separate.taxpayer.taxYear = taxYear;
+   separate.form1099Int = [{ payer: 'Fictional Bank', interestIncome: '950.25', usSavingsBondInterest: '0',
+    taxExemptInterest: '0', federalWithheld: '0', earlyWithdrawalPenalty: '0', stateWithholding: [] }];
+   const separateSchedule = calculateScheduleB(separate);
+   expect(separateSchedule.isRequired).toBe(false);
+   expect(separateSchedule.interestReportingRows).toBeUndefined();
+   expect(separateSchedule.taxableInterest.toFixed()).toBe('950.25');
+   const separateSource = calculateForm1099OID(separate.form1099OID!, taxYear);
+   expect(separateSource.deflationOrdinaryLoss.toFixed()).toBe('125.06');
+   expect(separateSource.deflationCarryforward.toFixed()).toBe('75.07');
+
+   const carry = fixture([tipsSource({ taxYear, otherPeriodicInterest: '100.25', treasuryOID: '50.15',
+    tipsDeflationFacts: { ...tipsDeflationFacts, priorOrdinaryLosses: '125.06', priorCarryforward: '75.07' },
+   })]);
+   carry.taxpayer.taxYear = taxYear;
+   const carrySchedule = calculateScheduleB(carry);
+   expect(carrySchedule.isRequired).toBe(true);
+   expect(carrySchedule.interestReportingRows?.map(row => [row.name, row.amount.toFixed()])).toEqual([
+    ['Fictional Treasury (OID)', '150.4'], ['Subtotal', '150.4'], ['OID Adjustment', '-75.07'],
+   ]);
+   expect(carrySchedule.taxableInterest.toFixed()).toBe('75.33');
+  }
+ });
+
+ it('keeps positive TIPS OID and independent premium on their existing reporting paths', () => {
+  for (const taxYear of [2025, 2026]) {
+   const input = fixture([tipsSource({ taxYear, treasuryOID: '200.12' })]);
+   input.taxpayer.taxYear = taxYear;
+   const positive = calculateScheduleB(input);
+   expect(positive.isRequired).toBe(false);
+   expect(positive.interestReportingRows).toBeUndefined();
+   expect(positive.taxableInterest.toFixed()).toBe('800.49');
+
+   input.form1099OID = [tipsSource({ taxYear, bondPremium: '100.10', bondPremiumElection: true })];
+   const withPremium = calculateScheduleB(input);
+   expect(withPremium.isRequired).toBe(false);
+   expect(withPremium.interestReportingRows).toBeUndefined();
+   expect(withPremium.taxableInterest.toFixed()).toBe('300.15');
+   const premiums = calculateForm1099OID(input.form1099OID, taxYear);
+   expect(premiums.bondPremiumInterestReduction.toFixed()).toBe('100.1');
+   expect(premiums.treasuryInterest.toFixed()).toBe('300.15');
+  }
+ });
+
+ it('keeps TIPS worksheet changes to original OID or coupon on the existing net reporting path', () => {
+  for (const taxYear of [2025, 2026]) {
+   const input = fixture([tipsSource({ taxYear, otherPeriodicInterest: '600', treasuryOID: '100',
+    recipientAdjustments: oidWorksheet('-300'),
+   })]);
+   input.taxpayer.taxYear = taxYear;
+   const changedOid = calculateScheduleB(input);
+   expect.soft(changedOid.isRequired).toBe(false);
+   expect.soft(changedOid.interestReportingRows).toBeUndefined();
+   expect(changedOid.interestPayers.map(row => row.amount.toFixed())).toEqual(['400']);
+   expect(changedOid.taxableInterest.toFixed()).toBe('400');
+   expect(calculateForm1099OID(input.form1099OID!, taxYear).treasuryInterest.toFixed()).toBe('400');
+
+   input.form1099OID = [tipsSource({ taxYear, otherPeriodicInterest: '600', treasuryOID: '-200',
+    recipientAdjustments: { ...oidWorksheet('0'), periodicInterest: '-75' },
+   })];
+   const changedCoupon = calculateScheduleB(input);
+   expect.soft(changedCoupon.isRequired).toBe(false);
+   expect.soft(changedCoupon.interestReportingRows).toBeUndefined();
+   expect(changedCoupon.interestPayers.map(row => row.amount.toFixed())).toEqual(['325']);
+   expect(changedCoupon.taxableInterest.toFixed()).toBe('325');
+   expect(calculateForm1099OID(input.form1099OID, taxYear).treasuryInterest.toFixed()).toBe('325');
+
+   input.form1099OID = [tipsSource({ taxYear, otherPeriodicInterest: '600', treasuryOID: '-200',
+    recipientAdjustments: oidWorksheet('0'),
+   })];
+   const originalAmounts = calculateScheduleB(input);
+   expect(originalAmounts.isRequired).toBe(true);
+   expect(originalAmounts.interestReportingRows?.map(row => [row.name, row.amount.toFixed()])).toEqual([
+    ['Fictional Treasury (OID)', '600'], ['Subtotal', '600'], ['OID Adjustment', '-200'],
+   ]);
+   expect(originalAmounts.taxableInterest.toFixed()).toBe('400');
+  }
+ });
+
  it('deducts actual TIPS loss for NIIT only when itemized',()=>{
   const input=fixture([source({obligationType:'treasury',inflationIndexed:true,treasuryOID:'-2000',tipsDeflationFacts:{allInstrumentInterestReportedHere:true,priorInterestInclusions:'1000',priorOrdinaryLosses:'0',priorCarryforward:'0'}}),source({sourceId:'other',originalIssueDiscount:'10000'})]);
   input.w2s[0]={...input.w2s[0],wages:'200000',federalWithheld:'60000'};

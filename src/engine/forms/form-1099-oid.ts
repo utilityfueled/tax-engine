@@ -178,6 +178,14 @@ export function calculateForm1099OID(forms: Form1099OID[], taxYear = 2025): Form
         const deflation = zeroFloor(netOid.negated()).plus(carry);
         if (deflation.gt(0) && currentMarketDiscount.gt(0)) throw new Error("Form 1099-OID mixed TIPS market-discount deflation requires an explicit allocation worksheet for source attribution.");
         const offset = Decimal.min(deflation, ordinaryInterest);
+        const matchesOriginalInterestAmounts = grossOid.eq(originalOid) && coupon.eq(raw.interest);
+        if (offset.gt(0) && matchesOriginalInterestAmounts && acquisition.isZero() && source.bondPremiumInterestReduction.isZero()) {
+          source.scheduleBInterest = {
+            grossTaxableInterest: ordinaryInterest,
+            oidAdjustment: offset.negated(),
+            bondPremiumReduction: d(0),
+          };
+        }
         const excess = deflation.minus(offset);
         source.deflationOrdinaryLoss = Decimal.min(excess, priorInterest.minus(priorLoss));
         source.deflationCarryforward = excess.minus(source.deflationOrdinaryLoss);
