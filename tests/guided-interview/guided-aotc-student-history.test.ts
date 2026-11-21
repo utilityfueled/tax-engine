@@ -127,12 +127,14 @@ describe("guided AOTC prior-claim history", () => {
     const changed = reopen(setInterviewTaxYear(original, 2026));
     const retained = creditsFor(changed).education.aocStudents[0];
     expect(retained).toMatchObject({ ...aoc, requiresPriorYearsConfirmation: true, sourceFactsConfirmed: null });
-    expect(changed.sectionData.credits?.education.llcStudents).toEqual([llc]);
+    expect(changed.sectionData.credits?.education.llcStudents?.[0]).toMatchObject({
+      studentTaxId: llc.studentTaxId, qualifiedExpenses: llc.qualifiedExpenses, courseEligibilityConfirmed: null,
+    });
     expect(buildTaxInputFromGuidedData(changed)).toBeNull();
     const correctedHistory = replaceStudents(changed, [{ ...retained, priorYearsClaimed: "4", requiresPriorYearsConfirmation: false }]);
     expect(buildTaxInputFromGuidedData(reopen(correctedHistory))).toBeNull();
     const corrected = replaceStudents(correctedHistory, [{ ...retained, priorYearsClaimed: "4", requiresPriorYearsConfirmation: false, sourceFactsConfirmed: true }]);
-    const current = updateEducation(corrected, { aocBanInEffect: false, form8862Required: false });
+    const current = updateEducation(corrected, { ...completeEducationClaimant, llcStudents: [llc] });
     const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen(current)));
     expect(input.taxpayer.taxYear).toBe(2026);
     expect(input.educationExpenses?.aocStudents[0].priorYearsClaimed).toBe(4);
@@ -141,7 +143,9 @@ describe("guided AOTC prior-claim history", () => {
     expect(setInterviewTaxYear(current, 2025).sectionData.credits?.education.aocStudents[0])
       .toMatchObject({ priorYearsClaimed: "4", requiresPriorYearsConfirmation: true, sourceFactsConfirmed: null });
     const onlyLlc = updateEducation(original, { aocStudents: [], aocBanInEffect: undefined, form8862Required: undefined, refundableAocFacts: undefined });
-    expect(setInterviewTaxYear(onlyLlc, 2026).sectionData.credits).toBe(onlyLlc.sectionData.credits);
+    expect(setInterviewTaxYear(onlyLlc, 2026).sectionData.credits?.education.llcStudents?.[0]).toMatchObject({
+      studentTaxId: llc.studentTaxId, qualifiedExpenses: llc.qualifiedExpenses, courseEligibilityConfirmed: null,
+    });
   });
 
   it("requires actual claimant AOTC answers for the changed return year", () => {
@@ -165,8 +169,11 @@ describe("guided AOTC prior-claim history", () => {
     });
     expect(education.form8862Completed).toBeUndefined();
     expect(education.refundableAocEligible).toBeUndefined();
-    expect(education.llcStudents).toEqual(creditsFor(source).education.llcStudents);
-    const currentClaimant = updateEducation(reviewedStudents, { aocBanInEffect: false, form8862Required: true,
+    expect(education.llcStudents?.[0]).toMatchObject({
+      studentTaxId: second.studentTaxId, qualifiedExpenses: "0", courseEligibilityConfirmed: null,
+    });
+    const currentClaimant = updateEducation(reviewedStudents, { ...completeEducationClaimant, aocBanInEffect: false, form8862Required: true,
+      llcStudents: [{ ...second, qualifiedExpenses: "0", courseEligibilityConfirmed: false }],
       refundableAocFacts: { fullTimeStudent: true, earnedIncome: "1000", totalSupport: "20000", parentAlive: true },
     });
     expect(buildTaxInputFromGuidedData(currentClaimant)).toBeNull();

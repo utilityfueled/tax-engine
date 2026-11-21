@@ -97,7 +97,7 @@ import { educationOriginalValues } from "./guided-coverdell-bank-interest";
 import { educationDistributionSourcesChanged, educationDistributionFactErrors, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
 import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
 import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
-import { buildActualEducationInput } from "./guided-education-facts";
+import { buildActualEducationInput, LLC_YEAR_FACTS_VERSION, requiresLlcYearReview } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
@@ -1436,7 +1436,7 @@ export type SelfEmploymentSectionData = NonNullable<SectionDataMap["income-self-
 export type GuidedFlowPhase = "segmentation" | "interview" | "complete";
 
 export interface GuidedFlowState {
-  factsVersion?: 2;
+  factsVersion?: 2 | typeof LLC_YEAR_FACTS_VERSION;
   /** Null or absent means the year has not been confirmed; never default in the adapter. */
   taxYear?: number | null;
   phase: GuidedFlowPhase;
@@ -1693,25 +1693,31 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const aotcSourcesEntered = education && (education.aocStudents.length > 0 ||
     [education.aocBanInEffect, education.form8862Required, education.form8862Completed,
       education.refundableAocFacts, education.refundableAocEligible].some(answer => answer !== undefined));
+  const llcSourcesEntered = !!education?.llcStudents?.length;
+  const bankInterestSourcesEntered = credits?.educationDistributions?.forms?.some(row => row.bankInterestConversion);
   const royalties = state.sectionData["income-royalties"];
   const otherTaxes = state.sectionData["other-taxes"];
   const k3Election = otherTaxes?.foreignTaxElection;
   return {
     ...state,
     taxYear,
+    ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
       ...(state.sectionData["income-investments"]?.digitalAssetEntries?.some(entry => entry.transactions?.some(row => row.marketDiscountFacts)) ? { "income-investments": { ...state.sectionData["income-investments"]!, digitalAssetEntries: state.sectionData["income-investments"]!.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } } : {}),
       ...(state.sectionData.adjustments?.codPrincipalResidenceSources ? { adjustments: { ...state.sectionData.adjustments, codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(state.sectionData.adjustments.codPrincipalResidenceSources) } } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
       ...(otherTaxes && k3Election?.qualifiedK3Statements?.length ? { "other-taxes": { ...otherTaxes, foreignTaxElection: { ...k3Election, sourceFactsConfirmed: null, qualifiedK3Statements: k3Election.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })), ...(k3Election.creditWithoutForm1116 ? { creditWithoutForm1116: { ...k3Election.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } } : {}),
-      ...(credits && ((education && aotcSourcesEntered) || credits.educationDistributions?.forms?.some(row => row.bankInterestConversion)) ? { credits: { ...credits,
-        ...(education && aotcSourcesEntered ? { education: {
-          ...education, aocStudents: education.aocStudents.map(requireAotcSourceReview),
-          aocBanInEffect: undefined, form8862Required: undefined, form8862Completed: undefined,
-          refundableAocFacts: undefined, refundableAocEligible: undefined,
+      ...(credits && (aotcSourcesEntered || llcSourcesEntered || bankInterestSourcesEntered) ? { credits: { ...credits,
+        ...(education && (aotcSourcesEntered || llcSourcesEntered) ? { education: {
+          ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
+          ...(aotcSourcesEntered ? {
+            aocStudents: education.aocStudents.map(requireAotcSourceReview),
+            aocBanInEffect: undefined, form8862Required: undefined, form8862Completed: undefined,
+            refundableAocFacts: undefined, refundableAocEligible: undefined,
+          } : {}),
         } } : {}),
-        ...(credits.educationDistributions?.forms?.some(row => row.bankInterestConversion) ? { educationDistributions: invalidateEducationPeriodSources(credits.educationDistributions) } : {}),
+        ...(bankInterestSourcesEntered ? { educationDistributions: invalidateEducationPeriodSources(credits.educationDistributions) } : {}),
       } } : {}),
     },
   };
@@ -1842,6 +1848,34 @@ function requireAotcSourceReview(student: EducationStudentData): EducationStuden
     ...student,
     ...(requiresPriorYearsConfirmation ? { requiresPriorYearsConfirmation: true } : {}),
     ...(requiresPriorYearsConfirmation || hasRetainedSources ? { sourceFactsConfirmed: null } : {}),
+  };
+}
+
+function invalidateLlcYearSources(education: EducationCreditData): EducationCreditData {
+  return {
+    ...education,
+    primarySsnEligible: null,
+    spouseSsnEligible: null,
+    primaryTinEligible: null,
+    canBeClaimedAsDependent: null,
+    claimedAsDependent: null,
+    nonresidentAlien: null,
+    residentJointElection: null,
+    possessionIncomeExclusion: undefined,
+    llcStudents: education.llcStudents?.map(student => ({
+      ...student,
+      studentTinEligible: null,
+      studentSsnEligible: null,
+      institutionEligible: null,
+      expensesEligibilityConfirmed: null,
+      form1098TRequirementMet: null,
+      courseEligibilityConfirmed: null,
+      institutions: student.institutions?.map(institution => ({
+        ...institution,
+        receivedCurrentYear1098T: null,
+        receivedPriorYear1098TWithBox7: null,
+      })),
+    })),
   };
 }
 
@@ -2011,6 +2045,7 @@ export function updateSectionData(
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const nextCredits = sectionId === "credits" ? retainAotcSources(credits, data as CreditsData | undefined) : credits;
+  const addedLlcSources = !credits?.education?.llcStudents?.length && !!nextCredits?.education?.llcStudents?.length;
   const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
     && nextCredits?.adoption?.children.some(child => child.priorYearForeignBenefitHistory) ? nextCredits?.adoption : undefined;
   const minimumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "credits"].includes(sectionId) && nextCredits?.minimumTaxCredit;
@@ -2096,6 +2131,7 @@ export function updateSectionData(
   } : undefined;
   return {
     ...state,
+    ...(addedLlcSources ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
       [sectionId]: sectionId === "credits" ? nextCredits : data,
@@ -2602,6 +2638,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       const credits = getSectionData(state, "credits");
       const personal = getSectionData(state, "personal-info");
       const educationErrors = educationFactErrors(credits, state.taxYear, state.segmentation.filingStatus, personal);
+      if (requiresLlcYearReview(state)) educationErrors.llcYearReview = "Review the Lifetime Learning Credit records for the selected tax year.";
       let distributionErrors: Record<string, string> = {};
       try {
         const actualEducation = Object.keys(educationErrors).length ? undefined : buildActualEducationInput(credits, state.taxYear, state.segmentation.filingStatus, personal);
@@ -2812,24 +2849,31 @@ export function loadGuidedFlowState(storage: Storage, target: GuidedFlowStorageT
     if (sectionData["income-retirement"]) {
       sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map(entry => ({ ...entry, requiresIraConfirmation: entry.requiresIraConfirmation || (entry.isIraSepSimple === false && entry.sourceTaxYear === undefined && entry.sourceFactsConfirmed === undefined) })) };
     }
-    if (parsed.factsVersion !== 2) {
+    const preV2Facts = parsed.factsVersion !== 2 && parsed.factsVersion !== LLC_YEAR_FACTS_VERSION;
+    if (preV2Facts) {
       if (sectionData["income-retirement"]) {
         sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map((entry) => ({ ...entry, requiresCodeConfirmation: entry.distributionCode === "7" || entry.requiresCodeConfirmation })) };
       }
     }
     const credits = sectionData.credits;
-    if (credits?.education.aocStudents.length) {
-      const students = credits.education.aocStudents.map(student => {
-        const legacyDefault = parsed.factsVersion !== 2 && student.priorYearsClaimed === "0";
+    const llcNeedsYearReview = requiresLlcYearReview(parsed);
+    if (credits?.education) {
+      const { education } = credits;
+      const students = education.aocStudents.length ? education.aocStudents.map(student => {
+        const legacyDefault = preV2Facts && student.priorYearsClaimed === "0";
         if (legacyDefault) return requireAotcSourceReview(student);
         return student.requiresPriorYearsConfirmation && student.sourceFactsConfirmed === undefined
           ? { ...student, sourceFactsConfirmed: null } : student;
-      });
-      sectionData.credits = { ...credits, education: { ...credits.education, aocStudents: students } };
+      }) : education.aocStudents;
+      if (llcNeedsYearReview || students !== education.aocStudents) {
+        sectionData.credits = { ...credits, education: {
+          ...(llcNeedsYearReview ? invalidateLlcYearSources(education) : education), aocStudents: students,
+        } };
+      }
     }
     return {
       ...parsed,
-      factsVersion: 2,
+      factsVersion: llcNeedsYearReview || parsed.factsVersion === LLC_YEAR_FACTS_VERSION ? LLC_YEAR_FACTS_VERSION : 2,
       taxYear: Number.isInteger(parsed.taxYear) ? parsed.taxYear : null,
       sectionData,
     };

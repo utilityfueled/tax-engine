@@ -119,6 +119,31 @@ lines:
     formula: "AOC and LLC use actual student identifiers and household roles, net paid qualified costs, institution records, receipt/exception qualification, and year-specific timely TIN or employment-SSN answers. Reconcile any saved LLC aggregate to exact individual costs. Reject duplicate credit claims for one student. Collect taxpayer dependency/residency, prior disallowance, possession exclusion and actual under-24 refund support facts. Unknown remains unknown and a known false answer remains false."
     irsRef: "Form 8863 instructions Parts I-III and Table 1; https://www.irs.gov/instructions/i8863; Publication 505 (2026), education credit SSN requirements"
     testRef: "tests/guided-interview/guided-education-source-facts.test.ts::reconciles actual LLC students and preserves zero and false qualification"
+  - line: "llc-return-year"
+    description: "Confirm Lifetime Learning Credit sources for the selected tax year"
+    formula: >-
+      On a year change with LLC students, preserve student and institution identity
+      and retain entered costs for review. Clear each institution's receipt answers
+      for the current-year Form 1098-T and prior-year Box 7, along with the student's
+      payment timing, receipt requirement or exception, institution, course and
+      timely identification confirmations. Recollect the shared taxpayer education
+      eligibility answers and education MAGI exclusion for the selected year.
+      Leave the credits section incomplete and hold calculation until the user
+      explicitly supplies the applicable year-specific facts, including negative
+      receipt answers when supported. A same-year selection preserves answers.
+      Saved drafts before facts version 3 have no LLC receipt-year provenance.
+      Apply the same review once when loading such drafts and preserve the
+      selected year. Loading a version 3 draft preserves confirmed and pending
+      answers. When raw guided state reaches the credits validator or shared
+      tax input builder directly, hold LLC rows without version 3 provenance.
+      The filled-return endpoint inherits the same check. Keep the earlier
+      retirement and AOTC migrations in effect.
+    irsRef: "2025 Form 8863 Part III line 22 and 2025 instructions Parts I-III; https://www.irs.gov/pub/irs-prior/f8863--2025.pdf#page=2; https://www.irs.gov/pub/irs-prior/i8863--2025.pdf"
+    testRef: "tests/apps/web/guided-llc-year-change.test.tsx::requires selected-year LLC facts before completing credits or calculating"
+    testRefs:
+      - "tests/apps/web/guided-llc-year-change.test.tsx::rechecks pre-v3 LLC drafts once and retains reconfirmed historical answers"
+      - "tests/apps/web/guided-llc-year-change.test.tsx::holds raw legacy LLC state before validating or building tax input"
+      - "tests/apps/web/workspace-filled-return.test.ts::holds raw legacy LLC state at the filled-return endpoint"
   - line: "business-analysis-cancellation"
     description: "Bind optional business-document AI review to current consent and return"
     formula: "No analysis starts without explicit current-return opt-in. Cancellation, consent withdrawal, unmount or return change aborts the same request signal; cancelled cache reads and late responses cannot publish suggestions. Successful analysis appends to current facts without overwriting edits made while waiting."

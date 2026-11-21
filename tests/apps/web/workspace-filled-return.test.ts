@@ -1,5 +1,5 @@
 import { emptyEstimatedTaxFacts } from "@/lib/guided-estimated-tax-facts";
-import { emptyPaymentData } from "@/lib/guided-interview-flow";
+import { emptyPaymentData, updateSectionData } from "@/lib/guided-interview-flow";
 import { guidedSharedMarketplaceHealthState } from "../../fixtures/guided-shared-marketplace-health";
 import { energySource, sourceCleanProperty } from "../../fixtures/energy-source";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -24,7 +24,7 @@ import * as federalEngine from "../../../src/engine/federal";
 import * as rendering from "@/pdf/fill-return";
 import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
 import { actualGuidedK1PassiveDistribution } from "../../fixtures/guided-k1-passive-distribution";
-import { startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
+import { completeAocEligibility, completeEducationClaimant, startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
 import { emptyDeductionData } from "../../../apps/web/src/lib/guided-interview-flow";
 import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
 import { actual, guidedForm8862 } from "../../fixtures/guided-form-8862";
@@ -464,6 +464,29 @@ describe("workspace filled return download", () => {
 
     const pdf = await PDFDocument.load(new Uint8Array(await response.arrayBuffer()));
     expect(pdf.getPageCount()).toBeGreaterThan(0);
+  });
+
+  it("holds raw legacy LLC state at the filled-return endpoint", async () => {
+    // Spec: spec/federal/guided-input.yaml, llc-return-year.
+    const state = createGuidedFlowState();
+    const current = updateSectionData(state, "credits", {
+      ...state.sectionData.credits!,
+      education: {
+        ...completeEducationClaimant, aocStudents: [], llcExpenses: "4000",
+        llcStudents: [{ ...completeAocEligibility, name: "Jordan Northwind", qualifiedExpenses: "4000", courseEligibilityConfirmed: true }],
+      },
+    });
+    const request = (guidedFlowState: GuidedFlowState) => new Request("http://localhost/api/workspace/filled-return", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ workspace: createWorkspace(), guidedFlowState }),
+    });
+    const legacy = await POST(request({ ...current, factsVersion: 2 }));
+    expect(legacy.status).toBe(400);
+    expect(await legacy.json()).toHaveProperty("error", expect.stringMatching(/required taxpayer facts/i));
+
+    const ready = await POST(request(current));
+    expect(ready.status).toBe(200);
+    expect(ready.headers.get("x-tax-engine-included-forms")).toContain("f8863-filled.pdf");
   });
 
   it("rejects the legacy workspace-only payload without actual taxpayer facts", async () => {

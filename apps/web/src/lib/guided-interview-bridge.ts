@@ -48,7 +48,7 @@ import { buildEducatorSources, educatorFactErrors, educatorBondFactErrors } from
 import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSources, type StudentLoanEducationSources } from "./guided-student-loan-facts";
 import { buildGuidedMortgageInputs } from "./guided-mortgage-worksheet";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
-import { buildActualEducationInput } from "./guided-education-facts";
+import { buildActualEducationInput, requiresLlcYearReview } from "./guided-education-facts";
 import { buildEducationDistributionInputs, educationDistributionFactErrors } from "./guided-education-distributions";
 import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-bond-facts";
 /**
@@ -774,6 +774,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const { segmentation, sectionData } = state;
 
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
+  if (requiresLlcYearReview(state)) return null;
 
   const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
   if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;

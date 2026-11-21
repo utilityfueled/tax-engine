@@ -1,6 +1,12 @@
 import Decimal from "decimal.js";
-import type { CreditsData, EducationStudentSourceData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
+import type { CreditsData, EducationStudentSourceData, FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+
+export const LLC_YEAR_FACTS_VERSION = 3;
+
+export function requiresLlcYearReview(state: GuidedFlowState): boolean {
+  return state.factsVersion !== LLC_YEAR_FACTS_VERSION && !!state.sectionData.credits?.education?.llcStudents?.length;
+}
 
 const present = (value: string | undefined) => !!value?.trim();
 function validAmount(value: string | undefined) { if (!present(value)) return false; try { return parseGuidedCurrency(value).gte(0); } catch { return false; } }
