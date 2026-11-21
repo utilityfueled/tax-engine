@@ -1,5 +1,16 @@
 {
   "activeContinuation": {
+    "nov21RentalYearAndSaverCredit": {
+      "guidedRental": { "source": "f1b2e0e6", "exactFocusedPassed": 252, "implementationFocusedPassed": 1207, "browserPassed": 2, "specReferencesPassed": 9780, "savedReopenHeldUntilReconfirmed": true, "scheduleENetAfterReview": "500" },
+      "form8880": { "source": "1cd93e1f", "exactFocusedPassed": 103, "implementationFocusedPassed": 73, "specReferencesPassed": 9782, "reopenedWidgets": 23, "codeD": "2500", "qualifyingContribution": "2000", "printedRateDigit": "1", "line12AndSchedule3Line4": "200", "worksheet1And3TestPreview": "2500", "worksheet2": "0", "publicAnnualDispatchAndExportsHeld": true },
+      "guidedScheduleC": { "source": "069c994f", "exactFocusedPassed": 329, "implementationFocusedPassed": 1217, "specReferencesPassed": 9783, "savedReopenHeldUntilBothReconciliations": true, "receipts": "1000.02", "supplies": "100.01", "netProfit": "900.01" },
+      "independentSourceReviewsPassed": 3,
+      "combinedStatic": { "application": "069c994f", "lintErrors": 0, "rootTypesPassed": true, "contractsTypesPassed": true, "webTypesPassed": true, "rootBuildPassed": true, "webBuildPassed": true, "inventoryPassed": true, "browserSourceAuditPassed": true, "finalTestFixtureGuardFocusedPassed": 10, "mainProductionCanceled": true },
+      "combinedCoverage": { "application": "069c994f", "testsPassed": 29849, "filesPassed": 2176, "branchesPercent": 88.38, "branchGatePercent": 85, "ownedLocalPostgresStoppedNormally": true },
+      "combinedUnit": { "application": "069c994f", "testsPassed": 29849, "filesPassed": 2176, "ownedLocalPostgresStoppedNormally": true },
+      "combinedDocker": { "application": "069c994f", "runId": 44897306268, "result": "success" },
+      "officialSources": ["https://www.irs.gov/instructions/i1040se", "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf", "https://www.irs.gov/instructions/iw2w3", "https://www.irs.gov/pub/irs-drop/n-25-67.pdf", "https://www.irs.gov/instructions/i1040sc"]
+    },
     "nov21ReciprocalPaymentAndFederalReviewPdf": {
       "reciprocalSource": "94620a66",
       "reciprocalExactFocusedPassed": 7658,

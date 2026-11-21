@@ -1,5 +1,56 @@
 # 2026 upgrade implementation evidence
 
+## November 21 guided Schedule C review after a year change
+
+`069c994f` requires renewed income and expense reconciliations when a
+guided return changes tax year. It preserves the entered cents, original
+statement years and other source facts. After save and reopen the regression
+holds the preview until both reconciliations are renewed. The confirmed
+return then shows $1,000.02 in receipts, $100.01 in supplies and $900.01
+in Schedule C net profit. A prior-year NEC and incomplete expense sources
+remain held. The isolated candidate passed 329 focused tests, web types,
+browser source audit, inventory and all 9,783 spec references. The
+implementation passed 1,217 focused tests and a separate source review.
+[IRS Schedule C instructions](https://www.irs.gov/instructions/i1040sc).
+
+On `069c994f`, the full unit and coverage suites each passed 29,849 tests
+with separate PostgreSQL 16.16 instances. Both instances stopped normally.
+Coverage was 88.38% branches. All eight static checks passed. Production
+was canceled. The final regression fixture also passed 10 focused tests
+after replacing one non-null assertion with an explicit error on a missing
+fixture. [Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/44897306268).
+
+## November 21 final Form 8880 from employer deferrals
+
+`1cd93e1f` projects the annual saver’s credit onto the final IRS form
+for one confirmed 2026 W-2 with regular Code D deferrals. The reopened
+review PDF shows $2,500 in deferrals, $2,000 qualifying, rate digit `1`
+and $200 on line 12, matching the engine’s Schedule 3 line 4. The
+credit-limit worksheet shows $2,500, $0 and $2,500 using the test-only
+statutory-rate preview. Inspection checked all 23 widgets, the recorded
+values and their appearances, both review notices and the redacted SSN.
+The isolated candidate passed 103 focused tests, all 9,782 spec references,
+inventory and types. The implementation passed 73 focused tests and lint,
+and a separate source review passed. Final annual tax tables, human
+review and public export qualification remain open.
+[Final 2026 Form 8880 and instructions](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf) ·
+[2026 W-2 instructions](https://www.irs.gov/instructions/iw2w3) ·
+[IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf).
+
+## November 21 guided rental review after a year change
+
+`f1b2e0e6` keeps entered properties and amounts when the selected return
+year changes, and requires a fresh review of previously confirmed annual
+rental facts. The new regression first reproduced the stale confirmation.
+It then verified that the new year's preview stays held after save and
+reopen and calculates $500 of Schedule E income after reconfirmation.
+Choosing the same year preserves the confirmation and recorded rental
+loss history. The isolated candidate passed 252 focused tests, both
+production-mode desktop and mobile rental history journeys, web types,
+inventory and all 9,780 spec references. The implementation run passed
+1,207 focused tests. A separate source review passed.
+[IRS Schedule E instructions](https://www.irs.gov/instructions/i1040se).
+
 ## November 21 reciprocal payment calculation
 
 `94620a66` reuses the validated Ohio reciprocal payment projection only

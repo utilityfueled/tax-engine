@@ -91,8 +91,10 @@ describe("guided business source records", () => {
   });
   it("retains original NEC years and false or unknown business answers across a tax-year change", () => {
     const state = flow();
+    const savedBusiness = state.sectionData["income-self-employment"];
+    if (!savedBusiness) throw new Error("Expected the saved business fixture.");
     const business = {
-      ...state.sectionData["income-self-employment"]!,
+      ...savedBusiness,
       necEntries: [{ ...source, sourceTaxYear: "2025", nonemployeeCompensation: "12.34" }],
       businessFacts: { ...businessFacts, incomeReconciled: true, expensesReconciled: false },
     };

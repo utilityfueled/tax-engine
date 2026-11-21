@@ -2,6 +2,18 @@
 
 ## November 21 resumption
 
+`f1b2e0e6` requires renewed rental source confirmation when the return
+year changes, including after save and reopen. `1cd93e1f` projects a
+confirmed 2026 W-2 Code D deferral onto the final Form 8880 review
+candidate. The reopened PDF showed a $200 credit and the matching
+Schedule 3 transfer using the test-only statutory-rate preview.
+`069c994f` now holds Schedule C after a return year change until both
+annual reconciliations are renewed. Annual tax-table and export
+qualification remain open.
+[Rental verification](upgrade-2026-progress.md#november-21-guided-rental-review-after-a-year-change) ·
+[Form 8880 verification](upgrade-2026-progress.md#november-21-final-form-8880-from-employer-deferrals) ·
+[Schedule C verification](upgrade-2026-progress.md#november-21-guided-schedule-c-review-after-a-year-change).
+
 `94620a66` removes a repeated Ohio reciprocal payment calculation while
 preserving both synthetic returns byte for byte. `522cf4b1` corrects the
 federal review cover for paid estimates. The reopened 2025 PDF showed

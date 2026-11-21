@@ -31,6 +31,20 @@ when there is no applicable pension adjustment and confirm which W-2 wage
 and tip facts are needed to allocate the self-employment tax deduction.
 [Case and official source evidence](upgrade-2026-progress.md#november-21-final-form-7206-from-original-records).
 
+For the final 2026 Form 8880 fixture, independently verify the single
+filer’s original Code D deferral, the distribution testing period,
+eligibility, the table rate and the Schedule 3 transfer. Reconcile Form
+1040 line 18 using the final annual Tax Table before signing the credit
+limit worksheet. [Case and official source evidence](upgrade-2026-progress.md#november-21-final-form-8880-from-employer-deferrals).
+
+On November 21, OpenAI still listed December 11, 2026 as the retirement
+date for the GPT-5 Mini alias and snapshot. Google still documented
+structured output for the registered Gemini candidates. These public
+references establish model lifecycle and capability. Project access and
+live evaluation still need evidence. [OpenAI deprecations](https://developers.openai.com/api/docs/deprecations) ·
+[Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) ·
+[Gemini 3 Flash Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview).
+
 For the final 2026 Form 2106 fixture, verify the reservist's overnight
 duty, distance and reimbursement facts, the January Abilene federal
 lodging cap, completed lines 3, 6A, 8A, 9A and 10, and the Schedule 1
