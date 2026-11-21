@@ -5,6 +5,9 @@ import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orch
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
 import { assessReturnReadiness } from "@/utils/return-readiness.js";
 import { actualDigitalAssetSource } from "../fixtures/digital-asset-sources.js";
+import { savingsBondReissueReturnInput } from "../fixtures/savings-bond-reissue-return.js";
+
+const missingScheduleBPartThree = "Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.";
 
 function makeInput() {
   return TaxYearInputSchema.parse({
@@ -66,11 +69,55 @@ describe("assessReturnReadiness", () => {
       includedForms: ["f1040-filled.pdf", "f1040sb-filled.pdf"],
     });
     expect(assess().lineCompleteness).toBe("partial");
-    expect(assess().findings).toContain("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+    expect(assess().findings).toContain(missingScheduleBPartThree);
     taxInput.scheduleBPartThree = { hasForeignTrust: false };
-    expect(assess().findings).toContain("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+    expect(assess().findings).toContain(missingScheduleBPartThree);
     taxInput.scheduleBPartThree = { hasForeignAccounts: true, fbarRequired: false, hasForeignTrust: false };
-    expect(assess().findings).not.toContain("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
+    expect(assess().findings).not.toContain(missingScheduleBPartThree);
+  });
+
+  it("keeps a low savings-bond exclusion attached without a Part III review finding", () => {
+    const taxInput = savingsBondReissueReturnInput(true);
+    const assess = () => assessReturnReadiness({
+      taxInput,
+      federalResult: calculateFederalTax(taxInput),
+      includedForms: ["f1040-filled.pdf", "f1040sb-filled.pdf", "f8815-reference-filled.pdf"],
+    });
+    expect(taxInput.scheduleBPartThree).toBeUndefined();
+    expect(calculateFederalTax(taxInput).scheduleB?.isRequired).toBe(true);
+    expect(assess().findings).not.toContain(missingScheduleBPartThree);
+    taxInput.scheduleBPartThree = { hasForeignTrust: false };
+    expect(assess().findings).toContain(missingScheduleBPartThree);
+    taxInput.scheduleBPartThree = { hasForeignAccounts: false, hasForeignTrust: false };
+    expect(assess().findings).not.toContain(missingScheduleBPartThree);
+    expect(assess().filingQualified).toBe(false);
+  });
+
+  it("uses the taxable interest after exclusion for the Part III review threshold", () => {
+    for (const [interestIncome, taxableInterest, needsPartThree] of [
+      ["1399", "1499", false], ["1400", "1500", false], ["1401", "1501", true],
+    ] as const) {
+      const taxInput = savingsBondReissueReturnInput(true);
+      taxInput.form1099Int.push({ payer: "Fictional bank", interestIncome, taxExemptInterest: "0" });
+      const federalResult = calculateFederalTax(taxInput);
+      expect(federalResult.scheduleB?.totalInterest.gt(1500)).toBe(true);
+      expect(federalResult.scheduleB?.savingsBondExclusion.toString()).toBe("400");
+      expect(federalResult.scheduleB?.taxableInterest.toString()).toBe(taxableInterest);
+      const assessment = assessReturnReadiness({
+        taxInput, federalResult, includedForms: ["f1040-filled.pdf", "f1040sb-filled.pdf", "f8815-reference-filled.pdf"],
+      });
+      expect(assessment.findings.includes(missingScheduleBPartThree), `Line 4 = ${taxableInterest}`).toBe(needsPartThree);
+    }
+  });
+
+  it("uses ordinary dividends for the Part III review threshold", () => {
+    for (const [ordinaryDividends, needsPartThree] of [["1500", false], ["1501", true]] as const) {
+      const taxInput = TaxYearInputSchema.parse({ ...makeInput(), form1099Div: [{ payer: "Fictional broker", ordinaryDividends }] });
+      const assessment = assessReturnReadiness({
+        taxInput, federalResult: calculateFederalTax(taxInput), includedForms: ["f1040-filled.pdf"],
+      });
+      expect(assessment.findings.includes(missingScheduleBPartThree), `Line 6 = ${ordinaryDividends}`).toBe(needsPartThree);
+    }
   });
 
   // Spec: spec/federal/form-1040.yaml line 26-review-packet.

@@ -256,7 +256,11 @@ export function assessReturnReadiness(
   let packetCompleteness: ReturnCompletenessStatus = "supported";
   let lineCompleteness: ReturnCompletenessStatus = "supported";
   const scheduleB = input.federalResult.scheduleB;
-  if (scheduleB && (scheduleB.isRequired || input.taxInput.scheduleBPartThree) && !scheduleB.partThreeComplete) {
+  if (scheduleB && !scheduleB.partThreeComplete && (
+    scheduleB.taxableInterest.gt(1500) || scheduleB.totalOrdinaryDividends.gt(1500)
+    || scheduleB.hasForeignAccounts === true || scheduleB.hasForeignTrust === true
+    || input.taxInput.scheduleBPartThree !== undefined
+  )) {
     lineCompleteness = "partial";
     findings.push("Schedule B Part III still needs the applicable foreign account, FBAR, country and trust answers.");
   }

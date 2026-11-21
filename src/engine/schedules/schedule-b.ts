@@ -2,8 +2,9 @@
  * Schedule B — Interest and Ordinary Dividends
  * Spec: spec/federal/schedule-b.yaml
  *
- * Required when taxable interest or ordinary dividends exceed $1,500,
- * or when the taxpayer has foreign financial accounts/trusts.
+ * Supported attachment triggers include the $1,500 interest and dividend
+ * thresholds, a claimed education savings-bond exclusion, and foreign
+ * financial accounts or trusts.
  */
 
 import Decimal from "decimal.js";
@@ -293,6 +294,7 @@ export function calculateScheduleB(
   const isRequired =
     totalInterest.greaterThan(1500) ||
     totalOrdinaryDividends.greaterThan(1500) ||
+    savingsBondExclusion.gt(0) ||
     hasForeignAccounts === true ||
     hasForeignTrust === true;
 

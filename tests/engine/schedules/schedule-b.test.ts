@@ -156,6 +156,21 @@ describe("Schedule B Part I - Interest", () => {
     expect(result.taxableInterest.toNumber()).toBe(1500); // 3000 - 1500
   });
 
+  it("requires Schedule B for a positive education savings-bond exclusion in 2025 and 2026", () => {
+    for (const taxYear of [2025, 2026]) {
+      const fixture = makeInterestFixture([{ payer: "Treasury", taxYear, interestIncome: "0", usSavingsBondInterest: "1500" }]);
+      const input = {
+        ...fixture,
+        taxpayer: { ...fixture.taxpayer, taxYear },
+        scheduleBPartThree: { hasForeignAccounts: false, hasForeignTrust: false },
+      };
+      expect(calculateScheduleB(input, d(0)).isRequired).toBe(false);
+      const claimed = calculateScheduleB(input, d(1500));
+      expect(claimed.taxableInterest.isZero()).toBe(true);
+      expect(claimed.isRequired, `tax year ${taxYear}`).toBe(true);
+    }
+  });
+
   it("Schedule B Line 4 - taxable interest to 1040", () => {
     const input = makeInterestFixture([
       { payer: "Bank", interestIncome: "3000", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", taxExemptInterest: "0" },

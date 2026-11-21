@@ -1,16 +1,37 @@
 /** Spec: spec/federal/savings-bond-reissue-return.yaml private-review. */
 import Decimal from "decimal.js";
 import { execFileSync } from "node:child_process";
-import { access, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { PDFDocument } from "pdf-lib";
 import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillReturn } from "@/pdf/fill-return.js";
+import { SCHEDULE_B_FIELDS } from "@/pdf/fill-schedule-b.js";
 import { prepareSavingsBondReview } from "@/pdf/savings-bond-review-context.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { FORM_1040_FIELDS as F1040 } from "@/pdf/fill-form-1040.js";
 import { savingsBondReissueReturnInput, savingsBondReissueHalfDollarInput } from "../fixtures/savings-bond-reissue-return.js";
+
+it("includes the required Schedule B when a source-backed savings-bond exclusion is under $1,500", async () => {
+  const input = savingsBondReissueReturnInput(true);
+  const result = calculateFederalTax(input);
+  expect(result.form8815?.sourceFactsVerified).toBe(true);
+  expect(result.form8815?.excludableSavingsBondInterest.toString()).toBe("400");
+  const outputDir = await mkdtemp(join(tmpdir(), "bond-required-schedule-b-"));
+  try {
+    const { filledForms } = await fillReturn(redactReviewIdentifiers(input), redactReviewIdentifiers(result), {
+      blankFormsDir: "forms/blank/2025", outputDir, savingsBondReview: prepareSavingsBondReview(input),
+    });
+    const scheduleBPath = join(outputDir, "f1040sb-filled.pdf");
+    expect(filledForms).toContain(scheduleBPath);
+    const scheduleB = await PDFDocument.load(await readFile(scheduleBPath));
+    const form = scheduleB.getForm();
+    expect([SCHEDULE_B_FIELDS.line2, SCHEDULE_B_FIELDS.line3, SCHEDULE_B_FIELDS.line4]
+      .map(field => form.getTextField(field).getText())).toEqual(["500", "400", "100"]);
+  } finally { await rm(outputDir, { recursive: true, force: true }); }
+});
 
 it("binds original bond history and income before saved review output", async () => {
   const input = savingsBondReissueReturnInput(true), before = JSON.stringify(input), result = calculateFederalTax(input);

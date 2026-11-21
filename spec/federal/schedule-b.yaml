@@ -7,6 +7,7 @@ notes: |
   Schedule B is required if the taxpayer has:
   - Over $1,500 of taxable interest (Part I)
   - Over $1,500 of ordinary dividends (Part II)
+  - A claimed education savings-bond interest exclusion (Part I, line 3)
   - Any financial interest in or signature authority over a foreign financial account (Part III)
   - A foreign trust distribution or grantor or transferor status during the return year (Part III)
 
@@ -70,6 +71,18 @@ lines:
       - "Single MAGI phase-out: $99,500–$114,500 (2025)"
       - "Bond must be used for qualified higher education expenses"
     testRef: "tests/engine/schedules/schedule-b.test.ts::Schedule B Line 3 - savings bond exclusion (Form 8815)"
+
+  - line: "3-attachment"
+    description: "Require Schedule B for a claimed education savings-bond interest exclusion"
+    formula: "A positive Form 8815 exclusion on Schedule B line 3 requires Schedule B even if interest and dividends are both at most $1,500. A zero line 3 adds no attachment requirement. Check the separate Part III conditions after calculating taxable interest on line 4."
+    irsRef: "2025 and 2026 Schedule B General Instructions and line 3"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf#page=1"
+      - "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf#page=1"
+    testRef: "tests/engine/schedules/schedule-b.test.ts::requires Schedule B for a positive education savings-bond exclusion in 2025 and 2026"
+    testRefs:
+      - "tests/utils/return-readiness.test.ts::keeps a low savings-bond exclusion attached without a Part III review finding"
+      - "tests/pdf/savings-bond-reissue-review.test.ts::includes the required Schedule B when a source-backed savings-bond exclusion is under $1,500"
 
   - line: "4"
     description: "Taxable interest"
@@ -155,12 +168,18 @@ lines:
 
   - line: "part-three-readiness"
     description: "Require the answers that establish the Schedule B filing requirement"
-    formula: "For taxpayer years 2025 and 2026 a complete Part III has explicit answers for foreign financial accounts and foreign trusts, the FBAR answer after an affirmative financial-account answer, and one or more nonblank countries when FBAR is required. A supplied FBAR answer without an affirmative account answer, or supplied country names without an affirmative FBAR answer, is inconsistent. A redacted Schedule B review copy can show incomplete answers with an advisory. An independently qualified filing export requires complete Part III even below the monetary reporting thresholds."
-    irsRef: "2025 and 2026 Schedule B Instructions, General Instructions and Part III"
+    formula: "Part III applies when taxable interest on line 4 or ordinary dividends on line 6 exceed $1,500, or a taxpayer reports a foreign financial account or a foreign trust. Review reports also flag a partially entered foreign disclosure. A complete Part III has explicit foreign account and trust answers, the FBAR answer after an affirmative account answer, and one or more nonblank countries when FBAR is required. An independently qualified filing export requires complete Part III to establish applicability even below the monetary thresholds."
+    irsRef: "Final 2025 Schedule B and draft 2026 Schedule B, lines 4, 6, and Part III"
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f1040sb--2025.pdf"
+      - "https://www.irs.gov/pub/irs-dft/f1040sb--dft.pdf#page=2"
     testRef: "tests/utils/return-readiness.test.ts::flags incomplete required Schedule B Part III on the review cover"
     testRefs:
       - "tests/pdf/filing-return.test.ts::rejects unresolved Schedule B applicability before selecting forms"
       - "tests/engine/schedules/schedule-b.test.ts::rejects contradictory Part III declarations from the direct parser"
+      - "tests/utils/return-readiness.test.ts::keeps a low savings-bond exclusion attached without a Part III review finding"
+      - "tests/utils/return-readiness.test.ts::uses the taxable interest after exclusion for the Part III review threshold"
+      - "tests/utils/return-readiness.test.ts::uses ordinary dividends for the Part III review threshold"
 
   - line: "7b"
     description: "Foreign account countries when the taxpayer must file FBAR"
