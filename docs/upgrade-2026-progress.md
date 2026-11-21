@@ -10895,3 +10895,35 @@ five original skips and confirmed cleanup. Platform-specific results remain
 bound to their exact run. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44913637095) ·
 [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44913637066) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44913661806).
+
+### November 21 exact managed and strict runtime results
+
+The `ab330572` source line matched the exact commit in the completed jobs.
+Managed Linux passed 650 with the five existing skips. Strict AMD64 passed
+636, failed 14 and kept five skips. Its failures covered 11 Ohio journeys,
+one Pennsylvania married-payment journey and both railroad inspection
+viewports. Strict ARM64 passed 640, failed 10 Ohio journeys and kept five
+skips. Native smoke, Compose recovery and owned browser-container cleanup
+passed on both platforms. AMD64 also passed independent image archive import.
+The immediately preceding `ff689bc1` strict runs both passed 642, failed eight
+Ohio cases and kept five skips. Neither set gives a passing strict gate.
+[Current strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44913637066/job/136874485658) ·
+[Current strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44913661806/job/136880896515) ·
+[Earlier AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44910663492) ·
+[Earlier ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44910704644).
+
+The fixed two-case NEW212 replay passed on the same app and test source at
+`843df7e6`, whose changes after `ab330572` were limited to progress documents.
+Both viewports completed all 40 timing boundary records. On the current run,
+PDF response waits were 2.15 and 1.97 seconds for desktop and mobile. The
+inspection calls took 2.15 and 2.11 seconds. In the earlier replay those
+intervals were 2.19 and 1.97 seconds, and 2.02 and 1.99 seconds respectively.
+The isolated replay supplies neither a reproducible full-suite timeout nor a
+measured speedup. The existing full-suite deadlines stay in place.
+[Current replay](https://github.com/utilityfueled/tax-engine/actions/runs/44920981940) ·
+[Earlier replay](https://github.com/utilityfueled/tax-engine/actions/runs/44665859535).
+
+All six exact `ab330572` CI jobs completed successfully. Unit and coverage
+each passed 29,915 tests in 2,181 suites, with 88.44% branch coverage. The
+protected production build guard remained in place throughout the main pushes.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44913637095).

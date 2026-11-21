@@ -6,6 +6,9 @@
       "checks": {"generatedRoundTripsRemovedInSchoolFixture": 4, "isolatedFocusedTestsPassed": 281, "authorFocusedTestsPassed": 194, "independentPageParityTestPassed": true, "specReferencesValid": 9825, "managedFocusedCasesPassed": 10, "managedCaseLimitMs": 30000, "managedCasesFailed": 0, "managedCasesSkipped": 0},
       "combinedLocal": {"unitTestsPassed": 29915, "coverageTestsPassed": 29915, "branchCoveragePercent": 88.44, "postgresVersion": "16.16", "postgresCleanup": true, "allEightStaticChecksPassed": true, "managedBrowserPassed": 650, "failures": 0, "existingSkips": 5, "browserCleanup": true, "summarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356"},
       "remote": {"ciWorkflow": 44913637095, "amd64Workflow": 44913637066, "arm64Workflow": 44913661806, "dockerWorkflowPassed": 44913637059},
+      "completedCi": {"jobsPassed": 6, "unitTestsPassed": 29915, "coverageTestsPassed": 29915, "suitesPassedEach": 2181, "branchCoveragePercent": 88.44},
+      "runtime": {"managedLinux": {"passed": 650, "failed": 0, "skipped": 5}, "strictAmd64": {"job": 136874485658, "passed": 636, "failed": 14, "skipped": 5, "smokeRecoveryAndCleanupPassed": true, "archiveImportPassed": true}, "strictArm64": {"job": 136880896515, "passed": 640, "failed": 10, "skipped": 5, "smokeRecoveryAndCleanupPassed": true}},
+      "focusedNew212Timing": {"commit": "843df7e627571ca263f3841007d1bd1265fd0cc1", "workflow": 44920981940, "priorWorkflow": 44665859535, "casesPassed": 2, "fixedPhases": 40, "desktopResponseMs": 2153.8, "mobileResponseMs": 1965.0, "desktopInspectionMs": 2149.2, "mobileInspectionMs": 2107.5, "fullStrictGateRemainsOpen": true},
       "remaining": "Browser effects on the actual strict runtimes require the exact platform runs."
     },
     "nov21CombinedLocalHsaAndDonation": {
