@@ -10781,3 +10781,21 @@ export remain subject to annual qualification.
 [PA Department of Revenue](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
 [Tax Reform Code §301(p)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s) ·
 [Commit](https://github.com/utilityfueled/tax-engine/commit/aea62a48d03f0f15461e5a0f8e122ad736ed3055).
+
+### November 21 focused Ohio browser and offline billing checks
+
+Exact `aea62a48` passed the two Ohio cases that reached the most recent strict
+Linux deadline, `refund100` and `covered`, in the managed macOS browser. Both
+kept the 30-second case limit and zero retries. Both passed in a combined
+23.2 seconds with verified cleanup. Strict Linux qualification still requires
+a passing run in the runtime image.
+
+Exact `3ade54fa` passed the offline evaluation artifact consistency check
+and all 74 evaluation, AI route and billing ledger tests against an isolated
+PostgreSQL 16.16 cluster. The cluster shut down after the tests, and the run
+made zero provider requests. Reviewed case labels and repeated live output
+qualification are still required.
+
+The earlier `b1f5dc37` remote CI completed all six jobs, including 29,861
+tests each in the unit and coverage runs and 88.39% branch coverage.
+[GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/44904804057).

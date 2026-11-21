@@ -1,5 +1,11 @@
 {
   "activeContinuation": {
+    "nov21ManagedOhioAndOfflineAIRechecks": {
+      "managedOhio": {"commit": "aea62a48d03f0f15461e5a0f8e122ad736ed3055", "casesPassed": 2, "failed": 0, "skipped": 0, "timeoutMs": 30000, "cleanup": true, "summarySha256": "50ed521edb37ac3746297c54c0064f1f4e5186aa140805018e056c76e6dc0b5f"},
+      "offlineAI": {"commit": "3ade54facef02a7063779dfebb5fcada5373e793", "artifactSyncPassed": true, "postgresVersion": "16.16", "testsPassed": 74, "skipped": 0, "providerRequests": 0, "cleanup": true},
+      "baselineRemoteCI": {"run": 44904804057, "jobsPassed": 6, "unitTestsPassed": 29861, "coverageTestsPassed": 29861, "branchCoveragePercent": 88.39},
+      "remaining": "Strict Linux runtime qualification, independent AI corpus and output review, and repeated provider qualification remain open."
+    },
     "nov21PaOutboundStatutoryNonresident": {
       "commit": "aea62a48d03f0f15461e5a0f8e122ad736ed3055",
       "scope": "Internal 2026 PA-to-New York statutory nonresident with at most 30 PA days, no PA permanent abode and bound original year-round NY abode. Requires dated source confirmation excluding reciprocal-state residence across both payroll periods. Exact fixture PA compensation $9,000 and tax $276.",
