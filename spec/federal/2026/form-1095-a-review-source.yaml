@@ -1,0 +1,58 @@
+form: "Form 1095-A Part III review source"
+taxYear: 2026
+references:
+  - "https://www.irs.gov/pub/irs-prior/f1095a--2026.pdf"
+  - "https://www.irs.gov/pub/irs-prior/i1095a--2026.pdf#page=2"
+sourceEvidence:
+  formSha256: "161686f5866e18c350c0b4397a72441b26091a2962bc4bab149433762c4efca1"
+  printedRevision: "(2026) Created 5/12/26"
+  pageContentSha256:
+    - "6f94de93ebde5407adda790cef7af70d5185c0c8feed50eb0badf90093b31223"
+    - "5d772d5b14d84f8038b958dc5720bfbfce53b7d9eac9a2929c3c883787e84b90"
+  scope: "Internal document review only. No upload integration, policy allocation, PTC eligibility, Form 8962, AI, filing, or export."
+lines:
+  - line: "Part I, 1–6 and statement status"
+    description: "Original final 2026 statement for one confirmed Marketplace policy"
+    formula: >-
+      Require the final two-page layout, with the recipient instructions in
+      the same document, pinned decoded page contents and 2026 printed
+      revision. Require both VOID and CORRECTED boxes to have agreeing
+      unchecked original field and display states. Independently confirm
+      original status and match the printed Marketplace identifier, assigned
+      policy number, issuer, recipient name and SSN to the supplied policy
+      confirmation. Accept the official asterisk or X masking of the first
+      five SSN digits with the confirmed name and policy identifiers, and
+      require a blank DOB when SSN is present. Compare the confirmed policy
+      number as printed rather than deriving a truncated number. Return no
+      identifying fields. Hold flattened, mixed, altered or incomplete
+      evidence, unmatched identifiers, and DOB-only identification. Review
+      only the saved AcroForm view. Hold documents retaining the separate
+      XFA form, whose displayed data this reader does not reconcile.
+    irsRef: "2026 Form 1095-A, Parts I and recipient instructions; 2026 Instructions for Form 1095-A, Statements to Individuals and Part I."
+    testRef: "tests/apps/web/read-2026-1095-a-review-source.test.ts::holds status and policy evidence outside the pinned original"
+  - line: "21–32(A)–(C)"
+    description: "Reported monthly Marketplace premiums and advance credit"
+    formula: >-
+      Read each month at its pinned visible widget locations. Preserve exact
+      amounts in cents from columns A enrollment premiums, B second lowest
+      cost silver plan benchmark, and C advance payments of the premium tax
+      credit. Return null for a visibly blank cell and 0.00 only for an
+      explicitly reported zero, including -0-. Hold ambiguous values and
+      documents without any reported monthly amount. A blank benchmark
+      can occur on an original statement and remains unresolved for tax
+      calculation. Do not infer coverage, allocate payments, or use line 33
+      to fill monthly blanks.
+    irsRef: "2026 Instructions for Form 1095-A, Part III, Columns A–C."
+    testRef: "tests/apps/web/read-2026-1095-a-review-source.test.ts::reads exact monthly cells and reported totals from the saved official layout"
+  - line: "33(A)–(C)"
+    description: "Reported annual totals independently reconciled to printed monthly cells"
+    formula: >-
+      Read line 33 at the final coordinates. Sum the reported monthly
+      amounts for each column in Decimal, excluding blank cells from
+      arithmetic while retaining their review status. Require an equal
+      annual amount for a column with any reported month, including
+      explicit zero months. For a wholly blank monthly column, accept a
+      blank or explicitly reported zero annual total. Hold inconsistent,
+      absent required, or annual-only positive amounts.
+    irsRef: "2026 Instructions for Form 1095-A, Part III, lines 21–33."
+    testRef: "tests/apps/web/read-2026-1095-a-review-source.test.ts::holds annual values that do not reconcile to the monthly source"
