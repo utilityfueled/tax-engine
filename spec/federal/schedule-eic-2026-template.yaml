@@ -8,8 +8,9 @@ notes: |
   The regular IRS PDF is the final 2026 Schedule EIC. The printed
   schedule refers to Form 1040, line 27a. The 2026 parent return, its
   annual instructions and Tax/EIC tables still require final sources.
-  All values and selections in the specimen are synthetic placement
-  diagnostics. Financial and packet qualification remain open.
+  The physical placement diagnostics use synthetic values. The source-bound
+  specimen uses the published ATS scenario for child facts and keeps recorded
+  identifiers private. Financial and packet qualification remain open.
 lines:
   - line: "revision"
     description: "Pin the official final annual blank"
@@ -40,7 +41,43 @@ lines:
     description: "Confirm canonical placement and appearances across all child columns"
     formula: "Save a review-marked specimen with distinct text values by child and row. Reopen and verify the canonical text and nonempty widget appearances."
     testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::reopens text and both checkbox choices with their native appearances"
+  - line: "1-through-6-original-child-review"
+    description: "Bind the taxpayer header and printed child rows to current household and qualifying-child sources"
+    formula: >-
+      Bind 2026 claimant identities to the current household and select up to
+      three SSN-counted children using the existing original child resolver.
+      Use original names and recorded birth-year digits and relationships.
+      Leave claimant and child SSNs out of review bytes. Use Died as the child
+      entry only for the resolver's documented live-birth evidence exception
+      when the original identifier is explicitly empty and the source confirms
+      the child never had an SSN. Reject a known identifier or an unknown
+      no-SSN answer before rendering.
+      Skip lines 4a and 4b for children born after 2007 and younger than a
+      relevant filer. Otherwise use the sourced student and disability answers
+      in the printed 4a then 4b order. Use original U.S. co-residence months on
+      line 6, with 7 for an established stay longer than half the year but
+      shorter than seven months, and 12 for a birth or death year supported by
+      the actual residence records. Require measured days and a known death
+      status for each printed child, including an explicit no-death record for
+      a surviving child. In an ordinary year, 12 months requires the full year.
+      A shorter recorded whole-month count must allow at least the shortest
+      possible duration for that count and fewer days than the longest possible
+      duration for one month more than the recorded count.
+      Apply these 2026 calendar bounds to reject contradictory evidence while
+      keeping the independently sourced month count.
+      Leave unused child columns empty. Require the pinned final blank and apply
+      the review notice to both pages.
+    sources:
+      - "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf"
+      - "https://www.irs.gov/pub/irs-efile/1040-mef-ats-scenario-4-09222026.pdf#page=16"
+    testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::renders the source-bound ATS scenario 4 qualifying children"
+    testRefs:
+      - "tests/pdf/schedule-eic-2026-candidate.test.ts::uses verified student, disability and residence facts for lines 4 and 6"
+      - "tests/pdf/schedule-eic-2026-candidate.test.ts::requires actual year, identity and child qualification sources before rendering"
+      - "tests/pdf/schedule-eic-2026-candidate.test.ts::rejects contradictory residence days and months before rendering"
+      - "tests/pdf/schedule-eic-2026-candidate.test.ts::requires measured residence days and a known child death status"
+      - "tests/pdf/schedule-eic-2026-candidate.test.ts::reserves Died for a confirmed absence of an original SSN"
   - line: "closed-exports"
     description: "Keep the candidate outside public review and filing"
-    formula: "Retain the admitted 2025 blank and its review mapping. The 2026 candidate is physically verified and has no review or filing registration."
+    formula: "Retain the admitted 2025 blank and its review mapping. The physically verified 2026 specimen has no public review or filing registration."
     testRef: "tests/pdf/schedule-eic-2026-candidate.test.ts::keeps the physical candidate outside public exports"
