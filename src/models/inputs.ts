@@ -2986,6 +2986,12 @@ export const StandardDeductionFactsSchema = z.object({
 export const DependentCareSchema = z.object({
   sourceFactsConfirmed: z.boolean().optional(),
   receivedBenefits: z.boolean().optional(),
+  /** Form 2441 line A facts for a separate return; omitted answers remain unknown. */
+  mfsLivingApart: z.object({
+    spouseLivedApartLast6Months: z.boolean().optional(),
+    paidOverHalfHomeCost: z.boolean().optional(),
+    qualifyingPersonMainHomeOverHalfYear: z.boolean().optional(),
+  }).optional(),
   usesDeemedIncome: z.boolean().optional(),
   providers: z.array(z.object({
     name: z.string().trim().min(1), address: z.string().trim().min(1),

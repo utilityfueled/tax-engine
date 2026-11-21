@@ -4,6 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2441, type Form2441Input } from "@/engine/forms/form-2441.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import { fillForm2441, FORM_2441_FIELDS as F } from "@/pdf/fill-form-2441.js";
 import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
@@ -23,6 +24,32 @@ const base = calculateFederalTax(input);
 const fill = (form2441 = source()) => fillForm2441(input, { ...base, agi: d("19000"), form2441 }, "forms/blank/2025/f2441.pdf");
 
 describe("Form2441 actual audited review fields", () => {
+  it("marks Line A and leaves Part III blank for a credit-only MFS return", async () => {
+    const actualInput = TaxYearInputSchema.parse({
+      ...input,
+      taxpayer: { ...input.taxpayer, filingStatus: "married_filing_separately" },
+      dependentCare: {
+        expenses: "3000", qualifyingIndividuals: 1, primaryEarnedIncome: "85000",
+        priorYearExpenseCredit: "0", excludedDependentCareBenefits: "0", eligibilityConfirmed: true,
+        receivedBenefits: false, usesDeemedIncome: false, sourceFactsConfirmed: true,
+        providers: [{ name: "Example Child Care", address: "16 Main St, Seattle WA 98101",
+          identifierType: "tin", taxId: "12-3456780", householdEmployee: false, amountPaid: "3000" }],
+        qualifyingPersons: [{ firstName: "Casey", lastName: "Doe", identifierType: "tax_id", taxId: "999-88-7000",
+          over12Disabled: false, qualifyingPersonConfirmed: true, qualifiedExpenses: "3000" }],
+        mfsLivingApart: { spouseLivedApartLast6Months: true, paidOverHalfHomeCost: true, qualifyingPersonMainHomeOverHalfYear: true },
+      },
+    });
+    const result = calculateFederalTax(actualInput);
+    const original = await fillForm2441(actualInput, result, "forms/blank/2025/f2441.pdf");
+    const saved = await PDFDocument.load(await original.save());
+    const form = saved.getForm();
+    expect(form.getCheckBox("topmostSubform[0].Page1[0].c1_1[0]").isChecked()).toBe(true);
+    expect(form.getTextField(F.provider1Name).getText()).toBe("Example Child Care");
+    expect(form.getTextField(F.qp1FirstName).getText()).toBe("Casey");
+    expect(form.getTextField(F.line11).getText()).toBe("600");
+    expect(form.getTextField(F.line12).getText() ?? "").toBe("");
+    expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+  });
   it("Form2441 review preserves provider and person source records with continuations", async () => {
     const dependentCare = { expenses: "10000", qualifyingIndividuals: 4, sourceFactsConfirmed: true,
       receivedBenefits: false, usesDeemedIncome: true, primaryEarnedIncome: "30000", spouseEarnedIncome: "2000",

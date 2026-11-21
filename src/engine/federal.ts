@@ -108,7 +108,7 @@ import { calculateForm8582 } from "./forms/form-8582.js";
 import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
 import { calculateK1QbiLossReturn } from "./forms/k1-qbi-loss-return.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
-import { calculateForm2441 } from "./forms/form-2441.js";
+import { calculateForm2441, hasForm2441MfsException } from "./forms/form-2441.js";
 import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
 import { calculateForm3903 } from "./forms/form-3903.js";
 import { assertMovingCodePReconciliation } from "./moving-code-p-sources.js";
@@ -4165,10 +4165,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     `Line 16 $${incomeTax} + Line 17 $${amt.plus(partIAdditions)}`);
 
   // ── Form 2441: Dependent Care Credit ────────────────────
-  // Actual PartIII living-apart facts support the statutory MFS exception.
   let dependentCareCredit = new Decimal(0);
   let form2441: ReturnType<typeof calculateForm2441> | undefined;
-  if (input.dependentCare && (filingStatus !== "married_filing_separately" || form2441Benefits?.treatedAsUnmarried)) {
+  if (input.dependentCare && (filingStatus !== "married_filing_separately"
+    || hasForm2441MfsException(input.dependentCare, input.dependentCareBenefits))) {
     // Per IRS Form 2441 Instructions (Lines 4-5), SE earned income =
     // Schedule SE Line 3 (net SE earnings) minus Schedule 1 Line 15
     // (deductible half of SE tax). IRC §21(d)(1) → §32(c)(2)(A)(i)(II).
@@ -4180,6 +4180,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       : d(input.dependentCare.primaryEarnedIncome);
     form2441 = calculateForm2441({
       dependentCareBenefits: input.dependentCareBenefits,
+      receivedBenefits: input.dependentCare.receivedBenefits,
+      mfsLivingApart: input.dependentCare.mfsLivingApart,
       taxYear: year,
       filingStatus,
       eligibilityConfirmed: input.dependentCare.eligibilityConfirmed,

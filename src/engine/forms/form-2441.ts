@@ -9,7 +9,7 @@
 
 import Decimal from "decimal.js";
 import type { FilingStatus } from "@/models/constants.js";
-import type { DependentCareBenefits } from "@/models/inputs.js";
+import type { DependentCare, DependentCareBenefits } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -23,6 +23,8 @@ export interface Form2441Input {
   excludedDependentCareBenefits?: Decimal;
   /** Actual Part III sources, validated and calculated before taking its line 31 as the credit expense base. */
   dependentCareBenefits?: DependentCareBenefits;
+  receivedBenefits?: boolean;
+  mfsLivingApart?: DependentCare["mfsLivingApart"];
   /** Separately determined spouse earned income; never combined household income. */
   spouseEarnedIncome?: Decimal;
   /** Qualifying person, provider, work-related and residence requirements confirmed. */
@@ -59,6 +61,32 @@ const AGI_STEP = new Decimal(2000);
 const AGI_THRESHOLD = new Decimal(15000);
 const PERCENTAGE_REDUCTION_STEP = new Decimal("0.01");
 
+const livingApartFields = [
+  "spouseLivedApartLast6Months",
+  "paidOverHalfHomeCost",
+  "qualifyingPersonMainHomeOverHalfYear",
+] as const;
+
+/** Resolve line A from actual Part II facts or validated Part III facts for an MFS return. */
+export function hasForm2441MfsException(
+  partII: Pick<DependentCare, "mfsLivingApart" | "receivedBenefits" | "eligibilityConfirmed">
+    & { excludedDependentCareBenefits?: Decimal.Value } | undefined,
+  partIII?: DependentCareBenefits,
+): boolean {
+  const partIIFacts = partII?.mfsLivingApart;
+  if (partIII) {
+    for (const field of livingApartFields) {
+      if (partIIFacts?.[field] !== undefined && partIIFacts[field] !== partIII[field]) {
+        throw new Error(`Form 2441 Part II and Part III living-apart facts disagree on ${field}`);
+      }
+    }
+    return livingApartFields.every(field => partIII[field] === true);
+  }
+  return partII?.receivedBenefits === false && partII.eligibilityConfirmed === true
+    && partII.excludedDependentCareBenefits !== undefined && new Decimal(partII.excludedDependentCareBenefits).isZero()
+    && livingApartFields.every(field => partIIFacts?.[field] === true);
+}
+
 export function calculateForm2441(input: Form2441Input): Form2441Result {
   const audit = new AuditTrail();
   const taxYear = input.taxYear ?? 2025;
@@ -79,6 +107,12 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
   const benefits = input.excludedDependentCareBenefits ?? benefitsResult?.totalBenefitsApplied ?? new Decimal(0);
   if (!benefits.isFinite() || benefits.isNegative()) throw new Error("Excluded dependent-care benefits must be nonnegative");
   if (!Number.isInteger(input.qualifyingIndividuals) || input.qualifyingIndividuals < 0) throw new Error("Invalid qualifying individual count");
+  const isMfs = input.filingStatus === "married_filing_separately";
+  const filingStatusAllowsCredit = !isMfs || hasForm2441MfsException(input, input.dependentCareBenefits);
+  if (isMfs) {
+    audit.record("Form 2441", "A", "Married-separate living-apart exception", new Decimal(filingStatusAllowsCredit ? 1 : 0),
+      benefitsResult ? "Part III living-apart facts" : "Part II no-benefit confirmation and living-apart facts");
+  }
   if (benefitsResult) {
     if (!benefits.eq(benefitsResult.totalBenefitsApplied)) throw new Error("Form 2441 benefits must reconcile to actual Part III line 28");
     if (input.qualifyingIndividuals !== input.dependentCareBenefits?.qualifyingIndividuals) throw new Error("Form 2441 qualifying-person count must match Part III sources");
@@ -87,9 +121,7 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
     audit.record("Form 2441 Source Reconciliation", "gross_paid_expenses", "Gross paid qualifying care expenses", input.careExpenses,
       "Actual gross source expenses retained separately from calculated Part III line 31");
   }
-  const eligible = input.eligibilityConfirmed !== false
-    && (input.filingStatus !== "married_filing_separately" || benefitsResult?.treatedAsUnmarried === true)
-    && input.qualifyingIndividuals > 0;
+  const eligible = input.eligibilityConfirmed !== false && filingStatusAllowsCredit && input.qualifyingIndividuals > 0;
 
   // Line 3: Qualifying expenses (capped)
   const expenseLimit = eligible
@@ -139,7 +171,8 @@ export function calculateForm2441(input: Form2441Input): Form2441Result {
 
   // Line 9: Credit amount
   const tentativeCredit = roundDollar(earnedIncomeLimit.times(percentage));
-  const priorCredit = input.priorYearExpenseCredit === undefined ? undefined : roundDollar(input.priorYearExpenseCredit);
+  const priorCredit = input.priorYearExpenseCredit === undefined ? undefined
+    : filingStatusAllowsCredit ? roundDollar(input.priorYearExpenseCredit) : new Decimal(0);
   const totalTentativeCredit = tentativeCredit.plus(priorCredit ?? 0);
   const limit = input.taxLiabilityLimit;
   if (limit !== undefined && (!limit.isFinite() || limit.isNegative())) throw new Error("Care credit tax-liability limit must be finite and nonnegative");

@@ -11,6 +11,7 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
+import { hasForm2441MfsException } from "@/engine/forms/form-2441.js";
 import { calculateForm2441Benefits } from "@/engine/forms/form-2441-benefits.js";
 import { calculateDependentCareBenefitSources } from "@/engine/forms/dependent-care-benefit-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -272,8 +273,11 @@ export async function fillForm2441(
   const f2441 = result.form2441;
   const partIII = benefitAudits(input, result);
   if (!f2441 && !partIII) throw new Error("Form 2441 review requires its audited calculation");
+  const isMfs = input.taxpayer.filingStatus === "married_filing_separately";
+  const mfsException = isMfs && hasForm2441MfsException(input.dependentCare, input.dependentCareBenefits);
+  if (isMfs && f2441?.credit.gt(0) && !mfsException) throw new Error("Form 2441 credit requires actual Line A eligibility");
   const required = ["3", "4", "5", "6", "7", "8", "9a", "10", "11"];
-  const printed = new Set([...required, "9b", "9c"]);
+  const printed = new Set([...required, "A", "9b", "9c"]);
   const byLine = new Map<string, Decimal>();
   for (const line of f2441?.lines ?? []) {
     if (!printed.has(line.line)) continue;
@@ -282,6 +286,9 @@ export async function fillForm2441(
       throw new Error(`Form 2441 requires a unique finite audit for printed line ${line.line}`);
     }
     byLine.set(line.line, line.value);
+  }
+  if (isMfs && f2441 && !byLine.get("A")?.eq(mfsException ? 1 : 0)) {
+    throw new Error("Form 2441 Line A audit disagrees with its source facts");
   }
   if (f2441) for (const line of required) if (!byLine.has(line)) throw new Error(`Form 2441 is missing audit line ${line}`);
   if (byLine.has("9b") !== byLine.has("9c")) throw new Error("Form 2441 prior-year audit is incomplete");
@@ -298,7 +305,7 @@ export async function fillForm2441(
 
   if (f2441 && partIII) {
     const eligible = input.dependentCare?.eligibilityConfirmed !== false
-      && (input.taxpayer.filingStatus !== "married_filing_separately" || result.form2441Benefits?.treatedAsUnmarried === true);
+      && (!isMfs || mfsException);
     const expectedExpenses = eligible ? partIII.get("31") : new Decimal(0);
     if (!byLine.get("3")?.eq(expectedExpenses ?? "NaN")) throw new Error("Form 2441 Part II audit does not reconcile to the actual Part III handoff");
   }
@@ -319,6 +326,7 @@ export async function fillForm2441(
     if (value !== undefined) setTextField(form, field, value.isZero() ? "0" : formatCurrency(value));
   }
   if (f2441) setTextField(form, F.line8decimal, f2441.creditPercentage.times(100).toFixed(0));
+  setCheckBox(form, F.mfsException, mfsException);
   if (partIII) {
     for (const line of benefitLineNumbers) {
       if (line >= 27 && !f2441) continue;
@@ -329,7 +337,6 @@ export async function fillForm2441(
     }
     const hasBusinessAmount = input.dependentCareBenefits?.selfEmployedBenefits?.some(source => new Decimal(source.benefitsReceived ?? "NaN").plus(source.priorYearCarryoverUsed ?? "NaN").gt(0)) === true;
     setCheckBox(form, F.line22Yes, hasBusinessAmount); setCheckBox(form, F.line22No, !hasBusinessAmount);
-    setCheckBox(form, F.mfsException, input.taxpayer.filingStatus === "married_filing_separately" && result.form2441Benefits?.treatedAsUnmarried === true);
   }
   await fillSourceRecords(doc, input, result);
   await markReviewPdf(doc);
