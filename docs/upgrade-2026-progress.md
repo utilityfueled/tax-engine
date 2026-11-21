@@ -1,5 +1,38 @@
 # 2026 upgrade implementation evidence
 
+## November 21 guided QOF discovery
+
+Commit `f9cb2c54` asks every 2026 guided filer whether they disposed
+of a qualified opportunity fund investment or held deferred gain on
+December 31. A wages-only return can reach the actual-record worksheet.
+An explicit No preserves ordinary investment sources. An unanswered
+question stays open for review. Incomplete or wrong-year worksheets
+remain visible for correction or removal and keep their original year.
+The existing annual calculation and PDF gates still apply.
+[IRS Notice 2026-40, section 4.01](https://www.irs.gov/pub/irs-drop/n-26-40.pdf#page=9).
+
+Independent source review and 216 focused tests passed. The exact
+extended Chromium tests reproduced the missing question on the prior
+source. Both viewports passed on the successor, including reload and
+navigation from wages to the QOF worksheet, with the original case
+limit. All 9,844 tracked spec references, inventory, types, scoped lint
+and the browser audit passed. The PostgreSQL 16.16 unit and coverage
+runs each passed 29,965 tests across 2,183 suites, with 88.49% branch
+coverage. Both temporary database instances stopped successfully.
+The remote Web build passed. The strict Linux browser and native
+recovery workflows still require terminal evidence.
+
+A separate NEW212 Ohio business PDF candidate saved about 9.4 ms
+per run in the changed phase on two actual local fixtures. Whole PDF
+timing was noisy, with about 640 ms median per request. The current
+renderer was retained. That evidence does not resolve the strict
+Linux case deadlines.
+
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44946102841) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44946102783) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44946102859) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44946369818).
+
 ## November 21 combined verification
 
 The exact tracked archive at `2fc5afb4` passed all 29,960 tests in

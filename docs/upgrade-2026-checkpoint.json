@@ -1,5 +1,22 @@
 {
   "activeContinuation": {
+    "nov21QofDiscovery": {
+      "commit": "f9cb2c549e70efabb832aa73faccbb8f207ea7bc",
+      "officialSource": "https://www.irs.gov/pub/irs-drop/n-26-40.pdf#page=9",
+      "focusedTestsPassed": 216,
+      "trackedSpecRefsValid": 9844,
+      "reviewedLocalChromiumCasesPassed": 2,
+      "localChromiumOriginalCaseLimitMs": 30000,
+      "unitTestsPassed": 29965,
+      "coverageTestsPassed": 29965,
+      "branchCoveragePercent": 88.49,
+      "suites": 2183,
+      "postgresVersion": "16.16",
+      "bothPostgresStopsPassed": true,
+      "remoteWebBuildPassed": true,
+      "gateStatus": "2026 annual and PDF gates remain closed",
+      "workflows": {"ci": 44946102841, "web": 44946102783, "docker": 44946102859, "nativeArm64": 44946369818}
+    },
     "nov21CombinedVerification": {
       "commit": "2fc5afb40f2b39e05af990c881c1cdbd152f31ec",
       "unitTestsPassed": 29960,
