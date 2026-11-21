@@ -54,11 +54,60 @@ lines:
   - line: "dex-swap-holding-period"
     description: "Holding period for DEX swap dispositions"
     formula: |
-      Holding period of disposed token determined from lot(s) matched.
-      When the acquisition date is known, use the calendar holding-period rule below.
-      Multiple lots consumed → date acquired = "VARIOUS".
-    irsRef: "IRC §1222"
-    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap spanning multiple lots reports VARIOUS dateAcquired"
+      For one taxable DEX execution, match all sold units and determine the term of each
+      consumed lot using its actual acquisition date and the calendar rule below.
+      Group matched units and their actual basis by term. Show "VARIOUS" only within
+      a term with multiple acquisition dates. For a mixed-term execution, allocate
+      proceeds by the quantity in each term at the common execution price. Calculate
+      the smaller quantity's share with Decimal and give the other term the residual
+      so proceeds reconcile to the original execution amount.
+      Retain the full source precision of matched units and basis. A fractional
+      shortfall, including one atomic unit, keeps the execution unresolved.
+      Hold a partially matched sale or a matched lot without a valid acquisition
+      date. Preserve the historical unknown-date and zero-basis result when no lots
+      match. Require finite source quantities, proceeds and basis. Establish one
+      new lot for the received tokens for each execution.
+    irsRef: "IRC §1222; Form 8949 instructions, Column (b), stock or digital assets acquired on various dates; https://www.irs.gov/instructions/i8949"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap splits consumed lots by term and preserves the matched basis"
+    testRefs:
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap spanning multiple same-term dates reports VARIOUS dateAcquired"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap conserves fractional proceeds and holds unresolved matched lots"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap matches unequal 18-place quantities without rounding basis"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds a one-unit shortfall and non-finite lot quantities"
+
+  - line: "dex-swap-wallet-source"
+    description: "Wallet or account and source record for a taxable DEX execution"
+    formula: |
+      For dispositions on or after January 1, 2025, mixed terms require a taxpayer-
+      confirmed wallet or account label and original execution record reference.
+      Each eligible lot must have its own taxpayer-confirmed wallet or account
+      and original lot record reference. Use local, nonsecret labels and distinct
+      row references for the lots and executions in each wallet. Hold duplicate
+      lot rows, repeated executions, or a receipt that would reuse an existing
+      lot reference. Require
+      taxpayer confirmation that FIFO applies to the original execution and its
+      recorded selection pool is complete. Select within the execution's wallet
+      or account and exclude confirmed lots of other wallets or accounts before
+      selecting units. Require actual acquisition dates for the selected wallet's
+      open lots. Hold incomplete evidence, an ambiguous source pool, insufficient
+      units in the selected wallet, or a source-bound method other than FIFO.
+      Hold a batch with wrapping or bridging that uses or creates an asset
+      in the wallet-qualified lot pool. Those transfers require separate methods.
+      Carry the execution's source binding into the received lot only if the
+      taxpayer confirms the same destination wallet or account. For executions
+      before January 1, 2025, apply mixed-term allocation without wallet evidence.
+      Unscoped single-term processing is a legacy input path and provides no
+      wallet qualification.
+    irsRef: "26 CFR §1.1012-1(j); IRS digital asset FAQs 82 and 92; https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions"
+    testRef: "tests/engine/forms/crypto-lot-matching.test.ts::routes mixed DEX proceeds and basis to separate Schedule D terms"
+    testRefs:
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds missing, incomplete, or contradictory wallet originals"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap carries source binding only with a confirmed same-wallet receipt"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap preserves the historical mixed result before the wallet rule"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds a duplicate original wallet lot row"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds a replayed wallet execution row"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds a received lot that collides with an original wallet lot row"
+      - "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap holds wallet-qualified batches with an overlapping wrap or bridge"
 
   - line: "digital-asset-calendar-holding-period"
     description: "Calendar anniversary for a digital asset disposition with a known acquisition date"
@@ -74,13 +123,15 @@ lines:
   - line: "dex-swap-form-8949"
     description: "DEX swap Form 8949 routing"
     formula: |
-      Each taxable DEX swap generates a Form 8949 entry:
+      Each taxable DEX swap generates one Form 8949 entry for each applicable term:
       - Description: "FROMTICKER→TOTICKER swap via PROTOCOL"
-      - Short-term → Part I (Box B, basis not reported by broker)
-      - Long-term → Part II (Box E, basis not reported by broker)
+      - Short-term digital asset disposition without a reporting statement → Part I, Box I
+      - Long-term digital asset disposition without a reporting statement → Part II, Box L
       Digital asset flag = true.
-    irsRef: "Form 8949 Instructions"
+    irsRef: "Form 8949 instructions, Digital Assets; https://www.irs.gov/instructions/i8949"
     testRef: "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap dispositions flow to Form 8949 with digitalAsset flag"
+    testRefs:
+      - "tests/engine/forms/crypto-lot-matching.test.ts::routes mixed DEX proceeds and basis to separate Schedule D terms"
 
   # ── Wrapped Token Conversion (Non-Taxable) ──────────────
   - line: "wrap-nontaxable"

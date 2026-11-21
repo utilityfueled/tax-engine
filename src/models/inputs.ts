@@ -423,6 +423,12 @@ export const CryptoCostBasisMethodSchema = z.enum([
 ]);
 
 // ── Crypto Lot for Cost Basis Tracking ──
+const CryptoWalletSourceSchema = z.object({
+  walletOrAccountReference: z.string(), // Nonsecret local label for the actual wallet or account
+  originalRecordReference: z.string(), // Nonsecret local label for a distinct source row in this wallet or account
+  sourceFactsConfirmed: z.boolean(),
+});
+
 export const CryptoLotSchema = z.object({
   asset: z.string(), // Ticker/symbol (e.g., "BTC")
   dateAcquired: z.string(), // YYYY-MM-DD
@@ -430,6 +436,7 @@ export const CryptoLotSchema = z.object({
   costBasisPerUnit: decimal,
   source: z.enum(["purchase", "mining", "staking", "airdrop", "hard_fork", "gift", "swap", "lp_exit", "yield", "lending", "other"]).default("purchase"),
   lotId: z.string().optional(), // For specific_id matching
+  walletSource: CryptoWalletSourceSchema.optional(),
 });
 
 // ── Crypto Mining Income ──
@@ -484,6 +491,9 @@ export const DeFiTokenSwapSchema = z.object({
   gasFee: optionalDecimal, // Gas fee in USD (capitalized into new lot basis)
   isWrappingEvent: z.boolean().default(false), // ETH→WETH, BTC→WBTC (non-taxable, basis carryover)
   isBridgeTransaction: z.boolean().default(false), // Cross-chain same-asset transfer (non-taxable)
+  walletSource: CryptoWalletSourceSchema.optional(),
+  walletFifoConfirmed: z.boolean().optional(), // FIFO applies and the original wallet lot pool is complete
+  receivedIntoSameWalletConfirmed: z.boolean().optional(),
 });
 
 // ── DeFi LP (Liquidity Pool) Position ──

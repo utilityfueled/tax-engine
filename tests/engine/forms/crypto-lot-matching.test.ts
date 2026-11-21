@@ -26,7 +26,7 @@ import {
   type TrackedLot,
 } from "@/engine/forms/crypto-lot-matching.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 const d = (n: number | string) => new Decimal(n);
@@ -980,6 +980,14 @@ describe("Crypto Edge Cases", () => {
 // Spec: spec/federal/defi-transactions.yaml
 // ═══════════════════════════════════════════════════════════
 
+function dexWalletSource(originalRecordReference: string, walletOrAccountReference = "Fixture Wallet A") {
+  return { walletOrAccountReference, originalRecordReference, sourceFactsConfirmed: true };
+}
+
+function dexWalletExecution() {
+  return { walletSource: dexWalletSource("Fixture Swap Receipt 1"), walletFifoConfirmed: true };
+}
+
 describe("DeFi Token Swaps — DEX Trades", () => {
   it("DEX swap ETH→USDC generates taxable disposition with correct gain/loss", () => {
     // Bought 10 ETH at $2000 each. Swap to USDC when ETH = $3000.
@@ -1044,13 +1052,14 @@ describe("DeFi Token Swaps — DEX Trades", () => {
     expect(newLot.source).toBe("swap");
   });
 
-  it("DEX swap spanning multiple lots reports VARIOUS dateAcquired", () => {
+  it("DEX swap splits consumed lots by term and preserves the matched basis", () => {
     const lots: TrackedLot[] = [
-      { asset: "ETH", dateAcquired: "2024-01-15", quantity: d(2), costBasisPerUnit: d(1500), source: "purchase" },
-      { asset: "ETH", dateAcquired: "2024-07-15", quantity: d(3), costBasisPerUnit: d(2500), source: "purchase" },
+      { asset: "ETH", dateAcquired: "2024-01-15", quantity: d(2), costBasisPerUnit: d(1500), source: "purchase", walletSource: dexWalletSource("Fixture Lot 1") },
+      { asset: "ETH", dateAcquired: "2024-07-15", quantity: d(3), costBasisPerUnit: d(2500), source: "purchase", walletSource: dexWalletSource("Fixture Lot 2") },
     ];
 
     const swaps = [{
+      ...dexWalletExecution(),
       fromAsset: "ETH",
       fromQuantity: "4", // Spans both lots (FIFO: 2 from first + 2 from second)
       toAsset: "USDC",
@@ -1064,12 +1073,214 @@ describe("DeFi Token Swaps — DEX Trades", () => {
 
     const result = processDeFiTokenSwaps(swaps, lots, "fifo");
 
+    expect(result.dispositions).toHaveLength(2);
+    const details = result.dispositions.map(disp => ({
+      term: disp.holdingPeriod, acquired: disp.dateAcquired, sold: disp.dateSold,
+      proceeds: disp.proceeds.toFixed(), basis: disp.costBasis.toFixed(), gain: disp.gainOrLoss.toFixed(),
+    }));
+    expect(details).toEqual(expect.arrayContaining([
+      { term: "long", acquired: "2024-01-15", sold: "2025-06-15", proceeds: "6000", basis: "3000", gain: "3000" },
+      { term: "short", acquired: "2024-07-15", sold: "2025-06-15", proceeds: "6000", basis: "5000", gain: "1000" },
+    ]));
+    expect(result.totalProceeds.toFixed()).toBe("12000");
+    expect(result.totalCostBasis.toFixed()).toBe("8000");
+    expect(result.totalGainOrLoss.toFixed()).toBe("4000");
+    expect(lots.map(lot => lot.quantity.toFixed())).toEqual(["2", "3"]);
+    expect(result.newLots).toEqual([{
+      asset: "USDC", dateAcquired: "2025-06-15", quantity: d("12000"), costBasisPerUnit: d(1), source: "swap",
+    }]);
+  });
+
+  it("DEX swap spanning multiple same-term dates reports VARIOUS dateAcquired", () => {
+    const lots: TrackedLot[] = [
+      { asset: "ETH", dateAcquired: "2025-01-15", quantity: d(1), costBasisPerUnit: d(100), source: "purchase" },
+      { asset: "ETH", dateAcquired: "2025-02-15", quantity: d(1), costBasisPerUnit: d(200), source: "purchase" },
+    ];
+    const result = processDeFiTokenSwaps([{
+      fromAsset: "ETH", fromQuantity: "2", toAsset: "USDC", toQuantity: "1000", fairMarketValueAtSwap: "1000",
+      dateSwapped: "2025-06-01", isWrappingEvent: false, isBridgeTransaction: false,
+    }], lots, "fifo");
+
     expect(result.dispositions).toHaveLength(1);
-    const disp = result.dispositions[0];
-    expect(disp.dateAcquired).toBe("VARIOUS"); // Multiple lots consumed
-    // Cost basis: 2 * $1500 + 2 * $2500 = $3000 + $5000 = $8000
-    expect(disp.costBasis.toNumber()).toBe(8000);
-    expect(disp.gainOrLoss.toNumber()).toBe(4000); // $12000 - $8000
+    expect(result.dispositions[0]).toMatchObject({
+      holdingPeriod: "short", dateAcquired: "VARIOUS", proceeds: d(1000), costBasis: d(300), gainOrLoss: d(700),
+    });
+  });
+
+  it("DEX swap conserves fractional proceeds and holds unresolved matched lots", () => {
+    const swap = {
+      ...dexWalletExecution(),
+      fromAsset: "ETH", fromQuantity: "3", toAsset: "USDC", toQuantity: "100", fairMarketValueAtSwap: "100",
+      dateSwapped: "2025-06-01", isWrappingEvent: false, isBridgeTransaction: false,
+    };
+    const lots: TrackedLot[] = [
+      { asset: "ETH", dateAcquired: "2023-01-01", quantity: d(1), costBasisPerUnit: d(12), source: "purchase", walletSource: dexWalletSource("Fixture Lot 1") },
+      { asset: "ETH", dateAcquired: "2023-01-02", quantity: d(1), costBasisPerUnit: d(13), source: "purchase", walletSource: dexWalletSource("Fixture Lot 2") },
+      { asset: "ETH", dateAcquired: "2025-01-01", quantity: d(1), costBasisPerUnit: d(0), source: "purchase", walletSource: dexWalletSource("Fixture Lot 3") },
+    ];
+    const result = processDeFiTokenSwaps([swap], lots, "fifo");
+
+    expect(result.dispositions).toHaveLength(2);
+    const short = result.dispositions.find(row => row.holdingPeriod === "short");
+    const long = result.dispositions.find(row => row.holdingPeriod === "long");
+    if (!short || !long) throw new Error("Expected both holding periods");
+    expect(short.proceeds.toFixed()).toBe("33.333333333333333333");
+    expect(long.proceeds.toFixed()).toBe("66.666666666666666667");
+    expect(long.dateAcquired).toBe("VARIOUS");
+    expect(long.costBasis.toFixed()).toBe("25");
+    expect(short.costBasis.toFixed()).toBe("0");
+    expect(short.proceeds.plus(long.proceeds).toFixed()).toBe("100");
+    expect(result.totalGainOrLoss.toFixed()).toBe("75");
+    expect(result.newLots).toHaveLength(1);
+    expect(result.newLots[0].costBasisPerUnit.times(result.newLots[0].quantity).toFixed()).toBe("100");
+    const preciseProceeds = "100.000000000000000001";
+    const precise = processDeFiTokenSwaps([{ ...swap, fairMarketValueAtSwap: preciseProceeds }], lots, "fifo");
+    expect(precise.totalProceeds.toFixed()).toBe(preciseProceeds);
+
+    expect(() => processDeFiTokenSwaps([{ ...swap, fromQuantity: "4" }], lots, "fifo")).toThrow(/match all sold units/);
+    for (const dateAcquired of ["VARIOUS", "2025-02-29", "2025-06-02"]) {
+      const unresolved = [...lots.slice(0, 2), { ...lots[2], dateAcquired }];
+      expect(() => processDeFiTokenSwaps([swap], unresolved, "fifo")).toThrow(/actual acquisition dates/);
+    }
+  });
+
+  function dexSwapWithUnequalLots() {
+    const input = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      cryptoIncome: {
+        tokenSwaps: [{
+          ...dexWalletExecution(),
+          fromAsset: "ETH", fromQuantity: "1000", toAsset: "USDC", toQuantity: "1000",
+          fairMarketValueAtSwap: "1000", dateSwapped: "2025-06-01",
+        }],
+        lots: [
+          { asset: "ETH", dateAcquired: "2023-01-01", quantity: "0.000000000000000001", costBasisPerUnit: "2", walletSource: dexWalletSource("Fixture Lot 1") },
+          { asset: "ETH", dateAcquired: "2025-01-01", quantity: "1000", costBasisPerUnit: "1", walletSource: dexWalletSource("Fixture Lot 2") },
+        ],
+      },
+    });
+    if (!input.cryptoIncome) throw new Error("Expected parsed DEX originals");
+    return { swap: input.cryptoIncome.tokenSwaps[0], lots: initializeLots(input.cryptoIncome.lots) };
+  }
+
+  it("DEX swap matches unequal 18-place quantities without rounding basis", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const followUp = {
+      ...swap, fromQuantity: "0.000000000000000001", toQuantity: "1", fairMarketValueAtSwap: "1",
+      walletSource: dexWalletSource("Fixture Swap Receipt 2"),
+    };
+    const result = processDeFiTokenSwaps([swap, followUp], lots, "fifo");
+    const [long, short, remainder] = result.dispositions;
+
+    expect(long.holdingPeriod).toBe("long");
+    expect(long.proceeds.toFixed()).toBe("0.000000000000000001");
+    expect(long.costBasis.toFixed()).toBe("0.000000000000000002");
+    expect(long.gainOrLoss.toFixed()).toBe("-0.000000000000000001");
+    expect(short.holdingPeriod).toBe("short");
+    expect(short.proceeds.toFixed()).toBe("999.999999999999999999");
+    expect(short.costBasis.toFixed()).toBe("999.999999999999999999");
+    expect(short.gainOrLoss.toFixed()).toBe("0");
+    expect(remainder.dateAcquired).toBe("2025-01-01");
+    expect(remainder.costBasis.toFixed()).toBe("0.000000000000000001");
+    expect(result.totalProceeds.toFixed()).toBe("1001");
+    expect(result.totalCostBasis.toFixed()).toBe("1000.000000000000000002");
+    expect(result.totalGainOrLoss.toFixed()).toBe("0.999999999999999998");
+  });
+
+  it("DEX swap holds a one-unit shortfall and non-finite lot quantities", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    expect(() => processDeFiTokenSwaps([{ ...swap, fromQuantity: "1000.000000000000000002" }], lots, "fifo"))
+      .toThrow(/match all sold units/);
+    for (const quantity of [d("Infinity"), d("NaN")]) {
+      expect(() => processDeFiTokenSwaps([swap], [{ ...lots[0], quantity }], "fifo")).toThrow(/finite/);
+    }
+    expect(() => processDeFiTokenSwaps([swap], [{ ...lots[0], costBasisPerUnit: d("Infinity") }], "fifo")).toThrow(/finite/);
+    expect(() => processDeFiTokenSwaps([{ ...swap, fairMarketValueAtSwap: "Infinity" }], [], "fifo")).toThrow(/finite/);
+  });
+
+  it("DEX swap holds missing, incomplete, or contradictory wallet originals", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const unboundSwap = { ...swap, walletSource: undefined, walletFifoConfirmed: undefined };
+    const unboundLots = lots.map(lot => ({ ...lot, walletSource: undefined }));
+    const otherWallet = { ...lots[1], walletSource: dexWalletSource("Fixture Lot 2", "Fixture Wallet B") };
+    const incompleteLot = { ...lots[1], walletSource: dexWalletSource("  ") };
+
+    expect(() => processDeFiTokenSwaps([unboundSwap], unboundLots, "fifo")).toThrow(/wallet.*original/i);
+    expect(() => processDeFiTokenSwaps([{ ...unboundSwap, fromQuantity: "0.000000000000000001" }], lots, "fifo"))
+      .toThrow(/wallet.*original/i);
+    expect(() => processDeFiTokenSwaps([{ ...swap, walletSource: dexWalletSource("  ") }], lots, "fifo"))
+      .toThrow(/wallet.*original/i);
+    expect(() => processDeFiTokenSwaps([{ ...swap, walletFifoConfirmed: false }], lots, "fifo")).toThrow(/FIFO/);
+    expect(() => processDeFiTokenSwaps([swap], lots, "hifo")).toThrow(/FIFO/);
+    expect(() => processDeFiTokenSwaps([swap], [lots[0], unboundLots[1]], "fifo")).toThrow(/wallet.*original/i);
+    expect(() => processDeFiTokenSwaps([swap], [lots[0], incompleteLot], "fifo")).toThrow(/wallet.*original/i);
+    expect(() => processDeFiTokenSwaps([swap], [lots[0], otherWallet], "fifo")).toThrow(/match all sold units/);
+    expect(() => processDeFiTokenSwaps([swap], [otherWallet], "fifo")).toThrow(/match all sold units/);
+    const undatedLot = { ...lots[0], dateAcquired: "VARIOUS", walletSource: dexWalletSource("Fixture Lot 3") };
+    expect(() => processDeFiTokenSwaps([swap], [...lots, undatedLot], "fifo")).toThrow(/actual acquisition dates/);
+  });
+
+  it("DEX swap carries source binding only with a confirmed same-wallet receipt", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const followingSwap = {
+      ...swap, walletSource: dexWalletSource("Fixture Swap Receipt 2"), fromAsset: "USDC", fromQuantity: "1000",
+      toAsset: "DAI", toQuantity: "1000", dateSwapped: "2025-06-02",
+    };
+    const result = processDeFiTokenSwaps([{ ...swap, receivedIntoSameWalletConfirmed: true }, followingSwap], lots, "fifo");
+    expect(result.newLots[0].walletSource).toEqual(dexWalletExecution().walletSource);
+    expect(result.newLots[1].walletSource).toBeUndefined();
+    const received = result.dispositions[2];
+    expect(received).toMatchObject({ dateAcquired: "2025-06-01", costBasis: d(1000), holdingPeriod: "short" });
+    expect(() => processDeFiTokenSwaps([swap, followingSwap], lots, "fifo")).toThrow(/wallet.*original/i);
+  });
+
+  it("DEX swap preserves the historical mixed result before the wallet rule", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const historicalSwap = { ...swap, dateSwapped: "2024-12-31", walletSource: undefined, walletFifoConfirmed: undefined };
+    const historicalLots = [
+      { ...lots[0], walletSource: undefined },
+      { ...lots[1], dateAcquired: "2024-12-01", walletSource: undefined },
+    ];
+    const result = processDeFiTokenSwaps([historicalSwap], historicalLots, "fifo");
+    expect(result.dispositions.map(row => row.holdingPeriod)).toEqual(["long", "short"]);
+  });
+
+  it("DEX swap holds a duplicate original wallet lot row", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const inflated = { ...swap, fromQuantity: "1000.000000000000000002" };
+    expect(() => processDeFiTokenSwaps([inflated], [...lots, { ...lots[0] }], "fifo")).toThrow(/duplicate.*lot/i);
+  });
+
+  it("DEX swap holds a replayed wallet execution row", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const repeated = { ...swap, fromQuantity: "1" };
+    expect(() => processDeFiTokenSwaps([repeated, { ...repeated }], lots, "fifo")).toThrow(/duplicate.*execution/i);
+  });
+
+  it("DEX swap holds a received lot that collides with an original wallet lot row", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const existing = { ...lots[0], asset: "USDC", walletSource: dexWalletExecution().walletSource };
+    expect(() => processDeFiTokenSwaps([{ ...swap, receivedIntoSameWalletConfirmed: true }], [...lots, existing], "fifo"))
+      .toThrow(/receipt.*existing.*lot/i);
+  });
+
+  it("DEX swap holds wallet-qualified batches with an overlapping wrap or bridge", () => {
+    const { swap, lots } = dexSwapWithUnequalLots();
+    const transfer = {
+      ...swap, fromAsset: "ETH", fromQuantity: "1", toAsset: "WETH", toQuantity: "1",
+      walletSource: dexWalletSource("Fixture Transfer 1", "Fixture Wallet B"), isWrappingEvent: true,
+    };
+    const otherWalletLot = { ...lots[1], walletSource: dexWalletSource("Fixture Other Lot", "Fixture Wallet B") };
+    const sale = { ...swap, fromQuantity: "2" };
+    expect(() => processDeFiTokenSwaps([transfer, sale], [...lots, otherWalletLot], "fifo")).toThrow(/wrapping or bridging/i);
+
+    const bridge = { ...transfer, fromAsset: "WETH", toAsset: "ETH", isWrappingEvent: false, isBridgeTransaction: true };
+    expect(() => processDeFiTokenSwaps([bridge, sale], lots, "fifo")).toThrow(/wrapping or bridging/i);
+
+    const independent = { ...transfer, fromAsset: "BTC", toAsset: "WBTC", walletSource: undefined };
+    const result = processDeFiTokenSwaps([independent, sale], lots, "fifo");
+    expect(result.nonTaxableEvents).toHaveLength(1);
+    expect(result.dispositions.map(row => row.holdingPeriod)).toEqual(["long", "short"]);
   });
 
   it("DEX swap with loss (sold token declined in value)", () => {
@@ -1380,6 +1591,30 @@ describe("DeFi Bridge Transactions", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("DeFi Integration — Full Return", () => {
+  it("routes mixed DEX proceeds and basis to separate Schedule D terms", () => {
+    const input = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      cryptoIncome: {
+        tokenSwaps: [{
+          ...dexWalletExecution(),
+          fromAsset: "ETH", fromQuantity: "2", toAsset: "USDC", toQuantity: "1000", fairMarketValueAtSwap: "1000",
+          dateSwapped: "2025-06-01", isWrappingEvent: false, isBridgeTransaction: false,
+        }],
+        lots: [
+          { asset: "ETH", dateAcquired: "2022-01-01", quantity: "2", costBasisPerUnit: "1", source: "purchase", walletSource: dexWalletSource("Fixture Lot 3", "Fixture Wallet B") },
+          { asset: "ETH", dateAcquired: "2023-01-01", quantity: "1", costBasisPerUnit: "100", source: "purchase", walletSource: dexWalletSource("Fixture Lot 1") },
+          { asset: "ETH", dateAcquired: "2025-01-01", quantity: "1", costBasisPerUnit: "200", source: "purchase", walletSource: dexWalletSource("Fixture Lot 2") },
+        ],
+      },
+    });
+    const result = calculateFederalTax(input);
+
+    expect(result.scheduleD?.netShortTerm.toFixed()).toBe("300");
+    expect(result.scheduleD?.netLongTerm.toFixed()).toBe("400");
+    expect(result.capitalGainLoss.toFixed()).toBe("700");
+    expect(result.digitalAssetQuestion).toBe(true);
+  });
+
   it("DEX swap dispositions flow to Form 8949 with digitalAsset flag", () => {
     const input = makeCryptoFixture({
       cryptoIncome: {

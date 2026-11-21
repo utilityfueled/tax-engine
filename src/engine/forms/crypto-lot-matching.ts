@@ -29,8 +29,11 @@ import type {
 } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { CharitableContributionWorksheetInput } from "./charitable-contribution-worksheet.js";
+
+const DEX_WALLET_RULE_START = "2025-01-01";
 
 export interface TrackedLot {
   asset: string;
@@ -39,6 +42,7 @@ export interface TrackedLot {
   costBasisPerUnit: Decimal;
   source: string;
   lotId?: string;
+  walletSource?: CryptoLot["walletSource"];
 }
 
 export interface MatchedDisposition {
@@ -121,6 +125,7 @@ export function initializeLots(lots: CryptoLot[]): TrackedLot[] {
     costBasisPerUnit: d(lot.costBasisPerUnit),
     source: lot.source,
     lotId: lot.lotId,
+    ...(lot.walletSource && { walletSource: { ...lot.walletSource } }),
   }));
 }
 
@@ -482,8 +487,17 @@ export function processDeFiTokenSwaps(
   const dispositions: MatchedDisposition[] = [];
   const newLots: TrackedLot[] = [];
   const nonTaxableEvents: NonTaxableEvent[] = [];
+  let taxableSwapCount = 0;
   // Work on a mutable copy of lots so we can consume them
   const remainingLots = lots.map((l) => ({ ...l, quantity: l.quantity }));
+  const walletExecutionReferences = new Set<string>();
+  const walletQualifiedAssets = new Set<string>();
+  for (const swap of swaps) {
+    if (swap.dateSwapped < DEX_WALLET_RULE_START || !swap.walletSource || swap.isWrappingEvent || swap.isBridgeTransaction
+      || !d(swap.fromQuantity).gt(0)) continue;
+    walletQualifiedAssets.add(swap.fromAsset.toUpperCase());
+    if (swap.receivedIntoSameWalletConfirmed === true) walletQualifiedAssets.add(swap.toAsset.toUpperCase());
+  }
 
   for (const swap of swaps) {
     const fromAsset = swap.fromAsset.toUpperCase();
@@ -493,6 +507,11 @@ export function processDeFiTokenSwaps(
     const fmv = d(swap.fairMarketValueAtSwap);
     const gasFee = d(swap.gasFee);
     const protocol = swap.protocol ?? "Unknown DEX";
+
+    if ((swap.isWrappingEvent || swap.isBridgeTransaction)
+      && (walletQualifiedAssets.has(fromAsset) || walletQualifiedAssets.has(toAsset))) {
+      throw new Error("DEX swap requires a separate lot method for overlapping wrapping or bridging in a wallet-qualified batch.");
+    }
 
     // ── Non-taxable: Wrapping event (ETH→WETH, BTC→WBTC) ──
     // Same economic substance — carry over basis, no realization event.
@@ -583,25 +602,58 @@ export function processDeFiTokenSwaps(
     // Disposition of fromAsset: proceeds = FMV at swap time
     // New acquisition of toAsset: basis = FMV + gas fee (capitalized)
     const proceeds = fmv;
-    const { costBasis, dateAcquired } = consumeLotsWithDateTracking(
-      remainingLots, fromAsset, fromQty, method
+    if ([fromQty, toQty, proceeds].some(value => !value.isFinite() || value.lt(0))) {
+      throw new Error("DEX swap requires finite, nonnegative execution amounts and quantities.");
+    }
+    const walletRuleApplies = swap.dateSwapped >= DEX_WALLET_RULE_START;
+    const walletSource = walletRuleApplies ? swap.walletSource : undefined;
+    if (walletRuleApplies && (walletSource || swap.walletFifoConfirmed !== undefined || swap.receivedIntoSameWalletConfirmed === true)) {
+      if (!hasConfirmedDexWalletSource(walletSource) || !isActualDexDate(swap.dateSwapped)) {
+        throw new Error("DEX swap requires a confirmed wallet and original execution record with an actual sale date.");
+      }
+      if (method !== "fifo" || swap.walletFifoConfirmed !== true) {
+        throw new Error("DEX swap requires confirmed wallet FIFO and a complete original lot pool.");
+      }
+    }
+    let eligibleLots = remainingLots;
+    if (walletSource) {
+      const walletReference = walletSource.walletOrAccountReference.trim();
+      const executionReference = walletSource.originalRecordReference.trim();
+      const executionKey = JSON.stringify([walletReference, executionReference]);
+      if (walletExecutionReferences.has(executionKey)) {
+        throw new Error("DEX swap has a duplicate wallet execution record.");
+      }
+      walletExecutionReferences.add(executionKey);
+      eligibleLots = selectDexWalletLots(
+        remainingLots, fromAsset, walletReference,
+        swap.receivedIntoSameWalletConfirmed === true ? executionReference : undefined,
+      );
+    }
+    const matchedLots: ConsumedLot[] = [];
+    const { costBasis, unmatchedQuantity } = consumeLotsWithDateTracking(
+      eligibleLots, fromAsset, fromQty, method, lot => matchedLots.push(lot),
     );
-    const gainOrLoss = proceeds.minus(costBasis);
-    const holdingPeriod = getHoldingPeriod(dateAcquired, swap.dateSwapped);
-
-    dispositions.push({
-      description: `${fromAsset}→${toAsset} swap via ${protocol}`,
-      dateAcquired,
-      dateSold: swap.dateSwapped,
-      proceeds,
-      costBasis,
-      gainOrLoss,
-      holdingPeriod,
-      basisReportedToIRS: false,
-      washSale: false,
-      washSaleDisallowed: new Decimal(0),
-      adjustments: new Decimal(0),
-    });
+    if (walletSource && !matchedLots.length) {
+      throw new Error("DEX swap requires actual lots that match all sold units in the confirmed wallet.");
+    }
+    const gainOrLoss = sumSourceMoney(proceeds, costBasis.negated());
+    const termAmounts = allocateDexSwapLots(matchedLots, unmatchedQuantity, fromQty, swap.dateSwapped, proceeds);
+    if (walletRuleApplies && !walletSource && (termAmounts.length > 1 || matchedLots.some(lot => lot.walletSource))) {
+      throw new Error("DEX swap requires a confirmed wallet and original execution record for mixed terms or wallet-bound lots.");
+    }
+    for (const amounts of termAmounts) {
+      dispositions.push({
+        description: `${fromAsset}→${toAsset} swap via ${protocol}`,
+        dateSold: swap.dateSwapped,
+        ...amounts,
+        gainOrLoss: sumSourceMoney(amounts.proceeds, amounts.costBasis.negated()),
+        basisReportedToIRS: false,
+        washSale: false,
+        washSaleDisallowed: new Decimal(0),
+        adjustments: new Decimal(0),
+      });
+    }
+    taxableSwapCount++;
 
     // New lot for received token: basis = FMV + gas (IRC §1012)
     const newBasisTotal = fmv.plus(gasFee);
@@ -614,6 +666,7 @@ export function processDeFiTokenSwaps(
       quantity: toQty,
       costBasisPerUnit: newBasisPerUnit,
       source: "swap",
+      ...(walletSource && swap.receivedIntoSameWalletConfirmed === true && { walletSource: { ...walletSource } }),
     };
     newLots.push(newLot);
     // Make lot available for subsequent swaps in the same batch
@@ -628,14 +681,14 @@ export function processDeFiTokenSwaps(
       });
   }
 
-  const totalProceeds = sum(...dispositions.map((dp) => dp.proceeds));
-  const totalCostBasis = sum(...dispositions.map((dp) => dp.costBasis));
-  const totalGainOrLoss = sum(...dispositions.map((dp) => dp.gainOrLoss));
+  const totalProceeds = sumSourceMoney(...dispositions.map((dp) => dp.proceeds));
+  const totalCostBasis = sumSourceMoney(...dispositions.map((dp) => dp.costBasis));
+  const totalGainOrLoss = sumSourceMoney(...dispositions.map((dp) => dp.gainOrLoss));
 
   if (dispositions.length > 0) {
     audit.record("DeFi", "swap-summary", "DeFi token swap summary",
       totalGainOrLoss,
-      `${dispositions.length} taxable swaps, ${nonTaxableEvents.length} non-taxable events`, {
+      `${taxableSwapCount} taxable swaps, ${nonTaxableEvents.length} non-taxable events`, {
         totalProceeds, totalCostBasis,
       });
   }
@@ -680,31 +733,86 @@ function consumeLotsForBasis(
   return totalBasis;
 }
 
+type ConsumedLot = Pick<TrackedLot, "dateAcquired" | "quantity" | "walletSource"> & { costBasis: Decimal };
+
+function hasConfirmedDexWalletSource(source: TrackedLot["walletSource"]): source is NonNullable<TrackedLot["walletSource"]> {
+  return Boolean(source?.sourceFactsConfirmed && source.walletOrAccountReference.trim() && source.originalRecordReference.trim());
+}
+
+function selectDexWalletLots(
+  lots: TrackedLot[], asset: string, walletReference: string, receivedLotReference: string | undefined,
+): TrackedLot[] {
+  const recordReferences = new Set<string>();
+  const eligibleLots: TrackedLot[] = [];
+  for (const lot of lots) {
+    const possibleLot = lot.asset === asset && !lot.quantity.isZero();
+    if (!hasConfirmedDexWalletSource(lot.walletSource)) {
+      if (possibleLot) throw new Error("DEX swap requires a confirmed wallet and original record for each possible lot.");
+      continue;
+    }
+    if (lot.walletSource.walletOrAccountReference.trim() !== walletReference) continue;
+
+    const originalRecordReference = lot.walletSource.originalRecordReference.trim();
+    if (recordReferences.has(originalRecordReference)) throw new Error("DEX swap has a duplicate wallet lot record.");
+    recordReferences.add(originalRecordReference);
+    if (!possibleLot) continue;
+    if (!isActualDexDate(lot.dateAcquired)) {
+      throw new Error("DEX swap requires actual acquisition dates for the confirmed wallet's lot pool.");
+    }
+    eligibleLots.push(lot);
+  }
+
+  if (receivedLotReference !== undefined && recordReferences.has(receivedLotReference)) {
+    throw new Error("DEX swap receipt would reuse an existing wallet lot record.");
+  }
+  return eligibleLots;
+}
+
+function dexLotDecimal(soldQuantity: Decimal, lots: TrackedLot[]): typeof Decimal {
+  const values = [soldQuantity, ...lots.flatMap(lot => [lot.quantity, lot.costBasisPerUnit])];
+  let integerDigits = 1;
+  let fractionalDigits = 0;
+  for (const value of values) {
+    if (!value.isFinite() || value.lt(0)) {
+      throw new Error("DEX swap requires finite, nonnegative lot quantities and basis.");
+    }
+    integerDigits = Math.max(integerDigits, value.precision(true) - value.decimalPlaces());
+    fractionalDigits = Math.max(fractionalDigits, value.decimalPlaces());
+  }
+  // Allow for exact quantity differences, quantity × unit basis, and a carry when summing the products.
+  const digits = 2 * (integerDigits + fractionalDigits) + String(lots.length).length;
+  return digits > Decimal.precision ? Decimal.clone({ precision: digits }) : Decimal;
+}
+
 /**
  * Consume lots and track the acquisition date(s) for holding period determination.
- * Returns total cost basis and a single dateAcquired string ("VARIOUS" if multiple).
+ * The DEX callback receives exact consumed quantities and their unrounded basis.
  */
 function consumeLotsWithDateTracking(
   lots: TrackedLot[],
   asset: string,
   quantity: Decimal,
   method: CryptoCostBasisMethod,
-): { costBasis: Decimal; dateAcquired: string } {
-  const assetLots = lots.filter((l) => l.asset === asset && l.quantity.greaterThan(0));
-  const sorted = sortLotsByMethod(assetLots, method);
+  onDexLotConsumed?: (lot: ConsumedLot) => void,
+): { costBasis: Decimal; dateAcquired: string; unmatchedQuantity: Decimal } {
+  const assetLots = lots.filter(lot => lot.asset === asset);
+  const LotDecimal = onDexLotConsumed ? dexLotDecimal(quantity, assetLots) : Decimal;
+  const sorted = sortLotsByMethod(assetLots.filter(lot => lot.quantity.gt(0)), method);
 
-  let remaining = quantity;
-  let totalBasis = new Decimal(0);
+  let remaining = new LotDecimal(quantity);
+  let totalBasis = new LotDecimal(0);
   const dates: string[] = [];
 
   for (const lot of sorted) {
     if (remaining.isZero()) break;
     if (lot.quantity.isZero()) continue;
 
-    const consumed = Decimal.min(lot.quantity, remaining);
-    totalBasis = totalBasis.plus(consumed.times(lot.costBasisPerUnit));
+    const consumed = LotDecimal.min(lot.quantity, remaining);
+    const costBasis = consumed.times(lot.costBasisPerUnit);
+    totalBasis = totalBasis.plus(costBasis);
+    onDexLotConsumed?.({ dateAcquired: lot.dateAcquired, quantity: consumed, costBasis, walletSource: lot.walletSource });
     dates.push(lot.dateAcquired);
-    lot.quantity = lot.quantity.minus(consumed);
+    lot.quantity = d(new LotDecimal(lot.quantity).minus(consumed));
     remaining = remaining.minus(consumed);
   }
 
@@ -712,7 +820,54 @@ function consumeLotsWithDateTracking(
     : dates.length > 1 ? "VARIOUS"
     : "UNKNOWN";
 
-  return { costBasis: totalBasis, dateAcquired };
+  return { costBasis: d(totalBasis), dateAcquired, unmatchedQuantity: remaining };
+}
+
+function isActualDexDate(value: string): boolean {
+  const date = new Date(value);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function allocateDexSwapLots(
+  matchedLots: ConsumedLot[],
+  unmatchedQuantity: Decimal,
+  soldQuantity: Decimal,
+  dateSold: string,
+  proceeds: Decimal,
+): Pick<MatchedDisposition, "dateAcquired" | "holdingPeriod" | "costBasis" | "proceeds">[] {
+  if (!matchedLots.length) {
+    return [{ dateAcquired: "UNKNOWN", holdingPeriod: "short", costBasis: d(0), proceeds }];
+  }
+  if (!unmatchedQuantity.isZero()) {
+    throw new Error("DEX swap requires actual lots that match all sold units.");
+  }
+  if (!isActualDexDate(dateSold) || matchedLots.some(lot => !isActualDexDate(lot.dateAcquired) || lot.dateAcquired > dateSold)) {
+    throw new Error("DEX swap requires actual acquisition dates on or before the sale date.");
+  }
+  const terms = new Map<MatchedDisposition["holdingPeriod"], ConsumedLot>();
+  for (const lot of matchedLots) {
+    const holdingPeriod = getHoldingPeriod(lot.dateAcquired, dateSold);
+    const group = terms.get(holdingPeriod);
+    if (group) {
+      group.quantity = group.quantity.plus(lot.quantity);
+      group.costBasis = group.costBasis.plus(lot.costBasis);
+      if (group.dateAcquired !== lot.dateAcquired) group.dateAcquired = "VARIOUS";
+    } else {
+      terms.set(holdingPeriod, { ...lot });
+    }
+  }
+
+  // Price the smaller group directly so subtraction preserves its share of a large execution.
+  const groups = [...terms].sort(([, a], [, b]) => a.quantity.comparedTo(b.quantity));
+  let residualProceeds = proceeds;
+  return groups.map(([holdingPeriod, { quantity, dateAcquired, costBasis }], index) => {
+    let allocatedProceeds = residualProceeds;
+    if (index < groups.length - 1) {
+      allocatedProceeds = proceeds.times(quantity).dividedBy(soldQuantity);
+      residualProceeds = sumSourceMoney(proceeds, allocatedProceeds.negated());
+    }
+    return { holdingPeriod, dateAcquired, costBasis: d(costBasis), proceeds: allocatedProceeds };
+  });
 }
 
 /**
