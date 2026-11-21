@@ -41,7 +41,7 @@ export interface Form8615Result {
   taxAtChildOwnRate: Decimal;
   /** Line 18: Final Form 8615 tax = max(Line 16, Line 17) */
   tax: Decimal;
-  /** Whether Form 8615 applies (net unearned income > 0) */
+  /** Whether Line 5 requires the Form 8615 tax calculation */
   applies: boolean;
   /** Audit lines */
   lines: CalculatedLine[];
@@ -61,21 +61,37 @@ export function calculateForm8615(
   audit.record("8615", "1", "Child's unearned income", line1, "Input: child's unearned income");
 
   // ── Line 2: Threshold deduction ──
-  const line2 = input.childItemizesDeductions
-    ? constants.kiddieTax.itemizingThreshold
-    : constants.kiddieTax.unearnedIncomeThreshold;
-  audit.record("8615", "2", "Threshold deduction", line2,
-    input.childItemizesDeductions
-      ? "Itemizing child: minimum dependent standard deduction"
-      : "Non-itemizing child: 2x minimum dependent standard deduction");
+  const { unearnedIncomeThreshold, itemizingThreshold } = constants.kiddieTax;
+  let line2 = unearnedIncomeThreshold;
+  if (input.childItemizesDeductions) {
+    const reportedDeductions = input.childDirectlyConnectedItemizedDeductions?.trim();
+    const directlyConnectedDeductions = reportedDeductions ? d(reportedDeductions) : undefined;
+    if (!directlyConnectedDeductions?.isFinite() || directlyConnectedDeductions.lt(0)) {
+      throw new Error("Form 8615 requires a nonnegative directly connected itemized deduction amount, including zero if none");
+    }
+    line2 = Decimal.max(unearnedIncomeThreshold, itemizingThreshold.plus(directlyConnectedDeductions));
+    audit.record("8615", "2", "Threshold deduction", line2,
+      "Greater of the unearned-income threshold or the minimum dependent standard deduction plus directly connected itemized deductions",
+      { unearnedIncomeThreshold, minimumDependentStandardDeduction: itemizingThreshold, directlyConnectedDeductions });
+  } else {
+    audit.record("8615", "2", "Threshold deduction", line2,
+      "Non-itemizing child: 2x minimum dependent standard deduction");
+  }
 
   // ── Line 3: Net unearned income ──
-  const line3 = zeroFloor(line1.minus(line2));
-  audit.record("8615", "3", "Net unearned income", line3, "Line 1 - Line 2 (floored at 0)");
+  const line3 = line1.minus(line2);
+  audit.record("8615", "3", "Net unearned income", line3, "Line 1 - Line 2");
 
-  if (line3.isZero()) {
+  const line4 = childTaxableIncome;
+  let line5 = zero;
+  if (line3.gt(0)) {
+    audit.record("8615", "4", "Child's taxable income", line4, "From Form 1040 Line 15");
+    line5 = min(line3, line4);
+    audit.record("8615", "5", "Net unearned income taxed at parent's rate", line5, "min(Line 3, Line 4)");
+  }
+  if (line5.lte(0)) {
     return {
-      netUnearnedIncome: zero,
+      netUnearnedIncome: zeroFloor(line3),
       netUnearnedAtParentRate: zero,
       childRateIncome: childTaxableIncome,
       allocableParentalTax: zero,
@@ -89,14 +105,10 @@ export function calculateForm8615(
     };
   }
 
-  // ── Line 4: Child's taxable income ──
-  const line4 = childTaxableIncome;
-  audit.record("8615", "4", "Child's taxable income", line4, "From Form 1040 Line 15");
-
-  // ── Line 5: Net unearned income taxed at parent's rate ──
-  const line5 = min(line3, line4);
-  audit.record("8615", "5", "Net unearned income taxed at parent's rate", line5,
-    "min(Line 3, Line 4)");
+  if (input.childItemizesDeductions
+    && (d(input.childQualifiedDividends).gt(0) || d(input.childNetLTCG).gt(0))) {
+    throw new Error("Form 8615 for an itemizing child with preferential income requires a separate worksheet");
+  }
 
   // ── Line 6: Child's taxable income taxed at child's rate ──
   const line6 = line4.minus(line5);

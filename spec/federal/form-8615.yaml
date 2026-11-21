@@ -1,6 +1,6 @@
 # Form 8615 — Tax for Certain Children Who Have Unearned Income
 # IRS Reference: Form 8615 Instructions (2025), IRC Section 1(g)
-# Rev. Proc. 2024-40 Section 3.01 (2025 inflation adjustments)
+# Rev. Proc. 2024-40 Section 2.02 (2025 inflation adjustments)
 
 form: "8615"
 title: "Tax for Certain Children Who Have Unearned Income"
@@ -39,13 +39,24 @@ lines:
     description: "Threshold deduction"
     formula: >
       If child did NOT itemize deductions: $2,700 (2025).
-      If child DID itemize deductions: $1,350 (2025).
-    irs_reference: "Form 8615 Instructions, Line 2; Rev. Proc. 2024-40 §3.01"
-    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 2 - non-itemizing child uses $2,700 threshold"
+      If child DID itemize deductions: max($2,700, $1,350 plus the deductible portion
+      of Schedule A directly connected with producing the unearned income on line 1).
+      The itemizing child must supply that portion explicitly, including zero when applicable.
+      Apply the corresponding year's thresholds.
+    notes: >
+      On the federal return, the child's itemization fact must agree with the selected
+      deduction method. The stated directly connected deductible amount must not
+      exceed allowed Schedule A line 17. Reject inconsistent amounts instead of
+      reducing them to the limit. An itemizing child with positive qualified
+      dividends or net long-term capital gain requires the separately classified
+      deductions used by the preferential-income worksheets for lines 5 and 14
+      when the form continues past line 5.
+    irs_reference: "2025 Form 8615 Instructions, Line 2 and Eleanor example (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf); IRC §1(g)(4)(A)(ii); Rev. Proc. 2024-40 §2.02"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 2 - reproduces the IRS Eleanor example"
 
   - line: "3"
     description: "Net unearned income"
-    formula: "max(0, Line 1 - Line 2)"
+    formula: "Record Line 1 minus Line 2, including a negative result. Stop if zero or less. Report semantic net unearned income as zero when stopped here."
     irs_reference: "Form 8615 Instructions, Line 3"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 3 - net unearned income is unearned minus threshold"
 
@@ -57,7 +68,7 @@ lines:
 
   - line: "5"
     description: "Net unearned income taxed at parent's rate"
-    formula: "min(Line 3, Line 4)"
+    formula: "min(Line 3, Line 4). If zero or less, stop before the parental tax or preferential-income worksheets. Leave the child's normal Form 1040 tax in place."
     irs_reference: "Form 8615 Instructions, Line 5"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Line 5 - net unearned income capped at child's taxable income"
 

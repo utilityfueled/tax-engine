@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateForm8615 } from "@/engine/forms/form-8615.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput, Form8615Input } from "@/models/inputs.js";
+import { Form8615Schema, type TaxYearInput, type Form8615Input } from "@/models/inputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { calculateTaxFromBrackets, calculateCapitalGainsTax } from "@/utils/tax-math.js";
 
@@ -135,18 +135,70 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(line2?.value.toNumber()).toBe(2700);
   });
 
-  it("Form 8615 Line 2 - itemizing child uses $1,350 threshold", () => {
+  it("Form 8615 Line 2 - reproduces the IRS Eleanor example", () => {
     const result = calculateForm8615(
-      makeInput({ childUnearnedIncome: "5000", childItemizesDeductions: true }),
-      new Decimal(5000),
+      makeInput({
+        childUnearnedIncome: "15900",
+        childItemizesDeductions: true,
+        childDirectlyConnectedItemizedDeductions: "1500",
+      }),
+      new Decimal(14400),
       "single",
       constants
     );
     const line2 = result.lines.find(l => l.form === "8615" && l.line === "2");
-    expect(line2?.value.toNumber()).toBe(1350);
-    // Net unearned income is higher with the lower threshold
-    expect(result.netUnearnedIncome.toNumber()).toBe(3650);
+    expect(line2?.value.toString()).toBe("2850");
+    expect(result.netUnearnedIncome.toString()).toBe("13050");
   });
+
+  it("requires a nonnegative directly connected itemized deduction amount for itemizers", () => {
+    for (const amount of [undefined, "-1"]) {
+      const input = makeInput({
+        childItemizesDeductions: true,
+        childDirectlyConnectedItemizedDeductions: amount,
+      });
+      expect(Form8615Schema.safeParse(input).success).toBe(false);
+      expect(() => calculateForm8615(input, new Decimal(5000), "single", constants)).toThrow(/directly connected/i);
+    }
+    expect(Form8615Schema.parse(makeInput({
+      childItemizesDeductions: true,
+      childDirectlyConnectedItemizedDeductions: "0",
+    })).childDirectlyConnectedItemizedDeductions).toBe("0");
+  });
+
+  it.each(["childQualifiedDividends", "childNetLTCG"] as const)(
+    "requires a separate worksheet for an itemizing child with positive %s",
+    (field) => {
+      const input = makeInput({
+        childItemizesDeductions: true,
+        childDirectlyConnectedItemizedDeductions: "1500",
+        [field]: "500",
+      });
+      expect(() => calculateForm8615(input, new Decimal(5000), "single", constants)).toThrow(/separate worksheet/i);
+    },
+  );
+
+  it.each([
+    ["2849", "1000", "-1", ["1", "2", "3"]],
+    ["2850", "1000", "0", ["1", "2", "3"]],
+    ["5000", "0", "2150", ["1", "2", "3", "4", "5"]],
+  ] as const)(
+    "does not require the preferential worksheet with $%s of unearned income and $%s of taxable income",
+    (childUnearnedIncome, taxableIncome, line3, auditLines) => {
+      const result = calculateForm8615(makeInput({
+        childUnearnedIncome,
+        childItemizesDeductions: true,
+        childDirectlyConnectedItemizedDeductions: "1500",
+        childQualifiedDividends: "500",
+      }), new Decimal(taxableIncome), "single", constants);
+
+      expect(result.lines.find(line => line.line === "2")?.value.toString()).toBe("2850");
+      expect(result.lines.find(line => line.line === "3")?.value.toString()).toBe(line3);
+      expect(result.lines.map(line => line.line)).toEqual(auditLines);
+      expect(result.netUnearnedAtParentRate.toString()).toBe("0");
+      expect(result.applies).toBe(false);
+    },
+  );
 
   it("Form 8615 Line 3 - net unearned income is unearned minus threshold", () => {
     const result = calculateForm8615(
@@ -522,10 +574,10 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.tax.greaterThanOrEqualTo(0)).toBe(true);
   });
 
-  it("Form 8615 - itemizing child with $1,351 unearned income triggers the form", () => {
+  it("Form 8615 - itemizing child with $2,701 unearned income and zero directly connected deductions triggers the form", () => {
     const result = calculateForm8615(
-      makeInput({ childUnearnedIncome: "1351", childItemizesDeductions: true }),
-      new Decimal(1351),
+      makeInput({ childUnearnedIncome: "2701", childItemizesDeductions: true, childDirectlyConnectedItemizedDeductions: "0" }),
+      new Decimal(2701),
       "single",
       constants
     );
@@ -533,10 +585,10 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     expect(result.netUnearnedIncome.toNumber()).toBe(1);
   });
 
-  it("Form 8615 - itemizing child with $1,350 unearned income does not trigger the form", () => {
+  it("Form 8615 - itemizing child with $2,700 unearned income and zero directly connected deductions does not trigger the form", () => {
     const result = calculateForm8615(
-      makeInput({ childUnearnedIncome: "1350", childItemizesDeductions: true }),
-      new Decimal(1350),
+      makeInput({ childUnearnedIncome: "2700", childItemizesDeductions: true, childDirectlyConnectedItemizedDeductions: "0" }),
+      new Decimal(2700),
       "single",
       constants
     );

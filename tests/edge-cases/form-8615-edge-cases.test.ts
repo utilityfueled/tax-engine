@@ -3,7 +3,7 @@
  * Spec: spec/federal/form-8615.yaml
  *
  * Tests boundary conditions for:
- * - Threshold boundaries ($2,700 non-itemizing, $1,350 itemizing)
+ * - Threshold boundaries ($2,700 floor and higher directly connected deductions)
  * - Parent bracket boundary crossings
  * - Sibling allocation edge cases
  * - QDCG absorption between Lines 5 and 6
@@ -72,10 +72,10 @@ describe("Form 8615 edge cases — threshold boundaries", () => {
     expect(result.netUnearnedIncome.toNumber()).toBe(1);
   });
 
-  it("Form 8615 Line 3 - $1,350 unearned income at itemizing threshold yields zero net", () => {
+  it("Form 8615 Line 3 - $2,850 unearned income at the itemizing threshold yields zero net", () => {
     const result = calculateForm8615(
-      makeInput({ childUnearnedIncome: "1350", childItemizesDeductions: true }),
-      new Decimal(1350),
+      makeInput({ childUnearnedIncome: "2850", childItemizesDeductions: true, childDirectlyConnectedItemizedDeductions: "1500" }),
+      new Decimal(2850),
       "single",
       constants
     );
@@ -83,10 +83,10 @@ describe("Form 8615 edge cases — threshold boundaries", () => {
     expect(result.netUnearnedIncome.toNumber()).toBe(0);
   });
 
-  it("Form 8615 Line 3 - $1,349 unearned income $1 below itemizing threshold yields zero net", () => {
+  it("Form 8615 Line 3 - $2,849 unearned income $1 below the itemizing threshold yields zero net", () => {
     const result = calculateForm8615(
-      makeInput({ childUnearnedIncome: "1349", childItemizesDeductions: true }),
-      new Decimal(1349),
+      makeInput({ childUnearnedIncome: "2849", childItemizesDeductions: true, childDirectlyConnectedItemizedDeductions: "1500" }),
+      new Decimal(2849),
       "single",
       constants
     );
@@ -94,10 +94,10 @@ describe("Form 8615 edge cases — threshold boundaries", () => {
     expect(result.netUnearnedIncome.toNumber()).toBe(0);
   });
 
-  it("Form 8615 Line 3 - $1,351 unearned income $1 above itemizing threshold yields $1 net", () => {
+  it("Form 8615 Line 3 - $2,851 unearned income $1 above the itemizing threshold yields $1 net", () => {
     const result = calculateForm8615(
-      makeInput({ childUnearnedIncome: "1351", childItemizesDeductions: true }),
-      new Decimal(1351),
+      makeInput({ childUnearnedIncome: "2851", childItemizesDeductions: true, childDirectlyConnectedItemizedDeductions: "1500" }),
+      new Decimal(2851),
       "single",
       constants
     );

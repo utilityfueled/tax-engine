@@ -287,7 +287,7 @@ function compareAutomaticReitCashDeduction(input: TaxYearInput, itemized: TaxRet
     || !itemized.standardDeductionWorksheet?.eligibleForStandardDeduction || !itemized.itemizedDeductionReduction?.gt(0)
     || input.priorYear || input.charitableCarryoverSources || input.k1CharitableSources || input.qbiLossSources
     || input.netOperatingLoss || input.form172 || input.form982NolSources
-    || input.form1095A.length || input.form8962 || input.form7206) return itemized;
+    || input.form1095A.length || input.form8962 || input.form7206 || input.form8615) return itemized;
 
   const qbi = itemized.form8995A;
   // Schedule B retains cents, while Form 8995-A line 17 rounds the aggregate.
@@ -3533,13 +3533,25 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // When Form 8615 input is provided, replace the income tax with the
   // Form 8615 computation that taxes net unearned income at the parent's rate.
   let form8615Result: ReturnType<typeof calculateForm8615> | undefined;
-  if (input.form8615) {
+  const { form8615 } = input;
+  if (form8615) {
+    const childItemizes = form8615.childItemizesDeductions === true;
+    if (childItemizes !== (deductionUsed === "itemized")) {
+      throw new Error("Form 8615 child itemization fact must match the selected deduction");
+    }
+    if (childItemizes && d(form8615.childDirectlyConnectedItemizedDeductions).gt(itemizedDeductions)) {
+      throw new Error("Form 8615 directly connected deductions cannot exceed Schedule A line 17");
+    }
     form8615Result = calculateForm8615(
-      input.form8615,
+      form8615,
       taxableIncome,
       filingStatus,
       constants
     );
+    if (childItemizes && form8615Result.applies
+      && (qualifiedDividends.gt(0) || netLTCG.gt(0))) {
+      throw new Error("Form 8615 child itemization with preferential income needs a separate allocation worksheet");
+    }
     audit.merge(form8615Result.lines);
     if (form8615Result.applies) {
       incomeTax = form8615Result.tax;

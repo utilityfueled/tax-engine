@@ -12573,6 +12573,74 @@ describe("Form 4684 casualty losses through federal pipeline", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Form 8615 kiddie tax through federal pipeline", () => {
+  // Spec: spec/federal/form-8615.yaml, line 2.
+  const itemizingChild = {
+    ...simpleW2Fixture,
+    taxpayer: {
+      ...simpleW2Fixture.taxpayer,
+      primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: "2017-01-15" },
+    },
+    standardDeductionFacts: {
+      ...simpleW2Fixture.standardDeductionFacts,
+      primaryCanBeClaimedAsDependent: true,
+      dependentEarnedIncome: "0",
+    },
+    deductionElection: "itemized",
+    w2s: [],
+    form1099Int: [{
+      payer: "Savings Bank", interestIncome: "16000", earlyWithdrawalPenalty: "100",
+      taxExemptInterest: "0", privateActivityBondInterest: "0",
+    }],
+    form4952: { investmentInterestExpense: "1500", grossInvestmentIncome: "15900" },
+    form8615: {
+      childUnearnedIncome: "15900",
+      childItemizesDeductions: true,
+      childDirectlyConnectedItemizedDeductions: "1500",
+      parentTaxableIncome: "200000",
+      parentFilingStatus: "single",
+    },
+  } satisfies TaxYearInput;
+
+  it("uses the supported Form 8615 line 2 Schedule A facts in the child's federal return", () => {
+    const result = calculateFederalTax(itemizingChild);
+
+    expect(result.deductionUsed).toBe("itemized");
+    expect(result.itemizedDeductions.toFixed()).toBe("1500");
+    expect(result.taxableIncome.toFixed()).toBe("14400");
+    expect(result.form8615?.netUnearnedIncome.toFixed()).toBe("13050");
+    expect(result.form8615?.tax.toFixed()).toBe("4312");
+    expect(result.allLines).toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", description: "Tax (Form 8615)", value: new Decimal("4312"),
+    }));
+  });
+
+  it("rejects directly connected deductions above the allowed Schedule A total", () => {
+    expect(() => calculateFederalTax({
+      ...itemizingChild,
+      form8615: { ...itemizingChild.form8615, childDirectlyConnectedItemizedDeductions: "1500.01" },
+    })).toThrow(/Form 8615.*Schedule A line 17/);
+  });
+
+  it("rejects a Form 8615 itemization fact that contradicts the selected deduction", () => {
+    expect(() => calculateFederalTax({ ...itemizingChild, deductionElection: "standard" }))
+      .toThrow(/Form 8615.*selected deduction/);
+    expect(() => calculateFederalTax({
+      ...itemizingChild,
+      form8615: { ...itemizingChild.form8615, childItemizesDeductions: false, childDirectlyConnectedItemizedDeductions: undefined },
+    })).toThrow(/Form 8615.*selected deduction/);
+  });
+
+  it("requires the distinct Form 8615 worksheet for an itemizing child with qualified dividends", () => {
+    expect(() => calculateFederalTax({
+      ...itemizingChild,
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "100", qualifiedDividends: "100",
+        exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0",
+      }],
+      form8615: { ...itemizingChild.form8615, childUnearnedIncome: "16000" },
+    })).toThrow(/Form 8615.*preferential.*worksheet/i);
+  });
+
   it("Kiddie tax replaces normal tax computation when it applies", () => {
     // Child with $10,000 unearned income and $15,000 wages
     const childFixture: TaxYearInput = {

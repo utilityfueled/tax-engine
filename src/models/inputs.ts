@@ -4397,8 +4397,13 @@ export const ScheduleHSchema = z.object({
 export const Form8615Schema = z.object({
   /** Line 1: Child's total unearned income (interest, dividends, capital gains, rents, royalties, etc.) */
   childUnearnedIncome: decimal,
-  /** Whether the child itemizes deductions (uses $1,350 threshold instead of $2,700) */
+  /** Whether the child itemizes deductions on Schedule A. */
   childItemizesDeductions: z.boolean().default(false),
+  /** Deductible portion of Schedule A directly connected with producing line 1 income. */
+  childDirectlyConnectedItemizedDeductions: decimal.refine(
+    value => d(value).isFinite() && d(value).gte(0),
+    "Directly connected itemized deductions must be finite and nonnegative",
+  ).optional(),
   /** Child's qualified dividends (for QDCG allocation between Lines 5 and 6) */
   childQualifiedDividends: optionalDecimal,
   /** Child's net long-term capital gain (for QDCG allocation between Lines 5 and 6) */
@@ -4417,6 +4422,9 @@ export const Form8615Schema = z.object({
   parentCollectiblesGain: optionalDecimal,
   /** Line 8: Total net unearned income (Line 5) of all OTHER children of the same parent who file Form 8615 */
   otherChildrenNetUnearnedIncome: optionalDecimal,
+}).refine(input => !input.childItemizesDeductions || input.childDirectlyConnectedItemizedDeductions !== undefined, {
+  path: ["childDirectlyConnectedItemizedDeductions"],
+  message: "Enter directly connected itemized deductions, including zero if none",
 });
 export type Form8615Input = z.infer<typeof Form8615Schema>;
 

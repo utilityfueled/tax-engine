@@ -198,7 +198,7 @@ export interface YearConstants {
   kiddieTax: {
     /** Unearned income threshold for non-itemizing children (2 x minimum dependent standard deduction) */
     unearnedIncomeThreshold: Decimal;
-    /** Threshold for itemizing children (minimum dependent standard deduction) */
+    /** Minimum dependent standard deduction added to directly connected itemized deductions. */
     itemizingThreshold: Decimal;
   };
   /** Form 8814 — Parents' Election To Report Child's Interest and Dividends (IRC §1(g)(7)) */
