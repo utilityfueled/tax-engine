@@ -39,6 +39,25 @@ test('remaining-job-budget',async()=>{
  for(const change of [{run_id:54321},{run_attempt:2},{head_sha:'b'.repeat(40)},{name:'foreign'},{status:'completed'},{completed_at:new Date(start).toISOString()},{started_at:'foreign'},{started_at:new Date(start+60000).toISOString()}])assert.throws(()=>remainingJobBudget({...job(),...change},env(),start));
  for(const now of [NaN,Infinity,-1])assert.throws(()=>remainingJobBudget(job(),env(),now));
 });
+test('public job budget reports only bounded failure reasons', async () => {
+ const { readOriginalJobBudget } = await import(moduleUrl);
+ const signal = new AbortController().signal;
+ const read = fetchResponse => readOriginalJobBudget(env(), signal, { fetchResponse, now: () => start });
+ assert.deepEqual(await read(async (url, init) => {
+  assert.equal(url, `https://api.github.com/repos/utilityfueled/tax-engine/actions/runs/${run}/jobs?filter=latest&per_page=100`);
+  assert.equal(init.redirect, 'error');
+  assert.equal(Object.hasOwn(init.headers, 'Authorization'), false);
+  return globalThis.Response.json({ total_count: 1, jobs: [job()] });
+ }), { budget: { jobId: 678, deadlineEpochMs: start + 5400000, remainingMs: 5400000, controllerMs: 600000, postStepReserveMs: 600000, allowed: true } });
+ assert.deepEqual(await read(async () => { throw Error('synthetic private transport details'); }),
+  { reason: 'original-job-request-unavailable' });
+ assert.deepEqual(await read(async () => new globalThis.Response('synthetic private refusal', { status: 403 })),
+  { reason: 'original-job-http-status', httpStatus: 403 });
+ assert.deepEqual(await read(async () => new globalThis.Response('synthetic malformed data')),
+  { reason: 'original-job-response-invalid' });
+ assert.deepEqual(await read(async () => globalThis.Response.json({ total_count: 1, jobs: [{ ...job(), head_sha: 'b'.repeat(40) }] })),
+  { reason: 'original-job-identity-mismatch' });
+});
 test('observed case failure never becomes a successful diagnostic exit',async()=>{
  const {diagnosticExit}=await import(moduleUrl);const summary={caseCount:10,error:null,cleanup:true,failed:0};
  assert.equal(diagnosticExit(summary,10,0),0);

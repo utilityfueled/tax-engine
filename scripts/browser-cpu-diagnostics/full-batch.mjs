@@ -64,14 +64,50 @@ async function readJson(file,max=LIMITS.bytes){
  const stat=await lstat(file);need(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=max);
  const bytes=await readFile(file);need(bytes.length<=max);return JSON.parse(bytes.toString('utf8'));
 }
-async function currentJob(env,signal){
- // Public, fixed GitHub endpoint; no token, redirects, or arbitrary URL are accepted.
- const response=await fetch(`https://api.github.com/repos/utilityfueled/tax-engine/actions/runs/${env.GITHUB_RUN_ID}/jobs?filter=latest&per_page=100`,{redirect:'error',signal:globalThis.AbortSignal.any([signal,globalThis.AbortSignal.timeout(10000)]),headers:{Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'tax-engine-public-cpu-diagnostic'}});
- need(response.ok&&response.body);const chunks=[];let size=0;
- for await(const chunk of response.body){size+=chunk.length;need(size<=2*1024*1024);chunks.push(chunk);}
- const data=JSON.parse(Buffer.concat(chunks).toString('utf8'));
- need(Number.isSafeInteger(data.total_count)&&data.total_count<=100&&Array.isArray(data.jobs));
- const found=data.jobs.filter(j=>j.name==='Container Recovery, Browser Flows and SBOM');need(found.length===1);return found[0];
+export async function readOriginalJobBudget(env, signal, { fetchResponse = globalThis.fetch, now = Date.now } = {}) {
+ // Read the public GitHub endpoint for the admitted run without credentials.
+ let response;
+ try {
+  response = await fetchResponse(
+   `https://api.github.com/repos/utilityfueled/tax-engine/actions/runs/${env.GITHUB_RUN_ID}/jobs?filter=latest&per_page=100`,
+   {
+    redirect: 'error',
+    signal: globalThis.AbortSignal.any([signal, globalThis.AbortSignal.timeout(10000)]),
+    headers: {
+     Accept: 'application/vnd.github+json',
+     'X-GitHub-Api-Version': '2022-11-28',
+     'User-Agent': 'tax-engine-public-cpu-diagnostic',
+    },
+   },
+  );
+ } catch {
+  return { reason: 'original-job-request-unavailable' };
+ }
+ if (!response.ok) return { reason: 'original-job-http-status', httpStatus: response.status };
+
+ let job;
+ try {
+  need(response.body);
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body) {
+   size += chunk.length;
+   need(size <= 2 * 1024 * 1024);
+   chunks.push(chunk);
+  }
+  const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  need(Number.isSafeInteger(data.total_count) && data.total_count <= 100 && Array.isArray(data.jobs));
+  const jobs = data.jobs.filter(job => job.name === 'Container Recovery, Browser Flows and SBOM');
+  need(jobs.length === 1);
+  [job] = jobs;
+ } catch {
+  return { reason: 'original-job-response-invalid' };
+ }
+ try {
+  return { budget: remainingJobBudget(job, env, now()) };
+ } catch {
+  return { reason: 'original-job-identity-mismatch' };
+ }
 }
 async function originalQualification(root,directory,manifest,audit,image){
  const base=path.join(root,'apps/web/test-results');
@@ -111,7 +147,11 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const phaseEnabled=phaseAdmission(env,event);
   const out=path.join(root,`artifacts/browser-cpu-full-batch-${number}`);await mkdir(path.dirname(out),{recursive:true});await mkdir(out,{mode:0o700});
   save=async(name,record)=>{need(/^[a-z0-9-]+\.json$/u.test(name));const bytes=JSON.stringify(record,null,2)+'\n';need(Buffer.byteLength(bytes)<=LIMITS.bytes);await writeFile(path.join(out,name),bytes,{flag:'wx',mode:0o600});};
-  const budget=remainingJobBudget(await currentJob(env,abort.signal),env);
+  const { budget, ...unavailableJob } = await readOriginalJobBudget(env, abort.signal);
+  if (!budget) {
+   await save('unavailable.json', { qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', ...unavailableJob, originalFailureSuperseded: false, paSampled: false });
+   return 1;
+  }
   await save('job-budget.json',budget);
   if(!budget.allowed){await save('result.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',status:'HOLD',reason:'insufficient-original-job-budget',originalFailureSuperseded: false,paSampled: false});return 0;}
   await noEnvFiles(root);

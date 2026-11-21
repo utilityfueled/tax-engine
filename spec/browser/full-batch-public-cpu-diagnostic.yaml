@@ -23,3 +23,7 @@ lines:
     description: "Reuse the reviewed public-JavaScript projection and retain no raw payload"
     formula: "Reuse inventory and profile validators, record only sanitized public chunk projections and fixed outcome metadata. Temporary original trace/PW/raw profile files never enter uploaded artifacts. Preserve original failure and PA gap, normal owned-child cleanup and all image protections. Composite remains default-off, accepts one fixed batch per call, and requires separate10-minute parent workflow steps."
     testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::sanitized-only-artifacts"
+  - line: "job-budget-unavailable-stage"
+    description: Record which public job-budget check stopped the diagnostic
+    formula: Distinguish request failure, HTTP status, malformed response and rejected job identity. Record only a fixed reason and the HTTP status when present. Stop before browser replay if the exact job budget is unavailable. Never retain the response body or exception text.
+    testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::public job budget reports only bounded failure reasons"
