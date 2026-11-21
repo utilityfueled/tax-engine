@@ -127,6 +127,33 @@ lines:
     irs_reference: "2025 Form 8615 Instructions, 2025 Line 5 Worksheet #2 and Lines 8, 9, 10, 14, 15 and 17 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf)"
     testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 2 allocates both kinds of preferential income after connected deductions"
 
+  - line: "5-worksheet-3"
+    description: "2025 preferential-income allocation when taxable income limits Line 5"
+    formula: >-
+      Require positive Line 5 below Line 3 and the same supported income sources,
+      confirmed tax methods, and absence of other children as Worksheets 1 and 2.
+      Use actual child AGI and the selected federal deduction. Let P be the sum
+      of qualified dividends and net capital gain. For an itemizer, split the
+      explicitly reported Schedule A expenses directly connected with P between
+      the two income amounts in proportion to their shares of P. Subtract each
+      share from the respective income. Use the selected Schedule A total less
+      those expenses as the remaining deduction. For a nonitemizer, use the
+      selected standard deduction as the remaining deduction without any direct
+      allocation. Multiply the remaining deduction by min(1, P / AGI) and split
+      that amount in the same proportions. Retain Decimal precision and subtract
+      each share from the corresponding remaining income. Floor each result at
+      zero, cap dividends at Line 5, and cap net gain at the remaining Line 5
+      balance. Use these amounts in Line 9. Line 14 and Line 15 are zero because
+      Line 5 equals Line 4. Use the full child amounts for Line 17.
+    notes: >-
+      Apply the stop rules before requiring Worksheet 3 facts. A standalone
+      form calculation must have the federal AGI and deduction context before
+      using this worksheet. For an itemizer, preferential-income expenses must
+      be explicit, including zero, and within the directly connected Line 2
+      expenses. The Line 2 expenses cannot exceed the selected Schedule A total.
+    irs_reference: "2025 Form 8615 Instructions, 2025 Line 5 Worksheet #3 and Lines 8, 9, 10, 14, 15 and 17 (https://www.irs.gov/pub/irs-prior/i8615--2025.pdf)"
+    testRef: "tests/engine/forms/form-8615.test.ts::Form 8615 Worksheet 3 allocates itemized deductions using actual federal AGI and Schedule A"
+
   - line: "6"
     description: "Parent's taxable income"
     formula: "max(0, parent's taxable income from Form 1040 Line 15)"

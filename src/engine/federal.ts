@@ -3568,7 +3568,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       form8615,
       taxableIncome,
       filingStatus,
-      constants
+      constants,
+      { adjustedGrossIncome: agi, selectedDeduction: deductionAmount },
     );
     if (form8615Result.applies && requiresSeparatePreferentialMethod) {
       throw new Error("Form 8615 preferential income from these sources requires a separate worksheet method");

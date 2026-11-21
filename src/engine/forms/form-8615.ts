@@ -45,11 +45,17 @@ export interface Form8615Result {
   lines: CalculatedLine[];
 }
 
+interface Form8615FederalContext {
+  adjustedGrossIncome: Decimal;
+  selectedDeduction: Decimal;
+}
+
 export function calculateForm8615(
   input: Form8615Input,
   childTaxableIncome: Decimal,
   childFilingStatus: FilingStatus,
-  constants: YearConstants
+  constants: YearConstants,
+  federalContext?: Form8615FederalContext,
 ): Form8615Result {
   const audit = new AuditTrail();
   const zero = new Decimal(0);
@@ -60,7 +66,9 @@ export function calculateForm8615(
 
   // ── Line 2: Threshold deduction ──
   const { unearnedIncomeThreshold, itemizingThreshold } = constants.kiddieTax;
-  const reportedDeductions = input.childDirectlyConnectedItemizedDeductions?.trim();
+  const reportedDeductions = input.childItemizesDeductions
+    ? input.childDirectlyConnectedItemizedDeductions?.trim()
+    : undefined;
   const directlyConnectedDeductions = reportedDeductions ? d(reportedDeductions) : undefined;
   let line2 = unearnedIncomeThreshold;
   if (input.childItemizesDeductions) {
@@ -130,41 +138,62 @@ export function calculateForm8615(
 
   const hasParentQDCG = parentQD.greaterThan(0) || parentLTCG.greaterThan(0);
   const facts = hasChildPreferences ? input.preferentialWorksheetFacts : undefined;
-  const worksheet = input.childItemizesDeductions ? 2 : 1;
+  const worksheet = line5.lt(line3) ? 3 : input.childItemizesDeductions ? 2 : 1;
   let qdOnLine5 = zero;
   let gainOnLine5 = zero;
   if (hasChildPreferences) {
     if (constants.taxYear !== 2025 || !facts || facts.noOtherChildUsesParentReturn !== true
-      || facts.childUsesOrdinaryQdcgWorksheet !== true || hasOtherChildren || !line5.eq(line3)
+      || facts.childUsesOrdinaryQdcgWorksheet !== true || hasOtherChildren
       || !parentSection1250.isZero() || !parentCollectibles.isZero()
       || facts.parentTaxMethod !== (hasParentQDCG ? "qualified-dividends-and-capital-gain" : "ordinary")) {
       throw new Error(`Form 8615 child preferential income requires a separate worksheet or confirmed 2025 Worksheet ${worksheet} facts and a supported tax composition`);
     }
-    if (childQD.lt(0) || childLTCG.lt(0) || childQD.plus(childLTCG).gt(line1)
+    const childPreferences = childQD.plus(childLTCG);
+    if (childQD.lt(0) || childLTCG.lt(0) || childPreferences.gt(line1)
       || parentQD.lt(0) || parentLTCG.lt(0) || parentQD.plus(parentLTCG).gt(line6)) {
       throw new Error("Form 8615 reported preferential amounts must fit within the verified income");
     }
-    let qualifiedDividendDeductions = zero;
-    let capitalGainDeductions = zero;
-    let thresholdToAllocate = line2;
-    if (worksheet === 2) {
-      if (line2.lte(unearnedIncomeThreshold)) {
-        throw new Error("Form 8615 Worksheet 2 requires Line 2 above the unearned-income threshold");
-      }
-      const reportedPreferentialDeductions = facts.childPreferentialIncomeConnectedDeductions?.trim();
-      const preferentialDeductions = reportedPreferentialDeductions ? d(reportedPreferentialDeductions) : undefined;
-      if (!preferentialDeductions?.isFinite() || preferentialDeductions.lt(0)
-        || !directlyConnectedDeductions || preferentialDeductions.gt(directlyConnectedDeductions)) {
-        throw new Error("Form 8615 Worksheet 2 requires explicit deductible qualified-dividend and capital-gain expenses within the Line 2 connected deduction amount");
-      }
-      qualifiedDividendDeductions = preferentialDeductions.times(childQD).dividedBy(childQD.plus(childLTCG));
-      capitalGainDeductions = preferentialDeductions.minus(qualifiedDividendDeductions);
-      thresholdToAllocate = itemizingThreshold;
+    if (worksheet === 2 && line2.lte(unearnedIncomeThreshold)) {
+      throw new Error("Form 8615 Worksheet 2 requires Line 2 above the unearned-income threshold");
     }
-    qdOnLine5 = min(line5, zeroFloor(childQD.minus(qualifiedDividendDeductions)
-      .minus(thresholdToAllocate.times(childQD.dividedBy(line1)))));
-    gainOnLine5 = min(line5.minus(qdOnLine5), zeroFloor(childLTCG.minus(capitalGainDeductions)
-      .minus(thresholdToAllocate.times(childLTCG.dividedBy(line1)))));
+    let preferentialDeductions = zero;
+    if (input.childItemizesDeductions) {
+      const reportedPreferentialDeductions = facts.childPreferentialIncomeConnectedDeductions?.trim();
+      const expense = reportedPreferentialDeductions ? d(reportedPreferentialDeductions) : undefined;
+      if (!expense?.isFinite() || expense.lt(0)
+        || !directlyConnectedDeductions || expense.gt(directlyConnectedDeductions)) {
+        throw new Error(`Form 8615 Worksheet ${worksheet} requires explicit deductible qualified-dividend and capital-gain expenses within the Line 2 connected deduction amount`);
+      }
+      preferentialDeductions = expense;
+    }
+
+    const qualifiedDividendDirectDeduction = preferentialDeductions.times(childQD).dividedBy(childPreferences);
+    const capitalGainDirectDeduction = preferentialDeductions.minus(qualifiedDividendDirectDeduction);
+    let qualifiedDividendDeduction: Decimal;
+    let capitalGainDeduction: Decimal;
+    if (worksheet === 3) {
+      const { adjustedGrossIncome, selectedDeduction } = federalContext ?? {};
+      if (!adjustedGrossIncome?.isFinite() || adjustedGrossIncome.lt(line1)
+        || !selectedDeduction?.isFinite() || selectedDeduction.lt(0)
+        || adjustedGrossIncome.minus(selectedDeduction).lt(line4)) {
+        throw new Error("Form 8615 Worksheet 3 requires actual federal AGI and selected deduction consistent with Lines 1 and 4");
+      }
+      if (directlyConnectedDeductions?.gt(selectedDeduction)) {
+        throw new Error("Form 8615 Worksheet 3 directly connected deductions cannot exceed the selected Schedule A amount");
+      }
+      // Worksheet 3 lines 11–17 allocate only the remaining deduction using actual AGI.
+      // The preferential income and AGI checks above bound the allocation ratio at 1.
+      const remainingDeduction = selectedDeduction.minus(preferentialDeductions);
+      const allocatedDeduction = remainingDeduction.times(childPreferences).dividedBy(adjustedGrossIncome);
+      qualifiedDividendDeduction = allocatedDeduction.times(childQD).dividedBy(childPreferences);
+      capitalGainDeduction = allocatedDeduction.minus(qualifiedDividendDeduction);
+    } else {
+      const thresholdToAllocate = worksheet === 2 ? itemizingThreshold : line2;
+      qualifiedDividendDeduction = thresholdToAllocate.times(childQD.dividedBy(line1));
+      capitalGainDeduction = thresholdToAllocate.times(childLTCG.dividedBy(line1));
+    }
+    qdOnLine5 = min(line5, zeroFloor(childQD.minus(qualifiedDividendDirectDeduction).minus(qualifiedDividendDeduction)));
+    gainOnLine5 = min(line5.minus(qdOnLine5), zeroFloor(childLTCG.minus(capitalGainDirectDeduction).minus(capitalGainDeduction)));
   }
 
   const parentPreferences = { section1250Gain: parentSection1250, collectiblesGain: parentCollectibles };

@@ -378,7 +378,7 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
       .toThrow(/Worksheet 2 requires explicit deductible/);
   });
 
-  it("accepts an explicitly reported zero and enforces the Worksheet 2 Line 2 and Line 5 limits", () => {
+  it("accepts an explicitly reported zero and enforces the Worksheet 2 Line 2 limit", () => {
     const input = makeInput({
       ...itemizingWorksheet,
       preferentialWorksheetFacts: {
@@ -394,8 +394,79 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     });
     expect(() => calculateForm8615({ ...input, childDirectlyConnectedItemizedDeductions: "1350" },
       new Decimal("8000"), "single", constants)).toThrow(/Line 2 above/);
-    expect(() => calculateForm8615(input, new Decimal("6600"), "single", constants))
-      .toThrow(/confirmed 2025 Worksheet 2/);
+  });
+
+  it("Form 8615 Worksheet 3 allocates itemized deductions using actual federal AGI and Schedule A", () => {
+    const input = TaxYearInputSchema.parse(makeFederalInput(itemizingWorksheet, {
+      standardDeductionFacts: dependentDeductionFacts,
+      form4952: { investmentInterestExpense: "2000", grossInvestmentIncome: "5000" },
+      donations: [{
+        organization: "Public charity", type: "cash", amount: "2000", dateOfDonation: "2025-12-01",
+        qualifiedOrganization: true, isPrivateFoundation: false,
+      }],
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "3000",
+        totalCapitalGainDistributions: "2000",
+      }],
+    }));
+    const result = calculateFederalTax(input);
+    const form = result.form8615;
+
+    expect(result.agi.toFixed()).toBe("10000");
+    expect(result.itemizedDeductions.toFixed()).toBe("4000");
+    expect(form?.netUnearnedIncome.toFixed()).toBe("6650");
+    expect(form?.netUnearnedAtParentRate.toFixed()).toBe("6000");
+    // Worksheet 3 allocates $500 directly and half of the remaining $3,500, each split 60:40.
+    expect(form?.lines.find(row => row.line === "9")?.inputs).toMatchObject({
+      line5Worksheet: "3",
+      childQualifiedDividendsOnLine5: new Decimal("1650"),
+      childNetCapitalGainOnLine5: new Decimal("1100"),
+    });
+    expect(form?.childRateIncome.toFixed()).toBe("0");
+    expect(form?.taxOnChildRateIncome.toFixed()).toBe("0");
+    expect(form?.taxAtChildOwnRate.toFixed()).toBe("101");
+    // The parent has $3,250 of additional ordinary income at 32% and $2,750 at 15%.
+    expect(result.allLines).toContainEqual(expect.objectContaining({
+      form: "1040", line: "16", description: "Tax (Form 8615)", value: new Decimal("1453"),
+    }));
+    expect(() => calculateFederalTax({
+      ...input,
+      form8615: makeInput({
+        ...itemizingWorksheet,
+        preferentialWorksheetFacts: ordinaryParentWorksheet.preferentialWorksheetFacts,
+      }),
+    })).toThrow(/Worksheet 3 requires explicit deductible/);
+  });
+
+  it("Form 8615 Worksheet 3 uses the selected standard deduction and includes wages in AGI", () => {
+    const input = TaxYearInputSchema.parse(makeFederalInput({
+      ...ordinaryParentWorksheet,
+      childUnearnedIncome: "20000", childQualifiedDividends: "3000", childNetLTCG: "2000",
+    }, {
+      standardDeductionFacts: { ...dependentDeductionFacts, primaryCanBeClaimedAsDependent: false },
+      w2s: [{
+        employer: { name: "Employer", ein: "12-3456789" }, wages: "2500", federalWithheld: "0",
+        socialSecurityWages: "2500", socialSecurityWithheld: "155", medicareWages: "2500", medicareWithheld: "36.25",
+      }],
+      form1099Int: [{ ...makeFederalInput().form1099Int[0], interestIncome: "15000" }],
+      form1099Div: [{
+        payer: "Fund", ordinaryDividends: "3000", qualifiedDividends: "3000",
+        totalCapitalGainDistributions: "2000",
+      }],
+    }));
+    const result = calculateFederalTax(input);
+    const form = result.form8615;
+
+    expect(result.agi.toFixed()).toBe("22500");
+    expect(form?.netUnearnedIncome.toFixed()).toBe("17300");
+    expect(form?.netUnearnedAtParentRate.toFixed()).toBe("6750");
+    // $15,750 times $5,000 / $22,500 gives $3,500, split 60:40.
+    expect(form?.lines.find(row => row.line === "9")?.inputs).toMatchObject({
+      line5Worksheet: "3",
+      childQualifiedDividendsOnLine5: new Decimal("900"),
+      childNetCapitalGainOnLine5: new Decimal("600"),
+    });
+    expect(form?.tax.toFixed()).toBe("1905");
   });
 
   it.each([
@@ -410,12 +481,17 @@ describe("Form 8615 — Tax for Certain Children Who Have Unearned Income", () =
     }), new Decimal("3650"), "single", constants)).toThrow(/confirmed 2025 Worksheet 1/);
   });
 
-  it("rejects a child requiring Worksheet 3 and a conflicting parent's adjusted tax", () => {
+  it("rejects Worksheet 3 without actual federal AGI and deduction context", () => {
+    expect(() => calculateForm8615(makeInput(itemizingWorksheet), new Decimal("6600"), "single", constants))
+      .toThrow(/Worksheet 3 requires actual federal AGI and selected deduction/);
     const input = makeInput({ ...ordinaryParentWorksheet, childQualifiedDividends: "2000" });
     expect(() => calculateForm8615(input, new Decimal("2000"), "single", constants))
-      .toThrow(/confirmed 2025 Worksheet 1/);
+      .toThrow(/Worksheet 3 requires actual federal AGI and selected deduction/);
+  });
+
+  it("rejects a conflicting parent's adjusted tax", () => {
     expect(() => calculateForm8615({
-      ...input,
+      ...makeInput({ ...ordinaryParentWorksheet, childQualifiedDividends: "2000" }),
       preferentialWorksheetFacts: { ...ordinaryParentWorksheet.preferentialWorksheetFacts, parentAdjustedLine16Tax: "41062" },
     }, new Decimal("3650"), "single", constants)).toThrow(/adjusted Form 1040 Line 16 tax does not reconcile/);
   });
