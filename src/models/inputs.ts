@@ -1856,6 +1856,39 @@ export const Form5329FirstHomeSourceSchema = z.strictObject({
   { path: ["spouseHadNoPrincipalResidenceInterest"], message: "Confirm the actual spouse's two-year ownership history when married at acquisition" },
 );
 
+const positiveLongTermCareSourceAmount = nonnegativeDollarsAndCents.refine(value => d(value).gt(0), "Expected a positive amount");
+
+export const Form5329LongTermCareSourceSchema = z.strictObject({
+  sourceTaxYear: z.literal(2026),
+  owner: z.literal("primary"),
+  payer: z.string().trim().min(1),
+  accountReference: z.string().trim().min(1),
+  distributionDate: z.iso.date(),
+  distributionAmount: positiveLongTermCareSourceAmount,
+  singleDistributionConfirmed: z.literal(true), // The full Form 1099-R Box 1 is this one payment.
+  noRolloverConfirmed: z.literal(true),
+  noOtherQualifiedLongTermCareDistributionsConfirmed: z.literal(true), // All the employee's plans for the full tax year.
+  noCompetingPartIExceptionConfirmed: z.literal(true),
+  plan: z.strictObject({
+    kind: z.literal("private_qualified_401k"),
+    administratorRecordReference: z.string().trim().min(1),
+    offersQualifiedLongTermCareDistributions: z.literal(true),
+    noAfterTaxContributionsInMatchedPaymentConfirmed: z.literal(true), // The parsed Form 1099-R defaults a blank Box 5 to zero.
+    qualifiedPortionOfMatchedPayment: positiveLongTermCareSourceAmount,
+    ordinaryPortionOfMatchedPayment: nonnegativeDollarsAndCents,
+    vestedBenefitPresentValue: positiveLongTermCareSourceAmount,
+  }),
+  premiumStatement: z.strictObject({
+    reference: z.string().trim().min(1),
+    calendarYear: z.literal(2026),
+    filedWithPlanDate: z.iso.date(),
+    issuerDisclosureAcknowledged: z.literal(true), // The issuer's confirmation in the statement to this plan.
+    certifiedLongTermCareInsurance: z.literal(true),
+    employeeOwnCoverageConfirmed: z.literal(true), // The employee is the policy owner and the insured.
+    premiumPaidOrAssessed: positiveLongTermCareSourceAmount,
+  }),
+});
+
 export const Form5329Schema = z.object({
   earlyDistributionsIncludedInIncome: optionalDecimal, // Part I Line 1
   rothConversionRecaptureAmount: optionalDecimal, // Part I Line 1 Roth conversion or qualified-plan rollover recapture amount

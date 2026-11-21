@@ -1,0 +1,33 @@
+form: "Form 5329 Qualified Long-Term Care Distribution Projection"
+fullName: "2026 taxable employer defined-contribution withdrawal under sections 72(t)(2)(N) and 401(a)(39)"
+taxYear: 2026
+irsReference: "https://www.irs.gov/irb/2026-24_IRB#NOT-2026-33"
+notes: "Internal calculation for one 2026 nonjoint employee's own coverage under a private qualified section 401(k) plan. This package leaves the December 30–31, 2025 effective-date cases, other plan and coverage types, aggregate claims, annual release, and Form 5329 exception-number reporting for separate qualification. Use local redacted references for plan and premium records. The audit outputs only amounts."
+lines:
+  - line: "ltc-source"
+    description: "Reconcile a plan-approved withdrawal with actual payee and insurance originals"
+    formula: "Match one wholly taxable primary Code 1 Form 1099-R to the plan's payment by actual account, payer, date and full amount. Require the employee under age 59 1/2 at payment, actual employer plan permission and payment under section 401(a)(39), the plan's confirmation of zero after-tax contributions in the entire matched payment, no rollover, current-year disaster distribution, or competing Part I claim. Require the insured and coverage owner to be the employee. Bind same-year certified premium paid or assessed and actual 2026 issuer premium statement filed with the applicable plan on or before payment; the issuer must affirm acknowledged IRS disclosure. Require one plan-confirmed vested benefit present value and explicit completeness across plans with no other 2026 qualified long-term care distributions. Hold missing or contradictory evidence."
+    sources:
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapD-partI-subpartA-sec401.htm"
+      - "https://www.irs.gov/irb/2026-24_IRB#NOT-2026-33"
+      - "https://www.irs.gov/instructions/i1099r"
+    testRef: "tests/engine/form-5329-long-term-care-source.test.ts::holds missing or contradictory plan, coverage or annual proof"
+    testRefs:
+      - "tests/engine/form-5329-long-term-care-source.test.ts::holds outside the single actual 2026 primary early-distribution branch"
+  - line: "ltc-limit"
+    description: "Respect the actual covered distribution and all three statutory limits"
+    formula: "Compute the least of the 2026 employee's certified premiums paid or assessed, 10% of the plan-certified present value of the vested accrued benefit, and the published $2,600 indexed cap. Reconcile the actual plan-approved qualified portion against that maximum and the wholly taxable Box 1 payment. Reconcile a separately documented ordinary portion, including an actual zero for a wholly qualified payment, so both components equal the original payment. The actual documented qualified portion alone is excepted. Hold a purported qualified portion above a statutory limit or the original payment."
+    sources:
+      - "https://www.irs.gov/irb/2026-24_IRB#NOT-2026-33"
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapD-partI-subpartA-sec401.htm"
+    testRef: "tests/engine/form-5329-long-term-care-source.test.ts::applies each verified annual cap with exact Decimal amounts"
+    testRefs:
+      - "tests/engine/form-5329-long-term-care-source.test.ts::holds an asserted long-term-care payment above its statutory or taxable limit"
+  - line: "ltc-tax"
+    description: "Project the additional tax and preserve all taxable income"
+    formula: "Keep the full matched taxable pension amount. Multiply the otherwise taxable early distribution less the actual qualified portion by 10% using Decimal. This internal projection does not assign a Form 5329 exception number or change annual calculation and filing admission."
+    sources:
+      - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm"
+      - "https://www.irs.gov/irb/2026-24_IRB#NOT-2026-33"
+    testRef: "tests/engine/form-5329-long-term-care-source.test.ts::preserves income and the annual gate while projecting the actual exception"
