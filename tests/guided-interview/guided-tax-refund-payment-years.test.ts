@@ -17,7 +17,7 @@ it("hands actual mixed-payment originals to the canonical recovery API", () => {
     expect(built[0].refundExpenseTaxYear).toBeUndefined();
 });
 import { buildTaxInputFromGuidedData, captureGuidedRefundRecoverySources } from "@/lib/guided-interview-bridge";
-import { updateSectionData } from "@/lib/guided-interview-flow";
+import { loadGuidedFlowState, saveGuidedFlowState, updateSectionData } from "@/lib/guided-interview-flow";
 import { calculateTaxableStateRefundRecoveries } from "@/engine/forms/taxable-state-refund-recoveries";
 import { calculateStateLocalIncomeTaxDeduction } from "@/engine/forms/state-local-income-tax-deduction";
 import { TaxYearInputSchema } from "@/models/inputs";
@@ -117,6 +117,92 @@ it("preserves the entire original inventory when nonrefund statements coexist", 
     expect(input.taxableStateRefundRecoveries?.sourceOriginals).toHaveLength(1);
     expect(required(data.refundRecoveries).originalSources?.forms).toHaveLength(2);
     expect(calculateTaxableStateRefundRecoveries(input).taxableRefund.toFixed()).toBe("300");
+});
+
+function fixture2026() {
+    const state = fixture();
+    state.taxYear = 2026;
+    const data = required(state.sectionData["income-unemployment"]);
+    const collection = required(data.refundRecoveries);
+    collection.sourceTaxYear = "2026";
+    const oldForm = required(data.entries)[0];
+    Object.assign(oldForm, { sourceTaxYear: "2026", sourceFormRevision: "2026-12", familyLeaveBenefits: "0", stateOrLocalTaxRefund: "100" });
+    const newForm = structuredClone(oldForm);
+    newForm.accountReference = "FixtureOnly 2025 liability";
+    newForm.refundTaxYear = "2025";
+    newForm.stateOrLocalTaxRefund = "400";
+    const oldBasis = required(oldForm.refundPaymentBasis);
+    oldBasis.receivedDate = "2026-09-20";
+    required(oldBasis.payments).pop();
+    const newBasis = required(newForm.refundPaymentBasis);
+    newBasis.sourceReference = "FixtureOnly separate complete 2025 ledger";
+    newBasis.receivedDate = "2026-09-21";
+    const payments = required(newBasis.payments);
+    for (const payment of payments) {
+        payment.sourceReference += " second ledger";
+        payment.datePaid = (payment.currentYearStatePaymentConfirmed ? "2026" : "2025") + required(payment.datePaid).slice(4);
+    }
+    required(required(state.sectionData["state-return"]).stateEstimatedPayments)[0].date = "2026-01-15";
+    required(data.entries).push(newForm);
+    const years = required(collection.years);
+    years[0].priorYearStateLocalTaxesPaid = "3000";
+    years[0].priorYearSaltDeduction = "3000";
+    years[0].priorYearOtherItemizedDeductions = "17000";
+    years.push({
+        ...years[0], priorTaxYear: "2025", sourceReference: "Actual synthetic 2025 federal return and Schedule A",
+        priorYearStandardDeduction: "15750", priorYearSaltMagi: "60000",
+    });
+    return { state, collection, years, payments };
+}
+
+it("reopens 2026 receipts with separate 2024 and 2025 deduction histories", () => {
+    const { state, collection } = fixture2026();
+    Object.assign(collection, captureGuidedRefundRecoverySources(state), { sourceFactsConfirmed: true });
+    const values = new Map<string, string>();
+    const storage: Storage = {
+        getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => { values.set(key, value); },
+        removeItem: key => { values.delete(key); },
+        clear: () => values.clear(),
+        key: index => [...values.keys()][index] ?? null,
+        get length() { return values.size; },
+    };
+    expect(saveGuidedFlowState(storage, "2026-refund", state)).toBe(true);
+    const restored = required(loadGuidedFlowState(storage, "2026-refund"));
+    expect(restored.sectionData["income-unemployment"]?.refundRecoveries).toEqual(collection);
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(restored));
+    expect(input.taxableStateRefundRecoveries?.sourceTaxYear).toBe(2026);
+    expect(input.taxableStateRefundRecoveries?.years.map(year => year.priorTaxYear)).toEqual([2024, 2025]);
+    const result = calculateTaxableStateRefundRecoveries(input);
+    expect(result.taxableRefund.toFixed()).toBe("400");
+    expect(result.currentYearRefund.toFixed()).toBe("100");
+    expect(calculateStateLocalIncomeTaxDeduction(input).total.toFixed()).toBe("900");
+    expect(input.form1099G?.[1]?.refundPaymentBasis?.payments?.[3]?.currentYearPayment)
+        .toEqual({ collection: "estimatedTaxPayments", index: 0 });
+});
+
+it("holds missing stale and conflicting 2026 source facts", () => {
+    const { state, collection, years } = fixture2026();
+    Object.assign(collection, captureGuidedRefundRecoverySources(state), { sourceFactsConfirmed: true });
+    years[1].priorYearSaltMagi = "60001";
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    for (const invalidate of [
+        ({ years }: ReturnType<typeof fixture2026>) => { delete years[1].priorYearSaltMagi; },
+        ({ years }: ReturnType<typeof fixture2026>) => { years.pop(); },
+        ({ years }: ReturnType<typeof fixture2026>) => { years[1].priorTaxYear = "2024"; },
+        ({ collection }: ReturnType<typeof fixture2026>) => { collection.sourceTaxYear = "2025"; },
+    ]) {
+        const draft = fixture2026();
+        invalidate(draft);
+        Object.assign(draft.collection, captureGuidedRefundRecoverySources(draft.state), { sourceFactsConfirmed: true });
+        expect(buildTaxInputFromGuidedData(draft.state)).toBeNull();
+    }
+    const mismatched = fixture2026();
+    mismatched.payments[3].currentYearStatePaymentConfirmed = false;
+    expect(() => captureGuidedRefundRecoverySources(mismatched.state)).toThrow(/payment years/);
+    const older = fixture2026();
+    required(older.state.sectionData["personal-info"]).dateOfBirth = "1962-01-01";
+    expect(() => captureGuidedRefundRecoverySources(older.state)).toThrow(/under.?65/);
 });
 
 function required<T>(value:T|null|undefined):T{if(value==null)throw new Error("Missing synthetic source");return value;}

@@ -21,7 +21,16 @@ it("collects payment-year originals explicitly and revokes provenance edits", as
   let writes=0;
   function Harness(){const [state,setState]=useState(latest);return <SectionUnemployment state={state} data={state.sectionData["income-unemployment"]} onDataChange={next=>{writes++;latest=updateSectionData(state,"income-unemployment",next);setState(latest);}}/>;}
   async function click(label:string){const button=[...element.querySelectorAll("button")].find(node=>node.textContent===label);if(!button)throw new Error(`Missing ${label}`);await act(async()=>button.click());}
-  async function change(label:string,value:string){const input=[...element.querySelectorAll("label")].find(node=>node.querySelector("span")?.textContent===label)?.querySelector<HTMLInputElement|HTMLSelectElement>("input,select");if(!input)throw new Error(`Missing ${label}`);await act(async()=>{Object.getOwnPropertyDescriptor(input.tagName==="SELECT"?HTMLSelectElement.prototype:HTMLInputElement.prototype,"value")?.set?.call(input,value);input.dispatchEvent(new Event(input.tagName==="SELECT"?"change":"input",{bubbles:true}));});}
+  async function change(label:string,value:string,index=0) {
+    const field = [...element.querySelectorAll("label")].filter(node=>node.querySelector("span")?.textContent===label)[index];
+    const input = field?.querySelector<HTMLInputElement|HTMLSelectElement>("input,select");
+    if (!input) throw new Error(`Missing ${label}`);
+    const select = input.tagName === "SELECT";
+    await act(async()=> {
+      Object.getOwnPropertyDescriptor(select?HTMLSelectElement.prototype:HTMLInputElement.prototype,"value")?.set?.call(input,value);
+      input.dispatchEvent(new Event(select?"change":"input",{bubbles:true}));
+    });
+  }
   const current=()=>required(latest.sectionData["income-unemployment"]);
   try {
     await act(async()=>root.render(<Harness/>));await click("Add mixed-payment-year refund collection");expect(current().refundRecoveries).toEqual({});
@@ -49,5 +58,12 @@ it("collects payment-year originals explicitly and revokes provenance edits", as
     await change("Statement 1 payment basis checked after the last edit","true");await change("Have you checked this government-payment source after the last edit?","true");await click("Capture current refund payment-year originals");await change("Refund payment-year collection checked after the last edit","true");expect(buildTaxInputFromGuidedData(latest)).not.toBeNull();expect(current().refundRecoveries?.originalSources).not.toEqual(captured);
     await change("Statement 1 payment 1 actual amount","");expect(current().entries?.[0].refundPaymentBasis?.payments?.[0].amount).toBe("");
     await change("Statement 1 payment 1 actual amount","0");expect(current().entries?.[0].refundPaymentBasis?.payments?.[0].amount).toBe("0");
+    await click("Add historical return");
+    await change("Actual historical deduction year","2025",1);
+    await change("Historical return facts checked after the last edit","true",1);
+    await change("Historical 2025 Schedule A SALT modified adjusted gross income","60000");
+    expect(current().refundRecoveries?.years?.[1]).toEqual({
+      priorTaxYear:"2025",priorYearSaltMagi:"60000",sourceFactsConfirmed:null,
+    });
   } finally { await act(async()=>root.unmount());element.remove(); }
 });

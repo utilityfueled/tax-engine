@@ -35,7 +35,7 @@ export function TaxRefundRecoveryDetails({data,state,onChange}:{data:Unemploymen
     }catch(cause){setError(cause instanceof Error?cause.message:"Complete actual original sources before capture.");}
   };
   return <details className="guided-expand"><summary className="guided-expand-trigger">Refund payments made in different years</summary><div className="guided-expand-body">
-    <p className="guided-hint">This source route accepts a 2025 single taxpayer under 65, actual 2024 ordinary return facts, and actual state estimated payments recorded in State Return. It does not infer any payment, ownership, negative answer or taxable amount. Use either this collection or the separate legacy worksheet.</p>
+    <p className="guided-hint">For a single taxpayer under 65, enter the original 2024 deduction history for a 2025 receipt. For a 2026 receipt, enter the original 2024 or 2025 deduction histories that apply. Record any linked current-year state estimated payments in State Return. Use one refund worksheet route.</p>
     {!collection?<button type="button" className="utility-button" onClick={()=>onChange({...data,refundRecoveries:{}})}>Add mixed-payment-year refund collection</button>:<>
       <TextFact label="Recovery collection receipt year" value={collection.sourceTaxYear??""} onChange={sourceTaxYear=>change({sourceTaxYear})}/>
       <TextFact label="Recovery collection original reference" value={collection.sourceReference??""} onChange={sourceReference=>change({sourceReference})}/>
@@ -64,6 +64,9 @@ export function TaxRefundRecoveryDetails({data,state,onChange}:{data:Unemploymen
         <BooleanFact label="Historical return itemized deductions" value={year.priorYearItemized} onChange={value=>yearChange(index,{priorYearItemized:value??undefined})}/>
         <label className="guided-field"><span>Historical state tax election</span><select value={year.priorYearStateLocalTaxElection??""} onChange={event=>yearChange(index,{priorYearStateLocalTaxElection:event.target.value==="income"?"income":event.target.value==="sales"?"sales":undefined})}><option value="">Choose from actual Schedule A</option><option value="income">Income tax</option><option value="sales">Sales tax</option></select></label>
         {refundHistoryAmounts.map(([key,label])=><TextFact key={key} label={label} value={year[key]??""} onChange={value=>yearChange(index,{[key]:value})}/>)}
+        {(year.priorTaxYear==="2025"||year.priorYearSaltMagi!==undefined)&&<TextFact
+          label="Historical 2025 Schedule A SALT modified adjusted gross income"
+          value={year.priorYearSaltMagi??""} onChange={priorYearSaltMagi=>yearChange(index,{priorYearSaltMagi})}/>}
         {refundHistoryExclusions.map(([key,label])=><BooleanFact key={key} label={label} value={year[key]} onChange={value=>yearChange(index,{[key]:value??undefined})}/>)}
         <BooleanFact label="Historical return facts checked after the last edit" value={year.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>yearChange(index,{sourceFactsConfirmed})}/>
         <button type="button" onClick={()=>change({years:collection.years?.filter((_,i)=>i!==index)})}>Remove historical return {index+1}</button>

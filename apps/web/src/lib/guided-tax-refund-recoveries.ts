@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { TaxYearInputSchema, TaxableStateRefundYearSchema, TaxableStateRefundRecoveriesSchema, type Form1099G, type TaxYearInput, type TaxableStateRefundYearInput } from "@/models/inputs";
 import { calculateTaxableStateRefundRecoveries } from "@/engine/forms/taxable-state-refund-recoveries";
 import type { GuidedFlowState } from "./guided-interview-flow";
+import { isActualDate } from "./guided-required-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 
 export interface GuidedRefundPaymentData {
@@ -74,18 +75,23 @@ export function refundRecoveryDraft(state: GuidedFlowState) {
 const stable=(value:unknown):unknown=>Array.isArray(value)?value.map(stable):value!==null&&typeof value==="object"
   ?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,stable(item)])):value;
 const same=(a:unknown,b:unknown)=>JSON.stringify(stable(a))===JSON.stringify(stable(b));
-function cohort(state:GuidedFlowState):void {
+function cohort(state:GuidedFlowState):2025|2026 {
+  const { taxYear } = state;
   const data=state.sectionData["income-unemployment"];
-  if(state.taxYear!==2025||state.segmentation.filingStatus!=="single")throw new Error("Native payment-year recovery currently requires an actual2025 single-owner return.");
-  const person=state.sectionData["personal-info"];
-  if(!person?.dateOfBirth||person.dateOfBirth<="1961-01-01")throw new Error("Native recovery requires actual under65 historical/current birth-date facts.");
+  if((taxYear!==2025&&taxYear!==2026)||state.segmentation.filingStatus!=="single")
+    throw new Error("Payment-year recovery requires an actual 2025 or 2026 single-owner return.");
+  const dob=state.sectionData["personal-info"]?.dateOfBirth;
+  if(!dob||!isActualDate(dob)||dob<=`${taxYear-64}-01-01`||dob>`${taxYear}-12-31`)
+    throw new Error("Payment-year recovery requires an actual under-65 birth date.");
   if(!data?.refundRecoveries||data.taxRefund)throw new Error("Payment-year collection and the legacy single-year refund worksheet are mutually exclusive.");
+  return taxYear;
 }
 function prepare(raw:unknown,state:GuidedFlowState):TaxYearInput {
-  cohort(state);
+  const taxYear=cohort(state);
   // Canonical wire input omits undefined object keys, exactly as local save/recovery does.
   // Raw draft blanks, null answers and original lexemes remain in originalDraft.
   const input=TaxYearInputSchema.parse(JSON.parse(JSON.stringify(raw))),entries=(state.sectionData["income-unemployment"]?.entries??[]).filter(entry=>Object.values(entry).some(value=>typeof value==="string"?value.trim()!=="":typeof value==="boolean"));
+  if(input.taxpayer.taxYear!==taxYear)throw new Error("The current return year does not match the recovery collection.");
   if(input.taxpayer.stateResidency===undefined)throw new Error("Confirm actual current residency before capturing refund originals.");
   const forms=input.form1099G?.map((form,index)=>{
     const draft=entries[index]?.refundPaymentBasis;
@@ -95,7 +101,7 @@ function prepare(raw:unknown,state:GuidedFlowState):TaxYearInput {
     return {...form,refundPaymentBasis:{...basis,payments:basis.payments.map((payment,i)=>{
       const link=draft.payments?.[i]?.currentYearStatePaymentConfirmed;
       if(typeof link!=="boolean")throw new Error("Confirm whether each original payment is also a current-year state estimated payment.");
-      const current=payment.datePaid?.startsWith("2025-")===true;
+      const current=payment.datePaid?.startsWith(`${taxYear}-`)===true;
       if(link!==current)throw new Error("Reconcile actual historical/current payment years and current payment ownership.");
       if(!current)return payment;
       const matches=(input.adjustments?.estimatedTaxPayments??[]).flatMap((actual,index)=>
@@ -116,12 +122,26 @@ export function guidedRefundRecoveryDraftErrors(state:GuidedFlowState):Record<st
   const data=state.sectionData["income-unemployment"]?.refundRecoveries;
   if(!data)return {};
   try {
-    cohort(state);
-    if(data.sourceTaxYear!=="2025"||!data.sourceReference?.trim()||data.sourceFactsConfirmed!==true||data.allRefundSourcesIncludedConfirmed!==true)
+    const taxYear=cohort(state);
+    if(data.sourceTaxYear!==String(taxYear)||!data.sourceReference?.trim()||data.sourceFactsConfirmed!==true||data.allRefundSourcesIncludedConfirmed!==true)
       throw new Error("Confirm the actual recovery collection year, original reference and complete inventory after the last edit.");
-    const year=data.years?.[0];
-    if(data.years?.length!==1||year?.priorTaxYear!=="2024"||year.sourceFactsConfirmed!==true||!year.sourceReference?.trim()||year.priorYearFilingStatus!=="single"||year.priorYearPrimarySsn!==state.sectionData["personal-info"]?.ssn||typeof year.priorYearItemized!=="boolean"||(year.priorYearItemized&&!["income","sales"].includes(year.priorYearStateLocalTaxElection??"")))throw new Error("Enter and confirm the actual 2024 same-owner historical return and tax election.");
-    if(refundHistoryAmounts.some(([key])=>typeof year[key]!=="string"||!/^\d{1,12}(?:\.\d{1,2})?$/.test(year[key]??""))||refundHistoryExclusions.some(([key])=>year[key]!==false))throw new Error("Historical amounts and each excluded tax-benefit treatment must be explicitly known for this finite route.");
+    const years=data.years;
+    if(!years?.length||new Set(years.map(year=>year.priorTaxYear)).size!==years.length)
+      throw new Error("Enter one original worksheet for each historical deduction year.");
+    const primarySsn=state.sectionData["personal-info"]?.ssn;
+    const actualAmount=(value:unknown)=>typeof value==="string"&&/^\d{1,12}(?:\.\d{1,2})?$/.test(value);
+    for(const year of years) {
+      const allowedYear=year.priorTaxYear==="2024"||(taxYear===2026&&year.priorTaxYear==="2025");
+      if(!allowedYear||year.sourceFactsConfirmed!==true||!year.sourceReference?.trim()
+        ||year.priorYearFilingStatus!=="single"||year.priorYearPrimarySsn!==primarySsn
+        ||typeof year.priorYearItemized!=="boolean"
+        ||(year.priorYearItemized&&!["income","sales"].includes(year.priorYearStateLocalTaxElection??"")))
+        throw new Error("Confirm the actual same-owner historical return year and tax election.");
+      if(year.priorTaxYear==="2025"&&!actualAmount(year.priorYearSaltMagi))
+        throw new Error("Enter the actual 2025 Schedule A SALT modified adjusted gross income.");
+      if(refundHistoryAmounts.some(([key])=>!actualAmount(year[key]))||refundHistoryExclusions.some(([key])=>year[key]!==false))
+        throw new Error("Historical amounts and each excluded tax-benefit treatment must be explicitly known for this route.");
+    }
     if(!data.originalSources||!data.originalDraft||!same(data.originalDraft,refundRecoveryDraft(state)))
       throw new Error("Capture the current original household, statements, payment basis and historical facts explicitly; saved originals are stale or missing.");
     return {};
@@ -130,11 +150,10 @@ export function guidedRefundRecoveryDraftErrors(state:GuidedFlowState):Record<st
 export function bindGuidedRefundRecoveryInput(raw:unknown,state:GuidedFlowState):TaxYearInput {
   const errors=guidedRefundRecoveryDraftErrors(state);if(Object.keys(errors).length)throw new Error(Object.values(errors)[0]);
   const input=prepare(raw,state),data=state.sectionData["income-unemployment"]?.refundRecoveries;
-  if(!data?.originalSources)throw new Error("Capture the original refund collection first.");
+  if(!data?.originalSources||!data.years)throw new Error("Capture the original refund collection first.");
   if(!same(data.originalSources,{taxpayer:input.taxpayer,forms:input.form1099G??[],adjustments:input.adjustments}))throw new Error("Current canonical refund originals or payment identities differ from the captured source.");
-  if(data.years?.length!==1||data.years[0].priorTaxYear!=="2024")throw new Error("Native recovery requires exactly one actual2024 historical worksheet.");
   const years=data.years.map(row=>TaxableStateRefundYearSchema.parse({...row,priorTaxYear:Number(row.priorTaxYear),sourceFactsConfirmed:row.sourceFactsConfirmed??undefined}));
-  const packet=TaxableStateRefundRecoveriesSchema.parse({methodVersion:"state-income-tax-recoveries-v1",sourceTaxYear:2025,sourceReference:data.sourceReference,
+  const packet=TaxableStateRefundRecoveriesSchema.parse({methodVersion:"state-income-tax-recoveries-v1",sourceTaxYear:input.taxpayer.taxYear,sourceReference:data.sourceReference,
     sourceFactsConfirmed:data.sourceFactsConfirmed,allRefundSourcesIncludedConfirmed:data.allRefundSourcesIncludedConfirmed,
     originalTaxpayer:data.originalSources.taxpayer,sourceOriginals:data.originalSources.forms.filter(original=>original.refundPaymentBasis!==undefined||Decimal.max(new Decimal(original.stateOrLocalTaxRefund??0),new Decimal(original.stateLocalIncomeTaxRefund??0)).gt(0)).map(original=>({sourceId:original.sourceId,original})),years});
   const bound=TaxYearInputSchema.parse({...input,taxableStateRefundRecoveries:packet});

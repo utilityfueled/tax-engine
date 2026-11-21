@@ -1,13 +1,14 @@
 form: "Native mixed-payment-year state refund recovery"
-fullName: "Actual 2025 single-owner payment-basis intake for existing recovery API"
+fullName: "Actual 2025 and 2026 single-owner payment-basis intake for existing recovery API"
 taxYear: 2025
 reference: "https://www.irs.gov/publications/p525#en_US_2025_publink1000229426"
 notes: |
   Intake only for the existing canonical recovery method. Publication525 (2025)
   Example28 allocates400 into300 historical and100 current, reducing1000 to900.
-  Native scope is a2025 single under65 owner and actual2024 ordinary history;
-  other canonical cohorts remain backend-only. No engine formula, final2026,
-  paper qualification or public filing gate changes. Legacy worksheet stays
+  Native scope is a 2025 or 2026 single owner under 65 in the receipt year,
+  with actual 2024 or 2025 ordinary history preceding receipt. The same actual
+  year and household bind the statements, worksheet and current-year payment
+  links. The legacy worksheet stays
   separate and mutually exclusive. No original date/year/owner/amount/history
   or negative answer is inferred; capture is explicit and immutable.
 lines:
@@ -19,6 +20,14 @@ lines:
     description: "Replay existing Example28 routes using independent literals"
     formula: "400 *3000 /4000 =300 historical;400 *1000 /4000 =100 current;1000 -100 =900 current income-tax deduction. Canonical engine supplies results; native collector supplies no arithmetic."
     testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::retains independent300 taxable and100 current with900 state payment deduction"
+  - line: "2026-receipt"
+    description: "Collect each historical deduction year independently for 2026 receipts"
+    formula: "Bind actual 2026 Form 1099-G originals and 2024 or 2025 ordinary histories. Require the actual Schedule A SALT MAGI for 2025 history, including zero where applicable, and let the canonical method reconcile the worksheet. In the regression, 100 attributable to 2024 and 400 × 3000 / 4000 attributable to 2025 total 400 taxable. The remaining 100 reduces a unique linked 2026 estimated payment from 1000 to 900. Preserve the captured years across save and reopen."
+    testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::reopens 2026 receipts with separate 2024 and 2025 deduction histories"
+  - line: "2026-history-controls"
+    description: "Require actual historical MAGI and one worksheet per deduction year"
+    formula: "Hold a missing or stale historical MAGI, missing or duplicate historical years, conflicting current-year link, changed receipt year or taxpayer age disqualification. Never fill a missing historical amount from current income or the printed Box 3 liability year."
+    testRef: "tests/guided-interview/guided-tax-refund-payment-years.test.ts::holds missing stale and conflicting 2026 source facts"
   - line: "unknown-and-boundaries"
     description: "Deny missing facts and unsupported methods"
     formula: "Every source/date/payment/identity/zero/election/history exclusion remains explicit. Unknown and conflicting scalar/basis/legacy packets, wrong owners/year, unlinked current payments, duplicate identities and fractional-cent allocations deny without discarding facts."
