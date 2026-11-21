@@ -73,6 +73,13 @@ lines:
     description: "Use the live guided selection for original uploads"
     formula: "Check existing original source dates for conflict with the guided year. A prior draft supplies neither an original source date nor authority to override the live selection."
     testRef: "tests/apps/web/guided-original-upload-year.test.tsx::uses the live 2026 selection after reopening a 2025 draft with no originals"
+  - line: "guided-2026-review-statement-uploads"
+    description: "Save source-identified 1098-E and 1099-R originals for review"
+    formula: "A source-proven 2026 Form 1098-E or Form 1099-R Copy B with review-only evidence can be saved only in the explicitly selected 2026 guided interview. Its source class and year take precedence over a historical filename alias. A conflicting dated original prevents the batch from being stored. Show original box evidence in the guided document list. It carries no calculation input, fixture seed or filing permission. A recognized copy with no reliable calendar year, a rotated page or a multipage upload stays unknown and manual."
+    irsRef: "Official Form 1098-E and Form 1099-R, Copy B"
+    testRef: "tests/apps/web/guided-original-upload-year.test.tsx::keeps a %s original in the selected 2026 guided review only"
+    testRefs:
+      - "tests/apps/web/pdf-text-extraction.test.ts::keeps a mixed 1099-R and W-2 packet manual without wage seeds"
   - line: "guided-2026-upload-concurrent-conflict"
     description: "Recheck current original source dates before an upload is committed"
     formula: "For local uploads, evaluate dated originals against the current stored return after document parsing and before original bytes are saved. If the return changes while those original bytes are being saved, discard the new byte batch and leave the latest metadata intact. Hosted uploads use the current revision and its existing rejected-write cleanup."

@@ -1160,16 +1160,24 @@ function hasWageOrNecOriginal(file: UploadableFile, fixture: FixtureMatch | null
   ));
 }
 
+function isDetectedReviewStatement(file: UploadableFile): boolean {
+  const original = file.detectedDocument;
+  return original?.coverage === "needs-review" && (original.kind === "1098-e" || original.kind === "1099-r");
+}
+
 function isSupportedGuided2026Original(file: UploadableFile) {
   const original = file.detectedDocument;
-  return original?.taxYear === 2026 && original.detectedFacts?.some(({ machineValue }) =>
-    (original.kind === "w2" && machineValue?.entryKind === "w2-summary")
-    || (original.kind === "1099-nec" && machineValue?.entryKind === "1099-nec-summary")
+  return original?.taxYear === 2026 && (
+    isDetectedReviewStatement(file) || original.detectedFacts?.some(({ machineValue }) =>
+      (original.kind === "w2" && machineValue?.entryKind === "w2-summary")
+      || (original.kind === "1099-nec" && machineValue?.entryKind === "1099-nec-summary")
+    )
   );
 }
 
 function getFutureYearSampleUploads(files: UploadableFile[], allowGuided2026Originals: boolean): FutureYearSampleUpload[] {
   return files.flatMap((file) => {
+    if (isDetectedReviewStatement(file)) return [];
     const matched = matchFixture(file.name);
     const original = file.detectedDocument && (file.detectedDocument.kind === "training-scenario" || hasWageOrNecOriginal(file, matched)) ? file.detectedDocument : null;
     if (original?.kind === "unknown") return [];
@@ -1192,6 +1200,9 @@ function getFutureYearSampleUploads(files: UploadableFile[], allowGuided2026Orig
 }
 
 export function getFutureYearSampleUploadMessage(files: UploadableFile[], allowGuided2026Originals = false) {
+  if (!allowGuided2026Originals && files.some(file => isDetectedReviewStatement(file) && file.detectedDocument?.taxYear === 2026)) {
+    return "Select tax year 2026 in the guided interview to save this original for review.";
+  }
   const futureYearSampleUploads = getFutureYearSampleUploads(files, allowGuided2026Originals);
 
   if (futureYearSampleUploads.length === 0) {
@@ -1242,7 +1253,7 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
   // seeded facts merely because the original upload is named f1095a.pdf.
   // A real guide cover cannot become a taxpayer form through its filename.
   // Recognized W-2/NEC source facts also take precedence over sample aliases.
-  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture) || detectedFinancialSource
+  const matchedFixture = hasWageOrNecOriginal(file, filenameFixture) || isDetectedReviewStatement(file) || detectedFinancialSource
     || (file.detectedDocument?.kind === "1095-a"
     && (filenameFixture?.kind !== "1095-a" || file.detectedDocument.taxYear == null
       || file.detectedDocument.taxYear !== filenameFixture.taxYearHint))

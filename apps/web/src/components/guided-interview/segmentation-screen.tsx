@@ -277,6 +277,9 @@ export function SegmentationScreen({
                         {document.kind !== "unknown" ? ` · ${document.kind.toUpperCase()}` : ""}
                         {document.coverage ? ` · ${document.coverage}` : ""}
                       </p>
+                      {document.coverage === "needs-review" && (document.kind === "1098-e" || document.kind === "1099-r") && (
+                        <p className="guided-doc-helper-meta">{document.notes}</p>
+                      )}
                       {document.coverage === "unsupported" ? (
                         <div className="guided-badge-row" style={{ marginTop: "8px" }}>
                           <span className="guided-field-badge-active">

@@ -109,6 +109,45 @@ it("saves a matching original only for the selected guided facts-only year", asy
   }
 });
 
+it.each([
+  ["1098-e", "f1098e.pdf", "Box 1: $1,800.25"],
+  ["1099-r", "f1099r.pdf", "Box 2a: $0.00"],
+] as const)("keeps a %s original in the selected 2026 guided review only", async (kind, name, notes) => {
+  const id = `synthetic-${kind}-review`;
+  ensureWorkspace(localStorage, id);
+  const panel = await mountGuidedPanel(<ReturnWorkspaceScreen workspaceId={id} deploymentMode="self-host" />);
+  vi.mocked(prepareUploadableFiles).mockImplementation(async files => prepareFiles(files).map(file => file.name === name ? ({
+    ...file,
+    detectedDocument: { kind, coverage: "needs-review", taxYear: 2026, label: `Form ${kind.toUpperCase()} Copy B`, notes, seededFactIds: [], detectedFacts: [] },
+  }) : file));
+  try {
+    const uploadOriginals = (...names: string[]) => upload(panel.container, ".guided-doc-upload-input", ...names);
+    const uploadMessage = () => panel.container.querySelector(".guided-doc-helper-status")?.textContent;
+    await panel.change("Tax year for this interview", "2025");
+    await uploadOriginals(name);
+    expect(uploadMessage()).toContain("Select tax year 2026");
+    expect(storeNewWorkspaceDocumentFiles).not.toHaveBeenCalled();
+    expect(getWorkspace(localStorage, id)?.documents).toEqual([]);
+
+    await panel.change("Tax year for this interview", "2026");
+    await uploadOriginals(name, priorWagesName);
+    expect(uploadMessage()).toContain("An original is for a different tax year");
+    expect(storeNewWorkspaceDocumentFiles).not.toHaveBeenCalled();
+
+    const originals = await uploadOriginals(name);
+    expect(vi.mocked(storeNewWorkspaceDocumentFiles).mock.calls[0]).toEqual([
+      id, [expect.objectContaining({ file: originals[0] })],
+    ]);
+    const saved = getWorkspace(localStorage, id);
+    expect(saved?.documents).toMatchObject([{ kind, taxYear: 2026, matchedFixtureId: null, notes, seededFactIds: [] }]);
+    expect(panel.container.querySelector(".guided-doc-helper-result")?.textContent).toContain(notes);
+    expect(saved?.enginePreview).toBeNull();
+    expect(saved?.returnSummary.blockers.map(({ id }) => id)).toContain("unsupported-tax-year");
+  } finally {
+    await panel.dispose();
+  }
+});
+
 it("keeps a 2026 original gated in the advanced help dock and conflicting 2025 workspace", async () => {
   const id = "synthetic-prior-year-original";
   savePriorWages(id);

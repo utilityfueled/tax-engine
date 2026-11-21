@@ -10,6 +10,8 @@ import type {
   WorkspaceStructuredFactMachineValue1099NecSummary,
   WorkspaceStructuredFactMachineValueW2Summary,
 } from "@tax-engine/contracts";
+import { read20261098ECopyB } from "./read-2026-1098-e-copy-b";
+import { read20261099RCopyB } from "./read-2026-1099-r-copy-b";
 
 export interface ParsedUploadedDocument {
   taxYear?: number | null;
@@ -291,6 +293,7 @@ async function readPdf(file: File, detectOriginal: boolean) {
     const pageTexts: string[] = [];
     let necCopyB: NecCopyB | null = null;
     let w2CopyB: W2CopyB | null = null;
+    let reviewStatement: ParsedUploadedDocument | null = null;
     let w2InformationalCover = false;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
@@ -305,9 +308,18 @@ async function readPdf(file: File, detectOriginal: boolean) {
             && /CAUTION:\s*DO NOT FILE/.test(pageText)
             && /Copy A of this form is provided for informational purposes only\./.test(pageText);
         }
-        const singleUprightLetterPage = pdf.numPages === 1 && page.rotate === 0 && page.view.join(",") === "0,0,612,792";
+        const letterPage = page.view.join(",") === "0,0,612,792";
+        const singleUprightLetterPage = pdf.numPages === 1 && page.rotate === 0 && letterPage;
         const readAnnotations = () => page.getAnnotations({ intent: "any" });
         if (singleUprightLetterPage) necCopyB = await readNecCopyB(items, readAnnotations);
+        if (letterPage && !reviewStatement) {
+          const readReviewAnnotations = singleUprightLetterPage ? readAnnotations : async () => [];
+          const statement = await read20261098ECopyB(items, readReviewAnnotations)
+            ?? await read20261099RCopyB(items, readReviewAnnotations);
+          reviewStatement = statement && !singleUprightLetterPage
+            ? { ...statement, taxYear: null, notes: "Upload the upright, single-page Copy B to review the calendar year and individual boxes." }
+            : statement;
+        }
         if (items.some(({ str }) => str === "Copy B—To Be Filed With Employee’s FEDERAL Tax Return.")) {
           w2CopyB ??= await read2026W2CopyB(items, singleUprightLetterPage, readAnnotations);
         }
@@ -315,7 +327,7 @@ async function readPdf(file: File, detectOriginal: boolean) {
       page.cleanup();
     }
     if (w2CopyB && w2InformationalCover) w2CopyB.informationalPacket = true;
-    return { text: pageTexts.join("\n\n"), necCopyB, w2CopyB };
+    return { text: pageTexts.join("\n\n"), necCopyB, w2CopyB, reviewStatement };
   } finally {
     await task.destroy();
   }
@@ -867,6 +879,7 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
 
 function parseDocumentText(
   text: string, fileName: string, necCopyB: NecCopyB | null, w2CopyB: W2CopyB | null = null,
+  reviewStatement: ParsedUploadedDocument | null = null,
 ): ParsedUploadedDocument | null {
   const normalizedText = normalizeParsingText(text);
   const signalText = `${fileName}\n${normalizedText}`;
@@ -894,6 +907,8 @@ function parseDocumentText(
 
   const marketplace = parseUploadedMarketplaceStatement(normalizedText);
   if (marketplace) return marketplace;
+  if (w2CopyB?.informationalPacket) return parse2026W2CopyB(w2CopyB);
+  if (reviewStatement) return reviewStatement;
   if (w2CopyB) return parse2026W2CopyB(w2CopyB);
 
   const parsed = parseUploadedW2Text(normalizedText, fileName)
@@ -959,8 +974,8 @@ export async function detectUploadedDocumentFromFile(
   }
 
   try {
-    const { text, necCopyB, w2CopyB } = await readPdf(file, true);
-    return parseDocumentText(text, file.name, necCopyB, w2CopyB);
+    const { text, necCopyB, w2CopyB, reviewStatement } = await readPdf(file, true);
+    return parseDocumentText(text, file.name, necCopyB, w2CopyB, reviewStatement);
   } catch {
     return null;
   }

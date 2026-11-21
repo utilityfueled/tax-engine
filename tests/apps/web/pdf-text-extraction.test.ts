@@ -79,6 +79,25 @@ it("recognizes the official 2026 W-2 informational packet before original intake
   expect(getFutureYearSampleUploadMessage([upload], true)).toContain("is an official sample document for tax year 2026");
 });
 
+it("keeps a mixed 1099-R and W-2 packet manual without wage seeds", async () => {
+  const source = await w2CopyB({ top: ["3,210.09", "0"] });
+  const pdf = await PDFDocument.load(await source.arrayBuffer());
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const retirement = pdf.addPage([612, 792]);
+  for (const [str, x, y] of [
+    ["Form", 406.093, 693.861], ["1099-R", 424.377, 693.861],
+    ["20", 406, 716.721], ["26", 431.28, 716.721],
+    ["Copy B", 541.36, 678.861], ["7a", 297.7, 580.001], ["7b", 348.1, 580.001],
+    ["1099-R", 68.684, 421.861],
+  ] as const) retirement.drawText(str, { x, y, size: str === "Form" ? 5 : 7, font });
+
+  const file = new File([new Uint8Array(await pdf.save())], "f1099r.pdf", { type: "application/pdf" });
+  const [upload] = await prepareUploadableFiles([file]);
+  expect(upload.detectedDocument).toMatchObject({ kind: "1099-r", coverage: "needs-review", taxYear: null, seededFactIds: [], detectedFacts: [] });
+  const workspace = ingestFilesIntoWorkspace(createWorkspaceRecord("mixed-public-statements"), [upload]);
+  expect(workspace.documents).toMatchObject([{ matchedFixtureId: null, taxYear: null, seededFactIds: [] }]);
+});
+
 it.each([
   { name: "top wages and explicit zero withholding", top: ["3,210.09", "0"], year: 2026, wages: "3210.09", withheld: "0.00" },
   { name: "bottom withholding with unknown wages", bottom: [null, "18.10"], year: 2026, wages: "", withheld: "18.10" },
