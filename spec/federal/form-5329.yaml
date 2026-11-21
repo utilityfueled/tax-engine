@@ -1,9 +1,17 @@
 form: "Form 5329"
 fullName: "Additional Taxes on Qualified Plans (Including IRAs) and Other Tax-Favored Accounts"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i5329"
+irsReference: "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf"
 
 notes: |
+  The 2025 federal review packet includes Part I for a nonjoint filer with an
+  actual ordinary pension Form 1099-R reporting Box 7 code 1 and positive
+  Box 2a when a computed, numbered Line 2 exception covers the entire
+  positive Line 1. The payer's code 1 does not indicate the exception.
+  A correctly coded, fully penalized distribution can use Schedule 2 Line 8
+  directly under the IRS instructions. The existing positive-tax review
+  attachment and owner-specific Form 5329 rules still apply.
+
   This slice implements Form 5329 Part I Lines 1-4 for the additional tax on
   early distributions from IRAs and other qualified retirement plans, Part II
   Lines 5-8 for the 10% additional tax on certain distributions from Coverdell

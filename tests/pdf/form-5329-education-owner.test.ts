@@ -76,6 +76,40 @@ it("preserves the single taxpayers other parts alongside actual education income
   expect(doc.getForm().getTextField(F.line17).getText()).toBe("60");
 });
 
+it("keeps the full Code 1 exception on the existing primary education attachment", async () => {
+  const base = educationInput();
+  const input = TaxYearInputSchema.parse({
+    ...base,
+    taxpayer: { ...base.taxpayer, filingStatus: "single", spouse: undefined },
+    form1099Q: base.form1099Q.filter(form => form.recipientOwner === "primary"),
+    form1099R: [{
+      taxYear: 2025,
+      payer: "Fictional Employer Pension",
+      distributionCode: "1",
+      grossDistribution: "9000",
+      taxableAmount: "9000",
+      taxableAmountNotDetermined: false,
+      federalWithheld: "0",
+      iraSepSimple: false,
+      terminalIllnessExceptionApplies: true,
+    }],
+  });
+  const result = calculateFederalTax(input);
+  expect(result.form5329?.totalAdditionalTax.toFixed()).toBe("0");
+  const outputDir = await mkdtemp(join(tmpdir(), "education-owner-part-i-"));
+  try {
+    const packet = await fillReturn(input, result, { blankFormsDir: "forms/blank/2025", outputDir });
+    const attachment = join(outputDir, "f5329-primary-filled.pdf");
+    expect(packet.filledForms.filter(path => path.includes("f5329"))).toEqual([attachment]);
+    const doc = await PDFDocument.load(await readFile(attachment));
+    expect(doc.getForm().getTextField(F.line1).getText()).toBe("9000");
+    expect(doc.getForm().getTextField(F.line2).getText()).toBe("9000");
+    expect(doc.getForm().getTextField(F.line2ExceptionNumber).getText()).toBe("20");
+    expect(doc.getForm().getTextField(F.line5).getText()).toBe("200");
+    expect(doc.getForm().getTextField(F.line8).getText()).toBe("20");
+  } finally { await rm(outputDir, { recursive: true, force: true }); }
+});
+
 it("unions education and HSA packet owners without duplicate forms", async () => {
   const input = educationInput(true); const result = calculateFederalTax(input);
   const directory = await mkdtemp(join(tmpdir(), "education-hsa-owner-union-"));

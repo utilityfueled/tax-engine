@@ -4,12 +4,16 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
 import { PDFDocument, PDFTextField } from "pdf-lib";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm5329, FORM_5329_FIELDS } from "@/pdf/fill-form-5329.js";
+import { fillReturn } from "@/pdf/fill-return.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 
 /** Helper: get text value from a filled PDF field. */
 function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
@@ -35,6 +39,50 @@ function expectedCurrency(value: Decimal): string | undefined {
 
 const BLANK_5329 = "forms/blank/2025/f5329.pdf";
 const F = FORM_5329_FIELDS;
+
+/** Spec: spec/federal/form-5329.yaml, 2025 review packet. */
+it.each([
+  { name: "Code 1 with a full verified exception", code: "1", terminalIllness: true, exception: "20", tax: "0", attach: true },
+  { name: "Code 1 with full additional tax", code: "1", terminalIllness: false, exception: undefined, tax: "900", attach: true },
+  { name: "Code 3 with payer reporting the exception", code: "3", terminalIllness: false, exception: "03", tax: "0", attach: false },
+  { name: "Code 7 with no Part I calculation", code: "7", terminalIllness: false, exception: undefined, tax: "0", attach: false },
+])("applies the 2025 Form 5329 review attachment rule for $name", async ({ code, terminalIllness, exception, tax, attach }) => {
+  const input = TaxYearInputSchema.parse({
+    taxpayer: earlyDistributionFixture.taxpayer,
+    form1099R: [{
+      taxYear: 2025,
+      payer: "Fictional Employer Pension",
+      distributionCode: code,
+      distributionDate: "2025-08-01",
+      grossDistribution: "9000",
+      taxableAmount: "9000",
+      taxableAmountNotDetermined: false,
+      federalWithheld: "0",
+      iraSepSimple: false,
+      terminalIllnessExceptionApplies: terminalIllness,
+    }],
+  });
+  const result = calculateFederalTax(input);
+  expect(result.form5329?.line2ExceptionNumber).toBe(exception);
+  expect(result.totalAdditionalTaxes.toFixed()).toBe(tax);
+  const outputDir = await mkdtemp(join(tmpdir(), "form-5329-part-i-review-"));
+  try {
+    const packet = await fillReturn(input, result, { purpose: "review", blankFormsDir: "forms/blank/2025", outputDir });
+    const attachments = packet.filledForms.filter(path => basename(path).startsWith("f5329"));
+    expect(attachments.map(path => basename(path))).toEqual(attach ? ["f5329-filled.pdf"] : []);
+    if (attach) {
+      const doc = await PDFDocument.load(await readFile(attachments[0]));
+      expect(getFieldText(doc, F.name)).toBe("Jake Wilson");
+      expect(getFieldText(doc, F.line1)).toBe("9000");
+      expect(getFieldText(doc, F.line2)).toBe(terminalIllness ? "9000" : undefined);
+      expect(getFieldText(doc, F.line2ExceptionNumber)).toBe(exception);
+      expect(getFieldText(doc, F.line3)).toBe(terminalIllness ? undefined : "9000");
+      expect(getFieldText(doc, F.line4)).toBe(terminalIllness ? undefined : "900");
+    }
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
 
 // ─── Fixture 1: Early distribution penalty (Part I) ─────────────────────
 

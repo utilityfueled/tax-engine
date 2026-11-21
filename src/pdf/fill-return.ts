@@ -931,9 +931,20 @@ export async function fillReturn(
     await savePacketPdf(doc5329, outputPath5329);
     filledForms.push(outputPath5329);
   }
-  if (source5329Owners.length === 0 && result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
+  const standalone5329 = source5329Owners.length === 0 ? result.form5329 : undefined;
+  const hasAdditionalTax5329 = standalone5329?.totalAdditionalTax.gt(0);
+  // Code 1 leaves a fully applicable Part I exception off the payer statement.
+  const hasUnreportedFullPensionException = standalone5329 && !hasAdditionalTax5329
+    && input.taxpayer.filingStatus !== "married_filing_jointly"
+    && standalone5329.line2.gt(0) && standalone5329.line2.eq(standalone5329.line1)
+    && Boolean(standalone5329.line2ExceptionNumber)
+    && input.form1099R?.some(form => form.distributionCode?.trim() === "1"
+      && form.accountHolder !== "spouse" && form.iraSepSimple === false
+      && !form.eligibleGovernmental457bPlan && form.taxableAmountNotDetermined !== true
+      && new Decimal(form.taxableAmount ?? "0").gt(0));
+  if (hasAdditionalTax5329 || hasUnreportedFullPensionException) {
     const f5329Path = join(blankFormsDir, "f5329.pdf");
-    const doc5329 = await fillForm5329(input, result, f5329Path, undefined, educationReview);
+    const doc5329 = await fillForm5329(input, result, f5329Path, hasAdditionalTax5329 ? undefined : "primary", educationReview);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, "f5329-filled.pdf");
     await savePacketPdf(doc5329, outputPath5329);
