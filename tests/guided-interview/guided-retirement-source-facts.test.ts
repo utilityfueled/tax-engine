@@ -158,7 +158,7 @@ it("reopens confirmed 2026 single-life pension facts without enabling the annual
     expect(calculateForm1099R(annual.form1099R, { taxYear: 2026 }).pensionTaxable.toFixed()).toBe(taxable);
   }
   for (const change of [
-    { sourceTaxYear: "2025" }, { distributionCode: "4" }, { taxableAmount: "0" }, { trumpAccount: true },
+    { sourceTaxYear: "2025" }, { distributionCode: "1" }, { distributionCode: "4" }, { taxableAmount: "0" }, { trumpAccount: true },
     { simplifiedMethod: { ...worksheet, statementCoversContractConfirmed: null } },
     { simplifiedMethod: { ...worksheet, priorRecovered: "" } },
     { simplifiedMethod: { ...worksheet, priorRecovered: "0.01" } },
@@ -167,6 +167,9 @@ it("reopens confirmed 2026 single-life pension facts without enabling the annual
   ]) {
     state.sectionData["income-retirement"].entries = [{ ...statement, ...change }];
     const unresolved = reopen(state);
+    if (change.distributionCode === "1") {
+      expect(unresolved.sectionData["income-retirement"]?.entries[0]?.distributionCode).toBe("1");
+    }
     expect(validateSection(unresolved, "income-retirement").status, JSON.stringify(change)).toBe("partial");
     expect(buildTaxInputFromGuidedData(unresolved)).toBeNull();
   }

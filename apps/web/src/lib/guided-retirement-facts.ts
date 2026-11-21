@@ -142,6 +142,8 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     const qualifiedLumpSum = isGuidedQualifiedLumpSum(entry);
     const qcdStatement = isGuidedQcdStatement(entry);
     const needsSimplifiedMethod = needsGuidedSimplifiedMethod(entry);
+    const earlyPension2026 = entry.sourceTaxYear === "2026" && code === "1"
+      && entry.isIraSepSimple === false && entry.taxableAmountNotDetermined === true;
     if (needsSimplifiedMethod) {
       const personal = basisContext?.personal;
       const dateOfBirth = entry.accountHolder === "spouse" ? personal?.spouse?.dateOfBirth : personal?.dateOfBirth;
@@ -152,8 +154,8 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
         if (simplifiedMethodPlans.has(plan)) fail("taxable-worksheet", "Reconcile multiple originals against this same annuity contract and recipient before calculating.");
         simplifiedMethodPlans.add(plan);
       }
-    } else if (entry.simplifiedMethod !== undefined) {
-      fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the 2025 or 2026 non-IRA Code 1 or 7 statement and its Box 2b answer.");
+    } else if (entry.simplifiedMethod !== undefined && !earlyPension2026) {
+      fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the original statement year, distribution code and Box 2b answer.");
     }
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
     else if (!qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
@@ -201,7 +203,8 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }
     if (entry.eligibleGovernmental457bPlan === false && hasEnteredAmount(entry.governmental457bTransferredTaxableAmount) && (amountError(entry.governmental457bTransferredTaxableAmount, "457(b) transferred amount") || !parseGuidedCurrency(entry.governmental457bTransferredTaxableAmount).isZero())) fail("457-transfer", "Reconcile saved 457(b) transferred funds with the answer that this is not a governmental 457(b) plan.");
     if (entry.isIraSepSimple === true && entry.militaryPensionOrSurvivorBenefit === true) fail("military-plan", "An IRA distribution is not a U.S. military pension or survivor benefit. Reconcile the actual source classification.");
-    if (entry.isIraSepSimple === false && entry.taxableAmountNotDetermined === true && !needsSimplifiedMethod && entry.simplifiedMethod === undefined) fail("taxable-worksheet", "A pension with taxable amount not determined needs the actual Simplified Method or General Rule worksheet; this ordinary route cannot use a guessed Box 2a.");
+    if (earlyPension2026) fail("taxable-worksheet", "Keep the original Code 1 and review the payment dates, any modified payment series and applicable early-distribution treatment before calculating this pension.");
+    else if (entry.isIraSepSimple === false && entry.taxableAmountNotDetermined === true && !needsSimplifiedMethod && entry.simplifiedMethod === undefined) fail("taxable-worksheet", "A pension with taxable amount not determined needs the actual Simplified Method or General Rule worksheet; this ordinary route cannot use a guessed Box 2a.");
     if (qualifiedLumpSum && entry.qualifiedLumpSumReporting === "ordinary_pension") {
       if (!amountError(entry.capitalGainIncluded, "Box 3") && !amountError(entry.taxableAmount, "Box 2a")
         && parseGuidedCurrency(entry.capitalGainIncluded).gt(parseGuidedCurrency(entry.taxableAmount))) {

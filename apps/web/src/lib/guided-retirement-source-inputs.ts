@@ -44,10 +44,10 @@ export function normalizeGuidedRetirementCode(value: string): string {
 }
 
 export function needsGuidedSimplifiedMethod(entry: RetirementEntryData): boolean {
-  return (entry.sourceTaxYear === '2025' || entry.sourceTaxYear === '2026')
-    && entry.isIraSepSimple === false
-    && ['1', '7'].includes(entry.distributionCode.trim())
-    && entry.taxableAmountNotDetermined === true;
+  if (entry.isIraSepSimple !== false || entry.taxableAmountNotDetermined !== true) return false;
+  const code = entry.distributionCode.trim();
+  return (entry.sourceTaxYear === '2025' && (code === '1' || code === '7'))
+    || (entry.sourceTaxYear === '2026' && code === '7');
 }
 
 export function simplifiedMethodPlanIdentifier(entry: RetirementEntryData): string {
