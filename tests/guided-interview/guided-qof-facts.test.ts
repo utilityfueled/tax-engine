@@ -1,7 +1,7 @@
 // Spec: spec/federal/qof-disposition-facts.yaml.
 import { expect, it } from "vitest";
-import { buildGuidedQofFacts, emptyQofInvestment, qofDispositionFactErrors, type QofDispositionData } from "@/lib/guided-qof-facts";
-import { initialFlowState, updateSectionData, type GuidedFlowState } from "@/lib/guided-interview-flow";
+import { buildGuidedQofFacts, emptyQofDispositionFacts, emptyQofInvestment, guidedQofDiscovery, qofDispositionFactErrors, type QofDispositionData } from "@/lib/guided-qof-facts";
+import { collectGuidedReviewIssues, getGuidedSectionRoute, initialFlowState, resumeInterviewAtSection, setInterviewTaxYear, updateSectionData, validateSection, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { investmentFactErrors, investmentRowsStarted, type InvestmentData } from "@/lib/guided-investment-facts";
 import { buildGuidedSyntheticDocuments, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
@@ -60,6 +60,150 @@ it("requires a QOF answer on a 2026 investment section", () => {
   expect(qofDispositionFactErrors({ sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false }, 2026)).toEqual({});
 });
 
+function wageOnlyQofInterview(year = 2026): GuidedFlowState {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+  state.taxYear = year;
+  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, sourceTaxYear: String(year), wages: "50000" }] };
+  return state;
+}
+
+it("asks about 2026 QOF gain on the wage-only route and opens details only for Yes", () => {
+  const state = wageOnlyQofInterview();
+  const sections = (current: GuidedFlowState) => getGuidedSectionRoute(current).map(section => section.id);
+  const qofIssues = (current: GuidedFlowState) => collectGuidedReviewIssues(current).filter(issue => /opportunity fund/i.test(issue.sectionLabel));
+  const no = updateSectionData(state, "review", { qof2026Disclosure: false });
+  const yes = updateSectionData(state, "review", { qof2026Disclosure: true });
+
+  expect(sections(state)).not.toContain("income-investments");
+  expect(qofIssues(state)).toMatchObject([{ sectionId: "personal-info", status: "needs-review" }]);
+  expect(buildTaxInputFromGuidedData(state)?.qofDispositionFacts).toBeUndefined();
+  expect(sections(no)).toEqual(sections(state));
+  expect(validateSection(no, "personal-info").status).toBe("complete");
+  expect(qofIssues(no)).toEqual([]);
+  expect(buildTaxInputFromGuidedData(no)?.qofDispositionFacts).toBeUndefined();
+  expect(sections(yes)).toContain("income-investments");
+  expect(validateSection(yes, "income-investments").fieldErrors).toHaveProperty("qofDisposition");
+  expect(buildTaxInputFromGuidedData(yes)).toBeNull();
+  const switchedBack = setInterviewTaxYear(yes, 2025);
+  expect(sections(switchedBack)).toEqual(sections(state));
+  expect(qofIssues(switchedBack)).toEqual([]);
+  expect(sections(setInterviewTaxYear(switchedBack, 2026))).toContain("income-investments");
+});
+
+it("preserves saved 2026 QOF originals and rejects conflicting discovery answers", () => {
+  const state = wageOnlyQofInterview();
+  const facts: QofDispositionData = {
+    sourceTaxYear: "2026", sourceReference: "Fictional prior Form 8997 and current fund statement", sourceFactsConfirmed: true,
+    allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: true,
+    investments: [{
+      ...emptyQofInvestment, sourceId: "qof-held", sourceReference: "Fictional fund records", sourceFactsConfirmed: true,
+      qofEin: "98-7654321", description: "Fictional corporation shares", investmentDate: "2021-06-30",
+      interestType: "corporation", gainCharacter: "long_term", originalDeferredGain: "100000", remainingDeferredGain: "100000",
+      event: "december_31_2026", eventDate: "2026-12-31", entireInvestment: true, noSpecialGainCode: true, fairMarketValue: "120000",
+    }],
+  };
+  state.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [], brokerageEntries: [], qofDispositionFacts: facts };
+  const current = buildGuidedQofFacts(facts, 2026);
+  const explicitYes = updateSectionData(state, "review", { qof2026Disclosure: true });
+  const conflictingNo = updateSectionData(state, "review", { qof2026Disclosure: false });
+
+  for (const saved of [state, explicitYes]) {
+    expect(getGuidedSectionRoute(saved).map(section => section.id)).toContain("income-investments");
+    expect(validateSection(saved, "income-investments").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(saved)?.qofDispositionFacts).toEqual(current);
+  }
+  expect(getGuidedSectionRoute(conflictingNo).map(section => section.id)).toContain("income-investments");
+  expect(validateSection(conflictingNo, "income-investments").fieldErrors).toHaveProperty("qofDisposition");
+  expect(buildTaxInputFromGuidedData(conflictingNo)).toBeNull();
+  expect(conflictingNo.sectionData["income-investments"]?.qofDispositionFacts).toEqual(facts);
+
+  const legacy = structuredClone(state);
+  Reflect.deleteProperty(legacy.sectionData["income-investments"]!.qofDispositionFacts!, "sourceTaxYear");
+  expect(getGuidedSectionRoute(legacy).map(section => section.id)).toContain("income-investments");
+  expect(validateSection(legacy, "income-investments").fieldErrors.qofDisposition).toMatch(/source year/);
+  expect(buildTaxInputFromGuidedData(legacy)).toBeNull();
+});
+
+it("builds ordinary 2026 wage and interest sources after a No disclosure", () => {
+  const state = wageOnlyQofInterview();
+  state.segmentation.incomeTypes.push("investments");
+  state.sectionData["income-investments"] = {
+    interestEntries: [{ ...completeInterestSource, sourceTaxYear: "2026", interestIncome: "25" }], dividendEntries: [], brokerageEntries: [],
+  };
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+
+  const no = updateSectionData(state, "review", { qof2026Disclosure: false });
+  expect(buildTaxInputFromGuidedData(no)).toMatchObject({
+    w2s: [{ wages: "50000" }], form1099Int: [{ interestIncome: "25" }],
+  });
+  expect(buildTaxInputFromGuidedData(no)?.qofDispositionFacts).toBeUndefined();
+});
+
+it("keeps a prior-year QOF worksheet bound to its original year", () => {
+  const prior = wageOnlyQofInterview(2025);
+  const facts: QofDispositionData = { sourceTaxYear: "2025", sourceReference: "Fictional 2025 investment records",
+    sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false };
+  prior.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [], brokerageEntries: [], qofDispositionFacts: facts };
+  expect(buildTaxInputFromGuidedData(prior)?.qofDispositionFacts).toEqual(buildGuidedQofFacts(facts, 2025));
+
+  const current = wageOnlyQofInterview();
+  current.sectionData["income-investments"] = structuredClone(prior.sectionData["income-investments"]);
+  expect(guidedQofDiscovery(current).answer).toBeNull();
+  const no = updateSectionData(current, "review", { qof2026Disclosure: false });
+  expect(getGuidedSectionRoute(no).map(section => section.id)).toContain("income-investments");
+  const issue = collectGuidedReviewIssues(no).find(item => item.sectionLabel === "Qualified Opportunity Fund investments");
+  expect(issue).toMatchObject({ sectionId: "income-investments", message: expect.stringMatching(/2026.*remove/i) });
+  const resumed = resumeInterviewAtSection(no, "income-investments");
+  expect(getGuidedSectionRoute(resumed)[resumed.currentSectionIndex].id).toBe("income-investments");
+  expect(validateSection(no, "income-investments").fieldErrors.qofDisposition).toMatch(/year/);
+  expect(buildTaxInputFromGuidedData(no)).toBeNull();
+  expect(no.sectionData["income-investments"]?.qofDispositionFacts).toEqual(facts);
+
+  const investment = no.sectionData["income-investments"]!;
+  const corrected = updateSectionData(no, "income-investments", { ...investment, qofDispositionFacts: {
+    ...facts, sourceTaxYear: "2026", sourceReference: "Fictional 2026 investment records", deferredGainHeldAtYearEnd: false,
+  } });
+  const updatedFacts = corrected.sectionData["income-investments"]!.qofDispositionFacts!;
+  expect(updatedFacts.sourceFactsConfirmed).toBeNull();
+  expect(getGuidedSectionRoute(corrected).map(section => section.id)).toContain("income-investments");
+  expect(buildTaxInputFromGuidedData(corrected)).toBeNull();
+  const confirmed = updateSectionData(corrected, "income-investments", { ...investment, qofDispositionFacts: { ...updatedFacts, sourceFactsConfirmed: true } });
+  expect(buildTaxInputFromGuidedData(confirmed)?.qofDispositionFacts).toMatchObject({ sourceTaxYear: 2026, deferredGainHeldAtYearEnd: false });
+  expect(getGuidedSectionRoute(confirmed).map(section => section.id)).not.toContain("income-investments");
+
+  const removed = updateSectionData(resumed, "income-investments", { ...investment, qofDispositionFacts: undefined });
+  expect(getGuidedSectionRoute(removed).map(section => section.id)).not.toContain("income-investments");
+  expect(collectGuidedReviewIssues(removed)).not.toContainEqual(expect.objectContaining({ sectionLabel: "Qualified Opportunity Fund investments" }));
+  expect(buildTaxInputFromGuidedData(removed)).toMatchObject({ w2s: [{ wages: "50000" }] });
+  expect(buildTaxInputFromGuidedData(removed)?.qofDispositionFacts).toBeUndefined();
+
+  const returned = setInterviewTaxYear(confirmed, 2025);
+  returned.sectionData["income-w2"] = prior.sectionData["income-w2"];
+  expect(guidedQofDiscovery(returned).answer).toBeNull();
+  expect(getGuidedSectionRoute(returned).map(section => section.id)).toContain("income-investments");
+  expect(collectGuidedReviewIssues(returned)).toContainEqual(expect.objectContaining({ sectionId: "income-investments", message: expect.stringMatching(/2025.*remove/i) }));
+  expect(buildTaxInputFromGuidedData(returned)).toBeNull();
+  const restoredPrior = updateSectionData(returned, "income-investments", { ...investment, qofDispositionFacts: facts });
+  const priorDraft = restoredPrior.sectionData["income-investments"]!.qofDispositionFacts!;
+  const reconfirmed = updateSectionData(restoredPrior, "income-investments", { ...investment, qofDispositionFacts: { ...priorDraft, sourceFactsConfirmed: true } });
+  expect(buildTaxInputFromGuidedData(reconfirmed)?.qofDispositionFacts).toEqual(buildGuidedQofFacts(facts, 2025));
+});
+
+it("keeps an incomplete QOF worksheet reachable after changing a 2026 Yes to No", () => {
+  const yes = updateSectionData(wageOnlyQofInterview(), "review", { qof2026Disclosure: true });
+  const investment = { interestEntries: [], dividendEntries: [], brokerageEntries: [], qofDispositionFacts: { ...emptyQofDispositionFacts, sourceTaxYear: "2026" } };
+  const draft = updateSectionData(yes, "income-investments", investment);
+  const no = updateSectionData(draft, "review", { qof2026Disclosure: false });
+
+  expect(getGuidedSectionRoute(no).map(section => section.id)).toContain("income-investments");
+  expect(collectGuidedReviewIssues(no)).toContainEqual(expect.objectContaining({ sectionId: "income-investments", message: expect.stringMatching(/remove/i) }));
+  expect(buildTaxInputFromGuidedData(no)).toBeNull();
+
+  const removed = updateSectionData(no, "income-investments", { ...investment, qofDispositionFacts: undefined });
+  expect(getGuidedSectionRoute(removed).map(section => section.id)).not.toContain("income-investments");
+  expect(buildTaxInputFromGuidedData(removed)).toMatchObject({ w2s: [{ wages: "50000" }] });
+});
+
 it("asks 2026 returns for QOF facts only once a row is started", () => {
   const blank = { interestEntries: [{}], dividendEntries: [], brokerageEntries: [] } as unknown as InvestmentData;
   const started = { ...blank, interestEntries: [{ payer: "Actual bank", taxableInterest: "10" }] } as unknown as InvestmentData;
@@ -83,5 +227,8 @@ it("keeps 2026 source documents supported once QOF is answered", () => {
   const answered = { sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false, investments: [] };
   expect(coverage(stateWith(answered))).toEqual(["supported", "supported", "supported"]);
   expect(coverage(stateWith())).toEqual(["partially-supported", "partially-supported", "partially-supported"]);
+  const discoveryNo = updateSectionData(stateWith(), "review", { qof2026Disclosure: false });
+  expect(coverage(discoveryNo)).toEqual(["supported", "supported", "supported"]);
+  expect(validateSection(discoveryNo, "income-investments").fieldErrors).not.toHaveProperty("qofDisposition");
 });
 

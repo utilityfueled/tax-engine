@@ -58,10 +58,10 @@ export function investmentRowsStarted(data: InvestmentData): boolean {
     || Boolean(data.oidEntries?.some(isStartedOid)) || Boolean(data.digitalAssetEntries?.some(isStartedDigitalAsset));
 }
 
-export function investmentFactErrors(data: InvestmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, stateCode?: string | null, personal?: PersonalInfoData): Record<string, string> {
+export function investmentFactErrors(data: InvestmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, stateCode?: string | null, personal?: PersonalInfoData, qofNotApplicable = false): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!data) return errors;
-  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear, investmentRowsStarted(data)));
+  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear, !qofNotApplicable && investmentRowsStarted(data)));
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
   Object.assign(errors, digitalAssetFactErrors(data.digitalAssetEntries, filingStatus, taxYear, personal, data.brokerageEntries, stateData, stateCode, { interestEntries: data.interestEntries, oidEntries: data.oidEntries, filingStatus, taxYear, stateCode }));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));

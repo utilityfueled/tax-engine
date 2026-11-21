@@ -84,12 +84,15 @@ import {
   updateSectionData,
 } from "@/lib/guided-interview-flow";
 import { updateGuidedScheduleBPartThree } from "@/lib/guided-schedule-b-part-three";
+import { guidedQofDiscovery, type QofDispositionData } from "@/lib/guided-qof-facts";
 import { getBrowserStorage, requireBrowserStorage } from "@/lib/browser-storage";
 import { SegmentationScreen } from "./segmentation-screen";
 import { SectionPersonalInfo } from "./section-personal-info";
 import { SectionW2Income } from "./section-w2-income";
 import { SectionSelfEmployment } from "./section-self-employment";
 import { SectionInvestmentIncome } from "./section-investment-income";
+import { BooleanFact } from "./fact-fields";
+import { QofDispositionDetails } from "./qof-disposition-details";
 import { SectionRentalIncome } from "./section-rental-income";
 import { SectionRetirementIncome } from "./section-retirement-income";
 import { SectionSocialSecurity } from "./section-social-security";
@@ -508,13 +511,20 @@ function SectionContent({
   switch (sectionId) {
     case "personal-info":
       return (
-        <SectionPersonalInfo
-          data={getSectionData(state, "personal-info")}
-          filingStatus={state.segmentation.filingStatus}
-          onDataChange={(data: PersonalInfoData) =>
-            onStateChange(updateSectionData(state, "personal-info", data))
-          }
-        />
+        <>
+          <SectionPersonalInfo
+            data={getSectionData(state, "personal-info")}
+            filingStatus={state.segmentation.filingStatus}
+            onDataChange={(data: PersonalInfoData) =>
+              onStateChange(updateSectionData(state, "personal-info", data))
+            }
+          />
+          {state.taxYear === 2026 && <BooleanFact
+            label="Did you dispose of a Qualified Opportunity Fund investment in 2026 or hold deferred gain on December 31, 2026?"
+            value={guidedQofDiscovery(state).answer}
+            onChange={qof2026Disclosure => onStateChange(updateSectionData(state, "review", { ...state.sectionData.review, qof2026Disclosure }))}
+          />}
+        </>
       );
     case "income-w2": {
       const w2Data = getSectionData(state, "income-w2");
@@ -566,6 +576,13 @@ function SectionContent({
     case "income-investments": {
       const investData = getSectionData(state, "income-investments");
       const savedSources = investData ?? { interestEntries: [], dividendEntries: [], brokerageEntries: [] };
+      const discovery = guidedQofDiscovery(state);
+      const onQofDispositionFactsChange = (qofDispositionFacts: QofDispositionData | undefined) => {
+        onStateChange(updateSectionData(state, "income-investments", { ...savedSources, qofDispositionFacts }));
+      };
+      if (discovery.needsDetails && !state.segmentation.incomeTypes.includes("investments")) {
+        return <QofDispositionDetails data={investData?.qofDispositionFacts} onChange={onQofDispositionFactsChange} />;
+      }
       const interestEntries = investData?.interestEntries ?? [emptyInterestEntry];
       const dividendEntries = investData?.dividendEntries ?? [emptyDividendEntry];
       const brokerageEntries = investData?.brokerageEntries ?? [emptyBrokerageEntry];
@@ -586,7 +603,7 @@ function SectionContent({
           section1202Sources={investData?.section1202Sources}
           onSection1202SourcesChange={section1202Sources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, section1202Sources }))}
           onScheduleDSourcesChange={scheduleDSources => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, scheduleDSources }))}
-          onQofDispositionFactsChange={qofDispositionFacts => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, qofDispositionFacts }))}
+          onQofDispositionFactsChange={discovery.answer === false && !investData?.qofDispositionFacts ? undefined : onQofDispositionFactsChange}
           onChildElectionsChange={childElections => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, childElections }))}
           stateCode={state.segmentation.stateCode}
           onOidEntriesChange={next => onStateChange(updateSectionData(state, "income-investments", { ...savedSources, oidEntries: next }))}

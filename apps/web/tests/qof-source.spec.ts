@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { taxpayerFacts2025 } from './guided-fixtures';
+import { fillRequiredW2Facts, taxpayerFacts2025 } from './guided-fixtures';
+
+const qof2026Question = 'Did you dispose of a Qualified Opportunity Fund investment in 2026 or hold deferred gain on December 31, 2026?';
 
 for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
   test(`retains actual QOF answers after reload at ${viewport.width}px`, async ({ page }, testInfo) => {
@@ -37,6 +39,51 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await page.getByRole('heading', { name: 'Qualified opportunity fund investments', exact: true }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: testInfo.outputPath(`qof-source-${viewport.width}.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    await page.getByRole('combobox', { name: 'Tax year for this interview', exact: true }).selectOption('2026');
+    await page.evaluate(({ id, facts }) => {
+      localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({
+        factsVersion: 2,
+        phase: 'interview',
+        taxYear: 2026,
+        currentSectionIndex: 0,
+        completedSections: [],
+        segmentation: { filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null },
+        sectionData: { 'personal-info': facts },
+      }));
+    }, { id, facts: taxpayerFacts2025 });
+    await page.reload();
+
+    const disclosure = page.getByRole('combobox', { name: qof2026Question, exact: true });
+    const investments = page.locator('.guided-progress-steps').getByRole('button', { name: 'Investments', exact: true });
+    await expect(disclosure).toBeVisible();
+    await expect(disclosure).toHaveValue('');
+    await expect(investments).toHaveCount(0);
+    await disclosure.selectOption('false');
+    await expect(investments).toHaveCount(0);
+    await expect.poll(() => page.evaluate(id => {
+      const saved = JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}');
+      return saved.sectionData?.review?.qof2026Disclosure;
+    }, id)).toBe(false);
+    await page.reload();
+    await expect(disclosure).toHaveValue('false');
+    await disclosure.selectOption('true');
+    await expect(investments).toHaveCount(1);
+    await expect.poll(() => page.evaluate(id => {
+      const saved = JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}');
+      return saved.sectionData?.review?.qof2026Disclosure;
+    }, id)).toBe(true);
+    await page.reload();
+    await expect(disclosure).toHaveValue('true');
+    await expect(investments).toHaveCount(1);
+    await expect(page.getByText(/2026 rules and filing forms are not yet qualified/i)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await page.getByRole('textbox', { name: /^Box 1 — Wages/ }).fill('50000');
+    await fillRequiredW2Facts(page);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Qualified opportunity fund investments', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add actual QOF disposition answer', exact: true })).toBeVisible();
     expect(bodies.join('\n')).not.toContain('synthetic-private-QOF-review-reference'); expect(bodies.join('\n')).not.toContain('900-70-0001');
   });
 }

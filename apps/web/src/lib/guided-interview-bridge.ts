@@ -18,7 +18,7 @@ import type { z } from "zod";
 import type { TaxYearInputSchema, Form1099Misc } from "@/models/inputs";
 import { buildGuidedCryptoDonations, cryptoDonationFactErrors } from './guided-crypto-donations';
 import { buildGuidedRoyaltySources, royaltySourceFactErrors } from "./guided-royalty-sources";
-import { buildGuidedQofFacts } from "./guided-qof-facts";
+import { buildGuidedQofFacts, guidedQofDiscovery } from "./guided-qof-facts";
 import { buildGuidedScheduleDInputs } from "./guided-schedule-d-sources";
 import { buildGuidedQsbsSources } from "./guided-qsbs-sources";
 import { buildGuidedInvestmentInterestInputs, investmentInterestFactErrors } from "./guided-investment-interest";
@@ -97,7 +97,7 @@ import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactError
 import { isStartedRetirement } from "./guided-retirement-facts";
 import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
-import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData } from "./guided-investment-facts";
+import { investmentFactErrors, isStartedInvestment, type InvestmentData, type InvestmentSourceData } from "./guided-investment-facts";
 import { buildOidInputs, buildPaOidSources, isStartedOid, oidFactErrors } from "./guided-oid-facts";
 import { buildDigitalAssetInputs, digitalAssetFactErrors, isStartedDigitalAsset } from "./guided-digital-asset-facts";
 import { buildGuidedScheduleBPartThree } from "./guided-schedule-b-part-three";
@@ -777,6 +777,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
 
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;
   if (requiresLlcYearReview(state)) return null;
+  const qofDiscovery = guidedQofDiscovery(state);
+  if (qofDiscovery.detailIssue) return null;
 
   const personalInfo = sectionData["personal-info"] as PersonalInfoData | undefined;
   if (!personalInfo?.dateOfBirth || Object.keys(personalFactErrors(personalInfo, segmentation.filingStatus, state.taxYear)).length) return null;
@@ -807,7 +809,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(schedule1AFactErrors(state));
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
     assertKnownFacts(combatPayElectionErrors(w2Data?.entries, w2Data?.combatPayElection, segmentation.filingStatus));
-    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
+    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo, qofDiscovery.answer === false));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
     standardMileage = readGuidedBusinessMileage(seData, state);
     professionalWagering = seData && readGuidedProfessionalWagering(seData, state);
@@ -1304,6 +1306,11 @@ export function buildGuidedSyntheticDocuments(
   }
 
   const investData = state.sectionData["income-investments"];
+  const discovery = guidedQofDiscovery(state);
+  const investmentCoverage = (data: InvestmentData) => {
+    const errors = investmentFactErrors(data, state.segmentation.filingStatus, state.taxYear, undefined, undefined, undefined, discovery.answer === false);
+    return discovery.detailIssue || Object.keys(errors).length ? "partially-supported" : "supported";
+  };
 
   if (investData?.oidEntries?.some(isStartedOid)) {
     docs.push({ id: "guided:1099-oid", name: "Guided Interview — 1099-OID", size: 0, uploadedAt: now,
@@ -1324,7 +1331,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-int",
-      coverage: Object.keys(investmentFactErrors({ qofDispositionFacts: investData.qofDispositionFacts, interestEntries: investData.interestEntries, dividendEntries: [], brokerageEntries: [] }, state.segmentation.filingStatus, state.taxYear)).length ? "partially-supported" : "supported",
+      coverage: investmentCoverage({ qofDispositionFacts: investData.qofDispositionFacts, interestEntries: investData.interestEntries, dividendEntries: [], brokerageEntries: [] }),
       label: "1099-INT (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
@@ -1339,7 +1346,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-div",
-      coverage: Object.keys(investmentFactErrors({ qofDispositionFacts: investData.qofDispositionFacts, interestEntries: [], dividendEntries: investData.dividendEntries, brokerageEntries: [] }, state.segmentation.filingStatus, state.taxYear)).length ? "partially-supported" : "supported",
+      coverage: investmentCoverage({ qofDispositionFacts: investData.qofDispositionFacts, interestEntries: [], dividendEntries: investData.dividendEntries, brokerageEntries: [] }),
       label: "1099-DIV (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,
@@ -1354,7 +1361,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-b",
-      coverage: Object.keys(investmentFactErrors({ qofDispositionFacts: investData.qofDispositionFacts, interestEntries: [], dividendEntries: [], brokerageEntries: investData.brokerageEntries }, state.segmentation.filingStatus, state.taxYear)).length ? "partially-supported" : "supported",
+      coverage: investmentCoverage({ qofDispositionFacts: investData.qofDispositionFacts, interestEntries: [], dividendEntries: [], brokerageEntries: investData.brokerageEntries }),
       label: "1099-B (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

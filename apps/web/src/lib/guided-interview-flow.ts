@@ -80,6 +80,7 @@ import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { combatPayElectionErrors, isStartedW2, retainCombatPayElection, w2FactErrors } from "./guided-w2-facts";
 import { investmentFactErrors, investmentRowsStarted, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
+import { guidedQofDiscovery, qofDispositionFactErrors } from "./guided-qof-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { clearWageringConfirmations, professionalWageringDraftSchema } from "./guided-professional-wagering";
 import { businessMileageDraftSchema, businessMileageOriginals, clearBusinessMileageConfirmations } from "./guided-business-mileage";
@@ -490,7 +491,7 @@ const incomeTypeToSection: Record<IncomeType, InterviewSectionId> = {
   "unemployment": "income-unemployment",
 };
 
-export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMovingRecords = false): InterviewSectionDefinition[] {
+export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMovingRecords = false, needsQofInvestments = false): InterviewSectionDefinition[] {
   const sections: InterviewSectionDefinition[] = [];
 
   // Personal info is always included
@@ -502,6 +503,11 @@ export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMov
     const sectionId = incomeTypeToSection[incomeType];
     const section = allSections.find((s) => s.id === sectionId);
     if (section) sections.push(section);
+  }
+
+  if (needsQofInvestments && !segmentation.incomeTypes.includes("investments")) {
+    const investments = allSections.find(section => section.id === "income-investments");
+    if (investments) sections.push(investments);
   }
 
   // Adjustments — include when the taxpayer selects a supported source route.
@@ -1426,7 +1432,7 @@ export interface SectionDataMap {
   "credits"?: CreditsData;
   "other-taxes"?: OtherTaxesData;
   "payments"?: PaymentData;
-  "review"?: { scheduleBPartThreeByYear?: Partial<Record<2025 | 2026, ScheduleBPartThreeDraft>> };
+  "review"?: { scheduleBPartThreeByYear?: Partial<Record<2025 | 2026, ScheduleBPartThreeDraft>>; qof2026Disclosure?: boolean | null };
   "state-return"?: StateReturnData;
   [key: string]: unknown;
 }
@@ -1545,7 +1551,7 @@ export interface FlowProgress {
 
 export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionDefinition[] {
   const adjustments = state.sectionData.adjustments;
-  return buildSectionRoute(state.segmentation, adjustments?.movingExpenses !== undefined || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state));
+  return buildSectionRoute(state.segmentation, adjustments?.movingExpenses !== undefined || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state), guidedQofDiscovery(state).needsDetails);
 }
 
 export type VisitedSectionStatus = "not-started" | "complete" | "skipped" | "needs-review";
@@ -2477,9 +2483,10 @@ function validateInvestmentSection(
   stateData?: StateReturnData,
   stateCode?: string | null,
   personal?: PersonalInfoData,
+  qofNotApplicable = false,
 ): SectionValidationResult {
   if (!data || (!investmentRowsStarted(data) && !data.childElections?.length && !data.scheduleDSources && !data.qofDispositionFacts && !data.section1202Sources)) return EMPTY_SECTION("investment info");
-  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode, personal);
+  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode, personal, qofNotApplicable);
   if (Object.keys(errors).length) return { status: "partial", message: "Complete the actual investment source amounts, ownership and classifications.", fieldErrors: errors, allowSkip: true };
   return VALID_SECTION;
 }
@@ -2635,8 +2642,11 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus, state.taxYear, state);
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear, state);
-    case "income-investments":
-      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"));
+    case "income-investments": {
+      const discovery = guidedQofDiscovery(state);
+      if (discovery.detailIssue) return validateRequiredFacts({ qofDisposition: discovery.detailIssue });
+      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"), discovery.answer === false);
+    }
     case "income-royalties":
       return validateRequiredFacts(royaltySourceFactErrors(state, true));
     case "income-rental":
@@ -2806,6 +2816,21 @@ export function collectGuidedReviewIssues(state: GuidedFlowState): GuidedReviewI
       message: missingAnswer,
       actionLabel: "Review foreign accounts and trusts",
     });
+  }
+  const discovery = guidedQofDiscovery(state);
+  if (state.taxYear === 2026 || discovery.worksheetIssue) {
+    const message = discovery.detailIssue ?? (discovery.answer === null
+      ? "Answer the Qualified Opportunity Fund question in Personal information."
+      : discovery.needsDetails ? qofDispositionFactErrors(state.sectionData["income-investments"]?.qofDispositionFacts, 2026).qofDisposition : undefined);
+    if (message) {
+      issues.push({
+        sectionId: discovery.worksheetIssue || discovery.answer === true ? "income-investments" : "personal-info",
+        sectionLabel: "Qualified Opportunity Fund investments",
+        status: "needs-review",
+        message,
+        actionLabel: discovery.worksheetIssue ? "Correct or remove the QOF worksheet" : "Review Qualified Opportunity Fund investments",
+      });
+    }
   }
   return issues;
 }

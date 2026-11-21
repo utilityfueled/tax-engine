@@ -33,9 +33,8 @@ notes: |
   reach a 10-year hold by 2026, and later return years stay closed here.
   State treatment is not determined: Pennsylvania, Ohio and guided state previews
   reject or leave the state result blank. Conforming states need their own method.
-  A 2026 guided investment section requires a QOF answer, because a return with no QOF
-  record cannot show that no inclusion applies. A return with no investment section,
-  and direct API input, carry no such prompt, so this needs review before 2026 opens.
+  The 2026 guided Personal information section asks all filers about an actual QOF
+  disposition or held deferred gain. Direct API input still carries no such prompt.
   Not reviewed here: section1411 treatment of gain deferred from non-NII activity, and
   whether a February29 investment reaches a full year on February28.
 lines:
@@ -125,8 +124,14 @@ lines:
     irsRef: "Form8801 PartI capital-gain branch"
     testRef: "tests/engine/federal-qof-inclusion.test.ts::treats QOF capital as capital in the exclusion-only credit guard"
   - line: "guided-2026-answer"
-    description: "Require a QOF answer on a 2026 investment section"
-    formula: "A started 2026 investment section with no QOF record reports an error. 2025 does not. An answered record clears it."
-    irsRef: "IRC1400Z-2(b)(1)(B)"
-    testRef: "tests/guided-interview/guided-qof-facts.test.ts::requires a QOF answer on a 2026 investment section"
+    description: "Ask every guided 2026 taxpayer about QOF dispositions and held deferred gain"
+    formula: "Ask on Personal information whether the taxpayer disposed of a QOF investment during 2026 or held deferred gain on December 31, 2026. An unanswered prompt remains unresolved. Yes opens the existing investment source details and requires consistent complete originals. An existing positive 2026 record still opens those details. No completes the inquiry without inventing source facts. In either supported year, a retained incomplete or mismatched worksheet that prevents the bridge from building inputs keeps the details and a review action visible until the taxpayer confirms current originals or removes the worksheet. A worksheet from another year supplies no current answer. Earlier return years have no new discovery prompt."
+    irsRef: "IRS Notice 2026-40 section 4.01, https://www.irs.gov/pub/irs-drop/n-26-40.pdf#page=9"
+    testRef: "tests/guided-interview/guided-qof-facts.test.ts::asks about 2026 QOF gain on the wage-only route and opens details only for Yes"
+    testRefs:
+      - "tests/guided-interview/guided-qof-facts.test.ts::preserves saved 2026 QOF originals and rejects conflicting discovery answers"
+      - "tests/guided-interview/guided-qof-facts.test.ts::builds ordinary 2026 wage and interest sources after a No disclosure"
+      - "tests/guided-interview/guided-qof-facts.test.ts::keeps a prior-year QOF worksheet bound to its original year"
+      - "tests/guided-interview/guided-qof-facts.test.ts::keeps an incomplete QOF worksheet reachable after changing a 2026 Yes to No"
+      - "tests/guided-interview/guided-qof-facts.test.ts::requires a QOF answer on a 2026 investment section"
 
