@@ -26,6 +26,16 @@ The initial commit left the browser audit hashes stale. Commit `988805a6`
 binds both changed sources and passed the source audit against an exact
 archive and 27 overlay checks. [Initial CI](https://github.com/utilityfueled/tax-engine/actions/runs/44936646058).
 
+Commit `fda15418` applies the supplied-school check to 2025 canonical
+calculation as well. Complete school records provide the EINs on the 2025
+form even when the optional summary is omitted. An explicitly supplied
+summary must have a valid format and match a school. The added test rejected
+missing, contradictory and malformed identifiers after reproducing the gaps.
+The package passed 192 Form 8863 and guide checks, 27 overlay checks, eight
+full-batch manifest checks, both typechecks, scoped lint, the browser source
+audit and 6,216 federal spec references.
+[2025 Form 8863, page 2](https://www.irs.gov/pub/irs-prior/f8863--2025.pdf#page=2).
+
 ## November 21 Ohio school navigation and Linux timing evidence
 
 In `040196f8`, Ohio navigation uses the full school district validation
@@ -87,6 +97,18 @@ manifest checks, both typechecks, scoped lint, the browser source audit and
 3,488 state spec references passed. The duplicate work is established on
 both fixtures. The full Linux qualification is still open.
 [Baseline comparison on one Linux runner](https://github.com/utilityfueled/tax-engine/actions/runs/44935775424).
+
+All four managed local school cases passed with two workers, zero retries
+and the original 30-second case limit. Header entry took 1.424 to 1.528
+seconds on this host. The full unit suite on exact `2134c1bc` passed all
+29,934 tests with PostgreSQL 16.16, and its temporary database shut down
+normally. The older ARM64 run passed image smoke and isolated Compose
+upgrade and recovery. Its strict browser stage finished with 641 passes,
+nine failures and five original skips. The exact revised
+ARM64 and Web runs started separately and remain open.
+[Older ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44929369390/job/136933871759) ·
+[Revised ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44937275054) ·
+[Revised Web run](https://github.com/utilityfueled/tax-engine/actions/runs/44937172012).
 
 ## November 21 original claims in canonical mortgage worksheets
 
