@@ -9,7 +9,7 @@
 | Independent security/privacy review and advisory disposition | Deferred at owner direction. Completion still requires documented review of the exact artifacts and staging evidence, with accountable owners, remediation or evidence-backed acceptance and expiry. [Advisory ledger](upgrade-2026-advisory-refresh-20261114.md). |
 | Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
-| Strict Linux runtime verification | The exact `be98b7cd` managed run passed 648 cases with two RRTA inspection deadlines. The strict AMD64 job passed 639 cases with ten Ohio deadlines and one RRTA inspection deadline. The earlier native `0c29105f` ARM64 job passed 640 cases with ten Ohio deadlines. All retained five original skips. The strict jobs passed Compose recovery and cleanup. Complete verification at the original 30-second browser and four-second PDF limits. [Current managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506884) · [Current AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506948) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44853971077/job/136691659960). |
+| Strict Linux runtime verification | Managed Linux at `2d97913e` passed all 650 active cases with five original skips. The last completed strict `be98b7cd` AMD64 job passed 639 cases with ten Ohio deadlines and one RRTA inspection deadline. The earlier native `0c29105f` ARM64 job passed 640 with ten Ohio deadlines. Both retained the five skips and passed Compose recovery and cleanup. Complete strict verification at the original 30-second browser and four-second PDF limits. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644/job/136723364201) · [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44856080114/job/136698506948) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44853971077/job/136691659960). |
 | Current Stripe Sandbox checkout and credits | The configured Starter and Plus prices match the Viva La Tax Sandbox. The second authorized actor has a canceled Starter subscription and can choose a plan. The enabled test webhook points to an older Preview. Current evidence needs checkout, signed delivery to the verified revision and a scoped read of its database for the two authorized test accounts, exact event and Session. Positive credit-grant testing requires an isolated test path while the public purchase gate stays closed. [Preview evidence](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline). |
 
 The Form 8863 review also needs an independent worksheet for the joint-return
@@ -40,6 +40,17 @@ transition from Worksheet 2 to Worksheet 3 when line 5 falls below line 3.
 For the Worksheet 1 itemizer, verify assignment when line 2 stays at
 $2,700 and line 5 equals line 3, including the line 5 preferences and the
 $2,030 transfer.
+For the 2025 single-life Simplified Method expansion, independently
+derive the expected payment count by age, the eligible payment months,
+the net plan cost and cumulative recoverable basis, and the effect on
+Form 1040 line 5. Review Code 1 with no exception and Code 7, together
+with the December first-payment month control and blank original Box 2a.
+For the final 2026 Schedule EIC candidate, verify lines 1 through 6
+against IRS acceptance-test scenario 4 and independently check the
+seven-month line 6 convention, the death-year residence exception,
+and the distinction between no SSN and an untimely SSN.
+[Guided pension evidence](upgrade-2026-progress.md#2025-guided-simplified-method-pension-originals) ·
+[Schedule EIC candidate evidence](upgrade-2026-progress.md#final-2026-schedule-eic-original-child-projection).
 For Form 2441, derive Line A, Part II and the Schedule 3 transfer for the
 2025 separate filer with $3,000 of qualified expenses at $85,000 AGI and
 the guided filer with $40,000 of wages and $3,900 of qualified expenses.

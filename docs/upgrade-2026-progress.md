@@ -1,5 +1,87 @@
 # 2026 upgrade implementation evidence
 
+## Final 2026 Schedule EIC original child projection
+
+`fdc05d39` binds the private 2026 Schedule EIC candidate to confirmed
+claimant and child originals. The reopened review PDF for IRS scenario
+4 showed the documented 2018 daughter and 2020 son, 12 months each,
+both age checkboxes blank and an empty third child column. The output
+omits SSNs. It requires measured residence and known death status,
+rejects days and months that conflict, and reserves `Died` for a
+qualifying documented live birth with an original empty SSN and
+confirmation that none was issued. The independent engineering recheck
+reproduced the rejection cases and the 12-month birth/death exception.
+[Final IRS Schedule EIC](https://www.irs.gov/pub/irs-pdf/f1040sei.pdf) ·
+[IRS ATS scenario 4](https://www.irs.gov/pub/irs-efile/1040-mef-ats-scenario-4-09222026.pdf#page=16).
+
+The exact archive passed 75 focused tests, 9,743 tracked spec
+references, type checking, the inventory check and 35 browser timing
+contracts. The broader implementation suite passed 172 tests. The
+candidate remains private, with public review and filing still gated.
+The combined exact PostgreSQL-backed unit and coverage runs each passed
+29,731 tests in 2,173 files. Branch coverage was 88.30% (86,757 of
+98,250), and both temporary databases stopped normally. Contract and
+web type checks, the TypeScript and webpack web builds, and full lint
+passed. Lint reported zero errors and 12,126 warnings.
+Exact application workflows track [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44867594762),
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44867594520)
+and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44867594618).
+
+## 2025 guided Simplified Method pension originals
+
+`78ba9b44` collects the original blank Box 2a and checked Box 2b for
+supported 2025 non-IRA Code 1 and 7 single-life pensions. It requires
+the actual qualified contract, starting date and age, net cost, months
+paid and all basis that could have been recovered before 2025. A
+December 2025 start accepts one payment month. The fixtures produce
+$6,000 gross, $4,800 taxable and $125 withheld. The Code 1 fixture
+also computes $480 of additional tax after confirming no exception
+worksheet is needed. Mixed payments, missing facts and conflicting
+originals stop calculation. Qualified human review remains open.
+[IRS Publication 575](https://www.irs.gov/publications/p575).
+
+The isolated archive passed 2,114 focused tests, all three type checks,
+the webpack production web build, 9,742 tracked spec references, the
+inventory check and 35 browser timing contracts. The broader
+implementation suite passed 2,613 tests.
+The push used the verified Preview-only production guard.
+
+## 2025 Schedule B review payer continuations
+
+`70b3fea9` carries ordinary interest and dividend payers beyond the
+2025 Schedule B template's 14 and 15 rows onto separate continuation
+pages in the review PDF. The official first page keeps the full
+calculated totals. The continuation pages preserve payer order and
+omit SSNs, and the Form 8814 capacity rejection still occurs before
+writing an export. Tests inspected saved PDF bytes for all 54 overflow
+rows and exercised the exact capacity, one-line overflow and long
+names. Existing PDF fonts still require WinAnsi-compatible names.
+[2025 IRS Schedule B instructions](https://www.irs.gov/pub/irs-prior/i1040sb--2025.pdf).
+
+The isolated archive passed 166 focused tests, 9,741 tracked spec
+references, type checking, the inventory check, and all 35 unchanged
+browser timing contracts. The push used the verified Preview-only
+production guard.
+
+## 2026 IRS acceptance worksheet and final employer coverage sources
+
+`c27939d5` pins the independent IRS MeF worked example for the 2026
+draft Schedule 3-A. Scenario 14 puts $4,971 of earned income credit and
+$2,377 of additional child tax credit on Form 1040. With zero applicable
+tax and the example's positive benefit answers, Schedule 3-A line 6
+shows $7,348, line 8 and Form 1040 line 32b show zero, and line 32c
+retains $7,348. The isolated calculation matched all printed numeric
+worksheet values and the transfer. It passed 45 focused tests and all
+9,740 tracked spec references, together with the inventory check.
+Filing, guided intake and live computation remain gated.
+[IRS ATS scenario 14](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf#page=4).
+
+The final 2026 Form 1095-C and its instructions are identified and hashed
+in the official source ledger. They can support confirmed employer
+coverage facts, with household affordability and premium tax credit
+eligibility evaluated separately.
+[Employer coverage source evidence](upgrade-2026-official-source-refresh-20261117-continuation.md#november-20-final-2026-employer-coverage-statement).
+
 ## 2025 Form 8615 early withdrawal penalty reconciliation
 
 `2d97913e` verifies Form 8615 line 1 from actual Form 1040 total
@@ -20,6 +102,18 @@ human tax review remain open.
 
 The exact PostgreSQL-backed coverage run passed 29,717 tests in 2,173
 files at 88.29% branch coverage. The temporary database stopped normally.
+The separately invoked full unit command also passed all 29,717 tests,
+with a normal PostgreSQL shutdown. Contract type checking passed. Full
+lint had zero errors and 12,126 warnings.
+The separate exact managed macOS browser run passed all 650 active
+cases, with five original skips and zero retries at the original
+deadlines. The read-only source archive needed the documented
+`pnpm sample-docs:fetch` prerequisite to restore the 15 ignored
+official sample PDFs. The launcher and managed web process closed
+successfully. Managed Linux independently passed the same 650 active
+cases and five original skips. Strict Linux container verification is
+tracked separately.
+[Managed Linux browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644/job/136723364201).
 Vercel canceled the production deployment. GitHub Actions tracks this
 application revision in [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44863960676),
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44863960644),
