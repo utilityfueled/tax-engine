@@ -6019,7 +6019,7 @@
       "key": "federal/form-8919",
       "jurisdiction": "federal",
       "taxYear": 2025,
-      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f8919--2025.pdf",
       "specPath": "spec/federal/form-8919.yaml",
       "enginePath": "src/engine/forms/form-8919.ts",
       "packetPath": "src/pdf/fill-form-8919.ts",
