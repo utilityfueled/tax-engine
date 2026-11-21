@@ -20,6 +20,13 @@ was canceled. The final regression fixture also passed 10 focused tests
 after replacing one non-null assertion with an explicit error on a missing
 fixture. [Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/44897306268).
 
+The exact managed macOS browser run passed 650 cases, with zero failures
+and five original skips. The isolated run required the 15 registry-listed
+IRS samples from the previous browser archive. Earlier attempts stopped
+on missing sample files and a temporary test-port collision. The final
+run used the existing app, tests and browser gates. All 11 local commands
+passed on the application revision.
+
 ## November 21 final Form 8880 from employer deferrals
 
 `1cd93e1f` projects the annual saver’s credit onto the final IRS form

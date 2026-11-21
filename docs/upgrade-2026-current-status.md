@@ -9,7 +9,9 @@ candidate. The reopened PDF showed a $200 credit and the matching
 Schedule 3 transfer using the test-only statutory-rate preview.
 `069c994f` now holds Schedule C after a return year change until both
 annual reconciliations are renewed. Annual tax-table and export
-qualification remain open.
+qualification remain open. All 11 local commands passed on `069c994f`.
+Both full suites passed 29,849 tests at 88.38% branch coverage. Managed
+macOS passed 650 browser cases with five original skips.
 [Rental verification](upgrade-2026-progress.md#november-21-guided-rental-review-after-a-year-change) ·
 [Form 8880 verification](upgrade-2026-progress.md#november-21-final-form-8880-from-employer-deferrals) ·
 [Schedule C verification](upgrade-2026-progress.md#november-21-guided-schedule-c-review-after-a-year-change).
