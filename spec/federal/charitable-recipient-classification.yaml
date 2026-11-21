@@ -3,6 +3,7 @@ fullName: "Actual recipient category and foundation valuation"
 taxYear: [2025, 2026]
 irsReference: "https://www.irs.gov/publications/p526"
 references:
+  - "https://uscode.house.gov/us/usc/119-118/t26/s170/"
   - "https://uscode.house.gov/us/usc/119-120/t26/s170/"
 notes: |
   Refreshed2026-10-25. IRC170(b)(1)(A)(vii)/(F) includes qualifying private
@@ -37,6 +38,11 @@ lines:
     description: "Actual category intake preserves unknown and legacy provenance"
     formula: "Guide offers three actual classifications without a default, retains legacy boolean, forwards actual category and uses the same resolver. Changing category revokes charitable-history confirmation; clearing an explicit answer remains unknown. No dollar values, receipt dates or organization identity are rewritten."
     testRef: "tests/guided-interview/guided-charitable-recipient.test.ts::preserves actual category and legacy facts while revoking stale history confirmation"
+  - line: "guide-known-ineligible-noncash"
+    description: "Preserve optional facts on a noncash gift to a known ineligible recipient"
+    formula: "For 2025 and 2026, preserve the actual recipient, eligibility answer, gift type, exact amount and date when the guide reopens a saved noncash gift. For a gift to a confirmed unqualified recipient, omit unanswered basis and holding period from canonical inputs. Retain explicitly entered zero basis and false holding period. The gift produces no deduction. A gift to a qualified recipient still needs its actual basis and holding period. Existing annual calculation and filing gates apply."
+    irsRef: "IRC 170(c) and IRS Publication 526, Organizations That Qualify To Receive Deductible Contributions."
+    testRef: "tests/guided-interview/guided-charitable-recipient.test.ts::reopens noncash gifts to a known unqualified recipient in %i"
   - line: "controls"
     description: "Real intake controls can resolve an ambiguous saved source"
     formula: "A saved true source renders unchanged and pending; actual fifty-percent selection can establish a qualifying operating-foundation category without replacing that legacy value. New rows and cleared answers remain unknown; private-nonoperating alone exposes the qualified-stock question."
