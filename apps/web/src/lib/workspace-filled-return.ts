@@ -4,7 +4,7 @@ import {prepareForm2210Review,requiresForm2210ScheduleAiReview,hasSavedForm2210R
 import {assertNoPAMarriedPaperExport,isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
 import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return';
 import {preparePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context';
-import { prepareOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
+import { prepareOhioResidencyReviewWithFederalResult } from "@/engine/state/oh-residency-source.js";
 import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
 import { preparePAWorkingCreditReview } from "@/pdf/pa-working-credit-review-context.js";
 import { hasInKindEducationReviewSources, prepareEducationReview } from "@/pdf/education-review-context.js";
@@ -692,9 +692,10 @@ export async function buildWorkspaceFilledReturnDownload(
   }
 
   const stateCode = resolveStateCode(workspace, resolved.taxInput, guidedFlowState);
+  const ohioReview = stateCode === "OH" ? prepareOhioResidencyReviewWithFederalResult(resolved.taxInput) : undefined;
   const completeResult = attachPennsylvaniaReturn(
     resolved.taxInput,
-    calculateFederalTax(resolved.taxInput),
+    ohioReview?.federalResult ?? calculateFederalTax(resolved.taxInput),
     stateCode,
   );
   // Identity participates in household matching and state worksheets. Keep it
@@ -718,7 +719,6 @@ export async function buildWorkspaceFilledReturnDownload(
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
   const educationReview = hasInKindEducationReviewSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
   const savingsBondReview = hasSavingsBondReviewSources(resolved.taxInput) ? prepareSavingsBondReview(resolved.taxInput) : undefined;
-  const ohioOriginalReview = stateCode === "OH" ? prepareOhioResidencyReview(resolved.taxInput) : undefined;
   const ohioSourceOverlay = stateCode === "OH" ? buildGuidedOhioOverlay(resolved.taxInput, guidedFlowState, completeResult.taxExemptInterest) : undefined;
   const form2210Review=requiresForm2210ScheduleAiReview(resolved.taxInput,completeResult)?prepareForm2210Review(resolved.taxInput):undefined;
   const rrtaPayrollReview=requiresRRTAPayrollReview(resolved.taxInput,completeResult)
@@ -764,7 +764,7 @@ export async function buildWorkspaceFilledReturnDownload(
         result,
         outputDir,
         ohioSourceOverlay,
-        ohioOriginalReview,
+        ohioReview?.token,
         blankFormsDir,
       );
       filledForms.push(...ohioReferencePacket.filledForms);

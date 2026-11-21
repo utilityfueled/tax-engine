@@ -6,6 +6,8 @@ import {buildWorkspaceFilledReturnDownload} from '@/lib/workspace-filled-return'
 import * as source from '@/engine/state/oh-residency-source';
 import * as pdf from '@/pdf/fill-oh-reference-forms';
 import * as scheduleAPdf from '@/pdf/fill-schedule-a';
+import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers';
+import * as federalEngine from '@/engine/federal';
 import {calculateFederalTax} from '@/engine/federal';
 import {buildOhioResidentReturnInput} from '@/engine/state/oh-input-adapter';
 import {calculateOhioResidentReturn} from '@/engine/state/oh-return';
@@ -26,8 +28,12 @@ vi.mock('server-only',()=>({}));
 afterEach(()=>vi.restoreAllMocks());
 it.each([['full_year_resident','2323','105'],['part_year_resident','929','41'],['nonresident','465','0']]as const)('actual Ohio workspace prepared originals survive redaction for %s',async(status,tax,penalty)=>{
   const state=actualOhioWorkspaceFlow(status),before=structuredClone(state),actualFill=pdf.fillOhioReferenceForms;
-  const prepared=vi.spyOn(source,'prepareOhioResidencyReview');
+  const prepared=vi.spyOn(source,'prepareOhioResidencyReviewWithFederalResult');
+  const federalCalculation=vi.spyOn(federalEngine,'calculateFederalTax');
   const renderer=vi.spyOn(pdf,'fillOhioReferenceForms').mockImplementation(async(input,federal,dir,overlay,token)=>{
+   expect(federalCalculation).toHaveBeenCalledOnce();
+   expect(federalCalculation.mock.calls[0]?.[0].taxpayer.primary.ssn).toBe('111-22-3333');
+   expect(federalCalculation.mock.calls[0]?.[0]).not.toBe(prepared.mock.calls[0]?.[0]);
    expect(token).toBeDefined();const original=source.resolveOhioResidencyReview(input,federal,token);
    expect(original.taxpayer.primary.ssn).toBe('111-22-3333');expect(input.taxpayer.primary.ssn).not.toBe(original.taxpayer.primary.ssn);
    expect(original.ohioResidency?.originalFederalSources).toEqual(original.ohioPayments?.originalFederalSources);
@@ -39,6 +45,20 @@ it.each([['full_year_resident','2323','105'],['part_year_resident','929','41'],[
   expect(prepared).toHaveBeenCalledOnce();expect(prepared.mock.calls[0]?.[0].taxpayer.primary.ssn).toBe('111-22-3333');expect(renderer).toHaveBeenCalledOnce();expect(output.includedForms).toContain('oh-it-1040-reference.pdf');expect(output.includedForms).toContain('oh-it-sd-2210-reference.pdf');expect(state).toEqual(before);
   const destination=process.env.TAX_ENGINE_OH_WORKSPACE_ARTIFACT_DIR;if(destination){await mkdir(destination,{recursive:true});await writeFile(join(destination,status+'.pdf'),output.contents);}
  });
+it('Ohio workspace preparation binds the exact original input and federal result',()=>{
+ const state=actualOhioWorkspaceFlow('part_year_resident');
+ const input=buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)),state);
+ const {token,federalResult}=source.prepareOhioResidencyReviewWithFederalResult(input);
+ const redactedInput=redactReviewIdentifiers(input),redactedResult=redactReviewIdentifiers(federalResult);
+ expect(source.resolveOhioResidencyReview(input,federalResult,token)).toEqual(input);
+ expect(source.resolveOhioResidencyReview(redactedInput,redactedResult,token)).toEqual(input);
+ const changedSource=structuredClone(input);
+ changedSource.taxpayer.primary.firstName='Changed';
+ expect(()=>source.resolveOhioResidencyReview(changedSource,federalResult,token)).toThrow(/originals differ from prepared review/);
+ const changedResult={...redactedResult,agi:redactedResult.agi.plus('1')};
+ expect(()=>source.resolveOhioResidencyReview(redactedInput,changedResult,token)).toThrow(/saved federal calculation differs/);
+ expect(()=>source.resolveOhioResidencyReview(redactedInput,redactedResult,{...token})).toThrow(/valid original review context/);
+});
 it.each(['missingResidency','missingPayments','stalePayer','unknownSpecial','staleNestedRemaining'])('Ohio workspace rejects saved source gap before renderer: %s',async kind=>{
  const state=actualOhioWorkspaceFlow('part_year_resident'),data=state.sectionData['state-return'];if(!data?.ohioPayments)throw Error('Independent actual payment fixture missing');
  if(kind==='missingResidency')delete data.ohioResidency;

@@ -137,6 +137,13 @@ const contexts = new WeakMap<PreparedOhioResidencyReview, {
 }>();
 /** Prepare only from current complete originals; token is local and unforgeable. */
 export function prepareOhioResidencyReview(input: TaxYearInput): PreparedOhioResidencyReview {
+    return prepareOhioResidencyReviewWithFederalResult(input).token;
+}
+/** Derive the token and the renderable federal result from the same private originals. */
+export function prepareOhioResidencyReviewWithFederalResult(input: TaxYearInput): {
+    token: PreparedOhioResidencyReview;
+    federalResult: TaxReturnResult;
+} {
     const original = structuredClone(input);
     const fresh = calculateFederalTax(original);
     const token = Object.freeze({ [brand]: true as const });
@@ -146,7 +153,7 @@ export function prepareOhioResidencyReview(input: TaxYearInput): PreparedOhioRes
         redactedDigest: digest(redactReviewIdentifiers(original)),
         resultDigest: digest(redactReviewIdentifiers(fresh)),
     });
-    return token;
+    return { token, federalResult: fresh };
 }
 /** Recover the private original solely for fresh source validation, not display. */
 export function resolveOhioResidencyReview(input: TaxYearInput, result: TaxReturnResult, token?: PreparedOhioResidencyReview): TaxYearInput {
