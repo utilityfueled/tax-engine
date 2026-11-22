@@ -99,27 +99,33 @@ function preconditions(data: OhioPaymentDraft | undefined, taxYear: number | nul
         return { 'ohio-payment-special-source-contradiction': 'The no farming or fishing income answer contradicts actual reported original farm or fishing receipts.' };
     return {};
 }
-export function ohioPaymentFactErrors(data: OhioPaymentDraft | undefined, taxYear: number | null | undefined, input?: TaxYearInput): Record<string, string> {
+function reviewOhioPaymentFacts(
+    data: OhioPaymentDraft | undefined,
+    taxYear: number | null | undefined,
+    input?: TaxYearInput,
+): { errors: Record<string, string>; facts?: OhioPaymentFacts } {
     const errors = preconditions(data, taxYear, input);
     if (Object.keys(errors).length || !data)
-        return errors;
+        return { errors };
     if (input) {
         try { assertGuidedOhioOriginals(input, data.originalFederalSources); }
-        catch (error) { return { 'ohio-payment-originals': error instanceof Error ? error.message : 'Reconfirm actual current Ohio originals.' }; }
+        catch (error) { return { errors: { 'ohio-payment-originals': error instanceof Error ? error.message : 'Reconfirm actual current Ohio originals.' } }; }
     }
     const original = data.originalFederalSources ?? {};
     const parsed = OhioPaymentFactsSchema.safeParse(raw(data, original));
     if (!parsed.success)
-        return Object.fromEntries(parsed.error.issues.map(issue => [`ohio-payment-${issue.path.join('-')}`, `Complete the actual ${issue.path.join(' ')} source facts; use zero only when known.`]));
-    if (input) {
-        try {
-            buildOhioPaymentSource(input, parsed.data);
-        }
-        catch (error) {
-            return { 'ohio-payment-reconciliation': error instanceof Error ? error.message : 'Reconcile the actual Ohio account originals.' };
-        }
+        return { errors: Object.fromEntries(parsed.error.issues.map(issue => [`ohio-payment-${issue.path.join('-')}`, `Complete the actual ${issue.path.join(' ')} source facts; use zero only when known.`])) };
+    if (!input)
+        return { errors };
+    try {
+        return { errors, facts: buildOhioPaymentSource(input, parsed.data).facts };
     }
-    return {};
+    catch (error) {
+        return { errors: { 'ohio-payment-reconciliation': error instanceof Error ? error.message : 'Reconcile the actual Ohio account originals.' } };
+    }
+}
+export function ohioPaymentFactErrors(data: OhioPaymentDraft | undefined, taxYear: number | null | undefined, input?: TaxYearInput): Record<string, string> {
+    return reviewOhioPaymentFacts(data, taxYear, input).errors;
 }
 /** Explicit confirmation is the only operation that replaces retained private originals. */
 export function confirmGuidedOhioPaymentFacts(input: TaxYearInput, draft: OhioPaymentDraft | undefined): OhioPaymentDraft {
@@ -130,7 +136,7 @@ export function confirmGuidedOhioPaymentFacts(input: TaxYearInput, draft: OhioPa
 }
 /** Validate retained originals without refreshing them or interpreting unknown special facts. */
 export function buildGuidedOhioPaymentFacts(data: OhioPaymentDraft | undefined, input: TaxYearInput): OhioPaymentFacts {
-    const errors = ohioPaymentFactErrors(data, input.taxpayer.taxYear, input);
-    if (!data || Object.keys(errors).length) throw new Error(Object.values(errors).join(' '));
-    return buildOhioPaymentSource(input, raw(data, structuredClone(data.originalFederalSources ?? {}))).facts;
+    const { errors, facts } = reviewOhioPaymentFacts(data, input.taxpayer.taxYear, input);
+    if (!facts) throw new Error(Object.values(errors).join(' '));
+    return facts;
 }
