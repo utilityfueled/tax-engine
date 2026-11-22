@@ -1,5 +1,21 @@
 {
   "activeContinuation": {
+    "nov22Form2106NativeNameRendering": {
+      "fontDependencyCommit": "11efa4a1",
+      "candidateCommit": "d078258a",
+      "scope": "disabled final 2026 Form 2106 candidate",
+      "observedRed": "standard font could not encode a character in the synthetic taxpayer name",
+      "scopedTestsPassed": 85,
+      "specReferencesPassed": 6,
+      "inventoryPassed": true,
+      "typecheckPassed": true,
+      "visibleNativeNameVerified": true,
+      "widgetAppearanceVerified": true,
+      "blankSsnFieldsVerified": true,
+      "filingEnabled": false,
+      "receipts": ".local/upgrade-evidence/nov22-form2106-unicode",
+      "releaseReady": false
+    },
     "nov22Form8919ReasonHIncomeReconciliation": {
       "commit": "9992e601",
       "scope": "disabled final 2026 Form 8919 Reason H review",

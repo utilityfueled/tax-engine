@@ -1,5 +1,30 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Form 2106 native name rendering
+
+The final 2026 Form 2106 asks for the taxpayer's name in the native
+header. A qualifying $80 reservist lodging review failed at field
+measurement for the synthetic name Jane Nguyễn. The same facts with an
+ASCII name succeeded. [Final Form 2106](https://www.irs.gov/pub/irs-pdf/f2106.pdf#page=1).
+
+`11efa4a1` pins the upstream fontkit dependency, its type definitions,
+and the static Noto Sans font. The font assets carry their upstream license
+notices and travel with the existing blank template assets. `d078258a`
+uses the original PDF font when it covers the full name and embeds Noto
+Sans when needed. The candidate holds unsupported glyphs and over-width
+names at the existing 9-point size. The saved native value retains the
+original spelling. The scope remains the disabled 2026 review candidate.
+[Font provenance](../forms/blank/_fonts/README.md).
+
+The regression reproduced the WinAnsi failure before implementation.
+All 85 scoped tests, six spec references, inventory validation and root
+type checking passed. Scoped lint reported one existing warning and zero
+errors. Strict pypdf reopening confirmed the original native value and
+nonempty widget appearance, the $80 deduction and blank SSN fields.
+The rendered header visibly showed the original spelling, and both pages
+retained the review notice. Evidence is under
+`.local/upgrade-evidence/nov22-form2106-unicode/`.
+
 ## November 22 Form 8919 Reason H income reconciliation
 
 A synthetic 2026 Reason H review placed $500 on Form 8919 while a live

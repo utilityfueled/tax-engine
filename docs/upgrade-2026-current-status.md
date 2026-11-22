@@ -2,6 +2,12 @@
 
 ## Latest exact release verification
 
+`d078258a` preserves supported Unicode names in the disabled Form 2106
+review candidate. All 85 scoped tests passed, and strict reopening and
+rendering verified the native field. The separate font dependency package
+is `11efa4a1`.
+[Form 2106 evidence](upgrade-2026-progress.md#november-22-form-2106-native-name-rendering).
+
 `9992e601` holds the disabled 2026 Form 8919 Reason H review candidate
 when the reclassified amount could also appear in active NEC or MISC
 income. All 102 scoped tests and seven spec references passed. The
