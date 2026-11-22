@@ -98,10 +98,11 @@ workspace lifecycle checks and passed four read-only billing checks for
 each test account. The Viva La Tax Sandbox checkout destination points
 to that exact Preview. On November 22, one synthetic checkout produced a
 real test-mode Stripe Session and displayed the $19 Starter plan. Stripe
-confirmed the Sandbox customer and configured return URLs. The Session was
-unpaid and scheduled for automatic expiry. Conditional postal behavior,
-actual return navigation, expiry, signed completion delivery and exact
-ledger effects remain open.
+confirmed the Sandbox customer and configured return URLs. The browser's
+Back link reached the configured cancel URL. The Session was unpaid and
+scheduled for automatic expiry. Conditional postal behavior, success
+return, expiry, signed completion delivery and exact ledger effects remain
+open.
 [Checkout rehearsal](upgrade-2026-progress.md#november-22-stripe-sandbox-checkout-and-source-recheck).
 Exact-source CI and Docker passed. Managed Linux passed 650 browser
 cases. Strict AMD64 passed Compose recovery and 642 browser cases. Eight

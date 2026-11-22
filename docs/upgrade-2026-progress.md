@@ -14,12 +14,13 @@ One ordinary checkout request from the fixed synthetic account in canceled
 Starter state returned a real `cs_test` Session, and the account signed out.
 Stripe readback confirmed one $19 USD monthly line, an attached Sandbox
 customer and the exact Preview success and cancel URLs. The hosted checkout
-page returned HTTP 200 and displayed Starter and $19. The read-only browser
-pass reached the landing page without entering payment data or exercising
-conditional postal collection. The Session was open and unpaid, with no
-payment intent or subscription, and was scheduled to expire November 23 at
-06:56:31 UTC. Actual return navigation, expiry, signed completion delivery,
-entitlement and exact credit effects remain open. Sanitized receipts are in
+page returned HTTP 200 and displayed Starter and $19. Its Back link sent the
+browser to the exact configured Preview cancel URL. The browser did not
+reach a visible card-address form or enter payment data. After the cancel
+navigation, the Session was still open and unpaid, with no payment intent or
+subscription, and was scheduled to expire November 23 at 06:56:31 UTC.
+Success return, conditional postal collection, expiry, signed completion
+delivery, entitlement and exact credit effects remain open. Sanitized receipts are in
 `.local/upgrade-evidence/nov21-preview-522cf4b1-beta-checkout-once/`.
 
 Independent guided intake replay confirmed that saved prior-year or undated
@@ -40,6 +41,14 @@ Q1 2027 rate. [Form 1040 and schedules](https://www.irs.gov/instructions/i1040gi
 [PA annual forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
 [Ohio forms catalog](https://tax.ohio.gov/home/forms) ·
 [IRS quarterly interest rates](https://www.irs.gov/payments/quarterly-interest-rates).
+
+The exact strict GitHub logs identify seven Ohio cases that reached the
+30-second deadline on both architectures. ARM64 also timed out on mobile
+NEW212, two desktop reciprocal cases and mobile resident-credit distinct.
+Reported terminal steps include filing rejection requests, reopen, field
+entry, review download and stored-state inspection. The job logs show no
+single terminal operation shared by all failures. [AMD64 log](https://github.com/utilityfueled/tax-engine/actions/runs/44990991529/job/137111786229) ·
+[ARM64 log](https://github.com/utilityfueled/tax-engine/actions/runs/44987928653/job/137109698288).
 
 ## November 22 Form 1095-C fixture timing
 
