@@ -39,6 +39,28 @@ lines:
       separate Form 8919 for each group of up to five firms, with summary fields
       completed on only the first form.
     testRef: "tests/pdf/form-8919-2026-candidate.test.ts::projects six original firms and puts the summary on the first review form only"
+  - line: "reason-h-nec-overlap"
+    description: "Require independent classification of active NEC income"
+    formula: >-
+      The final 2026 instructions treat the Reason H amount as employee wages.
+      When an original NEC supplies a positive portion of those wages, hold the
+      review projection if an active NEC with positive nonemployee compensation
+      cannot be distinguished by a different source year, recipient owner, or
+      well-formed nonzero payer TIN. A missing year or owner does not prove
+      separation. A missing, malformed or all-zero TIN cannot resolve an
+      otherwise possible overlap.
+      Preserve distinct NEC and withholding-only records without modifying
+      amounts or reclassifying income.
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::holds Reason H review when active NEC compensation could overlap wages"
+  - line: "reason-h-misc-overlap"
+    description: "Require independent classification of active MISC other income"
+    formula: >-
+      When an original MISC supplies a positive portion of the Reason H wages,
+      apply the same source year, recipient owner, and payer TIN checks to
+      active MISC statements with positive Box 3 other income. A statement that
+      reports only unrelated boxes such as rent, royalties or withholding can
+      remain in the return.
+    testRef: "tests/pdf/form-8919-2026-candidate.test.ts::holds Reason H review when active MISC other income could overlap wages"
   - line: "6-13"
     description: "Reconcile original wages and project calculated summary"
     formula: >-

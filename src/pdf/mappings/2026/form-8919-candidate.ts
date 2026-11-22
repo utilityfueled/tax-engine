@@ -61,6 +61,7 @@ interface Form8919ReviewSources {
 
 const page = "topmostSubform[0].Page1[0].";
 const exactCurrency = /^\d+(?:\.\d{1,2})?$/;
+const payerTinPattern = /^(?:\d{9}|\d{2}-\d{7}|\d{3}-\d{2}-\d{4})$/;
 
 function isDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -68,7 +69,28 @@ function isDate(value: string): boolean {
   return Number.isFinite(date.valueOf()) && date.toISOString().slice(0, 10) === value;
 }
 
-function originalFirmDetails(firm: FirmOriginal, sources: Form8919ReviewSources, w2s: TaxYearInput["w2s"]) {
+function assertNoReasonHIncomeOverlap(
+  input: TaxYearInput, sources: Form8919ReviewSources, firmTin: string, originals: readonly Form1099Original[],
+): void {
+  type StatementIdentity = Pick<TaxYearInput["form1099Nec"][number], "taxYear" | "accountHolder" | "payerTin">;
+  const couldBeSameSource = (row: StatementIdentity) => {
+    const payerTin = row.payerTin?.trim() ?? "";
+    const digits = payerTin.replaceAll("-", "");
+    return (row.taxYear === undefined || row.taxYear === sources.taxYear)
+      && (row.accountHolder === undefined || row.accountHolder === sources.accountHolder)
+      && (!payerTinPattern.test(payerTin) || digits === "000000000" || digits === firmTin);
+  };
+  const reclassifiedKinds = new Set(originals.filter(row => d(row.reclassifiedWages).gt(0)).map(row => row.kind));
+  const overlapsNec = reclassifiedKinds.has("1099-nec") && input.form1099Nec.some(row =>
+    d(row.nonemployeeCompensation).gt(0) && couldBeSameSource(row));
+  const overlapsMisc = reclassifiedKinds.has("1099-misc") && input.form1099Misc.some(row =>
+    d(row.otherIncome).gt(0) && couldBeSameSource(row));
+  if (overlapsNec || overlapsMisc) {
+    throw new Error("Form 8919 Reason H wages may overlap active Form 1099 income. Reconcile the original statements and income classification before review.");
+  }
+}
+
+function originalFirmDetails(firm: FirmOriginal, sources: Form8919ReviewSources, input: TaxYearInput) {
   const identifier = firm.identifier.trim();
   const digits = identifier.replaceAll("-", "");
   const identifierPattern = firm.identifierType === "ein" ? /^(?:\d{9}|\d{2}-\d{7})$/ : /^(?:\d{9}|\d{3}-\d{2}-\d{4})$/;
@@ -104,12 +126,14 @@ function originalFirmDetails(firm: FirmOriginal, sources: Form8919ReviewSources,
       }
       break;
     case "H": {
-      const matchedW2 = firm.identifierType === "ein" && w2s.some(w2 => w2.employer?.ein?.replaceAll("-", "") === digits);
+      const matchedW2 = firm.identifierType === "ein" && input.w2s.some(w2 =>
+        w2.accountHolder === sources.accountHolder && w2.employer?.ein?.replaceAll("-", "") === digits);
       if (!matchedW2 || reason.wagesBelongOnW2Confirmed !== true || !firm.receivedForm1099
         || originals.some(original => !exactCurrency.test(original.reclassifiedWages ?? ""))
         || !sum(...originals.map(original => d(original.reclassifiedWages))).eq(wages)) {
         throw new Error("Form 8919 requires the original W-2 and Form 1099 wage reconciliation.");
       }
+      assertNoReasonHIncomeOverlap(input, sources, digits, originals);
       break;
     }
     default:
@@ -150,7 +174,7 @@ export async function fillForm8919ReviewCandidate(
     throw new Error("Form 8919 with railroad payroll requires separate review.");
   }
   const ownerW2s = input.w2s.filter(w2 => w2.accountHolder === sources.accountHolder);
-  const firms = sources.firms.map(firm => originalFirmDetails(firm, sources, ownerW2s));
+  const firms = sources.firms.map(firm => originalFirmDetails(firm, sources, input));
   if (new Set(firms.map(firm => firm.key)).size !== firms.length) throw new Error("Form 8919 requires one original record per firm.");
   const totalWages = firms.reduce((total, firm) => total.plus(firm.wages), new Decimal(0));
   if (!totalWages.eq(input.form8919.wagesNotReportedOnW2)) throw new Error("Form 8919 original wages do not match the validated wage total.");

@@ -157,4 +157,74 @@ describe("Final 2026 Form 8919 physical candidate", () => {
     if (!input.form8919) throw new Error("Form 8919 fixture requires the wage summary");
     await expect(fillForm8919ReviewCandidate({ ...input, form8919: { ...input.form8919, socialSecurityWagesAndTipsAlreadyReported: "183499" } }, sources, bytes)).rejects.toThrow(/payroll/);
   });
+
+  it("holds Reason H review when active NEC compensation could overlap wages", async () => {
+    const { fillForm8919ReviewCandidate } = await import("@/pdf/mappings/2026/form-8919-candidate.js");
+    const { input, sources } = annualCase();
+    const bytes = await readFile(blank);
+    const joint = TaxYearInputSchema.parse({
+      ...input,
+      taxpayer: {
+        ...input.taxpayer,
+        filingStatus: "married_filing_jointly",
+        spouse: { ...input.taxpayer.primary, firstName: "Spouse", ssn: "123-45-6788" },
+      },
+    });
+    const nec = {
+      taxYear: 2026, accountHolder: "primary" as const, payer: "Synthetic Firm D",
+      payerTin: "12-0000004", nonemployeeCompensation: "500",
+    };
+    for (const possibleOverlap of [
+      nec,
+      { ...nec, payer: "Firm D Payroll", payerTin: " 120000004 ", nonemployeeCompensation: "600" },
+      { ...nec, taxYear: undefined },
+      { ...nec, accountHolder: undefined },
+      { ...nec, payerTin: undefined },
+      { ...nec, payerTin: "**-***0004" },
+      { ...nec, payerTin: "00-0000000" },
+    ]) {
+      const review = fillForm8919ReviewCandidate({ ...joint, form1099Nec: [possibleOverlap] }, sources, bytes);
+      await expect(review.then(docs => docs.length)).rejects.toThrow(/Reason H.*overlap/);
+    }
+    const distinctNec = [
+      { ...nec, payerTin: "12-0000007" },
+      { ...nec, accountHolder: "spouse" as const },
+      { ...nec, taxYear: 2025 },
+      { ...nec, nonemployeeCompensation: "0", federalWithheld: "25" },
+    ];
+    const distinctInput = { ...joint, form1099Nec: distinctNec };
+    const originalNec = structuredClone(distinctNec);
+    const reviewed = await fillForm8919ReviewCandidate(distinctInput, sources, bytes);
+    expect(reviewed[0].getForm().getTextField(field("f1_28[0]")).getText()).toBe("4000");
+    expect(distinctInput.form1099Nec).toEqual(originalNec);
+  });
+
+  it("holds Reason H review when active MISC other income could overlap wages", async () => {
+    const { fillForm8919ReviewCandidate } = await import("@/pdf/mappings/2026/form-8919-candidate.js");
+    const { input, sources } = annualCase();
+    const bytes = await readFile(blank);
+    const miscSources = {
+      ...sources,
+      firms: sources.firms.map(firm => ({
+        ...firm,
+        originals: firm.originals?.map(original => ({ ...original, kind: "1099-misc" as const })),
+      })),
+    };
+    const misc = {
+      taxYear: 2026, accountHolder: "primary" as const, payer: "Synthetic Firm D",
+      payerTin: "12-0000004", otherIncome: "500",
+    };
+    const review = fillForm8919ReviewCandidate({ ...input, form1099Misc: [misc] }, miscSources, bytes);
+    await expect(review.then(docs => docs.length)).rejects.toThrow(/Reason H.*overlap/);
+
+    const reviewed = await fillForm8919ReviewCandidate({
+      ...input,
+      form1099Misc: [
+        { ...misc, otherIncome: "0", rents: "500", royalties: "500", federalWithheld: "25" },
+        { ...misc, payerTin: "12-0000007" },
+      ],
+      form1099Nec: [{ ...misc, nonemployeeCompensation: "500" }],
+    }, miscSources, bytes);
+    expect(reviewed[0].getForm().getTextField(field("f1_28[0]")).getText()).toBe("4000");
+  });
 });
