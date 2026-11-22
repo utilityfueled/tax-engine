@@ -1,5 +1,39 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Form 8919 Reason H income reconciliation
+
+A synthetic 2026 Reason H review placed $500 on Form 8919 while a live
+NEC from the same firm also produced $500 of Schedule C profit. A second
+regression reproduced the overlapping route from MISC Box 3 into other
+income. The final form classifies wages reported as 1099 income in the
+Reason H scenario. [Final 2026 Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf).
+
+`9992e601` holds the disabled review candidate when a positive
+reclassified NEC or MISC amount could overlap active income of the same
+form kind. The active record must have a distinct year, recipient or
+full nonzero payer TIN to clear that check. An all-zero TIN also failed
+the regression before being treated as unresolved. Different owners and
+firms, withholding-only records, and MISC rent and royalties remain
+available. The check makes no automatic classification change. Reasons
+A, C and G need their own review of the underlying amounts. The filing
+gate stays closed.
+
+All 102 exact-source focused tests, seven specification references,
+coverage inventory, type checking and scoped lint passed. The browser
+manifest changed only its one application hash and dependent digest.
+Receipts are under `.local/upgrade-evidence/nov22-form8919-reason-h/`.
+
+The earlier Sandbox Session returned HTTP 200 again on the official
+Stripe Checkout host. The read-only browser pass found no card entry,
+postal-code field or Subscribe button and submitted no data. Successful
+checkout, live Sandbox delivery of its completion event, entitlement and
+credit effects remain open.
+
+The existing browser timing workflow on `ebc5a6b1` runs the strict suite
+and samples original windows 6 and 7 if that run fails.
+Its performance evidence does not change the runtime qualification.
+[GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/45017762942).
+
 ## November 22 Form 2441 return-year confirmation
 
 A saved 2026 care worksheet retained a $200 credit after changing to

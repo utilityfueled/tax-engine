@@ -2,6 +2,13 @@
 
 ## Latest exact release verification
 
+`9992e601` holds the disabled 2026 Form 8919 Reason H review candidate
+when the reclassified amount could also appear in active NEC or MISC
+income. All 102 scoped tests and seven spec references passed. The
+browser timing run on `ebc5a6b1` is in progress.
+[Form 8919 evidence](upgrade-2026-progress.md#november-22-form-8919-reason-h-income-reconciliation) ·
+[Browser timing run](https://github.com/utilityfueled/tax-engine/actions/runs/45017762942).
+
 `7968206c` holds retained Form 2441 Part II facts, including Worksheet A,
 until the taxpayer reconfirms them after a return-year change. All 496
 scoped tests and all three affected audited browser scenarios passed.

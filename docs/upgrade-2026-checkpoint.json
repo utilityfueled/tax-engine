@@ -1,5 +1,31 @@
 {
   "activeContinuation": {
+    "nov22Form8919ReasonHIncomeReconciliation": {
+      "commit": "9992e601",
+      "scope": "disabled final 2026 Form 8919 Reason H review",
+      "observedRedCases": ["matching active NEC Box 1", "matching active MISC Box 3", "all-zero payer TIN"],
+      "exactFocusedTestsPassed": 102,
+      "specReferencesPassed": 7,
+      "inventoryPassed": true,
+      "typecheckPassed": true,
+      "scopedLintPassed": true,
+      "filingEnabled": false,
+      "receipts": ".local/upgrade-evidence/nov22-form8919-reason-h",
+      "releaseReady": false
+    },
+    "nov22BrowserTimingAndCheckoutFollowUp": {
+      "browserDiagnosticCommit": "ebc5a6b1",
+      "browserDiagnosticRun": 45017762942,
+      "browserDiagnosticStatusAtCheckpoint": "in_progress",
+      "browserDiagnosticFrozenBatches": [6, 7],
+      "checkoutSource": "522cf4b1",
+      "checkoutObservedAtUtc": "2026-11-22T11:30:30.681Z",
+      "checkoutHttp": 200,
+      "checkoutCardEntryVisible": false,
+      "checkoutPostalControlVisible": false,
+      "checkoutSubscribeVisible": false,
+      "checkoutSubmitted": false
+    },
     "nov22Form2441ReturnYearConfirmation": {
       "commit": "7968206c",
       "scope": "Form 2441 Part II and Worksheet A",
