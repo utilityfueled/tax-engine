@@ -1,0 +1,13 @@
+form: "guided federal payment return year"
+fullName: "Federal payment application after a guided return-year change"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i1040gi"
+lines:
+  - line: "retained-federal-payment-application"
+    description: "Verify the IRS application year of retained estimated and extension payments"
+    formula: "When a confirmed return year changes or is cleared, keep every started federal estimated or extension payment's date and exact amount, including explicit zero. If the payment has no IRS application record, leave both the IRS application year and its confirmation unknown and require the existing application fields before calculation. Preserve recorded application facts, and require them to match the selected return year. Keep the review pending across saves and subsequent year selections. Reopening in the same year, reselecting the same year, and assigning a first year to an unbound draft retain existing date-based validation. Untouched blank rows, prior-year refund credits and state payments keep their existing treatment."
+    irsRef: "Form 4868, Amount you are paying and When To File (https://www.irs.gov/pub/irs-pdf/f4868.pdf); Schedule 3 line 10 and Form 1040 line 26 instructions (https://www.irs.gov/instructions/i1040gi); IRS Direct Pay payment types and applicable years (https://www.irs.gov/payments/types-of-payments-available-to-individuals-through-direct-pay)"
+    testRef: "tests/guided-interview/guided-federal-payment-return-year.test.ts::blocks an implicitly dated extension payment after a confirmed year change"
+    testRefs:
+      - "tests/guided-interview/guided-federal-payment-return-year.test.ts::preserves explicit application, pending estimates and blank rows through the year selector"
+      - "tests/guided-interview/guided-federal-payment-return-year.test.ts::preserves date-based validation for the first year assigned to an unbound draft"

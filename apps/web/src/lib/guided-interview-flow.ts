@@ -1699,6 +1699,11 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
 export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
   if ((state.taxYear ?? null) === taxYear) return state;
   const wages = state.sectionData["income-w2"];
+  const payments = state.sectionData.payments;
+  function requirePaymentApplication(entry: EstimatedPaymentEntry): EstimatedPaymentEntry {
+    if (entry.application !== undefined || !(entry.date?.trim() || entry.amount?.trim())) return entry;
+    return { ...entry, application: { taxYear: "", confirmed: null } };
+  }
   const personal = state.sectionData["personal-info"];
   const spouse = personal?.spouse;
   const filerYearFactsEntered = personal && [
@@ -1729,6 +1734,13 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
         "income-w2": {
           ...wages,
           entries: wages.entries.map(entry => isStartedW2(entry) ? { ...entry, requiresSourceYearConfirmation: true } : entry),
+        },
+      } : {}),
+      ...(Number.isInteger(state.taxYear) && payments ? {
+        payments: {
+          ...payments,
+          ...(payments.estimatedPayments?.length ? { estimatedPayments: payments.estimatedPayments.map(requirePaymentApplication) } : {}),
+          ...(payments.extensionPayments?.length ? { extensionPayments: payments.extensionPayments.map(requirePaymentApplication) } : {}),
         },
       } : {}),
       ...(personal && (filerYearFactsEntered || personal.dependents?.length) ? {
