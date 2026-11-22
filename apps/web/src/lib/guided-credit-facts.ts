@@ -35,7 +35,7 @@ export function careFactErrors(data: DependentCareData | undefined, filingStatus
   }
   if (filingStatus !== "mfj" && hasEnteredAmount(data.spouseEarnedIncome)) recordAmount("careSpouseIncome", data.spouseEarnedIncome, "spouse earned income", true);
   if (typeof data.eligibilityConfirmed !== "boolean") errors.careEligibility = "Confirm the qualifying-person, work-related care and eligible-provider requirements from Form 2441.";
-  if (data.sourceFactsConfirmed !== true) errors.careSourceFacts = "Confirm these provider and qualifying-person records against the actual care records.";
+  if (data.sourceFactsConfirmed !== true) errors.careSourceFacts = "Confirm the care credit facts and Worksheet A amount against your records for this tax year.";
   if (typeof data.receivedBenefits !== "boolean") errors.careReceivedBenefits = "Confirm whether you received dependent-care benefits, including employer-provided care.";
   if (typeof data.usesDeemedIncome !== "boolean") errors.careDeemedIncome = "Confirm whether either earned-income amount includes substantiated student or incapacity deemed income.";
   if (benefits && hasEnteredAmount(data.excludedDependentCareBenefits) && !errors["care-excludedDependentCareBenefits"] && !parseGuidedCurrency(data.excludedDependentCareBenefits).eq(benefits.totalBenefitsApplied)) errors.careBenefitReconciliation = "Reconcile the supplied exclusion amount to the actual Part III line 28 amount, or leave the duplicate amount blank.";

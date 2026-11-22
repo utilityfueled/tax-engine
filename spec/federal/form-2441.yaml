@@ -94,6 +94,15 @@ lines:
     formula: "If original payroll entries or business facts change, revoke confirmation and retain the entered worksheet. An EIC-only election edit does not change the original payroll entries."
     irsRef: "Form 2441 instructions lines 4 and 5; https://www.irs.gov/instructions/i2441"
     testRef: "tests/guided-interview/guided-care-source-facts.test.ts::requires a new Part II confirmation after original earned-income sources change"
+  - line: "guided-part-ii-return-year"
+    description: "Reconfirm Part II source facts for the selected return year"
+    formula: >-
+      Changing or clearing a previously confirmed return year clears the Part II source confirmation.
+      Retain the entered provider, qualifying-person, earned-income, expense, and Worksheet A facts for review.
+      Require confirmation for the selected year before mapping the credit, including any Worksheet A credit for earlier-year expenses paid during that return year.
+      Preserve confirmations on the same return year and on first assignment of a return year to an unbound draft.
+    irsRef: "2025 Form 2441 instructions, lines 3 and 9b and Worksheet A (https://www.irs.gov/instructions/i2441)"
+    testRef: "tests/guided-interview/guided-care-source-facts.test.ts::requires reconfirmation before a Worksheet A credit can reach a different return year"
   - line: "6"
     description: "Earned-income-limited qualifying expenses"
     formula: "max(0,min(line 3,line 4,line 5))"

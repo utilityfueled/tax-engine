@@ -643,7 +643,7 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("combobox", { name: "Does person 1 meet the Form 2441 qualifying-person, residence and dependency requirements?", exact: true }).selectOption("true");
     await page.getByRole("textbox", { name: "Qualified expenses for person 1", exact: true }).fill("3000");
     await expect(heroValue).toHaveText("Enter more info for an estimate");
-    await page.getByRole("combobox", { name: "Have you checked these provider and qualifying-person details against your actual records?", exact: true }).selectOption("true");
+    await page.getByRole("combobox", { name: "Have you confirmed the care credit facts and Worksheet A amount for this tax year?", exact: true }).selectOption("true");
     // Form2441(2025): $3,000 x20% at AGI$50,000 = $600; $1,125 + $600.
     await expect(heroValue).toHaveText("$1,725");
   });

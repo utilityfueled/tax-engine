@@ -41,7 +41,7 @@ export function CareSourceDetails({ data, onChange }: { data: DependentCareData;
       <button className="guided-button" type="button" onClick={() => change({ qualifyingPersons: persons.filter((_, i) => i !== index) })}>Remove qualifying person {index + 1}</button>
     </fieldset>)}
     <button className="guided-button" type="button" disabled={persons.length >= 20} onClick={() => change({ qualifyingPersons: [...persons, { firstName: "", lastName: "", identifierType: "", qualifiedExpenses: "" }] })}>Add qualifying person</button>
-    <Fact label="Have you checked these provider and qualifying-person details against your actual records?" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ ...data, sourceFactsConfirmed })} />
+    <Fact label="Have you confirmed the care credit facts and Worksheet A amount for this tax year?" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ ...data, sourceFactsConfirmed })} />
   </div>;
 }
 
