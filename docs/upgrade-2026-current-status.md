@@ -2,6 +2,11 @@
 
 ## Latest exact release verification
 
+`2a5c20c9` removes timer yields from Form 1095-C test-PDF construction.
+The measured fixtures remained byte-identical and the deadline stayed
+at five seconds. The exact Docker build passed.
+[Form 1095-C evidence](upgrade-2026-progress.md#november-22-form-1095-c-fixture-timing).
+
 `913339ec` holds retained W-2s after a return-year change until their
 original source year matches. The browser reproduced stale wages and
 withholding on the prior revision. The corrected revision passed all

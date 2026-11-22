@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Form 1095-C fixture timing
+
+`2a5c20c9` removes timer yields from pdf-lib while constructing the
+Form 1095-C PDFs used by four tests. The target had reached the original
+five-second deadline in one exact GitHub unit run. A paired comparison
+of 17 rejection cases and a positive control produced byte-identical
+PDFs and identical reader results. Elapsed time fell from 3,528 ms to
+1,276 ms. All four tests passed in three fresh single-worker runs.
+Independent review verified the scheduling-only test change and the
+same fixture data, assertions, output options and deadline. The
+production parser and application match `913339ec`. Docker passed.
+Local unit and coverage runs each passed 30,078 tests across 2,193
+suites. Branch coverage was 88.56%. Both PostgreSQL 16.16 instances
+shut down.
+[Original unit job](https://github.com/utilityfueled/tax-engine/actions/runs/44986325311/job/137097583183) ·
+[Correction CI](https://github.com/utilityfueled/tax-engine/actions/runs/44990991453) ·
+[Correction Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44990991479) ·
+[Correction Web](https://github.com/utilityfueled/tax-engine/actions/runs/44990991529).
+
 ## November 22 original W-2 year
 
 `913339ec` requires the original tax year on each started W-2 retained
@@ -29,6 +48,15 @@ the annual Schedule C reconciliations. Replacing them with reconciled
 The exact Docker build passed. Both full local suites passed 30,078
 tests across 2,193 files at 88.56% branch coverage. Each separate
 PostgreSQL 16.16 test instance shut down.
+Managed Linux passed 649 cases and hit one saved-PDF railroad
+inspection timeout. Strict AMD64 passed 646 and hit four Ohio
+deadlines, one NEW212 and three school-district cases. Both kept
+the five existing skips. The W-2 case passed in both jobs. Strict
+AMD64 passed image smoke, recovery, rollback, independent archive
+import, immutable SBOM checks and cleanup.
+Remote coverage passed all 30,078 tests at the same coverage.
+GitHub reported the separate single-worker unit job canceled before
+completion. Both remote test database shutdowns succeeded.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44987899220) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44987899233) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44987899198) ·
@@ -226,6 +254,15 @@ school header phases with comparable timings improved from 6,503 to
 5,951 ms and from 8,013 to 4,402 ms. Both desktop headers completed.
 The traces do not isolate a shared bottleneck or establish a browser
 performance gain attributable to this change alone.
+
+An independent follow-up replay measured school header updates at
+0.29–0.33 ms and JSON serialization at 0.018–0.021 ms per edit. Median
+school render evaluation was 14.8–17.6 ms, with reuse of the current
+display result in all 240 observations. The NEW212 render evaluations
+were 0.70–0.75 ms per edit. The replay excludes React rendering and
+browser storage. The partial strict traces do not attribute their longer
+input intervals to a shared operation, so no further performance change
+was introduced.
 
 A native ARM64 rehearsal on `0e71304c` verified its architecture and
 source, then passed candidate image smoke and isolated Compose
