@@ -1,11 +1,14 @@
 // Spec: spec/federal/guided-student-loan.yaml.
+import assert from "node:assert/strict";
 import Decimal from "decimal.js";
 import { expect, it } from "vitest";
 import { buildStudentLoanInputs, emptyStudentLoanFacts, emptyStudentLoanSource, type StudentLoanData } from "@/lib/guided-student-loan-facts";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyAdjustmentData, emptyCreditsData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyAdjustmentData, emptyCreditsData, emptyEducationStudent, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { emptyEducatorSource } from "@/lib/guided-educator-facts";
-import { startCompleteInterview } from "./complete-facts";
+import { calculateStudentLoanInterestDeduction } from "@/engine/forms/student-loan-interest";
+import { TaxYearInputSchema } from "@/models/inputs";
+import { completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
 function sourceFacts(): StudentLoanData {
   return { ...emptyStudentLoanFacts, sourceTaxYear: "2025", sourceFactsConfirmed: true, primaryClaimedAsDependent: false, spouseClaimedAsDependent: false, puertoRicoIncomeExclusion: "0", americanSamoaIncomeExclusion: "0", loans: [{ ...emptyStudentLoanSource,
@@ -64,6 +67,129 @@ it("requires actual loan sources in the guided return and forwards them once", (
   expect(validateSection(state, "adjustments").status).toBe("partial");
 });
 
+it("holds carried lender interest until the selected payment year is reconfirmed", () => {
+  const original = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: ["student-loans"], stateCode: null });
+  const wages = { ...completeW2Entry, wages: "50000", federalWithheld: "5000", socialSecurityWages: "50000", socialSecurityWithheld: "3100", medicareWages: "50000", medicareWithheld: "725" };
+  original.sectionData["income-w2"] = { entries: [wages] };
+  original.sectionData.adjustments = { ...emptyAdjustmentData, studentLoanFacts: sourceFacts() };
+  expect(validateSection(original, "adjustments").status).toBe("complete");
+
+  const switched = setInterviewTaxYear(original, 2026);
+  const saved = switched.sectionData.adjustments?.studentLoanFacts;
+  assert.ok(saved);
+  const reopened = JSON.parse(JSON.stringify(switched)) as typeof original;
+  const personal = updateSectionData(reopened, "personal-info", structuredClone(completePersonalInfo));
+  const current = updateSectionData(personal, "income-w2", { entries: [{ ...wages, sourceTaxYear: "2026", requiresSourceYearConfirmation: false }] });
+  const updateLoanFacts = (state: typeof original, studentLoanFacts: StudentLoanData) =>
+    updateSectionData(state, "adjustments", { ...emptyAdjustmentData, ...state.sectionData.adjustments, studentLoanFacts });
+  const relabeled = updateLoanFacts(current, { ...saved, sourceTaxYear: "2026", sourceFactsConfirmed: null });
+  const relabeledFacts = relabeled.sectionData.adjustments?.studentLoanFacts;
+  assert.ok(relabeledFacts);
+  const reconfirmed = updateLoanFacts(relabeled, { ...relabeledFacts, sourceFactsConfirmed: true });
+  expect(validateSection(reconfirmed, "adjustments").status).toBe("partial");
+  expect(buildTaxInputFromGuidedData(reconfirmed)).toBeNull();
+  expect(saved).toMatchObject({ sourceTaxYear: "2025", sourceFactsConfirmed: null, primaryClaimedAsDependent: null, spouseClaimedAsDependent: null, loans: [{ sourceId: "loan-1", borrowerId: "borrower-1", interestPaid: "1200.15", paymentsInTaxYearConfirmed: null }] });
+
+  const loan = relabeledFacts.loans?.[0];
+  assert.ok(loan);
+  const verifyPayment = (interestPaid: string) => {
+    const editedFacts = { ...relabeledFacts, sourceFactsConfirmed: null, primaryClaimedAsDependent: false, loans: [{ ...loan, interestPaid, paymentsInTaxYearConfirmed: true }] };
+    const edited = updateLoanFacts(reconfirmed, editedFacts);
+    return updateLoanFacts(edited, { ...editedFacts, sourceFactsConfirmed: true });
+  };
+  expect(buildTaxInputFromGuidedData(verifyPayment(""))).toBeNull();
+  for (const [paid, deduction] of [["0", "0"], ["1275.80", "1276"]] as const) {
+    const verified = verifyPayment(paid);
+    expect(validateSection(verified, "adjustments").status).toBe("complete");
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(verified));
+    const facts = input.studentLoanInterestFacts;
+    const paidInterest = facts?.loans?.[0]?.interestPaid;
+    assert.ok(facts && paidInterest !== undefined);
+    expect(new Decimal(paidInterest).eq(paid)).toBe(true);
+    const result = calculateStudentLoanInterestDeduction({ taxYear: 2026, filingStatus: "single", modifiedAgi: new Decimal(50000), facts, forms: input.form1098E });
+    expect(result.deduction?.toString()).toBe(deduction);
+  }
+});
+
+it("requires fresh dependency answers for the applicable filers", () => {
+  for (const filingStatus of ["single", "mfj"] as const) {
+    const original = startCompleteInterview({ filingStatus, incomeTypes: [], lifeEvents: ["student-loans"], stateCode: null });
+    original.sectionData.adjustments = { ...emptyAdjustmentData, studentLoanFacts: sourceFacts() };
+    const switched = setInterviewTaxYear(original, 2026);
+    const priorFacts = switched.sectionData.adjustments?.studentLoanFacts;
+    const loan = priorFacts?.loans?.[0];
+    assert.ok(priorFacts && loan);
+    expect(priorFacts).toMatchObject({ primaryClaimedAsDependent: null, spouseClaimedAsDependent: null });
+
+    const reentered = updateSectionData(switched, "adjustments", { ...emptyAdjustmentData, studentLoanFacts: { ...priorFacts, sourceTaxYear: "2026" } });
+    const submit = (primaryClaimedAsDependent: boolean | null, spouseClaimedAsDependent: boolean | null) => updateSectionData(reentered, "adjustments", {
+      ...emptyAdjustmentData, studentLoanFacts: { ...priorFacts, sourceTaxYear: "2026", sourceFactsConfirmed: true, primaryClaimedAsDependent, spouseClaimedAsDependent, loans: [{ ...loan, paymentsInTaxYearConfirmed: true }] },
+    });
+    expect(validateSection(submit(null, false), "adjustments").status).toBe("partial");
+    expect(validateSection(submit(false, null), "adjustments").status).toBe(filingStatus === "single" ? "complete" : "partial");
+    expect(validateSection(submit(false, false), "adjustments").status).toBe("complete");
+  }
+});
+
+it("clears stale education dependency without hiding a current-year conflict", () => {
+  const original = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["student-loans"], stateCode: null });
+  const personal = { ...completePersonalInfo, standardDeductionFacts: { ...completePersonalInfo.standardDeductionFacts, primaryCanBeClaimedAsDependent: true, dependentEarnedIncome: "0" } };
+  original.sectionData["personal-info"] = personal;
+  const credits = { ...emptyCreditsData, education: { ...emptyCreditsData.education, claimedAsDependent: true, canBeClaimedAsDependent: true, nonresidentAlien: false } };
+  const withAotc = updateSectionData(original, "credits", { ...credits, education: { ...credits.education, aocStudents: [emptyEducationStudent] } });
+  const withoutAotc = updateSectionData(withAotc, "credits", credits);
+  const oldLoanFacts = { ...sourceFacts(), primaryClaimedAsDependent: true };
+  const saved = updateSectionData(withoutAotc, "adjustments", { ...emptyAdjustmentData, studentLoanFacts: oldLoanFacts });
+  expect(saved.sectionData.credits?.education).toMatchObject({ claimedAsDependent: true, aocStudents: [] });
+  expect(saved.sectionData.credits?.education.llcStudents?.length ?? 0).toBe(0);
+  expect(validateSection(saved, "adjustments").status).toBe("complete");
+  expect(setInterviewTaxYear(saved, 2025)).toBe(saved);
+  expect(setInterviewTaxYear({ ...saved, taxYear: null }, 2025).sectionData.credits?.education.claimedAsDependent).toBe(true);
+  expect(setInterviewTaxYear(withoutAotc, 2026).sectionData.credits?.education.claimedAsDependent).toBe(true);
+
+  const reopened = JSON.parse(JSON.stringify(saved)) as typeof saved;
+  const switched = setInterviewTaxYear(reopened, 2026);
+  const currentPersonal = updateSectionData(switched, "personal-info", personal);
+  const newLoanFacts = { ...sourceFacts(), sourceTaxYear: "2026" };
+  const editYear = updateSectionData(currentPersonal, "adjustments", { ...emptyAdjustmentData, studentLoanFacts: newLoanFacts });
+  const verified = updateSectionData(editYear, "adjustments", { ...emptyAdjustmentData, studentLoanFacts: newLoanFacts });
+  expect(validateSection(verified, "adjustments").status).toBe("complete");
+  expect(buildTaxInputFromGuidedData(verified)?.studentLoanInterestFacts?.primaryClaimedAsDependent).toBe(false);
+  expect(switched.sectionData.credits?.education).toEqual({ ...credits.education, claimedAsDependent: null });
+
+  const currentConflict = updateSectionData(verified, "credits", credits);
+  const reconfirmed = updateSectionData(currentConflict, "adjustments", { ...emptyAdjustmentData, studentLoanFacts: newLoanFacts });
+  expect(validateSection(reconfirmed, "adjustments").fieldErrors?.studentLoanSources).toMatch(/claimed-dependent answer.*education and student-loan/i);
+  expect(buildTaxInputFromGuidedData(reconfirmed)).toBeNull();
+});
+
+it("clears individual answers on worksheet-year edits and preserves first assignments and legacy drafts", () => {
+  const initial = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["student-loans"], stateCode: null });
+  const facts = sourceFacts();
+  const baseLoan = facts.loans?.[0];
+  assert.ok(baseLoan && facts.loans);
+  facts.loans.push({ ...baseLoan, sourceId: "loan-2", sourceKind: "form1098e", interestPaid: "0", form1098ESourceId: "statement-2", form1098ETaxYear: "2025", form1098EBox1: "0", box2ExcludesOriginationFeesOrCapitalizedInterest: false });
+  const adjustment = { ...emptyAdjustmentData, studentLoanFacts: facts };
+  initial.sectionData.adjustments = adjustment;
+  expect(setInterviewTaxYear(initial, 2025)).toBe(initial);
+  expect(setInterviewTaxYear({ ...initial, taxYear: null }, 2025).sectionData.adjustments?.studentLoanFacts).toEqual(facts);
+  expect(updateSectionData(initial, "adjustments", adjustment).sectionData.adjustments?.studentLoanFacts).toEqual(facts);
+  const firstYear = { ...adjustment, studentLoanFacts: { ...facts, sourceTaxYear: "" } };
+  expect(updateSectionData({ ...initial, sectionData: { ...initial.sectionData, adjustments: firstYear } }, "adjustments", adjustment).sectionData.adjustments?.studentLoanFacts).toEqual(facts);
+
+  const edit = { ...adjustment, studentLoanFacts: { ...facts, sourceTaxYear: "2026" } };
+  const changed = updateSectionData(initial, "adjustments", edit);
+  expect(changed.sectionData.adjustments?.studentLoanFacts).toEqual({ ...edit.studentLoanFacts, sourceFactsConfirmed: null, primaryClaimedAsDependent: null, spouseClaimedAsDependent: null, loans: facts.loans.map(loan => ({ ...loan, paymentsInTaxYearConfirmed: null })) });
+  const blank = updateSectionData(initial, "adjustments", { ...edit, studentLoanFacts: { ...edit.studentLoanFacts, sourceTaxYear: "" } });
+  expect(blank.sectionData.adjustments?.studentLoanFacts?.loans?.map(loan => loan.paymentsInTaxYearConfirmed)).toEqual([null, null]);
+  const legacyFacts = { ...facts };
+  delete legacyFacts.loans;
+  const legacy = { ...initial, sectionData: { ...initial.sectionData, adjustments: { ...adjustment, studentLoanFacts: legacyFacts } } };
+  const changedLegacy = setInterviewTaxYear(legacy, 2026);
+  expect(changedLegacy.sectionData.adjustments?.studentLoanFacts).toEqual({ ...legacyFacts, sourceFactsConfirmed: null, primaryClaimedAsDependent: null, spouseClaimedAsDependent: null });
+  expect(validateSection(changedLegacy, "adjustments").status).toBe("partial");
+});
+
 it("invalidates substantive source changes without cycling confirmations", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["student-loans"], stateCode: null });
   state.sectionData.adjustments = { ...emptyAdjustmentData, studentLoanFacts: sourceFacts(), educatorExpenseSources: [{ ...emptyEducatorSource, sourceFactsConfirmed: true }] };
@@ -107,8 +233,6 @@ it("checks actual household dependency and calculated education links before com
 
 it("calculates the actual guided loan deduction through canonical federal income", async () => {
   const { calculateFederalTax } = await import("@/engine/federal");
-  const { TaxYearInputSchema } = await import("@/models/inputs");
-  const { completeW2Entry } = await import("./complete-facts");
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: ["student-loans"], stateCode: null });
   state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "5000", socialSecurityWages: "50000", socialSecurityWithheld: "3100", medicareWages: "50000", medicareWithheld: "725" }] };
   state.sectionData.adjustments = { ...emptyAdjustmentData, studentLoanFacts: sourceFacts() };

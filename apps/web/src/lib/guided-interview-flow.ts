@@ -1723,6 +1723,16 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
   };
 }
 
+function invalidateStudentLoanYearFacts(draft: StudentLoanData): StudentLoanData {
+  return {
+    ...draft,
+    sourceFactsConfirmed: null,
+    primaryClaimedAsDependent: null,
+    spouseClaimedAsDependent: null,
+    ...(draft.loans?.length ? { loans: draft.loans.map(loan => ({ ...loan, paymentsInTaxYearConfirmed: null })) } : {}),
+  };
+}
+
 export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
   if ((state.taxYear ?? null) === taxYear) return state;
   const wages = state.sectionData["income-w2"];
@@ -1757,6 +1767,8 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const k3Election = otherTaxes?.foreignTaxElection;
   const adjustments = state.sectionData.adjustments;
   const codSources = adjustments?.codPrincipalResidenceSources;
+  const studentLoanFactsToReconfirm = Number.isInteger(state.taxYear) && adjustments?.studentLoanFacts;
+  const clearStudentLoanEducationDependency = studentLoanFactsToReconfirm && typeof education?.claimedAsDependent === "boolean";
   const requireAlimonyReview = Number.isInteger(state.taxYear) && hasRetainedAlimonyContext(adjustments);
   const requireHouseholdReview = Number.isInteger(state.taxYear) && hasRetainedHouseholdContext(otherTaxes);
   return {
@@ -1836,11 +1848,12 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
         },
       } : {}),
       ...(state.sectionData["income-investments"]?.digitalAssetEntries?.some(entry => entry.transactions?.some(row => row.marketDiscountFacts)) ? { "income-investments": { ...state.sectionData["income-investments"]!, digitalAssetEntries: state.sectionData["income-investments"]!.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } } : {}),
-      ...(adjustments && (codSources || requireAlimonyReview) ? {
+      ...(adjustments && (codSources || requireAlimonyReview || studentLoanFactsToReconfirm) ? {
         adjustments: {
           ...adjustments,
           ...(codSources ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(codSources) } : {}),
           ...(requireAlimonyReview ? { alimonyAmountsTaxYear: null } : {}),
+          ...(studentLoanFactsToReconfirm ? { studentLoanFacts: invalidateStudentLoanYearFacts(studentLoanFactsToReconfirm) } : {}),
         },
       } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
@@ -1856,11 +1869,12 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } } : {}),
         },
       } : {}),
-      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || bankInterestSourcesEntered || credits.saversCredit) ? { credits: { ...credits,
+      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency || bankInterestSourcesEntered || credits.saversCredit) ? { credits: { ...credits,
         ...(requireCareReview ? { dependentCare: { ...credits.dependentCare, sourceFactsConfirmed: null } } : {}),
         ...(credits.saversCredit ? { saversCredit: { ...credits.saversCredit, sourceFactsConfirmed: null } } : {}),
-        ...(education && (aotcSourcesEntered || llcSourcesEntered) ? { education: {
+        ...(education && (aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency) ? { education: {
           ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
+          ...(clearStudentLoanEducationDependency ? { claimedAsDependent: null } : {}),
           ...(aotcSourcesEntered ? {
             aocStudents: education.aocStudents.map(requireAotcSourceReview),
             aocBanInEffect: undefined, form8862Required: undefined, form8862Completed: undefined,
@@ -2244,6 +2258,10 @@ export function updateSectionData(
   const investmentInterestSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextDeductions?.investmentInterestSources;
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
+  const previousStudentLoanYear = adjustments?.studentLoanFacts?.sourceTaxYear ?? "";
+  const nextStudentLoanFacts = nextAdjustments?.studentLoanFacts;
+  const studentLoanWorksheetYearChanged = sectionId === "adjustments" && nextStudentLoanFacts
+    && /^\d{4}$/u.test(previousStudentLoanYear) && previousStudentLoanYear !== nextStudentLoanFacts.sourceTaxYear;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const nextCredits = sectionId === "credits" ? retainAotcSources(credits, data as CreditsData | undefined) : credits;
   const savedSaversCredit = nextCredits?.saversCredit;
@@ -2409,14 +2427,16 @@ export function updateSectionData(
           ...(ohioStateReturn.paOrdinaryReturnCompletionSources ? { paOrdinaryReturnCompletionSources: { ...ohioStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
         } : {}),
       } } : {}),
-      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || studentLoanWorksheetYearChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
         ...(movingSourcesChanged ? { movingExpenses: invalidateMovingExpenses(nextMoving) } : {}),
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(principalResidenceCodChanged ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(nextAdjustments.codPrincipalResidenceSources!) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
         ...(nolSourcesChanged ? { netOperatingLossSources: invalidateNetOperatingLossSources(nolSourcesChanged) } : {}),
-        ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
+        ...(studentLoanWorksheetYearChanged ? { studentLoanFacts: invalidateStudentLoanYearFacts(nextStudentLoanFacts) }
+          : studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}),
+        ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged || saversCreditToReconfirm) && nextCredits ? { credits: { ...nextCredits,
         ...(saversCreditToReconfirm ? { saversCredit: { ...saversCreditToReconfirm, sourceFactsConfirmed: null } } : {}),
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),

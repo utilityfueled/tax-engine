@@ -27,6 +27,19 @@ lines:
     formula: "Substantive household, payroll or education-source edits invalidate linked student-loan and educator confirmations. Changing only sourceFactsConfirmed metadata does not invalidate another source confirmation. Actual eligibility answers always count as substantive."
     irsRef: "Source reconciliation requirement; Pub970 multiple benefits"
     testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::invalidates substantive source changes without cycling confirmations"
+  - line: "annual-payment-confirmation"
+    description: "Reconfirm actual payment years when moving a student-loan worksheet"
+    formula: >-
+      A changed known return year or a changed known worksheet year clears the
+      worksheet confirmation, both actual claimed-dependent answers and each
+      retained loan's payment-year answer.
+      Preserve the original loan facts, statement year and exact paid amounts,
+      including explicit zero. Require the primary actual claimed-dependent
+      answer, the spouse answer for joint returns, and the answers for the
+      selected payment year before the worksheet is complete. First assignments
+      and unchanged years keep existing confirmation and validation behavior.
+    irsRef: "26 USC 221(a), (c); Pub970 chapter4, When Must Interest Be Paid? and Can You Claim the Deduction?"
+    testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::holds carried lender interest until the selected payment year is reconfirmed"
   - line: "source-controls"
     description: "Collect actual facts through interaction and preserve saved evidence"
     formula: "New controls start unknown, allow explicit zero or false, retain saved legacy values and clear confirmation on source edits. Review shows source interest separately from an allowed deduction."
@@ -37,6 +50,16 @@ lines:
     formula: "An actual claimed-dependent answer must agree between student-loan and education-credit worksheets. A known claimed dependent cannot simultaneously have a known inability to be claimed in the household worksheet. Unknown related facts remain unknown."
     irsRef: "Topic456 claimant eligibility; Pub970 chapter4"
     testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::checks actual household dependency and calculated education links before completion"
+  - line: "annual-education-claimant-reconciliation"
+    description: "Reconcile actual dependency answers from the same return year"
+    formula: >-
+      When changing a known return year with a retained student-loan worksheet,
+      clear a known education-credit claimed-dependent answer even without a
+      Lifetime Learning Credit student. Preserve all other education values
+      subject to their existing year-change rules. Compare any newly supplied
+      education answer with the current-year student-loan answer as before.
+    irsRef: "26 USC 221(c); Pub970 chapter4, Can You Claim the Deduction?"
+    testRef: "tests/guided-interview/guided-student-loan-facts.test.ts::clears stale education dependency without hiding a current-year conflict"
   - line: "canonical-calculation"
     description: "Calculate the actual source deduction through the full return"
     formula: "The guided bridge supplies actual loan facts once; canonical federal MAGI and the source worksheet determine Schedule1 line21. A lender-statement source without Form1098E still reaches the return and never becomes a dropped adjustment."
