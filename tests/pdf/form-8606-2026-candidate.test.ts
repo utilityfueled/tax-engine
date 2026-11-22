@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { removeTrustedTemplateLegacyFormData } from "@/pdf/trusted-review-template-cleanup.js";
 import { ordinaryIraBasisFixture } from "../fixtures/ira-basis.js";
 
 const blank = new URL("../../forms/blank/2026/f8606.pdf", import.meta.url);
@@ -21,6 +22,33 @@ async function sourceContract() {
 async function mapping() {
   const { FORM_8606_2026_CANDIDATE } = await import("@/pdf/mappings/2026/form-8606-candidate.js");
   return FORM_8606_2026_CANDIDATE;
+}
+
+function ordinary2026IraBasisFixture() {
+  const source = ordinaryIraBasisFixture();
+  source.taxpayer.taxYear = 2026;
+  source.iraBasisSources.taxYear = 2026;
+  for (const owner of source.iraBasisSources.owners) {
+    owner.basisHistory.taxYear = 2025;
+    for (const account of owner.accounts) account.taxYear = 2026;
+  }
+  for (const form of source.form1099R) {
+    form.taxYear = 2026;
+    form.trumpAccount = false;
+    form.excessContributionEarnings = "0";
+  }
+  for (const distribution of source.iraBasisSources.distributions) distribution.taxYear = 2026;
+  return source;
+}
+
+function ordinaryDistributionWithNoYearEndValue(priorBasis: string, gross: string) {
+  const source = ordinary2026IraBasisFixture();
+  const owner = source.iraBasisSources.owners[0];
+  owner.accounts[0].yearEndValue = "0";
+  owner.basisHistory.line14 = priorBasis;
+  source.form1099R[0].grossDistribution = gross;
+  source.iraBasisSources.distributions[0].grossDistribution = gross;
+  return source;
 }
 
 describe("Final 2026 Form 8606 physical candidate", () => {
@@ -151,19 +179,7 @@ describe("Final 2026 Form 8606 physical candidate", () => {
   it("projects separate owners from the confirmed ordinary IRA originals", async () => {
     const { projectForm86062026OrdinaryDistribution, FORM_8606_2026_CANDIDATE: { fields } } =
       await import("@/pdf/mappings/2026/form-8606-candidate.js");
-    const source = ordinaryIraBasisFixture();
-    source.taxpayer.taxYear = 2026;
-    source.iraBasisSources.taxYear = 2026;
-    for (const owner of source.iraBasisSources.owners) {
-      owner.basisHistory.taxYear = 2025;
-      for (const account of owner.accounts) account.taxYear = 2026;
-    }
-    for (const form of source.form1099R) {
-      form.taxYear = 2026;
-      form.trumpAccount = false;
-      form.excessContributionEarnings = "0";
-    }
-    for (const distribution of source.iraBasisSources.distributions) distribution.taxYear = 2026;
+    const source = ordinary2026IraBasisFixture();
     const input = TaxYearInputSchema.parse(source);
     const keys = [fields.line1, fields.line2, fields.line3, fields.line4, fields.line5, fields.line6, fields.line7, fields.line8,
       fields.line9, fields.line10Integer, fields.line10Fraction, fields.line11, fields.line12, fields.line13, fields.line14,
@@ -227,8 +243,50 @@ describe("Final 2026 Form 8606 physical candidate", () => {
     full.iraBasisSources.distributions[0].grossDistribution = "10000";
     full.iraBasisSources.owners[0].accounts[0].yearEndValue = "-1";
     expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(full), "primary")).toThrow();
-    full.iraBasisSources.owners[0].accounts[0].yearEndValue = "0";
-    full.iraBasisSources.owners[0].basisHistory.line14 = "9999";
-    expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(full), "primary")).toThrow(/basis/iu);
+  });
+
+  it("reopens the four-place basis ratio and its reconciled taxable amount", async () => {
+    const { projectForm86062026OrdinaryDistribution, FORM_8606_2026_CANDIDATE: { fields } } =
+      await import("@/pdf/mappings/2026/form-8606-candidate.js");
+    const blankBytes = await readFile(blank);
+    for (const [basis, gross] of [["9999", "10000"], ["9998", "9999"]] as const) {
+      const input = TaxYearInputSchema.parse(ordinaryDistributionWithNoYearEndValue(basis, gross));
+      const projection = projectForm86062026OrdinaryDistribution(input, "primary");
+      const pdf = await PDFDocument.load(blankBytes);
+      removeTrustedTemplateLegacyFormData(pdf);
+      const form = pdf.getForm();
+      const fraction = form.getTextField(fields.line10Fraction);
+      const [widget] = fraction.acroField.getWidgets();
+      const width = widget.getRectangle().width;
+      const inset = 1 + (widget.getBorderStyle()?.getWidth() ?? 0);
+      const font = form.getDefaultFont();
+      expect(widget.getDefaultAppearance()).toMatch(/\b9\.00 Tf\b/u);
+      expect(fraction.getMaxLength()).toBeUndefined();
+      for (const digit of "0123456789") expect(font.widthOfTextAtSize(digit.repeat(4), 9) + 2 * inset).toBeLessThan(width);
+      expect(font.widthOfTextAtSize("99999", 9) + 2 * inset).toBeGreaterThan(width);
+
+      for (const [name, value] of Object.entries(projection)) form.getTextField(name).setText(value);
+      await markReviewPdf(pdf);
+      const saved = (await PDFDocument.load(await pdf.save())).getForm();
+      const exactFields = { line10Integer: "0", line10Fraction: "9999", line12: basis, line13: basis, line14: "0", line15a: "1", line15c: "1" } as const;
+      for (const [line, value] of Object.entries(exactFields)) {
+        const field = saved.getTextField(fields[line as keyof typeof exactFields]);
+        expect(field.acroField.getValue()?.decodeText(), line).toBe(value);
+        const appearance = field.acroField.getWidgets()[0].getAppearances()?.normal;
+        expect(appearance, line).toBeInstanceOf(PDFRawStream);
+        const commands = Buffer.from(decodePDFRawStream(appearance as PDFRawStream).decode()).toString("ascii");
+        expect(commands, line).toContain(`<${Buffer.from(value).toString("hex").toUpperCase()}> Tj`);
+        if (line === "line10Fraction") expect(commands).toContain("/Helvetica 9 Tf");
+      }
+    }
+  });
+
+  it("holds a distribution that still overuses basis at four places and excludes special repayments", async () => {
+    const { projectForm86062026OrdinaryDistribution } = await import("@/pdf/mappings/2026/form-8606-candidate.js");
+    const overuse = ordinaryDistributionWithNoYearEndValue("999999", "1000000");
+    expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(overuse), "primary")).toThrow(/basis/iu);
+    const special = ordinaryDistributionWithNoYearEndValue("9999", "10000");
+    special.iraBasisSources.owners[0].ordinaryFacts.specialDistributionsOrRepaymentsPresent = true;
+    expect(() => projectForm86062026OrdinaryDistribution(TaxYearInputSchema.parse(special), "primary")).toThrow(/separate actual method/iu);
   });
 });

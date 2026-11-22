@@ -45,15 +45,28 @@ lines:
       Line 2 is prior basis, line 3 its sum with line 1, and line 5 is line 3
       minus line 4. Lines 6 and 7 use the separately aggregated account value
       and distributions. Line 9 is the sum of lines 6 through 8. Split the
-      three-place capped ratio from line 10 across its two widgets. Apply it
+      capped ratio from line 10 across its two widgets. Apply it
       to line 7 on line 12. Line 13 equals line 12, line 14 is line 3 minus
-      line 13, and lines 15a and 15c equal line 7 minus line 12. Refuse a
-      ratio whose printed amount would use more basis than exists. Leave
+      line 13, and lines 15a and 15c equal line 7 minus line 12. Leave
       Part II, Part III, identity and preparer fields blank. Preserve separate
       spouse amounts and never write source references or account identifiers.
       Remove the official blank's obsolete Reader signature before saving the
       marked synthetic specimen.
     testRef: "tests/pdf/form-8606-2026-candidate.test.ts::projects separate owners from the confirmed ordinary IRA originals"
+  - line: "10 ordinary basis precision"
+    description: "Use four native fractional digits only when three places would overuse basis"
+    formula: >-
+      For the admitted ordinary distribution only, retain the capped
+      three-place calculation when printed line 13 does not exceed line 3.
+      Otherwise recompute line 5 divided by line 9 at four places using
+      Decimal half-up rounding. Four digits fit the pinned line 10 fraction
+      widget at its native size. Derive displayed lines 12, 13, 14, 15a and
+      15c from that same displayed ratio and hold the candidate if line 13
+      still overuses the available basis. Use no greater precision in this
+      projection. The shared calculation and Form 1040 line 4b transfer are
+      separate from this internal specimen.
+    irsRef: "https://www.irs.gov/pub/irs-prior/f8606--2026.pdf"
+    testRef: "tests/pdf/form-8606-2026-candidate.test.ts::reopens the four-place basis ratio and its reconciled taxable amount"
   - line: "closed-exports"
     description: "Keep the diagnostic source outside the public and filing registries"
     formula: "Reject the final 2026 source in the historical Form 8606 template slot and leave annual review and filing blocked."
