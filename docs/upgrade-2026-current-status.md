@@ -10,7 +10,10 @@ passed 30,075 tests across 2,192 suites with 88.56% branch coverage.
 Remote CI matched both counts and coverage and all test PostgreSQL
 16.16 instances shut down. Docker passed on the same source. Native
 ARM64 passed smoke and Compose recovery. Full browser qualification
-still needs results.
+remains open. The two mortgage browser cases that had expected stale
+residency to survive now re-enter it through the UI in `16c3d4dd`.
+Both focused reruns passed. Strict AMD64 also reported two Ohio
+school-district deadlines before that fixture update.
 [Annual personal facts evidence](upgrade-2026-progress.md#november-21-annual-dependent-filer-and-spouse-facts).
 
 `b3cb03a7` preserves exact state refund payment matches and includes the

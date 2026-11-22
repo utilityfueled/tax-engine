@@ -36,11 +36,34 @@ Exact unit and coverage each passed 30,075 tests across 2,192 suites
 with 88.56% branch coverage. The two disposable PostgreSQL 16.16
 instances both shut down. Remote CI matched the counts, coverage and
 database shutdowns. The exact Docker build passed. Native ARM64 passed
-image smoke, Compose upgrade and recovery before the browser step.
+image smoke, Compose upgrade and recovery. The superseded browser run
+was canceled so the corrected fixture could take the runner. GitHub
+recorded successful browser-container cleanup.
+Managed Linux passed 648 of 650 runnable cases. Strict AMD64 passed
+646, with two Ohio school-district deadlines. Both jobs retained five
+existing skips and failed both prepaid mortgage browser cases. The
+mortgage cases changed the return year before collecting original premium
+facts, then expected canonical input while the new year's U.S. residency
+months and state residency still awaited confirmation. Smoke, Compose
+recovery and rollback, archive import, immutable SBOMs and cleanup passed
+on strict AMD64. These full runs precede a fixture update.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44982692591) ·
 [Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44982692598) ·
 [Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/44982692590) ·
 [Exact native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44983010735).
+
+`16c3d4dd` updates the mortgage browser fixture to revisit About You,
+check that the year change cleared both residency answers, then enter
+current-year U.S. residency months and state residency through the UI.
+The original mortgage assertions, time limits, request budgets and
+workspace setup remain in place. Both focused browser cases and cleanup
+passed under the existing limits. All 181 Vitest and 37 Node preflight
+checks passed, and the exact Docker build passed. An independent review
+confirmed that the application source matches `9bc3fd3c`.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44986325311) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44986325295) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44986325371) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44986326170).
 
 ## November 21 donation and refund source reconfirmation
 

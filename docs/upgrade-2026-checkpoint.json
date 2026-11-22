@@ -27,9 +27,23 @@
         "combinedCoverage": {"passed": 30075, "suitesPassed": 2192, "branchCoveragePercent": 88.56, "postgres16_16Stopped": true},
         "githubDockerPassed": true,
         "githubCombinedCi": {"passed": true, "unitPassed": 30075, "coverageTestsPassed": 30075, "suitesPerRun": 2192, "branchCoveragePercent": 88.56, "bothPostgres16_16StopsPassed": true},
-        "githubNativeArm64BeforeBrowserResult": {"job": 137093060031, "nativeImageSmokePassed": true, "composeUpgradeAndRecoveryPassed": true},
+        "githubNativeArm64BeforeBrowserResult": {"job": 137093060031, "nativeImageSmokePassed": true, "composeUpgradeAndRecoveryPassed": true, "browserOutcome": "cancelled", "containerRemoved": true},
+        "githubManagedBrowserBeforeMortgageFixtureUpdate": {"job": 137086450797, "passed": 648, "failed": 2, "originalSkips": 5, "unconfirmedCurrentYearMortgageFixtureFailures": 2},
+        "githubStrictAmd64BeforeMortgageFixtureUpdate": {"job": 137086450478, "passed": 646, "failed": 4, "originalSkips": 5, "unconfirmedCurrentYearMortgageFixtureFailures": 2, "ohioSchoolDistrictDeadlineFailures": 2, "imageSmokePassed": true, "composeRecoveryAndRollbackPassed": true, "independentArchivePassed": true, "immutableSbomsPassed": true, "containerRemoved": true},
         "githubRuns": {"ci": 44982692591, "docker": 44982692598, "web": 44982692590, "nativeArm64": 44983010735},
         "receipts": ".local/upgrade-evidence/nov21-guided-filer-year"
+      },
+      "mortgageBrowserFixture": {
+        "commit": "16c3d4dd66ba934cf719833bf98c1c6d8bce143d",
+        "applicationDiffFrom9bc3fd3c": false,
+        "independentReviewPassed": true,
+        "browserSourceManifestPassed": true,
+        "preflightVitestPassed": 181,
+        "preflightNodeTestsPassed": 37,
+        "focusedManagedBrowser": {"passed": 2, "failed": 0, "skipped": 0, "timeoutMs": 30000, "retries": 0, "cleanupPassed": true},
+        "githubDockerPassed": true,
+        "githubRuns": {"ci": 44986325311, "docker": 44986325295, "web": 44986325371, "nativeArm64": 44986326170},
+        "receipts": ".local/upgrade-evidence/nov21-mortgage-year-fixture"
       },
       "releaseReady": false
     },
