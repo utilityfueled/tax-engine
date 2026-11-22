@@ -12372,3 +12372,22 @@ and [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf).
 The complete nonbrowser checks are running again from a tracked-only archive
 of `caf13618`, with idle sleep inhibited for each local process. Receipts are
 under `.local/upgrade-evidence/nov22-main-caf13618-awake/`.
+
+### November 22 clean local tests and richer Ohio diagnostics
+
+The awake `caf13618` archive passed 30,080 unit tests with 79 skips and passed
+all eight static, spec, lint and build checks. A separate managed archive with
+the 15 declared sample documents passed all four original Ohio resident-credit
+desktop and mobile cases under the unchanged 30-second deadline. The initial
+managed archive lacked those ignored fixtures and stopped before the server
+started. Sample hashes, build output and the focused result are under
+`.local/upgrade-evidence/nov22-caf13618-oh-resident-browser/`. Full managed
+browser and coverage results are pending.
+
+`8ca0f33c` adds a fixed failure category and verified relative test-source
+coordinates to paired diagnostics. Raw messages, values and stacks stay out
+of the artifact. Selection, budgets and pass/fail gates are unchanged. The
+author passed 56 focused checks and independent review passed 16. The exact
+main [Linux rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45055612463)
+was queued after dispatch. The four local passes do not supersede the previous
+native failures.

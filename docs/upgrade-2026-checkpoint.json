@@ -1,5 +1,21 @@
 {
   "activeContinuation": {
+    "nov22OhioDiagnosticCluesAndAwakeLocal": {
+      "diagnosticCommit": "8ca0f33c",
+      "diagnosticFocusedTestsPassed": 56,
+      "diagnosticIndependentTestsPassed": 16,
+      "linuxRehearsalRun": 45055612463,
+      "localApplicationCommit": "caf13618",
+      "unitPassed": 30080,
+      "unitSkipped": 79,
+      "staticChecksPassed": 8,
+      "focusedOhioBrowserPassed": 4,
+      "restoredSampleDocuments": 15,
+      "localBrowserReceipts": ".local/upgrade-evidence/nov22-caf13618-oh-resident-browser/",
+      "fullLocalBrowser": "running",
+      "fullCoverage": "running",
+      "releaseQualified": false
+    },
     "nov22Form8880RothCandidate": {
       "applicationCommit": "caf13618",
       "irsSources": ["https://www.irs.gov/pub/irs-prior/f8880--2026.pdf", "https://www.irs.gov/pub/irs-drop/n-25-67.pdf"],
