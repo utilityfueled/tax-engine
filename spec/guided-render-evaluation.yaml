@@ -13,6 +13,9 @@ lines:
   - line: "parity-and-edits"
     formula: 'Preserve complete old helper output and literal actual money, and revalidate owner, year, unknown confirmations, retained children and changed source records on each invocation.'
     testRef: "tests/guided-interview/guided-render-evaluation.test.ts::preserves original behavior after actual source edits %s"
+    notes: 'For a single 2025 Ohio return with confirmed business, residency and payment drafts, no school district sources, and an explicitly unconfirmed header, render preview can omit a state result without replaying the header. Independent validation, confirmed headers and required, entered or retained school sources keep their original replay.'
+    testRefs:
+      - "tests/guided-interview/guided-render-evaluation.test.ts::preserves original render results with an explicitly pending NEW212 header"
   - line: "output-isolation"
     formula: 'Caller state and independent returned projection arrays remain unmodified and unaliased; editing an earlier result does not change a subsequent evaluation.'
     testRef: "tests/guided-interview/guided-render-evaluation.test.ts::isolates returned source projections and subsequent evaluations %s"

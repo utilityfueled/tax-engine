@@ -188,12 +188,25 @@ export function computeGuidedPreviewEvaluation(state: GuidedFlowState): {preview
   let schoolReplaySucceeded = false;
   let blockedBy: string | null = null;
   const metrics = runGuidedPreview(state, message => { blockedBy = message; },
-    current => { input = current; }, () => { sourceReplaySucceeded = true; }, () => { schoolReplaySucceeded = true; });
+    current => { input = current; }, () => { sourceReplaySucceeded = true; }, () => { schoolReplaySucceeded = true; }, true);
   return { preview: {metrics, blockedBy}, input, sourceReplaySucceeded, schoolReplaySucceeded };
 }
 
+function pendingOhioBusinessHeaderWithoutSchool(input: TaxYearInput, data: StateReturnData | undefined): boolean {
+  const header = data?.ohioReturnHeaderSources;
+  const residency = data?.ohioResidency;
+  return input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus === "single"
+    && input.ohioResidency === undefined && input.ohioSchoolDistrict === undefined && input.ohioReturnHeaderSources === undefined
+    && residency?.sourceFactsConfirmed === true && residency.businessSources?.sourceFactsConfirmed === true
+    && residency.schoolDistrictStatus === "no_ohio_taxing_district_residency" && residency.residentCreditSources === undefined
+    && data?.ohioPayments?.sourceFactsConfirmed === true && data.ohioSchoolDistrict === undefined && data.ohioReciprocalWages === undefined
+    && header != null && Object.getOwnPropertyDescriptor(header, "sourceFactsConfirmed")?.value === null
+    && header.originalOhioSchoolDistrictSources === undefined;
+}
+
 function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void,
-  onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void, onSchoolReplay?: () => void): GuidedPreviewMetrics | null {
+  onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void, onSchoolReplay?: () => void,
+  renderEvaluation = false): GuidedPreviewMetrics | null {
   if (!state || typeof state !== "object" || state.segmentation == null || state.sectionData == null) {
     return null;
   }
@@ -266,6 +279,10 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
             const pa=calculatePAOrdinaryReturn(currentOriginals,currentOriginals.paOrdinaryReturnFacts,currentOriginals.paOrdinaryReturnCompletionSources).pa40;
             stateResult={stateCode,stateName:'Pennsylvania',stateTax:pa.netTaxLiability,refund:pa.netOverpayment,balanceDue:pa.totalAmountDue,totalPayments:pa.totalPayments};
           }
+        } else if (stateCode === "OH" && renderEvaluation && pendingOhioBusinessHeaderWithoutSchool(taxInput, state.sectionData["state-return"])) {
+          // An explicitly unconfirmed header cannot produce a preview. A school
+          // replay can still succeed before header rejection, so keep that path intact.
+          stateResult = null;
         } else if (stateCode === "OH") {
           const currentOriginals = buildGuidedStateOriginals(taxInput, state, onSchoolReplay);
           const ohio = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest)));

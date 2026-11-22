@@ -5,7 +5,8 @@ import *as bridge from '@/lib/guided-interview-bridge';
 import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
 import *as flow from '@/lib/guided-interview-flow';
-import {computeGuidedPreviewOutcome}from '@/lib/guided-preview-compute';
+import *as stateOriginals from '@/lib/guided-state-engine-inputs';
+import {computeGuidedPreviewEvaluation,computeGuidedPreviewOutcome}from '@/lib/guided-preview-compute';
 import {TaxYearInputSchema}from '@/models/inputs';
 import {nativeMIRoyaltyFixture}from '../fixtures/guided-pa-royalty-native';
 import {schoolPyHeaderPacket}from '../fixtures/oh-school-district-part-year-official-review';
@@ -15,6 +16,7 @@ import {confirmGuidedOhioResidencyFacts}from '@/lib/guided-ohio-residency-facts'
 import {confirmGuidedOhioPaymentFacts}from '@/lib/guided-ohio-payment-facts';
 import {confirmGuidedOhioSchoolDistrictFacts}from '@/lib/guided-ohio-school-district-facts';
 import {confirmGuidedOhioReturnHeaderSources}from '@/lib/guided-ohio-return-header-sources';
+import {julyNativeFixture,julyEnteredHeader} from '../fixtures/oh-business-part-year-header';
 function required<T,>(v:T|null|undefined):T{if(v==null)throw Error('Actual diagnostic fixture missing');return v;}
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
 function ohio(){
@@ -33,6 +35,78 @@ function ohio(){
 function prepare(state:flow.GuidedFlowState){const route=flow.buildSectionRoute(state.segmentation),i=route.findIndex(s=>s.id==='state-return');expect(i).toBeGreaterThan(0);state.phase='interview';state.currentSectionIndex=i;state.completedSections=route.slice(0,i+1).map(s=>s.id);return state;}
 function old(state:flow.GuidedFlowState){const preview=computeGuidedPreviewOutcome(state),analysis=flow.analyzeGuidedRender(state);let originalInput=null;try{const raw=bridge.buildTaxInputFromGuidedData(state),parsed=raw?TaxYearInputSchema.safeParse(raw):undefined;if(parsed?.success)originalInput=parsed.data;}catch{/* Preserve original incomplete-source boundary. */}return{preview,analysis,originalInput,ordinaryOriginalInput:flow.buildGuidedPAOrdinarySourceInput(state)};}
 const cohorts=[['OH school PY',ohio],['PA royalty',()=>nativeMIRoyaltyFixture().state]]as const;
+
+test('preserves original render results with an explicitly pending NEW212 header', () => {
+  for (const variant of ['initial entry', 'changed saved header', 'malformed header', 'stale parent', 'route summary'] as const) {
+    const fixture = julyNativeFixture();
+    let state = prepare(fixture.state);
+    const data = required(state.sectionData['state-return']);
+    data.ohioReturnHeaderSources = julyEnteredHeader();
+    if (variant === 'initial entry') {
+      state.completedSections = state.completedSections.filter(section => section !== 'state-return');
+    }
+    if (variant === 'changed saved header') {
+      const confirmed = confirmGuidedOhioReturnHeaderSources(fixture.input, data.ohioReturnHeaderSources, fixture.residency, fixture.payments);
+      data.ohioReturnHeaderSources = confirmed;
+      state = flow.updateSectionData(state, 'state-return', {
+        ...data, ohioReturnHeaderSources: {
+          ...confirmed, sourceFactsConfirmed: null, finderOriginal: { ...confirmed.finderOriginal, sourceReference: 'Fictional replacement Finder record' },
+        },
+      });
+      expect(state.sectionData['state-return']?.ohioReturnHeaderSources?.confirmedHeaderSources).toEqual(confirmed.confirmedHeaderSources);
+    }
+    if (variant === 'malformed header') Reflect.set(data.ohioReturnHeaderSources, 'finderOriginal', null);
+    if (variant === 'stale parent') required(data.ohioPayments).originalFederalSources = {};
+    if (variant === 'route summary') state.phase = 'complete';
+
+    const before = structuredClone(state), expected = old(state);
+    const originalValidation = flow.validateSection(state, 'state-return');
+    const replay = vi.spyOn(stateOriginals, 'buildGuidedStateOriginals');
+    try {
+      const actual = evaluateGuidedRender(state);
+      expect(actual, variant).toEqual(expected);
+      expect(actual.preview.metrics?.state ?? null, variant).toBeNull();
+      expect(actual.preview.blockedBy, variant).toBeNull();
+      expect(replay.mock.calls.length, variant).toBe(0);
+      expect(actual.analysis?.sectionStatuses.get('state-return'), variant)
+        .toBe(variant === 'initial entry' ? 'not-started' : 'needs-review');
+      expect(state, variant).toEqual(before);
+      expect(flow.validateSection(state, 'state-return'), variant).toEqual(originalValidation);
+    } finally { replay.mockRestore(); }
+  }
+});
+
+test('keeps confirmed or unknown NEW212 headers and retained school sources on the existing render replay', () => {
+  const fixture = julyNativeFixture();
+  const state = prepare(fixture.state), data = required(state.sectionData['state-return']);
+  const entered = julyEnteredHeader();
+  const confirmed = confirmGuidedOhioReturnHeaderSources(fixture.input, entered, fixture.residency, fixture.payments);
+  for (const header of [
+    confirmed,
+    { ...entered, sourceFactsConfirmed: undefined },
+    { ...entered, originalOhioSchoolDistrictSources: required(schoolPyHeaderPacket().canonical.ohioSchoolDistrict) },
+  ]) {
+    data.ohioReturnHeaderSources = header as typeof entered;
+    const expected = old(state);
+    const replay = vi.spyOn(stateOriginals, 'buildGuidedStateOriginals');
+    try {
+      expect(evaluateGuidedRender(state)).toEqual(expected);
+      expect(replay).toHaveBeenCalledTimes(1);
+    } finally { replay.mockRestore(); }
+  }
+});
+
+test('retains the separate completed school replay and display when its header is pending', () => {
+  const state = prepare(ohio()), data = required(state.sectionData['state-return']);
+  required(data.ohioReturnHeaderSources).sourceFactsConfirmed = null;
+  const expected = old(state);
+  const evaluation = computeGuidedPreviewEvaluation(state);
+  expect(evaluation.schoolReplaySucceeded).toBe(true);
+  expect(evaluation.sourceReplaySucceeded).toBe(false);
+  const render = evaluateGuidedRender(state);
+  expect(render).toEqual(expected);
+  expect(render.schoolDisplayObservation).toBeDefined();
+});
 
 test.each(['residency', 'payments', 'school', 'federal originals'] as const)(
   'preserves incomplete Ohio navigation with pending %s',
