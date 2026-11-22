@@ -1590,7 +1590,7 @@ describe("buildRetirementInputs", () => {
     expect(() => buildRetirementInputs([entry], "mfj", 2025, undefined, context))
       .toThrow(/saved.*Code 1 IRA receipt date/i);
     expect(() => buildRetirementInputs([{ ...entry, sourceTaxYear: "2026" }], "single", 2026, undefined, context))
-      .toThrow(/saved.*Code 1 IRA receipt date/i);
+      .toThrow(/actual receipt date in the 2026 statement year/i);
     expect(() => buildRetirementInputs([entry], "single", 2025, undefined, {}))
       .toThrow(/saved.*Code 1 IRA receipt date/i);
     expect(() => buildRetirementInputs([entry], "single", 2025, undefined, { personal: { ...personal, dateOfBirth: "1966-02-02" } }))
