@@ -2,9 +2,9 @@ import { Buffer } from 'node:buffer';
 import { LIMITS } from './profile.mjs';
 
 const SCHOOL_CASE_FILE = 'oh-school-district-part-year-native.spec.ts';
-const PHASES = ['school-entry', 'school-first-confirmation', 'review-download'];
-const MARKER_PREFIX = /^OH_SCHOOL_PY_PHASE (school-entry|school-first-confirmation|review-download)(?=\s|$)/mu;
-const MARKER = /^OH_SCHOOL_PY_PHASE (school-entry|school-first-confirmation|review-download) (begin|end) (0|[1-9][0-9]{0,4})(?:\r?\n)?$/u;
+const PHASES = ['school-entry', 'school-first-confirmation', 'header-entry', 'header-first-confirmation', 'review-download'];
+const MARKER_PREFIX = /^OH_SCHOOL_PY_PHASE (school-entry|school-first-confirmation|header-entry|header-first-confirmation|review-download)(?=\s|$)/mu;
+const MARKER = /^OH_SCHOOL_PY_PHASE (school-entry|school-first-confirmation|header-entry|header-first-confirmation|review-download) (begin|end) (0|[1-9][0-9]{0,4})(?:\r?\n)?$/u;
 const MAX_STDOUT_ENTRIES = 64;
 const MAX_STDOUT_BYTES = 8192;
 

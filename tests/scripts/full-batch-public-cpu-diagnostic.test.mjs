@@ -232,8 +232,14 @@ test('projects only fixed school phase markers from reconciled paired cases', as
   const retained=trace==='retain-on-failure';
   const report=f.report(retained?'timedOut':'passed');
   const [first,second]=report.suites[0].specs.map(spec=>spec.tests[0].results[0]);
-  first.stdout=[{text:'synthetic private stdout'},marker('school-entry','begin',0),marker('school-entry','end',10),marker('school-first-confirmation','begin',0)];
-  if(!retained)first.stdout.push(marker('school-first-confirmation','end',2),marker('saved-reopen','end',1),marker('review-download','begin',0),marker('review-download','end',3));
+  first.stdout=[
+   {text:'synthetic private stdout'},
+   marker('school-entry','begin',0),marker('school-entry','end',10),
+   marker('school-first-confirmation','begin',0),marker('school-first-confirmation','end',2),
+   marker('header-entry','begin',0),marker('header-entry','end',4),
+   marker('header-first-confirmation','begin',0),
+  ];
+  if(!retained)first.stdout.push(marker('header-first-confirmation','end',5),marker('saved-reopen','end',1),marker('review-download','begin',0),marker('review-download','end',3));
   second.stdout=[marker('school-entry','begin',0),marker('school-entry','begin',0),marker('school-entry','end',10)];
   return{exit:retained?1:0,report,executionMs:28};
  };
@@ -243,17 +249,23 @@ test('projects only fixed school phase markers from reconciled paired cases', as
  assert.deepEqual(legs.map(leg=>leg.failed),[1,0]);
  assert.deepEqual(legs[0].cases[0].schoolPhases,{
   'school-entry':{status:'completed',durationMs:10},
-  'school-first-confirmation':{status:'started'},
+  'school-first-confirmation':{status:'completed',durationMs:2},
+  'header-entry':{status:'completed',durationMs:4},
+  'header-first-confirmation':{status:'started'},
   'review-download':{status:'unavailable'},
  });
  assert.deepEqual(legs[1].cases[0].schoolPhases,{
   'school-entry':{status:'completed',durationMs:10},
   'school-first-confirmation':{status:'completed',durationMs:2},
+  'header-entry':{status:'completed',durationMs:4},
+  'header-first-confirmation':{status:'completed',durationMs:5},
   'review-download':{status:'completed',durationMs:3},
  });
  for(const leg of legs)assert.deepEqual(leg.cases[1].schoolPhases,{
   'school-entry':{status:'unavailable'},
   'school-first-confirmation':{status:'unavailable'},
+  'header-entry':{status:'unavailable'},
+  'header-first-confirmation':{status:'unavailable'},
   'review-download':{status:'unavailable'},
  });
  assert.deepEqual(f.saved.get('trace-off.json').cases[0].schoolPhases,legs[1].cases[0].schoolPhases);
@@ -264,9 +276,23 @@ test('school phase evidence is unavailable for impossible ordering or over-limit
  const {projectSchoolCasePhases}=await import('../../scripts/browser-cpu-diagnostics/school-phases.mjs');
  const file='oh-school-district-part-year-native.spec.ts';
  const project=(stdout)=>projectSchoolCasePhases({file,results:[{stdout}]}).schoolPhases;
- const start={text:'OH_SCHOOL_PY_PHASE school-entry begin 0\n'};
+ const marker=(phase,step,ms)=>({text:`OH_SCHOOL_PY_PHASE ${phase} ${step} ${ms}\n`});
+ const start=marker('school-entry','begin',0);
+ const throughSchool=[
+  start,marker('school-entry','end',10),
+  marker('school-first-confirmation','begin',0),marker('school-first-confirmation','end',2),
+ ];
+ const headerStarted=[...throughSchool,marker('header-entry','begin',0)];
+ const headerEntered=[...headerStarted,marker('header-entry','end',4)];
  const blank=project(undefined);
- assert.deepEqual(Object.values(blank).map(phase=>phase.status),['unavailable','unavailable','unavailable']);
+ assert.deepEqual(Object.values(blank).map(phase=>phase.status),Array(5).fill('unavailable'));
+ assert.deepEqual(project(headerStarted),{
+  'school-entry':{status:'completed',durationMs:10},
+  'school-first-confirmation':{status:'completed',durationMs:2},
+  'header-entry':{status:'started'},
+  'header-first-confirmation':{status:'unavailable'},
+  'review-download':{status:'unavailable'},
+ });
  const invalid=[
   [start,{text:'OH_SCHOOL_PY_PHASE school-entry end 30001\n'}],
   [start,{text:'OH_SCHOOL_PY_PHASE school-entry end -2\n'}],
@@ -275,6 +301,10 @@ test('school phase evidence is unavailable for impossible ordering or over-limit
   [start,{text:'OH_SCHOOL_PY_PHASE review-download begin 0\n'}],
   [start,{text:'unrelated multiline output\nOH_SCHOOL_PY_PHASE school-entry end 3\n'}],
   [start,{text:'OH_SCHOOL_PY_PHASE school-entry end 3\n\n'}],
+  [...throughSchool,marker('header-first-confirmation','begin',0)],
+  [...headerStarted,marker('header-first-confirmation','begin',0)],
+  [...headerEntered,marker('review-download','begin',0)],
+  [...headerEntered,{text:'unrelated multiline output\nOH_SCHOOL_PY_PHASE header-first-confirmation begin 0\n'}],
   Array.from({length:65},()=>start),
   [start,{text:'á'.repeat(4096)}],
  ];

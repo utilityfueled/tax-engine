@@ -1,5 +1,31 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Ohio header phase measurement
+
+The exact AMD64 comparison reached the 30-second deadline after first
+school confirmation and before review download in all four part-year
+cases. Its call sites include header entry and later school
+reconfirmation. The optional aggregate report now records header entry
+and first header confirmation with the existing fixed names, statuses
+and bounded completed durations. Case identities, browser actions,
+assertions, operation limits, retries and deadlines were preserved.
+
+All 53 Node checks, 39 Vitest checks, nine spec references, inventory
+and four local audited Chromium cases passed. An independent run
+passed 45 focused assertions. One separate actual opt-in Chromium
+case completed all five aggregate phases at the 30-second deadline.
+The local header entry measured 1,581 ms and first confirmation 129 ms.
+Those times describe local capture. The strict Linux gate remains open.
+Exact candidate binding SHA-256
+`5fb73036a5d74a3eebfa3136fd9715daba75650c18bfa3263a8064c75dad8dca`.
+Local opt-in receipt SHA-256
+`ffb948bc7a00b83a0574b5b019cc8a1ee124e9784371b49442c9724b046cccfd`.
+
+The inspected pending-header path leaves State Return uncompleted
+until Continue. It consequently runs one school projection and no
+standalone Ohio section-validation fallback during the observed edits.
+The proposed fallback shortcut could not affect those failure sites.
+
 ## November 22 Form 8889 displayed line reconciliation
 
 `3aefc04c` holds the disabled internal 2026 Form 8889 specimen when its

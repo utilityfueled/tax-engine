@@ -1,5 +1,23 @@
 {
   "activeContinuation": {
+    "nov22OhioHeaderPhaseDiagnostic": {
+      "applicationCommit": "3aefc04c",
+      "candidateBase": "35361029",
+      "browserAndTestSourcesOnly": true,
+      "fixedAdditionalPhases": ["header-entry", "header-first-confirmation"],
+      "unchangedDeadlineMs": 30000,
+      "originalRetries": 0,
+      "nodeChecksPassed": 53,
+      "vitestChecksPassed": 39,
+      "independentFocusedChecksPassed": 45,
+      "specReferencesPassed": 9,
+      "auditedLocalBrowserPassed": 4,
+      "actualLocalOptInAllFivePhases": true,
+      "candidateBindingSha256": "5fb73036a5d74a3eebfa3136fd9715daba75650c18bfa3263a8064c75dad8dca",
+      "optInReceiptSha256": "ffb948bc7a00b83a0574b5b019cc8a1ee124e9784371b49442c9724b046cccfd",
+      "strictRuntimeQualified": false,
+      "localEvidence": ".local/upgrade-evidence/nov22-ohio-header-phase-diagnostic/"
+    },
     "nov22Form8889DisplayReconciliation": {
       "applicationCommit": "3aefc04c",
       "githubStandardRuns": {"ci": 45075939078, "web": 45075939075, "docker": 45075939163},

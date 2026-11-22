@@ -2,6 +2,10 @@
 
 ## Resume here · November 22
 
+- The optional Ohio timing report adds header entry and first header
+  confirmation. Four audited Chromium cases and all five live timing
+  markers in a separate local opt-in passed. The strict runtime gate
+  remains open. [Ohio timing evidence](upgrade-2026-progress.md#november-22-ohio-header-phase-measurement).
 - `3aefc04c` holds the disabled internal Form 8889 review PDF when
   rounded line 16 contradicts the displayed subtraction. The exact
   engine amount and current public gates are preserved. Reopened
