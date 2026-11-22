@@ -12185,4 +12185,29 @@ example. Web TypeScript, targeted ESLint, both spec references, coverage invento
 generation and the six-file browser source audit passed. Independent source
 review identified future determinations and undated W-2s, both now covered.
 The reviewer observed that full 2026 preview and PDF export remained gated.
-An interactive browser run and qualified tax approval are pending.
+An independent Chromium smoke served archived `628ee303` on localhost. It
+confirmed intake, cents through formatting, edit invalidation, reconfirmation
+after reload and removal after switching to 2025. The corrected selector run
+passed with no page errors. The local receipt is
+`.local/form-8919-ux-628ee303/run.md`. Qualified tax review is pending.
+
+[Docker passed for the first push](https://github.com/utilityfueled/tax-engine/actions/runs/45043919900).
+[Vercel canceled its main-branch build](https://vercel.com/utility-fueled-llc/tax-engine).
+
+### November 22 provider model identity and exact settlement
+
+Commit `44973faf` compares the model reported by the provider with the exact
+authorized route before accepting output or settling usage. OpenAI and Gemini
+missing or conflicting identities retain the existing hold. Reconciliation
+requires supporting evidence for the authorized model, including reconnecting
+to a running attempt after an interruption. Settled historical replay remains
+idempotent. [OpenAI response contract](https://developers.openai.com/api/reference/resources/responses/methods/create)
+and [Gemini response contract](https://ai.google.dev/api/generate-content).
+
+The original adapter accepted all four mismatch/missing-model cases. The
+original ledger accepted reference-only settlement for both unknown and
+interrupted attempts. The final scoped `pnpm test` passed 213 tests across
+12 files with a disposable PostgreSQL 16.14 cluster. Eight additional mocked
+compatibility tests passed. Web TypeScript, scoped ESLint, browser source hashes,
+and diff review passed. Independent review found the interrupted-attempt edge
+and confirmed the documented direct-API model IDs. No live calls were made.

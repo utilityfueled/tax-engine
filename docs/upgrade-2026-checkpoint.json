@@ -1,13 +1,23 @@
 {
   "activeContinuation": {
+    "nov22AiReportedModelSettlement": {
+      "applicationCommit": "44973faf",
+      "sources": [
+        "https://developers.openai.com/api/reference/resources/responses/methods/create",
+        "https://ai.google.dev/api/generate-content"
+      ],
+      "verification": "213 passed across 12 scoped files with disposable local PostgreSQL 16.14 plus eight mocked compatibility cases; web TypeScript, scoped ESLint and three source digests verified.",
+      "review": "Independent source/contract and recovery review caught reference-only settlement from an interrupted running attempt; regression passed.",
+      "pending": "Independent qualified AI evaluation and actual provider availability remain separate from exact settlement."
+    },
     "nov22GuidedForm8919ReasonA": {
       "applicationCommit": "628ee303",
       "source": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
       "scope": "2026 guided Reason A only, one confirmed employer, primary nonjoint federal return",
       "verification": "29 passed across five scoped suites, web TypeScript and scoped ESLint passed, 2/2 spec references, inventory and six source hashes verified",
       "review": "Separate review reproduced future SS-8 date and undated W-2 acceptance; regressions added and passed.",
+      "browser": "Archived application 628ee303 passed local Chromium intake, cents, edit invalidation, reconfirm/reload and wrong-year removal; receipt .local/form-8919-ux-628ee303/run.md",
       "pending": [
-        "Interactive browser qualification",
         "Qualified tax review",
         "Broader employer, reason and taxpayer scenarios",
         "2026 final rule pack and public exports"
