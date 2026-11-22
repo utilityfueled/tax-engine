@@ -12166,3 +12166,23 @@ All six exact `ab330572` CI jobs completed successfully. Unit and coverage
 each passed 29,915 tests in 2,181 suites, with 88.44% branch coverage. The
 protected production build guard remained in place throughout the main pushes.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44913637095).
+
+
+### November 22 guided 2026 Form 8919 Reason A
+
+Commit `628ee303` lets one primary federal filer enter actual wages for one firm
+after receiving an IRS SS-8 employee determination. The guide verifies the dated
+determination, original EIN, exact wages and overlap attestations. W-2 Boxes 3
+and 7 require a confirmed 2026 original and a distinct employer. Editing source
+facts resets confirmation, and a retained draft stays reachable. Joint returns,
+state scenarios, and combinations with tip, railroad or potentially overlapping
+business records need further reconciliation.
+[Final 2026 IRS Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf)
+
+The spec preceded two reproduced failures. The final scoped `pnpm test` passed
+29 tests across five files, including the $1,000.25 wage and $77 payroll-tax
+example. Web TypeScript, targeted ESLint, both spec references, coverage inventory
+generation and the six-file browser source audit passed. Independent source
+review identified future determinations and undated W-2s, both now covered.
+The reviewer observed that full 2026 preview and PDF export remained gated.
+An interactive browser run and qualified tax approval are pending.

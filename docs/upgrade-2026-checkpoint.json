@@ -1,5 +1,18 @@
 {
   "activeContinuation": {
+    "nov22GuidedForm8919ReasonA": {
+      "applicationCommit": "628ee303",
+      "source": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+      "scope": "2026 guided Reason A only, one confirmed employer, primary nonjoint federal return",
+      "verification": "29 passed across five scoped suites, web TypeScript and scoped ESLint passed, 2/2 spec references, inventory and six source hashes verified",
+      "review": "Separate review reproduced future SS-8 date and undated W-2 acceptance; regressions added and passed.",
+      "pending": [
+        "Interactive browser qualification",
+        "Qualified tax review",
+        "Broader employer, reason and taxpayer scenarios",
+        "2026 final rule pack and public exports"
+      ]
+    },
     "nov22StrictLinuxAndCareSelectors": {
       "careSelectorCommit": "13cf80f4",
       "priorCoverageRun": 45017544395,
