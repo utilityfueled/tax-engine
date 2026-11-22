@@ -1,0 +1,22 @@
+form: Form 8919 guided Reason A source
+taxYear: 2026
+reference: https://www.irs.gov/pub/irs-pdf/f8919.pdf
+notes: >-
+  This initial guided calculation source covers one firm for one primary filer.
+  It does not qualify a review PDF, filing export, or state scenario.
+lines:
+  - line: "1–5"
+    description: Confirm the original IRS employee determination and wage records
+    formula: >-
+      Require the return-year firm name, original EIN, date of the received SS-8
+      employee determination, exact unreported wages, and explicit confirmation
+      of no payroll withholding, no Form 1099 from this firm, and no other report
+      of these wages. Hold joint, self-employment and unresolved overlaps.
+    testRef: tests/guided-interview/guided-form-8919-reason-a.test.ts::rejects incomplete or overlapping wage evidence
+  - line: "6, 8"
+    description: Transfer wages and derive Social Security amounts
+    formula: >-
+      Transfer exact confirmed wages with primary ownership. Require actual 2026 W-2
+      Boxes 3 and 7, including zero. Leave line 8 to the calculation engine.
+      Hold railroad pay and separate Form 4137 sources in this guided subset.
+    testRef: tests/guided-interview/guided-form-8919-reason-a.test.ts::projects confirmed source wages to the real payroll calculation

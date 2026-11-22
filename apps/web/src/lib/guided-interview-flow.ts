@@ -51,6 +51,7 @@ import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
 import { schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
+import { form8919ReasonAFactErrors } from "./guided-form-8919-reason-a";
 import { hasMovingW2Source, invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
 import { healthInsuranceSourceErrors, invalidateHealthInsuranceSources, type HealthInsuranceData } from "./guided-health-insurance-facts";
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
@@ -172,7 +173,7 @@ export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }
   { value: "current-year-loss", label: "Calculate a current-year net operating loss", hint: "Actual current business, deduction and independent AMT source records" },
   { value: "net-operating-loss", label: "Have a net operating loss carryforward", hint: "Actual filed regular and AMT loss worksheets and complete carry history" },
   { value: "foreign-earned-income", label: "Worked abroad", hint: "Actual foreign earnings, tax home and qualification records" },
-  { value: "additional-deductions", label: "Tips, overtime, vehicle loan interest or senior deduction", hint: "Actual tip records and Schedule 1-A eligibility" },
+  { value: "additional-deductions", label: "Tips, overtime, vehicle loan interest or senior deduction", hint: "Actual tip records, Form 8919 wages and Schedule 1-A eligibility" },
   { value: "bought-home", label: "Bought a home", hint: "Mortgage interest deduction may apply" },
   { value: "sold-home", label: "Sold a home", hint: "Capital gains exclusion may apply" },
   { value: "had-baby", label: "Had or adopted a child", hint: "Child tax credit, dependent exemption" },
@@ -498,7 +499,7 @@ const incomeTypeToSection: Record<IncomeType, InterviewSectionId> = {
   "unemployment": "income-unemployment",
 };
 
-export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedAdjustmentRecords = false, needsQofInvestments = false, hasSavedHouseholdRecords = false): InterviewSectionDefinition[] {
+export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedAdjustmentRecords = false, needsQofInvestments = false, hasSavedHouseholdRecords = false, hasSavedUnreportedWages = false): InterviewSectionDefinition[] {
   const sections: InterviewSectionDefinition[] = [];
 
   // Personal info is always included
@@ -541,7 +542,7 @@ export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedAdj
   const deductions = allSections.find((s) => s.id === "deductions");
   if (deductions) sections.push(deductions);
 
-  if (segmentation.lifeEvents.includes("additional-deductions")) {
+  if (segmentation.lifeEvents.includes("additional-deductions") || hasSavedUnreportedWages) {
     const additional = allSections.find(section => section.id === "additional-deductions");
     if (additional) sections.push(additional);
   }
@@ -1569,7 +1570,10 @@ export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionD
   const adjustments = state.sectionData.adjustments;
   const hasSavedAdjustmentRecords = hasAlimonyAmounts(adjustments) || adjustments?.movingExpenses !== undefined
     || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state);
-  return buildSectionRoute(state.segmentation, hasSavedAdjustmentRecords, guidedQofDiscovery(state).needsDetails, hasHouseholdAmounts(state.sectionData["other-taxes"]));
+  return buildSectionRoute(
+    state.segmentation, hasSavedAdjustmentRecords, guidedQofDiscovery(state).needsDetails,
+    hasHouseholdAmounts(state.sectionData["other-taxes"]), !!state.sectionData["additional-deductions"]?.form8919ReasonA,
+  );
 }
 
 export type VisitedSectionStatus = "not-started" | "complete" | "skipped" | "needs-review";
@@ -2181,6 +2185,13 @@ export function updateSectionData(
   const foreignTaxSourcesChanged = (qualifiedK3SourcesChanged || sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "adjustments", "credits", "deductions"].includes(sectionId)) && nextOtherTaxes?.foreignTaxElection;
   const tipSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2"].includes(sectionId) && state.sectionData["additional-deductions"];
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
+  const nextUnreportedWages = nextAdditional?.form8919ReasonA;
+  const previousUnreportedWages = state.sectionData["additional-deductions"]?.form8919ReasonA;
+  const unreportedWagesChanged = nextUnreportedWages && previousUnreportedWages && (
+    sectionId === "additional-deductions"
+      ? guidedSourceValuesChanged({ ...previousUnreportedWages, confirmed: false }, { ...nextUnreportedWages, confirmed: false })
+      : sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-royalties"].includes(sectionId)
+  );
   const rrtaParentChanged=sourceValuesChanged&&sectionId!=='additional-deductions'&&nextAdditional?.rrtaPayrollSources;
   const previousRRTA=state.sectionData['additional-deductions']?.rrtaPayrollSources,nextRRTA=nextAdditional?.rrtaPayrollSources;
   const rrtaFactsChanged=sectionId==='additional-deductions'&&nextRRTA&&previousRRTA&&rrtaDraftValues(nextRRTA)!==rrtaDraftValues(previousRRTA);
@@ -2342,7 +2353,7 @@ export function updateSectionData(
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null, ...(estimatedTaxSourcesChanged.investmentElectionSources?.household ? { investmentElectionSources: { ...estimatedTaxSourcesChanged.investmentElectionSources, household: { ...estimatedTaxSourcesChanged.investmentElectionSources.household, sourceFactsConfirmed: null } } } : {}), ...(ordinaryPeriodsChanged ? { ordinaryPreferentialPeriodsConfirmed: null } : {}), ...(specialPeriodsChanged ? { specialRatePeriodsConfirmed: null } : {}) } } } : {}),
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetHouseholdChanged || marketDiscountInterestChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null, ...(qofSourcesChanged.investments ? { investments: qofSourcesChanged.investments.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}) } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...((digitalAssetHouseholdChanged || marketDiscountInterestChanged) ? { digitalAssetEntries: nextInvestments.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } : {}) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...((qualifiedK3SourcesChanged || sectionId === "personal-info") && foreignTaxSourcesChanged.qualifiedK3Statements ? { qualifiedK3Statements: foreignTaxSourcesChanged.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}), ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
-      ...((tipSourcesChanged || additionalSourcesChanged || rrtaParentChanged || rrtaTipChanged || rrtaFactsChanged || paperFactsChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...((nextRRTA&&(rrtaParentChanged||rrtaTipChanged||rrtaFactsChanged))?{rrtaPayrollSources:{...nextRRTA,sourceFactsConfirmed:null,...(nextPaper?{paperSources:{...nextPaper,sourceFactsConfirmed:null}}:{})}}:{}), ...((nextPaper&&paperFactsChanged&&!rrtaParentChanged&&!rrtaTipChanged&&!rrtaFactsChanged)?{rrtaPayrollSources:{...nextRRTA,paperSources:{...nextPaper,sourceFactsConfirmed:null}}}:{}), ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
+      ...((tipSourcesChanged || additionalSourcesChanged || rrtaParentChanged || rrtaTipChanged || rrtaFactsChanged || paperFactsChanged || unreportedWagesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...((nextRRTA&&(rrtaParentChanged||rrtaTipChanged||rrtaFactsChanged))?{rrtaPayrollSources:{...nextRRTA,sourceFactsConfirmed:null,...(nextPaper?{paperSources:{...nextPaper,sourceFactsConfirmed:null}}:{})}}:{}), ...((nextPaper&&paperFactsChanged&&!rrtaParentChanged&&!rrtaTipChanged&&!rrtaFactsChanged)?{rrtaPayrollSources:{...nextRRTA,paperSources:{...nextPaper,sourceFactsConfirmed:null}}}:{}), ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(unreportedWagesChanged && nextUnreportedWages ? { form8919ReasonA: { ...nextUnreportedWages, confirmed: false } } : {}) } } : {}),
       ...((mortgageSourcesChanged || investmentInterestSourcesChanged || charitableCarryoverChanged || k1CharitableSourcesChanged || cryptoDonationsChanged || medicalMileageChanged) && nextDeductions ? { deductions: { ...nextDeductions,
         ...(medicalMileageChanged && medicalMileage ? { medicalMileage: clearMedicalMileageConfirmations(medicalMileage) } : {}),
         ...(cryptoDonationsChanged ? { cryptoDonations: nextDeductions.cryptoDonations?.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
@@ -2806,7 +2817,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
     case "income-unemployment":
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"), state);
     case "additional-deductions":
-      return getSectionData(state, "additional-deductions") ? validateRequiredFacts({ ...tipIncomeFactErrors(state), ...schedule1AFactErrors(state) }) : EMPTY_SECTION("additional deduction sources");
+      return getSectionData(state, "additional-deductions") ? validateRequiredFacts({ ...tipIncomeFactErrors(state), ...schedule1AFactErrors(state), ...form8919ReasonAFactErrors(state) }) : EMPTY_SECTION("additional deduction sources");
     case "deductions": {
       // This later section owns the regular charitable history. Navigation from
       // Adjustments must not confirm it, while completion here binds both originals.

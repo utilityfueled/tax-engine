@@ -42,6 +42,7 @@ import { buildGuidedChildElections } from "./guided-child-election-facts";
 import { buildSchedule1AInput, schedule1AFactErrors } from "./guided-schedule-1-a-facts";
 import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
+import { buildGuidedForm8919ReasonA } from "./guided-form-8919-reason-a";
 import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors, educatorBondFactErrors } from "./guided-educator-facts";
@@ -808,7 +809,9 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let form3903: ReturnType<typeof buildMovingExpenses>;
   let standardMileage: ReturnType<typeof readGuidedBusinessMileage>;
   let professionalWagering: ReturnType<typeof readGuidedProfessionalWagering>;
+  let form8919: ReturnType<typeof buildGuidedForm8919ReasonA>;
   try {
+    form8919 = buildGuidedForm8919ReasonA(state);
     form3903 = buildMovingExpenses(state);
     assertKnownFacts(royaltySourceFactErrors(state));
     if(sectionData['additional-deductions']?.rrtaPayrollSources)buildTipIncomeSourceOriginals(sectionData['additional-deductions']?.tipIncomeAccounts,segmentation.filingStatus,state.taxYear,w2Data?.entries);
@@ -904,6 +907,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
   try { royaltyInputs={...royaltyInputs,form1099Misc:buildGuidedZeroIncomeMiscSources(state,royaltyInputs.form1099Misc)}; } catch { return null; }
+  if (form8919 && (necs.length > 0 || royaltyInputs.form1099Misc?.length || scheduleC)) return null;
   let scheduleA: ReturnType<typeof buildScheduleAInput>;
   try {
     scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear, { state, originals: royaltyInputs.form1099Misc });
@@ -1000,6 +1004,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
     form4137ByOwner: (sectionData['additional-deductions']?.rrtaPayrollSources?buildTipIncomeSourceOriginals:buildTipIncomeInputs)(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
+    ...(form8919 ? { form8919 } : {}),
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form7206: healthInsurance,
     form1099Nec: necs,

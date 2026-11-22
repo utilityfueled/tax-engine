@@ -81,7 +81,12 @@ export function buildTipIncomeInputs(...args:Parameters<typeof buildTipOriginals
  if(Object.values(records??{}).some(record=>record?.sourceFacts&&money(record.sourceFacts.railroadRetirementCompensation,'actual railroad compensation').gt(0)))throw Error('RRTA compensation requires its separate Medicare source worksheet before this guided return can calculate it.');
  return records;
 }
-export interface AdditionalDeductionsData { rrtaPayrollSources?: GuidedRRTADraft; tipIncomeAccounts?: TipIncomeAccountData[]; schedule1A?: Schedule1AData }
+export interface AdditionalDeductionsData {
+  rrtaPayrollSources?: GuidedRRTADraft;
+  tipIncomeAccounts?: TipIncomeAccountData[];
+  schedule1A?: Schedule1AData;
+  form8919ReasonA?: import("./guided-form-8919-reason-a").GuidedForm8919ReasonA;
+}
 export function tipIncomeW2Options(entries: W2EntryData[] = []) {
   return entries.filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld)).map((entry, index) => ({ sourceId: `formW2:${index}`, accountHolder: entry.accountHolder ?? "", employerName: entry.employerName, employerEin: entry.employerEin }));
 }

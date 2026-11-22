@@ -7566,6 +7566,26 @@
       ]
     },
     {
+      "key": "federal/guided-form-8919-reason-a",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+      "specPath": "spec/federal/guided-form-8919-reason-a.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-goodwill-amortization",
       "jurisdiction": "federal",
       "taxYear": 2025,
