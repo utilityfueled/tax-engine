@@ -1016,7 +1016,7 @@ export function SectionSelfEmployment({
           </div>
         </div>
 
-        <BusinessSourceDetails data={businessFacts} onChange={value => commitSection({ businessFacts: value })} onCapturePassenger={facts=>{if(!flowState)throw new Error('Current complete interview required');return captureGuidedPassengerSources({...flowState,sectionData:{...flowState.sectionData,'income-self-employment':{...latestSection.current.value,businessFacts:facts}}});}} />
+        <BusinessSourceDetails data={businessFacts} taxYear={flowState?.taxYear} onChange={value => commitSection({ businessFacts: value })} onCapturePassenger={facts=>{if(!flowState)throw new Error('Current complete interview required');return captureGuidedPassengerSources({...flowState,sectionData:{...flowState.sectionData,'income-self-employment':{...latestSection.current.value,businessFacts:facts}}});}} />
         <ProfessionalWageringDetails data={businessFacts?.professionalWagering} available={supportsGuidedProfessionalWagering(flowState, businessFacts)}
           error={hasWageringLedger && flowState ? validateSection(flowState, "income-self-employment").fieldErrors?.professionalWagering : undefined}
           onChange={professionalWagering => {

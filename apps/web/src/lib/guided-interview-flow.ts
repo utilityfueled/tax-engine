@@ -2125,8 +2125,9 @@ export function updateSectionData(
       businessMileageOriginals(previousBusiness?.businessFacts), businessMileageOriginals(nextBusiness?.businessFacts),
     ))
   );
-  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,standardMileage:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
+  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,standardMileage:undefined,homeOfficeRenter:value.businessFacts.homeOfficeRenter?{...value.businessFacts.homeOfficeRenter,confirmed:undefined}:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
   const scheduleCValuesChanged=sectionId==='income-self-employment'?guidedSourceValuesChanged(scheduleCValues(state.sectionData['income-self-employment']),scheduleCValues(nextBusiness)):sourceValuesChanged;
+  const renterHomeOfficeChanged = scheduleCValuesChanged && ["personal-info", "income-self-employment"].includes(sectionId) && nextBusiness?.businessFacts?.homeOfficeRenter;
   const scheduleCSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.scheduleCSourceFacts;
   const macrsSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","income-rental","income-royalties","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.macrsAssets;
   const passengerSourcesChanged=scheduleCValuesChanged && nextBusiness?.businessFacts?.passengerSources;
@@ -2324,11 +2325,12 @@ export function updateSectionData(
       [sectionId]: sectionId === "credits" ? nextCredits : data,
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged) && nextBusiness ? {
+      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged) && nextBusiness ? {
         "income-self-employment": {
           ...nextBusiness,
           businessFacts: {
             ...nextBusiness.businessFacts,
+            ...(renterHomeOfficeChanged ? { homeOfficeRenter: { ...renterHomeOfficeChanged, confirmed: false } } : {}),
             ...(scheduleCSourcesChanged ? { scheduleCSourceFacts: { ...scheduleCSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(macrsSourcesChanged ? { macrsAssets: { ...macrsSourcesChanged, sourceFactsConfirmed: null } } : {}),
             ...(passengerSourcesChanged ? { passengerSources: { ...passengerSourcesChanged, sourceFactsConfirmed: null } } : {}),

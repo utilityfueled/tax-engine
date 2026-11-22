@@ -43,6 +43,7 @@ import { buildSchedule1AInput, schedule1AFactErrors } from "./guided-schedule-1-
 import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
 import { buildGuidedForm8919ReasonA } from "./guided-form-8919-reason-a";
+import { buildGuidedRenterHomeOffice } from "./guided-form-8829-renter";
 import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors, educatorBondFactErrors } from "./guided-educator-facts";
@@ -261,6 +262,7 @@ export function buildScheduleCInput(
   businessFacts?: BusinessSourceData,
   standardMileage?: NonNullable<ReturnType<typeof readGuidedBusinessMileage>>["packet"],
   professionalWagering?: NonNullable<ReturnType<typeof readGuidedProfessionalWagering>>["ledger"],
+  homeOffice?: ReturnType<typeof buildGuidedRenterHomeOffice>,
 ) {
   const sources = (necEntries ?? []).filter(isStartedNec);
   if (!sources.length && !hasEnteredAmount(manualGrossReceipts) && !Object.values(expenses ?? {}).some(hasEnteredAmount) && !businessFacts) return undefined;
@@ -273,6 +275,7 @@ export function buildScheduleCInput(
     sourceFacts: businessFacts?.scheduleCSourceFacts,
     ...(standardMileage ? { standardMileage } : {}),
     ...(professionalWagering ? { professionalWagering } : {}),
+    ...(homeOffice ? { homeOffice } : {}),
     grossReceipts: professionalWagering ? undefined : totalGross?.toFixed(),
     accountHolder: businessFacts?.accountHolder === "primary" || businessFacts?.accountHolder === "spouse" ? businessFacts.accountHolder : undefined,
     principalBusinessActivity: businessFacts?.activityDescription?.trim() || undefined,
@@ -809,6 +812,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let form3903: ReturnType<typeof buildMovingExpenses>;
   let standardMileage: ReturnType<typeof readGuidedBusinessMileage>;
   let professionalWagering: ReturnType<typeof readGuidedProfessionalWagering>;
+  let homeOffice: ReturnType<typeof buildGuidedRenterHomeOffice>;
   let form8919: ReturnType<typeof buildGuidedForm8919ReasonA>;
   try {
     form8919 = buildGuidedForm8919ReasonA(state);
@@ -821,6 +825,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(combatPayElectionErrors(w2Data?.entries, w2Data?.combatPayElection, segmentation.filingStatus));
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo, qofDiscovery.answer === false));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
+    homeOffice = buildGuidedRenterHomeOffice(seData?.businessFacts?.homeOfficeRenter, state.taxYear, segmentation.stateCode);
     standardMileage = readGuidedBusinessMileage(seData, state);
     professionalWagering = seData && readGuidedProfessionalWagering(seData, state);
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
@@ -871,7 +876,11 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const stateCode = segmentation.stateCode;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
-  const scheduleC = buildScheduleCInput(seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated, seData?.businessFacts, standardMileage?.packet, professionalWagering?.ledger);
+  const scheduleC = buildScheduleCInput(
+    seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated,
+    seData?.businessFacts, standardMileage?.packet, professionalWagering?.ledger,
+    homeOffice,
+  );
   let actualGoodwill:ReturnType<typeof buildGuidedGoodwill>;
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
   let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;

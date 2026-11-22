@@ -1,0 +1,27 @@
+form: Form 8829 guided actual renter expenses
+taxYear: 2026
+reference: https://www.irs.gov/pub/irs-pdf/f8829.pdf
+notes: >-
+  Source intake for one ordinary Schedule C business on the federal route.
+  This coverage does not qualify state treatment, public review PDFs, or filing exports.
+lines:
+  - line: "1–7"
+    description: Confirm actual qualified business use and measurements
+    formula: >-
+      Use original measurements for one rented home and the same regular,
+      exclusive business-use area throughout the return year. Require the
+      taxpayer to identify this home office as the principal place of this
+      business and confirm whole square feet with 0 < business area <= total
+      home area. Hold other qualification paths.
+    testRef: tests/guided-interview/guided-form-8829-renter.test.ts::holds incomplete unsupported and unreconciled home office originals
+  - line: "8, 19, 21, 36"
+    description: Derive ordinary renter deduction from Schedule C and original receipts
+    formula: >-
+      Bind this 2026 return to confirmed actual indirect rent and utilities,
+      including stated zeros. Require confirmation that all business gross income
+      used for the limit was from use of this home. Require separate expenses
+      with no duplication in Schedule C and hold any other home-office expense,
+      adjustment, carryover, or unsupported worksheet. Leave the gross-income
+      limit to Schedule C line 29. Transfer Form 8829 line 36 to Schedule C line
+      30 with no manual direct deduction. Reconfirm after affected sources change.
+    testRef: tests/guided-interview/guided-form-8829-renter.test.ts::projects documented renter expenses through the real Schedule C calculation

@@ -7,10 +7,13 @@ import {GoodwillAmortizationDetails} from "./goodwill-amortization-details";
 import { MacrsAssetDetails } from "./macrs-asset-details";
 import { CurrencyField } from "./currency-field";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
+import { RenterHomeOfficeDetails } from "./renter-home-office-details";
 
-export function BusinessSourceDetails({ data = {}, onChange, onCapturePassenger }: { data?: BusinessSourceData; onChange: (data: BusinessSourceData) => void; onCapturePassenger?:(facts:BusinessSourceData)=>GuidedPassengerDraft }) {
+export function BusinessSourceDetails({ data = {}, taxYear, onChange, onCapturePassenger }: { data?: BusinessSourceData; taxYear: number | null | undefined; onChange: (data: BusinessSourceData) => void; onCapturePassenger?:(facts:BusinessSourceData)=>GuidedPassengerDraft }) {
   const patch = (next: Partial<BusinessSourceData>) => {
-    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined, goodwillAmortization:facts.goodwillAmortization?{...facts.goodwillAmortization,sourceFactsConfirmed:undefined,originalCollection:undefined}:undefined, passengerSources:facts.passengerSources?{...facts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined });
+    const values = (facts: BusinessSourceData) => ({ ...facts, incomeReconciled: undefined, expensesReconciled: undefined, goodwillAmortization:facts.goodwillAmortization?{...facts.goodwillAmortization,sourceFactsConfirmed:undefined,originalCollection:undefined}:undefined, passengerSources:facts.passengerSources?{...facts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,
+      homeOfficeRenter: facts.homeOfficeRenter ? { ...facts.homeOfficeRenter, confirmed: undefined } : undefined,
+    });
     const changed = guidedSourceValuesChanged(values(data), values({ ...data, ...next }));
     const goodwillValues=(facts:BusinessSourceData)=>({...values(facts),scheduleCSourceFacts:facts.scheduleCSourceFacts?{...facts.scheduleCSourceFacts,sourceFactsConfirmed:undefined}:undefined});
     const goodwillChanged=guidedSourceValuesChanged(goodwillValues(data),goodwillValues({...data,...next}));
@@ -101,7 +104,11 @@ export function BusinessSourceDetails({ data = {}, onChange, onCapturePassenger 
     <TextFact label="Description of other deductible business expenses" value={data.otherExpenseDescription ?? ""} onChange={otherExpenseDescription => patch({ otherExpenseDescription, expensesReconciled: null })} />
     <BooleanFact label="Is this a specified service trade or business for section 199A?" value={data.isSST} onChange={isSST => patch({ isSST })} />
     <BooleanFact label="Is all your investment in this activity at risk under section 465?" value={data.allInvestmentAtRisk} onChange={allInvestmentAtRisk => patch({ allInvestmentAtRisk })} />
-    <BooleanFact label="Does this activity require other unsupported worksheets, such as home-office, passive-loss, accounting-method-change or special income exclusions?" value={data.additionalWorksheetRequired} onChange={additionalWorksheetRequired => patch({ additionalWorksheetRequired })} />
+    <RenterHomeOfficeDetails data={data.homeOfficeRenter} taxYear={taxYear} onChange={homeOfficeRenter => patch({ homeOfficeRenter })} />
+    <BooleanFact label={taxYear === 2026
+      ? "Does this activity need any worksheets beyond the renter home-office records above, such as another home-office worksheet, passive-loss, accounting-method-change, or special income exclusions?"
+      : "Does this activity require other unsupported worksheets, such as home-office, passive-loss, accounting-method-change or special income exclusions?"}
+      value={data.additionalWorksheetRequired} onChange={additionalWorksheetRequired => patch({ additionalWorksheetRequired })} />
     <BooleanFact label="Are the meal amounts eligible business meals subject to the ordinary 50% limit?" value={data.mealsEligibilityConfirmed} onChange={mealsEligibilityConfirmed => patch({ mealsEligibilityConfirmed })} />
     <BooleanFact label="Does the car and truck amount come from your actual deductible vehicle worksheet?" value={data.carExpenseWorksheetConfirmed} onChange={carExpenseWorksheetConfirmed => patch({ carExpenseWorksheetConfirmed })} />
     <BooleanFact label="Does the depreciation amount come from your actual depreciation and section 179 worksheet?" value={data.depreciationWorksheetConfirmed} onChange={depreciationWorksheetConfirmed => patch({ depreciationWorksheetConfirmed })} />
