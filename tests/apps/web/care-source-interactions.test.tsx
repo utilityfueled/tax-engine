@@ -47,7 +47,7 @@ describe("care provider and person interactions", () => {
     expect(latest.providers?.[0].amountPaid).toBe("9007199254740993.27");
     expect(latest.sourceFactsConfirmed).toBe(false);
     await change("Prior-year care expense worksheet credit", "0");
-    await change("Have you checked these provider and qualifying-person details against your actual records?", "true");
+    await change("Have you confirmed the care credit facts and Worksheet A amount for this tax year?", "true");
     expect(careFactErrors(latest, "mfj")).toEqual({});
     expect(control("Qualified expenses for person 2").value).toBe("0");
     await change("Was provider 1 your household employee?", "");
@@ -58,7 +58,7 @@ describe("care provider and person interactions", () => {
     await render(completeCareSource());
     await change("Provider 1 identification status", "withheld");
     await change("Provider 1 documented efforts to obtain information", "Requested Form W-10 twice; provider declined.");
-    await change("Have you checked these provider and qualifying-person details against your actual records?", "true");
+    await change("Have you confirmed the care credit facts and Worksheet A amount for this tax year?", "true");
     expect(latest.providers?.[0].identifierType).toBe("withheld");
     expect(careFactErrors(latest, "mfj")).toEqual({});
   });
