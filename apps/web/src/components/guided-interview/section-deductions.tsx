@@ -20,6 +20,7 @@ import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import { supportsMedicalMileage } from "@/lib/guided-medical-mileage";
 import { MedicalMileageDetails } from "./medical-mileage-details";
+import { deductionAmountYearErrors, hasEnteredAmount } from "@/lib/guided-required-facts";
 
 const formatUsd = formatGuidedCurrency;
 
@@ -41,9 +42,10 @@ export function SectionDeductions({
   onDataChange: (data: DeductionData) => void;
 }) {
   const current = data ?? emptyDeductionData;
+  const amountYearErrors = deductionAmountYearErrors(current, taxYear);
   const standardAmount = getStandardDeductionAmount(filingStatus, taxYear);
   let comparison: ReturnType<typeof computeDeductionComparison> | null = null;
-  if (current.medicalMileage === undefined) {
+  if (current.medicalMileage === undefined && !amountYearErrors.directItemizedAmountsTaxYear) {
     try { comparison = computeDeductionComparison(filingStatus, current, taxYear); }
     catch { /* Incomplete edits stay visible and are validated before calculation. */ }
   }
@@ -126,6 +128,11 @@ export function SectionDeductions({
 
         <CurrencyField label="Gambling winnings not already reported on an entered W-2G" hint="Enter actual winnings regardless of deduction method. Enter 0 only when known to be zero." value={current.gamblingWinnings ?? ""} onChange={(value) => update("gamblingWinnings", value)} />
         <CurrencyField label="Non-W-2 withholding already deducted on other schedules" hint="Enter the actual part of state or local withholding from your entered non-W-2 forms that is already deducted on Schedule C, E or F. Enter 0 only after checking. The source withholding is counted separately; do not add it again to additional income taxes." value={current.nonW2IncomeTaxesDeductedElsewhere ?? ""} onChange={value => update("nonW2IncomeTaxesDeductedElsewhere", value)} />
+        {typeof taxYear === "number" && amountYearErrors.manualWinningsTaxYear && (
+          <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, manualWinningsTaxYear: taxYear })}>
+            Confirm gambling winnings for {taxYear}
+          </button>
+        )}
         <InvestmentInterestSourceDetails data={current.investmentInterestSources} childEntries={childEntries} onChange={investmentInterestSources => onDataChange({ ...current, investmentInterestSources })} />
         <CryptoDonationDetails data={current.cryptoDonations} onChange={cryptoDonations => onDataChange({ ...current, cryptoDonations })} />
         <CharitableCarryoverDetails data={current.charitableCarryoverSources} onChange={charitableCarryoverSources => onDataChange({ ...current, charitableCarryoverSources })} />
@@ -164,7 +171,8 @@ export function SectionDeductions({
 
             <DeductionSourceDetails taxYear={taxYear} filingStatus={filingStatus} data={current} onChange={onDataChange} />
 
-            <details className="guided-expand">
+            <details className="guided-expand" open={amountYearErrors.directItemizedAmountsTaxYear
+              && (hasEnteredAmount(current.gamblingLosses) || hasEnteredAmount(current.gamblingExpenses)) ? true : undefined}>
               <summary className="guided-expand-trigger">Less common itemized deductions</summary>
               <div className="guided-expand-body">
                 <fieldset className="guided-fieldset">
@@ -183,7 +191,12 @@ export function SectionDeductions({
               </div>
             </details>
 
-            {!comparison && <p className="guided-hint" role="status">{current.medicalMileage === undefined ? "Correct incomplete amounts to compare your expenses." : "The tax calculation includes confirmed medical mileage in your itemized deduction."}</p>}
+            {typeof taxYear === "number" && amountYearErrors.directItemizedAmountsTaxYear && (
+              <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, directItemizedAmountsTaxYear: taxYear })}>
+                Confirm direct itemized amounts for {taxYear}
+              </button>
+            )}
+            {!comparison && !amountYearErrors.directItemizedAmountsTaxYear && <p className="guided-hint" role="status">{current.medicalMileage === undefined ? "Correct incomplete amounts to compare your expenses." : "The tax calculation includes confirmed medical mileage in your itemized deduction."}</p>}
             {comparison && parseGuidedDisplayAmount(comparison.itemizedTotal).gt(0) && (
               <div className="guided-deduction-comparison" style={{ marginTop: "16px" }} role="status" aria-live="polite">
                 <div className="guided-ticker-grid">

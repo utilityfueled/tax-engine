@@ -1,0 +1,23 @@
+form: Guided annual gambling and Schedule A amounts
+fullName: Confirm direct gambling and Schedule A amounts after a return-year change
+taxYear: 2025
+reference: https://www.irs.gov/instructions/i1040sca
+notes:
+  - IRS Topic 419 requires gambling winnings to be reported even without Form W-2G.
+  - IRS Publication 502 and Schedule A tie the direct medical expenses and applicable taxes to the payment year.
+  - Apply the same source-year admission when changing the selected guided return between 2025 and 2026. The 2026 calculation is subject to its own rule-pack gate.
+lines:
+  - line: "manual-winnings-year"
+    description: "Match manual gambling winnings to the selected return year"
+    formula: "When the confirmed return year changes, preserve the manual winnings and require explicit confirmation that the amount belongs to the selected return year. Block validation and canonical input after save and reopen until confirmation."
+    testRef: "tests/guided-interview/guided-deduction-amounts-year.test.ts::holds manual gambling winnings across return-year changes"
+  - line: "direct-itemized-year"
+    description: "Match direct itemized expenses to the selected return year"
+    formula: "Independently require the new year for retained direct medical, state-local income, real estate and personal property tax amounts, amounts allocated to other schedules, wagering losses and wagering expenses when itemizing. Inactive amounts remain pending until itemizing is selected."
+    testRef: "tests/guided-interview/guided-deduction-amounts-year.test.ts::holds direct itemized amounts when itemizing after a year change"
+    testRefs:
+      - "tests/guided-interview/guided-deduction-amounts-year.test.ts::holds the direct withholding allocation across return years"
+  - line: "first-assignment-and-edit"
+    description: "Keep existing same-year drafts and require renewed confirmation after edits"
+    formula: "Same-year legacy drafts and first assignment of an unbound year retain their prior behavior. Clearing or changing a confirmed year keeps the later confirmation pending. An edit to an amount after renewed confirmation requires it again."
+    testRef: "tests/guided-interview/guided-deduction-amounts-year.test.ts::preserves first assignment and renews confirmation after editing retained amounts"

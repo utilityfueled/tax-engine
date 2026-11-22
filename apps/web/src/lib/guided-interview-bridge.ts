@@ -70,7 +70,7 @@ import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
-import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
@@ -385,6 +385,7 @@ export function buildDependents(
 
 export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number, sourceContext?:{state:GuidedFlowState;originals:ReadonlyArray<Form1099Misc>}) {
   if (!deductionData) return undefined;
+  assertKnownFacts(deductionAmountYearErrors(deductionData, taxYear));
   assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
   const medicalMileage = buildGuidedMedicalMileage(deductionData, taxYear, sourceContext?.state.segmentation.filingStatus, sourceContext?.state.sectionData['personal-info']?.spouse, sourceContext?.state.sectionData['personal-info']);
   let matchedRetirement = new Decimal(0);
@@ -821,6 +822,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     professionalWagering = seData && readGuidedProfessionalWagering(seData, state);
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
     assertKnownFacts(nonitemizedElectionFactErrors(state));
+    assertKnownFacts(deductionAmountYearErrors(deductionData, state.taxYear));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
     assertKnownFacts(investmentInterestFactErrors(deductionData, investData?.childElections, state.taxYear));
     assertKnownFacts(charitableCarryoverFactErrors(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo));

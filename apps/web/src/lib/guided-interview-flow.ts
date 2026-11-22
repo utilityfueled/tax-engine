@@ -68,7 +68,7 @@ import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
-import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
@@ -1015,6 +1015,8 @@ export const emptyDonationEntry: DonationEntryData = { organization: "", type: "
 
 export interface DeductionData {
   method: DeductionMethod;
+  manualWinningsTaxYear?: number | null;
+  directItemizedAmountsTaxYear?: number | null;
   medicalExpenses: string;
   medicalMileage?: MedicalMileageDraft;
   stateLocalTaxes: string;
@@ -1700,6 +1702,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   if ((state.taxYear ?? null) === taxYear) return state;
   const wages = state.sectionData["income-w2"];
   const payments = state.sectionData.payments;
+  const deductions = state.sectionData.deductions;
   function requirePaymentApplication(entry: EstimatedPaymentEntry): EstimatedPaymentEntry {
     if (entry.application !== undefined || !(entry.date?.trim() || entry.amount?.trim())) return entry;
     return { ...entry, application: { taxYear: "", confirmed: null } };
@@ -1741,6 +1744,13 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           ...payments,
           ...(payments.estimatedPayments?.length ? { estimatedPayments: payments.estimatedPayments.map(requirePaymentApplication) } : {}),
           ...(payments.extensionPayments?.length ? { extensionPayments: payments.extensionPayments.map(requirePaymentApplication) } : {}),
+        },
+      } : {}),
+      ...(Number.isInteger(state.taxYear) && deductions ? {
+        deductions: {
+          ...deductions,
+          ...(hasEnteredAmount(deductions.gamblingWinnings) ? { manualWinningsTaxYear: null } : {}),
+          ...(directItemizedAmountFields.some(field => hasEnteredAmount(deductions[field])) ? { directItemizedAmountsTaxYear: null } : {}),
         },
       } : {}),
       ...(personal && (filerYearFactsEntered || personal.dependents?.length) ? {
@@ -1994,6 +2004,18 @@ export function updateSectionData(
   sectionId: string,
   data: unknown,
 ): GuidedFlowState {
+  const previousDeductions = state.sectionData.deductions;
+  if (sectionId === "deductions" && data && previousDeductions) {
+    const next = data as DeductionData;
+    data = {
+      ...next,
+      ...(previousDeductions.manualWinningsTaxYear !== undefined && guidedAmountChanged(previousDeductions.gamblingWinnings, next.gamblingWinnings)
+        ? { manualWinningsTaxYear: null } : {}),
+      ...(previousDeductions.directItemizedAmountsTaxYear !== undefined
+        && directItemizedAmountFields.some(field => guidedAmountChanged(previousDeductions[field], next[field]))
+        ? { directItemizedAmountsTaxYear: null } : {}),
+    };
+  }
   const credits = state.sectionData.credits;
   const adjustments = state.sectionData.adjustments;
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
@@ -2652,6 +2674,7 @@ function validateUnemploymentSection(data: UnemploymentData | undefined, state: 
 function validateDeductionsSection(data: DeductionData | undefined, taxYear?: number | null, sourceErrors: Record<string, string> = {}, filingStatus?: FilingStatus | null, spouse?: unknown, personal?: PersonalInfoData): SectionValidationResult {
   if (!data && !Object.keys(sourceErrors).length) return EMPTY_SECTION("deductions info");
   return validateRequiredFacts({
+    ...deductionAmountYearErrors(data, taxYear),
     ...deductionFactErrors(data, taxYear, filingStatus, spouse),
     ...guidedMedicalMileageErrors(data, taxYear, filingStatus, spouse, personal),
     ...sourceErrors,

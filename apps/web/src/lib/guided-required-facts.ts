@@ -1,7 +1,7 @@
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
 import Decimal from "decimal.js";
 import type { DeductionData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
-import { parseGuidedCurrency } from "./guided-currency";
+import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { mortgageWorksheetFactErrors } from "./guided-mortgage-worksheet";
 
 export function isActualDate(value: string | undefined): boolean {
@@ -12,6 +12,33 @@ export function isActualDate(value: string | undefined): boolean {
 
 export function hasEnteredAmount(value: string | undefined): boolean {
   return typeof value === "string" && value.trim() !== "";
+}
+
+/** A formatting-only edit keeps confirmation. Blank and an explicit zero are different facts. */
+export function guidedAmountChanged(before: string | undefined, after: string | undefined): boolean {
+  if (before === after) return false;
+  return hasEnteredAmount(before) !== hasEnteredAmount(after)
+    || !parseGuidedDisplayAmount(before).eq(parseGuidedDisplayAmount(after));
+}
+
+export const directItemizedAmountFields = [
+  "medicalExpenses", "stateLocalTaxes", "nonW2IncomeTaxesDeductedElsewhere", "realEstateTaxes", "personalPropertyTaxes",
+  "gamblingLosses", "gamblingExpenses",
+] as const;
+
+export function deductionAmountYearErrors(data: DeductionData | undefined, taxYear?: number | null): Record<string, string> {
+  if (!data) return {};
+  const errors: Record<string, string> = {};
+  if (hasEnteredAmount(data.gamblingWinnings) && data.manualWinningsTaxYear !== undefined
+    && (taxYear == null || data.manualWinningsTaxYear !== taxYear)) {
+    errors.manualWinningsTaxYear = "Confirm the manual gambling winnings for this return year.";
+  }
+  if (data.method === "itemized" && directItemizedAmountFields.some(field => hasEnteredAmount(data[field]))
+    && data.directItemizedAmountsTaxYear !== undefined
+    && (taxYear == null || data.directItemizedAmountsTaxYear !== taxYear)) {
+    errors.directItemizedAmountsTaxYear = "Confirm the direct itemized amounts for this return year.";
+  }
+  return errors;
 }
 
 export function amountError(value: string | undefined, label: string): string | undefined {
