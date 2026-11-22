@@ -5,6 +5,7 @@ import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {URL} from 'node:url';
 const moduleUrl=new URL('../../scripts/browser-cpu-diagnostics/full-batch.mjs',import.meta.url);
+const traceUrl=new URL('../../scripts/browser-cpu-diagnostics/trace-pair.mjs',import.meta.url);
 const manifest=JSON.parse(await readFile(new URL('../../scripts/browser-cpu-diagnostics/full-batches.json',import.meta.url),'utf8'));
 test('each frozen replay source digest still matches the checkout', async () => {
  const root = new URL('../../', import.meta.url);
@@ -77,4 +78,100 @@ test('sanitized-only-artifacts',async()=>{
  assert.ok(!/timeout-minutes:|trace\.zip|profiles\/|test-results\/|secrets\./.test(s));
  const code=await readFile(moduleUrl,'utf8');for(const text of ['sanitizeStoredRecord','validateInventory','publicChunkMetadata','projectCaseResults','verifyAudit','MAX_TOTAL_MS = 600000','originalFailureSuperseded: false','paSampled: false'])assert.ok(code.includes(text),text);
  assert.ok(!code.includes('--trace=off'));assert.ok(!/'docker',\s*\[\s*'(?:stop|rm|run|build)'/.test(code));
+});
+
+test('trace pairing requires its own manual opt-in and preserves original qualification', async () => {
+ const {admitBatch,main,remainingJobBudget}=await import(moduleUrl);
+ const {TRACE_PAIR_MS}=await import(traceUrl);
+ const pairEnv={...env(),TAX_BROWSER_TRACE_PAIR:'true',TAX_BROWSER_CPU_BATCH:'7'};
+ const pairEvent={...event(),inputs:{ohio_trace_pair:'true'}};
+ assert.equal(await main({env:{TAX_BROWSER_TRACE_PAIR:'true'},root:'/synthetic-must-not-be-accessed'}),0);
+ assert.equal(admitBatch(pairEnv,pairEvent,sha,'linux','x64'),7);
+ assert.throws(()=>admitBatch(pairEnv,event(),sha,'linux','x64'));
+ assert.throws(()=>admitBatch({...pairEnv,TAX_BROWSER_CPU_ORIGINAL_OUTCOME:'success'},pairEvent,sha,'linux','x64'));
+ for(const name of ['cpu_diagnostics','cpu_full_batches','cpu_phase_metrics','compare_ohio_runtimes']){
+  assert.throws(()=>admitBatch(pairEnv,{...pairEvent,inputs:{...pairEvent.inputs,[name]:'true'}},sha,'linux','x64'));
+ }
+ const cutoff=start+5400000-TRACE_PAIR_MS-600000;
+ assert.equal(remainingJobBudget(job(),pairEnv,cutoff,TRACE_PAIR_MS).allowed,true);
+ assert.equal(remainingJobBudget(job(),pairEnv,cutoff+1,TRACE_PAIR_MS).allowed,false);
+ const workflow=await readFile(new URL('../../.github/workflows/web.yml',import.meta.url),'utf8');
+ assert.match(workflow,/ohio_trace_pair:\s+description:[^\n]+\s+type: boolean\s+required: false\s+default: false/);
+ assert.match(workflow,/id: container_browser[\s\S]+?run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure/);
+ assert.match(workflow,/Compare trace capture in the original failing Ohio window\s+if: [^\n]+inputs.ohio_trace_pair[^\n]+steps.container_browser.outcome == 'failure'/);
+});
+
+test('trace pairing chooses a complete original Ohio window with an observed timeout', async () => {
+ const {selectTraceWindow}=await import(traceUrl);
+ const {selectOriginalBatch}=await import(moduleUrl);
+ const original=batches();
+ const ids=[original[5].rows[0].id,original[6].rows[0].id];
+ const timeouts=ids.map(id=>({id,failureCategory:'timeout'}));
+ assert.equal(selectTraceWindow(original,timeouts,new Set(ids)),7);
+ const n=selectTraceWindow(original,timeouts.slice(0,1),new Set(ids));
+ assert.equal(n,6);
+ assert.deepEqual(selectOriginalBatch(original,manifest,n).rows,manifest.batches[6].rows);
+ assert.equal(selectTraceWindow(original,timeouts,new Set()),undefined);
+ assert.equal(selectTraceWindow(original,[{id:ids[1],failureCategory:'assertion'}],new Set(ids)),undefined);
+});
+
+function traceFixture() {
+ const file='oh-fixture.spec.ts';
+ const report=(status,timeout=30000)=>({errors:[],config:{workers:2,projects:[{retries:0,repeatEach:1}]},suites:[{title:file,specs:['a','b'].map((label,i)=>({title:label,file,id:`${label.repeat(20)}-${label.repeat(20)}`,tests:[{projectName:'chromium',timeout,expectedStatus:'passed',results:[{status:i===0?status:'passed',retry:0,duration:27,errors:[]}]}]}))}]});
+ const waits=[],calls=[],saved=new Map();
+ let clock=0;
+ const io={now:()=>({mono:clock,wall:clock}),sleep:async ms=>{waits.push(ms);clock+=ms;},identity:async()=>{},alive:()=>true,cleanup:async()=>true,
+  run:async trace=>{calls.push(trace);clock+=37;const failing=trace==='retain-on-failure';return{exit:failing?1:0,report:report(failing?'timedOut':'passed'),executionMs:28};}};
+ return{report,waits,calls,saved,io,save:async(name,record)=>saved.set(name,record),audit:{files:{[file]:{}}},binding:{originalQualification:{failed:7}}};
+}
+
+test('trace legs differ only in capture mode and preserve totals across consecutive natural windows', async () => {
+ const {runTracePair}=await import(traceUrl);
+ const {browserArguments}=await import(moduleUrl);
+ const {rowsFromReport}=await import('../../scripts/run-browser-tests.mjs');
+ const f=traceFixture(),list='/private/synthetic/list.txt';
+ const baseline=browserArguments(list);
+ assert.deepEqual(browserArguments(list,'off'),baseline.map(arg=>arg==='--trace=retain-on-failure'?'--trace=off':arg));
+ assert.throws(()=>browserArguments(list,'on'));
+ const rows=rowsFromReport(f.report('passed'));
+ assert.equal(await runTracePair({...f,batch:{rows,bounds:{}}}),true);
+ assert.deepEqual(f.calls,['retain-on-failure','off']);
+ assert.deepEqual(f.waits,[61000,61000]);
+ const result=f.saved.get('result.json');
+ assert.equal(result.originalFailureSuperseded,false);
+ assert.deepEqual(result.originalQualification,{failed:7});
+ assert.deepEqual(result.executionOrder,['retain-on-failure','off']);
+ assert.match(result.limitation,/run order.*cache.*timing/u);
+ assert.deepEqual(result.legs.map(leg=>[leg.passed,leg.failed,leg.skipped,leg.wallMs,leg.executionMs]),[[1,1,0,37,28],[2,0,0,37,28]]);
+ assert.deepEqual(result.legs.map(leg=>leg.cases.map(row=>row.id)),[rows.map(row=>row.id),rows.map(row=>row.id)]);
+ assert.equal(result.legs[0].cases[0].failureCategory,'timeout');
+});
+
+test('a trace leg with deadline drift cannot be reported as a completed comparison', async () => {
+ const {runTracePair}=await import(traceUrl);
+ const {rowsFromReport}=await import('../../scripts/run-browser-tests.mjs');
+ const f=traceFixture(),rows=rowsFromReport(f.report('passed'));
+ f.io.run=async trace=>{f.calls.push(trace);return{exit:0,report:f.report('passed',90000),executionMs:28};};
+ assert.equal(await runTracePair({...f,batch:{rows,bounds:{}}}),false);
+ assert.deepEqual(f.calls,['retain-on-failure']);
+ assert.equal(f.saved.get('result.json').complete,false);
+ assert.equal(f.saved.get('result.json').legs[0].incompleteReason,'schedule-or-result-verification-failed');
+});
+
+test('an incomplete collection exposes only a fixed failure reason', async () => {
+ const {runTracePair}=await import(traceUrl);
+ const {executeBatch}=await import(moduleUrl);
+ const {rowsFromReport}=await import('../../scripts/run-browser-tests.mjs');
+ const f=traceFixture(),rows=rowsFromReport(f.report('passed'));
+ const batch={rows,bounds:{},list:'/private/synthetic/list.txt'};
+ f.io.run=trace=>executeBatch(batch,{
+  collect:async()=>{f.calls.push(trace);throw Error('synthetic private collection detail');},
+  execute:async()=>f.calls.push('forbidden'),
+ },trace);
+ assert.equal(await runTracePair({...f,batch}),false);
+ assert.deepEqual(f.calls,['retain-on-failure']);
+ const result=f.saved.get('result.json');
+ assert.deepEqual(result.executionOrder,['retain-on-failure','off']);
+ assert.deepEqual(result.legs,[{trace:'retain-on-failure',complete:false,incompleteReason:'schedule-or-result-verification-failed'}]);
+ assert.ok(!JSON.stringify([...f.saved]).includes('synthetic private collection detail'));
 });

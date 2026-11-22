@@ -12,6 +12,7 @@ import {auditCollection,containerProof,environment,exactUnion,noEnvFiles,planBat
 import {collectionHash,selectCases} from './selection.mjs';
 import {command,projectCaseResults} from './runner.mjs';
 import {LIMITS,ORIGIN,unavailable,validateInventory,publicChunkMetadata,sanitizeStoredRecord} from './profile.mjs';
+import {TRACE_PAIR_MS,runTracePair,selectTraceWindow} from './trace-pair.mjs';
 
 const MAX_TOTAL_MS = 600000;
 const POST_STEP_RESERVE_MS=600000;
@@ -27,17 +28,21 @@ export function admitBatch(env,event,head,platform=process.platform,arch=process
  need(env.GITHUB_REPOSITORY==='utilityfueled/tax-engine'&&env.GITHUB_JOB==='container'&&/^[1-9]\d*$/u.test(env.GITHUB_RUN_ID));
  need(/^[a-f0-9]{40}$/u.test(head)&&env.GITHUB_SHA===head&&env.TAX_BROWSER_CPU_ORIGINAL_OUTCOME==='failure');
  need(event?.repository?.private===false&&event.repository.fork===false&&event.repository.default_branch==='main'&&env.GITHUB_REF==='refs/heads/main');
- need(event.inputs?.cpu_full_batches==='true'&&env.PLAYWRIGHT_BASE_URL===ORIGIN&&/^sha256:[a-f0-9]{64}$/u.test(env.CANDIDATE_IMAGE_ID));
+ if(env.TAX_BROWSER_TRACE_PAIR==='true'){
+  need(event.inputs?.ohio_trace_pair==='true'&&env.TAX_BROWSER_CPU_BATCH==='7');
+  need(['cpu_diagnostics','cpu_full_batches','cpu_phase_metrics','compare_ohio_runtimes'].every(key=>event.inputs[key]!=='true'));
+ }else need(event.inputs?.cpu_full_batches==='true');
+ need(env.PLAYWRIGHT_BASE_URL===ORIGIN&&/^sha256:[a-f0-9]{64}$/u.test(env.CANDIDATE_IMAGE_ID));
  need(env.TAX_BROWSER_CPU_BATCH==='6'||env.TAX_BROWSER_CPU_BATCH==='7');
  return Number(env.TAX_BROWSER_CPU_BATCH);
 }
-export function remainingJobBudget(job,env,now=Date.now()){
+export function remainingJobBudget(job,env,now=Date.now(),controllerMs=MAX_TOTAL_MS){
  need(Number.isSafeInteger(now)&&now>=0&&job&&Number.isSafeInteger(job.id)&&job.id>0);
  need(String(job.run_id)===env.GITHUB_RUN_ID&&job.run_attempt===1&&job.head_sha===env.GITHUB_SHA);
  need(job.name==='Container Recovery, Browser Flows and SBOM'&&job.status==='in_progress'&&job.completed_at===null);
  const started=Date.parse(job.started_at);need(Number.isSafeInteger(started)&&started>=0&&started<=now);
  const deadlineEpochMs=started+JOB_MS,remainingMs=deadlineEpochMs-now;
- return{jobId:job.id,deadlineEpochMs,remainingMs,controllerMs:MAX_TOTAL_MS,postStepReserveMs:POST_STEP_RESERVE_MS,allowed:remainingMs>=MAX_TOTAL_MS+POST_STEP_RESERVE_MS};
+ return{jobId:job.id,deadlineEpochMs,remainingMs,controllerMs,postStepReserveMs:POST_STEP_RESERVE_MS,allowed:remainingMs>=controllerMs+POST_STEP_RESERVE_MS};
 }
 export function selectOriginalBatch(batches,manifest,number){
  need(manifest.version===1&&manifest.fullCaseCount===655&&manifest.totalBatches===8&&manifest.paSampled===false);
@@ -48,14 +53,15 @@ export function selectOriginalBatch(batches,manifest,number){
  need(batch.rows.every(r=>r.timeout===30000&&r.project==='chromium'&&r.expectedStatus==='passed'));
  return batch;
 }
-export function browserArguments(list){
+export function browserArguments(list,trace='retain-on-failure'){
  need(typeof list==='string'&&path.isAbsolute(list)&&!/[\r\n\0]/u.test(list));
- return['test','--workers=2','--retries=0','--timeout=30000','--project=chromium','--trace=retain-on-failure','--test-list',list];
+ need(trace==='retain-on-failure'||trace==='off');
+ return['test','--workers=2','--retries=0','--timeout=30000','--project=chromium',`--trace=${trace}`,'--test-list',list];
 }
-export async function executeBatch(batch,io){
+export async function executeBatch(batch,io,trace){
  const collected=await io.collect(batch.list);
  need(equal(collected.map(canonical),batch.rows.map(canonical)));
- return io.execute(browserArguments(batch.list));
+ return io.execute(browserArguments(batch.list,trace));
 }
 export function diagnosticExit(summary,expected,missing){
  return summary.caseCount===expected&&!summary.error&&summary.cleanup&&summary.failed===0&&missing===0?0:1;
@@ -64,7 +70,7 @@ async function readJson(file,max=LIMITS.bytes){
  const stat=await lstat(file);need(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=max);
  const bytes=await readFile(file);need(bytes.length<=max);return JSON.parse(bytes.toString('utf8'));
 }
-export async function readOriginalJobBudget(env, signal, { fetchResponse = globalThis.fetch, now = Date.now } = {}) {
+export async function readOriginalJobBudget(env, signal, { fetchResponse = globalThis.fetch, now = Date.now, controllerMs = MAX_TOTAL_MS } = {}) {
  // Read the public GitHub endpoint for the admitted run without credentials.
  let response;
  try {
@@ -104,7 +110,7 @@ export async function readOriginalJobBudget(env, signal, { fetchResponse = globa
   return { reason: 'original-job-response-invalid' };
  }
  try {
-  return { budget: remainingJobBudget(job, env, now()) };
+  return { budget: remainingJobBudget(job, env, now(), controllerMs) };
  } catch {
   return { reason: 'original-job-identity-mismatch' };
  }
@@ -126,7 +132,7 @@ async function originalQualification(root,directory,manifest,audit,image){
    }
    exactUnion([actual],full);need(projectCaseResults(actual).filter(r=>r.status==='failed'||r.status==='timedOut').length===summary.failed);
    need(equal(await snapshot(root,[],Object.keys(source.source)),source.source));
-   found.push({source,full,batches,summary:{passed:full.length-summary.failed-summary.skipped,failed:summary.failed,skipped:summary.skipped}});
+   found.push({source,full,batches,actual,summary:{passed:full.length-summary.failed-summary.skipped,failed:summary.failed,skipped:summary.skipped}});
   }catch{/* Ignore incomplete/foreign directories without exposing rows or errors. */}
  }
  need(found.length===1);return found[0];
@@ -134,8 +140,9 @@ async function originalQualification(root,directory,manifest,audit,image){
 
 export async function main({env=process.env,root=fileURLToPath(new URL('../../',import.meta.url))}={}){
  if(env.TAX_BROWSER_CPU_BATCH_DIAGNOSTICS!=='1')return 0;
- // Reserve the last30seconds of the600second outer step for owned-child/temp cleanup.
- const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),MAX_TOTAL_MS-30000),interrupt=()=>abort.abort();
+ const tracePair=env.TAX_BROWSER_TRACE_PAIR==='true',controllerMs=tracePair?TRACE_PAIR_MS:MAX_TOTAL_MS;
+ // Reserve 30 seconds of the outer step for owned-child and temporary-file cleanup.
+ const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),controllerMs-30000),interrupt=()=>abort.abort();
  process.once('SIGINT',interrupt);process.once('SIGTERM',interrupt);
  let temporary,save,exit=1;
  try{
@@ -145,9 +152,9 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const event=await readJson(env.GITHUB_EVENT_PATH,2*1024*1024);
   const number=admitBatch(env,event,head.stdout.trim());
   const phaseEnabled=phaseAdmission(env,event);
-  const out=path.join(root,`artifacts/browser-cpu-full-batch-${number}`);await mkdir(path.dirname(out),{recursive:true});await mkdir(out,{mode:0o700});
+  const out=path.join(root,'artifacts',tracePair?'browser-ohio-trace-pair':`browser-cpu-full-batch-${number}`);await mkdir(path.dirname(out),{recursive:true});await mkdir(out,{mode:0o700});
   save=async(name,record)=>{need(/^[a-z0-9-]+\.json$/u.test(name));const bytes=JSON.stringify(record,null,2)+'\n';need(Buffer.byteLength(bytes)<=LIMITS.bytes);await writeFile(path.join(out,name),bytes,{flag:'wx',mode:0o600});};
-  const { budget, ...unavailableJob } = await readOriginalJobBudget(env, abort.signal);
+  const { budget, ...unavailableJob } = await readOriginalJobBudget(env, abort.signal, {controllerMs});
   if (!budget) {
    await save('unavailable.json', { qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', ...unavailableJob, originalFailureSuperseded: false, paSampled: false });
    return 1;
@@ -162,12 +169,51 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const proof=await inspect(),original=await originalQualification(root,env.TAX_BROWSER_CPU_QUALIFICATION_DIRECTORY,manifest,audit,env.CANDIDATE_IMAGE_ID);
   need(equal(original.source.externalProof,proof)&&collectionHash(original.full)===frozen.fullCollectionSha256);
   const identity=async()=>{need(!abort.signal.aborted);await verifyAudit(root,audit);need(equal(await snapshot(root,[],Object.keys(original.source.source)),original.source.source)&&equal(await inspect(),proof));};
-  temporary=await mkdtemp(path.join(tmpdir(),'tax-full-batch-cpu-'));const profiles=path.join(temporary,'profiles');await mkdir(profiles);
+  temporary=await mkdtemp(path.join(tmpdir(),'tax-full-batch-cpu-'));
+  const app=path.join(root,'apps/web'),cli=path.join(app,'node_modules/@playwright/test/cli.js');
+  if(tracePair){
+   const originalCases=projectDiagnosticCases(original.actual,projectCaseResults);
+   const selected=selectTraceWindow(original.batches,originalCases,new Set(manifest.targets.map(row=>row.id)));
+   if(selected===undefined){
+    await save('result.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',status:'HOLD',reason:'no-original-ohio-timeout',originalQualification:original.summary,originalFailureSuperseded: false});
+    return 0;
+   }
+   const batch=selectOriginalBatch(original.batches,frozen,selected);
+   batch.list=path.join(temporary,'original-batch.txt');
+   await writeFile(batch.list,testList(batch.rows),{flag:'wx',mode:0o600});
+   const binding={sourceSha:proof[3],imageId:proof[1],originalBatch:selected,originalQualification:original.summary,
+    configuredWorkers:2,retries:0,deadlineMs:30000};
+   const ids=new Set(batch.rows.map(row=>row.id));
+   await save('plan.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',...binding,rows:batch.rows.map(canonical),bounds:batch.bounds,
+    originalCases:originalCases.filter(row=>ids.has(row.id)),originalFailureSuperseded: false});
+   const complete=await runTracePair({batch,audit,binding,save,io:{
+    now:()=>({mono:performance.now(),wall:Date.now()}),sleep:ms=>pause(ms,null,{signal:abort.signal}),
+    identity,alive:()=>!abort.signal.aborted,cleanup:async()=>true,
+    run:trace=>executeBatch(batch,{
+     collect:async list=>{
+      const r=await exec(process.execPath,[cli,...browserArguments(list,trace),'--list','--reporter=json'],{cwd:app});
+      need(r.exit===0);
+      return rowsFromReport(JSON.parse(r.stdout));
+     },
+     execute:async args=>{
+      const file=path.join(temporary,`${trace}.json`);
+      const start=performance.now();
+      const r=await exec(process.execPath,[cli,...args,'--output',path.join(temporary,`${trace}-artifacts`),'--reporter=json'],{
+       cwd:app,env:{...childEnv,PLAYWRIGHT_JSON_OUTPUT_FILE:file,PLAYWRIGHT_LAST_RUN_OUTPUT_FILE:path.join(temporary,`${trace}-last-run.json`)},
+       timeout:batch.rows.length*30000+10000,
+      });
+      const executionMs=performance.now()-start;
+      return {exit:r.exit,report:await readJson(file),executionMs};
+     },
+    },trace),
+   }});
+   return complete?0:1;
+  }
+  const profiles=path.join(temporary,'profiles');await mkdir(profiles);
   const inventoryProgram=await readFile(path.join(root,'scripts/browser-cpu-diagnostics/image-public-chunks.mjs'),'utf8');
   const inventoryResult=await exec('docker',['exec','tax-engine-browser-ci','node','--input-type=module','-e',inventoryProgram,'--','--image-public-chunks'],{timeout:15000,max:2*1024*1024});need(inventoryResult.exit===0);
   const inventory=JSON.parse(inventoryResult.stdout);validateInventory(inventory);await identity();
   const inventoryFile=path.join(temporary,'public-chunks.json');await writeFile(inventoryFile,JSON.stringify(inventory),{flag:'wx',mode:0o600});
-  const app=path.join(root,'apps/web'),cli=path.join(app,'node_modules/@playwright/test/cli.js');
   // Phase counters remain a separate opt-in; their source/image provenance closes with this runner.
   const phaseBinding={sourceSha:proof[3],imageId:proof[1],inventorySha256:sha(inventoryResult.stdout),chromiumRevision:'f842f52ef39fd97b449eb27cff414bf05a98ddce'};
   const phaseBindingFile=path.join(temporary,'phase-binding.json');

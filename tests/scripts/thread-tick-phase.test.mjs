@@ -152,7 +152,7 @@ test('cleanup rejection preserves original body error identity',async()=>{
 test('workflow phase observer requires explicit full-batch dispatch opt-in',async()=>{
  const source=await readFile(new URL('../../.github/workflows/web.yml',import.meta.url),'utf8'),workflow=yaml.parse(source);
  assert.deepEqual(workflow.on.workflow_dispatch.inputs.cpu_phase_metrics,{description:'Observe original resident-entry threadTicks inside approved full-batch diagnostics',type:'boolean',required:false,default:false});
- const steps=Object.values(workflow.jobs).flatMap(job=>job.steps??[]),batchSteps=steps.filter(s=>s.uses==='./.github/actions/browser-cpu-full-batches');
+ const steps=Object.values(workflow.jobs).flatMap(job=>job.steps??[]),batchSteps=steps.filter(s=>s.uses==='./.github/actions/browser-cpu-full-batches'&&s.with?.['trace-pair']!=='true');
  assert.equal(batchSteps.length,2);
  for(const step of steps){
   if(batchSteps.includes(step)){
@@ -168,6 +168,9 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  const forwarding="          TAX_BROWSER_PHASE_DIAGNOSTICS: ${{ inputs.cpu_full_batches && inputs.cpu_phase_metrics && '1' || '0' }}\n";
  assert.equal(source.split(input).length,2);assert.equal(source.split(forwarding).length,3);
  let original=source.replace(input,'').replaceAll(forwarding,'');
+ const traceInput=/^ {6}ohio_trace_pair:\n(?:^ {8}[^\n]*\n){4}/m;
+ const traceBlock=/^ {6}- name: Compare trace capture in the original failing Ohio window\n[\s\S]*?(?=^ {6}- name: Compare focused Ohio journeys)/m;
+ const traceGroup="github.event_name == 'workflow_dispatch' && inputs.ohio_trace_pair && format('web-ohio-trace-pair-{0}', github.run_id) || ";
  const ohioInput=/^ {6}compare_ohio_runtimes:\n(?:^ {8}[^\n]*\n){4}/m;
  const ohioBlock=/^ {6}- name: Compare focused Ohio journeys on the same runner\n[\s\S]*?(?=^ {6}- name: Verify Docker archive)/m;
  const ohioGroup="github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes && format('web-ohio-comparison-{0}', github.run_id) || ";
@@ -179,7 +182,7 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  assert.equal(comparison[0]['timeout-minutes'],18);
  assert.equal(comparison[0]['continue-on-error'],undefined);
  assert.match(comparison[0].run,/--workers=2 --retries=0 --timeout=30000/u);
- for(const delta of [ohioInput,ohioBlock,ohioGroup,'            ohio-same-runner-*.log\n            ohio-same-runner-status.txt\n']){
+ for(const delta of [traceInput,traceBlock,traceGroup,ohioInput,ohioBlock,ohioGroup,'            ohio-same-runner-*.log\n            ohio-same-runner-status.txt\n']){
   assert.equal(original.split(delta).length,2);
   original=original.replace(delta,'');
  }
@@ -187,7 +190,7 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  const reviewedDeltas=[
   ["git rev-parse HEAD 'HEAD^{tree}'",'git rev-parse HEAD HEAD^{tree}'],
   ['for ((attempt=1; attempt<=60; attempt++)); do','for attempt in $(seq 1 60); do'],
-  ['      - name: Verify original-entry timing contracts\n        run: node --test tests/scripts/thread-tick-phase.test.mjs\n',''],
+  ['      - name: Verify original-entry timing contracts\n        run: node --test tests/scripts/thread-tick-phase.test.mjs tests/scripts/full-batch-public-cpu-diagnostic.test.mjs\n',''],
  ];
  for(const[after,before]of reviewedDeltas){
   assert.equal(original.split(after).length,2);

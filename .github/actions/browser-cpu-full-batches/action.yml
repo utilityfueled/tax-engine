@@ -13,8 +13,12 @@ inputs:
     required: false
     default: ''
   batch:
-    description: One original whole batch, exactly6 or7; caller must use a10-minute workflow step
+    description: One original whole batch, 6 or 7. Trace pairing prefers batch 7 and may select batch 6.
     required: true
+  trace-pair:
+    description: Compare trace modes without CPU sampling, after the independent strict qualification
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -26,13 +30,22 @@ runs:
         TAX_BROWSER_CPU_BATCH: ${{ inputs.batch }}
         TAX_BROWSER_CPU_ORIGINAL_OUTCOME: ${{ inputs.original-outcome }}
         TAX_BROWSER_CPU_QUALIFICATION_DIRECTORY: ${{ inputs.qualification-directory }}
+        TAX_BROWSER_TRACE_PAIR: ${{ inputs.trace-pair }}
         PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
       run: node scripts/browser-cpu-diagnostics/full-batch.mjs
     - name: Retain sanitized full-batch sampling evidence
-      if: ${{ !cancelled() && inputs.enabled == 'true' && inputs.original-outcome == 'failure' }}
+      if: ${{ !cancelled() && inputs.enabled == 'true' && inputs.original-outcome == 'failure' && inputs.trace-pair != 'true' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
         name: browser-cpu-full-batch-${{ inputs.batch }}-${{ github.run_id }}-${{ github.run_attempt }}
         path: artifacts/browser-cpu-full-batch-${{ inputs.batch }}/
+        if-no-files-found: warn
+        retention-days: 3
+    - name: Retain sanitized Ohio trace comparison evidence
+      if: ${{ !cancelled() && inputs.enabled == 'true' && inputs.original-outcome == 'failure' && inputs.trace-pair == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: browser-ohio-trace-pair-${{ github.run_id }}-${{ github.run_attempt }}
+        path: artifacts/browser-ohio-trace-pair/
         if-no-files-found: warn
         retention-days: 3
