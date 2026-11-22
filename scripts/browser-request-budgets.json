@@ -311,7 +311,7 @@
     "apps/web/src/lib/guided-hsa-facts.ts": "cae2570dbd169d2d17b87e6ac63efb2dbb1a7c6b5f80722778c7f6ce4b2b26e5",
     "apps/web/src/lib/guided-interest-originals.ts": "105f06ec3c31e2405ea430e9e1e614aee8b3ef443ce3e88ebf92471d9108420b",
     "apps/web/src/lib/guided-interview-bridge.ts": "329787673c9d381a42a8e1183b8747a77d98c7627ab2aae3904d30f194ad0d06",
-    "apps/web/src/lib/guided-interview-flow.ts": "6d9c0366481f49667f989a6d47a6dadf685ee036ff65973af5862ebb1514c196",
+    "apps/web/src/lib/guided-interview-flow.ts": "f7e9d268f88555b97d4ddde5215ff21a1a20cb7a47be7ab73fdc43e860f7f59d",
     "apps/web/src/lib/guided-investment-facts.ts": "9128bd9f5f577bdb892f57cdf3201b6ac08313b83b011e5bb2dbba3622c70c33",
     "apps/web/src/lib/guided-investment-interest.ts": "3f55441684455777dac810e9122e14345944f6f5e4262e1f2e4447eff1b1118b",
     "apps/web/src/lib/guided-ira-basis.ts": "b6dff39b2a47ff2c56d233b91e9fa52fa35a75443577b2b33754edaa65c18473",
