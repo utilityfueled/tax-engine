@@ -687,6 +687,7 @@ export interface W2EntryData {
   stateLocalSources?: W2StateLocalSources;
   localWages?: string; localTaxWithheld?: string; localityName?: string;
   sourceTaxYear?: string;
+  requiresSourceYearConfirmation?: boolean;
   box12CodeTP?: string; box12CodeTT?: string; treasuryTippedOccupationCodes?: string[];
   box12CodeD?: string; box12CodeE?: string; box12CodeF?: string; box12CodeG?: string; box12CodeH?: string; box12CodeS?: string; box12CodeAA?: string; box12CodeBB?: string; box12CodeEE?: string; box12CodeT?: string;
   box12CodeW?: string;
@@ -1697,6 +1698,7 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
 
 export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
   if ((state.taxYear ?? null) === taxYear) return state;
+  const wages = state.sectionData["income-w2"];
   const personal = state.sectionData["personal-info"];
   const spouse = personal?.spouse;
   const filerYearFactsEntered = personal && [
@@ -1723,6 +1725,12 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
+      ...(Number.isInteger(state.taxYear) && wages?.entries?.some(isStartedW2) ? {
+        "income-w2": {
+          ...wages,
+          entries: wages.entries.map(entry => isStartedW2(entry) ? { ...entry, requiresSourceYearConfirmation: true } : entry),
+        },
+      } : {}),
       ...(personal && (filerYearFactsEntered || personal.dependents?.length) ? {
         "personal-info": {
           ...personal,

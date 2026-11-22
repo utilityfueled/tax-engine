@@ -2,8 +2,10 @@ import { fillRequiredW2Facts, fillRequiredTaxpayerFacts, reachFilingStatus, taxp
 import { copyFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createFilledW2Upload } from "./helpers/filled-w2-upload";
+import { buildTaxInputFromGuidedData } from "../src/lib/guided-interview-bridge";
+import type { GuidedFlowState } from "../src/lib/guided-interview-flow";
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const sampleDocsDir = path.resolve(testDir, "../../../sample-documents/downloads");
@@ -398,6 +400,7 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/review downloads omit it/i)).toBeVisible();
   });
 
+  // Spec: spec/federal/guided-input.yaml, w2-original-return-year.
   test("W-2 section allows entering wages and shows refund ticker", async ({ page }) => {
     // Complete segmentation with W-2 wages selected
     await completeSegmentation(page);
@@ -417,6 +420,62 @@ test.describe("Guided interview flow", () => {
 
     // The refund ticker should be visible and showing estimates
     await expect(page.getByText(/live ticker/i)).toBeVisible();
+
+    // Clear the scratch wages, then enter a 2026 source with no
+    // original year transcribed.
+    await wagesInput.fill("");
+    await wagesInput.press("Tab");
+    const year = page.getByRole("combobox", { name: "Tax year for this interview", exact: true });
+    const confirmResidency = async () => {
+      await page.getByLabel("Months of U.S. residency", { exact: true }).fill("12");
+      await page.getByRole("combobox", { name: "State residency", exact: true }).selectOption("full-year");
+    };
+
+    await year.selectOption("2026");
+    await page.getByRole("button", { name: "About You", exact: true }).click();
+    await confirmResidency();
+    await page.locator(".guided-nav").getByRole("button", { name: "Continue", exact: true }).click();
+    const wages = page.getByRole("textbox", { name: /^Box 1 — Wages/ });
+    const withholding = page.getByRole("textbox", { name: /^Box 2 — Federal income tax withheld/ });
+    await wages.fill("55000");
+    await fillRequiredW2Facts(page);
+    await withholding.fill("5000");
+    await withholding.press("Tab");
+    const id = new URL(page.url()).pathname.split("/").at(-1) ?? "";
+    expect(id).toBeTruthy();
+    const saved = () => loadSavedInterview(page, id);
+    await expect.poll(async () => (await saved()).sectionData["income-w2"]?.entries[0]?.federalWithheld).toBe("5,000");
+    await page.reload();
+
+    await year.selectOption("2025");
+    await page.getByRole("button", { name: "About You", exact: true }).click();
+    await confirmResidency();
+    await page.locator(".guided-nav").getByRole("button", { name: "Continue", exact: true }).click();
+    await expect.poll(async () => {
+      const state = await saved();
+      const personal = state.sectionData["personal-info"];
+      return [state.taxYear, personal?.usResidencyMonths, personal?.stateResidency];
+    }).toEqual([2025, "12", "full-year"]);
+    const original = (await saved()).sectionData["income-w2"]?.entries[0];
+    expect(original).toMatchObject({ wages: "55,000", federalWithheld: "5,000" });
+    expect(original?.sourceTaxYear ?? "").toBe("");
+    expect(buildTaxInputFromGuidedData(await saved())).toBeNull();
+
+    const sourceYear = page.getByRole("textbox", { name: "Original W-2 tax year", exact: true });
+    await expect(sourceYear).toHaveValue("");
+    await sourceYear.fill("2026");
+    await expect.poll(async () => (await saved()).sectionData["income-w2"]?.entries[0]?.sourceTaxYear).toBe("2026");
+    expect(buildTaxInputFromGuidedData(await saved())).toBeNull();
+
+    await sourceYear.fill("2025");
+    await wages.fill("28000");
+    if (!(await withholding.isVisible())) await page.getByText("More W-2 boxes", { exact: true }).click();
+    await withholding.fill("1100");
+    await withholding.press("Tab");
+    await expect.poll(async () => {
+      const w2 = buildTaxInputFromGuidedData(await saved())?.w2s?.[0];
+      return [w2?.taxYear, w2?.wages, w2?.federalWithheld];
+    }).toEqual([2025, "28000", "1100"]);
   });
 
   test("guided W-2 step lets filers upload a W-2 without leaving guided mode", async ({ page }, testInfo) => {
@@ -836,6 +895,12 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/here's everything at a glance/i)).toBeVisible({ timeout: 5000 });
   });
 });
+
+async function loadSavedInterview(page: Page, id: string): Promise<GuidedFlowState> {
+  return page.evaluate((workspaceId) => JSON.parse(
+    localStorage.getItem(`tax-engine.guided-flow-state.v1:${workspaceId}`) ?? "null"
+  ), id);
+}
 
 /**
  * Helper: complete segmentation with Single / W-2 wages / no events / no state.

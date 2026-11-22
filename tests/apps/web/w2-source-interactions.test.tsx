@@ -11,6 +11,7 @@ import { buildW2Inputs } from "@/lib/guided-interview-bridge";
 import { getCachedWorkspaceDocumentFile, hasCachedWorkspaceDocumentFile } from "@/lib/workspace-document-file-cache";
 import { detectUploadedDocumentFromFile } from "@/lib/uploaded-document-detection";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
+import { completeW2Entry } from "../../guided-interview/complete-facts";
 
 vi.mock("@/lib/workspace-document-file-cache", () => ({ getCachedWorkspaceDocumentFile: vi.fn(), hasCachedWorkspaceDocumentFile: vi.fn(async () => false) }));
 vi.mock("@/lib/uploaded-document-detection", async original => ({ ...await original<typeof import("@/lib/uploaded-document-detection")>(), detectUploadedDocumentFromFile: vi.fn() }));
@@ -30,6 +31,36 @@ beforeEach(() => { vi.clearAllMocks(); vi.mocked(hasCachedWorkspaceDocumentFile)
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
 
 describe("W-2 source entry interactions", () => {
+  it("checks retained W-2 years in the visible original year field without taking the upload year", async () => {
+    let latest: typeof completeW2Entry[] = [{ ...completeW2Entry, wages: "55000.05", requiresSourceYearConfirmation: true }];
+    const workspace = workspaceWithSource();
+    function Harness() {
+      const [entries, setEntries] = useState(latest);
+      return <SectionW2Income taxYear={2025} workspace={workspace} entries={entries} onEntriesChange={next => {
+        latest = next;
+        setEntries(next);
+      }} />;
+    }
+    await act(async () => root.render(<Harness />));
+    const label = "Original W-2 tax year";
+    expect(control(label).closest("details")).toBeNull();
+    expect(control(label).value).toBe("");
+    expect(w2FactErrors(latest, "mfj", 2025)).toHaveProperty("w2-0-sourceTaxYear");
+
+    await click("Review uploaded W-2 suggestions");
+    await click("Insert detected values");
+    expect(latest[0].wages).toBe("1000");
+    expect(control(label).value).toBe("");
+    expect(w2FactErrors(latest, "mfj", 2025)).toHaveProperty("w2-0-sourceTaxYear");
+    await change(label, "2026");
+    expect(w2FactErrors(latest, "mfj", 2025)).toHaveProperty("w2-0-sourceTaxYear");
+    await change(label, "2025");
+    expect(latest[0].sourceTaxYear).toBe("2025");
+    expect(w2FactErrors(latest, "mfj", 2025)).not.toHaveProperty("w2-0-sourceTaxYear");
+    await change(label, "");
+    expect(w2FactErrors(latest, "mfj", 2025)).toHaveProperty("w2-0-sourceTaxYear");
+  });
+
   it("collects separate combat pay choices for the two filers", async () => {
     const workspace = createWorkspaceRecord("fictional-combat-pay");
     const choices = vi.fn();

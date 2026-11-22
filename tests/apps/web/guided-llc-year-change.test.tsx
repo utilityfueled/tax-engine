@@ -33,13 +33,17 @@ const historicalCollege = { ...college, receivedCurrentYear1098T: true, received
 const student = { ...completeAocEligibility, name: "Jordan Example", courseEligibilityConfirmed: true, qualifiedExpenses: "4000", institutions: [college] };
 const household = { canBeClaimedAsDependent: false, claimedAsDependent: false, nonresidentAlien: false, primarySsnEligible: true, possessionIncomeExclusion: "0" };
 
+function originalWages(year: 2025 | 2026) {
+  return { entries: [{
+    ...completeW2Entry, sourceTaxYear: String(year), wages: "50000", socialSecurityWages: "50000", socialSecurityWithheld: "3100",
+    medicareWages: "50000", medicareWithheld: "725",
+  }] };
+}
+
 function interview(year: 2025 | 2026) {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
   state.taxYear = year;
-  state.sectionData["income-w2"] = { entries: [{
-    ...completeW2Entry, wages: "50000", socialSecurityWages: "50000", socialSecurityWithheld: "3100",
-    medicareWages: "50000", medicareWithheld: "725",
-  }] };
+  state.sectionData["income-w2"] = originalWages(year);
   const withEducation = updateSectionData(state, "credits", {
     ...emptyCreditsData, education: { ...emptyCreditsData.education, ...household, llcExpenses: "4000", llcStudents: [student] },
   });
@@ -80,7 +84,9 @@ it("requires selected-year LLC facts before completing credits or calculating", 
     expect(pending.taxYear).toBe(2025);
     expect(validateSection(pending, "credits").status).toBe("partial");
     expect(buildTaxInputFromGuidedData(pending)).toBeNull();
-    expect(saveGuidedFlowState(localStorage, record.id, updateSectionData(pending, "personal-info", completePersonalInfo))).toBe(true);
+    const personalConfirmed = updateSectionData(pending, "personal-info", completePersonalInfo);
+    const payrollConfirmed = updateSectionData(personalConfirmed, "income-w2", originalWages(2025));
+    expect(saveGuidedFlowState(localStorage, record.id, payrollConfirmed)).toBe(true);
     await panel.render(<GuidedInterviewShell key="reopened" workspace={record} onExitGuided={() => {}} />);
     for (const label of [currentReceipt, priorReceipt, ...annualFields.map(([label]) => label)]) {
       expect(panel.control(label).value, label).toBe("");

@@ -76,6 +76,9 @@ export function w2FactErrors(entries: W2EntryData[] | undefined, filingStatus?: 
     if (!isStartedW2(entry)) continue;
     const prefix = `w2-${index}`;
     for (const [key, error] of Object.entries(compensationReportingErrors(entry, returnYear))) errors[`${prefix}-${key}`] = error;
+    if (entry.requiresSourceYearConfirmation && !entry.sourceTaxYear?.trim()) {
+      errors[`${prefix}-sourceTaxYear`] = "Enter the tax year printed on this W-2 after changing the return year.";
+    }
     if (!entry.employerName.trim()) errors[`${prefix}-employerName`] = "Enter the actual W-2 employer name.";
     if (!/^\d{2}-?\d{7}$/.test(entry.employerEin.trim())) errors[`${prefix}-employerEin`] = "Enter the actual employer EIN from Box b.";
     if (filingStatus === "mfj" && !["primary", "spouse"].includes(entry.accountHolder ?? "")) errors[`${prefix}-accountHolder`] = "Identify whose W-2 this is on the joint return.";

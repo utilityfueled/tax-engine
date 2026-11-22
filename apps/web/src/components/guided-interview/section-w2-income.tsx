@@ -460,6 +460,17 @@ function W2Card({
 
       <div className="guided-form-grid">
         <label className="guided-field">
+          <span className="guided-field-label">Original W-2 tax year</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            className="guided-input"
+            value={entry.sourceTaxYear ?? ""}
+            aria-required={entry.requiresSourceYearConfirmation || undefined}
+            onChange={(event) => onUpdate("sourceTaxYear", event.target.value)}
+          />
+        </label>
+        <label className="guided-field">
           <span className="guided-field-label">W-2 recipient</span>
           <select className="guided-select" value={entry.accountHolder ?? ""} onChange={(event) => onUpdate("accountHolder", event.target.value)}>
             <option value="">Not answered</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse on a joint return</option>
@@ -622,7 +633,7 @@ function W2Card({
             fieldClassName={entry.aiSuggestedFields?.socialSecurityTips?.status === "pending-confirmation" ? "guided-field-ai-pending" : entry.aiSuggestedFields?.socialSecurityTips?.status === "confirmed" ? "guided-field-ai-confirmed" : undefined}
             footer={<SuggestedFieldNotice suggestion={entry.aiSuggestedFields?.socialSecurityTips} availableSuggestions={availableSuggestions} onConfirm={() => onConfirmField("socialSecurityTips")} />}
           />
-      <CompensationReportingFields data={entry} kind="w2" onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof W2EntryData, value); }} />
+      <CompensationReportingFields data={entry} kind="w2" showOriginalYear={false} onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof W2EntryData, value); }} />
           <CurrencyField label="Box 8 — Allocated tips" hint="Enter the actual reported amount. Unknown stays blank; checked zero remains zero." value={entry.allocatedTips ?? ""} onChange={value => onUpdate("allocatedTips", value)} />
           <CurrencyField label="Box 10 — Dependent-care benefits"
             hint="Check the actual W-2. Enter 0 only if no benefits are reported. Positive amounts need the benefit details in Tax Credits."

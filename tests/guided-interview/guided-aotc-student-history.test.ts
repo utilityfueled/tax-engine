@@ -11,17 +11,20 @@ import {
   completeAocEligibility, completeDependent, completeEducationClaimant, completeW2Entry, startCompleteInterview,
 } from "./complete-facts";
 
+function withOriginalWages(state: GuidedFlowState, sourceTaxYear: "2025" | "2026") {
+  return updateSectionData(state, "income-w2", { entries: [{
+    ...completeW2Entry, sourceTaxYear, wages: "50000", socialSecurityWages: "50000", socialSecurityWithheld: "3100",
+    medicareWages: "50000", medicareWithheld: "725",
+  }] });
+}
+
 function educationInterview() {
-  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
+  const state = withOriginalWages(startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null }), "2025");
   const personal = state.sectionData["personal-info"];
   if (!personal) throw new Error("Missing personal facts");
   const morgan = { ...completeDependent, firstName: "Morgan", dateOfBirth: "2004-01-02", qualifiesForCTC: false, qualifiesForODC: true };
   const river = { ...morgan, ssn: "333-44-5556", firstName: "River", dateOfBirth: "2005-01-02" };
   state.sectionData["personal-info"] = { ...personal, dependentCount: "2", dependents: [morgan, river] };
-  state.sectionData["income-w2"] = { entries: [{
-    ...completeW2Entry, wages: "50000", socialSecurityWages: "50000", socialSecurityWithheld: "3100",
-    medicareWages: "50000", medicareWithheld: "725",
-  }] };
   const first: EducationStudentData = {
     ...completeAocEligibility, name: "Morgan Example", studentRole: "dependent", studentTaxId: morgan.ssn,
     qualifiedExpenses: "4000", priorYearsClaimed: "0", requiresPriorYearsConfirmation: false,
@@ -124,7 +127,7 @@ describe("guided AOTC prior-claim history", () => {
     expect(calculateAotc(original)).toBe("2500");
     expect(setInterviewTaxYear(original, 2025)).toBe(original);
 
-    const changed = updateSectionData(reopen(setInterviewTaxYear(original, 2026)), "personal-info", original.sectionData["personal-info"]);
+    const changed = withOriginalWages(updateSectionData(reopen(setInterviewTaxYear(original, 2026)), "personal-info", original.sectionData["personal-info"]), "2026");
     const retained = creditsFor(changed).education.aocStudents[0];
     expect(retained).toMatchObject({ ...aoc, requiresPriorYearsConfirmation: true, sourceFactsConfirmed: null });
     expect(changed.sectionData.credits?.education.llcStudents?.[0]).toMatchObject({
@@ -151,15 +154,15 @@ describe("guided AOTC prior-claim history", () => {
   it("requires actual claimant AOTC answers for the changed return year", () => {
     const { state, first, second } = educationInterview();
     const personal = state.sectionData["personal-info"]!;
-    const source = updateEducation({ ...state, taxYear: 2026, sectionData: {
+    const source = updateEducation(withOriginalWages({ ...state, taxYear: 2026, sectionData: {
       ...state.sectionData, "personal-info": { ...personal, dateOfBirth: "2005-02-02" },
-    } }, {
+    } }, "2026"), {
       aocStudents: [{ ...first, priorYearsClaimed: "3" }],
       llcStudents: [{ ...second, qualifiedExpenses: "0", courseEligibilityConfirmed: false }],
       form8862Required: true, form8862Completed: true, refundableAocEligible: true,
       refundableAocFacts: { fullTimeStudent: true, earnedIncome: "15000", totalSupport: "18000", parentAlive: true },
     });
-    const changed = updateSectionData(reopen(setInterviewTaxYear(source, 2025)), "personal-info", source.sectionData["personal-info"]);
+    const changed = withOriginalWages(updateSectionData(reopen(setInterviewTaxYear(source, 2025)), "personal-info", source.sectionData["personal-info"]), "2025");
     const education = creditsFor(changed).education;
     const currentStudent = { ...education.aocStudents[0], priorYearsClaimed: "3", requiresPriorYearsConfirmation: false, sourceFactsConfirmed: true };
     const reviewedStudents = replaceStudents(changed, [currentStudent]);
@@ -183,7 +186,7 @@ describe("guided AOTC prior-claim history", () => {
     expect(result.form8863?.aocRefundable.toString()).toBe("0");
 
     const removed = replaceStudents(source, []);
-    const changedWithoutStudents = updateSectionData(reopen(setInterviewTaxYear(removed, 2025)), "personal-info", source.sectionData["personal-info"]);
+    const changedWithoutStudents = withOriginalWages(updateSectionData(reopen(setInterviewTaxYear(removed, 2025)), "personal-info", source.sectionData["personal-info"]), "2025");
     expect(creditsFor(changedWithoutStudents).education.aocBanInEffect).toBeUndefined();
     expect(buildTaxInputFromGuidedData(replaceStudents(changedWithoutStudents, [currentStudent]))).toBeNull();
   });
