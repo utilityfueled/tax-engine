@@ -75,6 +75,7 @@ export function refundRecoveryDraft(state: GuidedFlowState) {
 const stable=(value:unknown):unknown=>Array.isArray(value)?value.map(stable):value!==null&&typeof value==="object"
   ?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,stable(item)])):value;
 const same=(a:unknown,b:unknown)=>JSON.stringify(stable(a))===JSON.stringify(stable(b));
+const actualAmount=(value:unknown)=>typeof value==="string"&&/^\d{1,12}(?:\.\d{1,2})?$/.test(value);
 function cohort(state:GuidedFlowState):2025|2026 {
   const { taxYear } = state;
   const data=state.sectionData["income-unemployment"];
@@ -104,10 +105,16 @@ function prepare(raw:unknown,state:GuidedFlowState):TaxYearInput {
       const current=payment.datePaid?.startsWith(`${taxYear}-`)===true;
       if(link!==current)throw new Error("Reconcile actual historical/current payment years and current payment ownership.");
       if(!current)return payment;
-      const matches=(input.adjustments?.estimatedTaxPayments??[]).flatMap((actual,index)=>
-        actual.type==="state"&&actual.state===basis.state&&actual.date===payment.datePaid&&actual.amount===payment.amount?[index]:[]);
+      const amount = payment.amount === undefined ? undefined : new Decimal(payment.amount);
+      const estimatedPayments = input.adjustments?.estimatedTaxPayments ?? [];
+      const matches=estimatedPayments.flatMap((actual,index)=>
+        actual.type==="state"&&actual.state===basis.state&&actual.date===payment.datePaid&&amount?.eq(actual.amount)?[index]:[]);
       if(matches.length!==1)throw new Error("Record and uniquely reconcile this exact current state estimated payment in State Return first.");
-      return {...payment,currentYearPayment:{collection:"estimatedTaxPayments" as const,index:matches[0]}};
+      const [index] = matches;
+      if (!actualAmount(payment.amount) || !actualAmount(estimatedPayments[index].amount)) {
+        throw new Error("Current refund and state estimated payment amounts require actual bounded nonnegative cents.");
+      }
+      return {...payment,currentYearPayment:{collection:"estimatedTaxPayments" as const,index}};
     })}};
   });
   return TaxYearInputSchema.parse({...input,form1099G:forms});
@@ -129,7 +136,6 @@ export function guidedRefundRecoveryDraftErrors(state:GuidedFlowState):Record<st
     if(!years?.length||new Set(years.map(year=>year.priorTaxYear)).size!==years.length)
       throw new Error("Enter one original worksheet for each historical deduction year.");
     const primarySsn=state.sectionData["personal-info"]?.ssn;
-    const actualAmount=(value:unknown)=>typeof value==="string"&&/^\d{1,12}(?:\.\d{1,2})?$/.test(value);
     for(const year of years) {
       const allowedYear=year.priorTaxYear==="2024"||(taxYear===2026&&year.priorTaxYear==="2025");
       if(!allowedYear||year.sourceFactsConfirmed!==true||!year.sourceReference?.trim()

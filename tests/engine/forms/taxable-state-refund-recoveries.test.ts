@@ -30,7 +30,7 @@ it('rejects stale originals unknown payments and unsupported prior-return eligib
         input => { required(required(input.form1099G)[0]).stateOrLocalTaxRefund = '400.00'; },
         input => { required(required(required(required(required(input.form1099G)[0]).refundPaymentBasis).payments)[0]).sourceReference = 'changed original reference'; },
         input => { input.taxpayer.primary.lastName = 'Changed'; },
-        input => { required(required(required(input.adjustments).estimatedTaxPayments)[0]).amount = '1000.00'; },
+        input => { required(required(required(input.adjustments).estimatedTaxPayments)[0]).amount = '1000.01'; },
         input => { required(input.taxableStateRefundRecoveries).sourceOriginals = []; },
         input => { required(input.taxableStateRefundRecoveries).years = []; },
         input => { required(required(input.taxableStateRefundRecoveries).years).push(structuredClone(required(required(required(input.taxableStateRefundRecoveries).years)[0]))); },
@@ -110,6 +110,20 @@ it('uses actual standard sales and joint historical deduction facts', () => {
     refresh(joint);
     expect(recalculate(joint).taxableRefund.toFixed()).toBe('300');
     expect(required(joint.taxableStateRefundRecoveries).originalTaxpayer).toEqual(joint.taxpayer);
+});
+
+it('accepts equivalent linked payment amounts while retaining the exact original statement', () => {
+    const input = refundInput();
+    const forms = required(input.form1099G);
+    const payment = required(required(forms[0].refundPaymentBasis).payments)[3];
+    payment.amount = '1000.00';
+    refresh(input);
+    const before = structuredClone(input);
+    expect(recalculate(input).currentYearRefund.toFixed()).toBe('100');
+    expect(calculateStateLocalIncomeTaxDeduction(input).total.toFixed()).toBe('900');
+    expect(input).toEqual(before);
+    payment.amount = '1000';
+    expect(() => recalculate(input)).toThrow(/original source was edited/);
 });
 
 function required<T>(value:T|undefined|null):T {if(value==null)throw new Error('Test fixture requires actual value');return value;}

@@ -82,7 +82,7 @@ export function calculateTaxableStateRefundRecoveries(input:TaxYearInput):Taxabl
         if(currentLinks.has(key)) throw new Error("Refund current-year payment was allocated more than once.");
         currentLinks.add(key);
         const actual=input.adjustments?.[link.collection]?.[link.index];
-        if(!actual || actual.type!=="state" || actual.state!==form.refundPaymentBasis.state || actual.date!==payment.datePaid || actual.amount!==payment.amount || !money(actual.amount).eq(money(payment.amount))) throw new Error("Refund current-year original payment does not match actual return payment facts.");
+        if(!actual || actual.type!=="state" || actual.state!==form.refundPaymentBasis.state || actual.date!==payment.datePaid || !money(actual.amount).eq(money(payment.amount))) throw new Error("Refund current-year original payment does not match actual return payment facts.");
       } else if(payment.currentYearPayment!==undefined) throw new Error("Historical refund payment cannot claim a current-year payment identity.");
     }
   }

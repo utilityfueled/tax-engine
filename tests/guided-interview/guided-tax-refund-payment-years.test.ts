@@ -75,6 +75,64 @@ it("requires actual history and payment linkage even after fresh capture", () =>
     required(required(s.sectionData["state-return"]).stateEstimatedPayments).push({ ...required(required(s.sectionData["state-return"]).stateEstimatedPayments)[0] });
     expect(() => captureGuidedRefundRecoverySources(s)).toThrow(/uniquely/);
 });
+
+it("matches current refund payments by exact value while preserving both original amounts", () => {
+    for (const [ledgerAmount, estimatedAmount, expectedRecovery, expectedDeduction] of [
+        ["1000.00", "1000", "100", "900"],
+        ["0.00", "0", "0", "0"],
+    ]) {
+        const s = fixture(), data = required(s.sectionData["income-unemployment"]), collection = required(data.refundRecoveries);
+        const basis = required(required(data.entries)[0].refundPaymentBasis);
+        required(basis.payments)[3].amount = ledgerAmount;
+        required(required(s.sectionData["state-return"]).stateEstimatedPayments)[0].amount = estimatedAmount;
+        const capture = captureGuidedRefundRecoverySources(s);
+        Object.assign(collection, capture, { sourceFactsConfirmed: true });
+        const before = structuredClone(s), input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(s));
+        expect(capture.originalSources.forms[0].refundPaymentBasis?.payments?.[3].amount).toBe(ledgerAmount);
+        expect(capture.originalSources.adjustments?.estimatedTaxPayments[0].amount).toBe(estimatedAmount);
+        expect(input.form1099G?.[0].refundPaymentBasis?.payments?.[3].amount).toBe(ledgerAmount);
+        expect(input.adjustments?.estimatedTaxPayments[0].amount).toBe(estimatedAmount);
+        expect(calculateTaxableStateRefundRecoveries(input).currentYearRefund.toFixed()).toBe(expectedRecovery);
+        expect(calculateStateLocalIncomeTaxDeduction(input).total.toFixed()).toBe(expectedDeduction);
+        expect(s).toEqual(before);
+    }
+});
+
+it("holds multiple numerically equivalent current payment candidates", () => {
+    for (const amount of ["1000.00", "1000.000", "0000000001000"]) {
+        const s = fixture(), payments = required(required(s.sectionData["state-return"]).stateEstimatedPayments);
+        payments.push({ ...payments[0], amount });
+        expect(() => captureGuidedRefundRecoverySources(s)).toThrow(/uniquely/);
+    }
+});
+
+it("rejects unsupported cents syntax on either side before capturing a unique numeric match", () => {
+    for (const amount of ["1000.000", "0000000001000"]) {
+        const statePayment = fixture();
+        required(required(statePayment.sectionData["state-return"]).stateEstimatedPayments)[0].amount = amount;
+        expect(() => captureGuidedRefundRecoverySources(statePayment)).toThrow(/bounded nonnegative cents/);
+
+        const refundBasis = fixture(), data = required(refundBasis.sectionData["income-unemployment"]);
+        required(required(required(data.entries)[0].refundPaymentBasis).payments)[3].amount = amount;
+        expect(() => captureGuidedRefundRecoverySources(refundBasis)).toThrow(/before capture|bounded nonnegative cents/);
+    }
+});
+
+it("keeps exact cents fractions dates states and unknown amounts distinct", () => {
+    const s = fixture(), payments = required(required(s.sectionData["state-return"]).stateEstimatedPayments);
+    payments.unshift({ ...payments[0], amount: "1000.001" }, { ...payments[0], amount: "1000.01" });
+    const capture = captureGuidedRefundRecoverySources(s);
+    expect(capture.originalSources.forms[0].refundPaymentBasis?.payments?.[3].currentYearPayment?.index).toBe(2);
+    for (const replacement of [{ date: "2025-01-16" }, { state: "OH" }, { amount: "999.99" }]) {
+        const next = fixture(), rows = required(required(next.sectionData["state-return"]).stateEstimatedPayments);
+        Object.assign(rows[0], replacement);
+        expect(() => captureGuidedRefundRecoverySources(next)).toThrow();
+    }
+    const unknown = fixture(), data = required(unknown.sectionData["income-unemployment"]);
+    delete required(required(required(data.entries)[0].refundPaymentBasis).payments)[3].amount;
+    expect(() => captureGuidedRefundRecoverySources(unknown)).toThrow();
+});
+
 it("retains zero versus unknown and source-bound currentness", () => {
     const s = confirmedFixture(), originals = structuredClone(required(required(s.sectionData["income-unemployment"]).refundRecoveries).originalSources);
     const unchanged = updateSectionData(s, "income-unemployment", structuredClone(required(s.sectionData["income-unemployment"])));
