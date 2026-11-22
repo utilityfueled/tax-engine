@@ -4,7 +4,11 @@
 
 `2a5c20c9` removes timer yields from Form 1095-C test-PDF construction.
 The measured fixtures remained byte-identical and the deadline stayed
-at five seconds. The exact Docker build passed.
+at five seconds. Exact Docker and GitHub CI passed. Remote unit and
+coverage each passed 30,078 tests, with 88.56% branch coverage. Managed
+Linux hit two railroad saved-PDF inspection timeouts. Strict AMD64 and
+application-equivalent ARM64 passed image recovery and cleanup, with
+seven and eleven Ohio browser deadlines respectively.
 [Form 1095-C evidence](upgrade-2026-progress.md#november-22-form-1095-c-fixture-timing).
 
 `913339ec` holds retained W-2s after a return-year change until their

@@ -14,10 +14,19 @@ production parser and application match `913339ec`. Docker passed.
 Local unit and coverage runs each passed 30,078 tests across 2,193
 suites. Branch coverage was 88.56%. Both PostgreSQL 16.16 instances
 shut down.
+Exact GitHub CI passed every job. Remote unit and coverage matched the
+test counts, branch coverage and both PostgreSQL shutdowns. Managed
+Linux passed 648 cases and hit two railroad saved-PDF inspection
+timeouts. Strict AMD64 passed 643 with seven Ohio deadlines. The
+matching application on strict ARM64 passed 639 with eleven Ohio
+deadlines. Each browser run retained five existing skips. Both strict
+jobs passed smoke, Compose recovery and cleanup. AMD64 also passed
+rollback, independent archive import and immutable SBOM checks.
 [Original unit job](https://github.com/utilityfueled/tax-engine/actions/runs/44986325311/job/137097583183) ·
 [Correction CI](https://github.com/utilityfueled/tax-engine/actions/runs/44990991453) ·
 [Correction Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44990991479) ·
-[Correction Web](https://github.com/utilityfueled/tax-engine/actions/runs/44990991529).
+[Correction Web](https://github.com/utilityfueled/tax-engine/actions/runs/44990991529) ·
+[Matching application ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44987928653).
 
 ## November 22 original W-2 year
 
@@ -54,6 +63,10 @@ deadlines, one NEW212 and three school-district cases. Both kept
 the five existing skips. The W-2 case passed in both jobs. Strict
 AMD64 passed image smoke, recovery, rollback, independent archive
 import, immutable SBOM checks and cleanup.
+Native ARM64 passed 639 browser cases with the five existing skips.
+Two NEW212, two reciprocal employee, three resident-credit and four
+school-district Ohio cases reached their original deadline. Image
+smoke, Compose upgrade and recovery, and cleanup passed.
 Remote coverage passed all 30,078 tests at the same coverage.
 GitHub reported the separate single-worker unit job canceled before
 completion. Both remote test database shutdowns succeeded.

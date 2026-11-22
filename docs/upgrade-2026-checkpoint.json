@@ -10,7 +10,12 @@
       "independentSourceReviewPassed": true,
       "localFullVerification": {"unitPassed": 30078, "coverageTestsPassed": 30078, "suitesPerRun": 2193, "branchCoveragePercent": 88.56, "bothPostgres16_16StopsPassed": true},
       "githubDockerPassed": true,
+      "githubCi": {"passed": true, "unitJob": 137111786099, "coverageJob": 137111786069, "unitPassed": 30078, "coverageTestsPassed": 30078, "suitesPerRun": 2193, "branchCoveragePercent": 88.56, "bothPostgres16_16StopsPassed": true},
+      "githubManagedBrowser": {"job": 137111786333, "passed": 648, "failed": 2, "originalSkips": 5, "rrtaSavedPdfInspectionTimeouts": 2},
+      "githubStrictAmd64": {"job": 137111786229, "passed": 643, "failed": 7, "originalSkips": 5, "ohioDeadlineFailures": 7, "imageSmokePassed": true, "composeRecoveryAndRollbackPassed": true, "independentArchivePassed": true, "immutableSbomsPassed": true, "containerRemoved": true},
+      "applicationEquivalentArm64": {"source": "913339ece2f48d9ec18c107afc9e0a80a2c73fea", "job": 137109698288, "passed": 639, "failed": 11, "originalSkips": 5, "ohioDeadlineFailures": 11, "imageSmokePassed": true, "composeRecoveryPassed": true, "containerRemoved": true},
       "githubRuns": {"ci": 44990991453, "docker": 44990991479, "web": 44990991529},
+      "releaseReady": false,
       "receipts": ".local/upgrade-evidence/nov22-1095c-fixture-scheduling"
     },
     "nov22W2OriginalYear": {
@@ -32,6 +37,7 @@
       "githubDockerPassed": true,
       "githubManagedBrowser": {"job": 137102383670, "passed": 649, "failed": 1, "originalSkips": 5, "rrtaSavedPdfInspectionTimeouts": 1},
       "githubStrictAmd64": {"job": 137102383851, "passed": 646, "failed": 4, "originalSkips": 5, "ohioDeadlineFailures": 4, "imageSmokePassed": true, "composeRecoveryAndRollbackPassed": true, "independentArchivePassed": true, "immutableSbomsPassed": true, "containerRemoved": true},
+      "githubStrictArm64": {"job": 137109698288, "passed": 639, "failed": 11, "originalSkips": 5, "ohioDeadlineFailures": 11, "imageSmokePassed": true, "composeRecoveryPassed": true, "containerRemoved": true},
       "githubCi": {"coverageJob": 137102383836, "coverageTestsPassed": 30078, "coverageSuitesPassed": 2193, "branchCoveragePercent": 88.56, "unitJob": 137102383972, "unitOutcome": "cancelled", "bothPostgres16_16StopsPassed": true},
       "githubRuns": {"ci": 44987899220, "docker": 44987899233, "web": 44987899198, "nativeArm64": 44987928653},
       "receipts": ".local/upgrade-evidence/nov21-w2-original-year",
