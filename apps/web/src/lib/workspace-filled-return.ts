@@ -136,6 +136,7 @@ const FORM_LABELS: Record<string, string> = {
   "pa-schedule-c-reference.pdf": "Pennsylvania Schedule C (reference summary)",
   "pa-schedule-f-reference.pdf": "Pennsylvania Schedule F (reference summary)",
   "pa-schedule-j-reference.pdf": "Pennsylvania Schedule J (reference summary)",
+  "pa-schedule-nrh-filled.pdf": "Pennsylvania Schedule NRH (redacted official-form review)",
   "pa-schedule-nrh-reference.pdf": "Pennsylvania Schedule NRH (reference summary)",
   "pa-schedule-sp-reference.pdf": "Pennsylvania Schedule SP (reference summary)",
   "pa-schedule-t-reference.pdf": "Pennsylvania Schedule T (reference summary)",

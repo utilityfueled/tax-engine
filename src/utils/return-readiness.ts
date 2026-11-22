@@ -1,4 +1,4 @@
-import {isPAOrdinaryReturnResult,hasPAOrdinaryScheduleBReviewAuthority,hasPAOrdinaryScheduleBNonresidentSuppressionAuthority,type PreparedPAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
+import {isPAOrdinaryReturnResult,hasPAOrdinaryScheduleBReviewAuthority,hasPAOrdinaryScheduleBNonresidentSuppressionAuthority,hasPAOrdinaryScheduleNRHReviewAuthority,type PreparedPAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
 import { shouldIncludePAScheduleAReferenceSummary } from "@/pdf/fill-pa-schedule-a.js";
 import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
@@ -666,9 +666,13 @@ export function assessReturnReadiness(
     }
     if (requiredNRH > 0) {
       packetCompleteness = "partial";
-      findings.push(countArtifacts("pa-schedule-nrh-reference.pdf") >= requiredNRH
-        ? "Pennsylvania Schedule NRH is included as a reference summary, not an official PA Schedule NRH filing copy."
-        : "Pennsylvania Schedule NRH applies, but no complete set of employer Schedule NRH packet artifacts was generated.");
+      const officialReview = requiredNRH === 1 && countArtifacts("pa-schedule-nrh-filled.pdf") === 1 &&
+        hasPAOrdinaryScheduleNRHReviewAuthority(input.taxInput, input.federalResult, input.paOrdinaryReview);
+      findings.push(officialReview
+        ? "The redacted Schedule NRH review requires the original W-2 and signed employer letter for filing. An incorrect Pennsylvania wage amount also requires a taxpayer explanation."
+        : countArtifacts("pa-schedule-nrh-reference.pdf") >= requiredNRH
+          ? "Pennsylvania Schedule NRH is included as a reference summary, not an official PA Schedule NRH filing copy."
+          : "Pennsylvania Schedule NRH applies, but no complete set of employer Schedule NRH packet artifacts was generated.");
     }
   }
   if(normalizedStateCode==="PA"&&ordinaryPA&&"methodVersion"in ordinaryPA&&ordinaryPA.methodVersion==="pa-ordinary-return-v1"&&ordinaryPA.pa40.residentCredit.gt(0)){

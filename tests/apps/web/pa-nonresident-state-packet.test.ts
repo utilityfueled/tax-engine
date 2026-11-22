@@ -17,7 +17,7 @@ import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
 import { calculatePAScheduleNRH } from "@/engine/state/pa-schedule-nrh";
 import Decimal from "decimal.js";
-import { paOrdinaryEmployeeReturnFixture } from "../../fixtures/pa-ordinary-employee-sources";
+import { paOrdinaryEmployeeReturnFixture, paFullYearWorkingDaysReviewFixture } from "../../fixtures/pa-ordinary-employee-sources";
 import { calculatePAOrdinaryReturn } from "@/engine/state/pa-ordinary-return";
 import { confirmGuidedPAResidencySources } from "../../../apps/web/src/lib/guided-pa-residency-facts";
 import { confirmGuidedPAOrdinaryReturnFacts } from "../../../apps/web/src/lib/guided-pa-ordinary-return-facts";
@@ -453,6 +453,22 @@ describe("Pennsylvania nonresident workspace packet disclosure", () => {
     expect(pdfText).not.toContain("No filled Pennsylvania state forms are included in this packet.");
   });
 
+
+  it("actual full-calendar NY employment includes a redacted official NRH review with filing attachments held", async () => {
+    const f = paFullYearWorkingDaysReviewFixture();
+    const state = createActualEmployeeState(f);
+    vi.mocked(buildTaxInputFromGuidedData).mockReturnValue(f.input);
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    const pdfText = await extractPdfText(download.contents, "pa-nrh-working-days-review.pdf");
+    expect(download.includedForms).toContain("pa-40-filled.pdf");
+    expect(download.includedForms).toContain("pa-schedule-nrh-filled.pdf");
+    expect(download.includedForms).not.toContain("pa-schedule-nrh-reference.pdf");
+    expect(pdfText).toContain("Packet completeness status: partial.");
+    expect(pdfText).toContain("The redacted Schedule NRH review requires the original W-2 and signed employer letter for filing.");
+    expect(pdfText).not.toContain("no complete set of employer Schedule NRH packet artifacts");
+    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
+    for (const value of [f.input.taxpayer.primary.ssn, f.input.w2s[0].employer.ein, "Fictional Payroll Officer"]) expect(pdfText).not.toContain(value);
+  });
 
   it.each(["resident", "part_year"] as const)("actual employee %s workspace retains UE and review-only disclosure", async status => {
     const f = paOrdinaryEmployeeReturnFixture(status);

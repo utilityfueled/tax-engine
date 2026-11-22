@@ -1,3 +1,5 @@
+import { fillPAScheduleNRHOfficialReview, PA_SCHEDULE_NRH_TEMPLATE } from './mappings/2025/fill-pa-schedule-nrh-official-review.js';
+import type { PAScheduleNRHReviewFacts } from './pa-schedule-nrh-review-facts.js';
 import {fillPAOrdinaryScheduleB} from './mappings/2025/fill-pa-ordinary-schedule-b.js';
 import {fillPAOrdinaryScheduleA} from './mappings/2025/fill-pa-ordinary-schedule-a.js';
 import {requiresRRTAPayrollReview,rrtaPayrollReviewOriginalInput,type PreparedRRTAPayrollReview} from './rrta-payroll-review-context.js';
@@ -484,6 +486,7 @@ export async function fillReturn(
   let form2210ReviewArtifact:SavedForm2210Review|undefined;
   const paMarriedReview=options.paMarriedReview;
   let paOrdinaryCareOfficial=false,paOrdinaryScheduleBNotRequired=false;
+  let paOrdinaryScheduleNRH: PAScheduleNRHReviewFacts | undefined;
   const marriedRequested=input.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||paMarriedReview!==undefined;
   if(marriedRequested){
     if(!input.paMarriedOrdinarySources||!isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||!paMarriedReview)throw Error('Actual married PA originals, owned result and original prepared review context are required.');
@@ -507,6 +510,7 @@ export async function fillReturn(
     if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||options.paOrdinaryReview!==undefined){
       if(options.paWorkingCreditReview!==undefined)throw new Error("PA ordinary result requires its actual ordinary prepared context");
       const ordinaryPaper=assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview);
+      paOrdinaryScheduleNRH = ordinaryPaper.scheduleNRH;
       paOrdinaryCareOfficial=ordinaryPaper.care!==undefined;paOrdinaryScheduleBNotRequired=ordinaryPaper.scheduleBNotRequired===true;
     }else{
       if(options.paOrdinaryReview!==undefined)throw new Error("PA ordinary prepared context cannot qualify a legacy result");
@@ -1392,7 +1396,7 @@ export async function fillReturn(
     filledForms.push(outputPathPA40);
 
     // Actual employee amounts come from the already asserted pre-redaction ordinary context.
-    // Each employer keeps its own UE/NRH reference; no scalar legacy packet is fabricated.
+    // Each employer keeps its own UE/NRH attachment; no scalar legacy packet is fabricated.
     if (isPAOrdinaryReturnResult(result.stateReturns.pennsylvania) && result.stateReturns.pennsylvania.employeeSources) {
       for (const [index, employee] of result.stateReturns.pennsylvania.employeeSources.perEmployer.entries()) {
         const employerDir = index === 0 ? outputDir : join(outputDir, `pa-employee-${index + 1}`);
@@ -1400,7 +1404,14 @@ export async function fillReturn(
           filledForms.push(await fillPAScheduleUEReference(employee.scheduleUE, employerDir));
         }
         if (employee.residentPeriod === false && employee.scheduleNRH && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))) {
-          filledForms.push(await fillPAScheduleNRHReference(input, employee.scheduleNRH, employerDir, employee));
+          if (paOrdinaryScheduleNRH) {
+            const doc = await fillPAScheduleNRHOfficialReview(paOrdinaryScheduleNRH, join(blankFormsDir, PA_SCHEDULE_NRH_TEMPLATE));
+            const path = join(employerDir, 'pa-schedule-nrh-filled.pdf');
+            await savePacketPdf(doc, path);
+            filledForms.push(path);
+          } else {
+            filledForms.push(await fillPAScheduleNRHReference(input, employee.scheduleNRH, employerDir, employee));
+          }
         }
       }
     }

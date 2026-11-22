@@ -1,3 +1,4 @@
+import { projectPAScheduleNRHReview, type PAScheduleNRHReviewFacts } from './pa-schedule-nrh-review-facts.js';
 /** Actual ordinary source review; opaque prepared tokens never originate from render facts. */
 import Decimal from 'decimal.js';
 import {calculateFederalTax} from '@/engine/federal.js';
@@ -158,6 +159,15 @@ export function hasPAOrdinaryScheduleBNonresidentSuppressionAuthority(input:TaxY
  return dividendContext(input,result,token)?.scheduleBNotRequired===true;
 }
 
+export function hasPAOrdinaryScheduleNRHReviewAuthority(
+  input: TaxYearInput, result: TaxReturnResult, token?: PreparedPAOrdinaryReturnReview,
+): boolean {
+  const context = token && contexts.get(token);
+  return context !== undefined && result.taxYear === 2025 && digest(input) === context.redactedDigest &&
+    isDeepStrictEqual(result.stateReturns?.pennsylvania, context.expected) &&
+    projectPAScheduleNRHReview(context.original, context.expected) !== undefined;
+}
+
 /** Structural routing only; source qualification always requires fresh original replay. */
 export function isPAOrdinaryReturnResult(value:unknown):value is PAOrdinaryReturnResult{return !!value&&typeof value==='object'&&'methodVersion'in value&&value.methodVersion==='pa-ordinary-return-v1';}
 export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdinaryReturnReview{
@@ -179,6 +189,7 @@ export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdi
 export interface PAOrdinaryReviewRenderFacts{
  care?:PACareOwnedPaper;filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;scheduleA?:PAOrdinaryScheduleARenderFacts;scheduleB?:PAOrdinaryScheduleBRenderFacts;scheduleBNotRequired?:true;
  residency:{status:'resident'|'part_year'|'nonresident';schoolCode:string;schoolDistrictName:string;from?:string;through?:string};
+ scheduleNRH?: PAScheduleNRHReviewFacts;
  requestedRefund:string;nextYearCredit:string;donations:Array<{code:string;amount:string}>;
 }
 export function assertPAOrdinaryReturnReview(input:TaxYearInput,result:TaxReturnResult,token?:PreparedPAOrdinaryReturnReview):PAOrdinaryReviewRenderFacts{
@@ -200,9 +211,10 @@ export function assertPAOrdinaryReturnReview(input:TaxYearInput,result:TaxReturn
  }
  if(context.scheduleA){const fresh=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);if(!isDeepStrictEqual(fresh,expected)||!isDeepStrictEqual(actualInterestPaper(original,fresh),context.scheduleA))return fail('retained original interest paper replay differs');}
  if(context.scheduleB||context.scheduleBNotRequired){const fresh=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources),review=actualDividendReview(original,fresh);if(!isDeepStrictEqual(fresh,expected)||!isDeepStrictEqual(review,context.scheduleB?{kind:'paper',paper:context.scheduleB}:{kind:'not-required-nonresident'}))return fail('retained original dividend source replay differs');}
+ const scheduleNRH = actual === context.redactedDigest ? projectPAScheduleNRHReview(original, expected) : undefined;
  const redactSourceText=privateSourceTextRedactor(original);
  const period=expected.residencyStatus==='part_year'?residency.residency.domicilePeriods.find(p=>p.state==='PA'):undefined;
- return {...(care?{care}:{}),...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),...(context.scheduleA?{scheduleA:structuredClone(context.scheduleA)}:{}),...(context.scheduleB?{scheduleB:structuredClone(context.scheduleB)}:{}),...(context.scheduleBNotRequired?{scheduleBNotRequired:true as const}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
+ return {...(scheduleNRH ? { scheduleNRH } : {}),...(care?{care}:{}),...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),...(context.scheduleA?{scheduleA:structuredClone(context.scheduleA)}:{}),...(context.scheduleB?{scheduleB:structuredClone(context.scheduleB)}:{}),...(context.scheduleBNotRequired?{scheduleBNotRequired:true as const}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
  residency:{status:expected.residencyStatus,schoolCode:expected.schoolDistrictCode,schoolDistrictName:redactSourceText(residency.residency.schoolDistrictName),...(period?{from:period.from,through:period.through}:{})},
  requestedRefund:expected.refundDisposition.refund.toFixed(0),nextYearCredit:expected.refundDisposition.nextYearCredit.toFixed(0),donations:expected.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))};
 }

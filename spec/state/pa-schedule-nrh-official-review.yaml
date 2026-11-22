@@ -1,0 +1,29 @@
+form: "PA-Schedule-NRH-Official-Review"
+fullName: "Original-bound 2025 Pennsylvania nonresident working-days review"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf"
+notes: |
+  Continuous official PA-40 NRH (EX) 03-24 (FI), SHA-256 39254e3bd00841ff8c64445fea3ce869860993ca01f15b71ef1df10aede8e323.
+  2025 PA-40 instructions page 42 also require withholding/wage discrepancy evidence and the employer letter.
+  Only the original-bound 2025 redacted review is eligible. The source has six pages; reproduce page one as a static watermarked review.
+  This is a single full-calendar employer and full-year nonresident with original signed working-day categories and no employee expenses or reimbursements.
+  Keep prior reference behavior for correct PA Box 16, partial calendars, other methods, or unsupported sources. Never change the admitted engine's required precision or filing gates.
+lines:
+  - line: "actual-paper"
+    formula: "Part A Line 1 = 365 source calendar days, Lines 2a/2b/2c = signed weekend/holiday, illness/disability and vacation/leave classifications. Sum them on Line 2; compare Line 1 minus that sum to actual working days on Line 3. Line 4 is actual PA-working days. Line 5 is the admitted Line 4 divided by Line 3 to six decimal places."
+    testRef: "tests/pdf/pa-schedule-nrh-official-review.test.ts::renders actual signed day categories and PA-40 transfers on the physical 2025 NRH review"
+  - line: "compensation"
+    formula: "Only when original PA Box 16 is missing/incorrect and employer explanation is recorded, use original gross on C-9, carry A-5 to C-10, and multiply to reconcile C-12 as whole dollars. Carry C-12 to E-18; E-20 and E-22 equal E-18 with no applicable Lines 17/19/21. Match PA-40 Lines 1a and 1c and leave NRH Parts B and D empty."
+    testRef: "tests/pdf/pa-schedule-nrh-official-review.test.ts::renders actual signed day categories and PA-40 transfers on the physical 2025 NRH review"
+  - line: "privacy"
+    formula: "No taxpayer or employer display identifiers, receipt metadata, retained source references, interactive stock, or instructions. Render only after original facts, canonical redacted input, and actual complete PA result reconcile."
+    testRef: "tests/pdf/pa-schedule-nrh-official-review.test.ts::renders actual signed day categories and PA-40 transfers on the physical 2025 NRH review"
+  - line: "fallback"
+    formula: "Use existing reference where the full-calendar method is unsupported, a nonworking category has no official cell, Box 16 correctly reports the PA amount, or render input is not canonically redacted."
+    testRef: "tests/pdf/pa-schedule-nrh-official-review.test.ts::keeps the prior NRH reference for %s"
+  - line: "workspace"
+    formula: "The actual workspace packet includes the source-qualified redacted 2025 paper, retains partial status for original W-2 and signed employer letter, and retains the filing and business-rule holds."
+    testRef: "tests/apps/web/pa-nonresident-state-packet.test.ts::actual full-calendar NY employment includes a redacted official NRH review with filing attachments held"
+  - line: "annual-gates"
+    formula: "The standing blank qualifies for the bounded 2025 review only. The PDF mapping still rejects 2026 review and 2025 filing."
+    testRef: "tests/pdf/pa-schedule-nrh-official-review.test.ts::keeps the 2026 review and 2025 filing export holds"

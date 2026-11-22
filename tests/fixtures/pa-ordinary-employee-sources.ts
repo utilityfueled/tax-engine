@@ -134,3 +134,45 @@ export function paOrdinaryEmployeeReturnFixture(status: 'resident' | 'part_year'
   for (const history of sources.otherStateTaxes.jurisdictions) history.completeThroughDate = f.packet.asOfDate;
   return { ...f, input, facts, sources };
 }
+
+/** Fictional complete 2025 NY work calendar and independently expected PA transfer. */
+export function paFullYearWorkingDaysReviewFixture(kind?: 'unsupported nonworking category' | 'correct PA Box 16') {
+  const f = paOrdinaryEmployeeReturnFixture();
+  const row = f.packet.employers[0];
+  const holiday = '2025-01-01';
+  let weekday = 0, worked = 0;
+  row.calendar = Array.from({ length: 365 }, (_, index) => {
+    const date = new Date(Date.UTC(2025, 0, index + 1));
+    const day = date.toISOString().slice(0, 10);
+    const weekend = [0, 6].includes(date.getUTCDay()) || day === holiday;
+    const reason = weekend ? 'weekend_holiday' : ++weekday <= 4 ? 'illness_disability' : weekday <= 10 ? 'vacation_leave' : '';
+    const pa = !reason && ++worked <= 100;
+    return {
+      date: day, sourceReference: 'Fictional signed original day ' + day,
+      kind: reason ? 'nonworking' : 'working', nonworkingReason: reason, travelClassification: 'none',
+      locations: reason ? [] : [{ state: pa ? 'PA' : 'NY', compensatedWorkConfirmed: true,
+        employerRequiredOutsideWork: pa ? null : true, transitOnly: false }],
+    };
+  });
+  if (kind === 'unsupported nonworking category') row.calendar[0].nonworkingReason = 'other_employer';
+  row.employmentPeriods[0].through = '2025-12-31';
+  row.statement.outsideWorkDates = row.calendar.filter(day => day.locations.some(location => location.state === 'NY')).map(day => day.date);
+  const gross = row.payroll[0];
+  gross.serviceThrough = gross.paidOn = '2025-12-31';
+  row.ue.expenses = [];
+  f.residency.wages[0].payroll = [{ ...gross, paServicesCompensation: '30000', outsidePAServicesCompensation: '45000' }];
+  f.residency.residency.domicilePeriods[0].daysInPA = 100;
+  if (kind === 'correct PA Box 16') {
+    const w2 = f.input.w2s[0];
+    w2.state = 'PA';
+    w2.stateWages = '30000';
+    row.originalW2 = structuredClone(w2);
+    row.statement.w2CorrectionExplanation = '';
+    f.residency.wages[0].original = structuredClone(w2);
+  }
+  f.input = TaxYearInputSchema.parse({ ...f.input, paResidencySources: f.residency });
+  f.facts.originalFederalSources = snapshotPAOrdinaryReturnOriginals(f.input);
+  f.sources.originalFederalSources = snapshotPAOrdinaryReturnOriginals(f.input);
+  f.facts.timing.remainingTaxPayment!.amountAppliedToTax = '921';
+  return f;
+}
