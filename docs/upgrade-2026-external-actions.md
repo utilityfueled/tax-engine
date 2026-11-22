@@ -28,8 +28,14 @@ strict AMD64 passed 637. Both reached the railroad PDF inspector's
 four-second deadline twice. Strict AMD64 also reached the 30-second
 limit in 11 Ohio cases. Each run retained five existing skips. The
 strict image smoke, recovery, archive import and cleanup passed.
-The newer Ohio preview optimization has its own open remote jobs.
 [Exact comparison](upgrade-2026-progress.md#november-21-pennsylvania-template-registry-reconciliation).
+
+The Ohio preview optimization at `41796dfb` passed managed Linux
+with 650 browser cases and five existing skips. Its strict AMD64
+run passed 642, with eight Ohio deadlines and five existing skips.
+The same-source ARM64 job passed smoke and recovery and had an
+active strict browser step at the last check.
+[Current comparison and ARM64 run](upgrade-2026-progress.md#november-21-pending-ohio-header-preview-timing).
 
 For Pennsylvania Schedule NRH, independently derive page-one lines from a
 fictional single New York resident with one full-calendar-year 2025 employer.

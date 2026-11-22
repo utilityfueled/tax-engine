@@ -18,7 +18,31 @@
       "serialUnit": {"passed": 30064, "suitesPassed": 2190},
       "serialCoverage": {"passed": 30064, "suitesPassed": 2190, "branchCoveragePercent": 88.56},
       "bothSerialPostgres16_16StopsPassed": true,
-      "githubRuns": {"dockerPassed": 44971971766, "ci": 44971971767, "web": 44971971797},
+      "githubRuns": {"dockerPassed": 44971971766, "ciPassed": 44971971767, "webFailed": 44971971797},
+      "githubCiExact": {"unitPassed": 30064, "coverageTestsPassed": 30064, "suitesPerRun": 2190, "branchCoveragePercent": 88.56, "bothPostgresStopsPassed": true},
+      "githubManagedBrowser": {"job": 137053522112, "passed": 650, "failed": 0, "originalSkips": 5},
+      "githubStrictAmd64": {
+        "job": 137053522101,
+        "passed": 642,
+        "failed": 8,
+        "originalSkips": 5,
+        "ohioCaseDeadlineFailures": 8,
+        "railroadSavedPdfDeadlineFailures": 0,
+        "imageSmokePassed": true,
+        "composeRecoveryPassed": true,
+        "independentArchiveImportPassed": true,
+        "cleanupPassed": true
+      },
+      "githubNativeArm64": {
+        "run": 44974785059,
+        "job": 137062136208,
+        "commit": "0e71304cdc31ebe08db5f1d310ac6ab718a0b2c3",
+        "deltaFromApplicationOnlyDocumentation": true,
+        "nativeArchitectureAndSourcePassed": true,
+        "imageSmokePassed": true,
+        "composeUpgradeAndRecoveryPassed": true,
+        "strictBrowserRunningAtRecord": true
+      },
       "strictRuntimeQualified": false,
       "releaseReady": false
     },

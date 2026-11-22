@@ -1,5 +1,21 @@
 # Current 2026 upgrade status
 
+## Latest exact release verification
+
+`41796dfb` passed local and remote unit and coverage with 30,064 tests
+per run and 88.56% branch coverage. Managed Linux passed 650 browser
+cases and strict AMD64 passed 642, with eight Ohio deadlines. Each
+retained five existing skips. Strict AMD64 passed image smoke, Compose
+recovery, archive import and cleanup. ARM64 on application-equivalent
+`0e71304c` passed image smoke and Compose recovery. Its browser
+job was still running at the last check.
+[Exact evidence](upgrade-2026-progress.md#november-21-pending-ohio-header-preview-timing) ·
+[ARM64 browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44974785059).
+
+[Open external actions](upgrade-2026-external-actions.md) tracks the remaining
+tax and AI review, official forms, Stripe Sandbox, and runtime qualification.
+The independent cybersecurity package remains deferred.
+
 ## November 21 resumption
 
 `f1b2e0e6` requires renewed rental source confirmation when the return

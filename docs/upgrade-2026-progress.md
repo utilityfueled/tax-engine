@@ -26,10 +26,26 @@ shut down cleanly.
 The exact unit and coverage runs each passed 30,064 tests across 2,190
 files, with 88.56% branch coverage and clean shutdown of both disposable
 PostgreSQL 16.16 instances. Docker passed at the published revision.
-The remote CI and Web runs were still active at this verification.
+The remote unit and coverage jobs each passed the same 30,064 tests
+with 88.56% branch coverage. Both remote test databases shut down.
+Managed Linux passed all 650 runnable browser cases, with five
+existing skips. Strict AMD64 passed 642 cases, with the same five
+skips and eight Ohio deadlines at 30 seconds. Both NEW212 cases,
+two desktop resident-credit cases and four school-district cases
+timed out. Both railroad inspections passed in both jobs.
+Strict AMD64 passed image smoke, Compose recovery, independent
+archive import and cleanup.
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44971971766) ·
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44971971767) ·
-[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44971971797).
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44971971797/job/137053522112) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44971971797/job/137053522101).
+
+A native ARM64 rehearsal on `0e71304c` verified its architecture and
+source, then passed candidate image smoke and isolated Compose
+upgrade and recovery. The verified Git delta from `41796dfb` contains
+only three documentation files. Strict ARM64 browsers were running
+at this verification, so the architecture is still unqualified.
+[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44974785059).
 
 ## November 21 Pennsylvania template registry reconciliation
 
