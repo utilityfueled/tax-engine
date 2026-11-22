@@ -1,5 +1,46 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Stripe Sandbox checkout and source recheck
+
+The protected `522cf4b1` Preview returned HTTP 200 from health. Its exact
+submission passed the checked source and Preview binding, and set both
+build and runtime billing mode to `test`. Stripe readback found one
+enabled `checkout.session.completed` destination in the Viva La Tax
+Sandbox, pointing to that exact deployment. A newer Ready Preview also
+returned HTTP 200, and it was outside this checkout rehearsal. Vercel
+applies environment changes to subsequent deployments. [Vercel environment variables](https://vercel.com/docs/environment-variables).
+
+One ordinary checkout request from the fixed synthetic account in canceled
+Starter state returned a real `cs_test` Session, and the account signed out.
+Stripe readback confirmed one $19 USD monthly line, an attached Sandbox
+customer and the exact Preview success and cancel URLs. The hosted checkout
+page returned HTTP 200 and displayed Starter and $19. The read-only browser
+pass reached the landing page without entering payment data or exercising
+conditional postal collection. The Session was open and unpaid, with no
+payment intent or subscription, and was scheduled to expire November 23 at
+06:56:31 UTC. Actual return navigation, expiry, signed completion delivery,
+entitlement and exact credit effects remain open. Sanitized receipts are in
+`.local/upgrade-evidence/nov21-preview-522cf4b1-beta-checkout-once/`.
+
+Independent guided intake replay confirmed that saved prior-year or undated
+1099-INT and 1099-DIV originals block canonical input after a confirmed year
+change, including after reopening. Removing the retained rows let the 2025
+engine calculate $70,000.35 AGI and $6,855 total tax from matching-year
+synthetic facts. The 2026 scenario reached the rule-pack gate. Both focused
+suites passed all 12 tests. The replay required no source change.
+
+The official federal Form 1040, instructions, and tax tables checked still
+covered 2025. The 2026 Form 1040 and Form 2210 available for review were
+drafts. Pennsylvania still linked the 2025 PA-40, Ohio's indexed catalog
+still listed 2025 annual materials, and the tested Ohio 2026 paths were
+inaccessible. The IRS quarterly table and bulletin checked did not yield a
+Q1 2027 rate. [Form 1040 and schedules](https://www.irs.gov/instructions/i1040gi) ·
+[2026 Form 1040 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Form 2210 catalog](https://www.irs.gov/forms-instructions-and-publications?find=2210) ·
+[PA annual forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms catalog](https://tax.ohio.gov/home/forms) ·
+[IRS quarterly interest rates](https://www.irs.gov/payments/quarterly-interest-rates).
+
 ## November 22 Form 1095-C fixture timing
 
 `2a5c20c9` removes timer yields from pdf-lib while constructing the

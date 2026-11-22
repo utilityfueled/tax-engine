@@ -95,11 +95,14 @@ coverage each passed 29,844 tests at 88.36% branch coverage. The browser
 suite passed 650 cases with five original skips.
 The protected test-billing Preview reached Ready, passed all 12
 workspace lifecycle checks and passed four read-only billing checks for
-each test account. The Viva La Tax Sandbox checkout destination now points
-to that exact Preview. Checkout and signed delivery still need actual
-rehearsal evidence. Approval review held the one-Session rehearsal before
-execution because its price, customer, return flow and cleanup needed
-additional binding.
+each test account. The Viva La Tax Sandbox checkout destination points
+to that exact Preview. On November 22, one synthetic checkout produced a
+real test-mode Stripe Session and displayed the $19 Starter plan. Stripe
+confirmed the Sandbox customer and configured return URLs. The Session was
+unpaid and scheduled for automatic expiry. Conditional postal behavior,
+actual return navigation, expiry, signed completion delivery and exact
+ledger effects remain open.
+[Checkout rehearsal](upgrade-2026-progress.md#november-22-stripe-sandbox-checkout-and-source-recheck).
 Exact-source CI and Docker passed. Managed Linux passed 650 browser
 cases. Strict AMD64 passed Compose recovery and 642 browser cases. Eight
 Ohio cases reached the original 30-second limit. Both runs retained five

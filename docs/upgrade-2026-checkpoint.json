@@ -1,5 +1,27 @@
 {
   "activeContinuation": {
+    "nov22SandboxCheckoutAndSourceRecheck": {
+      "exactCheckoutSource": "522cf4b1fe005d04de00ce1a6b72425447ddfc5c",
+      "protectedPreviewHealthHttp": 200,
+      "otherReadyPreviewHealthHttp": 200,
+      "billingMode": "test",
+      "matchingEnabledSandboxEndpoints": 1,
+      "checkoutPostAttempts": 1,
+      "checkoutPageHttp": 200,
+      "starterLine": {"amountUsdMinor": 1900, "interval": "month", "quantity": 1},
+      "customerAttached": true,
+      "configuredReturnUrlsMatch": true,
+      "paymentStatus": "unpaid",
+      "sessionStatus": "open",
+      "paymentIntentPresent": false,
+      "subscriptionPresent": false,
+      "scheduledExpiryUtc": "2026-11-23T06:56:31Z",
+      "signedOut": true,
+      "followUp": ["expiry readback", "conditional postal behavior", "return navigation", "signed completion delivery", "entitlement and exact credit effects"],
+      "independentInvestmentYearReplay": {"forms": ["1099-INT", "1099-DIV"], "testsPassed": 12, "priorOrMissingYearBlockedAfterReopen": true, "2026RulePackGateRetained": true},
+      "officialFormsRecheck": {"federal1040And2210StillDraftFor2026InCheckedSources": true, "pa2025StillLinked": true, "oh2026PathsInaccessible": true, "q1_2027RateFound": false},
+      "receipts": ".local/upgrade-evidence/nov21-preview-522cf4b1-beta-checkout-once"
+    },
     "nov22Form1095CFixtureTiming": {
       "commit": "2a5c20c970aa5e0f624f4c85f0ed83b710fbb7a6",
       "scope": "Remove timer yields when constructing test-only Form 1095-C PDFs. Application and production parser unchanged from 913339ec.",
