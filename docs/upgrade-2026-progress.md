@@ -27,8 +27,20 @@ manifest SHA-256 is
 `7ad9ab048d97f19456f437a6e818d9d425d2f17c799e0f671bfd0418f801d326`.
 GitHub built the Docker image on `fe41fd48`, which only adds evidence
 to the same application source. Vercel recorded both production builds
-as canceled.
-[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45076191539).
+as canceled. All six exact GitHub CI jobs passed, with 88.58% branch
+coverage. Exact managed Linux Chromium passed 649 cases and retained
+five existing skips. One railroad saved-PDF inspector reached its
+four-second subprocess deadline. The strict AMD64 image passed smoke,
+Compose recovery and rollback, independent archive import and browser
+container removal. Its browser run passed 641 cases and retained five
+existing skips. Two Ohio business, three resident credit and four
+school district cases reached the 30-second deadline. Sanitized managed result SHA-256
+`a0f2327959c1f7bbd6117abe5f04daa5674e772159c5bc731d036b8bbfd6250c`.
+Sanitized strict result SHA-256
+`585601931234988d104ef4553c649c855fb806f9425b1ba0834751f59eccc743`.
+[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45076191539) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45075939078) ·
+[Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45075939075).
 
 ## November 22 Ohio payment projection reuse
 
@@ -68,9 +80,28 @@ Median full adapter time was 12.2 and 11.3 milliseconds. This
 process-local measurement does not establish the contribution to Linux
 browser timeouts.
 
-The exact AMD64 timing comparison and the ARM64 browser run are in
-progress. ARM64 smoke, independent archive verification and Compose
-recovery have passed. The strict timing effect remains unmeasured.
+AMD64 passed the build and managed browser jobs. The strict container
+browser passed 637 cases, failed 13 and retained five existing skips.
+The recorded container removal step passed. The subsequent same-case
+comparison retained the 30-second deadline, two workers and zero retries.
+Trace retention passed seven of 15 cases in 199.715 seconds, and trace off
+passed eight of 15 in 170.268 seconds. All four part-year school cases
+completed entry and first confirmation in both legs. None reached the
+review download. Entry took 11.838–16.928 seconds with retention and
+9.604–12.373 seconds with trace off. Failure cues include field entry,
+a later confirmation click and a later confirmation check. Five other
+school cases passed both legs. The fixed leg order and missing timing
+between first confirmation and download prevent a causal conclusion.
+Sanitized paired manifest SHA-256
+`b78664a7aec74f6a6970242cdeeb093ed94d80c72818c900dccd342b44c4aee4`.
+
+Exact ARM64 passed image
+smoke, independent archive verification, Compose recovery and browser
+container removal. Chromium passed 639 cases and retained five
+existing skips. Eleven Ohio cases reached the original 30-second
+deadline: two business, two reciprocal, three resident credit and
+four school district. Sanitized ARM64 summary SHA-256
+`875e611615858f86a5400f4f1e74f6d28138d7542492e0f25d7af0a39861d020`.
 [AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
 [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45075193188).
 

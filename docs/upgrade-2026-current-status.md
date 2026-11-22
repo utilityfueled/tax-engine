@@ -8,15 +8,26 @@
   controls and independent software review passed. All 11 local checks
   passed, with 30,111 unit and coverage cases per suite and 88.21%
   branch coverage. Chromium passed 650 cases with five existing skips.
+  All six exact GitHub CI jobs passed, with 88.58% branch coverage.
   GitHub built the Docker image on the application-equivalent documentation revision.
+  Managed Linux passed 649 browser cases, with one railroad saved-PDF
+  inspection timeout. The strict AMD64 image passed smoke, recovery,
+  archive import and cleanup. Its browser run passed 641 with nine Ohio
+  deadlines. Both remote browser runs retained five existing skips.
   [Form 8889 evidence](upgrade-2026-progress.md#november-22-form-8889-displayed-line-reconciliation) ·
+  [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45075939078) ·
+  [Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45075939075) ·
   [Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45076191539).
 - `c6ea35ac` removes a duplicate Ohio payment projection within each
   invocation. Four complete projections matched before and after, and
   all ten scoped Chromium cases passed. All 11 local checks passed
   with 30,109 unit and coverage cases per suite, 88.21% branch coverage,
-  and 650 Chromium passes with five existing skips. AMD64 timing and
-  ARM64 qualification continue. See
+  and 650 Chromium passes with five existing skips. ARM64 passed
+  smoke, independent archive import, recovery and cleanup. Its browser
+  run passed 639, with 11 Ohio deadlines and five existing skips.
+  Strict AMD64 passed 637 browser cases with 13 failures and five existing
+  skips. In the optional replay, all four part-year school cases cleared
+  first confirmation and reached the deadline before review download. See
   `activeContinuation.nov22OhioPaymentProjectionReuse`.
   [Ohio evidence](upgrade-2026-progress.md#november-22-ohio-payment-projection-reuse) ·
   [AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
