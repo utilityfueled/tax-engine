@@ -12520,3 +12520,90 @@ cleaned up with zero external requests. The local browser manifest SHA-256 is
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210),
 [2026 Form 1040-ES](https://www.irs.gov/pub/irs-pdf/f1040es.pdf) and
 [IRS Direct Pay guidance](https://www.irs.gov/payments/direct-pay-help).
+
+The standalone exact-source `f6ef1045` unit run passed 30,099 tests with 79
+original skips. The standalone coverage run passed the same 30,099 with
+79 original skips. It covered 89,725 of 101,724 branch outcomes, or 88.20%
+against the 85% gate. All three typechecks, both spec checks, lint and both
+builds passed. The runs used the frozen tracked archive and reused the
+installed lock-matching dependencies after the offline store lacked a package.
+The 15 declared sample documents were hash-checked separately.
+
+The first exact-source full Chromium run passed 645 with five existing skips
+and five failures in the final batch. Both Ohio batches passed all 25. The
+five affected tests started within the recorded host-suspension intervals.
+macOS entered software sleep at 14:39:37 ET, then maintenance sleep at
+14:40:19 and 14:49:42. Three case durations exceeded 119 seconds in the report.
+The full suite result remains failed. The summary SHA-256 is
+`3b2dd295c18f9c095b496c71981a06a84c4ca2b402862797560bb0c9c5e92f9f`.
+The five-case rerun uses the original deadlines and a stronger process-scoped
+sleep assertion.
+
+All five cases passed the focused exact-source rerun. Summary SHA-256
+`77071f58806ef8b4bd400e146fc02c29c511dcb37b92639c3241cb2e9bc241ab`.
+The awake full rerun passed 650 tests with five original skips and zero
+failures using the same 30-second deadlines. The combined exact-source local
+check manifest binds 18 records to `f6ef1045` and has SHA-256
+`919a1f3d5cd8f1b711766efda65df5a0305fb813185bf68f18eafdc77edda889`.
+The failed attempt remains in the manifest. The GitHub workflow separately
+verifies the application under Linux.
+[Exact application web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288).
+
+### November 22 strict Linux browser result and paired diagnostics
+
+The exact `8ca0f33c` container job passed Compose upgrade, recovery and
+rollback, then the strict Chromium suite returned 637 passes, 13 failures
+and five existing skips. Managed Chromium and the web build passed. Cleanup
+reported success. The sanitized paired artifact repeated the same 15 cases
+at the existing deadline with two workers and zero retries. Both legs had
+seven passes and the same eight failures. Trace retained took 188.652 seconds
+and trace off took 165.734 seconds. Fixed order and cache effects limit the
+timing comparison. The comparison leaves the strict failure authoritative.
+
+Each leg recorded six timeouts. The other two failures both occurred at the
+resident-credit Python reader call on line 233. Source review found that the
+optional runner bypassed the standard wrapper that supplies the pinned Python
+interpreter. In a local reproduction, ambient Python lacked pypdf and the
+prepared pypdf 6.10.0 interpreter parsed 23 pages of the same synthetic PDF
+with the same reader. This identifies a diagnostic prerequisite defect. The
+strict runner already selects the pinned interpreter, so its remaining
+deadline failures require separate evidence. Artifact result SHA-256
+`1c0dc309eaca8a35f9536664459739c9e5f74dfdb3532d49d36eacc805854169`.
+[GitHub runtime job](https://github.com/utilityfueled/tax-engine/actions/runs/45055612463/job/137310050740)
+and [sanitized paired artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45055612463/artifacts/14770812751).
+
+`55488dcb` uses a common interpreter selection for the required wrapper,
+optional per-case CPU runner, full-batch runner and trace pair. Admitted
+diagnostics verify pypdf 6.10.0 within the existing bounded subprocess and
+propagate the interpreter into every Playwright child. They hold with a fixed
+reason when the prerequisite is unavailable. Regression tests cover Python
+optimization, path-like overrides and bare overrides with relative PATH
+entries. The author's 67 Node and 69 wrapper checks passed. Independent review
+passed 78 operations checks and exercised the real venv from both working
+directories. The source snapshot now includes the shared helper. Original
+browser limits and qualification decisions are preserved. The corrected
+comparison is queued on the full exact SHA.
+[Corrected GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
+
+### November 22 annual source recheck
+
+- The IRS current final Form 1040, instructions and Tax/EIC tables are 2025.
+  Final 2026 parent transfer schedules and applicable annual instructions are
+  still required, including for standalone forms with a final blank already
+  available. [Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf),
+  [instructions](https://www.irs.gov/instructions/i1040gi),
+  [Tax and EIC tables](https://www.irs.gov/pub/irs-pdf/p1040.pdf),
+  [Schedule 2](https://www.irs.gov/pub/irs-pdf/f1040s2.pdf) and
+  [Schedule 3](https://www.irs.gov/pub/irs-pdf/f1040s3.pdf).
+- The Form 2210 catalog still lists 2025. The rates table has no first-quarter
+  2027 entry. Both are independent annual inputs.
+  [Form 2210 catalog](https://www.irs.gov/forms-instructions-and-publications?find=2210)
+  and [quarterly interest rates](https://www.irs.gov/payments/quarterly-interest-rates).
+- Pennsylvania's final annual PA-40, instructions and applicable residency
+  schedules including NRH remain pending for 2026. The current final booklet
+  is 2025. Ohio's current final IT 1040 and applicable IT NRC materials are
+  also 2025, with the November 2026 materials marked draft.
+  [Pennsylvania income tax index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax),
+  [Ohio IT 1040 bundle](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf),
+  [Ohio NRC index](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) and
+  [Ohio draft announcements](https://tax.ohio.gov/individual/resources/individualincome).

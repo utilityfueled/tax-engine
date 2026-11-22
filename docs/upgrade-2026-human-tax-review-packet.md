@@ -366,3 +366,16 @@ retirement-income credit. The expected federal and Ohio AGI is $66,000 and the
 Ohio tax is $1,444. Missing facts and other reasons for a Code 1 payment still
 require source review. [Ohio Revised Code §5747.055](https://codes.ohio.gov/ohio-revised-code/section-section-5747.055)
 and [Ohio Department of Taxation retirement guidance](https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income).
+
+Review the ordinary 2025 payment reconciliation in `f6ef1045`. For the
+single-filer fixture, one processed April 15 federal estimate of $500 gives
+Form 1040 line 26 of $500 and an underpayment penalty of $127. Independently
+derive the penalty when two separate processed receipts support $1,000 on
+line 26. Confirm the $94 result, the source-date allocation, and the separate
+transfer for a payment with an extension. Verify that a Direct Pay confirmation
+is reconciled against a processed, unreversed payment before counting it.
+The 2026 estimate check covers intake and canonical transfer pending annual
+calculation qualification. [2025 Form 1040 instructions](https://www.irs.gov/instructions/i1040gi),
+[2025 Form 2210 instructions](https://www.irs.gov/instructions/i2210),
+[2026 Form 1040-ES](https://www.irs.gov/pub/irs-pdf/f1040es.pdf) and
+[IRS Direct Pay guidance](https://www.irs.gov/payments/direct-pay-help).
