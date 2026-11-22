@@ -1,5 +1,27 @@
 {
   "activeContinuation": {
+    "nov21LongTermCareProjection": {
+      "commit": "0276fd9826aef576d16a287ba921a00102b05868",
+      "officialSources": ["https://uscode.house.gov/us/usc/119-118/t26/s72/", "https://uscode.house.gov/us/usc/119-118/t26/s401/", "https://www.irs.gov/pub/irs-drop/n-26-33.pdf"],
+      "authorFocusedTestsPassed": 213,
+      "finalExactFocusedTestsPassed": 36,
+      "specRefsValid": 9857,
+      "independentExactCentProbePassed": true,
+      "exactCentFixture": {"taxable": "2700", "qualified": "2599.99", "taxableForAdditionalTax": "100.01", "additionalTaxBeforeFormRounding": "10.001"},
+      "projectionOnly": true,
+      "draftExceptionCodeEnabled": false,
+      "filingEnabled": false
+    },
+    "nov21Form1099RCopyBBoxes7c7d": {
+      "commit": "bb36abfbc5d8c50ef27122708402113e3c98ed55",
+      "officialSource": "https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf#page=4",
+      "authorFocusedTestsPassed": 101,
+      "finalExactFocusedTestsPassed": 23,
+      "finalPhysicalUploadCasesPassed": 4,
+      "specRefsValid": 9854,
+      "requiresManualFactConfirmation": true,
+      "filingEnabled": false
+    },
     "nov21GuidedFirstHomeIra": {
       "commit": "eead6b7a9f8a66c1800ee0b772b8b673d2a3897e",
       "authorFocusedTestsPassed": 249,
@@ -24,6 +46,11 @@
       "postgresVersion": "16.16",
       "bothPostgresStopsPassed": true,
       "nativeArm64Run": 44953786499,
+      "nativeArm64Browser": {"passed": 642, "failed": 8, "existingSkips": 5, "imageSmokePassed": true, "composeRecoveryPassed": true, "cleanupPassed": true},
+      "matchingCodeManagedAndAmd64Run": 44954266314,
+      "managedLinuxBrowser": {"passed": 650, "failed": 0, "existingSkips": 5},
+      "strictAmd64Browser": {"passed": 640, "failed": 10, "existingSkips": 5},
+      "localFullBrowser": {"passed": 606, "failed": 44, "existingSkips": 5, "timeouts": 44},
       "normalWorkspacePartialTax": "100",
       "independentNormalWorkspaceFullException": {"line1": "7000", "line2": "7000", "exceptionCode": "09", "additionalTax": "0", "redacted": true, "savedStatePreserved": true},
       "humanReviewStatus": "unassigned",

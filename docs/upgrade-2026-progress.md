@@ -1,5 +1,30 @@
 # 2026 upgrade implementation evidence
 
+## November 21 qualified long-term-care distribution calculation
+
+Commit `0276fd98` projects the 2026 exception for one verified
+employee-owned private 401(k) payment. The administrator's written
+record supplies the qualified and ordinary amounts, the insurer's
+premium statement supports the actual premium, and the plan record
+supports the vested benefit. The code reconciles the payment to the
+taxable 1099-R and checks the annual cap. A competing current-year
+disaster distribution holds the projection. The independently derived
+case keeps $2,700 taxable, exempts $2,599.99 from additional tax, and
+computes $10.001 before form rounding. The integrated package passed 36
+focused tests, both type checks, 9,857 spec references and the inventory.
+The projection is internal. Annual filing and review exports need
+final instructions and qualified reporting. [IRS Notice 2026-33](https://www.irs.gov/pub/irs-drop/n-26-33.pdf).
+
+## November 21 2026 Form 1099-R Copy B review evidence
+
+Commit `bb36abfb` recognizes the actual Box 7c checkbox state and
+distinguishes a blank Box 7d from explicit zero and positive earnings.
+It omits a missing or conflicting widget. The extracted evidence stays
+in review notes and taxpayers confirm the original facts manually.
+Four physical upload cases on the final IRS template and 23 integrated
+focused tests passed. Web type checking, lint, spec, inventory and the
+browser source audit passed. [2026 Form 1099-R Copy B](https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf#page=4).
+
 ## November 21 guided first-home IRA worksheet
 
 Commit `eead6b7a` collects the original statement, receipt date, binding
@@ -23,8 +48,16 @@ and production web build passed. Full lint reported zero errors and
 12,167 warnings.
 The exact unit and coverage runs each passed 30,044 tests across
 2,188 files, with 88.54% branch coverage and both PostgreSQL 16.16
-instances shut down cleanly. The exact ARM64 rehearsal is queued.
-[Native ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44953786499).
+instances shut down cleanly.
+
+The exact full managed Mac browser suite passed 606, hit 44 timeout
+failures including one PDF subprocess timeout, and retained five skips.
+Managed Linux at matching code `6cea0f93` passed 650 with five skips.
+Strict AMD64 at the same source passed 640 with ten failures. The exact
+`eead6b7a` ARM64 run passed image smoke, Compose upgrade and recovery,
+and cleanup, and reported 642 browser passes and eight failures. Both
+strict architectures kept the 30-second limit, zero retries, and five
+existing skips. [Managed Linux and AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44954266314) · [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44953786499).
 [Independent tax review assignments](upgrade-2026-human-retirement-20261121.md).
 
 ## November 21 first-home IRA review export
