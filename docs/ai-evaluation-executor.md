@@ -39,6 +39,7 @@ every task's budgets/timeouts, actual prompt/transport constants, wire schema,
 repetitions and limits. The complete execution contract is retained in the plan
 as well as hashed, so a same-ID configuration change cannot reuse its approval.
 Changes require a new plan and authorization.
+
 Actual bindings now use all eight production task schemas and the same source
 validation as the application. Each response is the real task JSON; no
 model-authored normalization sidecar is accepted. The independent scorer reparses
@@ -85,6 +86,29 @@ not itself permission. The operator must verify that the configured account,
 standard text service tier, global endpoint, retention settings and pricing
 match the authorization. Never put keys in the plan, approval, command line,
 corpus, logs or journal.
+
+### Independent case review
+
+Make a private copy of the [frozen fixture pack](../prompts/provider-model-eval/fixture-pack.json).
+It contains 160 development cases and 80 held-out cases. For each case,
+review the fictional source, proposed answer or abstention, expected
+fields and case-specific criteria. Independently check money, dates and
+their source records. Record any disagreement by fixture ID. If a case
+needs a different oracle, correct the source corpus before preparing a
+new qualification plan.
+
+Keep all frozen content, IDs, splits and `review.author` intact in the
+copy. After a human independent of the case author resolves the review,
+set `review.status` to `reviewed`, identify the actual reviewer in
+`review.reviewer` and use the actual ISO date or timestamp in
+`review.reviewedAt`. Leave unresolved cases pending. This offline
+command checks the reviewed copy against the frozen corpus and counts
+accepted case reviews without contacting providers.
+
+```sh
+pnpm eval:models:live-summary -- \
+  --reviewed-fixtures-file=.local/ai-eval/reviewed-fixtures.json
+```
 
 ## Authorized execution and resumption
 
@@ -158,7 +182,22 @@ node --import tsx scripts/run-provider-eval.ts report \
   --output=.local/ai-eval/results.json
 ```
 
-`results.json` fits `pnpm eval:models:live-summary -- --live-run-file=...`.
+For each run response, preserve the original report and review a copy.
+Use the retained source context and case criteria to judge grounding,
+quality and PII exposure. Where possible, omit the provider label from
+the review material and associate the finding with the original case,
+profile and repeat afterward. Enter the actual human assessment in
+`independentReview` with `method` set to `human`, the reviewer identity,
+and the boolean `grounded`, `qualityAccepted` and `piiLeak` results.
+Leave `independentReview` null for unreviewed entries. Keep the response,
+measurement and usage fields as recorded.
+
+```sh
+pnpm eval:models:live-summary -- \
+  --live-run-file=.local/ai-eval/reviewed-results.json \
+  --reviewed-fixtures-file=.local/ai-eval/reviewed-fixtures.json
+```
+
 Results remain nonqualifying until independent fixture and output review,
 measured coverage, actual application normalization and every existing gate
 passes. Smoke provenance cannot pass qualification. Task schemas and source
