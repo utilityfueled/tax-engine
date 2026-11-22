@@ -31,3 +31,16 @@ lines:
     description: Record which public job-budget check stopped the diagnostic
     formula: Distinguish request failure, HTTP status, malformed response and rejected job identity. Record only a fixed reason and the HTTP status when present. Stop before browser replay if the exact job budget is unavailable. Never retain the response body or exception text.
     testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::public job budget reports only bounded failure reasons"
+  - line: "pinned-pdf-test-prerequisite"
+    description: Run both optional browser paths with the verified PDF test interpreter
+    formula: >-
+      Use the ordinary test runner's explicit Python override or checkout test
+      environment. Resolve relative paths from the checkout and preserve bare
+      commands for PATH lookup, anchoring relative PATH entries at the checkout
+      for both the probe and its children. Verify pypdf 6.10.0 before collection or
+      execution,
+      including under Python optimization. Supply the validated interpreter to
+      each Playwright child. If it is unavailable, stop
+      with fixed diagnostic metadata. Retain the existing original-run, timing,
+      and qualification gates.
+    testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::binds pinned PDF test Python before optional browser children with no host fallback"

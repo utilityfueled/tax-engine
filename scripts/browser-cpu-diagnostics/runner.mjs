@@ -8,6 +8,7 @@ import { fileURLToPath, URL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import { setTimeout as pause } from 'node:timers/promises';
 import { auditCollection, containerProof, environment, exactUnion, noEnvFiles, planBatches, reconcile, rowsFromReport, runSchedule, snapshot, testList, verifyAudit } from '../run-browser-tests.mjs';
+import { pdfTestPythonProbeArgs, resolvePdfTestEnvironment } from '../pdf-test-prerequisite.mjs';
 import { collectionHash, diagnosticOutcome, rewriteImport, selectCases } from './selection.mjs';
 import { LIMITS, ORIGIN, unavailable, validateInventory, publicChunkMetadata, sanitizeStoredRecord } from './profile.mjs';
 import { projectDiagnosticCases } from './fixed-metadata.mjs';
@@ -62,6 +63,16 @@ export function command(file, args, { cwd, env, signal, timeout = 60000, max = L
     child.on('error', stop);
     child.on('close', finish);
   });
+}
+
+export async function preparePdfBrowserEnvironment(root, childEnv, signal) {
+  const env = resolvePdfTestEnvironment(root, childEnv);
+  try {
+    const probe = await command(env.TAX_ENGINE_PDF_TEST_PYTHON, pdfTestPythonProbeArgs, { cwd: root, env, signal, timeout: 10000, max: 65536 });
+    return probe.exit === 0 ? env : null;
+  } catch {
+    return null;
+  }
 }
 
 async function originalQualification(root, directory, manifest, audit, image) {
@@ -129,6 +140,11 @@ export async function main({ env = process.env, root = fileURLToPath(new URL('..
     const imageProof = await inspect();
     const original = await originalQualification(root, env.TAX_BROWSER_CPU_QUALIFICATION_DIRECTORY, manifest, audit, env.CANDIDATE_IMAGE_ID);
     need(JSON.stringify(original.source.externalProof) === JSON.stringify(imageProof));
+    const browserEnv = await preparePdfBrowserEnvironment(root, childEnv, abort.signal);
+    if (!browserEnv) {
+      await save('unavailable.json', { qualification: 'NONQUALIFYING_DIAGNOSTIC', status: 'unavailable', code: 'pdf-test-prerequisite-unavailable', originalFailureSuperseded: false });
+      return 1;
+    }
     const identity = async () => {
       need(!abort.signal.aborted); await verifyAudit(root, audit);
       need(JSON.stringify(await snapshot(root, [], Object.keys(original.source.source))) === JSON.stringify(original.source.source));
@@ -143,9 +159,9 @@ export async function main({ env = process.env, root = fileURLToPath(new URL('..
     const inventoryFile = path.join(temporary, 'public-chunks.json'); await writeFile(inventoryFile, JSON.stringify(inventory), { flag: 'wx', mode: 0o600 });
     const app = path.join(root, 'apps/web'), cli = path.join(app, 'node_modules/@playwright/test/cli.js');
     const fixed = ['test', '--workers=2', '--retries=0', '--timeout=30000', '--project=chromium'];
-    const profilerEnv = { ...childEnv, TAX_BROWSER_CPU_DIAGNOSTICS: '1', TAX_BROWSER_CPU_OUTPUT: profileDirectory, TAX_BROWSER_CPU_INVENTORY: inventoryFile };
+    const profilerEnv = { ...browserEnv, TAX_BROWSER_CPU_DIAGNOSTICS: '1', TAX_BROWSER_CPU_OUTPUT: profileDirectory, TAX_BROWSER_CPU_INVENTORY: inventoryFile };
     const collect = async (enabled, list) => {
-      const result = await exec(process.execPath, [cli, ...fixed, '--list', '--reporter=json', ...(list ? ['--test-list', list] : [])], { cwd: app, env: enabled ? profilerEnv : childEnv });
+      const result = await exec(process.execPath, [cli, ...fixed, '--list', '--reporter=json', ...(list ? ['--test-list', list] : [])], { cwd: app, env: enabled ? profilerEnv : browserEnv });
       need(result.exit === 0); return rowsFromReport(JSON.parse(result.stdout));
     };
     const plain = await collect(false), instrumented = await collect(true);

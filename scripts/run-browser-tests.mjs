@@ -11,7 +11,7 @@ const auditedDirs = ['src', 'apps/web/src', 'apps/web/tests', 'tests/fixtures', 
 const auditedFiles = ['apps/web/playwright.config.ts', 'apps/web/package.json', 'packages/engine/package.json', 'packages/contracts/package.json', 'pnpm-lock.yaml'];
 const scopes = ['filled-return', 'provider', 'business-expense-analysis', 'self-employment-income-analysis'];
 const sourceDirs = ['src', 'apps/web/src', 'apps/web/tests', 'apps/web/public', 'apps/web/scripts', 'scripts', 'packages/contracts/src', 'packages/engine/src', 'tests', 'forms/blank', 'spec', 'sample-documents/downloads'];
-const sourceFiles = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'apps/web/package.json', 'apps/web/next.config.ts', 'apps/web/tsconfig.json', 'apps/web/playwright.config.ts', 'scripts/run-tests.mjs', 'scripts/run-browser-tests.mjs', 'scripts/browser-request-budgets.json', 'packages/contracts/package.json', 'packages/engine/package.json', '.github/workflows/web.yml'];
+const sourceFiles = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'apps/web/package.json', 'apps/web/next.config.ts', 'apps/web/tsconfig.json', 'apps/web/playwright.config.ts', 'scripts/run-tests.mjs', 'scripts/run-browser-tests.mjs', 'scripts/pdf-test-prerequisite.mjs', 'scripts/browser-request-budgets.json', 'packages/contracts/package.json', 'packages/engine/package.json', '.github/workflows/web.yml'];
 export function need(ok, label = 'Browser orchestration requires review') { if (!ok)
     throw Error(label); }
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');

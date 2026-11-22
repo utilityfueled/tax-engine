@@ -1,11 +1,15 @@
 // Spec: spec/browser/full-batch-public-cpu-diagnostic.yaml
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import test from 'node:test';
-import {readFile} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {delimiter,join} from 'node:path';
 import {URL} from 'node:url';
 const moduleUrl=new URL('../../scripts/browser-cpu-diagnostics/full-batch.mjs',import.meta.url);
 const traceUrl=new URL('../../scripts/browser-cpu-diagnostics/trace-pair.mjs',import.meta.url);
+const runnerUrl=new URL('../../scripts/browser-cpu-diagnostics/runner.mjs',import.meta.url);
 const manifest=JSON.parse(await readFile(new URL('../../scripts/browser-cpu-diagnostics/full-batches.json',import.meta.url),'utf8'));
 test('each frozen replay source digest still matches the checkout', async () => {
  const root = new URL('../../', import.meta.url);
@@ -41,6 +45,77 @@ test('original-browser-contract',async()=>{
  const result=await executeBatch(batch,{collect:async()=>batch.rows,execute:async actual=>{calls.push(actual);return{exit:1,report:{synthetic:true}};}});assert.equal(result.exit,1);assert.deepEqual(calls,[args]);
  calls.length=0;await assert.rejects(executeBatch(batch,{collect:async()=>batch.rows.slice(1),execute:async()=>calls.push('forbidden')}));assert.equal(calls.length,0);
  const drift=globalThis.structuredClone(batch.rows);drift[0].timeout=90000;await assert.rejects(executeBatch(batch,{collect:async()=>drift,execute:async()=>calls.push('forbidden')}));assert.equal(calls.length,0);
+});
+test('binds pinned PDF test Python before optional browser children with no host fallback', {skip:process.platform==='win32'}, async () => {
+ const {preparePdfBrowserEnvironment}=await import(runnerUrl);
+ const root=await mkdtemp(join(tmpdir(),'tax-browser-pdf-test-'));
+ try {
+  const host=join(root,'host'),checkout=join(root,'.local','pdf-test-venv','bin');
+  const web=join(root,'apps','web');
+  await mkdir(host);
+  await mkdir(checkout,{recursive:true});
+  await mkdir(web,{recursive:true});
+  const hostFallback='#!/bin/sh\nprintf host > host-python-used\nexit 0\n';
+  await writeFile(join(host,'python3'),hostFallback,{mode:0o700});
+  await writeFile(join(host,'python'),hostFallback,{mode:0o700});
+  const signal=new AbortController().signal,childEnv={PATH:host,PLAYWRIGHT_BASE_URL:'http://127.0.0.1:3109'};
+  assert.equal(await preparePdfBrowserEnvironment(root,childEnv,signal),null);
+  const valid='#!/bin/sh\nif [ "$1" = read-pdf ]; then printf "checkout Python"; exit 0; fi\n[ "$1" = -c ]\n';
+  const python=join(checkout,'python');
+  await writeFile(python,valid,{mode:0o700});
+  const bound=await preparePdfBrowserEnvironment(root,childEnv,signal);
+  assert.deepEqual(bound,{...childEnv,TAX_ENGINE_PDF_TEST_PYTHON:python});
+  assert.equal(execFileSync(bound?.TAX_ENGINE_PDF_TEST_PYTHON??'python3',['read-pdf'],{cwd:web,env:bound,encoding:'utf8'}),'checkout Python');
+  await writeFile(python,'#!/bin/sh\nprintf "synthetic interpreter detail" >&2\nexit 6\n',{mode:0o700});
+  assert.equal(await preparePdfBrowserEnvironment(root,childEnv,signal),null);
+  const override=join(root,'overridden-python');
+  await writeFile(override,valid,{mode:0o700});
+  assert.equal((await preparePdfBrowserEnvironment(root,{...childEnv,TAX_ENGINE_PDF_TEST_PYTHON:override},signal))?.TAX_ENGINE_PDF_TEST_PYTHON,override);
+  const relativeOverride=await preparePdfBrowserEnvironment(root,{...childEnv,TAX_ENGINE_PDF_TEST_PYTHON:'./overridden-python'},signal);
+  assert.equal(relativeOverride?.TAX_ENGINE_PDF_TEST_PYTHON,override);
+  assert.equal(execFileSync(relativeOverride.TAX_ENGINE_PDF_TEST_PYTHON,['read-pdf'],{cwd:web,env:relativeOverride,encoding:'utf8'}),'checkout Python');
+  await writeFile(join(host,'chosen-python'),valid,{mode:0o700});
+  const bareOverride=await preparePdfBrowserEnvironment(root,{...childEnv,TAX_ENGINE_PDF_TEST_PYTHON:'chosen-python'},signal);
+  assert.equal(bareOverride?.TAX_ENGINE_PDF_TEST_PYTHON,'chosen-python');
+  assert.equal(execFileSync(bareOverride.TAX_ENGINE_PDF_TEST_PYTHON,['read-pdf'],{cwd:web,env:bareOverride,encoding:'utf8'}),'checkout Python');
+  await writeFile(join(host,'chosen-python'),hostFallback,{mode:0o700});
+  await writeFile(join(root,'chosen-python'),valid,{mode:0o700});
+  await mkdir(join(root,'launchers'));
+  await writeFile(join(root,'launchers','chosen-python'),valid,{mode:0o700});
+  for(const entry of ['','launchers']) {
+   const relativePath=await preparePdfBrowserEnvironment(root,{...childEnv,PATH:[entry,host].join(delimiter),TAX_ENGINE_PDF_TEST_PYTHON:'chosen-python'},signal);
+   assert.equal(execFileSync(relativePath.TAX_ENGINE_PDF_TEST_PYTHON,['read-pdf'],{cwd:web,env:relativePath,encoding:'utf8'}),'checkout Python');
+  }
+  for(const cwd of [root,web])await assert.rejects(readFile(join(cwd,'host-python-used')),{code:'ENOENT'});
+ } finally {
+  await rm(root,{recursive:true,force:true});
+ }
+});
+test('requires the exact pypdf version under Python optimization', {skip:process.platform==='win32'}, async () => {
+ const {preparePdfBrowserEnvironment}=await import(runnerUrl);
+ const root=await mkdtemp(join(tmpdir(),'tax-browser-optimized-python-'));
+ try {
+  const fakePypdf=join(root,'pypdf.py');
+  const env={PATH:process.env.PATH,PYTHONDONTWRITEBYTECODE:'1',PYTHONOPTIMIZE:'1',TAX_ENGINE_PDF_TEST_PYTHON:'python3'};
+  const signal=new AbortController().signal;
+  await writeFile(fakePypdf,"__version__ = '6.10.1'\n");
+  assert.ok((await preparePdfBrowserEnvironment(root,env,signal)) === null,'reject the wrong version');
+  await writeFile(fakePypdf,"__version__ = '6.10.0'\n");
+  assert.equal((await preparePdfBrowserEnvironment(root,env,signal))?.TAX_ENGINE_PDF_TEST_PYTHON,'python3');
+ } finally {
+  await rm(root,{recursive:true,force:true});
+ }
+});
+test('per-case browser children require the admitted PDF environment', async () => {
+ const source=await readFile(runnerUrl,'utf8');
+ const original=source.indexOf('const original = await originalQualification');
+ const prepare=source.indexOf('const browserEnv = await preparePdfBrowserEnvironment(root, childEnv, abort.signal)');
+ const collect=source.indexOf('const collect = async');
+ assert.ok(original>=0&&original<prepare&&prepare<collect);
+ assert.match(source.slice(prepare,collect),/if \(!browserEnv\) \{[\s\S]+code: 'pdf-test-prerequisite-unavailable'[\s\S]+originalFailureSuperseded: false[\s\S]+return 1;/);
+ assert.match(source,/const profilerEnv = \{ \.\.\.browserEnv,/);
+ assert.match(source.slice(collect),/env: enabled \? profilerEnv : browserEnv/);
+ assert.match(source.slice(collect),/env: \{ \.\.\.profilerEnv, PLAYWRIGHT_JSON_OUTPUT_FILE:/);
 });
 test('remaining-job-budget',async()=>{
  const {remainingJobBudget}=await import(moduleUrl);

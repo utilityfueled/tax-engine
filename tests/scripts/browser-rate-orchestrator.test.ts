@@ -110,7 +110,7 @@ describe('browser-rate-window protocol', () => {
             expect(child.status).toBe(0);
             const events = (await readFile(trace, 'utf8')).trim().split('\n').map(line=>JSON.parse(line));
             expect(events).toHaveLength(2);
-            expect(events[0].probe).toEqual(['-c', "import pypdf; assert pypdf.__version__ == '6.10.0'"]);
+            expect(events[0].probe).toEqual(['-c', "import pypdf; raise SystemExit(pypdf.__version__ != '6.10.0')"]);
             expect(events[1].browser).toEqual(['--timeout=30000', '--retries=0']);
             expect(events[1].python).toBe(events[0].file);
         }

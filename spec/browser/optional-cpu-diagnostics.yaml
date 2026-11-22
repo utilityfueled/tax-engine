@@ -55,3 +55,12 @@ lines:
     description: "Bound only owned diagnostic child commands and transient output"
     formula: "Each child has an operation deadline followed by SIGTERM, then SIGKILL after 2000ms and a 500ms close-observation grace. Missing close becomes fixed unavailable with cleanup unconfirmed, never a successful observation. A 12-minute runner deadline aborts only its own commands; the outer CI step is the final containment. Never forward captured stderr or raw Playwright reports; erase owned transient outputs."
     testRef: "tests/scripts/browser-cpu-diagnostics.test.ts::settles an unresponsive owned child without waiting indefinitely for close"
+  - line: "pinned-pdf-test-prerequisite"
+    description: Verify the PDF interpreter before the optional per-case runner starts Playwright
+    formula: >-
+      Keep existing admission, original evidence and deadline checks. Before
+      Playwright collection, verify the same interpreter and pypdf version
+      as the required test runner. Pass the verified interpreter to plain and
+      instrumented collection and execution. Emit only the fixed prerequisite
+      failure when unavailable and leave the original qualification intact.
+    testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::per-case browser children require the admitted PDF environment"

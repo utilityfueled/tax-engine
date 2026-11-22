@@ -10,7 +10,7 @@ import {performance} from 'node:perf_hooks';
 import {setTimeout as pause} from 'node:timers/promises';
 import {auditCollection,containerProof,environment,exactUnion,noEnvFiles,planBatches,reconcile,rowsFromReport,runSchedule,snapshot,testList,verifyAudit} from '../run-browser-tests.mjs';
 import {collectionHash,selectCases} from './selection.mjs';
-import {command,projectCaseResults} from './runner.mjs';
+import {command,preparePdfBrowserEnvironment,projectCaseResults} from './runner.mjs';
 import {LIMITS,ORIGIN,unavailable,validateInventory,publicChunkMetadata,sanitizeStoredRecord} from './profile.mjs';
 import {TRACE_PAIR_MS,runTracePair,selectTraceWindow} from './trace-pair.mjs';
 
@@ -168,16 +168,21 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const inspect=async()=>{const r=await exec('docker',['inspect','--format','{{.Id}} {{.Image}} {{.State.Running}} {{index .Config.Labels "org.opencontainers.image.revision"}}','tax-engine-browser-ci'],{timeout:10000});need(r.exit===0);return containerProof(r.stdout,env.CANDIDATE_IMAGE_ID,env.GITHUB_SHA);};
   const proof=await inspect(),original=await originalQualification(root,env.TAX_BROWSER_CPU_QUALIFICATION_DIRECTORY,manifest,audit,env.CANDIDATE_IMAGE_ID);
   need(equal(original.source.externalProof,proof)&&collectionHash(original.full)===frozen.fullCollectionSha256);
+  const originalCases=tracePair?projectDiagnosticCases(original.actual,projectCaseResults):[];
+  const selected=tracePair?selectTraceWindow(original.batches,originalCases,new Set(manifest.targets.map(row=>row.id))):undefined;
+  if(tracePair&&selected===undefined){
+   await save('result.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',status:'HOLD',reason:'no-original-ohio-timeout',originalQualification:original.summary,originalFailureSuperseded: false});
+   return 0;
+  }
+  const browserEnv=await preparePdfBrowserEnvironment(root,childEnv,abort.signal);
+  if(!browserEnv){
+   await save('unavailable.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',status:'unavailable',reason:'pdf-test-prerequisite-unavailable',originalFailureSuperseded: false,paSampled: false});
+   return 1;
+  }
   const identity=async()=>{need(!abort.signal.aborted);await verifyAudit(root,audit);need(equal(await snapshot(root,[],Object.keys(original.source.source)),original.source.source)&&equal(await inspect(),proof));};
   temporary=await mkdtemp(path.join(tmpdir(),'tax-full-batch-cpu-'));
   const app=path.join(root,'apps/web'),cli=path.join(app,'node_modules/@playwright/test/cli.js');
-  if(tracePair){
-   const originalCases=projectDiagnosticCases(original.actual,projectCaseResults);
-   const selected=selectTraceWindow(original.batches,originalCases,new Set(manifest.targets.map(row=>row.id)));
-   if(selected===undefined){
-    await save('result.json',{qualification:'NONQUALIFYING_DIAGNOSTIC',status:'HOLD',reason:'no-original-ohio-timeout',originalQualification:original.summary,originalFailureSuperseded: false});
-    return 0;
-   }
+  if(selected!==undefined){
    const batch=selectOriginalBatch(original.batches,frozen,selected);
    batch.list=path.join(temporary,'original-batch.txt');
    await writeFile(batch.list,testList(batch.rows),{flag:'wx',mode:0o600});
@@ -191,7 +196,7 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
     identity,alive:()=>!abort.signal.aborted,cleanup:async()=>true,
     run:trace=>executeBatch(batch,{
      collect:async list=>{
-      const r=await exec(process.execPath,[cli,...browserArguments(list,trace),'--list','--reporter=json'],{cwd:app});
+      const r=await exec(process.execPath,[cli,...browserArguments(list,trace),'--list','--reporter=json'],{cwd:app,env:browserEnv});
       need(r.exit===0);
       return rowsFromReport(JSON.parse(r.stdout));
      },
@@ -199,7 +204,7 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
       const file=path.join(temporary,`${trace}.json`);
       const start=performance.now();
       const r=await exec(process.execPath,[cli,...args,'--output',path.join(temporary,`${trace}-artifacts`),'--reporter=json'],{
-       cwd:app,env:{...childEnv,PLAYWRIGHT_JSON_OUTPUT_FILE:file,PLAYWRIGHT_LAST_RUN_OUTPUT_FILE:path.join(temporary,`${trace}-last-run.json`)},
+       cwd:app,env:{...browserEnv,PLAYWRIGHT_JSON_OUTPUT_FILE:file,PLAYWRIGHT_LAST_RUN_OUTPUT_FILE:path.join(temporary,`${trace}-last-run.json`)},
        timeout:batch.rows.length*30000+10000,
       });
       const executionMs=performance.now()-start;
@@ -218,8 +223,8 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
   const phaseBinding={sourceSha:proof[3],imageId:proof[1],inventorySha256:sha(inventoryResult.stdout),chromiumRevision:'f842f52ef39fd97b449eb27cff414bf05a98ddce'};
   const phaseBindingFile=path.join(temporary,'phase-binding.json');
   if(phaseEnabled)await writeFile(phaseBindingFile,JSON.stringify(phaseBinding),{flag:'wx',mode:0o600});
-  const profilerEnv={...childEnv,TAX_BROWSER_CPU_DIAGNOSTICS:'1',TAX_BROWSER_CPU_OUTPUT:profiles,TAX_BROWSER_CPU_INVENTORY:inventoryFile,...(phaseEnabled?{TAX_BROWSER_PHASE_DIAGNOSTICS:'1',TAX_BROWSER_PHASE_BINDING:phaseBindingFile}:{})};
-  const collect=async(enabled,list)=>{const args=list?browserArguments(list):['test','--workers=2','--retries=0','--timeout=30000','--project=chromium','--trace=retain-on-failure'];const r=await exec(process.execPath,[cli,...args,'--list','--reporter=json'],{cwd:app,env:enabled?profilerEnv:childEnv});need(r.exit===0);return rowsFromReport(JSON.parse(r.stdout));};
+  const profilerEnv={...browserEnv,TAX_BROWSER_CPU_DIAGNOSTICS:'1',TAX_BROWSER_CPU_OUTPUT:profiles,TAX_BROWSER_CPU_INVENTORY:inventoryFile,...(phaseEnabled?{TAX_BROWSER_PHASE_DIAGNOSTICS:'1',TAX_BROWSER_PHASE_BINDING:phaseBindingFile}:{})};
+  const collect=async(enabled,list)=>{const args=list?browserArguments(list):['test','--workers=2','--retries=0','--timeout=30000','--project=chromium','--trace=retain-on-failure'];const r=await exec(process.execPath,[cli,...args,'--list','--reporter=json'],{cwd:app,env:enabled?profilerEnv:browserEnv});need(r.exit===0);return rowsFromReport(JSON.parse(r.stdout));};
   const plain=await collect(false),instrumented=await collect(true);selectCases(plain,manifest,sha(auditBytes));selectCases(instrumented,manifest,sha(auditBytes));auditCollection(plain,audit);
   need(collectionHash(plain)===collectionHash(instrumented)&&collectionHash(plain)===frozen.fullCollectionSha256);
   const batch=selectOriginalBatch(planBatches(plain,audit),frozen,number);batch.list=path.join(temporary,'original-batch.txt');await writeFile(batch.list,testList(batch.rows),{flag:'wx',mode:0o600});
