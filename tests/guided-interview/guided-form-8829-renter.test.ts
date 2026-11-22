@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { expect, it } from "vitest";
 import { calculateScheduleC } from "@/engine/schedules/schedule-c";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyScheduleCExpenses, updateSectionData, validateSection, type SelfEmploymentSectionData } from "@/lib/guided-interview-flow";
+import { emptyScheduleCExpenses, setInterviewTaxYear, updateSectionData, validateSection, type SelfEmploymentSectionData } from "@/lib/guided-interview-flow";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { startCompleteInterview } from "./complete-facts";
 
@@ -77,4 +77,10 @@ it("holds incomplete unsupported and unreconciled home office originals", () => 
   assert.ok(business.businessFacts);
   business.businessFacts.additionalWorksheetRequired = true;
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
+it("requires fresh office confirmation after a return-year edit", () => {
+  const { state } = interview();
+  const changed = setInterviewTaxYear(setInterviewTaxYear(state, 2025), 2026);
+  expect(changed.sectionData["income-self-employment"]?.businessFacts?.homeOfficeRenter).toEqual({ ...rentalRecords, confirmed: false });
 });

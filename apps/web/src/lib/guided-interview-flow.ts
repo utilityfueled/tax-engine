@@ -1746,6 +1746,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const bankInterestSourcesEntered = credits?.educationDistributions?.forms?.some(row => row.bankInterestConversion);
   const selfEmployment = state.sectionData["income-self-employment"];
   const businessFacts = selfEmployment?.businessFacts;
+  const renterHomeOffice = businessFacts?.homeOfficeRenter;
   const rentals = state.sectionData["income-rental"];
   const royalties = state.sectionData["income-royalties"];
   const otherTaxes = state.sectionData["other-taxes"];
@@ -1810,13 +1811,14 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } : {}),
         },
       } : {}),
-      ...(selfEmployment && businessFacts && (businessFacts.incomeReconciled === true || businessFacts.expensesReconciled === true) ? {
+      ...(selfEmployment && businessFacts && (businessFacts.incomeReconciled === true || businessFacts.expensesReconciled === true || renterHomeOffice?.confirmed === true) ? {
         "income-self-employment": {
           ...selfEmployment,
           businessFacts: {
             ...businessFacts,
             ...(businessFacts.incomeReconciled === true ? { incomeReconciled: null } : {}),
             ...(businessFacts.expensesReconciled === true ? { expensesReconciled: null } : {}),
+            ...(renterHomeOffice?.confirmed === true ? { homeOfficeRenter: { ...renterHomeOffice, confirmed: false } } : {}),
           },
         },
       } : {}),

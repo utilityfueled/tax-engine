@@ -25,3 +25,9 @@ lines:
       limit to Schedule C line 29. Transfer Form 8829 line 36 to Schedule C line
       30 with no manual direct deduction. Reconfirm after affected sources change.
     testRef: tests/guided-interview/guided-form-8829-renter.test.ts::projects documented renter expenses through the real Schedule C calculation
+  - line: "1–36"
+    description: Retain the originals after a return-year edit and require fresh confirmation
+    formula: >-
+      Preserve entered source records when the return year changes. Invalidate
+      the retained confirmation even if the taxpayer later selects 2026 again.
+    testRef: tests/guided-interview/guided-form-8829-renter.test.ts::requires fresh office confirmation after a return-year edit
