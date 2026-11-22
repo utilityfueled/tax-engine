@@ -1,5 +1,24 @@
 {
   "activeContinuation": {
+    "nov22W2OriginalYear": {
+      "commit": "913339ece2f48d9ec18c107afc9e0a80a2c73fea",
+      "scope": "Require the actual matching source year on started W-2 rows retained after changing a confirmed return year. Retain reported amounts, validate after reopen and through the bridge, and leave same-year undated drafts compatible.",
+      "sources": ["https://www.irs.gov/instructions/iw2w3", "https://www.irs.gov/pub/irs-prior/iw2w3--2025.pdf"],
+      "baselineRegressionsReproduced": 3,
+      "baselineBrowser": {"retainedYearlessWages": "55000", "retainedWithholding": "5000", "staleCanonicalCalculationReproduced": true},
+      "scopedTestsPassed": 2063,
+      "independentlyRepeatedTestsPassed": 11,
+      "webTypesPassed": true,
+      "globalSpecReferencesPassed": 9869,
+      "browserPreflight": {"vitestPassed": 181, "nodePassed": 37},
+      "correctedGuidedBrowser": {"passed": 31, "failed": 0, "skipped": 0, "timeoutMs": 30000, "retries": 0, "requestBudgetsChanged": false, "cleanupPassed": true},
+      "correctedMatchingOriginal": {"wages": "28000", "withholding": "1100"},
+      "retirementControl": {"priorYearAndUndatedOriginalsBlocked": true, "matchingConfirmedOriginalCalculated": true},
+      "githubDockerPassed": true,
+      "githubRuns": {"ci": 44987899220, "docker": 44987899233, "web": 44987899198, "nativeArm64": 44987928653},
+      "receipts": ".local/upgrade-evidence/nov21-w2-original-year",
+      "releaseReady": false
+    },
     "nov21AnnualPersonalFacts": {
       "dependent": {
         "commit": "513629ff8089459976497b675121b7d2fda1c4d8",

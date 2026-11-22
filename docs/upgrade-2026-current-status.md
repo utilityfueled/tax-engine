@@ -2,6 +2,13 @@
 
 ## Latest exact release verification
 
+`913339ec` holds retained W-2s after a return-year change until their
+original source year matches. The browser reproduced stale wages and
+withholding on the prior revision. The corrected revision passed all
+31 audited guided browser cases and 2,063 scoped unit and interaction
+tests. Local full suites and exact public workflows are tracked below.
+[W-2 evidence](upgrade-2026-progress.md#november-22-original-w-2-year).
+
 `513629ff` and `9bc3fd3c` require fresh annual answers for dependents,
 filers and spouses after a return-year change. The latest source
 passed all 81 focused browser cases, all 9,868 spec references,

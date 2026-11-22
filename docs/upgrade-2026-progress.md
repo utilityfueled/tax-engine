@@ -1,5 +1,34 @@
 # 2026 upgrade implementation evidence
 
+## November 22 original W-2 year
+
+`913339ec` requires the original tax year on each started W-2 retained
+through a confirmed return-year change. Entered facts remain available.
+An unknown or mismatched source year blocks section completion and
+canonical calculation. Clearing a known year after a switch also holds
+the row. The ordinary W-2 displays the original-year field, and upload
+suggestions leave it untouched. Same-year reopening preserves the
+legacy yearless path.
+[IRS General Instructions for Forms W-2 and W-3](https://www.irs.gov/instructions/iw2w3).
+
+The exact baseline browser reached a 2025 calculation with the retained
+undated W-2 showing $55,000 wages and $5,000 withheld after the
+2026-to-2025 switch. The corrected browser blocked both blank and
+mismatched years. Entering the actual fictional 2025 W-2 produced
+canonical wages of $28,000 and withholding of $1,100. All 31 audited
+guided browser cases passed with cleanup, zero retries and the existing
+30-second deadline and request budgets. All 2,063 scoped unit and
+interaction tests, web types, 9,869 spec references, 181 Vitest browser
+preflight cases, and 37 Node diagnostic checks passed. Independent review
+repeated the 11 W-2 unit and interaction checks. A separate 1099-R probe
+confirmed that existing original-year and source confirmation rules
+already hold retained prior-year and undated retirement distributions.
+The exact Docker build passed.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44987899220) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44987899233) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44987899198) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44987928653).
+
 ## November 21 annual dependent, filer and spouse facts
 
 `513629ff` requires fresh dependent residency months, eligibility and
