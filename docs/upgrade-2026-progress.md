@@ -40,6 +40,16 @@ archive import and cleanup.
 [Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44971971797/job/137053522112) ·
 [Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44971971797/job/137053522101).
 
+Independent trace review found four of the eight strict AMD64 cases
+reached the final filing-rejection request. Three school-district cases
+stopped while reading or reopening saved data. The mobile NEW212 case
+logged no terminal request. The filing rejection precedes tax and PDF
+work, and the logs provide no request-duration evidence. The two mobile
+school header phases with comparable timings improved from 6,503 to
+5,951 ms and from 8,013 to 4,402 ms. Both desktop headers completed.
+The traces do not isolate a shared bottleneck or establish a browser
+performance gain attributable to this change alone.
+
 A native ARM64 rehearsal on `0e71304c` verified its architecture and
 source, then passed candidate image smoke and isolated Compose
 upgrade and recovery. The verified Git delta from `41796dfb` contains

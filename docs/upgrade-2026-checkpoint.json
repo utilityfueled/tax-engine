@@ -28,6 +28,15 @@
         "originalSkips": 5,
         "ohioCaseDeadlineFailures": 8,
         "railroadSavedPdfDeadlineFailures": 0,
+        "independentOhioFailureTrace": {
+          "comparisonJob": 137045712976,
+          "finalFilingRejectionRequestReached": 4,
+          "stoppedAtSavedSchoolStateOrReopen": 3,
+          "noTerminalRequestLogged": 1,
+          "mobileSchoolHeaderComparisonMs": [[6503, 5951], [8013, 4402]],
+          "desktopSchoolHeaderPhasesCompleted": 2,
+          "sharedBottleneckIdentified": false
+        },
         "imageSmokePassed": true,
         "composeRecoveryPassed": true,
         "independentArchiveImportPassed": true,
