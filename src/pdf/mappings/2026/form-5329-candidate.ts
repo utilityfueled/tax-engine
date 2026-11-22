@@ -1,4 +1,14 @@
 /** Disabled final 2026 Form 5329 physical candidate. Spec: spec/federal/form-5329-2026-template.yaml. */
+import { createHash } from "node:crypto";
+import type Decimal from "decimal.js";
+import type { PDFDocument } from "pdf-lib";
+import { calculateFederalTax } from "@/engine/federal.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { d } from "@/utils/decimal.js";
+import { markReviewPdf } from "../../export-policy.js";
+import { loadPdfDocumentQuietly } from "../../pdf-utils.js";
+import { removeTrustedTemplateLegacyFormData } from "../../trusted-review-template-cleanup.js";
+
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
 const page3 = "topmostSubform[0].Page3[0].";
@@ -116,3 +126,75 @@ export const FORM_5329_2026_CANDIDATE = Object.freeze({
     preparerPhone: page3 + "f3_21[0]",
   }),
 });
+
+/** Render an internal Part I review. The returned amount is only the printed transfer from line 4. */
+export async function fillForm53292026FirstHomeCandidate(
+  rawInput: TaxYearInput,
+  blank: Uint8Array,
+): Promise<{ document: PDFDocument; schedule2Line5Transfer: Decimal }> {
+  const candidate = FORM_5329_2026_CANDIDATE;
+  if (rawInput.taxpayer.taxYear !== candidate.taxYear || rawInput.form5329FirstHomeSource?.sourceTaxYear !== candidate.taxYear) {
+    throw new Error("Form 5329 candidate requires a 2026 return and documented first-home source.");
+  }
+  const rawOriginal = rawInput.form1099R?.[0];
+  if (rawInput.taxpayer.filingStatus !== "single" || rawInput.taxpayer.spouse
+    || rawInput.form1099R?.length !== 1 || rawOriginal?.accountHolder !== "primary") {
+    throw new Error("Form 5329 first-home candidate requires one distribution for a single primary filer.");
+  }
+  const input = TaxYearInputSchema.parse(rawInput);
+  const source = input.form5329FirstHomeSource!;
+  const original = input.form1099R![0]!;
+  if (source.maritalStatusAtAcquisition !== "unmarried" || source.qualifiedPayment.kind !== "purchase_price"
+    || !/^\d{9}$/.test(original.payerTin?.replaceAll("-", "") ?? "")) {
+    throw new Error("Form 5329 first-home candidate requires the actual payer and ordinary completed purchase.");
+  }
+  if (rawOriginal.employeeContributions === undefined || !d(original.employeeContributions).isZero()) {
+    throw new Error("Form 5329 first-home candidate requires confirmed zero Box 5.");
+  }
+  if (original.trumpAccount !== false || original.excessContributionEarnings === undefined
+    || !d(original.excessContributionEarnings).isZero()) {
+    throw new Error("Form 5329 first-home candidate requires an unchecked Trump account and zero Box 7d.");
+  }
+  if (input.form5329) {
+    throw new Error("Form 5329 first-home candidate holds manual Form 5329 inputs.");
+  }
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  const reviewDate = `${today.getFullYear()}-${month}-${day}`;
+  if ([source.distributionReceivedDate, source.bindingContractDate, source.qualifiedPayment.date]
+    .some(date => date > reviewDate)) {
+    throw new Error("The IRA receipt, contract and purchase payment must have occurred on or before the review date.");
+  }
+  if (createHash("sha256").update(blank).digest("hex") !== candidate.sha256) {
+    throw new Error("Unreviewed Form 5329 candidate template revision.");
+  }
+
+  const result = calculateFederalTax(input);
+  const part = result.form5329;
+  const retirementTax = result.schedule2?.lines.find(row => row.line === "8")?.value;
+  if (!part || part.line2ExceptionNumber !== "09" || !part.line2.gt(0)
+    || !result.iraDistributionsTaxable.eq(part.line1) || !retirementTax?.eq(part.line4)
+    || result.form5329HsaByOwner !== undefined
+    || part.lines.some(row => !["1", "2", "3", "4"].includes(row.line) && !row.value.isZero())) {
+    throw new Error("Form 5329 first-home candidate requires a reconciled Part I and no other Form 5329 parts or transfers.");
+  }
+  const amounts = { line1: part.line1, line2: part.line2, line3: part.line3, line4: part.line4 } as const;
+  if (Object.values(amounts).some(amount => !amount.isInteger() || amount.isNegative())) {
+    throw new Error("Form 5329 first-home candidate requires exact whole dollar Part I amounts.");
+  }
+
+  const document = await loadPdfDocumentQuietly(blank);
+  removeTrustedTemplateLegacyFormData(document);
+  const form = document.getForm();
+  const { fields } = candidate;
+  const { firstName, lastName } = input.taxpayer.primary;
+  form.getTextField(fields.name).setText(`${firstName} ${lastName}`);
+  form.getTextField(fields.line2ExceptionNumber).setText(part.line2ExceptionNumber);
+  for (const key of Object.keys(amounts) as Array<keyof typeof amounts>) {
+    form.getTextField(fields[key]).setText(amounts[key].toFixed(0));
+  }
+  form.updateFieldAppearances();
+  await markReviewPdf(document);
+  return { document, schedule2Line5Transfer: part.line4 };
+}

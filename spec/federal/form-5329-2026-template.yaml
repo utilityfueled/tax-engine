@@ -5,10 +5,11 @@ reference: "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf"
 revision: "Created 11/12/26, IRS final index posted 11/17/2026"
 retrievedAt: "2026-11-19T05:11:10Z"
 notes: |
-  This disabled physical map describes the final blank form. The IRS current
-  instructions were still for 2025 at retrieval. Annual instructions,
-  tax-engine and source support, final parent forms, and qualified review
-  remain required before activating the output.
+  This disabled physical map describes the final blank form and a bounded
+  internal Part I projection. The IRS current instructions were still for
+  2025 at retrieval. Final annual instructions and parent forms, annual
+  calculation support, and independent qualification remain required
+  before activating public output.
 lines:
   - line: "revision"
     description: "Pin the final three-page annual PDF"
@@ -43,6 +44,33 @@ lines:
     description: "Check text values and both positions of each checkbox after save"
     formula: "Reopen synthetic placements, verify all stored text values and appearance streams, and check the amended-return and self-employed native checkbox states."
     testRef: "tests/pdf/form-5329-2026-candidate.test.ts::retains stored values and native appearances after save"
+  - line: "first-home-part-i"
+    description: "Record a documented 2026 first-home IRA case in the internal review PDF"
+    formula: >-
+      Recalculate one single primary taxpayer's fully taxable ordinary Code 1
+      traditional IRA distribution from its matched first-home source.
+      Project the exact whole-dollar canonical amounts to lines 1 through 4
+      and exception 09 to the separate line 2 code field. Reconcile line 4
+      to the existing canonical retirement-tax audit amount. Report the
+      isolated amount for the destination printed on the final form,
+      Schedule 2 line 5. Leave parent Schedule 2 generation and its existing
+      audit numbering unchanged. Native values and appearances survive
+      saving. Leave SSN, payer and account identifiers out of the artifact
+      and visibly mark all pages for review.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf"
+      - "https://uscode.house.gov/us/usc/119-124/t26/s72/"
+      - "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf#page=5"
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::renders exact first-home Part I amounts and isolated transfer from the confirmed original"
+  - line: "first-home-holds"
+    description: "Require the pinned source revision and only the supported intake facts"
+    formula: >-
+      Hold future or late acquisition events, rollover and recontribution,
+      mismatched or ambiguous original identity, other owners or distributions,
+      manual exceptions, nonzero other parts, unknown or nonzero Box 5,
+      2026 Trump or excess Box 7 facts, unsupported precision, and unreviewed
+      blank bytes.
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::holds unsupported first-home preparations before writing PDF fields"
   - line: "closed-exports"
     description: "Keep public review and filing disabled"
     formula: "No export registration. The 2026 source fails 2025 and 2026 review authorization and cannot be used for filing."
