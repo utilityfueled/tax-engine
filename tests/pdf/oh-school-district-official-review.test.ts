@@ -1,6 +1,7 @@
 /** Spec: spec/state/oh-school-district-official-review.yaml. Existing API controls first. */
-import { expect, it, vi } from 'vitest';
-import { PDFForm, PDFTextField, PDFDict, PDFName, PDFStream } from 'pdf-lib';
+import { beforeAll, expect, it } from 'vitest';
+import { PDFDocument, PDFForm, PDFTextField, PDFDict, PDFName, PDFStream } from 'pdf-lib';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { mkdtemp, access, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, basename } from 'node:path';
@@ -96,9 +97,15 @@ for index,page in enumerate(r.pages):
 print(json.dumps({'text':texts,'cells':cells,'objects':len(seen)}))
 `;
 type CanonicalSnapshot = { texts: Record<string, string>; statuses: Record<string, string>; widgets: number };
-function observeCanonicalBeforeFlatten(snapshots: CanonicalSnapshot[]) {
+const canonicalSnapshots = new AsyncLocalStorage<CanonicalSnapshot[]>();
+
+beforeAll(() => {
   const original = PDFForm.prototype.flatten;
-  return vi.spyOn(PDFForm.prototype, 'flatten').mockImplementation(function (this: PDFForm, options) {
+  PDFForm.prototype.flatten = function (this: PDFForm, options) {
+    // A timed-out export can resume while another case is running.
+    const snapshots = canonicalSnapshots.getStore();
+    if (!snapshots) return original.call(this, options);
+
     const snapshot: CanonicalSnapshot = { texts: {}, statuses: {}, widgets: 0 };
     for (const field of this.getFields()) {
       const value = field.acroField.dict.get(PDFName.of('V'));
@@ -125,8 +132,9 @@ function observeCanonicalBeforeFlatten(snapshots: CanonicalSnapshot[]) {
     }
     snapshots.push(snapshot);
     original.call(this, options);
-  });
-}
+  };
+  return () => { PDFForm.prototype.flatten = original; };
+});
 type Physical = { text: string[]; cells: Record<string, string>[]; objects: number };
 function physical(path: string, pages: number, ssn: string, first: number): Physical {
   return JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', readPhysical,
@@ -164,9 +172,10 @@ it.each(schoolOfficialCases)('SD official fixture independently preserves school
 it.each(schoolOfficialCases)('SD original source review emits exact official printed companions %s', async kind => {
   const input = schoolOfficialFixture(kind), before = JSON.stringify(input), federal = calculateFederalTax(input);
   const context = prepareOhioResidencyReview(input), { directory, retained } = await outputDirectory(kind);
-  const snapshots: CanonicalSnapshot[] = [], observer = observeCanonicalBeforeFlatten(snapshots);
+  const snapshots: CanonicalSnapshot[] = [];
   try {
-    const result = await fillOhioReferenceForms(redactReviewIdentifiers(input), federal, directory, {}, context);
+    const result = await canonicalSnapshots.run(snapshots, () =>
+      fillOhioReferenceForms(redactReviewIdentifiers(input), federal, directory, {}, context));
     const names = result.filledForms.map(path => basename(path)), oracle = schoolOfficialOracles[kind];
     expect(names).toContain('oh-sd-100-reference.pdf');
     expect(names).toContain('oh-sd-100-review.pdf');
@@ -203,7 +212,7 @@ it.each(schoolOfficialCases)('SD original source review emits exact official pri
       expect(wh.text.join(' ')).not.toContain('3000');
     }
     expect(JSON.stringify(input)).toBe(before);
-  } finally { observer.mockRestore(); if (!retained) await rm(directory, { recursive: true, force: true }); }
+  } finally { if (!retained) await rm(directory, { recursive: true, force: true }); }
 });
 
 it.each(['forged context', 'changed original', 'missing district', 'unresolved local', 'stale federal', 'inconsistent account'] as const)(
@@ -232,4 +241,36 @@ it('SD official employer identity prints actual first eight digits', async () =>
     const wh = physical(join(directory, 'oh-sd-withholding-review.pdf'), 1, input.taxpayer.primary.ssn, 3);
     cell(wh.cells, 0, 'SchedW_B_L1_OHID', '12345678');
   } finally { if (!retained) await rm(directory, { recursive: true, force: true }); }
+});
+
+it('keeps a late school PDF flatten with its original export', async () => {
+  const makeForm = async (line11: string) => {
+    const doc = await PDFDocument.create();
+    const form = doc.getForm();
+    const field = form.createTextField('L11');
+    field.addToPage(doc.addPage());
+    field.setText(line11);
+    form.updateFieldAppearances();
+    return form;
+  };
+  const base = await makeForm(schoolOfficialOracles.base.withheld);
+  const estimates = await makeForm(schoolOfficialOracles.estimates.withheld);
+  const releasePrior = Promise.withResolvers<void>();
+  const prior: CanonicalSnapshot[] = [];
+  const next: CanonicalSnapshot[] = [];
+  const priorRun = canonicalSnapshots.run(prior, async () => {
+    await releasePrior.promise;
+    base.flatten({ updateFieldAppearances: false });
+  });
+  const priorSettled = Promise.allSettled([priorRun]);
+  await canonicalSnapshots.run(next, async () => {
+    // Let the earlier export resume only after the next recorder is active.
+    releasePrior.resolve();
+    await priorSettled;
+    estimates.flatten({ updateFieldAppearances: false });
+  });
+  expect(next[0]?.texts.L11, 'next export canonical L11').toBe(schoolOfficialOracles.estimates.withheld);
+  expect(next).toHaveLength(1);
+  await priorRun;
+  expect(prior.map(({ texts }) => texts.L11), 'prior export canonical L11').toEqual([schoolOfficialOracles.base.withheld]);
 });
