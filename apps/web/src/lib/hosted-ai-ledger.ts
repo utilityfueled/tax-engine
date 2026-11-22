@@ -145,7 +145,7 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
         }
       });
     },
-    async settle(input: AiReservationIdentity & { attempt: 1 | 2; usage: AiTokenUsage; accepted: boolean; final: boolean; reconciliationReference?: string; providerRequestId?: string }) {
+    async settle(input: AiReservationIdentity & { attempt: 1 | 2; usage: AiTokenUsage; accepted: boolean; final: boolean; reconciliationReference?: string; reconciledModelId?: string; providerRequestId?: string }) {
       identity(input);
       return transaction(input.ownerId, async client => {
         const reservation = await row(client, input);
@@ -155,6 +155,14 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
         if (attempt.undispatched_at) throw new Error("AI attempt was never dispatched.");
         if (input.providerRequestId && attempt.provider_request_id && input.providerRequestId !== attempt.provider_request_id) {
           throw new Error("Conflicting AI provider request identifier.");
+        }
+        const isReconciliation = attempt.state === "unknown" || (attempt.provider_cost_usd === null
+          && (input.reconciliationReference !== undefined || input.reconciledModelId !== undefined));
+        if (isReconciliation && !input.reconciliationReference?.trim()) {
+          throw new Error("Unknown usage requires an authoritative reconciliation reference.");
+        }
+        if ((isReconciliation || input.reconciledModelId !== undefined) && input.reconciledModelId !== attempt.model_id) {
+          throw new Error("Reconciliation evidence must establish the authorized model.");
         }
         const cost = calculateAiCost(attempt.model_id, attempt.started_at.toISOString(), input.usage);
         if (attempt.provider_cost_usd !== null) {
@@ -169,7 +177,6 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
           }
           if (!input.final || reservation.state !== "reserved") return view(reservation);
         }
-        if (attempt.state === "unknown" && !input.reconciliationReference?.trim()) throw new Error("Unknown usage requires an authoritative reconciliation reference.");
         if (!input.final && (input.accepted || input.attempt === 2)) throw new Error("Only a rejected first attempt may escalate.");
         if (attempt.provider_cost_usd === null) await client.query(`UPDATE hosted_ai_attempts SET state=$4,usage=$5::jsonb,provider_cost_usd=$6,pricing_effective_from=$7,
           provider_request_id=$8,reconciliation_reference=$9,completed_at=NOW() WHERE owner_id=$1 AND request_id=$2 AND attempt=$3`,

@@ -24,6 +24,15 @@ Version: 2026-10-25. This defines software behavior; it does not qualify a model
 - Settlements and refunds are idempotent. Refunds require an operator reference, restore the original included/purchased charge allocation and preserve immutable provider usage/cost history. No public refund/reconciliation endpoint exists.
 - A known-cost overrun can be closed only by `reconcileOverrun` with a durable operator reference, no remaining holds and every attempt final/known. Closure retains the exact overrun and original capped charge, never adds a debit, and permits an ordinary referenced refund afterward. Unknown usage cannot take this path.
 
+Usage can be settled only when the provider reports the exact model ID of the
+authorized route. OpenAI reports `model` and Gemini reports `modelVersion`.
+Missing or conflicting identities retain the existing hold for reconciliation.
+Record only the existing validated request reference, discard the provider
+output, and avoid redispatching. An operator settling held usage must supply the
+model ID established by the authoritative reconciliation evidence. A different
+model remains unresolved pending provider investigation.
+[OpenAI Responses reference](https://developers.openai.com/api/reference/resources/responses/methods/create) · [Gemini response reference](https://ai.google.dev/api/generate-content)
+
 ## Qualification and rollout
 
 - Draft cases are not independent review. At least 200 reviewed cases, a fixed held-out subset and three repeats are required. Preserve failed/abstaining results and all billed attempts.

@@ -842,7 +842,7 @@ describe("security: external API call timeout protection", () => {
       capturedInit = init;
 
       return new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "test summary" })
       }), { status: 200 });
     };

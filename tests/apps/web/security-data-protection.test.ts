@@ -138,7 +138,7 @@ describe("security: data protection — model provider request does not store da
   it("model provider request includes store:false to prevent third-party data retention", async () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "Workspace summary." })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
@@ -162,7 +162,7 @@ describe("security: data protection — provider summary length bound", () => {
     const longSummary = "A".repeat(5000);
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: longSummary })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
@@ -182,7 +182,7 @@ describe("security: data protection — provider summary length bound", () => {
     const normalSummary = "Workspace is ready for recompute with 0 documents.";
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: normalSummary })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
@@ -475,7 +475,7 @@ describe("security: provider response body size limit", () => {
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: normalSummary })
       }), {
         status: 200,
@@ -537,7 +537,7 @@ describe("security: SSRF defense-in-depth — provider fetch rejects redirects",
   it("provider fetch sends redirect:'error' to prevent following redirects", async () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: "Workspace ready." })
       }), { status: 200, headers: { "content-type": "application/json" } })
     );
@@ -643,7 +643,7 @@ describe("security: provider response streaming size enforcement", () => {
   it("reads small response body successfully through streaming path", async () => {
     const normalSummary = "Workspace ready for recompute.";
     const body = JSON.stringify({
-      status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+      status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: normalSummary })
     });
 
@@ -698,7 +698,7 @@ describe("security: provider summary HTML sanitization (stored XSS prevention)",
       },
       skipUrlValidation: true,
       fetchFn: async () => new Response(JSON.stringify({
-        status: "completed", usage: { input_tokens: 100, output_tokens: 100 },
+        status: "completed", model: "gpt-6-luna", usage: { input_tokens: 100, output_tokens: 100 },
         output_text: JSON.stringify({ disposition: "answer", sourceIds: ["workspace:status"], summary: xssPayload })
       }), { status: 200 })
     });

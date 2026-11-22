@@ -5,6 +5,7 @@ const tokenCount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const promptBlockReason = z.enum(["BLOCK_REASON_UNSPECIFIED", "SAFETY", "OTHER", "BLOCKLIST", "PROHIBITED_CONTENT", "IMAGE_SAFETY"]);
 
 export const geminiTextResponseSchema = z.object({
+  modelVersion: z.unknown().optional(),
   candidates: z.array(z.object({
     finishReason: z.string(),
     content: z.object({ parts: z.array(z.object({ text: z.string().optional(), thought: z.boolean().optional() })) }).optional(),

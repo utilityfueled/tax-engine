@@ -10,7 +10,7 @@ const row = { date: "2025-01-08", description: "Office supplies", amount: "84.91
 const expense = { disposition: "answer", sourceIds: ["document:1"], facts: [], reviewCategory: "needs-review", label: "Statement", institution: "Example Bank", statementPeriod: "January 2025",
   summary: "Review one charge.", suggestions: [{ ...row, suggestedCategory: "officeExpense", suggestedBusinessUse: true }] };
 function executor(payload: unknown) {
-  const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed",
+  const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", model: "gpt-6-luna",
     output_text: JSON.stringify(payload), usage: { input_tokens: 100, output_tokens: 100 } }));
   return { fetchFn, run: createDocumentAiExecutor({ mode: "evaluation", syntheticFixtureId: "document-01",
     apiKey: "synthetic-key", fetchFn, now: () => "2026-10-24" }) };
@@ -18,7 +18,7 @@ function executor(payload: unknown) {
 
 describe("grounded text-only document tasks", () => {
   it("uses the actual source-fact contract and bills rejected grounding once", async () => {
-    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output_text: JSON.stringify({
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", model: "gpt-6-luna", output_text: JSON.stringify({
       ...expense, suggestions: [], facts: [{ name: "amount", kind: "money", value: "84.92", sourceId: "document:1", sourceQuote: source }],
     }), usage: { input_tokens: 100, output_tokens: 100 } }));
     const recordAttempt = vi.fn();

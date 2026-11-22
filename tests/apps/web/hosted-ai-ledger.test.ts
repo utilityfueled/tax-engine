@@ -87,7 +87,11 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     await expect(ledger.cancel(first)).rejects.toThrow(/settled or reconciled/);
     await expect(ledger.settle({ ...first, usage, accepted: false, final: true })).rejects.toThrow(/reference/);
     expect((await ledger.reserve({ ...base, requestId: "blocked" })).accepted).toBe(false);
-    const settled = await ledger.settle({ ...first, usage, accepted: false, final: true, reconciliationReference: "synthetic-provider-report:1" });
+    const evidence = { ...first, usage, accepted: false, final: true, reconciliationReference: "synthetic-provider-report:1" };
+    await expect(ledger.settle(evidence)).rejects.toThrow(/authorized model/);
+    await expect(ledger.settle({ ...evidence, reconciledModelId: "gpt-6.1-sol" })).rejects.toThrow(/authorized model/);
+    expect((await ledger.reserve({ ...base, requestId: "still-held" })).accepted).toBe(false);
+    const settled = await ledger.settle({ ...evidence, reconciledModelId: "gpt-6-luna" });
     expect(settled.chargedCents).toBe(1);
     expect(await ledger.settle({ ...first, usage, accepted: false, final: true })).toEqual(settled);
     await expect(ledger.settle({ ...first, usage: { ...usage, outputTokens: 9 }, accepted: false, final: true })).rejects.toThrow(/Conflicting/);
@@ -101,7 +105,7 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     const readAttempt = async () => (await pool.query("SELECT state, provider_request_id, reconciliation_reference, provider_cost_usd::text FROM hosted_ai_attempts")).rows[0];
     expect(await readAttempt()).toMatchObject({ state: "unknown", provider_request_id: "req_synthetic_original", provider_cost_usd: null });
     await expect(ledger.unknown({ ...first, providerRequestId: "req_synthetic_conflict" })).rejects.toThrow(/Conflicting.*identifier/);
-    const outcome = { ...first, usage, accepted: false, final: true, reconciliationReference: "synthetic-provider-report:2" };
+    const outcome = { ...first, usage, accepted: false, final: true, reconciliationReference: "synthetic-provider-report:2", reconciledModelId: "gpt-6-luna" };
     await expect(ledger.settle({ ...outcome, providerRequestId: "req_synthetic_conflict" })).rejects.toThrow(/Conflicting.*identifier/);
     expect((await readAttempt()).state).toBe("unknown");
     const settled = await ledger.settle(outcome);
@@ -110,6 +114,17 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
       reconciliation_reference: "synthetic-provider-report:2", provider_cost_usd: "0.000582" });
     expect(await ledger.settle({ ...outcome, providerRequestId: "req_synthetic_original" })).toEqual(settled);
     await expect(ledger.settle({ ...outcome, reconciliationReference: "synthetic-provider-report:other" })).rejects.toThrow(/Conflicting.*reference/);
+  });
+  it("requires model evidence when interruption leaves an attempt running", async () => {
+    await ledger.reserve(base);
+    await start();
+    const outcome = { ...first, usage, accepted: false, final: true };
+    const reconciliationReference = "synthetic-provider-report:interrupted";
+    await expect(ledger.settle({ ...outcome, reconciliationReference })).rejects.toThrow(/authorized model/);
+    await expect(ledger.settle({ ...outcome, reconciledModelId: "gpt-6-luna" })).rejects.toThrow(/reference/);
+    await expect(ledger.settle({ ...outcome, reconciliationReference, reconciledModelId: "gpt-6-luna" }))
+      .resolves.toMatchObject({ chargedCents: 1, reservedCents: 0 });
+    await expect(ledger.settle(outcome)).resolves.toMatchObject({ chargedCents: 1, reservedCents: 0 });
   });
   it("includes a failed attempt and one explicit escalation in one minimum retail charge", async () => {
     await ledger.reserve({ ...base, maximumChargeCents: 3 }); await start();

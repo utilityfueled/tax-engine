@@ -6,7 +6,7 @@ vi.mock("server-only", () => ({}));
 const source = "Form W-2c Corrected Wage and Tax Statement; previous and corrected amounts.";
 const payload = { disposition: "answer", sourceIds: ["document:1"], title: "Corrected wage statement", documentType: "w2c", summary: "The source is a correction form.", suggestedNextStep: "Review original corrections and confirm the facts.", relevantTaxTopics: [], bankStatementLike: false };
 function setup(value: unknown) {
-  const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output_text: JSON.stringify(value), usage: { input_tokens: 100, output_tokens: 100 } }));
+  const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", model: "gpt-6-luna", output_text: JSON.stringify(value), usage: { input_tokens: 100, output_tokens: 100 } }));
   const recordAttempt = vi.fn();
   return { fetchFn, recordAttempt, run: createDocumentAiExecutor({ mode: "evaluation", syntheticFixtureId: "canonical-classification", apiKey: "synthetic-no-live-key", fetchFn, recordAttempt, now: () => "2026-11-05" }) };
 }

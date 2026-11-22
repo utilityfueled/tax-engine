@@ -10,7 +10,7 @@ function request(overrides: Partial<AiTaskRequest<z.infer<typeof schema>>> = {})
     instructions: "Describe the next step.", schema, validateGrounding: vi.fn(), ...overrides };
 }
 function envelope(output = '{"summary":"Confirm the W-2."}', overrides = {}) {
-  return { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: output }] }],
+  return { status: "completed", model: "gpt-6-luna", output: [{ type: "message", content: [{ type: "output_text", text: output }] }],
     usage: { input_tokens: 100, output_tokens: 2000, input_tokens_details: { cached_tokens: 40 } }, ...overrides };
 }
 function execution(payload = envelope()): AiTaskExecution & { fetchFn: ReturnType<typeof vi.fn> } {
@@ -19,6 +19,24 @@ function execution(payload = envelope()): AiTaskExecution & { fetchFn: ReturnTyp
 }
 
 describe("task-based candidate AI adapter", () => {
+  it.each([
+    ["openai", envelope(undefined, { model: "gpt-6.1-sol", service_tier: "default" }), "req_fixture"],
+    ["openai", envelope(undefined, { model: undefined }), "req_fixture"],
+    ["google", { modelVersion: "gemini-3-flash-preview", candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"summary":"Confirm the W-2."}' }] } }], usageMetadata: geminiUsage }, undefined],
+    ["google", { candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"summary":"Confirm the W-2."}' }] } }], usageMetadata: geminiUsage }, undefined],
+  ] as const)("holds %s usage when the response does not establish the authorized model", async (provider, payload, providerRequestId) => {
+    const deps = execution();
+    const beforeAttempt = vi.fn();
+    const recordUnknownAttempt = vi.fn();
+    const recordAttempt = vi.fn();
+    deps.fetchFn.mockResolvedValue(Response.json(payload, { headers: { "x-request-id": "req_fixture" } }));
+    await expect(executeAiTask(request(), { ...deps, provider, beforeAttempt, recordAttempt, recordUnknownAttempt })).rejects.toThrow(/reconciliation/);
+    expect(beforeAttempt).toHaveBeenCalledOnce();
+    expect(deps.fetchFn).toHaveBeenCalledOnce();
+    expect(recordAttempt).not.toHaveBeenCalled();
+    expect(recordUnknownAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), { providerRequestId });
+  });
+
   it("keeps production and opt-out deterministic even with credentials", async () => {
     const deps = execution();
     expect(await executeAiTask(request(), { ...deps, mode: "production" })).toBeNull();
@@ -47,6 +65,7 @@ describe("task-based candidate AI adapter", () => {
     const deps = execution();
     const recordAttempt = vi.fn();
     deps.fetchFn.mockResolvedValue(Response.json({
+      modelVersion: "gemini-3.8-flash",
       candidates: [{ finishReason: "STOP", content: { parts: [{ thought: true, text: "private reasoning" }, { text: '{"summary":"Review W-2."}' }] } }],
       usageMetadata: { promptTokenCount: 1000, cachedContentTokenCount: 200, candidatesTokenCount: 100, thoughtsTokenCount: 900 },
     }, { headers: { "x-request-id": "req_undocumented" } }));
@@ -71,6 +90,7 @@ describe("task-based candidate AI adapter", () => {
       const recordUnknownAttempt = vi.fn();
       const validateGrounding = vi.fn();
       deps.fetchFn.mockResolvedValueOnce(Response.json({
+        modelVersion: "gemini-3.8-flash",
         candidates: [candidate],
         usageMetadata: geminiUsage,
       }));
@@ -94,7 +114,7 @@ describe("task-based candidate AI adapter", () => {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates: [{ finishReason: "SAFETY" }], usageMetadata }));
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "SAFETY" }], usageMetadata }));
 
       await expect(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }))
         .rejects.toThrow("AI provider request failed; usage requires reconciliation.");
@@ -109,7 +129,7 @@ describe("task-based candidate AI adapter", () => {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates: [{ finishReason: "SAFETY" }],
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "SAFETY" }],
         usageMetadata: { ...geminiUsage, serviceTier, toolUsePromptTokenCount: 0, totalTokenCount: 2000 },
       }));
       const result = await executeAiTask(request(), { ...deps, provider: "google", now: () => "2026-11-19T12:00:00Z",
@@ -130,7 +150,7 @@ describe("task-based candidate AI adapter", () => {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates: [{ finishReason: "SAFETY" }],
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", candidates: [{ finishReason: "SAFETY" }],
         usageMetadata: { ...geminiUsage, ...supplied },
       }));
       await expect.soft(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }), JSON.stringify(supplied))
@@ -147,7 +167,7 @@ describe("task-based candidate AI adapter", () => {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ candidates, promptFeedback, usageMetadata }));
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", candidates, promptFeedback, usageMetadata }));
       const result = await executeAiTask(request(), { ...deps, provider: "google", now: () => "2026-11-19T12:00:00Z",
         recordAttempt, recordUnknownAttempt });
       expect(result).toMatchObject({ accepted: false, value: null,
@@ -170,7 +190,7 @@ describe("task-based candidate AI adapter", () => {
       const deps = execution();
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
-      deps.fetchFn.mockResolvedValueOnce(Response.json({ usageMetadata, ...supplied }));
+      deps.fetchFn.mockResolvedValueOnce(Response.json({ modelVersion: "gemini-3.8-flash", usageMetadata, ...supplied }));
       await expect(executeAiTask(request(), { ...deps, provider: "google", recordAttempt, recordUnknownAttempt }))
         .rejects.toThrow(/usage requires reconciliation/);
       expect(recordUnknownAttempt).toHaveBeenCalledOnce();
@@ -203,7 +223,7 @@ describe("task-based candidate AI adapter", () => {
     expect(deps.fetchFn).not.toHaveBeenCalled();
   });
   it("requires matching year-specific sources for Sol tax explanations", async () => {
-    const deps = execution();
+    const deps = execution(envelope(undefined, { model: "gpt-6.1-sol" }));
     await expect(executeAiTask(request({ task: "tax-explanation" }), deps)).rejects.toThrow(/year-specific/);
     const taxContext = { taxYear: 2025, ruleVersion: "2025.3", excerpts: [{ id: "spec:a", taxYear: 2025, text: "A supplied spec." }],
       auditEntries: [{ id: "audit:1", taxYear: 2025, value: "2200", explanation: "Verified engine result." }] };
@@ -271,7 +291,7 @@ describe("task-based candidate AI adapter", () => {
   it("reserves the highest priced Sol usage before dispatch", async () => {
     const taxContext = { taxYear: 2026, ruleVersion: "synthetic", excerpts: [{ id: "s", taxYear: 2026, text: "Synthetic excerpt" }], auditEntries: [{ id: "a", taxYear: 2026, value: "0", explanation: "Synthetic audit" }] };
     const beforeAttempt = vi.fn();
-    const result = await executeAiTask(request({ task: "tax-explanation", taxContext }), { ...execution(), beforeAttempt });
+    const result = await executeAiTask(request({ task: "tax-explanation", taxContext }), { ...execution(envelope(undefined, { model: "gpt-6.1-sol" })), beforeAttempt });
     expect(beforeAttempt).toHaveBeenCalledWith(expect.objectContaining({ modelId: "gpt-6.1-sol", maximumChargeCents: 23 }));
     expect(result?.accounting).toMatchObject({ providerCostUsd: "0.020124", retailChargeCents: 3 });
   });
@@ -330,7 +350,7 @@ describe("task-based candidate AI adapter", () => {
   });
   it("prices at dispatch time across the January boundary and requires cancellation for complex tasks", async () => {
     const taxContext = { taxYear: 2026, ruleVersion: "synthetic", excerpts: [{ id: "s", taxYear: 2026, text: "Synthetic excerpt" }], auditEntries: [{ id: "a", taxYear: 2026, value: "0", explanation: "Synthetic audit" }] };
-    const deps = execution();
+    const deps = execution(envelope(undefined, { model: "gpt-6.1-sol" }));
     await expect(executeAiTask(request({ task: "complex-reconciliation", taxContext }), { ...deps, escalationCount: 1 })).rejects.toThrow(/cancellable/);
     const result = await executeAiTask(request({ task: "complex-reconciliation", taxContext, signal: new AbortController().signal }), { ...deps, escalationCount: 1 });
     expect(result?.accounting.profileId).toBe("sol-high");

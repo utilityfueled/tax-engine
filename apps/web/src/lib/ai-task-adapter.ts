@@ -94,6 +94,7 @@ function readProviderIdentifier(value: unknown, format: RegExp) {
 
 const openAiEnvelope = z.object({
   id: z.unknown().optional(),
+  model: z.unknown().optional(),
   service_tier: z.string().optional(),
   status: z.string(),
   output_text: z.string().optional(),
@@ -175,6 +176,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
   if (openai) {
     const envelope = openAiEnvelope.parse(payload);
     providerRequestId ??= readProviderIdentifier(envelope.id, openAiResponseId);
+    if (envelope.model !== profile.model) throw new Error("Reported OpenAI model does not establish the authorized route.");
     if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced provider service tier.");
     completed = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
     outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message"
@@ -190,7 +192,9 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
       ...(writes?.ttl_30m_tokens ? { cacheWrite30mTokens: writes.ttl_30m_tokens } : {}),
       ...(writes?.ttl_12h_tokens ? { cacheWrite12hTokens: writes.ttl_12h_tokens } : {}) };
   } else {
-    ({ completed, outputText, usage } = readGeminiTextResponse(geminiTextResponseSchema.parse(payload)));
+    const envelope = geminiTextResponseSchema.parse(payload);
+    if (envelope.modelVersion !== profile.model) throw new Error("Reported Gemini model does not establish the authorized route.");
+    ({ completed, outputText, usage } = readGeminiTextResponse(envelope));
   }
   } catch {
     await execution.recordUnknownAttempt?.(attempt, { providerRequestId });

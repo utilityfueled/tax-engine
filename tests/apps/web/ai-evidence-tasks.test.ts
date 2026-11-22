@@ -8,7 +8,7 @@ const payload = { disposition: "answer", summary: "The verified income is $120."
   facts: [{ name: "total", kind: "money", value: "120", sourceId: source.id, sourceQuote: source.text }], engineValues: [{ id: "audit:income", value: "120" }] };
 describe("bounded evidence assistance", () => {
   it("requires an explicit cancellable reconciliation with verified sources", async () => {
-    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", output_text: JSON.stringify(payload), usage: { input_tokens: 100, output_tokens: 100 } }));
+    const fetchFn = vi.fn().mockResolvedValue(Response.json({ status: "completed", model: "gpt-6.1-sol", output_text: JSON.stringify(payload), usage: { input_tokens: 100, output_tokens: 100 } }));
     const execution = { mode: "evaluation" as const, syntheticFixtureId: "reconciliation-1", apiKey: "synthetic", fetchFn, now: () => "2026-10-25" };
     const request = { task: "complex-reconciliation" as const, sources: [source], taxContext, signal: new AbortController().signal };
     await expect(executeEvidenceAssistance(request, execution)).rejects.toThrow(/explicit escalation/i);
