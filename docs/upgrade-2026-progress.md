@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Pennsylvania Schedule NRH review
+
+Commit `ee44261d` adds the redacted official 03-24 Schedule NRH page
+to a 2025 nonresident review packet for one verified full-year
+employer with missing or incorrect Pennsylvania wages and signed
+working-day records. The physical check reopened one static page with
+blank identity fields. The source calendar prints 105 weekend or holiday
+days, four sick days and six leave days. It uses 100 Pennsylvania days
+out of 250 working days. The $30,000 allocation from $75,000 gross
+appears on NRH Lines 12, 18, 20 and 22 and PA-40 Lines 1a and 1c.
+The packet stays partial and identifies the original W-2, employer
+letter and any required wage explanation. Other cohorts retain the
+reference packet. Integrated verification passed 25 focused tests,
+both type checks, lint, inventory, and all 9,863 spec references.
+[Pennsylvania Schedule NRH](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf).
+
 ## November 21 qualified long-term-care distribution calculation
 
 Commit `0276fd98` projects the 2026 exception for one verified
@@ -14,6 +30,14 @@ computes $10.001 before form rounding. The integrated package passed 36
 focused tests, both type checks, 9,857 spec references and the inventory.
 The projection is internal. Annual filing and review exports need
 final instructions and qualified reporting. [IRS Notice 2026-33](https://www.irs.gov/pub/irs-drop/n-26-33.pdf).
+Core and web builds passed, full lint reported zero errors, and the
+six exact Ohio resident-credit and future-year upload browser cases
+passed at the original time limit. The first parallel unit and coverage
+runs recorded eight and twelve failures, respectively. Eleven of the
+coverage failures were timeouts. The school-district withholding
+assertion that also failed passed on the isolated 19-case replay. Both
+original PostgreSQL instances shut down cleanly. A sequential recheck
+of the whole source is in progress.
 
 ## November 21 2026 Form 1099-R Copy B review evidence
 

@@ -1,5 +1,18 @@
 {
   "activeContinuation": {
+    "nov21PaScheduleNrhOfficialReview": {
+      "commit": "ee44261d955b18040eb43811feda1948c237528e",
+      "sourceRevision": "PA-40 NRH (EX) 03-24 (FI)",
+      "officialSource": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf",
+      "officialSourceSha256": "39254e3bd00841ff8c64445fea3ce869860993ca01f15b71ef1df10aede8e323",
+      "authorFocusedTestsPassed": 50,
+      "finalExactFocusedTestsPassed": 25,
+      "specRefsValid": 9863,
+      "independentPhysicalReviewPassed": true,
+      "independentFixture": {"year": 2025, "gross": "75000", "workingDays": 250, "paDays": 100, "workingFraction": "0.400000", "paCompensation": "30000"},
+      "packetCompleteness": "partial",
+      "filingEnabled": false
+    },
     "nov21LongTermCareProjection": {
       "commit": "0276fd9826aef576d16a287ba921a00102b05868",
       "officialSources": ["https://uscode.house.gov/us/usc/119-118/t26/s72/", "https://uscode.house.gov/us/usc/119-118/t26/s401/", "https://www.irs.gov/pub/irs-drop/n-26-33.pdf"],
@@ -10,6 +23,13 @@
       "exactCentFixture": {"taxable": "2700", "qualified": "2599.99", "taxableForAdditionalTax": "100.01", "additionalTaxBeforeFormRounding": "10.001"},
       "projectionOnly": true,
       "draftExceptionCodeEnabled": false,
+      "coreAndWebBuildsPassed": true,
+      "fullLintErrors": 0,
+      "fullLintWarnings": 12167,
+      "narrowProductionChromiumCasesPassed": 6,
+      "originalParallelUnit": {"passed": 30043, "failed": 8, "timeouts": 8},
+      "originalParallelCoverage": {"passed": 30039, "failed": 12, "timeouts": 11},
+      "isolatedOhioSchoolAssertionRecheckPassed": 19,
       "filingEnabled": false
     },
     "nov21Form1099RCopyBBoxes7c7d": {

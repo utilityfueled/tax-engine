@@ -22,6 +22,18 @@ limit, a fully excepted Code 1 distribution, and the actual date when the
 owner reaches age 59½. Give the reviewer the original facts and blank
 worksheet before sharing engineering outputs.
 
+For Pennsylvania Schedule NRH, independently derive page-one lines from a
+fictional single New York resident with one full-calendar-year 2025 employer.
+The signed calendar records 113 nonworking weekends and holidays, six sick
+days, 11 leave days, 82 days physically working in Pennsylvania, five days
+working remotely for personal convenience, and 148 employer-required days
+outside Pennsylvania. The employer reports $30,000 of Pennsylvania wages
+that the taxpayer explains is incorrect. Actual gross compensation is
+$80,032. There are no employee expenses or reimbursements. Repeat with
+$80,031 to assess the difference between six-decimal and full-precision
+rounding, and identify the required W-2, explanation and signed employer
+letter. [Official Schedule NRH and instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf).
+
 For Ohio extension and balance payments on federal Schedule A, obtain
 redacted original records that identify the cash-payment date, liability
 year and amount applied to income tax. A direct official payment allocation
