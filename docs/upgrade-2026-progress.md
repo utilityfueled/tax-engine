@@ -19,6 +19,17 @@ the 2025 template remains admitted. Candidate manifest SHA-256
 Qualified human review of whole-dollar presentation remains open.
 [Final 2026 Form 8889, lines 14c–17](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf).
 
+All 11 exact local checks passed. Unit and coverage each passed 30,111
+tests with 79 existing skips. Branch coverage was 88.21% against the 85%
+gate. Chromium completed eight windows with 650 passes, zero failures
+and five existing skips at the original deadlines. The exact local
+manifest SHA-256 is
+`7ad9ab048d97f19456f437a6e818d9d425d2f17c799e0f671bfd0418f801d326`.
+GitHub built the Docker image on `fe41fd48`, which only adds evidence
+to the same application source. Vercel recorded both production builds
+as canceled.
+[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45076191539).
+
 ## November 22 Ohio payment projection reuse
 
 `c6ea35ac` returns the canonical Ohio payment projection already built
@@ -37,9 +48,29 @@ related operations tests, 23 spec references and inventory check
 passed. The tracked candidate manifest SHA-256 is
 `0e705122e444dbe6e82d206486b16c02245b83c3a6b4c12123b32a16ea1053f7`.
 
-The complete local run, one exact AMD64 timing comparison and one
-standard ARM64 image and recovery rehearsal are in progress. The
-strict Linux speed effect of this source change is unmeasured.
+All 11 local checks passed on the exact tracked source, with 30,109
+unit and coverage cases per suite and 79 existing skips. Branch
+coverage was 88.21% against the 85% gate. Chromium passed 650 cases
+with five existing skips. All 15 sample PDF hashes and the pinned
+Python prerequisite were verified. The exact local manifest SHA-256
+is `aa3bd52e0778068d91139f4173431c83c799fae3bab3c4de85c5e5f1ab6ce8a0`.
+
+An independent comparison of both confirmed school and header fixtures
+found a second school projection during preview. The two school
+projections were equal with matching federal results and an empty
+overlay. The full state payment digest and final audit line changed
+after the confirmed header was attached. That rules out carrying the
+whole earlier adapter result into preview. The comparison also verified
+that an unmatched saved estimate and an edited header home still reject
+at their respective validation steps. In eight warmed local calls per
+fixture, median school projection time was 6.4 and 5.9 milliseconds.
+Median full adapter time was 12.2 and 11.3 milliseconds. This
+process-local measurement does not establish the contribution to Linux
+browser timeouts.
+
+The exact AMD64 timing comparison and the ARM64 browser run are in
+progress. ARM64 smoke, independent archive verification and Compose
+recovery have passed. The strict timing effect remains unmeasured.
 [AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
 [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45075193188).
 
@@ -138,6 +169,18 @@ The exact candidate five-file digest equals SHA-256
 Vercel recorded the exact main production build as canceled.
 [26 U.S.C. § 221](https://uscode.house.gov/us/usc/119-124/t26/s221/) ·
 [IRS Publication 970, chapter 4](https://www.irs.gov/publications/p970).
+
+## November 22 student-loan exact Linux browser outcomes
+
+Exact `2519ff1c` passed the app build, image smoke, Compose recovery
+and rollback, independent archive verification, and browser-container
+removal. Managed Linux passed 648 browser cases with two railroad
+saved-PDF subprocess deadlines and five existing skips. Both railroad
+cases hit the original four-second inspector limit. Strict AMD64 passed
+645 browser cases and retained five skips. A business case, a
+resident-credit case and three school cases hit their 30-second browser
+deadline. Both browser jobs failed.
+[Exact Linux browser jobs](https://github.com/utilityfueled/tax-engine/actions/runs/45070994820).
 
 ## November 22 exact federal-payment Linux browser outcomes
 

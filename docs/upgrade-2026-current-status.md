@@ -3,14 +3,20 @@
 ## Resume here · November 22
 
 - `3aefc04c` holds the disabled internal Form 8889 review PDF when
-  rounded line 16 contradicts the displayed subtraction. It preserves
-  the exact engine amount and current public gates. Reopened controls
-  and independent software review passed.
-  [Form 8889 evidence](upgrade-2026-progress.md#november-22-form-8889-displayed-line-reconciliation).
+  rounded line 16 contradicts the displayed subtraction. The exact
+  engine amount and current public gates are preserved. Reopened
+  controls and independent software review passed. All 11 local checks
+  passed, with 30,111 unit and coverage cases per suite and 88.21%
+  branch coverage. Chromium passed 650 cases with five existing skips.
+  GitHub built the Docker image on the application-equivalent documentation revision.
+  [Form 8889 evidence](upgrade-2026-progress.md#november-22-form-8889-displayed-line-reconciliation) ·
+  [Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45076191539).
 - `c6ea35ac` removes a duplicate Ohio payment projection within each
   invocation. Four complete projections matched before and after, and
-  all ten scoped Chromium cases passed. Exact local checks, AMD64 timing
-  and ARM64 recovery are running in parallel. See
+  all ten scoped Chromium cases passed. All 11 local checks passed
+  with 30,109 unit and coverage cases per suite, 88.21% branch coverage,
+  and 650 Chromium passes with five existing skips. AMD64 timing and
+  ARM64 qualification continue. See
   `activeContinuation.nov22OhioPaymentProjectionReuse`.
   [Ohio evidence](upgrade-2026-progress.md#november-22-ohio-payment-projection-reuse) ·
   [AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
