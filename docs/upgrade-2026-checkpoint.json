@@ -1,5 +1,35 @@
 {
   "activeContinuation": {
+    "nov22OhioEarlyRetirementCredit": {
+      "applicationCommit": "e44e8b31",
+      "law": "https://codes.ohio.gov/ohio-revised-code/section-section-5747.055",
+      "departmentGuidance": "https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income",
+      "priorErroneousCredit": "130",
+      "verifiedCorrectedCredit": "0",
+      "correctedOhioTax": "1444",
+      "federalAndOhioAgi": "66000",
+      "focusedTestsPassed": 211,
+      "independentFocusedTestsPassed": 3,
+      "independentSavedReviewExport": "pass",
+      "browserCheck": "pass",
+      "browserCasesPassed": 1,
+      "browserManifestSha256": "85c3171b12ee4d8f882eb31867fa6a36a9b2e2718802fa34a7a8a8ae5f423f7b",
+      "browserReceipts": ".local/upgrade-evidence/nov22-ohio-retirement-credit-browser/",
+      "receipts": ".local/upgrade-evidence/nov22-ohio-retirement-credit/",
+      "qualifiedHumanReview": "pending"
+    },
+    "nov22Form5329FirstHomeCandidate": {
+      "applicationCommit": "00cd051c",
+      "irsFinalForm": "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf",
+      "law": "https://uscode.house.gov/us/usc/119-124/t26/s72/",
+      "historicalExceptionInstructions": "https://www.irs.gov/pub/irs-prior/i5329--2025.pdf",
+      "focusedTestsPassed": 36,
+      "independentCandidateAndHistoricalPdfTestsPassed": 18,
+      "form5329SpecReferences": 100,
+      "reviewPartI": {"line1": "7000", "line2Code": "09", "line2": "6000", "line3": "1000", "line4": "100"},
+      "printedSchedule2Line5Only": "100",
+      "publicExportQualified": false
+    },
     "nov22GuidedFirstHomeIra2026": {
       "applicationCommit": "8b8a7d84",
       "source": "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf",
@@ -29,7 +59,11 @@
       "focusedOhioBrowserPassed": 4,
       "restoredSampleDocuments": 15,
       "localBrowserReceipts": ".local/upgrade-evidence/nov22-caf13618-oh-resident-browser/",
-      "fullLocalBrowser": "running",
+      "fullLocalBrowser": "pass",
+      "fullLocalBrowserPassed": 650,
+      "fullLocalBrowserOriginalSkips": 5,
+      "fullLocalBrowserFailures": 0,
+      "fullLocalBrowserSummarySha256": "ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356",
       "fullCoverage": "pass",
       "branchCoveragePercent": 88.19,
       "branchCoverageGatePercent": 85,

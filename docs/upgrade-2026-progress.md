@@ -12424,3 +12424,62 @@ is in `.local/upgrade-evidence/nov22-first-home-8b8a7d84-browser/`.
 `3a06e099` freezes the two age examples on their actual receipt dates, and
 both pass. The browser evidence covers intake. Annual calculation and PDF
 export still require their own qualification evidence.
+
+### November 22 internal Form 5329 first-home review PDF
+
+`00cd051c` renders an internal review artifact for the single primary taxpayer
+with one documented 2026 ordinary Code 1 traditional IRA distribution. The
+reopened native fields show $7,000 on line 1, exception 09 and $6,000 on line 2,
+$1,000 on line 3 and $100 on line 4. The isolated transfer targets line 5 as
+printed on 2026 Schedule 2. Existing annual audit positions remain historical.
+All three pages are marked for review and omit SSN, payer and account references.
+
+The independent review reproduced how schema defaults could convert an omitted
+Box 5 to zero. The candidate now checks for the actual entry before parsing
+and still checks its Decimal value. The controls hold future and late payments,
+competing education tax, and altered source or PDF bytes. The scoped run passed
+36 tests and 100 Form 5329 references. Independent review re-ran seven candidate
+and 11 historical PDF tests. Typecheck and the candidate-only browser source
+hashes passed. The tests use staged indexed values. Annual instructions, public
+export and filing are still gated. [Final 2026 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf),
+[26 U.S.C. §72](https://uscode.house.gov/us/usc/119-124/t26/s72/) and
+[2025 exception instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf).
+
+### November 22 completed full local Chromium run
+
+The exact `caf13618` archive passed the managed production-build Chromium
+suite with 650 passes, five existing skips and zero failures. Both Ohio windows
+passed all 25 cases under the existing 30-second deadlines. The summary SHA-256
+is `ed8ccae0fe11f871c6d2882084fd8fb37fc8fd0a2cd3dae1a6c49b0aff804356`.
+The managed run returned zero and retained its receipts in
+`.local/upgrade-evidence/nov22-caf13618-oh-resident-browser/`.
+The stricter Linux container run `45055612463` remains queued as of this check.
+[GitHub Actions diagnostic run](https://github.com/utilityfueled/tax-engine/actions/runs/45055612463).
+
+### November 22 ordinary Ohio retirement-income credit correction
+
+`e44e8b31` fixes the 2025 guided Ohio case with one primary, non-IRA Code 1
+statement. Before the change, $60,000 wages plus $6,000 from an early withdrawal
+incorrectly received a $130 Ohio credit. Confirmed documentation now supplies
+an explicit $0 credit base, and the fixture's Ohio tax is $1,444. Ohio and
+federal AGI both stay $66,000. Missing, stale and unsupported positive claims
+hold this case. A saved 2025 answer stays visible for removal on a later year
+with explicit 2025 labeling.
+
+The spec-first regression reproduced an incorrectly complete State Return.
+211 scoped tests, root and web typechecks, lint with no errors, and three spec
+references passed. Independent engineering review passed three focused tests
+and used the real saved-review download builder. It rejected pending or stale
+evidence and produced the confirmed Ohio IT 1040 review document without the
+zeroed Schedule of Credits reference. Qualified human review is pending.
+[Ohio Revised Code §5747.055](https://codes.ohio.gov/ohio-revised-code/section-section-5747.055)
+and [Ohio Department of Taxation retirement guidance](https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income).
+
+Independent Chromium on the exact production build passed one case in 3.529
+seconds, with the existing 30-second limit and zero retries. Seeded synthetic
+originals exercised missing, confirmed and stale states, exact credit and tax,
+reopening, reconfirmation, removal and workspace deletion. The owned server
+closed and no external requests occurred. The two private harness failures
+remain in the local packet. Manifest SHA-256
+`85c3171b12ee4d8f882eb31867fa6a36a9b2e2718802fa34a7a8a8ae5f423f7b`
+is in `.local/upgrade-evidence/nov22-ohio-retirement-credit-browser/`.
