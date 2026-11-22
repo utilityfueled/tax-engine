@@ -1,5 +1,58 @@
 # 2026 upgrade implementation evidence
 
+## November 21 donation and refund source reconfirmation
+
+`f68955f4` requires eligibility confirmation when a donation's recipient
+changes. In the 2026 guided return, the cash and appreciated-stock tests
+both reproduced the former eligibility surviving a save and reopen. The
+new recipient's category and eligibility remain unknown until confirmed.
+The gift date, exact amount, zero basis and holding period remain
+available. Surrounding whitespace alone preserves eligibility answers.
+The existing carryover worksheet may still need confirmation after a
+whitespace-only edit. The change passed 23 focused tests, 59 guided spec
+references and scoped lint. Independent review reproduced both original
+failures and passed all 10 interaction tests after the change.
+[IRS Publication 526](https://www.irs.gov/publications/p526).
+
+`b3cb03a7` matches current-year state refund payments by exact Decimal
+amount, state and date. An estimate written as `1000.00` can match a
+refund ledger entry written as `1000` when there is one eligible match.
+The saved originals keep their entered values. Equivalent duplicates,
+unknown amounts and unsupported amount formats prevent capture. The
+existing canonical link still has to identify the same state and date.
+The original regression reproduced a rejected valid match and a duplicate
+that raised the synthetic Schedule A deduction from $900 to $1,900. A
+second baseline reproduced capture of a format the engine later rejected.
+All 36 focused tests, both spec checks and scoped lint passed. Separate
+review repeated the normal capture with zero, equivalent amounts,
+malformed amounts and duplicates.
+[IRS Publication 525](https://www.irs.gov/publications/p525).
+
+On the combined revision, all 9,866 spec references, the coverage
+inventory and root and web types passed. Local unit and coverage each
+passed 30,071 tests across 2,190 suites. Branch coverage was 88.56%.
+Both disposable PostgreSQL 16.16 databases shut down normally.
+Remote CI passed both suites with the same counts and coverage, and
+both remote databases shut down. The Docker build passed. Both Web
+jobs stopped before browser collection because the three edited source
+files still had their original audit hashes. Strict AMD64 passed smoke,
+Compose recovery and rollback, archive import and cleanup.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44977386287) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44977386297) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44977386261).
+
+`5a4b63d7` refreshes those three source hashes and the linked test
+manifest hash. Independent comparison confirmed identical cases,
+timeouts, retries, limits and targets. The exact manifest passed 181
+Vitest checks, 37 Node checks and all 37 existing managed Chromium
+deduction, charity and refund cases. The suite used two workers,
+zero retries and the existing 30-second deadline. Cleanup and the exact
+Docker build passed.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44980998498) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44980998506) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44980998522) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44981047413).
+
 ## November 21 pending Ohio header preview timing
 
 Commit `41796dfb` skips the repeated Ohio state preview replay for a
@@ -53,9 +106,14 @@ performance gain attributable to this change alone.
 A native ARM64 rehearsal on `0e71304c` verified its architecture and
 source, then passed candidate image smoke and isolated Compose
 upgrade and recovery. The verified Git delta from `41796dfb` contains
-only three documentation files. Strict ARM64 browsers were running
-at this verification, so the architecture is still unqualified.
-[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44974785059).
+only three documentation files. The strict ARM64 job completed all
+eight browser batches. It passed 641 cases, reached nine Ohio deadlines
+at 30 seconds with zero retries, and retained five existing skips. The
+nine included two NEW212 cases, one reciprocal refund, two resident
+credits and four school-district cases. Both railroad inspections
+passed. Browser cleanup and container removal passed. Strict ARM64
+still lacks a passing run on this source.
+[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/44974785059/job/137062136208).
 
 ## November 21 Pennsylvania template registry reconciliation
 

@@ -1,5 +1,45 @@
 {
   "activeContinuation": {
+    "nov21GuidedDonationAndRefundSources": {
+      "donation": {
+        "commit": "f68955f4d76a2791c023cd0f01f943c12a2c3db7",
+        "baselineRecipientCasesReproduced": 2,
+        "focusedTestsPassed": 23,
+        "guidedSpecReferencesPassed": 59,
+        "scopedLintPassed": true,
+        "independentInteractionTestsPassed": 10,
+        "independentSourceReviewPassed": true
+      },
+      "stateRefund": {
+        "commit": "b3cb03a79be824487ea825536b3d9fe5c71b7f9f",
+        "baselineMatchingFailuresReproduced": 3,
+        "baselineInvalidAmountFormatFailureReproduced": true,
+        "focusedTestsPassed": 36,
+        "scopedSpecReferencesPassed": 18,
+        "scopedLintPassed": true,
+        "independentSourceReviewPassed": true
+      },
+      "combinedStatic": {"specReferencesPassed": 9866, "inventoryPassed": true, "rootTypesPassed": true, "webTypesPassed": true},
+      "combinedUnit": {"passed": 30071, "suitesPassed": 2190, "postgres16_16Stopped": true},
+      "combinedCoverage": {"passed": 30071, "suitesPassed": 2190, "branchCoveragePercent": 88.56, "postgres16_16Stopped": true},
+      "githubRuns": {"ci": 44977386287, "docker": 44977386297, "web": 44977386261},
+      "githubCombinedCi": {"passed": true, "unitPassed": 30071, "coverageTestsPassed": 30071, "suitesPerRun": 2190, "branchCoveragePercent": 88.56, "bothPostgres16_16StopsPassed": true},
+      "githubCombinedDockerPassed": true,
+      "githubWebBeforeAuditRefresh": {"managedJob": 137070206514, "strictAmd64Job": 137070206618, "failedBeforeCollection": true, "staleSourceHashes": 3, "strictImageSmokePassed": true, "strictComposeRecoveryPassed": true, "strictIndependentArchivePassed": true, "strictCleanupPassed": true},
+      "browserAuditRefresh": {
+        "commit": "5a4b63d7103f596dcd28c2eced32bde10ba3e65f",
+        "independentSourceReviewPassed": true,
+        "sourceHashesRefreshed": 3,
+        "auditSha256": "855ccfe02e0edea799c1f3be73f623f77ee86d08d8092c054020969b83587203",
+        "preflightVitestPassed": 181,
+        "preflightNodeTestsPassed": 37,
+        "focusedManagedBrowser": {"passed": 37, "failed": 0, "skipped": 0, "timeoutMs": 30000, "retries": 0, "cleanupPassed": true},
+        "githubDockerPassed": true,
+        "githubRuns": {"ci": 44980998498, "docker": 44980998506, "web": 44980998522, "nativeArm64": 44981047413}
+      },
+      "localFocusedReceipts": ".local/upgrade-evidence/nov21-guided-source-reconfirmation",
+      "releaseReady": false
+    },
     "nov21OhioPendingHeaderPreview": {
       "commit": "41796dfbd2bbb3e9e127f5c64afdd361f2f82edc",
       "benchmark": {
@@ -50,7 +90,19 @@
         "nativeArchitectureAndSourcePassed": true,
         "imageSmokePassed": true,
         "composeUpgradeAndRecoveryPassed": true,
-        "strictBrowserRunningAtRecord": true
+        "strictBrowserOutcome": "FAIL",
+        "batchesCompleted": 8,
+        "caseCount": 655,
+        "passed": 641,
+        "failed": 9,
+        "originalSkips": 5,
+        "ohioCaseDeadlineFailures": {"new212": 2, "reciprocalRefund": 1, "residentCredit": 2, "schoolDistrict": 4},
+        "railroadSavedPdfDeadlineFailures": 0,
+        "originalTimeoutMs": 30000,
+        "retries": 0,
+        "browserCleanupPassed": true,
+        "containerRemoved": true,
+        "summarySha256": "19b1f653e2257f93200a7b32bbadb531ff0544f3ab66d4078fd76e671fc48dee"
       },
       "strictRuntimeQualified": false,
       "releaseReady": false

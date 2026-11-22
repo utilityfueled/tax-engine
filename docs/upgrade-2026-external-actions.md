@@ -50,8 +50,9 @@ strict image smoke, recovery, archive import and cleanup passed.
 The Ohio preview optimization at `41796dfb` passed managed Linux
 with 650 browser cases and five existing skips. Its strict AMD64
 run passed 642, with eight Ohio deadlines and five existing skips.
-The same-source ARM64 job passed smoke and recovery and had an
-active strict browser step at the last check.
+The same-source ARM64 job passed smoke, recovery and cleanup. It
+passed 641 browser cases, reached nine Ohio deadlines and retained
+five existing skips.
 [Current comparison and ARM64 run](upgrade-2026-progress.md#november-21-pending-ohio-header-preview-timing).
 
 For Pennsylvania Schedule NRH, independently derive page-one lines from a

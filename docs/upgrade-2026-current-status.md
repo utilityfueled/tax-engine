@@ -2,13 +2,25 @@
 
 ## Latest exact release verification
 
+`b3cb03a7` preserves exact state refund payment matches and includes the
+renewed donation recipient confirmation from `f68955f4`. Unit and coverage
+each passed 30,071 tests across 2,190 suites at 88.56% branch coverage.
+Remote CI matched those totals and the Docker build passed. All owned
+test PostgreSQL 16.16 instances shut down. All 9,866 spec references,
+the coverage inventory and root and web types passed. Both remote
+Web jobs stopped before running cases because the audit still had
+the prior hashes. `5a4b63d7` refreshes exactly three source hashes
+and passed all 37 focused browser cases under the existing deadlines.
+[Guided source evidence](upgrade-2026-progress.md#november-21-donation-and-refund-source-reconfirmation).
+
 `41796dfb` passed local and remote unit and coverage with 30,064 tests
 per run and 88.56% branch coverage. Managed Linux passed 650 browser
 cases and strict AMD64 passed 642, with eight Ohio deadlines. Each
 retained five existing skips. Strict AMD64 passed image smoke, Compose
 recovery, archive import and cleanup. ARM64 on application-equivalent
-`0e71304c` passed image smoke and Compose recovery. Its browser
-job was still running at the last check.
+`0e71304c` passed image smoke, Compose recovery and cleanup. Strict
+ARM64 passed 641 browser cases with nine Ohio deadlines and five
+existing skips.
 [Exact evidence](upgrade-2026-progress.md#november-21-pending-ohio-header-preview-timing) ·
 [ARM64 browser job](https://github.com/utilityfueled/tax-engine/actions/runs/44974785059).
 
