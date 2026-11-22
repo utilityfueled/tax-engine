@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { PDFDocument, PDFHexString, PDFName } from "pdf-lib";
+import { ParseSpeeds, PDFDocument, PDFHexString, PDFName } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { getDocument } from "../../../apps/web/node_modules/pdfjs-dist/legacy/build/pdf.mjs";
 import { read20261095CReviewSource } from "../../../apps/web/src/lib/read-2026-1095-c-review-source";
@@ -29,14 +29,15 @@ async function read(bytes: Uint8Array, pageNumber = 1) {
 }
 
 async function filled(cells: Cell[], edit?: (pdf: PDFDocument) => void) {
-  const pdf = await PDFDocument.load(await readFile(officialPath));
+  // Avoid timer yields while constructing these small test-only PDFs.
+  const pdf = await PDFDocument.load(await readFile(officialPath), { parseSpeed: ParseSpeeds.Fastest });
   const form = pdf.getForm();
   for (const [line, column, value] of cells) form.getTextField(fieldName(line, column)).setText(value);
   form.getCheckBox(`${header}.c1_1[0]`).uncheck();
   form.getCheckBox(`${header}.c1_1[1]`).uncheck();
   form.updateFieldAppearances();
   edit?.(pdf);
-  return pdf.save({ updateFieldAppearances: false });
+  return pdf.save({ updateFieldAppearances: false, objectsPerTick: Infinity });
 }
 
 const annual: Cell[] = [[14, 0, "1E"], [15, 0, "0.00"], [16, 0, "2C"]];
