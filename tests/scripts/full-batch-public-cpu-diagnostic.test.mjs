@@ -190,8 +190,7 @@ test('trace pairing chooses a complete original Ohio window with an observed tim
  assert.equal(selectTraceWindow(original,[{id:ids[1],failureCategory:'assertion'}],new Set(ids)),undefined);
 });
 
-function traceFixture() {
- const file='oh-fixture.spec.ts';
+function traceFixture(file='oh-fixture.spec.ts') {
  const report=(status,timeout=30000)=>({errors:[],config:{workers:2,projects:[{retries:0,repeatEach:1}]},suites:[{title:file,specs:['a','b'].map((label,i)=>({title:label,file,id:`${label.repeat(20)}-${label.repeat(20)}`,tests:[{projectName:'chromium',timeout,expectedStatus:'passed',results:[{status:i===0?status:'passed',retry:0,duration:27,errors:[]}]}]}))}]});
  const waits=[],calls=[],saved=new Map();
  let clock=0;
@@ -220,6 +219,68 @@ test('trace legs differ only in capture mode and preserve totals across consecut
  assert.deepEqual(result.legs.map(leg=>[leg.passed,leg.failed,leg.skipped,leg.wallMs,leg.executionMs]),[[1,1,0,37,28],[2,0,0,37,28]]);
  assert.deepEqual(result.legs.map(leg=>leg.cases.map(row=>row.id)),[rows.map(row=>row.id),rows.map(row=>row.id)]);
  assert.equal(result.legs[0].cases[0].failureCategory,'timeout');
+ assert.equal(Object.hasOwn(result.legs[0].cases[0],'schoolPhases'),false);
+});
+
+test('projects only fixed school phase markers from reconciled paired cases', async () => {
+ const {runTracePair}=await import(traceUrl);
+ const {rowsFromReport}=await import('../../scripts/run-browser-tests.mjs');
+ const f=traceFixture('oh-school-district-part-year-native.spec.ts');
+ const rows=rowsFromReport(f.report('passed'));
+ const marker=(phase,step,ms)=>({text:`OH_SCHOOL_PY_PHASE ${phase} ${step} ${ms}\n`});
+ f.io.run=async trace=>{
+  const retained=trace==='retain-on-failure';
+  const report=f.report(retained?'timedOut':'passed');
+  const [first,second]=report.suites[0].specs.map(spec=>spec.tests[0].results[0]);
+  first.stdout=[{text:'synthetic private stdout'},marker('school-entry','begin',0),marker('school-entry','end',10),marker('school-first-confirmation','begin',0)];
+  if(!retained)first.stdout.push(marker('school-first-confirmation','end',2),marker('saved-reopen','end',1),marker('review-download','begin',0),marker('review-download','end',3));
+  second.stdout=[marker('school-entry','begin',0),marker('school-entry','begin',0),marker('school-entry','end',10)];
+  return{exit:retained?1:0,report,executionMs:28};
+ };
+ assert.equal(await runTracePair({...f,batch:{rows,bounds:{}}}),true);
+ const {legs,originalFailureSuperseded}=f.saved.get('result.json');
+ assert.equal(originalFailureSuperseded,false);
+ assert.deepEqual(legs.map(leg=>leg.failed),[1,0]);
+ assert.deepEqual(legs[0].cases[0].schoolPhases,{
+  'school-entry':{status:'completed',durationMs:10},
+  'school-first-confirmation':{status:'started'},
+  'review-download':{status:'unavailable'},
+ });
+ assert.deepEqual(legs[1].cases[0].schoolPhases,{
+  'school-entry':{status:'completed',durationMs:10},
+  'school-first-confirmation':{status:'completed',durationMs:2},
+  'review-download':{status:'completed',durationMs:3},
+ });
+ for(const leg of legs)assert.deepEqual(leg.cases[1].schoolPhases,{
+  'school-entry':{status:'unavailable'},
+  'school-first-confirmation':{status:'unavailable'},
+  'review-download':{status:'unavailable'},
+ });
+ assert.deepEqual(f.saved.get('trace-off.json').cases[0].schoolPhases,legs[1].cases[0].schoolPhases);
+ assert.doesNotMatch(JSON.stringify([...f.saved]),/synthetic private stdout|OH_SCHOOL_PY_PHASE|saved-reopen|oh-school-district-part-year-native\.spec\.ts/);
+});
+
+test('school phase evidence is unavailable for impossible ordering or over-limit stdout', async () => {
+ const {projectSchoolCasePhases}=await import('../../scripts/browser-cpu-diagnostics/school-phases.mjs');
+ const file='oh-school-district-part-year-native.spec.ts';
+ const project=(stdout)=>projectSchoolCasePhases({file,results:[{stdout}]}).schoolPhases;
+ const start={text:'OH_SCHOOL_PY_PHASE school-entry begin 0\n'};
+ const blank=project(undefined);
+ assert.deepEqual(Object.values(blank).map(phase=>phase.status),['unavailable','unavailable','unavailable']);
+ const invalid=[
+  [start,{text:'OH_SCHOOL_PY_PHASE school-entry end 30001\n'}],
+  [start,{text:'OH_SCHOOL_PY_PHASE school-entry end -2\n'}],
+  [{text:'OH_SCHOOL_PY_PHASE school-entry begin 1\n'}],
+  [{text:'OH_SCHOOL_PY_PHASE school-entry end 3\n'}],
+  [start,{text:'OH_SCHOOL_PY_PHASE review-download begin 0\n'}],
+  [start,{text:'unrelated multiline output\nOH_SCHOOL_PY_PHASE school-entry end 3\n'}],
+  [start,{text:'OH_SCHOOL_PY_PHASE school-entry end 3\n\n'}],
+  Array.from({length:65},()=>start),
+  [start,{text:'á'.repeat(4096)}],
+ ];
+ for(const stdout of invalid)assert.deepEqual(project(stdout),blank);
+ assert.deepEqual(project([start,{buffer:'AA=='},{text:'OH_SCHOOL_PY_PHASE school-entry end 30000\r\n'}])['school-entry'],{status:'completed',durationMs:30000});
+ assert.deepEqual(projectSchoolCasePhases({file:'other.spec.ts',results:[{stdout:[start]}]}),{});
 });
 
 test('a trace leg with deadline drift cannot be reported as a completed comparison', async () => {

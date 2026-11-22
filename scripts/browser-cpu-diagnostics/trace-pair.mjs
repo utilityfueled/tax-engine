@@ -1,6 +1,7 @@
 import { runSchedule } from '../run-browser-tests.mjs';
 import { projectDiagnosticCases } from './fixed-metadata.mjs';
 import { projectCaseResults } from './runner.mjs';
+import { projectSchoolCasePhases } from './school-phases.mjs';
 
 export const TRACE_PAIR_MS = 18 * 60 * 1000;
 const modes = ['retain-on-failure', 'off'];
@@ -24,7 +25,8 @@ export async function runTracePair({ batch, audit, io, save, binding }) {
         return result;
       },
       record: ({ start, close, result }) => {
-        const cases = projectDiagnosticCases(result.rows, projectCaseResults);
+        const cases = projectDiagnosticCases(result.rows, projectCaseResults)
+          .map((row, index) => ({ ...row, ...projectSchoolCasePhases(result.rows[index]) }));
         receipt = { trace, start, close, wallMs: close.mono - start.mono, executionMs, cases };
       },
     } });

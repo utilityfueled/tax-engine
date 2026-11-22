@@ -204,7 +204,7 @@ export async function main({env=process.env,root=fileURLToPath(new URL('../../',
       const file=path.join(temporary,`${trace}.json`);
       const start=performance.now();
       const r=await exec(process.execPath,[cli,...args,'--output',path.join(temporary,`${trace}-artifacts`),'--reporter=json'],{
-       cwd:app,env:{...browserEnv,PLAYWRIGHT_JSON_OUTPUT_FILE:file,PLAYWRIGHT_LAST_RUN_OUTPUT_FILE:path.join(temporary,`${trace}-last-run.json`)},
+       cwd:app,env:{...browserEnv,TAX_BROWSER_SCHOOL_PHASES:'1',PLAYWRIGHT_JSON_OUTPUT_FILE:file,PLAYWRIGHT_LAST_RUN_OUTPUT_FILE:path.join(temporary,`${trace}-last-run.json`)},
        timeout:batch.rows.length*30000+10000,
       });
       const executionMs=performance.now()-start;

@@ -44,3 +44,15 @@ lines:
       with fixed diagnostic metadata. Retain the existing original-run, timing,
       and qualification gates.
     testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::binds pinned PDF test Python before optional browser children with no host fallback"
+  - line: "school-pre-export-phases"
+    description: Compare Ohio part-year school entry, first confirmation and review download
+    formula: >-
+      In both admitted trace-pair legs only, add fixed begin and end marks around
+      the original school entry and first confirmation. Read the existing review
+      download mark from the same reconciled school case. Record each reviewed
+      phase as completed with bounded milliseconds, started without a duration,
+      or unavailable. Ambiguous or over-limit marker input makes the phases
+      unavailable without changing the case outcome. Never retain raw stdout,
+      test payloads or added source paths. Preserve original actions, assertions,
+      case identities, request budgets, workers, retries, deadlines and image.
+    testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::projects only fixed school phase markers from reconciled paired cases"
