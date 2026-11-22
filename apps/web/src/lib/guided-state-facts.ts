@@ -9,6 +9,23 @@ export function sumAdditionalStateWithholding(data: StateReturnData | undefined)
   return (data?.additionalStateWithholdingEntries ?? []).reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry.amount)), new Decimal(0));
 }
 
+/** A saved estimate can confirm one actual receipt, without adding a second payment. */
+export function assertSavedStateEstimatesMatchReceipts(
+  savedEstimates: ReadonlyArray<StateReturnData["stateEstimatedPayments"][number]>,
+  receipts: ReadonlyArray<{ kind: string; date: string; amount: string }>,
+): void {
+  const used = new Set<number>();
+  for (const saved of savedEstimates) {
+    const amount = parseGuidedCurrency(saved.amount);
+    const index = receipts.findIndex((actual, index) => actual.kind === "estimated"
+      && !used.has(index) && actual.date === saved.date && new Decimal(actual.amount).eq(amount));
+    if (index < 0) {
+      throw new Error("Reconcile each saved state estimated payment with a distinct actual original receipt or explicitly remove the saved claim.");
+    }
+    used.add(index);
+  }
+}
+
 export function statePaymentFactErrors(data: StateReturnData | undefined, taxYear?: number | null, selectedState?: string | null): Record<string, string> {
   if (!data) return {};
   const errors = paymentFactErrors(data.stateEstimatedPayments, taxYear);

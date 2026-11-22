@@ -20,7 +20,7 @@ import type { PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator";
 import type { GuidedFlowState, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { assertKnownFacts } from "./guided-required-facts";
-import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
+import { assertSavedStateEstimatesMatchReceipts, statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 import { ohioInterestFactErrors, requiresOhioInterestAllocation } from "./guided-ohio-interest-facts";
 
 function actualStatePayments(state: GuidedFlowState, code: string): StateReturnData | undefined {
@@ -33,7 +33,7 @@ function estimatedPayments(data: StateReturnData): string {
 }
 
 /** Saved generic rows are retained evidence, never a second source of credit. */
-function reconcileSavedStateLedger(data:StateReturnData|undefined,year:number,code:string,receipts:ReadonlyArray<{date:string;amount:string}>,retirementOriginals?:ReadonlyArray<RetirementWithholdingOriginal>,sourceContext?:{input:TaxYearInput;state:GuidedFlowState}):void{
+function reconcileSavedStateLedger(data:StateReturnData|undefined,year:number,code:string,receipts:ReadonlyArray<{kind:string;date:string;amount:string}>,retirementOriginals?:ReadonlyArray<RetirementWithholdingOriginal>,sourceContext?:{input:TaxYearInput;state:GuidedFlowState}):void{
   if(!data)return;
   assertKnownFacts(statePaymentFactErrors(data,year,code));
   if(sumAdditionalStateWithholding(data).gt(0)){
@@ -50,13 +50,7 @@ function reconcileSavedStateLedger(data:StateReturnData|undefined,year:number,co
       reconcileGuidedRetirementWithholding(retirementOriginals,savedRetirement,year);
     }
   }
-  const used=new Set<number>();
-  for(const saved of data.stateEstimatedPayments){
-    const amount=parseGuidedCurrency(saved.amount);
-    const index=receipts.findIndex((actual,index)=>!used.has(index)&&actual.date===saved.date&&new Decimal(actual.amount).eq(amount));
-    if(index<0)throw new Error("Reconcile each saved state estimated payment with a distinct actual original receipt or explicitly remove the saved claim.");
-    used.add(index);
-  }
+  assertSavedStateEstimatesMatchReceipts(data.stateEstimatedPayments, receipts);
 }
 
 /** The same actual payment overlay is used for the preview and saved review PDF. */
@@ -75,7 +69,7 @@ export function buildGuidedOhioOverlay(taxInput: TaxYearInput, state: GuidedFlow
   }
   if(taxInput.ohioPayments!==undefined||data?.ohioPayments!==undefined){
     if(!taxInput.ohioPayments)throw new Error("Actual canonical Ohio payment sources are required before payment reconciliation.");
-    reconcileSavedStateLedger(data,taxInput.taxpayer.taxYear,"OH",taxInput.ohioPayments.paymentRows.filter(row=>row.kind==='estimated'),undefined,{input:taxInput,state});
+    reconcileSavedStateLedger(data,taxInput.taxpayer.taxYear,"OH",taxInput.ohioPayments.paymentRows,undefined,{input:taxInput,state});
     return result;
   }
   if (data?.additionalStateWithholdingEntries?.length) {
@@ -145,7 +139,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
       ...("reciprocitySources" in bound ? {paReciprocitySources:bound.reciprocitySources} : {})};
     // Replays only: no confirmation action and no refreshed snapshot on read.
     const paOrdinaryReturnFacts=buildGuidedPAOrdinaryReturnFacts(current,data.paOrdinaryReturnFacts);
-    reconcileSavedStateLedger(data,input.taxpayer.taxYear,"PA",paOrdinaryReturnFacts.payments.rows.filter(row=>row.original.kind==='estimated').map(row=>({date:row.original.date,amount:row.original.amount})),input.form1099R??[],{input:current,state});
+    reconcileSavedStateLedger(data,input.taxpayer.taxYear,"PA",paOrdinaryReturnFacts.payments.rows.map(row=>row.original),input.form1099R??[],{input:current,state});
     const paOrdinaryReturnCompletionSources=buildGuidedPAOrdinaryReturnCompletionSources(current,data.paOrdinaryReturnCompletionSources,paOrdinaryReturnFacts);
     return {...current,paOrdinaryReturnFacts,paOrdinaryReturnCompletionSources};
   }

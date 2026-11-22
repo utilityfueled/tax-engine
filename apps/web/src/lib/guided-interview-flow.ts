@@ -77,7 +77,7 @@ import {
   adjustmentFactErrors, alimonySourceFactsChanged, hasAlimonyAmounts, hasHouseholdAmounts,
   hasRetainedAlimonyContext, hasRetainedHouseholdContext, householdFactErrors, householdSourceFactsChanged,
 } from "./guided-adjustment-facts";
-import { statePaymentFactErrors } from "./guided-state-facts";
+import { assertSavedStateEstimatesMatchReceipts, statePaymentFactErrors } from "./guided-state-facts";
 import {zeroIncomeMiscSourceFactErrors,type ZeroIncomeMiscSourceDraft} from './guided-zero-income-misc-sources';
 import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
 import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
@@ -2718,15 +2718,23 @@ function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<stri
     try{if(!data?.paMarriedOrdinarySources||!current)throw Error('Complete actual current federal and married PA household sources.');assertMarriedPASavedLedger(data);buildGuidedPAMarriedOrdinarySources(current,data.paMarriedOrdinarySources);}catch(error){errors.paMarriedOrdinarySources=error instanceof Error?error.message:'Reconcile actual married PA household sources.';}return errors;
   }
   if (!current) errors.paResidencySources = "Complete and confirm the actual current federal and Pennsylvania residency sources.";
+  let ordinaryFacts: PAOrdinaryReturnFacts | undefined;
   if (!data?.paOrdinaryReturnFacts) errors.paOrdinaryReturnFacts = "Complete and confirm the actual Pennsylvania return records.";
   else if (current) {
-    try { buildGuidedPAOrdinaryReturnFacts(current, data.paOrdinaryReturnFacts); }
+    try { ordinaryFacts = buildGuidedPAOrdinaryReturnFacts(current, data.paOrdinaryReturnFacts); }
     catch (error) { errors.paOrdinaryReturnFacts = error instanceof Error ? error.message : "Reconcile the actual Pennsylvania return records."; }
   }
   if (!data?.paOrdinaryReturnCompletionSources) errors.paOrdinaryReturnCompletionSources = "Complete and confirm the actual Pennsylvania completion records.";
   else if (current) {
     try { buildGuidedPAOrdinaryReturnCompletionSources(current, data.paOrdinaryReturnCompletionSources, data.paOrdinaryReturnFacts); }
     catch (error) { errors.paOrdinaryReturnCompletionSources = error instanceof Error ? error.message : "Reconcile the actual Pennsylvania completion records."; }
+  }
+  if (state.taxYear === 2025 && ordinaryFacts && data?.stateEstimatedPayments.length) {
+    try {
+      assertSavedStateEstimatesMatchReceipts(data.stateEstimatedPayments, ordinaryFacts.payments.rows.map(row => row.original));
+    } catch (error) {
+      errors.stateEstimatedPayments = error instanceof Error ? error.message : "Reconcile saved Pennsylvania estimated payments.";
+    }
   }
   return errors;
 }

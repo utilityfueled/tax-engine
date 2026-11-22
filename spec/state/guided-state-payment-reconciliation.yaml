@@ -21,3 +21,6 @@ lines:
   - line: "pa"
     description: A saved PA estimate100.01 absent from actual original receipts must block instead of silently disappearing from state computation.
     testRef: "tests/guided-interview/state-payment-source-reconciliation.test.ts::state actual payment ledger cannot silently discard saved PA estimated amounts"
+  - line: "pa-navigation"
+    description: On 2025 single-filer resident, part-year and nonresident PA returns, a saved estimate without a distinct actual receipt requires review before Continue even after both PA packets are reconfirmed. An actual receipt matching the saved date and exact Decimal amount, or explicit removal of the saved entry and reconfirmation, clears the navigation error without creating a second payment.
+    testRef: "tests/guided-interview/state-payment-source-reconciliation.test.ts::2025 PA navigation reconciles saved estimates before Continue"
