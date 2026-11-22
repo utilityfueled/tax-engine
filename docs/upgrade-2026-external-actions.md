@@ -16,6 +16,23 @@ requires authorization.
 | Strict Linux runtime verification | Qualify the release source on both strict architectures at the existing 30-second limit. Managed Linux on `6cea0f93` passed 650 cases and strict AMD64 passed 640 with ten failures. Strict ARM64 on matching application source `eead6b7a` passed image smoke, Compose recovery and cleanup, then reported 642 browser passes and eight failures. Each remote run retained five existing skips. The separate full managed Mac run on `eead6b7a` reported 606 passes and 44 timeout failures. [Managed Linux and AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44954266314) · [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/44953786499). |
 | Current Stripe Sandbox checkout and credits | The protected `069c994f` Preview passed 12 workspace lifecycle checks and four billing-page checks per synthetic account. The Viva La Tax Sandbox lists the active $19 Starter and $49 Plus monthly prices. Its enabled checkout webhook matches the bound `522cf4b1` Preview. The Vercel connector returned 403 on Preview environment metadata, so the deployed Starter price binding and synthetic customer, postal behavior, return behavior and cleanup still need verification. Then capture signed delivery and verify the exact event and Session in the scoped test records. Positive credits still require the isolated test path. [Preview and checkout evidence](upgrade-2026-progress.md#november-21-paid-estimates-on-the-federal-review-return). |
 
+The current final Form 2210 instructions still cover 2025. The IRS
+quarterly rates index currently ends with the fourth quarter of 2026.
+A positive penalty balance that enters 2027 requires the published
+first-quarter rate. [Current Form 2210 instructions](https://www.irs.gov/pub/irs-pdf/i2210.pdf) ·
+[Quarterly rates](https://www.irs.gov/payments/quarterly-interest-rates).
+
+For 2026 farmland elections, the existing Publication 505 worksheet
+uses 75% of the full-year Form 1062 line 14 when it calculates the
+estimated-tax reduction. Connecting that relief to a return requires
+the actual sale and election, the land-use covenant and reconciled
+full-year tax with and without that gain. Each Schedule AI column
+also needs explicit confirmation of gain inclusion in its cumulative
+income. The sale date alone cannot establish inclusion. Review the
+final 2026 instructions before qualifying the annual return transfer.
+[IRS Notice 2026-3 §4.02](https://www.irs.gov/pub/irs-drop/n-26-03.pdf#page=8) ·
+[2026 Publication 505 correction](https://www.irs.gov/forms-pubs/clarification-for-calculation-of-estimated-tax-payments-when-making-an-election-under-section-1062a).
+
 The [retirement supplement](upgrade-2026-human-retirement-20261121.md)
 adds independent assignments for the IRA first-home timing and lifetime
 limit, a fully excepted Code 1 distribution, and the actual date when the
