@@ -6,7 +6,7 @@ import { calculateForm1099SA, mergeForm1099SAIntoForm8889Input } from "@/engine/
 import { calculateForm8889, mergeW2Box12CodeWIntoForm8889Input } from "@/engine/forms/form-8889.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import type { Form8889Input, TaxYearInput } from "@/models/inputs.js";
-import { d, roundDollar } from "@/utils/decimal.js";
+import { d, max, roundDollar } from "@/utils/decimal.js";
 import { markReviewPdf } from "../../export-policy.js";
 import { loadPdfDocumentQuietly, setCheckBox, setTextField } from "../../pdf-utils.js";
 
@@ -206,6 +206,10 @@ export async function fillForm88892026OrdinaryCandidate(
   const bytes = Uint8Array.from(blank);
   if (createHash("sha256").update(bytes).digest("hex") !== candidate.sha256) {
     throw new Error("Unreviewed Form 8889 candidate template revision");
+  }
+  const displayedNet = roundDollar(result.line14c).minus(roundDollar(result.line15));
+  if (!roundDollar(result.line16).eq(max(d(0), displayedNet))) {
+    throw new Error("Form 8889 candidate cannot reconcile displayed lines 14c, 15, and 16");
   }
   const doc = await loadPdfDocumentQuietly(bytes);
   const form = doc.getForm();

@@ -71,6 +71,16 @@ lines:
       internal document for review. A blank with a different digest is rejected.
     irsRef: "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
     testRef: "tests/pdf/form-8889-2026-candidate.test.ts::renders a fully qualified family distribution as an explicit zero"
+  - line: "16 displayed reconciliation"
+    description: "Reconcile the three displayed whole-dollar distribution amounts"
+    formula: >-
+      Keep the exact calculation from confirmed original cents. Round each
+      computed amount for display as before. Reject the internal specimen when
+      displayed line 16 differs from displayed line 14c less displayed line
+      15, floored at zero. Accept coherent cents and whole-dollar originals.
+      This validation does not change the exact calculation or transfer.
+    irsRef: "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::reconciles the displayed line 16 without changing exact HSA amounts"
   - line: "ordinary source stops"
     description: "Reject unknown, unsupported or conflicting facts before rendering"
     formula: >-

@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, it } from "vitest";
+import { calculateForm8889 } from "@/engine/forms/form-8889.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { FORM_8889_2026_CANDIDATE as candidate, fillForm88892026OrdinaryCandidate } from "@/pdf/mappings/2026/form-8889-candidate.js";
@@ -32,6 +34,23 @@ const evidence = {
   personalContributions: "2199.49", employerContributions: "1200.51",
   grossDistributions: "850.65", qualifiedMedicalExpenses: "350.14",
 } as const;
+
+function ordinaryDistribution(grossDistributions: string, qualifiedMedicalExpenses: string) {
+  const input = TaxYearInputSchema.parse({
+    ...ordinary,
+    form8889: { ...ordinary.form8889, qualifiedMedicalExpenses },
+    form1099SA: [{
+      payer: "Fictional HSA Trustee", taxYear: 2026, accountHolder: "primary", accountType: "hsa",
+      distributionCode: "1", grossDistribution: grossDistributions,
+    }],
+  });
+  const worksheet = input.form8889;
+  if (!worksheet) throw new Error("Expected the ordinary fixture to include its HSA worksheet");
+  const calculateTaxable = () => calculateForm8889(
+    input.taxpayer, { ...worksheet, distributionsReceived: grossDistributions }, FEDERAL_2026_CONSTANTS,
+  ).line16.toString();
+  return { input, source: { ...evidence, grossDistributions, qualifiedMedicalExpenses }, calculateTaxable };
+}
 
 // Native suffix, rectangle in PDF points, and checkbox on-state when present.
 const locations = {
@@ -223,6 +242,40 @@ describe("Final 2026 Form 8889 physical candidate", () => {
     expect(saved.getTextField(candidate.fields.line13).getText()).toBe("8750");
     expect(saved.getTextField(candidate.fields.line16).getText()).toBe("0");
     expect(saved.getTextField(candidate.fields.line17b).getText()).toBe("0");
+  });
+
+  it("reconciles the displayed line 16 without changing exact HSA amounts", async () => {
+    const bytes = await readFile(blank);
+    for (const [gross, qualified, exactTaxable] of [
+      ["500.49", "499.50", "0.99"],
+      ["500.50", "500.49", "0.01"],
+    ] as const) {
+      const { input, source, calculateTaxable } = ordinaryDistribution(gross, qualified);
+      expect(calculateTaxable()).toBe(exactTaxable);
+      const failure = await fillForm88892026OrdinaryCandidate(input, source, bytes)
+        .then(() => undefined, (error: unknown) => error);
+      expect(failure).toBeInstanceOf(Error);
+      expect(failure).toHaveProperty("message", "Form 8889 candidate cannot reconcile displayed lines 14c, 15, and 16");
+      expect(calculateTaxable()).toBe(exactTaxable);
+    }
+  });
+
+  it("reopens reconciled cents and whole-dollar distributions with their exact displayed values", async () => {
+    const bytes = await readFile(blank);
+    for (const [gross, qualified, displayedGross, displayedQualified] of [
+      ["500.49", "499.49", "500", "499"],
+      ["501", "500", "501", "500"],
+    ] as const) {
+      const { input, source, calculateTaxable } = ordinaryDistribution(gross, qualified);
+      expect(calculateTaxable()).toBe("1");
+      const rendered = await fillForm88892026OrdinaryCandidate(input, source, bytes);
+      const form = (await PDFDocument.load(await rendered.save())).getForm();
+      for (const [line, value] of [["line14c", displayedGross], ["line15", displayedQualified], ["line16", "1"]] as const) {
+        const field = form.getTextField(candidate.fields[line]);
+        expect(field.getText(), line).toBe(value);
+        expect(field.acroField.getWidgets()[0].getAppearances()?.normal).toBeInstanceOf(PDFRawStream);
+      }
+    }
   });
 
   it("rejects unknown and unsupported ordinary candidate facts", async () => {
