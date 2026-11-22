@@ -1016,6 +1016,7 @@ export const emptyDonationEntry: DonationEntryData = { organization: "", type: "
 export interface DeductionData {
   method: DeductionMethod;
   manualWinningsTaxYear?: number | null;
+  withholdingAllocationTaxYear?: number | null;
   directItemizedAmountsTaxYear?: number | null;
   medicalExpenses: string;
   medicalMileage?: MedicalMileageDraft;
@@ -1750,6 +1751,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
         deductions: {
           ...deductions,
           ...(hasEnteredAmount(deductions.gamblingWinnings) ? { manualWinningsTaxYear: null } : {}),
+          ...(hasEnteredAmount(deductions.nonW2IncomeTaxesDeductedElsewhere) ? { withholdingAllocationTaxYear: null } : {}),
           ...(directItemizedAmountFields.some(field => hasEnteredAmount(deductions[field])) ? { directItemizedAmountsTaxYear: null } : {}),
         },
       } : {}),
@@ -2011,6 +2013,9 @@ export function updateSectionData(
       ...next,
       ...(previousDeductions.manualWinningsTaxYear !== undefined && guidedAmountChanged(previousDeductions.gamblingWinnings, next.gamblingWinnings)
         ? { manualWinningsTaxYear: null } : {}),
+      ...(previousDeductions.withholdingAllocationTaxYear !== undefined
+        && guidedAmountChanged(previousDeductions.nonW2IncomeTaxesDeductedElsewhere, next.nonW2IncomeTaxesDeductedElsewhere)
+        ? { withholdingAllocationTaxYear: null } : {}),
       ...(previousDeductions.directItemizedAmountsTaxYear !== undefined
         && directItemizedAmountFields.some(field => guidedAmountChanged(previousDeductions[field], next[field]))
         ? { directItemizedAmountsTaxYear: null } : {}),

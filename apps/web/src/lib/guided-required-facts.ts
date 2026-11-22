@@ -22,20 +22,21 @@ export function guidedAmountChanged(before: string | undefined, after: string | 
 }
 
 export const directItemizedAmountFields = [
-  "medicalExpenses", "stateLocalTaxes", "nonW2IncomeTaxesDeductedElsewhere", "realEstateTaxes", "personalPropertyTaxes",
-  "gamblingLosses", "gamblingExpenses",
+  "medicalExpenses", "stateLocalTaxes", "realEstateTaxes", "personalPropertyTaxes", "gamblingLosses", "gamblingExpenses",
 ] as const;
 
 export function deductionAmountYearErrors(data: DeductionData | undefined, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
-  if (hasEnteredAmount(data.gamblingWinnings) && data.manualWinningsTaxYear !== undefined
-    && (taxYear == null || data.manualWinningsTaxYear !== taxYear)) {
+  const needsReview = (recordedYear?: number | null) => recordedYear !== undefined && (taxYear == null || recordedYear !== taxYear);
+  if (hasEnteredAmount(data.gamblingWinnings) && needsReview(data.manualWinningsTaxYear)) {
     errors.manualWinningsTaxYear = "Confirm the manual gambling winnings for this return year.";
   }
+  if (hasEnteredAmount(data.nonW2IncomeTaxesDeductedElsewhere) && needsReview(data.withholdingAllocationTaxYear)) {
+    errors.withholdingAllocationTaxYear = "Confirm the withholding allocated to other schedules for this return year.";
+  }
   if (data.method === "itemized" && directItemizedAmountFields.some(field => hasEnteredAmount(data[field]))
-    && data.directItemizedAmountsTaxYear !== undefined
-    && (taxYear == null || data.directItemizedAmountsTaxYear !== taxYear)) {
+    && needsReview(data.directItemizedAmountsTaxYear)) {
     errors.directItemizedAmountsTaxYear = "Confirm the direct itemized amounts for this return year.";
   }
   return errors;

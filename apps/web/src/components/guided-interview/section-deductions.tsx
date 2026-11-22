@@ -133,6 +133,11 @@ export function SectionDeductions({
             Confirm gambling winnings for {taxYear}
           </button>
         )}
+        {typeof taxYear === "number" && amountYearErrors.withholdingAllocationTaxYear && (
+          <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, withholdingAllocationTaxYear: taxYear })}>
+            Confirm withholding allocated to other schedules for {taxYear}
+          </button>
+        )}
         <InvestmentInterestSourceDetails data={current.investmentInterestSources} childEntries={childEntries} onChange={investmentInterestSources => onDataChange({ ...current, investmentInterestSources })} />
         <CryptoDonationDetails data={current.cryptoDonations} onChange={cryptoDonations => onDataChange({ ...current, cryptoDonations })} />
         <CharitableCarryoverDetails data={current.charitableCarryoverSources} onChange={charitableCarryoverSources => onDataChange({ ...current, charitableCarryoverSources })} />

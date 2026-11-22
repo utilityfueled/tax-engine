@@ -5,7 +5,7 @@ import {
   startInterview, updateSectionData, validateSection,
   type DeductionData, type GuidedFlowState,
 } from "@/lib/guided-interview-flow";
-import { completePersonalInfo, completeW2Entry } from "./complete-facts";
+import { completeInterestSource, completePersonalInfo, completeW2Entry } from "./complete-facts";
 
 function currentYearFacts(state: GuidedFlowState, year: number) {
   state = updateSectionData(state, "personal-info", structuredClone(completePersonalInfo));
@@ -73,10 +73,18 @@ it("holds direct itemized amounts when itemizing after a year change", () => {
 
 it("holds the direct withholding allocation across return years", () => {
   const original = draft(2026, { method: "itemized", nonW2IncomeTaxesDeductedElsewhere: "1000" });
-  const switched = currentYearFacts(reopen(setInterviewTaxYear(original, 2025)), 2025);
+  const switched = updateSectionData(currentYearFacts(reopen(setInterviewTaxYear(original, 2025)), 2025), "income-investments", {
+    interestEntries: [{ ...completeInterestSource, interestIncome: "100", stateTaxReporting: "single", state: "OH", stateWithheld: "5000" }],
+    dividendEntries: [], brokerageEntries: [],
+  });
   expect(switched.sectionData.deductions?.nonW2IncomeTaxesDeductedElsewhere).toBe("1000");
-  expect(validateSection(switched, "deductions").fieldErrors).toHaveProperty("directItemizedAmountsTaxYear");
-  expect(computeGuidedPreviewEvaluation(switched).input).toBeNull();
+  for (const method of ["standard", "itemized"] as const) {
+    const pending = updateDeductions(switched, { method });
+    expect(computeGuidedPreviewEvaluation(pending).input).toBeNull();
+    expect(validateSection(pending, "deductions").fieldErrors).toHaveProperty("withholdingAllocationTaxYear");
+    const reviewed = updateDeductions(pending, { withholdingAllocationTaxYear: 2025 });
+    expect(computeGuidedPreviewEvaluation(reviewed).input?.scheduleA?.nonW2IncomeTaxesDeductedElsewhere?.toString()).toBe("1000");
+  }
 });
 
 it("preserves first assignment and renews confirmation after editing retained amounts", () => {
