@@ -67,6 +67,38 @@ lines:
       statutory-rate preview with a test-only rule-data mock.
     irsRef: "2026 Form 8880 face and integrated instructions. IRS 2026 W-2 instructions, Box 12 (https://www.irs.gov/instructions/iw2w3). IRS Notice 2025-67, §402(g) regular deferral limit (https://www.irs.gov/pub/irs-drop/n-25-67.pdf)."
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::projects an original Code D W-2 into the saved credit and worksheet"
+  - line: "ordinary-roth-projection"
+    description: "Project a confirmed regular Roth IRA contribution into the internal review PDF"
+    formula: >-
+      For the same single, wage-only 2026 return, require the referenced primary
+      holder's timely regular Roth IRA contribution from the original record. Its
+      positive whole-dollar amount must match both Form 8880 line 1 input and the
+      confirmed ordinary IRA worksheet. Require sufficient eligible compensation,
+      no other contribution sources or elections, zero testing-period distributions,
+      zero AGI restorations, and the same reconciled W-2 and tax-limit scope as the
+      Code D case. Write the canonical contribution on line 1a and zero on lines
+      2a and 4a. Require a positive credit tied to Schedule 3 line 4, preserve
+      the native line 9 digit and worksheet cells, and verify the saved PDF with
+      an independent reader. The candidate stays review-only with public export held.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::projects an original regular Roth IRA contribution into the saved credit and worksheet"
+  - line: "ordinary-roth-source-holds"
+    description: "Hold inconsistent or competing Roth IRA contribution sources"
+    formula: >-
+      Reject missing confirmation, wrong year or owner, amount mismatch between
+      the statement and either worksheet, insufficient compensation, competing
+      IRA or employer contributions, and a nonzero distribution reduction. Do
+      not project an estimate from a missing IRA worksheet.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::holds incomplete and conflicting ordinary Roth IRA originals"
+  - line: "ordinary-roth-age-limit"
+    description: "Use actual date of birth for the 2026 Roth IRA contribution limit"
+    formula: >-
+      The internal Roth projection uses the primary taxpayer birth date to
+      determine whether the 7500 dollar annual amount increases by the 1100
+      dollar age-50 catch-up. A saved age-50 worksheet override cannot affect the limit.
+      Apply the canonical IRA worksheet rules and reject contributions over the
+      actual age-based limit before rendering the form.
+    irsRef: "IRS Notice 2025-67, sections 219(b)(5)(A) and (B)(ii) (https://www.irs.gov/pub/irs-drop/n-25-67.pdf)."
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::uses actual birth date for the Roth limit despite a saved age override"
   - line: "ordinary-source-holds"
     description: "Hold incomplete, nonmatching and outside-scope sources before rendering"
     formula: >-

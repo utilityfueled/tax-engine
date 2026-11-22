@@ -57,6 +57,28 @@ function ordinarySourceFixture() {
   return { input, source, w2 };
 }
 
+function ordinaryRothSourceFixture() {
+  const ordinary = ordinarySourceFixture();
+  const w2 = {
+    ...ordinary.w2, wages: "30000", federalWithheld: "2000", box12CodeD: "0",
+    socialSecurityWages: "30000", socialSecurityWithheld: "1860", medicareWages: "30000", medicareWithheld: "435",
+  };
+  const source = {
+    sourceKind: "roth-ira" as const, taxYear: 2026, accountHolder: "primary" as const, employerEin: w2.employer.ein,
+    box1Wages: w2.wages, sourceReference: "FICTIONAL 2026 ROTH IRA TRUSTEE RECORD",
+    regularRothContribution: "2000.00", ordinaryWageOnlyReturnAndRothConfirmed: true,
+  };
+  const input = {
+    ...ordinary.input, w2s: [w2],
+    iraDeductionWorksheet: {
+      sourceFactsConfirmed: true, primaryContributions: "0", primaryCompensation: "30000", primaryRothContributions: "2000",
+      primarySection501c18Contributions: "0", primaryIsActiveParticipant: false,
+    },
+    form8880: { ...ordinary.input.form8880, primaryIraContributions: "2000", primaryElectiveDeferrals: "0" },
+  };
+  return { input, source, w2 };
+}
+
 const inspectSavedPdf = `
 import json, sys
 from pypdf import PdfReader
@@ -211,6 +233,85 @@ describe("Final 2026 Form 8880 physical candidate", () => {
       ]);
     } finally {
       await rm(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("projects an original regular Roth IRA contribution into the saved credit and worksheet", async () => {
+    const { input, source } = ordinaryRothSourceFixture();
+    const { document, schedule3Line4 } = await fillForm88802026OrdinaryCandidate(input, source, await readFile(blank));
+    expect(schedule3Line4.toFixed()).toBe("200");
+    const expected = {
+      name: "Jane Doe", ssn: "REDACTED",
+      line1a: "2000", line1b: "", line2a: "0", line2b: "", line3a: "2000", line3b: "",
+      line4a: "0", line4b: "", line5a: "2000", line5b: "", line6a: "2000", line6b: "",
+      line7: "2000", line8: "30000", line9: "1", line10: "200", line11: "1420", line12: "200",
+      worksheet1: "1420", worksheet2: "0", worksheet3: "1420",
+    };
+    const directory = await mkdtemp(join(tmpdir(), "form-8880-roth-original-"));
+    try {
+      const path = join(directory, "f8880-2026-internal-review.pdf");
+      await writeFile(path, await document.save());
+      execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", inspectSavedPdf, path,
+        JSON.stringify(fixture.locations), JSON.stringify(expected), REVIEW_PDF_NOTICE,
+        input.taxpayer.primary.ssn, source.sourceReference,
+      ]);
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("holds incomplete and conflicting ordinary Roth IRA originals", async () => {
+    const { input, source, w2 } = ordinaryRothSourceFixture();
+    const bytes = await readFile(blank);
+    const worksheet = input.iraDeductionWorksheet;
+    for (const difference of [
+      { source: { ...source, taxYear: 2025 }, message: /2026/ },
+      { source: { ...source, accountHolder: "spouse" as const }, message: /primary owner/ },
+      { source: { ...source, sourceReference: " " }, message: /confirm/ },
+      { source: { ...source, ordinaryWageOnlyReturnAndRothConfirmed: false }, message: /confirm/ },
+      { source: { ...source, regularRothContribution: "2000.01" }, message: /whole dollar/ },
+      { source: { ...source, regularRothContribution: "1999" }, message: /match.*Roth/ },
+      { input: { ...input, iraDeductionWorksheet: undefined }, message: /confirmed.*IRA worksheet/ },
+      { input: { ...input, iraDeductionWorksheet: { ...worksheet, sourceFactsConfirmed: false } }, message: /confirmed.*IRA worksheet/ },
+      { input: { ...input, iraDeductionWorksheet: { ...worksheet, primaryRothContributions: "1999" } }, message: /match.*Roth/ },
+      { input: { ...input, form8880: { ...input.form8880, primaryIraContributions: "1999" } }, message: /match.*Roth/ },
+      { input: { ...input, iraDeductionWorksheet: { ...worksheet, primaryCompensation: "1999" } }, message: /compensation/ },
+      { input: { ...input, iraDeductionWorksheet: { ...worksheet, primaryContributions: "1" } }, message: /other contributions/ },
+      { input: { ...input, form8880: { ...input.form8880, primaryAbleContributions: "1" } }, message: /other contributions/ },
+      { input: { ...input, w2s: [{ ...w2, box12CodeD: "1" }] }, message: /other contributions/ },
+      { input: { ...input, form8880: { ...input.form8880, sourceFacts2026: { ...input.form8880.sourceFacts2026, primary: {
+        ...input.form8880.sourceFacts2026.primary, testingPeriodDistributionReduction: "1",
+      } } } }, message: /zero.*distributions/ },
+    ]) {
+      await expect(fillForm88802026OrdinaryCandidate(difference.input ?? input, difference.source ?? source, bytes))
+        .rejects.toThrow(difference.message);
+    }
+  });
+
+  it("uses actual birth date for the Roth limit despite a saved age override", async () => {
+    const { input, source } = ordinaryRothSourceFixture();
+    const bytes = await readFile(blank);
+    const contribution = "8000";
+    const actual = {
+      ...input,
+      taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, dateOfBirth: "1990-01-15" } },
+      iraDeductionWorksheet: { ...input.iraDeductionWorksheet, primaryRothContributions: contribution, primaryAge50OrOlder: true },
+      form8880: { ...input.form8880, primaryIraContributions: contribution },
+    };
+    const rothSource = { ...source, regularRothContribution: contribution };
+    const projectedRoth = fillForm88802026OrdinaryCandidate(actual, rothSource, bytes)
+      .then(({ document }) => document.getForm().getTextField(candidate.fields.line1a).getText());
+    await expect(projectedRoth).rejects.toThrow(/excess.*contribution/i);
+
+    const eligible = { ...actual, taxpayer: { ...actual.taxpayer, primary: { ...actual.taxpayer.primary, dateOfBirth: "1977-01-01" } } };
+    for (const primaryAge50OrOlder of [undefined, true, false]) {
+      const { document, schedule3Line4 } = await fillForm88802026OrdinaryCandidate({
+        ...eligible, iraDeductionWorksheet: { ...eligible.iraDeductionWorksheet, primaryAge50OrOlder },
+      }, rothSource, bytes);
+      const saved = await PDFDocument.load(await document.save());
+      expect(saved.getForm().getTextField(candidate.fields.line1a).getText()).toBe("8000");
+      expect(saved.getForm().getTextField(candidate.fields.line6a).getText()).toBe("2000");
+      expect(schedule3Line4.toFixed()).toBe("200");
     }
   });
 

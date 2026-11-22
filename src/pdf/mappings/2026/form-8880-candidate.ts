@@ -69,22 +69,61 @@ export const FORM_8880_2026_CANDIDATE = Object.freeze({
   }),
 });
 
-interface OrdinarySaverCreditSource {
+interface OrdinaryWageSource {
   taxYear: number;
   accountHolder: "primary" | "spouse";
   sourceReference: string;
   employerEin: string;
   box1Wages: string;
+}
+
+interface OrdinaryCodeDSource extends OrdinaryWageSource {
+  sourceKind?: "w2-code-d";
   box12CodeD: string;
   /** Original sole wage source and a regular current-year 401(k) deferral with no catch-up, make-up or excess. */
   ordinaryWageOnlyReturnAndCodeDConfirmed: boolean;
 }
 
+interface OrdinaryRothSource extends OrdinaryWageSource {
+  sourceKind: "roth-ira";
+  regularRothContribution: string;
+  /** Original sole wage source and a timely regular Roth contribution, without special treatment or other contributions. */
+  ordinaryWageOnlyReturnAndRothConfirmed: boolean;
+}
+
+type OrdinarySaverCreditSource = OrdinaryCodeDSource | OrdinaryRothSource;
+
 const wholeDollarAmount = /^\d+(?:\.0{1,2})?$/;
 const regularDeferralLimit = d("24500");
 const precedingSchedule3Lines = new Set(["1", "2", "3", "6d", "6l"]);
 
-/** Render the internal candidate from the annual federal calculation and its original payroll source. */
+function reconcileOrdinaryRothContribution(
+  source: OrdinaryRothSource,
+  worksheet: TaxYearInput["iraDeductionWorksheet"],
+  formInput: NonNullable<TaxYearInput["form8880"]>,
+): Decimal {
+  if (worksheet?.sourceFactsConfirmed !== true || worksheet.primaryRothContributions === undefined) {
+    throw new Error("Form 8880 candidate requires a confirmed ordinary IRA worksheet with the Roth amount.");
+  }
+  if (!wholeDollarAmount.test(source.regularRothContribution)) {
+    throw new Error("Form 8880 candidate requires an original whole dollar Roth amount.");
+  }
+  const roth = d(source.regularRothContribution);
+  if (!roth.gt(0) || !roth.eq(worksheet.primaryRothContributions) || !roth.eq(d(formInput.primaryIraContributions))) {
+    throw new Error("Form 8880 evidence must match the positive whole dollar Roth amount on both worksheets.");
+  }
+  if (worksheet.primaryCompensation === undefined || roth.gt(worksheet.primaryCompensation)) {
+    throw new Error("Form 8880 candidate requires sufficient eligible IRA compensation.");
+  }
+  if (worksheet.primarySection501c18Contributions === undefined || [worksheet.primaryContributions,
+    worksheet.primarySection501c18Contributions, worksheet.spouseContributions, worksheet.spouseRothContributions,
+    worksheet.spouseSection501c18Contributions].some(amount => !d(amount).isZero())) {
+    throw new Error("Form 8880 Roth candidate holds other contributions on the IRA worksheet.");
+  }
+  return roth;
+}
+
+/** Render the internal candidate from the annual federal calculation and its confirmed contribution source. */
 export async function fillForm88802026OrdinaryCandidate(
   rawInput: TaxYearInput,
   source: OrdinarySaverCreditSource,
@@ -94,8 +133,12 @@ export async function fillForm88802026OrdinaryCandidate(
   if (rawInput.taxpayer.taxYear !== candidate.taxYear || source?.taxYear !== candidate.taxYear) {
     throw new Error("Form 8880 candidate requires 2026 return and source years.");
   }
-  if (source.ordinaryWageOnlyReturnAndCodeDConfirmed !== true || !source.sourceReference?.trim()) {
-    throw new Error("Form 8880 candidate requires confirmation of the original ordinary W-2 and Code D source.");
+  const rothSource = source.sourceKind === "roth-ira";
+  const confirmed = rothSource ? source.ordinaryWageOnlyReturnAndRothConfirmed : source.ordinaryWageOnlyReturnAndCodeDConfirmed;
+  if (confirmed !== true || !source.sourceReference?.trim()) {
+    throw new Error(rothSource
+      ? "Form 8880 candidate requires confirmation of the original ordinary W-2 and Roth IRA contribution source."
+      : "Form 8880 candidate requires confirmation of the original ordinary W-2 and Code D source.");
   }
   const input = TaxYearInputSchema.parse(rawInput);
   if (input.taxpayer.filingStatus !== "single" || input.taxpayer.spouse || input.taxpayer.dependents.length) {
@@ -106,31 +149,47 @@ export async function fillForm88802026OrdinaryCandidate(
     throw new Error("Form 8880 candidate requires one original 2026 W-2.");
   }
   if (w2.accountHolder !== "primary" || source.accountHolder !== "primary") {
-    throw new Error("Form 8880 candidate requires a confirmed primary owner on the W-2.");
+    throw new Error("Form 8880 candidate requires a confirmed primary owner on the W-2 and contribution record.");
   }
   const { box12CodeD, wages, employer } = w2;
-  if (!box12CodeD || ![box12CodeD, wages, source.box1Wages, source.box12CodeD].every(value => wholeDollarAmount.test(value))) {
-    throw new Error("Form 8880 candidate requires actual whole dollar Box 1 and Code D amounts.");
+  if (![wages, source.box1Wages].every(value => wholeDollarAmount.test(value)) || d(wages).lte(0)) {
+    throw new Error("Form 8880 candidate requires positive whole dollar Box 1 wages.");
   }
-  if (!employer.name.trim() || !employer.ein.trim() || source.employerEin !== employer.ein
-    || !d(wages).eq(source.box1Wages) || !d(box12CodeD).eq(source.box12CodeD)) {
-    throw new Error("Form 8880 evidence must match the original W-2 employer, Box 1 and Code D.");
+  if (!employer.name.trim() || !employer.ein.trim() || source.employerEin !== employer.ein || !d(wages).eq(source.box1Wages)) {
+    throw new Error("Form 8880 evidence must match the original W-2 employer and Box 1.");
   }
   const competingDeferrals = [w2.box12CodeE, w2.box12CodeF, w2.box12CodeG, w2.box12CodeH,
     w2.box12CodeS, w2.box12CodeAA, w2.box12CodeBB, w2.box12CodeEE];
-  if (d(wages).lte(0) || d(box12CodeD).lte(0) || d(box12CodeD).gt(regularDeferralLimit)
-    || competingDeferrals.some(amount => !d(amount).isZero())) {
-    throw new Error("Form 8880 candidate requires a positive ordinary Code D amount within the regular deferral limit.");
-  }
-
   const formInput = input.form8880;
   const annual = formInput?.sourceFacts2026;
   if (!annual || !formInput) throw new Error("Form 8880 candidate requires complete confirmed Form 8880 annual facts.");
-  if ([formInput.primaryElectiveDeferrals, formInput.supportedW2PrimaryElectiveDeferrals,
-    formInput.spouseElectiveDeferrals, formInput.supportedW2SpouseElectiveDeferrals].some(amount => amount !== undefined)
-    || [formInput.primaryIraContributions, formInput.primaryAbleContributions, formInput.spouseIraContributions,
-      formInput.spouseAbleContributions].some(amount => !d(amount).isZero())) {
-    throw new Error("Form 8880 candidate holds contribution overrides and sources other than the original Code D amount.");
+  const hasOtherSources = [formInput.supportedW2PrimaryElectiveDeferrals, formInput.spouseElectiveDeferrals,
+    formInput.supportedW2SpouseElectiveDeferrals].some(amount => amount !== undefined)
+    || [formInput.primaryAbleContributions, formInput.spouseIraContributions, formInput.spouseAbleContributions]
+      .some(amount => !d(amount).isZero());
+  let expectedLine1a = d(0);
+  let expectedLine2a = d(0);
+  if (rothSource) {
+    if (hasOtherSources || [formInput.primaryElectiveDeferrals, box12CodeD, ...competingDeferrals]
+      .some(amount => !d(amount).isZero())) {
+      throw new Error("Form 8880 Roth candidate holds other contributions and elective deferral overrides.");
+    }
+    expectedLine1a = reconcileOrdinaryRothContribution(source, input.iraDeductionWorksheet, formInput);
+  } else {
+    if (!box12CodeD || ![box12CodeD, source.box12CodeD].every(value => wholeDollarAmount.test(value))) {
+      throw new Error("Form 8880 candidate requires actual whole dollar Code D amounts.");
+    }
+    expectedLine2a = d(box12CodeD);
+    if (!expectedLine2a.eq(source.box12CodeD)) {
+      throw new Error("Form 8880 evidence must match the original W-2 Code D amount.");
+    }
+    if (expectedLine2a.lte(0) || expectedLine2a.gt(regularDeferralLimit)
+      || competingDeferrals.some(amount => !d(amount).isZero())) {
+      throw new Error("Form 8880 candidate requires a positive ordinary Code D amount within the regular deferral limit.");
+    }
+    if (hasOtherSources || formInput.primaryElectiveDeferrals !== undefined || !d(formInput.primaryIraContributions).isZero()) {
+      throw new Error("Form 8880 candidate holds contribution overrides and sources other than the original Code D amount.");
+    }
   }
   if (!d(annual.primary.testingPeriodDistributionReduction).isZero() || input.form1099R?.length
     || !d(annual.americanSamoaAgiRestoration).isZero() || !d(annual.puertoRicoAgiRestoration).isZero()) {
@@ -140,7 +199,10 @@ export async function fillForm88802026OrdinaryCandidate(
     throw new Error("Unreviewed Form 8880 candidate template revision.");
   }
 
-  const federal = calculateFederalTax(input);
+  // The Roth projection relies on the canonical age calculation from the taxpayer's birth date.
+  const federal = calculateFederalTax(rothSource && input.iraDeductionWorksheet
+    ? { ...input, iraDeductionWorksheet: { ...input.iraDeductionWorksheet, primaryAge50OrOlder: undefined } }
+    : input);
   const credit = federal.form8880;
   if (!credit?.line12.gt(0)) throw new Error("Form 8880 candidate requires a positive saver's credit.");
   const taxLimit = federal.allLines.find(row => row.form === "1040" && row.line === "18")?.value;
@@ -156,8 +218,8 @@ export async function fillForm88802026OrdinaryCandidate(
   if (federal.deductionUsed !== "standard" || !federal.taxableIncome.eq(federal.agi.minus(federal.standardDeduction))
     || !taxLimit.eq(federal.ordinaryTax) || otherIncome.some(amount => !amount.isZero())
     || !federal.totalWages.eq(wages) || !federal.totalIncome.eq(wages) || !federal.agi.eq(wages)
-    || !credit.line8.eq(wages) || !credit.line2a.eq(box12CodeD)) {
-    throw new Error("Form 8880 candidate requires a reconciled ordinary wage-only return and Code D contribution.");
+    || !credit.line8.eq(wages) || !credit.line1a.eq(expectedLine1a) || !credit.line2a.eq(expectedLine2a)) {
+    throw new Error("Form 8880 candidate requires a reconciled ordinary wage-only return and contribution.");
   }
 
   const amounts = {
