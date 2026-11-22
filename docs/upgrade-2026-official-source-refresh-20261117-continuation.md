@@ -241,4 +241,16 @@ The 1099-R instructions summarize availability as after 2026. Notice 2026-33 cit
 
 Ohio’s alerts label the available IT 1040 and SD 100 material draft, and its accessible IT NRC index reaches 2025. Pennsylvania continues to link the 2025 PA-40. The tested 2026 year-specific endpoints were inaccessible in this check. [Ohio alerts](https://tax.ohio.gov/individual/resources/individualincome) · [Ohio IT NRC index](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) · [Pennsylvania PIT index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax).
 
+An independent follow-up confirmed the Pennsylvania parent form's
+`2025 04-25 (FI)` stamp and the 2025 instructions' April 15, 2026
+filing deadline. Ohio's indexed agency catalog still groups the parent
+return, school district return and instructions under tax year 2025.
+Direct access to the Ohio pages returned 404. The indexed agency
+announcements describe the November 6 forms and November 13 instructions
+as drafts. The annual qualification status is unchanged.
+[PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
+[Pennsylvania instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+[Ohio forms catalog](https://tax.ohio.gov/home/forms) ·
+[Ohio alerts](https://tax.ohio.gov/individual/resources/individualincome).
+
 Pennsylvania separately publishes the standing six-page Schedule NRH, revision 03-24 (FI), with a blank tax-year field. Its first page requires separate actual nonworking-day categories and a Part C amount only when the employer’s Pennsylvania gross compensation is missing or incorrect. The standing schedule supports review of source records. Qualifying a complete PA-40 packet still requires the applicable annual materials. [Pennsylvania Schedule NRH](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf).
