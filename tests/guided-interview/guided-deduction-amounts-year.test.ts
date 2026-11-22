@@ -46,6 +46,8 @@ it("holds manual gambling winnings across return-year changes", () => {
   expect(switched.sectionData.deductions?.gamblingWinnings).toBe("10000.25");
   expect(computeGuidedPreviewEvaluation(switched).input).toBeNull();
   expect(validateSection(switched, "deductions").fieldErrors).toHaveProperty("manualWinningsTaxYear");
+  const replaced = updateSectionData(switched, "deductions", { ...emptyDeductionData, gamblingWinnings: "10000.25" });
+  expect(computeGuidedPreviewEvaluation(replaced).input).toBeNull();
 
   const confirmed = reopen(updateDeductions(switched, { manualWinningsTaxYear: 2025 }));
   expect(validateSection(confirmed, "deductions").status).toBe("complete");

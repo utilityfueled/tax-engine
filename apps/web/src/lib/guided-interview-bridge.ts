@@ -684,9 +684,9 @@ export function buildEnergyCreditsInput(creditsData: CreditsData | undefined, ta
 
 // ── Household employment tax (Schedule H) converter ─────────────────────────
 
-export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined) {
+export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined, taxYear?: number | null) {
   if (!otherTaxesData) return undefined;
-  assertKnownFacts(householdFactErrors(otherTaxesData));
+  assertKnownFacts(householdFactErrors(otherTaxesData, taxYear));
   if (!otherTaxesData.householdEmployees?.length) return undefined;
   return {
     employees: otherTaxesData.householdEmployees.map((employee) => ({ ...employee, name: employee.name.trim(), cashWages: toDecimalString(employee.cashWages), federalIncomeTaxWithheld: toDecimalString(employee.federalIncomeTaxWithheld), isSpouse: employee.isSpouse as boolean, isChildUnder21: employee.isChildUnder21 as boolean, isParent: employee.isParent as boolean, parentCareExceptionApplies: employee.parentCareExceptionApplies ?? undefined, isUnder18NonPrincipal: employee.isUnder18NonPrincipal as boolean })),
@@ -935,7 +935,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const savingsBondInputs = buildSavingsBondInputs(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo);
   const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses, { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn });
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
-  const scheduleH = buildScheduleHInput(otherTaxesData);
+  const scheduleH = buildScheduleHInput(otherTaxesData, state.taxYear);
   const estimatedPayments = [
     ...buildEstimatedPaymentsInput(paymentData, state.taxYear),
     ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "state" as const, state: entry.state })),

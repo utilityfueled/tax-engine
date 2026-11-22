@@ -6946,6 +6946,26 @@
       ]
     },
     {
+      "key": "federal/guided-alimony-household-return-year",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040sh",
+      "specPath": "spec/federal/guided-alimony-household-return-year.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-aotc-student-history",
       "jurisdiction": "federal",
       "taxYear": null,
@@ -7206,6 +7226,26 @@
       ]
     },
     {
+      "key": "federal/guided-deduction-amounts-year",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040sca",
+      "specPath": "spec/federal/guided-deduction-amounts-year.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-digital-asset-sources",
       "jurisdiction": "federal",
       "taxYear": null,
@@ -7351,6 +7391,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i2210",
       "specPath": "spec/federal/guided-estimated-tax.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-federal-payment-return-year",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
+      "specPath": "spec/federal/guided-federal-payment-return-year.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

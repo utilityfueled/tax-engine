@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdjustmentData, FilingStatus } from "@/lib/guided-interview-flow";
-import { alimonyRequirementFields, isDeductibleAlimony, adjustmentFactErrors } from "@/lib/guided-adjustment-facts";
+import { alimonyRequirementFields, isDeductibleAlimony, adjustmentFactErrors, hasAlimonyAmounts } from "@/lib/guided-adjustment-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { IraSourceDetails } from "./ira-source-details";
@@ -15,9 +15,15 @@ const alimonyLabels = {
   noPaymentsAfterRecipientDeath: "No liability to pay cash or property continues after the recipient's death",
 };
 
-export function AdjustmentSourceDetails({ data, filingStatus, onChange }: { data: AdjustmentData; filingStatus?: FilingStatus | null; onChange: (data: AdjustmentData) => void }) {
+export function AdjustmentSourceDetails({ data, filingStatus, taxYear, onChange }: {
+  data: AdjustmentData;
+  filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
+  onChange: (data: AdjustmentData) => void;
+}) {
   const alimony = data.alimonyQualification ?? { instrumentDate: "", post2018ModificationAppliesNewRules: null, paidInCash: null, notDesignatedNondeductible: null, notChildSupport: null, noJointReturnWithRecipient: null, householdRequirementMet: null, noPaymentsAfterRecipientDeath: null, recipientSsn: "" };
   const updateAlimony = (change: Partial<typeof alimony>) => onChange({ ...data, alimonyQualification: { ...alimony, ...change } });
+  const reviewPayments = taxYear != null && data.alimonyAmountsTaxYear !== undefined && hasAlimonyAmounts(data);
   return <>
     <IraSourceDetails data={data} filingStatus={filingStatus} onChange={onChange} />
     <h4>Alimony payments</h4>
@@ -27,7 +33,15 @@ export function AdjustmentSourceDetails({ data, filingStatus, onChange }: { data
       <BooleanFact label="A modification after 2018 expressly applied the new nondeductible alimony rules" value={alimony.post2018ModificationAppliesNewRules} onChange={(post2018ModificationAppliesNewRules) => updateAlimony({ post2018ModificationAppliesNewRules })} />
       {alimonyRequirementFields.map((field) => <BooleanFact key={field} label={alimonyLabels[field]} value={alimony[field]} onChange={(value) => updateAlimony({ [field]: value })} />)}
       <TextFact label="Alimony recipient SSN or ITIN" value={alimony.recipientSsn} onChange={(recipientSsn) => updateAlimony({ recipientSsn })} />
-      {Object.keys(adjustmentFactErrors({ ...data, iraDeduction: "", iraContributions: undefined })).length === 0 && !isDeductibleAlimony(data) && <p className="guided-hint">These facts do not qualify for an alimony deduction. The payment stays in your saved facts and the deductible amount is zero.</p>}
+      {Object.keys(adjustmentFactErrors({ ...data, iraDeduction: "", iraContributions: undefined }, filingStatus, taxYear)).length === 0 && !isDeductibleAlimony(data) && <p className="guided-hint">These facts do not qualify for an alimony deduction. The payment stays in your saved facts and the deductible amount is zero.</p>}
     </div>}
+    {reviewPayments && (data.alimonyAmountsTaxYear === taxYear
+      ? <p className="guided-hint" role="status">Alimony payments confirmed for {taxYear}.</p>
+      : <div>
+        <p className="guided-hint">Check the amounts and payment eligibility against your {taxYear} records.</p>
+        <button type="button" className="utility-button" onClick={() => onChange({ ...data, alimonyAmountsTaxYear: taxYear })}>
+          Confirm alimony payments for {taxYear}
+        </button>
+      </div>)}
   </>;
 }

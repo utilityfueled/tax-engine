@@ -136,7 +136,7 @@ export function SectionAdjustments({
         <details className="guided-expand">
           <summary className="guided-expand-trigger">More adjustments</summary>
           <div className="guided-expand-body">
-            <AdjustmentSourceDetails data={current} filingStatus={filingStatus} onChange={onDataChange} />
+            <AdjustmentSourceDetails data={current} filingStatus={filingStatus} taxYear={taxYear} onChange={onDataChange} />
           </div>
         </details>
       </div>

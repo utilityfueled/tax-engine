@@ -57,6 +57,7 @@ function InfoCard({
 
 export function SectionOtherTaxes({
   data,
+  taxYear,
   hasSelfEmployment,
   hasInvestments,
   guidedPreview,
@@ -65,6 +66,7 @@ export function SectionOtherTaxes({
   onDataChange,
 }: {
   data: OtherTaxesData | undefined;
+  taxYear?: number | null;
   hasSelfEmployment: boolean;
   hasInvestments: boolean;
   guidedPreview: GuidedPreviewMetrics | null;
@@ -128,7 +130,7 @@ export function SectionOtherTaxes({
               Household employment tax depends on each employee&apos;s wages and
               the applicable tax-year rules. Supply complete employee facts for Schedule H.
             </p>
-            <HouseholdSourceDetails data={current} onChange={onDataChange} />
+            <HouseholdSourceDetails data={current} taxYear={taxYear} onChange={onDataChange} />
           </div>
         </details>
       </div>

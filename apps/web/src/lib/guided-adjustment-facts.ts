@@ -5,9 +5,74 @@ import { educatorFactErrors } from "./guided-educator-facts";
 import { studentLoanFactErrors, type StudentLoanEducationSources } from "./guided-student-loan-facts";
 import type { AdjustmentData, FilingStatus, OtherTaxesData, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { amountError, guidedAmountChanged, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 
 export const alimonyRequirementFields = ["paidInCash", "notDesignatedNondeductible", "notChildSupport", "noJointReturnWithRecipient", "householdRequirementMet", "noPaymentsAfterRecipientDeath"] as const;
+
+const employeeAmountFields = ["cashWages", "federalIncomeTaxWithheld"] as const;
+const employeeQualificationFields = ["isSpouse", "isChildUnder21", "isParent", "isUnder18NonPrincipal", "parentCareExceptionApplies"] as const;
+const futaAmountFields = ["stateUnemploymentContributions", "stateUnemploymentContributionsPaidLate", "futaCreditReduction"] as const;
+const futaAnswerFields = ["futaApplies", "futaSectionA"] as const;
+const futaPeriodAmountFields = ["taxableWages", "contributionsPaidTimely", "experienceRatePercent"] as const;
+const futaPeriodSourceFields = ["state", "periodStart", "periodEnd", "hasAssignedExperienceRate"] as const;
+
+export function hasAlimonyAmounts(data: AdjustmentData | undefined): boolean {
+  return hasEnteredAmount(data?.alimonyPaid);
+}
+
+export function hasHouseholdAmounts(data: OtherTaxesData | undefined): boolean {
+  return hasEnteredAmount(data?.householdEmploymentWages)
+    || (data?.householdEmployees ?? []).some(employee => employeeAmountFields.some(field => hasEnteredAmount(employee[field])));
+}
+
+export function hasRetainedAlimonyContext(data: AdjustmentData | undefined): boolean {
+  const facts = data?.alimonyQualification;
+  return hasAlimonyAmounts(data) || (!!facts && (
+    !!facts.instrumentDate?.trim() || !!facts.recipientSsn?.trim() || typeof facts.post2018ModificationAppliesNewRules === "boolean"
+    || alimonyRequirementFields.some(field => typeof facts[field] === "boolean")
+  ));
+}
+
+export function hasRetainedHouseholdContext(data: OtherTaxesData | undefined): boolean {
+  return hasHouseholdAmounts(data)
+    || futaAnswerFields.some(field => typeof data?.[field] === "boolean")
+    || futaAmountFields.some(field => hasEnteredAmount(data?.[field]))
+    || (data?.householdEmployees ?? []).some(employee => !!employee.name?.trim()
+      || employeeQualificationFields.some(field => typeof employee[field] === "boolean"))
+    || (data?.futaStatePeriods ?? []).some(period =>
+      !!period.state?.trim() || !!period.periodStart?.trim() || !!period.periodEnd?.trim()
+      || typeof period.hasAssignedExperienceRate === "boolean"
+      || futaPeriodAmountFields.some(field => hasEnteredAmount(period[field])));
+}
+
+export function alimonySourceFactsChanged(before: AdjustmentData | undefined, after: AdjustmentData | undefined): boolean {
+  return guidedAmountChanged(before?.alimonyPaid, after?.alimonyPaid)
+    || guidedSourceValuesChanged(before?.alimonyQualification, after?.alimonyQualification);
+}
+
+export function householdSourceFactsChanged(before: OtherTaxesData | undefined, after: OtherTaxesData | undefined): boolean {
+  const employees = before?.householdEmployees ?? [];
+  const nextEmployees = after?.householdEmployees ?? [];
+  const periods = before?.futaStatePeriods ?? [];
+  const nextPeriods = after?.futaStatePeriods ?? [];
+  return guidedAmountChanged(before?.householdEmploymentWages, after?.householdEmploymentWages)
+    || futaAmountFields.some(field => guidedAmountChanged(before?.[field], after?.[field]))
+    || futaAnswerFields.some(field => before?.[field] !== after?.[field])
+    || employees.length !== nextEmployees.length
+    || employees.some((employee, index) => {
+      const next = nextEmployees[index];
+      return employee.name !== next?.name
+        || employeeQualificationFields.some(field => employee[field] !== next?.[field])
+        || employeeAmountFields.some(field => guidedAmountChanged(employee[field], next?.[field]));
+    })
+    || periods.length !== nextPeriods.length
+    || periods.some((period, index) => {
+      const next = nextPeriods[index];
+      return futaPeriodSourceFields.some(field => period[field] !== next?.[field])
+        || futaPeriodAmountFields.some(field => guidedAmountChanged(period[field], next?.[field]));
+    });
+}
 
 export function isDeductibleAlimony(data: AdjustmentData): boolean {
   const facts = data.alimonyQualification;
@@ -61,6 +126,10 @@ export function adjustmentFactErrors(data: AdjustmentData | undefined, filingSta
         if (isDeductibleAlimony(data) && !/^\d{3}-?\d{2}-?\d{4}$/.test(facts.recipientSsn)) errors.alimonyRecipient = "Enter the recipient's actual SSN or ITIN.";
       }
     }
+  }
+  if (hasAlimonyAmounts(data) && data.alimonyAmountsTaxYear !== undefined
+    && (taxYear == null || data.alimonyAmountsTaxYear !== taxYear)) {
+    errors.alimonyAmountsTaxYear = "Review and confirm the alimony payments and payment eligibility for the selected tax year.";
   }
   return errors;
 }
@@ -120,6 +189,10 @@ export function householdFactErrors(data: OtherTaxesData | undefined, taxYear?: 
       const total = employees.reduce((sum, employee) => sum.plus(parseGuidedCurrency(employee.cashWages)), new Decimal(0));
       if (!total.eq(parseGuidedCurrency(data.householdEmploymentWages))) errors.householdEmploymentWages = "Reconcile the saved wage total with individual employee wages.";
     }
+  }
+  if (hasHouseholdAmounts(data) && data.householdAmountsTaxYear !== undefined
+    && (taxYear == null || data.householdAmountsTaxYear !== taxYear)) {
+    errors.householdAmountsTaxYear = "Review and confirm household payroll and FUTA facts for the selected tax year.";
   }
   return errors;
 }

@@ -758,6 +758,7 @@ function SectionContent({
       return (
         <SectionOtherTaxes
           data={getSectionData(state, "other-taxes")}
+          taxYear={state.taxYear}
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
           hasInvestments={state.segmentation.incomeTypes.some(type => ["investments", "retirement", "rental", "royalties"].includes(type))}
           retirementEntries={getSectionData(state, "income-retirement")?.entries}

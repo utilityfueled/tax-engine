@@ -1,12 +1,18 @@
 "use client";
 
 import { emptyHouseholdEmployee, type OtherTaxesData } from "@/lib/guided-interview-flow";
+import { hasHouseholdAmounts } from "@/lib/guided-adjustment-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
 
-export function HouseholdSourceDetails({ data, onChange }: { data: OtherTaxesData; onChange: (data: OtherTaxesData) => void }) {
+export function HouseholdSourceDetails({ data, taxYear, onChange }: {
+  data: OtherTaxesData;
+  taxYear?: number | null;
+  onChange: (data: OtherTaxesData) => void;
+}) {
   const employees = data.householdEmployees ?? [];
   const periods = data.futaStatePeriods ?? [];
+  const reviewPayroll = taxYear != null && data.householdAmountsTaxYear !== undefined && hasHouseholdAmounts(data);
   return <>
     {data.householdEmploymentWages.trim() && <CurrencyField label="Saved household wage total to reconcile" value={data.householdEmploymentWages} onChange={(householdEmploymentWages) => onChange({ ...data, householdEmploymentWages })} />}
     {employees.map((employee, index) => {
@@ -47,5 +53,13 @@ export function HouseholdSourceDetails({ data, onChange }: { data: OtherTaxesDat
         <CurrencyField label="FUTA credit reduction from the applicable worksheet" value={data.futaCreditReduction ?? ""} onChange={(futaCreditReduction) => onChange({ ...data, futaCreditReduction })} required />
       </>}
     </>}
+    {reviewPayroll && (data.householdAmountsTaxYear === taxYear
+      ? <p className="guided-hint" role="status">Household employment facts confirmed for {taxYear}.</p>
+      : <div>
+        <p className="guided-hint">Check wages, withholding and employee facts for {taxYear}. Review the FUTA wage test for {taxYear - 1} and {taxYear}.</p>
+        <button type="button" className="utility-button" onClick={() => onChange({ ...data, householdAmountsTaxYear: taxYear })}>
+          Confirm household employment facts for {taxYear}
+        </button>
+      </div>)}
   </>;
 }

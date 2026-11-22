@@ -9,7 +9,7 @@ notes:
 lines:
   - line: "manual-winnings-year"
     description: "Match manual gambling winnings to the selected return year"
-    formula: "When the confirmed return year changes, preserve the manual winnings and require explicit confirmation that the amount belongs to the selected return year. Block validation and canonical input after save and reopen until confirmation."
+    formula: "When the confirmed return year changes, preserve the manual winnings and require explicit confirmation that the amount belongs to the selected return year. Block validation and canonical input after save, reopen, or an ordinary section replacement until confirmation."
     testRef: "tests/guided-interview/guided-deduction-amounts-year.test.ts::holds manual gambling winnings across return-year changes"
   - line: "direct-itemized-year"
     description: "Match direct itemized expenses to the selected return year"

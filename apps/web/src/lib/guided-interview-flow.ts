@@ -71,7 +71,10 @@ import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./gu
 import { allPaymentFactErrors, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
-import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
+import {
+  adjustmentFactErrors, alimonySourceFactsChanged, hasAlimonyAmounts, hasHouseholdAmounts,
+  hasRetainedAlimonyContext, hasRetainedHouseholdContext, householdFactErrors, householdSourceFactsChanged,
+} from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
 import {zeroIncomeMiscSourceFactErrors,type ZeroIncomeMiscSourceDraft} from './guided-zero-income-misc-sources';
 import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
@@ -149,6 +152,8 @@ export type LifeEvent =
   | "had-baby"
   | "got-married"
   | "got-divorced"
+  | "paid-alimony"
+  | "household-employment"
   | "started-business"
   | "student-loans"
   | "hsa-contributions"
@@ -173,6 +178,8 @@ export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }
   { value: "had-baby", label: "Had or adopted a child", hint: "Child tax credit, dependent exemption" },
   { value: "got-married", label: "Got married", hint: "Filing status change, possible joint return" },
   { value: "got-divorced", label: "Got divorced", hint: "Filing status change, alimony considerations" },
+  { value: "paid-alimony", label: "Paid alimony", hint: "Payments under a divorce or separation agreement" },
+  { value: "household-employment", label: "Paid a household employee", hint: "Household wages, withholding and Schedule H" },
   { value: "started-business", label: "Started a business", hint: "Schedule C, self-employment tax" },
   { value: "student-loans", label: "Paid student loan interest", hint: "Above-the-line deduction up to $2,500" },
   { value: "hsa-contributions", label: "HSA contributions or distributions", hint: "Actual HSA statements and eligibility" },
@@ -491,7 +498,7 @@ const incomeTypeToSection: Record<IncomeType, InterviewSectionId> = {
   "unemployment": "income-unemployment",
 };
 
-export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMovingRecords = false, needsQofInvestments = false): InterviewSectionDefinition[] {
+export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedAdjustmentRecords = false, needsQofInvestments = false, hasSavedHouseholdRecords = false): InterviewSectionDefinition[] {
   const sections: InterviewSectionDefinition[] = [];
 
   // Personal info is always included
@@ -517,7 +524,8 @@ export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMov
     segmentation.lifeEvents.includes("student-loans") ||
     segmentation.lifeEvents.includes("hsa-contributions") ||
     segmentation.lifeEvents.includes("educator-expenses") ||
-    hasSavedMovingRecords ||
+    segmentation.lifeEvents.includes("paid-alimony") ||
+    hasSavedAdjustmentRecords ||
     segmentation.lifeEvents.includes("moving-expenses") ||
     segmentation.lifeEvents.includes("self-employed-health-insurance") ||
     segmentation.lifeEvents.includes("foreign-earned-income") ||
@@ -543,7 +551,9 @@ export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedMov
   if (credits) sections.push(credits);
 
   // Actual retirement and investment sources may need the NIIT worksheet.
-  if (segmentation.lifeEvents.includes("k1-loss-sources") || segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "royalties", "retirement"].includes(type))) {
+  if (hasSavedHouseholdRecords || segmentation.lifeEvents.includes("household-employment")
+    || segmentation.lifeEvents.includes("k1-loss-sources")
+    || segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "royalties", "retirement"].includes(type))) {
     const otherTaxes = allSections.find((s) => s.id === "other-taxes");
     if (otherTaxes) sections.push(otherTaxes);
   }
@@ -1055,6 +1065,7 @@ export const emptyDeductionData: DeductionData = {
 // ── Adjustments data ──────────────────────────────────────────────────────
 
 export interface AdjustmentData {
+  alimonyAmountsTaxYear?: number | null;
   movingExpenses?: MovingExpensesDraft;
   movingExpensesNotApplicable?: true;
   k1LossSources?: K1LossSourcesData;
@@ -1325,6 +1336,7 @@ export const emptyCreditsData: CreditsData = {
 // ── Other taxes data ──────────────────────────────────────────────────────
 
 export interface OtherTaxesData {
+  householdAmountsTaxYear?: number | null;
   niitSources?: NiitSourceData;
   foreignTaxElection?: ForeignTaxElectionData;
   householdEmploymentWages: string;
@@ -1555,7 +1567,9 @@ export interface FlowProgress {
 
 export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionDefinition[] {
   const adjustments = state.sectionData.adjustments;
-  return buildSectionRoute(state.segmentation, adjustments?.movingExpenses !== undefined || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state), guidedQofDiscovery(state).needsDetails);
+  const hasSavedAdjustmentRecords = hasAlimonyAmounts(adjustments) || adjustments?.movingExpenses !== undefined
+    || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state);
+  return buildSectionRoute(state.segmentation, hasSavedAdjustmentRecords, guidedQofDiscovery(state).needsDetails, hasHouseholdAmounts(state.sectionData["other-taxes"]));
 }
 
 export type VisitedSectionStatus = "not-started" | "complete" | "skipped" | "needs-review";
@@ -1728,6 +1742,10 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const royalties = state.sectionData["income-royalties"];
   const otherTaxes = state.sectionData["other-taxes"];
   const k3Election = otherTaxes?.foreignTaxElection;
+  const adjustments = state.sectionData.adjustments;
+  const codSources = adjustments?.codPrincipalResidenceSources;
+  const requireAlimonyReview = Number.isInteger(state.taxYear) && hasRetainedAlimonyContext(adjustments);
+  const requireHouseholdReview = Number.isInteger(state.taxYear) && hasRetainedHouseholdContext(otherTaxes);
   return {
     ...state,
     taxYear,
@@ -1801,9 +1819,26 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
         },
       } : {}),
       ...(state.sectionData["income-investments"]?.digitalAssetEntries?.some(entry => entry.transactions?.some(row => row.marketDiscountFacts)) ? { "income-investments": { ...state.sectionData["income-investments"]!, digitalAssetEntries: state.sectionData["income-investments"]!.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } } : {}),
-      ...(state.sectionData.adjustments?.codPrincipalResidenceSources ? { adjustments: { ...state.sectionData.adjustments, codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(state.sectionData.adjustments.codPrincipalResidenceSources) } } : {}),
+      ...(adjustments && (codSources || requireAlimonyReview) ? {
+        adjustments: {
+          ...adjustments,
+          ...(codSources ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(codSources) } : {}),
+          ...(requireAlimonyReview ? { alimonyAmountsTaxYear: null } : {}),
+        },
+      } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
-      ...(otherTaxes && k3Election?.qualifiedK3Statements?.length ? { "other-taxes": { ...otherTaxes, foreignTaxElection: { ...k3Election, sourceFactsConfirmed: null, qualifiedK3Statements: k3Election.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })), ...(k3Election.creditWithoutForm1116 ? { creditWithoutForm1116: { ...k3Election.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } } : {}),
+      ...(otherTaxes && (requireHouseholdReview || k3Election?.qualifiedK3Statements?.length) ? {
+        "other-taxes": {
+          ...otherTaxes,
+          ...(requireHouseholdReview ? { householdAmountsTaxYear: null } : {}),
+          ...(k3Election?.qualifiedK3Statements?.length ? { foreignTaxElection: {
+            ...k3Election,
+            sourceFactsConfirmed: null,
+            qualifiedK3Statements: k3Election.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })),
+            ...(k3Election.creditWithoutForm1116 ? { creditWithoutForm1116: { ...k3Election.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}),
+          } } : {}),
+        },
+      } : {}),
       ...(credits && (aotcSourcesEntered || llcSourcesEntered || bankInterestSourcesEntered) ? { credits: { ...credits,
         ...(education && (aotcSourcesEntered || llcSourcesEntered) ? { education: {
           ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
@@ -2001,6 +2036,11 @@ function retainAotcSources(previous: CreditsData | undefined, next: CreditsData 
   return { ...next, education: { ...next.education, aocStudents: students } };
 }
 
+function annualConfirmationAfterEdit(previous: number | null, next: number | null | undefined, changed: boolean): number | null {
+  if (changed) return null;
+  return next === undefined ? previous : next;
+}
+
 export function updateSectionData(
   state: GuidedFlowState,
   sectionId: string,
@@ -2011,15 +2051,37 @@ export function updateSectionData(
     const next = data as DeductionData;
     data = {
       ...next,
-      ...(previousDeductions.manualWinningsTaxYear !== undefined && guidedAmountChanged(previousDeductions.gamblingWinnings, next.gamblingWinnings)
-        ? { manualWinningsTaxYear: null } : {}),
-      ...(previousDeductions.withholdingAllocationTaxYear !== undefined
-        && guidedAmountChanged(previousDeductions.nonW2IncomeTaxesDeductedElsewhere, next.nonW2IncomeTaxesDeductedElsewhere)
-        ? { withholdingAllocationTaxYear: null } : {}),
-      ...(previousDeductions.directItemizedAmountsTaxYear !== undefined
-        && directItemizedAmountFields.some(field => guidedAmountChanged(previousDeductions[field], next[field]))
-        ? { directItemizedAmountsTaxYear: null } : {}),
+      ...(previousDeductions.manualWinningsTaxYear !== undefined ? { manualWinningsTaxYear: annualConfirmationAfterEdit(
+        previousDeductions.manualWinningsTaxYear, next.manualWinningsTaxYear,
+        guidedAmountChanged(previousDeductions.gamblingWinnings, next.gamblingWinnings),
+      ) } : {}),
+      ...(previousDeductions.withholdingAllocationTaxYear !== undefined ? { withholdingAllocationTaxYear: annualConfirmationAfterEdit(
+        previousDeductions.withholdingAllocationTaxYear, next.withholdingAllocationTaxYear,
+        guidedAmountChanged(previousDeductions.nonW2IncomeTaxesDeductedElsewhere, next.nonW2IncomeTaxesDeductedElsewhere),
+      ) } : {}),
+      ...(previousDeductions.directItemizedAmountsTaxYear !== undefined ? { directItemizedAmountsTaxYear: annualConfirmationAfterEdit(
+        previousDeductions.directItemizedAmountsTaxYear, next.directItemizedAmountsTaxYear,
+        directItemizedAmountFields.some(field => guidedAmountChanged(previousDeductions[field], next[field])),
+      ) } : {}),
     };
+  } else if (sectionId === "adjustments" && data) {
+    const previous = state.sectionData.adjustments;
+    if (previous?.alimonyAmountsTaxYear !== undefined) {
+      const next = data as AdjustmentData;
+      data = {
+        ...next,
+        alimonyAmountsTaxYear: annualConfirmationAfterEdit(previous.alimonyAmountsTaxYear, next.alimonyAmountsTaxYear, alimonySourceFactsChanged(previous, next)),
+      };
+    }
+  } else if (sectionId === "other-taxes" && data) {
+    const previous = state.sectionData["other-taxes"];
+    if (previous?.householdAmountsTaxYear !== undefined) {
+      const next = data as OtherTaxesData;
+      data = {
+        ...next,
+        householdAmountsTaxYear: annualConfirmationAfterEdit(previous.householdAmountsTaxYear, next.householdAmountsTaxYear, householdSourceFactsChanged(previous, next)),
+      };
+    }
   }
   const credits = state.sectionData.credits;
   const adjustments = state.sectionData.adjustments;
