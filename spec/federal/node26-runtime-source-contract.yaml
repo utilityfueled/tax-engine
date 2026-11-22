@@ -21,8 +21,12 @@ notes: |
   the Next family and peer references. Its historical lock SHA-256 is
   64cccb8d87c0bfb6422210ecf5b4c12e6a1ef468976d7d68a466e5e5a744c4a2.
   The separately reviewed Nodemailer 10.4.1 successor 3d6a8e3a changes
-  only the Nodemailer web importer, package and snapshot entries. Bind
-  current lock SHA-256 2553ee4f90ed1ec557e633f9b10e588198f8a5c49b833fa0f6b3ad0133345393.
+  only the Nodemailer web importer, package and snapshot entries. Its
+  lock SHA-256 was 2553ee4f90ed1ec557e633f9b10e588198f8a5c49b833fa0f6b3ad0133345393.
+  The separately reviewed PDF font dependency commit 11efa4a1 adds fontkit
+  2.0.4 and its type definitions to the root importer, and adds 11 package
+  and snapshot entries while preserving all previous entries. Bind current
+  lock SHA-256 4a30d16012713f30ef5a88f71dd4b52923448452b97fc7290ac9f505ed8e1376.
   Future dependency changes require their own source review and exact successor.
   The November 11 Node security update includes high-severity HTTP/2 and TLS
   fixes and upgrades bundled Undici to 8.12.4. The November 12 image refresh pins
@@ -70,7 +74,8 @@ lines:
     sources:
       - "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-3q53-mvfw-q9v8"
       - "https://github.com/nodemailer/nodemailer/security/advisories/GHSA-2g53-87p2-4qq8"
-    formula: "Preserve the historical runtime lock evidence and bind the reviewed Nodemailer 10.4.1 successor to its exact frozen lock hash. Reject arbitrary lock drift."
+      - "https://registry.npmjs.org/fontkit/2.0.4"
+    formula: "Preserve the historical runtime lock evidence and bind the reviewed PDF font dependency successor to its exact frozen lock hash. Reject arbitrary lock drift."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::preserves the reviewed dependency lock exactly"
   - line: "operational-docs"
     formula: "Current setup documentation names 26.13.1/26; historical Node 24 and 26.13.0 evidence remains unchanged."
