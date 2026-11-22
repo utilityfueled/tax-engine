@@ -8446,6 +8446,26 @@
       ]
     },
     {
+      "key": "federal/guided-savers-credit-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf",
+      "specPath": "spec/federal/guided-savers-credit-2026.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-savings-bond-reissues",
       "jurisdiction": "federal",
       "taxYear": 2026,

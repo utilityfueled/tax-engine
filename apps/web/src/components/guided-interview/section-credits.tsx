@@ -22,6 +22,7 @@ import { CareBenefitsDetails } from "./care-benefits-details";
 import type { CareBenefitSource } from "@/lib/guided-dependent-care-benefits";
 import { CareSourceDetails } from "./care-source-details";
 import { MinimumTaxCreditDetails } from "./minimum-tax-credit-details";
+import { SaversCreditDetails } from "./savers-credit-details";
 
 function EligibilityFact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
@@ -162,6 +163,7 @@ export function SectionCredits({
           <PremiumTaxCreditSourceDetails healthInsurance={healthInsurance} personal={personalData} filingStatus={filingStatus} taxYear={taxYear} data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
           <SavingsBondSourceDetails data={current.savingsBondEducation} onChange={savingsBondEducation => onDataChange({ ...current, savingsBondEducation })} />
           <MinimumTaxCreditDetails data={current.minimumTaxCredit} onChange={minimumTaxCredit => onDataChange({ ...current, minimumTaxCredit })} />
+          <SaversCreditDetails data={current.saversCredit} taxYear={taxYear} filingStatus={filingStatus} onChange={saversCredit => onDataChange({ ...current, saversCredit })} />
 
           <EnergySourceDetails
             filingStatus={filingStatus}

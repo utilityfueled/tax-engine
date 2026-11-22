@@ -44,6 +44,7 @@ import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
 import { buildGuidedForm8919ReasonA } from "./guided-form-8919-reason-a";
 import { buildGuidedRenterHomeOffice } from "./guided-form-8829-renter";
+import { buildGuidedSaversCredit, guidedSaversCreditContext } from "./guided-savers-credit";
 import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
 import { buildEducatorSources, educatorFactErrors, educatorBondFactErrors } from "./guided-educator-facts";
@@ -813,6 +814,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let standardMileage: ReturnType<typeof readGuidedBusinessMileage>;
   let professionalWagering: ReturnType<typeof readGuidedProfessionalWagering>;
   let homeOffice: ReturnType<typeof buildGuidedRenterHomeOffice>;
+  let form8880: ReturnType<typeof buildGuidedSaversCredit>;
   let form8919: ReturnType<typeof buildGuidedForm8919ReasonA>;
   try {
     form8919 = buildGuidedForm8919ReasonA(state);
@@ -826,6 +828,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo, qofDiscovery.answer === false));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear, state));
     homeOffice = buildGuidedRenterHomeOffice(seData?.businessFacts?.homeOfficeRenter, state.taxYear, segmentation.stateCode);
+    if (creditsData?.saversCredit) form8880 = buildGuidedSaversCredit(creditsData.saversCredit, guidedSaversCreditContext(state));
     standardMileage = readGuidedBusinessMileage(seData, state);
     professionalWagering = seData && readGuidedProfessionalWagering(seData, state);
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
@@ -1060,6 +1063,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     } : undefined,
     dependentCare,
     dependentCareBenefits,
+    ...(form8880 ? { form8880 } : {}),
     eic: w2Data?.combatPayElection === undefined ? eic : { ...eic, combatPayElection: w2Data.combatPayElection },
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     deductionElection: deductionData?.method ?? "automatic",

@@ -105,6 +105,7 @@ import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-s
 import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
 import { buildActualEducationInput, LLC_YEAR_FACTS_VERSION, requiresLlcYearReview } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
+import { guidedSaversCreditContext, guidedSaversCreditFactErrors, type GuidedSaversCreditData } from "./guided-savers-credit";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
@@ -1316,6 +1317,7 @@ export const emptyEnergyCreditData: EnergyCreditData = {
 };
 
 export interface CreditsData {
+  saversCredit?: GuidedSaversCreditData;
   minimumTaxCredit?: MinimumTaxCreditData;
   premiumTaxCredit?: PremiumTaxCreditData;
   dependentCare: DependentCareData;
@@ -1569,7 +1571,8 @@ export interface FlowProgress {
 export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionDefinition[] {
   const adjustments = state.sectionData.adjustments;
   const hasSavedAdjustmentRecords = hasAlimonyAmounts(adjustments) || adjustments?.movingExpenses !== undefined
-    || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state);
+    || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state)
+    || Boolean(adjustments?.iraContributions || state.sectionData.credits?.saversCredit);
   return buildSectionRoute(
     state.segmentation, hasSavedAdjustmentRecords, guidedQofDiscovery(state).needsDetails,
     hasHouseholdAmounts(state.sectionData["other-taxes"]), !!state.sectionData["additional-deductions"]?.form8919ReasonA,
@@ -1844,8 +1847,9 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } } : {}),
         },
       } : {}),
-      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || bankInterestSourcesEntered) ? { credits: { ...credits,
+      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || bankInterestSourcesEntered || credits.saversCredit) ? { credits: { ...credits,
         ...(requireCareReview ? { dependentCare: { ...credits.dependentCare, sourceFactsConfirmed: null } } : {}),
+        ...(credits.saversCredit ? { saversCredit: { ...credits.saversCredit, sourceFactsConfirmed: null } } : {}),
         ...(education && (aotcSourcesEntered || llcSourcesEntered) ? { education: {
           ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
           ...(aotcSourcesEntered ? {
@@ -2233,6 +2237,11 @@ export function updateSectionData(
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const nextCredits = sectionId === "credits" ? retainAotcSources(credits, data as CreditsData | undefined) : credits;
+  const savedSaversCredit = nextCredits?.saversCredit;
+  const editedSaversDraft = sectionId === "credits" && credits?.saversCredit && sourceValuesChanged;
+  const saversSourcesChanged = savedSaversCredit && sourceValuesChanged
+    && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-social-security", "adjustments", "additional-deductions"].includes(sectionId);
+  const saversCreditToReconfirm = (editedSaversDraft || saversSourcesChanged) && savedSaversCredit;
   const addedLlcSources = !credits?.education?.llcStudents?.length && !!nextCredits?.education?.llcStudents?.length;
   const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
     && nextCredits?.adoption?.children.some(child => child.priorYearForeignBenefitHistory) ? nextCredits?.adoption : undefined;
@@ -2317,7 +2326,7 @@ export function updateSectionData(
     ...(incomingStateReturn.ohioSchoolDistrict && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged || invalidateBusiness || invalidateResidentCredit) ? { ohioSchoolDistrict: { ...incomingStateReturn.ohioSchoolDistrict, sourceFactsConfirmed: null } } : {}),
     ...(incomingStateReturn.ohioReciprocalWages && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged) ? {ohioReciprocalWages:{...incomingStateReturn.ohioReciprocalWages,sourceFactsConfirmed:null}} : {}),
   } : undefined;
-  return {
+  const nextState: GuidedFlowState = {
     ...state,
     ...(addedLlcSources ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
@@ -2392,7 +2401,8 @@ export function updateSectionData(
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
         ...(nolSourcesChanged ? { netOperatingLossSources: invalidateNetOperatingLossSources(nolSourcesChanged) } : {}),
         ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
-      ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged) && nextCredits ? { credits: { ...nextCredits,
+      ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged || saversCreditToReconfirm) && nextCredits ? { credits: { ...nextCredits,
+        ...(saversCreditToReconfirm ? { saversCredit: { ...saversCreditToReconfirm, sourceFactsConfirmed: null } } : {}),
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(careEarnedIncomeChanged ? { dependentCare: { ...care, sourceFactsConfirmed: null } } : {}),
@@ -2403,6 +2413,11 @@ export function updateSectionData(
       } } : {}),
     },
   };
+  if (sectionId === "credits" && Boolean(credits?.saversCredit) !== Boolean(savedSaversCredit)) {
+    const current = getGuidedSectionRoute(state)[state.currentSectionIndex];
+    if (current) return jumpToSection(nextState, current.id);
+  }
+  return nextState;
 }
 
 export function getSectionData<K extends keyof SectionDataMap>(
@@ -2862,6 +2877,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
         ...educatorBondFactErrors(state),
         ...premiumTaxCreditFactErrors(state),
         ...minimumTaxCreditFactErrors(credits?.minimumTaxCredit, state.taxYear, state.segmentation.filingStatus, personal),
+        ...(credits?.saversCredit ? guidedSaversCreditFactErrors(credits.saversCredit, guidedSaversCreditContext(state)) : {}),
         ...savingsBondFactErrors(credits?.savingsBondEducation, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "income-investments")?.interestEntries, personal),
         ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
         ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),
