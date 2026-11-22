@@ -1,6 +1,6 @@
 // Spec: spec/federal/form-5329-guided-code1-ira-2026.yaml.
 import assert from "node:assert/strict";
-import { expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import type { RetirementEntryData } from "@/lib/guided-interview-flow";
@@ -13,6 +13,9 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
   const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
   return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
 });
+
+beforeEach(() => vi.setSystemTime(new Date(2026, 7, 1, 12)));
+afterEach(() => vi.useRealTimers());
 
 const ownerBirthDate = "1967-02-01";
 const receipt = { singlePaymentConfirmed: true, ownerBirthDate, distributionDate: "2026-07-31" };
