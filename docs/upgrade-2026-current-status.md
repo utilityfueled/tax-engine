@@ -1,5 +1,25 @@
 # Current 2026 upgrade status
 
+## Resume here · November 22
+
+- The application at `f6ef1045` passed all 11 local checks, 30,099 unit
+  and coverage cases per run, 88.20% branch coverage against the 85%
+  gate, and 650 Chromium cases with five existing skips. Managed Linux
+  passed on the same source. The strict runtime job was still running
+  when recorded. [Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288).
+- `55488dcb` restored the pinned Python prerequisite to the optional
+  Ohio timing comparison. Follow the corrected run before deciding
+  whether another full replay is useful.
+  [Corrected Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
+- `c446a6c1` adds bounded Ohio school entry timing to the optional
+  comparison. Tests and independent review passed locally. Read only
+  `activeContinuation.nov22OhioSchoolPhaseTiming` in the checkpoint
+  for this pending measurement. [Timing evidence](upgrade-2026-progress.md#november-22-ohio-school-phase-timing).
+- [Open external actions](upgrade-2026-external-actions.md) tracks the
+  remaining annual publications, qualified human reviews and release
+  rehearsal. Cybersecurity work is deferred at the user's direction.
+  Release qualification remains open.
+
 ## Latest exact release verification
 
 `13cf80f4` aligns two Form 2441 interaction assertions with the annual

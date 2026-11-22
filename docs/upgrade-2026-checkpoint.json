@@ -1,5 +1,22 @@
 {
   "activeContinuation": {
+    "nov22OhioSchoolPhaseTiming": {
+      "commit": "c446a6c1",
+      "frozenFilesManifestSha256": "a8917e59ce09ad856bae4f0226aa7ae9a5d42f30c03f9a0ad075ee8fd1e72653",
+      "identicalSchoolCases": 4,
+      "strictSecondsPerCase": 30,
+      "nodeChecksPassed": 69,
+      "focusedWrapperChecksPassed": 69,
+      "independentVitestPassed": 60,
+      "independentNodePassed": 20,
+      "specReferencesPassed": 9,
+      "managedLinuxApplicationRun": 45059367288,
+      "managedLinuxApplicationPassed": true,
+      "pinnedInterpreterComparisonRun": 45067567954,
+      "hostedPhaseTiming": "unmeasured",
+      "productionBuildState": "CANCELED",
+      "strictRuntimeQualified": false
+    },
     "nov22DiagnosticPinnedPdfInterpreter": {
       "commit": "55488dcb406efe8b31c66f5ea629aa8bd9055dad",
       "pypdfVersion": "6.10.0",
@@ -10,7 +27,7 @@
       "independentOpsTestsPassed": 78,
       "frozenFilesManifestSha256": "df6a98d8ec9c6c1e803b7c4c80a2a272a830817f915f03790b0498897397fb35",
       "correctedLinuxComparisonRun": 45067567954,
-      "correctedLinuxComparisonStatus": "queued",
+      "correctedLinuxComparisonStatus": "in-progress",
       "nativeBrowserQualified": false
     },
     "nov22FederalPaymentReceiptReconciliation": {

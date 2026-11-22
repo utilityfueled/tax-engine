@@ -1,5 +1,33 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Ohio school phase timing
+
+`c446a6c1` adds timing for source entry and the first confirmation in
+the optional Ohio school-district replay. It also captures the existing
+review-download timing in both comparison legs. The fixed receipt
+records completed, started or unavailable for each phase, and emits a
+duration only when a phase completed. Raw Playwright output stays
+temporary. The test actions, assertions, deadlines and strict
+qualification remain unchanged.
+
+All 69 Node and 69 focused wrapper checks, web types and the nine
+specification references passed. Independent review passed 60 Vitest
+and 20 Node tests and verified both Playwright collection modes still
+have the same four school cases with their existing 30-second
+deadlines. The installed JSON reporter verified a complete and an
+interrupted phase locally. The browser request audit, case audit,
+full-batch source and restored-overlay pins were refreshed against
+the reviewed source. The six implementation files match frozen
+manifest SHA-256
+`a8917e59ce09ad856bae4f0226aa7ae9a5d42f30c03f9a0ad075ee8fd1e72653`.
+Hosted Linux phase timing remains unmeasured.
+
+The exact application `f6ef1045` managed Linux browser job passed.
+Its strict runtime and the separate `55488dcb` pinned-interpreter
+comparison were still running at the time of this record.
+[Exact application Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288) ·
+[Pinned-interpreter Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
+
 ## November 22 strict Linux timing and care selector verification
 
 The scoped timing workflow on `ebc5a6b1` completed. The unchanged
