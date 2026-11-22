@@ -12257,8 +12257,61 @@ The author passed 56 Node and 19 Vitest checks. The integration reran 48 Node
 checks plus Actionlint. [AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45046165720)
 was queued on exact `16cbc992` after dispatch.
 
+### November 22 guided Form 8829 and Form 8880
+
+`bbe8c894` adds actual renter home-office facts for a 2026 federal Schedule C
+business whose principal place of business is the home office. It binds the
+original floor measurements, rent, and utilities to Form 8829. The Schedule C
+limit and deduction are derived. The independent engineering review found that
+the client-meeting option needed more qualification facts, so that option
+remains held. The initial scoped run passed 213 tests. Exact-source local
+Chromium verified a $1,200 deduction, reopening, invalidation after an expense
+edit, a $1,100 deduction after reconfirmation, and removal. Its artifact is
+`.local/upgrade-evidence/nov22-renter-bbe8c894-browser/ASSESSMENT.json`.
+`73365365` retains originals across year changes and clears the old office
+confirmation. The regression and associated flow tests passed 194 checks.
+[IRS Form 8829](https://www.irs.gov/pub/irs-pdf/f8829.pdf) and
+[Publication 587](https://www.irs.gov/publications/p587).
+
+`0d6b7ebe` connects the ordinary 2026 Single regular Roth IRA contribution to
+Form 8880 and Schedule 3. The rule uses the linked IRA worksheet, eligibility,
+and confirmed testing-period distribution records. Other contribution types,
+current-return distributions and excluded income require separate reconciliation.
+The scoped run passed 413 tests and proved a $200 credit and exact distribution
+cents. Independent engineering review found missing access to Adjustments and
+stale confirmation after edits, both corrected with regression checks.
+Exact-source local Chromium verified the Credits-to-Adjustments trip, gating
+without IRA originals, reconfirmation after adding them, and reload. Replay of
+the captured state yielded $2,000 of Roth contributions and a confirmed zero
+distribution reduction. Receipts are under
+`.local/upgrade-evidence/nov22-savers-0d6b7ebe-browser/`.
+[Final 2026 IRS Form 8880](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf).
+
+The broader working-tree run exposed unquoted test references in three new
+specs. `0ef70a30` corrected the YAML scalars without changing the test harness.
+All 1,009 targeted tests and inventory then passed. In a tracked-only
+`0ef70a30` archive, typecheck for the engine, contracts and web, full spec
+validation, inventory, lint, engine build and production web build passed.
+Combined unit and coverage qualification remain pending. All four commits
+reached `origin/main`, and Vercel recorded their Production-target builds as
+canceled.
+The two browser checks were local intake rehearsals. Federal and state annual
+qualification, independent human review, and hosted and self-host release
+qualification remain open.
+
 The official OpenAI deprecations still show GPT-5 Mini's December 11 shutdown;
 the published Gemini Flash pricing still changes to $1.50/$7.50 per million
 tokens on January 1. Those public pages do not verify any project's access.
 [OpenAI deprecations](https://developers.openai.com/api/docs/deprecations) and
 [Google pricing](https://aistudio.google.com/docs/pricing).
+
+The November 22 official-source recheck still found 2025 as the latest final
+year for the 1040 instructions and tax tables, Form 2210, the PA-40, and the
+Ohio IT 1040 and IT NRC residency materials. Leave their annual qualification
+gates in place pending final 2026 publication and independent human review.
+[1040 instructions](https://www.irs.gov/instructions/i1040gi),
+[Tax and EIC tables](https://www.irs.gov/pub/irs-pdf/p1040.pdf),
+[IRS Form 2210 catalog](https://www.irs.gov/forms-instructions-and-publications?find=2210),
+[PA-40](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax),
+[Ohio IT 1040](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf),
+and [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms).

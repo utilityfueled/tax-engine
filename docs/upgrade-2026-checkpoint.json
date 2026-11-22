@@ -1,5 +1,35 @@
 {
   "activeContinuation": {
+    "nov22GuidedRenterAndSaversCredit": {
+      "renterCommit": "bbe8c894",
+      "renterYearConfirmationCommit": "73365365",
+      "saversCreditCommit": "0d6b7ebe",
+      "specReferenceFormatCommit": "0ef70a30",
+      "sources": [
+        "https://www.irs.gov/pub/irs-pdf/f8829.pdf",
+        "https://www.irs.gov/publications/p587",
+        "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf"
+      ],
+      "localChecks": {
+        "renterInitialTargeted": 213,
+        "renterYearReconfirmationTargeted": 194,
+        "saversCreditTargeted": 413,
+        "specReferenceFormatTargeted": 1009,
+        "renterSpecReferences": 3,
+        "saversCreditSpecReferences": 4,
+        "webTypecheck": "pass",
+        "specInventory": "pass",
+        "browserSourceAudit": "pass"
+      },
+      "renterBrowserReceipt": ".local/upgrade-evidence/nov22-renter-bbe8c894-browser/ASSESSMENT.json",
+      "saversCreditBrowserReceipt": ".local/upgrade-evidence/nov22-savers-0d6b7ebe-browser/execution.json",
+      "exactCombinedLocalChecks": ".local/upgrade-evidence/nov22-main-0ef70a30-exact/",
+      "exactCombinedStaticChecksPassed": 8,
+      "vercelProductionBuilds": "canceled for all four commits",
+      "humanReviewed": false,
+      "hostedQualified": false,
+      "filingQualified": false
+    },
     "nov22CombinedForm4137And8919": {
       "applicationCommit": "854e500d",
       "sources": [
