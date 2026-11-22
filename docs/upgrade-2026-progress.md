@@ -1,5 +1,41 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Form 2441 return-year confirmation
+
+A saved 2026 care worksheet retained a $200 credit after changing to
+2025, reopening the return and supplying matching-year personal and
+interest facts. The 2025 calculation used that amount. The IRS Worksheet A
+for 2025 applies to qualified 2024 expenses paid in 2025. `7968206c`
+clears the Part II confirmation when a previously selected year changes
+or is cleared. It preserves the entered records, including the Worksheet A
+amount, and requires confirmation for the selected year. The same-year
+and first-year assignment paths retain the existing confirmation behavior.
+[Form 2441 instructions, line 9b and Worksheet A](https://www.irs.gov/instructions/i2441).
+
+The regression first reproduced the carryover. After the change, the
+return could calculate only after fresh confirmation. With all other
+2025 facts identical, a verified $0 amount gave $2,875 total tax and a
+verified $200 amount gave $2,675. All 496 scoped tests, 54 spec references,
+root and web type checks, and the exact candidate inventory passed.
+Scoped lint reported zero errors and 23 existing warnings. The audited
+local browser run passed the federal and both Pennsylvania desktop/mobile
+care scenarios at the existing 30-second deadline and shut down its
+server. Only the text for the existing confirmation action changed in the
+browser fixtures. Receipts are under
+`.local/upgrade-evidence/nov22-form2441-current-year/`.
+
+Vercel recorded the production-labeled builds for the reviewed main
+commits through `7968206c` as canceled. The separate local full unit and
+coverage attempts on `891f921b` reported 26 and 29 failures, respectively.
+Both owned PostgreSQL instances stopped. The two remote full core runs
+documented below passed.
+
+The public Google recheck confirmed standard Gemini 3.8 Flash prices at
+$0.75 for input and $3.75 for output per million tokens through December 31.
+The rates rise to $1.50 and $7.50 respectively starting January 1, 2027.
+This public catalog check made zero provider generation requests.
+[Gemini standard pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash).
+
 ## November 22 retained direct federal amounts
 
 The year selector previously let certain scalar facts flow into the next

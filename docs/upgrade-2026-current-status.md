@@ -2,6 +2,11 @@
 
 ## Latest exact release verification
 
+`7968206c` holds retained Form 2441 Part II facts, including Worksheet A,
+until the taxpayer reconfirms them after a return-year change. All 496
+scoped tests and all three affected audited browser scenarios passed.
+[Form 2441 evidence](upgrade-2026-progress.md#november-22-form-2441-return-year-confirmation).
+
 `891f921b` incorporates the guided federal payment, manual gambling,
 direct Schedule A, alimony and household payroll source-year fixes.
 Combined focused verification passed 430 tests, web type checking and

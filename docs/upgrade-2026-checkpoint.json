@@ -1,5 +1,20 @@
 {
   "activeContinuation": {
+    "nov22Form2441ReturnYearConfirmation": {
+      "commit": "7968206c",
+      "scope": "Form 2441 Part II and Worksheet A",
+      "crossYearCreditBeforeFix": "200",
+      "actual2025TaxAfterConfirmingZero": "2875",
+      "actual2025TaxAfterConfirming200": "2675",
+      "focusedTestsPassed": 496,
+      "specReferencesPassed": 54,
+      "exactInventoryPassed": true,
+      "rootAndWebTypesPassed": true,
+      "localAuditedBrowser": {"passed": 3, "failed": 0, "deadlineMs": 30000, "serverStopped": true},
+      "vercelProductionBuild": "CANCELED",
+      "receipts": ".local/upgrade-evidence/nov22-form2441-current-year",
+      "releaseReady": false
+    },
     "nov22RetainedDirectFederalAmounts": {
       "paymentCommit": "6fb71550",
       "deductionCommit": "a41312b3",
@@ -29,6 +44,8 @@
       "localAuditedOhioBuildCompletedInTime": false,
       "localUnitTestsFailed": 26,
       "localUnitPostgresStopped": true,
+      "localCoverageTestsFailed": 29,
+      "localCoveragePostgresStopped": true,
       "officialAnnualSourcesRechecked": "2026-11-22",
       "newlyUnblockedAnnualQualification": false,
       "legalCalculationChanges": false,
