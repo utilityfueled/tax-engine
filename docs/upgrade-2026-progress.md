@@ -1,5 +1,89 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Pennsylvania saved-estimate navigation
+
+`a79ff3d0` uses the same original-receipt match for Continue and Preview
+in the implemented 2025 single-filer Pennsylvania resident, part-year
+and nonresident methods. A saved estimate must match a distinct actual
+estimated-payment receipt by date and Decimal amount or be explicitly
+removed. Navigation retains the original claim for review until the
+taxpayer resolves it. A matched receipt counts once. The engine keeps
+its own final admission check and its other reconciliation rules.
+
+All three methods reproduced the early navigation on the original
+browser revision. All three passed on the exact seven-file candidate.
+Each case reopened the saved return, held Continue for $100.01 without
+a matching original, then removed the claim and advanced with actual
+records. Matching and removal controls passed all 46 focused
+tests and 13 independent tests. The five specification references,
+coverage inventory, browser audit, 60 related operations tests, web
+typecheck and web build passed. The tracked candidate manifest SHA-256
+is `9d19cc7c38ee8f9c3b1e54458c1a5ce9836ba925a903fe6a15f90dada4970fd9`.
+[2025 PA-40 instructions, estimated payments and credits](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf).
+
+## November 22 NEW212 runner prerequisite test
+
+Full coverage on the student-loan application exposed a stale source
+assertion in the NEW212 browser timing test after the optional browser
+runner began using the pinned Python interpreter. The first full
+coverage attempt also reached a loopback permission error. The
+application, tax engine and browser runtime code are identical in the
+test-only successor `1da09dc8`. The updated test binds the actual
+runner construction and verifies the resolved interpreter and exact
+timing opt-in. All 62 focused checks and both independently rerun
+NEW212 checks passed. The original coverage result is retained. The
+awake reruns with local loopback passed the complete unit and coverage
+suites, 30,103 tests each with 79 existing skips. Branch coverage was
+88.21% against the 85% gate. The command received an extra Vitest filter
+on the first unit attempt. That partial result was also retained.
+The exact suite manifest is
+`3a3f36e05700d2a20a2c33b10324dd4f9a430e1ca5a92db14e79594cffb9201d`.
+
+## November 22 student-loan annual payment and dependency
+
+`2519ff1c` requires fresh per-loan payment-year and actual dependency
+answers when an established interview or worksheet year changes.
+Original loan records, amounts and statement years stay available for
+review. A confirmed summary alone cannot authorize retained interest.
+The return-year change also clears the old Credits dependency answer
+when a loan worksheet is retained. A conflicting answer actively
+re-entered for the current year still blocks the calculation.
+
+The local browser reproduced both stale confirmation paths on
+`f6ef1045`. In a later candidate it reproduced a separate hidden
+Credits answer that still blocked the renewed loan worksheet.
+The exact final app built and passed the same three Chromium checks,
+including save and reopen, explicit zero, and the stale Credits case.
+The regression retains $1,200.15 of entered interest for review,
+holds the unconfirmed amount, and calculates a $0 deduction when the
+current source actually reports zero. A separately verified complete
+fixture with $1,275.80 of current interest and $50,000 MAGI calculates
+a $1,276 deduction. The 2026 annual calculation and filing gate stays
+closed in the app.
+
+All 44 focused and 30 independent tests, nine spec references, six
+exact baseline static/build commands, the web build and web
+typechecking passed. Sixty linked browser-operation assertions passed,
+and the existing request audit verifies with new source hashes. The two
+existing audited desktop and mobile student-loan cases passed with the
+original 30-second deadlines after the sample PDF hashes and pinned Python
+were verified. The initial orchestration stop before runtime is retained.
+The exact candidate five-file digest equals SHA-256
+`21e58bf37a8c2b3d431be6a51da20bfa8886edf047ed9992c582a977d0ff8695`.
+Vercel recorded the exact main production build as canceled.
+[26 U.S.C. § 221](https://uscode.house.gov/us/usc/119-124/t26/s221/) ·
+[IRS Publication 970, chapter 4](https://www.irs.gov/publications/p970).
+
+## November 22 exact federal-payment Linux browser outcomes
+
+The exact `f6ef1045` managed browser job passed 650 cases and retained
+five existing skips. The build job passed. The strict container passed
+Compose recovery and cleanup. Its browser job passed 636 cases, failed
+14 and retained the same five skips. The optional Ohio comparison on
+`55488dcb` was a separate run.
+[Managed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288/job/137321595005) ·
+[Strict browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288/job/137321594973).
+
 ## November 22 Ohio school phase timing
 
 `c446a6c1` adds timing for source entry and the first confirmation in

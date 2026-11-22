@@ -2,19 +2,33 @@
 
 ## Resume here · November 22
 
-- The application at `f6ef1045` passed all 11 local checks, 30,099 unit
-  and coverage cases per run, 88.20% branch coverage against the 85%
-  gate, and 650 Chromium cases with five existing skips. Managed Linux
-  passed on the same source. The strict runtime job was still running
-  when recorded. [Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288).
+- `a79ff3d0` aligns Pennsylvania State Return navigation with payment
+  reconciliation for the implemented 2025 single resident, part-year and
+  nonresident methods. All three Chromium cases passed. See
+  `activeContinuation.nov22PASavedEstimateNavigation`.
+  [Pennsylvania evidence](upgrade-2026-progress.md#november-22-pennsylvania-saved-estimate-navigation).
+- The exact `1da09dc8` unit and coverage suites passed 30,103 each,
+  with 79 existing skips and 88.21% branch coverage. It changes only a
+  NEW212 timing test relative to application `2519ff1c`.
+- `2519ff1c` requires fresh annual student-loan interest payment and
+  dependency answers after a known year changes. Focused and independent
+  checks passed, including all three local Chromium regressions. Vercel
+  recorded its production build as canceled. See
+  `activeContinuation.nov22StudentLoanYearFacts` for exact evidence.
+  [Student-loan evidence](upgrade-2026-progress.md#november-22-student-loan-annual-payment-and-dependency) ·
+  [Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45070994820).
+- `f6ef1045` passed all 11 local checks, 30,099 unit and coverage cases
+  per run, 88.20% branch coverage against the 85% gate, and 650 Chromium
+  cases with five existing skips. Managed Linux matched the browser
+  outcome. The strict image passed Compose recovery and cleanup. Its
+  browser run passed 636 cases, failed 14 and retained five skips.
+  [Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288).
 - `55488dcb` restored the pinned Python prerequisite to the optional
-  Ohio timing comparison. Follow the corrected run before deciding
-  whether another full replay is useful.
-  [Corrected Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
-- `c446a6c1` adds bounded Ohio school entry timing to the optional
-  comparison. Tests and independent review passed locally. Read only
-  `activeContinuation.nov22OhioSchoolPhaseTiming` in the checkpoint
-  for this pending measurement. [Timing evidence](upgrade-2026-progress.md#november-22-ohio-school-phase-timing).
+  Ohio timing comparison. Follow that comparison before choosing the
+  next Linux measurement. `c446a6c1` adds school entry timings to the
+  optional replay with independent verification and no deadline change.
+  [Pinned-interpreter run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954) ·
+  [Timing evidence](upgrade-2026-progress.md#november-22-ohio-school-phase-timing).
 - [Open external actions](upgrade-2026-external-actions.md) tracks the
   remaining annual publications, qualified human reviews and release
   rehearsal. Cybersecurity work is deferred at the user's direction.
