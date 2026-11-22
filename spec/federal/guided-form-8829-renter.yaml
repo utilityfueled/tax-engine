@@ -1,4 +1,4 @@
-form: Form 8829 guided actual renter expenses
+form: "Form 8829 guided actual renter expenses"
 taxYear: 2026
 reference: https://www.irs.gov/pub/irs-pdf/f8829.pdf
 notes: >-
@@ -13,7 +13,7 @@ lines:
       taxpayer to identify this home office as the principal place of this
       business and confirm whole square feet with 0 < business area <= total
       home area. Hold other qualification paths.
-    testRef: tests/guided-interview/guided-form-8829-renter.test.ts::holds incomplete unsupported and unreconciled home office originals
+    testRef: "tests/guided-interview/guided-form-8829-renter.test.ts::holds incomplete unsupported and unreconciled home office originals"
   - line: "8, 19, 21, 36"
     description: Derive ordinary renter deduction from Schedule C and original receipts
     formula: >-
@@ -24,10 +24,10 @@ lines:
       adjustment, carryover, or unsupported worksheet. Leave the gross-income
       limit to Schedule C line 29. Transfer Form 8829 line 36 to Schedule C line
       30 with no manual direct deduction. Reconfirm after affected sources change.
-    testRef: tests/guided-interview/guided-form-8829-renter.test.ts::projects documented renter expenses through the real Schedule C calculation
+    testRef: "tests/guided-interview/guided-form-8829-renter.test.ts::projects documented renter expenses through the real Schedule C calculation"
   - line: "1–36"
     description: Retain the originals after a return-year edit and require fresh confirmation
     formula: >-
       Preserve entered source records when the return year changes. Invalidate
       the retained confirmation even if the taxpayer later selects 2026 again.
-    testRef: tests/guided-interview/guided-form-8829-renter.test.ts::requires fresh office confirmation after a return-year edit
+    testRef: "tests/guided-interview/guided-form-8829-renter.test.ts::requires fresh office confirmation after a return-year edit"

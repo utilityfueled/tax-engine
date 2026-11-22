@@ -1,4 +1,4 @@
-form: Form 8880 guided ordinary Roth IRA contribution
+form: "Form 8880 guided ordinary Roth IRA contribution"
 taxYear: 2026
 reference: https://www.irs.gov/pub/irs-prior/f8880--2026.pdf
 instructions: https://www.irs.gov/publications/p590a
@@ -16,7 +16,7 @@ lines:
       worksheet and require actual eligible IRA compensation at least equal
       to the contribution. Confirm the absence of other qualifying contributions
       and income exclusions. Hold conflicting employer, owner or contribution facts.
-    testRef: tests/guided-interview/guided-savers-credit-2026.test.ts::transfers the ordinary Roth contribution into Form 8880 and Schedule 3
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::transfers the ordinary Roth contribution into Form 8880 and Schedule 3"
   - line: "4"
     description: Derive the primary holder's reduction from actual distribution records
     formula: >-
@@ -25,7 +25,7 @@ lines:
       distribution after 2023 and before that due date. An explicitly confirmed
       empty list supplies zero. Distributions received in 2026 or positive
       current-return Form 1099-R originals require separate source reconciliation.
-    testRef: tests/guided-interview/guided-savers-credit-2026.test.ts::sums distinct actual testing-period distributions without rounding cents
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::sums distinct actual testing-period distributions without rounding cents"
   - line: "6–12"
     description: Carry owner-specific annual eligibility facts to the existing calculation
     formula: >-
@@ -34,7 +34,7 @@ lines:
       and use the return's actual date of birth. Hold missing, conflicting or
       out-of-scope evidence. Preserve the engine's eligibility, amount cap, rate
       and tax-liability limit.
-    testRef: tests/guided-interview/guided-savers-credit-2026.test.ts::requires complete and consistent return-year proof
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::requires complete and consistent return-year proof"
   - line: "Schedule 3, line 4"
     description: Transfer the confirmed guided worksheet through the ordinary return bridge
     formula: >-
@@ -42,4 +42,4 @@ lines:
       hold the return when confirmation becomes stale. Reveal Adjustments for
       a saved credit worksheet so taxpayers can enter the linked IRA facts.
       Preserve the worksheet across year edits while requiring fresh confirmation.
-    testRef: tests/guided-interview/guided-savers-credit-2026.test.ts::projects through the guided return and reconfirms after source changes
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::projects through the guided return and reconfirms after source changes"

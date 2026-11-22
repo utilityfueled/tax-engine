@@ -1,4 +1,4 @@
-form: Form 8919 guided Reason A source
+form: "Form 8919 guided Reason A source"
 taxYear: 2026
 reference: https://www.irs.gov/pub/irs-pdf/f8919.pdf
 notes: >-
@@ -12,14 +12,14 @@ lines:
       employee determination, exact unreported wages, and explicit confirmation
       of no payroll withholding, no Form 1099 from this firm, and no other report
       of these wages. Hold joint, self-employment and unresolved overlaps.
-    testRef: tests/guided-interview/guided-form-8919-reason-a.test.ts::rejects incomplete or overlapping wage evidence
+    testRef: "tests/guided-interview/guided-form-8919-reason-a.test.ts::rejects incomplete or overlapping wage evidence"
   - line: "6, 8"
     description: Transfer wages and derive Social Security amounts
     formula: >-
       Transfer exact confirmed wages with primary ownership. Require actual 2026 W-2
       Boxes 3 and 7, including zero. Leave line 8 to the calculation engine.
       Hold railroad pay in this guided subset.
-    testRef: tests/guided-interview/guided-form-8919-reason-a.test.ts::projects confirmed source wages to the real payroll calculation
+    testRef: "tests/guided-interview/guided-form-8919-reason-a.test.ts::projects confirmed source wages to the real payroll calculation"
   - line: "8 with Form 4137"
     description: Reconcile unreported tip payroll and preserve separate employer originals
     formula: >-
@@ -29,4 +29,4 @@ lines:
       employer EINs for the two forms. Transfer Form 4137 line 10 to Form 8919
       line 8 through existing payroll calculation. Hold noncash tip totals
       that lack employer attribution. Reconfirm when tip records change.
-    testRef: tests/guided-interview/guided-form-8919-reason-a.test.ts::uses reconciled Form 4137 line 10 in Form 8919 payroll for $%s of documented tips
+    testRef: "tests/guided-interview/guided-form-8919-reason-a.test.ts::uses reconciled Form 4137 line 10 in Form 8919 payroll for $%s of documented tips"
