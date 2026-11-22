@@ -1,5 +1,6 @@
 /** Disabled final 2026 Form 2106 physical candidate. Spec: spec/federal/form-2106-2026-template.yaml. */
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
@@ -8,6 +9,7 @@ import { loadPdfDocumentQuietly } from "../../pdf-utils.js";
 import { removeTrustedTemplateLegacyFormData } from "../../trusted-review-template-cleanup.js";
 
 const page1 = "topmostSubform[0].Page1[0].";
+const unicodeNameFont = new URL("../../../../forms/blank/_fonts/NotoSans-Regular.ttf", import.meta.url);
 
 export const FORM_2106_2026_CANDIDATE = Object.freeze({
   taxYear: 2026,
@@ -119,13 +121,31 @@ export async function fillForm2106ReservistReviewCandidate(input: TaxYearInput, 
   const form = document.getForm();
   const nameField = form.getTextField(fields.name);
   const fullName = `${firstName} ${lastName}`;
+  const nameCodePoints = Array.from(fullName, character => character.codePointAt(0) ?? 0);
+  let nameFont = form.getDefaultFont();
+  let availableGlyphs = new Set(nameFont.getCharacterSet());
+  if (!nameCodePoints.every(codePoint => availableGlyphs.has(codePoint))) {
+    const [{ create }, fontBytes] = await Promise.all([import("fontkit"), readFile(unicodeNameFont)]);
+    type EmbeddedFont = ReturnType<Parameters<typeof document.registerFontkit>[0]["create"]>;
+    document.registerFontkit({
+      // PDF-LIB types describe the older fontkit interfaces. The full-font
+      // embedder uses the layout and metrics present in this pinned release.
+      create: (bytes, name) => create(Buffer.from(bytes), name) as unknown as EmbeddedFont,
+    });
+    nameFont = await document.embedFont(fontBytes);
+    availableGlyphs = new Set(nameFont.getCharacterSet());
+    if (!nameCodePoints.every(codePoint => availableGlyphs.has(codePoint))) {
+      throw new Error("Form 2106 taxpayer name contains characters the review PDF cannot render exactly.");
+    }
+  }
   const [nameWidget] = nameField.acroField.getWidgets();
   const inset = 1 + (nameWidget.getBorderStyle()?.getWidth() ?? 0);
-  if (form.getDefaultFont().widthOfTextAtSize(fullName, 9) + 2 * inset > nameWidget.getRectangle().width) {
+  if (nameFont.widthOfTextAtSize(fullName, 9) + 2 * inset > nameWidget.getRectangle().width) {
     throw new Error("Form 2106 taxpayer name must fit the native field at readable size.");
   }
   nameField.setFontSize(9);
   nameField.setText(fullName);
+  nameField.updateAppearances(nameFont);
   form.getTextField(fields.occupation).setText("Armed Forces reservist");
   // The case has neither meals nor other expenses or reimbursements, so each completed amount equals line 3.
   for (const field of [fields.lodging, fields.totalExpenses, fields.netExpenses, fields.deductibleExpenses, fields.deduction]) {

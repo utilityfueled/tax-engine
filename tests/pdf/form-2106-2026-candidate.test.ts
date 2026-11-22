@@ -18,15 +18,16 @@ async function loadCandidate() {
   return FORM_2106_2026_CANDIDATE;
 }
 
-function reserveLodgingFixture(manualAmount = "80") {
+function reserveLodgingFixture(manualAmount = "80", lastName = "Doe") {
   const taxpayer = simpleW2Fixture.taxpayer;
+  const primary = { ...taxpayer.primary, lastName };
   const input = TaxYearInputSchema.parse({
     ...simpleW2Fixture,
-    taxpayer: { ...taxpayer, taxYear: 2026 },
+    taxpayer: { ...taxpayer, primary, taxYear: 2026 },
     w2s: [{ ...simpleW2Fixture.w2s[0], taxYear: 2026, accountHolder: "primary" }],
     adjustments: { businessExpenseAdjustments: manualAmount },
   });
-  const owner = { accountHolder: "primary", firstName: "Jane", lastName: "Doe" };
+  const owner = { accountHolder: "primary", firstName: primary.firstName, lastName };
   const sources = {
     duty: {
       taxYear: 2026, owner: { ...owner }, reserveComponent: "Air Force Reserve",
@@ -151,6 +152,28 @@ describe("Final 2026 Form 2106 physical candidate", () => {
     sources.lodging.roomAmountPaid = "110.00";
     const result = await fillForm2106ReservistReviewCandidate(input, sources, await readFile(blank));
     expect(result.schedule1Line12.toFixed()).toBe("110");
+  });
+
+  it("preserves a Vietnamese taxpayer name in the native review field", async () => {
+    const { input, sources } = reserveLodgingFixture("80", "Nguyễn");
+    const bytes = await readFile(blank);
+    const { document } = await fillForm2106ReservistReviewCandidate(input, sources, bytes);
+    // The strict reader verifies the saved native value and a nonempty widget appearance for every populated field.
+    const { values, pages } = reopenWithStrictPypdf(await document.save());
+    const page1 = "topmostSubform[0].Page1[0].";
+    expect(values[0][page1 + "f1_01[0]"]).toBe("Jane Nguyễn");
+    expect(values[0][page1 + "f1_25[0]"]).toBe("80");
+    expect(Object.keys(values[0])).toHaveLength(7);
+    expect(values[1]).toEqual({});
+    expect(pages).toHaveLength(2);
+    for (const page of pages) expect(page).toContain(REVIEW_PDF_NOTICE);
+
+    const overflow = reserveLodgingFixture("80", "Nguyễn".repeat(20));
+    await expect(fillForm2106ReservistReviewCandidate(overflow.input, overflow.sources, bytes))
+      .rejects.toThrow(/name.*fit the native field/i);
+    const unsupported = reserveLodgingFixture("80", "Nguyễn𠀀");
+    await expect(fillForm2106ReservistReviewCandidate(unsupported.input, unsupported.sources, bytes))
+      .rejects.toThrow(/name.*cannot render exactly/i);
   });
 
   it.each<[string, (fixture: ReturnType<typeof reserveLodgingFixture>) => void, RegExp]>([

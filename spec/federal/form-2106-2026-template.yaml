@@ -40,6 +40,15 @@ lines:
       tax home and distance, and confirmation that lodging was neither employer-paid, reimbursed, nor reimbursable.
       Hold cases with any other Form 2106 expenses, more trips, duplicate deductions or incomplete evidence.
     testRef: "tests/pdf/form-2106-2026-candidate.test.ts::holds incomplete, conflicting, or out-of-scope originals (%s)"
+  - line: "review-name"
+    description: "Preserve the taxpayer's name in the native review field"
+    formula: >-
+      Preserve the matched taxpayer name and its spelling, including Vietnamese
+      characters, in the native AcroForm value and its visible widget appearance.
+      Measure the full name using the appearance font at 9 points and hold names
+      with unsupported characters or insufficient native field width. Preserve the blank SSN cells
+      and review notice on both pages.
+    testRef: "tests/pdf/form-2106-2026-candidate.test.ts::preserves a Vietnamese taxpayer name in the native review field"
   - line: "3,6A,8A,9A,10"
     description: "Show only qualifying, unreimbursed overnight lodging on the 2026 face"
     formula: >-
