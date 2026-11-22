@@ -1,5 +1,30 @@
 {
   "activeContinuation": {
+    "nov22FederalPaymentReceiptReconciliation": {
+      "applicationCommit": "f6ef1045",
+      "estimateYears": [2025, 2026],
+      "extensionYears": [2025],
+      "ordinary2025SingleReceipt": {"form1040Line26": "500", "underpaymentPenalty": "127"},
+      "ordinary2025TwoActualReceipts": {"form1040Line26": "1000", "underpaymentPenalty": "94"},
+      "ambiguousRepeatHeld": true,
+      "federalPaymentReferenceEmitted": false,
+      "scopedTestsPassed": 2108,
+      "independentScopedTestsPassed": 226,
+      "browserCheck": "pass",
+      "browserCasesPassed": 1,
+      "browserManifestSha256": "752ab3a95ad488b94bd1f07de038f5d81fd8abd3ef2059f4005abfe1cbbd3c77",
+      "browserReceipts": ".local/upgrade-evidence/nov22-federal-estimate-receipts-browser/",
+      "combinedExactChecks": ".local/upgrade-evidence/nov22-main-f6ef1045-exact/",
+      "full2026CalculationQualified": false
+    },
+    "nov22BrowserDiagnosticAuditRefresh": {
+      "commit": "64a0b261",
+      "initialFullUnitApplicationCommit": "e44e8b31",
+      "diagnosticTestsPassed": 27,
+      "fullBatchControlsPassed": 13,
+      "originalAttemptReceipts": ".local/upgrade-evidence/nov22-main-e44e8b31-exact/",
+      "currentFullUnitPass": false
+    },
     "nov22OhioEarlyRetirementCredit": {
       "applicationCommit": "e44e8b31",
       "law": "https://codes.ohio.gov/ohio-revised-code/section-section-5747.055",

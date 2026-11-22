@@ -340,3 +340,29 @@ Code 7 statement that omits the optional QCD code. Check overlap with the cash
 charitable deduction when a receipt could describe the same transfer. The full
 return keeps current-year IRA deduction coordination, separate Form 8606 methods
 and specialized recipient or asset cases outside this ordinary path. [IRC §408(d)(8)](https://uscode.house.gov/us/usc/t26/s408/), [IRS Publication 590-B](https://www.irs.gov/publications/p590b), [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf), [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r)
+
+## November 22 first-home IRA and Ohio early-withdrawal material
+
+Review the single primary taxpayer examples in `8b8a7d84` and `00cd051c`.
+An otherwise fully taxable $7,000 traditional IRA receipt is used for an
+eligible first-home purchase. The owner previously used $4,000 of the lifetime
+limit. Independently verify the amount under exception 09 and the income that
+remains taxable. The expected Part I result is $7,000 on line 1, $6,000 on
+line 2, $1,000 on line 3 and $100 on line 4. Include the calendar-day count for
+September 15 through January 13 using the receipt year on the return, and check
+the day-121 control. Verify the acquisition date and principal-residence
+lookback using the signed contract and payment source. The internal review
+artifact records the tax printed for Schedule 2 line 5. Annual instructions and
+public export qualification remain open. [26 U.S.C. §72](https://uscode.house.gov/us/usc/119-124/t26/s72/),
+[2026 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf) and
+[2025 exception instructions](https://www.irs.gov/pub/irs-prior/i5329--2025.pdf).
+
+Review the 2025 full-year Ohio single-filer example in `e44e8b31`. One primary
+non-IRA Code 1 Form 1099-R reports a documented $6,000 withdrawal before
+retirement, alongside $60,000 of wages. Independently establish whether the
+payment was on account of retirement, how the prior lump-sum election would
+affect an otherwise eligible credit, and the Ohio tax with an explicit $0
+retirement-income credit. The expected federal and Ohio AGI is $66,000 and the
+Ohio tax is $1,444. Missing facts and other reasons for a Code 1 payment still
+require source review. [Ohio Revised Code §5747.055](https://codes.ohio.gov/ohio-revised-code/section-section-5747.055)
+and [Ohio Department of Taxation retirement guidance](https://tax.ohio.gov/help-center/faqs/income-retirement-income/income-retirement-income).

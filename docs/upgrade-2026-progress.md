@@ -12483,3 +12483,40 @@ closed and no external requests occurred. The two private harness failures
 remain in the local packet. Manifest SHA-256
 `85c3171b12ee4d8f882eb31867fa6a36a9b2e2718802fa34a7a8a8ae5f423f7b`
 is in `.local/upgrade-evidence/nov22-ohio-retirement-credit-browser/`.
+
+The first full `e44e8b31` unit attempt exposed an out-of-date diagnostic audit
+digest after the scoped source hashes changed. `64a0b261` refreshes that digest
+and leaves the diagnostic cases, timings and gate decisions intact. All 27
+diagnostic Vitest checks and 13 full-batch controls passed. The earlier full
+run also hit ordinary 5-second case deadlines and denied local socket binds.
+The failed attempt is retained in `.local/upgrade-evidence/nov22-main-e44e8b31-exact/`.
+
+### November 22 federal estimated and extension payment reconciliation
+
+`f6ef1045` requires distinct processed-payment references for matching 2025
+federal estimates and extensions, and matching 2026 federal estimates. Reuse
+holds even if the date, amount or reference formatting has been edited. Two
+actual equal-size payments can be admitted. The reference remains a guided
+source fact and is omitted from canonical engine input and review output.
+Legacy extension-only drafts can continue through the normal Payments and
+Review steps. Filing and 2026 extension and annual calculation gates retain
+their prior behavior.
+
+The reproduced 2025 duplicate raised Form 1040 line 26 from $500 to $1,000
+and lowered the underpayment penalty from $127 to $94. The new fixture holds
+an ambiguous duplicate and reproduces the $1,000 and $94 results only with
+two distinct actual references. The 2026 fixture verifies canonical estimate
+inputs. The author's 2,108 affected tests and the independent 226-test replay
+passed together with both typechecks, spec references and the two browser
+audit digests. The independent replay verified preservation of Ohio estimates,
+2024-applied overpayments, and reference omission from review markup.
+The exact-source full checks are underway. Independent Chromium on `f6ef1045`
+passed in 2.780 seconds with the 30-second deadline and zero retries. It held
+missing and reused references, admitted distinct payments for $1,000 and $94,
+and restored $500 and $127 after removal. The workspace and owned server were
+cleaned up with zero external requests. The local browser manifest SHA-256 is
+`752ab3a95ad488b94bd1f07de038f5d81fd8abd3ef2059f4005abfe1cbbd3c77`.
+[IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi),
+[IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210),
+[2026 Form 1040-ES](https://www.irs.gov/pub/irs-pdf/f1040es.pdf) and
+[IRS Direct Pay guidance](https://www.irs.gov/payments/direct-pay-help).
