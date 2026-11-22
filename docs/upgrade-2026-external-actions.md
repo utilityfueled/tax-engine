@@ -22,6 +22,15 @@ limit, a fully excepted Code 1 distribution, and the actual date when the
 owner reaches age 59½. Give the reviewer the original facts and blank
 worksheet before sharing engineering outputs.
 
+The next completed Linux comparison, on `46eb0559`, passed GitHub
+unit and coverage checks. Managed Chromium passed 648 cases and
+strict AMD64 passed 637. Both reached the railroad PDF inspector's
+four-second deadline twice. Strict AMD64 also reached the 30-second
+limit in 11 Ohio cases. Each run retained five existing skips. The
+strict image smoke, recovery, archive import and cleanup passed.
+The newer Ohio preview optimization has its own open remote jobs.
+[Exact comparison](upgrade-2026-progress.md#november-21-pennsylvania-template-registry-reconciliation).
+
 For Pennsylvania Schedule NRH, independently derive page-one lines from a
 fictional single New York resident with one full-calendar-year 2025 employer.
 The signed calendar records 113 nonworking weekends and holidays, six sick

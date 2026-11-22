@@ -39,7 +39,30 @@
       "serialCombinedCoverage": {"passed": 30061, "suitesPassed": 2190, "branchCoveragePercent": 88.56},
       "serialCombinedPostgresVersion": "16.16",
       "bothSerialCombinedPostgresStopsPassed": true,
-      "githubRuns": {"dockerPassed": 44969430475, "ciPassed": 44969430386, "webRunningAtRecord": 44969430322},
+      "githubRuns": {"dockerPassed": 44969430475, "ciPassed": 44969430386, "webFailed": 44969430322},
+      "githubCiExact": {"unitPassed": 30061, "coverageTestsPassed": 30061, "branchCoveragePercent": 88.56, "bothPostgresStopsPassed": true},
+      "githubManagedBrowser": {
+        "job": 137045712768,
+        "passed": 648,
+        "failed": 2,
+        "originalSkips": 5,
+        "failure": "RRTA independent saved PDF inspector deadline after byte equality and during page text extraction",
+        "inspectorDeadlineMs": 4000,
+        "decimalReuseTrialMedianCpuGainsPercent": [0.24, 0.54],
+        "trialAdopted": false
+      },
+      "githubStrictAmd64": {
+        "job": 137045712976,
+        "passed": 637,
+        "failed": 13,
+        "originalSkips": 5,
+        "ohioCaseDeadlineFailures": 11,
+        "railroadSavedPdfDeadlineFailures": 2,
+        "imageSmokePassed": true,
+        "composeRecoveryPassed": true,
+        "independentArchiveImportPassed": true,
+        "cleanupPassed": true
+      },
       "releaseReady": false
     },
     "nov21OhioSchoolPdfTestIsolation": {

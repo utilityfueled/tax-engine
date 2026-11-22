@@ -43,10 +43,29 @@ targeted lint passed. The exact combined revision passed all 30,061
 tests across 2,190 files in both the unit and coverage runs. Branch
 coverage was 88.56%, above the unchanged 85% gate. Both disposable
 PostgreSQL 16.16 instances shut down cleanly. Docker and GitHub CI
-passed. The Web workflow was still running at this verification.
+passed. GitHub's unit and coverage jobs each reported 30,061 passing
+tests, and coverage reported 88.56% branches.
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44969430475) ·
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44969430386) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44969430322).
+
+The managed Linux browser job passed 648 cases with five existing skips.
+Both railroad paper review cases reached the saved-PDF inspector after
+their download-response bytes matched. The inspector began page-text
+extraction at 2.94 and 2.97 seconds and hit its existing four-second
+deadline in both cases. Reusing the already-parsed Decimal operands
+preserved all eight output fields on the retained files and saved
+0.24% and 0.54% median CPU time. That experiment supplied no material
+fix and was discarded.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44969430322/job/137045712768).
+
+The strict AMD64 container on the same revision passed 637 cases with
+five existing skips. Eleven Ohio business, reciprocal, resident-credit
+and school-district cases reached the 30-second deadline. The two
+railroad cases reached the saved-PDF inspector's four-second deadline.
+Image smoke, Compose upgrade and recovery, independent archive import
+and container cleanup passed. The browser gate remains open.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44969430322/job/137045712976).
 
 ## November 21 strict Linux failure comparison
 
