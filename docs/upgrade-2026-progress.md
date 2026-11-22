@@ -1,5 +1,36 @@
 # 2026 upgrade implementation evidence
 
+## November 21 pending Ohio header preview timing
+
+Commit `41796dfb` skips the repeated Ohio state preview replay for a
+single 2025 return with confirmed business, residency and payment drafts
+while the header is explicitly unconfirmed and there are no school
+district originals. The federal preview and separate validations still
+run. Confirmed or unknown headers and required, entered or retained
+school sources still use the existing replay.
+
+On the same recorded NEW212 fixture, median pure render time for a
+pending-header edit fell from 5.87–5.99 ms to 0.69–0.73 ms. The fully
+passing November 17 ARM64 source had comparable baseline costs. The
+measurement covers render computation, so strict browser timing still
+needs qualification.
+
+The regression reproduced the redundant replay in the baseline. The
+sealed source review, 91 integration tests, web typecheck, scoped lint,
+all 9,863 spec references, inventory check and browser source audit
+passed. All 10 production Chromium cases passed across desktop and
+mobile business, school-district and resident-credit lifecycles, using
+the original 30-second deadlines and zero retries. The owned web server
+shut down cleanly.
+
+The exact unit and coverage runs each passed 30,064 tests across 2,190
+files, with 88.56% branch coverage and clean shutdown of both disposable
+PostgreSQL 16.16 instances. Docker passed at the published revision.
+The remote CI and Web runs were still active at this verification.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44971971766) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44971971767) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44971971797).
+
 ## November 21 Pennsylvania template registry reconciliation
 
 The combined suite on `a4f672e1` passed 30,060 tests and found one
@@ -11,8 +42,8 @@ official Pennsylvania PDF suites passed all nine focused tests and
 targeted lint passed. The exact combined revision passed all 30,061
 tests across 2,190 files in both the unit and coverage runs. Branch
 coverage was 88.56%, above the unchanged 85% gate. Both disposable
-PostgreSQL 16.16 instances shut down cleanly. Docker passed. GitHub CI
-and Web still had running jobs when this evidence was recorded.
+PostgreSQL 16.16 instances shut down cleanly. Docker and GitHub CI
+passed. The Web workflow was still running at this verification.
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44969430475) ·
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44969430386) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44969430322).
