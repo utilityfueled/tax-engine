@@ -1698,6 +1698,12 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
 export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
   if ((state.taxYear ?? null) === taxYear) return state;
   const personal = state.sectionData["personal-info"];
+  const spouse = personal?.spouse;
+  const filerYearFactsEntered = personal && [
+    personal.usResidencyMonths, personal.stateResidency, personal.livedWithSpouseAtAnyTimeDuringYear,
+    personal.employmentValidSsnIssuedByDueDate, personal.tinIssuedByDueDate,
+    spouse?.usResidencyMonths, spouse?.employmentValidSsnIssuedByDueDate, spouse?.tinIssuedByDueDate,
+  ].some(answer => answer != null && answer !== "");
   const credits = state.sectionData.credits;
   const education = credits?.education;
   const aotcSourcesEntered = education && (education.aocStudents.length > 0 ||
@@ -1717,18 +1723,33 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
-      ...(personal?.dependents?.length ? {
+      ...(personal && (filerYearFactsEntered || personal.dependents?.length) ? {
         "personal-info": {
           ...personal,
-          dependents: personal.dependents.map(dependent => ({
-            ...dependent,
-            monthsLivedWithYou: "",
-            qualifiesForCTC: null,
-            qualifiesForODC: null,
-            qualifiesForEIC: null,
-            ctcSsnEligible: null,
-            odcTinEligible: null,
-          })),
+          ...(filerYearFactsEntered ? {
+            usResidencyMonths: "",
+            stateResidency: null,
+            livedWithSpouseAtAnyTimeDuringYear: undefined,
+            employmentValidSsnIssuedByDueDate: undefined,
+            tinIssuedByDueDate: undefined,
+            ...(spouse ? { spouse: {
+              ...spouse,
+              usResidencyMonths: "",
+              employmentValidSsnIssuedByDueDate: undefined,
+              tinIssuedByDueDate: undefined,
+            } } : {}),
+          } : {}),
+          ...(personal.dependents?.length ? {
+            dependents: personal.dependents.map(dependent => ({
+              ...dependent,
+              monthsLivedWithYou: "",
+              qualifiesForCTC: null,
+              qualifiesForODC: null,
+              qualifiesForEIC: null,
+              ctcSsnEligible: null,
+              odcTinEligible: null,
+            })),
+          } : {}),
         },
       } : {}),
       ...(selfEmployment && businessFacts && (businessFacts.incomeReconciled === true || businessFacts.expensesReconciled === true) ? {

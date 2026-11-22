@@ -177,7 +177,7 @@ it("keeps a prior-year QOF worksheet bound to its original year", () => {
   expect(buildTaxInputFromGuidedData(removed)).toMatchObject({ w2s: [{ wages: "50000" }] });
   expect(buildTaxInputFromGuidedData(removed)?.qofDispositionFacts).toBeUndefined();
 
-  const returned = setInterviewTaxYear(confirmed, 2025);
+  const returned = updateSectionData(setInterviewTaxYear(confirmed, 2025), "personal-info", completePersonalInfo);
   returned.sectionData["income-w2"] = prior.sectionData["income-w2"];
   expect(guidedQofDiscovery(returned).answer).toBeNull();
   expect(getGuidedSectionRoute(returned).map(section => section.id)).toContain("income-investments");

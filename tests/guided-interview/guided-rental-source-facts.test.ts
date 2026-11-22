@@ -5,7 +5,7 @@ import { emptyRentalPropertyEntry, loadGuidedFlowState, saveGuidedFlowState, set
 import { computeGuidedPreviewEvaluation } from "@/lib/guided-preview-compute";
 import { RentalPropertySchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
-import { startCompleteInterview, completeRentalSource } from "./complete-facts";
+import { completePersonalInfo, startCompleteInterview, completeRentalSource } from "./complete-facts";
 
 const source = completeRentalSource;
 function flow() { const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["rental"], lifeEvents: [], stateCode: null }); state.sectionData["income-rental"] = { entries: [{ ...source }] }; return state; }
@@ -56,7 +56,7 @@ describe("guided actual rental sources", () => {
     expect(setInterviewTaxYear(saved, 2026)).toBe(saved);
     expect(validateSection(saved, "income-rental").status).toBe("complete");
 
-    const switched = setInterviewTaxYear(saved, 2025);
+    const switched = updateSectionData(setInterviewTaxYear(saved, 2025), "personal-info", completePersonalInfo);
     const pending = { ...amounts, sourceFactsConfirmed: null };
     expect(switched.sectionData["income-rental"]?.entries).toEqual([pending]);
     expect(validateSection(switched, "income-rental").status).toBe("partial");

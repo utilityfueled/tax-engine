@@ -6,9 +6,9 @@ import { calculateScheduleA } from '@/engine/schedules/schedule-a.js';
 import { FEDERAL_2026_CONSTANTS } from '@/models/federal-2026-indexed.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { buildDonationsInput, buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
-import { emptyDeductionData, emptyDonationEntry, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection } from '@/lib/guided-interview-flow';
+import { emptyDeductionData, emptyDonationEntry, loadGuidedFlowState, saveGuidedFlowState, startInterview, updateSectionData, validateSection } from '@/lib/guided-interview-flow';
 import { actualGuidedCharitableCarryover } from '../fixtures/guided-charitable-carryover';
-import { completeW2Entry, startCompleteInterview } from './complete-facts';
+import { completePersonalInfo, completeW2Entry, startCompleteInterview } from './complete-facts';
 it('preserves actual category and legacy facts while revoking stale history confirmation',()=>{
  const old={...emptyDonationEntry,organization:'Actual operating foundation',type:'cash' as const,amount:'6000.01',date:'2025-05-01',qualifiedOrganization:true,isPrivateFoundation:true};
  const data={...emptyDeductionData,method:'itemized' as const,charitableContributions:'6000.01',donationEntries:[old],charitableCarryoverSources:actualGuidedCharitableCarryover()};
@@ -26,7 +26,7 @@ it('preserves actual category and legacy facts while revoking stale history conf
 });
 
 it.each([2025, 2026])('reopens noncash gifts to a known unqualified recipient in %i', (year) => {
- const state = setInterviewTaxYear(startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null }), year);
+ const state = updateSectionData(startInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null }, year), 'personal-info', completePersonalInfo);
  state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, sourceTaxYear: String(year), wages: '75000', federalWithheld: '10000' }] };
  const gift = { ...emptyDonationEntry, organization: 'Fictional unqualified recipient', type: 'property' as const,
   amount: '600.25', date: `${year}-03-31`, qualifiedOrganization: false };

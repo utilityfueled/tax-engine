@@ -4,11 +4,11 @@ import { act, useState } from 'react';
 import { expect, it } from 'vitest';
 import { SectionReview } from '@/components/guided-interview/section-review';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
-import { collectGuidedReviewIssues, getGuidedSectionRoute, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear } from '@/lib/guided-interview-flow';
+import { collectGuidedReviewIssues, getGuidedSectionRoute, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData } from '@/lib/guided-interview-flow';
 import { computeGuidedPreview } from '@/lib/guided-preview-compute';
 import { updateGuidedScheduleBPartThree } from '@/lib/guided-schedule-b-part-three';
 import { guidedForeignTaxK3Fixture } from '../../fixtures/guided-foreign-tax-k3';
-import { completeDividendEntry, startCompleteInterview } from '../../guided-interview/complete-facts';
+import { completeDividendEntry, completePersonalInfo, startCompleteInterview } from '../../guided-interview/complete-facts';
 import { mountGuidedPanel } from './guided-panel-dom';
 
 const disclosure = 'Foreign accounts and trusts (Schedule B)';
@@ -85,12 +85,12 @@ it('records actual Schedule B disclosures by year and clears inapplicable follow
     expect(buildTaxInputFromGuidedData(reload(latest))?.scheduleBPartThree).toEqual(countries);
     expect(collectGuidedReviewIssues(latest)).toEqual([]);
 
-    await act(async () => apply(setInterviewTaxYear(latest, 2026)));
+    await act(async () => apply(updateSectionData(setInterviewTaxYear(latest, 2026), 'personal-info', completePersonalInfo)));
     expect(panel.control(accountQuestion(2026)).value).toBe('');
     expect(buildTaxInputFromGuidedData(latest)).not.toHaveProperty('scheduleBPartThree');
     await panel.change(trustQuestion(2026), 'true');
     expect(buildTaxInputFromGuidedData(reload(latest))?.scheduleBPartThree).toEqual({ hasForeignTrust: true });
-    await act(async () => apply(setInterviewTaxYear(latest, 2025)));
+    await act(async () => apply(updateSectionData(setInterviewTaxYear(latest, 2025), 'personal-info', completePersonalInfo)));
     expect(buildTaxInputFromGuidedData(latest)?.scheduleBPartThree).toEqual(countries);
 
     await panel.change(fbarQuestion(2025), 'false');

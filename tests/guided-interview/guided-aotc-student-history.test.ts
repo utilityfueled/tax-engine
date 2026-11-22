@@ -124,7 +124,7 @@ describe("guided AOTC prior-claim history", () => {
     expect(calculateAotc(original)).toBe("2500");
     expect(setInterviewTaxYear(original, 2025)).toBe(original);
 
-    const changed = reopen(setInterviewTaxYear(original, 2026));
+    const changed = updateSectionData(reopen(setInterviewTaxYear(original, 2026)), "personal-info", original.sectionData["personal-info"]);
     const retained = creditsFor(changed).education.aocStudents[0];
     expect(retained).toMatchObject({ ...aoc, requiresPriorYearsConfirmation: true, sourceFactsConfirmed: null });
     expect(changed.sectionData.credits?.education.llcStudents?.[0]).toMatchObject({
@@ -159,7 +159,7 @@ describe("guided AOTC prior-claim history", () => {
       form8862Required: true, form8862Completed: true, refundableAocEligible: true,
       refundableAocFacts: { fullTimeStudent: true, earnedIncome: "15000", totalSupport: "18000", parentAlive: true },
     });
-    const changed = reopen(setInterviewTaxYear(source, 2025));
+    const changed = updateSectionData(reopen(setInterviewTaxYear(source, 2025)), "personal-info", source.sectionData["personal-info"]);
     const education = creditsFor(changed).education;
     const currentStudent = { ...education.aocStudents[0], priorYearsClaimed: "3", requiresPriorYearsConfirmation: false, sourceFactsConfirmed: true };
     const reviewedStudents = replaceStudents(changed, [currentStudent]);
@@ -183,7 +183,7 @@ describe("guided AOTC prior-claim history", () => {
     expect(result.form8863?.aocRefundable.toString()).toBe("0");
 
     const removed = replaceStudents(source, []);
-    const changedWithoutStudents = reopen(setInterviewTaxYear(removed, 2025));
+    const changedWithoutStudents = updateSectionData(reopen(setInterviewTaxYear(removed, 2025)), "personal-info", source.sectionData["personal-info"]);
     expect(creditsFor(changedWithoutStudents).education.aocBanInEffect).toBeUndefined();
     expect(buildTaxInputFromGuidedData(replaceStudents(changedWithoutStudents, [currentStudent]))).toBeNull();
   });

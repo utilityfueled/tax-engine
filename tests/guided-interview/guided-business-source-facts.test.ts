@@ -11,7 +11,7 @@ import { businessFactErrors } from "@/lib/guided-business-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
-import { completeW2Entry, startCompleteInterview } from "./complete-facts";
+import { completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
 const source = { ...emptyNecEntry, payerName: "Actual client", payerTin: "12-3456789", accountHolder: "primary" as const, nonemployeeCompensation: "0", federalWithheld: "0", stateTaxReporting: "single" as const, state: "PA", stateIncome: "0", stateWithheld: "0" };
 const expenses = Object.fromEntries(Object.keys(emptyScheduleCExpenses).map(key => [key, "0"])) as typeof emptyScheduleCExpenses;
@@ -59,7 +59,7 @@ describe("guided business source records", () => {
     expect(setInterviewTaxYear(confirmed, 2026)).toBe(confirmed);
     expect(validateSection(confirmed, "income-self-employment").status).toBe("complete");
 
-    const switched = setInterviewTaxYear(confirmed, 2025);
+    const switched = updateSectionData(setInterviewTaxYear(confirmed, 2025), "personal-info", completePersonalInfo);
     expect(buildTaxInputFromGuidedData(switched)).toBeNull();
     expect(validateSection(switched, "income-self-employment")).toMatchObject({
       status: "partial",

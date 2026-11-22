@@ -11,7 +11,7 @@ import {
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
-import { completeAocEligibility, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
+import { completeAocEligibility, completePersonalInfo, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { mountGuidedPanel } from "./guided-panel-dom";
 
 const currentReceipt = "Did this student receive a current-year Form 1098-T from this institution?";
@@ -80,6 +80,7 @@ it("requires selected-year LLC facts before completing credits or calculating", 
     expect(pending.taxYear).toBe(2025);
     expect(validateSection(pending, "credits").status).toBe("partial");
     expect(buildTaxInputFromGuidedData(pending)).toBeNull();
+    expect(saveGuidedFlowState(localStorage, record.id, updateSectionData(pending, "personal-info", completePersonalInfo))).toBe(true);
     await panel.render(<GuidedInterviewShell key="reopened" workspace={record} onExitGuided={() => {}} />);
     for (const label of [currentReceipt, priorReceipt, ...annualFields.map(([label]) => label)]) {
       expect(panel.control(label).value, label).toBe("");
