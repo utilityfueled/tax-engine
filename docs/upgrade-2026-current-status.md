@@ -7,8 +7,10 @@ filers and spouses after a return-year change. The latest source
 passed all 81 focused browser cases, all 9,868 spec references,
 the coverage inventory and root and web types. Unit and coverage each
 passed 30,075 tests across 2,192 suites with 88.56% branch coverage.
-Both PostgreSQL 16.16 instances shut down. Docker passed on the same
-source. Full Web and native ARM64 qualification still need results.
+Remote CI matched both counts and coverage and all test PostgreSQL
+16.16 instances shut down. Docker passed on the same source. Native
+ARM64 passed smoke and Compose recovery. Full browser qualification
+still needs results.
 [Annual personal facts evidence](upgrade-2026-progress.md#november-21-annual-dependent-filer-and-spouse-facts).
 
 `b3cb03a7` preserves exact state refund payment matches and includes the

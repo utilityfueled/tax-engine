@@ -34,7 +34,9 @@ assertions around changing years and reopening saved data.
 
 Exact unit and coverage each passed 30,075 tests across 2,192 suites
 with 88.56% branch coverage. The two disposable PostgreSQL 16.16
-instances both shut down. The exact Docker build passed.
+instances both shut down. Remote CI matched the counts, coverage and
+database shutdowns. The exact Docker build passed. Native ARM64 passed
+image smoke, Compose upgrade and recovery before the browser step.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44982692591) ·
 [Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44982692598) ·
 [Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/44982692590) ·
@@ -88,10 +90,23 @@ Vitest checks, 37 Node checks and all 37 existing managed Chromium
 deduction, charity and refund cases. The suite used two workers,
 zero retries and the existing 30-second deadline. Cleanup and the exact
 Docker build passed.
+Remote CI also passed 30,071 tests in each suite at 88.56% branch
+coverage, and both test databases shut down. Managed Linux passed 648
+cases, reached the existing four-second deadline in both railroad PDF
+inspections and retained five skips. Strict AMD64 passed 637 cases,
+with 11 Ohio deadlines, both railroad inspection deadlines and five
+skips. Its image smoke, Compose recovery and rollback, independent
+archive import, immutable SBOMs and container removal passed.
+Strict ARM64 passed image smoke,
+Compose recovery and cleanup. It passed 641 browser cases, hit the same
+nine Ohio deadlines as `0e71304c`, and retained five skips. Matching
+failures covered two NEW212 cases, one reciprocal refund, two resident
+credits and four school-district cases. Both railroad cases passed on ARM64.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44980998498) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44980998506) ·
-[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44980998522) ·
-[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44981047413).
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/44980998522/job/137081241313) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44980998522/job/137081241447) ·
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/44981047413/job/137081394550).
 
 ## November 21 pending Ohio header preview timing
 
