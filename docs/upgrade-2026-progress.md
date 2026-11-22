@@ -12211,3 +12211,54 @@ interrupted attempts. The final scoped `pnpm test` passed 213 tests across
 compatibility tests passed. Web TypeScript, scoped ESLint, browser source hashes,
 and diff review passed. Independent review found the interrupted-attempt edge
 and confirmed the documented direct-API model IDs. No live calls were made.
+
+
+### November 22 combined tip and employee-wage payroll
+
+Commit `854e500d` reconciles actual Form 4137 records before accepting an
+allocated-tip W-2 in the 2026 guided Reason A case. Form 4137 line 10 flows
+through existing engine payroll into Form 8919 line 8. Distinct original EINs
+and confirmed payroll facts are required. Owner-only noncash tip totals lack
+employer attribution and hold this particular combination. Editing tip
+originals requires reconfirmation. The final scoped `pnpm test` passed 39 cases
+across six files, including actual tips below the Box 8 allocation. Independent
+review reproduced both the original missing-Box-8-proof defect and the
+noncash attribution gap. Web TypeScript, targeted ESLint, three spec references,
+inventory and browser source hashes passed.
+An independent Chromium rehearsal served an archive of exact `854e500d`.
+The confirmed Form 8919 draft stayed blocked with $500 in W-2 Box 8 until the
+user linked that employer's actual tip worksheet and reconfirmed both forms.
+The guide advanced to Tax Credits and retained the completed section. See
+`.local/form-8919-allocated-tips-854e500d/run.md` for the local evidence.
+[Final 2026 Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) and
+[final 2026 W-2](https://www.irs.gov/pub/irs-pdf/fw2.pdf).
+
+### November 22 ARM64 archive import and Ohio timing comparison
+
+Commit `726e5493` admits native Linux ARM64 to the isolated Docker archive
+verifier. The kernel, local Docker daemon, source image, archive config,
+allowed variant, fresh Podman store, imported image, and cleanup must agree.
+Independent review found that an explicit v9 config could pass under an
+admitted v8 descriptor; the replacement rejects that case across all archive
+layouts. The corrected package passed 85 focused tests, eight spec references,
+Bash and Python syntax, ShellCheck, and Actionlint. The ARM workflow now
+requires the independent export/import result and retains its identity
+receipts. [Native run](https://github.com/utilityfueled/tax-engine/actions/runs/45046167027)
+started on exact `16cbc992`; the archive, smoke, Compose and strict browser
+results are pending.
+
+Commit `16cbc992` adds manual, failure-triggered trace comparison in one
+original strict Ohio window. The same exact image, audited neighbors, request
+bounds, 30-second deadline, two workers and zero retries apply to both legs.
+The recorded order is retain-on-failure followed by off. Cache and run-order
+effects limit the inference. Independent review verified the original strict
+result remains authoritative and incomplete collection aborts the comparison.
+The author passed 56 Node and 19 Vitest checks. The integration reran 48 Node
+checks plus Actionlint. [AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45046165720)
+was queued on exact `16cbc992` after dispatch.
+
+The official OpenAI deprecations still show GPT-5 Mini's December 11 shutdown;
+the published Gemini Flash pricing still changes to $1.50/$7.50 per million
+tokens on January 1. Those public pages do not verify any project's access.
+[OpenAI deprecations](https://developers.openai.com/api/docs/deprecations) and
+[Google pricing](https://aistudio.google.com/docs/pricing).

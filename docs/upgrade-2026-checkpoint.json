@@ -1,5 +1,35 @@
 {
   "activeContinuation": {
+    "nov22CombinedForm4137And8919": {
+      "applicationCommit": "854e500d",
+      "sources": [
+        "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+        "https://www.irs.gov/pub/irs-pdf/fw2.pdf"
+      ],
+      "verification": "39 scoped tests across six files, web TypeScript, targeted ESLint, three spec references, inventory and browser hashes",
+      "browser": "Archived 854e500d local Chromium held the existing confirmation until the distinct Form 4137 employer was linked and both worksheets reconfirmed; advanced to Tax Credits.",
+      "differential": "Confirmed W-2 allocation needs actual Form 4137 records, with primary owner and distinct employer EIN. Hold noncash totals without attribution.",
+      "humanQualification": "pending"
+    },
+    "nov22NativeArm64IndependentArchive": {
+      "codeCommit": "726e5493",
+      "verifiedLocal": "85 focused tests, 8 spec references and static checks; independent review's explicit ARM64 v9 mismatch now rejected",
+      "runtime": {
+        "source": "16cbc992",
+        "runId": 45046167027,
+        "observed": "in_progress"
+      }
+    },
+    "nov22OhioTracePair": {
+      "codeCommit": "16cbc992",
+      "verifiedLocal": "56 author Node tests, 19 Vitest tests, 48 integration Node checks and actionlint; separate source review",
+      "runtime": {
+        "source": "16cbc992",
+        "runId": 45046165720,
+        "observed": "queued"
+      },
+      "limitations": "Fixed retain-on-failure then off order. Same approved strict window; diagnostics cannot qualify the original run."
+    },
     "nov22AiReportedModelSettlement": {
       "applicationCommit": "44973faf",
       "sources": [
