@@ -359,7 +359,7 @@ function CreditsSummary({ data }: { data: CreditsData | undefined }) {
 function PaymentsSummary({ data }: { data: PaymentData | undefined }) {
   if (!data) return <p className="guided-review-empty">No additional payments entered.</p>;
 
-  const filledPayments = data.estimatedPayments.filter((p) => p.amount.trim());
+  const filledPayments = (data.estimatedPayments ?? []).filter((p) => p.amount.trim());
   const extensionPayments = (data.extensionPayments ?? []).filter((p) => p.amount.trim());
   const appliedCredits = (data.priorYearAppliedCredits ?? []).filter((p) => p.amount.trim());
   const hasClassifiedOtherPayments = extensionPayments.length > 0 || appliedCredits.length > 0;

@@ -1130,6 +1130,7 @@ export const emptyAdjustmentData: AdjustmentData = {
 export interface EstimatedPaymentEntry {
   date: string;
   amount: string;
+  receiptReference?: string;
   application?: { taxYear: string; confirmed: boolean | null };
 }
 
@@ -2810,7 +2811,7 @@ function validatePaymentsSection(data: PaymentData | undefined, taxYear?: number
   if (!data) return EMPTY_SECTION("payments info", true);
   const errors = { ...allPaymentFactErrors(data, taxYear), ...estimatedTaxFactErrors(data, taxYear) };
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (!data.estimatedTaxFacts && !data.estimatedPayments.length && !data.extensionPayments?.length && !data.priorYearAppliedCredits?.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
+  if (!data.estimatedTaxFacts && !data.estimatedPayments?.length && !data.extensionPayments?.length && !data.priorYearAppliedCredits?.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
   return VALID_SECTION;
 }
 

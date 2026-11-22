@@ -11,7 +11,7 @@ import {
 import { CurrencyField } from "./currency-field";
 import { BooleanFact } from "./fact-fields";
 import { formatGuidedCurrency, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
-import { federalPaymentDateNeedsApplication, type FederalPaymentKind } from "@/lib/guided-required-facts";
+import { federalPaymentDateNeedsApplication, supportsFederalPaymentReceiptReferences, type FederalPaymentKind } from "@/lib/guided-required-facts";
 
 function editPayment(entry: EstimatedPaymentEntry, field: "date" | "amount", value: string): EstimatedPaymentEntry {
   // CurrencyField adds grouping commas on blur without changing the reported amount.
@@ -52,6 +52,22 @@ function PaymentApplicationFields({ label, entry, taxYear, kind, onChange }: {
     <BooleanFact label={`${label} applies to this return`} value={application.confirmed}
       onChange={confirmed => onChange({ ...application, confirmed })} />
   </>;
+}
+
+function PaymentReceiptReference({ label, entry, taxYear, kind, onUpdate }: {
+  label: string;
+  entry: EstimatedPaymentEntry;
+  taxYear?: number | null;
+  kind: FederalPaymentKind;
+  onUpdate: (entry: EstimatedPaymentEntry) => void;
+}) {
+  if (!supportsFederalPaymentReceiptReferences(taxYear, kind)) return null;
+  return <label className="guided-field">
+    <span className="guided-field-label">{label} receipt reference</span>
+    <input className="guided-input" value={entry.receiptReference ?? ""}
+      onChange={event => onUpdate({ ...entry, receiptReference: event.target.value })} />
+    <span className="guided-field-hint">Use one consistent reference from your records for each processed IRS payment. Payments with the same date and amount need separate references.</span>
+  </label>;
 }
 
 function EstimatedPaymentCard({
@@ -106,6 +122,7 @@ function EstimatedPaymentCard({
           onChange={(value) => onUpdate(editPayment(entry, "amount", value))}
           required
         />
+        <PaymentReceiptReference label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="estimate" onUpdate={onUpdate} />
         <PaymentApplicationFields label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="estimate"
           onChange={application => onUpdate({ ...entry, application })} />
       </div>
@@ -123,7 +140,7 @@ export function SectionPayments({
   onDataChange: (data: PaymentData) => void;
 }) {
   const current = data ?? emptyPaymentData;
-  const payments = current.estimatedPayments;
+  const payments = current.estimatedPayments ?? [];
   const extensions = current.extensionPayments ?? [];
   const appliedRefunds = current.priorYearAppliedCredits ?? [];
 
@@ -195,6 +212,8 @@ export function SectionPayments({
             {extensions.map((entry, index) => <div key={index} className="guided-w2-card">
               <label className="guided-field"><span className="guided-field-label">Extension payment #{index + 1} date</span><input className="guided-input" type="date" value={entry.date} onChange={(event) => updatePayment("extensionPayments", index, editPayment(entry, "date", event.target.value))} /></label>
               <CurrencyField label={`Extension payment #${index + 1} amount`} value={entry.amount} onChange={amount => updatePayment("extensionPayments", index, editPayment(entry, "amount", amount))} required />
+              <PaymentReceiptReference label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="extension"
+                onUpdate={updated => updatePayment("extensionPayments", index, updated)} />
               <PaymentApplicationFields label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="extension"
                 onChange={application => updatePayment("extensionPayments", index, { ...entry, application })} />
               <button type="button" className="utility-button" onClick={() => onDataChange({ ...current, extensionPayments: extensions.filter((_, i) => i !== index) })}>Remove extension payment #{index + 1}</button>

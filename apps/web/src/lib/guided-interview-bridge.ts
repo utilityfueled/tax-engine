@@ -73,7 +73,7 @@ import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
-import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
@@ -532,8 +532,8 @@ function federalPaymentInput(entry: PaymentData["estimatedPayments"][number]) {
 
 export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined, taxYear?: number | null) {
   if (!paymentData) return [];
-  assertKnownFacts(paymentFactErrors(paymentData.estimatedPayments, taxYear, "estimate"));
-  return paymentData.estimatedPayments.map(federalPaymentInput);
+  assertKnownFacts({ ...paymentFactErrors(paymentData.estimatedPayments, taxYear, "estimate"), ...federalPaymentReceiptFactErrors(paymentData, taxYear) });
+  return (paymentData.estimatedPayments ?? []).map(federalPaymentInput);
 }
 
 // ── Retirement income (1099-R) converter ──────────────────────────────────
@@ -953,7 +953,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData, state.taxYear);
   const estimatedPayments = [
-    ...buildEstimatedPaymentsInput(paymentData, state.taxYear),
+    ...(paymentData?.estimatedPayments ?? []).map(federalPaymentInput),
     ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => ({ date: entry.date, amount: toDecimalString(entry.amount), type: "state" as const, state: entry.state })),
   ];
   const extensionPayments = (paymentData?.extensionPayments ?? []).map(federalPaymentInput);

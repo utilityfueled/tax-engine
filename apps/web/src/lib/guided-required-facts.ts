@@ -123,6 +123,10 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
 
 export type FederalPaymentKind = "estimate" | "extension";
 
+export function supportsFederalPaymentReceiptReferences(taxYear: number | null | undefined, kind: FederalPaymentKind): boolean {
+  return taxYear === 2025 || (taxYear === 2026 && kind === "estimate");
+}
+
 export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null, kind?: FederalPaymentKind): boolean {
   if (taxYear == null || !isActualDate(date) || date.startsWith("0000-")) return false;
   const paidYear = Number(date.slice(0, 4));
@@ -148,10 +152,53 @@ export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, 
   return errors;
 }
 
+export function federalPaymentReceiptFactErrors(data: PaymentData, taxYear?: number | null): Record<string, string> {
+  if (!supportsFederalPaymentReceiptReferences(taxYear, "estimate")) return {};
+  const errors: Record<string, string> = {};
+  const referenceFields = new Map<string, string>();
+  const matchingPayments = new Map<string, { errorField: string; reference: string }[]>();
+
+  function record(entries: EstimatedPaymentEntry[], prefix: string) {
+    entries.forEach((entry, index) => {
+      const errorField = `${prefix}payment-${index}-receipt-reference`;
+      const reference = typeof entry.receiptReference === "string" ? entry.receiptReference.replace(/\s+/g, "").toUpperCase() : "";
+      if (reference) {
+        const previous = referenceFields.get(reference);
+        if (previous) {
+          const message = "This receipt reference is used by more than one federal payment. Reconcile the rows with the actual payment records.";
+          errors[previous] = message;
+          errors[errorField] = message;
+        } else {
+          referenceFields.set(reference, errorField);
+        }
+      }
+
+      if (!isActualDate(entry.date) || entry.date.startsWith("0000-") || amountError(entry.amount, "payment amount")) return;
+      const amount = parseGuidedCurrency(entry.amount);
+      if (!amount.gt(0)) return;
+      const key = `${entry.date}:${amount.toFixed()}`;
+      const group = matchingPayments.get(key) ?? [];
+      group.push({ errorField, reference });
+      matchingPayments.set(key, group);
+    });
+  }
+
+  record(data.estimatedPayments ?? [], "");
+  if (supportsFederalPaymentReceiptReferences(taxYear, "extension")) record(data.extensionPayments ?? [], "extension-");
+  for (const group of matchingPayments.values()) {
+    if (group.length < 2) continue;
+    for (const row of group) {
+      if (!row.reference) errors[row.errorField] = "Enter a distinct actual receipt reference for each federal payment with the same date and amount.";
+    }
+  }
+  return errors;
+}
+
 export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: number | null): Record<string, string> {
   if (!data) return {};
   const errors = paymentFactErrors(data.estimatedPayments, taxYear, "estimate");
   for (const [key, value] of Object.entries(paymentFactErrors(data.extensionPayments, taxYear, "extension"))) errors[`extension-${key}`] = value;
+  Object.assign(errors, federalPaymentReceiptFactErrors(data, taxYear));
   (data.priorYearAppliedCredits ?? []).forEach((entry, index) => {
     const error = amountError(entry.amount, "applied refund amount");
     if (error) errors[`credit-${index}-amount`] = error;

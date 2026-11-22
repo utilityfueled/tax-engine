@@ -1,0 +1,22 @@
+form: "2025 guided federal payment receipt reconciliation"
+taxYear: 2025
+reference: https://www.irs.gov/instructions/i1040gi
+lines:
+  - line: "Form 1040 line 26, Schedule 3 line 10, Form 2210 line 11"
+    description: Admit each actual 2025 federal estimate or extension once
+    formula: >-
+      Hold 2025 guided estimates and extension payments that reuse the same
+      actual confirmation or receipt reference, even when the entered dates,
+      amounts, or categories differ. Whenever positive rows across these
+      categories share the exact calendar date and Decimal amount, require
+      distinct actual receipt references. Never discard a row automatically.
+      Transfer each distinct admitted payment with its original date, exact
+      amount and category. Preserve ordinary noncolliding legacy rows, the
+      existing federal application-year checks, other years and state payments.
+    irsRef: "2025 Form 1040 line 26 and Schedule 3 line 10 instructions (https://www.irs.gov/instructions/i1040gi); Form 2210 line 11 and the penalty worksheet (https://www.irs.gov/instructions/i2210); IRS Direct Pay payment-specific confirmations (https://www.irs.gov/payments/direct-pay-help)"
+    testRef: "tests/guided-interview/guided-federal-payment-receipts.test.ts::holds an ambiguous repeated estimated payment and admits two actual originals"
+    testRefs:
+      - "tests/guided-interview/guided-federal-payment-receipts.test.ts::holds reused and ambiguous receipt evidence across estimates and extensions"
+      - "tests/guided-interview/guided-federal-payment-receipts.test.ts::keeps exact cents and the existing return-year admission"
+      - "tests/guided-interview/guided-federal-payment-receipts.test.ts::admits a saved extension-only draft through Continue and the bridge"
+      - "tests/apps/web/guided-federal-payment-receipts.test.tsx::reconciles matching 2025 payment rows in the ordinary Payments panel"
