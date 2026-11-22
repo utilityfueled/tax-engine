@@ -32,7 +32,7 @@ function money(value: string | undefined, label: string) {
 }
 export function tipIncomeW2Sources(entries: W2EntryData[] = []): Form4137PayrollContext["w2s"] {
   // These are the same complete source records and indexes emitted by buildW2Inputs.
-  return entries.filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld)).map((entry, index) => {
+  return entries.filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld) || entry.stateLocalSources !== undefined).map((entry, index) => {
     if (entry.accountHolder !== "primary" && entry.accountHolder !== "spouse") throw new Error("Actual tip payroll requires each W2's actual owner.");
     const allocated = "allocatedTips" in entry ? entry.allocatedTips : undefined;
     if (allocated !== undefined && typeof allocated !== "string") throw new Error("Enter actual W2 Box8 allocated tips.");
@@ -88,7 +88,7 @@ export interface AdditionalDeductionsData {
   form8919ReasonA?: import("./guided-form-8919-reason-a").GuidedForm8919ReasonA;
 }
 export function tipIncomeW2Options(entries: W2EntryData[] = []) {
-  return entries.filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld)).map((entry, index) => ({ sourceId: `formW2:${index}`, accountHolder: entry.accountHolder ?? "", employerName: entry.employerName, employerEin: entry.employerEin }));
+  return entries.filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld) || entry.stateLocalSources !== undefined).map((entry, index) => ({ sourceId: `formW2:${index}`, accountHolder: entry.accountHolder ?? "", employerName: entry.employerName, employerEin: entry.employerEin }));
 }
 export function tipIncomeFactErrors(state: GuidedFlowState): Record<string, string> {
   try { const rrta=state.sectionData['additional-deductions']?.rrtaPayrollSources;

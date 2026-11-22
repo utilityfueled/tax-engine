@@ -2190,6 +2190,7 @@ export function updateSectionData(
   const unreportedWagesChanged = nextUnreportedWages && previousUnreportedWages && (
     sectionId === "additional-deductions"
       ? guidedSourceValuesChanged({ ...previousUnreportedWages, confirmed: false }, { ...nextUnreportedWages, confirmed: false })
+        || guidedSourceValuesChanged(state.sectionData["additional-deductions"]?.tipIncomeAccounts, nextAdditional?.tipIncomeAccounts)
       : sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-royalties"].includes(sectionId)
   );
   const rrtaParentChanged=sourceValuesChanged&&sectionId!=='additional-deductions'&&nextAdditional?.rrtaPayrollSources;

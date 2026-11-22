@@ -1,6 +1,7 @@
 import { d } from "@/utils/decimal";
 import type { GuidedFlowState } from "./guided-interview-flow";
 import { hasEnteredAmount } from "./guided-required-facts";
+import { buildTipIncomeInputs } from "./guided-tip-income-facts";
 
 export interface GuidedForm8919ReasonA {
   taxYear: string;
@@ -42,11 +43,13 @@ export function buildGuidedForm8919ReasonA(state: GuidedFlowState) {
     throw new Error("Enter the employer name and EIN, the IRS determination date, and positive wages from the original records.");
   }
   if (original.confirmed !== true) throw new Error("Confirm the IRS determination and that these wages were never reported or subject to payroll withholding.");
-  if (additional.rrtaPayrollSources || additional.tipIncomeAccounts?.length || state.sectionData["income-self-employment"] || state.sectionData["income-royalties"]) {
-    throw new Error("Separate tip, railroad, business, and miscellaneous income sources require their own reconciliation before Form 8919 can be calculated here.");
+  if (additional.rrtaPayrollSources || state.sectionData["income-self-employment"] || state.sectionData["income-royalties"]) {
+    throw new Error("Railroad, business, and miscellaneous income sources require their own reconciliation before Form 8919 can be calculated here.");
   }
 
-  for (const w2 of state.sectionData["income-w2"]?.entries ?? []) {
+  const w2s = state.sectionData["income-w2"]?.entries ?? [];
+  const allocatedTipEmployers = new Set<string>();
+  for (const w2 of w2s) {
     if (Object.values(w2.aiSuggestedFields ?? {}).some(field => field?.status === "pending-confirmation")) {
       throw new Error("Confirm original W-2 sources before reconciling Form 8919.");
     }
@@ -56,6 +59,25 @@ export function buildGuidedForm8919ReasonA(state: GuidedFlowState) {
     if (w2.sourceTaxYear?.trim() !== original.taxYear || w2.accountHolder === "spouse" || !exactWages.test(w2.socialSecurityWages.trim()) || !exactWages.test(w2.socialSecurityTips?.trim() ?? "")) {
       throw new Error("Enter original 2026 W-2 Boxes 3 and 7 for the primary filer, including known zero.");
     }
+    const allocatedTips = w2.allocatedTips?.trim();
+    if (allocatedTips) {
+      if (!exactWages.test(allocatedTips)) throw new Error("Enter the actual allocated tips from W-2 Box 8.");
+      if (d(allocatedTips.replaceAll(",", "")).gt(0)) allocatedTipEmployers.add(w2Ein);
+    }
+  }
+
+  const tips = buildTipIncomeInputs(additional.tipIncomeAccounts, state.segmentation.filingStatus, state.taxYear, w2s)?.primary?.sourceFacts;
+  if (d(tips?.noncashTipsNotIncludedInWages).gt(0)) {
+    throw new Error("Noncash tips require separate employer attribution before combining them with Form 8919 wages.");
+  }
+  const tipEmployers = new Set<string>();
+  for (const employer of tips?.employers ?? []) {
+    const tipEin = employerId(employer.employerEin ?? "");
+    if (!tipEin || tipEin === ein) throw new Error("Forms 4137 and 8919 here require original EINs from separate employers.");
+    tipEmployers.add(tipEin);
+  }
+  if ([...allocatedTipEmployers].some(employer => !tipEmployers.has(employer))) {
+    throw new Error("Reconcile allocated W-2 Box 8 tips with confirmed Form 4137 records before continuing.");
   }
 
   return { accountHolder: "primary" as const, wagesNotReportedOnW2: d(wages.replaceAll(",", "")).toFixed() };
