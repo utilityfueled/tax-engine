@@ -66,8 +66,10 @@ export function guidedCode1IraOwnerBirthDate(
   entries: RetirementEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null,
   primaryDateOfBirth?: string, hasIraBasisWorksheet = false,
 ): string | undefined {
-  if (taxYear !== 2025 || !filingStatus || filingStatus === "mfj" || hasIraBasisWorksheet
-    || entries?.filter(isStartedRetirement).length !== 1 || !isActualDate(primaryDateOfBirth)) return undefined;
+  const originals = entries?.filter(isStartedRetirement);
+  if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus || filingStatus === "mfj" || hasIraBasisWorksheet
+    || originals?.length !== 1 || originals[0]?.sourceTaxYear !== String(taxYear)
+    || !isActualDate(primaryDateOfBirth)) return undefined;
   return primaryDateOfBirth;
 }
 
@@ -78,13 +80,17 @@ export function hasStartedGuidedCode1IraAgeSource(entry: RetirementEntryData): b
 export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDate?: string) {
   if (hasStartedGuidedCode1IraAgeSource(entry) && entry.code1IraAgeSource?.ownerBirthDate !== ownerBirthDate) return undefined;
   const box5 = entry.employeeContributions;
-  if (!ownerBirthDate || entry.sourceTaxYear !== "2025" || entry.accountHolder !== "primary"
+  const sourceYear = entry.sourceTaxYear;
+  if (!ownerBirthDate || (sourceYear !== "2025" && sourceYear !== "2026") || entry.accountHolder !== "primary"
     || entry.requiresCodeConfirmation || entry.requiresIraConfirmation || entry.qcdSource || entry.simplifiedMethod
     || normalizeGuidedRetirementCode(entry.distributionCode) !== "1" || entry.isIraSepSimple !== true
     || entry.iraBasisConfirmedZero !== true || entry.eligibleGovernmental457bPlan !== false
     || entry.taxableAmountNotDetermined !== false || entry.taxableAmountConfirmed !== true
     || amountError(entry.grossDistribution, "Box 1") || amountError(entry.taxableAmount, "Box 2a")
     || !box5 || amountError(box5, "Box 5")) return undefined;
+  if (sourceYear === "2026" && (entry.trumpAccount !== false
+    || amountError(entry.excessContributionEarnings, "Box 7d")
+    || !parseGuidedCurrency(entry.excessContributionEarnings).isZero())) return undefined;
 
   const gross = parseGuidedCurrency(entry.grossDistribution);
   if (!gross.gt(0) || !gross.eq(parseGuidedCurrency(entry.taxableAmount))
@@ -93,7 +99,7 @@ export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDat
   const proof = entry.code1IraAgeSource;
   const date = proof?.distributionDate;
   const distributionDate = proof?.singlePaymentConfirmed === true && date && isActualDate(date)
-    && date.startsWith("2025-") && date >= ownerBirthDate ? date : undefined;
+    && date.startsWith(`${sourceYear}-`) && date >= ownerBirthDate ? date : undefined;
   return {
     distributionDate,
     ageException: distributionDate !== undefined && !isBeforeAge59AndHalfDate(
@@ -103,6 +109,7 @@ export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDat
 }
 
 export function guidedCode1IraFirstHomeOriginal(entry: RetirementEntryData, ownerBirthDate?: string) {
+  if (entry.sourceTaxYear !== "2025") return undefined;
   const age = guidedCode1IraAgeFacts(entry, ownerBirthDate);
   return guidedFirstHomeOriginal(entry, ownerBirthDate, age?.ageException ? undefined : age?.distributionDate);
 }
@@ -303,7 +310,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (startedAgeSource && !ageFacts) {
       fail("code1-ira-age-date", "Reconcile the saved Code 1 IRA receipt date with the current statement and return before calculating.");
     } else if (startedAgeSource && !ageFacts?.distributionDate) {
-      fail("code1-ira-age-date", "Confirm the single Box 1 payment and enter its actual receipt date in the 2025 statement year.");
+      fail("code1-ira-age-date", `Confirm the single Box 1 payment and enter its actual receipt date in the ${entry.sourceTaxYear} statement year.`);
     }
     if (firstHome !== undefined) {
       try {

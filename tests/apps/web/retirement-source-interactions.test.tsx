@@ -8,11 +8,11 @@ import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
 import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 
-async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>) {
+async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>, taxYear = 2025, ownerBirthDate = "1966-02-01") {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container); let latest = initial;
-  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus="single" taxYear={2025} primaryDateOfBirth="1966-02-01" onEntriesChange={next => { latest = next; setEntries(next); }} />; }
+  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus="single" taxYear={taxYear} primaryDateOfBirth={ownerBirthDate} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
   async function change(label: string, value: string) {
     const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
     if (!element) throw new Error(`Missing control: ${label}`);
@@ -25,6 +25,28 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
   finally { await act(async () => root.unmount()); container.remove(); }
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
+
+// Spec: spec/federal/form-5329-guided-code1-ira-2026.yaml, 1-4.
+it("collects a 2026 Code 1 IRA payment date and keeps the first-home worksheet unavailable", async () => {
+  const ownerBirthDate = "1967-02-01";
+  const source = {
+    ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "1", isIraSepSimple: true,
+    grossDistribution: "6000", taxableAmount: "6000",
+  };
+  await render([source], async ({ latest, container, change }) => {
+    await change("Does Box 1 report one payment with no other distributions?", "true");
+    await change("Date the IRA payment was received", "2026-07-31");
+    expect(latest()[0]?.code1IraAgeSource).toMatchObject({ ownerBirthDate, distributionDate: "2026-07-31" });
+    expect(container.textContent).not.toContain("Enter a first-home IRA worksheet");
+    await change("Date the IRA payment was received", "2026-08-01");
+    await change("Is another retirement worksheet needed beyond this documented Code 1 age exception?", "false");
+    await change(confirm, "true");
+    const personal = { ...completePersonalInfo, dateOfBirth: ownerBirthDate };
+    expect(buildRetirementInputs(latest(), "single", 2026, undefined, { personal })[0]).toMatchObject({
+      distributionCode: "1", distributionDate: "2026-08-01",
+    });
+  }, 2026, ownerBirthDate);
+});
 
 // Spec: spec/federal/form-5329.yaml, Line 2, guided Code 1 age exception.
 it("requires a real Code 1 IRA receipt date and invalidates it when the original changes", async () => {

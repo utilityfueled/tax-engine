@@ -1,0 +1,18 @@
+form: "Form 5329 Guided 2026 Code 1 IRA receipt date"
+fullName: "2026 primary traditional IRA actual payment date and age exception"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf"
+notes: "The final form supplies Part I. Section 72(t)(2)(A)(i) supplies the age threshold. The 2026 annual calculation and filing gates continue to apply."
+lines:
+  - line: "1-4"
+    description: "Apply the age threshold on the actual receipt date"
+    formula: "For one nonjoint primary taxpayer's fully taxable ordinary Code 1 traditional IRA payment with confirmed zero basis and Box 5, accept a documented single Box 1 payment date in the same 2026 statement and return year. Use the actual owner birth date and preserve the original Box 7a code. If the receipt is before age 59 1/2, line 4 is 10 percent of the nonexcepted taxable amount. If on or after that age, the existing age exception applies to line 2 and leaves zero on line 4. The full taxable IRA amount remains in income."
+    sources:
+      - "https://uscode.house.gov/us/usc/119-124/t26/s72/"
+    testRef: "tests/guided-interview/guided-code1-ira-2026.test.ts::projects the 2026 IRA receipt and applies the exact age boundary through Form 5329"
+    testRefs:
+      - "tests/apps/web/retirement-source-interactions.test.tsx::collects a 2026 Code 1 IRA payment date and keeps the first-home worksheet unavailable"
+  - line: "source-guards"
+    description: "Require the matched current original and source confirmations"
+    formula: "Hold a saved receipt date if it does not match the statement year or owner birth date, the one-payment confirmation is absent, a competing worksheet is needed, or the ordinary source becomes ineligible. Require an unchecked Box 7c and zero Box 7d to use this ordinary 2026 path. The guided first-home IRA worksheet continues to require a 2025 original."
+    testRef: "tests/guided-interview/guided-code1-ira-2026.test.ts::holds an invalid or stale 2026 receipt and preserves the separate first-home boundary"
