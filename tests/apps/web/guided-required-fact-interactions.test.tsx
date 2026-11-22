@@ -6,18 +6,19 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SectionPersonalInfo } from "@/components/guided-interview/section-personal-info";
 import { HouseholdSourceDetails } from "@/components/guided-interview/household-source-details";
 import { DeductionSourceDetails } from "@/components/guided-interview/deduction-source-details";
+import { SectionDeductions } from "@/components/guided-interview/section-deductions";
 import { VehicleSourceDetails } from "@/components/guided-interview/vehicle-source-details";
 import { AdoptionSourceDetails } from "@/components/guided-interview/adoption-source-details";
 import { EducationSourceDetails } from "@/components/guided-interview/education-source-details";
 import { StandardDeductionSourceDetails } from "@/components/guided-interview/standard-deduction-source-details";
 import { buildStandardDeductionFacts, type StandardDeductionData } from "@/lib/guided-standard-deduction-facts";
-import { buildEducationInput } from "@/lib/guided-interview-bridge";
+import { buildEducationInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { buildAdoptionInput, type AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
 import { buildDonationsInput, buildForm1098Inputs, buildScheduleHInput } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
-import { emptyCreditsData, emptyEducationCreditData, emptyDeductionData, emptyOtherTaxesData, type EducationCreditData, type DeductionData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
-import { completeAocEligibility, completeEducationClaimant, completeDependent, completePersonalInfo } from "../../guided-interview/complete-facts";
+import { emptyCreditsData, emptyEducationCreditData, emptyDeductionData, emptyDonationEntry, emptyOtherTaxesData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type EducationCreditData, type DeductionData, type DonationEntryData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
+import { completeAocEligibility, completeEducationClaimant, completeDependent, completePersonalInfo, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -285,5 +286,62 @@ describe("required fact interaction boundaries", () => {
     expect(latest.charitableContributions).toBe("0.2");
     await click("Remove mortgage #1");
     expect(latest.mortgageInterest).toBe("");
+  });
+
+  it.each(["cash", "appreciated_stock"] as const)("reconfirms 2026 donation eligibility after a saved recipient changes (%s)", async type => {
+    let state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2026;
+    state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "100000", federalWithheld: "10000" }] };
+    const stock = type === "appreciated_stock";
+    const recipientCategory = stock ? "private-nonoperating" : "fifty-percent";
+    const original: DonationEntryData = {
+      ...emptyDonationEntry, organization: "Fictional Original Recipient", type, amount: "750.01", date: "2026-06-04",
+      costBasis: stock ? "0" : "", isLongTermCapitalGain: stock ? true : null,
+      recipientCategory, isPrivateFoundation: stock,
+      qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false,
+      ...(stock ? { qualifiedAppreciatedStock: true } : {}),
+    };
+    state.sectionData.deductions = { ...emptyDeductionData, method: "standard", charitableContributions: original.amount, donationEntries: [original] };
+
+    const render = () => root.render(<SectionDeductions data={state.sectionData.deductions} filingStatus={state.segmentation.filingStatus} taxYear={state.taxYear}
+      onDataChange={data => { state = updateSectionData(state, "deductions", data); render(); }} />);
+    await act(async () => render());
+
+    const equivalentName = `  ${original.organization}  `;
+    await change("Donation recipient", equivalentName);
+    expect(state.sectionData.deductions?.donationEntries).toEqual([{ ...original, organization: equivalentName }]);
+    expect(buildTaxInputFromGuidedData(state)?.donations?.[0]).toMatchObject({ organization: original.organization, amount: "750.01", supportingOrganization: false, donorAdvisedFund: false });
+
+    const newName = "Fictional Different Recipient";
+    await change("Donation recipient", newName);
+    const storageKey = { storageKey: `guided-donation-edit-${type}` };
+    expect(saveGuidedFlowState(window.localStorage, storageKey, state)).toBe(true);
+    const saved = loadGuidedFlowState(window.localStorage, storageKey);
+    window.localStorage.removeItem(storageKey.storageKey);
+    if (!saved) throw new Error("Expected the saved donation edit to reopen.");
+    state = saved;
+    await act(async () => render());
+
+    expect(state.taxYear).toBe(2026);
+    expect(state.sectionData.deductions?.donationEntries).toEqual([{
+      ...original, organization: newName, isPrivateFoundation: null, recipientCategory: null,
+      qualifiedOrganization: null, supportingOrganization: null, donorAdvisedFund: null, qualifiedAppreciatedStock: null,
+    }]);
+    expect(state.sectionData.deductions?.charitableContributions).toBe("750.01");
+    expect(control("Recipient qualifies for a charitable contribution deduction").value).toBe("");
+    expect(validateSection(state, "deductions").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+
+    await change("Recipient tax category", recipientCategory);
+    await change("Recipient qualifies for a charitable contribution deduction", "true");
+    await change("Recipient is a supporting organization", String(!stock));
+    await change("Gift was to a donor-advised fund", "false");
+    if (stock) await change("Gift is qualified appreciated stock", "false");
+    expect(validateSection(state, "deductions").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(state)?.donations?.[0]).toMatchObject({
+      organization: newName, type, amount: "750.01", dateOfDonation: "2026-06-04", recipientCategory,
+      qualifiedOrganization: true, supportingOrganization: !stock, donorAdvisedFund: false,
+      ...(stock ? { costBasis: "0", isLongTermCapitalGain: true, qualifiedAppreciatedStock: false } : {}),
+    });
   });
 });

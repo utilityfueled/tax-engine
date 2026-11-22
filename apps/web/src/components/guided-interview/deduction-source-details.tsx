@@ -64,8 +64,23 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     {includeDonations && <><h4>Charitable contributions</h4>
     {donations.map((entry, index) => {
       const update = (change: Partial<DonationEntryData>) => setDonations(donations.map((item, i) => i === index ? { ...item, ...change } : item));
+      const updateRecipient = (organization: string) => {
+        if (organization.trim() === entry.organization.trim()) {
+          update({ organization });
+          return;
+        }
+        update({
+          organization,
+          isPrivateFoundation: null,
+          recipientCategory: null,
+          qualifiedOrganization: null,
+          supportingOrganization: null,
+          donorAdvisedFund: null,
+          qualifiedAppreciatedStock: null,
+        });
+      };
       return <fieldset className="guided-fieldset" key={index}><legend>Donation #{index + 1}</legend><div className="guided-form-grid">
-        <TextFact label="Donation recipient" value={entry.organization} onChange={(organization) => update({ organization })} />
+        <TextFact label="Donation recipient" value={entry.organization} onChange={updateRecipient} />
         <label className="guided-field"><span className="guided-field-label">Donation type</span><select className="guided-input" value={entry.type} onChange={(event) => update({ type: event.target.value as DonationEntryData["type"] })}><option value="">Choose the actual type</option><option value="cash">Cash</option><option value="appreciated_stock">Appreciated stock</option><option value="property">Property</option><option value="other">Other noncash property</option></select></label>
         <CurrencyField label="Donation amount / fair market value" value={entry.amount} onChange={(amount) => update({ amount })} required />
         <TextFact label="Donation date" value={entry.date} type="date" onChange={(date) => update({ date })} />
