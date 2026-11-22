@@ -1,5 +1,43 @@
 # 2026 upgrade implementation evidence
 
+## November 21 Pennsylvania template registry reconciliation
+
+The combined suite on `a4f672e1` passed 30,060 tests and found one
+stale historical template count after Pennsylvania Schedule NRH was
+added. PostgreSQL 16.16 shut down cleanly. Commit `46eb0559` checks all
+49 templates and independently pins the Schedule NRH checksum. The
+altered-byte and unsupported-template checks still run. The registry and
+official Pennsylvania PDF suites passed all nine focused tests and
+targeted lint passed. The exact combined revision passed all 30,061
+tests across 2,190 files in both the unit and coverage runs. Branch
+coverage was 88.56%, above the unchanged 85% gate. Both disposable
+PostgreSQL 16.16 instances shut down cleanly. Docker passed. GitHub CI
+and Web still had running jobs when this evidence was recorded.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44969430475) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/44969430386) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/44969430322).
+
+## November 21 strict Linux failure comparison
+
+The earlier strict Linux job logs show eight matching 30-second Ohio
+failures on both architectures, across the business, resident-credit
+and school-district lifecycles. AMD64 additionally failed the reciprocal
+desktop case and the distinct resident-credit mobile case. The errors
+landed at different browser actions and request or download waits.
+The source review did not establish a single failing operation to fix.
+[Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44953786499/job/136997292844) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44954266314/job/136998793477).
+
+## November 21 Ohio school PDF test isolation
+
+Commit `a4f672e1` gives each Ohio school review export its own PDF test
+recorder. The reproduced overlap wrote the earlier case's $1,100
+withholding into a later case expecting $600. The new regression holds
+the first export until the second has started and checks both snapshots.
+All 20 exact focused tests passed. The independent review confirmed the
+existing physical assertions and deadlines, and production source stayed
+the same. [Docker workflow](https://github.com/utilityfueled/tax-engine/actions/runs/44968330741).
+
 ## November 21 Pennsylvania Schedule NRH review
 
 Commit `ee44261d` adds the redacted official 03-24 Schedule NRH page
@@ -36,8 +74,10 @@ passed at the original time limit. The first parallel unit and coverage
 runs recorded eight and twelve failures, respectively. Eleven of the
 coverage failures were timeouts. The school-district withholding
 assertion that also failed passed on the isolated 19-case replay. Both
-original PostgreSQL instances shut down cleanly. A sequential recheck
-of the whole source is in progress.
+original PostgreSQL instances shut down cleanly. The same source then
+passed all 30,051 unit tests and all 30,051 coverage tests across 2,189
+files, with 88.55% branch coverage and both PostgreSQL 16.16 instances
+shut down cleanly.
 
 ## November 21 2026 Form 1099-R Copy B review evidence
 

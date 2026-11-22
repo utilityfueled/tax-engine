@@ -1,5 +1,34 @@
 {
   "activeContinuation": {
+    "nov21PaNrhTemplateRegistryReconciliation": {
+      "commit": "46eb055955373a111ee723684da417287bbfb3f9",
+      "initialCombinedUnit": {
+        "commit": "a4f672e1df227f1c4287913fab58bd7f271400d1",
+        "passed": 30060,
+        "failed": 1,
+        "failure": "2025 registry expected 48 templates after official Schedule NRH increased the pack to 49",
+        "postgres16_16Stopped": true
+      },
+      "historicalTemplateCount": 49,
+      "scheduleNrhSha256": "39254e3bd00841ff8c64445fea3ce869860993ca01f15b71ef1df10aede8e323",
+      "focusedTestsPassed": 9,
+      "focusedLintPassed": true,
+      "serialCombinedUnit": {"passed": 30061, "suitesPassed": 2190},
+      "serialCombinedCoverage": {"passed": 30061, "suitesPassed": 2190, "branchCoveragePercent": 88.56},
+      "serialCombinedPostgresVersion": "16.16",
+      "bothSerialCombinedPostgresStopsPassed": true,
+      "githubRuns": {"dockerPassed": 44969430475, "ciRunningAtRecord": 44969430386, "webRunningAtRecord": 44969430322},
+      "releaseReady": false
+    },
+    "nov21OhioSchoolPdfTestIsolation": {
+      "commit": "a4f672e1df227f1c4287913fab58bd7f271400d1",
+      "reproducedOriginalOverlap": {"expectedWithholding": "600", "capturedPriorWithholding": "1100"},
+      "finalExactFocusedTestsPassed": 20,
+      "independentSourceReviewPassed": true,
+      "productionSourceChanged": false,
+      "originalAssertionsAndLimitsPreserved": true,
+      "dockerRunPassed": 44968330741
+    },
     "nov21PaScheduleNrhOfficialReview": {
       "commit": "ee44261d955b18040eb43811feda1948c237528e",
       "sourceRevision": "PA-40 NRH (EX) 03-24 (FI)",
@@ -30,6 +59,10 @@
       "originalParallelUnit": {"passed": 30043, "failed": 8, "timeouts": 8},
       "originalParallelCoverage": {"passed": 30039, "failed": 12, "timeouts": 11},
       "isolatedOhioSchoolAssertionRecheckPassed": 19,
+      "serialUnit": {"passed": 30051, "suitesPassed": 2189},
+      "serialCoverage": {"passed": 30051, "suitesPassed": 2189, "branchCoveragePercent": 88.55},
+      "serialPostgresVersion": "16.16",
+      "bothSerialPostgresStopsPassed": true,
       "filingEnabled": false
     },
     "nov21Form1099RCopyBBoxes7c7d": {
