@@ -5063,6 +5063,26 @@
       ]
     },
     {
+      "key": "federal/form-5329-first-home-guided-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf",
+      "specPath": "spec/federal/form-5329-first-home-guided-2026.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-5329-first-home-source",
       "jurisdiction": "federal",
       "taxYear": 2025,

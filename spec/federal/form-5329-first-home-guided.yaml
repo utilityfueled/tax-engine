@@ -14,7 +14,7 @@ lines:
     testRef: "tests/apps/web/retirement-first-home-interactions.test.tsx::collects and restores the actual first-home worksheet with no missing or inferred facts"
   - line: "09-guided-holds"
     description: "Hold incomplete, conflicting, stale and unsupported guided records"
-    formula: "The actual payment must be on or after receipt and contract and through calendar day 120 after receipt, including across tax years. Hold a saved worksheet if its original source or return context changed, two retirement sources are entered, or another retirement worksheet is needed or unresolved. Require confirmation after the latest edit; removal also requires the ordinary retirement worksheet answer to be confirmed again. Code 12 age relief remains available only on its independent route."
+    formula: "The actual payment must be on or after receipt and contract and through calendar day 120 after receipt, including across tax years. Require receipt, contract and payment to have occurred on or before the current local review day. Hold a saved worksheet if its original source or return context changed, two retirement sources are entered, or another retirement worksheet is needed or unresolved. Require confirmation after the latest edit; removal also requires the ordinary retirement worksheet answer to be confirmed again. Code 12 age relief remains available only on its independent route."
     testRef: "tests/apps/web/retirement-first-home-interactions.test.tsx::holds stale, mixed, late or unsupported guided first-home facts"
   - line: "2-4-review"
     description: "Send confirmed source facts to the ordinary guided calculation and workspace review packet"

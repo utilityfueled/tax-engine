@@ -1,0 +1,22 @@
+form: "Form 5329 Guided 2026 First-Home IRA Source"
+fullName: "2026 guided intake of an actual first-home IRA distribution"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf"
+notes: "Section 72(t)(2)(F) and (8) control the calculation. The final 2026 form supplies Part I and the annual instruction revision remains draft. This contract covers guided source intake under existing calculation, PDF and filing gates."
+lines:
+  - line: "09-guided-source"
+    description: "Send the confirmed first-home purchase and actual receipt to Form 5329"
+    formula: "Reuse the sole 2026 primary ordinary traditional IRA Code 1 distribution and actual date for an owner under age 59 1/2. Match the return and statement year, original payer, account, full taxable Box 1 amount, owner birth date, and payment date. Keep the existing confirmed completed purchase, own principal residence, unmarried status at acquisition, two-year ownership history, former section 1034, no-rollover and previously used lifetime amount requirements. The purchase payment may occur in the following calendar year through day 120 after receipt. The exception is the lesser of the purchase payment and the unused $10,000 lifetime limit. Preserve taxable IRA income and tax the remaining nonexcepted amount at 10 percent."
+    sources:
+      - "https://uscode.house.gov/us/usc/119-124/t26/s72/"
+    testRef: "tests/guided-interview/guided-first-home-ira-2026.test.ts::projects the confirmed 2026 first-home source and applies the exact day 120 result"
+    testRefs:
+      - "tests/apps/web/retirement-source-interactions.test.tsx::collects a 2026 Code 1 IRA date and offers first-home intake only before age 59½"
+  - line: "09-guided-holds"
+    description: "Hold late and unsupported worksheets"
+    formula: "Require a completed purchase and reject payment after day 120, changed source or return context, other owners or statements, and competing retirement worksheets. Delay, cancellation, rollover or recontribution treatment requires separate reconciliation. Continue holding Trump account distributions and positive excess contribution earnings."
+    testRef: "tests/guided-interview/guided-first-home-ira-2026.test.ts::holds day 121 and unsupported 2026 first-home sources"
+  - line: "09-actual-dates"
+    description: "Require receipt, contract and purchase payment to have occurred"
+    formula: "The guide requires actual distribution receipt, binding purchase contract, and payment dates on or before the current local calendar day. A planned future payment does not establish use of the proceeds. Allow the review day itself. Preserve the separate statutory day-120 limit and use a clock only in guided source admission."
+    testRef: "tests/guided-interview/guided-first-home-ira-2026.test.ts::holds future receipt, contract and purchase payment dates until they occur"

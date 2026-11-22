@@ -1,7 +1,7 @@
 import { Form5329FirstHomeSourceSchema } from "@/models/inputs";
 import type { RetirementEntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { amountError, isActualDate } from "./guided-required-facts";
+import { amountError, currentLocalCivilDate, isActualDate } from "./guided-required-facts";
 
 export interface GuidedFirstHomeOriginal {
   payer: string;
@@ -74,8 +74,13 @@ export function buildGuidedFirstHomeSource(
     throw new Error("Confirm the completed first-home purchase, ownership history and actual payment from the matched IRA proceeds.");
   }
   const { bindingContractDate, paymentDate, paymentAmount, priorQualifiedDistributions } = worksheet;
-  if (!bindingContractDate || !isActualDate(bindingContractDate) || !paymentDate || !isActualDate(paymentDate)) {
+  if (!isActualDate(original.distributionDate) || !bindingContractDate || !isActualDate(bindingContractDate)
+    || !paymentDate || !isActualDate(paymentDate)) {
     throw new Error("Enter the actual binding contract and purchase-price payment dates.");
+  }
+  const reviewDate = currentLocalCivilDate();
+  if (original.distributionDate > reviewDate || bindingContractDate > reviewDate || paymentDate > reviewDate) {
+    throw new Error("The IRA receipt, binding contract and purchase payment must have occurred on or before today.");
   }
   const deadline = new Date(`${original.distributionDate}T00:00:00Z`);
   deadline.setUTCDate(deadline.getUTCDate() + 120);
@@ -94,7 +99,7 @@ export function buildGuidedFirstHomeSource(
     throw new Error("Enter the positive purchase-price amount paid from the matched IRA distribution, up to the total received.");
   }
   return Form5329FirstHomeSourceSchema.parse({
-    sourceTaxYear: 2025,
+    sourceTaxYear: Number(original.distributionDate.slice(0, 4)),
     owner: "primary",
     accountReference: original.accountReference,
     sourceFactsConfirmed: true,

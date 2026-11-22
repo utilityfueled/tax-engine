@@ -11,8 +11,10 @@ lines:
       - "https://uscode.house.gov/us/usc/119-124/t26/s72/"
     testRef: "tests/guided-interview/guided-code1-ira-2026.test.ts::projects the 2026 IRA receipt and applies the exact age boundary through Form 5329"
     testRefs:
-      - "tests/apps/web/retirement-source-interactions.test.tsx::collects a 2026 Code 1 IRA payment date and keeps the first-home worksheet unavailable"
+      - "tests/apps/web/retirement-source-interactions.test.tsx::collects a 2026 Code 1 IRA date and offers first-home intake only before age 59½"
   - line: "source-guards"
     description: "Require the matched current original and source confirmations"
-    formula: "Hold a saved receipt date if it does not match the statement year or owner birth date, the one-payment confirmation is absent, a competing worksheet is needed, or the ordinary source becomes ineligible. Require an unchecked Box 7c and zero Box 7d to use this ordinary 2026 path. The guided first-home IRA worksheet continues to require a 2025 original."
+    formula: "Hold a saved receipt date if it falls after the current local calendar day, does not match the statement year or owner birth date, the one-payment confirmation is absent, a competing worksheet is needed, or the ordinary source becomes ineligible. Require an unchecked Box 7c and zero Box 7d to use this ordinary 2026 path. A first-home source requires its separate completed worksheet matched to the original."
     testRef: "tests/guided-interview/guided-code1-ira-2026.test.ts::holds an invalid or stale 2026 receipt and preserves the separate first-home boundary"
+    testRefs:
+      - "tests/guided-interview/guided-first-home-ira-2026.test.ts::holds future receipt, contract and purchase payment dates until they occur"

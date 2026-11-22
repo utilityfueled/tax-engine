@@ -10,6 +10,14 @@ export function isActualDate(value: string | undefined): boolean {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+/** Use the local calendar when comparing dates reported by the filer. */
+export function currentLocalCivilDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 export function hasEnteredAmount(value: string | undefined): boolean {
   return typeof value === "string" && value.trim() !== "";
 }

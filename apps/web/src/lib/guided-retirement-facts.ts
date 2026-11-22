@@ -4,7 +4,7 @@ import {statePaymentFactErrors}from './guided-state-facts';
 import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age";
-import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { amountError, currentLocalCivilDate, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import {
@@ -99,7 +99,7 @@ export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDat
   const proof = entry.code1IraAgeSource;
   const date = proof?.distributionDate;
   const distributionDate = proof?.singlePaymentConfirmed === true && date && isActualDate(date)
-    && date.startsWith(`${sourceYear}-`) && date >= ownerBirthDate ? date : undefined;
+    && date.startsWith(`${sourceYear}-`) && date >= ownerBirthDate && date <= currentLocalCivilDate() ? date : undefined;
   return {
     distributionDate,
     ageException: distributionDate !== undefined && !isBeforeAge59AndHalfDate(
@@ -109,7 +109,6 @@ export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDat
 }
 
 export function guidedCode1IraFirstHomeOriginal(entry: RetirementEntryData, ownerBirthDate?: string) {
-  if (entry.sourceTaxYear !== "2025") return undefined;
   const age = guidedCode1IraAgeFacts(entry, ownerBirthDate);
   return guidedFirstHomeOriginal(entry, ownerBirthDate, age?.ageException ? undefined : age?.distributionDate);
 }
@@ -310,7 +309,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (startedAgeSource && !ageFacts) {
       fail("code1-ira-age-date", "Reconcile the saved Code 1 IRA receipt date with the current statement and return before calculating.");
     } else if (startedAgeSource && !ageFacts?.distributionDate) {
-      fail("code1-ira-age-date", `Confirm the single Box 1 payment and enter its actual receipt date in the ${entry.sourceTaxYear} statement year.`);
+      fail("code1-ira-age-date", `Confirm the single Box 1 payment and enter its actual receipt date in the ${entry.sourceTaxYear} statement year, on or before today.`);
     }
     if (firstHome !== undefined) {
       try {

@@ -2,7 +2,7 @@
 // Spec: spec/federal/guided-input.yaml, retirement-source-records
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
 import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
@@ -26,8 +26,11 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
 
-// Spec: spec/federal/form-5329-guided-code1-ira-2026.yaml, 1-4.
-it("collects a 2026 Code 1 IRA payment date and keeps the first-home worksheet unavailable", async () => {
+afterEach(() => vi.useRealTimers());
+
+// Specs: spec/federal/form-5329-guided-code1-ira-2026.yaml, 1-4, and spec/federal/form-5329-first-home-guided-2026.yaml, 09-guided-source.
+it("collects a 2026 Code 1 IRA date and offers first-home intake only before age 59½", async () => {
+  vi.setSystemTime(new Date(2026, 7, 1, 12));
   const ownerBirthDate = "1967-02-01";
   const source = {
     ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "1", isIraSepSimple: true,
@@ -37,8 +40,9 @@ it("collects a 2026 Code 1 IRA payment date and keeps the first-home worksheet u
     await change("Does Box 1 report one payment with no other distributions?", "true");
     await change("Date the IRA payment was received", "2026-07-31");
     expect(latest()[0]?.code1IraAgeSource).toMatchObject({ ownerBirthDate, distributionDate: "2026-07-31" });
-    expect(container.textContent).not.toContain("Enter a first-home IRA worksheet");
+    expect(container.textContent).toContain("Enter a first-home IRA worksheet");
     await change("Date the IRA payment was received", "2026-08-01");
+    expect(container.textContent).not.toContain("Enter a first-home IRA worksheet");
     await change("Is another retirement worksheet needed beyond this documented Code 1 age exception?", "false");
     await change(confirm, "true");
     const personal = { ...completePersonalInfo, dateOfBirth: ownerBirthDate };
