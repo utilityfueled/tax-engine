@@ -2,6 +2,15 @@
 
 ## Latest exact release verification
 
+`513629ff` and `9bc3fd3c` require fresh annual answers for dependents,
+filers and spouses after a return-year change. The latest source
+passed all 81 focused browser cases, all 9,868 spec references,
+the coverage inventory and root and web types. Unit and coverage each
+passed 30,075 tests across 2,192 suites with 88.56% branch coverage.
+Both PostgreSQL 16.16 instances shut down. Docker passed on the same
+source. Full Web and native ARM64 qualification still need results.
+[Annual personal facts evidence](upgrade-2026-progress.md#november-21-annual-dependent-filer-and-spouse-facts).
+
 `b3cb03a7` preserves exact state refund payment matches and includes the
 renewed donation recipient confirmation from `f68955f4`. Unit and coverage
 each passed 30,071 tests across 2,190 suites at 88.56% branch coverage.

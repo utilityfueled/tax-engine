@@ -1,5 +1,45 @@
 # 2026 upgrade implementation evidence
 
+## November 21 annual dependent, filer and spouse facts
+
+`513629ff` requires fresh dependent residency months, eligibility and
+timely identity answers after a return-year change. Two baseline tests
+reproduced complete Personal status despite stale answers. With a
+matching target-year W-2, the saved and reopened return now keeps
+Personal in review until the annual facts are confirmed. Identity,
+birth date and relationship persist, and new zero and No answers are
+accepted. Same-year reopening preserves confirmed answers. All 225
+focused tests, web types and 9,867 spec references passed. The browser
+source manifest and inventory also passed on the exact revision.
+[IRS child tax credit eligibility](https://www.irs.gov/credits-deductions/individuals/child-tax-credit-and-credit-for-other-dependents).
+
+`9bc3fd3c` applies the same year transition to annual filer and spouse
+residency, cohabitation and identity-deadline answers. State residency
+classification requires fresh confirmation. Mailing address and the
+selected jurisdiction remain available. Both baseline tests reproduced
+old answers in the new year's canonical return. The new tests exercise
+both year directions, assigning an unbound draft, matching W-2s,
+saved reopening and newly confirmed zero and No answers. An independent
+review found that the seven existing fixture updates supply synthetic
+target-year personal facts and preserve their assertions and limits.
+All 198 focused tests, 61 guided spec references and web types passed.
+[IRS Form 1040 instructions](https://www.irs.gov/instructions/i1040gi).
+
+The combined revision passed all 9,868 spec references, inventory,
+root types and the browser source preflight. All 81 existing managed
+Chromium cases in payments, workspace uploads, separated-spouse EIC,
+the refund ticker and QOF passed with zero retries, the original
+deadlines and clean teardown. Those test suites retain the earlier
+assertions around changing years and reopening saved data.
+
+Exact unit and coverage each passed 30,075 tests across 2,192 suites
+with 88.56% branch coverage. The two disposable PostgreSQL 16.16
+instances both shut down. The exact Docker build passed.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/44982692591) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44982692598) ·
+[Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/44982692590) ·
+[Exact native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44983010735).
+
 ## November 21 donation and refund source reconfirmation
 
 `f68955f4` requires eligibility confirmation when a donation's recipient

@@ -1,5 +1,36 @@
 {
   "activeContinuation": {
+    "nov21AnnualPersonalFacts": {
+      "dependent": {
+        "commit": "513629ff8089459976497b675121b7d2fda1c4d8",
+        "baselineRegressionsReproduced": 2,
+        "focusedTestsPassed": 225,
+        "webTypesPassed": true,
+        "globalSpecReferencesPassed": 9867,
+        "browserSourceManifestAndInventoryPassed": true,
+        "independentReviewPassed": true,
+        "receipts": ".local/upgrade-evidence/nov21-guided-dependent-year"
+      },
+      "filerAndSpouse": {
+        "commit": "9bc3fd3c734f33880d3256c802f72355e378686f",
+        "baselineRegressionsReproduced": 2,
+        "focusedTestsPassed": 198,
+        "focusedSuitesPassed": 19,
+        "guidedSpecReferencesPassed": 61,
+        "webTypesPassed": true,
+        "independentReviewPassed": true,
+        "existingSuitesReconfirmingTargetYearFacts": 7,
+        "existingAssertionsOrLimitsRemoved": 0,
+        "combinedStatic": {"specReferencesPassed": 9868, "inventoryPassed": true, "rootAndWebTypesPassed": true, "browserSourceManifestPassed": true},
+        "focusedManagedBrowser": {"passed": 81, "failed": 0, "skipped": 0, "timeoutMs": 30000, "retries": 0, "cleanupPassed": true},
+        "combinedUnit": {"passed": 30075, "suitesPassed": 2192, "postgres16_16Stopped": true},
+        "combinedCoverage": {"passed": 30075, "suitesPassed": 2192, "branchCoveragePercent": 88.56, "postgres16_16Stopped": true},
+        "githubDockerPassed": true,
+        "githubRuns": {"ci": 44982692591, "docker": 44982692598, "web": 44982692590, "nativeArm64": 44983010735},
+        "receipts": ".local/upgrade-evidence/nov21-guided-filer-year"
+      },
+      "releaseReady": false
+    },
     "nov21GuidedDonationAndRefundSources": {
       "donation": {
         "commit": "f68955f4d76a2791c023cd0f01f943c12a2c3db7",
