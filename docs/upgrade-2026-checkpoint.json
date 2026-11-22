@@ -6,6 +6,8 @@
       "scope": "disabled final 2026 Form 2106 candidate",
       "observedRed": "standard font could not encode a character in the synthetic taxpayer name",
       "scopedTestsPassed": 85,
+      "exactArchiveTestsPassed": 85,
+      "strictReaderTransport": "private temporary file removed after validation",
       "specReferencesPassed": 6,
       "inventoryPassed": true,
       "typecheckPassed": true,

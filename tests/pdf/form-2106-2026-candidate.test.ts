@@ -1,7 +1,10 @@
 /** Spec: spec/federal/form-2106-2026-template.yaml. */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { PDFCheckBox, PDFDocument, PDFTextField } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
@@ -50,11 +53,15 @@ function reserveLodgingFixture(manualAmount = "80", lastName = "Doe") {
 
 function reopenWithStrictPypdf(bytes: Uint8Array) {
   const python = process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? ".local/pdf-test-venv/bin/python";
-  const proc = spawnSync(python, ["-c", `
-import io, json, sys
+  const workDir = mkdtempSync(join(tmpdir(), "tax-engine-form-2106-"));
+  const pdfPath = join(workDir, "candidate.pdf");
+  try {
+    writeFileSync(pdfPath, bytes, { mode: 0o600 });
+    const proc = spawnSync(python, ["-c", `
+import json, sys
 from pypdf import PdfReader
 
-reader = PdfReader(io.BytesIO(sys.stdin.buffer.read()), strict=True)
+reader = PdfReader(sys.argv[1], strict=True)
 fields = reader.get_fields()
 widgets = []
 for page in reader.pages:
@@ -80,9 +87,12 @@ for page in reader.pages:
             values[name] = value
     widgets.append(values)
 print(json.dumps({'values': widgets, 'pages': [page.extract_text() for page in reader.pages]}))
-`], { input: bytes, encoding: "utf8" });
-  expect(proc.status, proc.stderr || proc.error?.message).toBe(0);
-  return JSON.parse(proc.stdout) as { values: Record<string, string>[]; pages: string[] };
+`, pdfPath], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    expect(proc.status, proc.stderr || proc.error?.message).toBe(0);
+    return JSON.parse(proc.stdout) as { values: Record<string, string>[]; pages: string[] };
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
 }
 
 describe("Final 2026 Form 2106 physical candidate", () => {

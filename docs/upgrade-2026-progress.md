@@ -25,6 +25,11 @@ The rendered header visibly showed the original spelling, and both pages
 retained the review notice. Evidence is under
 `.local/upgrade-evidence/nov22-form2106-unicode/`.
 
+An isolated archive rerun stalled in the PDF-reader child. The test now
+opens a private temporary file and removes it after the reader exits.
+The identical strict field and appearance assertions passed in the
+archive on all 85 selected tests.
+
 ## November 22 Form 8919 Reason H income reconciliation
 
 A synthetic 2026 Reason H review placed $500 on Form 8919 while a live
