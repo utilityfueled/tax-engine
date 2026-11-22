@@ -1,5 +1,58 @@
 # 2026 upgrade implementation evidence
 
+## November 22 strict Linux timing and care selector verification
+
+The scoped timing workflow on `ebc5a6b1` completed. The unchanged
+managed browser run passed 650 cases and retained five original skips.
+The strict image passed Compose recovery and the independent archive
+import. Its browser run passed 637 cases with 13 failures and five
+original skips. The diagnostic replays retained the original deadline,
+worker count and request windows. Batch 6 passed none of ten cases.
+Batch 7 passed seven of fifteen. Three profiles were accepted from each
+batch, with three missing or invalid in batch 6 and five in batch 7.
+
+An independent review matched the four resident-credit entry receipts to
+their exact source, image and browser inventory. Entry took 16.72 to
+25.70 seconds in wall time and 9.65 to 9.93 seconds on the inspected
+thread. The gap ranged from 7.04 to 15.78 seconds. The receipts leave
+other threads, automation waits and runner scheduling unresolved. The
+strict browser qualification remains open.
+[Linux timing run](https://github.com/utilityfueled/tax-engine/actions/runs/45017762942).
+
+The exact `ebc5a6b1` coverage run found two old Form 2441 interaction
+selectors after the updated confirmation text. `13cf80f4` aligns those
+two selectors with the existing prompt. Both failures reproduced locally
+before the change, and all 51 focused interaction and related tests passed
+after it. Full unit and coverage verification on the corrected source is
+separate. The archived `2bb09ce6` unit attempt crossed a recorded Mac
+sleep and failed nine tests. Its PostgreSQL instance shut down. All
+9,880 spec references, inventory, contract types and the engine build
+passed on that archive.
+[Prior coverage failure](https://github.com/utilityfueled/tax-engine/actions/runs/45017544395).
+
+A full run caught the previous frozen lock digest in the runtime source
+test after the font dependency package. `41b7073c` binds the test to
+the reviewed successor. A parsed comparison verified additions of only
+two root importer entries and 11 package and snapshot entries, with all
+previous entries intact. The 47 runtime, interaction and PDF tests and
+all ten runtime contract references passed. The Mac entered sleep again
+while the isolated `13cf80f4` rerun had a process-scoped keep-awake
+assertion. That run finished with six failures and three skips, and
+its PostgreSQL instance shut down.
+
+GitHub CI on `41b7073c` passed all 30,099 unit tests and all 30,099
+coverage tests across 2,196 suites, with 88.58% branch coverage. Its
+Docker build and managed Linux browser run passed. Managed Linux passed
+650 cases with five original skips. The strict AMD64 image passed smoke,
+Compose recovery and native archive import. Its browser run passed 643
+cases, retained five original skips and hit seven Ohio deadlines. The
+seven were one business part-year case, two resident-credit cases and
+four school district cases. Both railroad saved-PDF cases passed on this
+revision.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45029369695) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45029369721) ·
+[Managed and strict browser results](https://github.com/utilityfueled/tax-engine/actions/runs/45029369654).
+
 ## November 22 Form 2106 native name rendering
 
 The final 2026 Form 2106 asks for the taxpayer's name in the native
@@ -59,10 +112,8 @@ postal-code field or Subscribe button and submitted no data. Successful
 checkout, live Sandbox delivery of its completion event, entitlement and
 credit effects remain open.
 
-The existing browser timing workflow on `ebc5a6b1` runs the strict suite
-and samples original windows 6 and 7 if that run fails.
-Its performance evidence does not change the runtime qualification.
-[GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/45017762942).
+The exact `ebc5a6b1` timing run recorded original strict windows 6 and 7.
+[Timing results](#november-22-strict-linux-timing-and-care-selector-verification).
 
 ## November 22 Form 2441 return-year confirmation
 

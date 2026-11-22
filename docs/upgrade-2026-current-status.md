@@ -2,6 +2,22 @@
 
 ## Latest exact release verification
 
+`13cf80f4` aligns two Form 2441 interaction assertions with the annual
+confirmation prompt. All 51 focused tests passed. On `ebc5a6b1`, managed
+Linux passed 650 cases. The strict image passed recovery and archive
+import. The browser run passed 637 cases with 13 failures and five
+original skips. The performance replay left the cause of the resident-credit
+wall-time gap unresolved.
+[Strict Linux and care selector evidence](upgrade-2026-progress.md#november-22-strict-linux-timing-and-care-selector-verification).
+
+`41b7073c` binds the runtime source contract to the reviewed font
+dependency lock. GitHub unit and coverage each passed 30,099 tests,
+with 88.58% branch coverage. Docker and managed Linux passed. Strict
+AMD64 passed smoke, recovery and archive import. Its browser run
+passed 643 cases with seven Ohio deadlines and five original skips.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45029369695) ·
+[Exact browser results](https://github.com/utilityfueled/tax-engine/actions/runs/45029369654).
+
 `d078258a` preserves supported Unicode names in the disabled Form 2106
 review candidate. All 85 scoped tests passed, and strict reopening and
 rendering verified the native field. The separate font dependency package
@@ -10,8 +26,7 @@ is `11efa4a1`.
 
 `9992e601` holds the disabled 2026 Form 8919 Reason H review candidate
 when the reclassified amount could also appear in active NEC or MISC
-income. All 102 scoped tests and seven spec references passed. The
-browser timing run on `ebc5a6b1` is in progress.
+income. All 102 scoped tests and seven spec references passed.
 [Form 8919 evidence](upgrade-2026-progress.md#november-22-form-8919-reason-h-income-reconciliation) ·
 [Browser timing run](https://github.com/utilityfueled/tax-engine/actions/runs/45017762942).
 
