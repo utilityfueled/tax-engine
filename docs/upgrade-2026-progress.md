@@ -23,7 +23,12 @@ preflight cases, and 37 Node diagnostic checks passed. Independent review
 repeated the 11 W-2 unit and interaction checks. A separate 1099-R probe
 confirmed that existing original-year and source confirmation rules
 already hold retained prior-year and undated retirement distributions.
-The exact Docker build passed.
+For Form 1099-NEC, both prior-year and undated retained entries held
+the annual Schedule C reconciliations. Replacing them with reconciled
+2025 records produced $12,500.25 in net profit and $1,766 federal tax.
+The exact Docker build passed. Both full local suites passed 30,078
+tests across 2,193 files at 88.56% branch coverage. Each separate
+PostgreSQL 16.16 test instance shut down.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44987899220) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44987899233) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44987899198) ·
@@ -89,6 +94,18 @@ workspace setup remain in place. Both focused browser cases and cleanup
 passed under the existing limits. All 181 Vitest and 37 Node preflight
 checks passed, and the exact Docker build passed. An independent review
 confirmed that the application source matches `9bc3fd3c`.
+Managed Linux passed all 650 runnable cases. Strict AMD64 passed 641.
+Its nine deadline failures covered two Ohio NEW212 cases, three
+resident-credit cases and four school-district cases. Strict ARM64
+passed 640, with the same nine Ohio deadlines and one reciprocal
+employee case. Each run retained the five original skips. The strict
+images passed smoke, Compose recovery and container cleanup. AMD64 also
+passed rollback, independent image archive import and immutable SBOM
+checks.
+Remote coverage passed all 30,075 tests at 88.56% branch coverage.
+The separate single-worker unit job passed 30,074 and hit the existing
+five-second deadline in the Form 1095-C inconsistent-line-and-column
+case. Both database shutdowns succeeded.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/44986325311) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/44986325295) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/44986325371) ·

@@ -5,8 +5,9 @@
 `913339ec` holds retained W-2s after a return-year change until their
 original source year matches. The browser reproduced stale wages and
 withholding on the prior revision. The corrected revision passed all
-31 audited guided browser cases and 2,063 scoped unit and interaction
-tests. Local full suites and exact public workflows are tracked below.
+31 audited guided browser cases, both full local suites at 30,078 tests
+and 88.56% branch coverage, and its public Docker build. Both local
+PostgreSQL test instances shut down.
 [W-2 evidence](upgrade-2026-progress.md#november-22-original-w-2-year).
 
 `513629ff` and `9bc3fd3c` require fresh annual answers for dependents,
@@ -19,8 +20,11 @@ Remote CI matched both counts and coverage and all test PostgreSQL
 ARM64 passed smoke and Compose recovery. Full browser qualification
 remains open. The two mortgage browser cases that had expected stale
 residency to survive now re-enter it through the UI in `16c3d4dd`.
-Both focused reruns passed. Strict AMD64 also reported two Ohio
-school-district deadlines before that fixture update.
+Managed Linux on that correction passed all 650 runnable cases.
+Strict AMD64 passed 641 and strict ARM64 passed 640, with nine and ten
+Ohio deadlines respectively. Both strict jobs passed image smoke,
+Compose recovery and cleanup. Its separate unit job hit a Form 1095-C
+deadline. Coverage passed all 30,075 tests.
 [Annual personal facts evidence](upgrade-2026-progress.md#november-21-annual-dependent-filer-and-spouse-facts).
 
 `b3cb03a7` preserves exact state refund payment matches and includes the
