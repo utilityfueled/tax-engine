@@ -47,6 +47,13 @@ for (const width of [1280, 390]) test.describe(`Native original prepaid mortgage
     await page.reload(); await enter(page, 'Tax year for this interview', '2026');
     await expect.poll(async () => (await saved(page, id)).taxYear).toBe(2026);
     await expect(page.getByText('You can save 2026 facts. The 2026 rules and filing forms are not yet qualified.', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'About You', exact: true }).click();
+    const residencyMonths = control(page, 'Months of U.S. residency'), stateResidency = control(page, 'State residency');
+    await expect(residencyMonths).toHaveValue('');
+    await expect(stateResidency).toHaveValue('');
+    await residencyMonths.fill('12');
+    await stateResidency.selectOption('full-year');
+    await page.locator('.guided-nav').getByRole('button', { name: 'Continue', exact: true }).click();
     await expect(control(page, 'Actual mortgage insurance allocation method')).toHaveCount(0);
     for (const [label, value] of mortgagePrepaidBrowserAnswers) await enter(page, label, value);
     expect(draft(await saved(page, id)).capturedOriginal).toBeUndefined(); expect(buildTaxInputFromGuidedData(await saved(page, id))).toBeNull();
