@@ -2,6 +2,18 @@
 
 ## Latest exact release verification
 
+`891f921b` incorporates the guided federal payment, manual gambling,
+direct Schedule A, alimony and household payroll source-year fixes.
+Combined focused verification passed 430 tests, web type checking and
+the seven affected spec lines. The exact archive passed coverage inventory
+and contract type checking. `09b12787` refreshes the browser source
+manifest. Core CI and Docker passed with 30,095 tests per core run and
+88.57% branch coverage. Managed Linux passed 650 browser cases, with five
+original skips. Strict AMD64 passed image smoke, recovery and archive
+import. Its browser run passed 637 cases, retained five original skips,
+and reported 11 Ohio deadlines and two railroad PDF inspection timeouts.
+[Retained direct federal amounts](upgrade-2026-progress.md#november-22-retained-direct-federal-amounts).
+
 `2a5c20c9` removes timer yields from Form 1095-C test-PDF construction.
 The measured fixtures remained byte-identical and the deadline stayed
 at five seconds. Exact Docker and GitHub CI passed. Remote unit and

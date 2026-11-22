@@ -1,5 +1,85 @@
 # 2026 upgrade implementation evidence
 
+## November 22 retained direct federal amounts
+
+The year selector previously let certain scalar facts flow into the next
+return after save and reopen. A controlled 2026-to-2025 replay with fresh
+2025 personal and wage facts changed the calculated 2025 tax from $5,075
+to $6,855 with $10,000.25 of retained manual gambling winnings, and from
+$8,120 to $4,505 with $25,000 of retained medical expenses when itemizing.
+It also reproduced unsupported changes from retained alimony and household
+payroll. In the other direction, a $5,000.75 extension payment actually
+paid in April 2026 for 2025 entered the 2026 canonical request. The
+incomplete 2026 rule pack still prevented a calculation.
+
+`6fb71550` keeps the payment dates and amounts and requires an actual IRS
+application record for older unbound estimates and extensions after a
+year change. `a41312b3` adds annual confirmation for manual gambling and
+direct itemized amounts. `53d8f46d` also holds the retained allocation of
+non-W-2 withholding to other schedules under either deduction election.
+Independent review reproduced the allocation's effect on the standard
+deduction comparison and verified that formatting-only changes preserve
+confirmation. The intake changes retain entered cents and leave the tax
+formulas and 2026 rule-pack gate in place.
+
+`891f921b` requires renewed confirmation of retained alimony and Schedule H
+amounts and gives each section an initial entry choice for wage-only filers.
+Saved eligibility and FUTA answers remain dormant when the taxpayer has no
+amounts. They require review if the taxpayer enters amounts after changing
+years. Normal section replacement keeps pending markers. Editing underlying
+facts after confirmation reopens the review, and formatting the same
+Decimal amount preserves it. Both standalone converters require the
+selected year for previously bound facts. Independent review reproduced the
+dormant-answer and ordinary reducer gaps before they were closed.
+
+The combined checks passed 430 tests in nine focused suites, all seven
+specification lines, the coverage inventory and web type checking. Scoped
+lint reported zero errors and three existing warnings. The exact tracked
+archive independently passed inventory validation and contract type checking.
+Evidence is under `.local/upgrade-evidence/nov22-direct-annual-intake/`.
+
+The first public CI and Docker builds passed, with 30,095 tests in each
+core run and 88.57% branch coverage. Both Web jobs stopped at the source
+manifest. `09b12787` updates the ten changed application hashes and the
+dependent manifest digest. The source review found no new browser network
+actions or test cases. Request limits and deadlines are unchanged. Both
+manifest suites passed all 44 tests, and core CI and Docker passed again
+with the same totals.
+
+Managed Linux passed 650 browser cases with five original skips on
+`09b12787`. Strict AMD64 passed image smoke, Compose recovery and the image
+archive import. Its browser run passed 637 cases with five original skips
+and 13 failures. Eleven were Ohio case deadlines and two were railroad
+saved-PDF inspection timeouts. The local audited run collected all 14
+selected Ohio cases after fetching the registered public samples, then
+the unchanged build deadline ended the run before any browser case. An
+earlier direct local attempt entered the rate limit and could not qualify
+the cases. The isolated local unit suite had 26 failures, including
+deadline failures, and its PostgreSQL instance shut down.
+[Core CI](https://github.com/utilityfueled/tax-engine/actions/runs/45010355337) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45010355255) ·
+[Managed and strict browser runs](https://github.com/utilityfueled/tax-engine/actions/runs/45010355247).
+
+An independent November 22 source recheck found no newly final annual
+form or instruction that advances a listed qualification. The IRS posted
+catalog still ended at the November 20 items already recorded. The current
+1040 instructions and Pennsylvania and Ohio annual listings still covered
+2025. The IRS quarterly interest table still had no 2027 entry.
+[IRS posted-date catalog](https://www.irs.gov/forms-instructions-and-publications?find=&items_per_page=25&order=posted_date&page=0&sort=desc) ·
+[Form 1040 instructions](https://www.irs.gov/instructions/i1040gi) ·
+[Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio forms](https://tax.ohio.gov/home/forms) ·
+[IRS quarterly rates](https://www.irs.gov/payments/quarterly-interest-rates).
+
+[IRS Direct Pay](https://www.irs.gov/payments/types-of-payments-available-to-individuals-through-direct-pay) ·
+[2025 Form 4868](https://www.irs.gov/pub/irs-pdf/f4868.pdf) ·
+[Gambling income](https://www.irs.gov/taxtopics/tc419) ·
+[Schedule A Instructions](https://www.irs.gov/instructions/i1040sca) ·
+[Publication 502](https://www.irs.gov/publications/p502) ·
+[Publication 504](https://www.irs.gov/publications/p504) ·
+[Schedule H Instructions](https://www.irs.gov/instructions/i1040sh) ·
+[Publication 926](https://www.irs.gov/publications/p926).
+
 ## November 22 Stripe Sandbox checkout and source recheck
 
 The protected `522cf4b1` Preview returned HTTP 200 from health. Its exact
