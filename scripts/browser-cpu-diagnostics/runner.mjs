@@ -10,6 +10,7 @@ import { setTimeout as pause } from 'node:timers/promises';
 import { auditCollection, containerProof, environment, exactUnion, noEnvFiles, planBatches, reconcile, rowsFromReport, runSchedule, snapshot, testList, verifyAudit } from '../run-browser-tests.mjs';
 import { collectionHash, diagnosticOutcome, rewriteImport, selectCases } from './selection.mjs';
 import { LIMITS, ORIGIN, unavailable, validateInventory, publicChunkMetadata, sanitizeStoredRecord } from './profile.mjs';
+import { projectDiagnosticCases } from './fixed-metadata.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const need = condition => { if (!condition) throw new Error('diagnostic-contract-unavailable'); };
@@ -162,7 +163,7 @@ export async function main({ env = process.env, root = fileURLToPath(new URL('..
     const summary = await runSchedule({ batches, expected: selected, audit, io: {
       now: () => ({ mono: performance.now(), wall: Date.now() }), sleep: ms => pause(ms, null, { signal: abort.signal }), identity, alive: () => !abort.signal.aborted,
       cleanup: async () => true, // The existing workflow owns the container; this runner never stops it.
-      record: async value => { const safe = projectCaseResults(value.result.rows); outcomes.push(...safe); await save(`batch-${value.batch}.json`, { cases: safe, bounds: value.bounds, start: value.start, close: value.close }); },
+      record: async value => { const safe = projectDiagnosticCases(value.result.rows, projectCaseResults); outcomes.push(...safe); await save(`batch-${value.batch}.json`, { cases: safe, bounds: value.bounds, start: value.start, close: value.close }); },
       run: async (batch, i) => {
         const reportFile = path.join(temporary, `result-${i}.json`);
         const result = await exec(process.execPath, [cli, ...fixed, '--test-list', batch.list, '--output', path.join(temporary, `test-artifacts-${i}`), '--reporter=json', '--trace=off'], {

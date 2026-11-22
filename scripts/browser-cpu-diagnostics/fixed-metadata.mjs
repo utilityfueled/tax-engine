@@ -1,4 +1,5 @@
 import{stripVTControlCharacters}from'node:util';
+import{failureClue}from'./failure-clues.mjs';
 // Fixed metadata only; never returns input values or error text.
 const MAX_INTERVALS=40000,MAX_ERRORS=16,MAX_MESSAGE=4096;
 const kinds=['valid','negative','fractional','unsafe','nonfinite','nonnumeric','unknown'];
@@ -29,5 +30,5 @@ function browserCategory(result){
  }catch{return'other';}
 }
 export function projectDiagnosticCases(rows,project){
- const fixed=project(rows);if(!Array.isArray(fixed)||fixed.length!==rows.length)throw Error('invalid-fixed-metadata');return fixed.map((r,i)=>{const results=own(rows[i],'results'),result=Array.isArray(results)?own(results,'0'):undefined;return{...r,failureCategory:browserCategory(result)};});
+ const fixed=project(rows),sources=new Map();if(!Array.isArray(fixed)||fixed.length!==rows.length)throw Error('invalid-fixed-metadata');return fixed.map((r,i)=>{const results=own(rows[i],'results'),result=Array.isArray(results)?own(results,'0'):undefined;return{...r,failureCategory:browserCategory(result),...(['failed','timedOut'].includes(r.status)?{failureClue:failureClue(result,sources)}:{})};});
 }
