@@ -37,6 +37,7 @@ import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-cur
 import { stateWithholdingDocumentTypes } from "@/lib/guided-state-facts";
 import { TextFact } from "./fact-fields";
 import { OhioInterestDetails } from "./ohio-interest-details";
+import { OhioRetirementCreditDetails } from "./ohio-retirement-credit-details";
 
 const formatCurrency = formatGuidedCurrency;
 
@@ -240,6 +241,8 @@ export function SectionStateReturn({
         <ZeroIncomeMiscDetails data={current.zeroIncomeMiscSources} taxYear={taxYear} filingStatus={filingStatus}
           onChange={zeroIncomeMiscSources=>onDataChange({...current,zeroIncomeMiscSources})}/>
         {stateCode === "OH" && <>
+          <OhioRetirementCreditDetails originalInput={originalInput} taxYear={taxYear} data={current.ohioRetirementCredit}
+            onChange={ohioRetirementCredit => onDataChange({ ...current, ohioRetirementCredit })} />
           {(originalInput?.scheduleC||current.ohioResidency?.businessSources!==undefined)&&<OhioBusinessDetails originalInput={originalInput??null} data={current.ohioResidency?.businessSources} residency={current.ohioResidency}
             onChange={businessSources=>onDataChange({...current,ohioResidency:{...structuredClone(current.ohioResidency??emptyOhioResidencyDraft),businessSources,sourceFactsConfirmed:null}})}/>}
           <OhioResidencyDetails originalInput={originalInput ?? null} data={current.ohioResidency} taxYear={taxYear} filingStatus={filingStatus}

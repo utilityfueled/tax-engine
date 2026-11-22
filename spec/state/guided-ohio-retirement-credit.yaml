@@ -1,0 +1,34 @@
+form: "2025 Ohio Schedule of Credits guided early retirement distribution"
+taxYear: 2025
+reference: https://tax.ohio.gov/static/ohio_individual/individual/SupportingDocumentation/Pages/SoC-2_RetInc.html
+notes: >-
+  Ohio Revised Code section 5747.055(A)(1) requires retirement income to be paid
+  on account of retirement and included in Ohio adjusted gross income. The Ohio
+  Department of Taxation retirement-income FAQ excludes early withdrawals before
+  retirement. This source path covers a 2025 single, full-year Ohio resident with
+  one ordinary taxable primary Form 1099-R, non-IRA, with distribution code 1.
+lines:
+  - line: "2"
+    description: Establish whether the documented distribution was an early withdrawal before retirement
+    formula: >-
+      Hold the Ohio result until supported payment facts are confirmed for the
+      current Form 1099-R. For a documented early withdrawal before retirement,
+      supply an explicit zero Ohio retirement-income credit base. Keep the
+      same federal distribution and Ohio adjusted gross income. Hold when
+      payment circumstances are unknown or differ from the supported early
+      withdrawal. Leave other return and distribution cohorts unchanged.
+    testRef: "tests/guided-interview/guided-ohio-retirement-credit.test.ts::holds the Ohio credit until the original early withdrawal is confirmed"
+  - line: "2 source"
+    description: Reconfirm after an affected source or return year changes
+    formula: >-
+      Retain entered evidence when the source or return year changes. A retained
+      answer cannot resolve a different form, or restore confirmation after a
+      return-year edit, without fresh confirmation against current facts.
+    testRef: "tests/guided-interview/guided-ohio-retirement-credit.test.ts::retains evidence but holds Ohio after an affected source or year edit"
+  - line: "2 intake"
+    description: Make the actual payment facts available in the Ohio state section
+    formula: >-
+      Let the taxpayer add the current source, enter the documented payment
+      circumstances, and confirm. Reopen confirmation after a source edit.
+      Retain an existing draft for removal when the original is unavailable.
+    testRef: "tests/apps/web/guided-ohio-retirement-credit.test.tsx::enters confirms edits and removes Ohio retirement facts in the state section"

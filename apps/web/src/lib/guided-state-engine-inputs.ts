@@ -8,6 +8,7 @@ import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precisio
 import {reconcileGuidedRetirementWithholding,type RetirementWithholdingOriginal}from "./guided-retirement-withholding-reconciliation";
 import { buildGuidedOhioResidencyFacts } from "./guided-ohio-residency-facts";
 import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
+import { buildGuidedOhioRetirementIncome } from "./guided-ohio-retirement-credit";
 import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import {buildGuidedPAOrdinaryReturnFacts} from "./guided-pa-ordinary-return-facts";
@@ -66,6 +67,8 @@ export function buildGuidedOhioOverlay(taxInput: TaxYearInput, state: GuidedFlow
   assertKnownFacts(ohioInterestFactErrors(allocation, state.taxYear,
     requiresOhioInterestAllocation(state.sectionData["income-investments"]), federalTaxExemptInterest));
   const result: OhioOverlayInput = {};
+  const retirementIncome = buildGuidedOhioRetirementIncome(taxInput, data?.ohioRetirementCredit);
+  if (retirementIncome !== undefined) result.retirementIncomeOverride = retirementIncome;
   if (allocation) {
     result.nonOhioStateLocalInterest = parseGuidedCurrency(allocation.nonOhioStateLocalInterest).toFixed();
     result.otherAdditions = parseGuidedCurrency(allocation.federalInterestTaxableByOhio).toFixed();
@@ -109,6 +112,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
   if (!state) return input;
   const data = state.sectionData["state-return"];
   if (state.segmentation.stateCode === "OH") {
+    buildGuidedOhioRetirementIncome(input, data?.ohioRetirementCredit);
     if(input.ohioReturnHeaderSources&&!data?.ohioReturnHeaderSources)throw Error('Retained actual Ohio header originals require the native packet and reconfirmation.');
     if(input.ohioResidency?.residentCreditSources&&!data?.ohioResidency?.residentCreditSources)throw Error('Retained actual Ohio resident-credit originals require the native packet and reconfirmation.');
     if(input.ohioResidency?.businessSources&&!data?.ohioResidency?.businessSources)throw Error('Retained actual Ohio business source records require the current native packet and reconfirmation.');

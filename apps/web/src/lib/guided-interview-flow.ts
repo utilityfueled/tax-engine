@@ -19,6 +19,7 @@ import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { PAOrdinaryReturnFacts } from "@/models/pa-ordinary-return-facts";
 import { buildGuidedOhioResidencyFacts } from "./guided-ohio-residency-facts";
 import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
+import { buildGuidedOhioRetirementIncome, type OhioRetirementCreditDraft } from "./guided-ohio-retirement-credit";
 import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import { buildGuidedPAOrdinaryReturnFacts } from "./guided-pa-ordinary-return-facts";
@@ -1398,6 +1399,7 @@ export interface StateReturnData {
   additionalStateWithholding: string;
   additionalStateWithholdingEntries?: StateWithholdingEntry[];
   ohioInterestAllocation?: OhioInterestAllocation;
+  ohioRetirementCredit?: OhioRetirementCreditDraft;
   ohioResidency?: OhioResidencyDraft;
   ohioPayments?: OhioPaymentDraft;
   ohioReturnHeaderSources?: OhioReturnHeaderDraft;
@@ -1725,6 +1727,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const wages = state.sectionData["income-w2"];
   const payments = state.sectionData.payments;
   const deductions = state.sectionData.deductions;
+  const stateReturn = state.sectionData["state-return"];
   function requirePaymentApplication(entry: EstimatedPaymentEntry): EstimatedPaymentEntry {
     if (entry.application !== undefined || !(entry.date?.trim() || entry.amount?.trim())) return entry;
     return { ...entry, application: { taxYear: "", confirmed: null } };
@@ -1761,6 +1764,9 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
+      ...(stateReturn?.ohioRetirementCredit ? { "state-return": { ...stateReturn,
+        ohioRetirementCredit: { ...stateReturn.ohioRetirementCredit, sourceFactsConfirmed: null },
+      } } : {}),
       ...(Number.isInteger(state.taxYear) && wages?.entries?.some(isStartedW2) ? {
         "income-w2": {
           ...wages,
@@ -2279,6 +2285,10 @@ export function updateSectionData(
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   const stateOriginalsChanged = sourceValuesChanged && sectionId !== "state-return" && ohioStateReturn;
   const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
+  const currentOhioRetirementCredit = incomingStateReturn?.ohioRetirementCredit;
+  const ohioRetirementCreditChanged = currentOhioRetirementCredit && ohioDraftSourceValuesChanged(
+    ohioStateReturn?.ohioRetirementCredit, currentOhioRetirementCredit,
+  );
   const paDependenciesChanged = incomingStateReturn && (canReusePAStateDependencyComparison(ohioStateReturn, incomingStateReturn)
     ? sourceValuesChanged
     : guidedSourceValuesChanged(paStateDependencyValues(ohioStateReturn), paStateDependencyValues(incomingStateReturn)));
@@ -2319,8 +2329,9 @@ export function updateSectionData(
     ohioStateReturn?.ohioReturnHeaderSources, currentOhioHeader, ohioHeaderActualSourceValues,
   );
   const invalidateHeader=Boolean(currentOhioHeader&&(ohioHeaderChanged||ohioResidencyChanged||ohioPaymentsChanged||ohioSchoolDistrictChanged||ohioReciprocalChanged||invalidateBusiness||invalidateResidentCredit));
-  const invalidatedOhioStateReturn = incomingStateReturn && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged || invalidateBusiness || invalidateResidentCredit || invalidateHeader || invalidate2026School) ? {
+  const invalidatedOhioStateReturn = incomingStateReturn && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged || invalidateBusiness || invalidateResidentCredit || invalidateHeader || invalidate2026School || ohioRetirementCreditChanged) ? {
     ...(invalidatedPAStateReturn ?? incomingStateReturn),
+    ...(ohioRetirementCreditChanged ? { ohioRetirementCredit: { ...currentOhioRetirementCredit, sourceFactsConfirmed: null } } : {}),
     ...(incomingStateReturn.ohio2026SchoolSources&&invalidate2026School?{ohio2026SchoolSources:{...incomingStateReturn.ohio2026SchoolSources,sourceFactsConfirmed:null}}:{}),
     ...(currentOhioHeader&&invalidateHeader?{ohioReturnHeaderSources:{...currentOhioHeader,sourceFactsConfirmed:null}}:{}),
     ...(incomingStateReturn.ohioResidency && (ohioResidencyChanged||invalidateBusiness||invalidateResidentCredit) ? { ohioResidency: { ...incomingStateReturn.ohioResidency, sourceFactsConfirmed: null,...(currentOhioBusiness&&invalidateBusiness?{businessSources:invalidateOhioBusiness(currentOhioBusiness)}:{}),...(currentOhioResidentCredit&&invalidateResidentCredit?{residentCreditSources:invalidateOhioResidentCredit(currentOhioResidentCredit)}:{}) } } : {}),
@@ -2382,6 +2393,8 @@ export function updateSectionData(
         ...ohioStateReturn,
         ...(ohioInterestChanged ? { ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } : {}),
         ...(stateOriginalsChanged ? {
+          ...(ohioStateReturn.ohioRetirementCredit && (sectionId === "income-retirement" || sectionId === "personal-info")
+            ? { ohioRetirementCredit: { ...ohioStateReturn.ohioRetirementCredit, sourceFactsConfirmed: null } } : {}),
           ...(ohioStateReturn.ohioResidency ? {ohioResidency:{...ohioStateReturn.ohioResidency,sourceFactsConfirmed:null,...(ohioStateReturn.ohioResidency.businessSources?{businessSources:invalidateOhioBusiness(ohioStateReturn.ohioResidency.businessSources)}:{}),...(ohioStateReturn.ohioResidency.residentCreditSources?{residentCreditSources:invalidateOhioResidentCredit(ohioStateReturn.ohioResidency.residentCreditSources)}:{})}} : {}),
           ...(ohioStateReturn.ohioPayments ? {ohioPayments:{...ohioStateReturn.ohioPayments,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.ohio2026SchoolSources?{ohio2026SchoolSources:{...ohioStateReturn.ohio2026SchoolSources,sourceFactsConfirmed:null}}:{}),
@@ -2713,6 +2726,8 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: Tax
     }
     let residency: ReturnType<typeof buildGuidedOhioResidencyFacts> | undefined;
     let payments: ReturnType<typeof buildGuidedOhioPaymentFacts> | undefined;
+    try { buildGuidedOhioRetirementIncome(input, data?.ohioRetirementCredit); }
+    catch (error) { errors.ohioRetirementCredit = error instanceof Error ? error.message : "Reconcile the actual Ohio retirement payment circumstances."; }
     try { residency = buildGuidedOhioResidencyFacts(data?.ohioResidency, input); }
     catch (error) { errors.ohioResidency = error instanceof Error ? error.message : "Reconcile the actual Ohio residency sources."; }
     try { payments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
