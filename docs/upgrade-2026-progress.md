@@ -12315,3 +12315,60 @@ gates in place pending final 2026 publication and independent human review.
 [PA-40](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax),
 [Ohio IT 1040](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf),
 and [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms).
+
+### November 22 actual 2026 IRA distribution dates
+
+`e458acc5` accepts the actual receipt date of a single fully taxable 2026
+Code 1 traditional IRA payment from one nonjoint primary owner. The original
+Box 7a code remains intact. Staged tests for a taxpayer born February 1, 1967
+applied $600 of additional tax to a $6,000 payment on July 31 and $0 with
+exception 12 on August 1. Invalid dates, stale owner proof, competing
+worksheets, and out-of-scope Boxes 7c and 7d hold this route. The first-home
+intake continues to require a 2025 original. The scoped run passed 235 tests,
+the independent engineering review passed 11, and the test-reference rerun
+passed 996. The existing stale-receipt assertion was updated in `8ee1ace7`,
+and the two bridge suites then passed 203 tests. Web typecheck, two spec
+references and inventory passed.
+[Final 2026 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf) and
+[26 U.S.C. §72](https://uscode.house.gov/us/usc/119-124/t26/s72/).
+
+### November 22 native rehearsal and local verification
+
+On `16cbc992`, native ARM64 passed smoke, independent image-store export/import,
+and isolated Compose upgrade and recovery. Its strict browser gate recorded
+640 passes, 10 Ohio failures and five skips across eight batches. Each failed
+case exceeded the unchanged 30-second deadline during input, navigation,
+geometry or requests. Cleanup and container stop completed. The managed AMD64
+browser job failed. Strict AMD64 recorded 643 passes, seven failures and five
+skips. Its batch 7 comparison ran the same 15 cases with two workers, no
+retries and the original 30-second deadline. The same eight failed in each leg. Trace
+retention ran first and took 174.6 seconds, followed by 146.8 seconds with
+trace off. Fixed order and cache state limit that timing comparison. The paired
+run did not supersede the strict result. [ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45046167027/job/137281149204)
+and [AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45046165720).
+
+macOS power logs show sleep during the `0ef70a30` local unit and coverage runs.
+Their timeout results do not establish full-suite qualification. With idle
+sleep inhibited, a focused exact-source rerun of the four affected PDF suites
+passed 77 tests with the normal per-test deadlines. The retained output is
+`.local/upgrade-evidence/nov22-main-0ef70a30-exact/awake-pdf-reproduction.log`.
+
+### November 22 internal Form 8880 Roth PDF
+
+`caf13618` extends the existing internal 2026 candidate to a reconciled ordinary
+Roth IRA contribution. An independent PDF reader reopened the official pinned
+template and verified all 23 fields and widgets, including $2,000 on line 1a,
+zero on lines 2a and 4a, the native rate digit and $200 on line 12. The same
+engine result carries $200 to Schedule 3 and supplies all three worksheet
+amounts. Independent review reproduced a conflicting saved catch-up flag.
+The candidate now derives the legal limit from the actual date of birth and
+rejects the underage $8,000 case. The eligible age-boundary PDF reopens with
+the expected values. Existing Code D cases still pass. The scoped run passed
+39 tests, validation resolved 9,900 references, and root typecheck, focused
+lint and the browser source audit passed. Public export and filing remain
+gated. [Final 2026 Form 8880](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf)
+and [IRS Notice 2025-67](https://www.irs.gov/pub/irs-drop/n-25-67.pdf).
+
+The complete nonbrowser checks are running again from a tracked-only archive
+of `caf13618`, with idle sleep inhibited for each local process. Receipts are
+under `.local/upgrade-evidence/nov22-main-caf13618-awake/`.
