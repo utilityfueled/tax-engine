@@ -1,5 +1,70 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Form 8889 displayed line reconciliation
+
+`3aefc04c` holds the disabled internal 2026 Form 8889 specimen when its
+rounded lines fail the line 16 subtraction. From $500.49 gross and
+$499.50 of qualified expenses, the exact engine computes $0.99. The
+original saved specimen reopened at $500 on lines 14c and 15 and $1
+on line 16, even though the displayed subtraction yields zero. The
+inverse mismatch also holds. The engine amounts and all public
+calculation, template, review and filing gates are preserved.
+
+Coherent cents, whole-dollar and fully qualified specimens reopened
+with expected widget values and appearances. All 110 focused tests,
+31 independent tests, 97 root tests, nine spec references, inventory
+and browser request audit passed. Independent software review confirmed
+the 2025 template remains admitted. Candidate manifest SHA-256
+`999e5fa32cb1678b5d6902437cbbd5dbb6cecfe64696bb844a688c06fbdf38bf`.
+Qualified human review of whole-dollar presentation remains open.
+[Final 2026 Form 8889, lines 14c–17](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf).
+
+## November 22 Ohio payment projection reuse
+
+`c6ea35ac` returns the canonical Ohio payment projection already built
+during the guided source review. Every call still checks the current
+draft and original sources. The first rejection and its message stay
+in the same order. The legacy shape-only check and snapshot isolation
+are preserved.
+
+The two school and two resident-credit fixtures each used two
+projections before and one after. Their full before-and-after
+projection digests matched row by row. All ten audited local Chromium
+cases passed at the original 30-second deadline, including active
+Ohio business, resident-credit and school methods. The 146 focused
+tests, 66 independent tests, eight additional review assertions, 62
+related operations tests, 23 spec references and inventory check
+passed. The tracked candidate manifest SHA-256 is
+`0e705122e444dbe6e82d206486b16c02245b83c3a6b4c12123b32a16ea1053f7`.
+
+The complete local run, one exact AMD64 timing comparison and one
+standard ARM64 image and recovery rehearsal are in progress. The
+strict Linux speed effect of this source change is unmeasured.
+[AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45075193188).
+
+## November 22 pinned-interpreter Ohio comparison
+
+The exact `55488dcb` build and managed browser jobs passed. Strict
+AMD64 passed 645 browser cases, failed five and retained five existing
+skips. It completed cleanup. The optional comparison included the
+same 15 cases in each leg, with the original 30-second deadline,
+two workers and no retries. Trace retention passed ten in 170.721
+seconds. Trace off passed 12 in 148.359 seconds. Every failure in the
+paired artifact was classified as a timeout. The earlier unclassified
+resident payment inspection losses did not recur in this run.
+
+The same three school cases failed in both legs. The trace-on leg also
+failed two resident-credit cases that passed with trace off. The
+remaining timeout sites include school review results, a review-download
+response and the response to a filing request that must be rejected.
+The trace-on leg ran first and shared the runtime's caches with the
+second leg, so the comparison cannot establish the effect of capture. The separate
+`c446a6c1` instrumentation allows the next eligible paired run to
+measure school entry, first confirmation and review-download boundaries.
+The strict runtime remains unqualified.
+[Exact Linux comparison](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
+
 ## November 22 Pennsylvania saved-estimate navigation
 
 `a79ff3d0` uses the same original-receipt match for Continue and Preview

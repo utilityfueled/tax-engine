@@ -1,5 +1,36 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 22 handoffs for independent qualification
+
+For Form 8889, independently derive the exact and printable line 16
+amounts for an ordinary Code 1 distribution of $500.49, including
+$499.50 of actual qualified expenses and no contributions. Record how
+the chosen presentation reconciles lines 14c, 15 and 16 and the
+Schedule 1 transfer. The current candidate holds the conflicting
+whole-dollar display.
+[Form 8889 regression and official form](upgrade-2026-progress.md#november-22-form-8889-displayed-line-reconciliation).
+
+For student-loan interest, independently derive Schedule 1 line 21 for
+a single filer with $50,000 MAGI and an actual $1,275.80 current-year
+interest payment. Check the current-year zero case and the rule when
+someone actually claims the borrower as a dependent. Confirm the
+joint-return dependency treatment and what happens when current
+Adjustments and Credits answers disagree.
+[Student-loan regression and authority](upgrade-2026-progress.md#november-22-student-loan-annual-payment-and-dependency).
+
+For Pennsylvania, independently reconcile a fictional original account
+receipt for a $100 estimated payment dated April 15, 2025 against
+saved drafts of $100 and $100.01. Confirm the estimated-payment line
+and duplicate handling in each implemented single-filer residency
+method. Record any discrepancy separately from the app's same-date,
+same-amount evidence check.
+[Pennsylvania regression and official instructions](upgrade-2026-progress.md#november-22-pennsylvania-saved-estimate-navigation).
+
+AMD64 timing and ARM64 recovery are now bound to application `c6ea35ac`.
+The earlier strict AMD64 browser qualification is still failed.
+[AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45075193188).
+
 ## Current external inputs — November 21
 
 Reviewed commits are pushed directly to `main` after verifying the

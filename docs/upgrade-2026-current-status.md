@@ -2,6 +2,19 @@
 
 ## Resume here · November 22
 
+- `3aefc04c` holds the disabled internal Form 8889 review PDF when
+  rounded line 16 contradicts the displayed subtraction. It preserves
+  the exact engine amount and current public gates. Reopened controls
+  and independent software review passed.
+  [Form 8889 evidence](upgrade-2026-progress.md#november-22-form-8889-displayed-line-reconciliation).
+- `c6ea35ac` removes a duplicate Ohio payment projection within each
+  invocation. Four complete projections matched before and after, and
+  all ten scoped Chromium cases passed. Exact local checks, AMD64 timing
+  and ARM64 recovery are running in parallel. See
+  `activeContinuation.nov22OhioPaymentProjectionReuse`.
+  [Ohio evidence](upgrade-2026-progress.md#november-22-ohio-payment-projection-reuse) ·
+  [AMD64 timing](https://github.com/utilityfueled/tax-engine/actions/runs/45074918225) ·
+  [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45075193188).
 - `a79ff3d0` aligns Pennsylvania State Return navigation with payment
   reconciliation for the implemented 2025 single resident, part-year and
   nonresident methods. All three Chromium cases passed. See
@@ -24,9 +37,10 @@
   browser run passed 636 cases, failed 14 and retained five skips.
   [Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45059367288).
 - `55488dcb` restored the pinned Python prerequisite to the optional
-  Ohio timing comparison. Follow that comparison before choosing the
-  next Linux measurement. `c446a6c1` adds school entry timings to the
-  optional replay with independent verification and no deadline change.
+  Ohio timing comparison. Strict AMD64 passed 645 and failed five with
+  five existing skips. The paired legs passed 10 and 12 of 15, with
+  timeout-only failures. `c446a6c1` adds school entry timing to the next
+  eligible replay. Neither result qualifies the strict runtime.
   [Pinned-interpreter run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954) ·
   [Timing evidence](upgrade-2026-progress.md#november-22-ohio-school-phase-timing).
 - [Open external actions](upgrade-2026-external-actions.md) tracks the
