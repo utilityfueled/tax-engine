@@ -9,19 +9,21 @@ const workflowSteps=parse(readFileSync('.github/workflows/web.yml','utf8')).jobs
 // Spec: spec/federal/runtime-scanner-source-contract.yaml image-identity-chain.
 const sha=(x:string)=>`sha256:${createHash('sha256').update(x).digest('hex')}`;
 const rev='b'.repeat(40),layer='synthetic layer bytes';
-function fixture(mode='valid') {
- const config=JSON.stringify({os:'linux',architecture:'amd64',rootfs:{type:'layers',diff_ids:[sha(layer)]},config:{User:'1001',Cmd:['node','server.js'],Env:['NODE_ENV=production'],Labels:{'org.opencontainers.image.revision':rev}}});
+type ArchiveFormat='index'|'manifest'|'legacy';
+function fixture(mode='valid',architecture='amd64',format:ArchiveFormat=mode==='manifest'?'manifest':'index',configVariant?:string,descriptorVariant?:string) {
+ const config=JSON.stringify({os:'linux',architecture:mode==='wrong-config-arch'?(architecture==='arm64'?'amd64':'arm64'):architecture,...(configVariant===undefined?{}:{variant:configVariant}),rootfs:{type:'layers',diff_ids:[sha(layer)]},config:{User:'1001',Cmd:['node','server.js'],Env:['NODE_ENV=production'],Labels:{'org.opencontainers.image.revision':rev}}});
  const desc=(body:string,mediaType:string)=>({mediaType,digest:sha(body),size:Buffer.byteLength(body)});
  const manifest=JSON.stringify({schemaVersion:2,mediaType:'application/vnd.oci.image.manifest.v1+json',config:desc(config,'application/vnd.oci.image.config.v1+json'),layers:[desc(layer,'application/vnd.oci.image.layer.v1.tar')]});
- const native={...desc(manifest,'application/vnd.oci.image.manifest.v1+json'),platform:{os:'linux',architecture:mode==='wrong-platform'?'arm64':'amd64'}};
+ const native={...desc(manifest,'application/vnd.oci.image.manifest.v1+json'),platform:{os:'linux',architecture:mode==='wrong-platform'?(architecture==='arm64'?'amd64':'arm64'):architecture,...(descriptorVariant!==undefined?{variant:descriptorVariant}:mode==='v8'?{variant:'v8'}:mode==='wrong-variant'?{variant:'v9'}:{})}};
  const entries=[native];
  if(mode==='ambiguous')entries.push(native);
  if(mode==='missing-platform')entries.push({...native,platform:{} as typeof native.platform});
  if(mode==='unknown-platform'||mode==='attestation')entries.push({...native,platform:{os:'unknown',architecture:'unknown'},...(mode==='attestation'?{annotations:{'vnd.docker.reference.type':'attestation-manifest','vnd.docker.reference.digest':native.digest}}:{})});
  const index=JSON.stringify({schemaVersion:2,mediaType:'application/vnd.oci.image.index.v1+json',manifests:entries});
- const target=mode==='manifest'?manifest:index;
- const candidate=[{Id:sha(target),Descriptor:desc(target,mode==='manifest'?'application/vnd.oci.image.manifest.v1+json':'application/vnd.oci.image.index.v1+json'),Os:'linux',Architecture:'amd64',RootFS:{Type:'layers',Layers:[sha(layer)]},Config:JSON.parse(config).config}];
+ const target=format==='legacy'?config:format==='manifest'?manifest:index;
+ const candidate=[{Id:sha(target),Descriptor:format==='legacy'?undefined:desc(target,format==='manifest'?'application/vnd.oci.image.manifest.v1+json':'application/vnd.oci.image.index.v1+json'),Os:'linux',Architecture:architecture,RootFS:{Type:'layers',Layers:[sha(layer)]},Config:JSON.parse(config).config}];
  const bodies:Record<string,string>={};for(const body of [index,manifest,config,layer])bodies[`blobs/sha256/${sha(body).slice(7)}`]=body;
+ if(format==='legacy')Object.assign(bodies,{[sha(config).slice(7)+'.json']:config,'manifest.json':JSON.stringify([{Config:sha(config).slice(7)+'.json',Layers:['layer.tar']}]),'layer.tar':layer});
  if(mode==='missing-config')delete bodies[`blobs/sha256/${sha(config).slice(7)}`];
  if(mode==='corrupt-layer')bodies[`blobs/sha256/${sha(layer).slice(7)}`]='corrupt';
  if(mode==='wrong-config')candidate[0].Config.User='foreign';
@@ -30,14 +32,14 @@ function fixture(mode='valid') {
  if(mode==='traversal')bodies['../foreign']='x';
  return {candidate,bodies,config,configDigest:sha(config),targetDigest:sha(target)};
 }
-function run(mode='valid') {
+function run(mode='valid',architecture='amd64',requiredArchitecture?:string,format?:ArchiveFormat,configVariant?:string,descriptorVariant?:string) {
  const dir=mkdtempSync(join(tmpdir(),'tax-image-chain-'));
  try {
-  const f=fixture(mode),archive=join(dir,'archive.tar'),candidate=join(dir,'candidate.json'),receipt=join(dir,'identity.json');
+  const f=fixture(mode,architecture,format,configVariant,descriptorVariant),archive=join(dir,'archive.tar'),candidate=join(dir,'candidate.json'),receipt=join(dir,'identity.json');
   writeFileSync(candidate,JSON.stringify(f.candidate));
   const tar=spawnSync('python3',['-c',`import io,json,sys,tarfile\na=json.load(sys.stdin)\nwith tarfile.open(sys.argv[1],'w') as t:\n for n,s in a.items():\n  if n=='DUPLICATE':\n   n=s;s=a[n]\n  b=s.encode();x=tarfile.TarInfo(n);x.size=len(b);t.addfile(x,io.BytesIO(b))\n`,archive],{input:JSON.stringify(f.bodies),encoding:'utf8'});
   if(tar.status!==0)throw new Error(tar.stderr);
-  const result=spawnSync('python3',[resolve('scripts/lib/container-image-identity.py'),archive,candidate,rev,receipt],{encoding:'utf8',timeout:5000});
+  const result=spawnSync('python3',[resolve('scripts/lib/container-image-identity.py'),archive,candidate,rev,receipt,...(requiredArchitecture===undefined?[]:[requiredArchitecture])],{encoding:'utf8',timeout:5000});
   return {status:result.status,stderr:result.stderr,receipt:result.status===0?JSON.parse(readFileSync(receipt,'utf8')):null,...f};
  }finally{rmSync(dir,{recursive:true,force:true});}
 }
@@ -80,4 +82,32 @@ function scannerChain(mode='valid') {
 describe('Workflow selected native config binding',()=>{
  it('executes the real SBOM gate with distinct index and config identities',()=>{const x=scannerChain();expect(x.status,x.stderr).toBe(0);});
  it.each(['foreign-config','foreign-input','corrupt-manifest','corrupt-target','missing-chain','substituted-chain'])('rejects %s at the real SBOM gate',mode=>{expect(scannerChain(mode).status).not.toBe(0);});
+});
+
+// Spec: spec/federal/runtime-scanner-source-contract.yaml archive-native-platform.
+describe('Explicit native archive architecture',()=>{
+ it.each(['valid','manifest','v8'])('verifies the explicitly required ARM64 %s identity',mode=>{
+  const x=run(mode,'arm64','arm64');expect(x.status,x.stderr).toBe(0);expect(x.receipt.platform).toBe('linux/arm64');
+ });
+ it.each(['wrong-platform','wrong-config-arch','wrong-variant','ambiguous'])('rejects ARM64 %s',mode=>{expect(run(mode,'arm64','arm64').status).not.toBe(0);});
+ it('does not infer ARM64 permission from candidate metadata',()=>{expect(run('valid','arm64').status).not.toBe(0);});
+ it('rejects an unsupported requested architecture',()=>{expect(run('valid','amd64','riscv64').status).not.toBe(0);});
+ it('keeps AMD64 variant rejection',()=>{expect(run('v8').status).not.toBe(0);});
+});
+
+// Spec: spec/federal/runtime-scanner-source-contract.yaml archive-config-variant.
+describe('Resolved archive config variant',()=>{
+ it.each(['legacy','manifest','index']as const)('rejects an explicit ARM64 v9 config in %s archives',format=>{
+  const x=run('valid','arm64','arm64',format,'v9');expect(x.status).not.toBe(0);expect(x.receipt).toBeNull();
+ });
+ it('rejects a v9 config even when its ARM64 index descriptor declares v8',()=>{
+  const x=run('valid','arm64','arm64','index','v9','v8');expect(x.status).not.toBe(0);expect(x.receipt).toBeNull();
+ });
+ it.each(['legacy','manifest','index']as const)('retains allowed ARM64 config variants in %s archives',format=>{
+  for(const variant of[undefined,'','v8']){const x=run('valid','arm64','arm64',format,variant);expect(x.status,x.stderr).toBe(0);expect(x.receipt.platform).toBe('linux/arm64');}
+ });
+ it.each(['legacy','manifest','index']as const)('retains default AMD64 selection and rejects nonempty config variants in %s archives',format=>{
+  for(const variant of[undefined,'']){const x=run('valid','amd64',undefined,format,variant);expect(x.status,x.stderr).toBe(0);expect(x.receipt.platform).toBe('linux/amd64');}
+  for(const variant of['v8','v9'])expect(run('valid','amd64',undefined,format,variant).status).not.toBe(0);
+ });
 });

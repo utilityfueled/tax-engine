@@ -18,6 +18,8 @@ store_info_diagnostics=null
 loaded_image_diagnostics=null
 image_identity_sha=
 config_id=
+architecture=
+platform=
 cleanup() {
   local result=$? removed=true verified=false current_identity=
   trap - EXIT HUP INT TERM
@@ -42,8 +44,8 @@ cleanup() {
     --argjson verified "$verified" --argjson removed "$removed" \
     --argjson diagnostics "$store_info_diagnostics" \
     --argjson loadedDiagnostics "$loaded_image_diagnostics" \
-    --arg imageIdentitySha256 "$image_identity_sha" \
-    '{version: 1, $source, $imageId, platform: "linux/amd64", $stage,
+    --arg imageIdentitySha256 "$image_identity_sha" --arg platform "$platform" \
+    '{version: 1, $source, $imageId, platform: (if $platform == "" then null else $platform end), $stage,
       $archiveSha256, $archiveBytes, importStore: "fresh local Podman vfs",
       archiveImportVerified: $verified, scratchRemoved: $removed, storeInfoDiagnostics: $diagnostics,
       loadedImageDiagnostics: $loadedDiagnostics, imageIdentitySha256: $imageIdentitySha256}' > "$receipt"
@@ -77,16 +79,23 @@ unset DOCKER_HOST DOCKER_CONTEXT DOCKER_TLS_VERIFY DOCKER_CERT_PATH CONTAINER_HO
 docker=(docker --host unix:///var/run/docker.sock)
 podman=(sudo -n -- env "TMPDIR=$scratch/tmp" podman --remote=false
   --root "$scratch/storage" --runroot "$scratch/run" --tmpdir "$scratch/libpod" --storage-driver=vfs)
-[[ $(uname -sm) == 'Linux x86_64' ]] || exit 1
-[[ $("${docker[@]}" version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null) == 'linux/amd64' ]] || exit 1
+# No image-selected architecture or --platform/emulation fallback: all stores
+# must agree with the actual supported Linux runner architecture.
+case "$(uname -sm)" in
+  'Linux x86_64') architecture=amd64 ;;
+  'Linux aarch64') architecture=arm64 ;;
+  *) exit 1 ;;
+esac
+platform="linux/$architecture"
+[[ $("${docker[@]}" version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null) == "$platform" ]] || exit 1
 
 stage=inspect-build-image
 # The source binding step has already captured the build-store inspection. Reuse
 # it and normalize only the Podman representation of the same config digest.
 signature='.[0] | {Id: (.Id | sub("^sha256:"; "")), Os, Architecture,
   RootFS, Config: (.Config | {User, Cmd, Entrypoint, Env, Labels})}'
-jq -e --arg id "$image_id" --arg rev "$revision" \
-  'length == 1 and (.[0] | .Id == $id and .Os == "linux" and .Architecture == "amd64"
+jq -e --arg id "$image_id" --arg rev "$revision" --arg arch "$architecture" \
+  'length == 1 and (.[0] | .Id == $id and .Os == "linux" and .Architecture == $arch
     and .Config.Labels["org.opencontainers.image.revision"] == $rev
     and (.RootFS.Layers | length > 0 and all(.[]; test("^sha256:[a-f0-9]{64}$"))))' \
   container-candidate.json >/dev/null
@@ -117,7 +126,7 @@ chmod 0400 "$archive"
 
 stage=verify-archive-identity
 python3 -E -B "$(dirname -- "${BASH_SOURCE[0]}")/lib/container-image-identity.py" "$archive" \
-  container-candidate.json "$revision" container-image-identity.json
+  container-candidate.json "$revision" container-image-identity.json "$architecture"
 image_identity_sha=$(sha256sum < container-image-identity.json)
 image_identity_sha=${image_identity_sha%% *}
 config_id=$(jq -er '.configDigest | select(test("^sha256:[a-f0-9]{64}$"))' container-image-identity.json)
@@ -152,8 +161,8 @@ store_info_diagnostics=$(jq -n --argjson exitCode "$info_exit" \
 if (( info_exit != 0 )); then exit "$info_exit"; fi
 (( collector_exit == 0 )) || exit 1
 store=$(cat "$scratch/podman-info.stdout")
-jq -e --arg root "$scratch/storage" --arg run "$scratch/run" \
-  '.host.os == "linux" and .host.arch == "amd64" and .host.serviceIsRemote == false
+jq -e --arg root "$scratch/storage" --arg run "$scratch/run" --arg arch "$architecture" \
+  '.host.os == "linux" and .host.arch == $arch and .host.serviceIsRemote == false
    and (.store | .graphRoot == $root and .runRoot == $run and .graphDriverName == "vfs"
      and .imageStore.number == 0 and .containerStore.number == 0)' \
   <<< "$store" >/dev/null

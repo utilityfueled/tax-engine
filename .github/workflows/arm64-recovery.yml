@@ -47,7 +47,7 @@ jobs:
       - run: pnpm test:setup
       - run: pnpm --filter @tax-engine/web exec playwright install --with-deps chromium
       - run: pnpm sample-docs:fetch
-      - name: Install and verify PostgreSQL 16 recovery tools
+      - name: Install archive and PostgreSQL 16 recovery tools
         run: |
           suite="$(lsb_release -cs)-pgdg"
           key=/usr/share/keyrings/tax-engine-pgdg.asc
@@ -61,6 +61,9 @@ jobs:
           EOF
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql-client-16
+          if ! command -v podman >/dev/null; then
+            sudo apt-get install --yes --no-install-recommends podman
+          fi
           for tool in pg_dump pg_restore; do
             version="$("$TAX_ENGINE_TEST_POSTGRES_BIN/$tool" --version)"
             printf '%s\n' "$version"
@@ -98,6 +101,15 @@ jobs:
         env:
           CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
         run: node scripts/smoke-container.mjs "$CANDIDATE_IMAGE_ID"
+      - name: Verify the archive in an independent native ARM64 image store
+        id: arm_archive
+        continue-on-error: true
+        timeout-minutes: 8
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
+        run: |
+          docker image inspect "$CANDIDATE_IMAGE_ID" > container-candidate.json
+          bash scripts/verify-container-archive.sh
       - name: Exercise isolated Compose upgrade and recovery
         env:
           PREVIOUS_IMAGE_ID: ${{ steps.images.outputs.previous }}
@@ -154,3 +166,17 @@ jobs:
           fi
           jq -c '{status, cleanup, batchesCompleted, caseCount, failed, skipped}' "${summaries[0]}"
           sha256sum "${summaries[0]}"
+      - name: Upload the ARM64 archive verification receipts
+        if: ${{ !cancelled() && (steps.arm_archive.outcome == 'success' || steps.arm_archive.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-arm64-archive-evidence
+          retention-days: 7
+          path: |
+            container-image-identity.json
+            container-archive-verification.json
+      - name: Enforce the ARM64 archive result
+        if: ${{ !cancelled() && steps.images.outcome == 'success' }}
+        env:
+          ARCHIVE_OUTCOME: ${{ steps.arm_archive.outcome }}
+        run: test "$ARCHIVE_OUTCOME" = success

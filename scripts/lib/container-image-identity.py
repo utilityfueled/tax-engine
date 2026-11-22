@@ -28,11 +28,13 @@ def valid_digest(value):
     assert isinstance(value, str) and re.fullmatch(r'sha256:[a-f0-9]{64}', value)
     return value
 
-def verify(archive, candidate, revision):
+def verify(archive, candidate, revision, architecture='amd64'):
+    assert architecture in ('amd64', 'arm64')
+    allowed_variants = (None, '', 'v8') if architecture == 'arm64' else (None, '')
     [expected] = parse(Path(candidate).read_bytes())
     target = valid_digest(expected['Id'])
     assert re.fullmatch(r'[a-f0-9]{40}', revision)
-    assert expected['Os'] == 'linux' and expected['Architecture'] == 'amd64'
+    assert expected['Os'] == 'linux' and expected['Architecture'] == architecture
     assert expected['Config']['Labels']['org.opencontainers.image.revision'] == revision
     assert expected['RootFS']['Type'] == 'layers' and len(expected['RootFS']['Layers']) > 0
     archive_sha = hashlib.sha256()
@@ -90,8 +92,8 @@ def verify(archive, candidate, revision):
                     blob(entry)
                     platform = entry['platform']
                     assert all(isinstance(platform.get(k), str) and 0 < len(platform[k]) <= 64 for k in ('os', 'architecture'))
-                    if platform.get('os') == 'linux' and platform.get('architecture') == 'amd64':
-                        assert platform.get('variant') in (None, '')
+                    if platform.get('os') == 'linux' and platform.get('architecture') == architecture:
+                        assert platform.get('variant') in allowed_variants
                         native.append(entry)
                     else:
                         if 'unknown' in (platform['os'], platform['architecture']):
@@ -127,13 +129,14 @@ def verify(archive, candidate, revision):
                 assert layer in members and members[layer].isfile()
         config = parse(raw_config)
         assert digest(raw_config) == config_digest
-        assert config['os'] == 'linux' and config['architecture'] == 'amd64'
+        assert config['os'] == 'linux' and config['architecture'] == architecture
+        assert config.get('variant') in allowed_variants
         assert config['rootfs']['type'] == expected['RootFS']['Type'] == 'layers'
         assert config['rootfs']['diff_ids'] == expected['RootFS']['Layers']
         for field in ('User', 'Cmd', 'Entrypoint', 'Env', 'Labels'):
             assert config['config'].get(field) == expected['Config'].get(field), field
         assert config['config']['Labels']['org.opencontainers.image.revision'] == revision
-    return {'version': 1, 'source': revision, 'platform': 'linux/amd64', 'targetDigest': target,
+    return {'version': 1, 'source': revision, 'platform': 'linux/' + architecture, 'targetDigest': target,
             'configDigest': config_digest, 'manifestDigest': selected['digest'] if selected else None,
             'targetMediaType': descriptor['mediaType'] if descriptor else None,
             'targetBytes': base64.b64encode(target_body).decode() if target_body else None,
@@ -142,7 +145,8 @@ def verify(archive, candidate, revision):
             'chainVerified': True}
 
 if __name__ == '__main__':
-    result = verify(*sys.argv[1:4])
+    assert len(sys.argv) in (5, 6)
+    result = verify(*sys.argv[1:4], architecture=sys.argv[5] if len(sys.argv) == 6 else 'amd64')
     with Path(sys.argv[4]).open('x') as output:
         json.dump(result, output, indent=2)
         output.write('\n')
