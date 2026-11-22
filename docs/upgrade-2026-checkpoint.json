@@ -1,5 +1,22 @@
 {
   "activeContinuation": {
+    "nov22GuidedFirstHomeIra2026": {
+      "applicationCommit": "8b8a7d84",
+      "source": "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf",
+      "law": "https://uscode.house.gov/us/usc/119-124/t26/s72/",
+      "scopedTestsPassed": 234,
+      "independentUtcPlus14TestsPassed": 5,
+      "testReferenceRerunPassed": 1000,
+      "form5329SpecReferences": 98,
+      "futureActualDatesHeld": true,
+      "normalBrowserCheck": "pass",
+      "normalBrowserCasesPassed": 1,
+      "normalBrowserManifestSha256": "a27444f9b7e7e6c5d8c9884d710b4fadfcfa26aed1d1ad663eaf012f3e726056",
+      "normalBrowserReceipts": ".local/upgrade-evidence/nov22-first-home-8b8a7d84-browser/",
+      "ageFixtureClockCommit": "3a06e099",
+      "humanReview": "pending",
+      "filingQualified": false
+    },
     "nov22OhioDiagnosticCluesAndAwakeLocal": {
       "diagnosticCommit": "8ca0f33c",
       "diagnosticFocusedTestsPassed": 56,
@@ -13,7 +30,9 @@
       "restoredSampleDocuments": 15,
       "localBrowserReceipts": ".local/upgrade-evidence/nov22-caf13618-oh-resident-browser/",
       "fullLocalBrowser": "running",
-      "fullCoverage": "running",
+      "fullCoverage": "pass",
+      "branchCoveragePercent": 88.19,
+      "branchCoverageGatePercent": 85,
       "releaseQualified": false
     },
     "nov22Form8880RothCandidate": {

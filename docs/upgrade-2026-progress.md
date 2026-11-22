@@ -12381,8 +12381,9 @@ the 15 declared sample documents passed all four original Ohio resident-credit
 desktop and mobile cases under the unchanged 30-second deadline. The initial
 managed archive lacked those ignored fixtures and stopped before the server
 started. Sample hashes, build output and the focused result are under
-`.local/upgrade-evidence/nov22-caf13618-oh-resident-browser/`. Full managed
-browser and coverage results are pending.
+`.local/upgrade-evidence/nov22-caf13618-oh-resident-browser/`. Coverage passed
+30,080 tests with 79 skips and measured 88.19% branches against the 85% gate.
+The full managed browser run is still in progress.
 
 `8ca0f33c` adds a fixed failure category and verified relative test-source
 coordinates to paired diagnostics. Raw messages, values and stacks stay out
@@ -12391,3 +12392,35 @@ author passed 56 focused checks and independent review passed 16. The exact
 main [Linux rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45055612463)
 was queued after dispatch. The four local passes do not supersede the previous
 native failures.
+
+### November 22 completed first-home purchases from 2026 IRA receipts
+
+`8b8a7d84` adds the ordinary primary-owner 2026 first-home source path to the
+Form 5329 guide. The matched receipt determines the source year even when a
+qualifying payment falls in the next calendar year. The staged test uses a
+$7,000 September 15 distribution and a January 13 payment on day 120. Form
+5329 reports a $6,000 exception, $1,000 subject to the additional tax and
+$100 additional tax. The IRA income remains $7,000. Day 121 holds.
+
+Independent engineering review reproduced an apparent completed purchase with
+future dates. The guide now compares actual receipt, binding-contract and
+payment dates with the local civil day before accepting the records. Frozen
+tests cover completed day 120 and reject day 121 after the payment date. They
+also cover the existing 2025 route and same-day actual proof. The scoped run
+passed 234 tests. Independent recheck passed five in UTC+14. The final
+test-reference run passed 1,000, Form 5329 validation resolved 98 references,
+and typecheck, inventory and browser source audit passed. Annual calculation
+and public filing gates remain in place.
+[Final 2026 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf) and
+[26 U.S.C. §72](https://uscode.house.gov/us/usc/119-124/t26/s72/).
+
+A separate Chromium run on the exact `8b8a7d84` production build passed the
+normal desktop guide in 2.557 seconds. The completed purchase saved and reopened.
+A future payment edit cleared acceptance and remained held after reconfirmation.
+Deletion and server cleanup passed, with zero external requests. The first
+private test attempt hit an ambiguous selector and remains in the local record.
+Manifest SHA-256 `a27444f9b7e7e6c5d8c9884d710b4fadfcfa26aed1d1ad663eaf012f3e726056`
+is in `.local/upgrade-evidence/nov22-first-home-8b8a7d84-browser/`.
+`3a06e099` freezes the two age examples on their actual receipt dates, and
+both pass. The browser evidence covers intake. Annual calculation and PDF
+export still require their own qualification evidence.
