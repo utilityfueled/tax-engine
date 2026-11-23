@@ -25,7 +25,8 @@ describe("Node 26 runtime source contract", () => {
   it("pins local and inherited CI Node versions consistently", () => {
     expect(read(".node-version").trim()).toBe("26.13.1");
     expect(read(".nvmrc").trim()).toBe("26.13.1");
-    expect(read(".github/workflows/ci.yml").match(/node-version-file: \.node-version/g)).toHaveLength(6);
+    expect(read(".github/workflows/ci.yml").match(/node-version-file: \.node-version/g)).toHaveLength(5);
+    expect(read(".github/workflows/unit-tests.yml").match(/node-version-file: \.node-version/g)).toHaveLength(1);
     expect(read(".github/workflows/web.yml").match(/node-version-file: \.node-version/g)).toHaveLength(3);
   });
   it("binds both image stages and CI preload to the reviewed multiarch index", () => {

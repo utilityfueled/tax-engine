@@ -46,7 +46,7 @@ lines:
     formula: "Root and web engines >=26.13.1 <27; package manager10.34.8 and all application/type pins remain unchanged."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::declares Node 26 at both deployable package roots without changing retained pins"
   - line: "development-ci"
-    formula: "Both runtime-manager files pin 26.13.1; all nine existing CI setup-node calls inherit .node-version."
+    formula: "Both runtime-manager files pin 26.13.1. The main CI, reusable unit shard and Web workflows inherit .node-version at every Node setup step."
     testRef: "tests/runtime/node26-runtime-source-contract.test.ts::pins local and inherited CI Node versions consistently"
   - line: "immutable-image"
     formula: "Both Docker stages and CI preload use the same 26.13.1-trixie-slim OCI index; no architecture-specific substitution."

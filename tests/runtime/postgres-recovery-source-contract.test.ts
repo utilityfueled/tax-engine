@@ -9,14 +9,22 @@ const postgresImage = "postgres:16.16-bookworm@sha256:a49f7438ba03589f9b1ca062f2
 type DatabaseServices = { services: { postgres: { image: string } } };
 type WorkflowStep = { id?: string; run?: string; "continue-on-error"?: boolean; with?: { name?: string; path?: string } };
 type ContainerJob = { env: Record<string, string>; steps: WorkflowStep[] };
-const { jobs: ci } = parse(readFileSync(".github/workflows/ci.yml", "utf8")) as { jobs: Record<string, DatabaseServices> };
+type ShardCaller = { uses: string; with: { shard: string } };
+const { jobs: ci } = parse(readFileSync(".github/workflows/ci.yml", "utf8")) as { jobs: {
+  test: DatabaseServices;
+  "unit-test-shard-1": ShardCaller;
+  "unit-test-shard-2": ShardCaller;
+} };
+const { jobs: { "unit-test": unit } } = parse(readFileSync(".github/workflows/unit-tests.yml", "utf8")) as { jobs: { "unit-test": DatabaseServices } };
 const { jobs: { container } } = parse(readFileSync(".github/workflows/web.yml", "utf8")) as { jobs: { container: ContainerJob } };
 
 describe("PostgreSQL 16.16 self-host recovery", () => {
   it("uses the same verified multi-platform database in Compose and both CI test jobs", () => {
     const compose = parse(readFileSync("compose.yaml", "utf8")) as DatabaseServices;
     expect(compose.services.postgres.image).toBe(postgresImage);
-    expect(ci["unit-test"].services.postgres.image).toBe(postgresImage);
+    expect(ci["unit-test-shard-1"]).toMatchObject({ uses: "./.github/workflows/unit-tests.yml", with: { shard: "1/2" } });
+    expect(ci["unit-test-shard-2"]).toMatchObject({ uses: "./.github/workflows/unit-tests.yml", with: { shard: "2/2" } });
+    expect(unit.services.postgres.image).toBe(postgresImage);
     expect(ci.test.services.postgres.image).toBe(postgresImage);
   });
 
