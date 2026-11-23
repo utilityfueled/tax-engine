@@ -13157,8 +13157,14 @@ Independent review passed 26 tests across the source, first-home and
 candidate routes. All 11 exact local checks passed. Unit and coverage
 each passed 30,156 with 79 existing skips. Branch coverage was 88.25%.
 Chromium passed 650 with five existing skips and verified cleanup.
-Vercel canceled the production build. The exact Docker job passed.
-GitHub CI and Web were in progress at this observation.
+Vercel canceled the production build. The exact GitHub CI jobs and
+Docker passed. The Linux Web build, isolated Compose upgrade,
+recovery and rollback, independent native archive verification and
+browser-container removal passed. Both Linux browser modes passed
+648 cases, failed two and retained five original skips. Strict
+failed two Ohio part-year school district cases at the configured
+30-second deadline. Managed failed two RRTA saved-PDF checks at their
+existing subprocess timeout. The Linux browser qualification remains open.
 [Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45115717009) ·
 [Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/45115717029) ·
 [Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45115717015).

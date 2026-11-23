@@ -32,7 +32,10 @@
       "exactLocalManifestSha256": "f1b68bb8c7c2caa442370aa41fdbb6285ad4346e017329141478b82b5c9a1c7f",
       "githubRuns": {"ci": 45115717029, "docker": 45115717009, "web": 45115717015},
       "githubDocker": "passed",
-      "githubCiAndWebAtObservation": "in_progress",
+      "githubCiJobsPassed": 6,
+      "githubWebBuildComposeRecoveryAndArchiveVerification": "passed",
+      "githubStrictBrowser": {"passed": 648, "failed": 2, "skipped": 5, "failureCategory": "Ohio part-year school district case deadline", "summarySha256": "ae2bc9f505cc6a91a7d7fdde3d95ccc7e8f0cdb7b4aaacc327b740a05962a4f1"},
+      "githubManagedBrowser": {"passed": 648, "failed": 2, "skipped": 5, "failureCategory": "RRTA saved-PDF check timeout", "summarySha256": "17175a4f599623c71fdce316ee75794e2526856a06e7c3e7d0a53ab3b66c781e"},
       "productionDeploymentCanceled": true
     },
     "nov23Form5329GuidedTuition": {

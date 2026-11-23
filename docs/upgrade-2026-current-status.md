@@ -25,8 +25,11 @@ draft. The annual calculation and export gates remain closed.
   and omission of the name, SSN and source identifiers. Independent
   software review and all 11 exact local checks passed, with 30,156
   tests in each core suite, 88.25% branch coverage and 650 Chromium
-  passes. The latest Docker job passed. GitHub CI and Web were still
-  running when this record was taken.
+  passes. All six GitHub CI jobs, Docker, isolated Compose recovery
+  and independent archive verification passed. Both Linux browser
+  modes passed 648, failed two and retained five skips. Strict failed
+  two Ohio school district cases. Managed failed two RRTA saved-PDF
+  checks.
   [Form 5329 PDF evidence](upgrade-2026-progress.md#november-23-internal-form-5329-tuition-pdf).
 - `2e373906` adds a guided 2026 tuition exception worksheet.
   `b406c579` restores the historical aggregate Form 5329 defaults and
