@@ -2,6 +2,7 @@
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { QBISource } from "./form-8995.js";
+import type { QBIBusinessSource } from "./form-8995-a.js";
 import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
@@ -10,6 +11,7 @@ export interface QBIDeductionSource extends QBISource {
   id: string;
   accountHolder?: Owner;
   netSEEarnings: Decimal;
+  form8995ALimits?: Pick<QBIBusinessSource, "w2Wages" | "ubia" | "isSST">;
   /** SE earnings include amounts excluded from this source's QBI. */
   excludedSEIncome?: boolean;
 }

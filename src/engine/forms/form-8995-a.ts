@@ -60,6 +60,8 @@ export interface Form8995AInput {
   qualifiedReitDividends?: Decimal;
   /** Part IV aggregation elections (Reg. §1.199A-4) */
   aggregationElections?: AggregationGroup[];
+  /** Original source names omitted from the deduction rows because their QBI is zero. */
+  zeroQbiSourceNames?: readonly string[];
   /** Schedule D patronage sources from specified ag/hort cooperatives (IRC §199A(b)(7), §199A(g)) */
   patronageSources?: PatronageCooperativeSource[];
   /** Prior year QBI loss carryforward (positive number representing loss) */
@@ -176,10 +178,14 @@ const PATRON_W2_RATE = new Decimal("0.50");
 function applyAggregationElections(
   sources: QBIBusinessSource[],
   elections: AggregationGroup[],
+  zeroQbiSourceNames: readonly string[],
 ): { effectiveSources: QBIBusinessSource[]; groupResults: AggregationGroupResult[] } {
-  const sourceMap = new Map<string, QBIBusinessSource>();
-  for (const s of sources) {
-    sourceMap.set(s.name, s);
+  const sourceMap = new Map(sources.map(source => [source.name, source]));
+  const seenNames = new Set<string>();
+  const ambiguousNames = new Set<string>();
+  for (const name of [...sources.map(source => source.name), ...zeroQbiSourceNames]) {
+    if (seenNames.has(name)) ambiguousNames.add(name);
+    seenNames.add(name);
   }
 
   // Track which business names are consumed by an aggregation group
@@ -199,6 +205,9 @@ function applyAggregationElections(
     let combinedUBIA = new Decimal(0);
 
     for (const bizName of group.componentBusinessNames) {
+      if (ambiguousNames.has(bizName)) {
+        throw new Error(`Aggregation group "${group.name}" references ambiguous business "${bizName}". Identify each source before aggregating.`);
+      }
       const biz = sourceMap.get(bizName);
       if (!biz) {
         throw new Error(
@@ -373,7 +382,7 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   const elections = input.aggregationElections ?? [];
   const { effectiveSources, groupResults: aggregationGroups } =
     elections.length > 0
-      ? applyAggregationElections(input.qbiSources, elections)
+      ? applyAggregationElections(input.qbiSources, elections, input.zeroQbiSourceNames ?? [])
       : { effectiveSources: input.qbiSources, groupResults: [] as AggregationGroupResult[] };
 
   if (aggregationGroups.length > 0) {

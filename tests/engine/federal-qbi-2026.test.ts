@@ -38,4 +38,27 @@ describe("2026 QBI minimum integration",()=>{
     // Net profit $1,200 less half SE tax $85 gives QBI $1,115; 20% = $223.
     expect(r.form8995?.qbiDeduction.toString()).toBe("223");
   });
+  it("preserves distinct K-1 limits when their display names match", () => {
+    const input = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+      w2s: [{ ...simpleW2Fixture.w2s[0], wages: "300000", socialSecurityWages: "184500" }],
+      form2210: {
+        calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher: false, disasterReliefClaimed: false,
+        waiverRequested: false, calculationMethod: "regular", withholdingMethod: "equal-installments",
+        priorYearTaxStatus: "no-tax-liability", priorYearFullYear: true, priorYearResidentAllYear: true,
+        priorYearTaxForForm2210: "0", priorYearTaxComputationConfirmed: true,
+      },
+      scheduleK1: [
+        { partnershipName: "Shared Name Inc", partnershipEIN: "98-7654321", entityType: "s_corporation", ordinaryIncome: "60000",
+          section199AQBI: "60000", section199AW2Wages: "40000", section199AIsSST: true, qbiMateriallyParticipated: false },
+        { partnershipName: "Shared Name Inc", partnershipEIN: "87-6543210", entityType: "s_corporation", ordinaryIncome: "80000",
+          section199AQBI: "80000", section199AW2Wages: "50000", section199AUBIA: "200000", section199AIsSST: false,
+          qbiMateriallyParticipated: false },
+      ],
+    });
+    const calculated = calculateFederalTax(input).form8995A!;
+    expect(calculated.businesses.map(row => row.line15QBIComponent.toFixed())).toEqual(["0", "16000"]);
+    expect(calculated.qbiDeduction.toFixed()).toBe("16000");
+  });
 });

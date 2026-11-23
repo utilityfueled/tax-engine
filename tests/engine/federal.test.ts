@@ -10843,6 +10843,47 @@ describe("Form 8995-A integration - auto-selection based on income", () => {
     expect(biz.line15QBIComponent.greaterThan(0)).toBe(true);
   });
 
+  it("Form 8995-A uses the source records for businesses with the same display name", () => {
+    const input = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      w2s: [{ employer: { name: "Day Job", ein: "12-3456789" }, wages: "300000", federalWithheld: "60000" }],
+      scheduleK1: [
+        { partnershipName: "Investment LLC", partnershipEIN: "98-7654321", ordinaryIncome: "60000",
+          section199AQBI: "60000", section199AW2Wages: "40000", section199AUBIA: "0", section199AIsSST: true },
+        { partnershipName: "Investment LLC", partnershipEIN: "87-6543210", ordinaryIncome: "80000",
+          section199AQBI: "80000", section199AW2Wages: "50000", section199AUBIA: "200000", section199AIsSST: false },
+      ],
+    });
+
+    const result = calculateFederalTax(input).form8995A!;
+    expect(result.businesses.map(row => [
+      row.line2AdjustedQBI.toFixed(), row.line3W2Wages.toFixed(), row.line5UBIA.toFixed(), row.line15QBIComponent.toFixed(),
+    ])).toEqual([["0", "0", "0", "0"], ["80000", "50000", "200000", "16000"]]);
+    expect(result.qbiDeduction.toFixed()).toBe("16000");
+  });
+
+  it.each([
+    { section199AQBI: "0", section199AW2Wages: "40000", section199AIsSST: true },
+    {},
+  ])("Form 8995-A checks aggregation names against original zero-QBI sources (%j)", (zeroQbiFacts) => {
+    const source = {
+      ...simpleW2Fixture,
+      w2s: [{ employer: { name: "Day Job", ein: "12-3456789" }, wages: "300000", federalWithheld: "60000" }],
+      scheduleK1: [
+        { partnershipName: "Shared Label", partnershipEIN: "98-7654321", ordinaryIncome: "0", ...zeroQbiFacts },
+        { partnershipName: "Shared Label", partnershipEIN: "87-6543210", ordinaryIncome: "80000", section199AQBI: "80000" },
+        { partnershipName: "Factory", partnershipEIN: "89-7654321", ordinaryIncome: "30000",
+          section199AQBI: "30000", section199AW2Wages: "100000" },
+      ],
+    };
+    expect(calculateFederalTax(TaxYearInputSchema.parse(source)).form8995A?.qbiDeduction.toFixed()).toBe("6000");
+    const input = TaxYearInputSchema.parse({
+      ...source,
+      priorYear: { qbiAggregationElections: [{ name: "Existing Group", componentBusinessNames: ["Shared Label", "Factory"] }] },
+    });
+    expect(() => calculateFederalTax(input)).toThrow(/ambiguous business.*Shared Label/);
+  });
+
   it("QBI deduction flows to Form 1040 Line 13 from Form 8995-A", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,

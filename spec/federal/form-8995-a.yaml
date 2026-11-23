@@ -92,7 +92,13 @@ lines:
       For K-1 entities, W-2 wages are reported by the entity (typically on a
       supplemental Section 199A statement with the K-1). For sole proprietors,
       these are wages the owner paid to employees of the Schedule C business.
+      The detailed return calculation carries each trade or business's W-2
+      wages, UBIA and SSTB status with its own source record. Two distinct
+      source records can share a display name while keeping separate limits.
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 3 - W-2 wages from business"
+    testRefs:
+      - "tests/engine/federal.test.ts::Form 8995-A uses the source records for businesses with the same display name"
+      - "tests/engine/federal-qbi-2026.test.ts::preserves distinct K-1 limits when their display names match"
 
   - line: "4"
     description: "Adjusted W-2 wages after SSTB reduction"
@@ -219,7 +225,10 @@ lines:
       combined amounts.
 
       Validation rules enforced by the engine:
-        - Each component business name must match an entry in qbiSources
+        - Each component business name must uniquely identify a source, including
+          original K-1 records with zero current QBI. Legacy input defaults do
+          not retain whether a K-1's zero amounts were supplied or omitted, so
+          a name-only election that could refer to multiple records requires review.
         - No component business may be an SSTB (Reg. §1.199A-4(b)(1)(v))
         - A business cannot appear in more than one aggregation group
         - An aggregation group must contain at least two businesses
@@ -233,8 +242,12 @@ lines:
       - "Single-business aggregation group is rejected (minimum two components)"
       - "SSTB business in aggregation group is rejected"
       - "Business appearing in two groups is rejected"
+      - "A component name shared by multiple source rows requires review"
       - "All businesses aggregated into one group: equivalent to single combined entry"
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Part IV - aggregation elections"
+    testRefs:
+      - "tests/engine/forms/form-8995-a.test.ts::aggregation rejects a component name shared by multiple source records"
+      - "tests/engine/federal.test.ts::Form 8995-A checks aggregation names against original zero-QBI sources"
 
   # ═══════════════════════════════════════════════════════════
   # REIT Dividends and Qualified PTP Income

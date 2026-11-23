@@ -846,6 +846,17 @@ describe("Form 8995-A Part IV - aggregation validation", () => {
     ).toThrow(/unknown business.*Fake Biz/);
   });
 
+  it("aggregation rejects a component name shared by multiple source records", () => {
+    expect(() => calculateForm8995A(make({
+      qbiSources: [
+        makeBiz({ name: "Shared Label", qbi: d("60000") }),
+        makeBiz({ name: "Shared Label", qbi: d("80000") }),
+        makeBiz({ name: "Distinct Business", qbi: d("90000") }),
+      ],
+      aggregationElections: [{ name: "Group", componentBusinessNames: ["Shared Label", "Distinct Business"] }],
+    }))).toThrow(/ambiguous business.*Shared Label/);
+  });
+
   it("aggregation rejects single-business group", () => {
     expect(() =>
       calculateForm8995A(make({

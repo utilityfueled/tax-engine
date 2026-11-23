@@ -160,7 +160,6 @@ import {
 import { calculateForm8606, type Form8606Result, type ValidatedOrdinaryIraBasis } from "./forms/form-8606.js";
 import { calculateIraBasisSources } from "./forms/ira-basis-sources.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "./forms/social-security-benefits-worksheet.js";
-import type { QBISource } from "./forms/form-8995.js";
 import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
 import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
@@ -2959,11 +2958,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const necOwnersForQBI = new Set(input.form1099Nec.filter(f => !d(f.nonemployeeCompensation).isZero()).map(f => f.accountHolder));
   const cOwnerForQBI = input.scheduleC?.accountHolder ?? (necOwnersForQBI.size === 1 ? [...necOwnersForQBI][0] : undefined);
   const deductionSources: QBIDeductionSource[] = [];
+  const zeroQbiSourceNames: string[] = [];
   if (input.scheduleC || !schedC.netProfit.isZero()) deductionSources.push({id:"scheduleC",name:input.scheduleC?.businessName ?? "Schedule C",
-    qbi:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),netSEEarnings:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated});
+    qbi:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),netSEEarnings:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated,
+    form8995ALimits: { w2Wages: d(input.scheduleC?.w2WagesPaid), ubia: d(input.scheduleC?.ubiaQualifiedProperty), isSST: input.scheduleC?.isSST ?? false } });
   if (input.scheduleF || !schedFNetProfit.isZero()) deductionSources.push({id:"scheduleF",name:input.scheduleF?.principalCropOrActivity ?? "Schedule F",
     qbi:schedFNetProfit,netSEEarnings:farmSeNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),
-    materiallyParticipated:excludedCashFarmCrp.gt(0) ? true : input.scheduleF?.qbiMateriallyParticipated});
+    materiallyParticipated:excludedCashFarmCrp.gt(0) ? true : input.scheduleF?.qbiMateriallyParticipated,
+    form8995ALimits: { w2Wages: d(input.scheduleF?.w2WagesPaid), ubia: d(input.scheduleF?.ubiaQualifiedProperty), isSST: false } });
   if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
     qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
   seSourceInput.scheduleK1.forEach((k1,index)=>{
@@ -2971,9 +2973,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     // Foreign earnings carry no U.S. share of the deduction, so they take none of it here.
     const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : (foreignK1Earnings.has(`scheduleK1:${index}`) ? k1SelfEmploymentAmount(k1) : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings))
       .minus(foreignK1QbiEarnings.get(`scheduleK1:${index}`) ?? d("0"));
-    if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
-      qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
-      excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
+    if (!qbi.isZero() || !netSEEarnings.isZero()) {
+      deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
+        qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
+        excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero(),
+        form8995ALimits: { w2Wages: d(k1.section199AW2Wages), ubia: d(k1.section199AUBIA), isSST: k1.section199AIsSST ?? false } });
+    } else {
+      // Canonical K-1 amounts default to zero. Keep the original name for
+      // collision checks when a legacy election supplies only a display name.
+      zeroQbiSourceNames.push(k1.partnershipName);
+    }
   });
   let qbiAllocation = input.qbiDeductionAllocations;
   if (excludedCashFarmCrp.gt(0)) {
@@ -3028,15 +3037,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (schedule1AReturn) audit.merge(schedule1AReturn.lines);
   audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
     "Schedule 1-A line 38; no change to AGI or payroll taxes");
-  const qbiSources: QBISource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
+  const noQbiLimits = { w2Wages: d(0), ubia: d(0), isSST: false };
+  const adjustedQbiSources: QBIBusinessSource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
+    ...(source.form8995ALimits ?? noQbiLimits),
     qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0")),
-  })).filter(source=>!source.qbi.isZero());
+  }));
+  const qbiSources = adjustedQbiSources.filter(source => !source.qbi.isZero());
+  zeroQbiSourceNames.push(...adjustedQbiSources.filter(source => source.qbi.isZero()).map(source => source.name));
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
   // Trust QBI is NOT self-employment income — no SE tax adjustment needed
   for (const k1 of k1Form1041s) {
     const k1QBI = d(k1.section199AQBI);
     if (!k1QBI.isZero()) {
-      qbiSources.push({ name: k1.estateTrustName, qbi: k1QBI, materiallyParticipated: k1.qbiMateriallyParticipated });
+      qbiSources.push({
+        name: k1.estateTrustName, qbi: k1QBI, materiallyParticipated: k1.qbiMateriallyParticipated,
+        w2Wages: d(k1.section199AW2Wages), ubia: d(k1.section199AUBIA), isSST: k1.section199AIsSST ?? false,
+      });
+    } else {
+      zeroQbiSourceNames.push(k1.estateTrustName);
     }
   }
 
@@ -3077,10 +3095,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     else if (releasedPriorActiveRentalLoss !== undefined) releasedPriorActiveRentalLoss = releasedPriorActiveRentalLoss.plus(tracked.priorActiveQualifiedLoss);
     const rentalQBI = tracked.currentYearQbi;
     if (!rentalQBI.isZero()) {
-      qbiSources.push({ name: rental.description, qbi: rentalQBI, materiallyParticipated: prop.qbiMateriallyParticipated });
+      qbiSources.push({
+        name: rental.description, qbi: rentalQBI, materiallyParticipated: prop.qbiMateriallyParticipated,
+        w2Wages: d(prop.qbiW2Wages), ubia: d(prop.qbiUBIA), isSST: prop.qbiIsSST ?? false,
+      });
       audit.record("1040", "13-QBI-rental", `Rental QBI: ${rental.description}`,
         rentalQBI,
         "Qualified current income less current losses allowed after FIFO prior use; released prior qualified losses transferred separately");
+    } else if (prop?.qualifiesForQBI) {
+      zeroQbiSourceNames.push(rental.description);
     }
   }
 
@@ -3161,48 +3184,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         qbiDeduction = form8995Result.qbiDeduction;
       } else {
         // Detailed Form 8995-A: W-2/UBIA limitations and SSTB phase-out apply
-        // Build per-business sources with W-2 wages, UBIA, and SSTB status
-        const qbiBusinessSources: QBIBusinessSource[] = qbiSources.map((source) => {
-          // Look up W-2/UBIA/SSTB metadata from original input
-          let w2Wages = new Decimal(0);
-          let ubia = new Decimal(0);
-          let isSST = false;
-          if (input.scheduleC && source.name === (input.scheduleC.businessName ?? "Schedule C")) {
-            w2Wages = d(input.scheduleC.w2WagesPaid ?? "0");
-            ubia = d(input.scheduleC.ubiaQualifiedProperty ?? "0");
-            isSST = input.scheduleC.isSST ?? false;
-          } else if (input.scheduleF && source.name === (input.scheduleF.principalCropOrActivity ?? "Schedule F")) {
-            w2Wages = d(input.scheduleF.w2WagesPaid ?? "0");
-            ubia = d(input.scheduleF.ubiaQualifiedProperty ?? "0");
-            // Farms are not SSTBs under IRC §199A(d)(2)
-          } else {
-            // Rental property source: look up by property description
-            const rental = (input.rentalProperties ?? []).find((rp) => rp.description === source.name);
-            if (rental?.qualifiesForQBI) {
-              w2Wages = d(rental.qbiW2Wages ?? "0");
-              ubia = d(rental.qbiUBIA ?? "0");
-              isSST = rental.qbiIsSST ?? false;
-            } else {
-              // K-1 source: look up by partnership name
-              const k1 = input.scheduleK1.find((k) => k.partnershipName === source.name);
-              if (k1) {
-                w2Wages = d(k1.section199AW2Wages ?? "0");
-                ubia = d(k1.section199AUBIA ?? "0");
-                isSST = k1.section199AIsSST ?? false;
-              } else {
-                // K-1 Form 1041 source: look up by estate/trust name
-                const k1_1041 = k1Form1041s.find((k) => k.estateTrustName === source.name);
-                if (k1_1041) {
-                  w2Wages = d(k1_1041.section199AW2Wages ?? "0");
-                  ubia = d(k1_1041.section199AUBIA ?? "0");
-                  isSST = k1_1041.section199AIsSST ?? false;
-                }
-              }
-            }
-          }
-          return { name: source.name, qbi: source.qbi, w2Wages, ubia, isSST, materiallyParticipated: source.materiallyParticipated };
-        });
-
         // Part IV aggregation elections from taxpayer input
         const aggregationElections = (input.priorYear?.qbiAggregationElections ?? []).map((e) => ({
           name: e.name,
@@ -3212,10 +3193,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         form8995AResult = calculateForm8995A({
           taxYear: year,
           priorYearActiveQBILoss,
-          qbiSources: qbiBusinessSources,
+          qbiSources,
           ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
           qualifiedReitDividends,
           aggregationElections: aggregationElections.length > 0 ? aggregationElections : undefined,
+          zeroQbiSourceNames,
           priorYearQBILoss: priorQBILoss,
           taxableIncomeBeforeQBI,
           netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
