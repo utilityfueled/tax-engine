@@ -30,6 +30,7 @@ const worksheet = {
   planReference: "Employer disability retirement plan notice",
   employerDisabilityPensionConfirmed: true, singlePaymentConfirmed: true,
   minimumRetirementDate: "2026-08-01", paymentDate: "2026-07-31",
+  publicSafetyOfficerExclusionElected: false,
 };
 
 beforeEach(() => vi.setSystemTime(new Date(2026, 9, 12, 12)));
@@ -56,6 +57,20 @@ it("projects a documented 2026 Code 3 disability pension as wages", () => {
   expect(federal.pensionDistributionsTaxable.toFixed()).toBe("0");
   expect(federal.totalWithholding.toFixed()).toBe("900.15");
   expect(federal.form5329?.line4.toFixed() ?? "0").toBe("0");
+});
+
+it("requires an explicit public safety officer election answer for the saved Code 3 worksheet", () => {
+  for (const [answer, expectedError] of [
+    [undefined, /confirm whether you are electing.*public safety officer/i],
+    [null, /confirm whether you are electing.*public safety officer/i],
+    [true, /review.*employer plan and paid premium records/i],
+  ] as const) {
+    const state = draft({ ...statement, code3DisabilitySource: { ...worksheet, publicSafetyOfficerExclusionElected: answer } });
+    const validation = validateSection(state, "income-retirement");
+    expect(validation.fieldErrors["retirement-0-code3-disability"]).toMatch(expectedError);
+    expect(validation.allowSkip).toBe(false);
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  }
 });
 
 it("holds unknown or stale Code 3 disability pension records", () => {

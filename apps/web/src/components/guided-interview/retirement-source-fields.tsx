@@ -5,7 +5,7 @@ import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1Ira
 import { isGuidedQcdStatement, isGuidedQualifiedLumpSum, needsGuidedSimplifiedMethod, retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, type GuidedRetirementSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 import { guidedFirstHomeOriginalError, matchesGuidedCode1IraOriginal, type GuidedFirstHomeWorksheet } from "@/lib/guided-retirement-first-home";
 import { guidedIraEducationOriginalError, matchesGuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "@/lib/guided-retirement-education";
-import { guidedDisabilityPensionOriginal, guidedDisabilityPensionOriginalError, matchesGuidedDisabilityPensionOriginal, type GuidedDisabilityPensionWorksheet } from "@/lib/guided-retirement-disability";
+import { guidedDisabilityPensionOriginal, guidedDisabilityPensionOriginalError, guidedDisabilityPensionPublicSafetyOfficerReview, matchesGuidedDisabilityPensionOriginal, type GuidedDisabilityPensionWorksheet } from "@/lib/guided-retirement-disability";
 import { CurrencyField } from "./currency-field";
 
 function Fact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
@@ -25,6 +25,8 @@ function DisabilityPensionWorksheetFields({ worksheet, onChange }: {
     <Fact label="Does Box 1 report only this one disability pension payment?" value={worksheet.singlePaymentConfirmed} onChange={singlePaymentConfirmed => onChange({ singlePaymentConfirmed })} />
     <Text label="Minimum retirement date shown by the employer plan" type="date" value={worksheet.minimumRetirementDate} onChange={minimumRetirementDate => onChange({ minimumRetirementDate })} />
     <Text label="Date the disability pension payment was received" type="date" value={worksheet.paymentDate} onChange={paymentDate => onChange({ paymentDate })} />
+    <Fact label="Are you electing the retired public safety officer insurance premium exclusion for this pension?" value={worksheet.publicSafetyOfficerExclusionElected} onChange={publicSafetyOfficerExclusionElected => onChange({ publicSafetyOfficerExclusionElected })} />
+    {worksheet.publicSafetyOfficerExclusionElected === true && <p className="guided-hint">{guidedDisabilityPensionPublicSafetyOfficerReview}</p>}
   </>;
 }
 

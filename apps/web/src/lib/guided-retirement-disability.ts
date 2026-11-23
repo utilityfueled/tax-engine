@@ -23,9 +23,11 @@ export interface GuidedDisabilityPensionWorksheet {
   singlePaymentConfirmed?: boolean | null;
   minimumRetirementDate?: string;
   paymentDate?: string;
+  publicSafetyOfficerExclusionElected?: boolean | null;
 }
 
 export const guidedDisabilityPensionOriginalError = "Reconcile the saved disability pension worksheet with the current taxpayer and actual 2026 Code 3 statement, or remove it.";
+export const guidedDisabilityPensionPublicSafetyOfficerReview = "Have a tax professional review the employer plan and paid premium records for the retired public safety officer exclusion.";
 
 export function guidedDisabilityPensionOriginal(
   entry: RetirementEntryData, ownerBirthDate?: string, ownerFingerprint?: string,
@@ -78,6 +80,10 @@ export function buildGuidedDisabilityPensionSource(
   if (!paymentDate || !isActualDate(paymentDate) || !paymentDate.startsWith("2026-")
     || paymentDate < original.ownerBirthDate || paymentDate > currentLocalCivilDate() || paymentDate >= minimumRetirementDate) {
     throw new Error("Enter the actual 2026 payment date on or before today and before the documented minimum retirement date.");
+  }
+  if (worksheet.publicSafetyOfficerExclusionElected === true) throw new Error(guidedDisabilityPensionPublicSafetyOfficerReview);
+  if (worksheet.publicSafetyOfficerExclusionElected !== false) {
+    throw new Error("Confirm whether you are electing the retired public safety officer insurance premium exclusion for this pension.");
   }
   return { distributionDate: paymentDate, disabilityPensionBeforeMinimumRetirementAge: true as const };
 }

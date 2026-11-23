@@ -26,6 +26,7 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
   finally { await act(async () => root.unmount()); container.remove(); }
 }
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
+const publicSafetyOfficerElection = "Are you electing the retired public safety officer insurance premium exclusion for this pension?";
 
 afterEach(() => vi.useRealTimers());
 
@@ -35,6 +36,9 @@ it("collects and reopens a 2026 Code 3 disability pension worksheet", async () =
   const ownerBirthDate = "1966-08-01";
   const source = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "3", taxableAmount: "1000" };
   const personal = { ...completePersonalInfo, dateOfBirth: ownerBirthDate };
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  draft.taxYear = 2026;
+  draft.sectionData["personal-info"] = personal;
   const key = "guided-code3-disability-regression";
   try {
     await render([source], async ({ latest, container, change }) => {
@@ -48,14 +52,24 @@ it("collects and reopens a 2026 Code 3 disability pension worksheet", async () =
       await change("Date the disability pension payment was received", "2026-07-31");
       await change("Is another retirement worksheet beyond this disability pension worksheet needed?", "false");
       await change(confirm, "true");
-      const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
-      draft.taxYear = 2026;
-      draft.sectionData["personal-info"] = personal;
+      draft.sectionData["income-retirement"] = { entries: latest() };
+      expect(saveGuidedFlowState(window.sessionStorage, key, draft)).toBe(true);
+      const legacy = loadGuidedFlowState(window.sessionStorage, key)?.sectionData["income-retirement"]?.entries;
+      expect(legacy?.[0]?.code3DisabilitySource?.publicSafetyOfficerExclusionElected).toBeUndefined();
+      expect(() => buildRetirementInputs(legacy, "single", 2026, undefined, { personal })).toThrow(/confirm whether you are electing.*public safety officer/i);
+      await change(publicSafetyOfficerElection, "true");
+      expect(container.textContent).toMatch(/review.*employer plan and paid premium records/i);
+      await change(confirm, "true");
+      expect(() => buildRetirementInputs(latest(), "single", 2026, undefined, { personal })).toThrow(/review.*employer plan and paid premium records/i);
+      await change(publicSafetyOfficerElection, "false");
+      expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+      await change(confirm, "true");
       draft.sectionData["income-retirement"] = { entries: latest() };
       expect(saveGuidedFlowState(window.sessionStorage, key, draft)).toBe(true);
     }, 2026, ownerBirthDate);
     const reopened = loadGuidedFlowState(window.sessionStorage, key)?.sectionData["income-retirement"]?.entries;
     if (!reopened) throw new Error("The disability pension worksheet did not reopen");
+    expect(reopened[0]?.code3DisabilitySource?.publicSafetyOfficerExclusionElected).toBe(false);
     expect(buildRetirementInputs(reopened, "single", 2026, undefined, { personal })[0]).toMatchObject({
       distributionCode: "3", distributionDate: "2026-07-31", disabilityPensionBeforeMinimumRetirementAge: true,
     });

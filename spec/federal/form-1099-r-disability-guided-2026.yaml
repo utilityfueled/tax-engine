@@ -12,8 +12,14 @@ lines:
       that record and one actual payment covering all of Box 1 to the payer,
       account, current owner and birth date; require the payment to occur in
       2026, on or before today, and strictly before that minimum retirement
-      date. Project the confirmed disability wage classification, original
-      payment date, Box 2a and withholding without inference. Hold unknown,
+      date. Require the owner’s explicit answer for this payment and tax year
+      about electing the retired public safety officer insurance premium
+      exclusion under IRC section 402(l). An absent or unknown answer holds
+      the worksheet, including older saved copies. An affirmative answer
+      requires separate review of the eligible plan, qualified premiums and
+      election because Box 2a does not reflect the exclusion. With an
+      explicit negative answer, project the disability wage classification,
+      original payment date, Box 2a and withholding without inference. Hold unknown,
       late or mixed payments and competing retirement worksheets. A source
       outside the guided cohort requires separate review. Keep the
       annual calculation and public export gates in place.
@@ -21,7 +27,10 @@ lines:
       - "https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf"
       - "https://www.irs.gov/instructions/i1099r"
       - "https://www.irs.gov/publications/p525"
+      - "https://www.irs.gov/publications/p575"
+      - "https://uscode.house.gov/us/usc/119-124/t26/s402/"
     testRef: "tests/guided-interview/guided-disability-pension-2026.test.ts::projects a documented 2026 Code 3 disability pension as wages"
     testRefs:
       - "tests/guided-interview/guided-disability-pension-2026.test.ts::holds unknown or stale Code 3 disability pension records"
+      - "tests/guided-interview/guided-disability-pension-2026.test.ts::requires an explicit public safety officer election answer for the saved Code 3 worksheet"
       - "tests/apps/web/retirement-source-interactions.test.tsx::collects and reopens a 2026 Code 3 disability pension worksheet"
