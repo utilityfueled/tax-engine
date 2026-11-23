@@ -118,7 +118,12 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  for(const row of calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources).digitalSources?.stateWithholding??[])if(row.state!=='PA'&&row.amount.gt(0)&&!(row.state==='VA'&&refundedDigital))fail('actual other-state digital withholding requires its credit/refund successor');
  const oc=sources.restrictedCredits;ref(oc.sourceReference);if(oc.status!=='none_available'||oc.allAwardsTransfersCarryforwardsReviewedConfirmed!==true||oc.originalAwards.length||oc.originalTransfers.length||oc.originalCarryforwards.length)fail('restricted credit awards/transfers/carryforwards are unknown or need their actual successor');
  // Actual care/benefit originals are replayed against the fresh federal result below.
- const nrk=sources.nrk1;ref(nrk.sourceReference);if(nrk.status!=='none_received'||nrk.allReceivedStatementsReviewedConfirmed!==true||nrk.originalStatements.length)fail('actual NRK1 statement credit sources are unknown or need their successor');
+ const nrk = sources.nrk1;
+ ref(nrk.sourceReference);
+ const expectedNrkStatus = residency.nrk1Source ? 'actual_statements' : 'none_received';
+ if (nrk.status !== expectedNrkStatus || nrk.allReceivedStatementsReviewedConfirmed !== true || nrk.originalStatements.length) {
+  fail('actual NRK-1 statement inventory must match the supported original and contain no additional statements');
+ }
  const local = sources.local;
  ref(local.sourceReference);
  if (local.status !== 'separate_return_required' || local.allResidentAndWorkJurisdictionsReviewedConfirmed !== true
@@ -175,11 +180,18 @@ function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completi
  let scheduleDC:ScheduleDCResult|undefined;
  let federalEarnedIncomeCredit:Decimal;
  if(stateOnly){dependencyProof=calculatePA2026OrdinaryDependencies(input,p,sources,income);federalEarnedIncomeCredit=dependencyProof.federalEarnedIncomeCredit;}
- else {const federal=calculateFederalTax(input);scheduleDC=calculatePAOrdinaryCareSources(input,sources.care,income,federal,p.timing.asOfDate);federalEarnedIncomeCredit=federal.earnedIncomeCredit;}
+ else {
+  const federal = calculateFederalTax(input);
+  if (income.nrk1Withholding !== undefined && federal.deductionUsed !== 'standard') {
+   return fail('NRK-1 requires the standard federal deduction here; itemized state withholding needs its own method');
+  }
+  scheduleDC=calculatePAOrdinaryCareSources(input,sources.care,income,federal,p.timing.asOfDate);
+  federalEarnedIncomeCredit=federal.earnedIncomeCredit;
+ }
  const zero=new Decimal(0);
  // All other classes/adjustments have actual confirmed-none residency proof;
  // all additional credit zeros have complete eligibility sources checked above.
- const base:PA40Input={taxYear:year,compensation:income.compensation,interest:income.reportedInterest,unreimbursedExpenses:income.unreimbursedEmployeeExpenses,dividends:income.reportedDividends,netBusinessIncome:income.reportedBusinessIncome,netGainOrLoss:income.reportedCapitalGainOrLoss,netRentalIncome:income.royaltySources?.reportedIncome??zero,estateTrustIncome:zero,gamblingIncome:zero,otherDeductions:zero,taxForgivenessEligibilityIncome:publicOrdinaryMoney(localMoney(p.paTaxableIncome).plus(p.spNontaxableIncome)),useTax:p.useTax,stateWithholding:p.paWithholding,creditFromPriorYear:p.priorCreditCarryforward,estimatedPayments:p.estimatedPayments,extensionPayment:p.extensionPayment,nonresidentTaxWithheld:zero,refundableCredits:zero,taxForgivenessCredit:zero,residentCredit:residentCredit?.totalCredit??zero,otherCredits:scheduleDC?.credit??zero,underpaymentPenalty:zero,lateFilingOrPaymentPenalty:zero,latePaymentInterest:zero};
+ const base:PA40Input={taxYear:year,compensation:income.compensation,interest:income.reportedInterest,unreimbursedExpenses:income.unreimbursedEmployeeExpenses,dividends:income.reportedDividends,netBusinessIncome:income.reportedBusinessIncome,netGainOrLoss:income.reportedCapitalGainOrLoss,netRentalIncome:income.royaltySources?.reportedIncome??zero,estateTrustIncome:zero,gamblingIncome:zero,otherDeductions:zero,taxForgivenessEligibilityIncome:publicOrdinaryMoney(localMoney(p.paTaxableIncome).plus(p.spNontaxableIncome)),useTax:p.useTax,stateWithholding:p.paWithholding,creditFromPriorYear:p.priorCreditCarryforward,estimatedPayments:p.estimatedPayments,extensionPayment:p.extensionPayment,nonresidentTaxWithheld:income.nrk1Withholding??zero,refundableCredits:zero,taxForgivenessCredit:zero,residentCredit:residentCredit?.totalCredit??zero,otherCredits:scheduleDC?.credit??zero,underpaymentPenalty:zero,lateFilingOrPaymentPenalty:zero,latePaymentInterest:zero};
  const beforeSP=calculatePA40(base);
  const scheduleSP=calculateScheduleSP({taxYear:year,filingCategory:'unmarried',dependents:p.spDependentChildren,paTaxableIncome:beforeSP.totalPATaxableIncome,nontaxableIncome:p.spNontaxableIncome,taxLiability:beforeSP.taxLiability,taxPaidToOtherStates:base.residentCredit,isClaimedAsDependentOnAnotherFederalReturn:p.claimedAsDependent,claimingHouseholdQualifiesForTaxForgiveness:p.claimingHouseholdQualifies});
  const beforePenalties=calculatePA40({...base,taxForgivenessEligibilityIncome:scheduleSP.eligibilityIncome,taxForgivenessCredit:scheduleSP.taxForgivenessCredit});
@@ -226,6 +238,6 @@ function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completi
  if(pendingOIDOHAccount)audit.merge(pendingOIDOHAccount.lines);
  if(scheduleDC)audit.merge(scheduleDC.lines);
  audit.merge(income.lines);audit.merge(p.lines);audit.merge(scheduleSP.lines);audit.merge(rev1630.lines);audit.merge(workingCredit.lines);audit.merge(pa40.lines);
- const blockers=['review-only-not-qualified-for-filing','separate-local-return-required',...(year===2026?['final-2026-forms-unqualified']:[]),...(workingCredit.credit.gt(0)?['filed-federal1040-copy-required-for-department-processing']:[])];
+ const blockers=['review-only-not-qualified-for-filing','separate-local-return-required',...(income.nrk1Withholding===undefined?[]:['original-pa-nrk1-attachment-required']),...(year===2026?['final-2026-forms-unqualified']:[]),...(workingCredit.credit.gt(0)?['filed-federal1040-copy-required-for-department-processing']:[])];
  return {dependencyProof,actualBalancePayment,result:{taxYear:year,sourceCommitment:commitment,methodVersion:'pa-ordinary-return-v1',residencyStatus:income.residencyStatus,filingChoice:p.paFilingChoice,schoolDistrictCode:income.schoolDistrictCode,dependentChildren:p.spDependentChildren,timingStatus:p.timing.kind as 'filed'|'expected',...(income.employeeSources?{employeeSources:income.employeeSources}:{}),...(residentCredit?{residentCreditSources:residentCredit}:{}),...(pendingBusinessAccounts.length?{pendingBusinessAccounts}:{}),...(pendingOIDOHAccount?{pendingOIDOHAccount}:{}),...(scheduleDC?{scheduleDC}:{}),pa40,scheduleA:income.scheduleA,scheduleB:income.scheduleB,...(income.scheduleC?{scheduleC:income.scheduleC}:{}),...(income.scheduleD?{scheduleD:income.scheduleD}:{}),...(income.royaltySources?.scheduleE?{scheduleE:income.royaltySources.scheduleE}:{}),scheduleSP,rev1630,workingCredit,wptcProcessing:{stage:'department-processing-reference',credit:workingCredit.credit,creditAppliedToTaxDue:applied,remainingTaxDueBeforePenalties:zeroFloor(localMoney(pa40.taxDue).minus(applied)),additionalOverpaymentBeforePenalties:zeroFloor(localMoney(workingCredit.credit).minus(pa40.taxDue))},refundDisposition:{refund:p.refundRequested,nextYearCredit:p.nextYearCreditRequested,donations:p.donations},penaltyCode:rev1630.totalInterest.gt(0)?latePenalty.gt(0)?'B':'E':latePenalty.gt(0)?'L':null,localBoundary,readiness:{formStatus:year===2026?'draft_2026_review_only':'actual_2025_review_only',filingEligible:false,blockers},lines:audit.getLines()}};
 }

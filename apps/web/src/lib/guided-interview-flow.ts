@@ -1974,6 +1974,25 @@ function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   return dependencies;
 }
 
+/** PA statement fields and refreshed PA custody snapshots do not change a federal K-1. */
+function paNrk1FederalDependencies(value: StateReturnData) {
+  const { paResidencySources, paOrdinaryReturnFacts, paOrdinaryReturnCompletionSources, ...stateSources } = value;
+  return {
+    ...stateSources,
+    paResidencySources: paResidencySources && {
+      ...paResidencySources, nrk1Source: undefined,
+      owner: paResidencySources.owner && { accountHolder: paResidencySources.owner.accountHolder },
+      wages: Array.isArray(paResidencySources.wages) ? paResidencySources.wages.map(row => ({ ...row, original: undefined })) : paResidencySources.wages,
+      interest: Array.isArray(paResidencySources.interest) ? paResidencySources.interest.map(row => ({ ...row, original: undefined })) : paResidencySources.interest,
+      dividends: Array.isArray(paResidencySources.dividends) ? paResidencySources.dividends.map(row => ({ ...row, original: undefined })) : paResidencySources.dividends,
+    },
+    paOrdinaryReturnFacts: paOrdinarySourceValues(paOrdinaryReturnFacts),
+    paOrdinaryReturnCompletionSources: paOrdinaryReturnCompletionSources && {
+      ...paOrdinaryReturnCompletionSources, nrk1: undefined, owner: undefined, originalFederalSources: undefined,
+    },
+  };
+}
+
 
 /** Reuse only the already computed comparison of identical plain source material.
  * Both old and incoming PA packets must be absent; retained/unknown packets keep
@@ -2132,6 +2151,8 @@ export function updateSectionData(
     ? { ...value, educationDistributions: educationOriginalValues(value.educationDistributions) } : value;
   const documentaryValues=(value:unknown)=>sectionId==='additional-deductions'?rrtaDocumentaryValues(value):sectionId==='income-unemployment'?refundDocumentaryValues(value):sectionId==='credits'?educationDocumentaryValues(value):value;
   const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
+  const previousStateReturn = state.sectionData["state-return"];
+  const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
   const previousBusiness = state.sectionData["income-self-employment"];
   const wageringDraft = professionalWageringDraftSchema.safeParse(nextBusiness?.businessFacts?.professionalWagering);
@@ -2235,7 +2256,13 @@ export function updateSectionData(
     (sourceValuesChanged && ['personal-info', 'income-w2'].includes(sectionId)) ||
     (sectionId === 'adjustments' && guidedSourceValuesChanged(movingValues(adjustments?.movingExpenses), movingValues(nextMoving)))
   );
-  const k1LossSourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextAdjustments?.k1LossSources;
+  const paNrk1OnlyEdit = sourceValuesChanged && nextAdjustments?.k1LossSources && state.taxYear === 2025
+    && state.segmentation.stateCode === "PA" && previousStateReturn?.paResidencySources?.residency?.status === "nonresident"
+    && incomingStateReturn?.paResidencySources?.residency?.status === "nonresident"
+    && (previousStateReturn.paResidencySources.nrk1Source !== undefined || incomingStateReturn.paResidencySources.nrk1Source !== undefined
+      || guidedSourceValuesChanged(previousStateReturn.paOrdinaryReturnCompletionSources?.nrk1, incomingStateReturn.paOrdinaryReturnCompletionSources?.nrk1))
+    && !guidedSourceValuesChanged(paNrk1FederalDependencies(previousStateReturn), paNrk1FederalDependencies(incomingStateReturn));
+  const k1LossSourcesChanged = sourceValuesChanged && sectionId !== "final-review" && !paNrk1OnlyEdit && nextAdjustments?.k1LossSources;
   const principalResidenceCodChanged = nextAdjustments?.codPrincipalResidenceSources && (
     (sectionId === "personal-info" && sourceValuesChanged)
     || (sectionId === "adjustments" && guidedSourceValuesChanged(state.sectionData.adjustments?.codPrincipalResidenceSources, nextAdjustments.codPrincipalResidenceSources))
@@ -2305,10 +2332,9 @@ export function updateSectionData(
     entries: nextW2.entries.map((entry, index) => entry.stateLocalSources && (sectionId === "personal-info" || guidedSourceValuesChanged(w2OriginalFields(previousW2?.entries[index]), w2OriginalFields(entry)))
       ? { ...entry, stateLocalSources: { ...entry.stateLocalSources, sourceFactsConfirmed: null } } : entry),
   } : undefined;
-  const ohioStateReturn = state.sectionData["state-return"];
+  const ohioStateReturn = previousStateReturn;
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   const stateOriginalsChanged = sourceValuesChanged && sectionId !== "state-return" && ohioStateReturn;
-  const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
   const currentOhioRetirementCredit = incomingStateReturn?.ohioRetirementCredit;
   const ohioRetirementCreditChanged = currentOhioRetirementCredit && ohioDraftSourceValuesChanged(
     ohioStateReturn?.ohioRetirementCredit, currentOhioRetirementCredit,

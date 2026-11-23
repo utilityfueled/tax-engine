@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import type { TaxYearInput } from "@/models/inputs";
-import type { PAResidencySources } from "@/models/pa-residency";
+import type { PAOrdinaryNrk1Source, PAResidencySources } from "@/models/pa-residency";
 import type { PAOrdinaryDividendSource } from "@/models/pa-ordinary-investment-sources";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import { PAUnionDuesDetails } from "./pa-union-dues-details";
-import { confirmGuidedPAResidencySources, emptyGuidedPAResidencySources, updateGuidedPAResidencySources } from "@/lib/guided-pa-residency-facts";
+import { confirmGuidedPAResidencySources, emptyGuidedPAOrdinaryNrk1Source, emptyGuidedPAResidencySources, updateGuidedPAResidencySources } from "@/lib/guided-pa-residency-facts";
 import { emptyGuidedPADividendSource, emptyGuidedPADividendCredit, updateGuidedPADividendSource } from "@/lib/guided-pa-dividend-sources";
 
 type Period = { from: string; through: string; state?: string; sourceReference?: string };
@@ -32,6 +32,40 @@ function Abodes({ label, periods, onChange, showStateSource }: { label: string; 
       <button type="button" onClick={() => onChange(periods.filter((_, i) => i !== index))}>Remove {prefix}</button>
     </div>;
   })}<button type="button" onClick={() => onChange([...periods, { from: "", through: "" }])}>Add {label}</button></fieldset>;
+}
+
+function PartnershipNrk1Details({ data, onChange }: {
+  data: PAOrdinaryNrk1Source;
+  onChange: (data: PAOrdinaryNrk1Source | undefined) => void;
+}) {
+  const textFields = [
+    ["sourceReference", "PA NRK-1 original record reference"], ["issuerName", "PA NRK-1 issuer name"],
+    ["issuerEin", "PA NRK-1 issuer FEIN"], ["issuerCity", "PA NRK-1 issuer city"],
+    ["issuerState", "PA NRK-1 issuer state"], ["issuerZip", "PA NRK-1 issuer ZIP code"],
+    ["recipientFirstName", "PA NRK-1 recipient first name and initial"], ["recipientLastName", "PA NRK-1 recipient last name"],
+    ["recipientSsn", "PA NRK-1 recipient SSN"], ["ownerType", "PA NRK-1 owner type code"],
+    ["entityType", "PA NRK-1 issuer entity type code"],
+  ] as const;
+  const answers = [
+    ["limitedPartner", "The original marks limited partner"],
+    ["calendarYear", "The partnership statement covers the full calendar year"],
+    ["amended", "The original is marked amended"], ["final", "The original is marked final"],
+    ["includedOnConsolidatedReturn", "The original shows inclusion on a PA-40 NRC consolidated return"],
+    ["eligibleIndividualClaimConfirmed", "The original withholding is eligible on this individual PA-40"],
+    ["allOtherReportableLinesZeroOrBlankConfirmed", "All other reportable lines and attachments show no income, loss, adjustments, or credits"],
+    ["whollyPennsylvaniaAndNoFederalStateDifferenceConfirmed", "Original records confirm all partnership profit is from Pennsylvania with no federal or PA difference"],
+    ["sourceFactsConfirmed", "I checked this PA NRK-1 against the actual original and its federal K-1"],
+  ] as const;
+  const update = (patch: Partial<PAOrdinaryNrk1Source>) => onChange({ ...data, sourceFactsConfirmed: null, ...patch });
+  return <fieldset>
+    <legend>Original Pennsylvania partnership NRK-1</legend>
+    <NumberFact label="PA NRK-1 printed tax year" value={data.sourceTaxYear} onChange={sourceTaxYear => update({ sourceTaxYear })} />
+    {textFields.map(([key, label]) => <TextFact key={key} label={label} value={data[key]} onChange={value => update({ [key]: value })} />)}
+    <CurrencyField label="PA NRK-1 line 1 business income" value={data.businessIncome} allowNegative onChange={businessIncome => update({ businessIncome })} />
+    <CurrencyField label="PA NRK-1 line 6 nonresident withholding" value={data.nonresidentWithholding} onChange={nonresidentWithholding => update({ nonresidentWithholding })} />
+    {answers.map(([key, label]) => <BooleanFact key={key} label={label} value={data[key]} onChange={value => update({ [key]: value })} />)}
+    <button type="button" onClick={() => onChange(undefined)}>Remove PA NRK-1 original</button>
+  </fieldset>;
 }
 
 /** Actual private source collector. This component does not select residency from a mailing address. */
@@ -168,6 +202,9 @@ export function PAResidencyDetails({ originalInput, data, onChange }: {
       <button type="button" onClick={() => update({ dividends: (current.dividends ?? []).filter((_, i) => i !== index) })}>Remove dividend source {index + 1}</button>
     </fieldset>)}
     <button type="button" onClick={() => update({ dividends: [...(current.dividends ?? []), emptyGuidedPADividendSource()] })}>Add actual dividend source</button>
+    {current.nrk1Source ? <PartnershipNrk1Details data={current.nrk1Source} onChange={nrk1Source => update({ nrk1Source })} />
+      : (originalInput?.taxpayer.taxYear ?? current.sourceTaxYear) === 2025 && residency.status === "nonresident"
+        && <button type="button" onClick={() => update({ nrk1Source: emptyGuidedPAOrdinaryNrk1Source() })}>Add 2025 Pennsylvania partnership NRK-1</button>}
     <BooleanFact label="Actual records establish no other PA income classes in this ordinary source packet" value={current.otherPAIncomeClassesConfirmedNone} onChange={otherPAIncomeClassesConfirmedNone => update({ otherPAIncomeClassesConfirmedNone })} />
     <BooleanFact label="Actual records establish no other PA taxable-income adjustments in this source packet" value={current.otherPAAdjustmentsConfirmedNone} onChange={otherPAAdjustmentsConfirmedNone => update({ otherPAAdjustmentsConfirmedNone })} />
     <button type="button" onClick={() => {

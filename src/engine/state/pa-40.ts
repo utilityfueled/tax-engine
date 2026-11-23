@@ -264,7 +264,7 @@ export function calculatePA40(originalInput: PA40Input): PA40Result {
   audit.record("PA-40", "3", "Dividend income", input.dividends, "1099-DIV dividends (all taxed at 3.07%)");
 
   // Line 4: Net business income (loss)
-  audit.record("PA-40", "4", "Net business/profession/farm income", input.netBusinessIncome, "PA Schedule C");
+  audit.record("PA-40", "4", "Net business/profession/farm income", input.netBusinessIncome, "PA Schedule C or PA Schedule NRK-1 line 1");
 
   // Line 5: Net gains/losses
   audit.record("PA-40", "5", "Net gain (loss) from disposition of property", input.netGainOrLoss, "PA Schedule D");
@@ -339,7 +339,7 @@ export function calculatePA40(originalInput: PA40Input): PA40Result {
     "17",
     "Nonresident tax withheld from PA Schedule(s) NRK-1",
     input.nonresidentTaxWithheld,
-    "PA Schedule NRK-1 Line 2 withholding claimed on PA-40 Line 17",
+    "PA-20S/PA-65 Schedule NRK-1 line 6 or PA-41 Schedule NRK-1 line 2 withholding",
   );
 
   // Line 18a: Engine helper refundable credits

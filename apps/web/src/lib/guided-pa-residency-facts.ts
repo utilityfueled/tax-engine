@@ -1,7 +1,20 @@
 import type { TaxYearInput } from "@/models/inputs";
-import { PAResidencySourcesSchema, type PAResidencySources } from "@/models/pa-residency";
+import { PAResidencySourcesSchema, type PAOrdinaryNrk1Source, type PAResidencySources } from "@/models/pa-residency";
 import { calculatePAResidencySources } from "@/engine/state/pa-residency-sources";
 import { validateGuidedPAUnionDues } from "@/engine/state/pa-guided-union-dues";
+import { parseGuidedCurrency } from "./guided-currency";
+
+export function emptyGuidedPAOrdinaryNrk1Source(): PAOrdinaryNrk1Source {
+  return {
+    sourceTaxYear: null, sourceReference: "", sourceFactsConfirmed: null,
+    issuerName: "", issuerEin: "", issuerCity: "", issuerState: "", issuerZip: "",
+    recipientFirstName: "", recipientLastName: "", recipientSsn: "",
+    ownerType: "", entityType: "", limitedPartner: null, calendarYear: null,
+    amended: null, final: null, includedOnConsolidatedReturn: null, eligibleIndividualClaimConfirmed: null,
+    allOtherReportableLinesZeroOrBlankConfirmed: null, whollyPennsylvaniaAndNoFederalStateDifferenceConfirmed: null,
+    businessIncome: "", nonresidentWithholding: "",
+  };
+}
 
 /** Empty draft only; no source amount/year/answer is inferred from the current return. */
 export function emptyGuidedPAResidencySources(): PAResidencySources {
@@ -18,6 +31,10 @@ export function emptyGuidedPAResidencySources(): PAResidencySources {
 
 export function updateGuidedPAResidencySources(data: PAResidencySources, patch: Partial<PAResidencySources>): PAResidencySources {
   return { ...data, ...patch, sourceFactsConfirmed: null };
+}
+
+function normalizeNrk1Amount(value: string): string {
+  return value.trim() === "" ? "" : parseGuidedCurrency(value).toFixed();
 }
 
 /** Only an explicit user confirmation may replace the privately retained originals. */
@@ -44,6 +61,14 @@ export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unkn
     owner: { accountHolder: data.owner.accountHolder,
       originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } },
     ...(royaltySources === undefined ? {} : { royaltySources }),
+    ...(data.nrk1Source === undefined ? {} : {
+      nrk1Source: {
+        ...data.nrk1Source,
+        businessIncome: normalizeNrk1Amount(data.nrk1Source.businessIncome),
+        nonresidentWithholding: normalizeNrk1Amount(data.nrk1Source.nonresidentWithholding),
+        originalFederalK1: structuredClone(input.scheduleK1[0]),
+      },
+    }),
     ...(data.employeeSources === undefined ? {} : { employeeSources: {
       ...data.employeeSources,
       owner: { accountHolder: data.employeeSources.owner.accountHolder, ...(data.employeeSources.owner.accountHolder === data.owner.accountHolder ? { originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } } : {}) },

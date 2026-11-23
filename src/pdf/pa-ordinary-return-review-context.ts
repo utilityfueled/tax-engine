@@ -174,6 +174,7 @@ export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdi
  if(input.taxpayer.taxYear!==2025)return fail('actual2025 ordinary PDF method only; final2026 mapping remains unavailable');
  if(!TaxYearInputSchema.safeParse(input).success)return fail('complete strict canonical actual originals are required');
  if(!input.paOrdinaryReturnFacts||!input.paOrdinaryReturnCompletionSources||!input.paResidencySources)return fail('complete actual ordinary completion and residency originals are required');
+ if(input.paResidencySources.nrk1Source)return fail('original PA NRK-1 attachment requires a separate physical review method');
  const original=structuredClone(input),expected=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);
  if(expected.refundDisposition.donations.length>5)return fail('more than five original donation elections require their physical continuation method');
  const residentCredit=actualResidentCreditPaper(original,expected),scheduleD=actualDigitalPaper(original,expected),scheduleA=actualInterestPaper(original,expected),dividendReview=actualDividendReview(original,expected),scheduleB=dividendReview?.kind==='paper'?dividendReview.paper:undefined,scheduleBNotRequired=dividendReview?.kind==='not-required-nonresident';

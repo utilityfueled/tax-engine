@@ -146,6 +146,7 @@ export interface PAResidencySourcesResult {
   scheduleA:PAScheduleAResult; scheduleB:PAScheduleBResult; excludedNonPACompensation: Decimal; excludedReciprocalCompensation: Decimal;
   excludedNonPAInterest: Decimal; totalOrdinaryPATaxableIncome: Decimal; taxBeforeCredits: Decimal;
   netBusinessIncome:Decimal;reportedBusinessIncome:Decimal;excludedNonPABusinessIncome:Decimal;actualPABusinessEarnedIncome:Decimal;businessPAWithholding:Decimal;
+  nrk1Withholding?: Decimal;
   scheduleC?:PAScheduleCResult;worldwideScheduleC?:PAScheduleCResult;
   royaltySources?:PAOrdinaryRoyaltySourcesResult;
   oidSources?:PAOrdinaryOIDSourcesResult;
@@ -156,6 +157,81 @@ export interface PAResidencySourcesResult {
   personalDebtSources?:PAPersonalDebtAndForeignBankSourcesResult;
   employeeSources?: PAOrdinaryEmployeeSourcesResult; unreimbursedEmployeeExpenses: Decimal; excludedNonPAEmployeeExpenses: Decimal; actualPAServiceCompensation?: Decimal;
   sourceCommitment: string; lines: CalculatedLine[];
+}
+
+function readOrdinaryNrk1(input: TaxYearInput, source: PAResidencySources, status: PAResidencySourcesResult["residencyStatus"]) {
+  const statement = source.nrk1Source;
+  if (statement === undefined) return undefined;
+  const fail = (detail: string): never => error("NRK-1 " + detail);
+  if (status !== "nonresident" || input.taxpayer.taxYear !== 2025 || statement.sourceTaxYear !== 2025
+    || input.taxpayer.filingStatus !== "single" || input.paReciprocitySources !== undefined
+    || input.deductionElection !== "standard"
+    || input.scheduleC !== undefined || source.businesses?.length) {
+    return fail("requires a single 2025 full-year nonresident with one ordinary partnership source and the federal standard deduction selected");
+  }
+  if (statement.sourceFactsConfirmed !== true || statement.ownerType !== "I" || statement.entityType !== "P" || statement.limitedPartner !== true
+    || statement.calendarYear !== true || statement.amended !== false || statement.final !== false
+    || statement.includedOnConsolidatedReturn !== false || statement.eligibleIndividualClaimConfirmed !== true
+    || statement.allOtherReportableLinesZeroOrBlankConfirmed !== true
+    || statement.whollyPennsylvaniaAndNoFederalStateDifferenceConfirmed !== true) {
+    return fail("requires a complete ordinary original and confirmed individual claim outside a consolidated return");
+  }
+  const taxpayer = input.taxpayer.primary;
+  const identity = (value: string) => value.trim().replace(/\s+/g, " ").toUpperCase();
+  const id = (value: string) => value.trim().replace(/-/g, "");
+  if (identity(statement.recipientFirstName) !== identity(taxpayer.firstName)
+    || identity(statement.recipientLastName) !== identity(taxpayer.lastName)
+    || !/^\d{9}$/.test(id(statement.recipientSsn)) || id(statement.recipientSsn) !== id(taxpayer.ssn)) {
+    return fail("recipient does not match the actual taxpayer");
+  }
+  const [federal] = input.scheduleK1;
+  if (input.scheduleK1.length !== 1 || !federal || statement.originalFederalK1 === undefined
+    || stable(statement.originalFederalK1) !== stable(federal) || federal.taxYear !== 2025 || federal.accountHolder !== "primary"
+    || federal.entityType !== "partnership" || federal.isForeignPartnership || federal.isPubliclyTradedPartnership
+    || federal.isPassiveActivity !== true || federal.selfEmploymentEarnings === undefined || !new Decimal(federal.selfEmploymentEarnings).isZero()
+    || !new Decimal(federal.selfEmploymentNetEarningsAfterAdjustments ?? 0).isZero()) {
+    return fail("requires its current matching ordinary federal partnership original and known zero self-employment earnings");
+  }
+  if (!statement.sourceReference.trim() || !statement.issuerCity.trim() || !/^[A-Z]{2}$/.test(statement.issuerState.trim().toUpperCase())
+    || !/^\d{5}(?:-\d{4})?$/.test(statement.issuerZip.trim()) || !identity(statement.issuerName)
+    || identity(statement.issuerName) !== identity(federal.partnershipName)
+    || !/^(?:\d{9}|\d{2}-\d{7})$/.test(statement.issuerEin.trim()) || id(statement.issuerEin) !== id(federal.partnershipEIN)) {
+    return fail("issuer name, FEIN and printed location must be complete and the issuing partnership must match");
+  }
+  const otherPartnershipAmounts = [
+    federal.netRentalIncome, federal.otherNetRentalIncome, federal.guaranteedPayments, federal.interestIncome,
+    federal.ordinaryDividends, federal.qualifiedDividends, federal.royalties, federal.netShortTermCapitalGain,
+    federal.netLongTermCapitalGain, federal.unrecapturedSection1250Gain, federal.collectiblesGain,
+    federal.section1231Gain, federal.otherIncome, federal.section179Deduction, federal.otherDeductions,
+    federal.charitableCash, federal.charitableCapitalGain30, federal.charitableCapitalGain20,
+    federal.investmentInterestExpense, federal.excessBusinessInterest,
+    federal.foreignTaxPaid, federal.foreignSourceIncome, federal.amtDepreciationAdjustment,
+    federal.amtAdjustedGainOrLoss, federal.amtDepletion, federal.amtOtherItems,
+    federal.taxExemptInterest, federal.otherTaxExemptIncome, federal.nondeductibleExpenses, federal.distributions,
+    federal.investmentIncome, federal.investmentExpenses, federal.excessTaxableIncome, federal.excessBusinessInterestIncome,
+    federal.section199AQBI, federal.section199AW2Wages, federal.section199AUBIA, federal.section199AQualifiedReitDividends,
+    federal.section199AQualifiedPTPIncome, federal.section199APTPW2Wages, federal.section199APTPUBIA,
+    federal.lowIncomeHousingCredit42j5, federal.lowIncomeHousingCreditOther, federal.qualifiedRehabilitationExpenditures,
+    federal.otherRentalRealEstateCredits, federal.otherRentalCredits, federal.otherCredits,
+    federal.federalIncomeTaxWithheld, federal.njPassThroughBusinessAlternativeIncomeTaxCredit, federal.ptpDispositionGainOrLoss,
+    federal.beginningDebtBasis, federal.additionalLoansToScorp, federal.priorDebtBasisReduction,
+    federal.form6198?.gainLossFromDispositions, federal.form6198?.otherIncomeGains, federal.form6198?.otherDeductionsLosses,
+    ...Object.values(federal.priorSuspendedLosses ?? {}),
+    ...(input.priorYear?.suspendedPassiveLosses ?? []).map(loss => loss.amount),
+    ...(input.qbiLossSources?.activities ?? []).map(activity => activity.atRisk?.priorSuspendedLoss),
+  ];
+  if (input.k1CharitableSources !== undefined || otherPartnershipAmounts.some(value => !new Decimal(value ?? 0).isZero())
+    || federal.election1367 || federal.ptpFullyDisposedInTaxableTransaction || federal.section199APTPIsSST
+    || (federal.form6198?.ordinaryIncome !== undefined && !new Decimal(federal.form6198.ordinaryIncome).eq(federal.ordinaryIncome))) {
+    return fail("other retained partnership income or adjustments require a separate method");
+  }
+  const wholeDollars = /^\d+(?:\.0+)?$/;
+  if (!wholeDollars.test(statement.businessIncome) || !wholeDollars.test(statement.nonresidentWithholding)) {
+    return fail("lines 1 and 6 must be actual whole-dollar amounts, including known zero withholding");
+  }
+  const businessIncome = new Decimal(statement.businessIncome);
+  if (!businessIncome.gt(0) || !businessIncome.eq(federal.ordinaryIncome)) return fail("line 1 must match the positive ordinary partnership income");
+  return {businessIncome, nonresidentWithholding: new Decimal(statement.nonresidentWithholding)};
 }
 
 export function calculatePAResidencySources(input: TaxYearInput, rawSources: unknown): PAResidencySourcesResult {
@@ -176,13 +252,15 @@ function amount(value: unknown): Decimal {
   if (source.otherPAIncomeClassesConfirmedNone !== true || source.otherPAAdjustmentsConfirmedNone !== true) return error("confirm complete ordinary source scope; unknown other classes/adjustments are not zero");
   for (const key of ["w2s", "form1099Int", "form1099Div", "form1099B", "form1099Nec", "form1099Misc", "scheduleK1"] as const) if (!Array.isArray(input[key])) return error("complete current canonical document arrays are required before source derivation");
   const personalDebtSources=calculatePAPersonalDebtAndForeignBankSources(input,{personalDebtDischarges:source.personalDebtDischarges,foreignBankTaxSources:source.foreignBankTaxSources});
-  for (const key of ["scheduleK1", "formW2G", "form1099G", "form1099K", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
+  for (const key of ["formW2G", "form1099G", "form1099K", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
     const rows = input[key]; if (Array.isArray(rows) && rows.length) return error("additional retained income originals need their actual PA class source method");
   }
   if (input.scheduleF !== undefined || input.cryptoIncome !== undefined || input.form4797 !== undefined || input.form6252.length || input.form6781 !== undefined || input.form8824.length) return error("additional retained income source needs its actual PA class source method");
 
   reconcileOIDOverride(input,source,amount);
   const residency = deriveResidency(source, year);
+  if (input.scheduleK1.length && source.nrk1Source === undefined) return error("additional retained income originals need their actual PA class source method");
+  const nrk1 = readOrdinaryNrk1(input, source, residency.status);
   if (residency.outboundMoveNonresident) {
     if (input.taxpayer.stateResidency !== undefined && input.taxpayer.stateResidency !== "nonresident") {
       return error("reconcile the conflicting retained residency selection with the confirmed annual PA nonresident claim");
@@ -412,7 +490,8 @@ function amount(value: unknown): Decimal {
     additionAdjustments:scheduleB.additionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),reductionAdjustments:scheduleB.reductionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),lines:publicOrdinaryLines(scheduleB.lines)};
   const reportedCompensation = roundDollar(compensation), reportedInterest = scheduleA.line16,reportedDividends=scheduleB.line12;
   if (employeeSources && !reportedCompensation.minus(unreimbursedEmployeeExpenses).eq(employeeNetTotal)) return error("actual per-employer versus aggregate printed compensation precision requires its separate method");
-  const taxable = Money.max(0,new Money(reportedCompensation).minus(unreimbursedEmployeeExpenses)).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)).plus(Money.max(reportedCapitalGainOrLoss,0)).plus(royaltySources.reportedIncome), tax = roundDollar(taxable.times("0.0307"));
+  const reportedBusinessIncome = nrk1?.businessIncome ?? business.reportedBusinessIncome;
+  const taxable = Money.max(0,new Money(reportedCompensation).minus(unreimbursedEmployeeExpenses)).plus(reportedInterest).plus(reportedDividends).plus(Money.max(reportedBusinessIncome,0)).plus(Money.max(reportedCapitalGainOrLoss,0)).plus(royaltySources.reportedIncome), tax = roundDollar(taxable.times("0.0307"));
   // Bind original PA facts without the collector packet or federal Schedule B disclosures.
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources" && key !== "scheduleBPartThree"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
@@ -424,6 +503,10 @@ function amount(value: unknown): Decimal {
   audit.record("PA-Residency-Sources", "reported-compensation", "Reported ordinary PA compensation", reportedCompensation, "Aggregate exact actual compensation class, then round once to whole dollars");
   audit.record("PA-Residency-Sources", "reported-interest", "Reported ordinary PA interest", reportedInterest, "Replay official Schedule A line totals, preserving included/excluded source cents separately");
   audit.merge(scheduleA.lines);audit.merge(scheduleB.lines);audit.merge(business.lines);
+  if (nrk1) {
+    audit.record("PA-Residency-Sources", "nrk1-business", "Verified partnership business income", nrk1.businessIncome, "Original PA NRK-1 line 1 to PA-40 line 4");
+    audit.record("PA-Residency-Sources", "nrk1-withholding", "Verified partnership nonresident withholding", nrk1.nonresidentWithholding, "Original PA NRK-1 line 6 to PA-40 line 17");
+  }
   if (employeeSources) audit.merge(employeeSources.lines);
   audit.merge(retirementSources.lines);audit.merge(royaltySources.lines);
   if(hasBrokerage)audit.merge(brokerageSources.lines);
@@ -435,6 +518,6 @@ function amount(value: unknown): Decimal {
     ...(hasBrokerage?{brokerageSources}:{}),reportedCapitalGainOrLoss:publicOrdinaryMoney(reportedCapitalGainOrLoss),...(scheduleD?{scheduleD}:{}),
     compensation:publicOrdinaryMoney(compensation),interest:publicOrdinaryMoney(interest),reportedCompensation:publicOrdinaryMoney(reportedCompensation),reportedInterest:publicOrdinaryMoney(reportedInterest),dividends:publicOrdinaryMoney(dividends),reportedDividends:publicOrdinaryMoney(reportedDividends),excludedNonPADividends:publicOrdinaryMoney(excludedNonPADividends),scheduleA,scheduleB:publicScheduleB,
     ...(employeeSources?{employeeSources,actualPAServiceCompensation:publicOrdinaryMoney(actualPAServiceCompensation)}:{}),unreimbursedEmployeeExpenses:publicOrdinaryMoney(unreimbursedEmployeeExpenses),excludedNonPAEmployeeExpenses:publicOrdinaryMoney(excludedNonPAEmployeeExpenses),
-    netBusinessIncome:business.netBusinessIncome,reportedBusinessIncome:business.reportedBusinessIncome,excludedNonPABusinessIncome:business.excludedNonPABusinessIncome,actualPABusinessEarnedIncome:business.actualPABusinessEarnedIncome,businessPAWithholding:business.paWithholding,...(business.scheduleC?{scheduleC:business.scheduleC,worldwideScheduleC:business.worldwideScheduleC}:{}),
+    netBusinessIncome:nrk1?.businessIncome??business.netBusinessIncome,reportedBusinessIncome,excludedNonPABusinessIncome:business.excludedNonPABusinessIncome,actualPABusinessEarnedIncome:business.actualPABusinessEarnedIncome,businessPAWithholding:business.paWithholding,...(nrk1?{nrk1Withholding:nrk1.nonresidentWithholding}:{}),...(business.scheduleC?{scheduleC:business.scheduleC,worldwideScheduleC:business.worldwideScheduleC}:{}),
     excludedNonPACompensation:publicOrdinaryMoney(excludedCompensation),excludedReciprocalCompensation:publicOrdinaryMoney(excludedReciprocalCompensation),excludedNonPAInterest:publicOrdinaryMoney(excludedInterest),totalOrdinaryPATaxableIncome:publicOrdinaryMoney(taxable),taxBeforeCredits:publicOrdinaryMoney(tax),oidSources,...(source.digitalSources!==undefined||input.form1099DA.length?{digitalSources}:{}),...(source.retirementSources!==undefined||input.form1099R?.length?{retirementSources}:{}),...(source.royaltySources!==undefined?{royaltySources}:{}),sourceCommitment:commitment,lines:publicOrdinaryLines([...audit.getLines(),...(oidSources?.lines??[]),...digitalSources.lines]) };
 }

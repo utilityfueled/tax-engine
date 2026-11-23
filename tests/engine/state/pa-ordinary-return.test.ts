@@ -3,6 +3,93 @@ import {it,expect} from 'vitest';
 import {calculatePAOrdinaryReturn} from '@/engine/state/pa-ordinary-return.js';
 import {paOrdinaryReturnFixture,paOrdinaryReturnReciprocalFixture,paOrdinaryReturnExtensionFixture,paOrdinaryReturnRefundFixture} from '../../fixtures/pa-ordinary-return.js';
 import {snapshotPAOrdinaryReturnOriginals} from '@/engine/state/pa-ordinary-return-facts.js';
+import {ScheduleK1Schema, type TaxYearInput} from '@/models/inputs.js';
+import {preparePAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
+
+function partnershipNrk1Fixture() {
+ const f = paOrdinaryReturnFixture('nonresident');
+ const taxpayer = f.input.taxpayer.primary;
+ f.input.deductionElection = 'standard';
+ const federal = ScheduleK1Schema.parse({
+  taxYear: 2025, accountHolder: 'primary', partnershipName: 'Fictional Keystone Partners',
+  partnershipEIN: '00-1234567', ordinaryIncome: '10000', isPassiveActivity: true, selfEmploymentEarnings: '0',
+ });
+ f.input.scheduleK1 = [federal];
+ const nrk1Source = {
+  sourceTaxYear: 2025, sourceReference: 'Fictional actual partnership statement',
+  sourceFactsConfirmed: true, originalFederalK1: structuredClone(federal),
+  issuerName: federal.partnershipName, issuerEin: federal.partnershipEIN, issuerCity: 'Pittsburgh', issuerState: 'PA', issuerZip: '15219',
+  recipientFirstName: taxpayer.firstName, recipientLastName: taxpayer.lastName, recipientSsn: taxpayer.ssn,
+  ownerType: 'I', entityType: 'P', limitedPartner: true, calendarYear: true, amended: false, final: false,
+  includedOnConsolidatedReturn: false, eligibleIndividualClaimConfirmed: true,
+  allOtherReportableLinesZeroOrBlankConfirmed: true, whollyPennsylvaniaAndNoFederalStateDifferenceConfirmed: true,
+  businessIncome: '10000', nonresidentWithholding: '307',
+ };
+ const input = {...f.input, paResidencySources: {...f.input.paResidencySources, nrk1Source}};
+ f.facts.originalFederalSources = snapshotPAOrdinaryReturnOriginals(input);
+ f.sources.originalFederalSources = snapshotPAOrdinaryReturnOriginals(input);
+ f.sources.nrk1.status = 'actual_statements';
+ return {...f, input, nrk1Source};
+}
+
+it('PA ordinary nonresident composes an original partnership NRK-1 once', () => {
+ const {input, facts, sources, nrk1Source} = partnershipNrk1Fixture();
+ const result = calculatePAOrdinaryReturn(input, facts, sources);
+ expect(result.pa40.netBusinessIncome.toFixed()).toBe('10000');
+ expect(result.pa40.totalPATaxableIncome.toFixed()).toBe('16000');
+ expect(result.pa40.taxLiability.toFixed()).toBe('491');
+ expect(result.pa40.stateWithholding.toFixed()).toBe('184');
+ expect(result.pa40.nonresidentTaxWithheld.toFixed()).toBe('307');
+ expect(result.pa40.taxDue.toFixed()).toBe('0');
+ expect(result.scheduleSP.eligibilityIncome.toFixed()).toBe('60120');
+ expect(result.workingCredit.paEarnedIncome.toFixed()).toBe('6000');
+ expect(result.readiness.filingEligible).toBe(false);
+ expect(result.readiness.blockers).toContain('original-pa-nrk1-attachment-required');
+ expect(JSON.stringify(result.lines)).not.toContain(nrk1Source.issuerEin);
+ expect(() => preparePAOrdinaryReturnReview({...input, paOrdinaryReturnFacts: facts, paOrdinaryReturnCompletionSources: sources} as Parameters<typeof preparePAOrdinaryReturnReview>[0])).toThrow(/NRK-1.*attachment/i);
+
+ nrk1Source.nonresidentWithholding = '0';
+ facts.timing.remainingTaxPayment = {
+  status: 'expected_payment', date: '2026-04-15', amountAppliedToTax: '307',
+  sourceReference: 'Fictional exact outstanding tax',
+ };
+ expect(calculatePAOrdinaryReturn(input, facts, sources).pa40.nonresidentTaxWithheld.toFixed()).toBe('0');
+});
+
+it('PA ordinary nonresident holds incomplete or conflicting NRK-1 sources', () => {
+ for (const edit of [
+  ({nrk1Source}: ReturnType<typeof partnershipNrk1Fixture>) => { nrk1Source.includedOnConsolidatedReturn = true; },
+  ({nrk1Source}: ReturnType<typeof partnershipNrk1Fixture>) => { nrk1Source.issuerEin = '00-7654321'; },
+  ({nrk1Source}: ReturnType<typeof partnershipNrk1Fixture>) => { nrk1Source.allOtherReportableLinesZeroOrBlankConfirmed = false; },
+  ({nrk1Source}: ReturnType<typeof partnershipNrk1Fixture>) => { nrk1Source.nonresidentWithholding = ''; },
+  ({input, facts}: ReturnType<typeof partnershipNrk1Fixture>) => {
+   input.scheduleK1.push({...input.scheduleK1[0], partnershipEIN: '00-7654321'});
+   facts.originalFederalSources = snapshotPAOrdinaryReturnOriginals(input);
+  },
+  ({sources}: ReturnType<typeof partnershipNrk1Fixture>) => { sources.nrk1.status = 'none_received'; },
+ ]) {
+  const f = partnershipNrk1Fixture();
+  edit(f);
+  expect(() => calculatePAOrdinaryReturn(f.input, f.facts, f.sources)).toThrow(/NRK-1/i);
+ }
+});
+
+it('PA ordinary nonresident holds a federal partnership Box 13 deduction', () => {
+ for (const edit of [
+  (input: TaxYearInput) => { input.scheduleK1[0].otherDeductions = '250'; },
+  (input: TaxYearInput) => { input.scheduleK1[0].otherCredits = '10'; },
+  (input: TaxYearInput) => { input.scheduleK1[0].distributions = '100'; },
+  (input: TaxYearInput) => { input.scheduleK1[0].priorSuspendedLosses = { ordinary: '500' }; },
+  (input: TaxYearInput) => { input.qbiLossSources = { activities: [{ atRisk: { priorSuspendedLoss: '300' } }] }; },
+ ]) {
+  const {input, facts, sources, nrk1Source} = partnershipNrk1Fixture();
+  edit(input);
+  nrk1Source.originalFederalK1 = structuredClone(input.scheduleK1[0]);
+  facts.originalFederalSources = snapshotPAOrdinaryReturnOriginals(input);
+  sources.originalFederalSources = snapshotPAOrdinaryReturnOriginals(input);
+  expect(() => calculatePAOrdinaryReturn(input, facts, sources)).toThrow(/NRK-1.*other retained partnership/i);
+ }
+});
 it('PA ordinary return composes all three actual residency bases',()=>{
  for(const [status,paIncome,compensation,interest] of [['resident','50120','50000','120'],['part_year','26040','26000','40'],['nonresident','6000','6000','0']] as const){const f=paOrdinaryReturnFixture(status);const p=calculatePAOrdinaryReturn(f.input,f.facts,f.sources);expect(p.residencyStatus).toBe(status);expect(p.pa40.totalPATaxableIncome.toString()).toBe(paIncome);expect(p.pa40.compensation.toString()).toBe(compensation);expect(p.pa40.interest.toString()).toBe(interest);expect(p.pa40.taxDue.toString()).toBe('0');expect(p.pa40.netOverpayment.toString()).toBe('0');}
 });

@@ -10,6 +10,37 @@ notes: |
   Local return obligations are explicit unresolved boundaries, never zero tax.
   No complete-state, final2026form, humanqualification or filing promotion claim.
 lines:
+  - line: "ordinary-nrk1"
+    description: One original 2025 partnership NRK-1 for a full-year nonresident
+    formula: >-
+      The final 2025 PA-40 instructions, pages 16 and 21, transfer PA-20S/PA-65
+      NRK-1 line 1 to PA-40 line 4 and NRK-1 line 6 to PA-40 line 17. Bind the
+      original issuer, individual owner, period and matching federal partnership
+      K-1. Require supported positive ordinary income wholly sourced to PA, a
+      limited partner with no self-employment earnings, the selected federal
+      standard deduction, complete statement
+      review, no consolidated PA-40 NRC inclusion, and no other reportable
+      income, adjustments, losses or credits on the statement. Preserve
+      explicit zero withholding. Include the income once in worldwide
+      eligibility and the withholding in the separate line 17 payment. Add the
+      original attachment requirement to review and leave physical output held.
+      See also the final 2025 PA-20S/PA-65 Schedule NRK-1 and its line instructions.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary nonresident composes an original partnership NRK-1 once"
+  - line: "ordinary-nrk1-boundary"
+    description: Require original statement identity and hold unsupported NRK-1 cases
+    formula: >-
+      A missing or changed original, unknown or affirmative consolidated return
+      inclusion, another PA income class or NRK-1 source, or unsupported
+      residency or tax year cannot qualify this source method.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary nonresident holds incomplete or conflicting NRK-1 sources"
+  - line: "ordinary-nrk1-federal-boxes"
+    description: Hold separately stated federal partnership amounts outside the ordinary method
+    formula: >-
+      The actual federal K-1 and linked source worksheets must establish pure
+      ordinary business income. Federal Box 13 deductions, including other
+      deductions lowering Schedule E income, other income, credits, basis
+      events, and adjustments cannot be suppressed by an ordinary-only answer.
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary nonresident holds a federal partnership Box 13 deduction"
   - line: "classes"
     description: Actual PA classes for resident, part-year resident and nonresident
     formula: Replay actual residency sources and unchanged complete facts; feed exact compensation/interest to PA40 once. Other classes and adjustments require explicit actual confirmed-none residency sources. Never use federalAGI or synthesize a full orchestrator result.

@@ -2,14 +2,146 @@
 import { expect, it } from "vitest";
 import * as flow from "@/lib/guided-interview-flow";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { confirmGuidedPAResidencySources, emptyGuidedPAOrdinaryNrk1Source } from "@/lib/guided-pa-residency-facts";
+import { confirmGuidedPAOrdinaryReturnFacts } from "@/lib/guided-pa-ordinary-return-facts";
+import { confirmGuidedPAOrdinaryReturnCompletionSources } from "@/lib/guided-pa-ordinary-return-completion";
+import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { guidedPAOrdinaryPanelFixture, paPanelStatuses, required, type PAOrdinaryPanelData } from "../fixtures/guided-pa-ordinary-panels";
 import { paCompletionOriginalRecordFixture } from "../fixtures/pa-ordinary-return-completion";
+import { actualGuidedK1Sources } from "../fixtures/guided-k1-qbi-sources";
 function sourceInput(state: flow.GuidedFlowState): TaxYearInput | null {
   const method = (flow as unknown as { buildGuidedPAOrdinarySourceInput?: (state: flow.GuidedFlowState) => TaxYearInput | null }).buildGuidedPAOrdinarySourceInput;
   expect(typeof method).toBe("function"); return required(method)(state);
 }
 function data(state: flow.GuidedFlowState): PAOrdinaryPanelData { return required(state.sectionData["state-return"]); }
+
+it("reopens and previews one confirmed PA partnership NRK-1", () => {
+  const f = guidedPAOrdinaryPanelFixture("nonresident");
+  const taxpayer = required(f.state.sectionData["personal-info"]);
+  const taxpayerName = [taxpayer.firstName, taxpayer.lastName].join(" ");
+  const last4 = taxpayer.ssn.slice(-4);
+  const draft = actualGuidedK1Sources();
+  const activity = required(required(draft.activities)[0]);
+  Object.assign(activity, {
+    entityName: "Fictional Keystone Partners", entityEIN: "00-1234567",
+    recipientName: taxpayerName, recipientTaxpayerIdLast4: last4,
+  });
+  Object.assign(required(activity.statement), {
+    ordinaryIncome: "10000", section199AQBI: "0", selfEmploymentEarnings: "0",
+    isPassiveActivity: true, qbiMateriallyParticipated: false,
+  });
+  Object.assign(required(draft.priorQbiCarry), { primaryName: taxpayerName, primaryTaxpayerIdLast4: last4 });
+  f.state.segmentation.lifeEvents.push("k1-loss-sources");
+  f.state.sectionData.adjustments = { ...flow.emptyAdjustmentData, k1LossSources: draft };
+  f.state.sectionData.deductions = { ...flow.emptyDeductionData, method: "standard" };
+  const unboundResidency = required(f.data.paResidencySources);
+  delete unboundResidency.owner.originalTaxpayer;
+  for (const wage of unboundResidency.wages) delete wage.original;
+  for (const interest of unboundResidency.interest) delete interest.original;
+  unboundResidency.sourceFactsConfirmed = null;
+  delete f.facts.owner.originalTaxpayer;
+  delete f.facts.originalFederalSources;
+  f.facts.sourceFactsConfirmed = null;
+  f.sources.owner = { firstName: "", lastName: "", ssn: "" };
+  f.sources.originalFederalSources = {};
+  f.sources.sourceFactsConfirmed = null;
+
+  const federal = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(f.state));
+  const blank = emptyGuidedPAOrdinaryNrk1Source();
+  expect(blank).toMatchObject({ sourceTaxYear: null, nonresidentWithholding: "", includedOnConsolidatedReturn: null });
+  expect(blank).not.toHaveProperty("originalFederalK1");
+  const inventoryFirst = flow.updateSectionData(f.state, "state-return", { ...f.data, paOrdinaryReturnCompletionSources: {
+    ...f.sources, nrk1: { ...f.sources.nrk1, status: "actual_statements" },
+  } });
+  expect(inventoryFirst.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+  const inventoryFirstData = data(inventoryFirst);
+  const entered = flow.updateSectionData(inventoryFirst, "state-return", { ...inventoryFirstData, paResidencySources: {
+    ...required(inventoryFirstData.paResidencySources), sourceFactsConfirmed: null,
+    nrk1Source: {
+      ...blank, sourceTaxYear: 2025, sourceReference: "Fictional original PA partnership statement",
+      sourceFactsConfirmed: true, issuerName: activity.entityName, issuerEin: activity.entityEIN,
+      issuerCity: "Pittsburgh", issuerState: "PA", issuerZip: "15219",
+      recipientFirstName: taxpayer.firstName, recipientLastName: taxpayer.lastName, recipientSsn: taxpayer.ssn,
+      ownerType: "I", entityType: "P", limitedPartner: true, calendarYear: true, amended: false, final: false,
+      includedOnConsolidatedReturn: false, eligibleIndividualClaimConfirmed: true,
+      allOtherReportableLinesZeroOrBlankConfirmed: true, whollyPennsylvaniaAndNoFederalStateDifferenceConfirmed: true,
+      businessIncome: "10,000", nonresidentWithholding: "307.00",
+    },
+  } });
+  expect(entered.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+  const currentFederal = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(entered));
+  expect(currentFederal.scheduleK1).toEqual(federal.scheduleK1);
+  const enteredData = data(entered);
+  const enteredResidency = required(enteredData.paResidencySources);
+  const enteredNrk1 = required(enteredResidency.nrk1Source);
+  const confirmWithholding = (nonresidentWithholding: string) => confirmGuidedPAResidencySources(currentFederal, {
+    ...enteredResidency, nrk1Source: { ...enteredNrk1, nonresidentWithholding },
+  });
+  expect(() => confirmWithholding("")).toThrow(/whole-dollar amounts/);
+  expect(() => confirmWithholding("0.01")).toThrow(/whole-dollar amounts/);
+  expect(() => confirmWithholding("30,7")).toThrow();
+  expect(confirmWithholding("0.00").nrk1Source?.nonresidentWithholding).toBe("0");
+  const confirmed = flow.updateSectionData(entered, "state-return", {
+    ...enteredData, paResidencySources: confirmGuidedPAResidencySources(currentFederal, enteredData.paResidencySources),
+  });
+  expect(confirmed.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+  expect(data(confirmed).paResidencySources?.nrk1Source).toMatchObject({ businessIncome: "10000", nonresidentWithholding: "307" });
+  const originals = required(sourceInput(confirmed));
+  const confirmedData = data(confirmed);
+  const inventoried = flow.updateSectionData(confirmed, "state-return", {
+    ...confirmedData, paOrdinaryReturnCompletionSources: {
+      ...required(confirmedData.paOrdinaryReturnCompletionSources), nrk1: { ...f.sources.nrk1,
+        status: "actual_statements", sourceReference: "Reviewed actual partnership original" },
+    },
+  });
+  expect(inventoried.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+  const afterInventory = data(inventoried);
+  const factsConfirmed = flow.updateSectionData(inventoried, "state-return", {
+    ...afterInventory, paOrdinaryReturnFacts: confirmGuidedPAOrdinaryReturnFacts(originals, afterInventory.paOrdinaryReturnFacts),
+  });
+  expect(factsConfirmed.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+  const afterFacts = data(factsConfirmed);
+  const ready = flow.updateSectionData(factsConfirmed, "state-return", {
+    ...afterFacts, paOrdinaryReturnCompletionSources: confirmGuidedPAOrdinaryReturnCompletionSources(originals,
+      afterFacts.paOrdinaryReturnCompletionSources, afterFacts.paOrdinaryReturnFacts),
+  });
+  expect(ready.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+
+  const entries = new Map<string, string>();
+  const storage: Storage = {
+    getItem: key => entries.get(key) ?? null,
+    setItem: (key, value) => { entries.set(key, value); },
+    removeItem: key => { entries.delete(key); },
+    clear: () => entries.clear(),
+    key: index => [...entries.keys()][index] ?? null,
+    get length() { return entries.size; },
+  };
+  const target = { storageKey: "fictional-pa-ordinary-nrk1" };
+  expect(flow.saveGuidedFlowState(storage, target, ready)).toBe(true);
+  const reopened = required(flow.loadGuidedFlowState(storage, target));
+  expect(flow.validateSection(reopened, "state-return").status).toBe("complete");
+  expect(data(reopened).paResidencySources?.nrk1Source?.originalFederalK1).toEqual(federal.scheduleK1[0]);
+  expect(computeGuidedPreview(reopened)?.state).toMatchObject({
+    stateCode: "PA", stateTax: "491", stateWithholding: "491", stateRefund: "0", stateAmountOwed: "0",
+  });
+
+  const current = data(reopened);
+  const residency = required(current.paResidencySources);
+  const revised = flow.updateSectionData(reopened, "state-return", { ...current, paResidencySources: {
+    ...residency, nrk1Source: { ...required(residency.nrk1Source), nonresidentWithholding: "0" },
+  } });
+  expect(data(revised).paOrdinaryReturnCompletionSources?.sourceFactsConfirmed).toBeNull();
+  expect(revised.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBe(true);
+  expect(flow.validateSection(revised, "state-return").status).toBe("partial");
+
+  const stateEdit = flow.updateSectionData(reopened, "state-return", { ...current, paResidencySources: {
+    ...residency, sourceReference: "A different PA residency original",
+  } });
+  expect(stateEdit.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBeNull();
+  const federalEdit = flow.updateSectionData(reopened, "personal-info", { ...taxpayer, lastName: "Edited" });
+  expect(federalEdit.sectionData.adjustments?.k1LossSources?.sourceFactsConfirmed).toBeNull();
+});
 it("PA ordinary source context is available before ordinary confirmation for all three residencies", () => {
   for (const status of paPanelStatuses) {
     const f = guidedPAOrdinaryPanelFixture(status); delete f.data.paOrdinaryReturnFacts; delete f.data.paOrdinaryReturnCompletionSources;

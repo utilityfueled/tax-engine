@@ -38,6 +38,17 @@ const interestSource = z.object({
   credits: z.array(z.object({ creditedOn: z.string(), amount: z.string(), sourceReference: z.string() }).strict()),
 }).strict();
 
+const nrk1Source = z.strictObject({
+  sourceTaxYear: sourceYear, sourceReference: z.string(), sourceFactsConfirmed: answer,
+  originalFederalK1: original,
+  issuerName: z.string(), issuerEin: z.string(), issuerCity: z.string(), issuerState: z.string(), issuerZip: z.string(),
+  recipientFirstName: z.string(), recipientLastName: z.string(), recipientSsn: z.string(),
+  ownerType: z.string(), entityType: z.string(), limitedPartner: answer, calendarYear: answer,
+  amended: answer, final: answer, includedOnConsolidatedReturn: answer, eligibleIndividualClaimConfirmed: answer,
+  allOtherReportableLinesZeroOrBlankConfirmed: answer, whollyPennsylvaniaAndNoFederalStateDifferenceConfirmed: answer,
+  businessIncome: z.string(), nonresidentWithholding: z.string(),
+});
+
 export const PAResidencySourcesSchema = z.object({
   sourceTaxYear: sourceYear, sourceReference: z.string(), sourceFactsConfirmed: answer,
   owner: z.object({
@@ -57,6 +68,7 @@ export const PAResidencySourcesSchema = z.object({
   dividends: z.array(PAOrdinaryDividendSourceSchema).optional(),
   // Absent only when no actual Schedule C/NEC original exists; replay enforces coverage.
   businesses: z.array(PAOrdinaryBusinessSourceSchema).optional(),
+  nrk1Source: nrk1Source.optional(),
   royaltySources: PAOrdinaryRoyaltySourcesSchema.optional(),
   oidAndMiscSources: PAOrdinaryOIDSourcesSchema.optional(),
   employeeSources: PAOrdinaryEmployeeSourcesSchema.optional(),
@@ -69,4 +81,5 @@ export const PAResidencySourcesSchema = z.object({
 }).strict();
 
 export type PAResidencySources = z.infer<typeof PAResidencySourcesSchema>;
+export type PAOrdinaryNrk1Source = z.infer<typeof nrk1Source>;
 export type PAResidencyStatus = Exclude<PAResidencySources["residency"]["status"], "">;

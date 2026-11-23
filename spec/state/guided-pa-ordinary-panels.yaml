@@ -8,6 +8,21 @@ notes: |
   confirmation and navigation do not qualify positive unsupported credit methods,
   completed returns, final2026 forms/law, filing or public/self-host release.
 lines:
+  - line: "nrk1-original"
+    description: "Capture and reopen the actual PA partnership statement"
+    formula: |
+      Collect the original 2025 issuer, owner, period, filing and lines 1 and 6
+      in the nonresident residency panel. Read displayed grouping exactly and
+      require actual whole dollars, distinguishing blank from reported zero.
+      Confirm against the current federal
+      partnership original and separately acknowledge the one actual statement
+      in completion. Preserve the confirmed federal partnership original for
+      edits limited to this statement, its PA completion inventory, and the
+      automatic custody copies created by explicit PA confirmation. Clear
+      affected PA confirmation after an edit and retain the federal invalidation
+      for other state fields and federal dependencies. Preserve actual sources
+      on save and reopen and keep the original paper attachment requirement.
+    testRef: "tests/guided-interview/guided-pa-ordinary-panels.test.ts::reopens and previews one confirmed PA partnership NRK-1"
   - line: "source-context"
     description: "Separate federal-only and PA residency-bound confirmation originals"
     formula: |
