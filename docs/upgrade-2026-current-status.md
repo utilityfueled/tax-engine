@@ -18,6 +18,17 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
 [Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+- `e0ecb6c9` labels Box 2a as the payer's statement amount and
+  distinguishes missing Box 2a or Box 4 from an entered zero. The
+  saved affirmative premium election remains held. All 71 adjacent
+  tests, 62 spec references, web types, inventory, lint and browser
+  source audit passed.
+  [Review evidence](upgrade-2026-progress.md#november-23-retirement-draft-source-amounts).
+- `f49a9fb8` distributes the GitHub unit suite across two runners
+  while keeping the `Unit Tests` check. Both local shards passed all
+  30,161 runnable tests with 79 existing skips and no overlap across
+  2,209 files. Docker passed. The hosted shard results are pending.
+  [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45239551695).
 - `d164d0ca` requires an explicit answer about the public safety officer
   premium exclusion on a 2026 Code 3 pension. An affirmative answer goes
   to qualified review, and older unanswered worksheets hold. Independent

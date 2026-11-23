@@ -9,10 +9,13 @@ The fictional Code 3 statement has $12,000.45 in Box 1, $9,000.25 in
 determined Box 2a and $900.15 in Box 4. Check the one-day boundary, the
 taxable amount, early-distribution additional tax and the withholding
 transfer. For a retired public safety officer who elects the §402(l)
-premium exclusion, separately verify the eligible employer plan, payment
-records, qualifying premiums, cap and deductions before approving that
-path. Verify the annual reporting fields once final instructions are
-available.
+premium exclusion, verify the qualifying public safety role and retirement
+reason, the same employer's eligible governmental plan and the election
+after separation. Tie the insurer, policy and covered person to dated
+payment records and the distribution. Record the payer route and check
+the statutory attestation for premiums paid by the officer. Reconcile
+the year's applicable plans, cap and medical deductions. Verify the annual
+reporting fields once final instructions are available.
 [2026 Form 1099-R](https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf) ·
 [Publication 525](https://www.irs.gov/publications/p525) ·
 [Publication 575](https://www.irs.gov/publications/p575).

@@ -1,5 +1,26 @@
 {
   "activeContinuation": {
+    "nov23RetirementReviewSourceAmounts": {
+      "applicationCommit": "e0ecb6c9bccb7277b3409afe4bf949e45ba2f5d0",
+      "scope": "Label Box 2a as a payer statement amount and distinguish missing Box 2a and Box 4 values from entered zeroes on draft review",
+      "savedAffirmativeElectionStillHolds": true,
+      "adjacentTestsPassed": 71,
+      "scopedSpecReferencesPassed": 62,
+      "webTypesInventoryLintAndBrowserSourceAudit": "passed"
+    },
+    "nov23CiUnitShards": {
+      "workflowCommit": "f49a9fb8",
+      "parentRun": 45239551695,
+      "dockerRunPassed": 45239551170,
+      "unitShardJobs": [137920175686, 137920175813],
+      "configuredFilePartition": {"first": 1105, "second": 1104, "overlap": 0},
+      "localApplicationCommit": "d164d0ca",
+      "localShardOutcomes": [{"passed": 14729, "skipped": 53}, {"passed": 15432, "skipped": 26}],
+      "actionlintAndAggregateTruthTable": "passed",
+      "stableUnitCheckName": "Unit Tests",
+      "productionDeploymentCanceled": true,
+      "githubUnitShardsObserved": "in progress"
+    },
     "nov23DisabilityPensionPremiumElection": {
       "applicationCommit": "d164d0cacfedc83ed6ef6071f592fb0c6330e8f0",
       "scope": "Require an explicit §402(l) premium election answer before projecting ordinary 2026 Code 3 disability pension wages",

@@ -13534,3 +13534,29 @@ place. This closes the expiry observation for that Session. Conditional
 postal collection, success return, signed completion, entitlement and
 exact credit effects remain separate checks.
 [Stripe Checkout Session retrieval](https://docs.stripe.com/api/checkout/sessions/retrieve).
+
+### November 23 parallel single-worker unit checks
+
+`f49a9fb8` keeps the GitHub `Unit Tests` check and requires both shard
+jobs to pass. Each shard retains the original worker count, test deadlines
+and isolated PostgreSQL/Python setup. The independent coverage job retains
+its 85% branch gate. Actionlint passed, and the aggregate shell check
+accepted only the success/success outcome across 25 result pairs.
+The configured Vitest sequencer assigned 1,105 and 1,104 files with
+zero overlap. Both local shards passed on the application-equivalent
+`d164d0ca` archive, totaling 30,161 passed and 79 existing skips.
+GitHub Docker passed and Vercel canceled the production build.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45239551695) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45239551170).
+
+### November 23 retirement draft source amounts
+
+`e0ecb6c9` shows the original Box 2a figure as reported on the statement
+and gives blank Box 2a and Box 4 distinct labels from an entered zero.
+The regression saves and reopens an affirmative public safety officer
+election. It verifies the draft label and the existing calculation hold.
+The independent software review found a blank-withholding display defect
+in the first patch. The tightened regression failed before the correction.
+All 71 adjacent tests, all 62 scoped spec references, web types, inventory,
+scoped lint and the exact browser source audit passed.
+[IRS Publication 575](https://www.irs.gov/publications/p575).
