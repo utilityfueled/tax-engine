@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateForm8839 } from "@/engine/forms/form-8839.js";
 import { TAX_CONSTANTS } from "@/models/constants.js";
+import { Form8839Schema } from "@/models/inputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { Form8839Child } from "@/models/inputs.js";
 
@@ -461,6 +462,34 @@ describe("Form 8839 year-aware credit and carryforward", () => {
   const child = (overrides: Partial<import("@/engine/forms/form-8839.js").Form8839Params["children"][number]> = {}) => ({
     ...makeParams({children:[{}]}).children[0], adoptionFinalizedYear: 2026,
     expensesByYear: [{year: 2026, amount: "20000"}], ...overrides,
+  });
+  it.each([2025, 2026] as const)("rejects duplicate known child identifiers under the %s per-child limits", taxYear => {
+    const record = child({
+      childName: "Sam Example", childFirstName: "Sam", childLastName: "Example",
+      childBirthYear: 2020, childPermanentlyDisabled: false, childIdentifyingNumber: "900-11-2222",
+      adoptionFinalizedYear: taxYear, expensesByYear: [{ year: taxYear, amount: "20000" }],
+      employerPlanQualified: false,
+    });
+    function calculate(records: typeof record[]) {
+      const { children } = Form8839Schema.parse({ children: records });
+      return calculateForm8839(current(children, { taxYear, ...(taxYear === 2025 ? { constants: constants2025 } : {}) }));
+    }
+    const perChild = taxYear === 2025 ? "17280" : "17670";
+    const refundable = taxYear === 2025 ? "5000" : "5120";
+    const original = calculate([record]);
+    expect(original.adoptionCredit.toFixed()).toBe(perChild);
+    expect(original.refundableAdoptionCredit.toFixed()).toBe(refundable);
+
+    const sameChild = { ...record, childIdentifyingNumber: "900112222" };
+    expect(() => calculate([record, sameChild])).toThrow(/reconcile duplicate Form 8839 child records/i);
+
+    const distinctChild = { ...record, childIdentifyingNumber: "900-11-2223" };
+    const unidentifiedChild = { ...record, childIdentifyingNumber: undefined };
+    for (const records of [[record, distinctChild], [unidentifiedChild, unidentifiedChild]]) {
+      const result = calculate(records);
+      expect(result.adoptionCredit.eq(new Decimal(perChild).times(2))).toBe(true);
+      expect(result.refundableAdoptionCredit.eq(new Decimal(refundable).times(2))).toBe(true);
+    }
   });
   it("2026 splits refundable credit per child after phaseout", () => {
     const r = calculateForm8839(current([child(), child({expensesByYear:[{year:2026,amount:"4000"}]})], {agi:new Decimal("285080")}));

@@ -99,6 +99,13 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
   if (taxYear === 2026 && (params.eligibilityConfirmed === undefined || params.taxLiabilityLimit === undefined)) {
     throw new Error("2026 adoption calculation requires eligibility and actual tax-liability limit");
   }
+  const childIds = new Set<string>();
+  for (const child of children) {
+    const childId = child.childIdentifyingNumber?.replaceAll("-", "");
+    if (!childId || !/^\d{9}$/.test(childId)) continue;
+    if (childIds.has(childId)) throw new Error("Reconcile duplicate Form 8839 child records before calculating");
+    childIds.add(childId);
+  }
   const nonnegative = (value: Decimal, label: string) => {
     if (!value.isFinite() || value.isNegative()) throw new Error(`Invalid adoption ${label}`);
     return value;
