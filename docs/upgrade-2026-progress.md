@@ -1,5 +1,46 @@
 # 2026 upgrade implementation evidence
 
+## November 22 Form 8606 native ratio precision
+
+`931d088f` uses a four-place ratio in the disabled final 2026 Form 8606
+specimen when the three-place calculation would allocate more than the
+actual prior IRA basis. The original candidate held $9,999 of basis
+with a $10,000 ordinary distribution and zero year-end value. The
+pinned native field and its 9-point appearance reopened at `0.9999`,
+with $9,999 recovered, $0 remaining basis and $1 taxable. The
+projector holds cases when four places still overuse basis. Existing
+three-place, capped `1.000`, separate spouse and special-method controls
+passed. The shared engine and parent Form 1040 transfer are unchanged.
+Qualified annual review and filing remain closed.
+The current official IRS download matches the pinned template byte for
+byte. The current official Form 8889 download also matches its pin.
+
+All 182 expanded tests, 48 independently run tests, 76 root checks,
+seven spec references and root typecheck passed. The two exact local
+checkouts match the three pushed source files. Exact binding SHA-256
+`6ee76b03dbbe28fe29cbe3c4ef5fe28e993820dc575c1015d1c4490e229ca96c`.
+The first browser attempt stopped before runtime because the changed PDF
+mapping was still pinned to its earlier digest. `77b5ae7c` refreshes
+that pin and the related comparison manifest digest. The exact audit
+closure, 55 Node checks and 39 Vitest checks passed on the refreshed
+source. All 11 checks passed in the two refreshed source copies. Unit
+and coverage each passed 30,113 cases with 79 existing skips, and
+branch coverage was 88.21% against the 85% gate. Chromium completed all
+eight windows, with 650 passes, five existing skips and successful
+cleanup. The shell used to record its exit failed after the runner
+finished. The persisted PASS result and the runner's return path confirm
+the underlying result. The web build passed with its corrected recorder.
+The exact GitHub Docker and CI jobs and managed browser run passed.
+The strict browser step failed. Runtime smoke, isolated recovery and
+rollback, archive import and browser-container removal passed.
+[Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45084914781).
+Exact local manifest SHA-256
+`f2ab73f81acccdb34d9b83299dc2994be1fb47973a6eaab6d5eeac0ee7f8ac07`.
+Refreshed source binding SHA-256
+`a5c4d524e8a2a11fe0696f55cc0efa56006bc3c599330a25c0dd2d23069909a9`.
+[Final 2026 Form 8606, lines 10–15c](https://www.irs.gov/pub/irs-prior/f8606--2026.pdf) ·
+[Exact Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45084914785).
+
 ## November 22 Ohio header phase measurement
 
 The exact AMD64 comparison reached the 30-second deadline after first
@@ -20,6 +61,27 @@ Exact candidate binding SHA-256
 `5fb73036a5d74a3eebfa3136fd9715daba75650c18bfa3263a8064c75dad8dca`.
 Local opt-in receipt SHA-256
 `ffb948bc7a00b83a0574b5b019cc8a1ee124e9784371b49442c9724b046cccfd`.
+
+The exact Linux replay on `7f1a0ee6` passed the web build. The managed
+browser job and strict container browser gate failed. Strict Chromium
+passed 636 with 14 failures and five existing skips. The bounded
+optional comparison ran all 15 selected cases with 7 passes when
+retaining traces and 8 with tracing off. In both legs the four school
+cases completed school entry and first confirmation. Three stopped
+during header entry at the native-control wait. The fourth passed
+header confirmation and stopped before review download. School entry
+was the largest completed interval. The incomplete header entries
+prevent a comparison of their durations. Browser container removal
+passed. The frozen and terminal manifests are in
+`.local/upgrade-evidence/nov22-7f1a0ee6-ohio-five-phase-actual/`.
+[Exact GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/45083783740).
+
+Local profiling on `ed2cafdb` measured a median 24.3–26.6 ms per
+edit through reducer, in-memory save and display. A separate comparison
+put preview at about 22.7 ms. The duplicate descriptor scan accounts for
+about 3 ms across 46 edits. The current-source replay includes a second
+federal estimate of the same canonical input that cost 2.04–2.45 ms in
+isolation. The local timing cannot attribute the Linux deadlines.
 
 The inspected pending-header path leaves State Return uncompleted
 until Continue. It consequently runs one school projection and no
@@ -12861,6 +12923,86 @@ directories. The source snapshot now includes the shared helper. Original
 browser limits and qualification decisions are preserved. The corrected
 comparison is queued on the full exact SHA.
 [Corrected GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
+
+### November 22 guided Form 8880 historical evidence
+
+`ed2cafdb` adds an optional source path to the existing 2026 Single
+Credits worksheet. A historical Form 1099-R and receipt link through
+the issuer EIN, a redacted account reference, the recipient's last four
+digits and the exact payment. The existing saved row retains the
+receipt details. The separate proof travels under Form 8880 only.
+Guided save and reopen preserved the entered records. Relevant edits
+invalidated confirmations. A reviewed issuer mismatch held Credits
+until corrected. Older and manually affirmed entries remain compatible.
+The annual release and filing gates stay closed.
+[Final Form 8880 and instructions](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2).
+
+Implementation checks passed 56 tests and five spec references.
+Independent software review passed 54 tests and the same spec refs.
+The exact audit closure, 28 scoped tests and 55 audit script tests passed
+in the root check. A separate local production-build Chromium run
+verified guided save, reload, issuer mismatch and recovery. It made
+no external requests and stopped its owned server. Its log SHA-256 is
+`d6d29bbb8fdd898efea6d5ca5e87684d5af24ebc64486a33e186a3d550f78b02`.
+Independent Chromium at 390 pixels verified all 15 control labels,
+matched the panel's scroll and client widths before and after entry,
+and passed the same reload and correction flow. Its log SHA-256 is
+`957935ae9520b87f9f7f939ad937d484a9979c6e4b66222f24139c6abc0a1c2d`.
+Vercel recorded the production build as canceled. The full exact
+local checks are running.
+
+### November 22 Form 8880 prior-year IRA receipt
+
+`550139f5` adds a canonical request path for a single 2026 filer whose
+only includible testing-period distribution was a fully taxable 2025
+traditional IRA withdrawal. The application matches the historical Form
+1099-R to an issuer payment record and to the filer. It requires explicit
+review of testing-period completeness and exclusions. A $500.25
+reduction survives exactly and stays outside current-year income. A
+separate $500 whole-dollar fixture reopens with $500 on Form 8880 line
+4a and $150 on line 12, matching Schedule 3 line 4. The guided manual
+aggregate path keeps its existing behavior. Other positive PDF paths,
+public annual calculation, export and filing remain held.
+[Final Form 8880 and instructions](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2).
+
+Implementation checks passed 121 focused tests. Independent software
+review passed 118 tests and 45 spec references. The tracked-only root
+check passed 41 focused tests and 55 audit-script tests after adding
+the new unit-only fixture to the source audit. Vercel recorded the
+production build as canceled. Both core suites passed 30,118 cases each
+with 79 existing skips and 88.21% branch coverage. The first browser
+attempt stopped before cases because the previous audited run held port
+3099. The failure log is retained. The unchanged command restarted
+after that earlier run finished.
+The source binding in `.local/upgrade-evidence/nov22-form8880-historical-ira/`
+has SHA-256 `659ff4c130a1e49dd1302ef89f59ca02bde140a82100cf5c33e8c91c8ea51e02`.
+
+### November 22 Form 8606 parent transfer
+
+`648ba271` shares the 2026 four-place basis reconciliation between the
+Form 8606 calculation and the pinned internal review PDF. The joint
+regression supplies annual constants only inside the test. With $9,999
+of documented prior Form 8606 basis and a $10,000 ordinary distribution,
+the primary owner's $1 taxable amount now joins $1,600 from the spouse
+on Form 1040 line 4b. Joint AGI is $86,601. The independent reviewer
+reopened the PDF and verified the native value and appearance. The 2025,
+legacy override, and prior repayment-adjustment controls retain their
+existing rounding. Cases exceeding basis at four places still hold.
+Official annual inputs and qualified human review remain required.
+[Final 2026 Form 8606](https://www.irs.gov/pub/irs-prior/f8606--2026.pdf).
+
+Implementation verification passed 179 targeted tests. Independent
+software review passed 67 targeted tests and 47 spec references. The
+root verified 82 focused tests, 55 audit script tests and the rebound
+audit against the tracked-only source. Vercel recorded the production
+build as canceled. All 11 exact local commands passed. Unit and
+coverage each passed 30,115 with 79 existing skips and 88.21% branch
+coverage. Chromium passed 650 with five existing skips and successful
+cleanup. The exact local result manifest has SHA-256
+`ba609bb1d930e757cfec8c6c488f94880fbb35c5b3755a0e037bedbbc2076206`.
+The source binding manifest in
+`.local/upgrade-evidence/nov22-form8606-parent-parity/` has SHA-256
+`543e254a468d6f383665aa1eeef7739e4d74de81b0ee6fafd9556d3d2e3927e5`.
 
 ### November 22 annual source recheck
 

@@ -2,6 +2,24 @@
 
 ## November 22 handoffs for independent qualification
 
+For Form 8606, independently derive the printable ratio and amounts
+on lines 10 and 12–15c for $9,999 of prior ordinary IRA basis, a
+$10,000 Code 7 distribution and zero year-end IRA value. Compare with
+an otherwise equivalent $999,999 basis and $1,000,000 distribution.
+Record how any rounding affects basis conservation and the Form 1040
+line 4b transfer. [Form 8606 specimen and official source](upgrade-2026-progress.md#november-22-form-8606-native-ratio-precision).
+
+For Form 8880, independently derive line 4, the credit and Schedule 3
+transfer for a 2026 single filer with a $2,000 Roth contribution, a
+fully taxable $500 Code 7 traditional IRA distribution in 2025, and an
+otherwise applicable 10% rate. Verify the exclusion and completeness
+questions across the full testing period. The internal specimen accepts
+this one cohort with matched issuer records. The guided worksheet
+accepts the same optional source evidence, and manual aggregate answers
+remain available. Other positive review PDF cases remain held.
+[Final 2026 Form 8880, line 4](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf) ·
+[Source-backed specimen evidence](upgrade-2026-progress.md#november-22-form-8880-prior-year-ira-receipt).
+
 For Form 8889, independently derive the exact and printable line 16
 amounts for an ordinary Code 1 distribution of $500.49, including
 $499.50 of actual qualified expenses and no contributions. Record how

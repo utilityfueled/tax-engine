@@ -2,10 +2,43 @@
 
 ## Resume here · November 22
 
+- `ed2cafdb` collects the historical IRA evidence in the 2026 Single
+  Credits worksheet. Private Chromium verified save and reopen,
+  confirmation invalidation and correction of a mismatched issuer.
+  Independent software review passed. Exact full checks are in progress.
+  [Guided Form 8880 evidence](upgrade-2026-progress.md#november-22-guided-form-8880-historical-evidence).
+- `550139f5` validates one 2025 traditional IRA distribution for a single
+  2026 filer. It matches the historical statement and payment record,
+  keeps the amount outside current-year income, and ties the internal
+  Roth review PDF to Schedule 3. Focused checks and independent software
+  review passed. Exact full checks are in progress. Manually affirmed
+  totals remain supported and the public gate is closed.
+  [Form 8880 prior-year receipt](upgrade-2026-progress.md#november-22-form-8880-prior-year-ira-receipt).
+- `648ba271` uses the same 2026 IRA basis ratio in Form 8606 and its
+  internal review PDF. An isolated joint-return fixture now carries the
+  primary owner's $1 taxable amount to Form 1040 line 4b. Focused checks
+  and independent software review passed. All 11 exact local checks
+  passed, with 30,115 tests per core suite, 88.21% branch coverage and
+  650 Chromium passes. The annual gate stays closed.
+  [Form 8606 parent transfer](upgrade-2026-progress.md#november-22-form-8606-parent-transfer).
+- `931d088f` reconciles the disabled Form 8606 specimen when three
+  fractional digits would overuse basis. The pinned PDF reopened with
+  `0.9999` and $1 taxable in the $9,999 basis fixture. The larger
+  overuse case remains held. `77b5ae7c` refreshes the browser source
+  audit. All 11 exact local checks passed, with 30,113 cases per core
+  suite, 88.21% branch coverage and 650 Chromium passes. The exact
+  GitHub Docker build, six CI jobs and managed browser job passed. The
+  strict browser step failed. Recovery, archive import and removal passed.
+  [Form 8606 evidence](upgrade-2026-progress.md#november-22-form-8606-native-ratio-precision).
 - The optional Ohio timing report adds header entry and first header
   confirmation. Four audited Chromium cases and all five live timing
-  markers in a separate local opt-in passed. The strict runtime gate
-  remains open. [Ohio timing evidence](upgrade-2026-progress.md#november-22-ohio-header-phase-measurement).
+  markers in a separate local opt-in passed. The exact `7f1a0ee6` Linux
+  strict run passed 636, failed 14 and retained five existing skips.
+  In both optional legs, three of four school cases stopped during
+  header entry. The fourth passed header confirmation and stopped
+  later. Runtime qualification remains pending.
+  [Ohio timing evidence](upgrade-2026-progress.md#november-22-ohio-header-phase-measurement) ·
+  [Exact Linux replay](https://github.com/utilityfueled/tax-engine/actions/runs/45083783740).
 - `3aefc04c` holds the disabled internal Form 8889 review PDF when
   rounded line 16 contradicts the displayed subtraction. The exact
   engine amount and current public gates are preserved. Reopened
