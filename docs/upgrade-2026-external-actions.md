@@ -109,6 +109,20 @@ that resolves an ambiguous Part IV election. Record the worksheets,
 citations, applicable year and review date before annual qualification.
 [Form 8995-A fixtures and authorities](upgrade-2026-progress.md#november-23-form-8995-a-business-source-matching).
 
+The Form 8863 worksheet review also needs the 2026 matched-spouse identity
+fixtures. Review evidence for the return claimant, the student’s TIN and
+each independent yes/no answer before accepting a credit in the annual gate.
+[Form 8863 fixtures and authorities](upgrade-2026-progress.md#november-23-education-student-identity-and-ohio-render-verification).
+
+Pennsylvania's REV-276 permits an extension payment by the original due
+date. The current ordinary and married calculation paths accept extension
+receipts dated April 15. Extending either path to earlier receipts needs a
+reviewed worksheet distinguishing PA-40 Line 16 extension payments from
+late estimated payments and determining when a receipt changes REV-1630
+interest. [Pennsylvania filing instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+[REV-276](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-276.pdf) ·
+[REV-1630](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf).
+
 | Input still needed | Specific review material and deliverable |
 | --- | --- |
 | Qualified independent tax reviewers | Derive and record independent worksheets, authority, findings and dated decisions for the [original nine-case assignment](upgrade-2026-nov14-human-tax-review.md), [five-method supplement](upgrade-2026-human-tax-five-method-supplement-46a95320.md), [AI/partial-interest source supplement](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md), [state/guide supplement](upgrade-2026-human-state-guide-supplement-e014f390.md), [goodwill/PA supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md) and [November 19 territory, Ohio, mortgage and pension supplement](upgrade-2026-human-territory-ohio-resident-20261119.md), including their linked earlier packets. All human assignments remain unfilled. |

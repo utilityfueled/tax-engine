@@ -1,5 +1,36 @@
 {
   "activeContinuation": {
+    "nov23Form8863StudentIdentity": {
+      "applicationCommit": "f50e6261b3e1aea21c0823649c284cd8d0b32043",
+      "studentIdentityCommit": "6bbc2f3c54b072e5caae2e0d59f3570629ade5e0",
+      "claimantIdentityCommit": "e91dc09f2bd20f9f52eef6c8916d3b7ff9f3a161",
+      "sourceArchiveSha256": "5ccb87cbd5e503a646f470e7ec35bcffa70cac5b037b0ee7b8cd6d5df17ce8a2",
+      "sources": ["https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits", "https://www.govinfo.gov/content/pkg/PLAW-119publ21/pdf/PLAW-119publ21.pdf"],
+      "baselineRegressionFailures": {"studentCases": 3, "claimantCases": 2},
+      "firstExactUnitAndCoverageFailure": "6bbc2f3c failed the existing requirement for a separate 2026 timely-TIN answer when the student has no employment-valid SSN. f50e6261 restores that requirement and adds a safeguard when the claimant SSN facts are absent.",
+      "scopedTestsPassed": 861,
+      "form8863SpecReferencesPassed": 40,
+      "exactLocalUnit": {"passed": 30197, "skipped": 79, "filesPassed": 2201},
+      "exactLocalCoverage": {"passed": 30197, "skipped": 79, "branchCoveragePercent": 88.29},
+      "exactLocalBrowser": {"passed": 650, "skipped": 5, "failed": 0, "batches": 8},
+      "exactLocalChecksPassed": ["typecheck", "typecheck:contracts", "typecheck:web", "spec:validate", "spec:inventory:check", "lint", "build", "test", "test:coverage", "build:web", "test:web"],
+      "independentCodeReview": "passed after closing the ineligible-claimant bypass and preserving separate confirmation",
+      "qualifiedIndependentTaxReview": "pending",
+      "githubRuns": {"ci": 45288279238, "web": 45288279172, "docker": 45288279081},
+      "dockerBuild": "passed",
+      "githubCiAndRuntimeAtLocalSignoff": "in progress",
+      "productionDeploymentCanceled": true,
+      "public2026AnnualCalculationOrExport": "closed"
+    },
+    "nov23OhioPendingResidentCreditRender": {
+      "applicationCommit": "add12647b4bad9a1710ed19cd30456ea63a721e1",
+      "scopedTestsPassed": 31,
+      "baselineRegressionFailures": 2,
+      "stateReplaysPerEligiblePendingRender": {"before": 1, "after": 0},
+      "independentCodeReview": "passed",
+      "productionDeploymentCanceled": true,
+      "strictRuntimeTiming": "Requires exact image evidence. No wall-time improvement established by the replay-count assertion."
+    },
     "nov23DetailedQbiBusinessSourceMatching": {
       "applicationCommit": "c819ad3b857b69d49c8128a30eac99f7f0480448",
       "scope": "Bind each Form 8995-A business to original W-2 wages, UBIA and SSTB facts. Hold legacy elections naming multiple possible originals, including zero-QBI K-1 records.",

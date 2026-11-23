@@ -18,6 +18,25 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
 [Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+- `6bbc2f3c`, `e91dc09f` and `f50e6261` reconcile 2026 education identity against the same
+  taxpayer or spouse on the saved return and in the calculator. The change
+  holds a positive claim with contradictory timely-TIN and employment-valid
+  SSN facts. It also preserves eligibility when the other spouse meets the
+  SSN requirement and the student has a verified timely TIN. The adult
+  student's explicit TIN requirement remains in force. All 861 focused tests
+  passed. The annual 2026 calculation and export gates
+  remain closed. [Form 8863 evidence](upgrade-2026-progress.md#november-23-education-student-identity-and-ohio-render-verification).
+- `add12647` skips one redundant state-source replay per eligible pending
+  2025 single-filer Ohio resident-credit render. Federal preview, saved
+  facts, school and header paths, and independent state validation have
+  regression coverage. All 31 focused tests passed. Linux deadline
+  qualification requires exact image evidence.
+  [Ohio render evidence](upgrade-2026-progress.md#november-23-education-student-identity-and-ohio-render-verification).
+- All 11 local checks passed on exact `f50e6261`, including 30,197 unit tests,
+  88.29% branch coverage, and 650 Chromium tests. Docker passed remotely.
+  GitHub CI and runtime were still running at local signoff.
+  [Exact revision evidence](upgrade-2026-progress.md#november-23-education-student-identity-and-ohio-render-verification).
+
 - `c819ad3b` keeps each Form 8995-A business's wage, property basis and
   service-business facts with its original record. A name-only aggregation
   election requires review when two source records share its component name,

@@ -1,5 +1,56 @@
 # 2026 upgrade implementation evidence
 
+## November 23 education student identity and Ohio render verification
+
+`6bbc2f3c` reconciles positive 2026 Form 8863 student records with the same
+adult’s household TIN and claimant SSN facts. Previously a matched spouse
+with a household answer of no timely TIN could claim $2,500 of AOTC in the
+internal 2026 calculation when the student marked timely employment-valid SSN
+and omitted the TIN answer. The calculator now holds the contradictory facts,
+including when the claimant is otherwise ineligible. Reopened interviews
+hold conflicting student and claimant SSN answers before marking Credits
+complete. A spouse with a timely TIN can still be the student when the other
+spouse meets the employment-valid SSN requirement. Three regressions
+failed on `b94fd4c3`. All 832 focused tests and 40 Form 8863 spec references
+passed with the fix, and independent code review passed.
+[IRS 2026 education-credit SSN guidance](https://www.irs.gov/tax-professionals/eitc-central/new-social-security-number-requirements-for-education-tax-credits) ·
+[Public Law 119-21, section 70606](https://www.govinfo.gov/content/pkg/PLAW-119publ21/pdf/PLAW-119publ21.pdf).
+
+`e91dc09f` checks claimant SSN and household TIN even when another person
+is the student. Two baseline regressions reproduced that bypass. The first
+exact unit and coverage runs on `6bbc2f3c` failed the existing test requiring
+a separate timely-TIN answer from a 2026 adult student without an affirmative
+employment-valid SSN. `f50e6261` restores the original confirmation requirement
+and still holds a claimed student SSN that conflicts with a confirmed negative
+household TIN. The existing regression passed without changes, and a new case
+isolates the contradiction when both claimant SSN answers are absent. All 861
+focused tests, all 40 Form 8863 spec references and independent code review
+passed on the resulting implementation. Vercel canceled all four automatic
+production builds for the Ohio and education application commits.
+
+The exact `f50e6261` archive was verified under Node 26.13.1 using the same
+document samples and Python prerequisites as the preceding exact checks.
+All three type checks, specification validation and inventory, lint, and
+both builds passed locally. The unit and coverage runs each passed 30,197
+tests and retained 79 existing skips. Branch coverage was 88.29% against
+the 85% gate. Local Chromium passed 650 tests with five existing skips
+across eight batches, bringing the exact-revision local checklist to 11 of
+11. The remote Docker workflow passed. GitHub CI and runtime were still
+running at local signoff.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45288279081) ·
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45288279238) ·
+[Runtime checks](https://github.com/utilityfueled/tax-engine/actions/runs/45288279172).
+
+`add12647` skips an Ohio state-source replay in the render-only preview of
+an expressly unconfirmed 2025 single-filer resident-credit draft without
+other Ohio source compositions. Both regressions measured one previous
+replay per eligible render and zero with the change. Confirmed credits still
+produce the same state amounts, and reopened drafts retain their originals.
+Independent validation, confirmation, and school or header composition keep
+their prior paths. All 31 focused tests and independent code review passed.
+This establishes the replay reduction. Wall-time and strict AMD64 results
+require runtime evidence.
+
 ## November 23 Form 8995-A business source matching
 
 `c819ad3b` carries each business's W-2 wages, UBIA and SSTB status from the
