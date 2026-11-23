@@ -23,6 +23,13 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
   spouse and statement ownership facts. The upgrade holds ambiguous
   grouped basis and retains the guided election review gate. All 1,805
   scoped tests, 61 independent checks and 86 spec references passed.
+  At `9df3b108`, all 11 exact local checks, full GitHub CI and the
+  Docker build passed. GitHub coverage ran all 30,249 tests at 88.63%.
+  Managed Linux passed 650 browser cases. Strict AMD64 passed 635
+  and hit 15 existing deadlines. Native ARM64 passed 641 and hit nine.
+  Image smoke, Compose recovery and archive verification passed on
+  both. The AMD64 job generated both candidate-bound SBOM formats.
+  Vercel canceled the production build.
   [Joint cap evidence](upgrade-2026-progress.md#november-23-joint-public-safety-officer-exclusion).
 - `3e9fbee4` updates the browser diagnostic audit fingerprint.
   `95ee42c0` verifies that both unit shards use the exact inherited
@@ -32,8 +39,12 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
   Unit and coverage each passed 30,162 tests with 79 existing skips
   and 88.26% branch coverage. The application-equivalent browser run
   passed all 650 runnable cases. GitHub Docker passed and Vercel
-  canceled the production build. Both GitHub unit shards and the
-  aggregate passed. Hosted coverage and runtime checks continue.
+  canceled the production build. Full GitHub CI passed, with 30,241
+  coverage tests and 88.63% branch coverage. Managed Linux passed
+  650 browser cases. Strict AMD64 passed 645 and hit five Ohio case
+  deadlines. The earlier application-equivalent native ARM64 run passed
+  640 and hit ten Ohio case deadlines. Recovery, image archive and cleanup
+  passed on both strict platforms.
   [Latest CI](https://github.com/utilityfueled/tax-engine/actions/runs/45243150390) ·
   [Retirement draft ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45242081974).
 - `e0ecb6c9` labels Box 2a as the payer's statement amount and

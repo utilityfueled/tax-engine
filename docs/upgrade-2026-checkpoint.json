@@ -9,7 +9,24 @@
       "scopeChecks": {"implementationTestsPassed": 1805, "independentFocusedPassed": 61, "rootFocusedPassed": 590, "specReferencesPassed": 86},
       "generatedInventoryUnchanged": true,
       "browserSourceAndDiagnosticHashesVerified": true,
-      "remaining": "Exact full checks and independent tax qualification. Claims relying on eligible-employer plan pooling or ambiguous owner and basis evidence stay outside the matched-statement route."
+      "exactVerificationCommit": "9df3b10861ce8884abed1fbc4f390cdc2a05e987",
+      "sourceArchiveSha256": "be629c5c6acd3d46b511ce771625de2262be1189d7143bbf4d9fbee0c5945226",
+      "githubRuns": {"ci": 45248565351, "web": 45248565507, "docker": 45248565438, "nativeArm64Recovery": 45249178673},
+      "productionDeploymentCanceled": true,
+      "exactLocalChecksPassed": 11,
+      "exactLocalUnitAndCoveragePerSuite": {"passed": 30170, "skipped": 79},
+      "exactLocalBranchCoveragePercent": 88.27,
+      "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8},
+      "exactGithubDocker": "passed",
+      "exactGithubUnitShards": [137951758002, 137951758141],
+      "exactGithubUnitAggregate": {"job": 137964217562, "conclusion": "success"},
+      "exactGithubCi": "passed",
+      "exactGithubCoverage": {"job": 137951757776, "passed": 30249, "files": 2209, "branchCoveragePercent": 88.63},
+      "exactLinuxManagedBrowser": {"job": 137951758668, "passed": 650, "failed": 0, "skipped": 5},
+      "exactLinuxStrictBrowser": {"job": 137951759372, "passed": 635, "failed": 15, "skipped": 5, "failureCategory": "12 Ohio and one Pennsylvania 30-second browser deadlines and two RRTA subprocess deadlines"},
+      "exactLinuxRuntimeSmokeComposeRecoveryArchiveAndBothSboms": "passed",
+      "exactNativeArm64": {"job": 137962428976, "passed": 641, "failed": 9, "skipped": 5, "failureCategory": "nine Ohio 30-second browser deadlines", "imageSmokeRecoveryArchiveAndCleanup": "passed"},
+      "remaining": "Strict AMD64 and native ARM64 browser qualification, independent tax qualification, and separate evidence for claims relying on eligible-employer plan pooling or ambiguous owner and basis evidence."
     },
     "nov23SourceContractFollowup": {
       "workflowTestCommit": "95ee42c0",
@@ -31,7 +48,12 @@
       "productionDeploymentCanceled": true,
       "hostedUnitShards": [{"job": 137932856533, "conclusion": "success", "elapsedSeconds": 1402}, {"job": 137932855679, "conclusion": "success", "elapsedSeconds": 1250}],
       "githubAggregateSuccess": {"job": 137947629898, "name": "Unit Tests", "conclusion": "success"},
-      "status": "local core/browser, hosted unit aggregate and GitHub Docker passed; hosted coverage and runtime checks running"
+      "exactHostedCoverage": {"job": 137932856118, "passed": 30241, "files": 2209, "branchCoveragePercent": 88.63},
+      "exactGithubCi": "passed",
+      "exactLinuxManagedBrowser": {"job": 137932853573, "passed": 650, "failed": 0, "skipped": 5},
+      "exactLinuxStrictBrowser": {"job": 137932854550, "passed": 645, "failed": 5, "skipped": 5, "buildRecoveryAndArchive": "passed"},
+      "retirementDraftExactNativeArm64": {"job": 137929083128, "passed": 640, "failed": 10, "skipped": 5, "imageSmokeRecoveryArchiveAndCleanup": "passed"},
+      "status": "local core/browser, full GitHub CI, Docker and managed Linux passed; strict Linux and prior application-equivalent native ARM64 browser qualification failed"
     },
     "nov23RetirementReviewSourceAmounts": {
       "applicationCommit": "e0ecb6c9bccb7277b3409afe4bf949e45ba2f5d0",

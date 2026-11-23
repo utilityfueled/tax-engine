@@ -13581,7 +13581,14 @@ On the earlier `f49a9fb8` run the two stale CI assertions failed in
 separate shards at 23m17s and 20m21s. The aggregate received two failures
 and correctly reported failure. Both corrected hosted shards passed
 in 23m22s and 20m50s, and the stable `Unit Tests` aggregate passed.
-Hosted coverage and runtime qualification are still running.
+Full GitHub CI passed. Coverage ran all 30,241 tests in 2,209 files
+at 88.63% branch coverage. Managed Linux finished 650 cases with five
+existing skips. Strict AMD64 passed 645 and hit five Ohio deadlines.
+The application-equivalent `7be3ba41` native ARM64 rehearsal passed
+640 and hit ten Ohio deadlines, with five existing skips on each
+architecture. The strict jobs passed image smoke, isolated recovery,
+archive verification and cleanup.
+[Strict Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45243150135/job/137932854550).
 [Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45243150390) ·
 [Retirement draft ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45242081974).
 
@@ -13606,3 +13613,25 @@ initial patch and verified their corrections. The implementation passed
 lint, browser source audit and exact generated-inventory comparison passed.
 [26 USC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
 [IRS Internal Revenue Manual 21.6.6.2.29](https://www.irs.gov/irm/part21/irm_21-006-006r).
+
+At `9df3b108`, all 11 exact local checks passed. Unit and coverage each
+passed 30,170 tests with 79 existing skips and 88.27% branch coverage.
+Local Chromium passed 650 cases across eight batches with five existing
+skips and completed cleanup. Both hosted unit shards and their aggregate,
+and GitHub Docker passed. Full GitHub CI passed, with all 30,249
+tests in 2,209 files at 88.63% branch coverage. Vercel canceled the
+production build. Exact managed Linux Chromium passed 650 cases.
+Strict AMD64 passed 635 with 15 failures. Twelve Ohio paths and one
+Pennsylvania path reached their 30-second case deadline, and two
+RRTA inspections reached their subprocess deadline. Both jobs retained
+five existing skips. Strict image smoke, isolated Compose upgrade,
+recovery and rollback, independent archive verification, and both
+candidate-bound SBOM formats passed. Native ARM64 passed 641 browser
+cases and hit nine unchanged 30-second Ohio deadlines across
+part-year business, reciprocity, resident credit, and part-year school
+district. It retained five existing skips. Native image smoke, isolated
+recovery, independent archive verification and cleanup passed. Runtime
+browser qualification remains open on both strict platforms.
+[Exact GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45248565351) ·
+[Exact GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45248565507) ·
+[Exact native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45249178673).
