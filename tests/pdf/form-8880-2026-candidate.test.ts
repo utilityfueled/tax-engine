@@ -13,6 +13,7 @@ import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { FORM_8880_2026_CANDIDATE as candidate, fillForm88802026OrdinaryCandidate } from "@/pdf/mappings/2026/form-8880-candidate.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { priorYearOrdinaryIraDistribution } from "../fixtures/form-8880-prior-ira.js";
 import { foreignTaxDirectCreditFixture } from "../fixtures/foreign-tax-direct-credit.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 import fixture from "./sources/form-8880-2026.json";
@@ -114,8 +115,8 @@ for key, value in expected.items():
 for page in reader.pages:
     text = page.extract_text()
     assert text.count(sys.argv[4]) == 1
-    assert sys.argv[5] not in text
-    assert sys.argv[6] not in text
+    for reference in sys.argv[5:]:
+        assert reference not in text
 `;
 
 describe("Final 2026 Form 8880 physical candidate", () => {
@@ -286,6 +287,51 @@ describe("Final 2026 Form 8880 physical candidate", () => {
       await expect(fillForm88802026OrdinaryCandidate(difference.input ?? input, difference.source ?? source, bytes))
         .rejects.toThrow(difference.message);
     }
+  });
+
+  it("reopens the matched prior-year distribution and reduced Roth credit", async () => {
+    const { input, source } = ordinaryRothSourceFixture();
+    const prior = priorYearOrdinaryIraDistribution();
+    const withPriorPayment = (amount: string) => TaxYearInputSchema.parse({
+      ...input,
+      taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, dateOfBirth: "1966-06-30" } },
+      form8880: { ...input.form8880, sourceFacts2026: {
+        ...input.form8880.sourceFacts2026,
+        primary: { ...input.form8880.sourceFacts2026.primary, testingPeriodDistributionReduction: amount },
+        priorYearOrdinaryIraDistribution: priorYearOrdinaryIraDistribution(amount),
+      } },
+    });
+    const parsed = withPriorPayment("500");
+    const bytes = await readFile(blank);
+    const { document, schedule3Line4 } = await fillForm88802026OrdinaryCandidate(parsed, source, bytes);
+    expect(schedule3Line4.toFixed()).toBe("150");
+    const expected = {
+      name: "Jane Doe", ssn: "REDACTED",
+      line1a: "2000", line1b: "", line2a: "0", line2b: "", line3a: "2000", line3b: "",
+      line4a: "500", line4b: "", line5a: "1500", line5b: "", line6a: "1500", line6b: "",
+      line7: "1500", line8: "30000", line9: "1", line10: "150", line11: "1420", line12: "150",
+      worksheet1: "1420", worksheet2: "0", worksheet3: "1420",
+    };
+    const directory = await mkdtemp(join(tmpdir(), "form-8880-prior-ira-"));
+    try {
+      const path = join(directory, "f8880-2026-internal-review.pdf");
+      await writeFile(path, await document.save());
+      execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", inspectSavedPdf, path,
+        JSON.stringify(fixture.locations), JSON.stringify(expected), REVIEW_PDF_NOTICE,
+        parsed.taxpayer.primary.ssn, source.sourceReference,
+        prior.original.sourceReference, prior.original.accountReference, prior.issuerPayment.sourceReference,
+      ]);
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+    await expect(fillForm88802026OrdinaryCandidate(withPriorPayment("500.25"), source, bytes))
+      .rejects.toThrow(/exact whole dollars/);
+    const codeD = ordinarySourceFixture();
+    await expect(fillForm88802026OrdinaryCandidate({
+      ...codeD.input,
+      taxpayer: parsed.taxpayer,
+      form8880: { sourceFacts2026: parsed.form8880?.sourceFacts2026 },
+    }, codeD.source, bytes)).rejects.toThrow(/zero.*distributions/);
   });
 
   it("uses actual birth date for the Roth limit despite a saved age override", async () => {

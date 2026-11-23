@@ -191,8 +191,10 @@ export async function fillForm88802026OrdinaryCandidate(
       throw new Error("Form 8880 candidate holds contribution overrides and sources other than the original Code D amount.");
     }
   }
-  if (!d(annual.primary.testingPeriodDistributionReduction).isZero() || input.form1099R?.length
-    || !d(annual.americanSamoaAgiRestoration).isZero() || !d(annual.puertoRicoAgiRestoration).isZero()) {
+  const priorPayment = annual.priorYearOrdinaryIraDistribution;
+  const expectedLine4a = d(priorPayment?.issuerPayment.amount);
+  if (((!rothSource || !priorPayment) && !d(annual.primary.testingPeriodDistributionReduction).isZero())
+    || input.form1099R?.length || !d(annual.americanSamoaAgiRestoration).isZero() || !d(annual.puertoRicoAgiRestoration).isZero()) {
     throw new Error("Form 8880 candidate requires confirmed zero retirement distributions and AGI restorations.");
   }
   if (createHash("sha256").update(blank).digest("hex") !== candidate.sha256) {
@@ -218,7 +220,8 @@ export async function fillForm88802026OrdinaryCandidate(
   if (federal.deductionUsed !== "standard" || !federal.taxableIncome.eq(federal.agi.minus(federal.standardDeduction))
     || !taxLimit.eq(federal.ordinaryTax) || otherIncome.some(amount => !amount.isZero())
     || !federal.totalWages.eq(wages) || !federal.totalIncome.eq(wages) || !federal.agi.eq(wages)
-    || !credit.line8.eq(wages) || !credit.line1a.eq(expectedLine1a) || !credit.line2a.eq(expectedLine2a)) {
+    || !credit.line8.eq(wages) || !credit.line1a.eq(expectedLine1a) || !credit.line2a.eq(expectedLine2a)
+    || !credit.line4a.eq(expectedLine4a)) {
     throw new Error("Form 8880 candidate requires a reconciled ordinary wage-only return and contribution.");
   }
 

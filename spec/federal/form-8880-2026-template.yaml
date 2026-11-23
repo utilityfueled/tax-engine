@@ -74,10 +74,11 @@ lines:
       holder's timely regular Roth IRA contribution from the original record. Its
       positive whole-dollar amount must match both Form 8880 line 1 input and the
       confirmed ordinary IRA worksheet. Require sufficient eligible compensation,
-      no other contribution sources or elections, zero testing-period distributions,
-      zero AGI restorations, and the same reconciled W-2 and tax-limit scope as the
-      Code D case. Write the canonical contribution on line 1a and zero on lines
-      2a and 4a. Require a positive credit tied to Schedule 3 line 4, preserve
+      no other contribution sources or elections, zero AGI restorations, and the
+      same reconciled W-2 and tax-limit scope as the Code D case. Write the
+      canonical contribution on line 1a and zero on line 2a. Line 4a is either a
+      confirmed zero or the separately bound ordinary 2025 distribution below.
+      Require a positive credit tied to Schedule 3 line 4, preserve
       the native line 9 digit and worksheet cells, and verify the saved PDF with
       an independent reader. The candidate stays review-only with public export held.
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::projects an original regular Roth IRA contribution into the saved credit and worksheet"
@@ -86,9 +87,19 @@ lines:
     formula: >-
       Reject missing confirmation, wrong year or owner, amount mismatch between
       the statement and either worksheet, insufficient compensation, competing
-      IRA or employer contributions, and a nonzero distribution reduction. Do
-      not project an estimate from a missing IRA worksheet.
+      IRA or employer contributions, and a nonzero distribution reduction
+      without the separately bound supported original. Do not project an estimate
+      from a missing IRA worksheet.
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::holds incomplete and conflicting ordinary Roth IRA originals"
+  - line: "4a 2025 ordinary original"
+    description: "Materialize the supported historical reduction on the Roth candidate"
+    formula: >-
+      Use the exact matched 2025 ordinary IRA original from the annual source
+      packet. Require the canonical line 4a to match that amount and preserve
+      current wage-only income. Keep whole-dollar field validation, the positive
+      Schedule 3 transfer and all existing export holds. Do not write the
+      historical statement or payment identifiers into the saved PDF.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::reopens the matched prior-year distribution and reduced Roth credit"
   - line: "ordinary-roth-age-limit"
     description: "Use actual date of birth for the 2026 Roth IRA contribution limit"
     formula: >-

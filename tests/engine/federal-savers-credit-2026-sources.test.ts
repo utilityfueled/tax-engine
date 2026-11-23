@@ -4,6 +4,7 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm8880, mergeW2RetirementContributionsIntoForm8880Input } from "@/engine/forms/form-8880.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
+import { priorYearOrdinaryIraDistribution } from "../fixtures/form-8880-prior-ira.js";
 import { mixedCapitalServicesFixture } from "../fixtures/form-2555-mixed-capital-services.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
@@ -48,6 +49,79 @@ function tax(sources: unknown, contributions: Record<string, string> = { primary
 }
 
 describe("Confirmed annual Form 8880 sources", () => {
+  it("derives line 4 from one matched 2025 issuer payment without changing return income", () => {
+    const prior = priorYearOrdinaryIraDistribution("500.25");
+    const input = TaxYearInputSchema.parse({
+      ...raw,
+      taxpayer: { ...raw.taxpayer, primary: { ...raw.taxpayer.primary, dateOfBirth: "1966-06-30" } },
+      form8880: {
+        primaryIraContributions: "2000",
+        primaryElectiveDeferrals: "0",
+        sourceFacts2026: {
+          ...confirmed,
+          primary: { ...contributor, testingPeriodDistributionReduction: "500.250" },
+          priorYearOrdinaryIraDistribution: prior,
+        },
+      },
+    });
+    const replay = TaxYearInputSchema.parse(JSON.parse(JSON.stringify(input)));
+    expect(replay.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistribution).toEqual(prior);
+    expect(replay.form1099R ?? []).toEqual([]);
+    const result = calculateFederalTax(replay);
+    expect(result.iraDistributionsGross.toFixed()).toBe("0");
+    expect(result.agi.toFixed()).toBe("39000");
+    expect(result.form8880?.line4a.toFixed()).toBe("500.25");
+    expect(result.form8880?.line5a.toFixed()).toBe("1499.75");
+    expect(result.form8880?.line12.toFixed()).toBe("150");
+    expect(result.schedule3?.retirementSavingsCredit.toFixed()).toBe("150");
+  });
+
+  it("holds conflicting historical originals at the request and calculation boundaries", () => {
+    const prior = priorYearOrdinaryIraDistribution();
+    const taxpayer = { ...raw.taxpayer, primary: { ...raw.taxpayer.primary, dateOfBirth: "1966-06-30" } };
+    const positive = {
+      ...confirmed,
+      primary: { ...contributor, testingPeriodDistributionReduction: "500" },
+      priorYearOrdinaryIraDistribution: prior,
+    };
+    const input = { ...raw, taxpayer, form8880: { primaryIraContributions: "2000", sourceFacts2026: positive } };
+    const withOriginal = (change: object) => ({
+      ...input, form8880: { ...input.form8880, sourceFacts2026: {
+        ...positive, priorYearOrdinaryIraDistribution: { ...prior, ...change },
+      } },
+    });
+    for (const incompatible of [
+      withOriginal({ original: { ...prior.original, taxYear: 2024 } }),
+      withOriginal({ original: { ...prior.original, accountHolder: "spouse" } }),
+      withOriginal({ original: { ...prior.original, recipientTaxIdLast4: "1234" } }),
+      withOriginal({ original: { ...prior.original, accountType: "roth-ira" } }),
+      withOriginal({ original: { ...prior.original, distributionCode: "G" } }),
+      withOriginal({ original: { ...prior.original, taxableAmountNotDetermined: true } }),
+      withOriginal({ original: { ...prior.original, taxableAmount: "499.99" } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, payerTin: "12-3456789" } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, accountReference: "another account" } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, sourceReference: ` ${prior.original.sourceReference.toLowerCase()} ` } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, receivedDate: "2024-12-31" } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, receivedDate: "2026-01-01" } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, receivedDate: "2025-02-29" } }),
+      withOriginal({ issuerPayment: { ...prior.issuerPayment, amount: "499.99" } }),
+      withOriginal({ statementReportsThisSinglePaymentConfirmed: false }),
+      withOriginal({ noLine4ExclusionConfirmed: false }),
+      withOriginal({ onlyIncludiblePaymentForTestingPeriodConfirmed: false }),
+      withOriginal({ onlyIncludiblePaymentForTestingPeriodConfirmed: undefined }),
+      withOriginal({ issuerPayments: [prior.issuerPayment, prior.issuerPayment] }),
+      { ...input, taxpayer: { ...taxpayer, primary: { ...taxpayer.primary, dateOfBirth: "1966-07-01" } } },
+      { ...input, taxpayer: { ...taxpayer, filingStatus: "head_of_household" } },
+      { ...input, form1099R: [{ payer: "Current issuer", taxYear: 2026, grossDistribution: "500" }] },
+      { ...input, form8880: { ...input.form8880, sourceFacts2026: {
+        ...positive, primary: { ...positive.primary, testingPeriodDistributionReduction: "499.99" },
+      } } },
+    ]) {
+      expect(TaxYearInputSchema.safeParse(incompatible).success).toBe(false);
+      expect(() => calculateFederalTax(incompatible as TaxYearInput)).toThrow(/Form 8880/i);
+    }
+  });
+
   it("requires complete annual facts at schema and calculation boundaries", () => {
     for (const sourceFacts2026 of [
       undefined,

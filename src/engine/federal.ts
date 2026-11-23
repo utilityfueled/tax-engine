@@ -565,6 +565,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const saverCreditSources = input.form8880
     ? readForm8880AnnualSources(
       input.form8880, year, filingStatus === "married_filing_jointly", Boolean(input.taxpayer.spouse), input.standardDeductionFacts,
+      { taxpayer: input.taxpayer, hasCurrentRetirementStatements: Boolean(input.form1099R?.length) },
     )
     : undefined;
   if (year === 2025 && input.form8880 && !input.form8880.sourceFacts2026

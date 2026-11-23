@@ -6874,6 +6874,7 @@ export const TaxYearInputSchema = z.object({
       readForm8880AnnualSources(
         value.form8880, taxYear, filingStatus === "married_filing_jointly",
         spouse !== undefined, value.standardDeductionFacts,
+        { taxpayer: value.taxpayer, hasCurrentRetirementStatements: Boolean(value.form1099R?.length) },
       );
     }
     catch (error) {
