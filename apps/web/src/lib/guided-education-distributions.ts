@@ -4,7 +4,7 @@ import { calculateForm1099Q } from "@/engine/forms/form-1099-q.js";
 import type { FilingStatus } from "./guided-interview-flow";
 import { buildCoverdellBankInterest, educationOriginalOptions, educationOriginalValues, invalidateCoverdellBankInterest, type CoverdellBankInterestData, type EducationOriginalContext } from "./guided-coverdell-bank-interest";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
-import { parseGuidedCurrency } from "./guided-currency";
+import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 
 export type EducationSourceRecord = Record<string, string | boolean | null | undefined>;
 export interface EducationStatementDraft { fields: EducationSourceRecord; transfer: EducationSourceRecord; bankInterestConversion?: CoverdellBankInterestData }
@@ -33,7 +33,7 @@ export interface EducationSourceField {
   key: string; label: string; kind: "text" | "date" | "money" | "integer" | "boolean" | "choice";
   choices?: ReadonlyArray<readonly [string, string]>; signed?: boolean;
   link?: "beneficiary" | "expense" | "source" | "borrower" | "period" | "priorUse";
-  when?: (record: EducationSourceRecord) => boolean;
+  when?: (record: EducationSourceRecord, data: EducationDistributionData) => boolean;
 }
 const text = (key: string, label: string): EducationSourceField => ({ key, label, kind: "text" });
 const money = (key: string, label: string, signed = false): EducationSourceField => ({ key, label, kind: "money", signed });
@@ -80,10 +80,20 @@ export const educationExpenseCategories = [
   ["k12_tuition", "K-12 tuition"], ["k12_curriculum", "K-12 curriculum"], ["k12_books", "K-12 books and instructional materials"], ["k12_online", "K-12 online educational materials"], ["k12_tutoring", "K-12 tutoring"], ["k12_testing", "K-12 testing"], ["k12_dual_enrollment", "K-12 dual enrollment"], ["k12_disability_therapy", "K-12 disability therapies"],
   ["coverdell_k12_other", "Other qualified Coverdell K-12 expenses"], ["qtp_contribution", "Coverdell contribution to a same-beneficiary 529 plan"], ["apprenticeship", "Registered apprenticeship"], ["student_loan", "Qualified student-loan payment"], ["credential_enrollment", "Recognized credential enrollment"], ["credential_testing", "Recognized credential testing"], ["credential_continuing_education", "Required continuing credential education"],
 ] as const;
+
+function showRefundHistory(record: EducationSourceRecord, data: EducationDistributionData): boolean {
+  if (typeof record.refundHistoryCompleteConfirmed === "boolean") return true;
+  if (typeof record.refundedAmount === "string" && parseGuidedDisplayAmount(record.refundedAmount).gt(0)) return true;
+  const expenseId = typeof record.id === "string" ? record.id.trim() : "";
+  return expenseId !== "" && (data.expenseRefunds?.some(
+    refund => typeof refund.expenseId === "string" && refund.expenseId.trim() === expenseId,
+  ) ?? false);
+}
+
 export const educationCollectionFields: Record<EducationSourceCollection, EducationSourceField[]> = {
   beneficiaries: [text("name", "Beneficiary name"), text("studentTaxId", "Beneficiary tax ID (for education credits and prepaid benefits)"), money("outsideK12QualifiedDistributions", "Qualified K-12 cash distributions from plans outside these records"), bool("outsideK12CashOnlyConfirmed", "Outside K-12 amount includes only cash distributions (required for prepaid benefits)")],
   expenses: [link("beneficiaryId", "Expense beneficiary", "beneficiary"), choice("category", "Expense category", educationExpenseCategories), date("paidDate", "Expense paid date"), money("amount", "Actual expense paid"), money("refundedAmount", "Refunded expense amount"), money("taxFreeAssistance", "Tax-free assistance allocated to this expense"), money("educationCreditAmount", "Expense allocated to AOTC or lifetime learning credit"), money("otherTaxBenefitAmount", "Expense used for another tax benefit"), bool("qualificationConfirmed", "Applicable expense eligibility checked"),
-    only(bool("refundHistoryCompleteConfirmed", "Every refund for this receipt is recorded"), record => Boolean(record.refundedAmount) && record.refundedAmount !== "0"),
+    only(bool("refundHistoryCompleteConfirmed", "Every refund for this receipt is recorded"), showRefundHistory),
     ...[choice("creditExpenseTreatment", "Actual non-tuition credit expense treatment", [["aotc_required_course_materials", "AOTC required course materials"], ["llc_required_institution_charge", "LLC required charge paid to the institution"], ["none", "Does not qualify for an education credit"]]),
       text("creditExpenseSourceReference", "Course or institution credit source reference"), bool("creditExpenseQualificationConfirmed", "Actual credit expense requirements checked, excluding personal or medical costs")]
       .map(field => only(field, record => ["postsecondary_books", "postsecondary_computer", "postsecondary_special_needs"].includes(String(record.category)) && Boolean(record.educationCreditAmount) && record.educationCreditAmount !== "0")),

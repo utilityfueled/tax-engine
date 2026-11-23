@@ -28,3 +28,11 @@ lines:
     description: "Editable source records without assumed facts"
     formula: "Statement, beneficiary, expense, allocation, transfer, loan, account-basis and exception controls retain actual entered values; edits invalidate confirmation; explicit none supplies empty lists"
     testRef: "tests/apps/web/education-distribution-interactions.test.tsx::collects actual education distribution records and invalidates edited facts"
+  - line: "refund-confirmation-visibility"
+    description: "Keep earlier receipt refund facts editable after an amount edit"
+    formula: >-
+      Show the refund-history answer for a positive refund amount, any retained
+      yes or no answer, or a refund row linked to the expense. Compare amounts
+      as decimals so zero in any format needs no new refund-history answer.
+      Clearing the answer leaves the entered amount and refund rows intact.
+    testRef: "tests/apps/web/ordinary-education-expense-interactions.test.tsx::keeps refund history editable after changing a refund to zero"

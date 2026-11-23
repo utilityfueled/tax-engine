@@ -47,7 +47,7 @@ function SourceFields({ fields, record, data, onChange }: {
   data: EducationDistributionData;
   onChange: (key: string, value: string | boolean | null) => void;
 }) {
-  return fields.filter(field => !field.when || field.when(record)).map(field => {
+  return fields.filter(field => !field.when || field.when(record, data)).map(field => {
     const value = record[field.key];
     if (field.kind === "boolean") return <BooleanFact key={field.key} label={field.label} value={typeof value === "boolean" ? value : null} onChange={next => onChange(field.key, next)} />;
     if (field.kind === "money") return <CurrencyField key={field.key} label={field.label} value={stringValue(value)} allowNegative={field.signed} onChange={next => onChange(field.key, next)} />;
