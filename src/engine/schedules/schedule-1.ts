@@ -717,6 +717,7 @@ export function calculateSchedule1(
   const form1099R = extra?.form1099R ?? calculateForm1099R(input.form1099R ?? [], {
     qcdAnnualLimit: constants.qcd.annualLimit,
     taxYear: currentReturn ? input.taxpayer.taxYear : undefined,
+    isJointReturn: filingStatus === "married_filing_jointly",
     hasJointSpouse: filingStatus === "married_filing_jointly" && input.taxpayer.spouse !== undefined,
     qcdReturnContext: currentReturn ? input : undefined,
   });

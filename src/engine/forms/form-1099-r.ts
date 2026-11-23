@@ -95,6 +95,7 @@ interface RetirementAggregationOptions {
   qcdAnnualLimit?: Decimal;
   taxYear?: number;
   hasValidatedIraBasisSources?: boolean;
+  isJointReturn?: boolean;
   hasJointSpouse?: boolean;
   qcdReturnContext?: Pick<TaxYearInput, "taxpayer" | "form8606" | "form8606ByOwner" | "iraBasisSources"
     | "adjustments" | "iraDeductionWorksheet" | "donations">;
@@ -325,6 +326,8 @@ export function calculateForm1099R(
   forms: Form1099R[] = [],
   options: RetirementAggregationOptions = {},
 ): Form1099RResult {
+  const hasJointSpouse = options.hasJointSpouse === true;
+  const isJointReturn = options.isJointReturn ?? hasJointSpouse;
   const hasActualQcdSources = forms.some(form => form.qcdSource !== undefined);
   const use2026Rules = options.taxYear === 2026 || (options.taxYear === undefined
     && (hasActualQcdSources || forms.some(form => form.taxYear === 2026 && hasQcdClaim(form))));
@@ -413,6 +416,11 @@ export function calculateForm1099R(
   // Group Simplified Method forms by payer+plan so same-plan forms share
   // a single exclusion calculation with aggregated payments.
   const payerGroupExclusionOverrides = buildPayerGroupedSimplifiedMethodExclusions(pensionSimplifiedMethodForms);
+  if (isJointReturn && hasJointSpouse && payerGroupExclusionOverrides.payerGroups.some((group) =>
+    new Set(group.forms.map((form) => form.accountHolder)).size > 1
+      && group.forms.some((form) => resolveRetiredPublicSafetyOfficerInsurancePremiums(form).gt(0)))) {
+    throw new Error("Retired public safety officer premiums require a Simplified Method group with one verified owner");
+  }
 
   const pensionSimplifiedMethodExpectedPayments = pensionSimplifiedMethodForms.map(resolveSimplifiedMethodExpectedPayments);
   const pensionSimplifiedMethodExpectedPaymentSources = pensionSimplifiedMethodForms.map(
@@ -438,32 +446,21 @@ export function calculateForm1099R(
   const pensionSimplifiedMethodCurrentYearExclusion = sum(
     ...payerGroupExclusionOverrides.payerGroups.map((g) => g.payerLevelExclusion)
   );
-  const disabilityPensionTaxableBeforePublicSafetyOfficerExclusion = sum(
-    ...disabilityPensionForms.map(resolveForm1099RTaxableAmount)
-  );
-  const disabilityPensionRetiredPublicSafetyOfficerInsurancePremiums = sum(
-    ...disabilityPensionForms.map(resolveRetiredPublicSafetyOfficerInsurancePremiums)
-  );
-  const disabilityPensionPublicSafetyOfficerPremiumExclusion = Decimal.min(
-    RETIRED_PUBLIC_SAFETY_OFFICER_PREMIUM_CAP,
-    disabilityPensionRetiredPublicSafetyOfficerInsurancePremiums,
-    disabilityPensionTaxableBeforePublicSafetyOfficerExclusion
-  );
-  const pensionRetiredPublicSafetyOfficerInsurancePremiums = sum(
-    ...pensionForms.map(resolveRetiredPublicSafetyOfficerInsurancePremiums)
-  );
-  const pensionTaxableBeforePublicSafetyOfficerExclusion = sum(
-    ...pensionForms.map((form) =>
-      resolveForm1099RTaxableAmountWithPayerGrouping(form, payerGroupExclusionOverrides.formOverrides)
-    )
-  );
-  const pensionPublicSafetyOfficerPremiumExclusion = Decimal.min(
-    Decimal.max(
-      new Decimal(0),
-      RETIRED_PUBLIC_SAFETY_OFFICER_PREMIUM_CAP.minus(disabilityPensionPublicSafetyOfficerPremiumExclusion)
-    ),
-    pensionRetiredPublicSafetyOfficerInsurancePremiums,
-    pensionTaxableBeforePublicSafetyOfficerExclusion
+  const disabilityPensionSources = disabilityPensionForms.map((form) =>
+    pensionTaxableSource(form, resolveForm1099RTaxableAmount(form)));
+  const pensionSources = pensionForms.map((form) => pensionTaxableSource(
+    form,
+    resolveForm1099RTaxableAmountWithPayerGrouping(form, payerGroupExclusionOverrides.formOverrides),
+  ));
+  const disabilityPensionTaxableBeforePublicSafetyOfficerExclusion =
+    sum(...disabilityPensionSources.map((source) => source.taxableAmount));
+  const pensionTaxableBeforePublicSafetyOfficerExclusion = sum(...pensionSources.map((source) => source.taxableAmount));
+  const pensionRetiredPublicSafetyOfficerInsurancePremiums = sum(...pensionSources.map((source) => source.premiums));
+  const {
+    disabilityExclusion: disabilityPensionPublicSafetyOfficerPremiumExclusion,
+    pensionExclusion: pensionPublicSafetyOfficerPremiumExclusion,
+  } = calculatePublicSafetyOfficerPremiumExclusions(
+    disabilityPensionSources, pensionSources, isJointReturn, hasJointSpouse,
   );
   const disabilityPensionWages = Decimal.max(
     new Decimal(0),
@@ -660,6 +657,66 @@ function resolveRetiredPublicSafetyOfficerInsurancePremiums(form: Form1099R): De
   }
 
   return Decimal.max(new Decimal(0), d(form.retiredPublicSafetyOfficerInsurancePremiums));
+}
+
+function pensionTaxableSource(form: Form1099R, taxableAmount: Decimal) {
+  return {
+    accountHolder: form.accountHolder,
+    taxableAmount,
+    premiums: resolveRetiredPublicSafetyOfficerInsurancePremiums(form),
+  };
+}
+
+function calculatePublicSafetyOfficerPremiumExclusions(
+  disabilityPensions: ReturnType<typeof pensionTaxableSource>[],
+  pensions: ReturnType<typeof pensionTaxableSource>[],
+  isJointReturn: boolean,
+  hasJointSpouse: boolean,
+) {
+  const premiumSources = [...disabilityPensions, ...pensions].filter((source) => source.premiums.gt(0));
+  if (premiumSources.length === 0) {
+    return { disabilityExclusion: new Decimal(0), pensionExclusion: new Decimal(0) };
+  }
+  if (isJointReturn) {
+    if (!hasJointSpouse) {
+      throw new Error("Retired public safety officer premiums on a joint return require the actual spouse's identity");
+    }
+    if (premiumSources.some((source) => source.accountHolder !== "primary" && source.accountHolder !== "spouse")) {
+      throw new Error("Retired public safety officer premiums on a joint return require the actual owner of each Form 1099-R with positive premiums");
+    }
+  }
+
+  const qualifyingPremiums = (
+    sources: ReturnType<typeof pensionTaxableSource>[],
+    owner: Form1099R["accountHolder"],
+  ): Decimal => {
+    if (owner === undefined) {
+      return Decimal.min(
+        sum(...sources.map((source) => source.premiums)),
+        sum(...sources.map((source) => source.taxableAmount)),
+      );
+    }
+    return sum(...sources
+      .filter((source) => source.accountHolder === owner)
+      .map((source) => Decimal.min(source.premiums, source.taxableAmount)));
+  };
+
+  const owners = isJointReturn ? (["primary", "spouse"] as const) : [undefined];
+  const exclusions = owners.map((owner) => {
+    const disabilityExclusion = Decimal.min(
+      RETIRED_PUBLIC_SAFETY_OFFICER_PREMIUM_CAP,
+      qualifyingPremiums(disabilityPensions, owner),
+    );
+    const pensionExclusion = Decimal.min(
+      RETIRED_PUBLIC_SAFETY_OFFICER_PREMIUM_CAP.minus(disabilityExclusion),
+      qualifyingPremiums(pensions, owner),
+    );
+    return { disabilityExclusion, pensionExclusion };
+  });
+  return {
+    disabilityExclusion: sum(...exclusions.map((owner) => owner.disabilityExclusion)),
+    pensionExclusion: sum(...exclusions.map((owner) => owner.pensionExclusion)),
+  };
 }
 
 function shouldReportGross(

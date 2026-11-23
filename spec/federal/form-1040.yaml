@@ -120,7 +120,7 @@ lines:
 
   - line: "1"
     description: "Wages, salaries, tips, etc."
-    formula: "Sum of all W-2 Box 1 values plus any supported Form 4137 unreported tip income that must be included in wages on Form 1040 line 1, plus any supported Form 8919 line 6 employee wages that must be included in wages on Form 1040 line 1, plus any non-IRA Form 1099-R disability pension amounts that are taxable as wages because the taxpayer had not reached minimum retirement age on the date received; if validated retired-public-safety-officer accident, health, or long-term care insurance premiums were paid directly from the disability pension, reduce the disability-pension wage amount by the smaller of those validated premiums, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported pension-line exclusion, or the disability-pension taxable amount"
+    formula: "Sum of all W-2 Box 1 values plus any supported Form 4137 unreported tip income that must be included in wages on Form 1040 line 1, plus any supported Form 8919 line 6 employee wages that must be included in wages on Form 1040 line 1, plus any non-IRA Form 1099-R disability pension amounts that are taxable as wages because the taxpayer had not reached minimum retirement age on the date received; reduce disability-pension wages by the owner-specific retired-public-safety-officer premium exclusions determined in form-1099-r.yaml"
     irsRef: "Form 1040 Instructions, Line 1"
     inputs:
       - "W-2 Box 1 (all employers)"
@@ -132,7 +132,7 @@ lines:
       - "Multiple W-2s from same employer"
       - "Corrected W-2c supersedes original"
       - "Disability pensions reported on Form 1099-R move from the retirement lines to wages until minimum retirement age"
-      - "Retired public safety officer premiums can reduce disability-pension wages reported on Line 1 and share the same $3,000 annual cap used for pension-line exclusions"
+      - "Retired public safety officer premiums can reduce disability-pension wages reported on Line 1 and use the owner's $3,000 annual limit before the same owner's pension-line exclusion"
       - "Supported Form 4137 unreported tip income increases Form 1040 line 1 and total income"
       - "Supported Form 8919 wages increase Form 1040 line 1 and total income"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 1 - supported Form 8919 wages increase wages, Schedule 2 tax, and Additional Medicare exposure"
@@ -248,14 +248,14 @@ lines:
       - "A direct rollover with blank Box 2a and Box 5 basis still reports gross on 5a because the taxable amount is reduced, not eliminated, by the contribution recovery"
       - "Validated Simplified Method inputs keep gross on 5a whenever the worksheet exclusion reduces the current-year taxable amount below Box 1"
       - "Disability pensions received before minimum retirement age are excluded from 5a because they are taxed as wages on Line 1"
-      - "Retired public safety officer premiums on disability pensions consume part of the same $3,000 annual cap before any remaining exclusion reduces Line 5b"
+      - "Retired public safety officer premiums on disability pensions use part of the owner's $3,000 annual limit before any remaining exclusion for that owner reduces Line 5b"
       - "Fully taxable pensions and annuities leave 5a blank and report amount on 5b"
       - "Lump-sum averaging is not yet supported"
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 5a - pension gross distribution shown only when not fully taxable"
 
   - line: "5b"
     description: "Taxable amount of pensions and annuities"
-    formula: "Sum of taxable non-IRA Form 1099-R amounts (use Box 2a when provided, unless validated Simplified Method worksheet inputs are present and the payer left Box 2a blank or checked taxable amount not determined; in that supported Simplified Method branch, compute the tax-free amount as the smaller of (a) (cost in the plan at annuity starting date divided by expected number of monthly payments) times current-year payments received and (b) cost in the plan minus prior-year tax-free recovery, then subtract that amount from Box 1 without going below $0; otherwise if Box 2a is blank and Box 5 is provided, use Box 1 minus Box 5 without going below $0; if Box 2a is blank and Box 5 is not provided, use Box 1 unless a direct-rollover code makes the amount nontaxable); after that supported pension aggregation, subtract the smaller of the validated retired-public-safety-officer accident, health, or long-term care insurance premiums paid directly from an eligible retirement plan, the remaining share of the $3,000 annual retired-public-safety-officer exclusion after any supported disability-pension wage exclusion on Line 1, or the otherwise taxable pension total"
+    formula: "Sum of taxable non-IRA Form 1099-R amounts (use Box 2a when provided, unless validated Simplified Method worksheet inputs are present and the payer left Box 2a blank or checked taxable amount not determined; in that supported Simplified Method branch, compute the tax-free amount as the smaller of (a) (cost in the plan at annuity starting date divided by expected number of monthly payments) times current-year payments received and (b) cost in the plan minus prior-year tax-free recovery, then subtract that amount from Box 1 without going below $0; otherwise if Box 2a is blank and Box 5 is provided, use Box 1 minus Box 5 without going below $0; if Box 2a is blank and Box 5 is not provided, use Box 1 unless a direct-rollover code makes the amount nontaxable); after that supported pension aggregation, subtract the owner-specific retired-public-safety-officer premium exclusions determined in form-1099-r.yaml"
     irsRef: "Form 1040 Instructions, Lines 5a and 5b"
     inputs:
       - "Form 1099-R Box 1"
@@ -272,9 +272,9 @@ lines:
       - "A taxable rollover to a Roth account follows Box 2a when it is reported"
       - "Validated Simplified Method recovery is capped at the unrecovered cost remaining after prior-year exclusions"
       - "Disability pensions received before minimum retirement age are excluded from 5b because they are taxed as wages on Line 1"
-      - "Retired public safety officer premiums cannot reduce combined disability-pension wages and taxable pension income by more than $3,000 per return or below zero"
+      - "Each eligible retired public safety officer can exclude up to $3,000 annually across their own taxable disability-pension wages and pension income. A joint return requires the actual owner of each positive premium record"
       - "Validated Simplified Method inputs override the all-taxable fallback when Box 2b says taxable amount not determined"
-    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 5a and 5b - retired public safety officer premiums reduce taxable pension income up to the annual cap"
+    testRef: "tests/engine/federal.test.ts::Form 1040 Lines 1h and 5b - retired public safety officer premiums use separate joint-return owner caps"
 
   - line: "social-security-statement-source-year"
     description: "Bind Social Security and equivalent railroad benefits to the statement's payment year"

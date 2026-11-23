@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { Form8824Schema, type TaxYearInput } from "@/models/inputs.js";
+import { Form8824Schema, TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
 import { actualPartialPersonalCodInput } from "../fixtures/cod-partial-personal.js";
 import { qualifiedPersonalBankruptcyInput } from "../fixtures/cod-bankruptcy.js";
@@ -16,6 +16,124 @@ import { getConstants } from "@/models/constants.js";
 import { partialPersonalLegacyNolZeroPoolInput } from "../fixtures/cod-zero-minimum-tax-credit-bound.js";
 
 const d = (n: number | string) => new Decimal(n);
+
+describe("Retired public safety officer premium exclusions on joint returns", () => {
+  const fixture = { ...simpleW2Fixture, taxpayer: complexMFJFixture.taxpayer };
+  const disability = {
+    payer: "City Disability Plan",
+    taxYear: 2025,
+    accountHolder: "primary" as const,
+    grossDistribution: "10000.00",
+    taxableAmount: "10000.00",
+    taxableAmountNotDetermined: false,
+    iraSepSimple: false,
+    distributionCode: "3",
+    disabilityPensionBeforeMinimumRetirementAge: true,
+    retiredPublicSafetyOfficerInsurancePremiums: "2500.00",
+  };
+  const pension = {
+    ...disability,
+    payer: "County Retirement Plan",
+    accountHolder: "spouse" as const,
+    distributionCode: "7",
+    disabilityPensionBeforeMinimumRetirementAge: false,
+  };
+
+  // spec/federal/form-1099-r.yaml, public-safety-officer-premium-owner-limit
+  it("Form 1040 Lines 1h and 5b - retired public safety officer premiums use separate joint-return owner caps", () => {
+    const input = TaxYearInputSchema.parse({ ...fixture, form1099R: [disability, pension] });
+    const result = calculateFederalTax(input);
+
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "1h")?.value.toFixed()).toBe("7500");
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "5a")?.value.toFixed()).toBe("10000");
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "5b")?.value.toFixed()).toBe("7500");
+  });
+
+  it("shares the cap across both reporting lines for one owner", () => {
+    const input = TaxYearInputSchema.parse({
+      ...fixture,
+      form1099R: [disability, { ...pension, accountHolder: "primary" }],
+    });
+    const result = calculateFederalTax(input);
+
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "1h")?.value.toFixed()).toBe("7500");
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "5b")?.value.toFixed()).toBe("9500");
+  });
+
+  it("requires the actual owner for a positive premium record", () => {
+    const input = TaxYearInputSchema.parse({
+      ...fixture,
+      form1099R: [disability, { ...pension, accountHolder: undefined }],
+    });
+
+    expect(() => calculateFederalTax(input)).toThrow(/public safety officer.*actual owner/i);
+  });
+
+  it("requires the actual spouse for a joint premium claim even when the standard deduction is unavailable", () => {
+    const input = TaxYearInputSchema.parse({
+      ...fixture,
+      taxpayer: { ...fixture.taxpayer, spouse: undefined },
+      deductionElection: "itemized",
+      standardDeductionFacts: { shortTaxYear: true },
+      scheduleA: { stateTaxesPaid: "20000", realEstateTaxes: "10000", medicalExpenses: "20000" },
+      form1099R: [pension],
+    });
+
+    expect(() => calculateFederalTax(input)).toThrow(/public safety officer.*actual spouse/i);
+  });
+
+  it("limits an exclusion to the verified owner's taxable income on the line", () => {
+    const input = TaxYearInputSchema.parse({
+      ...fixture,
+      form1099R: [
+        { ...pension, taxableAmount: "400.00" },
+        { ...pension, accountHolder: "primary", retiredPublicSafetyOfficerInsurancePremiums: "0" },
+        { ...pension, accountHolder: undefined, retiredPublicSafetyOfficerInsurancePremiums: "0" },
+      ],
+    });
+    const result = calculateFederalTax(input);
+
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "5b")?.value.toFixed()).toBe("20000");
+  });
+
+  it.each([
+    { payer: "Private Pension", premiums: "0", taxable: "10000" },
+    { payer: "County Pension", premiums: "1", taxable: "9999" },
+  ])("keeps a zero-taxable city plan's premiums from reducing the same owner's $payer", ({ payer, premiums, taxable }) => {
+    const input = TaxYearInputSchema.parse({
+      ...fixture,
+      form1099R: [
+        { ...pension, payer: "City Retirement Plan", taxableAmount: "0" },
+        { ...pension, payer, retiredPublicSafetyOfficerInsurancePremiums: premiums },
+      ],
+    });
+    const result = calculateFederalTax(input);
+
+    expect(result.allLines.find((line) => line.form === "1040" && line.line === "5b")?.value.toFixed()).toBe(taxable);
+    expect(result.allLines.find((line) => line.form === "Form 1099-R" && line.line === "4")
+      ?.inputs["Retired public safety officer premium exclusion"]?.toString()).toBe(premiums);
+  });
+
+  it("holds a premium claim whose Simplified Method group mixes joint filers' statements", () => {
+    const cityPension = {
+      ...pension,
+      taxableAmountNotDetermined: true,
+      simplifiedMethodCostInPlan: "1000",
+      simplifiedMethodExpectedPayments: 100,
+      simplifiedMethodPriorYearRecovered: "990",
+      simplifiedMethodPaymentsReceivedThisYear: 4,
+    };
+    const input = TaxYearInputSchema.parse({
+      ...fixture,
+      form1099R: [
+        cityPension,
+        { ...cityPension, accountHolder: "primary", retiredPublicSafetyOfficerInsurancePremiums: "0" },
+      ],
+    });
+
+    expect(() => calculateFederalTax(input)).toThrow(/public safety officer.*Simplified Method.*owner/i);
+  });
+});
 
 // ═══════════════════════════════════════════════════════════
 // Simple W-2 Scenario (Single filer, one W-2, no other income)

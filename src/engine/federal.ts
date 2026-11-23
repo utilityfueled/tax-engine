@@ -759,6 +759,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     qcdAnnualLimit: constants.qcd.annualLimit,
     hasValidatedIraBasisSources: iraBasisSources !== undefined,
     qcdReturnContext: year === 2026 ? input : undefined,
+    isJointReturn: filingStatus === "married_filing_jointly",
     hasJointSpouse: filingStatus === "married_filing_jointly" && input.taxpayer.spouse !== undefined,
   });
   audit.merge(form1099R.lines);
