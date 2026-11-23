@@ -24,8 +24,9 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
   including K-1 records with zero current QBI. Five regressions failed on the
   previous revision and 647 focused tests passed with the fix. Independent code
   review passed. All 11 exact local checks, GitHub CI, Docker and managed Linux
-  browser flows passed. Strict AMD64 was still running when recorded. The 2026
-  regression uses the internal draft calculation.
+  browser flows passed. Strict AMD64 passed Compose recovery and archive
+  verification and hit 11 Ohio case deadlines and two RRTA inspection
+  deadlines. The 2026 regression uses the internal draft calculation.
   [Source-matching evidence](upgrade-2026-progress.md#november-23-form-8995-a-business-source-matching).
 
 - `1dd593b5` binds nonjoint public safety officer premiums to the

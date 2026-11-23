@@ -33,8 +33,12 @@ eight batches with five existing skips. All 11 local checks passed.
 
 All eight GitHub CI jobs and the Docker build passed. PostgreSQL-backed CI
 coverage passed 30,268 tests across 2,209 files with 88.64% branch coverage.
-Managed Linux browser flows passed. The strict AMD64 job was still running
-when recorded.
+Managed Linux Chromium passed 650 cases with five skips. Strict AMD64 passed
+637 cases with five skips, 11 Ohio 30-second case deadlines and two RRTA
+4-second saved-PDF inspection deadlines. Compose upgrade, recovery and
+rollback, independent Docker archive verification, both immutable SBOM
+formats and browser container cleanup passed. Strict browser qualification
+remains open.
 [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45275710186) ·
 [Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45275710029) ·
 [Exact-source Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45275710118).

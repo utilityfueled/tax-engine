@@ -19,8 +19,8 @@
       "firstLocalCoverageAndBrowserRuns": "Interrupted by verified host sleep. Logs retained and suites restarted with a temporary wake assertion.",
       "exactGithubCi": "passed",
       "exactGithubCoverage": {"job": 138046832508, "passed": 30268, "files": 2209, "branchCoveragePercent": 88.64},
-      "exactLinuxManagedBrowser": {"job": 138046832301, "status": "passed"},
-      "exactLinuxStrictBrowser": {"job": 138046831489, "status": "in progress when recorded; prior strict deadline findings remain open"},
+      "exactLinuxManagedBrowser": {"job": 138046832301, "passed": 650, "failed": 0, "skipped": 5},
+      "exactLinuxStrictBrowser": {"job": 138046831489, "passed": 637, "failed": 13, "skipped": 5, "ohioCaseDeadlines": 11, "rrtaInspectionDeadlines": 2, "composeRecovery": "passed", "dockerArchiveVerification": "passed", "immutableSbomVerification": "passed", "browserContainerCleanup": "passed"},
       "dockerBuild": "passed",
       "productionDeploymentCanceled": true,
       "2026Calculation": "Internal draft fixture only. Annual calculation and export gates stay closed."
