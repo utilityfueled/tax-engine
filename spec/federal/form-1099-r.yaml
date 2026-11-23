@@ -82,12 +82,11 @@ notes: |
   applies a $3,000 annual limit per eligible retired officer under IRC §402(l).
   A joint return with positive premiums requires an identified spouse and
   the actual Form 1099-R owner for each positive record. Each owner's
-  disability-pension wage exclusion uses
-  that owner's limit first. The same owner's remaining limit then applies to
-  pension-line amounts. On a joint return only the otherwise taxable amount
-  on the statement with validated premiums can support those premiums. The
-  legacy nonjoint path accepts untagged records under a single owner limit
-  and retains the existing totals by line.
+  disability-pension wage exclusion uses that owner's limit first. The same
+  owner's remaining limit then applies to pension-line amounts. Only the
+  otherwise taxable amount on the statement with validated premiums can
+  support those premiums. Nonjoint returns accept untagged records under a
+  single owner limit.
   Because that exclusion makes the supported non-IRA distribution partly
   nontaxable, the gross pension distribution remains visible on Form 1040
   Line 5a even if Box 2a otherwise matched Box 1. Supported disability
@@ -223,15 +222,13 @@ lines:
   - line: "public-safety-officer-premium-owner-limit"
     description: "Annual retired public safety officer premium exclusion by Form 1099-R owner"
     formula: >-
-      For each Form 1099-R on a joint return, take the smaller of the
-      validated premiums and otherwise taxable amount on that statement.
-      Sum these amounts by owner and line. Each owner's disability-pension
+      For each Form 1099-R, take the smaller of the validated premiums and
+      otherwise taxable amount on that statement. Sum these amounts by owner
+      and line on joint returns. On nonjoint returns, add them under a single
+      owner limit, with optional owner tags. Each owner's disability-pension
       wage exclusion uses up to $3,000 of their own limit first. Their
       pension-line exclusion uses up to the remaining limit. Sum exclusions
-      by line across owners. On nonjoint returns, keep the single owner
-      limit and the existing calculation using total validated premiums
-      and total otherwise taxable amounts by line. An owner tag is optional
-      on that path.
+      by line across owners.
     irsRef: "26 USC §402(l)(1)–(3), §402(l)(5)(B), and IRS IRM 21.6.6.2.29"
     inputs:
       - "Validated retired public safety officer insurance premiums"
@@ -242,8 +239,9 @@ lines:
       - "One owner's disability-pension premiums and pension-line premiums share the same limit"
       - "A positive premium record with unknown ownership on a joint return requires review"
       - "A joint return with positive premiums requires actual spouse identity, including when the standard deduction is unavailable"
-      - "An otherwise nontaxable city plan statement cannot use the same owner's unrelated private pension to support a premium exclusion"
-      - "A Simplified Method group containing a positive premium record requires all grouped statements to belong to that owner"
+      - "An otherwise nontaxable city plan statement cannot use the same owner's unrelated private pension to support a premium exclusion on a joint or nonjoint return"
+      - "On a joint return, a Simplified Method group containing a positive premium record requires all grouped statements to belong to that owner"
+      - "A Simplified Method group with positive premiums and conflicting complete payer TINs requires review, including when the statements share an explicit plan identifier"
     notes: >-
       Claims that depend on aggregating eligible plans under §402(l)(3)(B)
       require separate review. That review needs evidence of the eligible

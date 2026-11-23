@@ -416,10 +416,18 @@ export function calculateForm1099R(
   // Group Simplified Method forms by payer+plan so same-plan forms share
   // a single exclusion calculation with aggregated payments.
   const payerGroupExclusionOverrides = buildPayerGroupedSimplifiedMethodExclusions(pensionSimplifiedMethodForms);
-  if (isJointReturn && hasJointSpouse && payerGroupExclusionOverrides.payerGroups.some((group) =>
-    new Set(group.forms.map((form) => form.accountHolder)).size > 1
-      && group.forms.some((form) => resolveRetiredPublicSafetyOfficerInsurancePremiums(form).gt(0)))) {
-    throw new Error("Retired public safety officer premiums require a Simplified Method group with one verified owner");
+  for (const group of payerGroupExclusionOverrides.payerGroups) {
+    if (group.forms.length < 2 ||
+      !group.forms.some((form) => resolveRetiredPublicSafetyOfficerInsurancePremiums(form).gt(0))) continue;
+    if (isJointReturn && hasJointSpouse && new Set(group.forms.map((form) => form.accountHolder)).size > 1) {
+      throw new Error("Retired public safety officer premiums require a Simplified Method group with one verified owner");
+    }
+    const payerTins = new Set(group.forms
+      .map((form) => form.payerTin?.replace(/[-\s]/gu, "") ?? "")
+      .filter((tin) => /^\d{9}$/u.test(tin)));
+    if (payerTins.size > 1) {
+      throw new Error("Retired public safety officer premiums require review when a Simplified Method group has conflicting payer TINs");
+    }
   }
 
   const pensionSimplifiedMethodExpectedPayments = pensionSimplifiedMethodForms.map(resolveSimplifiedMethodExpectedPayments);
@@ -689,17 +697,9 @@ function calculatePublicSafetyOfficerPremiumExclusions(
   const qualifyingPremiums = (
     sources: ReturnType<typeof pensionTaxableSource>[],
     owner: Form1099R["accountHolder"],
-  ): Decimal => {
-    if (owner === undefined) {
-      return Decimal.min(
-        sum(...sources.map((source) => source.premiums)),
-        sum(...sources.map((source) => source.taxableAmount)),
-      );
-    }
-    return sum(...sources
-      .filter((source) => source.accountHolder === owner)
-      .map((source) => Decimal.min(source.premiums, source.taxableAmount)));
-  };
+  ): Decimal => sum(...sources
+    .filter((source) => owner === undefined || source.accountHolder === owner)
+    .map((source) => Decimal.min(source.premiums, source.taxableAmount)));
 
   const owners = isJointReturn ? (["primary", "spouse"] as const) : [undefined];
   const exclusions = owners.map((owner) => {

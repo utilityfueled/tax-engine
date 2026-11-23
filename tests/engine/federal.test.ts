@@ -7707,6 +7707,113 @@ describe("Retirement distributions through federal pipeline", () => {
     expect(String(form1099RLine4?.inputs["Retired public safety officer premium exclusion"])).toBe("3000");
   });
 
+  // spec/federal/form-1099-r.yaml, public-safety-officer-premium-owner-limit
+  it.each([
+    { payer: "Unrelated Private Pension", premiums: "0", taxable: "10000" },
+    { payer: "Separate Eligible County Pension", premiums: "1", taxable: "9999" },
+  ])("Form 1040 Line 5b - nonjoint public safety officer premiums stay matched to the statement ($payer)", ({
+    payer, premiums, taxable,
+  }) => {
+    const statement = {
+      taxYear: 2025,
+      grossDistribution: "10000.00",
+      taxableAmountNotDetermined: false,
+      iraSepSimple: false,
+      distributionCode: "7",
+    };
+    const input = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      form1099R: [
+        {
+          ...statement,
+          payer: "City Governmental Retirement Plan",
+          payerTin: "11-1111111",
+          accountReference: "city-plan",
+          taxableAmount: "0",
+          retiredPublicSafetyOfficerInsurancePremiums: "2500",
+        },
+        {
+          ...statement,
+          payer,
+          payerTin: "22-2222222",
+          accountReference: "other-plan",
+          taxableAmount: "10000",
+          retiredPublicSafetyOfficerInsurancePremiums: premiums,
+        },
+      ],
+    });
+    const result = calculateFederalTax(input);
+    const line5b = result.allLines.find((line) => line.form === "1040" && line.line === "5b");
+    const form1099RLine4 = result.allLines.find((line) => line.form === "Form 1099-R" && line.line === "4");
+
+    expect(line5b?.value.toFixed()).toBe(taxable);
+    expect(String(form1099RLine4?.inputs["Retired public safety officer premium exclusion"])).toBe(premiums);
+  });
+
+  // spec/federal/form-1099-r.yaml, public-safety-officer-premium-owner-limit
+  describe.each([
+    { group: "fallback", planIdentifier: undefined },
+    { group: "explicit-plan", planIdentifier: "Plan 01" },
+  ])("public safety officer premiums in $group Simplified Method groups", ({ planIdentifier }) => {
+    const statement = {
+      taxYear: 2025,
+      payer: "Retirement Benefits Administrator",
+      grossDistribution: "1000",
+      taxableAmountNotDetermined: true,
+      iraSepSimple: false,
+      distributionCode: "7",
+      simplifiedMethodCostInPlan: "100000",
+      simplifiedMethodPlanIdentifier: planIdentifier,
+      simplifiedMethodExpectedPayments: 100,
+      simplifiedMethodPriorYearRecovered: "99000",
+      simplifiedMethodPaymentsReceivedThisYear: 1,
+    };
+    const city = {
+      ...statement,
+      payerTin: "11-1111111",
+      accountReference: "city-plan",
+      retiredPublicSafetyOfficerInsurancePremiums: "500",
+    };
+    const separatePayer = {
+      ...statement,
+      payerTin: "22-2222222",
+      accountReference: "private-plan",
+    };
+
+    it.each([
+      { status: "single", taxpayer: simpleW2Fixture.taxpayer, accountHolder: undefined },
+      { status: "joint", taxpayer: complexMFJFixture.taxpayer, accountHolder: "primary" },
+    ])("holds conflicting actual payer identities for a $status filer", ({ taxpayer, accountHolder }) => {
+      const input = TaxYearInputSchema.parse({
+        ...simpleW2Fixture,
+        taxpayer,
+        form1099R: [{ ...city, accountHolder }, { ...separatePayer, accountHolder }],
+      });
+
+      expect(() => calculateFederalTax(input)).toThrow(/public safety officer.*Simplified Method.*conflicting payer TINs/i);
+    });
+
+    it("preserves the calculation for a payer TIN shown in two formats", () => {
+      const input = TaxYearInputSchema.parse({
+        ...simpleW2Fixture,
+        form1099R: [city, { ...statement, payerTin: "111111111", accountReference: "second-statement" }],
+      });
+      const result = calculateFederalTax(input);
+      const line5b = result.allLines.find((line) => line.form === "1040" && line.line === "5b");
+
+      expect(line5b?.value.toFixed()).toBe("500");
+    });
+
+    it("applies the review hold only to groups with positive premiums", () => {
+      const input = TaxYearInputSchema.parse({
+        ...simpleW2Fixture,
+        form1099R: [{ ...city, retiredPublicSafetyOfficerInsurancePremiums: "0" }, separatePayer],
+      });
+
+      expect(() => calculateFederalTax(input)).not.toThrow();
+    });
+  });
+
   it("Form 1040 Lines 5a and 5b - taxable-amount-not-determined pensions keep gross visible on line 5a", () => {
     const fixture = {
       ...simpleW2Fixture,
