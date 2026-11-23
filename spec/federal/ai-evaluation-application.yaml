@@ -55,5 +55,14 @@ lines:
       cannot count toward a candidate's eligibility. Report cost and
       diagnostics for incomplete or conflicting evidence. Digests correlate
       records. Authorization, authentic provider history and independent
-      human review require external evidence.
+      human review require external evidence. A fully measured baseline may
+      contribute to the quality comparison when its only rejected responses
+      otherwise meet every acceptance criterion and an independent human
+      explicitly marked their quality as unacceptable. Keep these responses
+      rejected in baseline metrics and diagnostics. Preserve every other
+      baseline and candidate gate, including grounding, independent review,
+      safety, exact fields, appropriate answer or abstention, usage and coverage.
     testRef: "tests/engine/provider-model-eval.test.ts::blocks mixed plans and missing or reused provider responses without dropping spend"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::qualifies a measured quality gain against both cheaper baselines"
+      - "tests/engine/provider-model-eval.test.ts::requires grounded independent baseline reviews and candidate acceptance for the quality comparison"

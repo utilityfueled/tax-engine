@@ -143,10 +143,12 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const complete = provenanceMatches && qualifiedModel && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
     && isIndependentReviewer(entry.independentReview.reviewer, canonicalAuthor)
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
-  const accepted = complete && schemaValid && !!output && !safetyFailure
-    && !inventedField && engineValuesComplete && grounding && entry.independentReview?.qualityAccepted === true
+  const otherwiseAcceptable = complete && schemaValid && !!output && !safetyFailure
+    && !inventedField && engineValuesComplete && grounding
     && output.disposition === fixture.expected.disposition && exact === fields.length
     && output.category === fixture.expected.category;
+  const accepted = otherwiseAcceptable && entry.independentReview?.qualityAccepted === true;
+  const qualityOnlyRejection = otherwiseAcceptable && entry.independentReview?.qualityAccepted === false;
   let actualCost = new Money(0);
   let filingSeasonCost = new Money(0);
   let knownCost = entry.attempts.length > 0;
@@ -156,7 +158,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     actualCost = actualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
     filingSeasonCost = filingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
   }
-  return { complete, accepted, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, safetyFailure, grounding, answerable, answered,
+  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, safetyFailure, grounding, answerable, answered,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
     criticalCorrect: provenanceMatches && qualifiedModel && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
@@ -251,6 +253,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     }
   }
   const groupPlans = new Map<string, Set<string>>();
+  const comparableBaselines = new Set<string>();
+  const acceptanceBlocker = "grounding-quality-or-abstention";
   // These computations depend on this call's already checked fixture/entry
   // objects, not the profile being summarized. Keep reuse local to this report
   // so changed payloads, review evidence and source contexts are always checked
@@ -285,7 +289,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const preflightCases = cases.filter(fixture => preparedCases.get(fixture.id)?.kind === "preflight");
     const preflightEntries = (validated.preflightEntries ?? []).filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
     const evidence = [...entries.map(entry => entry.measurement), ...preflightEntries];
-    groupPlans.set(`${profile.id}:${task}`, new Set(evidence.flatMap(item => item?.runPurpose === "qualification" ? [item.planDigest] : [])));
+    const groupKey = `${profile.id}:${task}`;
+    groupPlans.set(groupKey, new Set(evidence.flatMap(item => item?.runPurpose === "qualification" ? [item.planDigest] : [])));
     const preflightPassed = preflightEntries.filter(entry => { const fixture = preflightCases.find(item => item.id === entry.fixtureId);
       return entry.runPurpose === "qualification" && entry.bindingVersion === PROVIDER_EVAL_BINDING_VERSION && fixture?.expected.disposition === "abstain" && hasCurrentProviderEvalProvenance(entry, fixture, currentCorpusDigest) && Object.keys(fixture.expected.fields).length === 0
         && Object.keys(fixture.expected.engineValues).length === 0 && fixture.expected.category === null; }).length;
@@ -324,10 +329,14 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     if (schemaRate === null || schemaRate < evaluationGates.schemaValidity) blockers.push("schema-validity");
     if (fields && (exactRate === null || exactRate < evaluationGates.criticalFieldExactMatch)) blockers.push("critical-field-exact-match");
     if (scored.some(item => item.result.safetyFailure)) blockers.push("observed-safety-failure");
-    if (accepted !== expectedRuns) blockers.push("grounding-quality-or-abstention");
+    if (accepted !== expectedRuns) blockers.push(acceptanceBlocker);
     if (p50 === null || p50 > (task === "complex-reconciliation" ? evaluationGates.p50EscalationLatencyMs : evaluationGates.p50RoutineLatencyMs)
       || p95 === null || p95 > (task === "complex-reconciliation" ? evaluationGates.p95EscalationLatencyMs : evaluationGates.p95RoutineLatencyMs)) blockers.push("latency-budget");
     if (costPerAccepted === null || new Money(costPerAccepted).gt(task === "complex-reconciliation" ? evaluationGates.maximumEscalationCostPerAcceptedUsd : evaluationGates.maximumRoutineCostPerAcceptedUsd)) blockers.push("spend-budget-or-unknown-usage");
+    if (profile.role === "baseline" && blockers.every(blocker => blocker === acceptanceBlocker)
+      && scored.every(({ result }) => result.accepted || result.qualityOnlyRejection)) {
+      comparableBaselines.add(groupKey);
+    }
     return { profileId: profile.id, model: profile.model, effort: profile.effort, task, expectedRuns, completedRuns: complete.length, expectedPreflightRuns, deterministicPreflightRuns: preflightEntries.length, deterministicPreflightPassed: preflightPassed,
       schemaValidity: schemaRate, criticalFieldExactMatch: exactRate, acceptedRuns: accepted,
       answerableAbstentions: scored.filter(item => item.result.answerable && !item.result.answered).length,
@@ -341,7 +350,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const baselines = groups.filter(item => item.task === group.task && candidate(item.profileId).role === "baseline");
     const comparisonPlans = new Set([group, ...baselines].flatMap(item => [...(groupPlans.get(`${item.profileId}:${item.task}`) ?? [])]));
     if (comparisonPlans.size > 1) group.blockers.push("qualification-comparison-mixed-plans");
-    if (baselines.some(item => item.completedRuns !== item.expectedRuns || item.blockers.length)) group.blockers.push("baseline-comparison-incomplete");
+    if (baselines.some(item => !comparableBaselines.has(`${item.profileId}:${item.task}`))) group.blockers.push("baseline-comparison-incomplete");
     const candidateEntries = validated.entries.filter(entry => entry.profileId === group.profileId && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
     for (const entry of candidateEntries) {
       const fixture = fixtures.find(item => item.id === entry.fixtureId);

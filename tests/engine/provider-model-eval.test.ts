@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 import {
   buildProviderModelBenchmark, buildProviderModelEvalFixturePack, buildProviderModelLiveEvalTemplate,
@@ -58,6 +59,23 @@ const availability: ProviderModelLiveEvalTemplate["availability"] = providerMode
   profileId: profile.id, status: "available", checkedAt: "2026-10-24T00:00:00Z", expiresAt: "2026-10-25T00:00:00Z",
   evidenceReference: "test-only-account-capability", structuredOutput: true, reasoningEffort: true, reportedUsage: true, reason: "Synthetic test evidence",
 }));
+
+function qualityComparison() {
+  const fixtures = reviewedFixtures("2026-10-24");
+  const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+  const profiles = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"] as const;
+  const entries = profiles.flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+  for (const { attempts } of entries.filter(entry => entry.profileId === "luna-high")) {
+    for (const attempt of attempts) attempt.usage = { inputTokens: 6000, outputTokens: 6000 };
+  }
+  const summarize = () => summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures, reportAt);
+  const reviewedEntry = (profileId: (typeof profiles)[number]) => {
+    const entry = entries.find(entry => entry.profileId === profileId);
+    if (!entry?.independentReview) throw new Error("Missing test-only response review.");
+    return { entry, review: entry.independentReview };
+  };
+  return { summarize, reviewedEntry, baselineIds: profiles.slice(1) };
+}
 
 describe("measured task model evaluation", () => {
   it("keeps 240 distinct draft scenarios with fixed held-out coverage and no qualification claim", () => {
@@ -143,6 +161,42 @@ describe("measured task model evaluation", () => {
     changePayload(entries[0]!, payload => { const amount = payload.facts[0]; if (!amount) throw new Error("Missing amount."); amount.value = "999"; });
     const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
+  });
+  it("qualifies a measured quality gain against both cheaper baselines", () => {
+    const { summarize, reviewedEntry, baselineIds } = qualityComparison();
+    const candidateGroup = () => summarize().groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+    expect(candidateGroup()?.blockers).toEqual(["no-measured-quality-or-cost-benefit"]);
+
+    for (const profileId of baselineIds) reviewedEntry(profileId).review.qualityAccepted = false;
+    const report = summarize();
+    const extractionGroups = report.groups.filter(group => group.task === "income-extraction");
+    expect(extractionGroups.find(group => group.profileId === "luna-high")).toMatchObject({
+      acceptedRuns: 90, completedRuns: 90, eligibleForPromotionReview: true, blockers: [],
+      filingSeasonCostPerAcceptedUsd: "0.0036",
+    });
+    for (const profileId of baselineIds) {
+      const baseline = extractionGroups.find(group => group.profileId === profileId);
+      expect(baseline).toMatchObject({ acceptedRuns: 89, completedRuns: 90, schemaValidity: 1, criticalFieldExactMatch: 1,
+        eligibleForPromotionReview: false, blockers: ["grounding-quality-or-abstention"] });
+      expect(new Decimal(baseline?.filingSeasonCostPerAcceptedUsd ?? "Infinity").lt("0.0036")).toBe(true);
+    }
+    expect(report.productionPromotion).toBe(false);
+  });
+  it("requires grounded independent baseline reviews and candidate acceptance for the quality comparison", () => {
+    const { summarize, reviewedEntry, baselineIds } = qualityComparison();
+    for (const profileId of baselineIds) reviewedEntry(profileId).review.qualityAccepted = false;
+    const candidateGroup = () => summarize().groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+    const { entry: baseline, review } = reviewedEntry("baseline-gpt-5-mini");
+
+    baseline.independentReview = { ...review, grounded: false };
+    expect(candidateGroup()).toMatchObject({ eligibleForPromotionReview: false, blockers: ["baseline-comparison-incomplete"] });
+    baseline.independentReview = null;
+    expect(candidateGroup()).toMatchObject({ eligibleForPromotionReview: false, blockers: ["baseline-comparison-incomplete"] });
+
+    baseline.independentReview = review;
+    reviewedEntry("luna-high").review.qualityAccepted = false;
+    expect(candidateGroup()).toMatchObject({ eligibleForPromotionReview: false,
+      blockers: ["grounding-quality-or-abstention", "no-measured-quality-or-cost-benefit"] });
   });
   it("blocks mixed plans and missing or reused provider responses without dropping spend", () => {
     const fixtures = reviewedFixtures("2026-10-24");
