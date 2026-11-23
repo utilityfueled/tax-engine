@@ -20,6 +20,16 @@ reporting fields once final instructions are available.
 [Publication 525](https://www.irs.gov/publications/p525) ·
 [Publication 575](https://www.irs.gov/publications/p575).
 
+For the joint control, independently derive the transfers for two
+eligible officers with $10,000 of otherwise taxable retirement income
+and $2,500 of qualified premiums each. One receives a below-minimum-age
+disability pension and the other an ordinary pension. Also verify the
+owner's shared cap across the two reporting lines and the evidence
+required for same-employer plan pooling under §402(l)(3)(B). The current
+matched-statement calculation requires actual spouse and owner data.
+[26 USC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
+[IRS Internal Revenue Manual 21.6.6.2.29](https://www.irs.gov/irm/part21/irm_21-006-006r).
+
 ## November 22 handoffs for independent qualification
 
 OpenAI schedules the existing GPT-5 mini baseline for December 11,

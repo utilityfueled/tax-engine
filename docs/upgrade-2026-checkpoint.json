@@ -1,5 +1,38 @@
 {
   "activeContinuation": {
+    "nov23JointPublicSafetyOfficerCap": {
+      "applicationCommit": "45340a4e9b36cfe0d5f77b6bdfcc084dcb28fe67",
+      "authorities": ["https://uscode.house.gov/us/usc/119-124/t26/s402/", "https://www.irs.gov/irm/part21/irm_21-006-006r"],
+      "scope": "Apply the existing public safety officer exclusion to eligible statement amounts for each identified joint filer, preserving nonjoint calculation and guided review gates",
+      "ownerAnnualCap": "3000",
+      "mixedLineSyntheticResult": {"primaryLine1h": "7500", "spouseLine5a": "10000", "spouseLine5b": "7500"},
+      "scopeChecks": {"implementationTestsPassed": 1805, "independentFocusedPassed": 61, "rootFocusedPassed": 590, "specReferencesPassed": 86},
+      "generatedInventoryUnchanged": true,
+      "browserSourceAndDiagnosticHashesVerified": true,
+      "remaining": "Exact full checks and independent tax qualification. Claims relying on eligible-employer plan pooling or ambiguous owner and basis evidence stay outside the matched-statement route."
+    },
+    "nov23SourceContractFollowup": {
+      "workflowTestCommit": "95ee42c0",
+      "diagnosticManifestCommit": "3e9fbee4107896ee5707e6dccd4d96139743a044",
+      "previousExactCommit": "7be3ba41",
+      "previousLocalUnitFailures": ["Node CI location count", "shared PostgreSQL workflow lookup", "optional browser manifest audit digest"],
+      "focusedTestsPassed": 48,
+      "scopedSpecReferencesPassed": 10,
+      "independentReview": "passed",
+      "githubRuns": {"ci": 45243150390, "web": 45243150135, "docker": 45243150260},
+      "retirementDraftNativeArm64Run": 45242081974,
+      "sourceArchiveSha256": "120f88ae7a64df238f0e547cd70bccab18a6e4baac0558444c20a779f044483e",
+      "localCoreChecksPassed": 9,
+      "localUnitAndCoveragePerSuite": {"passed": 30162, "skipped": 79},
+      "localBranchCoveragePercent": 88.26,
+      "normalBrowserAuditAndRuntimeInputsIdenticalTo": "7be3ba41",
+      "localBrowser": {"commit": "7be3ba41", "passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8, "webBuildPassed": true},
+      "githubDocker": "passed",
+      "productionDeploymentCanceled": true,
+      "hostedUnitShards": [{"job": 137932856533, "conclusion": "success", "elapsedSeconds": 1402}, {"job": 137932855679, "conclusion": "success", "elapsedSeconds": 1250}],
+      "githubAggregateSuccess": {"job": 137947629898, "name": "Unit Tests", "conclusion": "success"},
+      "status": "local core/browser, hosted unit aggregate and GitHub Docker passed; hosted coverage and runtime checks running"
+    },
     "nov23RetirementReviewSourceAmounts": {
       "applicationCommit": "e0ecb6c9bccb7277b3409afe4bf949e45ba2f5d0",
       "scope": "Label Box 2a as a payer statement amount and distinguish missing Box 2a and Box 4 values from entered zeroes on draft review",
@@ -19,7 +52,8 @@
       "actionlintAndAggregateTruthTable": "passed",
       "stableUnitCheckName": "Unit Tests",
       "productionDeploymentCanceled": true,
-      "githubUnitShardsObserved": "in progress"
+      "githubUnitShardsObserved": "both failed on the superseded workflow source",
+      "githubAggregateFailureObserved": {"job": 137934454002, "name": "Unit Tests", "conclusion": "failure"}
     },
     "nov23DisabilityPensionPremiumElection": {
       "applicationCommit": "d164d0cacfedc83ed6ef6071f592fb0c6330e8f0",

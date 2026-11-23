@@ -18,6 +18,24 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
 [Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+- `45340a4e` applies the $3,000 public safety officer exclusion cap
+  separately to each eligible spouse. Joint claims require actual
+  spouse and statement ownership facts. The upgrade holds ambiguous
+  grouped basis and retains the guided election review gate. All 1,805
+  scoped tests, 61 independent checks and 86 spec references passed.
+  [Joint cap evidence](upgrade-2026-progress.md#november-23-joint-public-safety-officer-exclusion).
+- `3e9fbee4` updates the browser diagnostic audit fingerprint.
+  `95ee42c0` verifies that both unit shards use the exact inherited
+  Node and PostgreSQL setup. The previous full run found three stale
+  source assertions. All 48 focused tests and independent review passed
+  after the corrections. All nine exact local core checks passed.
+  Unit and coverage each passed 30,162 tests with 79 existing skips
+  and 88.26% branch coverage. The application-equivalent browser run
+  passed all 650 runnable cases. GitHub Docker passed and Vercel
+  canceled the production build. Both GitHub unit shards and the
+  aggregate passed. Hosted coverage and runtime checks continue.
+  [Latest CI](https://github.com/utilityfueled/tax-engine/actions/runs/45243150390) ·
+  [Retirement draft ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45242081974).
 - `e0ecb6c9` labels Box 2a as the payer's statement amount and
   distinguishes missing Box 2a or Box 4 from an entered zero. The
   saved affirmative premium election remains held. All 71 adjacent
@@ -27,7 +45,8 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 - `f49a9fb8` distributes the GitHub unit suite across two runners
   while keeping the `Unit Tests` check. Both local shards passed all
   30,161 runnable tests with 79 existing skips and no overlap across
-  2,209 files. Docker passed. The hosted shard results are pending.
+  2,209 files. Docker passed. The original hosted shards failed and
+  the aggregate reported failure. The corrected revision is running.
   [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45239551695).
 - `d164d0ca` requires an explicit answer about the public safety officer
   premium exclusion on a 2026 Code 3 pension. An affirmative answer goes

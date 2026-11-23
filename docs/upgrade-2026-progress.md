@@ -13560,3 +13560,49 @@ in the first patch. The tightened regression failed before the correction.
 All 71 adjacent tests, all 62 scoped spec references, web types, inventory,
 scoped lint and the exact browser source audit passed.
 [IRS Publication 575](https://www.irs.gov/publications/p575).
+
+### November 23 runtime source contract follow-up
+
+The full `7be3ba41` unit run found three stale assertions. Both unit
+callers now resolve the same reusable workflow in the source contracts.
+`95ee42c0` checks the original Node pins across their new file
+locations and the original PostgreSQL digest in both callers' shared
+job, coverage and Compose. `3e9fbee4` updates only the optional
+browser diagnostic manifest's audit fingerprint. Independent software
+review verified the workflow links, runtime pins and manifest bytes.
+All 48 focused tests, 10 scoped spec references, inventory, scoped lint
+and actionlint passed. All nine exact local core checks passed at
+`3e9fbee4`. Both unit and coverage passed 30,162 tests with 79 existing
+skips and 88.26% branch coverage. Local Chromium at `7be3ba41` passed
+650 cases in eight batches with five existing skips. A source comparison
+confirmed identical normal browser audit, app, runtime assets and Docker
+inputs. GitHub Docker passed, and Vercel canceled the production build.
+On the earlier `f49a9fb8` run the two stale CI assertions failed in
+separate shards at 23m17s and 20m21s. The aggregate received two failures
+and correctly reported failure. Both corrected hosted shards passed
+in 23m22s and 20m50s, and the stable `Unit Tests` aggregate passed.
+Hosted coverage and runtime qualification are still running.
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45243150390) ·
+[Retirement draft ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45242081974).
+
+### November 23 joint public safety officer exclusion
+
+`45340a4e` applies the statutory $3,000 annual cap per eligible owner.
+The prior joint calculation pooled two officers under one cap. In the
+verified control, each has $10,000 taxable and $2,500 of qualified
+premiums. The corrected line 1h and line 5b are $7,500 each, with
+$10,000 on line 5a. A given officer still shares one cap across the
+two reporting lines. Joint claims require the actual spouse and the
+owner of every positive-premium statement. Each supported statement
+contributes up to its attributable taxable amount. The joint path
+holds mixed or unknown owner groups where a positive-premium statement
+depends on the Simplified Method group. Existing nonjoint calculations
+and guided and annual gates remain in place. Separately qualify claims
+that depend on employer-plan pooling under §402(l)(3)(B).
+Independent review reproduced three additional boundary defects in the
+initial patch and verified their corrections. The implementation passed
+1,805 scoped tests. Independent checks passed 61, root checks passed
+590, and spec validation passed all 86 references. Typecheck, scoped
+lint, browser source audit and exact generated-inventory comparison passed.
+[26 USC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
+[IRS Internal Revenue Manual 21.6.6.2.29](https://www.irs.gov/irm/part21/irm_21-006-006r).
