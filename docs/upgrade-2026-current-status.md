@@ -4,17 +4,21 @@
 
 - `83436988` reuses the exact federal result during one pending Ohio
   part-year header replay. Both source checks and the original proof
-  still run. Independent software review passed. Four paired local
-  measurements improved by 1.55–4.02 ms per edit. The exact strict
-  Linux browser outcomes are pending on AMD64 and native ARM64.
+  still run. Independent software review and all 11 exact local checks
+  passed, with 30,125 cases per core suite, 88.21% branch coverage and
+  650 Chromium passes. Local timings improved 1.55–4.02 ms per edit.
+  Strict Chromium passed 637 with 13 failures on AMD64 and 640 with 10
+  failures on native ARM64. Each retained five existing skips. Image
+  smoke, recovery, archive verification and cleanup passed on both.
+  Runtime qualification remains open.
   [Ohio preview evidence](upgrade-2026-progress.md#november-22-ohio-pending-header-federal-reuse) ·
   [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157) ·
   [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293).
 - `ed2cafdb` collects the historical IRA evidence in the 2026 Single
   Credits worksheet. Private Chromium verified save and reopen,
   confirmation invalidation and correction of a mismatched issuer.
-  Independent software review passed. Unit and coverage passed
-  30,121 cases each with 88.21% branch coverage. Full Chromium is running.
+  Independent software review and all 11 exact checks passed, with
+  30,121 cases per core suite, 88.21% branch coverage and 650 Chromium passes.
   [Guided Form 8880 evidence](upgrade-2026-progress.md#november-22-guided-form-8880-historical-evidence).
 - `550139f5` validates one 2025 traditional IRA distribution for a single
   2026 filer. It matches the historical statement and payment record,

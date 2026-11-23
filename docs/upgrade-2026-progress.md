@@ -12944,10 +12944,23 @@ output SHA-256 is
 Separate macOS Chromium on exact `83436988` passed all four original
 school cases in 13.220–15.585 seconds with the existing 30-second limit,
 two configured workers and no retries. Its owned server and browser
-closed. The exact standard AMD64 run and native ARM64 rehearsal are
-in progress. The latter uses the repository's existing Linux ARM64
-workflow, with a standard runner on the public repository. Vercel
-recorded the production build as canceled.
+closed. All 11 exact local checks passed. Both core suites passed
+30,125 cases each with 79 existing skips and 88.21% branch coverage.
+The full browser run passed 650 with five existing skips across eight
+windows and verified cleanup. The exact local result manifest has
+SHA-256 `2d4034a4a3bf23c150880d7dd7cd9070b4dd5c7aa8ce7c0f37ff93f01296bb6c`.
+The exact GitHub core run passed all six jobs and the Docker build
+passed. Managed Chromium passed 650 with no failures and five existing
+skips. Strict AMD64 Chromium passed 637, failed 13 and retained five
+existing skips. Smoke, isolated recovery, independent archive import
+and browser-container removal passed. Native ARM64 strict Chromium
+passed 640, failed 10 and retained five existing skips across all eight
+windows. Native image builds, smoke, isolated recovery, archive import
+and browser-container removal passed. The Linux browser gate remains
+open. Individual failing cases and causal timing remain unverified.
+The native workflow used a standard
+runner in the public repository. Vercel recorded the production build
+as canceled.
 [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157) ·
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293) ·
 [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
@@ -12996,8 +13009,15 @@ Independent Chromium at 390 pixels verified all 15 control labels,
 matched the panel's scroll and client widths before and after entry,
 and passed the same reload and correction flow. Its log SHA-256 is
 `957935ae9520b87f9f7f939ad937d484a9979c6e4b66222f24139c6abc0a1c2d`.
-Vercel recorded the production build as canceled. The full exact
-local checks are running.
+Vercel recorded the production build as canceled. All 11 exact local
+checks passed. Both core suites passed 30,121 cases each, with 79
+existing skips and 88.21% branch coverage. Chromium passed 650
+cases, with five existing skips and verified cleanup. The final local
+manifest SHA-256 is
+`d2c6d173899a5ad14c28de6da73bdbb3da6a9435cc3ede46da300100ef10dcca`.
+The exact Linux Web build passed and both browser jobs failed. Smoke,
+recovery, independent archive import and browser-container removal passed.
+[Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45090594379).
 
 ### November 22 Form 8880 prior-year IRA receipt
 
@@ -13024,6 +13044,10 @@ attempt stopped before cases because the previous audited run held port
 650 Chromium cases with five existing skips and verified cleanup.
 All 11 exact checks passed. The local result manifest has SHA-256
 `f951d70a30de47576b1d604c8321837fa89d30aee99a821bdf20f0a6a72f8d00`.
+The exact GitHub Web build and managed browser job passed. The strict
+browser job failed. Smoke, recovery, independent archive import and
+browser-container removal passed.
+[Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45089139521).
 The source binding in `.local/upgrade-evidence/nov22-form8880-historical-ira/`
 has SHA-256 `659ff4c130a1e49dd1302ef89f59ca02bde140a82100cf5c33e8c91c8ea51e02`.
 
