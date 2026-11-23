@@ -155,9 +155,8 @@ import {
   calculateForm8880,
   mergeW2RetirementContributionsIntoForm8880Input,
 } from "./forms/form-8880.js";
-import { calculateForm8606 } from "./forms/form-8606.js";
+import { calculateForm8606, type Form8606Result, type ValidatedOrdinaryIraBasis } from "./forms/form-8606.js";
 import { calculateIraBasisSources } from "./forms/ira-basis-sources.js";
-import type { Form8606Result } from "./forms/form-8606.js";
 import { calculateSocialSecurityBenefitsWorksheet } from "./forms/social-security-benefits-worksheet.js";
 import type { QBISource } from "./forms/form-8995.js";
 import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
@@ -992,6 +991,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // before entering the existing separate-owner calculation.
   if (iraBasisSources) audit.merge(iraBasisSources.lines);
   const ownerForm8606Inputs = iraBasisSources?.form8606ByOwner ?? input.form8606ByOwner;
+  const validatedOrdinaryBasis = iraBasisSources ? input.iraBasisSources : undefined;
   // Legacy source modes remain available:
   // 1. form8606ByOwner: Per-spouse Form 8606 on MFJ returns (each spouse's IRA basis computed independently)
   // 2. form8606: Single combined Form 8606 (backward-compatible, used for single filers or pre-split MFJ)
@@ -1037,7 +1037,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       const defaults = deriveForm8606DefaultsForOwner(primaryForms, primaryHsa, {
         qcdAnnualLimit: constants.qcd.annualLimit,
       });
-      const primaryResult = calculateForm8606ForOwner(primaryInput, defaults);
+      const primaryResult = calculateForm8606ForOwner(primaryInput, defaults,
+        validatedOrdinaryBasis && { sources: validatedOrdinaryBasis, owner: "primary" });
       form8606ByOwnerResults.primary = primaryResult;
       audit.merge(primaryResult.lines);
     }
@@ -1047,7 +1048,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       const defaults = deriveForm8606DefaultsForOwner(spouseForms, spouseHsa, {
         qcdAnnualLimit: constants.qcd.annualLimit,
       });
-      const spouseResult = calculateForm8606ForOwner(spouseInput, defaults);
+      const spouseResult = calculateForm8606ForOwner(spouseInput, defaults,
+        validatedOrdinaryBasis && { sources: validatedOrdinaryBasis, owner: "spouse" });
       form8606ByOwnerResults.spouse = spouseResult;
       audit.merge(spouseResult.lines);
     }
@@ -7881,6 +7883,7 @@ function deriveForm8606DefaultsForOwner(
 function calculateForm8606ForOwner(
   ownerInput: Form8606Input,
   defaults: ReturnType<typeof deriveForm8606DefaultsForOwner>,
+  ordinaryBasis?: ValidatedOrdinaryIraBasis,
 ): Form8606Result {
   return calculateForm8606({
     ...ownerInput,
@@ -7897,5 +7900,5 @@ function calculateForm8606ForOwner(
     rothReturnedContributionsByDueDate: ownerInput.rothReturnedContributionsByDueDate ?? defaults.rothReturnedContributionsByDueDate.toString(),
     rothReturnedExcessContributions: ownerInput.rothReturnedExcessContributions ?? defaults.rothReturnedExcessContributions.toString(),
     rothQualifiedHsaFundingDistributions: ownerInput.rothQualifiedHsaFundingDistributions ?? defaults.rothQualifiedHsaFundingDistributions.toString(),
-  });
+  }, ordinaryBasis);
 }

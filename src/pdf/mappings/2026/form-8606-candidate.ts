@@ -3,11 +3,10 @@
  * Spec: spec/federal/form-8606-2026-template.yaml.
  * The internal projection stays outside the export registry.
  */
-import Decimal from "decimal.js";
 import { calculateForm8606 } from "@/engine/forms/form-8606.js";
 import { calculateIraBasisSources } from "@/engine/forms/ira-basis-sources.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import { d, roundDollar } from "@/utils/decimal.js";
+import { d } from "@/utils/decimal.js";
 
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
@@ -94,29 +93,22 @@ export function projectForm86062026OrdinaryDistribution(
     throw new Error("The Form 8606 candidate requires a 2026 return with only ordinary IRA statements");
   }
   const bound = calculateIraBasisSources(input)?.form8606ByOwner[owner];
-  const history = input.iraBasisSources?.owners.find(source => source.accountHolder === owner)?.basisHistory;
-  if (!bound || history?.method !== "prior_form_8606" || !d(history.line15cWorksheetAdjustment).isZero()) {
+  const sources = input.iraBasisSources;
+  const history = sources?.owners.find(source => source.accountHolder === owner)?.basisHistory;
+  if (!bound || !sources || history?.method !== "prior_form_8606" || !d(history.line15cWorksheetAdjustment).isZero()) {
     throw new Error("The Form 8606 candidate requires an original prior basis without a repayment adjustment");
   }
 
-  const result = calculateForm8606(bound);
+  const result = calculateForm8606(bound, { sources, owner });
   if (result.line2.lte(0) || result.line7.lte(0)) {
     throw new Error("The Form 8606 candidate requires positive prior basis and an ordinary distribution");
   }
   const { fields, printedLine10 } = FORM_8606_2026_CANDIDATE;
-  const useFourPlaces = result.line13.gt(result.line3);
-  const precision = useFourPlaces ? nativeLine10FractionDigits : printedLine10.minimumFractionDigits;
-  const ratio = useFourPlaces
-    ? Decimal.min(1, result.line5.dividedBy(result.line9)).toDecimalPlaces(precision, Decimal.ROUND_HALF_UP)
-    : result.line10;
-  const line12 = roundDollar(result.line7.times(ratio));
-  const line13 = result.line11.plus(line12);
-  if (line13.gt(result.line3)) {
-    throw new Error("The Form 8606 candidate cannot reconcile the printed ratio with available basis");
+  const precision = Math.max(printedLine10.minimumFractionDigits, result.line10.decimalPlaces());
+  if (precision > nativeLine10FractionDigits) {
+    throw new Error("The Form 8606 candidate cannot display the calculated basis ratio at native size");
   }
-
-  const line15a = result.line7.minus(line12);
-  const [integer, fraction] = ratio.toFixed(precision).split(".");
+  const [integer, fraction] = result.line10.toFixed(precision).split(".");
   const text: Record<string, string> = {
     [fields.line10Integer]: integer,
     [fields.line10Fraction]: fraction,
@@ -124,8 +116,8 @@ export function projectForm86062026OrdinaryDistribution(
   const money = {
     line1: result.line1, line2: result.line2, line3: result.line3, line4: result.line4, line5: result.line5,
     line6: result.line6, line7: result.line7, line8: result.line8, line9: result.line9, line11: result.line11,
-    line12, line13, line14: result.line3.minus(line13), line15a, line15b: result.line15b,
-    line15c: line15a.minus(result.line15b),
+    line12: result.line12, line13: result.line13, line14: result.line14,
+    line15a: result.line15a, line15b: result.line15b, line15c: result.line15c,
   };
   for (const line of Object.keys(money) as (keyof typeof money)[]) text[fields[line]] = money[line].toFixed(0);
   return text;

@@ -9,6 +9,7 @@
 
 import Decimal from "decimal.js";
 import type { Form8606Input } from "@/models/inputs.js";
+import type { IraBasisSourcesInput } from "@/models/ira-basis-sources.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -102,7 +103,13 @@ export interface Form8606Result {
   lines: CalculatedLine[];
 }
 
-export function calculateForm8606(input: Form8606Input): Form8606Result {
+/** Pass only after the original IRA source packet has been validated. */
+export interface ValidatedOrdinaryIraBasis {
+  sources: IraBasisSourcesInput;
+  owner: "primary" | "spouse";
+}
+
+export function calculateForm8606(input: Form8606Input, ordinaryBasis?: ValidatedOrdinaryIraBasis): Form8606Result {
   const audit = new AuditTrail();
 
   const qualifiedReservistDistributionRepayments = d(input.qualifiedReservistDistributionRepayments);
@@ -163,12 +170,24 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
   const line7 = roundDollar(Decimal.max(new Decimal(0), traditionalDistributions.minus(line7Exclusions)));
   const line8 = roundDollar(d(input.rothConversions));
   const line9 = line6.plus(line7).plus(line8);
-  const line10 = line9.isZero()
+  const basisRatio = line9.isZero()
     ? new Decimal(0)
-    : Decimal.min(new Decimal(1), line5.dividedBy(line9)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+    : Decimal.min(1, line5.dividedBy(line9));
+  const priorBasis = ordinaryBasis?.sources.taxYear === 2026
+    ? ordinaryBasis.sources.owners.find(source => source.accountHolder === ordinaryBasis.owner)?.basisHistory
+    : undefined;
+  const reconcileOrdinaryBasis = priorBasis?.method === "prior_form_8606"
+    && line2.gt(0) && line7.gt(0) && d(priorBasis.line15cWorksheetAdjustment).isZero();
+  const threePlaceRatio = basisRatio.toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+  const needsFourPlaces = reconcileOrdinaryBasis
+    && roundDollar(line8.times(threePlaceRatio)).plus(roundDollar(line7.times(threePlaceRatio))).gt(line3);
+  const line10 = needsFourPlaces ? basisRatio.toDecimalPlaces(4, Decimal.ROUND_HALF_UP) : threePlaceRatio;
   const line11 = roundDollar(line8.times(line10));
   const line12 = roundDollar(line7.times(line10));
   const line13 = line11.plus(line12);
+  if (reconcileOrdinaryBasis && line13.gt(line3)) {
+    throw new Error("Form 8606 cannot reconcile the four-place ratio with available basis");
+  }
   const priorYearLine15cBasisAdjustment = roundDollar(Decimal.max(new Decimal(0), d(input.priorYearLine15cBasisAdjustment)));
   const line14 = Decimal.max(new Decimal(0), line3.minus(line13)).plus(priorYearLine15cBasisAdjustment);
   const line15a = Decimal.max(new Decimal(0), line7.minus(line12));
@@ -447,7 +466,9 @@ export function calculateForm8606(input: Form8606Input): Form8606Result {
     "Line 7": line7,
     "Line 8": line8,
   });
-  audit.record("Form 8606", "10", "Nontaxable percentage", line10, "Round Line 5 / Line 9 to three decimals, limited to 1.000", {
+  audit.record("Form 8606", "10", "Nontaxable percentage", line10, needsFourPlaces
+    ? "Round capped Line 5 / Line 9 to four decimals because three decimals allocate more than Line 3"
+    : "Round Line 5 / Line 9 to three decimals, limited to 1.000", {
     "Line 5": line5,
     "Line 9": line9,
   });

@@ -60,11 +60,11 @@ lines:
       three-place calculation when printed line 13 does not exceed line 3.
       Otherwise recompute line 5 divided by line 9 at four places using
       Decimal half-up rounding. Four digits fit the pinned line 10 fraction
-      widget at its native size. Derive displayed lines 12, 13, 14, 15a and
-      15c from that same displayed ratio and hold the candidate if line 13
-      still overuses the available basis. Use no greater precision in this
-      projection. The shared calculation and Form 1040 line 4b transfer are
-      separate from this internal specimen.
+      widget at its native size. Project lines 10, 12, 13, 14, 15a and 15c
+      from the shared per-owner calculation used for the Form 1040 line 4b
+      transfer. Hold the candidate if line 13 still overuses the available
+      basis at four places. The candidate and annual filing gates remain
+      closed.
     irsRef: "https://www.irs.gov/pub/irs-prior/f8606--2026.pdf"
     testRef: "tests/pdf/form-8606-2026-candidate.test.ts::reopens the four-place basis ratio and its reconciled taxable amount"
   - line: "closed-exports"

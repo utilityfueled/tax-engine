@@ -11,7 +11,9 @@ notes: |
   Whole-dollar calculation follows Form1040 instructions, Rounding Off to Whole
   Dollars: retain cents while combining source amounts for one monetary line,
   round that line once, and use completed lines in downstream calculations.
-  Form8606 line10 retains its separate three-decimal HALF_UP ratio rule.
+  Form8606 line10 retains its separate three-decimal HALF_UP ratio rule by
+  default. The final 2026 ordinary original-source method below uses the
+  minimum additional precision needed within the four-place review scope.
   See form-8606-rounding.yaml for source aggregation, allocation boundaries and
   the currently published line15c examples refreshed2026-10-25.
   This slice implements the traditional IRA basis-allocation math needed to
@@ -183,18 +185,35 @@ lines:
 
   - line: "10"
     description: "Nontaxable percentage"
-    formula: "Line 5 divided by Line 9, rounded to three decimal places and limited to 1.000"
+    formula: "Line 5 divided by Line 9, rounded to three decimal places by default and limited to 1.000"
     irsRef: "Form 8606 Instructions, Line 10"
     inputs:
       - "Form 8606 Line 5"
       - "Form 8606 Line 9"
-    notes: "IRS instructions say to enter the result as a decimal rounded to at least three places. The engine rounds Line 10 to three decimals with standard half-up rounding before using it in downstream basis-allocation lines, and clamps the percentage at 1.000. At an exact 0.0005 rounding boundary, that half-up result can consume the final dollar of basis, so downstream carryforward lines must still floor at zero instead of going negative."
+    notes: "IRS instructions say to enter the result as a decimal rounded to at least three places. The default method rounds Line 10 to three decimals with standard half-up rounding before using it in downstream basis-allocation lines, and clamps the percentage at 1.000. The final 2026 ordinary original-source method below applies a separate reconciliation."
     edgeCases:
       - "Zero basis (no nondeductible contributions) produces a ratio of 0 — all distributions are fully taxable"
       - "Basis exceeding the total IRA value plus distributions produces a ratio clamped at 1.000 — no distributions are taxable and excess basis carries forward"
       - "Denominator is exactly zero (no IRA value, distributions, or conversions) — ratio defaults to zero and all basis carries forward"
       - "Full IRA conversion to Roth (yearEndValue=0, no traditional distributions) concentrates the entire denominator in the conversion amount"
     testRef: "tests/engine/forms/form-8606.test.ts::Form 8606 Line 10 - nontaxable percentage uses the pro-rata ratio and never exceeds 1"
+
+  - line: "10–15c 2026 ordinary basis precision and Form 1040 transfer"
+    description: "Reconcile each owner’s printed allocation and taxable distribution"
+    formula: >-
+      For validated 2026 ordinary originals with actual prior Form 8606 basis
+      and a zero prior repayment worksheet adjustment, retain the capped
+      three-place Decimal half-up ratio if line 13 does not exceed line 3.
+      Otherwise round the same capped ratio to four places and recompute the
+      whole-dollar allocations on lines 11 and 12. Hold the calculation if
+      line 13 still exceeds line 3. Use the reconciled values for lines 14,
+      15a and 15c. Transfer line 15c to Form 1040 line 4b before total income
+      and adjusted gross income, preserving the separate owner’s calculation
+      and existing adjustment order. Legacy and special-method calculations
+      retain their existing precision. Annual calculation and filing gates
+      continue to apply.
+    irsRef: "https://www.irs.gov/pub/irs-prior/f8606--2026.pdf"
+    testRef: "tests/engine/federal-ira-basis-sources.test.ts::transfers the reconciled 2026 ordinary basis without pooling spouses"
 
   - line: "11"
     description: "Nontaxable portion of Roth conversions"
