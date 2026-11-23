@@ -13428,3 +13428,85 @@ The source binding manifest in
   [Ohio IT 1040 bundle](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf),
   [Ohio NRC index](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) and
   [Ohio draft announcements](https://tax.ohio.gov/individual/resources/individualincome).
+
+### November 23 guided Form 1099-R disability pension
+
+`ec186160` adds guided intake for one primary nonjoint recipient with an
+actual 2026 employer disability pension distribution. The worksheet
+records the employer’s documented minimum retirement date and an actual
+pre-minimum-date payment covering Box 1. It binds the payer, account,
+recipient, date of birth, taxable amount and withholding to the original
+standalone Code 3 statement. Unknown, mixed, competing and stale records
+remain held. The existing federal engine classifies the taxable amount as
+wages once authorized to calculate a year. The production 2026 federal
+calculation, review PDF and filing export gates stayed closed in a
+separate unmocked check.
+[Final 2026 Form 1099-R](https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf),
+[payer instructions](https://www.irs.gov/instructions/i1099r), and
+[Publication 525 disability pension rules](https://www.irs.gov/publications/p525).
+
+The scoped spec, 2,216 adjacent tests, root and web types, and scoped lint
+passed with four existing warnings. An independent software reviewer
+passed 46 controls and identified a message that could point to an
+unavailable worksheet. The new assertion reproduced it before the fix.
+All 12 focused controls passed after correction. The initial exact run
+found the generated inventory and browser source pins stale. `af43b507`
+updates the single inventory entry and `3fbbd41c` refreshes the six
+application source hashes. The 33 orchestration tests and 35 diagnostic
+tests passed. Browser test collection, deadlines and request budgets are
+unchanged. Vercel canceled the `3fbbd41c` production build. With the public
+sample files and local loopback available, its exact browser run passed
+650 cases with five existing skips. Exact release verification continues
+on the successor. The authoritative 2026 annual instructions and qualified
+human tax review remain required.
+
+The first two local browser attempts for `3fbbd41c` stopped before any
+browser case. The tracked archive needed the 15 public samples under
+`sample-documents/downloads`. After those were supplied, a direct local
+probe identified `EPERM` on `127.0.0.1:3099` when the runner reported
+“Browser port already bound.” The successful run used the same source,
+fixtures and case deadlines with local loopback available.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45225985808),
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45225985762),
+and [browser](https://github.com/utilityfueled/tax-engine/actions/runs/45225985900).
+
+### November 23 Code 3 public safety officer election
+
+`d164d0ca` asks the taxpayer whether they elect the retired public safety
+officer premium exclusion. Box 2a does not account for it. A missing
+answer holds even on an older saved worksheet. An affirmative answer
+requires review of the employer plan and paid premiums. An explicit
+negative preserves the existing wage projection. Editing the election
+resets the source confirmation. The federal annual and public PDF gates
+remain closed.
+[IRC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
+[IRS Publication 575](https://www.irs.gov/publications/p575) ·
+[Qualified tax review packet](upgrade-2026-external-actions.md#november-23-disability-pension-review).
+
+Two source-first regressions failed before implementation. The separate
+software review passed 42 retirement tests and the unmocked public PDF
+gate check. The final 46 scoped tests, 35 diagnostic tests, scoped spec,
+web types and inventory passed. The broader concurrent run passed 2,216
+and hit one Ohio display-proof deadline. That Ohio case and 53 other
+controls passed the scoped rerun with the original timeout. The exact
+local run uses the archived source, pinned Node/Python and the same 15
+public sample documents as the prior passing run. All nine exact core
+checks passed. Unit and coverage each passed 30,161 cases with 79 skipped
+under their existing conditions. Branch coverage was 88.25%
+against the 85% gate. GitHub Docker passed and Vercel canceled the
+production build. Browser and recovery runs remain active.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45227494758) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45227495021) ·
+[Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45227494580) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45227688897).
+
+### November 23 Stripe Sandbox checkout expiry
+
+At 17:29:18 UTC, a read-only Stripe API retrieval matched the exact
+`522cf4b1` test Session in the named Viva La Tax Sandbox. Stripe returned
+`expired` and `unpaid`, no PaymentIntent or subscription, and the
+original 06:56:31 UTC expiry time. No checkout or account mutation took
+place. This closes the expiry observation for that Session. Conditional
+postal collection, success return, signed completion, entitlement and
+exact credit effects remain separate checks.
+[Stripe Checkout Session retrieval](https://docs.stripe.com/api/checkout/sessions/retrieve).

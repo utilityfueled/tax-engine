@@ -12,6 +12,33 @@ draft. The annual calculation and export gates remain closed.
 [Ohio forms](https://tax.ohio.gov/home/forms/tax-forms) ·
 [Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax).
 
+Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
+2025 PA-40 and the standing Schedule NRH, revision 03-24. A verified
+2026 annual parent return is needed for the selected residency paths.
+[Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
+[Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
+
+- `d164d0ca` requires an explicit answer about the public safety officer
+  premium exclusion on a 2026 Code 3 pension. An affirmative answer goes
+  to qualified review, and older unanswered worksheets hold. Independent
+  review and 46 final scoped tests passed. All nine exact core checks
+  passed, including 30,161 tests in each run and 88.25% branch coverage.
+  GitHub Docker passed. Browser and recovery checks are still running.
+  Vercel canceled the production build.
+  [Election evidence](upgrade-2026-progress.md#november-23-code-3-public-safety-officer-election).
+- The sandbox Checkout Session from `522cf4b1` expired unpaid without a
+  PaymentIntent or subscription. This closes the expiry observation.
+  Successful checkout, signed delivery and credit effects remain open.
+  [Sandbox expiry evidence](upgrade-2026-progress.md#november-23-stripe-sandbox-checkout-expiry).
+- `ec186160` captures one documented 2026 employer disability pension
+  payment before the recipient’s minimum retirement date. It holds
+  missing and mismatched records, and leaves the annual gates closed.
+  All 2,216 adjacent tests, the scoped spec check, root and web typechecks,
+  and independent software review passed. `af43b507` and `3fbbd41c`
+  refresh the inventory and browser source pins. Vercel canceled the
+  `3fbbd41c` production build. That revision passed 650 local browser
+  cases with five existing skips. Qualified tax review is still required.
+  [Disability pension evidence](upgrade-2026-progress.md#november-23-guided-form-1099-r-disability-pension).
 - The exact `b59f68b1` Linux comparison passed 637 strict container
   cases, failed 13 and retained five original skips. On the same AMD64
   runner, the focused 10 Ohio cases passed four and failed six in each

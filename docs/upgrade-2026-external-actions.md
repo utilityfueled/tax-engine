@@ -1,5 +1,22 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 23 disability pension review
+
+Independently derive the federal classification and Form 1040 transfer for
+one single taxpayer's sole 2026 employer disability pension payment on
+July 31, one day before the plan’s documented minimum retirement date.
+The fictional Code 3 statement has $12,000.45 in Box 1, $9,000.25 in
+determined Box 2a and $900.15 in Box 4. Check the one-day boundary, the
+taxable amount, early-distribution additional tax and the withholding
+transfer. For a retired public safety officer who elects the §402(l)
+premium exclusion, separately verify the eligible employer plan, payment
+records, qualifying premiums, cap and deductions before approving that
+path. Verify the annual reporting fields once final instructions are
+available.
+[2026 Form 1099-R](https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf) ·
+[Publication 525](https://www.irs.gov/publications/p525) ·
+[Publication 575](https://www.irs.gov/publications/p575).
+
 ## November 22 handoffs for independent qualification
 
 OpenAI schedules the existing GPT-5 mini baseline for December 11,
@@ -69,7 +86,7 @@ requires authorization.
 | Google project/model access | Establish authorized project access for the selected Gemini profile and available baseline through a secure configuration path. [Current public catalog observations](upgrade-2026-provider-catalog-20261117.md) do not establish Google entitlement or generation qualification. |
 | Applicable final 2026 annual material | Obtain each required published revision, then pin and qualify the maps, transfers and enabled scenarios. The [bounded official recheck](upgrade-2026-official-source-refresh-20261117-continuation.md) does not establish global absence or qualify drafts. |
 | Runtime verification | Qualify the exact release image at the existing browser deadlines. On `83436988`, all 11 local checks, all six GitHub core jobs, the Docker build and managed Chromium passed. Strict Linux Chromium passed 637 with 13 failures on AMD64 and 640 with 10 failures on native ARM64, each with five existing skips. Smoke, isolated recovery, independent archive verification and cleanup passed on both. Keep the strict browser gate open until an exact candidate passes. [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293). |
-| Stripe Sandbox checkout and credits | The bound `522cf4b1` test-mode Preview created one real Sandbox Session for the $19 monthly Starter line. Stripe confirmed an attached test customer and the configured return URLs. The landing page displayed Starter and $19, and its Back link reached the exact cancel URL. The Session remained open and unpaid, with automatic expiry scheduled for November 23 at 06:56:31 UTC. Verify expiry and complete the remaining conditional postal, success-return and signed-delivery checks on an exact protected test build. Verify the resulting entitlement and receipts in scoped synthetic records. Positive credit effects still require the isolated test path. [Checkout evidence](upgrade-2026-progress.md#november-22-stripe-sandbox-checkout-and-source-recheck). |
+| Stripe Sandbox checkout and credits | The bound `522cf4b1` test-mode Preview created one real Sandbox Session for the $19 monthly Starter line. Stripe confirmed an attached test customer and the configured return URLs. The landing page displayed Starter and $19, and its Back link reached the exact cancel URL. Stripe later confirmed that the Session expired unpaid at its original scheduled time with no PaymentIntent or subscription. Complete the remaining conditional postal, success-return and signed-delivery checks on an exact protected test build. Verify the resulting entitlement and receipts in scoped synthetic records. Positive credit effects still require the isolated test path. [Checkout evidence](upgrade-2026-progress.md#november-22-stripe-sandbox-checkout-and-source-recheck). |
 
 The current final Form 2210 instructions still cover 2025. The IRS
 quarterly rates index currently ends with the fourth quarter of 2026.
