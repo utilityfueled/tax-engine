@@ -25,11 +25,14 @@ export function resolveForm5329EducationSource(input: TaxYearInput, iraTaxable: 
     || !distribution.receiptDate.startsWith("2026-")) {
     throw new Error("Form 5329 education source must match one actual 2026 Form 1099-R payer, owner, account and receipt date.");
   }
+  if (original.employeeContributions === undefined || !d(original.employeeContributions).eq(distribution.employeeContributions)) {
+    throw new Error("Form 5329 education source requires an actual zero in Form 1099-R Box 5.");
+  }
   const taxableDistribution = d(distribution.amount);
   if (original.iraSepSimple !== true || original.distributionCode?.trim() !== "1" || original.eligibleGovernmental457bPlan
     || original.trumpAccount !== false || original.excessContributionEarnings === undefined || !d(original.excessContributionEarnings).isZero()
     || original.returnedContributionByDueDate || original.excessContributionReturnedWithoutEarnings || !d(original.rothConversionAmount).isZero()
-    || original.iraBasisConfirmedZero !== true || !d(original.employeeContributions).eq(distribution.employeeContributions)
+    || original.iraBasisConfirmedZero !== true
     || original.taxableAmountNotDetermined !== false || !taxableDistribution.eq(d(original.grossDistribution))
     || !taxableDistribution.eq(d(original.taxableAmount)) || !taxableDistribution.eq(iraTaxable)) {
     throw new Error("Form 5329 education source requires a fully taxable ordinary Code 1 IRA distribution with no basis.");

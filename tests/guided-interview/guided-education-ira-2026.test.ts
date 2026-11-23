@@ -201,6 +201,33 @@ it("requires confirmed eligible college tuition in direct canonical input", () =
   }
 });
 
+it("requires actual Box 5 after parsing and reloading a canonical tuition packet", () => {
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(draft()));
+  const original = input.form1099R?.[0];
+  assert.ok(original);
+  expect(original.employeeContributions).toBe("0");
+  const missing = { ...input, form1099R: [{ ...original, employeeContributions: undefined }] };
+  const parsed = TaxYearInputSchema.parse(missing);
+  const reloaded = TaxYearInputSchema.parse(JSON.parse(JSON.stringify(parsed)));
+  for (const candidate of [missing, parsed, reloaded]) {
+    expect(candidate.form1099R?.[0]?.employeeContributions).toBeUndefined();
+    expect(candidate.form5329EducationSource?.distribution.employeeContributions).toBe("0");
+    expect(() => calculateFederalTax(candidate)).toThrow(/actual zero.*Box 5/i);
+  }
+  const nonzero = TaxYearInputSchema.parse({ ...input, form1099R: [{ ...original, employeeContributions: "0.01" }] });
+  expect(nonzero.form1099R?.[0]?.employeeContributions).toBe("0.01");
+  expect(() => calculateFederalTax(nonzero)).toThrow(/confirmed zero nondeductible IRA basis/i);
+  const confirmed = TaxYearInputSchema.parse(JSON.parse(JSON.stringify(input)));
+  expect(calculateFederalTax(confirmed).form5329?.line2.toFixed()).toBe("2000.15");
+  for (const changes of [{ taxYear: 2025 }, { taxYear: undefined }, { distributionCode: "7" }, { iraSepSimple: false }]) {
+    const legacy = TaxYearInputSchema.parse({ ...input, form5329EducationSource: undefined,
+      taxpayer: { ...input.taxpayer, taxYear: changes.taxYear ?? input.taxpayer.taxYear },
+      form1099R: [{ ...original, ...changes, employeeContributions: undefined }],
+    });
+    expect(legacy.form1099R?.[0]?.employeeContributions).toBe("0");
+  }
+});
+
 it("holds a saved tuition proof after the primary taxpayer changes with the same birth date", () => {
   const originalState = draft();
   const personal = originalState.sectionData["personal-info"];

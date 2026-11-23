@@ -1177,7 +1177,7 @@ export const Form1099RSchema = z.object({
   stateDistribution: optionalDecimal, // Box 16 — required for IL Schedule IL-WIT Column D auto-attachment
   localTaxWithheld: optionalDecimal, // Engine-modeled school district withholding / Local withholding carried to NYC or Yonkers lines 73/74
   locality: z.string().optional(), // Locality name for local withholding
-  employeeContributions: optionalDecimal, // Box 5
+  employeeContributions: optionalDecimalInput, // Box 5, defaulted below for legacy intake
   simplifiedMethodCostInPlan: decimal.optional(), // Simplified Method worksheet line 1
   simplifiedMethodPlanIdentifier: z.string().trim().min(1).optional(), // Validated identifier for a specific annuity contract when one payer issues multiple Simplified Method plans
   simplifiedMethodExpectedPayments: z.number().int().positive().optional(), // Simplified Method worksheet line 3
@@ -1549,6 +1549,11 @@ export const Form1099RSchema = z.object({
       });
     }
   }
+}).overwrite(value => {
+  // The 2026 primary Code 1 IRA source needs to distinguish reported zero from omission.
+  if (value.employeeContributions !== undefined || (value.taxYear === 2026 && value.accountHolder === "primary"
+    && value.iraSepSimple && value.distributionCode?.trim() === "1")) return value;
+  return { ...value, employeeContributions: "0" };
 });
 
 function getNormalizedDistributionCodes(code?: string): string[] {
