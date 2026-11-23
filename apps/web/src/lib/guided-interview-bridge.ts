@@ -98,7 +98,8 @@ import { buildGuidedCashFarm, buildGuidedCashFarmBenefitOriginals } from "./guid
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
 import { buildGuidedFirstHomeSource } from "./guided-retirement-first-home";
-import { guidedCode1IraAgeFacts, guidedCode1IraFirstHomeOriginal, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
+import { buildGuidedIraEducationException, guidedIraEducationOwnerFingerprint } from "./guided-retirement-education";
+import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1IraOriginal, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
 import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import { investmentFactErrors, isStartedInvestment, type InvestmentData, type InvestmentSourceData } from "./guided-investment-facts";
@@ -841,7 +842,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
     assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear));
     assertKnownFacts(minimumTaxCreditFactErrors(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo));
-    assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData }));
+    assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData }, creditsData));
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData, deductionData, segmentation.stateCode, socialSecurityData));
     assertKnownFacts(savingsBondFactErrors(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo));
@@ -900,11 +901,17 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const retirementEntries = retirementData?.entries;
   const form1099R = buildRetirementInputs(retirementEntries, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData });
   const firstHomeEntry = retirementEntries?.find(entry => entry.code1IraFirstHomeSource !== undefined);
-  const firstHomeOwnerBirthDate = firstHomeEntry
+  const educationEntry = retirementEntries?.find(entry => entry.code1IraEducationSource !== undefined);
+  const iraExceptionOwnerBirthDate = firstHomeEntry || educationEntry
     ? guidedCode1IraOwnerBirthDate(retirementEntries, segmentation.filingStatus, state.taxYear, personalInfo.dateOfBirth, !!retirementData?.basisSources)
     : undefined;
   const form5329FirstHomeSource = firstHomeEntry?.code1IraFirstHomeSource
-    ? buildGuidedFirstHomeSource(firstHomeEntry.code1IraFirstHomeSource, guidedCode1IraFirstHomeOriginal(firstHomeEntry, firstHomeOwnerBirthDate))
+    ? buildGuidedFirstHomeSource(firstHomeEntry.code1IraFirstHomeSource, guidedCode1IraOriginal(firstHomeEntry, iraExceptionOwnerBirthDate))
+    : undefined;
+  const qualifiedHigherEducationExpenseExceptionAmount = educationEntry?.code1IraEducationSource
+    ? buildGuidedIraEducationException(educationEntry.code1IraEducationSource, guidedCode1IraEducationOriginal(
+      educationEntry, iraExceptionOwnerBirthDate, guidedIraEducationOwnerFingerprint(personalInfo),
+    ), creditsData)
     : undefined;
   const iraBasisSources = buildGuidedIraBasisSources(retirementData?.basisSources, retirementData?.entries, state.taxYear, segmentation.filingStatus, personalInfo, adjustmentData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
@@ -1040,6 +1047,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form1099DA,
     form1099R,
     ...(form5329FirstHomeSource ? { form5329FirstHomeSource } : {}),
+    ...(qualifiedHigherEducationExpenseExceptionAmount ? { form5329: { qualifiedHigherEducationExpenseExceptionAmount } } : {}),
     iraBasisSources,
     form8960Sources: buildGuidedNiitSources(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus),
     foreignTaxElection: buildGuidedForeignTaxElection(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state), state),
@@ -1245,7 +1253,7 @@ export function buildGuidedFactAnswers(
     const filled = retData.entries.filter(isStartedRetirement);
     if (filled.length > 0) {
       const totalTaxable = sourceTotal(filled.map(entry => entry.taxableAmount));
-      const complete = Object.keys(retirementFactErrors(filled, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"], { data: retData.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments })).length === 0;
+      const complete = Object.keys(retirementFactErrors(filled, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"], { data: retData.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments }, state.sectionData.credits)).length === 0;
       const methodNotes = [];
       if (retData.basisSources) methodNotes.push("Form 8606 calculates taxable IRA amounts from separate-owner IRA basis history and account values. The original printed amounts are preserved.");
       if (filled.some(entry => entry.simplifiedMethod)) methodNotes.push("The Simplified Method worksheet calculates taxable pension amounts and preserves the original blank Box 2a.");
@@ -1412,7 +1420,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "1099-r",
-      coverage: Object.keys(retirementFactErrors(retData.entries, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"], { data: retData.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments })).length ? "partially-supported" : "supported",
+      coverage: Object.keys(retirementFactErrors(retData.entries, true, state.segmentation.filingStatus, state.taxYear, state.sectionData["state-return"], { data: retData.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments }, state.sectionData.credits)).length ? "partially-supported" : "supported",
       label: "1099-R (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

@@ -27,6 +27,7 @@ function RetirementCard({
   removable,
   basisMode,
   code1IraOwnerBirthDate,
+  primaryOwnerFingerprint,
 }: {
   index: number;
   entry: RetirementEntryData;
@@ -35,6 +36,7 @@ function RetirementCard({
   removable: boolean;
   basisMode?: boolean;
   code1IraOwnerBirthDate?: string;
+  primaryOwnerFingerprint?: string;
 }) {
   const qcdMode = isGuidedQcdStatement(entry);
   const simplifiedMethod = needsGuidedSimplifiedMethod(entry);
@@ -104,7 +106,8 @@ function RetirementCard({
           </span>
         </label>
 
-        <RetirementSourceFields entry={entry} onUpdate={onUpdate} basisMode={basisMode} code1IraOwnerBirthDate={code1IraOwnerBirthDate} />
+        <RetirementSourceFields entry={entry} onUpdate={onUpdate} basisMode={basisMode}
+          code1IraOwnerBirthDate={code1IraOwnerBirthDate} primaryOwnerFingerprint={primaryOwnerFingerprint} />
       </div>
     </div>
   );
@@ -118,6 +121,7 @@ export function SectionRetirementIncome({
   filingStatus,
   taxYear,
   primaryDateOfBirth,
+  primaryOwnerFingerprint,
 }: {
   entries: RetirementEntryData[];
   onEntriesChange: (entries: RetirementEntryData[]) => void;
@@ -126,6 +130,7 @@ export function SectionRetirementIncome({
   filingStatus?: FilingStatus | null;
   taxYear?: number | null;
   primaryDateOfBirth?: string;
+  primaryOwnerFingerprint?: string;
 }) {
   const code1OwnerBirthDate = guidedCode1IraOwnerBirthDate(entries, filingStatus, taxYear, primaryDateOfBirth, !!basisSources);
   function updateEntry<K extends keyof RetirementEntryData>(
@@ -148,12 +153,11 @@ export function SectionRetirementIncome({
           simplifiedMethod: { ...entry.simplifiedMethod, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
         } : {}),
       };
-      const hasFirstHomeWorksheet = entry.code1IraFirstHomeSource !== undefined;
-      const firstHomeWorksheetChanged = field === "code1IraFirstHomeSource"
-        && hasFirstHomeWorksheet !== (value !== undefined);
+      const iraExceptionWorksheetChanged = (field === "code1IraFirstHomeSource" || field === "code1IraEducationSource")
+        && (entry[field] !== undefined) !== (value !== undefined);
       const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);
       const codeChanged = needsGuidedSimplifiedMethod(updated) && entry.distributionCode !== updated.distributionCode;
-      return methodChanged || codeChanged || code1SourceChanged || firstHomeWorksheetChanged || field === "code1IraAgeSource"
+      return methodChanged || codeChanged || code1SourceChanged || iraExceptionWorksheetChanged || field === "code1IraAgeSource"
         ? { ...updated, additionalWorksheetRequired: null } : updated;
     });
     onEntriesChange(next);
@@ -185,6 +189,7 @@ export function SectionRetirementIncome({
               entry={entry}
               basisMode={!!basisSources && entry.isIraSepSimple === true}
               code1IraOwnerBirthDate={code1OwnerBirthDate}
+              primaryOwnerFingerprint={primaryOwnerFingerprint}
               onUpdate={(field, value) => updateEntry(index, field, value)}
               onRemove={() => removeEntry(index)}
               removable={entries.length > 1}

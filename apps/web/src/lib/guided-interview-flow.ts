@@ -2831,9 +2831,9 @@ function validateRequiredFacts(errors: Record<string, string>): SectionValidatio
   } : VALID_SECTION;
 }
 
-function validateRetirementSection(data: SectionDataMap["income-retirement"], filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext): SectionValidationResult {
+function validateRetirementSection(data: SectionDataMap["income-retirement"], filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext, credits?: CreditsData): SectionValidationResult {
   if (!data?.entries?.length && !data?.basisSources) return EMPTY_SECTION("retirement info");
-  return validateRequiredFacts(retirementFactErrors(data?.entries, true, filingStatus, taxYear, stateData, basisContext));
+  return validateRequiredFacts(retirementFactErrors(data?.entries, true, filingStatus, taxYear, stateData, basisContext, credits));
 }
 
 function validateSocialSecuritySection(data: SocialSecurityData | undefined, state: GuidedFlowState): SectionValidationResult {
@@ -2906,7 +2906,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["personal-info"]);
     case "income-retirement":
-      return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), { data: state.sectionData["income-retirement"]?.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments });
+      return validateRetirementSection(getSectionData(state, "income-retirement"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), { data: state.sectionData["income-retirement"]?.basisSources, personal: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments }, state.sectionData.credits);
     case "income-social-security":
       return validateSocialSecuritySection(getSectionData(state, "income-social-security"), state);
     case "income-unemployment":

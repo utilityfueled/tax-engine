@@ -64,7 +64,7 @@ export function isGuidedQcdStatement(entry: RetirementEntryData): boolean {
 }
 
 export function isStartedRetirement(entry: RetirementEntryData): boolean {
-  return entry.qcdSource !== undefined || entry.simplifiedMethod !== undefined
+  return entry.qcdSource !== undefined || entry.simplifiedMethod !== undefined || entry.code1IraEducationSource !== undefined
     || Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
 }
 function amount(value: string | undefined): string | undefined {

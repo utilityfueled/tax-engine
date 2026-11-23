@@ -95,6 +95,7 @@ import { BooleanFact } from "./fact-fields";
 import { QofDispositionDetails } from "./qof-disposition-details";
 import { SectionRentalIncome } from "./section-rental-income";
 import { SectionRetirementIncome } from "./section-retirement-income";
+import { guidedIraEducationOwnerFingerprint } from "@/lib/guided-retirement-education";
 import { SectionSocialSecurity } from "./section-social-security";
 import { SectionUnemployment } from "./section-unemployment";
 import { SectionAdditionalDeductions } from "./section-additional-deductions";
@@ -621,13 +622,15 @@ function SectionContent({
     }
     case "income-retirement": {
       const retData = getSectionData(state, "income-retirement");
+      const personal = getSectionData(state, "personal-info");
       const entries = retData?.entries ?? [emptyRetirementEntry];
       return (
         <SectionRetirementIncome
           entries={entries}
           filingStatus={state.segmentation.filingStatus}
           taxYear={state.taxYear}
-          primaryDateOfBirth={getSectionData(state, "personal-info")?.dateOfBirth}
+          primaryDateOfBirth={personal?.dateOfBirth}
+          primaryOwnerFingerprint={state.taxYear === 2026 ? guidedIraEducationOwnerFingerprint(personal) : undefined}
           basisSources={retData?.basisSources}
           onBasisSourcesChange={basisSources => onStateChange(updateSectionData(state, "income-retirement", { ...retData, entries, basisSources }))}
           onEntriesChange={(next: RetirementEntryData[]) =>

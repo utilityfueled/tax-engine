@@ -1890,14 +1890,14 @@ export const Form5329LongTermCareSourceSchema = z.strictObject({
 });
 
 export const Form5329Schema = z.object({
-  earlyDistributionsIncludedInIncome: optionalDecimal, // Part I Line 1
+  earlyDistributionsIncludedInIncome: optionalDecimalInput, // Part I Line 1, derived from actual forms when omitted
   rothConversionRecaptureAmount: optionalDecimal, // Part I Line 1 Roth conversion or qualified-plan rollover recapture amount
   distributionsNotSubjectToAdditionalTax: optionalDecimal, // Part I Line 2
   distributionExceptionNumber: z.string().regex(/^(0[1-9]|1[0-9]|2[0-3]|99)$/).optional(), // Part I Line 2 exception number for tax year 2025
   substantiallyEqualPeriodicPaymentsExceptionAmount: optionalDecimal, // Part I Line 2 exception 02 validated substantially equal periodic payments amount
   deathDistributionExceptionAmount: optionalDecimal, // Part I Line 2 exception 04 validated death-distribution amount
   qualifiedDomesticRelationsOrderDistributionAmount: optionalDecimal, // Part I Line 2 exception 06 validated QDRO alternate-payee distribution amount
-  medicalExpenseExceptionAmount: optionalDecimal, // Part I Line 2 exception 05 validated deductible unreimbursed medical-expense amount above 7.5% of AGI
+  medicalExpenseExceptionAmount: optionalDecimalInput, // Part I Line 2 exception 05 explicit override of the Schedule A medical amount
   unemployedHealthInsurancePremiumExceptionAmount: optionalDecimal, // Part I Line 2 exception 07 validated IRA amount used to pay health insurance premiums while unemployed
   qualifiedHigherEducationExpenseExceptionAmount: optionalDecimal, // Part I Line 2 exception 08 validated IRA amount used for qualified higher education expenses
   qualifiedFirstTimeHomebuyerDistributionAmount: optionalDecimal, // Part I Line 2 exception 09 validated IRA amount used for a first home purchase
@@ -1915,7 +1915,7 @@ export const Form5329Schema = z.object({
   returnedContributionByDueDateTaxableEarningsExceptionAmount: optionalDecimal, // Part I Line 2 exception 21 validated taxable earnings on current-year IRA contributions returned by the due date
   domesticAbuseExceptionAmount: optionalDecimal, // Part I Line 2 exception 22 validated domestic-abuse victim distribution amount
   emergencyPersonalExpenseExceptionAmount: optionalDecimal, // Part I Line 2 exception 23 validated emergency personal expense distribution amount
-  supportedMedicalExpenseExceptionAmount: optionalDecimal, // Engine trace: deductible medical expenses from Schedule A Line 4 (exception 05)
+  supportedMedicalExpenseExceptionAmount: optionalDecimalInput, // Engine trace: deductible medical expenses from Schedule A Line 4 (exception 05)
   supportedDeathDistributionAmount: optionalDecimal, // Engine trace: taxable attached Form 1099-R Box 7 code 4 death distributions (exception 04)
   supportedTerminalIllnessDistributionAmount: optionalDecimal, // Engine trace: taxable attached non-IRA qualified-plan Form 1099-R Box 7 code 1 terminal-illness distributions (exception 20)
   simpleIRADistributionsWithinFirstTwoYears: optionalDecimal, // Part I Line 4 25% branch

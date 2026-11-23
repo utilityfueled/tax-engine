@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
 import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precision';
 import {statePaymentFactErrors}from './guided-state-facts';
-import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
+import type { CreditsData, FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age";
 import { amountError, currentLocalCivilDate, hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -13,7 +13,8 @@ import {
   simplifiedMethodPlanIdentifier, simplifiedMethodWholeNumber,
   type GuidedRetirementQcdSource, type GuidedRetirementSimplifiedMethod,
 } from "./guided-retirement-source-inputs";
-import { buildGuidedFirstHomeSource, guidedFirstHomeOriginal, guidedFirstHomeOriginalError, type GuidedFirstHomeWorksheet } from "./guided-retirement-first-home";
+import { buildGuidedFirstHomeSource, guidedCode1IraOriginalSnapshot, guidedFirstHomeOriginalError, type GuidedFirstHomeWorksheet } from "./guided-retirement-first-home";
+import { buildGuidedIraEducationException, guidedIraEducationOriginalError, guidedIraEducationOwnerFingerprint, type GuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "./guided-retirement-education";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -39,6 +40,7 @@ export interface RetirementSourceData {
   iraBasisConfirmedZero?: boolean | null;
   code1IraAgeSource?: { singlePaymentConfirmed?: boolean | null; ownerBirthDate?: string; distributionDate?: string };
   code1IraFirstHomeSource?: GuidedFirstHomeWorksheet;
+  code1IraEducationSource?: GuidedIraEducationWorksheet;
   qcdSource?: GuidedRetirementQcdSource;
   simplifiedMethod?: GuidedRetirementSimplifiedMethod;
   qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
@@ -108,9 +110,15 @@ export function guidedCode1IraAgeFacts(entry: RetirementEntryData, ownerBirthDat
   };
 }
 
-export function guidedCode1IraFirstHomeOriginal(entry: RetirementEntryData, ownerBirthDate?: string) {
+export function guidedCode1IraOriginal(entry: RetirementEntryData, ownerBirthDate?: string) {
   const age = guidedCode1IraAgeFacts(entry, ownerBirthDate);
-  return guidedFirstHomeOriginal(entry, ownerBirthDate, age?.ageException ? undefined : age?.distributionDate);
+  return guidedCode1IraOriginalSnapshot(entry, ownerBirthDate, age?.ageException ? undefined : age?.distributionDate);
+}
+
+export function guidedCode1IraEducationOriginal(entry: RetirementEntryData, ownerBirthDate?: string, ownerFingerprint?: string): GuidedIraEducationOriginal | undefined {
+  if (entry.sourceTaxYear !== "2026" || !ownerFingerprint) return undefined;
+  const original = guidedCode1IraOriginal(entry, ownerBirthDate);
+  return original ? { ...original, ownerFingerprint } : undefined;
 }
 
 function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: string): string | undefined {
@@ -154,7 +162,7 @@ function simplifiedMethodFactError(entry: RetirementEntryData, dateOfBirth?: str
   }
 }
 
-export function retirementFactErrors(entries: RetirementEntryData[] | undefined, requireTaxableAmount = true, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext): Record<string, string> {
+export function retirementFactErrors(entries: RetirementEntryData[] | undefined, requireTaxableAmount = true, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext, credits?: CreditsData): Record<string, string> {
   const errors: Record<string, string> = {};
   let basisBound = false;
   if (basisContext?.data) {
@@ -185,6 +193,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   (entries ?? []).forEach((entry, index) => {
     const startedAgeSource = hasStartedGuidedCode1IraAgeSource(entry);
     const firstHome = entry.code1IraFirstHomeSource;
+    const education = entry.code1IraEducationSource;
     if (!isStartedRetirement(entry) && !startedAgeSource && firstHome === undefined) return;
     const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
@@ -313,9 +322,21 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }
     if (firstHome !== undefined) {
       try {
-        buildGuidedFirstHomeSource(firstHome, guidedCode1IraFirstHomeOriginal(entry, code1IraOwnerBirthDate));
+        buildGuidedFirstHomeSource(firstHome, guidedCode1IraOriginal(entry, code1IraOwnerBirthDate));
       } catch (error) {
         fail("code1-ira-first-home", error instanceof Error ? error.message : guidedFirstHomeOriginalError);
+      }
+    }
+    if (education !== undefined) {
+      if (firstHome !== undefined) fail("code1-ira-education", "Reconcile the competing college tuition and first-home IRA worksheets for this payment.");
+      else {
+        try {
+          buildGuidedIraEducationException(education, guidedCode1IraEducationOriginal(
+            entry, code1IraOwnerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal),
+          ), credits);
+        } catch (error) {
+          fail("code1-ira-education", error instanceof Error ? error.message : guidedIraEducationOriginalError);
+        }
       }
     }
     if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) {
@@ -323,6 +344,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
         : qcdStatement ? "Confirm whether another retirement method beyond this QCD worksheet is needed."
         : needsSimplifiedMethod ? "Confirm whether a penalty exception or another retirement worksheet is needed for this pension."
         : firstHome !== undefined ? "Confirm whether another retirement worksheet is needed beyond this first-home IRA worksheet."
+        : education !== undefined ? "Confirm whether another retirement worksheet is needed beyond this college tuition IRA worksheet."
         : ageFacts?.ageException ? "Confirm whether another retirement worksheet is needed beyond the documented Code 1 age exception."
         : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.";
       fail("additional-worksheet", question);

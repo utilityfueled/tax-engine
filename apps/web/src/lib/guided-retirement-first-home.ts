@@ -3,7 +3,7 @@ import type { RetirementEntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, currentLocalCivilDate, isActualDate } from "./guided-required-facts";
 
-export interface GuidedFirstHomeOriginal {
+export interface GuidedCode1IraOriginal {
   payer: string;
   payerTin: string;
   accountReference: string;
@@ -13,7 +13,7 @@ export interface GuidedFirstHomeOriginal {
 }
 
 export interface GuidedFirstHomeWorksheet {
-  original: GuidedFirstHomeOriginal;
+  original: GuidedCode1IraOriginal;
   ownHomePurchaseCompleted?: boolean | null;
   unmarriedWithoutMainHomeInterest?: boolean | null;
   noFormerSection1034Suspension?: boolean | null;
@@ -25,9 +25,9 @@ export interface GuidedFirstHomeWorksheet {
   priorQualifiedDistributions?: string;
 }
 
-export function guidedFirstHomeOriginal(
+export function guidedCode1IraOriginalSnapshot(
   entry: RetirementEntryData, ownerBirthDate: string | undefined, earlyReceiptDate: string | undefined,
-): GuidedFirstHomeOriginal | undefined {
+): GuidedCode1IraOriginal | undefined {
   if (!ownerBirthDate || !earlyReceiptDate || entry.trumpAccount === true
     || entry.directRolloverConfirmed === true || entry.qualifiedLumpSumReporting != null) {
     return undefined;
@@ -55,19 +55,18 @@ export function guidedFirstHomeOriginal(
 
 export const guidedFirstHomeOriginalError = "Reconcile the saved first-home IRA worksheet with its original statement, actual receipt date and return, or remove it.";
 
-export function matchesGuidedFirstHomeOriginal(
-  worksheet: GuidedFirstHomeWorksheet | undefined, original: GuidedFirstHomeOriginal | undefined,
+export function matchesGuidedCode1IraOriginal(
+  saved: GuidedCode1IraOriginal | undefined, original: GuidedCode1IraOriginal | undefined,
 ): boolean {
-  const saved = worksheet?.original;
   return !!saved && !!original && saved.payer === original.payer && saved.payerTin === original.payerTin
     && saved.accountReference === original.accountReference && saved.grossDistribution === original.grossDistribution
     && saved.ownerBirthDate === original.ownerBirthDate && saved.distributionDate === original.distributionDate;
 }
 
 export function buildGuidedFirstHomeSource(
-  worksheet: GuidedFirstHomeWorksheet, original: GuidedFirstHomeOriginal | undefined,
+  worksheet: GuidedFirstHomeWorksheet, original: GuidedCode1IraOriginal | undefined,
 ) {
-  if (!original || !matchesGuidedFirstHomeOriginal(worksheet, original)) throw new Error(guidedFirstHomeOriginalError);
+  if (!original || !matchesGuidedCode1IraOriginal(worksheet.original, original)) throw new Error(guidedFirstHomeOriginalError);
   if (worksheet.ownHomePurchaseCompleted !== true || worksheet.unmarriedWithoutMainHomeInterest !== true
     || worksheet.noFormerSection1034Suspension !== true || worksheet.distributionWasNotRolledOver !== true
     || worksheet.paidPurchasePriceFromDistribution !== true) {
