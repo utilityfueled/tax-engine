@@ -2,6 +2,7 @@
 import {test,expect,vi}from 'vitest';
 import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
+import {readOhioSchoolAdapterMethod,withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
 import { buildSectionRoute, validateSection } from '@/lib/guided-interview-flow';
 import *as bridge from '@/lib/guided-interview-bridge';
@@ -14,7 +15,7 @@ import {confirmGuidedOhioPaymentFacts}from '@/lib/guided-ohio-payment-facts';
 import * as residencyFacts from '@/lib/guided-ohio-residency-facts';
 import * as paymentFacts from '@/lib/guided-ohio-payment-facts';
 import {confirmGuidedOhioSchoolDistrictFacts}from '@/lib/guided-ohio-school-district-facts';
-import {confirmGuidedOhioReturnHeaderSources,emptyOhioReturnHeaderDraft}from '@/lib/guided-ohio-return-header-sources';
+import {buildGuidedOhioReturnHeaderOriginals,confirmGuidedOhioReturnHeaderSources,emptyOhioReturnHeaderDraft}from '@/lib/guided-ohio-return-header-sources';
 function required<T,>(v:T|null|undefined):T{if(v==null)throw Error('Actual diagnostic fixture missing');return v;}
 
 function ohio(which:0|1=0){
@@ -97,5 +98,80 @@ test.each([0, 1] as const)('replays each current parent once during incomplete e
  } finally {
   residency.mockRestore();
   payments.mockRestore();
+ }
+});
+
+test.each([0, 1] as const)('calculates federal tax once for the same pending school and residency input %s', (which) => {
+ const state = ohio(which);
+ const route = buildSectionRoute(state.segmentation);
+ state.currentSectionIndex = route.findIndex(section => section.id === 'state-return');
+ state.completedSections = route.slice(0, state.currentSectionIndex).map(section => section.id);
+ const data = required(state.sectionData['state-return']);
+ const header = { ...emptyOhioReturnHeaderDraft(), taxYear: '2025', sourceReference: 'FICTIONAL-HEADER-ENTRY' };
+ data.ohioReturnHeaderSources = header;
+ const before = structuredClone(state);
+ const calculate = vi.spyOn(federal, 'calculateFederalTax');
+ const schoolSource = vi.spyOn(school, 'buildOhioSchoolDistrictSource');
+ try {
+  const first = evaluateGuidedRender(state);
+  expect(first.preview.metrics).toMatchObject({ agi: '60000', state: null });
+  expect(first.preview.blockedBy).toBeNull();
+  expect(first.schoolDisplayObservation).toBeDefined();
+  expect(schoolSource).toHaveBeenCalledTimes(1);
+  const schoolInput = required(schoolSource.mock.calls[0]?.[0]);
+  expect(schoolInput).toBe(calculate.mock.calls.find(([input]) => input.ohioSchoolDistrict)?.[0]);
+  expect(calculate.mock.calls.filter(([input]) => input.ohioSchoolDistrict)).toHaveLength(1);
+  expect(calculate.mock.calls.filter(([input]) => !input.ohioSchoolDistrict)).toHaveLength(1);
+  expect(Object.isFrozen(schoolInput.taxpayer.primary)).toBe(true);
+  expect(Object.isFrozen(schoolInput.ohioPayments?.paymentRows)).toBe(true);
+  expect(state).toEqual(before);
+
+  const changed = structuredClone(state);
+  required(changed.sectionData['state-return']).ohioReturnHeaderSources = { ...header, sourceReference: 'FICTIONAL-HEADER-CHANGED' };
+  const second = evaluateGuidedRender(changed);
+  expect(second.preview).toEqual(first.preview);
+  expect(second.schoolDisplayObservation).not.toBe(first.schoolDisplayObservation);
+  expect(calculate.mock.calls.filter(([input]) => input.ohioSchoolDistrict)).toHaveLength(2);
+ } finally {
+  schoolSource.mockRestore();
+  calculate.mockRestore();
+ }
+});
+
+test('keeps header proof binding and independent replay for unsupported canonical material', () => {
+ const { canonical } = schoolPyHeaderPacket();
+ const federalResult = federal.calculateFederalTax(canonical);
+ const method = withOhioSchoolAdapterInvocation(canonical, federalResult, proof => readOhioSchoolAdapterMethod(canonical, federalResult, proof));
+ expect(method).toBeDefined();
+ const calculate = vi.spyOn(federal, 'calculateFederalTax');
+ try {
+  expect(withPendingOhioSchoolAdapterInvocation(canonical, proof => readOhioSchoolAdapterMethod(canonical, federalResult, proof))).toEqual(method);
+  expect(calculate).toHaveBeenCalledTimes(1);
+  expect(Object.isFrozen(canonical)).toBe(false);
+  const unsupported = Object.defineProperty({ ...canonical }, 'extraMetadata', { value: 'synthetic', enumerable: false });
+  calculate.mockClear();
+  expect(withPendingOhioSchoolAdapterInvocation(unsupported, proof => readOhioSchoolAdapterMethod(unsupported, federalResult, proof))).toBeUndefined();
+  expect(calculate).toHaveBeenCalledTimes(3);
+  expect(calculate.mock.calls.every(([input]) => input === unsupported)).toBe(true);
+ } finally { calculate.mockRestore(); }
+});
+
+test('keeps pending header rejection and the earlier invalid school guard in order', () => {
+ const state = ohio();
+ const original = required(evaluateGuidedRender(state).originalInput);
+ const data = required(state.sectionData['state-return']);
+ const header = emptyOhioReturnHeaderDraft();
+ const schoolDraft = required(data.ohioSchoolDistrict);
+ for (const sourceFactsConfirmed of [null, false]) {
+  const pending = { ...header, sourceFactsConfirmed };
+  const observed = vi.fn();
+  expect(() => buildGuidedOhioReturnHeaderOriginals(original, pending, data.ohioResidency, data.ohioPayments, schoolDraft, observed))
+   .toThrow('complete every actual header field and retain its explicit source confirmation');
+  expect(observed).toHaveBeenCalledTimes(1);
+  observed.mockClear();
+  const invalid = { ...schoolDraft, sourceFactsConfirmed: null };
+  expect(() => buildGuidedOhioReturnHeaderOriginals(original, pending, data.ohioResidency, data.ohioPayments, invalid, observed))
+   .toThrow('complete and explicitly confirm the actual school district records after the last edit');
+  expect(observed).not.toHaveBeenCalled();
  }
 });

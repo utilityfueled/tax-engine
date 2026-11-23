@@ -20,6 +20,27 @@ lines:
     description: Validate the current residency and payment records once during header entry or confirmation
     formula: "For one header replay with the native school district, validate the original residency and payment drafts once and use those base results in the same synchronous school replay. Validate any header resident-credit child before using the school result, preserve the standalone school replay, and keep the incomplete header out of the state totals while its separately confirmed school display remains available. Only the explicit confirmation action captures header originals."
     testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::replays each current parent once during incomplete entry and confirmation %s"
+  - line: "pending-header-school-federal"
+    description: Reuse the current federal calculation for the exact school and residency adapter input during pending guided rendering
+    formula: >-
+      Within one guided render of a 2025 single part-year payroll return with
+      an explicitly unconfirmed header and no resident-credit child, calculate
+      federal tax once from the privately owned, immutable canonical Ohio school
+      input, including its actual residency and payment packets. Preserve both
+      original stale-result comparisons, their ordering, the full school and
+      residency validation, the existing school method proof and the separate
+      base federal preview. Standalone actions, nonplain material and inputs
+      outside this scope retain independent federal replays. The next render
+      repeats all validation using the newly projected input.
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::calculates federal tax once for the same pending school and residency input %s"
+  - line: "pending-header-school-fallback"
+    description: Preserve admission order and method proof during pending guided rendering
+    formula: >-
+      Reject invalid or unconfirmed school facts before observing the school or
+      reporting the pending header. A successful school replay still builds the
+      existing adapter proof before the header rejection. Unsupported canonical
+      material uses the original independent calculations and existing proof rules.
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::keeps pending header rejection and the earlier invalid school guard in order"
   - line: "unsupported-material"
     description: A source proof cannot omit unsupported defined values or normalize distinct material into an existing proof
     formula: after the original full adapter, only finite primitives, explicit finite Decimal values with original data descriptors and dense finite integer digit arrays, exact plain objects with defined data properties and exact dense ordered arrays can capture or consume authority; unsupported types, symbol keys, accessors (never invoked by proof admission), extended Decimal metadata and nonfinite numbers fall back to original full validation without an earlier error; undefined object data properties remain omitted

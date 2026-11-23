@@ -1,5 +1,6 @@
 import { buildOhioResidentCreditSource, type OhioResidentCreditSourceContext } from './oh-resident-credit-source.js';
 import { buildOhioSchoolDistrictSource, type OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
+import { readOhioCurrentFederalCalculation, type OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
 import { calculateOhioReciprocalWageSourceWithPayment, type OhioReciprocalWageContext } from './oh-reciprocal-wage-source.js';
@@ -169,7 +170,10 @@ export function resolveOhioResidencyReview(input: TaxYearInput, result: TaxRetur
     return structuredClone(context.original);
 }
 /** Validate canonical originals; isolated old resident math is not source evidence. */
-export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnResult, ohio: OhioResidentReturnInput, raw: unknown): {
+export function buildOhioResidencySource(
+    input: TaxYearInput, result: TaxReturnResult, ohio: OhioResidentReturnInput, raw: unknown,
+    currentFederal?: OhioCurrentFederalCalculation,
+): {
     facts: OhioResidencyFacts;
     sourceDigest: string;
     businessSource?: OhioCanonicalBusinessContext;
@@ -189,13 +193,13 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     if (!facts.originalFederalSources || !sameSourceMaterial(facts.originalFederalSources, withoutFacts(input))) {
         fail('current private federal original source snapshot is missing or changed');
     }
-    const fresh = calculateFederalTax(input);
+    const fresh = readOhioCurrentFederalCalculation(input, currentFederal) ?? calculateFederalTax(input);
     if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(result)))
         fail('saved federal result is stale');
     // Spec: state/oh-school-source-same-invocation.yaml. Keep this first validation in order.
     let schoolDistrictSource: OhioSchoolDistrictSourceProjection | undefined;
     if (input.ohioSchoolDistrict) {
-        schoolDistrictSource = buildOhioSchoolDistrictSource(input, result, ohio);
+        schoolDistrictSource = buildOhioSchoolDistrictSource(input, result, ohio, currentFederal);
     } else if (facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency')
         fail('actual school district residency sources require their separate method');
     if (!input.ohioSchoolDistrict && ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0)))

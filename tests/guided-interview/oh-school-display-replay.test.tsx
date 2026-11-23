@@ -37,7 +37,7 @@ test.each([0,1]as const)('current school display reuses only completed same-rend
  const before=structuredClone(state),f=vi.spyOn(federal,'calculateFederalTax'),sd=vi.spyOn(school,'buildOhioSchoolDistrictSource');
  try{
   const result=evaluateGuidedRender(state);
-  expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:4,school:1});
+  expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:2,school:1});
   expect(Object.getOwnPropertyDescriptor(result,'schoolDisplayObservation')).toMatchObject({enumerable:false,writable:false,configurable:false});
   expect(Reflect.get({...result},'schoolDisplayObservation')).toBeUndefined();
   expect(Reflect.get(structuredClone(result),'schoolDisplayObservation')).toBeUndefined();
@@ -46,10 +46,10 @@ test.each([0,1]as const)('current school display reuses only completed same-rend
   vi.spyOn(Math,'random').mockReturnValue(0.125);
   const current=renderToStaticMarkup(<OhioSchoolDistrictDetails {...props}/>);
   expect(current).toContain('Actual school district sources explicitly confirmed.');
-  expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:4,school:1});
+  expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:2,school:1});
   const standalone=renderToStaticMarkup(<OhioSchoolDistrictDetails {...{...props,schoolDisplayObservation:undefined}}/>);
   expect(standalone).toBe(current);
-  expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:7,school:2});
+  expect({federal:f.mock.calls.length,school:sd.mock.calls.length}).toEqual({federal:5,school:2});
   expect(state).toEqual(before);
  }finally{vi.restoreAllMocks();}
 });

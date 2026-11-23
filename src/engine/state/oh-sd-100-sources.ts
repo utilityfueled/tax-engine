@@ -16,6 +16,7 @@ import { calculateOhioSDResidentIncome, type OhioSDResidentIncomeResult, type Oh
 import { calculateOhioSD100, type SchoolDistrictEntry } from './oh-sd-100.js';
 import { calculateOhioITSD2210, type EstimatedPaymentEntry } from './oh-it-sd-2210.js';
 import { lookupOhioSchoolDistrictMetadata } from './oh-school-district-lookup.js';
+import { readOhioCurrentFederalCalculation, type OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
 
 function fail(message: string): never { throw new Error(`Ohio actual school district sources: ${message}`); }
 function stable(value: unknown): unknown {
@@ -80,7 +81,10 @@ export interface OhioSchoolDistrictSourceProjection {
 }
 
 /** Independent replay of all three actual Ohio packets. Reading never updates a snapshot. */
-export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxReturnResult, ohio: OhioResidentReturnInput): OhioSchoolDistrictSourceProjection {
+export function buildOhioSchoolDistrictSource(
+  input: TaxYearInput, federal: TaxReturnResult, ohio: OhioResidentReturnInput,
+  currentFederal?: OhioCurrentFederalCalculation,
+): OhioSchoolDistrictSourceProjection {
   const parsed = OhioSchoolDistrictFactsSchema.safeParse(input.ohioSchoolDistrict);
   if (!parsed.success) fail(`complete confirmed actual source facts required (${parsed.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ')})`);
   const facts = parsed.data;
@@ -249,7 +253,7 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
           || !new Exact(amounts.nonresidentOhioAmount).isZero()) fail('actual Ohio owner income classification contradicts current W2 originals');
     }
   }
-  const fresh = calculateFederalTax(input);
+  const fresh = readOhioCurrentFederalCalculation(input, currentFederal) ?? calculateFederalTax(input);
   if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(federal))) fail('saved federal result is stale, not the fresh current original calculation');
   const wages = actualWages.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   if (!fresh.totalWages.eq(wages) || !fresh.agi.eq(wages) || !fresh.adjustmentsToIncome.isZero()) fail('actual ordinary compensation and fresh federal income do not reconcile; other income/adjustments need their source method');

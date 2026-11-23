@@ -1,11 +1,82 @@
 /** Spec: state/oh-school-header-same-invocation.yaml. Active synchronous scope only. */
 import Decimal from 'decimal.js';
+import {calculateFederalTax} from '@/engine/federal.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
 import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
 const brand=Symbol('completed current Ohio school adapter');
 export interface OhioSourceAdapterInvocation{readonly [brand]:true}
 const active=new WeakMap<OhioSourceAdapterInvocation,{material:string;method:string|undefined}>();
+
+/** The pending render owns an isolated, plain canonical record for this adapter call. */
+function immutableSchoolInput(input: TaxYearInput): TaxYearInput | undefined {
+  const copies = new Map<object, object>();
+  const pending = new Set<object>();
+
+  function copy(value: unknown): unknown {
+    if (value === undefined || value === null || typeof value === 'string' || typeof value === 'boolean'
+      || (typeof value === 'number' && Number.isFinite(value))) return value;
+    if (typeof value !== 'object' || pending.has(value)) throw Error('Unsupported current federal input');
+    const existing = copies.get(value);
+    if (existing) return existing;
+
+    const array = Array.isArray(value);
+    const expectedPrototype = array ? Array.prototype : Object.prototype;
+    const keys = Reflect.ownKeys(value);
+    if (Object.getPrototypeOf(value) !== expectedPrototype || keys.some(key => typeof key !== 'string')) {
+      throw Error('Unsupported current federal input');
+    }
+    if (array && keys.length !== value.length + 1) throw Error('Unsupported current federal array');
+
+    const output = array ? [] : {};
+    pending.add(value);
+    for (const key of keys) {
+      if (array && key === 'length') continue;
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !('value' in descriptor) || !descriptor.enumerable) {
+        throw Error('Unsupported current federal field');
+      }
+      if (array && (typeof key !== 'string' || !/^(0|[1-9][0-9]*)$/.test(key)
+        || Number(key) >= value.length || descriptor.value === undefined)) {
+        throw Error('Unsupported current federal array entry');
+      }
+      Object.defineProperty(output, key, { value: copy(descriptor.value), enumerable: true });
+    }
+    pending.delete(value);
+    copies.set(value, output);
+    return Object.freeze(output);
+  }
+
+  try {
+    return copy(input) as TaxYearInput;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Only the synchronous adapter receives this pair. Its result never reaches the proof consumer. */
+class CurrentFederalCalculation {
+  readonly #input: TaxYearInput;
+  readonly #result: TaxReturnResult;
+
+  constructor(input: TaxYearInput, result: TaxReturnResult) {
+    this.#input = input;
+    this.#result = result;
+  }
+
+  static forInput(input: TaxYearInput, candidate: CurrentFederalCalculation | undefined): TaxReturnResult | undefined {
+    if (typeof candidate === 'object' && candidate !== null && #input in candidate && candidate.#input === input) {
+      return candidate.#result;
+    }
+    return undefined;
+  }
+}
+export type OhioCurrentFederalCalculation = CurrentFederalCalculation;
+export function readOhioCurrentFederalCalculation(
+  input: TaxYearInput, candidate: OhioCurrentFederalCalculation | undefined,
+): TaxReturnResult | undefined {
+  return CurrentFederalCalculation.forInput(input, candidate);
+}
 function arrayData(value:unknown[]):unknown[]{
  if(Object.getPrototypeOf(value)!==Array.prototype||Object.getOwnPropertySymbols(value).length||Object.getOwnPropertyNames(value).length!==value.length+1)throw Error('Unsupported source proof array');
  return Array.from({length:value.length},(_,index)=>{
@@ -42,7 +113,24 @@ function stable(value:unknown):unknown{
 const material=(input:TaxYearInput,federal:TaxReturnResult)=>JSON.stringify(stable({input,federal}));
 /** Calls the actual full adapter; no caller-supplied adapter result or mutable result escapes. */
 export function withOhioSchoolAdapterInvocation<T>(input:TaxYearInput,federal:TaxReturnResult,use:(proof:OhioSourceAdapterInvocation)=>T):T{
- const adapted=buildOhioResidentReturnInput(input,federal),proof=Object.freeze({[brand]:true as const});
+ return withCompletedSchoolAdapter(input,federal,use);
+}
+
+/** Run the real adapter before exposing its existing proof, with no supplied federal result. */
+export function withPendingOhioSchoolAdapterInvocation<T>(input: TaxYearInput, use: (proof: OhioSourceAdapterInvocation) => T): T {
+  const immutable = immutableSchoolInput(input);
+  const current = immutable ?? input;
+  const federal = calculateFederalTax(current);
+  const currentFederal = immutable ? new CurrentFederalCalculation(immutable, federal) : undefined;
+  return withCompletedSchoolAdapter(current, federal, use, currentFederal);
+}
+
+function withCompletedSchoolAdapter<T>(
+  input: TaxYearInput, federal: TaxReturnResult, use: (proof: OhioSourceAdapterInvocation) => T,
+  currentFederal?: OhioCurrentFederalCalculation,
+): T {
+ const adapted=buildOhioResidentReturnInput(input,federal,undefined,currentFederal);
+ const proof=Object.freeze({[brand]:true as const});
  // Unsupported serialization cannot introduce an earlier error or authorize reuse.
  try{active.set(proof,{material:material(input,federal),method:adapted.schoolDistrictSource?.methodVersion});}catch{/* Original header validation remains the fallback. */}
  try{return use(proof);}finally{active.delete(proof);}

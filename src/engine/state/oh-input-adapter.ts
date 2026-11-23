@@ -7,6 +7,7 @@ import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import type {OhioPaymentFacts} from '@/models/ohio-payments.js';
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {buildOhioResidencySource} from "./oh-residency-source.js";
+import type { OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
 /**
  * Ohio Input Adapter — bridges federal tax documents and results to Ohio engine input.
  * Spec: spec/state/oh-input-adapter.yaml
@@ -749,6 +750,7 @@ export function buildOhioResidentReturnInput(
   taxInput: TaxYearInput,
   federalResult: TaxReturnResult,
   overlay: OhioOverlayInput = {},
+  currentFederal?: OhioCurrentFederalCalculation,
 ): OhioResidentReturnInput {
   // Spec: form-2555-all-foreign-capital-loss.yaml state-composition.
   if (taxInput.form2555?.sourceMapping?.rows.some(row => row.allForeignCapitalLoss !== undefined)) throw new Error("Ohio all-foreign capital loss requires its separate state source method");
@@ -1096,7 +1098,7 @@ export function buildOhioResidentReturnInput(
   let currentReciprocalPayment: ReturnType<typeof buildOhioResidencySource>['reciprocalPaymentSource'];
   if(residency){
     if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
-    const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
+    const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency,currentFederal);
     currentSchoolProjection=verified.schoolDistrictSource;
     currentReciprocalPayment=verified.reciprocalPaymentSource;
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
