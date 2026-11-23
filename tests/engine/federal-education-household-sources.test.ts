@@ -193,6 +193,19 @@ it("keeps the 2026 explicit student TIN requirement when the household has an an
     .toThrow(/actual student timely TIN facts required for2026/);
 });
 
+it("holds a 2026 student SSN contradicted by household TIN without a claimant SSN answer", () => {
+  const input = adultStudentClaim("spouse", false);
+  const { educationExpenses: education, taxpayer } = input;
+  if (!education || !taxpayer.spouse) throw new Error("Expected the joint education fixture");
+  const withStudentSsn = TaxYearInputSchema.parse({
+    ...input,
+    taxpayer: { ...taxpayer, spouse: { ...taxpayer.spouse, employmentValidSsnIssuedByDueDate: undefined } },
+    educationExpenses: { ...education, spouseSsnEligible: undefined,
+      aocStudents: [{ ...education.aocStudents[0], studentSsnEligible: true }] },
+  });
+  expect(() => calculateFederalTax(withStudentSsn)).toThrow(/student.*SSN.*timely TIN/i);
+});
+
 it("preserves the 2025 LLC student TIN rule without an AOTC claimant TIN requirement", () => {
   function llc(householdTin: boolean | undefined, studentTin: boolean) {
     const input = adultStudentClaim("spouse", householdTin, studentTin, "4000", 2025);

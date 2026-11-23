@@ -4315,7 +4315,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           student.studentTinEligible !== householdTinEligible) {
         throw new Error(`Form 8863 ${student.studentRole} student timely TIN answer conflicts with the return taxpayer record`);
       }
-      const knownIneligible = householdTinEligible === false && student.studentTinEligible === undefined;
+      const knownIneligible = householdTinEligible === false && student.studentTinEligible === undefined &&
+        (year === 2025 || student.studentSsnEligible === true);
       return { ...student, ...(knownIneligible ? { studentTinEligible: false } : {}), qualifiedExpenses };
     }
     const aocStudents = education.aocStudents.map(educationStudentForCalculation);
