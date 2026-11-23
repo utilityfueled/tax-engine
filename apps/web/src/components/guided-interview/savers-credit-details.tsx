@@ -42,7 +42,7 @@ function HistoricalDistributionProof({ proof, onChange, onRemove }: {
   const edit = (next: Partial<GuidedSaversHistoricalProof>) => onChange({ ...proof, ...next, sourceFactsConfirmed: null });
   return <fieldset className="guided-fieldset">
     <legend>Historical traditional IRA payment records</legend>
-    <p className="guided-hint">Use the original Form 1099-R and a separate receipt from the IRA issuer. The distribution reference, date and amount above come from that receipt. Copy each issuer’s EIN only if it appears on that record. Use short labels for record references. Enter only the requested last four digits for the recipient and account numbers.</p>
+    <p className="guided-hint">Use the original Form 1099-R and a separate receipt from the IRA issuer. The distribution reference, date and amount above come from that receipt. Copy each issuer’s EIN only if it appears on that record. Use a distinct short label for each record. Enter only the requested last four digits for the recipient and account numbers.</p>
     <div className="guided-form-grid">
       <TextFact label="Year printed on Form 1099-R" value={proof.originalTaxYear} onChange={originalTaxYear => edit({ originalTaxYear })} />
       <TextFact label="Original Form 1099-R record reference" value={proof.originalReference} onChange={originalReference => edit({ originalReference })} />
@@ -97,8 +97,8 @@ export function SaversCreditDetails({ data, taxYear, filingStatus, onChange }: {
     contribution: { ...data.contribution, ...next }, ordinaryScopeConfirmed: null,
   });
   const period = data.testingPeriod;
-  const historicalPaymentYear = period.distributions.length === 1
-    ? getForm8880HistoricalIraPaymentYear(period.distributions[0]?.receivedDate) : undefined;
+  const historicalPaymentYears = period.distributions.length <= 2
+    ? period.distributions.map(row => getForm8880HistoricalIraPaymentYear(row.receivedDate)) : [];
   const updatePeriod = (next: Partial<Pick<GuidedSaversCreditData["testingPeriod"], "dueDate" | "distributions">>) => update({
     testingPeriod: { ...period, ...next, distributionsConfirmed: null },
   });
@@ -156,8 +156,8 @@ export function SaversCreditDetails({ data, taxYear, filingStatus, onChange }: {
         {row.historicalProof ? <HistoricalDistributionProof proof={row.historicalProof}
           onChange={historicalProof => updateDistribution(index, { historicalProof })}
           onRemove={() => updateDistribution(index, { historicalProof: undefined })} />
-          : historicalPaymentYear !== undefined && <button type="button" className="utility-button"
-            onClick={() => updateDistribution(index, { historicalProof: { ...emptyGuidedSaversHistoricalProof } })}>Add {historicalPaymentYear} Form 1099-R and payment receipt details</button>}
+          : historicalPaymentYears[index] !== undefined && <button type="button" className="utility-button"
+            onClick={() => updateDistribution(index, { historicalProof: { ...emptyGuidedSaversHistoricalProof } })}>Add {historicalPaymentYears[index]} Form 1099-R and payment receipt details</button>}
         <button type="button" className="utility-button" onClick={() => updatePeriod({ distributions: period.distributions.filter((_, rowIndex) => index !== rowIndex) })}>Remove distribution {index + 1}</button>
       </fieldset>)}
       <button type="button" className="utility-button" onClick={() => updatePeriod({ distributions: [

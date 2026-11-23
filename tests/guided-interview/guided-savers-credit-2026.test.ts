@@ -46,7 +46,7 @@ const historicalRow = {
   },
 };
 
-function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow) {
+function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow, ...otherRows: GuidedSaversCreditDistribution[]) {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
   state.taxYear = 2026;
   const personal = state.sectionData["personal-info"];
@@ -55,13 +55,11 @@ function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow
   state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "30000", federalWithheld: "2000", socialSecurityWages: "30000", socialSecurityWithheld: "1860", medicareWages: "30000", medicareWithheld: "435" }] };
   state.sectionData.adjustments = { ...emptyAdjustmentData, iraContributions: { ...completeIraSources, ...context.iraContributions } };
   return updateSectionData(state, "credits", { ...emptyCreditsData, saversCredit: {
-    ...draft, testingPeriod: { ...draft.testingPeriod, distributions: [row] },
+    ...draft, testingPeriod: { ...draft.testingPeriod, distributions: [row, ...otherRows] },
   } });
 }
 
-it.each([2024, 2025] as const)("reopens guided %i historical proof and transfers the exact reduction only to Form 8880", taxYear => {
-  const row = { ...historicalRow, receivedDate: `${taxYear}-03-05`, historicalProof: { ...historicalRow.historicalProof, originalTaxYear: String(taxYear) } };
-  const state = historicalInterview(row);
+function reopenHistoricalInterview(state: ReturnType<typeof historicalInterview>) {
   const key = "synthetic-historical-ira-credit";
   const items = new Map<string, string>();
   const storage: Storage = {
@@ -75,6 +73,12 @@ it.each([2024, 2025] as const)("reopens guided %i historical proof and transfers
   expect(saveGuidedFlowState(storage, key, state)).toBe(true);
   const reopened = loadGuidedFlowState(storage, key);
   assert.ok(reopened);
+  return reopened;
+}
+
+it.each([2024, 2025] as const)("reopens guided %i historical proof and transfers the exact reduction only to Form 8880", taxYear => {
+  const row = { ...historicalRow, receivedDate: `${taxYear}-03-05`, historicalProof: { ...historicalRow.historicalProof, originalTaxYear: String(taxYear) } };
+  const reopened = reopenHistoricalInterview(historicalInterview(row));
   expect(reopened.sectionData.credits?.saversCredit?.testingPeriod.distributions).toEqual([row]);
   expect(validateSection(reopened, "credits").status).toBe("complete");
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
@@ -87,6 +91,46 @@ it.each([2024, 2025] as const)("reopens guided %i historical proof and transfers
   expect(calculation.form8880?.line4a.toFixed()).toBe("500");
   expect(calculation.iraDistributionsGross.toFixed()).toBe("0");
   expect(calculation.schedule3?.retirementSavingsCredit.toFixed()).toBe("150");
+});
+
+it("reopens proof for both historical years and sums exact cents", () => {
+  const prior = { ...historicalRow, sourceReference: "2024 receipt", receivedDate: "2024-03-05", amount: "0.75",
+    historicalProof: { ...historicalRow.historicalProof, originalTaxYear: "2024", originalReference: "2024 statement", grossDistribution: "0.75", taxableAmount: "0.75" },
+  };
+  const reopened = reopenHistoricalInterview(historicalInterview(historicalRow, prior));
+  expect(reopened.sectionData.credits?.saversCredit?.testingPeriod.distributions).toEqual([historicalRow, prior]);
+  expect(validateSection(reopened, "credits").status).toBe("complete");
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+  expect(input.form1099R).toEqual([]);
+  expect(input.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistribution).toBeUndefined();
+  expect(input.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistributions?.payments).toMatchObject([
+    { original: { taxYear: 2025 }, issuerPayment: { amount: "500" } },
+    { original: { taxYear: 2024 }, issuerPayment: { amount: "0.75" } },
+  ]);
+  expect(calculateFederalTax(input).form8880?.line4a.toFixed()).toBe("500.75");
+
+  const credit = reopened.sectionData.credits?.saversCredit;
+  assert.ok(credit);
+  const edited = updateSectionData(reopened, "credits", { ...emptyCreditsData, saversCredit: { ...credit,
+    testingPeriod: { ...credit.testingPeriod, distributions: [historicalRow, { ...prior, sourceReference: "edited 2024 receipt" }] },
+  } });
+  expect(edited.sectionData.credits?.saversCredit?.testingPeriod).toMatchObject({ distributionsConfirmed: null, distributions: [
+    { historicalProof: { sourceFactsConfirmed: null } }, { historicalProof: { sourceFactsConfirmed: null } },
+  ] });
+  expect(buildTaxInputFromGuidedData(edited)).toBeNull();
+
+  const noProof = (row: GuidedSaversCreditDistribution) => ({ ...row, historicalProof: undefined });
+  const manual = historicalInterview(noProof(historicalRow), noProof(prior));
+  const manualInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(manual));
+  expect(manualInput.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistributions).toBeUndefined();
+  expect(calculateFederalTax(manualInput).form8880?.line4a.toFixed()).toBe("500.75");
+  for (const incomplete of [noProof(prior), { ...prior, receivedDate: "2025-03-05" }, {
+    ...prior, receivedDate: "2025-03-05", historicalProof: { ...prior.historicalProof, originalTaxYear: "2025" },
+  }]) {
+    const incompleteState = historicalInterview(historicalRow, incomplete);
+    expect(validateSection(incompleteState, "credits").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(incompleteState)).toBeNull();
+  }
 });
 
 it("holds opted-in proof until the historical issuer records and primary owner match", () => {
@@ -113,7 +157,7 @@ it("holds opted-in proof until the historical issuer records and primary owner m
   const fresh = historicalInterview();
   for (const receivedDate of ["2023-12-31", "2026-01-01"]) {
     const outsideProofScope = historicalInterview({ ...historicalRow, receivedDate, historicalProof: { ...proof, originalTaxYear: receivedDate.slice(0, 4) } });
-    expect(validateSection(outsideProofScope, "credits").fieldErrors?.saversCredit).toMatch(/covers one 2024 or 2025 payment/);
+    expect(validateSection(outsideProofScope, "credits").fieldErrors?.saversCredit).toMatch(/requires a 2024 or 2025 payment/);
   }
   const credit = fresh.sectionData.credits?.saversCredit;
   const personal = fresh.sectionData["personal-info"];
@@ -127,7 +171,7 @@ it("holds opted-in proof until the historical issuer records and primary owner m
     testingPeriod: { ...credit.testingPeriod, distributions: [historicalRow,
       { sourceReference: "another receipt", accountHolder: "primary", receivedDate: "2024-01-01", amount: "1" }] },
   } };
-  expect(validateSection(secondDistribution, "credits").fieldErrors?.saversCredit).toMatch(/covers one 2024 or 2025 payment/);
+  expect(validateSection(secondDistribution, "credits").fieldErrors?.saversCredit).toMatch(/requires records for every listed payment/);
 
   const current = updateSectionData(fresh, "income-retirement", { entries: [{ ...emptyRetirementEntry, grossDistribution: "0" }] });
   expect(validateSection(current, "credits").fieldErrors?.saversCredit).toMatch(/without a current Form 1099-R/);

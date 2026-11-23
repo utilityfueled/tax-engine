@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import type { z } from "zod";
 import { Form8880AnnualSchema, getForm8880HistoricalIraPaymentYear, readForm8880AnnualSources } from "@/models/form-8880-sources";
+import { sumSourceMoney } from "@/utils/sum-source-money";
 import type { AdjustmentData, FilingStatus, GuidedFlowState, RetirementEntryData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -135,7 +136,7 @@ function distributionReduction(period: GuidedSaversCreditData["testingPeriod"]):
   if (period.distributionsConfirmed !== true || !["2027-04-15", "2027-10-15"].includes(period.dueDate) || !Array.isArray(period.distributions)) {
     throw new Error("Confirm the actual testing-period distributions and the applicable ordinary or extended return due date.");
   }
-  let total = new Decimal(0);
+  const amounts: Decimal[] = [];
   const references = new Set<string>();
   for (const row of period.distributions) {
     const reference = row.sourceReference?.trim().toLowerCase();
@@ -149,19 +150,15 @@ function distributionReduction(period: GuidedSaversCreditData["testingPeriod"]):
     const amount = actualAmount(row.amount, "distribution amount");
     if (amount.isZero()) throw new Error("Each included distribution requires a positive amount from its actual record.");
     references.add(reference);
-    total = total.plus(amount);
+    amounts.push(amount);
   }
-  return total.toFixed();
+  return sumSourceMoney(...amounts).toFixed();
 }
 
-function buildHistoricalProof(period: GuidedSaversCreditData["testingPeriod"]) {
-  if (!Array.isArray(period?.distributions)) return undefined;
-  const row = period.distributions.find(distribution => distribution.historicalProof !== undefined);
-  if (!row) return undefined;
-  const proof = row.historicalProof;
+function buildHistoricalPayment(row: GuidedSaversCreditDistribution, proof: GuidedSaversHistoricalProof) {
   const paymentYear = getForm8880HistoricalIraPaymentYear(row.receivedDate);
-  if (period.distributions.length !== 1 || row.accountHolder !== "primary" || paymentYear === undefined) {
-    throw new Error("Historical proof covers one 2024 or 2025 payment to the primary taxpayer. Review your full list of distributions.");
+  if (row.accountHolder !== "primary" || paymentYear === undefined) {
+    throw new Error("Each historical proof requires a 2024 or 2025 payment to the primary taxpayer.");
   }
   if (!proof || proof.originalTaxYear !== String(paymentYear)) {
     throw new Error("The year printed on Form 1099-R must match the year you received the payment.");
@@ -193,6 +190,27 @@ function buildHistoricalProof(period: GuidedSaversCreditData["testingPeriod"]) {
     statementReportsThisSinglePaymentConfirmed: true,
     noLine4ExclusionConfirmed: true,
   } as const;
+}
+
+function buildHistoricalProof(period: GuidedSaversCreditData["testingPeriod"]) {
+  if (!Array.isArray(period?.distributions) || !period.distributions.some(row => row.historicalProof !== undefined)) return undefined;
+  const [first, second] = period.distributions;
+  if (period.distributions.length === 1 && first?.historicalProof) {
+    return { priorYearOrdinaryIraDistribution: {
+      ...buildHistoricalPayment(first, first.historicalProof), onlyIncludiblePaymentForTestingPeriodConfirmed: true,
+    } } as const;
+  }
+  if (period.distributions.length !== 2 || !first?.historicalProof || !second?.historicalProof) {
+    throw new Error("Historical proof requires records for every listed payment. Provide proof for one 2024 or 2025 payment, or one from each year.");
+  }
+  const firstPayment = buildHistoricalPayment(first, first.historicalProof);
+  const secondPayment = buildHistoricalPayment(second, second.historicalProof);
+  if (firstPayment.original.taxYear === secondPayment.original.taxYear) {
+    throw new Error("Two historical payments require one payment from 2024 and one from 2025.");
+  }
+  return { priorYearOrdinaryIraDistributions: {
+    payments: [firstPayment, secondPayment], onlyIncludiblePaymentsForTestingPeriodConfirmed: true,
+  } } as const;
 }
 
 export function buildGuidedSaversCredit(data: GuidedSaversCreditData | undefined, context: GuidedSaversCreditContext): z.infer<typeof Form8880AnnualSchema> | undefined {
@@ -251,7 +269,7 @@ export function buildGuidedSaversCredit(data: GuidedSaversCreditData | undefined
       },
       americanSamoaAgiRestoration: "0",
       puertoRicoAgiRestoration: "0",
-      ...(historicalProof ? { priorYearOrdinaryIraDistribution: { ...historicalProof, onlyIncludiblePaymentForTestingPeriodConfirmed: true } } : {}),
+      ...historicalProof,
     },
   });
   if (historicalProof) readForm8880AnnualSources(annual, taxYear, false, false, undefined, {

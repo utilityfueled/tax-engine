@@ -45,12 +45,21 @@ lines:
       confirmation when the proof, return year, owner or testing period changes.
     testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::reopens guided %i historical proof and transfers the exact reduction only to Form 8880"
   - line: "4, historical record collection"
-    description: Collect the historical proof from a single distribution row
+    description: Collect historical proof from each supported distribution row
     formula: >-
       For a single valid 2024 or 2025 receipt date, offer the corresponding
       historical records. Leave the year printed on Form 1099-R blank until
       the taxpayer copies it from the original.
     testRef: "tests/apps/web/savers-credit-details.test.tsx::collects %i historical records without prefilling the original year"
+  - line: "4, two historical originals"
+    description: Reconcile a complete pair of historical payments, one per year
+    formula: >-
+      For one 2024 and one 2025 receipt, collect and retain each row's own
+      issuer proof and require both sets of records to agree with their own
+      payment. Require whole-period confirmation and hold partial proof or a
+      repeated year. Preserve correct basic rows when the taxpayer uses the
+      separately affirmed aggregate path. Reconfirm edited saved evidence.
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::reopens proof for both historical years and sums exact cents"
   - line: "6–12"
     description: Carry owner-specific annual eligibility facts to the existing calculation
     formula: >-

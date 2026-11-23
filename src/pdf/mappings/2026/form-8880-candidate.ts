@@ -191,9 +191,9 @@ export async function fillForm88802026OrdinaryCandidate(
       throw new Error("Form 8880 candidate holds contribution overrides and sources other than the original Code D amount.");
     }
   }
-  const priorPayment = annual.priorYearOrdinaryIraDistribution;
-  const expectedLine4a = d(priorPayment?.issuerPayment.amount);
-  if (((!rothSource || !priorPayment) && !d(annual.primary.testingPeriodDistributionReduction).isZero())
+  const hasHistoricalProof = Boolean(annual.priorYearOrdinaryIraDistribution ?? annual.priorYearOrdinaryIraDistributions);
+  const expectedLine4a = d(annual.primary.testingPeriodDistributionReduction);
+  if (((!rothSource || !hasHistoricalProof) && !expectedLine4a.isZero())
     || input.form1099R?.length || !d(annual.americanSamoaAgiRestoration).isZero() || !d(annual.puertoRicoAgiRestoration).isZero()) {
     throw new Error("Form 8880 candidate requires confirmed zero retirement distributions and AGI restorations.");
   }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { d } from "@/utils/decimal.js";
 import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 
 const unsignedAmount = z.string().regex(/^\d+(\.\d+)?$/);
 const payerTin = z.string().regex(/^\d{2}-?\d{7}$/);
@@ -23,7 +24,7 @@ export function getForm8880HistoricalIraPaymentYear(receivedDate: string | undef
   return historicalIraPaymentYears.find(year => date.data.startsWith(`${year}-`));
 }
 
-const priorYearOrdinaryIraDistribution = z.strictObject({
+const historicalIraPayment = z.strictObject({
   original: z.strictObject({
     taxYear: z.literal(historicalIraPaymentYears),
     accountHolder: z.literal("primary"),
@@ -47,11 +48,22 @@ const priorYearOrdinaryIraDistribution = z.strictObject({
   }),
   statementReportsThisSinglePaymentConfirmed: z.literal(true),
   noLine4ExclusionConfirmed: z.literal(true),
-  /** Covers the full testing period before the actual applicable due date, including extensions. */
-  onlyIncludiblePaymentForTestingPeriodConfirmed: z.literal(true),
 }).refine(({ original, issuerPayment }) => issuerPayment.receivedDate.startsWith(`${original.taxYear}-`), {
   path: ["issuerPayment", "receivedDate"],
   message: "The issuer payment date must match the historical Form 1099-R year.",
+});
+
+const priorYearOrdinaryIraDistribution = historicalIraPayment.safeExtend({
+  /** Covers the full testing period before the actual applicable due date, including extensions. */
+  onlyIncludiblePaymentForTestingPeriodConfirmed: z.literal(true),
+});
+
+const priorYearOrdinaryIraDistributions = z.strictObject({
+  payments: z.tuple([historicalIraPayment, historicalIraPayment]).refine(
+    ([first, second]) => first.original.taxYear !== second.original.taxYear,
+    "Historical IRA proof requires one payment from 2024 and one from 2025.",
+  ),
+  onlyIncludiblePaymentsForTestingPeriodConfirmed: z.literal(true),
 });
 
 /** Confirmed annual inputs, including the net AGI effects of disregarding §§931 and 933. */
@@ -61,9 +73,12 @@ const Form8880Sources2026Schema = z.strictObject({
   primary: contributor,
   spouse: contributor.optional(),
   priorYearOrdinaryIraDistribution: priorYearOrdinaryIraDistribution.optional(),
+  priorYearOrdinaryIraDistributions: priorYearOrdinaryIraDistributions.optional(),
   americanSamoaAgiRestoration: signedAmount,
   puertoRicoAgiRestoration: signedAmount,
-});
+}).refine(({ priorYearOrdinaryIraDistribution, priorYearOrdinaryIraDistributions }) => (
+  priorYearOrdinaryIraDistribution === undefined || priorYearOrdinaryIraDistributions === undefined
+), "Form 8880 requires a single historical proof packet.");
 
 const contribution = signedAmount.refine(value => d(value).gte(0), "Contribution must be nonnegative").optional();
 export const Form8880AnnualSchema = z.strictObject({
@@ -81,6 +96,25 @@ export const Form8880AnnualSchema = z.strictObject({
 interface Form8880ReturnContext {
   taxpayer: { filingStatus: string; primary: { ssn: string; dateOfBirth: string } };
   hasCurrentRetirementStatements: boolean;
+}
+
+function reconcileHistoricalIraPayment(
+  { original, issuerPayment }: z.infer<typeof historicalIraPayment>,
+  { dateOfBirth, ssn }: Form8880ReturnContext["taxpayer"]["primary"],
+) {
+  const taxpayerId = ssn.replace(/-/g, "");
+  if (!/^\d{9}$/.test(taxpayerId) || taxpayerId.slice(-4) !== original.recipientTaxIdLast4
+    || !z.iso.date().safeParse(dateOfBirth).success
+    || isBeforeAge59AndHalfDate(new Date(`${dateOfBirth}T00:00:00Z`), new Date(`${issuerPayment.receivedDate}T00:00:00Z`))) {
+    throw new Error("Form 8880 historical IRA proof must match the primary owner and ordinary distribution age at receipt");
+  }
+  const gross = d(original.grossDistribution);
+  if (original.payerTin.replace("-", "") !== issuerPayment.payerTin.replace("-", "")
+    || original.accountReference.toLowerCase() !== issuerPayment.accountReference.toLowerCase()
+    || !gross.gt(0) || !gross.eq(original.taxableAmount) || !gross.eq(issuerPayment.amount)) {
+    throw new Error("Form 8880 requires separately referenced historical records matching the issuer, account and fully taxable payment amount");
+  }
+  return gross;
 }
 
 export function readForm8880AnnualSources(
@@ -113,32 +147,23 @@ export function readForm8880AnnualSources(
     || (spouse && spouseDependency !== undefined && spouseDependency !== spouse.dependentDeductionAllowedToAnotherTaxpayer)) {
     throw new Error("Form 8880 and standard deduction dependency facts require reconciliation");
   }
-  const priorYear = sourceFacts2026.priorYearOrdinaryIraDistribution;
-  if (!priorYear) return sourceFacts2026;
+  const single = sourceFacts2026.priorYearOrdinaryIraDistribution;
+  const payments = sourceFacts2026.priorYearOrdinaryIraDistributions?.payments ?? (single ? [single] : []);
+  if (payments.length === 0) return sourceFacts2026;
   if (!returnContext || returnContext.taxpayer.filingStatus !== "single" || hasSpouse
     || returnContext.hasCurrentRetirementStatements) {
     throw new Error("Form 8880 historical IRA proof requires a 2026 single return without current Form 1099-R originals");
   }
-  const { original, issuerPayment } = priorYear;
-  const { dateOfBirth, ssn } = returnContext.taxpayer.primary;
-  const taxpayerId = ssn.replace(/-/g, "");
-  if (!/^\d{9}$/.test(taxpayerId) || taxpayerId.slice(-4) !== original.recipientTaxIdLast4
-    || !z.iso.date().safeParse(dateOfBirth).success
-    || isBeforeAge59AndHalfDate(new Date(`${dateOfBirth}T00:00:00Z`), new Date(`${issuerPayment.receivedDate}T00:00:00Z`))) {
-    throw new Error("Form 8880 historical IRA proof must match the primary owner and ordinary distribution age at receipt");
+  const references = payments.flatMap(({ original, issuerPayment }) => [original.sourceReference.toLowerCase(), issuerPayment.sourceReference.toLowerCase()]);
+  if (new Set(references).size !== references.length) {
+    throw new Error("Form 8880 requires separately referenced historical records for each original and issuer payment");
   }
-  const gross = d(original.grossDistribution);
-  if (original.payerTin.replace("-", "") !== issuerPayment.payerTin.replace("-", "")
-    || original.accountReference.toLowerCase() !== issuerPayment.accountReference.toLowerCase()
-    || original.sourceReference.toLowerCase() === issuerPayment.sourceReference.toLowerCase()
-    || !gross.gt(0) || !gross.eq(original.taxableAmount) || !gross.eq(issuerPayment.amount)) {
-    throw new Error("Form 8880 requires separately referenced historical records matching the issuer, account and fully taxable payment amount");
-  }
-  if (!gross.eq(primary.testingPeriodDistributionReduction)) {
-    throw new Error("Form 8880 line 4 must match the original historical IRA payment amount");
+  const total = sumSourceMoney(...payments.map(payment => reconcileHistoricalIraPayment(payment, returnContext.taxpayer.primary)));
+  if (!total.eq(primary.testingPeriodDistributionReduction)) {
+    throw new Error("Form 8880 line 4 must match the total of the original historical IRA payments");
   }
   return {
     ...sourceFacts2026,
-    primary: { ...primary, testingPeriodDistributionReduction: gross.toFixed() },
+    primary: { ...primary, testingPeriodDistributionReduction: total.toFixed() },
   };
 }

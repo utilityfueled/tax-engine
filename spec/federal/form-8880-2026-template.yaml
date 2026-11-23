@@ -77,7 +77,8 @@ lines:
       no other contribution sources or elections, zero AGI restorations, and the
       same reconciled W-2 and tax-limit scope as the Code D case. Write the
       canonical contribution on line 1a and zero on line 2a. Line 4a is either a
-      confirmed zero or the separately bound ordinary 2024 or 2025 distribution below.
+      confirmed zero, one separately bound ordinary 2024 or 2025 distribution,
+      or one separately bound distribution from each of those years.
       Require a positive credit tied to Schedule 3 line 4, preserve
       the native line 9 digit and worksheet cells, and verify the saved PDF with
       an independent reader. The candidate stays review-only with public export held.
@@ -100,6 +101,13 @@ lines:
       Schedule 3 transfer and all existing export holds. Do not write the
       historical statement or payment identifiers into the saved PDF.
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::reopens the matched %i distribution and reduced Roth credit"
+  - line: "4a two ordinary originals"
+    description: "Materialize the reconciled historical sum on the Roth candidate"
+    formula: >-
+      Project the canonically reconciled total of one 2024 and one 2025 original
+      payment when the total is an exact whole dollar. Keep the wage-only
+      return, positive Schedule 3 transfer, privacy handling and export holds.
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::reopens the exact whole-dollar total of two historical IRA payments"
   - line: "ordinary-roth-age-limit"
     description: "Use actual date of birth for the 2026 Roth IRA contribution limit"
     formula: >-

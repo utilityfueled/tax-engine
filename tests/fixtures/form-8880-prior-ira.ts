@@ -1,5 +1,4 @@
-/** Fictional matching originals for one prior-year payment. */
-export function priorYearOrdinaryIraDistribution(amount = "500", taxYear: 2024 | 2025 = 2025) {
+function historicalIraPayment(amount: string, taxYear: 2024 | 2025) {
   return {
     original: {
       taxYear,
@@ -24,6 +23,18 @@ export function priorYearOrdinaryIraDistribution(amount = "500", taxYear: 2024 |
     },
     statementReportsThisSinglePaymentConfirmed: true as const,
     noLine4ExclusionConfirmed: true as const,
-    onlyIncludiblePaymentForTestingPeriodConfirmed: true as const,
+  };
+}
+
+/** Fictional matching originals for one prior-year payment. */
+export function priorYearOrdinaryIraDistribution(amount = "500", taxYear: 2024 | 2025 = 2025) {
+  return { ...historicalIraPayment(amount, taxYear), onlyIncludiblePaymentForTestingPeriodConfirmed: true as const };
+}
+
+/** Fictional matching originals for one payment per historical year. */
+export function twoPriorYearOrdinaryIraDistributions(amount2024 = "200.25", amount2025 = "300.50") {
+  return {
+    payments: [historicalIraPayment(amount2024, 2024), historicalIraPayment(amount2025, 2025)] as const,
+    onlyIncludiblePaymentsForTestingPeriodConfirmed: true as const,
   };
 }
