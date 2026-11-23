@@ -13635,3 +13635,114 @@ browser qualification remains open on both strict platforms.
 [Exact GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45248565351) ·
 [Exact GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45248565507) ·
 [Exact native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45249178673).
+
+### November 23 matched pension statements and estimated-payment display
+
+`1dd593b5` caps a nonjoint public safety officer exclusion at each
+matched statement's otherwise taxable amount before applying the
+existing $3,000 annual limit across lines 1h and 5b. In the single-filer
+control, $2,500 of premiums on a fully nontaxable city pension leave the
+unrelated private pension's $10,000 on line 5b. A separate supported
+$1 premium on an otherwise taxable eligible statement produces $9,999.
+A positive claim requires review when a merged Simplified Method group
+contains conflicting complete payer TINs, including under a shared
+explicit plan label. Tests exercise both filing paths, formatting
+variants of the same TIN, different plan IDs and cases without positive
+premiums. The pension package passed 1,815 scoped tests and the
+independent conflict recheck passed eight. Review of statutory
+same-employer plan aggregation remains open.
+[26 USC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
+[IRS Publication 575](https://www.irs.gov/publications/p575).
+
+`e097ec35` marks the guided estimated-payment total incomplete when a
+started row has a missing or invalid amount. A wholly unused row is
+ignored by the display and a confirmed zero displays as $0. The
+existing calculation fact checks still apply. The package passed all
+27 scoped tests and its ESLint check. The two clean package checks
+verified all 19 pension and 62 guided spec lines, unchanged generated
+inventories and the exact browser source audit.
+
+The combined `1dd593b5` archive passed all 11 local checks, including
+30,182 unit and coverage tests per suite with 79 existing skips and
+88.27% branch coverage. Local Chromium passed all 650 active cases in
+eight batches with five existing skips. The GitHub Docker build
+passed and Vercel canceled both production builds. All eight GitHub
+CI jobs passed, including both hosted unit shards and their aggregate.
+Hosted coverage passed all 30,261 tests in 2,209 files at 88.63%
+branch coverage.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45262828894) ·
+[GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45262828840).
+
+Managed Linux passed 648 cases, with two RRTA saved-PDF inspection
+deadlines. Strict AMD64 passed 635 cases and hit 15 deadlines in
+Ohio and Pennsylvania journeys and the RRTA PDF inspection. Both
+retained five existing skips. The strict image smoke test, isolated
+Compose upgrade, recovery and rollback, independent archive, both
+SBOM formats and cleanup passed.
+[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45262828886).
+
+Native ARM64 on `1dd593b5` passed 643 browser cases and retained the
+five existing skips. Seven Ohio cases reached the 30-second deadline.
+They cover one part-year business case, two resident-credit cases
+and four part-year school-district cases. Image smoke, isolated
+Compose upgrade and recovery, independent archive and cleanup passed.
+[Native ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45263002156).
+
+The bounded IRS release check found no new final 2026 individual
+form to integrate among the checked items. The new W-2G is a January
+2027 revision. Form 1045's 2026 release is already recorded, and the
+current Form 172 instructions carry their December 2024 revision.
+[Current IRS files](https://www.irs.gov/downloads/irs-pdf) ·
+[IRS Form W-2G](https://www.irs.gov/pub/irs-pdf/fw2g.pdf) ·
+[IRS Form 1045 instructions](https://www.irs.gov/pub/irs-pdf/i1045.pdf) ·
+[IRS Form 172 instructions](https://www.irs.gov/pub/irs-pdf/i172.pdf).
+
+### November 23 offline AI quality comparison
+
+`0c24c408` lets two fully measured baselines record explicit
+independent human quality rejections and remain available for
+comparison. Every other baseline gate applies, including current run
+provenance, review, grounding, safe and exact outputs, appropriate
+answer or abstention, usage, repeated coverage and plan coherence.
+Candidate acceptance and promotion gates remain in effect.
+
+In the synthetic scorer regression the candidate accepts 90 of 90
+measurements at exactly $0.0036 per accepted run, and each less
+expensive baseline accepts 89 of 90. The resulting quality difference
+exceeds one percentage point for each comparator. Missing or
+ungrounded human review still blocks the comparison. All 73 scoped
+tests passed on Node 26.13.1, along with type checking, the spec and
+inventory checks, model artifact synchronization and browser audit
+verification. Independent code review found no blocker. This exercise
+used fixtures without provider calls or model promotion. The exact
+GitHub Docker build passed and Vercel canceled the production build.
+[GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45263934621).
+
+The combined `0c24c408` archive passed all 11 local checks.
+Unit and coverage suites each passed 30,184 tests with 79 existing
+skips. Branch coverage stayed at 88.27%. Chromium passed all 650
+active cases in eight batches with five existing skips and cleanup.
+All eight GitHub CI jobs passed, including both hosted unit shards
+and their aggregate. Hosted coverage passed all 30,263 tests in
+2,209 files at 88.63% branch coverage.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45263934780).
+
+Strict AMD64 on `0c24c408` passed 646 browser cases and retained the
+five existing skips. One Ohio part-year business case and three Ohio
+part-year school-district cases reached the existing 30-second case
+deadline. Image smoke, isolated Compose upgrade, recovery and
+rollback, the independent native archive, both candidate-bound SBOM
+formats and container cleanup passed. Strict browser qualification
+remains open. The mobile school case completed review and saved PDF
+inspection before reaching the deadline on the filing-rejection
+request. The desktop cases reached the same overall deadline during
+review download. Those markers measure elapsed time starting before
+the button click. The review builder already uses the
+calculated federal result when supplied.
+[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45263934728/job/138005716656).
+
+Managed Linux on the same revision passed 648 cases with five
+existing skips. The existing bounded subprocess inspection of the
+saved RRTA paper-review PDF timed out at both desktop and mobile
+viewport sizes.
+[Managed Linux browser run](https://github.com/utilityfueled/tax-engine/actions/runs/45263934728/job/138005716564).

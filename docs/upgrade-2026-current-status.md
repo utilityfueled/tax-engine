@@ -18,6 +18,33 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
 [Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+- `1dd593b5` binds nonjoint public safety officer premiums to the
+  otherwise taxable amount on their own Form 1099-R. Positive claims
+  with conflicting complete payer TINs in a single Simplified Method
+  group require review. `e097ec35` shows an incomplete estimated-payment
+  total when a started row has a missing or invalid amount and displays
+  confirmed zero as $0. The two packages passed 1,815 and 27 scoped
+  tests respectively. Native ARM64 on `1dd593b5` passed 643 browser
+  cases and reached seven Ohio deadlines. Image smoke, Compose
+  recovery and independent archive verification passed.
+  [Matched statements and payment display](upgrade-2026-progress.md#november-23-matched-pension-statements-and-estimated-payment-display).
+
+- `0c24c408` allows a fully measured AI baseline to be compared when
+  its only rejected responses otherwise satisfy every acceptance
+  criterion and an independent human explicitly rejects their quality.
+  The baseline still records those rejections. All 73 scoped tests
+  passed. The combined revision passed all 11 local checks, with
+  30,184 tests per unit and coverage suite, 88.27% branch coverage
+  and all 650 active local Chromium cases. All eight GitHub CI
+  jobs passed, with 30,263 coverage tests and 88.63% branch
+  coverage. Independent human corpus and output reviews and live
+  model qualification remain open.
+  Strict AMD64 passed 646 cases with four Ohio part-year case
+  deadlines. Image smoke, Compose recovery, archive verification and
+  both SBOM formats passed. Managed Linux passed 648 cases and hit
+  two saved-PDF inspection deadlines for RRTA.
+  [Offline AI comparison](upgrade-2026-progress.md#november-23-offline-ai-quality-comparison).
+
 - `45340a4e` applies the $3,000 public safety officer exclusion cap
   separately to each eligible spouse. Joint claims require actual
   spouse and statement ownership facts. The upgrade holds ambiguous

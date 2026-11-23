@@ -30,6 +30,17 @@ matched-statement calculation requires actual spouse and owner data.
 [26 USC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
 [IRS Internal Revenue Manual 21.6.6.2.29](https://www.irs.gov/irm/part21/irm_21-006-006r).
 
+For the nonjoint control, independently derive line 5b for $2,500 in
+verified premiums tied to a $10,000 city pension with zero taxable
+income and a separate $10,000 fully taxable private pension. Check the
+same facts when $1 of verified premiums applies to an otherwise taxable
+eligible statement. Resolve contract and administrator identity before
+accepting a positive claim whose Simplified Method group contains
+conflicting payer TINs. Review any claim that depends on the statutory
+same-employer aggregation with the full eligible-plan records.
+[26 USC §402(l)](https://uscode.house.gov/us/usc/119-124/t26/s402/) ·
+[IRS Publication 575](https://www.irs.gov/publications/p575).
+
 ## November 22 handoffs for independent qualification
 
 OpenAI schedules the existing GPT-5 mini baseline for December 11,
