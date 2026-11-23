@@ -15,6 +15,7 @@ import {
 } from "./guided-retirement-source-inputs";
 import { buildGuidedFirstHomeSource, guidedCode1IraOriginalSnapshot, guidedFirstHomeOriginalError, type GuidedFirstHomeWorksheet } from "./guided-retirement-first-home";
 import { buildGuidedIraEducationSource, guidedIraEducationOriginalError, guidedIraEducationOwnerFingerprint, type GuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "./guided-retirement-education";
+import { buildGuidedDisabilityPensionSource, guidedDisabilityPensionOriginal, type GuidedDisabilityPensionWorksheet } from "./guided-retirement-disability";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -41,6 +42,7 @@ export interface RetirementSourceData {
   code1IraAgeSource?: { singlePaymentConfirmed?: boolean | null; ownerBirthDate?: string; distributionDate?: string };
   code1IraFirstHomeSource?: GuidedFirstHomeWorksheet;
   code1IraEducationSource?: GuidedIraEducationWorksheet;
+  code3DisabilitySource?: GuidedDisabilityPensionWorksheet;
   qcdSource?: GuidedRetirementQcdSource;
   simplifiedMethod?: GuidedRetirementSimplifiedMethod;
   qualifiedLumpSumReporting?: "ordinary_pension" | "form_4972" | null;
@@ -64,7 +66,7 @@ export const retirementSourceAmounts = [
   ["inPlanRothRolloverAmount", "Amount allocable to in-plan Roth rollover within five years (Box 10)"],
 ] as const;
 
-export function guidedCode1IraOwnerBirthDate(
+export function guidedDatedRetirementOwnerBirthDate(
   entries: RetirementEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null,
   primaryDateOfBirth?: string, hasIraBasisWorksheet = false,
 ): string | undefined {
@@ -187,7 +189,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   }
   const sourceIds = new Set<string>();
   const simplifiedMethodPlans = new Set<string>();
-  const code1IraOwnerBirthDate = guidedCode1IraOwnerBirthDate(
+  const ownerBirthDate = guidedDatedRetirementOwnerBirthDate(
     entries, filingStatus, taxYear, basisContext?.personal?.dateOfBirth, !!basisContext?.data,
   );
   (entries ?? []).forEach((entry, index) => {
@@ -233,8 +235,18 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     } else if (entry.simplifiedMethod !== undefined && !earlyPension2026) {
       fail("taxable-worksheet", "Reconcile the saved Simplified Method worksheet with the original statement year, distribution code and Box 2b answer.");
     }
+    const code3Statement = taxYear === 2026 && entry.sourceTaxYear === "2026" && code === "3";
     if (!/^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(code)) fail("code", "Enter the actual Form 1099-R distribution code from Box 7 (2026 Box 7a).");
-    else if (!qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    else if (!code3Statement && !qualifiedLumpSum && !qcdStatement && !["1", "2", "4", "7", "G", "H", "1D", "2D", "4D", "7D", "D1", "D2", "D4", "D7"].includes(code)) fail("code", "This distribution code needs its actual basis, Roth, disability, QCD or other special worksheet; the ordinary guided route cannot calculate it yet.");
+    if (code3Statement || entry.code3DisabilitySource !== undefined) {
+      try {
+        buildGuidedDisabilityPensionSource(entry.code3DisabilitySource, guidedDisabilityPensionOriginal(
+          entry, ownerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal),
+        ));
+      } catch (error) {
+        fail("code3-disability", error instanceof Error ? error.message : "Reconcile the saved disability pension worksheet.");
+      }
+    }
     const qcd = entry.qcdSource;
     if (qcd && !qcdStatement) fail("qcd-source", "Reconcile this QCD worksheet with the original retirement statement year and distribution code.");
     if (qcdStatement) {
@@ -314,7 +326,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       } else fail(`${location}-reporting`, reporting === "multiple" ? `Multiple ${location} retirement records need their separate source allocations.` : `Confirm actual ${location} reporting on the source form.`);
     }
     if (!reconciledOriginals.has(index) && entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
-    const ageFacts = guidedCode1IraAgeFacts(entry, code1IraOwnerBirthDate);
+    const ageFacts = guidedCode1IraAgeFacts(entry, ownerBirthDate);
     if (startedAgeSource && !ageFacts) {
       fail("code1-ira-age-date", "Reconcile the saved Code 1 IRA receipt date with the current statement and return before calculating.");
     } else if (startedAgeSource && !ageFacts?.distributionDate) {
@@ -322,7 +334,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     }
     if (firstHome !== undefined) {
       try {
-        buildGuidedFirstHomeSource(firstHome, guidedCode1IraOriginal(entry, code1IraOwnerBirthDate));
+        buildGuidedFirstHomeSource(firstHome, guidedCode1IraOriginal(entry, ownerBirthDate));
       } catch (error) {
         fail("code1-ira-first-home", error instanceof Error ? error.message : guidedFirstHomeOriginalError);
       }
@@ -332,7 +344,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       else {
         try {
           buildGuidedIraEducationSource(education, guidedCode1IraEducationOriginal(
-            entry, code1IraOwnerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal),
+            entry, ownerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal),
           ), credits);
         } catch (error) {
           fail("code1-ira-education", error instanceof Error ? error.message : guidedIraEducationOriginalError);
@@ -345,6 +357,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
         : needsSimplifiedMethod ? "Confirm whether a penalty exception or another retirement worksheet is needed for this pension."
         : firstHome !== undefined ? "Confirm whether another retirement worksheet is needed beyond this first-home IRA worksheet."
         : education !== undefined ? "Confirm whether another retirement worksheet is needed beyond this college tuition IRA worksheet."
+        : entry.code3DisabilitySource !== undefined ? "Confirm whether another retirement worksheet is needed beyond this disability pension worksheet."
         : ageFacts?.ageException ? "Confirm whether another retirement worksheet is needed beyond the documented Code 1 age exception."
         : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.";
       fail("additional-worksheet", question);

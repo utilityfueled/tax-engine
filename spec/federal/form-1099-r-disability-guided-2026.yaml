@@ -1,0 +1,27 @@
+form: "Form 1099-R Guided 2026 Employer Disability Pension"
+fullName: "Documented Code 3 pension payment before minimum retirement age"
+taxYear: 2026
+irsReference: "https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf"
+lines:
+  - line: "2026-guided-code-3"
+    description: "Carry a documented employer disability pension received before minimum retirement age"
+    formula: >-
+      For a nonjoint primary taxpayer and one 2026 non-IRA original carrying
+      standalone Box 7a Code 3, require a determined positive Box 2a and the
+      employer plan record of the recipient's minimum retirement date. Bind
+      that record and one actual payment covering all of Box 1 to the payer,
+      account, current owner and birth date; require the payment to occur in
+      2026, on or before today, and strictly before that minimum retirement
+      date. Project the confirmed disability wage classification, original
+      payment date, Box 2a and withholding without inference. Hold unknown,
+      late or mixed payments and competing retirement worksheets. A source
+      outside the guided cohort requires separate review. Keep the
+      annual calculation and public export gates in place.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f1099r--2026.pdf"
+      - "https://www.irs.gov/instructions/i1099r"
+      - "https://www.irs.gov/publications/p525"
+    testRef: "tests/guided-interview/guided-disability-pension-2026.test.ts::projects a documented 2026 Code 3 disability pension as wages"
+    testRefs:
+      - "tests/guided-interview/guided-disability-pension-2026.test.ts::holds unknown or stale Code 3 disability pension records"
+      - "tests/apps/web/retirement-source-interactions.test.tsx::collects and reopens a 2026 Code 3 disability pension worksheet"

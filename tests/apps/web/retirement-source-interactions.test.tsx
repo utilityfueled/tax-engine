@@ -7,12 +7,13 @@ import { SectionRetirementIncome } from "@/components/guided-interview/section-r
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
 import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
+import { iraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
 
 async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>, taxYear = 2025, ownerBirthDate = "1966-02-01") {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container); let latest = initial;
-  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus="single" taxYear={taxYear} primaryDateOfBirth={ownerBirthDate} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
+  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus="single" taxYear={taxYear} primaryDateOfBirth={ownerBirthDate} primaryOwnerFingerprint={iraEducationOwnerFingerprint(completePersonalInfo)} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
   async function change(label: string, value: string) {
     const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
     if (!element) throw new Error(`Missing control: ${label}`);
@@ -27,6 +28,47 @@ async function render(initial: RetirementEntryData[], run: (context: { latest: (
 const confirm = "Have you checked all retirement source and taxability facts after the last edit?";
 
 afterEach(() => vi.useRealTimers());
+
+// Spec: spec/federal/form-1099-r-disability-guided-2026.yaml.
+it("collects and reopens a 2026 Code 3 disability pension worksheet", async () => {
+  vi.setSystemTime(new Date(2026, 9, 12, 12));
+  const ownerBirthDate = "1966-08-01";
+  const source = { ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "3", taxableAmount: "1000" };
+  const personal = { ...completePersonalInfo, dateOfBirth: ownerBirthDate };
+  const key = "guided-code3-disability-regression";
+  try {
+    await render([source], async ({ latest, container, change }) => {
+      const start = [...container.querySelectorAll("button")].find(button => button.textContent === "Enter a disability pension worksheet");
+      if (!start) throw new Error("Missing the disability pension worksheet button");
+      await act(async () => start.click());
+      await change("Employer plan record reference", "Plan notice A");
+      await change("Does the employer plan confirm this is a disability pension?", "true");
+      await change("Does Box 1 report only this one disability pension payment?", "true");
+      await change("Minimum retirement date shown by the employer plan", "2026-08-01");
+      await change("Date the disability pension payment was received", "2026-07-31");
+      await change("Is another retirement worksheet beyond this disability pension worksheet needed?", "false");
+      await change(confirm, "true");
+      const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+      draft.taxYear = 2026;
+      draft.sectionData["personal-info"] = personal;
+      draft.sectionData["income-retirement"] = { entries: latest() };
+      expect(saveGuidedFlowState(window.sessionStorage, key, draft)).toBe(true);
+    }, 2026, ownerBirthDate);
+    const reopened = loadGuidedFlowState(window.sessionStorage, key)?.sectionData["income-retirement"]?.entries;
+    if (!reopened) throw new Error("The disability pension worksheet did not reopen");
+    expect(buildRetirementInputs(reopened, "single", 2026, undefined, { personal })[0]).toMatchObject({
+      distributionCode: "3", distributionDate: "2026-07-31", disabilityPensionBeforeMinimumRetirementAge: true,
+    });
+    await render(reopened, async ({ container, latest, change }) => {
+      expect(container.textContent).toContain("Employer plan record reference");
+      await change("Payer TIN shown on the retirement form", "12-3456788");
+      expect(container.textContent).toContain("Reconcile the saved disability pension worksheet");
+      expect(() => buildRetirementInputs(latest(), "single", 2026, undefined, { personal })).toThrow(/reconcile.*disability pension/i);
+    }, 2026, ownerBirthDate);
+  } finally {
+    window.sessionStorage.removeItem(getGuidedFlowStorageKey(key));
+  }
+});
 
 // Specs: spec/federal/form-5329-guided-code1-ira-2026.yaml, 1-4, and spec/federal/form-5329-first-home-guided-2026.yaml, 09-guided-source.
 it("collects a 2026 Code 1 IRA date and offers first-home intake only before age 59½", async () => {

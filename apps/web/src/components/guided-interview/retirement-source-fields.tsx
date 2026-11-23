@@ -5,6 +5,7 @@ import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1Ira
 import { isGuidedQcdStatement, isGuidedQualifiedLumpSum, needsGuidedSimplifiedMethod, retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, type GuidedRetirementSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 import { guidedFirstHomeOriginalError, matchesGuidedCode1IraOriginal, type GuidedFirstHomeWorksheet } from "@/lib/guided-retirement-first-home";
 import { guidedIraEducationOriginalError, matchesGuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "@/lib/guided-retirement-education";
+import { guidedDisabilityPensionOriginal, guidedDisabilityPensionOriginalError, matchesGuidedDisabilityPensionOriginal, type GuidedDisabilityPensionWorksheet } from "@/lib/guided-retirement-disability";
 import { CurrencyField } from "./currency-field";
 
 function Fact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
@@ -12,6 +13,19 @@ function Fact({ label, value, onChange }: { label: string; value: boolean | null
 }
 function Text({ label, value, onChange, type = "text" }: { label: string; value: string | undefined; onChange: (value: string) => void; type?: "text" | "date" }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><input className="guided-input" type={type} value={value ?? ""} onChange={event => onChange(event.target.value)} /></label>;
+}
+
+function DisabilityPensionWorksheetFields({ worksheet, onChange }: {
+  worksheet: GuidedDisabilityPensionWorksheet;
+  onChange: (change: Partial<GuidedDisabilityPensionWorksheet>) => void;
+}) {
+  return <>
+    <Text label="Employer plan record reference" value={worksheet.planReference} onChange={planReference => onChange({ planReference })} />
+    <Fact label="Does the employer plan confirm this is a disability pension?" value={worksheet.employerDisabilityPensionConfirmed} onChange={employerDisabilityPensionConfirmed => onChange({ employerDisabilityPensionConfirmed })} />
+    <Fact label="Does Box 1 report only this one disability pension payment?" value={worksheet.singlePaymentConfirmed} onChange={singlePaymentConfirmed => onChange({ singlePaymentConfirmed })} />
+    <Text label="Minimum retirement date shown by the employer plan" type="date" value={worksheet.minimumRetirementDate} onChange={minimumRetirementDate => onChange({ minimumRetirementDate })} />
+    <Text label="Date the disability pension payment was received" type="date" value={worksheet.paymentDate} onChange={paymentDate => onChange({ paymentDate })} />
+  </>;
 }
 
 const firstHomeConfirmations = [
@@ -58,17 +72,19 @@ function EducationWorksheetFields({ worksheet, onChange }: {
   </>;
 }
 
-export function RetirementSourceFields({ entry, onUpdate, basisMode = false, code1IraOwnerBirthDate, primaryOwnerFingerprint }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void; basisMode?: boolean; code1IraOwnerBirthDate?: string; primaryOwnerFingerprint?: string }) {
+export function RetirementSourceFields({ entry, onUpdate, basisMode = false, datedOwnerBirthDate, primaryOwnerFingerprint }: { entry: RetirementEntryData; onUpdate: <K extends keyof RetirementEntryData>(field: K, value: RetirementEntryData[K]) => void; basisMode?: boolean; datedOwnerBirthDate?: string; primaryOwnerFingerprint?: string }) {
   const qcdStatement = isGuidedQcdStatement(entry);
   const ordinaryQcdEligibleCode = entry.sourceTaxYear === "2026" && entry.isIraSepSimple === true && entry.distributionCode.trim() === "7";
   const qcd = entry.qcdSource;
   const needsSimplifiedMethod = needsGuidedSimplifiedMethod(entry);
-  const ageFacts = guidedCode1IraAgeFacts(entry, code1IraOwnerBirthDate);
+  const ageFacts = guidedCode1IraAgeFacts(entry, datedOwnerBirthDate);
   const ageSource = entry.code1IraAgeSource;
   const firstHome = entry.code1IraFirstHomeSource;
-  const firstHomeOriginal = guidedCode1IraOriginal(entry, code1IraOwnerBirthDate);
+  const firstHomeOriginal = guidedCode1IraOriginal(entry, datedOwnerBirthDate);
   const education = entry.code1IraEducationSource;
-  const educationOriginal = guidedCode1IraEducationOriginal(entry, code1IraOwnerBirthDate, primaryOwnerFingerprint);
+  const educationOriginal = guidedCode1IraEducationOriginal(entry, datedOwnerBirthDate, primaryOwnerFingerprint);
+  const disability = entry.code3DisabilitySource;
+  const disabilityOriginal = guidedDisabilityPensionOriginal(entry, datedOwnerBirthDate, primaryOwnerFingerprint);
   const worksheet = entry.simplifiedMethod;
   const worksheetYear = entry.sourceTaxYear === "2025" || entry.sourceTaxYear === "2026" ? Number(entry.sourceTaxYear) : undefined;
   const updateWorksheet = (change: Partial<GuidedRetirementSimplifiedMethod>) => onUpdate("simplifiedMethod", { ...worksheet, ...change });
@@ -95,7 +111,7 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false, cod
     {!basisMode && entry.isIraSepSimple === true && <Fact label="Do actual owner records establish zero nondeductible IRA basis?" value={entry.iraBasisConfirmedZero} onChange={value => onUpdate("iraBasisConfirmedZero", value)} />}
     {ageFacts && <>
       <Fact label="Does Box 1 report one payment with no other distributions?" value={ageSource?.singlePaymentConfirmed}
-        onChange={value => onUpdate("code1IraAgeSource", { singlePaymentConfirmed: value, ownerBirthDate: value === true ? code1IraOwnerBirthDate : undefined })} />
+        onChange={value => onUpdate("code1IraAgeSource", { singlePaymentConfirmed: value, ownerBirthDate: value === true ? datedOwnerBirthDate : undefined })} />
       {ageSource?.singlePaymentConfirmed === true && <Text label="Date the IRA payment was received" type="date"
         value={ageSource.distributionDate} onChange={distributionDate => onUpdate("code1IraAgeSource", { ...ageSource, distributionDate })} />}
     </>}
@@ -165,7 +181,16 @@ export function RetirementSourceFields({ entry, onUpdate, basisMode = false, cod
       <CurrencyField label={`Plan cost recovered or eligible for tax-free recovery ${worksheetYear ? `through ${worksheetYear - 1}` : "in prior years"}`} hint="Use line 10 of the prior-year worksheet and include amounts you could have recovered in prior years. Enter zero only if there was no prior recoverable cost." value={worksheet?.priorRecovered ?? ""} onChange={priorRecovered => updateWorksheet({ priorRecovered })} required />
       {worksheet && <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("simplifiedMethod", undefined)}>Remove Simplified Method worksheet</button>}
     </fieldset>}
-    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label={qcdStatement ? "Is another retirement worksheet beyond this QCD worksheet needed?" : needsSimplifiedMethod ? "Is a penalty exception or another retirement worksheet needed for this pension?" : firstHome !== undefined ? "Is another retirement worksheet needed beyond this first-home IRA worksheet?" : education !== undefined ? "Is another retirement worksheet needed beyond this college tuition IRA worksheet?" : ageFacts?.ageException ? "Is another retirement worksheet needed beyond this documented Code 1 age exception?" : "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?"} value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
+    {disabilityOriginal && disability === undefined && <button type="button" className="utility-button utility-button-small"
+      onClick={() => onUpdate("code3DisabilitySource", { original: disabilityOriginal })}>Enter a disability pension worksheet</button>}
+    {disability !== undefined && <fieldset className="guided-form-grid" style={{ gridColumn: "1 / -1" }}>
+      <legend>Disability pension worksheet</legend>
+      {matchesGuidedDisabilityPensionOriginal(disability, disabilityOriginal)
+        ? <DisabilityPensionWorksheetFields worksheet={disability} onChange={change => onUpdate("code3DisabilitySource", { ...disability, ...change })} />
+        : <p className="guided-hint">{guidedDisabilityPensionOriginalError}</p>}
+      <button type="button" className="utility-button utility-button-small" onClick={() => onUpdate("code3DisabilitySource", undefined)}>Remove disability pension worksheet</button>
+    </fieldset>}
+    {basisMode ? <Fact label="Is another retirement method beyond the ordinary IRA basis records needed?" value={entry.otherRetirementWorksheetRequired} onChange={value => onUpdate("otherRetirementWorksheetRequired", value)} /> : <Fact label={qcdStatement ? "Is another retirement worksheet beyond this QCD worksheet needed?" : needsSimplifiedMethod ? "Is a penalty exception or another retirement worksheet needed for this pension?" : firstHome !== undefined ? "Is another retirement worksheet needed beyond this first-home IRA worksheet?" : education !== undefined ? "Is another retirement worksheet needed beyond this college tuition IRA worksheet?" : disability !== undefined ? "Is another retirement worksheet beyond this disability pension worksheet needed?" : ageFacts?.ageException ? "Is another retirement worksheet needed beyond this documented Code 1 age exception?" : "Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?"} value={entry.additionalWorksheetRequired} onChange={value => onUpdate("additionalWorksheetRequired", value)} />}
     <Fact label="Have you checked all retirement source and taxability facts after the last edit?" value={entry.sourceFactsConfirmed} onChange={value => onUpdate("sourceFactsConfirmed", value)} />
     <p className="guided-hint">Keep unknown amounts blank. Enter zero only when the source or completed worksheet establishes zero. Special distributions and unresolved basis, rollover or multi-state allocations stay saved for review until their source worksheets are supported.</p>
   </>;

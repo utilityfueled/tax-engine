@@ -99,7 +99,8 @@ import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
 import { buildGuidedFirstHomeSource } from "./guided-retirement-first-home";
 import { buildGuidedIraEducationSource, guidedIraEducationOwnerFingerprint } from "./guided-retirement-education";
-import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1IraOriginal, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
+import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1IraOriginal, guidedDatedRetirementOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
+import { buildGuidedDisabilityPensionSource, guidedDisabilityPensionOriginal } from "./guided-retirement-disability";
 import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import { investmentFactErrors, isStartedInvestment, type InvestmentData, type InvestmentSourceData } from "./guided-investment-facts";
@@ -542,11 +543,14 @@ export function buildEstimatedPaymentsInput(paymentData: PaymentData | undefined
 export function buildRetirementInputs(entries: RetirementEntryData[] | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, basisContext?: GuidedIraBasisContext) {
   if (!entries || entries.length === 0) return [];
   assertKnownFacts(retirementFactErrors(entries, false, filingStatus, taxYear, stateData, basisContext));
-  const ownerBirthDate = guidedCode1IraOwnerBirthDate(entries, filingStatus, taxYear, basisContext?.personal?.dateOfBirth, !!basisContext?.data);
+  const ownerBirthDate = guidedDatedRetirementOwnerBirthDate(entries, filingStatus, taxYear, basisContext?.personal?.dateOfBirth, !!basisContext?.data);
   return entries
     .filter(isStartedRetirement)
     .map(entry => {
       const source = retirementSourceInput(entry);
+      if (entry.code3DisabilitySource !== undefined) return { ...source, ...buildGuidedDisabilityPensionSource(
+        entry.code3DisabilitySource, guidedDisabilityPensionOriginal(entry, ownerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal)),
+      ) };
       const distributionDate = guidedCode1IraAgeFacts(entry, ownerBirthDate)?.distributionDate;
       return distributionDate === undefined ? source : { ...source, distributionDate };
     });
@@ -903,7 +907,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const firstHomeEntry = retirementEntries?.find(entry => entry.code1IraFirstHomeSource !== undefined);
   const educationEntry = retirementEntries?.find(entry => entry.code1IraEducationSource !== undefined);
   const iraExceptionOwnerBirthDate = firstHomeEntry || educationEntry
-    ? guidedCode1IraOwnerBirthDate(retirementEntries, segmentation.filingStatus, state.taxYear, personalInfo.dateOfBirth, !!retirementData?.basisSources)
+    ? guidedDatedRetirementOwnerBirthDate(retirementEntries, segmentation.filingStatus, state.taxYear, personalInfo.dateOfBirth, !!retirementData?.basisSources)
     : undefined;
   const form5329FirstHomeSource = firstHomeEntry?.code1IraFirstHomeSource
     ? buildGuidedFirstHomeSource(firstHomeEntry.code1IraFirstHomeSource, guidedCode1IraOriginal(firstHomeEntry, iraExceptionOwnerBirthDate))
