@@ -16,6 +16,8 @@ import {confirmGuidedOhioResidencyFacts}from '@/lib/guided-ohio-residency-facts'
 import {confirmGuidedOhioPaymentFacts}from '@/lib/guided-ohio-payment-facts';
 import {confirmGuidedOhioSchoolDistrictFacts}from '@/lib/guided-ohio-school-district-facts';
 import {confirmGuidedOhioReturnHeaderSources}from '@/lib/guided-ohio-return-header-sources';
+import {confirmGuidedOhioResidentCreditSources,emptyOhioResidentCreditDraft}from '@/lib/guided-ohio-resident-credit-sources';
+import {enterGuidedResidentCreditFederalOriginals,guidedResidentCreditFixture}from '../fixtures/guided-oh-resident-credit-complete';
 import {julyNativeFixture,julyEnteredHeader} from '../fixtures/oh-business-part-year-header';
 function required<T,>(v:T|null|undefined):T{if(v==null)throw Error('Actual diagnostic fixture missing');return v;}
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
@@ -106,6 +108,74 @@ test('retains the separate completed school replay and display when its header i
   const render = evaluateGuidedRender(state);
   expect(render).toEqual(expected);
   expect(render.schoolDisplayObservation).toBeDefined();
+});
+
+test.each(['distinct', 'cents'] as const)('skips only the blocked render replay for pending Ohio resident credit %s', cohort => {
+  const fixture = guidedResidentCreditFixture(cohort);
+  let state = prepare(fixture.state);
+  enterGuidedResidentCreditFederalOriginals(state, fixture.input);
+  const input = TaxYearInputSchema.parse(required(bridge.buildTaxInputFromGuidedData(state)));
+  const data = required(state.sectionData['state-return']);
+  const residency = confirmGuidedOhioResidencyFacts(input, fixture.residency);
+  data.ohioPayments = confirmGuidedOhioPaymentFacts(input, fixture.payments);
+  const confirmed = confirmGuidedOhioResidentCreditSources(input, required(residency.residentCreditSources), residency, data.ohioPayments);
+  data.ohioResidency = { ...residency, residentCreditSources: confirmed };
+  const confirmedRender = evaluateGuidedRender(state);
+  expect(confirmedRender).toEqual(old(state));
+  expect(confirmedRender.preview.metrics?.state).toMatchObject({stateTax: fixture.expected.tax, stateRefund: fixture.expected.refund});
+
+  const entry = {
+    ...state,
+    completedSections: state.completedSections.filter(section => section !== 'state-return'),
+    sectionData: {
+      ...state.sectionData,
+      'state-return': { ...data, ohioResidency: {
+        ...residency, sourceFactsConfirmed: null, originalFederalSources: undefined,
+        residentCreditSources: emptyOhioResidentCreditDraft(),
+      } },
+    },
+  };
+  state = flow.updateSectionData(state, 'state-return', {
+    ...data, ohioResidency: { ...residency, residentCreditSources: { ...confirmed, sourceReference: 'Fictional changed Virginia source' } },
+  });
+  const edited = required(state.sectionData['state-return']?.ohioResidency?.residentCreditSources);
+  expect(edited.sourceFactsConfirmed).toBeNull();
+  expect(edited.originalResidentCreditSourcePacket).toEqual(confirmed.originalResidentCreditSourcePacket);
+
+  const reopened = JSON.parse(JSON.stringify(state)) as flow.GuidedFlowState;
+  for (const pending of [entry, reopened]) {
+    const before = structuredClone(pending), expected = old(pending);
+    const validation = flow.validateSection(pending, 'state-return');
+    const replay = vi.spyOn(stateOriginals, 'buildGuidedStateOriginals');
+    try {
+      const actual = evaluateGuidedRender(pending);
+      expect(actual).toEqual(expected);
+      expect(actual.preview.metrics).toEqual({ ...confirmedRender.preview.metrics, state: null });
+      expect(actual.schoolDisplayObservation).toBeUndefined();
+      expect(replay).not.toHaveBeenCalled();
+      expect(pending).toEqual(before);
+      expect(flow.validateSection(pending, 'state-return')).toEqual(validation);
+      expect(computeGuidedPreviewOutcome(pending)).toEqual(expected.preview);
+      expect(replay).toHaveBeenCalledTimes(1);
+    } finally { replay.mockRestore(); }
+  }
+
+  for (const composition of ['unknown confirmation', 'added school draft', 'added header draft'] as const) {
+    const composed = structuredClone(reopened), stateReturn = required(composed.sectionData['state-return']);
+    if (composition === 'unknown confirmation') {
+      Reflect.deleteProperty(required(stateReturn.ohioResidency?.residentCreditSources), 'sourceFactsConfirmed');
+    } else if (composition === 'added school draft') {
+      stateReturn.ohioSchoolDistrict = enteredSchoolDraft(schoolPyHeaderPacket().canonical.ohioSchoolDistrict);
+    } else {
+      stateReturn.ohioReturnHeaderSources = julyEnteredHeader();
+    }
+    const expected = old(composed);
+    const replay = vi.spyOn(stateOriginals, 'buildGuidedStateOriginals');
+    try {
+      expect(evaluateGuidedRender(composed), composition).toEqual(expected);
+      expect(replay, composition).toHaveBeenCalledTimes(1);
+    } finally { replay.mockRestore(); }
+  }
 });
 
 test.each(['residency', 'payments', 'school', 'federal originals'] as const)(

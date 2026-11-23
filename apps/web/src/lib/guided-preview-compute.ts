@@ -204,6 +204,17 @@ function pendingOhioBusinessHeaderWithoutSchool(input: TaxYearInput, data: State
     && header.originalOhioSchoolDistrictSources === undefined;
 }
 
+function pendingOhioResidentCreditWithoutSchool(input: TaxYearInput, data: StateReturnData | undefined): boolean {
+  const residency = data?.ohioResidency;
+  const credit = residency?.residentCreditSources;
+  return input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus === "single"
+    && input.ohioResidency === undefined && input.ohioPayments === undefined
+    && input.ohioSchoolDistrict === undefined && input.ohioReturnHeaderSources === undefined
+    && residency?.businessSources === undefined && residency?.schoolDistrictStatus !== "actual_district_sources_required"
+    && data?.ohioSchoolDistrict === undefined && data?.ohioReturnHeaderSources === undefined && data?.ohioReciprocalWages === undefined
+    && credit != null && Object.getOwnPropertyDescriptor(credit, "sourceFactsConfirmed")?.value === null;
+}
+
 function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void,
   onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void, onSchoolReplay?: () => void,
   renderEvaluation = false): GuidedPreviewMetrics | null {
@@ -279,9 +290,12 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
             const pa=calculatePAOrdinaryReturn(currentOriginals,currentOriginals.paOrdinaryReturnFacts,currentOriginals.paOrdinaryReturnCompletionSources).pa40;
             stateResult={stateCode,stateName:'Pennsylvania',stateTax:pa.netTaxLiability,refund:pa.netOverpayment,balanceDue:pa.totalAmountDue,totalPayments:pa.totalPayments};
           }
-        } else if (stateCode === "OH" && renderEvaluation && pendingOhioBusinessHeaderWithoutSchool(taxInput, state.sectionData["state-return"])) {
-          // An explicitly unconfirmed header cannot produce a preview. A school
-          // replay can still succeed before header rejection, so keep that path intact.
+        } else if (stateCode === "OH" && renderEvaluation && (
+          pendingOhioBusinessHeaderWithoutSchool(taxInput, state.sectionData["state-return"])
+          || pendingOhioResidentCreditWithoutSchool(taxInput, state.sectionData["state-return"])
+        )) {
+          // These pending drafts cannot produce a state preview. Keep the
+          // independent validation and any school replay on their existing paths.
           stateResult = null;
         } else if (stateCode === "OH") {
           const currentOriginals = buildGuidedStateOriginals(taxInput, state, onSchoolReplay);

@@ -378,7 +378,7 @@
     "apps/web/src/lib/guided-pa-union-dues.ts": "d72691f1f67b5329fdfa79ee0fc363920e260244f7d6ec819683a5d428760c05",
     "apps/web/src/lib/guided-passenger-sources.ts": "5b98cd4b9d0e8ee12359f819838af6017c3c81c0c11f3c5a837e7ce0de5048c1",
     "apps/web/src/lib/guided-premium-tax-credit-facts.ts": "884dd10cc55bd383181ca5df1892caba30895561725ca4a18e3da0de481e4e0d",
-    "apps/web/src/lib/guided-preview-compute.ts": "cbdd7084048a6dfc8f577be37280b1fa666743604fc68f8bbd7b332b7af95bee",
+    "apps/web/src/lib/guided-preview-compute.ts": "a0d7fd6b0aa82c5e11fef37d677a45fd3d75d8cec25e863f66a8d3f35153c5f2",
     "apps/web/src/lib/guided-private-activity-facts.ts": "640327f963d0b9daae2427cc845017bde6809d062b471eb2af864b8fb0bae41f",
     "apps/web/src/lib/guided-professional-wagering.ts": "bfd577e9994f809031961ae212fbbb1cf6daf95ec1f327a68f22c132f85c092d",
     "apps/web/src/lib/guided-qbi-loss-data.ts": "480a8ee1f63d92b524eeb1c2c2db38a39ea004a1d9fed94c9f8950c6e4f160fb",
