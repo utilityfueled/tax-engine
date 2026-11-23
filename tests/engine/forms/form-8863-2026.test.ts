@@ -7,6 +7,14 @@ const d = (v: Decimal.Value) => new Decimal(v);
 const student = () => ({name:"Actual Student",studentTaxId:"111-22-3333",studentRole:"dependent" as const,qualifiedExpenses:d(4000),studentSsnEligible:true,institutionEin:"12-3456789",priorYearsClaimed:0,completedFirstFourYearsBeforeYear:false,enrolledAtLeastHalfTime:true,pursuingDegreeOrCredential:true,felonyDrugConviction:false,institutionEligible:true,expensesEligibilityConfirmed:true,form1098TRequirementMet:true});
 const make = (overrides:Partial<Form8863Input>={}):Form8863Input => ({taxYear:2026,aocStudents:[student()],llcExpenses:d(0),magi:d(50000),filingStatus:"single",taxLiabilityLimit:d(10000),primarySsnEligible:true,canBeClaimedAsDependent:false,claimedAsDependent:false,nonresidentAlien:false,aocBanInEffect:false,form8862Required:false,primaryAgeAtYearEnd:40,...overrides});
 describe("Form8863 actual2026 facts",()=>{
+ it("rejects contradictory 2026 student SSN and timely TIN answers", () => {
+  const adult = { ...student(), studentRole: "spouse" as const, studentTinEligible: false };
+  const input = make({ filingStatus: "married_filing_jointly", spouseSsnEligible: true, aocStudents: [adult] });
+  expect(() => calculateForm8863(input)).toThrow(/SSN.*timely TIN/i);
+  expect(() => calculateForm8863({ ...input, claimedAsDependent: true })).toThrow(/SSN.*timely TIN/i);
+  expect(calculateForm8863({ ...input, aocStudents: [{ ...adult, studentSsnEligible: false }] }).aocTotalTentative.toFixed()).toBe("0");
+  expect(calculateForm8863({ ...input, spouseSsnEligible: false, aocStudents: [{ ...adult, studentSsnEligible: false, studentTinEligible: true }] }).aocTotalTentative.toFixed()).toBe("2500");
+ });
  it("requires actual 2026 student facts and allows only one credit per student",()=>{
   expect(()=>calculateForm8863(make({aocStudents:[{...student(),enrolledAtLeastHalfTime:undefined}]}))).toThrow(/half|student facts/i);
   expect(()=>calculateForm8863(make({aocStudents:[student(),student()]}))).toThrow(/duplicate|one credit/i);

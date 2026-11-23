@@ -24,9 +24,14 @@ lines:
     description: "Actual claimant and student eligibility"
     formula: "No credit for MFS, actually claimed dependent, or nonresident alien without joint resident election; AOC also requires no effective ban and required Form8862. 2026 primary OR joint spouse employment-valid timely SSN; dependent student timely employment-valid SSN. Actual identity prevents duplicate student credits."
     edgeCases:
+      - "For positive 2026 expenses, an employment-valid SSN issued by the return due date conflicts with an explicit no timely TIN for the same student. Reconcile matched adult student, claimant and household facts before calculating or accepting a saved interview. A known false household timely TIN must survive an omitted student TIN answer."
       - "AOC requires fewer than4 prior claim years, no completed first4 years, half-time degree enrollment, no felony drug conviction, eligible school, substantiated adjusted expenses and1098T requirement or exception"
       - "LLC has no AOC age/year/degree/felony conditions; actual eligible courses and student identity still required"
     testRef: "tests/engine/forms/form-8863-2026.test.ts::requires actual 2026 student facts and allows only one credit per student"
+    testRefs:
+      - "tests/engine/forms/form-8863-2026.test.ts::rejects contradictory 2026 student SSN and timely TIN answers"
+      - "tests/engine/federal-education-distribution.test.ts::reconciles omitted 2026 student TIN with the actual household"
+      - "tests/guided-interview/guided-aotc-student-history.test.ts::holds conflicting 2026 spouse student identity answers after reopen"
   - line: "22-aotc-institution-ein"
     description: "Actual EINs on the institution records for an American Opportunity Credit"
     formula: "For the 2025 and 2026 rules, when aggregate Form 8863 line 7 is positive, require a nine-digit EIN on every supplied school record of each student with a positive tentative AOTC and reconcile any student summary EIN to one of those records. Complete 2025 school records can supply the EINs when the separate summary is absent. Form 1098-T exceptions do not supply an EIN. A zero line 7 or zero tentative student credit does not trigger the additional school-list requirement."

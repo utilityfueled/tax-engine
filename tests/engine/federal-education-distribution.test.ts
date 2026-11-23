@@ -18,6 +18,19 @@ const education={primarySsnEligible:true,primaryTinEligible:true,claimedAsDepend
 const raw=(year=2026)=>({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:year},w2s:[{...simpleW2Fixture.w2s[0],wages:"50000",socialSecurityWages:"50000",socialSecurityWithheld:"3100",socialSecurityTips:"0",medicareWages:"50000",medicareWithheld:"725",box12:[]}],form1099Q:[statement(year)],qualifiedEducationExpenses:{sourceFacts:facts(year)},educationExpenses:education});
 const calculate=(value:unknown)=>calculateFederalTax(TaxYearInputSchema.parse(value));
 describe("Federal education distribution source integration",()=>{
+  it("reconciles omitted 2026 student TIN with the actual household", () => {
+    const base = raw();
+    const input = {
+      ...base, form1099Q: [], qualifiedEducationExpenses: undefined,
+      educationExpenses: { ...education, aocStudents: [{ ...student, studentTinEligible: undefined }] },
+    };
+    const withHouseholdTin = (tinIssuedByDueDate: boolean) => ({
+      ...input, taxpayer: { ...base.taxpayer, primary: { ...base.taxpayer.primary, tinIssuedByDueDate } },
+    });
+    expect(calculate(withHouseholdTin(true)).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+    expect(() => calculate(withHouseholdTin(false))).toThrow(/SSN.*timely TIN/i);
+  });
+
   it("routes actual in-kind benefits and remaining cash expenses without duplicating income",()=>{
     for (const year of [2025,2026]) {
       const sourceFacts=facts(year,{expenses:[expense(year,{amount:"10000",taxFreeAssistance:"0",educationCreditAmount:"0"})],allocations:[{sourceId:"q1",expenseId:"e1",amount:"4000",creditAmount:"0"},{sourceId:"cash",expenseId:"e1",amount:"6000",creditAmount:"0"}],inKindBenefits:[{id:"provided1",sourceId:"q1",expenseId:"e1",amount:"4000",providedDate:`${year}-08-15`,qualificationConfirmed:true,sourceReference:"actual-plan-benefit"}]});

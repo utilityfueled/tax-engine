@@ -17,6 +17,7 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
   const errors: Record<string, string> = {}, education = data?.education;
   if (!education) return errors;
   const aoc = education.aocStudents, llc = education.llcStudents ?? [];
+  const { primarySsnEligible, spouseSsnEligible } = education;
   const claimantMayQualifyForAoc = filingStatus !== "mfs" && education.claimedAsDependent !== true && education.aocBanInEffect !== true
     && (education.nonresidentAlien !== true || (filingStatus === "mfj" && education.residentJointElection !== false))
     && (taxYear === 2026
@@ -27,6 +28,7 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
   function studentFacts(student: EducationStudentSourceData, key: string, potentiallyEligibleAoc = false) {
     if (!student.name.trim()) errors[`${key}-name`] = "Enter the actual student name.";
     const hasValidExpenses = validAmount(student.qualifiedExpenses);
+    const hasPositiveExpenses = hasValidExpenses && parseGuidedCurrency(student.qualifiedExpenses).gt(0);
     if (!hasValidExpenses) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
     const id = cleanId(student.studentTaxId);
     if (!/^\d{9}$/.test(id)) errors[`${key}-id`] = "Enter the student's actual SSN, ITIN or ATIN.";
@@ -37,19 +39,29 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
       const adult = student.studentRole === "primary" ? personal : student.studentRole === "spouse" ? personal.spouse : undefined;
       const actual = student.studentRole === "dependent" ? (personal.dependents ?? []).map(dep => dep.ssn) : [adult?.ssn];
       if (!actual.some(tin => cleanId(tin) === id)) errors[`${key}-household`] = "Student identity must match the actual return household role.";
-      else if (taxYear === 2025 && (student.studentRole === "primary" || filingStatus === "mfj") &&
-        typeof adult?.tinIssuedByDueDate === "boolean" && typeof student.studentTinEligible === "boolean" &&
-        adult.tinIssuedByDueDate !== student.studentTinEligible && validAmount(student.qualifiedExpenses) &&
-        parseGuidedCurrency(student.qualifiedExpenses).gt(0)) {
-        errors[`${key}-tin`] = "Reconcile the student's timely TIN answer with the same person's Personal Info answer.";
+      else if (adult && hasPositiveExpenses && (student.studentRole === "primary" || filingStatus === "mfj")) {
+        const studentTin = taxYear === 2026 && student.studentSsnEligible === true ? true : student.studentTinEligible;
+        if ((taxYear === 2025 || taxYear === 2026) && typeof adult.tinIssuedByDueDate === "boolean" &&
+          typeof studentTin === "boolean" && adult.tinIssuedByDueDate !== studentTin) {
+          errors[`${key}-tin`] = "Reconcile the student's timely TIN answer with the same person's Personal Info answer.";
+        }
+        const claimantSsn = (student.studentRole === "primary" ? primarySsnEligible : spouseSsnEligible)
+          ?? adult.employmentValidSsnIssuedByDueDate;
+        if (taxYear === 2026 && typeof claimantSsn === "boolean" && typeof student.studentSsnEligible === "boolean" &&
+          student.studentSsnEligible !== claimantSsn) {
+          errors[`${key}-ssn`] = "Reconcile the student's employment-valid SSN answer with the same person's claimant answer.";
+        }
       }
+    }
+    if (taxYear === 2026 && hasPositiveExpenses && student.studentSsnEligible === true && student.studentTinEligible === false) {
+      errors[`${key}-tin`] = "Reconcile the student's employment-valid SSN and timely TIN answers.";
     }
     for (const field of ["institutionEligible", "expensesEligibilityConfirmed", "form1098TRequirementMet"] as const) if (typeof student[field] !== "boolean") errors[`${key}-${field}`] = "Confirm actual institution, net qualified expenses and Form 1098-T requirements.";
     if (taxYear === 2026 && student.studentRole === "dependent" && typeof student.studentSsnEligible !== "boolean") errors[`${key}-ssn`] = "Confirm the dependent student's employment-valid SSN was issued by the due date.";
     if (taxYear === 2026 && student.studentRole !== "dependent" && student.studentSsnEligible !== true && typeof student.studentTinEligible !== "boolean") errors[`${key}-tin`] = "Confirm the primary or spouse student's actual timely TIN.";
     if (taxYear !== 2026 && typeof student.studentTinEligible !== "boolean") errors[`${key}-tin`] = "Confirm the student's timely TIN for 2025; an ITIN is not an employment SSN.";
     if (!student.institutions?.length) errors[`${key}-institutions`] = "Enter the actual educational institution records.";
-    const requireEveryEin = potentiallyEligibleAoc && hasValidExpenses && parseGuidedCurrency(student.qualifiedExpenses).gt(0);
+    const requireEveryEin = potentiallyEligibleAoc && hasPositiveExpenses;
     for (const institution of student.institutions ?? []) {
       const requireEin = requireEveryEin || present(institution.ein) || institution.receivedCurrentYear1098T || institution.receivedPriorYear1098TWithBox7;
       if (!institution.name.trim() || !institution.address.trim()

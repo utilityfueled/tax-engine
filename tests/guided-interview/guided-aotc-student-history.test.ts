@@ -66,6 +66,37 @@ function calculateAotc(state: GuidedFlowState) {
 }
 
 describe("guided AOTC prior-claim history", () => {
+  it("holds conflicting 2026 spouse student identity answers after reopen", () => {
+    const starting = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
+    const base = withOriginalWages({ ...starting, taxYear: 2026 }, "2026");
+    const personal = base.sectionData["personal-info"]!;
+    const spouse = personal.spouse!;
+    const student = {
+      ...completeAocEligibility, name: `${spouse.firstName} ${spouse.lastName}`,
+      studentTaxId: spouse.ssn, studentRole: "spouse" as const,
+      studentTinEligible: undefined, qualifiedExpenses: "4000", priorYearsClaimed: "0",
+    };
+    function returnWithSpouseFacts(employmentSsn: boolean, timelyTin: boolean, studentFacts: Partial<EducationStudentData> = {}) {
+      const withPersonal = updateSectionData(base, "personal-info", {
+        ...personal, spouse: { ...spouse, employmentValidSsnIssuedByDueDate: employmentSsn, tinIssuedByDueDate: timelyTin },
+      });
+      return reopen(updateSectionData(withPersonal, "credits", {
+        ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant, spouseSsnEligible: employmentSsn, aocStudents: [{ ...student, ...studentFacts }] },
+      }));
+    }
+    const consistent = returnWithSpouseFacts(true, true);
+    expect(validateSection(consistent, "credits").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(consistent)?.educationExpenses?.aocStudents[0]?.studentSsnEligible).toBe(true);
+    const otherSpouseQualifies = returnWithSpouseFacts(false, true, { studentSsnEligible: false, studentTinEligible: true });
+    expect(validateSection(otherSpouseQualifies, "credits").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(otherSpouseQualifies)?.educationExpenses?.aocStudents[0]?.studentTinEligible).toBe(true);
+    for (const [employmentSsn, timelyTin] of [[false, true], [true, false]] as const) {
+      const conflicting = returnWithSpouseFacts(employmentSsn, timelyTin);
+      expect(validateSection(conflicting, "credits").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(conflicting)).toBeNull();
+    }
+  });
+
   it("blocks reuse of a different student's zero before federal calculation", () => {
     const { state, first, second } = educationInterview();
     expect(calculateAotc(state)).toBe("2500");

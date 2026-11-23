@@ -123,7 +123,12 @@ export function calculateForm8863(input: Form8863Input): Form8863Result {
   const audit = new AuditTrail();
   if (!input.magi.isFinite()) throw new Error("Form8863 MAGI must be finite");
   nonnegative(input.llcExpenses, "LLC expenses");
-  for (const s of [...input.aocStudents, ...(input.llcStudents ?? [])]) nonnegative(s.qualifiedExpenses, "student expenses");
+  for (const student of [...input.aocStudents, ...(input.llcStudents ?? [])]) {
+    nonnegative(student.qualifiedExpenses, "student expenses");
+    if (strict && student.qualifiedExpenses.gt(0) && student.studentSsnEligible === true && student.studentTinEligible === false) {
+      throw new Error("Form8863 student employment-valid SSN conflicts with the timely TIN answer");
+    }
+  }
   if (input.taxLiabilityLimit !== undefined) nonnegative(input.taxLiabilityLimit, "tax liability limit");
   const hasExpenses = input.aocStudents.some(s => s.qualifiedExpenses.gt(0)) || input.llcExpenses.gt(0) || (input.llcStudents ?? []).some(s => s.qualifiedExpenses.gt(0));
   const joint = input.filingStatus === "married_filing_jointly";
