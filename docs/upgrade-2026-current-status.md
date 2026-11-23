@@ -9,12 +9,20 @@ deferred at the owner’s direction. Their readiness criteria remain open.
   2025 payment to an exact combined line 4 reduction. All 93 focused
   tests, 47 scoped spec references, root and web types, and independent
   software review passed. Chromium verified save, reopen, and recovery
-  from a mismatched second issuer.
+  from a mismatched second issuer. All 11 exact local checks passed,
+  with 30,136 unit and coverage cases per suite, 88.22% branch coverage,
+  and 650 Chromium passes. On application-equivalent `fd67b598`, all six
+  GitHub CI jobs, Docker and managed Chromium passed. Strict AMD64 and
+  ARM64 each passed 640 cases, failed 10 and retained five existing skips.
+  Native image smoke, Compose recovery and independent archive verification
+  passed. The strict browser gate remains open.
   [Paired Form 8880 evidence](upgrade-2026-progress.md#november-22-paired-form-8880-issuer-records).
 - `e728b7b3` keeps an education refund-history answer editable after
   formatting or clearing a zero entry, and exposes the question when an
   expense has a linked refund. All 14 focused tests, web typecheck, six
-  scoped spec references and independent software review passed.
+  scoped spec references and independent software review passed. All
+  11 exact local checks passed, with 30,131 unit and coverage cases per
+  suite, 88.22% branch coverage, and 650 Chromium passes.
   [Education refund evidence](upgrade-2026-progress.md#november-22-education-refund-zero).
 - `00134fa3` accepts one matching 2024 or 2025 Form 1099-R and issuer
   receipt in the guided 2026 Saver’s Credit path. All 88 focused tests

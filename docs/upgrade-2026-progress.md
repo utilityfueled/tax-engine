@@ -13031,6 +13031,30 @@ correcting it and reconfirming restored progression. All records were
 synthetic. Public filing qualification and independent tax review
 remain open.
 
+All 11 exact local checks passed. The unit and coverage suites each
+passed 30,136 tests and retained 79 existing skips. Branch coverage
+reached 88.22%. Chromium passed 650 tests with five existing skips
+and verified cleanup. Exact manifest SHA-256
+`f597f37274a11da707027735c993bb3047b3cd009dd1f4d0609350b5c1589449`.
+
+Application-equivalent `fd67b598` passed all six GitHub CI jobs, Docker
+and managed Chromium. Managed Chromium passed 650 cases with five
+existing skips. Strict AMD64 and native ARM64 each passed 640, failed
+10 and retained five existing skips. The AMD64 candidate passed smoke,
+Compose recovery and rollback, and immutable SBOM generation. ARM64
+passed smoke, Compose recovery, independent archive import and removal,
+and browser cleanup. The strict browser gate remains open on both
+architectures. [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45102705470) ·
+[Managed and AMD64 browser jobs](https://github.com/utilityfueled/tax-engine/actions/runs/45102705623) ·
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45102823126).
+
+Independent log review reconciled all strict failures. Both architectures
+hit the 30-second deadline in two Ohio part-year business cases, three
+resident-credit cases and four part-year school district cases. One Ohio
+reciprocity case reached the same deadline on ARM64. The tenth AMD64
+failure reached the four-second RRTA saved-PDF subprocess deadline.
+The cause of the elapsed time remains open.
+
 ### November 22 Form 8880 2024 issuer records
 
 `00134fa3` accepts one fully taxable ordinary traditional IRA payment
@@ -13058,6 +13082,9 @@ cleanup. The shell sandbox denied loopback binds in initial attempts.
 Their logs were retained and reruns used normal localhost permissions
 with the same source, checks and thresholds. Exact manifest SHA-256
 `1aa560b4776f7d8cea4656e84381c7ed263ecb6a13d5503fc7e04e48e50324a0`.
+GitHub managed Chromium passed 650 and strict AMD64 passed 644 with
+six failures and five existing skips. Docker passed.
+[Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45100009389).
 
 ### November 22 education refund zero
 
@@ -13073,6 +13100,16 @@ and the hidden saved No. All 14 focused tests, six scoped spec references,
 web typecheck, the browser source hash audit and independent software
 review passed. Both packages were pushed behind the Preview-only build
 guard. Full exact-source checks are recorded in the continuation checkpoint.
+
+All 11 exact local checks passed. Unit and coverage each passed 30,131
+tests and retained 79 existing skips. Branch coverage reached 88.22%.
+Chromium passed 650 tests with five existing skips and verified cleanup.
+Exact manifest SHA-256
+`3a6369c7ca794269e72f6b51d7c756c9759b2350e4794b2402995053842f26ee`.
+All six GitHub CI jobs and Docker passed. GitHub managed Chromium passed
+648 with two saved-PDF deadlines. Strict AMD64 passed 642 with eight
+failures. Both jobs retained five existing skips.
+[Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45100487454).
 
 ### November 22 guided Form 8880 historical evidence
 

@@ -9,7 +9,43 @@
       "independentSoftwareReview": "passed",
       "guidedChromiumReopenedBothExactReceiptsAndRejectedIssuerMismatch": true,
       "guidedChromiumExecutionSha256": "a1023bbc3b41f15feb2599deb9800804d9b67f44f3a32b575bc8ab2ddf37d5ee",
-      "exactFullChecks": "running"
+      "exactLocalCoreChecksPassed": 9,
+      "exactLocalUnitAndCoveragePerSuite": {"passed": 30136, "skipped": 79},
+      "exactLocalBranchCoveragePercent": 88.22,
+      "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8, "cleanupPassed": true},
+      "exactLocalManifestSha256": "f597f37274a11da707027735c993bb3047b3cd009dd1f4d0609350b5c1589449",
+      "githubRuns": {"ci": 45102549496, "web": 45102549574, "docker": 45102549525},
+      "applicationEquivalentMainCommit": "fd67b598",
+      "applicationEquivalentGitHubRuns": {"ci": 45102705470, "web": 45102705623, "docker": 45102705499},
+      "applicationEquivalentCiJobsPassed": 6,
+      "applicationEquivalentDockerStatus": "passed",
+      "githubManagedBrowser": {"passed": 650, "failed": 0, "skipped": 5},
+      "githubStrictAmd64Browser": {"passed": 640, "failed": 10, "skipped": 5},
+      "githubStrictAmd64SmokeRecoveryAndSbomPassed": true,
+      "nativeArm64Run": 45102823126,
+      "nativeArm64Status": "failed",
+      "nativeArm64Browser": {"passed": 640, "failed": 10, "skipped": 5, "completedBatches": 8, "cleanupPassed": true},
+      "nativeArm64SmokeRecoveryAndIndependentArchivePassed": true,
+      "nativeArm64ArchiveEvidenceArtifact": 14787794878,
+      "nativeArm64TerminalReceiptSha256": "888fd0894aeabeefc1fc7e34780a8409830604e7a15ce2e9e8b7d0f405675029",
+      "githubBrowserAggregatesSha256": "5b39e438097a5f57b7a4cccac332fffffc7d22b224c67b0145681e725e2424ba",
+      "strictBrowserFailureClassification": {
+        "amd64Job": 137456947769,
+        "arm64Job": 137457328971,
+        "ohioCaseDeadlineSeconds": 30,
+        "ohioCaseDeadlinesBySpec": {
+          "oh-business-part-year-native": {"amd64": 2, "arm64": 2},
+          "oh-reciprocal-native": {"amd64": 0, "arm64": 1},
+          "oh-resident-credit-native": {"amd64": 3, "arm64": 3},
+          "oh-school-district-part-year-native": {"amd64": 4, "arm64": 4}
+        },
+        "rrtaSavedPdfInspectionTimeoutSeconds": 4,
+        "rrtaSavedPdfInspectionTimeouts": {"amd64": 1, "arm64": 0},
+        "independentReviewReconciledAllFailures": true,
+        "rootCauseEstablished": false
+      },
+      "productionBuildState": "CANCELED",
+      "exactFullChecks": "passed"
     },
     "nov22EducationRefundZero": {
       "applicationCommit": "e728b7b3f740c0ebbbcad9779d9e7f1ea852719b",
@@ -24,9 +60,15 @@
       "exactLocalCoreChecksPassed": 9,
       "exactLocalUnitAndCoveragePerSuite": {"passed": 30131, "skipped": 79},
       "exactLocalBranchCoveragePercent": 88.22,
+      "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8, "cleanupPassed": true},
+      "exactLocalManifestSha256": "3a6369c7ca794269e72f6b51d7c756c9759b2350e4794b2402995053842f26ee",
       "githubRuns": {"ci": 45100487331, "web": 45100487454, "docker": 45100487425},
+      "githubCiJobsPassed": 6,
+      "githubDockerStatus": "passed",
+      "githubManagedBrowser": {"passed": 648, "failed": 2, "skipped": 5},
+      "githubStrictAmd64Browser": {"passed": 642, "failed": 8, "skipped": 5},
       "productionBuildState": "CANCELED",
-      "exactFullChecks": "running"
+      "exactFullChecks": "passed"
     },
     "nov22Form8880Historical2024": {
       "applicationCommit": "00134fa30faf4cc76aa129427300c09bb270eb16",
@@ -43,6 +85,9 @@
       "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8, "cleanupPassed": true},
       "exactLocalManifestSha256": "1aa560b4776f7d8cea4656e84381c7ed263ecb6a13d5503fc7e04e48e50324a0",
       "githubRuns": {"ci": 45100009405, "web": 45100009389, "docker": 45100009471},
+      "githubDockerStatus": "passed",
+      "githubManagedBrowser": {"passed": 650, "failed": 0, "skipped": 5},
+      "githubStrictAmd64Browser": {"passed": 644, "failed": 6, "skipped": 5},
       "productionBuildState": "CANCELED",
       "exactFullChecks": "passed"
     },
