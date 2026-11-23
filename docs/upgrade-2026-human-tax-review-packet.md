@@ -379,3 +379,37 @@ calculation qualification. [2025 Form 1040 instructions](https://www.irs.gov/ins
 [2025 Form 2210 instructions](https://www.irs.gov/instructions/i2210),
 [2026 Form 1040-ES](https://www.irs.gov/pub/irs-pdf/f1040es.pdf) and
 [IRS Direct Pay guidance](https://www.irs.gov/payments/direct-pay-help).
+
+## November 23 IRA tuition and Pennsylvania partnership material
+
+**IRA tuition.** A single primary taxpayer under age 59½ has one
+fully taxable traditional IRA distribution of $3,000.45 and pays
+$2,000.15 of their own tuition at an eligible college in the same
+year. The tuition was fully paid without aid, reimbursement,
+education-account funds or an education-credit allocation. Review the
+eligibility and overlap checks independently. Compare the result with
+the implementation's Code 08, $2,000.15 exception, $1,000.30
+remaining distribution and $100.03 additional tax. Also review whether
+a separately qualifying medical expense uses Code 99 with the combined
+exception. The physical review fixture uses $3,000 of taxable IRA
+income and $2,000 of qualified tuition. Its line 4 is $100, the
+amount printed for Schedule 2 line 5. Confirm the form-line rounding
+method before certifying a PDF with cents in the source facts. See
+`b406c579`, `16af26be` and `95c40f61`.
+[26 U.S.C. §72](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm) ·
+[IRS Publication 970](https://www.irs.gov/publications/p970) ·
+[Final 2026 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf).
+
+**Pennsylvania partnership.** Review the 2025 full-year nonresident
+who receives an ordinary partnership NRK-1. The matching federal
+original reports $10,000 of ordinary income. The Pennsylvania
+statement reports the same Pennsylvania-source income and $307 of
+nonresident withholding. The taxpayer separately has $184 of
+Pennsylvania payroll withholding and files individually without a
+consolidated return. Independently verify treatment of NRK-1 ordinary
+profit on PA-40 line 4 and withholding on line 17, separate from
+payroll withholding. Confirm which original attachments must accompany
+the individual return. The implementation holds the official review PDF
+until those attachments qualify. See `af96bd3a`.
+[2025 PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+[2025 Schedule NRK-1](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/partnerships-s-corps-llcs/documents/2025/2025_pa-20s-pa-65nrk-1.pdf).

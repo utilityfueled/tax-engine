@@ -13012,6 +13012,202 @@ requests and did not change any routing.
 [Gemini 3.8 Flash](https://aistudio.google.com/docs/models/gemini-3.8-flash) ·
 [Google lifecycle](https://aistudio.google.com/docs/deprecations).
 
+### November 23 PA nonresident partnership original
+
+`af96bd3a` captures a matching Pennsylvania NRK-1 and its current
+federal partnership original for a single 2025 full-year nonresident
+using the federal standard deduction. Part of qualification is confirming
+the income belongs on an individual return, with no consolidated filing,
+nonordinary amounts or federal–state profit difference. The PA profit
+flows to PA-40 line 4 and the actual partnership withholding flows to
+line 17, apart from payroll withholding. [Final PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+[Final Schedule NRK-1](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/partnerships-s-corps-llcs/documents/2025/2025_pa-20s-pa-65nrk-1.pdf).
+
+The experiment preserved the initial Chromium failures for federal K-1
+invalidation and grouped currency input. The corrected guided sequence
+accepted a valid original from an initially unbound draft and reopened
+the saved evidence. An absent original and a mismatched issuer EIN each
+blocked progression. Replay of the synthetic saved browser facts produced
+$10,000 on line 4, $307 on line 17, and $491 of Pennsylvania tax. The
+attachment warning displayed, and the local PDF action returned HTTP 400
+without a download because the original attachment is still required.
+All 44 focused tests and 24 scoped spec references passed, along with
+root and web typechecks and independent software review.
+All 11 exact local checks passed. Unit and coverage each passed 30,140
+tests with 79 existing skips. Branch coverage was 88.23%. Chromium
+passed 650 with five existing skips and verified cleanup. Exact result
+manifest SHA-256
+`7dcdc65d2f93ce4338db7deffc5171bcaeeadb0b73be7a3012785fd5fce06f82`.
+GitHub CI, Docker, the Web build and the ordinary managed browser job
+passed. The strict image browser step passed 637, failed 13 and
+retained five existing skips.
+[Exact GitHub Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45110633520).
+
+### November 23 Ohio runtime timing comparison
+
+Two synthetic pending-header fixtures were profiled on the exact `b59f68b1`
+source. Current residency material comparison used about 2 ms per edit
+in each fixture, and school-district comparison used about 1.9–2.1 ms.
+A scratch variant reusing sorted entries and the default collator took
+about 1 ms longer per pure edit, save, and render. The experiment retained
+both fixtures and alternated variant order across four pairs. The slower
+variant stayed in the scratch checkout. The samples measure JavaScript in Node and
+leave browser, server, and Linux scheduling time to the same-runner comparison.
+
+The exact strict full suite on the public AMD64 runner passed 637,
+failed 13 and retained five original skips. Failures included four
+Ohio resident-credit cases, four school-district part-year cases,
+two Ohio business part-year cases, one Ohio reciprocity case and two
+RRTA cases. All 11 Ohio failures reached the 30-second case deadline,
+and the two RRTA cases timed out in the fixed saved-PDF check. The
+separate ordinary managed full-suite job passed. The
+same-runner 10-case comparison then passed four and failed six in
+each runtime, two failures each for Ohio business part-year,
+resident credit and school-district part-year. Independent log
+review confirmed repeatable late business checkpoints and failures
+at varying resident-credit checkpoints. The school failures covered
+the overall deadline and a late cleanup wait in each runtime. The configured worker
+ceiling was two, with zero retries and a 30-second case deadline.
+Container ran first. Recorded completed header-entry phases had
+medians of about 4.10 seconds in the container and 4.16 seconds
+in managed mode. Fixed execution order, the different full-suite
+runners and the available markers leave the cause unresolved.
+Normalized result SHA-256
+`9659f7281e4731e3339f7f6629a7a97f204639643ac4558dbc69487e36d55134`.
+Phase analysis SHA-256
+`a84d27f888abe2c71a0b5e133a5d080e50052d62b6ea98323056f0ac7eda3553`.
+[Linux comparison workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45108772468).
+
+### November 23 Form 5329 tuition records
+
+`2e373906` adds a bounded guided path for a single primary taxpayer on
+a nonjoint 2026 return. One fully taxable ordinary traditional IRA
+distribution and one matched tuition bill and payment support exception
+08. The worksheet records actual positive amounts, matches the student's
+account records, preserves a verified zero for tax-free assistance and
+holds unresolved reimbursements, aid, education benefit allocations
+and unsupported histories. Changing the taxpayer's name and TIN while
+retaining the birth date invalidates the saved worksheet. Local
+Chromium confirmed the hold after reload and restored the $2,000.15
+amount when the original identity was restored.
+[26 U.S.C. §72](https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partII-sec72.htm) ·
+[IRS Publication 970](https://www.irs.gov/publications/p970) ·
+[Final 2026 Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf).
+
+The first commit's full unit and coverage runs both exposed an existing
+joint HSA case changed from $84 to $684 by the new defaults. The browser
+runner also detected a mid-run inventory change and stopped after 92
+passes. A stable rerun reached 262 passes with zero failures before it
+was stopped to free the test port for the corrected source. Both runs
+confirmed cleanup.
+
+`b406c579` restores the historical defaults and uses the separately
+validated tuition source for the new calculation. It also rejects
+future-dated receipts at engine admission. The earlier observation date
+is caller-supplied for controlled replay only, bounded by today's date.
+The unchanged legacy HSA control again produces $84. The final targeted
+run passed 29 tests and five scoped spec references. Independent
+software review passed 28 tests, including the joint HSA PDF and the
+direct chronology boundary. Local replay of the same saved Chromium
+record produced Code 08, $2,000.15 on line 2 and $100.03 on line 4 with
+test-only 2026 constants. The unmocked annual gate prevented calculation.
+The earlier dates and same-day boundary were exercised. Public export
+and filing remain held. Vercel canceled production builds for both
+commits. All 11 exact local checks passed. Unit and coverage each
+passed 30,152 tests and retained 79 existing skips. Branch coverage
+was 88.24%. Chromium passed 650 with five existing skips and verified
+cleanup. Exact local manifest SHA-256
+`531729a1f97290d37dced210dd80bb1c40cf1834c738dc103ed670fd0690a564`.
+
+Replay source manifest SHA-256
+`51e4a2b0a4c4d2118910241dc70553a691a0c008c063a7d640404d0336bbae68`.
+Chronology receipt SHA-256
+`e64d76fac46e58781c54f3aab127866714a623774839c9d7c10544a9b47ad158`.
+
+### November 23 internal Form 5329 tuition PDF
+
+Independent review reproduced a missing Form 1099-R Box 5 being
+defaulted to zero before the review renderer received it. `16af26be`
+preserves the missing field for 2026 primary ordinary Code 1 IRA
+records through parsing and reopening. The canonical tuition source
+now requires an actual zero on the matching statement. Other statement
+cohorts preserve their existing defaults. A zero persisted by an older
+parser has no additional provenance in the amount alone. The new
+guided path requires the original's confirmed facts. The exact scoped
+source passed 29 tests, engine typecheck, full spec validation, inventory
+and the unchanged browser source audit.
+
+`95c40f61` adds a standalone internal renderer for the sole documented
+Code 08 cohort on the pinned 2026 blank. The separate transfer equals
+line 4 for printed Schedule 2 line 5. A synthetic whole-dollar return
+reopened in the native fields with $3,000 on line 1, code 08 and $2,000
+on line 2, $1,000 on line 3 and $100 on line 4. The application retains
+exact calculation cents. The PDF requires all four physical line
+values to be exact whole dollars. A second exception, missing Box 5,
+other Form 5329 parts, an altered blank or the disabled annual pack
+holds the candidate. The candidate is separate from public dispatch.
+
+Native PDF inspection and Poppler rendering verified the privacy
+treatment, the review watermark on all three pages and the new
+candidate's blank name field. The existing watermark crosses a small
+part of the printed footer. The standalone return omits SSN and source
+identifiers. Exact focused checks passed 41 tests, engine typecheck,
+full spec validation, inventory and the unchanged browser source audit.
+Independent review passed 26 tests across the source, first-home and
+candidate routes. All 11 exact local checks passed. Unit and coverage
+each passed 30,156 with 79 existing skips. Branch coverage was 88.25%.
+Chromium passed 650 with five existing skips and verified cleanup.
+Vercel canceled the production build. The exact Docker job passed.
+GitHub CI and Web were in progress at this observation.
+[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45115717009) ·
+[Exact CI run](https://github.com/utilityfueled/tax-engine/actions/runs/45115717029) ·
+[Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45115717015).
+
+Exact local result manifest SHA-256
+`f1b68bb8c7c2caa442370aa41fdbb6285ad4346e017329141478b82b5c9a1c7f`.
+[Final Form 5329](https://www.irs.gov/pub/irs-prior/f5329--2026.pdf) ·
+[IRS Form 5329 instructions](https://www.irs.gov/instructions/i5329).
+
+Synthetic PDF SHA-256
+`04f9d0fa3c7ce6a1963299af3668c854b39ac05fd0d5a3ffea97f1b16c279bde`.
+Page 1 raster SHA-256
+`a8844f726bf5dddb7a260c1be8853385c303971eb65278f3f5e08ad8d7949cfd`.
+
+### November 23 annual return source check
+
+The federal catalog still identifies 2025 as the current final Form
+1040 and instructions. The separately published 2026 Form 1040 is
+marked draft. Ohio's final IT 1040, SD 100 and combined instructions
+are also for 2025. Ohio has posted 2026 estimated-payment material.
+Pennsylvania still links the 2025 PA-40 and instructions with separate
+2026 estimated-tax material. These are catalog observations. Final
+annual packets and review of the applicable transfers remain open.
+[IRS current return](https://www.irs.gov/forms-pubs/about-form-1040) ·
+[IRS 2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Ohio tax forms](https://tax.ohio.gov/home/forms/tax-forms) ·
+[Pennsylvania income tax forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax).
+
+### November 23 public provider catalog check
+
+The public model IDs and standard USD rates match the November 17
+check. Per million input, cache-read and output tokens, OpenAI
+`gpt-6-luna` is $0.10, $0.01 and $0.50. `gpt-6.1-sol` is $2,
+$0.10 and $10 in its short-context tier. Luna's separate background
+beta has different eligibility and pricing. The current interactive
+routes retain standard rate treatment.
+[OpenAI Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[OpenAI Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[OpenAI changelog](https://developers.openai.com/api/docs/changelog).
+
+Google `gemini-3.8-flash` remains $0.75, $0.075 and $3.75 through
+December 31, rising to $1.50, $0.15 and $7.50 on January 1, 2027.
+The `gemini-3-flash-preview` standard text rates remain $0.50, $0.05
+and $3. The public refresh records pricing and catalog metadata.
+Account availability, independently reviewed labels and repeated
+live qualification are open.
+[Gemini pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
+[Gemini deprecations](https://aistudio.google.com/docs/deprecations#gemini-3-models).
+
 ### November 22 paired Form 8880 issuer records
 
 `80fb4d9c` accepts one matching ordinary traditional IRA payment from

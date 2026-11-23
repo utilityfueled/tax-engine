@@ -1,10 +1,50 @@
 # Current 2026 upgrade status
 
-## Resume here · November 22
+## Resume here · November 23
 
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
 
+The refreshed federal, Ohio and Pennsylvania catalogs still show 2025
+as the final annual return year. The IRS labels its 2026 Form 1040 a
+draft. The annual calculation and export gates remain closed.
+[IRS Form 1040](https://www.irs.gov/forms-pubs/about-form-1040) ·
+[Ohio forms](https://tax.ohio.gov/home/forms/tax-forms) ·
+[Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax).
+
+- The exact `b59f68b1` Linux comparison passed 637 strict container
+  cases, failed 13 and retained five original skips. On the same AMD64
+  runner, the focused 10 Ohio cases passed four and failed six in each
+  runtime. The normal managed full-suite job passed on a separate runner.
+  The comparison leaves the strict browser qualification open.
+  [Linux workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45108772468).
+- `16af26be` preserves the distinction between a blank and a reported
+  zero in Box 5 for a 2026 primary Code 1 IRA. `95c40f61` renders
+  the internal 2026 Form 5329 Code 08 review candidate. Physical
+  inspection verified lines 1–4, the review notice on all three pages
+  and omission of the name, SSN and source identifiers. Independent
+  software review and all 11 exact local checks passed, with 30,156
+  tests in each core suite, 88.25% branch coverage and 650 Chromium
+  passes. The latest Docker job passed. GitHub CI and Web were still
+  running when this record was taken.
+  [Form 5329 PDF evidence](upgrade-2026-progress.md#november-23-internal-form-5329-tuition-pdf).
+- `2e373906` adds a guided 2026 tuition exception worksheet.
+  `b406c579` restores the historical aggregate Form 5329 defaults and
+  validates the tuition source separately. The unchanged joint HSA control
+  returns $84. Actual Chromium-captured records replay to Code 08, line 2
+  of $2,000.15 and line 4 of $100.03 with test-only annual values.
+  Independent software review and all 11 exact local checks passed.
+  Each core suite passed 30,152 tests, with 88.24% branch coverage and
+  650 Chromium passes.
+  [Form 5329 tuition evidence](upgrade-2026-progress.md#november-23-form-5329-tuition-records).
+- `af96bd3a` carries one matched 2025 Pennsylvania NRK-1 partnership
+  original into the ordinary full-year nonresident calculation. Local
+  Chromium reopened the supported return, verified the original attachment
+  hold, and replayed saved facts to PA-40 lines 4 and 17. All 44 focused
+  tests, 24 scoped spec references, and independent software review passed.
+  All 11 exact local checks passed, with 30,140 tests in each core suite,
+  88.23% branch coverage, and 650 Chromium passes.
+  [Pennsylvania partnership evidence](upgrade-2026-progress.md#november-23-pa-nonresident-partnership-original).
 - `80fb4d9c` binds one matching 2024 issuer payment and one matching
   2025 payment to an exact combined line 4 reduction. All 93 focused
   tests, 47 scoped spec references, root and web types, and independent
