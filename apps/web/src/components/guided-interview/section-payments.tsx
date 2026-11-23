@@ -11,7 +11,7 @@ import {
 import { CurrencyField } from "./currency-field";
 import { BooleanFact } from "./fact-fields";
 import { formatGuidedCurrency, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
-import { federalPaymentDateNeedsApplication, supportsFederalPaymentReceiptReferences, type FederalPaymentKind } from "@/lib/guided-required-facts";
+import { amountError, federalPaymentDateNeedsApplication, hasEnteredAmount, supportsFederalPaymentReceiptReferences, type FederalPaymentKind } from "@/lib/guided-required-facts";
 
 function editPayment(entry: EstimatedPaymentEntry, field: "date" | "amount", value: string): EstimatedPaymentEntry {
   // CurrencyField adds grouping commas on blur without changing the reported amount.
@@ -163,7 +163,12 @@ export function SectionPayments({
     });
   }
 
-  const totalEstimated = sumGuidedDisplayAmounts(payments.map((entry) => entry.amount));
+  const startedEstimates = payments.filter(entry => entry.date.trim() || hasEnteredAmount(entry.amount) || entry.receiptReference?.trim()
+    || entry.application?.taxYear.trim() || entry.application?.confirmed != null);
+  const amounts = startedEstimates.map(entry => entry.amount);
+  const totalEstimated = amounts.every(amount => !amountError(amount, "payment amount"))
+    ? sumGuidedDisplayAmounts(amounts)
+    : null;
 
   return (
     <RetroShell title="Payments & Withholding" eyebrow="PAYMENTS">
@@ -231,12 +236,12 @@ export function SectionPayments({
 
         <EstimatedTaxSourceDetails data={current.estimatedTaxFacts} appliedCredits={current.priorYearAppliedCredits} taxYear={taxYear} onChange={estimatedTaxFacts => onDataChange({ ...current, estimatedTaxFacts })} />
 
-        {totalEstimated.gt(0) && (
+        {startedEstimates.length > 0 && (
           <div className="guided-ticker-grid" style={{ marginTop: "16px" }} role="status" aria-live="polite">
             <div className="guided-ticker-item">
               <span className="guided-ticker-label">Total Estimated Payments</span>
               <strong className="guided-ticker-value">
-                {formatGuidedCurrency(totalEstimated)}
+                {totalEstimated === null ? "Incomplete. Enter each payment amount." : formatGuidedCurrency(totalEstimated)}
               </strong>
             </div>
           </div>

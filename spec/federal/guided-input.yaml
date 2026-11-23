@@ -235,9 +235,12 @@ lines:
     testRef: "tests/guided-interview/guided-required-facts.test.ts::rejects impossible and conflicting source dates"
   - line: "display-money"
     description: "Keep source totals exact through review and UI presentation"
-    formula: "Sum and compare income, expenses, payments and review totals using Decimal; stringify without a binary-number conversion. Malformed UI input displays unknown rather than a numeric zero. Other-tax indicators use verified engine amounts, not total-income threshold guesses."
+    formula: "Sum and compare income, expenses, payments and review totals using Decimal; stringify without a binary-number conversion. Malformed UI input displays unknown rather than a numeric zero. On the federal Payments screen, an estimated payment row with any entered facts but a missing or invalid amount makes the displayed total incomplete. Ignore wholly empty spare rows in the display. A known estimated payment amount of zero remains a valid entry. Other-tax indicators use verified engine amounts, not total-income threshold guesses."
     irsRef: "Form 1040 instructions, rounding off to whole dollars"
     testRef: "tests/guided-interview/guided-display-money.test.ts::retains exact source cents in deduction comparison and formatting"
+    testRefs:
+      - "tests/guided-interview/guided-money-components.test.tsx::marks the estimated-payment total incomplete when a started row lacks a valid amount"
+      - "tests/guided-interview/guided-money-components.test.tsx::keeps an explicit estimated-payment zero and ignores an unused row"
   - line: "eligibility-and-migration"
     description: "Preserve actual eligibility and require confirmation of old defaults"
     formula: "Capture AOTC enrollment, degree, prior study, conviction and refundable-eligibility answers explicitly. Preserve residency months including zero. Saved pre-version-2 code 7 and prior-claim count 0 remain stored but require reconfirmation because their provenance is unknown."
