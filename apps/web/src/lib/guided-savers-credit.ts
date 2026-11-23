@@ -1,9 +1,10 @@
 import Decimal from "decimal.js";
 import type { z } from "zod";
-import { Form8880AnnualSchema } from "@/models/form-8880-sources";
+import { Form8880AnnualSchema, readForm8880AnnualSources } from "@/models/form-8880-sources";
 import type { AdjustmentData, FilingStatus, GuidedFlowState, RetirementEntryData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 const electiveDeferralFields = ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE"] as const;
 
@@ -12,13 +13,31 @@ export interface GuidedSaversCreditDistribution {
   accountHolder: "" | "primary" | "spouse";
   receivedDate: string;
   amount: string;
+  historicalProof?: GuidedSaversHistoricalProof;
+}
+
+export interface GuidedSaversHistoricalProof {
+  originalTaxYear: string;
+  originalReference: string;
+  originalIssuerEin: string;
+  receiptIssuerEin: string;
+  originalAccountLast4: string;
+  receiptAccountLast4: string;
+  recipientTaxIdLast4: string;
+  grossDistribution: string;
+  taxableAmount: string;
+  distributionCode: string;
+  traditionalIraConfirmed: boolean | null;
+  iraSepSimple: boolean | null;
+  taxableAmountNotDetermined: boolean | null;
+  sourceFactsConfirmed: boolean | null;
 }
 
 export interface GuidedSaversCreditData {
   taxYear: string;
   sourceFactsConfirmed: boolean | null;
   ordinaryScopeConfirmed: boolean | null;
-  contribution: Omit<GuidedSaversCreditDistribution, "receivedDate">;
+  contribution: Pick<GuidedSaversCreditDistribution, "accountHolder" | "sourceReference" | "amount">;
   qualifyingStudentMonths: string;
   dependentDeductionAllowedToAnotherTaxpayer: boolean | null;
   testingPeriod: {
@@ -34,9 +53,10 @@ export interface GuidedSaversCreditContext {
   iraContributions: Pick<NonNullable<AdjustmentData["iraContributions"]>,
     "contributionTaxYear" | "contributionTimingConfirmed" | "specialContributionRulesRequired" | "sourceFactsConfirmed"
     | "primaryRothContributions" | "primaryContributions" | "primarySection501c18Contributions" | "primaryCompensation"> | undefined;
-  personal: { dateOfBirth?: string; standardDeductionFacts?: { primaryCanBeClaimedAsDependent?: boolean | null } } | undefined;
+  personal: { ssn?: string; dateOfBirth?: string; standardDeductionFacts?: { primaryCanBeClaimedAsDependent?: boolean | null } } | undefined;
   wageEntries: readonly Pick<W2EntryData, typeof electiveDeferralFields[number]>[];
   retirementEntries: readonly Pick<RetirementEntryData, "grossDistribution">[];
+  hasCurrentRetirementStatements?: boolean;
   hasConflictingIncomeExclusions?: boolean;
 }
 
@@ -48,6 +68,7 @@ export function guidedSaversCreditContext(state: GuidedFlowState): GuidedSaversC
   const schedule1A = sections["additional-deductions"]?.schedule1A;
   const studentLoan = sections.adjustments?.studentLoanFacts;
   const credits = sections.credits;
+  const retirementEntries = sections["income-retirement"]?.entries ?? [];
   const exclusions = [
     childFacts?.possessionIncomeExclusion, childFacts?.puertoRicoExcludedIncome, childFacts?.form4563ExcludedIncome,
     socialSecurity?.puertoRicoIncomeExclusion, socialSecurity?.americanSamoaIncomeExclusion,
@@ -66,7 +87,8 @@ export function guidedSaversCreditContext(state: GuidedFlowState): GuidedSaversC
     iraContributions: sections.adjustments?.iraContributions,
     personal,
     wageEntries: sections["income-w2"]?.entries ?? [],
-    retirementEntries: sections["income-retirement"]?.entries ?? [],
+    retirementEntries,
+    hasCurrentRetirementStatements: retirementEntries.some(isStartedRetirement),
     hasConflictingIncomeExclusions: Boolean(sections.adjustments?.foreignIncome) || hasNonzeroOrUnknownExclusions,
   };
 }
@@ -77,6 +99,30 @@ export const emptyGuidedSaversCredit: GuidedSaversCreditData = {
   qualifyingStudentMonths: "", dependentDeductionAllowedToAnotherTaxpayer: null,
   testingPeriod: { dueDate: "", distributionsConfirmed: null, distributions: [] },
 };
+
+export const emptyGuidedSaversHistoricalProof: GuidedSaversHistoricalProof = {
+  originalTaxYear: "", originalReference: "", originalIssuerEin: "", receiptIssuerEin: "", originalAccountLast4: "",
+  receiptAccountLast4: "", recipientTaxIdLast4: "", grossDistribution: "", taxableAmount: "", distributionCode: "",
+  traditionalIraConfirmed: null, iraSepSimple: null, taxableAmountNotDetermined: null, sourceFactsConfirmed: null,
+};
+
+export function guidedSaversHistoricalEvidence(data: GuidedSaversCreditData | undefined) {
+  if (!data) return undefined;
+  const period = data.testingPeriod;
+  if (!Array.isArray(period?.distributions) || !period.distributions.some(row => row.historicalProof !== undefined)) return undefined;
+  return { taxYear: data.taxYear, dueDate: period.dueDate, distributions: period.distributions };
+}
+
+export function requireGuidedSaversReview(data: GuidedSaversCreditData, historical = false): GuidedSaversCreditData {
+  if (!historical) return { ...data, sourceFactsConfirmed: null };
+  return {
+    ...data,
+    sourceFactsConfirmed: null,
+    testingPeriod: { ...data.testingPeriod, distributionsConfirmed: null, distributions: data.testingPeriod.distributions.map(row => (
+      row.historicalProof ? { ...row, historicalProof: { ...row.historicalProof, sourceFactsConfirmed: null } } : row
+    )) },
+  };
+}
 
 function actualAmount(value: string | undefined, label: string): Decimal {
   if (!hasEnteredAmount(value)) throw new Error(`Enter the actual ${label}, including zero when known.`);
@@ -108,11 +154,52 @@ function distributionReduction(period: GuidedSaversCreditData["testingPeriod"]):
   return total.toFixed();
 }
 
+function buildHistoricalProof(period: GuidedSaversCreditData["testingPeriod"]) {
+  if (!Array.isArray(period?.distributions)) return undefined;
+  const row = period.distributions.find(distribution => distribution.historicalProof !== undefined);
+  if (!row) return undefined;
+  const proof = row.historicalProof;
+  if (period.distributions.length !== 1 || row.accountHolder !== "primary" || !row.receivedDate?.startsWith("2025-")) {
+    throw new Error("Historical proof covers one 2025 payment to the primary taxpayer. Review your full list of distributions.");
+  }
+  if (!proof || proof.originalTaxYear !== "2025" || proof.distributionCode?.trim() !== "7" || proof.traditionalIraConfirmed !== true
+    || proof.iraSepSimple !== true || proof.taxableAmountNotDetermined !== false) {
+    throw new Error("Enter the original 2025 Form 1099-R for a traditional IRA with Code 7, the IRA box checked and a determined taxable amount.");
+  }
+  const isLastFour = (value: string | undefined) => /^\d{4}$/.test(value ?? "");
+  const isIssuerEin = (value: string | undefined) => /^\d{2}-?\d{7}$/.test(value?.trim() ?? "");
+  if (!proof.originalReference?.trim() || !isIssuerEin(proof.originalIssuerEin) || !isIssuerEin(proof.receiptIssuerEin)
+    || !isLastFour(proof.originalAccountLast4) || !isLastFour(proof.receiptAccountLast4) || !isLastFour(proof.recipientTaxIdLast4)) {
+    throw new Error("Enter the Form 1099-R reference, both issuer EINs, and only the requested last four digits.");
+  }
+  const grossDistribution = actualAmount(proof.grossDistribution, "Form 1099-R Box 1 amount");
+  const taxableAmount = actualAmount(proof.taxableAmount, "Form 1099-R Box 2a amount");
+  if (proof.sourceFactsConfirmed !== true) throw new Error("Confirm the original Form 1099-R and matching issuer payment after reviewing both records.");
+  return {
+    original: {
+      taxYear: 2025, accountHolder: row.accountHolder, recipientTaxIdLast4: proof.recipientTaxIdLast4,
+      payerTin: proof.originalIssuerEin.trim(), accountReference: proof.originalAccountLast4, sourceReference: proof.originalReference,
+      accountType: "traditional-ira", iraSepSimple: true, distributionCode: "7", grossDistribution: grossDistribution.toFixed(),
+      taxableAmount: taxableAmount.toFixed(), taxableAmountNotDetermined: false,
+    },
+    issuerPayment: {
+      sourceReference: row.sourceReference, payerTin: proof.receiptIssuerEin.trim(), accountReference: proof.receiptAccountLast4,
+      receivedDate: row.receivedDate, amount: actualAmount(row.amount, "issuer payment amount").toFixed(),
+    },
+    statementReportsThisSinglePaymentConfirmed: true,
+    noLine4ExclusionConfirmed: true,
+  } as const;
+}
+
 export function buildGuidedSaversCredit(data: GuidedSaversCreditData | undefined, context: GuidedSaversCreditContext): z.infer<typeof Form8880AnnualSchema> | undefined {
   if (!data) return undefined;
   const { taxYear, filingStatus, iraContributions, personal, wageEntries, retirementEntries, hasConflictingIncomeExclusions } = context;
   if (taxYear !== 2026 || data.taxYear !== "2026" || filingStatus !== "single") {
     throw new Error("This Form 8880 worksheet requires a 2026 single return.");
+  }
+  const historicalProof = buildHistoricalProof(data.testingPeriod);
+  if (historicalProof && context.hasCurrentRetirementStatements) {
+    throw new Error("This historical proof requires a return without a current Form 1099-R.");
   }
   if (data.sourceFactsConfirmed !== true || data.ordinaryScopeConfirmed !== true || hasConflictingIncomeExclusions) {
     throw new Error("Confirm the actual ordinary Roth IRA facts, including the absence of other qualifying contributions and relevant income exclusions.");
@@ -147,7 +234,7 @@ export function buildGuidedSaversCredit(data: GuidedSaversCreditData | undefined
     || (typeof householdDependency === "boolean" && householdDependency !== dependency)) {
     throw new Error("Confirm the taxpayer's date of birth, qualifying student months and dependency facts for 2026.");
   }
-  return Form8880AnnualSchema.parse({
+  const annual = Form8880AnnualSchema.parse({
     primaryIraContributions: roth.toFixed(),
     primaryElectiveDeferrals: "0",
     sourceFacts2026: {
@@ -160,8 +247,14 @@ export function buildGuidedSaversCredit(data: GuidedSaversCreditData | undefined
       },
       americanSamoaAgiRestoration: "0",
       puertoRicoAgiRestoration: "0",
+      ...(historicalProof ? { priorYearOrdinaryIraDistribution: { ...historicalProof, onlyIncludiblePaymentForTestingPeriodConfirmed: true } } : {}),
     },
   });
+  if (historicalProof) readForm8880AnnualSources(annual, taxYear, false, false, undefined, {
+    taxpayer: { filingStatus, primary: { ssn: personal?.ssn ?? "", dateOfBirth: birthDate } },
+    hasCurrentRetirementStatements: context.hasCurrentRetirementStatements ?? retirementEntries.length > 0,
+  });
+  return annual;
 }
 
 export function guidedSaversCreditFactErrors(data: GuidedSaversCreditData | undefined, context: GuidedSaversCreditContext): Record<string, string> {

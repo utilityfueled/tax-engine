@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyAdjustmentData, emptyCreditsData, getGuidedSectionRoute, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
-import { buildGuidedSaversCredit, type GuidedSaversCreditContext, type GuidedSaversCreditData } from "@/lib/guided-savers-credit";
+import { emptyAdjustmentData, emptyCreditsData, emptyRetirementEntry, getGuidedSectionRoute, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { buildGuidedSaversCredit, type GuidedSaversCreditContext, type GuidedSaversCreditData, type GuidedSaversCreditDistribution } from "@/lib/guided-savers-credit";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { d } from "@/utils/decimal";
 import { simpleW2Fixture } from "../fixtures/simple-w2";
@@ -35,6 +35,145 @@ const draft: GuidedSaversCreditData = {
   qualifyingStudentMonths: "0", dependentDeductionAllowedToAnotherTaxpayer: false,
   testingPeriod: { dueDate: "2027-04-15", distributionsConfirmed: true, distributions: [] },
 };
+
+const historicalRow = {
+  sourceReference: "IRA payment receipt", accountHolder: "primary" as const, receivedDate: "2025-03-05", amount: "500.00",
+  historicalProof: {
+    originalTaxYear: "2025", originalReference: "IRA tax statement", originalIssuerEin: "12-3456789", receiptIssuerEin: "123456789",
+    originalAccountLast4: "0042", receiptAccountLast4: "0042", recipientTaxIdLast4: "3333",
+    grossDistribution: "500", taxableAmount: "500.00", distributionCode: "7", traditionalIraConfirmed: true,
+    iraSepSimple: true, taxableAmountNotDetermined: false, sourceFactsConfirmed: true,
+  },
+};
+
+function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow) {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const personal = state.sectionData["personal-info"];
+  assert.ok(personal);
+  state.sectionData["personal-info"] = { ...personal, dateOfBirth: "1960-01-15" };
+  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "30000", federalWithheld: "2000", socialSecurityWages: "30000", socialSecurityWithheld: "1860", medicareWages: "30000", medicareWithheld: "435" }] };
+  state.sectionData.adjustments = { ...emptyAdjustmentData, iraContributions: { ...completeIraSources, ...context.iraContributions } };
+  return updateSectionData(state, "credits", { ...emptyCreditsData, saversCredit: {
+    ...draft, testingPeriod: { ...draft.testingPeriod, distributions: [row] },
+  } });
+}
+
+it("reopens guided historical proof and transfers the exact reduction only to Form 8880", () => {
+  const state = historicalInterview();
+  const key = "synthetic-historical-ira-credit";
+  const items = new Map<string, string>();
+  const storage: Storage = {
+    getItem: key => items.get(key) ?? null,
+    setItem: (key, value) => { items.set(key, value); },
+    removeItem: key => { items.delete(key); },
+    clear: () => items.clear(),
+    key: index => [...items.keys()][index] ?? null,
+    get length() { return items.size; },
+  };
+  expect(saveGuidedFlowState(storage, key, state)).toBe(true);
+  const reopened = loadGuidedFlowState(storage, key);
+  assert.ok(reopened);
+  expect(reopened.sectionData.credits?.saversCredit?.testingPeriod.distributions).toEqual([historicalRow]);
+  expect(validateSection(reopened, "credits").status).toBe("complete");
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+  expect(input.form1099R).toHaveLength(0);
+  expect(input.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistribution).toMatchObject({
+    original: { taxYear: 2025, recipientTaxIdLast4: "3333", accountReference: "0042" },
+    issuerPayment: { sourceReference: historicalRow.sourceReference, receivedDate: historicalRow.receivedDate, amount: "500" },
+  });
+  const calculation = calculateFederalTax(input);
+  expect(calculation.form8880?.line4a.toFixed()).toBe("500");
+  expect(calculation.iraDistributionsGross.toFixed()).toBe("0");
+  expect(calculation.schedule3?.retirementSavingsCredit.toFixed()).toBe("150");
+});
+
+it("holds opted-in proof until the historical issuer records and primary owner match", () => {
+  const proof = historicalRow.historicalProof;
+  for (const [changed, message] of [
+    [{ originalTaxYear: "2024" }, /original 2025 Form 1099-R/],
+    [{ distributionCode: "7A" }, /Code 7/],
+    [{ taxableAmountNotDetermined: true }, /determined taxable amount/],
+    [{ receiptIssuerEin: "" }, /both issuer EINs/],
+    [{ receiptIssuerEin: "98-7654321" }, /matching the issuer, account/],
+    [{ receiptAccountLast4: "5432" }, /matching the issuer, account/],
+    [{ originalAccountLast4: "123450042" }, /last four digits/],
+    [{ originalReference: " IRA PAYMENT RECEIPT " }, /separately referenced/],
+    [{ taxableAmount: "499.99" }, /fully taxable payment amount/],
+    [{ recipientTaxIdLast4: "3433" }, /match the primary owner/],
+    [{ sourceFactsConfirmed: null }, /after reviewing both records/],
+  ] as const) {
+    const updated = historicalInterview({ ...historicalRow, historicalProof: { ...proof, ...changed } });
+    expect(validateSection(updated, "credits").fieldErrors?.saversCredit).toMatch(message);
+    expect(buildTaxInputFromGuidedData(updated)).toBeNull();
+  }
+
+  const fresh = historicalInterview();
+  const credit = fresh.sectionData.credits?.saversCredit;
+  const personal = fresh.sectionData["personal-info"];
+  assert.ok(credit && personal);
+  const tooYoung = historicalInterview();
+  tooYoung.sectionData["personal-info"] = { ...personal, dateOfBirth: "1965-09-06" };
+  expect(validateSection(tooYoung, "credits").fieldErrors?.saversCredit).toMatch(/ordinary distribution age/);
+  expect(buildTaxInputFromGuidedData(tooYoung)).toBeNull();
+  const secondDistribution = historicalInterview();
+  secondDistribution.sectionData.credits = { ...emptyCreditsData, saversCredit: { ...credit,
+    testingPeriod: { ...credit.testingPeriod, distributions: [historicalRow,
+      { sourceReference: "another receipt", accountHolder: "primary", receivedDate: "2024-01-01", amount: "1" }] },
+  } };
+  expect(validateSection(secondDistribution, "credits").fieldErrors?.saversCredit).toMatch(/covers one 2025 payment/);
+
+  const current = updateSectionData(fresh, "income-retirement", { entries: [{ ...emptyRetirementEntry, grossDistribution: "0" }] });
+  expect(validateSection(current, "credits").fieldErrors?.saversCredit).toMatch(/without a current Form 1099-R/);
+  expect(buildTaxInputFromGuidedData(current)).toBeNull();
+  const manual = historicalInterview({ ...historicalRow, historicalProof: undefined });
+  expect(validateSection(manual, "credits").status).toBe("complete");
+  const manualInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(manual));
+  expect(manualInput.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistribution).toBeUndefined();
+  expect(calculateFederalTax(manualInput).form8880?.line4a.toFixed()).toBe("500");
+});
+
+it("retains historical evidence and requires renewed review after proof, owner or year changes", () => {
+  const state = historicalInterview();
+  const credit = state.sectionData.credits?.saversCredit;
+  const personal = state.sectionData["personal-info"];
+  assert.ok(credit && personal);
+  const editPeriod = (row: GuidedSaversCreditDistribution) => updateSectionData(state, "credits", { ...emptyCreditsData,
+    saversCredit: { ...credit, testingPeriod: { ...credit.testingPeriod, distributions: [row] } },
+  });
+  const changedReference = { ...historicalRow, sourceReference: "updated receipt label" };
+  const changedEvidence = { ...historicalRow, historicalProof: { ...historicalRow.historicalProof, originalReference: "updated tax form label" } };
+  for (const [changed, savedRow] of [
+    [editPeriod(changedReference), changedReference],
+    [editPeriod(changedEvidence), changedEvidence],
+    [updateSectionData(state, "personal-info", { ...personal, ssn: "555-55-3333" }), historicalRow],
+    [updateSectionData(state, "personal-info", { ...personal, dateOfBirth: "1961-01-15" }), historicalRow],
+    [setInterviewTaxYear(setInterviewTaxYear(state, 2025), 2026), historicalRow],
+  ] as const) {
+    expect(changed.sectionData.credits?.saversCredit).toMatchObject({ sourceFactsConfirmed: null,
+      testingPeriod: { distributionsConfirmed: null, distributions: [{ ...savedRow, historicalProof: { ...savedRow.historicalProof, sourceFactsConfirmed: null } }] },
+    });
+    expect(validateSection(changed, "credits").status).toBe("partial");
+  }
+
+  const edited = editPeriod(changedReference);
+  const editedCredit = edited.sectionData.credits?.saversCredit;
+  assert.ok(editedCredit);
+  const recordsReviewed = updateSectionData(edited, "credits", { ...emptyCreditsData, saversCredit: {
+    ...editedCredit, testingPeriod: { ...editedCredit.testingPeriod, distributions: [changedReference] },
+  } });
+  const reviewedCredit = recordsReviewed.sectionData.credits?.saversCredit;
+  assert.ok(reviewedCredit);
+  expect(reviewedCredit.testingPeriod.distributions[0]?.historicalProof?.sourceFactsConfirmed).toBe(true);
+  const periodReviewed = updateSectionData(recordsReviewed, "credits", { ...emptyCreditsData, saversCredit: {
+    ...reviewedCredit, testingPeriod: { ...reviewedCredit.testingPeriod, distributionsConfirmed: true },
+  } });
+  const finalCredit = periodReviewed.sectionData.credits?.saversCredit;
+  assert.ok(finalCredit);
+  const rechecked = updateSectionData(periodReviewed, "credits", { ...emptyCreditsData, saversCredit: { ...finalCredit, sourceFactsConfirmed: true } });
+  expect(validateSection(rechecked, "credits").status).toBe("complete");
+  expect(buildTaxInputFromGuidedData(rechecked)?.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistribution?.issuerPayment.sourceReference).toBe(changedReference.sourceReference);
+});
 
 it("projects through the guided return and reconfirms after source changes", () => {
   const base = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });

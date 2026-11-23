@@ -26,6 +26,23 @@ lines:
       empty list supplies zero. Distributions received in 2026 or positive
       current-return Form 1099-R originals require separate source reconciliation.
     testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::sums distinct actual testing-period distributions without rounding cents"
+  - line: "4, historical original proof"
+    description: Reconcile a single fully taxable 2025 traditional IRA payment from two historical issuer records
+    formula: >-
+      When the taxpayer chooses to provide historical proof for the sole
+      includible distribution, keep the 2025 Form 1099-R and matching issuer
+      payment out of current-year income. Use the receipt date, reference and
+      actual amount already entered on that row. Confirm the original's year,
+      owner, Code 7, IRA checkbox, and determined taxable amount equal to
+      gross; match both records' issuer EINs and redacted account references.
+      Compare the recipient's last four digits and age at receipt to the
+      existing taxpayer information. Require separately referenced records,
+      no current Form 1099-R originals or line 4 exclusions, and actual
+      completion of the full testing period. Hold incomplete or inconsistent
+      proof; preserve separately affirmed distributions without proof. Retain
+      saved evidence through autosave and year or owner edits, requiring fresh
+      confirmation when the proof, return year, owner or testing period changes.
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::reopens guided historical proof and transfers the exact reduction only to Form 8880"
   - line: "6–12"
     description: Carry owner-specific annual eligibility facts to the existing calculation
     formula: >-

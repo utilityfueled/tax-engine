@@ -106,7 +106,7 @@ import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-s
 import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
 import { buildActualEducationInput, LLC_YEAR_FACTS_VERSION, requiresLlcYearReview } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
-import { guidedSaversCreditContext, guidedSaversCreditFactErrors, type GuidedSaversCreditData } from "./guided-savers-credit";
+import { guidedSaversCreditContext, guidedSaversCreditFactErrors, guidedSaversHistoricalEvidence, requireGuidedSaversReview, type GuidedSaversCreditData } from "./guided-savers-credit";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
 import { formatPendingW2SuggestionValueLabel, isOfficialFixtureSourceType } from "@/lib/document-fixture-copy";
@@ -1871,7 +1871,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
       } : {}),
       ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency || bankInterestSourcesEntered || credits.saversCredit) ? { credits: { ...credits,
         ...(requireCareReview ? { dependentCare: { ...credits.dependentCare, sourceFactsConfirmed: null } } : {}),
-        ...(credits.saversCredit ? { saversCredit: { ...credits.saversCredit, sourceFactsConfirmed: null } } : {}),
+        ...(credits.saversCredit ? { saversCredit: requireGuidedSaversReview(credits.saversCredit, Boolean(guidedSaversHistoricalEvidence(credits.saversCredit))) } : {}),
         ...(education && (aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency) ? { education: {
           ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
           ...(clearStudentLoanEducationDependency ? { claimedAsDependent: null } : {}),
@@ -2268,7 +2268,12 @@ export function updateSectionData(
   const editedSaversDraft = sectionId === "credits" && credits?.saversCredit && sourceValuesChanged;
   const saversSourcesChanged = savedSaversCredit && sourceValuesChanged
     && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-social-security", "adjustments", "additional-deductions"].includes(sectionId);
-  const saversCreditToReconfirm = (editedSaversDraft || saversSourcesChanged) && savedSaversCredit;
+  const previousSaversOwner = state.sectionData["personal-info"];
+  const saversProofChanged = (sectionId === "credits" && credits?.saversCredit
+    && guidedSourceValuesChanged(guidedSaversHistoricalEvidence(credits.saversCredit), guidedSaversHistoricalEvidence(savedSaversCredit)))
+    || (sectionId === "personal-info" && Boolean(guidedSaversHistoricalEvidence(savedSaversCredit))
+      && (previousSaversOwner?.ssn !== nextPersonal?.ssn || previousSaversOwner?.dateOfBirth !== nextPersonal?.dateOfBirth));
+  const saversCreditToReconfirm = (editedSaversDraft || saversSourcesChanged || saversProofChanged) && savedSaversCredit;
   const addedLlcSources = !credits?.education?.llcStudents?.length && !!nextCredits?.education?.llcStudents?.length;
   const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
     && nextCredits?.adoption?.children.some(child => child.priorYearForeignBenefitHistory) ? nextCredits?.adoption : undefined;
@@ -2438,7 +2443,7 @@ export function updateSectionData(
           : studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged || saversCreditToReconfirm) && nextCredits ? { credits: { ...nextCredits,
-        ...(saversCreditToReconfirm ? { saversCredit: { ...saversCreditToReconfirm, sourceFactsConfirmed: null } } : {}),
+        ...(saversCreditToReconfirm ? { saversCredit: requireGuidedSaversReview(saversCreditToReconfirm, Boolean(saversProofChanged)) } : {}),
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(careEarnedIncomeChanged ? { dependentCare: { ...care, sourceFactsConfirmed: null } } : {}),
