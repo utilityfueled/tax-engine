@@ -404,7 +404,7 @@ function PaymentsSummary({ data }: { data: PaymentData | undefined }) {
 function RetirementSummary({ entries }: { entries: RetirementEntryData[] | undefined }) {
   if (!entries || entries.length === 0) return <p className="guided-review-empty">No 1099-R entered.</p>;
 
-  const filledEntries = entries.filter((e) => hasValue(e.grossDistribution) || hasValue(e.taxableAmount));
+  const filledEntries = entries.filter((entry) => hasEnteredAmount(entry.grossDistribution) || hasEnteredAmount(entry.taxableAmount));
   if (filledEntries.length === 0) return <p className="guided-review-empty">No 1099-R with data entered.</p>;
 
   return (
@@ -415,9 +415,15 @@ function RetirementSummary({ entries }: { entries: RetirementEntryData[] | undef
             {entry.payer || `1099-R #${i + 1}`}
           </span>
           <span className="guided-review-value">
-            {needsGuidedSimplifiedMethod(entry) && !hasEnteredAmount(entry.taxableAmount)
-              ? "Box 2a blank on the original"
-              : `${formatCurrency(entry.taxableAmount)} taxable`}, {formatCurrency(entry.federalWithheld)} withheld
+            {hasEnteredAmount(entry.taxableAmount)
+              ? `${formatCurrency(entry.taxableAmount)} reported in Box 2a`
+              : needsGuidedSimplifiedMethod(entry)
+                ? "Box 2a blank on the original"
+                : "Box 2a amount not entered"}
+            {", "}
+            {hasEnteredAmount(entry.federalWithheld)
+              ? `${formatCurrency(entry.federalWithheld)} withheld`
+              : "Box 4 amount not entered"}
           </span>
         </div>
       ))}

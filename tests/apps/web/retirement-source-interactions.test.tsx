@@ -2,8 +2,10 @@
 // Spec: spec/federal/guided-input.yaml, retirement-source-records
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, it, vi } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
+import { SectionReview } from "@/components/guided-interview/section-review";
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
 import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
@@ -61,6 +63,13 @@ it("collects and reopens a 2026 Code 3 disability pension worksheet", async () =
       expect(container.textContent).toMatch(/review.*employer plan and paid premium records/i);
       await change(confirm, "true");
       expect(() => buildRetirementInputs(latest(), "single", 2026, undefined, { personal })).toThrow(/review.*employer plan and paid premium records/i);
+      draft.sectionData["income-retirement"] = { entries: latest() };
+      expect(saveGuidedFlowState(window.sessionStorage, key, draft)).toBe(true);
+      const pendingElection = loadGuidedFlowState(window.sessionStorage, key);
+      if (!pendingElection) throw new Error("The pending premium election did not reopen");
+      const summary = renderToStaticMarkup(<SectionReview state={pendingElection} preview={null} onJumpToSection={() => {}} />);
+      expect(summary).toContain("$1,000 reported in Box 2a");
+      expect(summary).not.toContain("$1,000 taxable");
       await change(publicSafetyOfficerElection, "false");
       expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
       await change(confirm, "true");
@@ -82,6 +91,19 @@ it("collects and reopens a 2026 Code 3 disability pension worksheet", async () =
   } finally {
     window.sessionStorage.removeItem(getGuidedFlowStorageKey(key));
   }
+});
+
+it("distinguishes an entered zero from missing Box 2a on draft review", () => {
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  draft.sectionData["income-retirement"] = { entries: [
+    { ...emptyRetirementEntry, payer: "Zero plan", taxableAmount: "0" },
+    { ...emptyRetirementEntry, payer: "Incomplete plan", grossDistribution: "500", federalWithheld: "0" },
+  ] };
+  const summary = renderToStaticMarkup(<SectionReview state={draft} preview={null} onJumpToSection={() => {}} />);
+  expect(summary).toContain("Zero plan");
+  expect(summary).toContain("$0 reported in Box 2a, Box 4 amount not entered");
+  expect(summary).toContain("Incomplete plan");
+  expect(summary).toContain("Box 2a amount not entered, $0 withheld");
 });
 
 // Specs: spec/federal/form-5329-guided-code1-ira-2026.yaml, 1-4, and spec/federal/form-5329-first-home-guided-2026.yaml, 09-guided-source.
