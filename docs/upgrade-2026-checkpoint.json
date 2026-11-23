@@ -1,5 +1,51 @@
 {
   "activeContinuation": {
+    "nov22Form8880PairedHistoricalIra": {
+      "applicationCommit": "80fb4d9c5d3edb0050ef53c4e698aa24a9ae528e",
+      "scope": "One matched primary ordinary traditional IRA payment in each of 2024 and 2025",
+      "authority": "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2",
+      "focusedTestsPassed": 93,
+      "scopedSpecReferences": 47,
+      "independentSoftwareReview": "passed",
+      "guidedChromiumReopenedBothExactReceiptsAndRejectedIssuerMismatch": true,
+      "guidedChromiumExecutionSha256": "a1023bbc3b41f15feb2599deb9800804d9b67f44f3a32b575bc8ab2ddf37d5ee",
+      "exactFullChecks": "running"
+    },
+    "nov22EducationRefundZero": {
+      "applicationCommit": "e728b7b3f740c0ebbbcad9779d9e7f1ea852719b",
+      "scope": "Guided ordinary education expense refund-history visibility",
+      "explicitZeroPreserved": true,
+      "savedAnswersAndLinkedRefundsRemainReviewable": true,
+      "focusedTestsPassed": 14,
+      "focusedLogSha256": "b9ca3a758d0ad6dedbaf0ce2e6e6614c86e6ddd7f5814d7e2342846c1256fd91",
+      "scopedSpecReferences": 6,
+      "webTypecheckPassed": true,
+      "independentSoftwareReview": "passed",
+      "exactLocalCoreChecksPassed": 9,
+      "exactLocalUnitAndCoveragePerSuite": {"passed": 30131, "skipped": 79},
+      "exactLocalBranchCoveragePercent": 88.22,
+      "githubRuns": {"ci": 45100487331, "web": 45100487454, "docker": 45100487425},
+      "productionBuildState": "CANCELED",
+      "exactFullChecks": "running"
+    },
+    "nov22Form8880Historical2024": {
+      "applicationCommit": "00134fa30faf4cc76aa129427300c09bb270eb16",
+      "scope": "One matched 2024 or 2025 fully taxable ordinary traditional IRA payment to the primary taxpayer",
+      "authority": "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2",
+      "focusedTestsPassed": 88,
+      "scopedSpecReferences": 45,
+      "independentSoftwareReview": "passed",
+      "guidedChromiumReopenedExactCentsAndRejectedBothYearMismatches": true,
+      "guidedChromiumExecutionSha256": "58af13f034b9c273df7cfb7f50852c23f62273a7effeb0c1e32e508aa50b6eeb",
+      "exactLocalCoreChecksPassed": 9,
+      "exactLocalUnitAndCoveragePerSuite": {"passed": 30130, "skipped": 79},
+      "exactLocalBranchCoveragePercent": 88.22,
+      "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8, "cleanupPassed": true},
+      "exactLocalManifestSha256": "1aa560b4776f7d8cea4656e84381c7ed263ecb6a13d5503fc7e04e48e50324a0",
+      "githubRuns": {"ci": 45100009405, "web": 45100009389, "docker": 45100009471},
+      "productionBuildState": "CANCELED",
+      "exactFullChecks": "passed"
+    },
     "nov22PublicProviderDocs": {
       "publicDocumentationOnly": true,
       "openAiProfilesDocumented": {"gpt-6-luna": "high", "gpt-6.1-sol": "low"},
@@ -43,7 +89,14 @@
         "rrtaSavedPdfInspectionTimeoutSeconds": 4,
         "rrtaSavedPdfInspectionTimeouts": {"amd64": 2, "arm64": 0},
         "allFailuresReconciled": true,
-        "rootCauseEstablished": false
+        "rootCauseEstablished": false,
+        "secondaryPaymentProjectionBenchmark": {
+          "sameSyntheticEditsPerFixture": 224,
+          "duplicateMedianMilliseconds": [1.124, 1.131],
+          "shareOfPureEditSaveRenderPercent": [3.64, 3.73],
+          "logSha256": "18a1ef194be0ff306de04ae16a8398df09772613fbfc13cbc83a17f806d71990",
+          "applicationChangeMade": false
+        }
       },
       "nativeArm64BrowserSummarySha256": "f4560ed78f799e8b29f5f989b4d71f8a57735ffdb0d87b90734bdb5b35ac7112",
       "nativeArm64TerminalReceiptSha256": "1ca25af6ecf079c1569a2c8b19860474273fba389a12e827d5150236ddb7dd3c",

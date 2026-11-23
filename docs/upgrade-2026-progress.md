@@ -12985,6 +12985,13 @@ deadlines without establishing why the runners reached them.
 [AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157/job/137424225792) ·
 [Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293/job/137427369274).
 
+An independent local benchmark replayed 224 edits per fixture on two
+synthetic Ohio school-district returns. One matching payment projection
+was repeated per edit. The median duplicate took 1.124 and 1.131 ms, about
+3.6 and 3.7 percent of pure edit, save, and render time on the Mac.
+The strict Linux deadlines still lack a measured cause. Reusing this
+result would cross the residency adapter boundary for a small saving.
+
 ### November 22 provider catalog and retirement check
 
 OpenAI still documents GPT-6 Luna with high reasoning and GPT-6.1 Sol
@@ -13004,6 +13011,68 @@ real qualification remain outstanding. This check made no generation
 requests and did not change any routing.
 [Gemini 3.8 Flash](https://aistudio.google.com/docs/models/gemini-3.8-flash) ·
 [Google lifecycle](https://aistudio.google.com/docs/deprecations).
+
+### November 22 paired Form 8880 issuer records
+
+`80fb4d9c` accepts one matching ordinary traditional IRA payment from
+each of 2024 and 2025 for the primary taxpayer. Each original Form
+1099-R is reconciled to its own issuer receipt. The taxpayer confirms
+that the records cover every includible distribution in the testing
+period. The validated amounts use an exact Decimal sum for line 4.
+Existing single-payment proof and affirmed totals remain available.
+[Final 2026 Form 8880 instructions](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2).
+
+All 93 focused tests, 47 scoped spec references, root and web
+typechecks, and independent software review passed. Independent
+local Chromium reopened $500.37 and $249.85 in both receipts and all
+four amount boxes. Editing the second receipt’s issuer tax ID cleared
+all four confirmations. The mismatched receipt blocked Continue and
+correcting it and reconfirming restored progression. All records were
+synthetic. Public filing qualification and independent tax review
+remain open.
+
+### November 22 Form 8880 2024 issuer records
+
+`00134fa3` accepts one fully taxable ordinary traditional IRA payment
+received in 2024 or 2025 when the original Form 1099-R year matches the
+issuer receipt year. The amount still enters the 2026 Form 8880 line 4
+distribution reduction in exact cents. Saved 2025 evidence and the
+taxpayer-affirmed testing-period total still work. Line 4 covers eligible
+distribution receipts after 2023 and before the applicable 2026 return
+due date. Other years and kinds of issuer records still require their
+own source paths and qualification. [Final 2026 Form 8880 instructions](https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2).
+
+Three new positive regression paths failed before implementation.
+All 88 focused tests, 45 scoped spec references, root and web types, and
+independent software review passed. An isolated production-build Chromium
+check saved and reopened the 2024 receipt and amount boxes at $500.37.
+Changing either year cleared all three confirmations and blocked Continue.
+Correcting the year and reconfirming restored progression. Verification
+used synthetic records. Annual public export and independent human tax
+review remain open.
+
+All 11 exact local checks passed. Unit and coverage each passed 30,130
+tests and retained 79 existing skips. Branch coverage reached 88.22%.
+Chromium passed 650 tests, retained five existing skips, and verified
+cleanup. The shell sandbox denied loopback binds in initial attempts.
+Their logs were retained and reruns used normal localhost permissions
+with the same source, checks and thresholds. Exact manifest SHA-256
+`1aa560b4776f7d8cea4656e84381c7ed263ecb6a13d5503fc7e04e48e50324a0`.
+
+### November 22 education refund zero
+
+`e728b7b3` compares refund amounts as Decimal values for question
+visibility. A new `0` or `0.00` can remain explicit zero without exposing
+an unnecessary refund-history question. A saved Yes or No and a linked
+refund each keep the question available for review. A blank still
+represents a missing amount. The existing reconciliation and confirmation
+requirements still apply.
+
+The failing interaction test reproduced both zero-format differences
+and the hidden saved No. All 14 focused tests, six scoped spec references,
+web typecheck, the browser source hash audit and independent software
+review passed. Both packages were pushed behind the Preview-only build
+guard. Full exact-source checks are recorded in the continuation checkpoint.
 
 ### November 22 guided Form 8880 historical evidence
 

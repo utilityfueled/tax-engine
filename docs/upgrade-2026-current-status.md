@@ -2,6 +2,27 @@
 
 ## Resume here · November 22
 
+Main is the active branch. The hosted cybersecurity rehearsals are
+deferred at the owner’s direction. Their readiness criteria remain open.
+
+- `80fb4d9c` binds one matching 2024 issuer payment and one matching
+  2025 payment to an exact combined line 4 reduction. All 93 focused
+  tests, 47 scoped spec references, root and web types, and independent
+  software review passed. Chromium verified save, reopen, and recovery
+  from a mismatched second issuer.
+  [Paired Form 8880 evidence](upgrade-2026-progress.md#november-22-paired-form-8880-issuer-records).
+- `e728b7b3` keeps an education refund-history answer editable after
+  formatting or clearing a zero entry, and exposes the question when an
+  expense has a linked refund. All 14 focused tests, web typecheck, six
+  scoped spec references and independent software review passed.
+  [Education refund evidence](upgrade-2026-progress.md#november-22-education-refund-zero).
+- `00134fa3` accepts one matching 2024 or 2025 Form 1099-R and issuer
+  receipt in the guided 2026 Saver’s Credit path. All 88 focused tests
+  and independent software review passed. Chromium saved and reopened
+  $500.37 and blocked both directions of a year mismatch. All 11 exact
+  local checks passed, with 30,130 unit and coverage cases per suite,
+  88.22% branch coverage, and 650 Chromium passes.
+  [Historical IRA evidence](upgrade-2026-progress.md#november-22-form-8880-2024-issuer-records).
 - `83436988` reuses the exact federal result during one pending Ohio
   part-year header replay. Both source checks and the original proof
   still run. Independent software review and all 11 exact local checks
