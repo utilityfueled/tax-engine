@@ -59,8 +59,9 @@ function historicalInterview(row: GuidedSaversCreditDistribution = historicalRow
   } });
 }
 
-it("reopens guided historical proof and transfers the exact reduction only to Form 8880", () => {
-  const state = historicalInterview();
+it.each([2024, 2025] as const)("reopens guided %i historical proof and transfers the exact reduction only to Form 8880", taxYear => {
+  const row = { ...historicalRow, receivedDate: `${taxYear}-03-05`, historicalProof: { ...historicalRow.historicalProof, originalTaxYear: String(taxYear) } };
+  const state = historicalInterview(row);
   const key = "synthetic-historical-ira-credit";
   const items = new Map<string, string>();
   const storage: Storage = {
@@ -74,13 +75,13 @@ it("reopens guided historical proof and transfers the exact reduction only to Fo
   expect(saveGuidedFlowState(storage, key, state)).toBe(true);
   const reopened = loadGuidedFlowState(storage, key);
   assert.ok(reopened);
-  expect(reopened.sectionData.credits?.saversCredit?.testingPeriod.distributions).toEqual([historicalRow]);
+  expect(reopened.sectionData.credits?.saversCredit?.testingPeriod.distributions).toEqual([row]);
   expect(validateSection(reopened, "credits").status).toBe("complete");
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
   expect(input.form1099R).toHaveLength(0);
   expect(input.form8880?.sourceFacts2026?.priorYearOrdinaryIraDistribution).toMatchObject({
-    original: { taxYear: 2025, recipientTaxIdLast4: "3333", accountReference: "0042" },
-    issuerPayment: { sourceReference: historicalRow.sourceReference, receivedDate: historicalRow.receivedDate, amount: "500" },
+    original: { taxYear, recipientTaxIdLast4: "3333", accountReference: "0042" },
+    issuerPayment: { sourceReference: row.sourceReference, receivedDate: row.receivedDate, amount: "500" },
   });
   const calculation = calculateFederalTax(input);
   expect(calculation.form8880?.line4a.toFixed()).toBe("500");
@@ -91,7 +92,8 @@ it("reopens guided historical proof and transfers the exact reduction only to Fo
 it("holds opted-in proof until the historical issuer records and primary owner match", () => {
   const proof = historicalRow.historicalProof;
   for (const [changed, message] of [
-    [{ originalTaxYear: "2024" }, /original 2025 Form 1099-R/],
+    [{ originalTaxYear: "2024" }, /year printed on Form 1099-R must match/],
+    [{ originalTaxYear: "" }, /year printed on Form 1099-R must match/],
     [{ distributionCode: "7A" }, /Code 7/],
     [{ taxableAmountNotDetermined: true }, /determined taxable amount/],
     [{ receiptIssuerEin: "" }, /both issuer EINs/],
@@ -109,6 +111,10 @@ it("holds opted-in proof until the historical issuer records and primary owner m
   }
 
   const fresh = historicalInterview();
+  for (const receivedDate of ["2023-12-31", "2026-01-01"]) {
+    const outsideProofScope = historicalInterview({ ...historicalRow, receivedDate, historicalProof: { ...proof, originalTaxYear: receivedDate.slice(0, 4) } });
+    expect(validateSection(outsideProofScope, "credits").fieldErrors?.saversCredit).toMatch(/covers one 2024 or 2025 payment/);
+  }
   const credit = fresh.sectionData.credits?.saversCredit;
   const personal = fresh.sectionData["personal-info"];
   assert.ok(credit && personal);
@@ -121,7 +127,7 @@ it("holds opted-in proof until the historical issuer records and primary owner m
     testingPeriod: { ...credit.testingPeriod, distributions: [historicalRow,
       { sourceReference: "another receipt", accountHolder: "primary", receivedDate: "2024-01-01", amount: "1" }] },
   } };
-  expect(validateSection(secondDistribution, "credits").fieldErrors?.saversCredit).toMatch(/covers one 2025 payment/);
+  expect(validateSection(secondDistribution, "credits").fieldErrors?.saversCredit).toMatch(/covers one 2024 or 2025 payment/);
 
   const current = updateSectionData(fresh, "income-retirement", { entries: [{ ...emptyRetirementEntry, grossDistribution: "0" }] });
   expect(validateSection(current, "credits").fieldErrors?.saversCredit).toMatch(/without a current Form 1099-R/);
@@ -142,9 +148,11 @@ it("retains historical evidence and requires renewed review after proof, owner o
     saversCredit: { ...credit, testingPeriod: { ...credit.testingPeriod, distributions: [row] } },
   });
   const changedReference = { ...historicalRow, sourceReference: "updated receipt label" };
+  const changedReceiptDate = { ...historicalRow, receivedDate: "2024-03-05" };
   const changedEvidence = { ...historicalRow, historicalProof: { ...historicalRow.historicalProof, originalReference: "updated tax form label" } };
   for (const [changed, savedRow] of [
     [editPeriod(changedReference), changedReference],
+    [editPeriod(changedReceiptDate), changedReceiptDate],
     [editPeriod(changedEvidence), changedEvidence],
     [updateSectionData(state, "personal-info", { ...personal, ssn: "555-55-3333" }), historicalRow],
     [updateSectionData(state, "personal-info", { ...personal, dateOfBirth: "1961-01-15" }), historicalRow],

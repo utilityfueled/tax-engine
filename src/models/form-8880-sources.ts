@@ -14,9 +14,18 @@ const contributor = z.strictObject({
 
 const signedAmount = z.string().regex(/^-?\d+(\.\d+)?$/);
 
+const historicalIraPaymentYears = [2024, 2025] as const;
+const issuerPaymentDate = z.iso.date();
+
+export function getForm8880HistoricalIraPaymentYear(receivedDate: string | undefined) {
+  const date = issuerPaymentDate.safeParse(receivedDate);
+  if (!date.success) return undefined;
+  return historicalIraPaymentYears.find(year => date.data.startsWith(`${year}-`));
+}
+
 const priorYearOrdinaryIraDistribution = z.strictObject({
   original: z.strictObject({
-    taxYear: z.literal(2025),
+    taxYear: z.literal(historicalIraPaymentYears),
     accountHolder: z.literal("primary"),
     recipientTaxIdLast4: z.string().regex(/^\d{4}$/),
     payerTin,
@@ -33,13 +42,16 @@ const priorYearOrdinaryIraDistribution = z.strictObject({
     sourceReference,
     payerTin,
     accountReference: sourceReference,
-    receivedDate: z.iso.date().refine(date => date.startsWith("2025-")),
+    receivedDate: issuerPaymentDate,
     amount: unsignedAmount,
   }),
   statementReportsThisSinglePaymentConfirmed: z.literal(true),
   noLine4ExclusionConfirmed: z.literal(true),
   /** Covers the full testing period before the actual applicable due date, including extensions. */
   onlyIncludiblePaymentForTestingPeriodConfirmed: z.literal(true),
+}).refine(({ original, issuerPayment }) => issuerPayment.receivedDate.startsWith(`${original.taxYear}-`), {
+  path: ["issuerPayment", "receivedDate"],
+  message: "The issuer payment date must match the historical Form 1099-R year.",
 });
 
 /** Confirmed annual inputs, including the net AGI effects of disregarding §§931 and 933. */

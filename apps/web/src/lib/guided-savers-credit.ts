@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import type { z } from "zod";
-import { Form8880AnnualSchema, readForm8880AnnualSources } from "@/models/form-8880-sources";
+import { Form8880AnnualSchema, getForm8880HistoricalIraPaymentYear, readForm8880AnnualSources } from "@/models/form-8880-sources";
 import type { AdjustmentData, FilingStatus, GuidedFlowState, RetirementEntryData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { hasEnteredAmount, isActualDate } from "./guided-required-facts";
@@ -159,12 +159,16 @@ function buildHistoricalProof(period: GuidedSaversCreditData["testingPeriod"]) {
   const row = period.distributions.find(distribution => distribution.historicalProof !== undefined);
   if (!row) return undefined;
   const proof = row.historicalProof;
-  if (period.distributions.length !== 1 || row.accountHolder !== "primary" || !row.receivedDate?.startsWith("2025-")) {
-    throw new Error("Historical proof covers one 2025 payment to the primary taxpayer. Review your full list of distributions.");
+  const paymentYear = getForm8880HistoricalIraPaymentYear(row.receivedDate);
+  if (period.distributions.length !== 1 || row.accountHolder !== "primary" || paymentYear === undefined) {
+    throw new Error("Historical proof covers one 2024 or 2025 payment to the primary taxpayer. Review your full list of distributions.");
   }
-  if (!proof || proof.originalTaxYear !== "2025" || proof.distributionCode?.trim() !== "7" || proof.traditionalIraConfirmed !== true
+  if (!proof || proof.originalTaxYear !== String(paymentYear)) {
+    throw new Error("The year printed on Form 1099-R must match the year you received the payment.");
+  }
+  if (proof.distributionCode?.trim() !== "7" || proof.traditionalIraConfirmed !== true
     || proof.iraSepSimple !== true || proof.taxableAmountNotDetermined !== false) {
-    throw new Error("Enter the original 2025 Form 1099-R for a traditional IRA with Code 7, the IRA box checked and a determined taxable amount.");
+    throw new Error("Enter the original Form 1099-R for a traditional IRA with Code 7, the IRA box checked and a determined taxable amount.");
   }
   const isLastFour = (value: string | undefined) => /^\d{4}$/.test(value ?? "");
   const isIssuerEin = (value: string | undefined) => /^\d{2}-?\d{7}$/.test(value?.trim() ?? "");
@@ -177,7 +181,7 @@ function buildHistoricalProof(period: GuidedSaversCreditData["testingPeriod"]) {
   if (proof.sourceFactsConfirmed !== true) throw new Error("Confirm the original Form 1099-R and matching issuer payment after reviewing both records.");
   return {
     original: {
-      taxYear: 2025, accountHolder: row.accountHolder, recipientTaxIdLast4: proof.recipientTaxIdLast4,
+      taxYear: paymentYear, accountHolder: row.accountHolder, recipientTaxIdLast4: proof.recipientTaxIdLast4,
       payerTin: proof.originalIssuerEin.trim(), accountReference: proof.originalAccountLast4, sourceReference: proof.originalReference,
       accountType: "traditional-ira", iraSepSimple: true, distributionCode: "7", grossDistribution: grossDistribution.toFixed(),
       taxableAmount: taxableAmount.toFixed(), taxableAmountNotDetermined: false,

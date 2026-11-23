@@ -1,13 +1,13 @@
 /** Fictional matching originals for one prior-year payment. */
-export function priorYearOrdinaryIraDistribution(amount = "500") {
+export function priorYearOrdinaryIraDistribution(amount = "500", taxYear: 2024 | 2025 = 2025) {
   return {
     original: {
-      taxYear: 2025 as const,
+      taxYear,
       accountHolder: "primary" as const,
       recipientTaxIdLast4: "6789",
       payerTin: "98-7654321",
       accountReference: "FICTIONAL RETIREMENT ACCOUNT",
-      sourceReference: "FICTIONAL 2025 FORM 1099-R",
+      sourceReference: `FICTIONAL ${taxYear} FORM 1099-R`,
       accountType: "traditional-ira" as const,
       iraSepSimple: true as const,
       distributionCode: "7" as const,
@@ -16,10 +16,10 @@ export function priorYearOrdinaryIraDistribution(amount = "500") {
       taxableAmountNotDetermined: false as const,
     },
     issuerPayment: {
-      sourceReference: "FICTIONAL 2025 IRA PAYMENT",
+      sourceReference: `FICTIONAL ${taxYear} IRA PAYMENT`,
       payerTin: "98-7654321",
       accountReference: "FICTIONAL RETIREMENT ACCOUNT",
-      receivedDate: "2025-12-31",
+      receivedDate: `${taxYear}-12-31`,
       amount,
     },
     statementReportsThisSinglePaymentConfirmed: true as const,

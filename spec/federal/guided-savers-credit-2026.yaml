@@ -27,12 +27,13 @@ lines:
       current-return Form 1099-R originals require separate source reconciliation.
     testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::sums distinct actual testing-period distributions without rounding cents"
   - line: "4, historical original proof"
-    description: Reconcile a single fully taxable 2025 traditional IRA payment from two historical issuer records
+    description: Reconcile a single fully taxable 2024 or 2025 traditional IRA payment from two historical issuer records
     formula: >-
       When the taxpayer chooses to provide historical proof for the sole
-      includible distribution, keep the 2025 Form 1099-R and matching issuer
+      includible distribution, keep the 2024 or 2025 Form 1099-R and matching issuer
       payment out of current-year income. Use the receipt date, reference and
-      actual amount already entered on that row. Confirm the original's year,
+      actual amount already entered on that row. Match the independently entered
+      original form year to the receipt date and confirm the original's
       owner, Code 7, IRA checkbox, and determined taxable amount equal to
       gross; match both records' issuer EINs and redacted account references.
       Compare the recipient's last four digits and age at receipt to the
@@ -42,7 +43,14 @@ lines:
       proof; preserve separately affirmed distributions without proof. Retain
       saved evidence through autosave and year or owner edits, requiring fresh
       confirmation when the proof, return year, owner or testing period changes.
-    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::reopens guided historical proof and transfers the exact reduction only to Form 8880"
+    testRef: "tests/guided-interview/guided-savers-credit-2026.test.ts::reopens guided %i historical proof and transfers the exact reduction only to Form 8880"
+  - line: "4, historical record collection"
+    description: Collect the historical proof from a single distribution row
+    formula: >-
+      For a single valid 2024 or 2025 receipt date, offer the corresponding
+      historical records. Leave the year printed on Form 1099-R blank until
+      the taxpayer copies it from the original.
+    testRef: "tests/apps/web/savers-credit-details.test.tsx::collects %i historical records without prefilling the original year"
   - line: "6–12"
     description: Carry owner-specific annual eligibility facts to the existing calculation
     formula: >-

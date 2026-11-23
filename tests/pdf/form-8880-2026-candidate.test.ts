@@ -289,16 +289,16 @@ describe("Final 2026 Form 8880 physical candidate", () => {
     }
   });
 
-  it("reopens the matched prior-year distribution and reduced Roth credit", async () => {
+  it.each([2024, 2025] as const)("reopens the matched %i distribution and reduced Roth credit", async taxYear => {
     const { input, source } = ordinaryRothSourceFixture();
-    const prior = priorYearOrdinaryIraDistribution();
+    const prior = priorYearOrdinaryIraDistribution("500", taxYear);
     const withPriorPayment = (amount: string) => TaxYearInputSchema.parse({
       ...input,
-      taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, dateOfBirth: "1966-06-30" } },
+      taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, dateOfBirth: "1965-06-30" } },
       form8880: { ...input.form8880, sourceFacts2026: {
         ...input.form8880.sourceFacts2026,
         primary: { ...input.form8880.sourceFacts2026.primary, testingPeriodDistributionReduction: amount },
-        priorYearOrdinaryIraDistribution: priorYearOrdinaryIraDistribution(amount),
+        priorYearOrdinaryIraDistribution: priorYearOrdinaryIraDistribution(amount, taxYear),
       } },
     });
     const parsed = withPriorPayment("500");

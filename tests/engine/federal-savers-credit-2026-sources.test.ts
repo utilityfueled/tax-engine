@@ -49,11 +49,11 @@ function tax(sources: unknown, contributions: Record<string, string> = { primary
 }
 
 describe("Confirmed annual Form 8880 sources", () => {
-  it("derives line 4 from one matched 2025 issuer payment without changing return income", () => {
-    const prior = priorYearOrdinaryIraDistribution("500.25");
+  it.each([2024, 2025] as const)("derives line 4 from one matched %i issuer payment without changing return income", taxYear => {
+    const prior = priorYearOrdinaryIraDistribution("500.25", taxYear);
     const input = TaxYearInputSchema.parse({
       ...raw,
-      taxpayer: { ...raw.taxpayer, primary: { ...raw.taxpayer.primary, dateOfBirth: "1966-06-30" } },
+      taxpayer: { ...raw.taxpayer, primary: { ...raw.taxpayer.primary, dateOfBirth: "1965-06-30" } },
       form8880: {
         primaryIraContributions: "2000",
         primaryElectiveDeferrals: "0",
@@ -92,6 +92,8 @@ describe("Confirmed annual Form 8880 sources", () => {
     });
     for (const incompatible of [
       withOriginal({ original: { ...prior.original, taxYear: 2024 } }),
+      withOriginal({ original: { ...prior.original, taxYear: 2023 }, issuerPayment: { ...prior.issuerPayment, receivedDate: "2023-12-31" } }),
+      withOriginal({ original: { ...prior.original, taxYear: 2026 }, issuerPayment: { ...prior.issuerPayment, receivedDate: "2026-01-01" } }),
       withOriginal({ original: { ...prior.original, accountHolder: "spouse" } }),
       withOriginal({ original: { ...prior.original, recipientTaxIdLast4: "1234" } }),
       withOriginal({ original: { ...prior.original, accountType: "roth-ira" } }),
@@ -104,6 +106,7 @@ describe("Confirmed annual Form 8880 sources", () => {
       withOriginal({ issuerPayment: { ...prior.issuerPayment, receivedDate: "2024-12-31" } }),
       withOriginal({ issuerPayment: { ...prior.issuerPayment, receivedDate: "2026-01-01" } }),
       withOriginal({ issuerPayment: { ...prior.issuerPayment, receivedDate: "2025-02-29" } }),
+      withOriginal(priorYearOrdinaryIraDistribution("500", 2024)),
       withOriginal({ issuerPayment: { ...prior.issuerPayment, amount: "499.99" } }),
       withOriginal({ statementReportsThisSinglePaymentConfirmed: false }),
       withOriginal({ noLine4ExclusionConfirmed: false }),

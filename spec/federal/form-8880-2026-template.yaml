@@ -77,7 +77,7 @@ lines:
       no other contribution sources or elections, zero AGI restorations, and the
       same reconciled W-2 and tax-limit scope as the Code D case. Write the
       canonical contribution on line 1a and zero on line 2a. Line 4a is either a
-      confirmed zero or the separately bound ordinary 2025 distribution below.
+      confirmed zero or the separately bound ordinary 2024 or 2025 distribution below.
       Require a positive credit tied to Schedule 3 line 4, preserve
       the native line 9 digit and worksheet cells, and verify the saved PDF with
       an independent reader. The candidate stays review-only with public export held.
@@ -91,15 +91,15 @@ lines:
       without the separately bound supported original. Do not project an estimate
       from a missing IRA worksheet.
     testRef: "tests/pdf/form-8880-2026-candidate.test.ts::holds incomplete and conflicting ordinary Roth IRA originals"
-  - line: "4a 2025 ordinary original"
+  - line: "4a prior-year ordinary original"
     description: "Materialize the supported historical reduction on the Roth candidate"
     formula: >-
-      Use the exact matched 2025 ordinary IRA original from the annual source
-      packet. Require the canonical line 4a to match that amount and preserve
+      Use one exact matched 2024 or 2025 ordinary IRA original from the annual
+      source packet. Require the canonical line 4a to match that amount and preserve
       current wage-only income. Keep whole-dollar field validation, the positive
       Schedule 3 transfer and all existing export holds. Do not write the
       historical statement or payment identifiers into the saved PDF.
-    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::reopens the matched prior-year distribution and reduced Roth credit"
+    testRef: "tests/pdf/form-8880-2026-candidate.test.ts::reopens the matched %i distribution and reduced Roth credit"
   - line: "ordinary-roth-age-limit"
     description: "Use actual date of birth for the 2026 Roth IRA contribution limit"
     formula: >-

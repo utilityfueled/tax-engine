@@ -47,15 +47,16 @@ lines:
       the same couple files jointly in both 2026 and the year of receipt.
       Zero is an affirmed result, never a replacement for absent information.
     testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::uses confirmed testing-period reductions and student months"
-  - line: "4a 2025 ordinary original"
+  - line: "4a prior-year ordinary original"
     description: "Reconcile one historical ordinary IRA distribution to the 2026 reduction"
     formula: >-
       On a 2026 single return with no current-return Form 1099-R, admit one
-      2025 primary traditional IRA distribution from an actual Form 1099-R
+      2024 or 2025 primary traditional IRA distribution from an actual Form 1099-R
       with Box 7 Code 7, known Box 2a equal to positive Box 1 and the IRA
       checkbox. Match the recipient to the primary taxpayer and match the
       issuer TIN, account and exact amount to the separately referenced
-      issuer payment record dated in 2025. Verify ordinary age at receipt.
+      issuer payment record. Require the actual receipt date to be in the
+      year printed on the historical Form 1099-R. Verify ordinary age at receipt.
       Require confirmation that the original statement reports this one
       payment, that no rollover, transfer, conversion, inherited account
       or other line 4 exclusion applies, and that the entire testing period
@@ -64,7 +65,7 @@ lines:
       line 4 total to agree exactly. Keep the historical statement out of
       current-year income and preserve the established affirmed-total path.
     irsRef: "https://www.irs.gov/pub/irs-prior/f8880--2026.pdf#page=2"
-    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::derives line 4 from one matched 2025 issuer payment without changing return income"
+    testRef: "tests/engine/federal-savers-credit-2026-sources.test.ts::derives line 4 from one matched %i issuer payment without changing return income"
   - line: "6"
     description: "Apply contributor-specific student and dependency facts"
     formula: >-
