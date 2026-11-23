@@ -2,6 +2,12 @@
 
 ## November 22 handoffs for independent qualification
 
+OpenAI schedules the existing GPT-5 mini baseline for December 11,
+2026 shutdown. Record the original comparator's actual availability at
+rehearsal time. Google lists both selected Gemini model entries publicly.
+Account access and independently reviewed generation evidence remain
+required. [Provider catalog and lifecycle evidence](upgrade-2026-progress.md#november-22-provider-catalog-and-retirement-check).
+
 For Form 8606, independently derive the printable ratio and amounts
 on lines 10 and 12–15c for $9,999 of prior ordinary IRA basis, a
 $10,000 Code 7 distribution and zero year-end IRA value. Compare with

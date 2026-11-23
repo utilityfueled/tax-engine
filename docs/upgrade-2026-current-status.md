@@ -2,17 +2,27 @@
 
 ## Resume here · November 22
 
+- `83436988` reuses the exact federal result during one pending Ohio
+  part-year header replay. Both source checks and the original proof
+  still run. Independent software review passed. Four paired local
+  measurements improved by 1.55–4.02 ms per edit. The exact strict
+  Linux browser outcomes are pending on AMD64 and native ARM64.
+  [Ohio preview evidence](upgrade-2026-progress.md#november-22-ohio-pending-header-federal-reuse) ·
+  [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157) ·
+  [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293).
 - `ed2cafdb` collects the historical IRA evidence in the 2026 Single
   Credits worksheet. Private Chromium verified save and reopen,
   confirmation invalidation and correction of a mismatched issuer.
-  Independent software review passed. Exact full checks are in progress.
+  Independent software review passed. Unit and coverage passed
+  30,121 cases each with 88.21% branch coverage. Full Chromium is running.
   [Guided Form 8880 evidence](upgrade-2026-progress.md#november-22-guided-form-8880-historical-evidence).
 - `550139f5` validates one 2025 traditional IRA distribution for a single
   2026 filer. It matches the historical statement and payment record,
   keeps the amount outside current-year income, and ties the internal
   Roth review PDF to Schedule 3. Focused checks and independent software
-  review passed. Exact full checks are in progress. Manually affirmed
-  totals remain supported and the public gate is closed.
+  review passed. All 11 exact checks passed with 30,118 tests per core
+  suite, 88.21% branch coverage and 650 Chromium passes. Manually
+  affirmed totals remain supported and the public gate is closed.
   [Form 8880 prior-year receipt](upgrade-2026-progress.md#november-22-form-8880-prior-year-ira-receipt).
 - `648ba271` uses the same 2026 IRA basis ratio in Form 8606 and its
   internal review PDF. An isolated joint-return fixture now carries the

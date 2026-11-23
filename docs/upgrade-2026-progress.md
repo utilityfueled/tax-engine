@@ -12924,6 +12924,54 @@ browser limits and qualification decisions are preserved. The corrected
 comparison is queued on the full exact SHA.
 [Corrected GitHub Actions run](https://github.com/utilityfueled/tax-engine/actions/runs/45067567954).
 
+### November 22 Ohio pending header federal reuse
+
+`83436988` performs one federal calculation for the common school and
+residency source replay during one pending 2025 single-filer part-year
+header render. It uses a privately owned immutable canonical input.
+Both existing source and result checks run in their original order.
+School proof creation, standalone and confirmed-header validation,
+error behavior and browser deadlines are preserved.
+
+Implementation checks passed 176 tests and six spec references.
+Independent software review passed 189 tests and the six spec
+references. The root verified 17 focused tests, audit closure and 55
+audit script tests. Two fixtures each ran 112 measured edit, save and
+render calls per benchmark arm. All four paired local median differences
+improved by 1.55–4.02 ms including the immutable copy. The benchmark
+output SHA-256 is
+`0e06d313be3a1510d15c0886baac709f097b31a75eeafb85de16a7fe070d4bf2`.
+Separate macOS Chromium on exact `83436988` passed all four original
+school cases in 13.220–15.585 seconds with the existing 30-second limit,
+two configured workers and no retries. Its owned server and browser
+closed. The exact standard AMD64 run and native ARM64 rehearsal are
+in progress. The latter uses the repository's existing Linux ARM64
+workflow, with a standard runner on the public repository. Vercel
+recorded the production build as canceled.
+[AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293) ·
+[GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+
+### November 22 provider catalog and retirement check
+
+OpenAI still documents GPT-6 Luna with high reasoning and GPT-6.1 Sol
+with low reasoning. Its lifecycle table schedules the GPT-5 mini
+historical baseline and its dated snapshot for December 11, 2026
+shutdown and lists GPT-6.1 Terra as the replacement. Record the
+historical comparator as unavailable if it retires. A successor
+comparison produces separate evidence.
+[GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations).
+
+Google documents high thinking for `gemini-3.8-flash`. Its lifecycle
+table lists `gemini-3-flash-preview` with no announced shutdown date.
+These public entries establish catalog visibility. Project access and
+real qualification remain outstanding. This check made no generation
+requests and did not change any routing.
+[Gemini 3.8 Flash](https://aistudio.google.com/docs/models/gemini-3.8-flash) ·
+[Google lifecycle](https://aistudio.google.com/docs/deprecations).
+
 ### November 22 guided Form 8880 historical evidence
 
 `ed2cafdb` adds an optional source path to the existing 2026 Single
@@ -12972,8 +13020,10 @@ the new unit-only fixture to the source audit. Vercel recorded the
 production build as canceled. Both core suites passed 30,118 cases each
 with 79 existing skips and 88.21% branch coverage. The first browser
 attempt stopped before cases because the previous audited run held port
-3099. The failure log is retained. The unchanged command restarted
-after that earlier run finished.
+3099. The failure log is retained. The unchanged command then passed
+650 Chromium cases with five existing skips and verified cleanup.
+All 11 exact checks passed. The local result manifest has SHA-256
+`f951d70a30de47576b1d604c8321837fa89d30aee99a821bdf20f0a6a72f8d00`.
 The source binding in `.local/upgrade-evidence/nov22-form8880-historical-ira/`
 has SHA-256 `659ff4c130a1e49dd1302ef89f59ca02bde140a82100cf5c33e8c91c8ea51e02`.
 
