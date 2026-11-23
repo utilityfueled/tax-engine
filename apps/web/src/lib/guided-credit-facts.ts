@@ -6,13 +6,18 @@ import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
 const mfsLivingApartFields = ["spouseLivedApartLast6Months", "paidOverHalfHomeCost", "qualifyingPersonMainHomeOverHalfYear"] as const;
 
+export function supportsGuidedCarePartIILivingApart(taxYear: number | null | undefined, hasPartIII: boolean): boolean {
+  return taxYear === 2025 || (taxYear === 2026 && !hasPartIII);
+}
+
 export function careFactErrors(data: DependentCareData | undefined, filingStatus?: FilingStatus | null, benefitsContext?: CareBenefitsContext): Record<string, string> {
   if (!data) return {};
-  const partII = filingStatus === "mfs" && benefitsContext?.year === 2025 ? data.mfsLivingApart : undefined;
+  const partIII = benefitsContext?.data;
+  const supportsPartII = supportsGuidedCarePartIILivingApart(benefitsContext?.year, partIII !== undefined);
+  const partII = filingStatus === "mfs" && supportsPartII ? data.mfsLivingApart : undefined;
   if (!Object.values(data).some(value => typeof value === "boolean" || (Array.isArray(value) && value.length > 0) || (typeof value === "string" && value.trim() !== ""))
     && !mfsLivingApartFields.some(field => typeof partII?.[field] === "boolean")) return {};
   const errors: Record<string, string> = {};
-  const partIII = benefitsContext?.data;
   let benefits: ReturnType<typeof calculateGuidedCareBenefits>;
   if (partIII) {
     try { benefits = calculateGuidedCareBenefits(benefitsContext, filingStatus); }
@@ -47,7 +52,7 @@ export function careFactErrors(data: DependentCareData | undefined, filingStatus
       errors.careMfsLivingApart = "Reconcile the living-apart answers for Form 2441 Parts II and III.";
     }
     if (benefits?.treatedAsUnmarried !== true) {
-      if (benefitsContext?.year !== 2025 || partIII) {
+      if (!supportsPartII || partIII) {
         errors.careFilingStatus = "A separate-return care claim needs confirmed Form 2441 living-apart facts.";
       } else {
         if (!mfsLivingApartFields.every(field => partII?.[field] === true)) {
@@ -57,7 +62,7 @@ export function careFactErrors(data: DependentCareData | undefined, filingStatus
           || errors["care-excludedDependentCareBenefits"] || !parseGuidedCurrency(data.excludedDependentCareBenefits).isZero()) {
           errors.careFilingStatus = "Confirm care eligibility, no dependent-care benefits received, and zero excluded benefits for the separate-return Part II claim.";
         }
-        Object.assign(errors, careBenefitsFactErrors(undefined, benefitsContext.year, filingStatus, benefitsContext.sources));
+        Object.assign(errors, careBenefitsFactErrors(undefined, benefitsContext?.year, filingStatus, benefitsContext?.sources));
       }
     }
   }

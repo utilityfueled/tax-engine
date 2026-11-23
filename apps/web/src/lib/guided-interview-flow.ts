@@ -1751,7 +1751,8 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     spouse?.usResidencyMonths, spouse?.employmentValidSsnIssuedByDueDate, spouse?.tinIssuedByDueDate,
   ].some(answer => answer != null && answer !== "");
   const credits = state.sectionData.credits;
-  const requireCareReview = Number.isInteger(state.taxYear) && credits?.dependentCare?.sourceFactsConfirmed === true;
+  const requireCareReview = credits?.dependentCare?.sourceFactsConfirmed === true &&
+    (Number.isInteger(state.taxYear) || state.segmentation.filingStatus === "mfs");
   const education = credits?.education;
   const aotcSourcesEntered = education && (education.aocStudents.length > 0 ||
     [education.aocBanInEffect, education.form8862Required, education.form8862Completed,

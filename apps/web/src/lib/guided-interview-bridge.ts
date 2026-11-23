@@ -81,7 +81,7 @@ import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-
 import {buildGuidedZeroIncomeMiscSources} from './guided-zero-income-misc-sources';
 import {reconcileGuidedZeroIncomeMiscOriginalClaims} from './guided-zero-income-misc-withholding-reconciliation';
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
-import { careFactErrors } from "./guided-credit-facts";
+import { careFactErrors, supportsGuidedCarePartIILivingApart } from "./guided-credit-facts";
 import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
 import { combatPayElectionErrors, isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
@@ -652,7 +652,8 @@ export function buildDependentCareInput(creditsData: CreditsData | undefined, fi
   const qualifyingIndividuals = Number.parseInt(dependentCare.qualifyingIndividuals, 10);
   if (Number.isNaN(qualifyingIndividuals) || qualifyingIndividuals < 1) return undefined;
 
-  const livingApart = filingStatus === "mfs" && taxYear === 2025 ? dependentCare.mfsLivingApart : undefined;
+  const livingApart = filingStatus === "mfs" && supportsGuidedCarePartIILivingApart(taxYear, creditsData.dependentCareBenefits !== undefined)
+    ? dependentCare.mfsLivingApart : undefined;
   return {
     expenses: toDecimalString(dependentCare.expenses),
     qualifyingIndividuals,

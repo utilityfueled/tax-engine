@@ -20,6 +20,7 @@ import { PremiumTaxCreditSourceDetails } from "./premium-tax-credit-source-detai
 import { SavingsBondSourceDetails } from "./savings-bond-source-details";
 import { CareBenefitsDetails } from "./care-benefits-details";
 import type { CareBenefitSource } from "@/lib/guided-dependent-care-benefits";
+import { supportsGuidedCarePartIILivingApart } from "@/lib/guided-credit-facts";
 import { CareSourceDetails } from "./care-source-details";
 import { MinimumTaxCreditDetails } from "./minimum-tax-credit-details";
 import { SaversCreditDetails } from "./savers-credit-details";
@@ -90,7 +91,7 @@ function DependentCareSection({
         </label>
       </div>
       <EligibilityFact label="Do the qualifying-person, work-related care and eligible-provider requirements in Form 2441 apply?" value={data.eligibilityConfirmed} onChange={(value) => onChange({ ...data, sourceFactsConfirmed: false, eligibilityConfirmed: value })} />
-      {filingStatus === "mfs" && taxYear === 2025 && (!hasBenefitFacts || data.mfsLivingApart) && <fieldset>
+      {filingStatus === "mfs" && supportsGuidedCarePartIILivingApart(taxYear, hasBenefitFacts === true) && (!hasBenefitFacts || data.mfsLivingApart) && <fieldset>
         <legend>Filing separately and living apart (Form 2441)</legend>
         {mfsLivingApartQuestions.map(([field, label]) => <EligibilityFact key={field} label={label} value={data.mfsLivingApart?.[field]}
           onChange={value => onChange({ ...data, sourceFactsConfirmed: false, mfsLivingApart: { ...data.mfsLivingApart, [field]: value } })} />)}

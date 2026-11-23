@@ -47,9 +47,9 @@ async function change(label: string, answer: string) {
   });
 }
 
-describe("guided 2025 Form 2441 Part II living-apart answers", () => {
-  it("preserves independent yes, no and unanswered controls and clears source confirmation", async () => {
-    await render({ ...emptyCreditsData, dependentCare: { ...emptyCreditsData.dependentCare, sourceFactsConfirmed: true } }, "mfs", 2025);
+describe("guided Form 2441 Part II living-apart answers", () => {
+  it.each([2025, 2026])("preserves independent %d yes, no and unanswered controls and clears source confirmation", async year => {
+    await render({ ...emptyCreditsData, dependentCare: { ...emptyCreditsData.dependentCare, sourceFactsConfirmed: true } }, "mfs", year);
     expect([lastSixMonths, householdCosts, qualifyingMainHome].map(label => select(label)?.value)).toEqual(["", "", ""]);
     await change(lastSixMonths, "true");
     await change(householdCosts, "false");
@@ -68,8 +68,16 @@ describe("guided 2025 Form 2441 Part II living-apart answers", () => {
     expect(select(lastSixMonths)?.value).toBe("false");
   });
 
-  it.each([["mfs", 2026], ["mfj", 2025]] as const)("does not display the Part II facts for %s in %d", async (status, year) => {
+  it.each([["mfs", 2024], ["mfj", 2025], ["mfj", 2026]] as const)("does not display the Part II facts for %s in %d", async (status, year) => {
     await render(emptyCreditsData, status, year);
     expect(select(lastSixMonths)).toBeUndefined();
+  });
+
+  it("uses the existing Part III questions for a 2026 benefit worksheet", async () => {
+    await render({ ...emptyCreditsData, dependentCareBenefits: {}, dependentCare: {
+      ...emptyCreditsData.dependentCare, mfsLivingApart: { spouseLivedApartLast6Months: false },
+    } }, "mfs", 2026);
+    expect(select(lastSixMonths)).toBeUndefined();
+    expect(select("Did your spouse live apart from you throughout the last six months of the year?")).toBeDefined();
   });
 });
