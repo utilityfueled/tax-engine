@@ -24,11 +24,13 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
       ? education.primarySsnEligible !== false || (filingStatus === "mfj" && education.spouseSsnEligible !== false)
       : education.primaryTinEligible !== false);
   let totalLlc = new Decimal(0);
+  let hasPositiveStudentExpenses = false;
   const ids = new Set<string>();
   function studentFacts(student: EducationStudentSourceData, key: string, potentiallyEligibleAoc = false) {
     if (!student.name.trim()) errors[`${key}-name`] = "Enter the actual student name.";
     const hasValidExpenses = validAmount(student.qualifiedExpenses);
     const hasPositiveExpenses = hasValidExpenses && parseGuidedCurrency(student.qualifiedExpenses).gt(0);
+    hasPositiveStudentExpenses ||= hasPositiveExpenses;
     if (!hasValidExpenses) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
     const id = cleanId(student.studentTaxId);
     if (!/^\d{9}$/.test(id)) errors[`${key}-id`] = "Enter the student's actual SSN, ITIN or ATIN.";
@@ -98,6 +100,12 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
   if (taxYear === 2026) {
     if (typeof education.primarySsnEligible !== "boolean") errors.primarySsnEligible = "Confirm the taxpayer's employment-valid SSN eligibility.";
     if (filingStatus === "mfj" && typeof education.spouseSsnEligible !== "boolean") errors.spouseSsnEligible = "Confirm the spouse's employment-valid SSN eligibility.";
+    if (hasPositiveStudentExpenses && primarySsnEligible === true && personal?.tinIssuedByDueDate === false) {
+      errors.primarySsnEligible = "Reconcile the taxpayer's employment-valid SSN and timely TIN answers.";
+    }
+    if (hasPositiveStudentExpenses && filingStatus === "mfj" && spouseSsnEligible === true && personal?.spouse?.tinIssuedByDueDate === false) {
+      errors.spouseSsnEligible = "Reconcile the spouse's employment-valid SSN and timely TIN answers.";
+    }
   } else if (aoc.length && typeof education.primaryTinEligible !== "boolean") errors.primaryTinEligible = "Confirm the taxpayer's actual timely TIN for 2025.";
   for (const [actual, answer, label] of [
     [personal?.employmentValidSsnIssuedByDueDate, education.primarySsnEligible, "taxpayer SSN"],

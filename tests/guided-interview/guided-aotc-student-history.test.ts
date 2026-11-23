@@ -66,6 +66,29 @@ function calculateAotc(state: GuidedFlowState) {
 }
 
 describe("guided AOTC prior-claim history", () => {
+  it("holds a conflicting 2026 spouse claimant TIN when the primary is the student", () => {
+    const starting = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
+    const base = withOriginalWages({ ...starting, taxYear: 2026 }, "2026");
+    const personal = base.sectionData["personal-info"]!;
+    const student = { ...completeAocEligibility, name: `${personal.firstName} ${personal.lastName}`, studentTaxId: personal.ssn,
+      studentSsnEligible: false, qualifiedExpenses: "4000", priorYearsClaimed: "0" };
+    function withSpouseTin(tinIssuedByDueDate: boolean) {
+      const withPersonal = updateSectionData(base, "personal-info", {
+        ...personal, employmentValidSsnIssuedByDueDate: false,
+        spouse: { ...personal.spouse!, employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate },
+      });
+      return reopen(updateSectionData(withPersonal, "credits", { ...emptyCreditsData, education: {
+        ...emptyCreditsData.education, ...completeEducationClaimant, primarySsnEligible: false, aocStudents: [student],
+      } }));
+    }
+    const consistent = withSpouseTin(true);
+    expect(validateSection(consistent, "credits").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(consistent)?.educationExpenses?.spouseSsnEligible).toBe(true);
+    const conflicting = withSpouseTin(false);
+    expect(validateSection(conflicting, "credits").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(conflicting)).toBeNull();
+  });
+
   it("holds conflicting 2026 spouse student identity answers after reopen", () => {
     const starting = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
     const base = withOriginalWages({ ...starting, taxYear: 2026 }, "2026");

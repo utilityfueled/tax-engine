@@ -4283,6 +4283,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
             education.spouseSsnEligible !== undefined && householdSpouseSsnEligible !== education.spouseSsnEligible) {
           throw new Error("Form 8863 spouse employment-valid SSN answers conflict with the return household");
         }
+        if (primarySsnEligible === true && input.taxpayer.primary.tinIssuedByDueDate === false) {
+          throw new Error("Form 8863 primary employment-valid SSN conflicts with the household timely TIN answer");
+        }
+        if (filingStatus === "married_filing_jointly" && spouseSsnEligible === true && input.taxpayer.spouse?.tinIssuedByDueDate === false) {
+          throw new Error("Form 8863 spouse employment-valid SSN conflicts with the household timely TIN answer");
+        }
       }
     }
     function educationStudentForCalculation<Student extends (typeof educationStudents)[number]>(student: Student) {
