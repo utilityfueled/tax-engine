@@ -4,19 +4,26 @@ import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
+import { iraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
 import { annualCashQtpFixture } from "../fixtures/education-annual-cash.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
+const { testConstants } = vi.hoisted(() => ({ testConstants: { useIndexed2026: true } }));
 vi.mock("@/models/constants.js", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/models/constants.js")>();
   const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
-  return { ...original, getConstants: (year: number) => year === 2026 ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
+  return { ...original, getConstants: (year: number) => year === 2026 && testConstants.useIndexed2026
+    ? FEDERAL_2026_CONSTANTS : original.getConstants(year) };
 });
 
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  testConstants.useIndexed2026 = true;
+  vi.useRealTimers();
+});
 
 const blank = new URL("../../forms/blank/2026/f5329.pdf", import.meta.url);
 const sourceContract = new URL("./sources/form-5329-2026.json", import.meta.url);
@@ -57,6 +64,31 @@ function documentedFirstHome(priorDistributions = "4000") {
       maritalStatusAtAcquisition: "unmarried", buyerHadNoPrincipalResidenceInterest: true, noFormerSection1034Suspension: true,
       qualifiedPayment: { date: "2026-10-13", amount: "6500", kind: "purchase_price", paidFromMatchedDistribution: true },
       priorQualifiedFirstTimeHomebuyerDistributions: priorDistributions,
+    },
+  });
+}
+
+function documentedTuition(distributionAmount = "3000", tuitionAmount = "2000") {
+  const taxpayer = { ...simpleW2Fixture.taxpayer, taxYear: 2026 };
+  const distribution = {
+    payerName: "SYNTHETIC PRIVATE TRUSTEE", payerTin: "987654321", accountReference: "PRIVATE IRA ACCOUNT",
+    receiptDate: "2026-09-15", amount: distributionAmount, employeeContributions: "0",
+  };
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture, taxpayer, w2s: [],
+    form1099R: [{
+      taxYear: 2026, accountHolder: "primary", distributionCode: "1", payer: distribution.payerName,
+      payerTin: "98-7654321", accountReference: distribution.accountReference, distributionDate: distribution.receiptDate,
+      grossDistribution: distributionAmount, taxableAmount: distributionAmount, taxableAmountNotDetermined: false,
+      iraSepSimple: true, iraBasisConfirmedZero: true, employeeContributions: "0", trumpAccount: false, excessContributionEarnings: "0",
+    }],
+    form5329EducationSource: {
+      sourceTaxYear: 2026, owner: "primary", ownerFingerprint: iraEducationOwnerFingerprint(taxpayer.primary), distribution,
+      tuition: { institutionName: "SYNTHETIC PRIVATE COLLEGE", billAccountReference: "PRIVATE STUDENT ACCOUNT",
+        receiptAccountReference: "PRIVATE STUDENT ACCOUNT", paymentDate: "2026-08-25",
+        billedAmount: tuitionAmount, paidAmount: tuitionAmount, taxFreeAssistance: "0" },
+      ordinaryTraditionalIraConfirmed: true, ownEligibleTuitionConfirmed: true, refundedOrReimbursed: false,
+      coveredByEducationAccount: false, allocatedToEducationCredit: false,
     },
   });
 }
@@ -206,6 +238,74 @@ describe("Final 2026 Form 5329 physical candidate", () => {
     expect(fullyExcepted.schedule2Line5Transfer.toFixed()).toBe("0");
     expect(fullyExcepted.document.getForm().getTextField(fields.line4).getText()).toBe("0");
     expect(fullyExcepted.document.getForm().getTextField(fields.line2ExceptionNumber).getText()).toBe("09");
+  });
+
+  it("renders the whole-dollar Code 08 Part I candidate and isolated transfer", async () => {
+    vi.setSystemTime(new Date(2026, 9, 12, 12));
+    const input = documentedTuition();
+    const { fillForm53292026EducationCandidate } = await import("@/pdf/mappings/2026/form-5329-candidate.js");
+    const [bytes, source] = await Promise.all([readFile(blank), readFile(sourceContract, "utf8")
+      .then(text => JSON.parse(text) as Record<string, Location>)]);
+    const { document, schedule2Line5Transfer } = await fillForm53292026EducationCandidate(input, bytes);
+    expect(schedule2Line5Transfer.toFixed()).toBe("100");
+    const expected: Record<string, string> = {
+      [source.line1!.name]: "3000", [source.line2ExceptionNumber!.name]: "08",
+      [source.line2!.name]: "2000", [source.line3!.name]: "1000", [source.line4!.name]: "100",
+    };
+    const saved = await document.save();
+    const reopened = await PDFDocument.load(saved);
+    for (const [name, value] of Object.entries(expected)) {
+      const field = reopened.getForm().getTextField(name);
+      expect(field.acroField.getValue()?.decodeText()).toBe(value);
+      expectNonemptyStream(field.acroField.getWidgets()[0].getAppearances()?.normal);
+    }
+    const hidden = Object.values(source).filter(field => field.type === "/Tx" && !Object.hasOwn(expected, field.name)).map(field => field.name);
+    const { ownerFingerprint, distribution, tuition } = input.form5329EducationSource!;
+    const protectedValues = [`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`,
+      input.taxpayer.primary.ssn, input.taxpayer.primary.ssn.replaceAll("-", ""), ownerFingerprint,
+      distribution.payerName, distribution.payerTin, "98-7654321", distribution.accountReference,
+      tuition.institutionName, tuition.receiptAccountReference];
+    execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", readSavedPartI,
+      JSON.stringify(expected), JSON.stringify(hidden), JSON.stringify(REVIEW_PDF_NOTICE), JSON.stringify(protectedValues),
+    ], { input: saved });
+  });
+
+  it("holds unsupported Code 08 sources and precision before rendering", async () => {
+    vi.setSystemTime(new Date(2026, 9, 12, 12));
+    const { fillForm53292026EducationCandidate } = await import("@/pdf/mappings/2026/form-5329-candidate.js");
+    const [input, bytes] = [documentedTuition(), await readFile(blank)];
+    const proof = input.form5329EducationSource!;
+    const original = input.form1099R![0]!;
+    for (const [changedInput, message] of [
+      [documentedFirstHome(), /2026.*education source/],
+      [{ ...input, taxpayer: { ...input.taxpayer, filingStatus: "married_filing_jointly" } }, /single.*primary/],
+      [{ ...input, taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, ssn: "333-22-1111" } } }, /actual primary taxpayer/],
+      [{ ...input, form1099R: [original, original] }, /one distribution/],
+      [{ ...input, form1099R: [{ ...original, employeeContributions: undefined }] }, /Box 5/],
+      [TaxYearInputSchema.parse({ ...input, form1099R: [{ ...original, employeeContributions: undefined }] }), /Box 5/],
+      [{ ...input, form1099R: [{ ...original, accountReference: "other account" }] }, /match one actual/],
+      [{ ...input, form5329EducationSource: { ...proof, tuition: { ...proof.tuition, paymentDate: "2026-12-15" } } }, /on or before.*as-of/],
+      [{ ...input, form5329EducationSource: { ...proof, tuition: { ...proof.tuition, receiptAccountReference: "other student" } } }, /matching college tuition/],
+      [{ ...input, form5329: { qualifiedHigherEducationExpenseExceptionAmount: "2000" } }, /other retirement or education/],
+      [{ ...input, scheduleA: { medicalExpenses: "1000" } }, /sole.*08/],
+      [documentedTuition("3000", "3500.01"), /whole dollar/],
+      [documentedTuition("3001", "2000"), /whole dollar/],
+    ] as const) {
+      await expect(fillForm53292026EducationCandidate(changedInput as typeof input, bytes).then(() => undefined)).rejects.toThrow(message);
+    }
+    const cents = documentedTuition("3000.45", "2000.15");
+    const part = calculateFederalTax(cents).form5329!;
+    expect([part.line1, part.line2, part.line3, part.line4].map(amount => amount.toFixed())).toEqual(["3000.45", "2000.15", "1000.3", "100.03"]);
+    await expect(fillForm53292026EducationCandidate(cents, bytes)).rejects.toThrow(/whole dollar/);
+    await expect(fillForm53292026EducationCandidate(input, new Uint8Array(1))).rejects.toThrow(/revision/);
+  });
+
+  it("holds the Code 08 candidate under the unqualified annual constants", async () => {
+    vi.setSystemTime(new Date(2026, 9, 12, 12));
+    testConstants.useIndexed2026 = false;
+    const { fillForm53292026EducationCandidate } = await import("@/pdf/mappings/2026/form-5329-candidate.js");
+    await expect(fillForm53292026EducationCandidate(documentedTuition(), await readFile(blank)))
+      .rejects.toThrow(/2026 rule pack.*incomplete/);
   });
 
   it("holds unsupported first-home preparations before writing PDF fields", async () => {

@@ -4,6 +4,7 @@ import type Decimal from "decimal.js";
 import type { PDFDocument } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import type { Form5329Result, TaxReturnResult } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { markReviewPdf } from "../../export-policy.js";
 import { loadPdfDocumentQuietly } from "../../pdf-utils.js";
@@ -127,6 +128,44 @@ export const FORM_5329_2026_CANDIDATE = Object.freeze({
   }),
 });
 
+function assertCandidateTemplate(blank: Uint8Array): void {
+  if (createHash("sha256").update(blank).digest("hex") !== FORM_5329_2026_CANDIDATE.sha256) {
+    throw new Error("Unreviewed Form 5329 candidate template revision.");
+  }
+}
+
+function reconcilePartI(result: TaxReturnResult, exceptionNumber: "08" | "09"): Form5329Result | undefined {
+  const part = result.form5329;
+  const retirementTax = result.schedule2?.lines.find(row => row.line === "8")?.value;
+  if (!part || part.line2ExceptionNumber !== exceptionNumber || !part.line2.gt(0)
+    || !result.iraDistributionsTaxable.eq(part.line1) || !retirementTax?.eq(part.line4)
+    || result.form5329HsaByOwner !== undefined
+    || part.lines.some(row => !["1", "2", "3", "4"].includes(row.line) && !row.value.isZero())) return undefined;
+  return part;
+}
+
+async function renderPartI(
+  blank: Uint8Array, part: Form5329Result, sourceLabel: "first-home" | "education", filerName?: string,
+): Promise<{ document: PDFDocument; schedule2Line5Transfer: Decimal }> {
+  const amounts = { line1: part.line1, line2: part.line2, line3: part.line3, line4: part.line4 } as const;
+  if (Object.values(amounts).some(amount => !amount.isInteger() || amount.isNegative())) {
+    throw new Error(`Form 5329 ${sourceLabel} candidate requires exact whole dollar Part I amounts.`);
+  }
+
+  const document = await loadPdfDocumentQuietly(blank);
+  removeTrustedTemplateLegacyFormData(document);
+  const form = document.getForm();
+  const { fields } = FORM_5329_2026_CANDIDATE;
+  if (filerName !== undefined) form.getTextField(fields.name).setText(filerName);
+  form.getTextField(fields.line2ExceptionNumber).setText(part.line2ExceptionNumber);
+  for (const key of Object.keys(amounts) as Array<keyof typeof amounts>) {
+    form.getTextField(fields[key]).setText(amounts[key].toFixed(0));
+  }
+  form.updateFieldAppearances();
+  await markReviewPdf(document);
+  return { document, schedule2Line5Transfer: part.line4 };
+}
+
 /** Render an internal Part I review. The returned amount is only the printed transfer from line 4. */
 export async function fillForm53292026FirstHomeCandidate(
   rawInput: TaxYearInput,
@@ -166,35 +205,41 @@ export async function fillForm53292026FirstHomeCandidate(
     .some(date => date > reviewDate)) {
     throw new Error("The IRA receipt, contract and purchase payment must have occurred on or before the review date.");
   }
-  if (createHash("sha256").update(blank).digest("hex") !== candidate.sha256) {
-    throw new Error("Unreviewed Form 5329 candidate template revision.");
-  }
-
-  const result = calculateFederalTax(input);
-  const part = result.form5329;
-  const retirementTax = result.schedule2?.lines.find(row => row.line === "8")?.value;
-  if (!part || part.line2ExceptionNumber !== "09" || !part.line2.gt(0)
-    || !result.iraDistributionsTaxable.eq(part.line1) || !retirementTax?.eq(part.line4)
-    || result.form5329HsaByOwner !== undefined
-    || part.lines.some(row => !["1", "2", "3", "4"].includes(row.line) && !row.value.isZero())) {
+  assertCandidateTemplate(blank);
+  const part = reconcilePartI(calculateFederalTax(input), "09");
+  if (!part) {
     throw new Error("Form 5329 first-home candidate requires a reconciled Part I and no other Form 5329 parts or transfers.");
   }
-  const amounts = { line1: part.line1, line2: part.line2, line3: part.line3, line4: part.line4 } as const;
-  if (Object.values(amounts).some(amount => !amount.isInteger() || amount.isNegative())) {
-    throw new Error("Form 5329 first-home candidate requires exact whole dollar Part I amounts.");
-  }
-
-  const document = await loadPdfDocumentQuietly(blank);
-  removeTrustedTemplateLegacyFormData(document);
-  const form = document.getForm();
-  const { fields } = candidate;
   const { firstName, lastName } = input.taxpayer.primary;
-  form.getTextField(fields.name).setText(`${firstName} ${lastName}`);
-  form.getTextField(fields.line2ExceptionNumber).setText(part.line2ExceptionNumber);
-  for (const key of Object.keys(amounts) as Array<keyof typeof amounts>) {
-    form.getTextField(fields[key]).setText(amounts[key].toFixed(0));
+  return renderPartI(blank, part, "first-home", `${firstName} ${lastName}`);
+}
+
+/** Render an internal Part I review from the original, validated tuition and IRA sources. */
+export async function fillForm53292026EducationCandidate(
+  rawInput: TaxYearInput,
+  blank: Uint8Array,
+): Promise<{ document: PDFDocument; schedule2Line5Transfer: Decimal }> {
+  const { taxYear } = FORM_5329_2026_CANDIDATE;
+  if (rawInput.taxpayer.taxYear !== taxYear || rawInput.form5329EducationSource?.sourceTaxYear !== taxYear) {
+    throw new Error("Form 5329 candidate requires a 2026 return and documented education source.");
   }
-  form.updateFieldAppearances();
-  await markReviewPdf(document);
-  return { document, schedule2Line5Transfer: part.line4 };
+  const rawOriginal = rawInput.form1099R?.[0];
+  if (rawInput.taxpayer.filingStatus !== "single" || rawInput.taxpayer.spouse
+    || rawInput.form1099R?.length !== 1 || rawOriginal?.accountHolder !== "primary") {
+    throw new Error("Form 5329 education candidate requires one distribution for a single primary filer.");
+  }
+  if (rawOriginal.employeeContributions === undefined) {
+    throw new Error("Form 5329 education candidate requires confirmed zero Box 5.");
+  }
+  const input = TaxYearInputSchema.parse(rawInput);
+  const { distribution, tuition } = input.form5329EducationSource!;
+  if (!d(distribution.amount).isInteger() || !d(tuition.paidAmount).isInteger()) {
+    throw new Error("Form 5329 education candidate requires exact whole dollar distribution and tuition amounts.");
+  }
+  assertCandidateTemplate(blank);
+  const part = reconcilePartI(calculateFederalTax(input), "08");
+  if (!part || input.form5329HsaByOwner !== undefined) {
+    throw new Error("Form 5329 education candidate requires a sole code 08 exception and no other Form 5329 parts or transfers.");
+  }
+  return renderPartI(blank, part, "education");
 }

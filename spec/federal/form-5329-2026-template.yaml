@@ -71,6 +71,39 @@ lines:
       2026 Trump or excess Box 7 facts, unsupported precision, and unreviewed
       blank bytes.
     testRef: "tests/pdf/form-5329-2026-candidate.test.ts::holds unsupported first-home preparations before writing PDF fields"
+  - line: "education-part-i"
+    description: "Record a documented 2026 college tuition IRA case in the standalone internal review PDF"
+    formula: >-
+      Recalculate the sole single primary filer's matched ordinary Code 1
+      traditional IRA distribution and own eligible college tuition from the
+      separate canonical, owner-bound education source. On the pinned final
+      template, write the exact whole-dollar Part I values and exception 08
+      in its separate field. Reconcile line 4 to the canonical retirement-tax
+      audit and expose only the amount for the printed Schedule 2 line 5
+      destination. Leave other fields, taxpayer name and identifiers, payer, IRA and
+      college identifiers out, and mark each page for review. Native values
+      and visible field appearances must survive saving. The candidate never
+      generates or qualifies a parent return and remains subject to federal
+      annual calculation readiness.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f5329--2026.pdf"
+      - "https://uscode.house.gov/us/usc/119-124/t26/s72/"
+      - "https://www.irs.gov/publications/p970"
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::renders the whole-dollar Code 08 Part I candidate and isolated transfer"
+  - line: "education-holds"
+    description: "Hold ambiguous intake, competing exceptions and amounts requiring rounding"
+    formula: >-
+      Hold unmatched owner, payer, IRA account, tuition, or dates, future
+      events, other filers and distributions, omitted Box 5 before or after
+      normal canonical parsing, manual or other
+      competing worksheet sources, multiple exceptions, nonzero other parts,
+      and unreviewed template bytes. Hold any cents in source distribution,
+      paid tuition, or the canonical Part I values pending independent annual
+      rounding qualification. This physical hold leaves the exact-cent
+      canonical calculation intact and does not enable a public export.
+    testRef: "tests/pdf/form-5329-2026-candidate.test.ts::holds unsupported Code 08 sources and precision before rendering"
+    testRefs:
+      - "tests/pdf/form-5329-2026-candidate.test.ts::holds the Code 08 candidate under the unqualified annual constants"
   - line: "closed-exports"
     description: "Keep public review and filing disabled"
     formula: "No export registration. The 2026 source fails 2025 and 2026 review authorization and cannot be used for filing."
