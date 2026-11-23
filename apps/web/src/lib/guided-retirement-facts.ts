@@ -14,7 +14,7 @@ import {
   type GuidedRetirementQcdSource, type GuidedRetirementSimplifiedMethod,
 } from "./guided-retirement-source-inputs";
 import { buildGuidedFirstHomeSource, guidedCode1IraOriginalSnapshot, guidedFirstHomeOriginalError, type GuidedFirstHomeWorksheet } from "./guided-retirement-first-home";
-import { buildGuidedIraEducationException, guidedIraEducationOriginalError, guidedIraEducationOwnerFingerprint, type GuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "./guided-retirement-education";
+import { buildGuidedIraEducationSource, guidedIraEducationOriginalError, guidedIraEducationOwnerFingerprint, type GuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "./guided-retirement-education";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
 export interface RetirementSourceData {
@@ -331,7 +331,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       if (firstHome !== undefined) fail("code1-ira-education", "Reconcile the competing college tuition and first-home IRA worksheets for this payment.");
       else {
         try {
-          buildGuidedIraEducationException(education, guidedCode1IraEducationOriginal(
+          buildGuidedIraEducationSource(education, guidedCode1IraEducationOriginal(
             entry, code1IraOwnerBirthDate, guidedIraEducationOwnerFingerprint(basisContext?.personal),
           ), credits);
         } catch (error) {

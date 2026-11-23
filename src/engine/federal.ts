@@ -28,6 +28,7 @@ import { reportSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
+import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date.js";
 import type {
   Form1099B,
   Form1099Div,
@@ -45,6 +46,7 @@ import type {
   W2,
 } from "@/models/inputs.js";
 import { Form5329FirstHomeSourceSchema } from "@/models/inputs.js";
+import { resolveForm5329EducationSource } from "./forms/form-5329-education-source.js";
 import { readForm8880AnnualSources } from "@/models/form-8880-sources.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
@@ -229,7 +231,19 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
-export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+export function calculateFederalTax(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  if (input.form5329EducationSource) {
+    const today = currentLocalCivilDate();
+    // This observation date belongs to the calculation caller, outside return data.
+    const asOfDate = context?.asOfDate ?? today;
+    if (!isActualDate(asOfDate) || asOfDate > today) {
+      throw new Error("Form 5329 education calculation as-of date must be a valid date on or before today.");
+    }
+    const { distribution, tuition } = input.form5329EducationSource;
+    if (distribution.receiptDate > asOfDate || tuition.paymentDate > asOfDate) {
+      throw new Error("Form 5329 education receipt and tuition payment dates must be on or before the calculation as-of date.");
+    }
+  }
   assertFederalPaymentSources(input);
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
@@ -2900,6 +2914,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         )
       : []),
   ];
+  const educationException = resolveForm5329EducationSource(input, iraTaxable);
   const firstHome = resolveForm5329FirstHomeSource(input, iraTaxable);
   const normalizedForm5329 = buildForm5329Input(
     input.form5329,
@@ -2909,6 +2924,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     schedA.medicalDeduction,
     input.form5329HsaByOwner ? [] : allForm8889Results,
     firstHome,
+    educationException,
   );
   if (firstHome) {
     const { source, taxableDistribution } = firstHome;
@@ -6734,6 +6750,7 @@ function buildForm5329Input(
   supportedMedicalExpenseExceptionAmount: Decimal = new Decimal(0),
   form8889Results: Form8889Result[] = [],
   firstHome?: ReturnType<typeof resolveForm5329FirstHomeSource>,
+  educationException?: ReturnType<typeof resolveForm5329EducationSource>,
 ): Form5329Input | undefined {
   const defaults = deriveDefaultForm5329Amounts(
     forms,
@@ -6744,6 +6761,9 @@ function buildForm5329Input(
   if (firstHome && (!defaults.earlyDistributionsIncludedInIncome.eq(firstHome.taxableDistribution)
     || defaults.distributionsNotSubjectToAdditionalTax.gt(0))) {
     throw new Error("Form 5329 first-home source requires reconciliation of the taxable amount and any competing Part I exception");
+  }
+  if (educationException && !defaults.earlyDistributionsIncludedInIncome.eq(educationException.taxableDistribution)) {
+    throw new Error("Form 5329 education source must reconcile with the taxable early distribution.");
   }
   const hsaDefaults = form8889Results.length > 0
     ? deriveForm5329HsaDefaults(form8889Results)
@@ -6782,8 +6802,9 @@ function buildForm5329Input(
       input?.earlyDistributionsIncludedInIncome ?? defaults.earlyDistributionsIncludedInIncome.toString(),
     rothConversionRecaptureAmount:
       input?.rothConversionRecaptureAmount ?? "0",
+    // The tuition source has no manual Line 2 amount. Automatic medical is supplied below.
     distributionsNotSubjectToAdditionalTax:
-      input?.distributionsNotSubjectToAdditionalTax ?? defaultDistributionsNotSubjectToAdditionalTax.toString(),
+      educationException ? "0" : input?.distributionsNotSubjectToAdditionalTax ?? defaultDistributionsNotSubjectToAdditionalTax.toString(),
     distributionExceptionNumber: input?.distributionExceptionNumber,
     substantiallyEqualPeriodicPaymentsExceptionAmount:
       input?.substantiallyEqualPeriodicPaymentsExceptionAmount ?? "0",
@@ -6796,7 +6817,7 @@ function buildForm5329Input(
     unemployedHealthInsurancePremiumExceptionAmount:
       input?.unemployedHealthInsurancePremiumExceptionAmount ?? "0",
     qualifiedHigherEducationExpenseExceptionAmount:
-      input?.qualifiedHigherEducationExpenseExceptionAmount ?? "0",
+      educationException?.exceptionAmount.toFixed() ?? input?.qualifiedHigherEducationExpenseExceptionAmount ?? "0",
     qualifiedFirstTimeHomebuyerDistributionAmount:
       firstHome?.source.qualifiedPayment.amount ?? input?.qualifiedFirstTimeHomebuyerDistributionAmount ?? "0",
     priorQualifiedFirstTimeHomebuyerDistributions:

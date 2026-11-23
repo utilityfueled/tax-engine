@@ -98,7 +98,7 @@ import { buildGuidedCashFarm, buildGuidedCashFarmBenefitOriginals } from "./guid
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
 import { buildGuidedFirstHomeSource } from "./guided-retirement-first-home";
-import { buildGuidedIraEducationException, guidedIraEducationOwnerFingerprint } from "./guided-retirement-education";
+import { buildGuidedIraEducationSource, guidedIraEducationOwnerFingerprint } from "./guided-retirement-education";
 import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1IraOriginal, guidedCode1IraOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
 import { retirementSourceInput } from "./guided-retirement-source-inputs";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
@@ -908,10 +908,14 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const form5329FirstHomeSource = firstHomeEntry?.code1IraFirstHomeSource
     ? buildGuidedFirstHomeSource(firstHomeEntry.code1IraFirstHomeSource, guidedCode1IraOriginal(firstHomeEntry, iraExceptionOwnerBirthDate))
     : undefined;
-  const qualifiedHigherEducationExpenseExceptionAmount = educationEntry?.code1IraEducationSource
-    ? buildGuidedIraEducationException(educationEntry.code1IraEducationSource, guidedCode1IraEducationOriginal(
+  const primaryFirstName = combineGivenNameWithMiddleInitial(personalInfo.firstName, personalInfo.middleName);
+  const educationOwnerFingerprint = educationEntry ? guidedIraEducationOwnerFingerprint({
+    firstName: primaryFirstName, lastName: personalInfo.lastName, ssn: personalInfo.ssn,
+  }) : undefined;
+  const form5329EducationSource = educationEntry?.code1IraEducationSource && educationOwnerFingerprint
+    ? { ...buildGuidedIraEducationSource(educationEntry.code1IraEducationSource, guidedCode1IraEducationOriginal(
       educationEntry, iraExceptionOwnerBirthDate, guidedIraEducationOwnerFingerprint(personalInfo),
-    ), creditsData)
+    ), creditsData), ownerFingerprint: educationOwnerFingerprint }
     : undefined;
   const iraBasisSources = buildGuidedIraBasisSources(retirementData?.basisSources, retirementData?.entries, state.taxYear, segmentation.filingStatus, personalInfo, adjustmentData);
   const rentalProperties = buildRentalPropertyInputs(rentalData?.entries);
@@ -982,10 +986,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       taxYear: state.taxYear,
       filingStatus: mapFilingStatus(segmentation.filingStatus),
       primary: {
-        firstName: combineGivenNameWithMiddleInitial(
-          personalInfo?.firstName,
-          personalInfo?.middleName
-        ),
+        firstName: primaryFirstName,
         lastName: personalInfo.lastName,
         ssn: personalInfo.ssn,
         dateOfBirth: personalInfo.dateOfBirth,
@@ -1047,7 +1048,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form1099DA,
     form1099R,
     ...(form5329FirstHomeSource ? { form5329FirstHomeSource } : {}),
-    ...(qualifiedHigherEducationExpenseExceptionAmount ? { form5329: { qualifiedHigherEducationExpenseExceptionAmount } } : {}),
+    ...(form5329EducationSource ? { form5329EducationSource } : {}),
     iraBasisSources,
     form8960Sources: buildGuidedNiitSources(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus),
     foreignTaxElection: buildGuidedForeignTaxElection(otherTaxesData?.foreignTaxElection, investData, state.taxYear, segmentation.filingStatus, foreignCreditKnownFacts(state), state),

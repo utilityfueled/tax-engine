@@ -1889,15 +1889,45 @@ export const Form5329LongTermCareSourceSchema = z.strictObject({
   }),
 });
 
+const positiveEducationSourceAmount = nonnegativeDollarsAndCents.refine(value => d(value).gt(0), "Expected a positive amount");
+export const Form5329EducationSourceSchema = z.strictObject({
+  sourceTaxYear: z.literal(2026),
+  owner: z.literal("primary"),
+  ownerFingerprint: z.string().regex(/^[0-9a-f]{64}$/),
+  distribution: z.strictObject({
+    payerName: z.string().trim().min(1),
+    payerTin: z.string().regex(/^\d{9}$/),
+    accountReference: z.string().trim().min(1),
+    receiptDate: z.iso.date(),
+    amount: positiveEducationSourceAmount,
+    employeeContributions: z.literal("0"),
+  }),
+  tuition: z.strictObject({
+    institutionName: z.string().trim().min(1),
+    billAccountReference: z.string().trim().min(1),
+    receiptAccountReference: z.string().trim().min(1),
+    paymentDate: z.iso.date(),
+    billedAmount: positiveEducationSourceAmount,
+    paidAmount: positiveEducationSourceAmount,
+    taxFreeAssistance: z.literal("0"),
+  }),
+  ordinaryTraditionalIraConfirmed: z.literal(true),
+  ownEligibleTuitionConfirmed: z.literal(true),
+  refundedOrReimbursed: z.literal(false),
+  coveredByEducationAccount: z.literal(false),
+  allocatedToEducationCredit: z.literal(false),
+});
+export type Form5329EducationSource = z.infer<typeof Form5329EducationSourceSchema>;
+
 export const Form5329Schema = z.object({
-  earlyDistributionsIncludedInIncome: optionalDecimalInput, // Part I Line 1, derived from actual forms when omitted
+  earlyDistributionsIncludedInIncome: optionalDecimal, // Part I Line 1
   rothConversionRecaptureAmount: optionalDecimal, // Part I Line 1 Roth conversion or qualified-plan rollover recapture amount
   distributionsNotSubjectToAdditionalTax: optionalDecimal, // Part I Line 2
   distributionExceptionNumber: z.string().regex(/^(0[1-9]|1[0-9]|2[0-3]|99)$/).optional(), // Part I Line 2 exception number for tax year 2025
   substantiallyEqualPeriodicPaymentsExceptionAmount: optionalDecimal, // Part I Line 2 exception 02 validated substantially equal periodic payments amount
   deathDistributionExceptionAmount: optionalDecimal, // Part I Line 2 exception 04 validated death-distribution amount
   qualifiedDomesticRelationsOrderDistributionAmount: optionalDecimal, // Part I Line 2 exception 06 validated QDRO alternate-payee distribution amount
-  medicalExpenseExceptionAmount: optionalDecimalInput, // Part I Line 2 exception 05 explicit override of the Schedule A medical amount
+  medicalExpenseExceptionAmount: optionalDecimal, // Part I Line 2 exception 05 validated deductible unreimbursed medical-expense amount above 7.5% of AGI
   unemployedHealthInsurancePremiumExceptionAmount: optionalDecimal, // Part I Line 2 exception 07 validated IRA amount used to pay health insurance premiums while unemployed
   qualifiedHigherEducationExpenseExceptionAmount: optionalDecimal, // Part I Line 2 exception 08 validated IRA amount used for qualified higher education expenses
   qualifiedFirstTimeHomebuyerDistributionAmount: optionalDecimal, // Part I Line 2 exception 09 validated IRA amount used for a first home purchase
@@ -1915,7 +1945,7 @@ export const Form5329Schema = z.object({
   returnedContributionByDueDateTaxableEarningsExceptionAmount: optionalDecimal, // Part I Line 2 exception 21 validated taxable earnings on current-year IRA contributions returned by the due date
   domesticAbuseExceptionAmount: optionalDecimal, // Part I Line 2 exception 22 validated domestic-abuse victim distribution amount
   emergencyPersonalExpenseExceptionAmount: optionalDecimal, // Part I Line 2 exception 23 validated emergency personal expense distribution amount
-  supportedMedicalExpenseExceptionAmount: optionalDecimalInput, // Engine trace: deductible medical expenses from Schedule A Line 4 (exception 05)
+  supportedMedicalExpenseExceptionAmount: optionalDecimal, // Engine trace: deductible medical expenses from Schedule A Line 4 (exception 05)
   supportedDeathDistributionAmount: optionalDecimal, // Engine trace: taxable attached Form 1099-R Box 7 code 4 death distributions (exception 04)
   supportedTerminalIllnessDistributionAmount: optionalDecimal, // Engine trace: taxable attached non-IRA qualified-plan Form 1099-R Box 7 code 1 terminal-illness distributions (exception 20)
   simpleIRADistributionsWithinFirstTwoYears: optionalDecimal, // Part I Line 4 25% branch
@@ -6788,6 +6818,7 @@ export const TaxYearInputSchema = z.object({
   form8880: Form8880Schema.optional(),
   form5329: Form5329Schema.optional(),
   form5329FirstHomeSource: Form5329FirstHomeSourceSchema.optional(),
+  form5329EducationSource: Form5329EducationSourceSchema.optional(),
   form5329HsaByOwner: Form5329HsaByOwnerSchema.optional(),
   form8606: Form8606Schema.optional(),
   form8606ByOwner: Form8606ByOwnerSchema.optional(),

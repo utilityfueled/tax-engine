@@ -79,7 +79,7 @@ it("requires a complete matched tuition worksheet and reopens it with exact sour
     expect(saveGuidedFlowState(sessionStorage, storageKey, draft())).toBe(true);
     const saved = loadGuidedFlowState(sessionStorage, storageKey);
     assert.ok(saved);
-    expect(buildTaxInputFromGuidedData(saved)?.form5329?.qualifiedHigherEducationExpenseExceptionAmount).toBe("1000.15");
+    expect(buildTaxInputFromGuidedData(saved)?.form5329EducationSource?.tuition.paidAmount).toBe("1000.15");
     await change("Student account reference on the payment receipt", "other-13");
     await change(confirm, "true");
     expect(buildTaxInputFromGuidedData(draft())).toBeNull();

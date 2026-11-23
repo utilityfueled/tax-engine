@@ -6,7 +6,7 @@ notes: "Section 72(t)(2)(E) and (7) and IRS Publication 970 chapter 8 govern exc
 lines:
   - line: "08-guided-source"
     description: "Compute the exception for tuition the IRA owner actually paid in 2026"
-    formula: "Match one fully taxable ordinary traditional IRA Code 1 statement to its owner, actual 2026 receipt date before age 59 1/2, original payer, account and exact distribution amount. Require eligible college tuition for the owner, one posted nonrefunded tuition payment matching the college bill by student account and exact amount, and an actual payment date in the distribution year on or before today. Require confirmed zero tax-free assistance and no Coverdell, QTP or education-credit allocations for this limited cohort. Line 2 code 08 is the lesser of qualifying paid tuition and the taxable IRA distribution. Keep Line 1 and taxable IRA income intact and apply 10 percent to Line 3."
+    formula: "Carry the separately validated education source into the canonical return. Match one fully taxable ordinary traditional IRA Code 1 statement to its owner, actual 2026 receipt date before age 59 1/2, original payer, account and exact distribution amount. Require the owner's explicit confirmation of eligible college tuition and one posted nonrefunded tuition payment matching the college bill by student account and exact amount. The actual receipt and tuition payment dates must both be in the distribution year and on or before the federal calculation's as-of date, which defaults to the current local calendar date. An explicitly supplied calculation as-of date must come from the caller's calculation context and cannot exceed the current local calendar date. Require confirmed zero tax-free assistance and no Coverdell, QTP or education-credit allocations for this limited cohort. Line 2 code 08 is the lesser of qualifying paid tuition and the taxable IRA distribution. Keep Line 1 and taxable IRA income intact and apply 10 percent to Line 3."
     sources:
       - "https://uscode.house.gov/us/usc/119-124/t26/s72/"
       - "https://www.irs.gov/publications/p970"
@@ -21,8 +21,19 @@ lines:
       - "tests/guided-interview/guided-education-ira-2026.test.ts::holds saved education benefit sources and a change of return year"
   - line: "08-medical-overlap"
     description: "Preserve separately qualifying medical expenses under Part I"
-    formula: "The finite college tuition worksheet passes only the validated education amount. Leave omitted Line 1, manual medical, and supported medical values absent through input parsing so the engine can still derive them from Form 1099-R and Schedule A. Honor explicitly entered zero. Preserve code 99 when both qualified exceptions contribute to Line 2."
+    formula: "The separate canonical education source derives Line 1 from Form 1099-R and the distinct medical exception from Schedule A. Count the medical amount once and preserve code 99 when both qualified exceptions contribute to Line 2. Preserve the prior aggregate Form 5329 parser defaults, including explicit zero inputs and legacy HSA, and hold any mixture of the canonical education source with aggregate manual Form 5329."
     testRef: "tests/guided-interview/guided-education-ira-2026.test.ts::preserves a separately qualifying medical exception and code 99"
+    testRefs:
+      - "tests/guided-interview/guided-education-ira-2026.test.ts::preserves legacy Form 5329 defaults and explicit zeros outside the guided education source"
+      - "tests/pdf/form-5329-joint-part-i.test.ts::preserves the aggregate HSA review packet when $name"
+  - line: "08-canonical-matching"
+    description: "Verify the matched tuition route after canonical parsing"
+    formula: "Require a complete source tied to the current canonical owner, original distribution, paid tuition and exact source amounts. Reject stale source identity, other owners or statements, invalid or mismatched tuition, competing retirement inputs, and saved education benefit allocations."
+    testRef: "tests/guided-interview/guided-education-ira-2026.test.ts::holds stale or competing canonical tuition sources"
+    testRefs:
+      - "tests/guided-interview/guided-education-ira-2026.test.ts::holds future receipt or tuition payment dates in direct canonical input"
+      - "tests/guided-interview/guided-education-ira-2026.test.ts::uses the calculation as-of date for dated canonical replay"
+      - "tests/guided-interview/guided-education-ira-2026.test.ts::requires confirmed eligible college tuition in direct canonical input"
   - line: "08-primary-owner"
     description: "Bind college tuition to the actual primary taxpayer"
     formula: "Store a tuition-specific fingerprint of the normalized primary taxpayer name and full tax identifier alongside the existing IRA source snapshot. Hold a changed or unknown owner, including a change without a birth date change, and hold a saved tuition worksheet without the owner binding pending new source review. Formatting-only name and tax identifier edits may preserve an otherwise identical binding. Preserve the existing first-home snapshot and review behavior."

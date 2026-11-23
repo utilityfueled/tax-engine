@@ -1,22 +1,11 @@
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
+import { isActualDate } from "@/utils/civil-date";
 import Decimal from "decimal.js";
 import type { DeductionData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { mortgageWorksheetFactErrors } from "./guided-mortgage-worksheet";
 
-export function isActualDate(value: string | undefined): boolean {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
-
-/** Use the local calendar when comparing dates reported by the filer. */
-export function currentLocalCivilDate(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
+export { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 
 export function hasEnteredAmount(value: string | undefined): boolean {
   return typeof value === "string" && value.trim() !== "";

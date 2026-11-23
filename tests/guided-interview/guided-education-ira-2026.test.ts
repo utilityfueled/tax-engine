@@ -54,10 +54,9 @@ it("projects matched 2026 paid tuition and calculates exact code 08 amounts", ()
   const state = draft();
   expect(validateSection(state, "income-retirement").status).toBe("complete");
   const projected = buildTaxInputFromGuidedData(state);
-  expect(projected?.form5329).toEqual({ qualifiedHigherEducationExpenseExceptionAmount: "2000.15" });
   const input = TaxYearInputSchema.parse(projected);
-  expect(input.form5329?.qualifiedHigherEducationExpenseExceptionAmount).toBe("2000.15");
-  expect(input.form5329?.earlyDistributionsIncludedInIncome).toBeUndefined();
+  expect(input.form5329).toBeUndefined();
+  expect(input.form5329EducationSource?.tuition).toMatchObject({ paidAmount: "2000.15", paymentDate: "2026-08-25" });
   const result = calculateFederalTax(input);
   expect(result.iraDistributionsTaxable.toFixed()).toBe("3000.45");
   const partI = result.form5329;
@@ -68,8 +67,9 @@ it("projects matched 2026 paid tuition and calculates exact code 08 amounts", ()
   const capped = buildTaxInputFromGuidedData(draft({ ...original, code1IraEducationSource: {
     ...worksheet, billedTuition: "4000", paidTuition: "4000",
   } }));
-  expect(capped?.form5329?.qualifiedHigherEducationExpenseExceptionAmount).toBe("3000.45");
-  expect(calculateFederalTax(TaxYearInputSchema.parse(capped)).form5329?.line4.toFixed()).toBe("0");
+  const cappedPartI = calculateFederalTax(TaxYearInputSchema.parse(capped)).form5329;
+  expect(cappedPartI?.line2.toFixed()).toBe("3000.45");
+  expect(cappedPartI?.line4.toFixed()).toBe("0");
 });
 
 it("holds missing, mismatched and competing Code 08 source facts", () => {
@@ -116,10 +116,8 @@ it("preserves a separately qualifying medical exception and code 99", () => {
     ...worksheet, original: { ...worksheet.original, grossDistribution: "3000" }, billedTuition: "2000", paidTuition: "2000",
   } });
   const projected = buildTaxInputFromGuidedData(state);
-  expect(projected?.form5329?.qualifiedHigherEducationExpenseExceptionAmount).toBe("2000");
   const input = TaxYearInputSchema.parse({ ...projected, scheduleA: { medicalExpenses: "1000" } });
-  expect(input.form5329?.medicalExpenseExceptionAmount).toBeUndefined();
-  expect(input.form5329?.supportedMedicalExpenseExceptionAmount).toBeUndefined();
+  expect(input.form5329EducationSource?.tuition.paidAmount).toBe("2000");
   const result = calculateFederalTax(input);
   expect(result.agi.toFixed()).toBe("3000");
   const partI = result.form5329;
@@ -127,17 +125,87 @@ it("preserves a separately qualifying medical exception and code 99", () => {
   expect(partI.line2ExceptionNumber).toBe("99");
   expect([partI.line1, partI.line2, partI.line3, partI.line4].map(amount => amount.toFixed()))
     .toEqual(["3000", "2775", "225", "22.5"]);
-  const explicitMedicalZero = TaxYearInputSchema.parse({ ...input, form5329: { ...input.form5329, medicalExpenseExceptionAmount: "0" } });
-  expect(calculateFederalTax(explicitMedicalZero).form5329?.line2ExceptionNumber).toBe("08");
-  const explicitLine1Zero = TaxYearInputSchema.parse({ ...input, form5329: { ...input.form5329, earlyDistributionsIncludedInIncome: "0" } });
-  expect(calculateFederalTax(explicitLine1Zero).form5329?.line1.toFixed()).toBe("0");
+});
+
+it("preserves legacy Form 5329 defaults and explicit zeros outside the guided education source", () => {
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(draft()));
+  for (const explicit of [false, true]) {
+    const manual = TaxYearInputSchema.parse({ ...input, form5329EducationSource: undefined,
+      scheduleA: { medicalExpenses: "1000" }, form5329: { qualifiedHigherEducationExpenseExceptionAmount: "2000.15",
+        ...(explicit ? { earlyDistributionsIncludedInIncome: "0", medicalExpenseExceptionAmount: "0", supportedMedicalExpenseExceptionAmount: "0" } : {}),
+      },
+    });
+    expect(manual.form5329).toMatchObject({ earlyDistributionsIncludedInIncome: "0", medicalExpenseExceptionAmount: "0", supportedMedicalExpenseExceptionAmount: "0" });
+    expect(calculateFederalTax(manual).form5329?.line1.toFixed()).toBe("0");
+  }
+  const manualPositive = TaxYearInputSchema.parse({ ...input, form5329EducationSource: undefined,
+    scheduleA: { medicalExpenses: "1000" }, form5329: { earlyDistributionsIncludedInIncome: "3000.45", qualifiedHigherEducationExpenseExceptionAmount: "2000.15", medicalExpenseExceptionAmount: "0" },
+  });
+  expect(calculateFederalTax(manualPositive).form5329?.line2ExceptionNumber).toBe("08");
+});
+
+it("holds stale or competing canonical tuition sources", () => {
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(draft()));
+  const source = input.form5329EducationSource;
+  assert.ok(source);
+  for (const changes of [
+    { form5329: { qualifiedHigherEducationExpenseExceptionAmount: "0" } },
+    { taxpayer: { ...input.taxpayer, primary: { ...input.taxpayer.primary, ssn: "222-22-3333" } } },
+    { form1099R: input.form1099R?.map(form => ({ ...form, accountReference: "another IRA" })) },
+    { form5329EducationSource: { ...source, tuition: { ...source.tuition, receiptAccountReference: "unmatched" } } },
+    { form5329EducationSource: { ...source, tuition: { ...source.tuition, paymentDate: "2025-12-31" } } },
+  ]) expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...input, ...changes }))).toThrow(/Form 5329.*education/i);
+});
+
+it("holds future receipt or tuition payment dates in direct canonical input", () => {
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(draft()));
+  const source = input.form5329EducationSource;
+  assert.ok(source);
+  for (const [receiptDate, paymentDate] of [
+    ["2026-12-15", "2026-12-18"],
+    ["2026-12-15", source.tuition.paymentDate],
+    [source.distribution.receiptDate, "2026-12-18"],
+  ]) {
+    const submitted = TaxYearInputSchema.parse({ ...input,
+      form1099R: input.form1099R?.map(form => ({ ...form, distributionDate: receiptDate })),
+      form5329EducationSource: {
+        ...source,
+        distribution: { ...source.distribution, receiptDate },
+        tuition: { ...source.tuition, paymentDate },
+      },
+    });
+    expect(() => calculateFederalTax(submitted)).toThrow(/Form 5329.*education.*on or before.*as-of/i);
+  }
+});
+
+it("uses the calculation as-of date for dated canonical replay", () => {
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(draft()));
+  expect(() => calculateFederalTax(input, { asOfDate: "2026-09-14" })).toThrow(/on or before.*as-of/i);
+  const result = calculateFederalTax(input, { asOfDate: "2026-09-15" }).form5329;
+  expect(result?.line2.toFixed()).toBe("2000.15");
+  expect(result?.line2ExceptionNumber).toBe("08");
+  for (const asOfDate of ["2026-02-30", "2026-12-19"]) {
+    expect(() => calculateFederalTax(input, { asOfDate })).toThrow(/as-of.*valid.*on or before today/i);
+  }
+});
+
+it("requires confirmed eligible college tuition in direct canonical input", () => {
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(draft()));
+  const source = input.form5329EducationSource;
+  assert.ok(source);
+  for (const ownEligibleTuitionConfirmed of [undefined, false]) {
+    expect(() => TaxYearInputSchema.parse({
+      ...input,
+      form5329EducationSource: { ...source, ownEligibleTuitionConfirmed },
+    })).toThrow(/ownEligibleTuitionConfirmed/);
+  }
 });
 
 it("holds a saved tuition proof after the primary taxpayer changes with the same birth date", () => {
   const originalState = draft();
   const personal = originalState.sectionData["personal-info"];
   assert.ok(personal);
-  expect(buildTaxInputFromGuidedData(originalState)?.form5329?.qualifiedHigherEducationExpenseExceptionAmount).toBe("2000.15");
+  expect(buildTaxInputFromGuidedData(originalState)?.form5329EducationSource?.tuition.paidAmount).toBe("2000.15");
   const records = new Map<string, string>();
   const storage = {
     getItem: (key: string) => records.get(key) ?? null,
@@ -160,7 +228,7 @@ it("holds a saved tuition proof after the primary taxpayer changes with the same
     expect(buildTaxInputFromGuidedData(restored)).toBeNull();
   }
   const formatted = updateSectionData(originalState, "personal-info", { ...personal, firstName: " JORDAN ", ssn: "111223333" });
-  expect(buildTaxInputFromGuidedData(formatted)?.form5329?.qualifiedHigherEducationExpenseExceptionAmount).toBe("2000.15");
+  expect(buildTaxInputFromGuidedData(formatted)?.form5329EducationSource?.tuition.paidAmount).toBe("2000.15");
   const legacy = draft({ ...original, code1IraEducationSource: {
     ...worksheet, original: { ...worksheet.original, ownerFingerprint: undefined },
   } });

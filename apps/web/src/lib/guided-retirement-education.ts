@@ -1,12 +1,10 @@
-import Decimal from "decimal.js";
-import { sha256 } from "@noble/hashes/sha2.js";
-import { bytesToHex } from "@noble/hashes/utils.js";
-import type { CreditsData, PersonalInfoData } from "./guided-interview-flow";
+import type { Form5329EducationSource } from "@/models/inputs.js";
+import type { CreditsData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, currentLocalCivilDate, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { matchesGuidedCode1IraOriginal, type GuidedCode1IraOriginal } from "./guided-retirement-first-home";
 
-export type GuidedIraEducationOwner = Pick<PersonalInfoData, "firstName" | "middleName" | "lastName" | "ssn">;
+export { iraEducationOwnerFingerprint as guidedIraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
 export type GuidedIraEducationOriginal = GuidedCode1IraOriginal & { ownerFingerprint: string };
 
 export interface GuidedIraEducationWorksheet {
@@ -27,15 +25,6 @@ export interface GuidedIraEducationWorksheet {
 
 export const guidedIraEducationOriginalError = "Reconcile the saved college tuition IRA worksheet with the actual primary taxpayer, original statement and receipt date, or remove it.";
 
-export function guidedIraEducationOwnerFingerprint(owner?: GuidedIraEducationOwner): string | undefined {
-  const name = (value?: string) => value?.normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase() ?? "";
-  const first = name(owner?.firstName);
-  const last = name(owner?.lastName);
-  const taxId = owner?.ssn?.trim().replaceAll("-", "") ?? "";
-  if (!first || !last || !/^\d{9}$/.test(taxId)) return undefined;
-  return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify([first, name(owner?.middleName), last, taxId]))));
-}
-
 export function matchesGuidedIraEducationOriginal(
   worksheet: GuidedIraEducationWorksheet | undefined, original: GuidedIraEducationOriginal | undefined,
 ): boolean {
@@ -43,15 +32,18 @@ export function matchesGuidedIraEducationOriginal(
     && matchesGuidedCode1IraOriginal(worksheet.original, original);
 }
 
-export function buildGuidedIraEducationException(
+export function buildGuidedIraEducationSource(
   worksheet: GuidedIraEducationWorksheet, original: GuidedIraEducationOriginal | undefined, credits?: CreditsData,
-): string {
+): Omit<Form5329EducationSource, "ownerFingerprint"> {
   if (!original || !matchesGuidedIraEducationOriginal(worksheet, original)) throw new Error(guidedIraEducationOriginalError);
   if (worksheet.ordinaryTraditionalIraConfirmed !== true || worksheet.ownEligibleTuitionConfirmed !== true) {
     throw new Error("Confirm the ordinary traditional IRA withdrawal with no rollover and required tuition for your own enrollment at an eligible college.");
   }
-  const billAccount = worksheet.billAccountReference?.trim().toLowerCase();
-  if (!worksheet.institutionName?.trim() || !billAccount || billAccount !== worksheet.receiptAccountReference?.trim().toLowerCase()) {
+  const institutionName = worksheet.institutionName?.trim();
+  const billAccountReference = worksheet.billAccountReference?.trim();
+  const receiptAccountReference = worksheet.receiptAccountReference?.trim();
+  if (!institutionName || !billAccountReference || !receiptAccountReference
+    || billAccountReference.toLowerCase() !== receiptAccountReference.toLowerCase()) {
     throw new Error("Enter the eligible college and match the student account references from its bill and posted payment receipt.");
   }
   const { paymentDate, billedTuition, paidTuition, taxFreeAssistance } = worksheet;
@@ -74,5 +66,17 @@ export function buildGuidedIraEducationException(
     || credits?.education?.llcStudents?.length || hasEnteredAmount(credits?.education?.llcExpenses)) {
     throw new Error("This worksheet requires zero assistance and no tuition refunds, education-account payments, or other education-benefit allocations. Reconcile any education sources saved in Credits.");
   }
-  return Decimal.min(paid, taxable).toFixed();
+  return {
+    sourceTaxYear: 2026, owner: "primary",
+    distribution: {
+      payerName: original.payer, payerTin: original.payerTin, accountReference: original.accountReference,
+      receiptDate: original.distributionDate, amount: taxable.toFixed(), employeeContributions: "0",
+    },
+    tuition: {
+      institutionName, billAccountReference, receiptAccountReference, paymentDate,
+      billedAmount: billed.toFixed(), paidAmount: paid.toFixed(), taxFreeAssistance: "0",
+    },
+    ordinaryTraditionalIraConfirmed: true, ownEligibleTuitionConfirmed: true,
+    refundedOrReimbursed: false, coveredByEducationAccount: false, allocatedToEducationCredit: false,
+  };
 }
