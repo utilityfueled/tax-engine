@@ -12965,6 +12965,26 @@ as canceled.
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293) ·
 [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 
+#### Exact strict Chromium failure classification
+
+Independent review of the two exact jobs reconciled every strict
+Chromium failure. The original 30-second case deadline accounts for
+all 10 ARM64 failures and 11 of 13 AMD64 failures. The remaining two
+AMD64 cases reached the existing four-second saved-PDF inspection
+deadline during page-text extraction. These observations locate the
+deadlines without establishing why the runners reached them.
+
+| Case | AMD64 | Native ARM64 |
+| --- | ---: | ---: |
+| Ohio part-year business | 2 | 2 |
+| Ohio reciprocity | 1 | 1 |
+| Ohio resident credit | 4 | 3 |
+| Ohio part-year school district | 4 | 4 |
+| RRTA saved-PDF inspection | 2 | 0 |
+
+[AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157/job/137424225792) ·
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293/job/137427369274).
+
 ### November 22 provider catalog and retirement check
 
 OpenAI still documents GPT-6 Luna with high reasoning and GPT-6.1 Sol

@@ -10,7 +10,9 @@
   Strict Chromium passed 637 with 13 failures on AMD64 and 640 with 10
   failures on native ARM64. Each retained five existing skips. Image
   smoke, recovery, archive verification and cleanup passed on both.
-  Runtime qualification remains open.
+  The failures reconcile to 11 Ohio case deadlines and two RRTA
+  saved-PDF inspection timeouts on AMD64 and 10 Ohio case deadlines on
+  ARM64. Runtime qualification remains open.
   [Ohio preview evidence](upgrade-2026-progress.md#november-22-ohio-pending-header-federal-reuse) ·
   [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45092257157) ·
   [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45093267293).
