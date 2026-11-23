@@ -1,5 +1,53 @@
 # 2026 upgrade implementation evidence
 
+## November 23 Form 8995-A business source matching
+
+`c819ad3b` carries each business's W-2 wages, UBIA and SSTB status from the
+original record through the detailed Form 8995-A calculation. The federal
+fixture uses two K-1s with distinct EINs and an identical display name. The
+SSTB contributes zero above the phase-out and the separately reported
+non-SSTB contributes $16,000. A second fixture produces $6,000 without an
+election and requires review when an existing Part IV election names two
+possible source records, including an original zero-QBI record. Legacy
+K-1 defaults record both omitted and reported zero amounts as zero, so the
+collision check considers every original K-1 name. A reviewer independently
+confirmed that distinguishable components can still aggregate.
+[IRS Form 8995-A instructions](https://www.irs.gov/instructions/i8995a) ·
+[Business aggregation regulation](https://www.ecfr.gov/current/title-26/section-1.199A-4).
+
+All five new regressions failed on `ef89227f`. The fix passed 647 focused
+tests, TypeScript, the exact browser audit-pin check and all 37 Form 8995-A
+spec references. The 2026 test exercises the internal draft calculation.
+The annual filing and export gates remain closed pending final materials
+and qualified independent review. `c819ad3b` was pushed to `main`, and Vercel
+reported the automatic production build as canceled.
+
+The tracked-source archive passed all nine core checks. Unit and coverage
+each passed 30,189 tests with 79 existing skips and 88.28% branch coverage.
+The archive used Node 26.13.1, Python 3.14.6, pypdf 6.10.0 and 15 public
+sample documents for the unit, coverage and Chromium suites.
+Sleep from 17:12:04 to 17:17:48 local time interrupted the first coverage and
+Chromium runs. Their timeout logs were retained. Both exact-source retries
+passed with a temporary wake assertion. Chromium passed 650 cases across
+eight batches with five existing skips. All 11 local checks passed.
+
+All eight GitHub CI jobs and the Docker build passed. PostgreSQL-backed CI
+coverage passed 30,268 tests across 2,209 files with 88.64% branch coverage.
+Managed Linux browser flows passed. The strict AMD64 job was still running
+when recorded.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45275710186) ·
+[Docker build](https://github.com/utilityfueled/tax-engine/actions/runs/45275710029) ·
+[Exact-source Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45275710118).
+
+Retained strict AMD64 traces from the preceding run locate the Ohio deadline
+failures at different points. The NEW212 desktop trace reached deletion
+after reopening. Both school desktops reached review download at the time
+limit. The school mobile log recorded a completed download and PDF inspection
+before the filing-request timeout. The traces have no network timing, so they
+cannot attribute the delays to the runtime service or browser. The original
+steps and 30-second limit stay in force.
+[Preceding strict AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45263934728/job/138005716656).
+
 ## November 22 Form 8606 native ratio precision
 
 `931d088f` uses a four-place ratio in the disabled final 2026 Form 8606

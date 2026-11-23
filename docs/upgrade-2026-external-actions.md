@@ -102,6 +102,13 @@ Reviewed commits are pushed directly to `main` after verifying the
 installed Preview-only build guard. Production deployment still
 requires authorization.
 
+For the duplicate-name Form 8995-A fixtures, a qualified reviewer should
+independently derive each Line 15 amount, sum the components on Line 16,
+verify the Line 39 transfer to Form 1040 and identify the source evidence
+that resolves an ambiguous Part IV election. Record the worksheets,
+citations, applicable year and review date before annual qualification.
+[Form 8995-A fixtures and authorities](upgrade-2026-progress.md#november-23-form-8995-a-business-source-matching).
+
 | Input still needed | Specific review material and deliverable |
 | --- | --- |
 | Qualified independent tax reviewers | Derive and record independent worksheets, authority, findings and dated decisions for the [original nine-case assignment](upgrade-2026-nov14-human-tax-review.md), [five-method supplement](upgrade-2026-human-tax-five-method-supplement-46a95320.md), [AI/partial-interest source supplement](upgrade-2026-human-ai-partial-supplement-8a31d8ae.md), [state/guide supplement](upgrade-2026-human-state-guide-supplement-e014f390.md), [goodwill/PA supplement](upgrade-2026-human-goodwill-pa-supplement-1360b9cb.md) and [November 19 territory, Ohio, mortgage and pension supplement](upgrade-2026-human-territory-ohio-resident-20261119.md), including their linked earlier packets. All human assignments remain unfilled. |

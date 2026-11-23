@@ -1,5 +1,30 @@
 {
   "activeContinuation": {
+    "nov23DetailedQbiBusinessSourceMatching": {
+      "applicationCommit": "c819ad3b857b69d49c8128a30eac99f7f0480448",
+      "scope": "Bind each Form 8995-A business to original W-2 wages, UBIA and SSTB facts. Hold legacy elections naming multiple possible originals, including zero-QBI K-1 records.",
+      "sources": ["https://www.irs.gov/instructions/i8995a", "https://www.ecfr.gov/current/title-26/section-1.199A-4"],
+      "baselineRegressionFailures": 5,
+      "scopedTestsPassed": 647,
+      "form8995ASpecReferencesPassed": 37,
+      "independentCodeReview": "passed",
+      "qualifiedIndependentTaxReview": "pending",
+      "sourceArchiveSha256": "972ec3426f1023e41e059393cf317013e5cbf38e6edbc60e248199d5303989bc",
+      "githubRuns": {"ci": 45275710186, "web": 45275710118, "docker": 45275710029},
+      "exactLocalCoreChecksPassed": 9,
+      "exactLocalUnitAndCoveragePerSuite": {"passed": 30189, "skipped": 79},
+      "exactLocalBranchCoveragePercent": 88.28,
+      "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8},
+      "exactLocalChecksPassed": 11,
+      "firstLocalCoverageAndBrowserRuns": "Interrupted by verified host sleep. Logs retained and suites restarted with a temporary wake assertion.",
+      "exactGithubCi": "passed",
+      "exactGithubCoverage": {"job": 138046832508, "passed": 30268, "files": 2209, "branchCoveragePercent": 88.64},
+      "exactLinuxManagedBrowser": {"job": 138046832301, "status": "passed"},
+      "exactLinuxStrictBrowser": {"job": 138046831489, "status": "in progress when recorded; prior strict deadline findings remain open"},
+      "dockerBuild": "passed",
+      "productionDeploymentCanceled": true,
+      "2026Calculation": "Internal draft fixture only. Annual calculation and export gates stay closed."
+    },
     "nov23OfflineAiQualityComparison": {
       "applicationCommit": "0c24c4086b2e705bfb0f22cba5c13c3e683a0376",
       "scope": "Keep an otherwise fully measured baseline comparable when its only rejected responses are independently marked quality-rejected by a human and otherwise meet every acceptance criterion.",

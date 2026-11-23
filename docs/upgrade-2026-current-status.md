@@ -18,6 +18,16 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
 [Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+- `c819ad3b` keeps each Form 8995-A business's wage, property basis and
+  service-business facts with its original record. A name-only aggregation
+  election requires review when two source records share its component name,
+  including K-1 records with zero current QBI. Five regressions failed on the
+  previous revision and 647 focused tests passed with the fix. Independent code
+  review passed. All 11 exact local checks, GitHub CI, Docker and managed Linux
+  browser flows passed. Strict AMD64 was still running when recorded. The 2026
+  regression uses the internal draft calculation.
+  [Source-matching evidence](upgrade-2026-progress.md#november-23-form-8995-a-business-source-matching).
+
 - `1dd593b5` binds nonjoint public safety officer premiums to the
   otherwise taxable amount on their own Form 1099-R. Positive claims
   with conflicting complete payer TINs in a single Simplified Method
