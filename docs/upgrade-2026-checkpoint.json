@@ -18,11 +18,21 @@
       "githubRuns": {"ci": 45227494758, "docker": 45227495021, "web": 45227494580, "nativeArm64Recovery": 45227688897},
       "productionDeploymentCanceled": true,
       "exactCoreChecksPassed": 9,
+      "exactLocalChecksPassed": 11,
       "localUnitAndCoveragePerSuite": {"passed": 30161, "skipped": 79},
       "localBranchCoveragePercent": 88.25,
+      "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8, "cleanupPassed": true},
+      "exactLocalManifestSha256": "2811c8bb99d0ca1008b4a6c89ccdbc6ba8fb6810a86c73a1ff099486a71d0207",
       "githubDocker": "passed",
-      "exactChecks": "running",
-      "remaining": "Positive election qualification, qualified human review, final annual materials and the exact local and remote release gates."
+      "githubLinuxWebBuildComposeRecoveryAndArchiveVerification": "passed",
+      "githubManagedBrowser": {"job": 137877798211, "passed": 648, "failed": 2, "skipped": 5, "failureCategory": "RRTA saved-PDF inspection subprocess deadlines"},
+      "githubStrictBrowser": {"job": 137877798890, "passed": 647, "failed": 3, "skipped": 5, "failureCategory": "Ohio part-year school district browser case deadlines"},
+      "nativeArm64ImageSmokeArchiveAndComposeRecovery": "passed",
+      "nativeArm64Browser": {"job": 137878497264, "passed": 641, "failed": 9, "skipped": 5, "cleanupPassed": true, "failureCategory": "Ohio 30-second browser deadlines across NEW212, reciprocal, resident credit and part-year school district"},
+      "githubCoverage": {"job": 137877799413, "passed": 30240, "testFiles": 2209, "branchCoveragePercent": 88.62},
+      "githubSingleWorkerUnitJob": {"job": 137877799391, "conclusion": "cancelled", "reason": "60-minute job limit reached before a terminal suite result"},
+      "exactChecks": "local passed; GitHub lint, types, spec, build and coverage passed; unit job cancelled; Linux and ARM64 browser qualification failed",
+      "remaining": "Positive election qualification, qualified human review, final annual materials, Linux and ARM64 browser deadlines and a complete hosted unit check."
     },
     "nov23CheckoutSandboxExpiry": {
       "exactCheckoutSource": "522cf4b1",
@@ -56,6 +66,8 @@
       "githubRuns": {"ci": 45225985808, "docker": 45225985762, "web": 45225985900},
       "productionDeploymentCanceled": true,
       "exactLocalBrowser": {"passed": 650, "failed": 0, "skipped": 5, "completedBatches": 8},
+      "githubManagedBrowser": {"passed": 650, "failed": 0, "skipped": 5},
+      "githubStrictBrowser": {"passed": 645, "failed": 5, "skipped": 5, "failureCategory": "Ohio 30-second browser deadlines across NEW212, resident credit and part-year school district cases"},
       "remaining": "Qualified human tax review, other Code 3 cohorts and annual calculation or export admission. Exact release verification continues on the successor."
     },
     "nov23PublicProviderCatalog": {

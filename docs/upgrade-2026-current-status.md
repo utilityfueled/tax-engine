@@ -21,9 +21,13 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 - `d164d0ca` requires an explicit answer about the public safety officer
   premium exclusion on a 2026 Code 3 pension. An affirmative answer goes
   to qualified review, and older unanswered worksheets hold. Independent
-  review and 46 final scoped tests passed. All nine exact core checks
-  passed, including 30,161 tests in each run and 88.25% branch coverage.
-  GitHub Docker passed. Browser and recovery checks are still running.
+  review and 46 final scoped tests passed. All 11 exact local checks passed,
+  including 30,161 tests in each core run, 88.25% branch coverage and
+  650 Chromium cases. The Docker build, Linux and ARM64 recovery, and
+  independent archive checks passed. Managed Linux hit two RRTA inspection
+  deadlines. Strict Linux and ARM64 hit three and nine Ohio deadlines,
+  respectively. GitHub coverage passed all 30,240 tests at 88.62% branch
+  coverage. The single-worker unit job canceled at its 60-minute limit.
   Vercel canceled the production build.
   [Election evidence](upgrade-2026-progress.md#november-23-code-3-public-safety-officer-election).
 - The sandbox Checkout Session from `522cf4b1` expired unpaid without a

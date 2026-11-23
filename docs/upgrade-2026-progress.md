@@ -13466,6 +13466,15 @@ browser case. The tracked archive needed the 15 public samples under
 probe identified `EPERM` on `127.0.0.1:3099` when the runner reported
 “Browser port already bound.” The successful run used the same source,
 fixtures and case deadlines with local loopback available.
+[Exact prior Linux Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45225985900).
+
+The exact Linux managed run also passed 650 cases with five original
+skips. Strict Linux passed 645 and hit five unchanged 30-second Ohio
+deadlines across NEW212, resident credit and part-year school district.
+An independent trace review localized the stops to different stages from
+saved state through the final filing rejection. That evidence supports
+retaining the tests and deadlines, with strict qualification still open.
+[Exact strict Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45225985900/job/137872473448).
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45225985808),
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45225985762),
 and [browser](https://github.com/utilityfueled/tax-engine/actions/runs/45225985900).
@@ -13490,11 +13499,26 @@ web types and inventory passed. The broader concurrent run passed 2,216
 and hit one Ohio display-proof deadline. That Ohio case and 53 other
 controls passed the scoped rerun with the original timeout. The exact
 local run uses the archived source, pinned Node/Python and the same 15
-public sample documents as the prior passing run. All nine exact core
+public sample documents as the prior passing run. All 11 exact local
 checks passed. Unit and coverage each passed 30,161 cases with 79 skipped
-under their existing conditions. Branch coverage was 88.25%
-against the 85% gate. GitHub Docker passed and Vercel canceled the
-production build. Browser and recovery runs remain active.
+under their existing conditions. Branch coverage was 88.25% against the 85%
+gate. Chromium passed 650 cases in eight batches, with five existing
+skips and successful cleanup. The local result manifest SHA-256 is
+`2811c8bb99d0ca1008b4a6c89ccdbc6ba8fb6810a86c73a1ff099486a71d0207`.
+GitHub Docker passed and Vercel canceled the production build. Linux and
+ARM64 image smoke or build checks, isolated Compose recovery and separately
+loaded archives passed. Managed Linux passed 648 Chromium cases, hit two
+RRTA saved-PDF inspection deadlines, and retained five existing skips.
+Strict Linux passed 647, hit three Ohio part-year school district deadlines,
+and retained five existing skips. Both timing investigations preserved the
+original assertions and deadlines. Native ARM64 passed 641 Chromium cases,
+hit nine 30-second Ohio deadlines across NEW212, reciprocal, resident
+credit and part-year school district, and retained five existing skips.
+Image smoke, archive import, Compose recovery and browser container cleanup
+passed. GitHub lint, typechecks, spec validation, build and coverage
+passed. Coverage ran all 30,240 tests in 2,209 files with 88.62% branch
+coverage. The separate single-worker unit job reached its 60-minute job
+limit and canceled before reporting a suite result.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45227494758) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45227495021) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45227494580) ·
