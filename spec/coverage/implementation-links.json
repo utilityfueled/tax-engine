@@ -1674,6 +1674,16 @@
       "note": "Links the enacted-law 2026 Ohio resident-credit draft calculation and its own-spec actual-original settlement/binding regressions. Composition separately requires oh-2026-resident-credit-source.ts and oh-2026-ordinary-source.ts; the historical worksheet rounding continuity remains provisional. No final 2026 form, packet, complete 2026 return, legal review or filing qualification is claimed."
     },
     {
+      "key": "state/oh-sd-100-federal-schedule-a",
+      "enginePath": "src/engine/forms/state-local-income-tax-deduction.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::deducts three native school estimates and leaves the January installment on the Ohio return",
+        "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::reopens federal Schedule A for the school deduction and rejects a coherent stale result"
+      ],
+      "note": "Links the ordinary 2025 district cash payment transfer to the shared federal deduction engine and original-bound historical review packet. Qualified tax review, 2026 forms and filing eligibility remain open."
+    },
+    {
       "key": "state/oh-school-source-material-equality",
       "enginePath": "src/engine/state/oh-sd-100-sources.ts",
       "testRefs": [

@@ -19192,6 +19192,29 @@
       "knownGaps": []
     },
     {
+      "key": "state/oh-sd-100-federal-schedule-a",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3",
+      "specPath": "spec/state/oh-sd-100-federal-schedule-a.yaml",
+      "enginePath": "src/engine/forms/state-local-income-tax-deduction.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::deducts three native school estimates and leaves the January installment on the Ohio return",
+        "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::reopens federal Schedule A for the school deduction and rejects a coherent stale result"
+      ],
+      "implementationNote": "Links the ordinary 2025 district cash payment transfer to the shared federal deduction engine and original-bound historical review packet. Qualified tax review, 2026 forms and filing eligibility remain open.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-sd-100-guided",
       "jurisdiction": "state",
       "taxYear": 2025,

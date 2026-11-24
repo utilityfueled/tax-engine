@@ -6,9 +6,14 @@ import {calculateTaxableStateRefundRecoveries} from "./taxable-state-refund-reco
 import { calculateForm1099OID } from "./form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
+import { W2StateLocalSourcesSchema } from "@/models/w2-state-local.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, sum } from "@/utils/decimal.js";
 import { calculateStateTaxPaymentsInYear } from "./state-tax-payment-year.js";
+import { readOhioSchoolScheduleAPayments } from "../federal.js";
+
+const stateJurisdiction = W2StateLocalSourcesSchema.shape.stateRows.element.shape.state;
+const US_TERRITORY_CODES = new Set(["AS", "GU", "MP", "PR", "VI"]);
 
 interface StateLocalIncomeTaxDeductionResult {
   w2StateWithholding: Decimal;
@@ -68,8 +73,32 @@ export function calculateStateLocalIncomeTaxDeduction(input: TaxYearInput): Stat
   }
   const deductedElsewhere = actualAmount(allocation, "Non-W2 income taxes deducted elsewhere");
   if (deductedElsewhere.gt(nonW2Withholding)) throw new Error("Another-schedule tax deduction exceeds actual non-W2 withholding");
-  const statePaymentsInYear = calculateStateTaxPaymentsInYear(input);
+  let statePaymentsInYear = calculateStateTaxPaymentsInYear(input);
   const additionalPayments = actualAmount(input.scheduleA?.additionalStateLocalIncomeTaxes, "Additional income-tax payments");
+  const ohioSchool = readOhioSchoolScheduleAPayments(input);
+  if (ohioSchool) {
+    const estimated = d(ohioSchool.estimatedPrincipal);
+    const priorCredit = d(ohioSchool.appliedPriorCredit);
+    const { estimatedTaxPayments = [], extensionPayments = [], priorYearAppliedCredits = [] } = input.adjustments ?? {};
+    const jurisdiction = (state: string | undefined) => {
+      const code = state?.trim().toUpperCase();
+      return code && (stateJurisdiction.safeParse(code).success || US_TERRITORY_CODES.has(code)) ? code : undefined;
+    };
+    const inCashYear = (payment: { type: string; date: string; amount: string }) => payment.type === "state"
+      && payment.date.startsWith("2025-") && d(payment.amount).gt(0);
+    if (additionalPayments.gt(0)
+      || [...estimatedTaxPayments, ...extensionPayments].some(payment => inCashYear(payment) && !jurisdiction(payment.state))
+      || extensionPayments.some(payment => inCashYear(payment) && jurisdiction(payment.state) === "OH")
+      || priorYearAppliedCredits.some(credit => credit.type === "state" && d(credit.amount).gt(0) && !jurisdiction(credit.state))) {
+      throw new Error("Identify the state jurisdiction and reconcile additional taxes with the Ohio school district receipts and applied credit.");
+    }
+    const schoolPayments = estimated.plus(priorCredit);
+    statePaymentsInYear = statePaymentsInYear.plus(schoolPayments);
+    audit.record("SALT Income Tax WS", "OH-SD-100", "Verified Ohio school district income taxes", schoolPayments,
+      "2025 estimated principal paid plus the verified prior-year district refund applied to 2025", {
+        "Estimated principal paid during 2025": estimated, "Prior district refund applied to 2025": priorCredit,
+      });
+  }
   if ((input.form1099G ?? []).some(source => source.refundPaymentBasis !== undefined) && !input.taxableStateRefundRecoveries) throw new Error("Refund original allocation requires a complete source recovery collection");
   const recoveries = input.taxableStateRefundRecoveries ? calculateTaxableStateRefundRecoveries(input) : undefined;
   const currentRefundSources = (input.form1099G ?? []).filter(source => source.refundExpenseTaxYear === input.taxpayer.taxYear

@@ -1,6 +1,8 @@
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
+import { requiresOhioSchoolScheduleAPaymentProof } from "@/engine/federal.js";
+import { resolveOhioResidencyReview, type PreparedOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
 /**
  * PDF filler for IRS Schedule A (Form 1040) — Itemized Deductions.
  *
@@ -115,11 +117,15 @@ export async function fillScheduleA(
   result: TaxReturnResult,
   blankPdfPath: string,
   charitableReview?: PreparedCharitableReview,
+  ohioReview?: PreparedOhioResidencyReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   charitableReviewOriginalSourceInput(input, result, charitableReview);
   const sa = result.scheduleA;
   if (!sa) throw new Error("Schedule A requires an actual calculation before tax audit mapping");
+  if (requiresOhioSchoolScheduleAPaymentProof(input) || sa.lines.some(line => line.form === "SALT Income Tax WS" && line.line === "OH-SD-100")) {
+    resolveOhioResidencyReview(input, result, ohioReview);
+  }
   if (sa.charitableSourceDigest !== charitableSourceDigest(input)) throw new Error("Schedule A charitable sources do not match the calculation");
   const exactPriorUsed = sa.charitableCarryforwardDetail.reduce((total, row) => total.plus(row.amountUsed), ZERO);
   const exactPriorCash = sa.charitableCarryforwardDetail.filter(row => row.medium === "cash").reduce((total, row) => total.plus(row.amountUsed), ZERO);

@@ -11,12 +11,17 @@ Use the linked progress sections when investigating individual packages.
 
 - Exact `f84a7000` passed all 11 local checks, with 30,410 unit and coverage
   cases, 88.34% branch coverage and 652 passing Chromium cases. The earlier
-  `e2d50f12` managed Linux browser and build jobs passed. Exact release
-  container qualification remains open. [Local and Linux evidence](upgrade-2026-progress.md#november-24-exact-pennsylvania-candidate-verification).
+  `e2d50f12` managed Linux browser and build jobs passed. Its runtime
+  container browser suite missed 14 deadlines. [Local and Linux evidence](upgrade-2026-progress.md#november-24-exact-pennsylvania-candidate-verification).
 
 - Verified Ohio IT 1040 carryovers and income-tax principal paid in 2025
   now reach Schedule A once. Same-year extension receipts require separate
   principal evidence. [Ohio payment evidence](upgrade-2026-progress.md#november-24-ohio-applied-refunds-and-balance-principal).
+
+- Verified Ohio school district estimates paid during 2025 and prior refunds
+  applied to that district account now reach federal Schedule A. Guided preview
+  and historical PDF review check the same current originals.
+  [School district payment evidence](upgrade-2026-progress.md#november-24-ohio-school-district-payments-on-schedule-a).
 
 - A verified prior-year refund applied to an individual 2025 Pennsylvania
   return now counts once in federal Schedule A. The guided preview holds

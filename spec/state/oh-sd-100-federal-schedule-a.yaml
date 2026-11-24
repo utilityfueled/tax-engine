@@ -1,0 +1,101 @@
+form: "2025 Ohio SD 100 to federal Schedule A"
+fullName: "Verified Ohio school district income tax in federal itemized deductions"
+taxYear: 2025
+reference: "https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"
+notes: |
+  2025 Ohio IT 1040 / SD 100 instructions, SD 100 lines 11, 12, 17 and 20:
+  https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=58
+  Scope is the supported ordinary 2025 Ohio school-district source method.
+  Preserve Ohio 2025 return-year totals, existing deduction elections, source
+  admission and public readiness gates. Require current reconciled original
+  school, state payment, residency and federal records. Keep original receipts
+  and account identifiers private. Do not use a state result dependent on the
+  projected federal result as proof of its own deduction.
+lines:
+  - line: "5a-actual-school-estimates"
+    description: "Cash-year Ohio school-district estimated-tax principal"
+    formula: |
+      Add the Decimal sum of unique verified original SD 100 estimated-tax
+      principal actually paid between 2025-01-01 and 2025-12-31. The January
+      2026 receipt remains on the Ohio 2025 account but is excluded from 2025
+      Schedule A. Preserve the existing receipt owner, school account, posted
+      total, original confirmation and supported whole-dollar checks. A matching
+      date or amount alone does not collapse separately verified IT 1040 and
+      SD 100 payments. The same actual confirmation cannot serve both accounts.
+      Do not use a generic OH row as evidence for both accounts. Hold unresolved
+      overlap instead of silently letting a generic aggregate duplicate cash.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::deducts three native school estimates and leaves the January installment on the Ohio return"
+  - line: "5a-distinct-ohio-accounts"
+    description: "Independent state and school transactions"
+    formula: |
+      Include both verified accounts' payments when the amounts and payment
+      dates agree but the independent confirmations differ. Reject a repeated
+      normalized original confirmation across IT 1040 and SD 100, even when
+      the account type and local receipt row label differ.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::uses distinct same-day state and school receipts and rejects a reused confirmation"
+  - line: "5a-generic-jurisdiction"
+    description: "Identify generic entries before counting them with native school tax"
+    formula: |
+      A positive generic cash-year estimate or extension or prior applied credit
+      needs a recognized U.S. state or territory code when an actual district deduction
+      is present. District codes, locality labels and missing jurisdiction do
+      not establish a separate state payment. A valid different jurisdiction can
+      remain separate. A current generic Ohio estimate or prior credit can only
+      reconcile to the existing native IT 1040 source, once. An Ohio generic
+      extension has no verified distinct income-tax principal in this cohort.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::holds generic district aliases and keeps recognized different-state payments separate"
+  - line: "5a-applied-school-credit"
+    description: "Actual prior Ohio school district refund applied to 2025"
+    formula: |
+      Add only the exact 2024 district overpayment elected and confirmed applied
+      to the taxpayer's 2025 district account. Require the filed original,
+      complete posted account and reconciled amount. Exclude the unelected or
+      unapplied portion, a refund actually received, and a 2025 overpayment
+      elected into 2026. Keep this distinct from cash receipts and independently
+      verified IT 1040 credit. Never reuse an ambiguous generic Ohio credit as
+      a second deduction or a second mirror.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::deducts only the verified prior district refund applied to the current district account"
+  - line: "5a-school-exclusions"
+    description: "School withholding, later balance payments and gross tax totals"
+    formula: |
+      W-2 Box 19 already reports admitted school withholding through the federal
+      W-2 path. Add only the verified supplemental income-tax principal; no
+      SD 100 liability, blended payments/withholding, payable balance, interest,
+      penalty, or expected remittance. The admitted current-original SD 100
+      balance actually paid during 2026 is excluded in 2025. A 2024 balance
+      actually paid in 2025 could qualify federally, but the current native
+      school prior-return model has no such dated receipt. No special, extension,
+      amended or unsupported payment method gains admission here.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::deducts school withholding once and excludes a verified current school balance paid in 2026"
+  - line: "5a-retained-school-claim"
+    description: "Changes to a previously confirmed district payment inventory"
+    formula: |
+      Keep a year-specific record of any previously verified positive cash-year
+      school estimate or applied refund during guided editing and restoration.
+      Hold current federal preview if its retained original is missing or stale.
+      A no-payment replacement releases this requirement only after replay of
+      current district and independent parent sources. A merely valid-shaped
+      stale or malformed replacement remains held through unrelated saves.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::retains a verified school deduction through removal, stale save and current known-none replacement"
+  - line: "5a-school-review-binding"
+    description: "Federal Schedule A review transfers the current verified deduction"
+    formula: |
+      Verify the current federal result against Ohio private originals using the
+      existing prepared review context before transferring Schedule A. Require
+      the same exact calculation when the renderer receives redacted originals.
+      Reject even an internally consistent earlier federal result with the
+      district transfer missing. Preserve review-only export eligibility and
+      keep the original school receipts out of the document.
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::reopens federal Schedule A for the school deduction and rejects a coherent stale result"
+  - line: "5a-final-federal-settlement"
+    description: "Apply the school deduction before validating federal settlement"
+    formula: |
+      Keep the original 2025 federal payment facts on the current private
+      snapshot. Perform deduction-sensitive Form 2210 settlement and full
+      payment checks on the final federal result. In the finite wage-only
+      case, a $300 verified school estimate moves $15,500 of preliminary
+      deductions to $15,800, above the $15,750 standard deduction. Reconcile
+      the original Schedule AI annual itemized amount to the $15,800 final
+      return and hold an inconsistent annual amount.
+      Official form: https://www.irs.gov/pub/irs-prior/f2210--2025.pdf#page=3
+    testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::validates Schedule AI after the school payments change the automatic deduction selection"

@@ -22,6 +22,7 @@ import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
 import { buildGuidedOhioOverlay, buildGuidedStateOriginals, readGuidedPAMarriedDraft } from "./guided-state-engine-inputs";
 import { buildGuidedOhioPaymentFacts, guidedOhioScheduleAPaymentClaim } from "./guided-ohio-payment-facts";
+import { buildGuidedOhioSchoolScheduleAOriginals, guidedOhioSchoolScheduleAPaymentClaim } from "./guided-ohio-school-district-facts";
 import { buildGuidedPAMarriedOrdinarySources } from "./guided-pa-married-ordinary-sources";
 import {
   calculateGenericStateReturn,
@@ -258,6 +259,18 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
           && (paymentDraft.paymentRows?.some(row => row?.kind === "estimated") || ohioPaymentClaim);
         if (paymentDraft && (requiresOhioPaymentProof || hasSavedOhioEstimate || hasSourcedOhioPayment)) {
           taxInput = {...baseInput, ohioPayments: buildGuidedOhioPaymentFacts(paymentDraft, baseInput)};
+        }
+        const school = stateData?.ohioSchoolDistrict;
+        const requiresSchoolPaymentProof = stateData?.lastConfirmedOHSchoolScheduleAPaymentYear === year;
+        const claimedSchoolPayment = guidedOhioSchoolScheduleAPaymentClaim(school, year)
+          && (school?.sourceFactsConfirmed === true || school?.originalFederalSources != null);
+        if (requiresSchoolPaymentProof || claimedSchoolPayment) {
+          try {
+            if (!school) throw new Error("Current payment records are missing.");
+            taxInput = buildGuidedOhioSchoolScheduleAOriginals(taxInput, school, stateData?.ohioResidency, paymentDraft);
+          } catch (error) {
+            throw new Error(`Confirm the complete Ohio school district tax payment records for this year. ${error instanceof Error ? error.message : ""}`.trim());
+          }
         }
       }
       const pennsylvaniaDraft = stateData?.paOrdinaryReturnFacts;

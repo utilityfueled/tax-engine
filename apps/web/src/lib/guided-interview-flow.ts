@@ -12,7 +12,7 @@ import {buildGuidedOhioReturnHeaderSources,type OhioReturnHeaderDraft} from './g
 import {buildGuidedOhioReciprocalWages,type OhioReciprocalWagesDraft} from './guided-oh-reciprocal-wages';
 import {ohioBusinessActualValues,invalidateOhioBusiness} from './guided-ohio-business-facts';
 import {buildGuidedOhioResidentCreditSources,ohioResidentCreditActualValues,invalidateOhioResidentCredit,type OhioResidentCreditDraft} from './guided-ohio-resident-credit-sources';
-import {buildGuidedOhioSchoolDistrictFacts,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
+import {buildGuidedOhioSchoolDistrictFacts,guidedOhioSchoolScheduleAPaymentClaim,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
 import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
 import {PAMarriedPaymentSourcesSchema} from '@/models/pa-married-payment-sources';
 import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guided-interview-bridge";
@@ -1418,6 +1418,8 @@ export interface StateReturnData {
   ohioResidency?: OhioResidencyDraft;
   ohioPayments?: OhioPaymentDraft;
   lastConfirmedOHScheduleAPaymentYear?: number;
+  /** Last verified cash-year school receipt or applied refund until the district inventory is reconciled. */
+  lastConfirmedOHSchoolScheduleAPaymentYear?: number;
   ohioReturnHeaderSources?: OhioReturnHeaderDraft;
   ohioSchoolDistrict?: OhioSchoolDistrictDraft;
   ohio2026SchoolSources?: Ohio2026SchoolDraft;
@@ -2019,6 +2021,41 @@ function retainedOhioScheduleAPaymentYear(year: number, nextState: GuidedFlowSta
     const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(nextState));
     buildGuidedOhioPaymentFacts(current, input);
     return year;
+  } catch {
+    return pending ? year : undefined;
+  }
+}
+
+function retainedOhioSchoolScheduleAPaymentYear(year: number, nextState: GuidedFlowState, previous: StateReturnData | undefined): number | undefined {
+  const prior = previous?.ohioSchoolDistrict;
+  const data = nextState.sectionData["state-return"];
+  const school = data?.ohioSchoolDistrict;
+  let pending = previous?.lastConfirmedOHSchoolScheduleAPaymentYear === year;
+  if (!pending && prior?.sourceFactsConfirmed === true && guidedOhioSchoolScheduleAPaymentClaim(prior, year)) {
+    const snapshot = TaxYearInputSchema.safeParse(prior.originalFederalSources);
+    if (snapshot.success) {
+      try {
+        buildGuidedOhioSchoolDistrictFacts(snapshot.data, prior, previous?.ohioResidency, previous?.ohioPayments);
+        pending = true;
+      } catch { /* An incomplete legacy packet cannot establish prior verification. */ }
+    }
+  }
+  const residency = data?.ohioResidency;
+  if (pending && data && !school && residency?.sourceFactsConfirmed === true
+    && residency.schoolDistrictStatus === "no_ohio_taxing_district_residency") {
+    // Test the corrected return without the school hold. Keep any independent IT 1040 hold.
+    const replacement = { ...data, lastConfirmedOHSchoolScheduleAPaymentYear: undefined };
+    const candidate = { ...nextState, sectionData: { ...nextState.sectionData, "state-return": replacement } };
+    return computeGuidedPreviewEvaluation(candidate).sourceReplaySucceeded ? undefined : year;
+  }
+  if (school?.sourceFactsConfirmed !== true) return pending ? year : undefined;
+  const hasPayment = guidedOhioSchoolScheduleAPaymentClaim(school, year);
+  if (!pending && !hasPayment) return undefined;
+  if (hasPayment && pending && school === prior) return year;
+  try {
+    const current = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(nextState));
+    buildGuidedOhioSchoolDistrictFacts(current, school, data?.ohioResidency, data?.ohioPayments);
+    return hasPayment ? year : undefined;
   } catch {
     return pending ? year : undefined;
   }
@@ -2656,6 +2693,11 @@ export function updateSectionData(
     if (lastConfirmedOHScheduleAPaymentYear !== nextStateReturn.lastConfirmedOHScheduleAPaymentYear) {
       const { lastConfirmedOHScheduleAPaymentYear: _previousYear, ...current } = nextStateReturn;
       nextStateReturn = lastConfirmedOHScheduleAPaymentYear === undefined ? current : { ...current, lastConfirmedOHScheduleAPaymentYear };
+    }
+    const lastConfirmedOHSchoolScheduleAPaymentYear = retainedOhioSchoolScheduleAPaymentYear(state.taxYear, nextState, previousStateReturn);
+    if (lastConfirmedOHSchoolScheduleAPaymentYear !== nextStateReturn.lastConfirmedOHSchoolScheduleAPaymentYear) {
+      const { lastConfirmedOHSchoolScheduleAPaymentYear: _previousYear, ...current } = nextStateReturn;
+      nextStateReturn = lastConfirmedOHSchoolScheduleAPaymentYear === undefined ? current : { ...current, lastConfirmedOHSchoolScheduleAPaymentYear };
     }
   }
   if (state.taxYear === 2025 && state.segmentation.stateCode === "PA" && nextStateReturn && !nextStateReturn.paMarriedOrdinarySources) {

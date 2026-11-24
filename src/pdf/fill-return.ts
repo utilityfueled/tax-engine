@@ -117,6 +117,7 @@ import {
   fillForm6781Reference,
   shouldIncludeForm6781ReferenceSummary,
 } from "./fill-form-6781.js";
+import type { PreparedOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
 import { fillForm4137, assertForm4137ReviewSource } from "./fill-form-4137.js";
 import { fillForm8919 } from "./fill-form-8919.js";
 import { fillScheduleEIC } from "./fill-schedule-eic.js";
@@ -442,6 +443,8 @@ export interface FillReturnOptions {
   paOrdinaryReview?:PreparedPAOrdinaryReturnReview;
   /** Actual complete household and owned results, privately prepared before redaction. */
   paMarriedReview?:PreparedPAMarriedReturnReview;
+  /** Current Ohio originals for the verified federal school district deduction. */
+  ohioReview?: PreparedOhioResidencyReview;
   /** Actual EIC child records, validated before identifier redaction. */
   eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
@@ -648,7 +651,7 @@ export async function fillReturn(
   // ── Schedule A (if applicable — only when itemizing) ──
   if (result.scheduleA && result.deductionUsed === "itemized") {
     const saPath = join(blankFormsDir, "f1040sa.pdf");
-    const docSA = await fillScheduleA(input, result, saPath, charitableReview);
+    const docSA = await fillScheduleA(input, result, saPath, charitableReview, options.ohioReview);
     if (flatten) await flattenForm(docSA.getForm());
     const outputPathSA = join(outputDir, "f1040sa-filled.pdf");
     await savePacketPdf(docSA, outputPathSA);

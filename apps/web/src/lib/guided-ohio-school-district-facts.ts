@@ -6,6 +6,7 @@ import {OhioSchoolDistrictFactsSchema,type OhioSchoolDistrictFacts} from '@/mode
 import type {TaxYearInput} from '@/models/inputs';
 import {buildGuidedOhioResidencyFacts,snapshotGuidedOhioOriginals,assertGuidedOhioOriginals,type OhioResidencyDraft} from './guided-ohio-residency-facts';
 import {buildGuidedOhioPaymentFacts,type OhioPaymentDraft} from './guided-ohio-payment-facts';
+import Decimal from 'decimal.js';
 type Confirmation=boolean|null;
 interface SourceAddress{street:string;apt?:string;city:string;state:string;zip:string}
 interface SourceIdentity{firstName:string;lastName:string;ssn:string;dateOfBirth:string}
@@ -40,6 +41,24 @@ export interface OhioSchoolDistrictDraft{
   priorReturn:SchoolPriorDraft;priorCreditCarryforward:SchoolCarryDraft;remainingTaxPayment:SchoolBalanceDraft;
   currentTiming:{kind:string;expectedDate?:string;filedDate?:string;asOfDate:string};filingExtension:{kind:string};paymentExtension:{kind:string};returnKind:string;specialMethod:string;refundDisposition:{sourceReference:string;outgoingCarryforward:string}};
 }
+
+/** Announces a possible cash-year claim. Only full current source replay verifies it. */
+export function guidedOhioSchoolScheduleAPaymentClaim(data: OhioSchoolDistrictDraft | undefined, returnYear: number): boolean {
+ if (returnYear !== 2025 || typeof data?.taxYear !== 'string' || year(data.taxYear) !== returnYear) return false;
+ const p = data.payments;
+ const positive = (value: unknown) => {
+  if (typeof value !== 'string') return false;
+  const amount = normalizeSchoolCurrency(value);
+  return /^\d+(?:\.\d{1,2})?$/.test(amount) && new Decimal(amount).gt(0);
+ };
+ const inCashYear = (date: unknown) => typeof date === 'string' && date.startsWith('2025-');
+ const rows = p?.paymentRows;
+ return (Array.isArray(rows) && rows.some(row => (inCashYear(row?.original?.date) && positive(row.original.amount))
+    || (inCashYear(row?.date) && positive(row.amount))))
+  || ((!Array.isArray(rows) || rows.length === 0) && positive(p?.account?.estimatedPaymentsCredited))
+  || positive(p?.priorCreditCarryforward?.availableForThisReturn) || positive(p?.account?.priorCreditApplied);
+}
+
 const address=():SourceAddress=>({street:'',apt:'',city:'',state:'',zip:''});
 export function emptySchoolPartYearHome():SchoolPartYearHomeDraft{return{sourceReference:'',from:'',through:'',domicileState:'',originalAddress:address()};}
 export function emptySchoolPartYearState():SchoolPartYearStateDraft{return{state:'',wages:'',withheld:''};}
@@ -125,24 +144,37 @@ function readCurrentSchoolParents(input: TaxYearInput, residency: OhioResidencyD
 }
 type CurrentSchoolParents = ReturnType<typeof readCurrentSchoolParents>;
 
+function readCurrentSchoolOriginals(input: TaxYearInput, data: OhioSchoolDistrictDraft | undefined, readParents: () => CurrentSchoolParents) {
+ if (!data || data.sourceFactsConfirmed !== true) fail('complete and explicitly confirm the actual school district records after the last edit');
+ assertGuidedOhioOriginals(input, data.originalFederalSources);
+ const { residency, payments } = readParents();
+ if (residency.schoolDistrictStatus !== 'actual_district_sources_required') fail('retained school records conflict with the current no-district residency answer');
+ const parsed = OhioSchoolDistrictFactsSchema.safeParse(originalPacket(data));
+ if (!parsed.success) fail(`complete actual source facts; zero only when known (${parsed.error.issues.map(i => i.path.join('.')).join('; ')})`);
+ return { ...input, ohioResidency: residency, ohioPayments: payments, ohioSchoolDistrict: parsed.data };
+}
+
+/** The federal calculation verifies a positive school claim. Recheck any replacement with no claim here. */
+export function buildGuidedOhioSchoolScheduleAOriginals(input: TaxYearInput, data: OhioSchoolDistrictDraft, residency: OhioResidencyDraft | undefined, payments: OhioPaymentDraft | undefined) {
+ const current = readCurrentSchoolOriginals(input, data, () => readCurrentSchoolParents(input, residency, payments));
+ if (!guidedOhioSchoolScheduleAPaymentClaim(data, input.taxpayer.taxYear)) {
+  buildOhioResidentReturnInput(current, calculateFederalTax(current));
+ }
+ return current;
+}
+
 /** Pure read: neither retained snapshots nor any confirmation is refreshed here. */
 function replayGuidedOhioSchoolDistrictFacts<T>(
  input: TaxYearInput, data: OhioSchoolDistrictDraft | undefined, readParents: () => CurrentSchoolParents,
  use: (facts: OhioSchoolDistrictFacts, proof?: OhioSourceAdapterInvocation) => T,
  mode: 'standalone' | 'header' | 'pending-header',
 ): T {
- if(!data||data.sourceFactsConfirmed!==true)fail('complete and explicitly confirm the actual school district records after the last edit');
- assertGuidedOhioOriginals(input,data.originalFederalSources);
- const { residency, payments } = readParents();
- if(residency.schoolDistrictStatus!=='actual_district_sources_required')fail('retained school records conflict with the current no-district residency answer');
- const parsed=OhioSchoolDistrictFactsSchema.safeParse(originalPacket(data));
- if(!parsed.success)fail(`complete actual source facts; zero only when known (${parsed.error.issues.map(i=>i.path.join('.')).join('; ')})`);
- const current={...input,ohioResidency:residency,ohioPayments:payments,ohioSchoolDistrict:parsed.data};
- if (mode === 'pending-header') return withPendingOhioSchoolAdapterInvocation(current, proof => use(parsed.data, proof));
+ const current=readCurrentSchoolOriginals(input,data,readParents);
+ if (mode === 'pending-header') return withPendingOhioSchoolAdapterInvocation(current, proof => use(current.ohioSchoolDistrict, proof));
  const federal=calculateFederalTax(current);
- if (mode === 'header') return withOhioSchoolAdapterInvocation(current, federal, proof => use(parsed.data, proof));
+ if (mode === 'header') return withOhioSchoolAdapterInvocation(current, federal, proof => use(current.ohioSchoolDistrict, proof));
  buildOhioResidentReturnInput(current,federal);
- return use(parsed.data);
+ return use(current.ohioSchoolDistrict);
 }
 export function buildGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictFacts{
  return replayGuidedOhioSchoolDistrictFacts(input,data,()=>readCurrentSchoolParents(input,residencyDraft,paymentDraft),facts=>facts,'standalone');

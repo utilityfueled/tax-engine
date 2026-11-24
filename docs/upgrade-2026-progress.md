@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio school district payments on Schedule A
+
+Verified 2025 SD 100 estimates and prior refunds posted to the district account
+now reach federal Schedule A once. The Ohio return keeps its January 2026
+installment. Distinct IT 1040 and SD 100 confirmations stay separate. Missing,
+ambiguous or changed originals hold the preview until the current Ohio sources
+reconcile. The final federal payment calculation applies the local deduction
+before validating Form 2210. Original-bound historical PDF review prints the
+same deduction and rejects a stale calculation. Qualified review remains open.
+[2025 Schedule A instructions](https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3) ·
+[2025 Ohio SD 100 instructions](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=58).
+
+The core and guided scopes passed 73 and 37 tests, respectively, and the
+isolated replay passed 26. All eight dedicated and 15 shared spec references,
+inventory, 2,062 browser audit hashes, both typechecks and independent source
+review passed. Strict full candidate verification remains open.
+
 ## November 24 exact Pennsylvania candidate verification
 
 The `f84a7000` archive verified 6,669 tracked blobs and all 15 sample-document
@@ -10,10 +27,14 @@ Chromium passed all 652 active cases in eight original request windows, with
 five original skips and successful cleanup. This exact archive precedes the
 later Pennsylvania applied-refund and Ohio IT 1040 fixes.
 
-On the earlier exact `e2d50f12` Linux workflow, web build and managed browser
-jobs passed. Its runtime-container job was still running at this check.
-The `f84a7000` exact Linux workflow was queued. Vercel skipped automatic
-production builds for `f84a7000` and `f1abf676`.
+On the earlier exact `e2d50f12` Linux workflow, web build and all 652 active
+managed browser cases passed with five original skips. The runtime container
+passed 638 cases, missed 14 deadlines and retained five original skips.
+Those failures covered 11 Ohio journeys, one paired Pennsylvania payment
+journey and two RRTA review journeys. Candidate build, smoke, recovery,
+rollback, archive verification, scan and cleanup steps passed.
+The `f84a7000` exact Linux workflow was queued at the check. Vercel skipped
+automatic production builds for `f84a7000` and `f1abf676`.
 [Earlier Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45449802299) ·
 [Exact candidate Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057).
 

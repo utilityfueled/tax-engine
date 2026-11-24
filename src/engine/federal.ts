@@ -229,9 +229,51 @@ import {
 import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestrator.js";
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 import { calculatePAMarriedOrdinaryReturnWithFederal } from "./state/pa-married-ordinary-return.js";
+import { verifyOhioSchoolScheduleAPayments } from "./state/oh-source-adapter-invocation.js";
+import type { OhioSchoolDistrictSourceProjection } from "./state/oh-sd-100-sources.js";
+
+type OhioSchoolScheduleAPayments = OhioSchoolDistrictSourceProjection["scheduleAIncomeTaxes"];
+const ohioSchoolScheduleAPaymentProof = Symbol("verified Ohio school district deductions");
+type OhioSchoolCalculation = { readonly phase: "preliminary" }
+  | { readonly phase: "final"; readonly payments: OhioSchoolScheduleAPayments };
+type FederalInputWithOhioSchoolProof = TaxYearInput & { readonly [ohioSchoolScheduleAPaymentProof]?: OhioSchoolCalculation };
+
+/** Read only during the federal calculation on the exact immutable verified originals. */
+export function readOhioSchoolScheduleAPayments(input: TaxYearInput): OhioSchoolScheduleAPayments | undefined {
+  const school = (input as FederalInputWithOhioSchoolProof)[ohioSchoolScheduleAPaymentProof];
+  return school?.phase === "final" ? school.payments : undefined;
+}
+
+export function requiresOhioSchoolScheduleAPaymentProof(input: TaxYearInput): boolean {
+  if (input.taxpayer.taxYear !== 2025 || !input.ohioSchoolDistrict
+    || input.deductionElection === "standard" || input.deductionElection === "nonitemized") return false;
+  const payments = input.ohioSchoolDistrict.payments;
+  return !Array.isArray(payments?.paymentRows) || payments.paymentRows.length > 0
+    || payments.priorCreditCarryforward?.status !== "none"
+    || payments.priorReturn?.status === "filed_return" && !d(payments.priorReturn.electedCreditCarryforward).isZero()
+    || !/^0+(?:\.0{1,2})?$/.test(payments.account?.estimatedPaymentsCredited ?? "")
+    || !/^0+(?:\.0{1,2})?$/.test(payments.account?.priorCreditApplied ?? "");
+}
+
+/** Spec: state/oh-sd-100-federal-schedule-a.yaml. Resolve the local account before final deductions. */
+export function calculateFederalTax(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  if (!requiresOhioSchoolScheduleAPaymentProof(input)) return calculateFederalTaxReturn(input, context);
+  const { current, payments } = verifyOhioSchoolScheduleAPayments(input, context);
+  if (d(payments.estimatedPrincipal).isZero() && d(payments.appliedPriorCredit).isZero()) return calculateFederalTaxReturn(current, context);
+  // Local immutable context follows same-return spreads and stays out of original JSON snapshots.
+  const proof: OhioSchoolCalculation = Object.freeze({ phase: "final", payments });
+  const verified = Object.freeze({ ...current, [ohioSchoolScheduleAPaymentProof]: proof });
+  return calculateFederalTaxReturn(verified, context);
+}
+
+/** For the private Ohio source replay only. Final settlement uses the completed deduction. */
+export function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  const phase: OhioSchoolCalculation = Object.freeze({ phase: "preliminary" });
+  return calculateFederalTaxReturn(Object.freeze({ ...input, [ohioSchoolScheduleAPaymentProof]: phase }), context);
+}
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
-export function calculateFederalTax(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
   if (input.paMarriedOrdinarySources?.paymentSources !== undefined) {
     return calculatePAMarriedOrdinaryReturnWithFederal(input, input.paMarriedOrdinarySources).federal;
   }
@@ -4821,22 +4863,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form5329?.line4 ?? d("0"), form5329?.line8 ?? d("0"), form1099Q?.netPenalty ?? d("0"),
     additionalMedicareTax,niitTax,sched1.hsaAdditionalTax,sched1.hsaRecaptureTax));
   const estimatedTaxRefundableCredits = sum(educationRefundable,refundableAdoptionCredit,netPremiumTaxCredit,form8812.actc,eic,sched3.section1341Credit);
-  const scheduleAiInvestmentElection = calculateForm2210InvestmentElectionSources(input, form4952, {
+  const ohioSchoolPreliminary = (input as FederalInputWithOhioSchoolProof)[ohioSchoolScheduleAPaymentProof]?.phase === "preliminary";
+  const form2210Facts = ohioSchoolPreliminary ? undefined : input.form2210;
+  const scheduleAiInvestmentElection = ohioSchoolPreliminary ? undefined : calculateForm2210InvestmentElectionSources(input, form4952, {
     qualifiedDividends, netCapitalGain: netLTCG, grossInvestmentIncome: totalTaxableInterest.plus(totalDividends),
     itemizedDeductions: deductionUsed === "itemized" ? deductionAmount : undefined,
     ordinaryCohort: section1250Gain.isZero() && collectiblesGain.isZero() && !input.section1202Sources && schedD.section1202Exclusion.isZero()
       && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0)) && !input.form8615 && !input.scheduleJ && !input.form2555,
   });
-  const scheduleAiOrdinaryPreferentialIncome = input.form2210?.calculationMethod === "annualized"
-    && input.form2210.ordinaryPreferentialPeriodsConfirmed === true
+  const scheduleAiOrdinaryPreferentialIncome = form2210Facts?.calculationMethod === "annualized"
+    && form2210Facts.ordinaryPreferentialPeriodsConfirmed === true
     && section1250Gain.isZero() && collectiblesGain.isZero() && (investmentIncomeElection.isZero() || scheduleAiInvestmentElection !== undefined)
     && !input.section1202Sources && schedD.section1202Exclusion.isZero()
     && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0))
     ? { qualifiedDividends, netCapitalGain: netLTCG } : undefined;
   const scheduleAiSpecialLines = schedD.specialGainWorksheets?.lines;
   const scheduleAi1250BeforeLosses = scheduleAiSpecialLines?.find(row => row.form === "Unrecaptured Section1250 Gain Worksheet" && row.line === "13")?.value;
-  const scheduleAiSpecialPreferentialIncome = input.form2210?.calculationMethod === "annualized"
-    && input.form2210.specialRatePeriodsConfirmed === true && scheduleAiSpecialLines && scheduleAi1250BeforeLosses !== undefined
+  const scheduleAiSpecialPreferentialIncome = form2210Facts?.calculationMethod === "annualized"
+    && form2210Facts.specialRatePeriodsConfirmed === true && scheduleAiSpecialLines && scheduleAi1250BeforeLosses !== undefined
     && investmentIncomeElection.isZero() && !input.section1202Sources && schedD.section1202Exclusion.isZero()
     && !input.form1099Div.some(statement => d(statement.section1202Gain).gt(0))
     ? { qualifiedDividends, netCapitalGain: netLTCG,
@@ -4848,7 +4892,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     refundableCredits:estimatedTaxRefundableCredits,
     priorYearTax:input.priorYear?.priorYearTax === undefined ? undefined : d(input.priorYear.priorYearTax),
     priorYearAGI:input.priorYear?.priorYearAGI === undefined ? undefined : d(input.priorYear.priorYearAGI),
-    filingStatus,facts:input.form2210,
+    filingStatus,facts:form2210Facts,
     scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
       preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
       ...(scheduleAiOrdinaryPreferentialIncome ? { ordinaryPreferentialIncome: scheduleAiOrdinaryPreferentialIncome } : {}),
@@ -4856,34 +4900,36 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ...(scheduleAiSpecialPreferentialIncome ? { specialRatePreferentialIncome: scheduleAiSpecialPreferentialIncome,
         distributionOnlyCapitalBounds: getForm2210DistributionOnlyBounds(input) } : {}),
       specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction,
-      ownerSources:buildForm2210OwnerSourceContext(input,schedSE,
+      ownerSources: ohioSchoolPreliminary ? undefined : buildForm2210OwnerSourceContext(input,schedSE,
         estimatedTaxBase.minus(taxAfterCredits).minus(selfEmploymentTax).plus(amt).plus(partIAdditions),
         taxBeforeCredits.minus(taxAfterCredits).plus(estimatedTaxRefundableCredits))},
     payments:[
       ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),
-      ...(input.form2210?.priorYearCreditPayments ?? []).map(payment=>({...payment,kind:"prior-year-credit" as const})),
+      ...(form2210Facts?.priorYearCreditPayments ?? []).map(payment=>({...payment,kind:"prior-year-credit" as const})),
       ...(input.adjustments?.extensionPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"extension" as const})),
-      ...(input.form2210?.returnPayments ?? []).map(payment=>({...payment,kind:"return" as const})),
+      ...(form2210Facts?.returnPayments ?? []).map(payment=>({...payment,kind:"return" as const})),
     ],
   };
   const householdTax = scheduleH?.totalTax ?? d("0");
-  let form2210: ReturnType<typeof calculateForm2210>;
-  if (householdTax.gt(0) && federalWithholding.gt(0)) {
-    form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
-  } else {
-    // A waiver amount is tested against the final penalty, not this first pass.
-    const firstPass=householdTax.gt(0) && input.form2210 ? {...estimatedTaxInput,facts:{...input.form2210,waiverRequested:false}} : estimatedTaxInput;
-    form2210=calculateForm2210(firstPass);
-    const paymentsRequiredWithoutHousehold=estimatedTaxBase.minus(estimatedTaxRefundableCredits).gte(1000)
-      && form2210.requiredAnnualPayment.gt(0);
-    if (householdTax.gt(0)) {
-      form2210=calculateForm2210(paymentsRequiredWithoutHousehold ? {...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)} : estimatedTaxInput);
+  let form2210: ReturnType<typeof calculateForm2210> | undefined;
+  if (!ohioSchoolPreliminary) {
+    if (householdTax.gt(0) && federalWithholding.gt(0)) {
+      form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
+    } else {
+      // A waiver amount is tested against the final penalty, not this first pass.
+      const firstPass=householdTax.gt(0) && form2210Facts ? {...estimatedTaxInput,facts:{...form2210Facts,waiverRequested:false}} : estimatedTaxInput;
+      form2210=calculateForm2210(firstPass);
+      const paymentsRequiredWithoutHousehold=estimatedTaxBase.minus(estimatedTaxRefundableCredits).gte(1000)
+        && form2210.requiredAnnualPayment.gt(0);
+      if (householdTax.gt(0)) {
+        form2210=calculateForm2210(paymentsRequiredWithoutHousehold ? {...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)} : estimatedTaxInput);
+      }
     }
+    audit.merge(form2210.lines);
   }
-  audit.merge(form2210.lines);
-  const estimatedTaxPenalty=form2210.penalty;
+  const estimatedTaxPenalty=form2210?.penalty ?? d("0");
 
   // ── Schedule 2: Aggregate Additional Taxes ───────────
   const sched2 = calculateSchedule2({
@@ -4914,7 +4960,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ═══════════════════════════════════════════════════════════
 
   const totalTax = taxAfterCredits.plus(totalAdditionalTaxes);
-  const paidInFullDate = input.form2210?.returnPaidInFullDate;
+  const paidInFullDate = form2210Facts?.returnPaidInFullDate;
   if (paidInFullDate) {
     const paid = sum(estimatedTaxInput.withholding, ...estimatedTaxInput.payments.filter((payment) => payment.date <= paidInFullDate).map((payment) => d(payment.amount)));
     const due = totalTax.minus(estimatedTaxRefundableCredits);

@@ -58,3 +58,11 @@ lines:
     description: Keep verified Ohio estimates applied to another tax year separate from the selected return's receipt mirrors.
     formula: Preserve explicit confirmed application in retained Ohio facts. Reconcile current-year or legacy yearless saved rows with distinct current originals. Include verified other-return amounts in Schedule A using their actual cash year without applying them to the selected Ohio return. Matching dates and amounts do not merge payments applied to distinct return years.
     testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::uses explicit prior-year Ohio estimates in the federal cash year without merging current state receipts"
+  - line: "oh-school-schedule-a-no-district-reconfirmation"
+    description: Reconcile a previously deducted school payment after correcting the Ohio residency records to no taxing district.
+    formula: Removing the school packet keeps the prior deduction on hold until the current confirmed federal, Ohio residency and IT 1040 payment originals produce a complete no-district Ohio calculation. Require removal of conflicting district records and preserve any independent IT 1040 payment hold.
+    testRef: "tests/guided-interview/oh-sd-100-guided-payment-retention.test.ts::clears the school payment hold only after a verified no-district Ohio correction"
+  - line: "oh-school-schedule-a-source-year-routing"
+    description: Apply the same accepted school source year to guided preview and to retained school payment proof.
+    formula: Use the district source year parser for routing and retention. An accepted 2025 source year with surrounding whitespace follows the same cash-year calculation and confirmation guard as 2025.
+    testRef: "tests/guided-interview/oh-sd-100-guided-payment-retention.test.ts::routes accepted whitespace around the school source year through preview and retention"

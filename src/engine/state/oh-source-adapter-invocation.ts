@@ -1,9 +1,10 @@
 /** Spec: state/oh-school-header-same-invocation.yaml. Active synchronous scope only. */
 import Decimal from 'decimal.js';
-import {calculateFederalTax} from '@/engine/federal.js';
+import {calculateFederalTax, calculateFederalTaxBeforeOhioSchoolScheduleA} from '@/engine/federal.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
 import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
+import type {OhioSchoolDistrictSourceProjection} from './oh-sd-100-sources.js';
 const brand=Symbol('completed current Ohio school adapter');
 export interface OhioSourceAdapterInvocation{readonly [brand]:true}
 const active=new WeakMap<OhioSourceAdapterInvocation,{material:string;method:string|undefined}>();
@@ -76,6 +77,20 @@ export function readOhioCurrentFederalCalculation(
   input: TaxYearInput, candidate: OhioCurrentFederalCalculation | undefined,
 ): TaxReturnResult | undefined {
   return CurrentFederalCalculation.forInput(input, candidate);
+}
+
+/** Spec: state/oh-sd-100-federal-schedule-a.yaml. A calculation supplies its own preliminary result. */
+export function verifyOhioSchoolScheduleAPayments(
+  input: TaxYearInput, context?: { asOfDate?: string },
+): { current: TaxYearInput; payments: OhioSchoolDistrictSourceProjection['scheduleAIncomeTaxes'] } {
+  const current = immutableSchoolInput(input);
+  if (!current) throw Error('Ohio school district tax deductions require complete plain current originals.');
+  const beforeSchoolDeduction = calculateFederalTaxBeforeOhioSchoolScheduleA(current, context);
+  const adapted = buildOhioResidentReturnInput(current, beforeSchoolDeduction, undefined,
+    new CurrentFederalCalculation(current, beforeSchoolDeduction));
+  const payments = adapted.schoolDistrictSource?.scheduleAIncomeTaxes;
+  if (!payments) throw Error('Ohio school district tax deductions require reconciled current payment sources.');
+  return { current, payments: Object.freeze(payments) };
 }
 function arrayData(value:unknown[]):unknown[]{
  if(Object.getPrototypeOf(value)!==Array.prototype||Object.getOwnPropertySymbols(value).length||Object.getOwnPropertyNames(value).length!==value.length+1)throw Error('Unsupported source proof array');
