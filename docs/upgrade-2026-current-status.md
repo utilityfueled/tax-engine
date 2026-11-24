@@ -1,9 +1,35 @@
 # Current 2026 upgrade status
 
-## Resume here · November 23
+## Resume here · November 24
 
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
+
+- `cee016b0` lets a living single filer save actual dates for a regular
+  month-end accounting-period change. Incomplete and confirmed drafts
+  survive encrypted recovery. The dates and reference stay out of PDF
+  and provider requests. Annualized amounts still require a qualified
+  calculation. All eleven exact local checks and all eight GitHub CI
+  jobs passed. Strict Linux checks are in progress.
+  [Intake evidence](upgrade-2026-progress.md#november-23-actual-short-accounting-period-intake).
+
+- `0c33f925` holds the public federal API and workspace recompute for a
+  confirmed accounting-period change. The CLI and guided app use the same
+  admission rule. Two tests reproduced unsupported amounts before the fix,
+  and 216 scoped tests passed afterward. All 11 exact local checks passed
+  with 88.28% branch coverage and 650 active Chromium cases. The exact
+  Docker build and all eight GitHub CI jobs passed. Strict AMD64 and ARM64
+  passed recovery and archive checks. Their browser suites reached
+  thirteen and nine existing deadlines. Section 443 annualization
+  remains open. Vercel canceled the production build.
+  [Public calculation evidence](upgrade-2026-progress.md#november-23-public-federal-calculation-admission).
+
+- `546de14a` drops one redundant Ohio source replay while the school
+  district draft is awaiting confirmation. Federal metrics, Ohio validation
+  and the standalone preview match their prior behavior. Independent
+  review, 140 scoped tests and ten Chromium cases passed. The combined
+  exact release checks use `0c33f925`.
+  [Ohio render evidence](upgrade-2026-progress.md#november-23-pending-ohio-school-district-replay).
 
 - `caa601bf` holds whole-return estimates, official review PDFs and
   verified AI amounts when an actual change in accounting period requires

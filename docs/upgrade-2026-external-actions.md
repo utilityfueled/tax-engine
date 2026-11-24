@@ -1,5 +1,22 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 23 short accounting-period review
+
+The guided draft now retains the actual dates for a living single filer
+changing between regular month-end accounting periods. The calculator
+still withholds whole-return amounts. A qualified reviewer should derive
+independent expected regular tax and Form 6251 results from the same
+short-period dates and source records. Start with a calendar-year filer
+who has approval to switch to a June 30 year end. The short period is
+January 1 through June 30, 2026, with $30,000 in ordinary wages and no
+other income, deductions or credits. Confirm the wage-only result,
+the separate minimum-tax calculation, and how the twelve-month relief
+procedure differs from the ordinary method. Record the applicable rounding
+and form instructions before qualifying any output.
+[26 USC §63(c)(6)](https://uscode.house.gov/us/usc/t26/s63/) ·
+[26 USC §443](https://uscode.house.gov/us/usc/t26/s443/) ·
+[26 CFR §1.443-1](https://www.ecfr.gov/current/title-26/section-1.443-1).
+
 ## November 23 Form 8960 and Section 68
 
 Resolve whether the 2026 Section 68 reduction allocated to NIIT follows

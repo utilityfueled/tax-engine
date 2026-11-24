@@ -1,5 +1,102 @@
 # 2026 upgrade implementation evidence
 
+## November 23 actual short accounting-period intake
+
+`cee016b0` records the inclusive start and end dates and a local source
+reference when a living single filer confirms a change between regular
+month-end periods. The short
+period must begin in the selected return year and contain one to eleven
+whole months. A cross-calendar-year short period is supported, and the
+former close and new start are derived without time-zone dependence.
+Section 443 annualization remains held.
+[U.S. Code](https://uscode.house.gov/us/usc/t26/s443/) ·
+[Form 1128](https://www.irs.gov/pub/irs-pdf/f1128.pdf) ·
+[2025 Form 1040](https://www.irs.gov/pub/irs-prior/f1040--2025.pdf).
+
+The source packet remains in the guided draft and encrypted recovery.
+The PDF request retains the short-year flag and excludes the private
+packet. Provider interview requests also exclude the packet. Independent
+review found issues in the first draft with the PDF request, unrelated
+proof invalidation and contradictory identity facts. All were reproduced
+and fixed. A follow-up regression proved that a restored separated-spouse
+source can retain its EIC history confirmation when only the private
+short-period packet changes.
+
+There were 131 passing focused tests after the main review fixes, 23
+passing tests after the final proof fix, 62 passing browser audit and
+fixture checks, passing Form 1040 references, clean inventory and both
+typechecks. The date tests passed in Pacific/Honolulu. Vercel canceled
+the production build. The exact GitHub Docker build and all eight local
+static and build checks passed. The unit and coverage runs passed 30,272
+tests with 81 existing skips and 88.30% branch coverage. Chromium passed
+650 active cases in eight batches with five original skips and owned
+server cleanup, completing all eleven exact local checks. All eight
+GitHub CI jobs passed. Remote coverage passed all 30,353 tests in 2,210
+files at 88.68% branch coverage. Strict Linux results are pending.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45328203164) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45328203124) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45328203260) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45328290048).
+
+## November 23 public federal calculation admission
+
+`0c33f925` applies the existing whole-return accounting-period hold to
+the root library export and the exported workspace recompute. The CLI
+shares the library entry point. Its directory loader still has no
+short-period field. The guided app uses the same engine assertion.
+Internal component calculations and ordinary, decedent and older saved
+returns retain their existing calculation paths. A confirmed short year
+still requires the period facts and annualization under Section 443.
+[U.S. Code](https://uscode.house.gov/us/usc/t26/s443/) ·
+[Treasury regulation](https://www.ecfr.gov/current/title-26/section-1.443-1).
+
+Two public boundary tests reproduced unsupported whole-return output
+before the fix. All 216 tests across 11 focused suites passed afterward,
+including guided, PDF, verified AI and component checks. Both typechecks,
+57 Form 1040 spec references, the clean inventory, 89 combined public
+boundary and browser audit checks, and a synthetic normal CLI run passed.
+The local CLI was run directly with Node because the pnpm launcher
+requires IPC unavailable in the sandbox.
+
+Vercel canceled the production build for the exact commit. All eight
+static and build checks and the exact GitHub Docker build passed.
+The local unit and coverage suites each passed 30,263 tests with 81
+existing skips. Branch coverage was 88.28% against the 85% gate.
+Local Chromium passed all 650 active cases in eight batches with the
+five original skips and owned-server cleanup. All eleven required local
+commands passed. GitHub CI passed all eight jobs. Remote coverage passed
+all 30,344 tests in 2,210 files at 88.67% branch coverage. Managed Linux
+passed 648 cases with five original skips. Both RRTA viewport cases
+reached the existing four-second saved-PDF inspection deadline.
+The strict AMD64 run passed 637 active cases, with eleven Ohio
+30-second deadlines and both RRTA saved-PDF deadlines. Strict ARM64
+passed 641 active cases, with nine Ohio 30-second deadlines. Both
+retained five original skips and passed isolated Compose recovery,
+independent archive verification and owned-container cleanup.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45326014581) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45326014766) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45326014199) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45326177452).
+
+## November 23 pending Ohio school district replay
+
+`546de14a` avoids a duplicate source replay during render when the 2025
+single-filer Ohio school draft explicitly awaits confirmation and the
+Ohio residency and payment originals are already confirmed. A failing
+test recorded one replay on the previous source. The revised test covers
+initial entry, an edit after confirmation, a stale payment source and
+an absent confirmation value. Independent review confirmed parity with
+the federal preview and Ohio validation. There were 140 passing scoped
+tests and ten passing Chromium cases on the tracked-source candidate,
+including all four part-year school district journeys. The original
+browser case deadlines and request budgets remain in force. Strict Linux
+qualification requires the full current candidate on both architectures.
+
+A local diagnostic ran the same pending draft in baseline, candidate,
+candidate and baseline order. After warmup, 14 samples per revision
+measured median process CPU of 406.4 ms before and 302.1 ms after per
+100 render evaluations. This measures the render path on macOS.
+
 ## November 23 whole-return short accounting-period admission
 
 `caa601bf` checks the confirmed accounting-period-change fact before the
