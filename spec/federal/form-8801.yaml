@@ -3,15 +3,19 @@ fullName: "Credit for Prior Year Minimum Tax — Individuals"
 taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i8801"
 sources:
-  - "https://www.irs.gov/pub/irs-pdf/f8801.pdf (final2025; prior2024 computation)"
-  - "https://www.irs.gov/pub/irs-dft/f8801--dft.pdf (draft2026 created May27; NOT filing qualification)"
+  - "https://www.irs.gov/pub/irs-prior/f8801--2025.pdf (final 2025; prior 2024 computation)"
+  - "https://www.irs.gov/pub/irs-prior/f8801--2026.pdf (final 2026; prior 2025 computation; posted 2026-11-23)"
+  - "https://www.irs.gov/pub/irs-pdf/i8801.pdf (current instructions still print 2025 at the 2026-11-24 check)"
+  - "https://www.irs.gov/pub/irs-dft/f6251--dft.pdf (current-year 2026 Form 6251 dependency, draft)"
   - "https://www.irs.gov/pub/irs-drop/rp-24-40.pdf (prior2025 AMT and capital gains indexing)"
   - "https://www.irs.gov/pub/irs-drop/rp-23-34.pdf (prior2024 indexing)"
 notes: |
   Only individual filing statuses are supported. A tax2026 credit uses prior2025
   AMT rules, not the new current2026 phaseout. Every amount uses Decimal and IRS
-  whole-dollar rounding. Final2026 instructions, form qualification and independent
-  tax review remain required. The draft is calculation research, not filing evidence.
+  whole-dollar rounding. The final 2026 blank confirms the printed formulas and
+  line transfers. The disabled physical source receipt is documented in
+  docs/upgrade-2026-form-8801-final-source.md. Final 2026 Form 8801 instructions,
+  Form 6251, form qualification and independent tax review remain required.
   Actual MTFTCE and MTCNOLD worksheets are supplied source facts; this module does
   not calculate those ancillary worksheets. Foreign-earned-income PartIII source
   amounts must explicitly confirm the required capital-gain-excess adjustments.
