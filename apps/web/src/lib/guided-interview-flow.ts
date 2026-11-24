@@ -2383,24 +2383,34 @@ export function updateSectionData(
   const ohio2026SchoolChanged=incomingStateReturn&&guidedSourceValuesChanged(ohio2026SchoolActualValues(ohioStateReturn?.ohio2026SchoolSources),ohio2026SchoolActualValues(incomingStateReturn.ohio2026SchoolSources));
   const ohio2026SchoolDependenciesChanged=incomingStateReturn&&incomingStateReturn.ohio2026SchoolSources&&guidedSourceValuesChanged({...ohioStateReturn,ohio2026SchoolSources:undefined},{...incomingStateReturn,ohio2026SchoolSources:undefined});
   const invalidate2026School=Boolean(incomingStateReturn?.ohio2026SchoolSources&&(ohio2026SchoolChanged||ohio2026SchoolDependenciesChanged));
-  const ohioResidencyChanged = incomingStateReturn && ohioDraftSourceValuesChanged(ohioStateReturn?.ohioResidency, incomingStateReturn.ohioResidency);
+  const previousOhioResidency = ohioStateReturn?.ohioResidency;
+  const nextOhioResidency = incomingStateReturn?.ohioResidency;
+  const ohioResidencyChanged = incomingStateReturn && ohioDraftSourceValuesChanged(previousOhioResidency, nextOhioResidency);
   const ohioPaymentsChanged = incomingStateReturn && ohioDraftSourceValuesChanged(ohioStateReturn?.ohioPayments, incomingStateReturn.ohioPayments);
   const ohioSchoolDistrictChanged = incomingStateReturn && ohioDraftSourceValuesChanged(ohioStateReturn?.ohioSchoolDistrict, incomingStateReturn.ohioSchoolDistrict);
   const ohioReciprocalChanged = incomingStateReturn && ohioDraftSourceValuesChanged(
     ohioStateReturn?.ohioReciprocalWages, incomingStateReturn.ohioReciprocalWages, ohioReciprocalActualSourceValues,
   );
-  const currentOhioBusiness=incomingStateReturn?.ohioResidency?.businessSources;
-  const ohioBusinessDependenciesChanged=currentOhioBusiness&&(incomingStateReturn&&guidedSourceValuesChanged(
-    ohioActualSourceValues(ohioStateReturn?.ohioResidency?{...ohioStateReturn.ohioResidency,businessSources:undefined}:undefined),
-    ohioActualSourceValues(incomingStateReturn.ohioResidency?{...incomingStateReturn.ohioResidency,businessSources:undefined}:undefined))||ohioPaymentsChanged||ohioSchoolDistrictChanged);
-  const ohioBusinessChanged=currentOhioBusiness&&incomingStateReturn&&guidedSourceValuesChanged(ohioBusinessActualValues(ohioStateReturn?.ohioResidency?.businessSources),ohioBusinessActualValues(currentOhioBusiness));
-  const invalidateBusiness=Boolean(currentOhioBusiness&&(ohioBusinessChanged||ohioBusinessDependenciesChanged));
-  const currentOhioResidentCredit=incomingStateReturn?.ohioResidency?.residentCreditSources;
-  const residentCreditDependenciesChanged=currentOhioResidentCredit&&(incomingStateReturn&&guidedSourceValuesChanged(
-    ohioActualSourceValues(ohioStateReturn?.ohioResidency?{...ohioStateReturn.ohioResidency,residentCreditSources:undefined}:undefined),
-    ohioActualSourceValues(incomingStateReturn.ohioResidency?{...incomingStateReturn.ohioResidency,residentCreditSources:undefined}:undefined))||ohioPaymentsChanged||ohioSchoolDistrictChanged||ohioReciprocalChanged);
-  const residentCreditChanged=currentOhioResidentCredit&&incomingStateReturn&&guidedSourceValuesChanged(ohioResidentCreditActualValues(ohioStateReturn?.ohioResidency?.residentCreditSources),ohioResidentCreditActualValues(currentOhioResidentCredit));
-  const invalidateResidentCredit=Boolean(currentOhioResidentCredit&&(residentCreditChanged||residentCreditDependenciesChanged));
+  const currentOhioBusiness = nextOhioResidency?.businessSources;
+  const ohioBusinessDependenciesChanged = currentOhioBusiness && (
+    ohioDraftSourceValuesChanged(previousOhioResidency, nextOhioResidency, value =>
+      ohioActualSourceValues(value ? { ...value, businessSources: undefined } : undefined),
+    ) || ohioPaymentsChanged || ohioSchoolDistrictChanged
+  );
+  const ohioBusinessChanged = currentOhioBusiness && ohioDraftSourceValuesChanged(
+    previousOhioResidency?.businessSources, currentOhioBusiness, ohioBusinessActualValues,
+  );
+  const invalidateBusiness = Boolean(currentOhioBusiness && (ohioBusinessChanged || ohioBusinessDependenciesChanged));
+  const currentOhioResidentCredit = nextOhioResidency?.residentCreditSources;
+  const residentCreditDependenciesChanged = currentOhioResidentCredit && (
+    ohioDraftSourceValuesChanged(previousOhioResidency, nextOhioResidency, value =>
+      ohioActualSourceValues(value ? { ...value, residentCreditSources: undefined } : undefined),
+    ) || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged
+  );
+  const residentCreditChanged = currentOhioResidentCredit && ohioDraftSourceValuesChanged(
+    previousOhioResidency?.residentCreditSources, currentOhioResidentCredit, ohioResidentCreditActualValues,
+  );
+  const invalidateResidentCredit = Boolean(currentOhioResidentCredit && (residentCreditChanged || residentCreditDependenciesChanged));
   const currentOhioHeader=incomingStateReturn?.ohioReturnHeaderSources;
   const ohioHeaderChanged = incomingStateReturn && ohioDraftSourceValuesChanged(
     ohioStateReturn?.ohioReturnHeaderSources, currentOhioHeader, ohioHeaderActualSourceValues,
