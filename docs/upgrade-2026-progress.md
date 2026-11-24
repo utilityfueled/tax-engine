@@ -32,8 +32,13 @@ were pushed to `main`. Vercel reports canceled production builds for all three.
 
 The exact `e3b3b2bd` local archive has SHA-256
 `b7280c3b0d392b5d14155542bff7d9ca5e4330fa240d80eea9fc1f715ec89920`.
-Its local checks are in progress with Node 26.13.1, the same sample PDFs
-as the preceding run, the pinned pypdf environment and Chromium.
+It passed all 11 local checks with Node 26.13.1, the same sample PDFs
+as the preceding run, the pinned pypdf environment and Chromium. Unit
+and coverage each passed 30,230 tests with 79 existing skips. Branch
+coverage was 88.29% against the 85% gate. Chromium passed 650 cases
+with five existing skips across all eight batches and verified cleanup.
+The exact remote Docker build passed. GitHub CI, web and the exact
+native ARM64 jobs await their final results.
 [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45298543669) ·
 [GitHub web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45298543013) ·
@@ -44,8 +49,12 @@ rollback, independent archive and scan source verification. Chromium passed
 636, skipped five existing cases and missed deadlines in 14 cases, including
 11 Ohio, one passenger vehicle and two RRTA saved-PDF inspections. A bounded
 RRTA performance check on two existing synthetic PDFs found no material
-speedup. The native `a1632117` rehearsal reached the strict ARM64 browser
-stage and predates the shared scan workflow.
+speedup. The 11 Ohio cases passed locally in 6.7–10.6 seconds. The earlier
+same-host comparison failed the same six cases in the managed app and
+the runtime image. A fixed-order trace comparison reduced batch time
+with the same pass count. This evidence leaves the cause unresolved.
+The native `a1632117` rehearsal reached the strict ARM64 browser stage
+and predates the shared scan workflow.
 [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45288279172/job/138090165569) ·
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45296962451).
 

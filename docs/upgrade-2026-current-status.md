@@ -13,9 +13,12 @@ deferred at the owner’s direction. Their readiness criteria remain open.
   Final 2026 Publication 915 is available. The annual calculation and export
   gates remain closed. [Source and test evidence](upgrade-2026-progress.md#november-23-social-security-marketplace-and-native-release-evidence).
 - `5380da8c` adds candidate-bound native ARM64 scan evidence, using the
-  same workflow as AMD64. All 101 focused tests passed. Exact local checks
-  for the three combined changes are in progress, and the exact native
-  rehearsal is queued. [Exact ARM64 recovery run](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
+  same workflow as AMD64. All 101 focused tests passed. Exact `e3b3b2bd`
+  passed all 11 local checks, with 30,230 unit tests, 88.29% branch
+  coverage and 650 Chromium passes. The exact GitHub Docker build also
+  passed. Strict Linux image qualification awaits the remote results.
+  [Exact AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169) ·
+  [Exact ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
 
 The refreshed federal, Ohio and Pennsylvania catalogs still show 2025
 as the final annual return year. The IRS labels its 2026 Form 1040 a

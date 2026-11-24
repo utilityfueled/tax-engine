@@ -19,6 +19,11 @@
       "specReferencesPassed": 141,
       "productionDeploymentCanceled": true,
       "githubRuns": {"ci": 45298543669, "web": 45298543169, "docker": 45298543013, "nativeArm64": 45299047812},
+      "dockerBuild": "passed",
+      "exactLocalChecksPassed": 11,
+      "exactLocalUnit": {"passed": 30230, "skipped": 79, "filesPassed": 2201},
+      "exactLocalCoverage": {"passed": 30230, "skipped": 79, "branchCoveragePercent": 88.29, "requiredBranchCoveragePercent": 85},
+      "exactLocalBrowser": {"passed": 650, "skipped": 5, "failed": 0, "batches": 8, "cleanup": true},
       "public2026AnnualCalculationOrExport": "closed"
     },
     "nov23NativeReleaseEvidence": {
