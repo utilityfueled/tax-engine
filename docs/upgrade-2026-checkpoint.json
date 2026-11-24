@@ -11,6 +11,7 @@
     "statusDocument": "docs/upgrade-2026-current-status.md",
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
     "stateEstimateYearEvidenceKey": "activeContinuation.nov24StateEstimatedPaymentApplicationYear",
+    "individualPaScheduleAEstimateEvidenceKey": "activeContinuation.nov24IndividualPaScheduleAEstimates",
     "ohioEstimateNavigationEvidenceKey": "activeContinuation.nov24OhioSavedEstimateNavigation",
     "dependentAotcTinEvidenceKey": "activeContinuation.nov24AotcDependentTinConflict",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
@@ -39,6 +40,16 @@
     ]
   },
   "activeContinuation": {
+    "nov24IndividualPaScheduleAEstimates": {
+      "focusedTestsPassed": 49,
+      "isolatedReplayTestsPassed": 12,
+      "specReferencesResolved": 64,
+      "auditedSourcesVerified": 2062,
+      "inventoryCheck": "passed",
+      "independentSourceReview": "passed",
+      "qualifiedTaxReview": "open",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-individual-pennsylvania-estimates-on-schedule-a"
+    },
     "nov24ProviderEvalModelBoundAccounting": {
       "focusedTestsPassed": 89,
       "separateFocusedTestsPassed": 37,

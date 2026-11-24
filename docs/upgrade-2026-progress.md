@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 24 individual Pennsylvania estimates on Schedule A
+
+The 2025 individual Pennsylvania originals now supply federal line 5a by
+payment date. A guided case with a $100 payment in 2025 and $50 in January 2026
+retains $150 on the PA return and deducts the $100 on its 2025 Schedule A.
+Matching saved estimates count once, and confirmed payments applied to an
+earlier PA return can still belong to the current federal cash year. A saved
+return that removes the last previously confirmed positive receipt requires
+reconfirmation before automatic or itemized federal preview resumes.
+[2025 Schedule A instructions](https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3).
+
+The new calculation and saved-reopen cases failed before the fixes. The 49
+related tests, 64 Schedule A references, web typecheck, and the browser audit
+closure of 2,062 files passed. An isolated replay passed 12 tests and the
+inventory check. Independent source review passed. Qualified tax review and
+2026 form qualification remain open.
+
 ## November 24 AI evaluation billed model
 
 Live evaluation usage settles a budget hold only when the response identifies

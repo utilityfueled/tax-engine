@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Verified individual Pennsylvania estimates now reach federal Schedule A
+  by actual payment date. A previously confirmed estimate that is edited or
+  removed requires reconfirmation before the itemized preview resumes.
+  [Pennsylvania evidence](upgrade-2026-progress.md#november-24-individual-pennsylvania-estimates-on-schedule-a).
+
 - AI evaluation keeps the full budget hold when the provider response or a
   reconciliation cannot identify a billed model that matches the plan.
   [Accounting evidence](upgrade-2026-progress.md#november-24-ai-evaluation-billed-model).

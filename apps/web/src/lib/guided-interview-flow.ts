@@ -1421,6 +1421,8 @@ export interface StateReturnData {
   paResidencySources?: PAResidencySources;
   paReciprocitySources?: PAReciprocitySources;
   paOrdinaryReturnFacts?: PAOrdinaryReturnFacts;
+  /** Year of a positive in-year estimate in the last confirmed PA inventory, if any. */
+  lastConfirmedPAEstimateYear?: number;
   paOrdinaryReturnCompletionSources?: GuidedPAOrdinaryReturnCompletionSources;
 }
 
@@ -1986,13 +1988,32 @@ function ohioDraftSourceValuesChanged<T>(
 
 function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   if (!value) return value;
-  const { paMarriedOrdinarySources: _married, paOrdinaryReturnFacts: _ordinary, paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
+  const { paMarriedOrdinarySources: _married, paOrdinaryReturnFacts: _ordinary, lastConfirmedPAEstimateYear: _estimate,
+    paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
   return dependencies;
+}
+
+function retainedPAEstimateYear(year: number, current: StateReturnData, previous: StateReturnData | undefined): number | undefined {
+  const isConfirmed = (facts: PAOrdinaryReturnFacts | undefined): facts is PAOrdinaryReturnFacts =>
+    facts?.sourceTaxYear === year && facts.sourceFactsConfirmed === true && facts.originalFederalSources != null;
+  const hasInYearEstimate = (facts: PAOrdinaryReturnFacts) => Array.isArray(facts.payments?.rows)
+    && facts.payments.rows.some(row => {
+      const original = row?.original;
+      return original?.kind === "estimated" && typeof original.date === "string" && original.date.startsWith(`${year}-`)
+        && typeof original.amount === "string" && /^\d+(\.\d+)?$/u.test(original.amount) && parseGuidedCurrency(original.amount).gt(0);
+    });
+  const facts = current.paOrdinaryReturnFacts;
+  if (isConfirmed(facts)) return hasInYearEstimate(facts) ? year : undefined;
+  if (previous?.lastConfirmedPAEstimateYear === year) return year;
+  const prior = previous?.paOrdinaryReturnFacts;
+  // Older drafts have no marker, but a still-confirmed inventory can establish it.
+  return isConfirmed(prior) && hasInYearEstimate(prior) ? year : undefined;
 }
 
 /** PA statement fields and refreshed PA custody snapshots do not change a federal K-1. */
 function paNrk1FederalDependencies(value: StateReturnData) {
-  const { paResidencySources, paOrdinaryReturnFacts, paOrdinaryReturnCompletionSources, ...stateSources } = value;
+  const { paResidencySources, paOrdinaryReturnFacts, lastConfirmedPAEstimateYear: _estimate,
+    paOrdinaryReturnCompletionSources, ...stateSources } = value;
   return {
     ...stateSources,
     paResidencySources: paResidencySources && {
@@ -2518,6 +2539,14 @@ export function updateSectionData(
       } } : {}),
     },
   };
+  const nextStateReturn = nextState.sectionData["state-return"];
+  if (state.taxYear === 2025 && state.segmentation.stateCode === "PA" && nextStateReturn && !nextStateReturn.paMarriedOrdinarySources) {
+    const lastConfirmedPAEstimateYear = retainedPAEstimateYear(state.taxYear, nextStateReturn, previousStateReturn);
+    if (lastConfirmedPAEstimateYear !== nextStateReturn.lastConfirmedPAEstimateYear) {
+      const { lastConfirmedPAEstimateYear: _previousYear, ...current } = nextStateReturn;
+      nextState.sectionData["state-return"] = lastConfirmedPAEstimateYear === undefined ? current : { ...current, lastConfirmedPAEstimateYear };
+    }
+  }
   if (sectionId === "credits" && Boolean(credits?.saversCredit) !== Boolean(savedSaversCredit)) {
     const current = getGuidedSectionRoute(state)[state.currentSectionIndex];
     if (current) return jumpToSection(nextState, current.id);

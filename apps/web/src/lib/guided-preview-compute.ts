@@ -15,7 +15,7 @@ import { isPAMarriedOrdinaryReturnResult } from "@/engine/state/pa-return-result
 import { PAMarriedOrdinarySourcesSchema } from "@/models/pa-married-ordinary-sources";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion";
 import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right";
-import { canUseOhioEstimatesForScheduleA } from "@/engine/forms/state-tax-payment-year";
+import { canUseOhioEstimatesForScheduleA, canUsePennsylvaniaEstimatesForScheduleA } from "@/engine/forms/state-tax-payment-year";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
 import { buildGuidedOhioOverlay, buildGuidedStateOriginals, readGuidedPAMarriedDraft } from "./guided-state-engine-inputs";
@@ -245,6 +245,24 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
           && paymentDraft.paymentRows.some(row => row.kind === "estimated");
         if (hasSourcedEstimate || hasSavedOhioEstimate) {
           taxInput = {...baseInput, ohioPayments: buildGuidedOhioPaymentFacts(paymentDraft, baseInput)};
+        }
+      }
+      const pennsylvaniaDraft = stateData?.paOrdinaryReturnFacts;
+      if (state.segmentation.stateCode === "PA" && !stateData?.paMarriedOrdinarySources
+        && canUsePennsylvaniaEstimatesForScheduleA(baseInput)) {
+        const currentYear = baseInput.taxpayer.taxYear;
+        if (stateData?.lastConfirmedPAEstimateYear === currentYear
+          && (pennsylvaniaDraft?.sourceTaxYear !== currentYear || pennsylvaniaDraft.sourceFactsConfirmed !== true
+            || pennsylvaniaDraft.originalFederalSources == null)) {
+          throw new Error("Confirm complete actual sources for the selected year after editing Pennsylvania estimated payments.");
+        }
+        if (pennsylvaniaDraft && (pennsylvaniaDraft.sourceFactsConfirmed === true || pennsylvaniaDraft.originalFederalSources !== undefined)
+          && (pennsylvaniaDraft.payments.rows.some(row => row.original.kind === "estimated")
+            || stateData?.stateEstimatedPayments?.some(payment => payment.state?.trim().toUpperCase() === "PA"))) {
+          taxInput = {
+            ...baseInput, paOrdinaryReturnFacts: pennsylvaniaDraft,
+            paResidencySources: stateData?.paResidencySources, paReciprocitySources: stateData?.paReciprocitySources,
+          };
         }
       }
       result = calculateFederalTax(taxInput);

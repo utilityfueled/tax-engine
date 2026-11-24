@@ -336,6 +336,19 @@ lines:
       - "tests/apps/web/independent-oh-workspace-originals.test.ts::includes Ohio estimate originals with automatic itemization from confirmed donations"
       - "tests/engine/forms/state-tax-payment-year.test.ts::automatically itemizes a qualifying Ohio estimate without a separate Schedule A worksheet"
 
+  - line: "5a-pa-estimated-payment-originals"
+    description: "Use verified Pennsylvania ordinary individual estimated receipts in the 2025 state income tax deduction"
+    formula: "In the guided preview and canonical review, replay the confirmed PA ordinary individual payment source with its current federal originals, original owner and applied return year. Count each distinct estimated receipt once at exact cents by calendar payment year. Reconcile saved same-return PA estimate mirrors one-to-one by date and exact amount. Independently dated payments expressly applied to a different return keep their actual calendar payment year. Exclude the following January installment from the current federal deduction."
+    notes: "Available for explicit or automatic itemization. A new unconfirmed draft supplies no evidence. Previously confirmed changed or incomplete originals require review, including removal of the last positive in-year receipt without a legacy mirror. The guided preview releases that hold once the current receipt inventory is explicitly confirmed again. A positive additional income-tax aggregate cannot establish which original payments it repeats. PA married J does not accept actual payment receipt packets. PA married M maintains separate owner-account inventories; their full source composer invokes the federal calculation and their payment projection supplies totals rather than a dated receipt ledger. This entry uses the ordinary individual source packet."
+    irsRef: "2025 Schedule A Instructions, Line 5a, https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"
+    testRef: "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::includes only in-year verified Pennsylvania estimates in guided and canonical federal calculations"
+    testRefs:
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::includes distinct exact-cents Pennsylvania receipts once under automatic itemization"
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::keeps payments expressly applied to a prior return in the actual cash year"
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::holds a changed previously verified Pennsylvania receipt until reviewed again"
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::holds removal of the last previously confirmed Pennsylvania receipt until the empty ledger is confirmed"
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::requires distinct verified Pennsylvania identity, exact mirrors and an unambiguous deduction"
+
   - line: "16-oid-premium"
     description: "Allowable excess bond premium"
     formula: "Add source-calculated allowable section171 excess premium to Schedule A line16 with gambling deductions, retaining unused premium carry separately. Identify audit values by both form and line; another worksheet line16 is not the Schedule A total. Count actual OID state withholding once on line5a."
