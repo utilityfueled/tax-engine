@@ -9,12 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
-- The exact pre-change baseline `1d4f3a3f` passed all 11 local checks.
-  Unit and coverage runs each passed 30,369 tests with 81 conditional
-  skips and 88.31% branches. Chromium passed all 652 active cases with
-  five original skips. The latest application archive `f3163949` is
-  running the same local suite. Its equivalent ARM64 rehearsal is
-  [queued in GitHub Actions](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946).
+- The current application archive `f3163949` passed all 11 local checks.
+  Unit and coverage each passed 30,377 tests with 81 conditional skips
+  and 88.31% branches. Chromium passed all 652 active cases with five
+  original skips, as did the exact pre-change baseline. The equivalent
+  [strict ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946)
+  is in progress.
 
 - `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
   Part II widgets under a disabled candidate. The form adds no public

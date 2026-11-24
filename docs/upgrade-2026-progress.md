@@ -12,10 +12,16 @@ errors and 12,204 warnings. The original Chromium suite passed 652
 active cases in eight request windows with five original skips. Its
 ordinary run emitted no scheduler observations. The current exact
 `f3163949` archive matched 6,664 tracked blobs and started the same
-checklist after the baseline browser exited.
+checklist after the baseline browser exited. All 11 checks passed.
+Unit and coverage each reported 30,377 passes, 81 conditional skips, and
+88.31% branches. All 9,986 spec references resolved. Lint reported zero
+errors and 12,204 warnings. The original Chromium suite again passed all
+652 active cases in eight request windows with five original skips.
 
 The existing native ARM64 rehearsal was dispatched on code-equivalent
-`4ccb88b0`. It is queued on GitHub's free standard public ARM64 runner.
+`4ccb88b0` and reached the strict browser step on GitHub's free standard
+public ARM64 runner. The pre-change Linux comparison also reached the
+strict browser step.
 [ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946) ·
 [Runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories).
 
@@ -23,6 +29,16 @@ The existing native ARM64 rehearsal was dispatched on code-equivalent
 8801 annual archive. The generic form URL now serves 2026. The exact
 spec overlay resolved all 9,986 references and changed no formulas.
 Vercel skipped the build. [2025 annual archive](https://www.irs.gov/pub/irs-prior/f8801--2025.pdf).
+
+`196c80d7` pins six more federal spec citations that explicitly use 2025
+forms. Independent source review checked the printed years of all five
+annual PDFs against their rolling 2026 counterparts. The exact spec
+overlay resolved all 9,986 references.
+[Schedule EIC](https://www.irs.gov/pub/irs-prior/f1040sei--2025.pdf) ·
+[Form 7206](https://www.irs.gov/pub/irs-prior/f7206--2025.pdf) ·
+[Form 8606](https://www.irs.gov/pub/irs-prior/f8606--2025.pdf) ·
+[Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2025.pdf) ·
+[Form 2555](https://www.irs.gov/pub/irs-prior/f2555--2025.pdf).
 
 ## November 24 Ohio header source comparisons
 

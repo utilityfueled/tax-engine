@@ -98,7 +98,7 @@
     "nov24OhioFullLinuxScheduler": {
       "diagnosticCommit": "3f4141fe834ff57cec53a420a68e820d01b33bc4",
       "githubComparison": 45415466985,
-      "status": "Pending terminal results from the opt-in full and focused Linux comparison",
+      "status": "Opt-in Linux comparison reached the full strict browser step. Terminal results pending.",
       "diagnosticTestsPassed": 56,
       "orchestrationAndCPUTestsPassed": 62,
       "ordinaryChromiumTestsPassed": 4,
@@ -118,11 +118,18 @@
       "baselineLocalEvidence": ".local/upgrade-evidence/nov24-exact-main-1d4f3a3f",
       "currentLocalRevision": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
       "currentLocalArchiveTrackedBlobsMatched": 6664,
-      "currentLocalStatus": "Running",
+      "currentLocalStatus": "All 11 checks passed",
+      "currentLocalUnitAndCoverage": {"passedEach": 30377, "conditionalSkipsEach": 81, "branchesPercent": 88.31},
+      "currentLocalChromium": {"passed": 652, "failed": 0, "originalSkips": 5, "requestWindows": 8},
+      "currentLocalSpecReferencesPassed": 9986,
+      "currentLocalLint": {"errors": 0, "warnings": 12204},
       "currentLocalEvidence": ".local/upgrade-evidence/nov24-exact-main-f3163949",
-      "currentARM64": {"revision": "4ccb88b0446c4c5978af21b8b49356c4ae012589", "run": 45420399946, "status": "Queued"},
+      "currentARM64": {"revision": "4ccb88b0446c4c5978af21b8b49356c4ae012589", "run": 45420399946, "status": "Strict browser qualification in progress"},
       "priorYearCitationCommit": "a3f5f225504bc0d8fca8822bf50a5c9c625bfc08",
-      "priorYearCitationExactSpecReferencesPassed": 9986
+      "priorYearCitationExactSpecReferencesPassed": 9986,
+      "additionalAnnualCitationsCommit": "196c80d7",
+      "additionalAnnualCitationsPinned": 6,
+      "additionalAnnualCitationsExactSpecReferencesPassed": 9986
     },
     "nov24OhioHeaderSourceComparisons": {
       "applicationCommit": "bbebe6750fe1f384b0b91540ea7cc4f8d0c00d88",
