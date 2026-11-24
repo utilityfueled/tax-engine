@@ -24,6 +24,10 @@ Use the linked progress sections when investigating individual packages.
   deadlines. Its header entry median was 5,238 ms.
   [Scheduler evidence](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison).
 
+- `3f4141fe` extends the opt-in measurements to the full Linux jobs,
+  with explicit workload labels. The full and focused measurements are
+  running in [GitHub Actions](https://github.com/utilityfueled/tax-engine/actions/runs/45415466985).
+
 - `ae399bd1` compares the current and candidate Python versions on the
   same Ubuntu runner with the two exact retained RRTA inputs. Both
   validator suites and all 104 attempts passed. Python 3.14.10 improved

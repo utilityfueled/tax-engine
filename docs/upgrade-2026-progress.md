@@ -49,6 +49,16 @@ The four corresponding header phases had a 5,238 ms median during the
 full strict run. Scheduler counters are available for the focused
 comparison. The full-suite slowdown still needs attribution.
 
+`3f4141fe` adds explicitly labeled full and focused measurements to the
+same opt-in workflow. A manual-dispatch input enables sampling during the
+original managed and strict suites and their focused Ohio legs. Default
+browser runs keep sampling disabled. All 56 diagnostic tests, 62 focused
+orchestration and CPU tests, type checking, scoped lint, actionlint and
+the browser source audit passed. Independent review checked the workflow
+gate and source hashes. The first local ordinary run stopped at source
+drift during a concurrent edit. A settled rerun passed all four Ohio
+Chromium cases with no scheduler output. [Actual full workload run](https://github.com/utilityfueled/tax-engine/actions/runs/45415466985).
+
 ## November 24 Pennsylvania balance receipt confirmations
 
 `a2568205` extends the confirmation check to a retained actual PA-40

@@ -13,6 +13,7 @@
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
+    "strictFullSchedulerEvidenceKey": "activeContinuation.nov24OhioFullLinuxScheduler",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
@@ -89,6 +90,17 @@
       "focused": {"containerPassed": 10, "managedPassed": 10, "headerMedianMs": {"container": 2805, "managed": 2952}, "rendererCPUTimeMedianMs": {"container": 2515.629, "managed": 2655.829}, "rendererRunnableWaitMedianMs": {"container": 41.826, "managed": 41.988}, "rendererSamplesPerMode": 4},
       "fullStrictHeaderMedianMs": 5238,
       "localProjection": ".local/upgrade-evidence/nov24-strict-browser-differential/SCHEDULER-RESULT.json"
+    },
+    "nov24OhioFullLinuxScheduler": {
+      "diagnosticCommit": "3f4141fe834ff57cec53a420a68e820d01b33bc4",
+      "githubComparison": 45415466985,
+      "status": "Pending terminal results from the opt-in full and focused Linux comparison",
+      "diagnosticTestsPassed": 56,
+      "orchestrationAndCPUTestsPassed": 62,
+      "ordinaryChromiumTestsPassed": 4,
+      "ordinaryChromiumSchedulerOutput": false,
+      "independentReview": "Workflow admission and browser source hashes verified",
+      "limits": "Existing cases, timeouts, retries, worker counts and request budgets preserved"
     },
     "nov24PennsylvaniaBalanceConfirmation": {
       "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",
