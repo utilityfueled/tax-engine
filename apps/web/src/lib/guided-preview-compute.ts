@@ -269,7 +269,8 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
             if (!school) throw new Error("Current payment records are missing.");
             taxInput = buildGuidedOhioSchoolScheduleAOriginals(taxInput, school, stateData?.ohioResidency, paymentDraft);
           } catch (error) {
-            throw new Error(`Confirm the complete Ohio school district tax payment records for this year. ${error instanceof Error ? error.message : ""}`.trim());
+            const details = error instanceof Error ? ` ${error.message}` : "";
+            throw new Error(`Confirm the complete Ohio school district tax payment records for this year.${details}`.trim(), { cause: error });
           }
         }
       }

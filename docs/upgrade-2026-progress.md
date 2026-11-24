@@ -33,6 +33,12 @@ isolated replay passed 26. All eight dedicated and 15 shared spec references,
 inventory, 2,062 browser audit hashes, both typechecks and independent source
 review passed. Strict full candidate verification remains open.
 
+The first combined lint run on `2be7b99f` caught one missing error cause in
+the guided school payment diagnostic. The correction preserves the existing
+user-facing message and retains the original error for the immediate catch.
+Scoped lint, ten Ohio district tests and all 2,062 audit hashes passed after
+the correction. The failed full run and correction checks are retained separately.
+
 ## November 24 exact Pennsylvania candidate verification
 
 The `f84a7000` archive verified 6,669 tracked blobs and all 15 sample-document
