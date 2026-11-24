@@ -19,6 +19,10 @@ deferred at the owner’s direction. Their readiness criteria remain open.
   passed. Strict Linux image qualification awaits the remote results.
   [Exact AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169) ·
   [Exact ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
+- The first managed job stopped at the pre-Chromium Web workflow hash.
+  The test now pins the reviewed scanner extraction, and all 53 standalone
+  Node timing-contract tests passed locally. The managed rerun is required.
+  [Managed job evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169/job/138124985292).
 
 The refreshed federal, Ohio and Pennsylvania catalogs still show 2025
 as the final annual return year. The IRS labels its 2026 Form 1040 a

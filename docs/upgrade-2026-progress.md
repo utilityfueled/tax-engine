@@ -44,6 +44,16 @@ native ARM64 jobs await their final results.
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45298543013) ·
 [Exact ARM64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
 
+The exact managed Linux browser job stopped before Chromium. Its standalone
+Node timing-contract test still pinned the full Web workflow from before
+the scanner extraction. The mismatch reproduced locally on the same archive.
+The reviewed Web diff replaces only the AMD64 scanner block. The follow-up
+refreshes the exact workflow hash while retaining the opt-in checks and
+strict browser settings. All 53 tests in the separate Node timing-contract
+step passed locally after the refresh. Run this workflow-specific Node step
+alongside the 11 local checks when editing Web CI.
+[Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169/job/138124985292).
+
 The preceding `f50e6261` strict AMD64 job passed recovery, upgrade,
 rollback, independent archive and scan source verification. Chromium passed
 636, skipped five existing cases and missed deadlines in 14 cases, including

@@ -20,6 +20,7 @@
       "productionDeploymentCanceled": true,
       "githubRuns": {"ci": 45298543669, "web": 45298543169, "docker": 45298543013, "nativeArm64": 45299047812},
       "dockerBuild": "passed",
+      "exactManagedLinux": {"job": 138124985292, "result": "stopped at the standalone Web workflow timing-contract hash before Chromium", "localCorrectedNodeTestsPassed": 53},
       "exactLocalChecksPassed": 11,
       "exactLocalUnit": {"passed": 30230, "skipped": 79, "filesPassed": 2201},
       "exactLocalCoverage": {"passed": 30230, "skipped": 79, "branchCoveragePercent": 88.29, "requiredBranchCoveragePercent": 85},

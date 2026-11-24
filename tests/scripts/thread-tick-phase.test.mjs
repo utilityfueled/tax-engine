@@ -196,7 +196,8 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
   assert.equal(original.split(after).length,2);
   original=original.replace(after,before);
  }
- assert.equal(createHash('sha256').update(original).digest('hex'),'b3b8d319e952234e3f4d918c8c0b61823af060ce914501449aa768e1b0c8e6c3');
+ // The reviewed scanner extraction in 5380da8c replaces one AMD64 scanner block.
+ assert.equal(createHash('sha256').update(original).digest('hex'),'38c2c8eb8997b35d0121f33e75b817d73f186ceb225d66a8d5f26ad90405ed4b');
 });
 
 test('diagnostic source pins refresh without changing original budgets or collection',async()=>{
