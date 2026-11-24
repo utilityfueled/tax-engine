@@ -14,6 +14,11 @@ Use the linked progress sections when investigating individual packages.
   Chromium cases passed. The exact Linux comparison is running at the
   original deadlines. [Scheduler evidence](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison).
 
+- `ae399bd1` compares the current and candidate Python versions on the
+  same Ubuntu runner with the two exact retained RRTA inputs. The
+  existing inspection deadline and output checks are part of the
+  comparison. All 41 focused tests passed. [Exact benchmark run](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980).
+
 - `a2568205` requires separate actual confirmations for Pennsylvania
   extension and balance payments. Exact unit and coverage runs both passed
   30,364 tests with 81 skips and 88.31% branches. All eight GitHub CI jobs

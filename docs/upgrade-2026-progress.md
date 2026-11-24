@@ -73,6 +73,17 @@ timestamps at the decoded-stream level. The cause of the managed Linux
 timing difference is still open.
 [Exact managed run artifacts](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640#artifacts).
 
+`ae399bd1` adds a manual Ubuntu 24.04 x64 comparison of CPython 3.13.18
+and 3.14.10 using these two retained inputs and hash-locked pypdf 6.10.0.
+Both versions run the existing validator tests. The benchmark retains
+all 104 subprocess receipts, including warm-ups and failures, with the
+original phase telemetry, output limit and deadline. It reports a paired
+median only when every full output matches the pinned expected output.
+Forty-one focused tests, lint, types, workflow validation and both local
+output hashes passed. The exact Linux run is queued.
+[CPython runner builds](https://github.com/actions/python-versions/blob/main/versions-manifest.json) ·
+[Exact benchmark run](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980).
+
 ## November 24 Pennsylvania extension receipts
 
 `4ee0721b` reports verified January 1 through April 15 extension receipts

@@ -13,6 +13,7 @@
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
+    "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "remaining": [
       "Qualify Linux browsers with original limits. On a2568205 strict AMD64 missed six Ohio deadlines and managed Chromium missed two RRTA saved-PDF deadlines. On d439de12 strict ARM64 missed ten Ohio deadlines. Strict recovery and archive verification passed. The opt-in Linux scheduler comparison for 33b6a593 is running.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
@@ -22,6 +23,16 @@
     ]
   },
   "activeContinuation": {
+    "nov24RRTALinuxComparison": {
+      "diagnosticCommit": "ae399bd17696c79e11804f3d7613ea80a6be93c1",
+      "scope": "Manual performance comparison on one Ubuntu 24.04 x64 runner. Two exact synthetic PDFs from immutable artifact 14923508728, unchanged helper and validator, and exact CPython 3.13.18 versus 3.14.10 with hash-locked pypdf 6.10.0.",
+      "attemptsPlanned": 104,
+      "originalSubprocessDeadlineMs": 4000,
+      "focusedTestsPassed": 41,
+      "otherChecks": ["local full output hash parity for both retained PDFs", "actionlint", "ESLint", "TypeScript", "independent engineering review"],
+      "githubComparison": 45406230980,
+      "githubComparisonStatus": "queued on the bound diagnostic revision"
+    },
     "nov24OhioLinuxScheduler": {
       "diagnosticCommit": "33b6a5938b8ecede02b59adbc72d81073d9ae343",
       "scope": "Opt-in Linux comparison of the existing Ohio browser journeys. Renderer main-thread counters are aggregated across a worker browser, and optional CPU pressure is host-wide.",
