@@ -2423,7 +2423,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const nonIraAdjustments = sched1.totalAdjustments.minus(sched1.iraDeduction).minus(sched1.studentLoanInterest).plus(k1Form1041Section67eDeductions);
     const iraMagiBase = incomeBeforeSocialSecurity.minus(nonIraAdjustments);
     const noIraSocialSecurity = socialSecurityBenefitsGross.gt(0) ? calculateSocialSecurityBenefitsWorksheet({
-      filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:iraMagiBase,taxExemptInterest,
+      taxYear:year,filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:iraMagiBase,taxExemptInterest,
       exclusionsAdjustments:sum(form2555IncomeReduction,form2555HousingDeduction,
         adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),d(possessionExclusions?.puertoRicoIncomeExclusion),d(possessionExclusions?.americanSamoaIncomeExclusion)),
       livedWithSpouseAtAnyTimeDuringYear:input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,

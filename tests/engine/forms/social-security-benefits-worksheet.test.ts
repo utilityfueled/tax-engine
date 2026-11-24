@@ -121,6 +121,58 @@ describe("Social Security Benefits Worksheet", () => {
     expect(result.lines.find(line => line.form === "Pub915 WS1" && line.line === "19")?.value).toEqual(d(3000));
   });
 
+  it("requires actual 2026 cohabitation for separate filers with positive current benefits", () => {
+    // Publication 915 (2026), Worksheet 1 Example 4, and spec/federal/social-security-source-facts.yaml.
+    const example = {
+      taxYear: 2026, filingStatus: "married_filing_separately" as const,
+      benefitsReceived: d("4000"), otherIncome: d("8000"), taxExemptInterest: d("0"),
+    };
+    expect(() => calculateSocialSecurityBenefitsWorksheet(example)).toThrow(/2026.*lived with.*spouse/i);
+    expect(calculateSocialSecurityBenefitsWorksheet({
+      ...example, livedWithSpouseAtAnyTimeDuringYear: true,
+    }).taxableBenefits.toFixed()).toBe("3400");
+    expect(calculateSocialSecurityBenefitsWorksheet({
+      ...example, livedWithSpouseAtAnyTimeDuringYear: false,
+    }).taxableBenefits.toFixed()).toBe("0");
+    expect(calculateSocialSecurityBenefitsWorksheet({
+      ...example, benefitsReceived: d("0"),
+    }).taxableBenefits.toFixed()).toBe("0");
+    for (const taxYear of [2025, undefined]) {
+      expect(calculateSocialSecurityBenefitsWorksheet({ ...example, taxYear }).taxableBenefits.toFixed()).toBe("0");
+    }
+  });
+
+  it("requires actual earlier-year cohabitation for the 2026 lump-sum election", () => {
+    // Publication 915 (2026), Worksheet 2 lines 1 and 9, and spec/federal/social-security-source-facts.yaml.
+    const current = terryJacksonLumpSumFixture(2026);
+    const earlier = {
+      ...current.lumpSumElection.earlierYears[0], filingStatus: "married_filing_separately" as const,
+      adjustedGrossIncome: d("12000"),
+    };
+    const calculate = (record: typeof earlier & { livedWithSpouseAtAnyTimeDuringYear?: boolean }, taxYear = 2026) =>
+      calculateSocialSecurityBenefitsWorksheet({
+        ...current, taxYear, lumpSumElection: { ...current.lumpSumElection, earlierYears: [record] },
+      });
+    expect(() => calculate(earlier)).toThrow(/2025.*lived with.*spouse/i);
+    const apart = calculate({ ...earlier, livedWithSpouseAtAnyTimeDuringYear: false });
+    expect(apart.usedLumpSumElection).toBe(true);
+    expect(apart.taxableBenefits.toFixed()).toBe("2500");
+    const together = calculate({ ...earlier, livedWithSpouseAtAnyTimeDuringYear: true });
+    expect(together.lumpSumElectionAdditionalBenefitsByYear[0].additionalTaxableBenefits.toFixed()).toBe("1700");
+    expect(together.usedLumpSumElection).toBe(false);
+    expect(together.taxableBenefits.toFixed()).toBe("3000");
+    expect(calculate({ ...earlier, taxYear: 2024 }, 2025).taxableBenefits.toFixed()).toBe("2500");
+
+    for (const benefitsReceivedInEarlierYear of [d("-2000"), d("-2001")]) {
+      const nonpositive = calculate({ ...earlier, benefitsReceivedInEarlierYear });
+      expect(nonpositive.lumpSumElectionAdditionalBenefitsByYear).toEqual([{
+        taxYear: 2025, refiguredTaxableBenefits: d("0"), additionalTaxableBenefits: d("0"),
+      }]);
+      expect(nonpositive.lines.find(line => line.line === "W2-21 (2025)")
+        ?.inputs["Earlier-year lived with spouse during the year"]).toBe("unknown");
+    }
+  });
+
   it("records the election publication for the return year rather than the year of the delayed benefits", () => {
     // Spec: spec/federal/social-security-benefits-worksheet.yaml#pub915-2026-terry-jackson-election
     for (const [returnYear, worksheet2Page, worksheet4Page] of [[2025, 17, 19], [2026, 18, 20]] as const) {

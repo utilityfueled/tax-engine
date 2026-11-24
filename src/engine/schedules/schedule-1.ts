@@ -783,7 +783,8 @@ export function calculateSchedule1(
     const legacyMagiBase = sum(magiWages,magiInterest,magiDividends,form1099R.iraTaxable,form1099R.pensionTaxable,
       capitalGainLoss,businessIncome,supplementalIncome,farmIncome,magiOtherIncome).minus(adjustmentsExcludingIraAndStudentLoan);
     const legacyBenefits = socialSecurityBenefitsGross.gt(0) ? calculateSocialSecurityBenefitsWorksheet({
-      filingStatus,benefitsReceived:socialSecurityBenefitsGross,otherIncome:legacyMagiBase,taxExemptInterest:magiTaxExemptInterest,
+      taxYear: returnYear, filingStatus, benefitsReceived: socialSecurityBenefitsGross,
+      otherIncome: legacyMagiBase, taxExemptInterest: magiTaxExemptInterest,
       livedWithSpouseAtAnyTimeDuringYear:input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
     }).taxableBenefits : ZERO;
     const result = calculateIraReturnWorksheet(input,extra?.iraModifiedAgi ?? legacyMagiBase.plus(legacyBenefits),extra?.iraModifiedAgi !== undefined);
@@ -814,6 +815,7 @@ export function calculateSchedule1(
     const adjustmentsExcludingStudentLoan = adjustmentsExcludingIraAndStudentLoan.plus(iraDeduction);
     const socialSecurityBenefitsTaxable = socialSecurityBenefitsGross.greaterThan(0)
       ? calculateSocialSecurityBenefitsWorksheet({
+        taxYear: returnYear,
         filingStatus,
         benefitsReceived: socialSecurityBenefitsGross,
         otherIncome: sum(

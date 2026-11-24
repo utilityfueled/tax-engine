@@ -1,9 +1,13 @@
 form: "Social Security source facts"
-fullName: "Current-year possession income exclusion source facts for Publication 915"
+fullName: "Source facts for the 2026 Publication 915 Social Security worksheets"
 taxYear: 2026
 irsReference: "https://www.irs.gov/publications/p915"
-retrievedAt: "2026-10-25"
+retrievedAt: "2026-11-23"
 reviewStatus: "independent-review-pending"
+notes: |
+  These checks cover the applicability and source facts of the supported 2026
+  Publication 915 calculations only. The federal annual rule-pack, form, and
+  filing-output gates retain their independent requirements.
 lines:
   - line: "worksheet-1-line-5-source"
     description: "Preserve actual Puerto Rico and American Samoa excluded income"
@@ -19,3 +23,13 @@ lines:
     description: "Do not replace a missing possession exclusion source with zero"
     formula: "Reject unconfirmed, incomplete, negative or nonfinite supplied possession sources before calculating taxable benefits; explicit0/0 remains supported."
     testRef: "tests/engine/federal-income-exclusion-addbacks.test.ts::rejects unknown possession exclusion facts and preserves explicit zero"
+  - line: "worksheet-1-mfs-cohabitation"
+    description: "Use actual current-year cohabitation on a 2026 separate return"
+    formula: "For positive 2026 net benefits and married filing separately, require an explicit answer for whether the filer lived with a spouse at any time during the return year. Use the $25,000 base only if the filer lived apart throughout that year. The 2026 source requirement does not apply to nonpositive net benefits or legacy 2025 and year-unspecified worksheet calls."
+    irsRef: "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=11, Publication 915 (2026), Worksheet 1 line 9 and Example 4 ($4,000 in benefits and $8,000 in wages; $3,400 taxable when spouses lived together)"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::requires actual 2026 cohabitation for separate filers with positive current benefits"
+  - line: "worksheet-2-mfs-cohabitation"
+    description: "Use actual earlier-year cohabitation on the 2026 lump-sum election"
+    formula: "For an earlier year with separate filing status, require an explicit cohabitation answer for that year when earlier benefits plus the delayed payment are positive. If that sum is nonpositive, Worksheet 2 line 21 is zero and does not require this answer. Retain the actual earlier year and distinguish an omitted answer from a confirmed no in the audit. Leave legacy 2025 and year-unspecified worksheet behavior unchanged."
+    irsRef: "https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=18, Publication 915 (2026), Worksheet 2 lines 1 and 9"
+    testRef: "tests/engine/forms/social-security-benefits-worksheet.test.ts::requires actual earlier-year cohabitation for the 2026 lump-sum election"

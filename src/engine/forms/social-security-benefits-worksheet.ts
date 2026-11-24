@@ -175,8 +175,16 @@ function calculatePub915Worksheet2AdditionalTaxableBenefits(input: {
   taxExemptInterest?: Decimal;
   exclusionsAdjustments?: Decimal;
   taxableBenefitsPreviouslyReported: Decimal;
-}): SocialSecurityLumpSumElectionYearResult {
+}, is2026Return: boolean): SocialSecurityLumpSumElectionYearResult {
   const totalBenefits = d(input.benefitsReceivedInEarlierYear).plus(d(input.delayedBenefitsReceivedInCurrentYear));
+  if (is2026Return) {
+    if (totalBenefits.lte(0)) {
+      return { taxYear: input.taxYear, refiguredTaxableBenefits: d(0), additionalTaxableBenefits: d(0) };
+    }
+    if (input.filingStatus === "married_filing_separately" && typeof input.livedWithSpouseAtAnyTimeDuringYear !== "boolean") {
+      throw new Error(`Social Security requires confirmation of whether the ${input.taxYear} separate filer lived with their spouse during that year`);
+    }
+  }
   const provisionalIncome = totalBenefits
     .dividedBy(2)
     .plus(d(input.adjustedGrossIncome))
@@ -203,6 +211,12 @@ function calculatePub915Worksheet2AdditionalTaxableBenefits(input: {
 export function calculateSocialSecurityBenefitsWorksheet(
   input: SocialSecurityBenefitsWorksheetInput
 ): SocialSecurityBenefitsWorksheetResult {
+  const is2026Return = input.taxYear === 2026;
+  const line1 = d(input.benefitsReceived);
+  if (is2026Return && line1.gt(0) && input.filingStatus === "married_filing_separately" &&
+    typeof input.livedWithSpouseAtAnyTimeDuringYear !== "boolean") {
+    throw new Error("Social Security requires confirmation of whether the 2026 separate filer lived with their spouse during that year");
+  }
   const audit = new AuditTrail();
   const mfsLivedWithSpouse =
     input.filingStatus === "married_filing_separately" && input.livedWithSpouseAtAnyTimeDuringYear;
@@ -220,11 +234,10 @@ export function calculateSocialSecurityBenefitsWorksheet(
   const exclusionsAdjustments = aggregateExclusions ?? knownExclusions;
   const earlierYears = input.lumpSumElection?.earlierYears ?? [];
   const electionSources = input.taxYear === undefined ? undefined : PUB_915_ELECTION_SOURCES[input.taxYear];
-  const use2026PublicationWorksheet = input.taxYear === 2026 && earlierYears.length > 0;
+  const use2026PublicationWorksheet = is2026Return && earlierYears.length > 0;
   const worksheetKind = exclusionsAdjustments.greaterThan(0) || use2026PublicationWorksheet
     ? "publication915" : "form1040";
 
-  const line1 = d(input.benefitsReceived);
   const line2 = line1.dividedBy(2);
   const line3 = d(input.otherIncome);
   const line4 = d(input.taxExemptInterest);
@@ -366,7 +379,7 @@ export function calculateSocialSecurityBenefitsWorksheet(
     .slice()
     .sort((left, right) => left.taxYear - right.taxYear);
   const lumpSumElectionAdditionalBenefitsByYear = sortedLumpSumElectionEarlierYears
-    .map((earlierYear) => calculatePub915Worksheet2AdditionalTaxableBenefits(earlierYear));
+    .map((earlierYear) => calculatePub915Worksheet2AdditionalTaxableBenefits(earlierYear, is2026Return));
   const totalDelayedBenefitsReceivedInCurrentYear = sum(
     ...sortedLumpSumElectionEarlierYears.map((earlierYear) => d(earlierYear.delayedBenefitsReceivedInCurrentYear))
   );
@@ -399,6 +412,11 @@ export function calculateSocialSecurityBenefitsWorksheet(
 
   for (const [index, earlierYear] of lumpSumElectionAdditionalBenefitsByYear.entries()) {
     const earlierYearInput = sortedLumpSumElectionEarlierYears[index];
+    let cohabitationAnswer = earlierYearInput?.livedWithSpouseAtAnyTimeDuringYear ? "yes" : "no";
+    if (is2026Return && earlierYearInput?.filingStatus === "married_filing_separately" &&
+      earlierYearInput.livedWithSpouseAtAnyTimeDuringYear === undefined) {
+      cohabitationAnswer = "unknown";
+    }
     audit.record(
       "SS Worksheet",
       `W2-21 (${earlierYear.taxYear})`,
@@ -408,8 +426,7 @@ export function calculateSocialSecurityBenefitsWorksheet(
       {
         ...(electionSources ? { "Publication 915 source": electionSources.worksheet2 } : {}),
         "Earlier-year filing status": earlierYearInput?.filingStatus ?? "",
-        "Earlier-year lived with spouse during the year":
-          earlierYearInput?.livedWithSpouseAtAnyTimeDuringYear ? "yes" : "no",
+        "Earlier-year lived with spouse during the year": cohabitationAnswer,
         "Earlier-year benefits received": d(earlierYearInput?.benefitsReceivedInEarlierYear),
         "Delayed benefits received in current year": d(earlierYearInput?.delayedBenefitsReceivedInCurrentYear),
         "Earlier-year adjusted gross income": d(earlierYearInput?.adjustedGrossIncome),
