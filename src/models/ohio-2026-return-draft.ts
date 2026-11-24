@@ -36,6 +36,29 @@ export const Ohio2026OrdinarySourcesSchema = z.object({
 }).strict();
 export type Ohio2026OrdinarySources = z.infer<typeof Ohio2026OrdinarySourcesSchema>;
 
+/** Current ordinary Box 1 only. Box 2 has two existing input aliases. */
+export const Ohio2026UnemploymentOriginalSchema = z.object({
+  payer: reference, payerTin: reference.optional(), accountHolder: z.literal('primary'),
+  sourceId: reference, accountReference: reference, taxYear: z.literal(2026), sourceFormRevision: z.literal('2026-12'),
+  sourceFactsComplete: z.literal(true), sourceFactsConfirmed: z.literal(true), actualReceiptConfirmed: z.literal(true),
+  additionalWorksheetRequired: z.literal(false), programType: z.literal('government-unemployment'),
+  unemploymentCompensation: money, stateLocalIncomeTaxRefund: money.optional(), stateOrLocalTaxRefund: money.optional(),
+  federalWithheld: money, rtaaPayments: money, taxableGrants: money, agriculturePayments: money, marketGain: money,
+  familyLeaveBenefits: money, tradeOrBusinessRefund: z.literal(false), currentYearRepaid: money, priorYearRepaid: money,
+  unrecoveredAfterTaxContributions: money, stateTaxReporting: z.literal('none'), stateWithheld: money.optional(),
+}).strict().refine(form => form.stateLocalIncomeTaxRefund !== undefined || form.stateOrLocalTaxRefund !== undefined);
+
+export const Ohio2026UnemploymentEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
+  methodId: z.literal('oh-2026-unemployment-employee-draft-v1'),
+  unemploymentOriginal: z.object({
+    sourceId: reference, sourceReference: reference,
+    recipient: z.object({ firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/) }).strict(),
+    currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
+    ordinaryNoncontributoryStateUnemploymentConfirmed: z.literal(true), noStateWithholdingConfirmed: z.literal(true),
+  }).strict(),
+}).strict();
+export type Ohio2026UnemploymentEmployeeSources = z.infer<typeof Ohio2026UnemploymentEmployeeSourcesSchema>;
+
 /** Separate current documentary method; ordinary packets keep their strict schema. */
 export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: z.literal('oh-2026-pa-reciprocal-employee-draft-v1'),

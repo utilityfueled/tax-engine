@@ -10,11 +10,11 @@ import { roundDollar } from '@/utils/decimal.js';
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhio2026ResidentCredit } from './oh-2026-resident-credit.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
-import { readOhio2026OrdinarySource, type Ohio2026OrdinaryContext } from './oh-2026-ordinary-source.js';
+import { calculateOhio2026UnemploymentEmployeeSource, readOhio2026OrdinarySource, type Ohio2026OrdinaryContext } from './oh-2026-ordinary-source.js';
 
 export interface Ohio2026ReturnDraftResult {
   taxYear: 2026;
-  ruleVersion: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1' | 'oh-2026-earned-school-employee-draft-v1';
+  ruleVersion: Ohio2026OrdinaryContext['methodId'];
   baselineRuleVersion: string;
   calculationStatus: 'incomplete';
   reviewStatus: 'independent-review-pending';
@@ -42,11 +42,16 @@ export interface Ohio2026ReturnDraftResult {
   limitations: string[];
   lines: CalculatedLine[];
 }
+/** Private documentary draft for the separate ordinary unemployment cohort. */
+export function calculateOhio2026UnemploymentReturnDraft(input: TaxYearInput, sources: unknown): Ohio2026ReturnDraftResult {
+  return calculateOhio2026ReturnDraft(input, sources, calculateOhio2026UnemploymentEmployeeSource(input, sources));
+}
 /** Calculate solely from the current opaque source context; caller scalars cannot qualify. */
 export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unknown, context: Ohio2026OrdinaryContext): Ohio2026ReturnDraftResult {
   const actual = readOhio2026OrdinarySource(context, input, sources);
   const federalAgi = new Decimal(actual.federalAgi);
   const reciprocal = actual.reciprocalWageExclusion !== undefined;
+  const unemployment = context.methodId === 'oh-2026-unemployment-employee-draft-v1';
   const ohioAgi = federalAgi.minus(actual.reciprocalWageExclusion ?? '0');
   const baselineInput = { taxYear: 2026, filingStatus: actual.filingStatus, ohioAdjustedGrossIncome: ohioAgi,
     businessIncomeDeduction: '0', qualifyingCapitalGainsAndPayrollDeduction: '0', taxableBusinessIncome: '0',
@@ -80,8 +85,12 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     'Current complete full-year PA ordinary employee originals; RC5747.05(A)(2). Ohio AGI0; excluded compensation creates neither NRC nor resident credit. No final2026 form qualification.');
   if (actual.seniorCreditEligibleByAge) audit.record('OH2026 enacted ordinary draft', 'senior-credit', 'Senior citizen credit', seniorCitizenCredit,
     'One nonrefundable $50 per return, limited to available tax, if actual MAGI less exemptions is below $100,000; RC5747.055(F), RC5747.98');
+  const agiDescription = unemployment ? 'Actual ordinary wages and gross Box 1 unemployment in federal and Ohio AGI'
+    : reciprocal ? 'Actual completed wage-only federal AGI before reciprocal exclusion' : 'Actual completed wage-only federal and Ohio AGI';
+  const agiFormula = unemployment ? 'Round the sum of current ordinary W2 wages and gross Form 1099-G Box 1; allocate actual receipts by domicile under RC5747.20'
+    : 'Round sum current source-qualified ordinary W2 wages; no other actual sources admitted';
   for (const [line, label, value, formula] of [
-    ['AGI', reciprocal ? 'Actual completed wage-only federal AGI before reciprocal exclusion' : 'Actual completed wage-only federal and Ohio AGI', federalAgi, 'Round sum current source-qualified ordinary W2 wages; no other actual sources admitted'],
+    ['AGI', agiDescription, federalAgi, agiFormula],
     ['personal-credit', 'Personal exemption credit', personalExemptionCredit, 'min(tax remaining after senior credit,20*actual eligible count) only if statutory MAGI less exemptions<30000; RC5747.022'],
     ['joint-credit', 'Joint filing credit after preceding credits', baseline.jointFilingCredit, 'Actual each-owner qualifying wages, corrected MAGI and remaining-tax tier/cap; RC5747.05(E)'],
     ['earned-income-credit', 'Actual zero earned income credit', earnedIncomeCredit, 'Complete no-qualifying-child sources and AGI at or above indexed2026 phaseout; no unavailable credit default'],
@@ -102,7 +111,8 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     taxBeforeCredits: baseline.totalTax, ...(actual.seniorCreditEligibleByAge ? { seniorCitizenCredit } : {}), personalExemptionCredit, jointFilingCredit: baseline.jointFilingCredit, earnedIncomeCredit,
     nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax, withholding, underpaymentPenalty, latePaymentInterest, amountDue, refund,
     limitations: [
-      actual.seniorCreditEligibleByAge
+      unemployment ? 'Single part-year or nonresident ordinary employee under 65 with one actual state unemployment original; no dependents, EITC-qualifying children, state adjustments, or other credit sources.'
+        : actual.seniorCreditEligibleByAge
         ? 'Finite single/MFJ ordinary employee cohort with confirmed complete Ohio senior credit history; no dependents, EITC-qualifying children, state adjustments or other credit sources.'
         : 'Finite single/MFJ current ordinary employee cohort only; no dependents or EITC-qualifying children, under65 adults, no other state adjustments or credit sources.',
       context.methodId==='oh-2026-earned-school-employee-draft-v1' ? 'Actual independently source-qualified earned-school residence; school liability and payments remain separate from IT1040 in the distinct parent composition.' : resident ? 'Finite single full-year Ohio employee credit for completed paid2026 VA763 liability; Virginia tax calculation, unsettled accounts and other jurisdictions require separate methods.' : reciprocal ? 'Finite single full-year PA ordinary employee reciprocal compensation only; mixed, other-domicile, part-year, joint and specialized compensation remain separate methods.' : 'Actual no taxing-school-district residence and no other-state tax on Ohio-resident income; reciprocal and specialized income methods remain separate.',
