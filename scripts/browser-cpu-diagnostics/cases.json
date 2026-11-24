@@ -4,7 +4,7 @@
   "applicationSource": "cecb99444f63aca4ad8cc4411675c0fa2cf630de",
   "originalFullListSha256": "b15051ef3a45fa837b72268af3deb638e6732ca415a0bd2448a9e6b06452aaec",
   "fullCaseCount": 592,
-  "currentFullCaseCount": 655,
+  "currentFullCaseCount": 657,
   "currentFullCollectionSha256": "c486b270fbc2136a6f6b11c3b0ae1c64c8e03107dc34fc5c77ed7f90aa355525",
   "originalOutcome": {
     "passed": 573,

@@ -255,6 +255,8 @@ it('preserves validated scheduler row keys through exact selected batches', () =
 it('binds the optional diagnostic selection to the current browser audit bytes', () => {
   const audit = readFileSync(new URL('../../scripts/browser-request-budgets.json', import.meta.url));
   expect(realManifest.auditSha256).toBe(createHash('sha256').update(audit).digest('hex'));
+  const approvedFiles = Object.values(JSON.parse(audit.toString()).files) as { caseCount: number }[];
+  expect(realManifest.currentFullCaseCount).toBe(approvedFiles.reduce((total, file) => total + file.caseCount, 0));
 });
 
 // Spec: Optional-Browser-CPU-Diagnostics public-code-only.
