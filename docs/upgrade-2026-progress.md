@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 24 paired Pennsylvania browser timing
+
+The earlier strict Linux trace reached the final saved-state match at 29.84
+seconds. Its 68 extra control-type lookups took 3.25 seconds in the trace.
+Both browser journeys now use the existing typed controls for all 139 entries.
+Independent review and the rendered-DOM regression checked label association,
+unique control type, option values and action order. The journeys retain their
+118 fill-and-Tab pairs, 21 native selections, assertions, request ceilings,
+and original timing and retry settings.
+
+On isolated source, both Chromium cases passed at 4.15 and 3.60 seconds with
+successful cleanup. The DOM regression, five spec references, scoped lint and
+2,062 audit hashes passed. The first direct DOM invocation used the system
+Node and failed to start its worker. The rerun used Node 26.13.1. Strict Linux
+timing on the updated fixture remains pending.
+
 ## November 24 Ohio school district payments on Schedule A
 
 Verified 2025 SD 100 estimates and prior refunds posted to the district account

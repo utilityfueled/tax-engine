@@ -26,6 +26,7 @@
     "publicProviderEvidenceKey": "activeContinuation.nov24ExactPublicProviderCatalog",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
+    "pairedPaControlTimingEvidenceKey": "activeContinuation.nov24PairedPaNativeControls",
     "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
     "strictFullSchedulerEvidenceKey": "activeContinuation.nov24OhioFullLinuxScheduler",
     "ohioHeaderComparisonEvidenceKey": "activeContinuation.nov24OhioHeaderSourceComparisons",
@@ -45,6 +46,20 @@
     ]
   },
   "activeContinuation": {
+    "nov24PairedPaNativeControls": {
+      "nativeEntriesPerJourney": 139,
+      "textFillAndTabEntries": 118,
+      "nativeSelectEntries": 21,
+      "browserCasesPassed": 2,
+      "browserCaseDurationsMs": [4148, 3600],
+      "browserCleanupPassed": true,
+      "focusedDomRegressionPassed": true,
+      "specReferencesResolved": 5,
+      "auditedSourcesVerified": 2062,
+      "independentSourceReview": "passed",
+      "strictLinuxResult": "pending",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-paired-pennsylvania-browser-timing"
+    },
     "nov24OhioSchoolDistrictScheduleAPayments": {
       "focusedCoreTestsPassed": 73,
       "focusedGuidedTestsPassed": 37,

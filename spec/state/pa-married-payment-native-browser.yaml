@@ -15,14 +15,16 @@ lines:
     formula: "At1280px and390px, start target paymentSources absent and owner receipt snapshots empty with unknown payment statuses. Enter account identity/year/completeness/posted rows, separate receipt originals/installments and prior-election originals through visible controls; no post-entry storage writes."
     testRef: "apps/web/tests/pa-married-payment-native.spec.ts::originates separate payment accounts and preserves current owned refunds through reopen and source edit"
   - line: "known-receipt-textboxes"
-    description: "Use the proven text input kind for repeated payment original fields"
+    description: "Use the proven native control kind for each entered payment field"
     formula: |
       The posted receipt, separate receipt original and prior-election original
       loops enter all 71 fixture fields through unique native text inputs.
-      Use strict fill followed by Tab for each field without discovering its
-      control kind at runtime. Keep the row-add actions, values, order and
-      existing browser assertions.
-    testRef: "tests/apps/web/pa-married-payment-native-kind.test.tsx::keeps all 71 receipt and prior original actions on their rendered native text inputs"
+      The account, owner review, timing, election and edit fields add 47 text
+      inputs and 21 selects. Check each field's unique associated label and
+      actual native control. Use strict fill followed by Tab for text inputs
+      and selectOption for selects. Keep the row-add and capture actions,
+      fixture values, order and existing browser assertions.
+    testRef: "tests/apps/web/pa-married-payment-native-kind.test.tsx::keeps all 139 payment field entries on their rendered native controls"
   - line: "explicit-capture-and-confirm"
     description: "Keep account inventory, retained originals and confirmation actions distinct"
     formula: "No source edit infers owner originals or totals. Capture each reviewed original receipt inventory explicitly, confirm payment sources then household separately; actual source bridge and composer independently return primary credit51/estimates200/extension76/refund327 and spouse credit0/estimates80/extension0/refund80."

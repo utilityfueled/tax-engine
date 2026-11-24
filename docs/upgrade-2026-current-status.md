@@ -32,6 +32,11 @@ Use the linked progress sections when investigating individual packages.
   federal Schedule A calculation used in preview and saved PDF review.
   [Paired Pennsylvania evidence](upgrade-2026-progress.md#november-24-separate-pennsylvania-accounts-on-schedule-a).
 
+- The paired Pennsylvania browser journeys passed locally in 4.15 and
+  3.60 seconds after removing repeated control lookups. Both journeys keep
+  all 139 native entries and their assertions. Strict Linux timing is pending.
+  [Browser evidence](upgrade-2026-progress.md#november-24-paired-pennsylvania-browser-timing).
+
 - Verified individual Pennsylvania estimates now reach federal Schedule A
   by actual payment date. A previously confirmed estimate that is edited or
   removed requires reconfirmation before the itemized preview resumes.

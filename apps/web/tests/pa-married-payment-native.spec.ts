@@ -1,6 +1,5 @@
 // Spec: spec/state/pa-married-payment-native-browser.yaml. No target source injection after entry.
-import { enterKnownNativeControl } from './helpers/known-native-control';
-import { nativeControlTag } from './helpers/native-control-snapshot';
+import { enterKnownNativeControl as enter } from './helpers/known-native-control';
 import {expect,test,type Page,type TestInfo} from '@playwright/test';
 import assert from 'node:assert/strict';
 import {paMarriedPaymentNativeBrowserFixture} from '../../../tests/fixtures/pa-married-payment-native-browser';
@@ -12,7 +11,6 @@ import {calculatePAMarriedOrdinaryReturn} from '../../../src/engine/state/pa-mar
 
 function required<T>(value:T|null|undefined):T{if(value===null||value===undefined)throw Error('Explicit actual synthetic source required');return value;}
 function control(page:Page,label:string){return page.getByRole('textbox',{name:label,exact:true}).or(page.getByRole('combobox',{name:label,exact:true}));}
-async function enter(page:Page,label:string,value:string){const field=control(page,label);const tagName=await nativeControlTag(field);if(tagName==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
 async function saved(page:Page,id:string):Promise<GuidedFlowState>{return page.evaluate(id=>JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`)??'null'),id);}
 function source(state:GuidedFlowState){return required(state.sectionData['state-return']?.paMarriedOrdinarySources);}
 async function assertResults(page:Page,state:GuidedFlowState){
@@ -53,35 +51,35 @@ for(const width of [1280,390])test.describe(`Native separate PA payment original
   expect(()=>buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(f.state)),f.state)).toThrow();
   const panel=page.getByRole('region',{name:'Actual separate PA payment accounts',exact:true});await panel.getByRole('button',{name:'Add actual separate PA payment accounts',exact:true}).click();
   expect(source(await saved(page,id)).paymentSources).toEqual({sourceTaxYear:null,sourceReference:'',sourceFactsConfirmed:null,accounts:[]});
-  await expect(control(page,'Separate PA payment source tax year')).toHaveValue('');await enter(page,'Separate PA payment source tax year','2025');await enter(page,'Separate PA payment collection source reference',f.target.sourceReference);
+  await expect(control(page,'Separate PA payment source tax year')).toHaveValue('');await enter(page,'Separate PA payment source tax year','2025','input');await enter(page,'Separate PA payment collection source reference',f.target.sourceReference,'input');
   for(const[i,account]of f.target.accounts.entries()){
    const prefix=`Payment account ${i+1}`,tag=account.accountHolder==='primary'?'Primary':'Spouse';await panel.getByRole('button',{name:`Add ${account.accountHolder} actual payment account`,exact:true}).click();
    const blank=required(source(await saved(page,id)).paymentSources).accounts[i];expect(blank.originalAccount).toMatchObject({accountName:'',accountSsn:'',taxYear:null,availablePriorCredit:'',receipts:[],allPaymentsCompleteConfirmed:null});expect(blank.receipts).toEqual([]);expect(blank.priorCredit).toEqual({status:'',sourceReference:''});
-   await enter(page,prefix+' actual owner',account.accountHolder);await enter(page,prefix+' original source reference',account.sourceReference);
-   for(const key of ['accountName','accountSsn','returnType','filingStatus','accountKind','asOfDate','availablePriorCredit']as const)await enter(page,prefix+' printed '+key,account.originalAccount[key]);
-   await enter(page,prefix+' printed taxYear','2025');await enter(page,prefix+' prior credit applied date or no date',account.originalAccount.priorCreditAppliedOn??'');
-   await enter(page,prefix+' complete account checked','true');await enter(page,prefix+' no transfers offsets refunds or adjustments checked','true');
+   await enter(page,prefix+' actual owner',account.accountHolder,'select');await enter(page,prefix+' original source reference',account.sourceReference,'input');
+   for(const key of ['accountName','accountSsn','returnType','filingStatus','accountKind','asOfDate','availablePriorCredit']as const)await enter(page,prefix+' printed '+key,account.originalAccount[key],'input');
+   await enter(page,prefix+' printed taxYear','2025','input');await enter(page,prefix+' prior credit applied date or no date',account.originalAccount.priorCreditAppliedOn??'','input');
+   await enter(page,prefix+' complete account checked','true','select');await enter(page,prefix+' no transfers offsets refunds or adjustments checked','true','select');
    for(const[n,row]of account.originalAccount.receipts.entries()){
-    await panel.getByRole('button',{name:`Add ${prefix} posted original receipt row`,exact:true}).click();for(const[key,value]of Object.entries(row))await enterKnownNativeControl(page,`${prefix} posted row ${n+1} ${key}`,String(value),'input');
+    await panel.getByRole('button',{name:`Add ${prefix} posted original receipt row`,exact:true}).click();for(const[key,value]of Object.entries(row))await enter(page,`${prefix} posted row ${n+1} ${key}`,String(value),'input');
    }
    for(const[n,row]of account.receipts.entries()){
-    await panel.getByRole('button',{name:`Add ${prefix} actual payment receipt`,exact:true}).click();await enter(page,`${prefix} receipt ${n+1} source reference`,row.sourceReference);
-    await enter(page,`${prefix} receipt ${n+1} intended installment`,row.intendedInstallment===null?'':String(row.intendedInstallment));
-    for(const[key,value]of Object.entries(row.original))await enterKnownNativeControl(page,`${prefix} receipt ${n+1} original ${key}`,String(value),'input');
+    await panel.getByRole('button',{name:`Add ${prefix} actual payment receipt`,exact:true}).click();await enter(page,`${prefix} receipt ${n+1} source reference`,row.sourceReference,'input');
+    await enter(page,`${prefix} receipt ${n+1} intended installment`,row.intendedInstallment===null?'':String(row.intendedInstallment),'input');
+    for(const[key,value]of Object.entries(row.original))await enter(page,`${prefix} receipt ${n+1} original ${key}`,String(value),'input');
    }
-   await enter(page,prefix+' prior credit status',account.priorCredit.status);await enter(page,prefix+' prior credit source reference',account.priorCredit.sourceReference);
-   if(account.priorCredit.originalPriorReturn){await panel.getByRole('button',{name:`Add ${prefix} original prior return election`,exact:true}).click();for(const[key,value]of Object.entries(account.priorCredit.originalPriorReturn))await enterKnownNativeControl(page,prefix+' prior original '+key,String(value),'input');}
+   await enter(page,prefix+' prior credit status',account.priorCredit.status,'select');await enter(page,prefix+' prior credit source reference',account.priorCredit.sourceReference,'input');
+   if(account.priorCredit.originalPriorReturn){await panel.getByRole('button',{name:`Add ${prefix} original prior return election`,exact:true}).click();for(const[key,value]of Object.entries(account.priorCredit.originalPriorReturn))await enter(page,prefix+' prior original '+key,String(value),'input');}
    const expected=required(f.expected.owners.find(row=>row.accountHolder===account.accountHolder)).payments;
-   await enter(page,tag+' PA account original source reference',expected.sourceReference);await enter(page,tag+' all current PA payments reviewed','true');
-   for(const[key,label]of [['estimatedPaymentsStatus','estimated payment history'],['extensionPaymentsStatus','extension payment history'],['priorCreditStatus','prior credit history'],['priorReturnStatus','prior return history']]as const)await enter(page,tag+' actual '+label,expected[key]);
-   await enter(page,tag+' prior return original source reference',expected.priorReturnSourceReference);
+   await enter(page,tag+' PA account original source reference',expected.sourceReference,'input');await enter(page,tag+' all current PA payments reviewed','true','select');
+   for(const[key,label]of [['estimatedPaymentsStatus','estimated payment history'],['extensionPaymentsStatus','extension payment history'],['priorCreditStatus','prior credit history'],['priorReturnStatus','prior return history']]as const)await enter(page,tag+' actual '+label,expected[key],'select');
+   await enter(page,tag+' prior return original source reference',expected.priorReturnSourceReference,'input');
    expect(required(source(await saved(page,id)).owners.find(row=>row.accountHolder===account.accountHolder)).payments.originalReceipts).toEqual([]);
    const printedBefore=structuredClone(required(source(await saved(page,id)).paymentSources).accounts[i].originalAccount);
    await panel.getByRole('button',{name:`Capture ${prefix} reviewed original receipts`,exact:true}).click();
    const captured=source(await saved(page,id));expect(required(captured.owners.find(row=>row.accountHolder===account.accountHolder)).payments.originalReceipts).toEqual(account.receipts.map(row=>row.original));expect(required(captured.paymentSources).accounts[i].originalAccount).toEqual(printedBefore);expect(captured.sourceFactsConfirmed).toBeNull();
   }
-  for(const[label,value]of [['Married PA timing original source reference',f.expected.timing.sourceReference],['Married PA actual as of date','2026-04-15'],['Married PA actual filing extension','actual_extension']])await enter(page,label,value);
-  for(const row of f.expected.dispositions){const tag=row.accountHolder==='primary'?'Primary':'Spouse';for(const[label,value]of [['election original source reference',row.sourceReference],['actual requested refund',row.refundRequested],['actual requested next year credit','0'],['actual remaining payment source','no_remaining_tax'],['remaining payment original source reference',row.remainingPayment.sourceReference]])await enter(page,tag+' '+label,value);}
+  for(const[label,value,kind]of [['Married PA timing original source reference',f.expected.timing.sourceReference,'input'],['Married PA actual as of date','2026-04-15','input'],['Married PA actual filing extension','actual_extension','select']]as const)await enter(page,label,value,kind);
+  for(const row of f.expected.dispositions){const tag=row.accountHolder==='primary'?'Primary':'Spouse';for(const[label,value,kind]of [['election original source reference',row.sourceReference,'input'],['actual requested refund',row.refundRequested,'input'],['actual requested next year credit','0','input'],['actual remaining payment source','no_remaining_tax','select'],['remaining payment original source reference',row.remainingPayment.sourceReference,'input']]as const)await enter(page,tag+' '+label,value,kind);}
   expect(source(await saved(page,id)).paymentSources).toEqual({...f.target,sourceFactsConfirmed:null});
   await panel.getByRole('button',{name:'Confirm actual separate PA payment accounts after the last edit',exact:true}).click();await expect.poll(async()=>required(source(await saved(page,id)).paymentSources).sourceFactsConfirmed).toBe(true);expect(source(await saved(page,id)).sourceFactsConfirmed).toBeNull();
   await page.getByRole('button',{name:'Confirm actual married PA household sources after the last edit',exact:true}).click();await expect.poll(async()=>source(await saved(page,id)).sourceFactsConfirmed).toBe(true);
@@ -90,7 +88,7 @@ for(const width of [1280,390])test.describe(`Native separate PA payment original
   const amount=control(page,'Payment account 1 receipt 1 original amount');await amount.focus();await amount.press('Tab');expect(source(await saved(page,id))).toEqual(confirmed);await capture(page,info,width);
   await page.reload();
   const reloadedState=await saved(page,id);expect(source(reloadedState)).toEqual(confirmed);await assertResults(page,reloadedState);
-  await enter(page,'Payment account 1 receipt 1 source reference',editReference);
+  await enter(page,'Payment account 1 receipt 1 source reference',editReference,'input');
   const staleState=await saved(page,id),stale=source(staleState);expect(stale.sourceFactsConfirmed).toBeNull();expect(required(stale.paymentSources).sourceFactsConfirmed).toBeNull();expect(stale.owners).toEqual(confirmed.owners);expect(stale.originalFederalSources).toEqual(confirmed.originalFederalSources);expect(required(stale.paymentSources).accounts[0].originalAccount).toEqual(required(confirmed.paymentSources).accounts[0].originalAccount);
   expect(()=>buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(staleState)),staleState)).toThrow();
   await expect(page.locator('.guided-section-transition').getByRole('region',{name:'Pennsylvania separate returns',exact:true})).toHaveCount(0);
