@@ -18,12 +18,17 @@ Unit and coverage each reported 30,377 passes, 81 conditional skips, and
 errors and 12,204 warnings. The original Chromium suite again passed all
 652 active cases in eight request windows with five original skips.
 
-The existing native ARM64 rehearsal was dispatched on code-equivalent
-`4ccb88b0` and reached the strict browser step on GitHub's free standard
-public ARM64 runner. The pre-change Linux comparison also reached the
-strict browser step.
-[ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946) ·
-[Runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories).
+The native ARM64 rehearsal on code-equivalent `4ccb88b0` passed native
+image build, smoke, Compose upgrade and recovery, independent archive
+verification, image scanning and cleanup. The unchanged strict Chromium
+suite passed 642 and missed ten original 30-second Ohio deadlines with
+five original skips. The Ohio business, reciprocal, resident-credit, and
+part-year school-district cases repeated the exact ten failure IDs from
+`d439de12` on the same Ubuntu 24.04 ARM runner image revision
+20261116.188.1. The Ohio header comparison change leaves the ARM64
+qualification open. [Current ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946/job/138538082796) ·
+[Current timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946/artifacts/14938704508) ·
+[Earlier timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45389977101/artifacts/14922412389).
 
 `a3f5f225` pins three specs and two evidence links to the 2025 IRS Form
 8801 annual archive. The generic form URL now serves 2026. The exact

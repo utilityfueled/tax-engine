@@ -14,7 +14,9 @@ Use the linked progress sections when investigating individual packages.
   and 88.31% branches. Chromium passed all 652 active cases with five
   original skips, as did the exact pre-change baseline. The equivalent
   [strict ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946)
-  is in progress.
+  passed image build, smoke, recovery and archive verification. Its
+  Chromium suite passed 642 and missed ten Ohio deadlines with five
+  original skips. The same ten cases failed in the earlier ARM64 run.
 
 - `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
   Part II widgets under a disabled candidate. The form adds no public
