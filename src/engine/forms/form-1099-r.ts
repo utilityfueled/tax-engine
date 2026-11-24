@@ -371,12 +371,17 @@ export function calculateForm1099R(
     if (datedDistributions.some(form => !form.distributionCode?.trim())) {
       throw new Error("2025 Form 1099-R requires the actual Box 7 distribution code");
     }
-    if (datedDistributions.some(form => {
+    const unresolvedPension = datedDistributions.find(form => {
       const code = form.distributionCode?.trim();
-      return (code === "1" || code === "7") && form.taxableAmountNotDetermined === true
-        && form.taxableAmount === undefined && resolveTaxableAmountBeforeQcdSource(form).source === "historical-preview";
-    })) {
-      throw new Error("2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet");
+      const box2b = form.taxableAmountNotDetermined;
+      return (code === "1" || code === "7") && form.taxableAmount === undefined
+        && (box2b === true || (box2b === false && !d(form.employeeContributions).gt(0)))
+        && resolveTaxableAmountBeforeQcdSource(form).source === "historical-preview";
+    });
+    if (unresolvedPension) {
+      throw new Error(unresolvedPension.taxableAmountNotDetermined
+        ? "2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet"
+        : "2025 Form 1099-R pension with unchecked Box 2b and missing Box 2a requires the actual taxable amount or a supported taxable-amount worksheet");
     }
   }
   const audit = new AuditTrail();

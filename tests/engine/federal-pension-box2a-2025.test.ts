@@ -48,32 +48,55 @@ it.each(scenarios)("holds a dated 2025 Code $code pension with checked Box 2b an
   expect(() => calculateFederalTax(input)).toThrow(missingWorksheet);
 });
 
+it.each(scenarios)("holds a dated 2025 Code $code pension with unchecked Box 2b and omitted Box 2a", scenario => {
+  for (const employeeContributions of [undefined, "0"]) {
+    const input = parsed(scenario, { taxableAmountNotDetermined: false, employeeContributions });
+    expect(input.form1099R?.[0]?.taxableAmountNotDetermined).toBe(false);
+    expect(input.form1099R?.[0]?.taxableAmount).toBeUndefined();
+    expect(() => calculateFederalTax(input)).toThrow(/unchecked Box 2b and missing Box 2a/);
+  }
+});
+
+it.each(scenarios)("preserves the historical positive Box 5 exception for Code $code", scenario => {
+  const employeeContributions = "1200";
+  const unchecked = parsed(scenario, { employeeContributions, taxableAmountNotDetermined: false });
+  const result = calculateFederalTax(unchecked);
+  expect(line(result, "1040", "5b")).toBe("4800");
+  expect(line(result, "1040", "25b")).toBe("125");
+  expect(() => calculateFederalTax(parsed(scenario, { employeeContributions }))).toThrow(missingWorksheet);
+});
+
 it("preserves the original schema rejection for an incomplete Simplified Method worksheet", () => {
   expect(() => parsed(scenarios[1], { simplifiedMethodCostInPlan: "26000", simplifiedMethodPaymentsReceivedThisYear: 12 }))
     .toThrow("Simplified Method expected payments are required");
 });
 
 it.each(scenarios)("uses a complete Simplified Method worksheet for dated 2025 Code $code", scenario => {
-  const input = parsed(scenario, {
-    simplifiedMethodCostInPlan: scenario.costInPlan,
-    simplifiedMethodAnnuityStartingDate: "2025-01-15",
-    simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: scenario.age,
-    simplifiedMethodPaymentsReceivedThisYear: 12,
-  });
-  const statement = input.form1099R?.[0];
-  if (!statement) throw new Error("The parsed pension original is required");
-  expect(getForm1099RTaxabilitySource(statement).source).toBe("supported-method");
-  const result = calculateFederalTax(input);
-  expect(line(result, "1040", "5a")).toBe("6000");
-  expect(line(result, "1040", "5b")).toBe("4800");
-  expect(line(result, "1040", "25b")).toBe("125");
-  expect(line(result, "Form 5329", "4")).toBe(scenario.additionalTax);
+  for (const taxableAmountNotDetermined of [true, false]) {
+    const input = parsed(scenario, {
+      taxableAmountNotDetermined,
+      simplifiedMethodCostInPlan: scenario.costInPlan,
+      simplifiedMethodAnnuityStartingDate: "2025-01-15",
+      simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: scenario.age,
+      simplifiedMethodPaymentsReceivedThisYear: 12,
+    });
+    const statement = input.form1099R?.[0];
+    if (!statement) throw new Error("The parsed pension original is required");
+    expect(getForm1099RTaxabilitySource(statement).source).toBe("supported-method");
+    const result = calculateFederalTax(input);
+    expect(line(result, "1040", "5a")).toBe("6000");
+    expect(line(result, "1040", "5b")).toBe("4800");
+    expect(line(result, "1040", "25b")).toBe("125");
+    expect(line(result, "Form 5329", "4")).toBe(scenario.additionalTax);
+  }
 });
 
-it.each(["4800", "0"])("preserves a printed Box 2a amount of %s", taxableAmount => {
-  const result = calculateFederalTax(parsed(scenarios[1], { taxableAmount }));
-  expect(line(result, "1040", "5b")).toBe(taxableAmount);
-  expect(line(result, "1040", "25b")).toBe("125");
+it.each(["6000", "4800", "0"])("preserves a printed Box 2a amount of %s", taxableAmount => {
+  for (const taxableAmountNotDetermined of [true, false]) {
+    const result = calculateFederalTax(parsed(scenarios[1], { taxableAmount, taxableAmountNotDetermined }));
+    expect(line(result, "1040", "5b")).toBe(taxableAmount);
+    expect(line(result, "1040", "25b")).toBe("125");
+  }
 });
 
 it("preserves source-year validation, unknown checkbox facts and the direct worksheet preview", () => {
@@ -86,7 +109,9 @@ it("preserves source-year validation, unknown checkbox facts and the direct work
 });
 
 it.each(["6", "G"])("preserves known Code %s treatment with blank Box 2a", distributionCode => {
-  const result = calculateFederalTax(parsed(scenarios[1], { distributionCode, federalWithheld: "0" }));
-  expect(line(result, "1040", "5b")).toBe("0");
-  expect(line(result, "Form 5329", "4")).toBeUndefined();
+  for (const taxableAmountNotDetermined of [true, false]) {
+    const result = calculateFederalTax(parsed(scenarios[1], { distributionCode, taxableAmountNotDetermined, federalWithheld: "0" }));
+    expect(line(result, "1040", "5b")).toBe("0");
+    expect(line(result, "Form 5329", "4")).toBeUndefined();
+  }
 });
