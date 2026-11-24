@@ -25,11 +25,13 @@
       "localEvidence": ".local/upgrade-evidence/nov24-pa-unemployment",
       "remoteRuns": {"ci": 45350826062, "web": 45350825703, "docker": 45350825798, "nativeArm64": 45350876304},
       "docker": "Passed on the exact application revision",
+      "remoteCI": {"jobsPassed": 8, "coverageTestsPassed": 30419, "branchCoveragePercent": 88.7},
+      "managedLinuxBrowser": {"job": 138296525535, "passed": 650, "originalSkips": 5},
       "vercel": "Canceled by Ignored Build Step",
       "localFullTests": {"passed": 30338, "skipped": 81, "branchCoveragePercent": 88.32, "chromiumPassed": 650, "chromiumOriginalSkips": 5, "allChecksPassed": 11},
       "nativeArm64": {"smokeRecoveryArchiveAndCleanupPassed": true, "strictBrowserPassed": 640, "strictBrowserDeadlines": 10, "originalSkips": 5, "timingArtifact": 14903472814},
       "boundedBrowserMeasurement": {"run": 45359637143, "sourceCommit": "406aab41", "applicationDiff": "none relative to 9a45b970", "scope": "Existing strict AMD64 baseline first, followed by original Ohio batches with entry phase metrics only if the baseline fails"},
-      "remaining": ["Complete latest exact local and remote qualification checks.", "Obtain qualified tax review and final Pennsylvania artifacts."]
+      "remaining": ["Complete exact strict Linux browser qualification.", "Obtain qualified tax review and final Pennsylvania artifacts."]
     },
     "nov24OhioUnemploymentDraft": {
       "applicationCommit": "badcfd4b6e65df0ccf637fc7d60b7e40a9d675e5",
@@ -43,7 +45,7 @@
       "localEvidence": ".local/upgrade-evidence/nov24-ohio-unemployment-draft",
       "localFullTests": {"passed": 30319, "skipped": 81, "branchCoveragePercent": 88.32, "chromiumPassed": 650, "chromiumOriginalSkips": 5, "allChecksPassed": 11},
       "remoteRuns": {"ci": 45349613445, "web": 45349613426, "docker": 45349613349},
-      "remaining": ["Complete the latest full checks from the combined tracked source.", "Verify final Ohio artifacts and obtain qualified independent review."]
+      "remaining": ["Complete combined strict browser qualification.", "Verify final Ohio artifacts and obtain qualified independent review."]
     },
     "nov24ShortYearCutoff": {
       "applicationCommit": "355d3fec5858596c44a6e21d3e57b399043ab376",

@@ -20,14 +20,18 @@ eligibility and admission boundaries. The clean archived source passed
 9,980 spec references. TypeScript and scoped ESLint passed. Full exact
 unit and coverage runs each passed 30,338 tests with 81 skips and 88.32%
 branch coverage. Local Chromium passed all 650 active cases with five
-original skips, completing all 11 local checks. The exact GitHub image
-build passed. ARM64 image smoke, Compose recovery, independent archive
-verification and cleanup passed. The unchanged ARM64 browser run passed
+original skips, completing all 11 local checks. All eight exact GitHub CI
+jobs passed, including 30,419 coverage tests and 88.70% branch coverage.
+The managed Linux browser job passed 650 cases with five original skips.
+The exact GitHub image build passed. ARM64 image smoke, Compose recovery,
+independent archive verification and cleanup passed. The unchanged ARM64 browser run passed
 640 cases, exceeded 10 Ohio deadlines and retained the five original
 skips. Its timing artifact shows failures around several different
 actions. A bounded performance workflow on the same application code
 will collect entry-phase measurements if its original strict AMD64 run
 fails. Vercel reported an ignored build.
+[CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350826062) ·
+[Managed Linux browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45350825703/job/138296525535) ·
 [Image workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350825798) ·
 [ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304) ·
 [ARM64 timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304/artifacts/14903472814) ·
