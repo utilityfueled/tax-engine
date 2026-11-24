@@ -261,6 +261,22 @@ describe("task-based candidate AI adapter", () => {
     expect(recordUndispatchedAttempt).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ attempt: 1 }));
     expect(recordUnknownAttempt).not.toHaveBeenCalled();
   });
+  it("propagates cancellation during an escalation refusal without writing an undispatched attempt", async () => {
+    const controller = new AbortController();
+    const deps = execution();
+    const recordUndispatchedAttempt = vi.fn();
+    const recordUnknownAttempt = vi.fn();
+    await expect(executeAiTask(request({ task: "document-classification", signal: controller.signal }), {
+      ...deps, escalationCount: 1, recordUndispatchedAttempt, recordUnknownAttempt,
+      beforeAttempt: async () => {
+        controller.abort();
+        return "use-fallback";
+      },
+    })).rejects.toMatchObject({ name: "AbortError" });
+    expect(deps.fetchFn).not.toHaveBeenCalled();
+    expect(recordUndispatchedAttempt).not.toHaveBeenCalled();
+    expect(recordUnknownAttempt).not.toHaveBeenCalled();
+  });
   it("keeps cancellation after transport invocation on the unknown-usage path", async () => {
     const deps = execution();
     const controller = new AbortController();

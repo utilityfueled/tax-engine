@@ -32,7 +32,9 @@ export function hostedAiTaskAccounting(input: {
       if (!result.accepted) throw new Error("AI credits are exhausted.");
       if (!result.created && attempt.attempt === 1) throw new Error("This AI request was already reserved; it will not be sent again.");
       try {
-        if (!await db.start({ ...identity, ...attempt })) throw new Error("AI attempt already started.");
+        const started = await db.start({ ...identity, ...attempt });
+        if (started === "insufficient-hold") return "use-fallback";
+        if (!started) throw new Error("AI attempt already started.");
       } catch (error) {
         if (result.created) await db.cancel(identity);
         throw error;

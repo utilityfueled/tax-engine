@@ -1,8 +1,15 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createRequire } from "node:module";
+import { z } from "zod";
+import { executeAiTask, type AiTaskExecution } from "../../../apps/web/src/lib/ai-task-adapter";
 import { createHostedAiLedger } from "../../../apps/web/src/lib/hosted-ai-ledger";
 import { ensureHostedAiLedgerSchema } from "../../../apps/web/src/lib/hosted-ai-ledger-schema";
 import { ensureHostedAiStorageModeSchema } from "../../../apps/web/src/lib/hosted-ai-storage-mode";
+import { hostedAiTaskAccounting } from "../../../apps/web/src/lib/hosted-ai-task-accounting";
+
+const { getHostedServerDatabase } = vi.hoisted(() => ({ getHostedServerDatabase: vi.fn() }));
+vi.mock("../../../apps/web/src/lib/hosted-server-db", () => ({ getHostedServerDatabase, ensureHostedAppSchema: async () => {} }));
+vi.mock("server-only", () => ({}));
 
 const base = { ownerId: "synthetic-owner", requestId: "request-1", payloadDigest: "a".repeat(64), cycleKey: "2026-10", includedBudgetCents: 3, maximumChargeCents: 2 };
 describe("AI ledger input boundary", () => {
@@ -127,7 +134,7 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     await expect(ledger.settle(outcome)).resolves.toMatchObject({ chargedCents: 1, reservedCents: 0 });
   });
   it("includes a failed attempt and one explicit escalation in one minimum retail charge", async () => {
-    await ledger.reserve({ ...base, maximumChargeCents: 3 }); await start();
+    await ledger.reserve({ ...base, includedBudgetCents: 33, maximumChargeCents: 33 }); await start();
     await ledger.settle({ ...first, usage, accepted: false, final: false });
     await expect(start({ attempt: 2 })).rejects.toThrow(/Sol High/);
     await start({ attempt: 2, task: "complex-reconciliation", profileId: "sol-high" });
@@ -174,7 +181,7 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     expect(cancelled).toMatchObject({ state: "cancelled", reservedCents: 0, chargedCents: 0 });
     expect(await ledger.cancelUndispatched(first)).toEqual(cancelled);
     await expect(ledger.settle({ ...first, usage, accepted: false, final: true })).rejects.toThrow(/never dispatched/u);
-    const next = { ...base, requestId: "second-request", maximumChargeCents: 3 };
+    const next = { ...base, requestId: "second-request", includedBudgetCents: 33, maximumChargeCents: 33 };
     expect((await ledger.reserve(next)).created).toBe(true);
     await start(next);
     await ledger.settle({ ...first, requestId: next.requestId, usage, accepted: false, final: false });
@@ -197,18 +204,61 @@ describe.skipIf(!databaseUrl)("AI credits against isolated PostgreSQL", () => {
     await expect(ledger.cancelUndispatched(first)).rejects.toThrow(/provider usage/u);
     expect((await ledger.reserve({ ...base, requestId: "held" })).accepted).toBe(false);
   });
-  it("keeps a known first attempt overrun reconcilable after refusing the second dispatch", async () => {
-    await ledger.reserve(base); await start();
-    await ledger.settle({ ...first, usage: { inputTokens: 1000, outputTokens: 100000 }, accepted: false, final: false });
-    await start({ attempt: 2, task: "complex-reconciliation", profileId: "sol-high" });
-    expect(await ledger.cancelUndispatched({ ...first, attempt: 2 })).toMatchObject({
-      state: "reconciliation-required", chargedCents: 2, reservedCents: 0,
-    });
-    expect(await ledger.reconcileOverrun({ ...first, reference: "synthetic-operator:prior-attempt" })).toMatchObject({
-      state: "settled", chargedCents: 2, reservedCents: 0,
-    });
-    const costs = await pool.query("SELECT provider_cost_usd::text AS cost FROM hosted_ai_attempts ORDER BY attempt");
-    expect(costs.rows).toEqual([{ cost: "0.0501" }, { cost: "0" }]);
+  // Spec: federal/ai-provider-refresh.yaml, hosted-escalation-remaining-hold.
+  it.each([
+    { caseName: "first cost exceeds the entire hold", outputTokens: 1000000, exactCost: "0.5001", escalates: false,
+      state: "reconciliation-required", charge: 33 },
+    { caseName: "positive headroom is below the second bound", outputTokens: 35800, exactCost: "0.018", escalates: false,
+      state: "settled", charge: 2 },
+    { caseName: "fractional-cent headroom is sufficient", outputTokens: 34000, exactCost: "0.0171", escalates: true,
+      state: "settled", charge: 3 },
+  ])("bounds Sol High dispatch against the exact remaining authorized hold ($caseName)", async ({
+    outputTokens, exactCost, escalates, state, charge,
+  }) => {
+    getHostedServerDatabase.mockResolvedValue({ pool });
+    const accounting = hostedAiTaskAccounting({ ...base, includedBudgetCents: 33, requestPayload: { reference: "synthetic" },
+      escalationApprovalReference: "synthetic approval" }, {});
+    const providerResponse = (model: string, output_tokens: number, requestId: string) => Response.json({
+      model, status: "completed", output_text: '{"summary":"Reviewed."}', usage: { input_tokens: 1000, output_tokens },
+    }, { headers: { "x-request-id": requestId } });
+    const fetchFn = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(providerResponse("gpt-6-luna", outputTokens, "req_first"))
+      .mockResolvedValueOnce(providerResponse("gpt-6.1-sol", 1000, "req_second"));
+    const execution: AiTaskExecution = { ...accounting, mode: "evaluation", syntheticFixtureId: "bounded-escalation",
+      apiKey: "synthetic-key", now: () => "2026-10-25T02:00:00Z", fetchFn };
+    const request = { task: "document-classification" as const, redactedText: "Synthetic tax record.", instructions: "Classify the document.",
+      schema: z.object({ summary: z.string() }), validateGrounding() {} };
+    expect(await executeAiTask(request, execution)).toMatchObject({ accepted: false, accounting: { providerCostUsd: exactCost } });
+    const taxContext = { taxYear: 2025, ruleVersion: "synthetic", excerpts: [{ id: "s", taxYear: 2025, text: "Synthetic excerpt" }],
+      auditEntries: [{ id: "a", taxYear: 2025, value: "0", explanation: "Synthetic audit" }] };
+    const reconcile = () => executeAiTask({ ...request, task: "complex-reconciliation", taxContext, signal: new AbortController().signal },
+      { ...execution, escalationCount: 1 });
+    if (escalates) {
+      expect(await reconcile()).toMatchObject({ accepted: true, accounting: { providerCostUsd: "0.012", profileId: "sol-high" } });
+    } else {
+      expect(await Promise.allSettled([reconcile(), reconcile()])).toEqual([
+        { status: "fulfilled", value: null }, { status: "fulfilled", value: null },
+      ]);
+      expect(await reconcile()).toBeNull();
+    }
+    expect(fetchFn).toHaveBeenCalledTimes(escalates ? 2 : 1);
+    const replay = { ...first, usage: { inputTokens: 1000, outputTokens, cachedInputTokens: 0 }, accepted: false,
+      final: false, providerRequestId: "req_first" };
+    expect(await ledger.settle(replay)).toMatchObject({ state, chargedCents: charge, reservedCents: 0 });
+    const { rows } = await pool.query(`SELECT attempt, state, provider_cost_usd::text AS cost, provider_request_id
+      FROM hosted_ai_attempts ORDER BY attempt`);
+    expect(rows).toEqual([
+      { attempt: 1, state: "rejected", cost: exactCost, provider_request_id: "req_first" },
+      ...(escalates ? [{ attempt: 2, state: "accepted", cost: "0.012", provider_request_id: "req_second" }] : []),
+    ]);
+    const reservation = await pool.query(`SELECT state, included_charge_cents::text AS charge, included_reserved_cents::text AS hold
+      FROM hosted_ai_reservations`);
+    expect(reservation.rows).toEqual([{ state, charge: String(charge), hold: "0" }]);
+    if (state === "reconciliation-required") {
+      expect(await ledger.reconcileOverrun({ ...first, reference: "synthetic-operator:prior-attempt" })).toMatchObject({
+        state: "settled", chargedCents: charge, reservedCents: 0,
+      });
+    }
   });
   it("adds the undispatched marker without changing historical settled attempts", async () => {
     await ledger.reserve(base); await start();

@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import type { Pool, PoolClient } from "pg";
-import { calculateAiCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
+import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { AI_PROFILES, AI_TASKS, type AiProfileId, type AiTask } from "@tax-engine/engine/src/ai-task-registry";
 import { withHostedAiStorageMode, type StripeBillingMode } from "./hosted-ai-storage-mode";
 
@@ -34,9 +34,12 @@ function cents(value: Decimal.Value): number {
 function identity(input: AiReservationIdentity) {
   if (!input.ownerId.trim() || !input.requestId.trim() || input.requestId.length > 256) throw new Error("Invalid AI ledger identity.");
 }
+function reservedCreditCents(row: ReservationRow) {
+  return new Money(row.included_reserved_cents).plus(row.purchased_reserved_cents);
+}
 function view(row: ReservationRow) {
   return { ownerId: row.owner_id, requestId: row.request_id, state: row.state,
-    reservedCents: cents(new Money(row.included_reserved_cents).plus(row.purchased_reserved_cents)),
+    reservedCents: cents(reservedCreditCents(row)),
     chargedCents: cents(new Money(row.included_charge_cents).plus(row.purchased_charge_cents)) };
 }
 
@@ -61,7 +64,7 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
   }
   async function finalize(client: PoolClient, reservation: ReservationRow, totalCost: Decimal) {
     const retail = Money.max(1, totalCost.times(100).ceil());
-    const reserved = new Money(reservation.included_reserved_cents).plus(reservation.purchased_reserved_cents);
+    const reserved = reservedCreditCents(reservation);
     // Provider overruns are retained exactly. Never debit more than the authorized hold.
     const charge = Money.min(reserved, retail);
     const includedCharge = Money.min(reservation.included_reserved_cents, charge);
@@ -111,13 +114,31 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
     async start(input: AiReservationIdentity & { attempt: 1 | 2; task: AiTask; profileId: AiProfileId; startedAt: string }) {
       identity(input);
       const profile = AI_PROFILES[input.profileId];
-      if (!profile || !AI_TASKS[input.task] || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("Invalid AI attempt.");
+      const policy = AI_TASKS[input.task];
+      if (!profile || !policy || !Number.isFinite(Date.parse(input.startedAt))) throw new Error("Invalid AI attempt.");
       return transaction(input.ownerId, async client => {
         const reservation = await row(client, input);
         const previous = await attemptsFor(client, input);
         if (previous.some(entry => entry.attempt === input.attempt)) return false;
-        if (reservation.state !== "reserved" || previous.length !== input.attempt - 1) throw new Error("AI reservation is not ready for this attempt.");
-        if (input.attempt === 2 && (input.profileId !== "sol-high" || previous[0]?.state !== "rejected")) throw new Error("Only one explicit Sol High escalation after known rejection is allowed.");
+        const ready = reservation.state === "reserved" && previous.length === input.attempt - 1;
+        if (input.attempt === 2 && previous.length === 1) {
+          const first = previous[0];
+          if (input.profileId !== "sol-high" || first?.state !== "rejected" || first.provider_cost_usd === null
+            || first.usage === null || first.undispatched_at) throw new Error("Only one explicit Sol High escalation after known rejection is allowed.");
+          const heldCents = reservedCreditCents(reservation);
+          if (heldCents.isZero() && (reservation.state === "settled" || reservation.state === "reconciliation-required")) {
+            return "insufficient-hold" as const;
+          }
+          if (ready) {
+            const firstCost = new Money(first.provider_cost_usd);
+            const secondBound = maximumAiRequestCost(profile.model, input.startedAt, policy.maxInputTokens, policy.maxOutputTokens);
+            if (firstCost.plus(secondBound.providerCostUsd).times(100).ceil().gt(heldCents)) {
+              await finalize(client, reservation, firstCost);
+              return "insufficient-hold" as const;
+            }
+          }
+        }
+        if (!ready) throw new Error("AI reservation is not ready for this attempt.");
         await client.query(`INSERT INTO hosted_ai_attempts (owner_id, request_id, attempt, task, profile_id, model_id, state, started_at)
           VALUES ($1,$2,$3,$4,$5,$6,'running',$7::timestamptz)`, [input.ownerId, input.requestId, input.attempt, input.task, input.profileId, profile.model, input.startedAt]);
         await client.query("UPDATE hosted_ai_reservations SET state='running',updated_at=NOW() WHERE owner_id=$1 AND request_id=$2", [input.ownerId, input.requestId]);
@@ -238,8 +259,7 @@ export function createHostedAiLedger(pool: Pick<Pool, "connect">, mode: StripeBi
           if (reservation.reconciliation_reference !== input.reference) throw new Error("Conflicting overrun reconciliation replay.");
           return view(reservation);
         }
-        if (reservation.state !== "reconciliation-required"
-          || !new Money(reservation.included_reserved_cents).plus(reservation.purchased_reserved_cents).isZero()) {
+        if (reservation.state !== "reconciliation-required" || !reservedCreditCents(reservation).isZero()) {
           throw new Error("Only a final known-usage overrun can be closed.");
         }
         const dispatched = (await attemptsFor(client, input)).filter(attempt => !attempt.undispatched_at);

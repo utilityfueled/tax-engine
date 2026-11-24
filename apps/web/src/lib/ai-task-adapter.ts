@@ -43,8 +43,8 @@ export interface AiTaskExecution {
   now?: () => string;
   /** Server-owned rollout configuration; HTTP request bodies never populate it. */
   productionRollout?: { ownerScope: string; cohortSecret: string; states?: readonly AiRolloutState[] };
-  /** Trusted server hooks. Reserve before dispatch; retain unknown usage for reconciliation. */
-  beforeAttempt?: (attempt: AiAttemptMetadata) => Promise<void>;
+  /** Trusted server hooks. Reserve before dispatch; return fallback after settling a blocked escalation. */
+  beforeAttempt?: (attempt: AiAttemptMetadata) => Promise<void | "use-fallback">;
   recordUndispatchedAttempt?: (attempt: AiAttemptMetadata) => Promise<void>;
   recordAttempt?: (attempt: AiAttemptMetadata, outcome: { accepted: boolean; usage: AiTokenUsage; providerRequestId?: string }) => Promise<void>;
   recordUnknownAttempt?: (attempt: AiAttemptMetadata, outcome: { providerRequestId?: string }) => Promise<void>;
@@ -154,11 +154,12 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
   const attempt: AiAttemptMetadata = { task: request.task, profileId: profile.id, modelId: profile.model, startedAt,
     maximumChargeCents: maximumAiRequestCost(profile.model, startedAt, policy.maxInputTokens, policy.maxOutputTokens).retailChargeCents,
     attempt: execution.escalationCount === 1 ? 2 : 1 };
-  await execution.beforeAttempt?.(attempt);
+  const useFallback = await execution.beforeAttempt?.(attempt) === "use-fallback";
   if (signal.aborted) {
-    await execution.recordUndispatchedAttempt?.(attempt);
+    if (!useFallback) await execution.recordUndispatchedAttempt?.(attempt);
     signal.throwIfAborted();
   }
+  if (useFallback) return null;
   const started = performance.now();
   let outputText: string;
   let usage: AiTokenUsage;
