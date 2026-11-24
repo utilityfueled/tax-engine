@@ -1,5 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Pennsylvania balance receipt confirmations
+
+`a2568205` extends the confirmation check to a retained actual PA-40
+balance receipt. One confirmation can no longer establish both an extension
+payment and settlement of the remaining principal. A control with distinct
+originals for the same date and amount still calculates the expected balance.
+The red regression reproduced the duplicate and independent engineering
+review found no remaining issue. The exact source passed 30,364 tests
+with 81 skips in both unit and coverage runs, with 88.31% branch coverage.
+All 227 focused tests, types, lint, the spec and inventory checks, and the
+browser source audit passed. The exact GitHub Docker build passed and
+Vercel skipped the production build. [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45394897639) ·
+[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640) ·
+[GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45394897728).
+
 ## November 24 Pennsylvania extension receipts
 
 `4ee0721b` reports verified January 1 through April 15 extension receipts
@@ -26,11 +41,27 @@ stopped before any test because the tracked-only checkout lacked the sample
 directory. A unit run alongside browser and coverage work timed out in
 nine cases. Running the unit suite alone with the samples passed 30,363
 tests with the same 81 skips and the original timeouts. GitHub Docker
-passed and Vercel skipped the production build. The remaining dated-interest
-question is in the [independent review handoff](upgrade-2026-external-actions.md#current-external-inputs--november-21).
+passed and Vercel skipped the production build. All eight exact GitHub CI
+jobs passed, including 88.69% branch coverage. The strict AMD64 runtime
+passed 648 browser cases with five original skips. One Ohio part-year
+business case and three Ohio part-year school cases reached the unchanged
+30-second deadline. Compose upgrade, recovery and rollback, independent
+archive verification and cleanup passed. Strict qualification remains open.
+Managed Chromium passed 650 cases and retained the five original skips. The
+RRTA saved-PDF inspector reached its unchanged four-second subprocess
+deadline in both viewports. Both attempts last recorded the start of
+page text inspection. This remains separate from the strict Ohio timeouts.
+Native ARM64 on `d439de12`, which adds only tracking documents to
+`4ee0721b`, passed 642 browser cases with five original skips. Ten Ohio
+cases reached the original 30-second deadline across business, reciprocity,
+resident credit and part-year school flows. Independent native archive
+verification, Compose recovery, candidate evidence and cleanup passed.
+The dated-interest question remains in the
+[independent review handoff](upgrade-2026-external-actions.md#current-external-inputs--november-21).
 [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45387470599) ·
 [GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45387470531) ·
-[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45387470691).
+[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45387470691) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45389977101/job/138430806615).
 
 ## November 24 paired Ohio browser traces
 

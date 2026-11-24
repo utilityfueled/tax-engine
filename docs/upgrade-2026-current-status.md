@@ -9,12 +9,23 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `a2568205` requires separate actual confirmations for Pennsylvania
+  extension and balance payments. Exact unit and coverage runs both passed
+  30,364 tests with 81 skips and 88.31% branches. [Balance evidence](upgrade-2026-progress.md#november-24-pennsylvania-balance-receipt-confirmations).
+
 - `4ee0721b` reports verified Pennsylvania extension receipts before the
   due date in the 2025 review methods and the 2026 state-only draft when
   independently established tax coverage permits. The 2026 draft keeps
   the full withholding and refund reconciliation requirements in all three
   residency paths. The exact source passed 30,363 unit tests with 81 skips,
-  88.31% branch coverage and all six selected Pennsylvania Chromium journeys.
+  88.31% local branch coverage and all six selected Pennsylvania Chromium
+  journeys. Eight GitHub CI jobs passed. The strict AMD64 run passed 648
+  cases and missed four Ohio deadlines with five original skips.
+  Managed Chromium passed 650 cases and missed two saved-PDF inspection
+  deadlines with the same original skips. Native ARM64 on the equivalent
+  application source `d439de12` passed 642 cases and missed ten Ohio
+  deadlines with five original skips. Recovery and archive verification
+  passed in both strict runtime rehearsals.
   [Payment evidence](upgrade-2026-progress.md#november-24-pennsylvania-extension-receipts).
 
 - `924c3545` pins the refreshed official Node base. AMD64 and ARM64 inherit

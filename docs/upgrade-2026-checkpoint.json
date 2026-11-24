@@ -2,17 +2,18 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "4ee0721b740ad383d8c282c1f7ab1e4b3a424111",
+    "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",
     "verificationCommit": "26348f19",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
+    "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
+    "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "remaining": [
-      "Qualify strict Linux browsers with original limits. Exact 924c3545 passed 652 active managed Chromium cases, while strict AMD64 missed six Ohio deadlines and strict ARM64 missed nine. Both architectures passed recovery and archive checks. The six AMD64 cases have matched local traces, and all 14 targeted local journeys passed in their original request windows. A local Chromium profile bounds one entry phase but leaves Linux bottleneck attribution open.",
+      "Qualify Linux browsers with original limits. On 4ee0721b strict AMD64 missed four Ohio deadlines and managed Chromium missed two RRTA saved-PDF deadlines. On d439de12, with the same application source, strict ARM64 missed ten Ohio deadlines. Recovery and archive verification passed on both strict architectures. The earlier matched local traces do not attribute the Linux bottleneck.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -20,6 +21,21 @@
     ]
   },
   "activeContinuation": {
+    "nov24PennsylvaniaBalanceConfirmation": {
+      "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",
+      "localEvidence": ".local/upgrade-evidence/nov24-pa-early-extension",
+      "node": "26.13.1",
+      "unitPassed": 30364,
+      "unitSkipped": 81,
+      "coveragePassed": 30364,
+      "branchCoveragePercent": 88.31,
+      "focusedPassed": 227,
+      "engineeringReview": "Distinct extension and balance originals passed. The red case reproduced a reused confirmation, and independent review verified its rejection after the fix.",
+      "githubCI": 45394897639,
+      "githubWeb": 45394897640,
+      "githubDockerPassed": 45394897728,
+      "vercel": "Canceled by Ignored Build Step"
+    },
     "nov24PennsylvaniaExtensionReceipts": {
       "applicationCommit": "4ee0721b740ad383d8c282c1f7ab1e4b3a424111",
       "localEvidence": ".local/upgrade-evidence/nov24-pa-early-extension",
@@ -36,8 +52,14 @@
       "engineeringReview": "Duplicate confirmation across payment kinds reproduced, fixed and independently rechecked.",
       "staticAndBuildChecks": "Root, contract and web types, lint, spec validation, inventory, engine build and web build passed.",
       "githubCI": 45387470599,
+      "githubCIPassedJobs": 8,
+      "githubCICoverageTestsPassed": 30444,
+      "githubCIBranchCoveragePercent": 88.69,
       "githubDockerPassed": 45387470531,
       "githubWeb": 45387470691,
+      "strictAmd64": {"job": 138422067423, "passed": 648, "failed": 4, "skipped": 5, "deadlineMs": 30000, "recoveryRollbackArchiveAndCleanup": true},
+      "managedChromium": {"job": 138422068066, "passed": 650, "failed": 2, "skipped": 5, "rrtaSavedPdfTimeoutMs": 4000},
+      "strictArm64": {"run": 45389977101, "job": 138430806615, "rehearsalCommit": "d439de128fef411f0ac6cde6dd06d7a5d0aa0ca3", "passed": 642, "failed": 10, "skipped": 5, "deadlineMs": 30000, "recoveryArchiveAndCleanup": true},
       "vercel": "Canceled by Ignored Build Step",
       "limits": "Dated interest for an early extension payment that affects an existing underpayment, final 2026 form qualification and independent human tax review remain open. The 2026 draft requires independently sufficient withholding and reconciled overpayment and remains review-only."
     },
