@@ -1,5 +1,30 @@
 # 2026 upgrade implementation evidence
 
+## November 24 exact state and AI application verification
+
+The `e2d50f12` archive matched 6,666 tracked blobs. An offline frozen
+install used the retained pnpm store. Node 26.13.1, pnpm 10.34.8,
+Python 3.14.6 and pypdf 6.10.0 passed the unit and coverage checks with
+30,385 tests passing and 81 conditional skips in each run. Branch
+coverage was 88.32%. Both builds, all three typechecks, lint and all
+9,988 spec references passed.
+
+The first browser invocation stopped before running cases because the
+archive lacked the ignored sample documents. The retry used 15 byte-matched
+files from the earlier verified fixture collection. The original Chromium
+suite passed 652 active cases with five original skips across eight
+request batches. Cleanup succeeded. The `e2d50f12` inventory freshness
+failure was resolved by the `0e8fd139` generated inventory update. That
+update passed regeneration, the inventory check and all 24 inventory
+tests on its exact generated contents. `0e8fd139` changes documentation
+and inventory authority links relative to the tested application source.
+
+The exact local evidence is under
+`.local/upgrade-evidence/nov24-state-payment-exact/`. The new public Linux
+browser workflow was still queued at inspection. The earlier strict Linux
+deadline failures remain the latest completed remote comparison.
+[Exact public Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45449802299).
+
 ## November 24 generated inventory authorities
 
 The exact `e2d50f12` archive reported stale coverage inventory. An

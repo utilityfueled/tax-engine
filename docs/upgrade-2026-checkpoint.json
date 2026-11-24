@@ -2,8 +2,10 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
-    "verificationCommit": "26348f19",
+    "applicationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
+    "verificationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
+    "generatedInventoryCommit": "0e8fd1397b449b885a546b6b44d984a7d19b8a9e",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov24ExactStateAndAIApplicationVerification",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
@@ -34,6 +36,25 @@
     ]
   },
   "activeContinuation": {
+    "nov24ExactStateAndAIApplicationVerification": {
+      "applicationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
+      "verifiedTrackedBlobs": 6666,
+      "unitPassed": 30385,
+      "coverageTestsPassed": 30385,
+      "conditionalSkips": 81,
+      "branchCoveragePercent": 88.32,
+      "specReferencesResolved": 9988,
+      "browsersPassed": 652,
+      "browserOriginalSkips": 5,
+      "browserRequestBatches": 8,
+      "browserCleanupPassed": true,
+      "initialBrowserFailure": "Sample documents absent before first case",
+      "browserRetryFixturesVerified": 15,
+      "inventoryFailureResolvedByCommit": "0e8fd1397b449b885a546b6b44d984a7d19b8a9e",
+      "inventoryTestsPassed": 24,
+      "localEvidence": ".local/upgrade-evidence/nov24-state-payment-exact/",
+      "linuxWorkflowUrl": "https://github.com/utilityfueled/tax-engine/actions/runs/45449802299"
+    },
     "nov24StateEstimatedPaymentApplicationYear": {
       "implementationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
       "focusedTestsPassed": 396,

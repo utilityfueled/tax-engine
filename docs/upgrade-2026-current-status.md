@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- The verified `e2d50f12` archive passed 30,385 unit tests and the same
+  30,385 coverage tests with 81 conditional skips and 88.32% branch
+  coverage. All 652 active Chromium cases passed in eight batches with
+  five original skips. The `0e8fd139` inventory follow-up passed its check
+  and 24 inventory tests. Linux qualification remains open.
+  [Local verification](upgrade-2026-progress.md#november-24-exact-state-and-ai-application-verification).
+
 - Guided state estimates now retain the confirmed applied tax year.
   A verified prior-year payment is excluded from the current state
   balance and remains available for its actual federal cash year.
@@ -26,7 +33,7 @@ Use the linked progress sections when investigating individual packages.
   [Scorer evidence](upgrade-2026-progress.md#november-24-ai-evaluation-attempt-token-caps) ·
   [Commit 076ddaf7](https://github.com/utilityfueled/tax-engine/commit/076ddaf782cd5d80017ce030ab691bd30291319c).
 
-- The current application archive `f3163949` passed all 11 local checks.
+- The earlier application archive `f3163949` passed all 11 local checks.
   Unit and coverage each passed 30,377 tests with 81 conditional skips
   and 88.31% branches. Chromium passed all 652 active cases with five
   original skips, as did the exact pre-change baseline. The exact
