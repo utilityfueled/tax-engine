@@ -1,5 +1,29 @@
 # 2026 upgrade implementation evidence
 
+## November 24 exact local baseline and current runs
+
+The `1d4f3a3f` archive matched 6,660 tracked blobs. An offline frozen
+install succeeded using the retained pnpm store after the default store
+lacked a transitive package. Node 26.13.1, pnpm 10.34.8, Python 3.14.6 and
+pypdf 6.10.0 ran all 11 checks in the execution brief. Unit and coverage
+each passed 30,369 tests with 81 conditional skips. Branch coverage was
+88.31%, all 9,986 spec test references resolved, and lint reported zero
+errors and 12,204 warnings. The original Chromium suite passed 652
+active cases in eight request windows with five original skips. Its
+ordinary run emitted no scheduler observations. The current exact
+`f3163949` archive matched 6,664 tracked blobs and started the same
+checklist after the baseline browser exited.
+
+The existing native ARM64 rehearsal was dispatched on code-equivalent
+`4ccb88b0`. It is queued on GitHub's free standard public ARM64 runner.
+[ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946) ·
+[Runner specifications](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories).
+
+`a3f5f225` pins three specs and two evidence links to the 2025 IRS Form
+8801 annual archive. The generic form URL now serves 2026. The exact
+spec overlay resolved all 9,986 references and changed no formulas.
+Vercel skipped the build. [2025 annual archive](https://www.irs.gov/pub/irs-prior/f8801--2025.pdf).
+
 ## November 24 Ohio header source comparisons
 
 `bbebe675` uses the existing identity-aware comparator for business and

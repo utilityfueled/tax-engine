@@ -17,6 +17,7 @@
     "ohioHeaderComparisonEvidenceKey": "activeContinuation.nov24OhioHeaderSourceComparisons",
     "paSupportEvidenceKey": "activeContinuation.nov24PAReviewDisclosure",
     "annualForm8801EvidenceKey": "activeContinuation.nov24FinalForm8801Source",
+    "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
@@ -104,6 +105,24 @@
       "ordinaryChromiumSchedulerOutput": false,
       "independentReview": "Workflow admission and browser source hashes verified",
       "limits": "Existing cases, timeouts, retries, worker counts and request budgets preserved"
+    },
+    "nov24ExactLocalBaselineAndCurrentRuns": {
+      "baselineRevision": "1d4f3a3f62c845abfb9dc91d18afad0f7a9b2080",
+      "trackedBlobsMatched": 6660,
+      "prerequisites": {"node": "26.13.1", "pnpm": "10.34.8", "python": "3.14.6", "pypdf": "6.10.0"},
+      "allChecksPassed": ["test", "test:coverage", "typecheck", "typecheck:contracts", "typecheck:web", "spec:validate", "spec:inventory:check", "build", "build:web", "lint", "test:web"],
+      "unitAndCoverage": {"passedEach": 30369, "conditionalSkipsEach": 81, "branchesPercent": 88.31},
+      "specReferencesPassed": 9986,
+      "lint": {"errors": 0, "warnings": 12204},
+      "localChromium": {"passed": 652, "failed": 0, "originalSkips": 5, "requestWindows": 8, "schedulerObservations": false},
+      "baselineLocalEvidence": ".local/upgrade-evidence/nov24-exact-main-1d4f3a3f",
+      "currentLocalRevision": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
+      "currentLocalArchiveTrackedBlobsMatched": 6664,
+      "currentLocalStatus": "Running",
+      "currentLocalEvidence": ".local/upgrade-evidence/nov24-exact-main-f3163949",
+      "currentARM64": {"revision": "4ccb88b0446c4c5978af21b8b49356c4ae012589", "run": 45420399946, "status": "Queued"},
+      "priorYearCitationCommit": "a3f5f225504bc0d8fca8822bf50a5c9c625bfc08",
+      "priorYearCitationExactSpecReferencesPassed": 9986
     },
     "nov24OhioHeaderSourceComparisons": {
       "applicationCommit": "bbebe6750fe1f384b0b91540ea7cc4f8d0c00d88",
