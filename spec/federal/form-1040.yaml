@@ -565,11 +565,17 @@ lines:
       - "tests/engine/federal-payment-date-sources.test.ts::keeps the actual paid date distinct from the historical tax year application"
       - "tests/engine/federal-payment-date-sources.test.ts::preserves following-year estimates and extensions and a confirmed zero"
       - "tests/engine/federal-payment-date-sources.test.ts::credits only nonnegative amounts actually carried over from the preceding return"
+      - "tests/engine/federal-payment-date-sources.test.ts::holds a positive prior-return credit that conflicts with a sole taxpayer's no-return history"
     notes: |
       Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
       Line 26 and Schedule 3 line 10, distinguish estimates from payments made
       with the extension request. A preceding return's applied overpayment may
-      explicitly be zero. The Form 2210 example (https://www.irs.gov/instructions/i2210)
+      explicitly be zero. A sole taxpayer's explicit Form 2210 no-return history
+      conflicts with a positive federal credit from that return. Hold the
+      conflicting facts for reconciliation before crediting line 26, including
+      when the return qualifies for a penalty exception. Preserve explicit zero,
+      absent prior-return status and a joint return's potential separately sourced
+      spouse credit. The Form 2210 example (https://www.irs.gov/instructions/i2210)
       uses January 15, 2026 for the 2025 liability. Publication 505 (2026),
       chapter 2 (https://www.irs.gov/publications/p505), uses January 15, 2027
       for the fourth 2026 installment. Its early-return waiver changes the

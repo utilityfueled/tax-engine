@@ -36,6 +36,7 @@ it("preserves actual prior history and known zero without creating missing facts
 });
 it("reconciles actual effective credit dates per original source", () => {
   const source = facts();
+  Object.assign(source, { priorYearTaxStatus: "return-filed", priorYearFullYear: false, priorYearJointReturn: false });
   const payments: PaymentData = { ...emptyPaymentData, estimatedTaxFacts: source, priorYearAppliedCredits: [{ sourceTaxYear: "2024", amount: "9007199254740993.03" }] };
   expect(Object.keys(estimatedTaxFactErrors(payments, 2025)).length).toBeGreaterThan(0);
   source.priorYearCreditPayments = [{ appliedCreditIndex: "0", date: "2025-08-01", amount: "9007199254740993.01" }, { appliedCreditIndex: "0", date: "2025-09-15", amount: "0.02" }];
@@ -48,6 +49,38 @@ it("reconciles actual effective credit dates per original source", () => {
   expect(buildEstimatedTaxFacts(payments, 2025)?.priorYearCreditPayments).toEqual([]);
   payments.priorYearAppliedCredits[0].amount = "";
   expect(() => buildEstimatedTaxFacts(payments, 2025)).toThrow(/amount|refund/i);
+});
+it("holds conflicting positive prior-return refunds through Payments and the bridge", () => {
+  for (const year of [2025, 2026]) {
+    const credit = { sourceTaxYear: String(year - 1), amount: "872.09" };
+    const source = {
+      ...facts(), sourceTaxYear: String(year),
+      priorYearCreditPayments: [{ appliedCreditIndex: "0", date: `${year}-04-15`, amount: credit.amount }],
+    };
+    const payments = { ...emptyPaymentData, estimatedTaxFacts: source, priorYearAppliedCredits: [credit] };
+    const state = stateWith(payments);
+    state.taxYear = year;
+    const validation = validateSection(state, "payments");
+    expect(validation).toMatchObject({ status: "partial", allowSkip: false });
+    expect(validation.fieldErrors.estimatedTaxFacts).toMatch(/prior.return.*credit|prior.return.*refund/i);
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(state.sectionData.payments).toEqual(payments);
+
+    state.segmentation.filingStatus = "mfj";
+    expect(validateSection(state, "payments").status).toBe("complete");
+    state.segmentation.filingStatus = "single";
+
+    state.sectionData.payments = { ...payments, estimatedTaxFacts: undefined };
+    expect(buildTaxInputFromGuidedData(state)?.adjustments?.priorYearAppliedCredits).toEqual([
+      { ...credit, sourceTaxYear: year - 1, type: "federal" },
+    ]);
+    state.sectionData.payments = {
+      ...payments, estimatedTaxFacts: { ...source, priorYearCreditPayments: [] },
+      priorYearAppliedCredits: [{ ...credit, amount: "0.00" }],
+    };
+    expect(validateSection(state, "payments").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(state)?.adjustments?.priorYearAppliedCredits?.[0]?.amount).toBe("0.00");
+  }
 });
 it("rejects unsupported or contradictory source history without guessing", () => {
   for (const patch of [{ sourceTaxYear: "2026" }, { sourceFactsConfirmed: null }, { allPaymentRecordsIncluded: null }, { farmerOrFisher: true }, { calculationMethod: "annualized" },

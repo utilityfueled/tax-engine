@@ -33,6 +33,28 @@ describe("Actual federal payment dates and selected return application", () => {
     }
   });
 
+  it("holds a positive prior-return credit that conflicts with a sole taxpayer's no-return history", () => {
+    for (const year of [2025, 2026] as const) {
+      const facts = (amount: string) => raw(year, {
+        ...adjustments(),
+        priorYearAppliedCredits: [{ sourceTaxYear: year - 1, amount, type: "federal" }],
+      });
+      const noReturn = { priorYearTaxStatus: "no-return" };
+      expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...facts("872.09"), form2210: noReturn })))
+        .toThrow(/prior.return.*credit|prior.return.*refund/i);
+      expect(calculateFederalTax(TaxYearInputSchema.parse({ ...facts("0.00"), form2210: noReturn }))
+        .estimatedTaxPayments.toFixed()).toBe("0");
+      expect(calculateFederalTax(TaxYearInputSchema.parse(facts("872.09"))).estimatedTaxPayments.toFixed()).toBe("872.09");
+
+      const joint = facts("872.09");
+      const spouse = { ...joint.taxpayer.primary, firstName: "Spouse", ssn: "111-22-3333" };
+      expect(calculateFederalTax(TaxYearInputSchema.parse({
+        ...joint, taxpayer: { ...joint.taxpayer, filingStatus: "married_filing_jointly", spouse }, form2210: noReturn,
+        w2s: joint.w2s.map(w2 => ({ ...w2, accountHolder: "primary" })),
+      })).estimatedTaxPayments.toFixed()).toBe("872.09");
+    }
+  });
+
   it("holds undocumented estimates and extension payments even with no installment penalty", () => {
     expect(run(2025).estimatedTaxPenalty.isZero()).toBe(true);
     expect(run(2026).estimatedTaxPenalty.isZero()).toBe(true);

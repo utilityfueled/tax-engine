@@ -1,4 +1,5 @@
 /** Source validation for Form 1040 line 26 and Schedule 3 line 10. */
+import type Decimal from "decimal.js";
 import { z } from "zod";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
@@ -9,7 +10,17 @@ function isActualPaymentAmount(amount: string): boolean {
   return typeof amount === "string" && /^\d+(?:\.\d+)?$/u.test(amount) && d(amount).isFinite();
 }
 
-export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer" | "adjustments">): void {
+export function assertPriorReturnCreditSource(
+  amount: Decimal,
+  priorYearTaxStatus: NonNullable<TaxYearInput["form2210"]>["priorYearTaxStatus"],
+  hasSingleTaxpayer: boolean,
+): void {
+  if (hasSingleTaxpayer && priorYearTaxStatus === "no-return" && amount.gt(0)) {
+    throw new Error("A positive prior-return credit conflicts with the reported absence of a prior return. Reconcile the credit and prior-return history.");
+  }
+}
+
+export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer" | "adjustments" | "form2210">): void {
   const year = input.taxpayer.taxYear;
   for (const payment of [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.extensionPayments ?? [])]) {
     if (payment.type !== "federal") continue;
@@ -38,5 +49,7 @@ export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer"
     if (!isActualPaymentAmount(credit.amount)) {
       throw new Error("Federal prior-return applied credit requires a confirmed nonnegative amount.");
     }
+    // An ownerless credit on a joint return may come from a spouse's separate prior return.
+    assertPriorReturnCreditSource(d(credit.amount), input.form2210?.priorYearTaxStatus, input.taxpayer.filingStatus !== "married_filing_jointly");
   }
 }

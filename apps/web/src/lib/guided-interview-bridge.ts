@@ -845,7 +845,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(charitableCarryoverFactErrors(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
     assertKnownFacts(allPaymentFactErrors(paymentData, state.taxYear));
-    assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear));
+    assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(minimumTaxCreditFactErrors(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData }, creditsData));
     assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
@@ -1014,7 +1014,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     },
     w2s,
     ...(scheduleBPartThree ? { scheduleBPartThree } : {}),
-    form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
+    form2210: buildEstimatedTaxFacts(paymentData, state.taxYear, segmentation.filingStatus),
     form2555: builtForeignIncome = buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     ...(form3903 === undefined ? {} : { form3903 }),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),

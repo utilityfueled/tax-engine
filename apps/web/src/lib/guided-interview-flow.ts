@@ -2867,9 +2867,9 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   return VALID_SECTION;
 }
 
-function validatePaymentsSection(data: PaymentData | undefined, taxYear?: number | null): SectionValidationResult {
+function validatePaymentsSection(data: PaymentData | undefined, taxYear: number | null | undefined, filingStatus: FilingStatus | null): SectionValidationResult {
   if (!data) return EMPTY_SECTION("payments info", true);
-  const errors = { ...allPaymentFactErrors(data, taxYear), ...estimatedTaxFactErrors(data, taxYear) };
+  const errors = { ...allPaymentFactErrors(data, taxYear), ...estimatedTaxFactErrors(data, taxYear, filingStatus) };
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
   if (!data.estimatedTaxFacts && !data.estimatedPayments?.length && !data.extensionPayments?.length && !data.priorYearAppliedCredits?.length && !hasNumericValue(data.otherPayments)) return EMPTY_SECTION("payments info", true);
   return VALID_SECTION;
@@ -2969,7 +2969,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
         ...guidedNiitFactErrors(getSectionData(state, "other-taxes")?.niitSources, getSectionData(state, "income-retirement")?.entries, state.taxYear, state.segmentation.filingStatus),
         ...guidedForeignTaxFactErrors(getSectionData(state, "other-taxes")?.foreignTaxElection, getSectionData(state, "income-investments"), state.taxYear, state.segmentation.filingStatus, foreignCreditKnownFacts(state), state) });
     case "payments":
-      return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear);
+      return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear, state.segmentation.filingStatus);
     case "review":
       return VALID_SECTION; // Review is always valid
     case "state-return":

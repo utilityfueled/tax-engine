@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
+import { assertPriorReturnCreditSource } from "@/engine/forms/federal-payment-date-sources";
 import { buildEstimatedInvestmentElection, type EstimatedInvestmentElectionData } from "./guided-estimated-investment-election";
 import { Form2210Schema, type TaxYearInput } from "@/models/inputs";
-import type { EstimatedPaymentEntry, PaymentData } from "./guided-interview-flow";
+import type { EstimatedPaymentEntry, FilingStatus, PaymentData } from "./guided-interview-flow";
 import { amountError, isActualDate } from "./guided-required-facts";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 
@@ -82,7 +83,11 @@ function buildAnnualizedPeriods(facts: EstimatedTaxFactsData): AnnualizedPeriodD
   }
   return periods;
 }
-export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: number | null): TaxYearInput["form2210"] {
+export function buildEstimatedTaxFacts(
+  data: PaymentData | undefined,
+  taxYear?: number | null,
+  filingStatus?: FilingStatus | null,
+): TaxYearInput["form2210"] {
   const facts = data?.estimatedTaxFacts; if (!facts) return undefined;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Select the actual supported return year before the estimated-tax worksheet.");
   const year = taxYear;
@@ -135,8 +140,9 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   });
   credits.forEach((credit, index) => {
     if (credit.sourceTaxYear !== String(taxYear - 1)) throw new Error("Applied refund source year must be the actual immediately preceding tax year.");
-    const original = money(credit.amount, "original applied refund");
-    if (!allocated[index].eq(original as string) || (new Decimal(original as string).gt(0) && !facts.priorYearCreditPayments.some(row => row.appliedCreditIndex === String(index)))) throw new Error("Actual effective-date payments must reconcile every original applied-refund source, including zero.");
+    const original = new Decimal(money(credit.amount, "original applied refund") as string);
+    assertPriorReturnCreditSource(original, facts.priorYearTaxStatus || undefined, filingStatus != null && filingStatus !== "mfj");
+    if (!allocated[index].eq(original) || (original.gt(0) && !facts.priorYearCreditPayments.some(row => row.appliedCreditIndex === String(index)))) throw new Error("Actual effective-date payments must reconcile every original applied-refund source, including zero.");
   });
   const early = known(facts.earlyReturnExceptionClaimed, "early filing and full-payment exception");
   const hasDates = !!facts.returnFiledDate || !!facts.returnPaidInFullDate;
@@ -162,6 +168,6 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
     returnFiledDate: facts.returnFiledDate || undefined, returnPaidInFullDate: facts.returnPaidInFullDate || undefined,
   });
 }
-export function estimatedTaxFactErrors(data: PaymentData | undefined, taxYear?: number | null): Record<string, string> {
-  try { buildEstimatedTaxFacts(data, taxYear); return {}; } catch (error) { return { estimatedTaxFacts: error instanceof Error ? error.message : "Reconcile the actual estimated-tax source worksheet." }; }
+export function estimatedTaxFactErrors(data: PaymentData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null): Record<string, string> {
+  try { buildEstimatedTaxFacts(data, taxYear, filingStatus); return {}; } catch (error) { return { estimatedTaxFacts: error instanceof Error ? error.message : "Reconcile the actual estimated-tax source worksheet." }; }
 }
