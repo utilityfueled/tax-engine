@@ -34,8 +34,9 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
-import { stateWithholdingDocumentTypes } from "@/lib/guided-state-facts";
-import { TextFact } from "./fact-fields";
+import { stateWithholdingDocumentTypes, usesDedicatedStatePaymentReceipts } from "@/lib/guided-state-facts";
+import { guidedAmountChanged } from "@/lib/guided-required-facts";
+import { BooleanFact, TextFact } from "./fact-fields";
 import { OhioInterestDetails } from "./ohio-interest-details";
 import { OhioRetirementCreditDetails } from "./ohio-retirement-credit-details";
 
@@ -50,38 +51,44 @@ function StateEstimatedPaymentCard({
   entry,
   onUpdate,
   onRemove,
-  removable,
 }: {
   index: number;
   entry: StateEstimatedPaymentEntry;
-  onUpdate: (field: keyof StateEstimatedPaymentEntry, value: string) => void;
+  onUpdate: (entry: StateEstimatedPaymentEntry) => void;
   onRemove: () => void;
-  removable: boolean;
 }) {
+  const application = entry.application ?? { taxYear: "", confirmed: null };
+  function edit(field: "state" | "date" | "amount", value: string) {
+    const changed = field === "amount" ? guidedAmountChanged(entry.amount, value) : entry[field] !== value;
+    onUpdate({
+      ...entry,
+      [field]: value,
+      ...(entry.application && changed ? { application: { ...entry.application, confirmed: null } } : {}),
+    });
+  }
+
   return (
     <div className="guided-card">
       <div className="guided-card-header">
         <h3 className="guided-card-title">State Payment {index + 1}</h3>
-        {removable && (
-          <button
-            type="button"
-            className="guided-card-remove"
-            onClick={onRemove}
-            aria-label={`Remove state estimated payment ${index + 1}`}
-          >
-            Remove
-          </button>
-        )}
+        <button
+          type="button"
+          className="guided-card-remove"
+          onClick={onRemove}
+          aria-label={`Remove state estimated payment ${index + 1}`}
+        >
+          Remove
+        </button>
       </div>
       <div className="guided-form-grid">
-        <PaymentState value={entry.state} onChange={(value) => onUpdate("state", value)} />
+        <PaymentState value={entry.state} onChange={(value) => edit("state", value)} />
         <label className="guided-field">
           <span className="guided-field-label">Date paid</span>
           <input
             type="date"
             className="guided-input"
             value={entry.date}
-            onChange={(e) => onUpdate("date", e.target.value)}
+            onChange={(e) => edit("date", e.target.value)}
             aria-describedby={`state-payment-${index}-date-hint`}
           />
           <span className="guided-field-hint" id={`state-payment-${index}-date-hint`}>
@@ -91,8 +98,30 @@ function StateEstimatedPaymentCard({
         <CurrencyField
           label="Amount"
           value={entry.amount}
-          onChange={(v) => onUpdate("amount", v)}
+          onChange={(v) => edit("amount", v)}
           required
+        />
+        <label className="guided-field">
+          <span className="guided-field-label">Tax year applied by the state</span>
+          <input
+            className="guided-input"
+            inputMode="numeric"
+            maxLength={4}
+            value={application.taxYear}
+            onChange={(event) => {
+              const taxYear = event.target.value;
+              if (taxYear !== application.taxYear) onUpdate({ ...entry, application: { taxYear, confirmed: null } });
+            }}
+            aria-describedby={`state-payment-${index}-year-hint`}
+          />
+          <span className="guided-field-hint" id={`state-payment-${index}-year-hint`}>
+            Use the tax year on the state payment confirmation or account record.
+          </span>
+        </label>
+        <BooleanFact
+          label="I confirmed the applied tax year on the state record"
+          value={application.confirmed}
+          onChange={(confirmed) => onUpdate({ ...entry, application: { ...application, confirmed } })}
         />
       </div>
     </div>
@@ -154,7 +183,7 @@ export function SectionStateReturn({
   const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
   const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
   const withholdingEntries = current.additionalStateWithholdingEntries ?? [];
-  const actualSourceState = stateCode === "PA" || stateCode === "OH";
+  const actualSourceState = usesDedicatedStatePaymentReceipts(stateCode);
 
   function updateWithholding(index: number, field: keyof StateWithholdingEntry, value: string) {
     onDataChange({ ...current, additionalStateWithholdingEntries: withholdingEntries.map((entry, entryIndex) => entryIndex === index ? { ...entry, [field]: value } : entry) });
@@ -172,10 +201,8 @@ export function SectionStateReturn({
     onDataChange({ ...current, stateEstimatedPayments: next });
   }
 
-  function handleUpdatePayment(index: number, field: keyof StateEstimatedPaymentEntry, value: string) {
-    const next = current.stateEstimatedPayments.map((entry, i) =>
-      i === index ? { ...entry, [field]: value } : entry
-    );
+  function handleUpdatePayment(index: number, updated: StateEstimatedPaymentEntry) {
+    const next = current.stateEstimatedPayments.map((entry, i) => i === index ? updated : entry);
     onDataChange({ ...current, stateEstimatedPayments: next });
   }
 
@@ -332,8 +359,7 @@ export function SectionStateReturn({
           State Estimated Tax Payments
         </h3>
         <p className="guided-hint">
-          Did you make estimated tax payments to {stateName} during the year?
-          These are quarterly payments you sent directly to the state.
+          Enter the actual payment date and the tax year {stateName} applied it to.
         </p>
 
         {current.stateEstimatedPayments.map((entry, index) => (
@@ -341,9 +367,8 @@ export function SectionStateReturn({
             key={index}
             index={index}
             entry={entry}
-            onUpdate={(field, value) => handleUpdatePayment(index, field, value)}
+            onUpdate={(updated) => handleUpdatePayment(index, updated)}
             onRemove={() => handleRemovePayment(index)}
-            removable={current.stateEstimatedPayments.length > 1}
           />
         ))}
 

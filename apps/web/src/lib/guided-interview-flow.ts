@@ -1396,6 +1396,7 @@ export interface StateEstimatedPaymentEntry {
   date: string;
   amount: string;
   state?: string;
+  application?: EstimatedPaymentEntry["application"];
 }
 
 export const emptyStateEstimatedPayment: StateEstimatedPaymentEntry = {

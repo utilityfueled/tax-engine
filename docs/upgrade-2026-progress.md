@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## November 24 state estimated payment application years
+
+Generic guided estimates require the applied return year from the
+state record. A verified other-year payment stays in the canonical
+ledger and contributes only to its own state return. Federal Schedule A
+still uses the actual cash date. Refund recovery rejects a linked
+payment with an explicit year that conflicts with Form 1099-G Box 3.
+The Illinois regression keeps a January 2025 payment applied to 2024
+out of the 2025 state credit and preserves the $900 net federal
+deduction after a $100 refund. New Jersey Line 57 respects explicit
+year assignments. Pennsylvania and Ohio keep their dedicated receipt checks.
+
+The first regression reproduced a $1,000 wrong-year credit after an
+ordinary year switch. The conflict tests also failed before the guided
+and canonical guards were added. All 396 focused tests passed, core
+and web typechecks passed, and 128 scoped references resolved. Focused
+lint reported zero errors and three existing warnings. Independent
+engineering review passed and 2,062 browser source hashes verified.
+
 ## November 24 AI evaluation attempt token caps
 
 Imported held-out results now use the same per-task input and output

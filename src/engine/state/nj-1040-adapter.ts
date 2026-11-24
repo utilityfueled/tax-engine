@@ -368,6 +368,7 @@ export function buildNJ1040Input(
   const estimatedPayments = (taxInput.adjustments?.estimatedTaxPayments ?? [])
     .filter(
       (p) => p.type === "state" && (!p.state || p.state.toUpperCase() === "NJ")
+        && (!p.application || p.application.taxYear === taxYear)
     )
     .reduce((acc, p) => acc.plus(d(p.amount)), new Decimal(0));
   const extensionPayments = (taxInput.adjustments?.extensionPayments ?? [])

@@ -126,6 +126,19 @@ it('accepts equivalent linked payment amounts while retaining the exact original
     expect(() => recalculate(input)).toThrow(/original source was edited/);
 });
 
+it('holds conflicting explicit return years on a linked current-cash-year payment', () => {
+    const input = refundInput();
+    const payment = required(input.adjustments).estimatedTaxPayments[0];
+    expect(recalculate(input).currentYearRefund.toFixed()).toBe('100');
+
+    payment.application = { taxYear: 2025, confirmed: true };
+    expect(() => recalculate(input)).toThrow(/applied tax year.*Box 3/i);
+
+    payment.application = { taxYear: 2024, confirmed: true };
+    expect(recalculate(input).currentYearRefund.toFixed()).toBe('100');
+    expect(calculateStateLocalIncomeTaxDeduction(input).total.toFixed()).toBe('900');
+});
+
 function required<T>(value:T|undefined|null):T {if(value==null)throw new Error('Test fixture requires actual value');return value;}
 it('binds current extension payments and rejects cross-source duplicate payment custody',()=>{
  const extension=refundInput();required(extension.adjustments).extensionPayments=structuredClone(required(extension.adjustments).estimatedTaxPayments);required(extension.adjustments).estimatedTaxPayments=[];

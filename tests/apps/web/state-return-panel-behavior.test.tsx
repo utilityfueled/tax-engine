@@ -19,7 +19,7 @@ it('reconciles state payment records through actual add edit and remove controls
   const initial = structuredClone(state);
   function Harness() {
     const [current, setCurrent] = useState(state);
-    return <SectionStateReturn stateCode="MI" data={current.sectionData['state-return']} guidedPreview={null}
+    return <SectionStateReturn stateCode="MI" taxYear={current.taxYear} data={current.sectionData['state-return']} guidedPreview={null}
       onDataChange={next => { state = updateSectionData(current, 'state-return', next); setCurrent(state); }} />;
   }
   const dom = await mountGuidedPanel(<Harness />);
@@ -55,16 +55,35 @@ it('reconciles state payment records through actual add edit and remove controls
     await dom.change('State shown in the payment or withholding record', 'MI', 2);
     await dom.change('Date paid', '2025-06-16');
     await dom.change('Amount', '50.25');
+    expect(errors().fieldErrors?.['payment-0-application-year']).toBeDefined();
+    await dom.change('Tax year applied by the state', '2025');
+    await dom.change('I confirmed the applied tax year on the state record', 'true');
+    expect(errors().status).toBe('complete');
+    await dom.change('Tax year applied by the state', '2024');
+    expect(errors().fieldErrors?.['payment-0-application-confirmation']).toBeDefined();
+    await dom.change('I confirmed the applied tax year on the state record', 'true');
+    expect(errors().status).toBe('complete');
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe('0.3');
+    await dom.change('Tax year applied by the state', '2025');
+    expect(errors().fieldErrors?.['payment-0-application-confirmation']).toBeDefined();
+    expect(state.sectionData['state-return']?.stateEstimatedPayments[0]).toEqual({ date: '2025-06-16', amount: '50.25', state: 'MI', application: { taxYear: '2025', confirmed: null } });
+    await dom.change('I confirmed the applied tax year on the state record', 'true');
+    await dom.change('Date paid', '2025-06-17');
+    expect(errors().fieldErrors?.['payment-0-application-confirmation']).toBeDefined();
+    await dom.change('Date paid', '2025-06-16');
+    await dom.change('I confirmed the applied tax year on the state record', 'true');
     await dom.click('Add another state estimated tax payment');
     await dom.change('State shown in the payment or withholding record', 'MI', 3);
     await dom.change('Date paid', '2025-09-15', 1);
     await dom.change('Amount', '0', 1);
+    await dom.change('Tax year applied by the state', '2025', 1);
+    await dom.change('I confirmed the applied tax year on the state record', 'true', 1);
     expect(errors().status).toBe('complete');
     expect(state.sectionData['state-return']?.stateEstimatedPayments.map(row => row.amount)).toEqual(['50.25', '0']);
     await dom.change('Amount', '', 1);
     expect(errors().status).toBe('partial');
     await dom.click('Remove state estimated payment 2');
-    expect(state.sectionData['state-return']?.stateEstimatedPayments).toEqual([{ date: '2025-06-16', amount: '50.25', state: 'MI' }]);
+    expect(state.sectionData['state-return']?.stateEstimatedPayments).toEqual([{ date: '2025-06-16', amount: '50.25', state: 'MI', application: { taxYear: '2025', confirmed: true } }]);
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe('50.55');
 
     await dom.click('Remove', 0);
@@ -73,6 +92,8 @@ it('reconciles state payment records through actual add edit and remove controls
     await dom.change('Saved additional withholding total to reconcile', '0.20');
     expect(errors().status).toBe('complete');
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe('50.45');
+    await dom.click('Remove state estimated payment 1');
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe('0.2');
     expect(initial.sectionData['state-return']).toEqual({ stateEstimatedPayments: [], additionalStateWithholding: '0.30' });
   } finally { await dom.dispose(); }
 });

@@ -83,6 +83,9 @@ export function calculateTaxableStateRefundRecoveries(input:TaxYearInput):Taxabl
         currentLinks.add(key);
         const actual=input.adjustments?.[link.collection]?.[link.index];
         if(!actual || actual.type!=="state" || actual.state!==form.refundPaymentBasis.state || actual.date!==payment.datePaid || !money(actual.amount).eq(money(payment.amount))) throw new Error("Refund current-year original payment does not match actual return payment facts.");
+        if (actual.application && form.refundTaxYear !== undefined && actual.application.taxYear !== form.refundTaxYear) {
+          throw new Error("The linked payment's applied tax year must agree with the Form 1099-G Box 3 state-return year.");
+        }
       } else if(payment.currentYearPayment!==undefined) throw new Error("Historical refund payment cannot claim a current-year payment identity.");
     }
   }

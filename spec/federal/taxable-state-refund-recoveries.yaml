@@ -28,8 +28,10 @@ lines:
     testRef: "tests/engine/federal-taxable-state-refund-recoveries.test.ts::transfers300 toSchedule1 and reduces actual current payments1000 to900 once"
   - line: "linked-payment-amount"
     description: "Compare the linked payment amount without altering original records"
-    formula: "The linked payment must have the same state, date and exact Decimal amount after the existing supported cents validation. Keep original statement comparisons sensitive to input spelling."
+    formula: "The linked payment must have the same state, date and exact Decimal amount after the existing supported cents validation. If the payment has a confirmed applied year and the statement gives the actual Box 3 state-return year, require both years to agree. The actual date still determines the federal cash year. Keep original statement comparisons sensitive to input spelling."
     testRef: "tests/engine/forms/taxable-state-refund-recoveries.test.ts::accepts equivalent linked payment amounts while retaining the exact original statement"
+    testRefs:
+      - "tests/engine/forms/taxable-state-refund-recoveries.test.ts::holds conflicting explicit return years on a linked current-cash-year payment"
   - line: "full-return-origin-transfer"
     description: "Preserve original current return while transferring multi-year benefit once"
     formula: "Existing canonical federal engine uses the new mutually exclusive source method; ordinary legacy route and incomplete2026 public gates remain unchanged"

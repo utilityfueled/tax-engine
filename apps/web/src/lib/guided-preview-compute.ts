@@ -115,15 +115,6 @@ function collectStateWithholding(state: GuidedFlowState, input: TaxYearInput): D
   return total;
 }
 
-function collectStateEstimatedPayments(state: GuidedFlowState): Decimal {
-  const stateReturnData = state.sectionData["state-return"] as StateReturnData | undefined;
-  if (!stateReturnData?.stateEstimatedPayments) return new Decimal(0);
-
-  return stateReturnData.stateEstimatedPayments.reduce((sum, entry) => {
-    return sum.plus(parseGuidedCurrency(entry.amount));
-  }, new Decimal(0));
-}
-
 // ── State preview ───────────────────────────────────────────────────────────
 
 function tryComputeStatePreview(
@@ -272,7 +263,6 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
       const filingStatus = mapFilingStatus(state.segmentation.filingStatus) as EngineFilingStatus;
       const hasSpouse = filingStatus === "married_filing_jointly" || filingStatus === "married_filing_separately";
       const stateWithholding = collectStateWithholding(state, taxInput);
-      const stateEstimatedPayments = collectStateEstimatedPayments(state);
 
       try {
         assertQofStateMethod(taxInput, stateCode);
@@ -326,6 +316,10 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
               estimatedPayments:schoolPacket.payments.account.estimatedPaymentsCredited,priorCredit:schoolPacket.payments.account.priorCreditApplied,totalPayments:sd.line13_totalPayments.toString(),
               overpayment:sd.line19_overpayment.toString(),outgoingCarryforward:sd.line20_creditCarryforward.toString(),refund:sd.line21_refund.toString(),amountOwed:sd.line18_totalAmountDue.toString()}}: {}) };
         } else {
+          const stateEstimatedPayments = (taxInput.adjustments?.estimatedTaxPayments ?? [])
+            .filter((payment) => payment.type === "state" && payment.state === stateCode
+              && payment.application?.taxYear === taxInput.taxpayer.taxYear)
+            .reduce((sum, payment) => sum.plus(payment.amount), new Decimal(0));
           stateResult = tryComputeStatePreview(stateCode, taxInput.taxpayer.taxYear, filingStatus,
             result.agi, result.taxableIncome, Number.isNaN(depCount) ? 0 : depCount,
             hasSpouse, stateWithholding, stateEstimatedPayments);

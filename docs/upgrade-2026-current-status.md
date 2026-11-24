@@ -9,11 +9,17 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Guided state estimates now retain the confirmed applied tax year.
+  A verified prior-year payment is excluded from the current state
+  balance and remains available for its actual federal cash year.
+  All 396 focused tests passed. [State payment evidence](upgrade-2026-progress.md#november-24-state-estimated-payment-application-years).
+
 - The offline AI scorer now excludes attempts over the task token cap
   from promotion eligibility and retains the exact billed cost.
   All 85 focused tests passed. Live qualification and independent
   evaluation review remain open.
-  [Scorer evidence](upgrade-2026-progress.md#november-24-ai-evaluation-attempt-token-caps).
+  [Scorer evidence](upgrade-2026-progress.md#november-24-ai-evaluation-attempt-token-caps) ·
+  [Commit 076ddaf7](https://github.com/utilityfueled/tax-engine/commit/076ddaf782cd5d80017ce030ab691bd30291319c).
 
 - The current application archive `f3163949` passed all 11 local checks.
   Unit and coverage each passed 30,377 tests with 81 conditional skips

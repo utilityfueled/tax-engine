@@ -17,10 +17,35 @@ it("hands actual mixed-payment originals to the canonical recovery API", () => {
     expect(built[0].refundExpenseTaxYear).toBeUndefined();
 });
 import { buildTaxInputFromGuidedData, captureGuidedRefundRecoverySources } from "@/lib/guided-interview-bridge";
+import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { loadGuidedFlowState, saveGuidedFlowState, updateSectionData } from "@/lib/guided-interview-flow";
 import { calculateTaxableStateRefundRecoveries } from "@/engine/forms/taxable-state-refund-recoveries";
 import { calculateStateLocalIncomeTaxDeduction } from "@/engine/forms/state-local-income-tax-deduction";
 import { TaxYearInputSchema } from "@/models/inputs";
+it("requires generic state payment application confirmation before refund source capture", () => {
+    const state = fixture();
+    state.segmentation.stateCode = "IL";
+    Object.assign(required(state.sectionData["personal-info"]), { state: "IL", city: "Chicago", zip: "60601" });
+    const payment = required(required(state.sectionData["state-return"]).stateEstimatedPayments[0]);
+    payment.state = "IL";
+    const government = required(state.sectionData["income-unemployment"]);
+    const basis = required(required(government.entries)[0].refundPaymentBasis);
+    basis.state = "IL";
+    expect(() => captureGuidedRefundRecoverySources(state)).toThrow(/before capture/i);
+
+    payment.application = { taxYear: "2025", confirmed: true };
+    expect(() => captureGuidedRefundRecoverySources(state)).toThrow(/applied tax year.*Box 3/i);
+
+    payment.application = { taxYear: "2024", confirmed: true };
+    const capture = captureGuidedRefundRecoverySources(state);
+    Object.assign(required(government.refundRecoveries), capture, { sourceFactsConfirmed: true });
+    expect(capture.originalSources.forms[0].refundPaymentBasis?.payments?.[3].currentYearPayment).toEqual({ collection: "estimatedTaxPayments", index: 0 });
+    expect(capture.originalSources.adjustments?.estimatedTaxPayments[0]).toMatchObject({ date: "2025-01-15", state: "IL", amount: "1000", application: { taxYear: 2024, confirmed: true } });
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    expect(calculateTaxableStateRefundRecoveries(input).currentYearRefund.toFixed()).toBe("100");
+    expect(calculateStateLocalIncomeTaxDeduction(input).total.toFixed()).toBe("900");
+    expect(computeGuidedPreview(state)?.state).toMatchObject({ stateCode: "IL", stateWithholding: "0" });
+});
 export function confirmedFixture(): GuidedFlowState {
     const state = fixture(), data = state.sectionData["income-unemployment"];
     if (!data?.refundRecoveries)

@@ -10,6 +10,7 @@ import { socialSecurityEntries, isStartedSocialSecurity, socialSecuritySourceTot
 import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { isStartedOid, type OidEntryData } from "@/lib/guided-oid-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
+import { stateEstimatedPaymentFactErrors, usesDedicatedStatePaymentReceipts } from "@/lib/guided-state-facts";
 import { needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 import type { ScheduleBPartThreeDraft } from "@/lib/guided-schedule-b-part-three";
@@ -514,10 +515,12 @@ function OtherTaxesSummary({ data }: { data: OtherTaxesData | undefined }) {
 
 function StateReturnSummary({
   stateCode,
+  taxYear,
   data,
   preview,
 }: {
   stateCode: SupportedStateCode | null;
+  taxYear?: number | null;
   data: StateReturnData | undefined;
   preview: GuidedPreviewMetrics | null;
 }) {
@@ -529,7 +532,15 @@ function StateReturnSummary({
   const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
   const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
 
-  const filledPayments = (data?.stateEstimatedPayments ?? []).filter((p) => hasValue(p.amount));
+  const estimates = data?.stateEstimatedPayments ?? [];
+  const usesDedicatedReceipts = usesDedicatedStatePaymentReceipts(stateCode);
+  const needsPaymentConfirmation = !usesDedicatedReceipts
+    && Object.keys(stateEstimatedPaymentFactErrors(estimates, stateCode)).length > 0;
+  const excludesOtherTaxYears = !usesDedicatedReceipts && estimates.some((payment) => (
+    payment.application?.confirmed === true && payment.application.taxYear !== String(taxYear)
+  ));
+  const filledPayments = needsPaymentConfirmation ? [] : estimates.filter((payment) => hasValue(payment.amount)
+    && (usesDedicatedReceipts || payment.application?.taxYear === String(taxYear)));
   const totalEstimated = sumGuidedDisplayAmounts(filledPayments.map((payment) => payment.amount));
 
   return (
@@ -563,6 +574,8 @@ function StateReturnSummary({
         {([['School earned income',stateMetrics.schoolDistrict.earnedIncome],['School tax',stateMetrics.schoolDistrict.tax],['School withholding',stateMetrics.schoolDistrict.withholding],['School estimated payments',stateMetrics.schoolDistrict.estimatedPayments],['School prior credit',stateMetrics.schoolDistrict.priorCredit],['School total payments',stateMetrics.schoolDistrict.totalPayments],['School overpayment',stateMetrics.schoolDistrict.overpayment],['Actual school credit election',stateMetrics.schoolDistrict.outgoingCarryforward],['Calculated school refund',stateMetrics.schoolDistrict.refund],['School balance due',stateMetrics.schoolDistrict.amountOwed]]as const).map(([label,value])=><div key={label} className="guided-review-row"><span className="guided-review-label">{label}</span><span className="guided-review-value">{formatCurrency(value)}</span></div>)}
         <p>Experimental SD 100 and school withholding review PDFs cover only qualified, current original-bound Hillsdale (0302) full-year or 212-day Ohio / 153-day Virginia payroll methods. The part-year packet requires actual Ashland County / Hillsdale header originals. Other methods and incomplete sources remain unavailable for paper review; filing remains unavailable.</p>
       </section>}
+      {needsPaymentConfirmation && <p className="guided-review-empty">Confirm the applied tax year and payment details in State Return.</p>}
+      {excludesOtherTaxYears && !needsPaymentConfirmation && <p className="guided-review-empty">Payments applied to another tax year are excluded from this state total.</p>}
       {totalEstimated.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">
@@ -713,6 +726,7 @@ export function SectionReview({
         return (
           <StateReturnSummary
             stateCode={state.segmentation.stateCode as SupportedStateCode | null}
+            taxYear={state.taxYear}
             data={getSectionData(state, "state-return")}
             preview={preview}
           />

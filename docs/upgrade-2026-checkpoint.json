@@ -8,6 +8,7 @@
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
+    "stateEstimateYearEvidenceKey": "activeContinuation.nov24StateEstimatedPaymentApplicationYear",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "aiAttemptTokenCapsEvidenceKey": "activeContinuation.nov24AIEvaluationAttemptTokenCaps",
@@ -33,7 +34,16 @@
     ]
   },
   "activeContinuation": {
+    "nov24StateEstimatedPaymentApplicationYear": {
+      "focusedTestsPassed": 396,
+      "focusedTestFiles": 14,
+      "specReferencesResolved": 128,
+      "auditedSourcesVerified": 2062,
+      "cashYearRegression": "2025 actual cash, applied to 2024 Illinois, zero 2025 state credit and 900.00 federal net deduction",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-state-estimated-payment-application-years"
+    },
     "nov24AIEvaluationAttemptTokenCaps": {
+      "scoringCommit": "076ddaf782cd5d80017ce030ab691bd30291319c",
       "focusedTestsPassed": 85,
       "specReferencesResolved": 12,
       "auditedSourcesVerified": 2062,

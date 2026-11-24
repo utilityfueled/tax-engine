@@ -326,7 +326,8 @@ lines:
     description: "Sum NJ line 57 payments from estimates, extension payments, and the prior-year credit carryforward"
     formula: |
       Sum adjustments.estimatedTaxPayments where type = 'state' and
-      (state is blank/missing OR state = 'NJ')
+      (state is blank/missing OR state = 'NJ') and
+      (no recorded application OR applied tax year = current tax year)
       + Sum adjustments.extensionPayments where type = 'state' and
       (state is blank/missing OR state = 'NJ')
       + Sum adjustments.priorYearAppliedCredits where sourceTaxYear = current tax year - 1,
@@ -334,6 +335,7 @@ lines:
     inputs:
       - "adjustments.estimatedTaxPayments (type='state')"
       - "adjustments.estimatedTaxPayments.state"
+      - "adjustments.estimatedTaxPayments.application.taxYear"
       - "adjustments.extensionPayments (type='state')"
       - "adjustments.extensionPayments.state"
       - "adjustments.priorYearAppliedCredits.sourceTaxYear"
@@ -350,6 +352,8 @@ lines:
       state-payment entries without a populated state code are still treated as
       NJ payments by this adapter path.
     testRef: "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - line 57 includes NJ prior-year credit carryforward, extension payments, and excludes other states"
+    testRefs:
+      - "tests/engine/state/nj-1040-adapter.test.ts::NJ-1040 adapter - line 57 credits recorded application years independently of payment dates"
 
   - line: "organDonationDeduction"
     description: "Pass through NJ-1040 line 36 organ/bone marrow donation deduction interview amount"

@@ -111,8 +111,12 @@ function prepare(raw:unknown,state:GuidedFlowState):TaxYearInput {
         actual.type==="state"&&actual.state===basis.state&&actual.date===payment.datePaid&&amount?.eq(actual.amount)?[index]:[]);
       if(matches.length!==1)throw new Error("Record and uniquely reconcile this exact current state estimated payment in State Return first.");
       const [index] = matches;
-      if (!actualAmount(payment.amount) || !actualAmount(estimatedPayments[index].amount)) {
+      const actual = estimatedPayments[index];
+      if (!actualAmount(payment.amount) || !actualAmount(actual.amount)) {
         throw new Error("Current refund and state estimated payment amounts require actual bounded nonnegative cents.");
+      }
+      if (actual.application && form.refundTaxYear !== undefined && actual.application.taxYear !== form.refundTaxYear) {
+        throw new Error("The linked payment's applied tax year must agree with the Form 1099-G Box 3 state-return year.");
       }
       return {...payment,currentYearPayment:{collection:"estimatedTaxPayments" as const,index}};
     })}};

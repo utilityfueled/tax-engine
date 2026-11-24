@@ -1059,6 +1059,22 @@ describe("NJ-1040 adapter withholding", () => {
 // ---------------------------------------------------------------------------
 
 describe("NJ-1040 adapter estimated payments", () => {
+  it("NJ-1040 adapter - line 57 credits recorded application years independently of payment dates", () => {
+    const input = minimalTaxInput({
+      adjustments: {
+        estimatedTaxPayments: [
+          { date: "2025-01-15", amount: "1000", type: "state", state: "NJ", application: { taxYear: 2024, confirmed: true } },
+          { date: "2026-01-15", amount: "100.25", type: "state", state: "NJ", application: { taxYear: 2025, confirmed: true } },
+          { date: "2025-06-16", amount: "1100.30", type: "state" },
+        ],
+        extensionPayments: [
+          { date: "2026-04-15", amount: "38", type: "state", state: "NJ" },
+        ],
+      },
+    });
+    expect(buildNJ1040Input(input, minimalFederalResult()).estimatedPayments).toEqual(d("1238.55"));
+  });
+
   it("NJ-1040 adapter - estimated payments from adjustments", () => {
     const input = minimalTaxInput({
       adjustments: {
