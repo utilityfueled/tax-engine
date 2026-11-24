@@ -216,6 +216,19 @@ function pendingOhioResidentCreditWithoutSchool(input: TaxYearInput, data: State
     && credit != null && Object.getOwnPropertyDescriptor(credit, "sourceFactsConfirmed")?.value === null;
 }
 
+function pendingOhioSchoolDistrictWithoutHeader(input: TaxYearInput, data: StateReturnData | undefined): boolean {
+  const school = data?.ohioSchoolDistrict;
+  const residency = data?.ohioResidency;
+  return input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus === "single"
+    && input.ohioResidency === undefined && input.ohioPayments === undefined
+    && input.ohioSchoolDistrict === undefined && input.ohioReturnHeaderSources === undefined
+    && residency?.sourceFactsConfirmed === true && residency.schoolDistrictStatus === "actual_district_sources_required"
+    && residency.businessSources === undefined && residency.residentCreditSources === undefined
+    && data?.ohioPayments?.sourceFactsConfirmed === true
+    && data.ohioReturnHeaderSources === undefined && data.ohioReciprocalWages === undefined
+    && school != null && Object.getOwnPropertyDescriptor(school, "sourceFactsConfirmed")?.value === null;
+}
+
 function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void,
   onInput?: (input: TaxYearInput) => void, onSourceReplay?: () => void, onSchoolReplay?: () => void,
   renderEvaluation = false): GuidedPreviewMetrics | null {
@@ -295,9 +308,10 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
         } else if (stateCode === "OH" && renderEvaluation && (
           pendingOhioBusinessHeaderWithoutSchool(taxInput, state.sectionData["state-return"])
           || pendingOhioResidentCreditWithoutSchool(taxInput, state.sectionData["state-return"])
+          || pendingOhioSchoolDistrictWithoutHeader(taxInput, state.sectionData["state-return"])
         )) {
-          // These pending drafts cannot produce a state preview. Keep the
-          // independent validation and any school replay on their existing paths.
+          // These pending drafts cannot produce a state preview. Independent
+          // validation still checks their sources and reports incomplete facts.
           stateResult = null;
         } else if (stateCode === "OH") {
           const currentOriginals = buildGuidedStateOriginals(taxInput, state, onSchoolReplay);

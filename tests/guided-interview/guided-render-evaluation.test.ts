@@ -14,7 +14,7 @@ import {guidedSchoolDistrictFixture,enteredSchoolDraft}from '../fixtures/guided-
 import {confirmGuidedW2StateLocalSources}from '@/lib/guided-w2-state-local-facts';
 import {confirmGuidedOhioResidencyFacts}from '@/lib/guided-ohio-residency-facts';
 import {confirmGuidedOhioPaymentFacts}from '@/lib/guided-ohio-payment-facts';
-import {confirmGuidedOhioSchoolDistrictFacts}from '@/lib/guided-ohio-school-district-facts';
+import {confirmGuidedOhioSchoolDistrictFacts,emptyOhioSchoolDistrictDraft}from '@/lib/guided-ohio-school-district-facts';
 import {confirmGuidedOhioReturnHeaderSources}from '@/lib/guided-ohio-return-header-sources';
 import {confirmGuidedOhioResidentCreditSources,emptyOhioResidentCreditDraft}from '@/lib/guided-ohio-resident-credit-sources';
 import {enterGuidedResidentCreditFederalOriginals,guidedResidentCreditFixture}from '../fixtures/guided-oh-resident-credit-complete';
@@ -175,6 +175,56 @@ test.each(['distinct', 'cents'] as const)('skips only the blocked render replay 
       expect(evaluateGuidedRender(composed), composition).toEqual(expected);
       expect(replay, composition).toHaveBeenCalledTimes(1);
     } finally { replay.mockRestore(); }
+  }
+});
+
+test('keeps Ohio parent validation and skips the unavailable state preview during school entry', () => {
+  const state = prepare(ohio());
+  const data = required(state.sectionData['state-return']);
+  delete data.ohioReturnHeaderSources;
+  const school = required(data.ohioSchoolDistrict);
+  const confirmed = evaluateGuidedRender(state);
+  expect(confirmed.preview.metrics?.state).toMatchObject({ stateCode: 'OH' });
+
+  const entry = structuredClone(state);
+  entry.completedSections = entry.completedSections.filter(section => section !== 'state-return');
+  required(entry.sectionData['state-return']).ohioSchoolDistrict = emptyOhioSchoolDistrictDraft();
+  const edited = flow.updateSectionData(state, 'state-return', {
+    ...data, ohioSchoolDistrict: { ...school, sourceReference: 'Fictional amended district record' },
+  });
+  expect(edited.sectionData['state-return']?.ohioSchoolDistrict?.sourceFactsConfirmed).toBeNull();
+  const stale = structuredClone(edited);
+  required(stale.sectionData['state-return']?.ohioPayments).originalFederalSources = {};
+  for (const pending of [entry, edited, stale]) {
+    const before = structuredClone(pending);
+    const expected = old(pending);
+    const validation = flow.validateSection(pending, 'state-return');
+    expect(validation.fieldErrors).toHaveProperty('ohioSchoolDistrict');
+    if (pending === stale) expect(validation.fieldErrors).toHaveProperty('ohioPayments');
+
+    const replay = vi.spyOn(stateOriginals, 'buildGuidedStateOriginals');
+    try {
+      const actual = evaluateGuidedRender(pending);
+      expect(actual).toEqual(expected);
+      expect(actual.preview.metrics).toEqual({ ...confirmed.preview.metrics, state: null });
+      expect(replay.mock.calls).toHaveLength(0);
+      expect(pending).toEqual(before);
+      expect(flow.validateSection(pending, 'state-return')).toEqual(validation);
+      expect(computeGuidedPreviewOutcome(pending)).toEqual(expected.preview);
+      expect(replay).toHaveBeenCalledTimes(1);
+    } finally {
+      replay.mockRestore();
+    }
+  }
+
+  Reflect.deleteProperty(school, 'sourceFactsConfirmed');
+  const expected = old(state);
+  const replay = vi.spyOn(stateOriginals, 'buildGuidedStateOriginals');
+  try {
+    expect(evaluateGuidedRender(state)).toEqual(expected);
+    expect(replay).toHaveBeenCalledTimes(1);
+  } finally {
+    replay.mockRestore();
   }
 });
 
