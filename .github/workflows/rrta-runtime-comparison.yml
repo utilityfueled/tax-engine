@@ -1,0 +1,107 @@
+name: RRTA runtime comparison (nonqualifying)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare:
+    if: ${{ github.repository == 'utilityfueled/tax-engine' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        id: python313
+        with:
+          python-version: '3.13.18'
+          architecture: x64
+          update-environment: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        id: python314
+        with:
+          python-version: '3.14.10'
+          architecture: x64
+          update-environment: false
+      - name: Install identical hash-locked Python dependencies
+        env:
+          PYTHON313: ${{ steps.python313.outputs.python-path }}
+          PYTHON314: ${{ steps.python314.outputs.python-path }}
+        run: |
+          "$PYTHON313" -m venv "$RUNNER_TEMP/rrta-python-3.13.18"
+          "$PYTHON314" -m venv "$RUNNER_TEMP/rrta-python-3.14.10"
+          for version in 3.13.18 3.14.10; do
+            "$RUNNER_TEMP/rrta-python-$version/bin/python" -m pip install --disable-pip-version-check --require-hashes --only-binary :all: -r requirements-test.txt
+          done
+      - name: Run existing saved-review controls on both interpreters
+        id: controls
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/rrta-comparison-output"
+          failed=0
+          for version in 3.13.18 3.14.10; do
+            status=0
+            TAX_ENGINE_PDF_TEST_PYTHON="$RUNNER_TEMP/rrta-python-$version/bin/python" \
+              pnpm test tests/pdf/rrta-saved-review-privacy-efficiency.test.ts --maxWorkers=1 >/dev/null 2>&1 || status=$?
+            printf '{"python":"%s","exitCode":%d}\n' "$version" "$status" \
+              | tee "$RUNNER_TEMP/rrta-comparison-output/control-$version.json"
+            if [ "$status" -ne 0 ]; then failed=1; fi
+          done
+          exit "$failed"
+      - name: Download fixed public browser failure artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          repository: utilityfueled/tax-engine
+          run-id: '45394897640'
+          artifact-ids: '14923508728'
+          merge-multiple: true
+          path: ${{ runner.temp }}/rrta-comparison-input
+      - name: Benchmark both interpreters on the retained saved reviews
+        id: benchmark
+        continue-on-error: true
+        env:
+          TSX_TSCONFIG_PATH: apps/web/tsconfig.json
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --import tsx scripts/rrta-runtime-comparison.mts \
+            "$RUNNER_TEMP/rrta-comparison-input" \
+            "$RUNNER_TEMP/rrta-python-3.13.18/bin/python" \
+            "$RUNNER_TEMP/rrta-python-3.14.10/bin/python" \
+            "$RUNNER_TEMP/rrta-comparison-output/report.json"
+      - name: Retain report and bounded control summaries
+        if: ${{ !cancelled() }}
+        id: evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rrta-runtime-comparison-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/rrta-comparison-output/report.json
+            ${{ runner.temp }}/rrta-comparison-output/control-3.13.18.json
+            ${{ runner.temp }}/rrta-comparison-output/control-3.14.10.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Check both controls, the benchmark, and retained evidence
+        if: ${{ !cancelled() }}
+        env:
+          CONTROL_OUTCOME: ${{ steps.controls.outcome }}
+          BENCHMARK_OUTCOME: ${{ steps.benchmark.outcome }}
+          EVIDENCE_OUTCOME: ${{ steps.evidence.outcome }}
+        run: |
+          printf 'controls=%s benchmark=%s evidence=%s\n' "$CONTROL_OUTCOME" "$BENCHMARK_OUTCOME" "$EVIDENCE_OUTCOME"
+          test "$CONTROL_OUTCOME" = success
+          test "$BENCHMARK_OUTCOME" = success
+          test "$EVIDENCE_OUTCOME" = success
+          test -s "$RUNNER_TEMP/rrta-comparison-output/report.json"
+          test -s "$RUNNER_TEMP/rrta-comparison-output/control-3.13.18.json"
+          test -s "$RUNNER_TEMP/rrta-comparison-output/control-3.14.10.json"
