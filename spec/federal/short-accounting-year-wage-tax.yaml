@@ -1,0 +1,54 @@
+form: "IRC Section 443 wage sources"
+fullName: "Actual payroll originals for ordinary short accounting-year tax"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/iw2w3"
+retrievedAt: "2026-11-24"
+reviewStatus: "Private calculation candidate; qualified independent review pending"
+notes: |
+  This retrospective worksheet uses a complete calendar-year payroll history
+  and its matching original Form W-2. A wage-only short year ending before a
+  calendar Form W-2 becomes available still needs a separate source method.
+  Scope is a living single cash-basis filer's confirmed regular change from
+  a calendar year to a fiscal month end in 2025 or 2026. The taxpayer's 24th
+  birthday must have occurred by the period end for this candidate. The
+  reportable share comes from original payment records. Public calculation
+  and filing remain on hold.
+lines:
+  - line: "period-and-source-identity"
+    description: "Bind the confirmed short period and original payroll to one taxpayer and employer"
+    formula: >-
+      Accept January 1 through an actual January to November month end of the
+      same year. The date of birth must satisfy the guided intake's existing
+      lower bound of January 1, 1850. Require explicit confirmation of the
+      change, wage-only cash basis facts, one original W-2, complete payroll
+      and the absence of deductions, credits and AMT adjustments. Match year,
+      primary owner and employer on the actual source records. Require an
+      original identifier, actual receipt and first date the payment was
+      available without substantial restriction for every payroll record.
+    irsRef: "IRC §§1(g)(2), 59(j), 63(c)(6)(C), 443(a)(1), 443(b)(1); 26 CFR §1.451-1(a)"
+    testRef: "tests/engine/forms/short-accounting-year-wage-tax.test.ts::requires an eligible actual period and matching confirmed originals"
+  - line: "calendar-original-reconciliation"
+    description: "Reconcile the payroll inventory to original W-2 Boxes 1 and 2"
+    formula: >-
+      Compare Decimal sums of calendar-year federal taxable wages and actual
+      federal income tax withheld to the two corresponding source boxes.
+      Require a precise match for each box. A controlling tax receipt date
+      outside the source calendar year, duplicate original or missing value
+      holds the result.
+    irsRef: "Instructions for Forms W-2 and W-3, calendar year, Box 1 and Box 2"
+    testRef: "tests/engine/forms/short-accounting-year-wage-tax.test.ts::holds incomplete duplicate out-of-year or unreconciled payroll"
+  - line: "short-period-wage-bases"
+    description: "Use wages received within the inclusive short period for both ordinary bases"
+    formula: >-
+      Sum federal taxable wages actually or constructively received from the
+      confirmed start through the confirmed end, inclusive. Use the confirmed
+      date of unrestricted availability, which may precede actual receipt.
+      With the stated facts the same
+      exact wages are modified taxable income and AMTI. Use the ordinary
+      Section 443 candidate with the verified count of months. Withholding
+      is for calendar source reconciliation. This worksheet produces no
+      withholding credit, refund or balance. For regular chapter 24 wage
+      withholding, §31(a)(2) places the credit in the last taxable year
+      beginning in that calendar year.
+    irsRef: "IRC §§31(a)(2), 443(b)(1) and (d); 26 CFR §§1.31-1(b), 1.451-1(a), 1.451-2(a)"
+    testRef: "tests/engine/forms/short-accounting-year-wage-tax.test.ts::derives both tax bases from inclusive actual receipts with no withholding output"

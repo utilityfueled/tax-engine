@@ -972,6 +972,7 @@
     "src/engine/forms/selected-charitable-carryover.ts": "09cf33bd0753843b405cf1e78d323367ef5971114e262cf427b60817be33e573",
     "src/engine/forms/shared-marketplace-health.ts": "b06abedd28df13a94eaa86a1711e36037c0c94d5b60840ea93ebca0d07c24226",
     "src/engine/forms/short-accounting-year-tax.ts": "1b8b0c225f4bfd6f446092cbdfcb986bc88453066c45f0c29b61bb93446e124f",
+    "src/engine/forms/short-accounting-year-wage-tax.ts": "501157b7a9eb0e1254af333659a1b2356880368ca090468d227bde4aa856e950",
     "src/engine/forms/social-security-benefits-worksheet.ts": "030e04a726b5ffd8063e13f873df7001e11357fb8c306d02e60ae1d547903343",
     "src/engine/forms/standard-deduction.ts": "c41d87a611be0d149d63aa4fbec1edc2015e2e81faf8954f84443c3c32611d3e",
     "src/engine/forms/state-local-income-tax-deduction.ts": "ca38ead5acca90a8a604c0ffdc781d23490343f2db6449cad3d8e4ba181759d3",
