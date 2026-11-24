@@ -10,6 +10,7 @@
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
+    "publicProviderEvidenceKey": "activeContinuation.nov24ExactPublicProviderCatalog",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
@@ -158,6 +159,20 @@
       "additionalAnnualCitationsCommit": "196c80d7",
       "additionalAnnualCitationsPinned": 6,
       "additionalAnnualCitationsExactSpecReferencesPassed": 9986
+    },
+    "nov24ExactPublicProviderCatalog": {
+      "state": "Public documentation rechecked. Exact configured ID rates unchanged.",
+      "standardOpenAiLuna": {"model": "gpt-6-luna", "input": "0.10", "cachedInput": "0.01", "output": "0.50"},
+      "standardOpenAiSol": {"model": "gpt-6.1-sol", "shortCachedInput": "0.10", "longCachedInput": "0.20"},
+      "distinctUnconfiguredSol": {"model": "gpt-6-sol", "shortCachedInput": "0.20", "longCachedInput": "0.40"},
+      "gpt5MiniShutdownDate": "2026-12-11",
+      "geminiFlash": {"model": "gemini-3.8-flash", "through20261231": ["0.75", "0.075", "3.75"], "from20270101": ["1.50", "0.15", "7.50"], "rateOrder": ["input", "cachedInput", "output"]},
+      "accountRequestsMade": 0,
+      "generationRequestsMade": 0,
+      "qualificationChanged": false,
+      "focusedTestsPassed": 37,
+      "conditionalTestSkips": 20,
+      "evidence": "docs/upgrade-2026-provider-catalog-20261117.md#november-24-exact-model-and-pricing-recheck"
     },
     "nov24OhioHeaderSourceComparisons": {
       "applicationCommit": "bbebe6750fe1f384b0b91540ea7cc4f8d0c00d88",

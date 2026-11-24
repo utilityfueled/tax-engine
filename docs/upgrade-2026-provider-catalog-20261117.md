@@ -76,3 +76,32 @@ review with the fixed 80 held-out cases. Selected Google project access
 and repeated provider measurements remain open.
 [OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations) ·
 [Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
+
+## November 24 exact model and pricing recheck
+
+The candidate registry, hosted billing and evaluation bind Sol Low and
+Sol High to `gpt-6.1-sol`. The public Standard table lists cached input
+at $0.10 per million for short context and $0.20 for long context. The
+model page gives the same five percent cache-read multiplier. The
+distinct `gpt-6-sol` model has $0.20 and $0.40 cache-read rates. The
+repository rejects that ID for the configured Sol profiles, so the
+distinct listing changes no rate or historical receipt. The published
+standard `gpt-6-luna` rates remain $0.10 input, $0.01 cache read and
+$0.50 output per million tokens. OpenAI still lists December 11, 2026
+for the `gpt-5-mini` alias and dated snapshot shutdown.
+[OpenAI Standard prices](https://developers.openai.com/api/docs/pricing) ·
+[GPT-6.1 Sol details](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[GPT-6 Sol details](https://developers.openai.com/api/docs/models/gpt-6-sol) ·
+[OpenAI lifecycle](https://developers.openai.com/api/docs/deprecations).
+
+Google's published `gemini-3.8-flash` Standard text rates per million
+remain $0.75 input, $0.075 cache read and $3.75 output through December
+31, 2026, then $1.50, $0.15 and $7.50 starting January 1, 2027.
+This recheck used only public documentation. Project access, live
+comparisons and independent held-out review remain open.
+[Google AI Studio prices](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
+
+Independent engineering review checked the exact model binding against
+the shared rate table and found the published configured rates unchanged.
+On the exact current application archive, 37 focused registry, settlement
+and evaluation tests passed with 20 conditional skips.
