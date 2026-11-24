@@ -16,7 +16,7 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
   await expect(page.getByText(/did any of these happen/i)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+  await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
   await page.getByRole("button", { name: /start my return/i }).click();
 
   await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
@@ -284,10 +284,10 @@ test.describe("Segmentation form accessibility", () => {
     await expect(page.getByText(/did any of these happen/i)).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+    await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
 
     // State selection should be a radiogroup with an accessible name
-    const stateGroup = page.getByRole("combobox", { name: /state of residence/i });
+    const stateGroup = page.getByRole("combobox", { name: /^state return$/i });
     await expect(stateGroup).toBeVisible();
   });
 

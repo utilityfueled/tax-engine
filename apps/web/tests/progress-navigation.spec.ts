@@ -24,7 +24,7 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
   await expect(page.getByText(/did any of these happen/i)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+  await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
   await page.getByRole("button", { name: /start my return/i }).click();
 
   await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });

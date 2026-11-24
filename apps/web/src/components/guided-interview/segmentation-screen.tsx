@@ -28,7 +28,7 @@ const stepLabels = [
   "Filing Status",
   "Income Types",
   "Life Events",
-  "State of Residence",
+  "State Return",
 ] as const;
 
 export function SegmentationScreen({
@@ -387,12 +387,13 @@ export function SegmentationScreen({
 
         {step === 4 && (
           <div className="guided-question">
-            <p className="guided-prompt">What state did you live in?</p>
-            <p className="guided-hint">Choose your state to include a state return, or skip it for now and add it later.</p>
+            <p className="guided-prompt">Which state return are you preparing?</p>
+            <p className="guided-hint" id="state-return-scope">Choose Pennsylvania if you&apos;re preparing a Pennsylvania return for income earned there while living in another state.</p>
             <label className="guided-field">
-              <span className="guided-field-label">State of residence</span>
+              <span className="guided-field-label">State return</span>
               <select
-                aria-label="State of residence"
+                aria-label="State return"
+                aria-describedby="state-return-scope"
                 className="guided-input"
                 name="state-code"
                 value={answers.stateCode ?? ""}

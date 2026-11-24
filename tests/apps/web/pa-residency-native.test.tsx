@@ -47,7 +47,7 @@ async function enterResidence(panel: Panel, records: PAResidencySources) {
     'PA source tax year': '2025',
     'PA original source reference': records.sourceReference,
     'Actual owner of this PA return': 'primary',
-    'Residency status supported by actual records': r.status,
+    'Pennsylvania residency status supported by actual records': r.status,
     'Domicile, permanent-home and presence source reference': r.sourceReference,
   });
   for (const [index, period] of r.domicilePeriods.entries()) {

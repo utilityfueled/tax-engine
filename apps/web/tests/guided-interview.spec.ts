@@ -215,9 +215,9 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/did any of these happen/i)).toBeVisible();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // Step 4: State of residence — skip for now remains the default value
-    await expect(page.getByText(/what state did you live in/i)).toBeVisible();
-    await expect(page.getByRole("combobox", { name: /state of residence/i })).toHaveValue("");
+    // Step 4: State return — skip for now remains the default value
+    await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
+    await expect(page.getByRole("combobox", { name: /^state return$/i })).toHaveValue("");
     await page.getByRole("button", { name: /start my return/i }).click();
 
     // Should advance to interview phase — personal info section
@@ -263,7 +263,7 @@ test.describe("Guided interview flow", () => {
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("button", { name: "Continue" }).click();
 
-    const statePicker = page.getByRole("combobox", { name: /state of residence/i });
+    const statePicker = page.getByRole("combobox", { name: /^state return$/i });
     await expect(statePicker).toBeVisible();
     await expect(page.getByRole("radio", { name: /california/i })).toHaveCount(0);
 
@@ -370,7 +370,7 @@ test.describe("Guided interview flow", () => {
     await expect(page.getByText(/did any of these happen/i)).toBeVisible();
 
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+    await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
 
     await page.getByRole("button", { name: /start my return/i }).click();
     await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
@@ -923,8 +923,8 @@ async function completeSegmentation(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Step 4: No state — skip for now is the default dropdown value
-  await expect(page.getByText(/what state did you live in/i)).toBeVisible();
-  await expect(page.getByRole("combobox", { name: /state of residence/i })).toHaveValue("");
+  await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
+  await expect(page.getByRole("combobox", { name: /^state return$/i })).toHaveValue("");
   await page.getByRole("button", { name: /start my return/i }).click();
 
   // Wait for interview phase to start

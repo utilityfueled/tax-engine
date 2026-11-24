@@ -652,7 +652,7 @@ async function completeHostedGuidedReturnSmoke(
     await expect(page.getByRole("heading", { name: /life events/i })).toBeVisible();
     await segmentationNav.getByRole("button", { name: /^continue$/i }).click();
 
-    await expect(page.getByRole("heading", { name: /state of residence/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^state return$/i })).toBeVisible();
     await segmentationNav.getByRole("button", { name: /start my return/i }).click();
   }
 

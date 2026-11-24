@@ -82,7 +82,7 @@ async function completeSegmentation(page: Page) {
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByText(/did any of these happen/i)).toBeVisible();
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('combobox', { name: /state of residence/i })).toHaveValue('');
+  await expect(page.getByRole('combobox', { name: /^state return$/i })).toHaveValue('');
   await page.getByRole('button', { name: /start my return/i }).click();
 }
 async function estimate(page: Page) {

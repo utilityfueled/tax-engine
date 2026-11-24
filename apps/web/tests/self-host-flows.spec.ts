@@ -32,7 +32,7 @@ async function reachStateStep(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Continue" }).click();
 
   // Now on step 4: State selection
-  await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+  await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
 }
 
 test.describe("/returns/new redirect", () => {
@@ -60,9 +60,11 @@ test.describe("Segmentation — state selection", () => {
     await reachStateStep(page);
 
     // Check a few representative states
-    const stateGroup = page.getByRole("combobox", { name: /state of residence/i });
+    const stateGroup = page.getByRole("combobox", { name: /^state return$/i });
+    await expect(stateGroup).toHaveAccessibleDescription(/Pennsylvania return for income earned there while living in another state/i);
     await expect(stateGroup.locator('option[value="CA"]')).toHaveCount(1);
     await expect(stateGroup.locator('option[value="NY"]')).toHaveCount(1);
+    await expect(stateGroup.locator('option[value="PA"]')).toHaveCount(1);
     await expect(stateGroup.locator('option[value="TX"]')).toHaveCount(1);
     await expect(stateGroup.locator('option[value="DC"]')).toHaveCount(1);
 
@@ -74,7 +76,7 @@ test.describe("Segmentation — state selection", () => {
     await reachStateStep(page);
 
     // Select California
-    await page.getByRole("combobox", { name: /state of residence/i }).selectOption("CA");
+    await page.getByRole("combobox", { name: /^state return$/i }).selectOption("CA");
     await page.getByRole("button", { name: /start my return/i }).click();
 
     // Should reach interview phase
@@ -85,19 +87,19 @@ test.describe("Segmentation — state selection", () => {
     await reachStateStep(page);
 
     // "Skip for now" should be checked by default (no state return needed)
-    await expect(page.getByRole("combobox", { name: /state of residence/i })).toHaveValue("");
+    await expect(page.getByRole("combobox", { name: /^state return$/i })).toHaveValue("");
   });
 
   test("changing state selection after initial pick updates correctly", async ({ page }) => {
     await reachStateStep(page);
 
     // Select California
-    await page.getByRole("combobox", { name: /state of residence/i }).selectOption("CA");
+    await page.getByRole("combobox", { name: /^state return$/i }).selectOption("CA");
 
     // Change to New York
-    await page.getByRole("combobox", { name: /state of residence/i }).selectOption("NY");
+    await page.getByRole("combobox", { name: /^state return$/i }).selectOption("NY");
 
-    await expect(page.getByRole("combobox", { name: /state of residence/i })).toHaveValue("NY");
+    await expect(page.getByRole("combobox", { name: /^state return$/i })).toHaveValue("NY");
   });
 });
 
@@ -268,7 +270,7 @@ test.describe("Life events in segmentation", () => {
 
     // Go forward to state step
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+    await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
 
     // Go back to life events
     await page.getByRole("button", { name: "Back" }).click();
@@ -297,7 +299,7 @@ async function completeSegmentationQuick(page: import("@playwright/test").Page) 
   await expect(page.getByText(/did any of these happen/i)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByText(/what state did you live in/i)).toBeVisible();
+  await expect(page.getByText(/which state return are you preparing/i)).toBeVisible();
   await page.getByRole("button", { name: /start my return/i }).click();
 
   await expect(page.getByText(/let's start with the basics/i)).toBeVisible({ timeout: 5000 });
