@@ -175,7 +175,7 @@
     "oh-business-part-year-native.spec.ts": "fd4abf7c48e58ba88f46aa4019a869c2a591ef57858e6336e969ff4eb16ab841",
     "oh-reciprocal-native.spec.ts": "fbabb235a1803f1487e2f4db0e61fe8cba43c06dcf649d52da9598910626366b",
     "oh-resident-credit-native.spec.ts": "474e0969a2302e9c09768400c902a5c6de2a9b62367f9f19bed680771e374b58",
-    "oh-school-district-part-year-native.spec.ts": "99a43b36434604f01b15197518897f3ef86b36e2ba668be4b85280d662dcbdcb"
+    "oh-school-district-part-year-native.spec.ts": "c95cc65405cb53831a42d97178aa5fd6d059c79cc1420cf2feb150cbe4bfa57a"
   },
   "fullCollectionSha256": "d198850bbaf6bb9aea91be6f252c185a2b1eb28c9bb2732bc9bbaa5ddc68c0e0",
   "originalAuditSha256": "7330923d4f247b90548f0384614ae916a88259b5da97a6b0aab1ce74e504fbb6"
