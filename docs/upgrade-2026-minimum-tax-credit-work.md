@@ -2,7 +2,7 @@
 
 ## Sources and scope
 
-Checked October24/25,2026: [final2025 Form8801 instructions](https://www.irs.gov/instructions/i8801), [final2025 form](https://www.irs.gov/pub/irs-pdf/f8801.pdf), [draft2026 form created May27,2026](https://www.irs.gov/pub/irs-dft/f8801--dft.pdf), [Rev.Proc.2024-40](https://www.irs.gov/pub/irs-drop/rp-24-40.pdf), and [ScheduleD Tax Worksheet](https://www.irs.gov/instructions/i1040sd). The draft is research evidence only. No2026 form or model is promoted or qualified by this work.
+Checked October24/25,2026: [final2025 Form8801 instructions](https://www.irs.gov/instructions/i8801), [final2025 form](https://www.irs.gov/pub/irs-prior/f8801--2025.pdf), [draft2026 form created May27,2026](https://www.irs.gov/pub/irs-dft/f8801--dft.pdf), [Rev.Proc.2024-40](https://www.irs.gov/pub/irs-drop/rp-24-40.pdf), and [ScheduleD Tax Worksheet](https://www.irs.gov/instructions/i1040sd). The draft is research evidence only. No2026 form or model is promoted or qualified by this work.
 
 ## Implemented calculation package
 
