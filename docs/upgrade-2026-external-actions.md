@@ -1,5 +1,27 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 24 Form 4137 review
+
+For one 2026 primary taxpayer, the first employer has $183,000 in
+W-2 Box 3, $1,000 in Box 7, $0 in Box 8, and $2,018 in received cash
+and charge tips. Its verified diary has $18 in one month that was
+unreported and below the reporting threshold. The second employer
+has $0 in Box 3, $200 in Box 7, $0 in Box 8, and $1,200 in received
+tips. The diaries confirm $1,000 and $200 reported to the respective
+employers with no reporting adjustments. Confirm the employer
+columns and lines 2 through 13, then
+increase the first employer's Box 3 to $183,500 and repeat. Compare
+a second copy of a wage-only W-2 and a linked W-2 with a conflicting
+Box 12 code TP. Confirm the facts needed before either source can be
+used and identify any calendar-year reporting adjustment.
+
+Use the final published form to check the printed Form 1040 line 1c
+and Schedule 2 line 16a destinations. Final annual companions and
+independent human expected amounts are required for qualification.
+[Final 2026 Form 4137](https://www.irs.gov/pub/irs-prior/f4137--2026.pdf) ·
+[2026 W-2 instructions](https://www.irs.gov/instructions/iw2w3) ·
+[Worksheet and cases](upgrade-2026-form-4137-final-source.md).
+
 ## November 24 pension and Schedule B review
 
 For the 2025 pension case, review a dated original non-IRA distribution

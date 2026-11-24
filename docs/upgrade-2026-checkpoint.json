@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "f2ac230eb2fd8c384240a05527f519de475c55bc",
-    "verificationCommit": "f2ac230eb2fd8c384240a05527f519de475c55bc",
-    "generatedInventoryCommit": "f2ac230eb2fd8c384240a05527f519de475c55bc",
+    "applicationCommit": "d316004fec0492a0e1754025c8b9af2beaaad5a5",
+    "verificationCommit": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
+    "generatedInventoryCommit": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov24LatestLocalAndLinuxVerification",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
@@ -38,6 +38,8 @@
     "annualForm8801CandidateEvidenceKey": "activeContinuation.nov24Form8801NoCreditReviewCandidate",
     "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
     "annualForm6781CandidateEvidenceKey": "activeContinuation.nov24Form6781OriginalReviewCandidate",
+    "annualForm4137EvidenceKey": "activeContinuation.nov24Form4137",
+    "ohioBrowserSavedReadsEvidenceKey": "activeContinuation.nov24OhioSavedReadConsolidation",
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
@@ -45,7 +47,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Qualify current managed and strict Linux browsers with original limits. The f84a7000 strict AMD64 image passed 650 cases and missed two desktop Ohio school deadlines, with five original skips. Build, recovery, archive verification, scan and cleanup passed. Exact f2ac230e has its own CI, managed and strict Linux Web, and ARM64 recovery receipts.",
+      "Qualify the current managed and strict Linux browsers and ARM64 recovery. Exact d316004f has Web 45503159877 and ARM64 45503211576. All six affected Chromium cases passed locally with the original deadlines. Earlier f8a451b1 passed recovery, independent restore, rollback, scan and cleanup but reached browser deadlines in both Linux jobs.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -53,6 +55,50 @@
     ]
   },
   "activeContinuation": {
+    "nov24OhioSavedReadConsolidation": {
+      "revision": "d316004fec0492a0e1754025c8b9af2beaaad5a5",
+      "trackedBlobsVerified": 6691,
+      "officialSampleHashesVerified": 15,
+      "savedReadsPerBusinessCase": {"before": 29, "after": 23},
+      "savedReadsPerResidentCreditCase": {"before": 26, "after": 14},
+      "assertionSitesRetained": 216,
+      "selectedNativeMethodsRetained": 64,
+      "browserAuditSourceHashes": 2069,
+      "diagnosticChecksPassed": 38,
+      "focusedBrowser": {"passed": 6, "originalTimeoutsRetained": true, "cleanupVerified": true},
+      "independentTechnicalReview": "Passed",
+      "ciRun": 45503159782,
+      "webRun": 45503159877,
+      "dockerRun": 45503159775,
+      "arm64Run": 45503211576,
+      "automaticProductionBuildStatus": "Canceled",
+      "releaseQualification": "Open",
+      "evidence": ".local/upgrade-evidence/nov24-ohio-saved-reads"
+    },
+    "nov24Form4137": {
+      "revision": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
+      "postedDate": "2026-11-24",
+      "assetSha256": "9bd93a180bb4e438fc7fa6c0f912f696e14f40d3e8fb62e5749b8c925900980a",
+      "assetLength": 84583,
+      "nativeBlankTextWidgets": 34,
+      "focusedTestsPassed": 70,
+      "independentFocusedTestsPassed": 18,
+      "firstUnit": {"passed": 30467, "deadlineFailures": 3, "originalSkips": 81},
+      "unitRecheck": {"passed": 30470, "originalSkips": 81, "maxWorkers": 8, "caseDeadlinesUnchanged": true},
+      "localChecksPassed": 11,
+      "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true},
+      "coverage": {"passed": 30470, "originalSkips": 81, "branchPercent": 88.38},
+      "specReferencesPassed": 10041,
+      "browserAuditSourceHashes": 2069,
+      "privateReceipt": ".local/upgrade-evidence/nov24-form-4137",
+      "receipt": "docs/upgrade-2026-form-4137-final-source.md",
+      "exportsEnabled": false,
+      "companionForm1040AndSchedule2": "Open",
+      "ciRun": 45498838276,
+      "webRun": 45498838327,
+      "dockerRun": 45498837990,
+      "automaticProductionBuildStatus": "Canceled"
+    },
     "nov24ScheduleBOrdinaryReview": {
       "revision": "f2ac230eb2fd8c384240a05527f519de475c55bc",
       "focusedTestsPassed": 163,
@@ -97,7 +143,7 @@
       "providerCallsMade": 0
     },
     "nov24LatestLocalAndLinuxVerification": {
-      "lastCompleteLocalRevision": "f2ac230eb2fd8c384240a05527f519de475c55bc",
+      "lastCompleteLocalRevision": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
       "f84StrictAmd64": {
         "run": 45463661057,
         "job": 138692709406,
@@ -117,6 +163,8 @@
         "mobileLastPhase": "page_text at 2836664 microseconds"
       },
       "earlier2beManagedLinux": {"run": 45472505533, "job": 138723958872, "activePassed": 652, "originalSkips": 5, "windows": 8},
+      "f8ManagedLinux": {"run": 45475481555, "job": 138734449354, "activePassed": 650, "rrtaSavedPdfDeadlineFailures": 2, "originalSkips": 5, "lastChildPhases": ["desktop page_text at 3002163 microseconds", "mobile page_text at 2942682 microseconds"]},
+      "f8StrictLinux": {"run": 45475481555, "job": 138734449285, "activePassed": 645, "deadlineFailures": 7, "originalSkips": 5, "passingStages": ["build", "recovery", "rollback", "independent archive restore", "scan", "cleanup"]},
       "earlier2beStrictLinux": {"run": 45472505533, "job": 138723958812, "activePassed": 643, "deadlineFailures": 9, "originalSkips": 5, "recoveryPassed": true, "rollbackPassed": true, "independentArchiveRestorePassed": true, "optionalCpuDiagnosticPassed": false},
       "ohioSavedCheckpointChange": {
         "revision": "90336dafcc055b2b6551c5de534e40c31f2df22f",
@@ -146,7 +194,8 @@
       "1910af95Archive": {"trackedBlobsVerified": 6680, "officialSampleHashesVerified": 15, "ciRun": 45481235928, "webRun": 45481235600, "dockerRun": 45481235711, "diagnosticFailures": 2, "localLoopbackBlocked": true, "stoppedBeforeBrowser": true},
       "diagnosticBindings": {"revision": "c12c6ad4837aec066205e3102274d422d1e6f0bb", "focusedTestsPassed": 27, "fullBatchSourceHashesVerified": 9},
       "previousD383Archive": {"revision": "d383107399a6b68a9167d0dfa68c99259fdd5a25", "trackedBlobsVerified": 6685, "officialSampleHashesVerified": 15, "localUnitPassed": 30456, "localCoveragePassed": 30456, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10029, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45483317174, "webRun": 45483317206, "dockerRun": 45483317231, "arm64Run": 45484309448, "automaticProductionBuildStatus": "Canceled"},
-      "currentArchive": {"revision": "f2ac230eb2fd8c384240a05527f519de475c55bc", "trackedBlobsVerified": 6686, "officialSampleHashesVerified": 15, "localUnitPassed": 30461, "localCoveragePassed": 30461, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10033, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45489392245, "webRun": 45489392134, "dockerRun": 45489392197, "arm64Run": 45491371992, "ciWebAndDockerStatusAtVerification": "Queued", "arm64StatusAtVerification": "Pending", "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-exact-main-f2ac230e"},
+      "previousF2Archive": {"revision": "f2ac230eb2fd8c384240a05527f519de475c55bc", "trackedBlobsVerified": 6686, "officialSampleHashesVerified": 15, "localUnitPassed": 30461, "localCoveragePassed": 30461, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10033, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45489392245, "webRun": 45489392134, "dockerRun": 45489392197, "arm64Run": 45491371992, "ciWebAndDockerStatusAtVerification": "Queued", "arm64StatusAtVerification": "Pending", "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-exact-main-f2ac230e"},
+      "currentArchive": {"revision": "a70ba4c740712ed15c086c9f01bccbe7e03711a5", "officialSampleHashesVerified": 15, "localUnitPassed": 30470, "maxUnitWorkers": 8, "localCoveragePassed": 30470, "localConditionalSkips": 81, "localBranchesPercent": 88.38, "localSpecLinesPassed": 10041, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45498838276, "webRun": 45498838327, "dockerRun": 45498837990, "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-form-4137"},
       "evidence": ".local/upgrade-evidence/nov24-non-hosted-followup"
     },
     "nov24Form8801NoCreditReviewCandidate": {

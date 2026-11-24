@@ -1,5 +1,55 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio business and resident-credit browser checkpoints
+
+`d316004f` reuses saved-state snapshots within the existing browser
+checkpoints. Each business part-year journey reads 23 stored drafts instead
+of 29. Each resident-credit journey reads 14 instead of 26. Exact comparison
+retained 216 assertions and 64 selected browser calls, including review,
+downloads, reopen and deletion. Independent review covered the other
+native evidence calls and pinned-source checks. The tests keep the 30-second
+deadline, two workers, original request budgets and zero retries.
+
+The isolated revision matched 6,691 tracked blobs and all 15 official
+sample hashes. All six affected desktop/mobile Chromium cases passed with
+verified teardown. The 38 diagnostics passed and all 2,069 browser source
+hashes matched. Lint, web type checking, spec validation and inventory passed.
+Vercel canceled the automatic production build.
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45503159782) ·
+[Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45503159877) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45503159775) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45503211576).
+
+## November 24 final Form 4137
+
+`a70ba4c7` pins final 2026 Form 4137 and adds a disabled ordinary review
+worksheet from verified tip and payroll facts. The official current and
+annual archive bytes matched. The new PDF prints Form 1040 line 1c,
+Schedule 2 line 16a and the $184,500 Social Security wage base.
+Independent review reproduced and confirmed the fixes for an
+indistinguishable duplicate W-2, one statement over the wage base,
+and reported tips conflicting with Code TP. The five-employer maximum
+fits the actual page. Both pages of a synthetic render were checked
+with private identifiers blank and the visible review notice.
+
+All 70 focused tests, eight mapped spec lines, 2,069 browser source
+hashes and 18 independently run focused checks passed. The isolated
+full coverage run passed 30,470 active cases and 81 original conditional
+skips at 88.38% branch coverage. All 10,041 spec references resolved.
+The first full unit run hit three existing five-second deadlines in
+unmodified passenger/Ohio cases, with 30,467 passing and 81 original
+skips. The exact unit rerun passed all 30,470 active cases and 81
+original skips with eight workers and unchanged case deadlines.
+All eleven local commands passed, including all 652 active Chromium
+cases across eight windows with five original skips and verified
+teardown. The CI, Linux Web and Docker jobs were queued. Vercel
+canceled the automatic production build.
+[Worksheet and official sources](upgrade-2026-form-4137-final-source.md) ·
+[Review cases](upgrade-2026-external-actions.md#november-24-form-4137-review) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45498838276) ·
+[Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45498838327) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45498837990).
+
 ## November 24 current Linux and local verification
 
 The exact `f2ac230e` archive matched 6,686 tracked blobs and all 15
@@ -13,10 +63,10 @@ exact remote CI, Web and Docker jobs were queued at verification,
 and the bound ARM64 recovery workflow was pending. Vercel recorded the
 automatic production build as canceled.
 
-[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45489392245) ·
-[Current Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134) ·
-[Current Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45489392197) ·
-[Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992).
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45489392245) ·
+[Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45489392197) ·
+[Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992).
 
 The exact `f84a7000` Linux runtime passed 650 of 652 active Chromium
 cases, with five original skips. Recovery, rollback, independent archive
@@ -52,6 +102,21 @@ traces. Scoped ESLint, seven spec references and 2,066 request-audit
 entries passed. The exact change still needs browser timing evidence.
 [Ohio part-year browser spec](../spec/state/oh-school-district-part-year-native-browser.yaml) ·
 [Exact commit](https://github.com/utilityfueled/tax-engine/commit/90336dafcc055b2b6551c5de534e40c31f2df22f).
+
+The earlier exact `f8a451b1` strict AMD64 job passed 645 active browser
+cases with five original skips. Seven Ohio cases reached existing
+30-second limits in business part-year, resident-credit and school
+part-year views. Recovery, rollback, independent archive restore,
+image scan and cleanup passed. The later school snapshot optimization
+has a separate exact-source workflow.
+[Earlier strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45475481555/job/138734449285).
+The managed Linux job for the same revision passed 650 active cases
+and retained five original skips. Both native RRTA cases reached the
+existing four-second Python saved-PDF limit. The child reported entry
+into page text inspection at 3.002 seconds on desktop and 2.943 seconds
+on mobile, with no completion phase. The parent timed out at about
+4.008 seconds in both.
+[Earlier managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45475481555/job/138734449354).
 
 The `f8a451b1` archive matched 6,678 tracked blobs and 15 official
 sample hashes. All eleven checks passed. Unit and coverage

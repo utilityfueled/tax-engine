@@ -9,6 +9,21 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `d316004f` reuses persisted Ohio drafts in the business and resident
+  credit browser journeys. All six scoped Chromium cases and 38 diagnostic
+  checks passed with the original assertions and deadlines. Current Linux
+  browser and ARM64 recovery workflow results remain open.
+  [Ohio browser evidence](upgrade-2026-progress.md#november-24-ohio-business-and-resident-credit-browser-checkpoints).
+
+- `a70ba4c7` pins the final 2026 Form 4137 and provides an internal
+  worksheet for confirmed current employer and payroll originals. It holds
+  duplicate federal payroll, a W-2 above its wage cap and conflicting Code TP.
+  The form prints $184,500 and the new Schedule 2 line 16a destination.
+  All eleven exact local checks passed, with 30,470 active unit and
+  coverage tests, 88.38% branch coverage and 652 active Chromium cases.
+  Public export, final return transfer and qualified human review remain open.
+  [Form 4137 source and evidence](upgrade-2026-form-4137-final-source.md).
+
 - Exact `f84a7000` passed all 11 local checks. Its strict Linux runtime
   passed 650 active Chromium cases, missed two desktop Ohio school
   deadlines and retained five original skips. Build, recovery and cleanup
