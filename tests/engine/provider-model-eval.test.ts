@@ -238,6 +238,117 @@ describe("measured task model evaluation", () => {
     expect(summarizeProviderModelLiveEvalTemplate(template, reviewedFixtures("2026-09-31"), reportAt).independentlyReviewedCases).toBe(0);
     expect(summarizeProviderModelLiveEvalTemplate(template, reviewedFixtures(reportAt), reportAt).independentlyReviewedCases).toBe(240);
   });
+  it("applies one inclusive reporting cutoff to dated evidence and baseline comparisons", () => {
+    const eventAt = "2026-10-24T12:00:01.2345Z";
+    const justBefore = "2026-10-24T07:00:01.23449-05:00";
+    const atEvent = "2026-10-24T07:00:01.234500-05:00";
+    const fixtures = reviewedFixtures("2026-10-24");
+    const preflight = fixtures.find(fixture => fixture.id === "case-explain-missing-audit");
+    const escalationProfile = providerModelCandidates.find(profile => profile.id === "sol-high");
+    const initial = run(extraction);
+    const escalated = run(extraction, "luna-high", 2);
+    const baseline = run(extraction, "baseline-gpt-5-mini");
+    const baselineAttempt = baseline.attempts[0];
+    if (!preflight || !escalationProfile || !initial.measurement || !escalated.measurement || !baseline.measurement || !baselineAttempt?.usage) {
+      throw new Error("Missing synthetic cutoff evidence.");
+    }
+    escalated.attempts.push({ profileId: escalationProfile.id, startedAt: eventAt, usage: { inputTokens: 1000, outputTokens: 1000 } });
+    escalated.measurement.reportedModel = escalationProfile.model;
+    baselineAttempt.startedAt = eventAt;
+    baseline.measurement.planDigest = providerEvalDigest("future synthetic baseline plan");
+    baseline.measurement.responseReference = initial.measurement.responseReference;
+    const template: ProviderModelLiveEvalTemplate = {
+      version: 2,
+      entries: [initial, escalated, baseline],
+      availability: availability.map(item => item.profileId === escalationProfile.id ? { ...item, checkedAt: eventAt } : item),
+      preflightEntries: [{
+        profileId: "sol-high", fixtureId: preflight.id, repeat: 1, at: eventAt,
+        reason: "missing-verified-context", runPurpose: "qualification", planDigest: "0".repeat(64),
+        corpusDigest: syntheticCorpusDigest, fixtureDigest: providerEvalFixtureDigest(preflight),
+        bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
+      }],
+    };
+
+    const before = summarizeProviderModelLiveEvalTemplate(template, fixtures, justBefore);
+    const beforeCandidate = before.groups.find(group => group.profileId === "luna-high" && group.task === extraction.task);
+    const beforePreflight = before.groups.find(group => group.profileId === "sol-high" && group.task === preflight.task);
+    expect(before.entries).toBe(1);
+    expect(beforeCandidate).toMatchObject({
+      completedRuns: 1, acceptedRuns: 1, schemaValidity: 1,
+      providerCostUsd: scoreProviderEvalEntry(initial, extraction).actualCostUsd,
+    });
+    expect(beforeCandidate?.blockers).not.toContain("qualification-comparison-mixed-plans");
+    expect(beforeCandidate?.blockers).not.toContain("provider-response-evidence-missing-or-reused");
+    expect(beforePreflight).toMatchObject({ availability: null, deterministicPreflightRuns: 0, deterministicPreflightPassed: 0 });
+    expect(beforePreflight?.blockers).toContain("account-capability-unverified-or-unavailable");
+
+    const at = summarizeProviderModelLiveEvalTemplate(template, fixtures, atEvent);
+    const atCandidate = at.groups.find(group => group.profileId === "luna-high" && group.task === extraction.task);
+    const atPreflight = at.groups.find(group => group.profileId === "sol-high" && group.task === preflight.task);
+    expect(at.entries).toBe(3);
+    expect(atCandidate).toMatchObject({ completedRuns: 2, acceptedRuns: 2, blockers: expect.arrayContaining([
+      "qualification-comparison-mixed-plans", "provider-response-evidence-missing-or-reused",
+    ]) });
+    expect(atPreflight).toMatchObject({ availability: { status: "available" }, deterministicPreflightRuns: 1, deterministicPreflightPassed: 1 });
+    expect(atPreflight?.blockers).not.toContain("account-capability-unverified-or-unavailable");
+    expect(atCandidate?.blockers).not.toContain("account-capability-unverified-or-unavailable");
+
+    baselineAttempt.usage.inputTokens = -1;
+    expect(() => summarizeProviderModelLiveEvalTemplate(template, fixtures, justBefore)).toThrow(/Invalid provider model live-eval file/);
+    expect(() => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [] }, fixtures, "2026-10-32T12:00:00Z")).toThrow();
+  });
+  it("keeps submillisecond case reviews and capability windows in event order", () => {
+    const tooEarly = "2026-10-24T12:00:01.12339Z";
+    const checkedAt = "2026-10-24T12:00:01.1234Z";
+    const expiresAt = "2026-10-24T12:00:01.1241Z";
+    const fixtures = reviewedFixtures("2026-10-24");
+    const preflightFixture = fixtures.find(fixture => fixture.id === "case-explain-missing-audit");
+    const extractionFixture = fixtures.find(fixture => fixture.id === extraction.id);
+    const entry = run(extraction);
+    const attempt = entry.attempts[0];
+    if (!preflightFixture || !extractionFixture || !attempt) throw new Error("Missing synthetic event evidence.");
+    preflightFixture.review.reviewedAt = "2026-10-24T07:00:01.12340-05:00";
+    extractionFixture.review.reviewedAt = preflightFixture.review.reviewedAt;
+    const preflight = {
+      profileId: "luna-high", fixtureId: preflightFixture.id, repeat: 1, at: tooEarly,
+      reason: "missing-verified-context", runPurpose: "qualification", planDigest: "0".repeat(64),
+      corpusDigest: syntheticCorpusDigest, fixtureDigest: providerEvalFixtureDigest(preflightFixture),
+      bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
+    } as const;
+    const summarize = (attemptAt: string) => {
+      attempt.startedAt = attemptAt;
+      const summary = summarizeProviderModelLiveEvalTemplate({
+        version: 2, entries: [entry], preflightEntries: [{ ...preflight, at: attemptAt }],
+        availability: availability.map(item => item.profileId === entry.profileId ? { ...item, checkedAt, expiresAt } : item),
+      }, fixtures, reportAt);
+      return {
+        extraction: summary.groups.find(group => group.profileId === entry.profileId && group.task === extraction.task)?.blockers,
+        preflight: summary.groups.find(group => group.profileId === preflight.profileId && group.task === preflightFixture.task)?.blockers,
+      };
+    };
+
+    const reviewBlocker = "independent-fixture-review-incomplete";
+    const capabilityBlocker = "account-capability-unverified-or-unavailable";
+    const early = summarize(tooEarly);
+    expect(early.extraction).toEqual(expect.arrayContaining([reviewBlocker, capabilityBlocker]));
+    expect(early.preflight).toContain(reviewBlocker);
+    const atCheck = summarize("2026-10-24T12:00:01.123400Z");
+    expect(atCheck.extraction).not.toContain(reviewBlocker);
+    expect(atCheck.extraction).not.toContain(capabilityBlocker);
+    expect(atCheck.preflight).not.toContain(reviewBlocker);
+    expect(summarize("2026-10-24T12:00:01.12409Z").extraction).not.toContain(capabilityBlocker);
+    expect(summarize(expiresAt).extraction).toContain(capabilityBlocker);
+  });
+  it("enforces positive capability windows up to exactly 30 days", () => {
+    const checkedAt = "2026-10-24T12:00:01.1234Z";
+    const parseWithExpiry = (expiresAt: string) => parseProviderModelLiveEvalTemplate({
+      version: 2, entries: [], availability: availability.slice(0, 1).map(item => ({ ...item, checkedAt, expiresAt })),
+    });
+    expect(() => parseWithExpiry("2026-10-24T12:00:01.123401Z")).not.toThrow();
+    expect(() => parseWithExpiry("2026-10-24T12:00:01.12340Z")).toThrow(/30 days/);
+    expect(() => parseWithExpiry("2026-11-23T12:00:01.12340Z")).not.toThrow();
+    expect(() => parseWithExpiry("2026-11-23T12:00:01.123401Z")).toThrow(/30 days/);
+  });
   it("rejects output reviews by a spelling variant of the frozen author", () => {
     const entry = run(extraction);
     if (!entry.independentReview) throw new Error("Missing test-only response review.");

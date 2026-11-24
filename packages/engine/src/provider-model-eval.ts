@@ -83,12 +83,19 @@ function isIndependentReviewer(reviewer: unknown, author: unknown) {
 
 const reviewDate = z.union([z.iso.date(), z.iso.datetime({ offset: true })]);
 
-function independentReviewTime(fixture: ProviderEvalFixture, cutoff: number) {
+function timestampAtOrBefore(instant: string, cutoff: string, cutoffOffsetMs = 0): boolean {
+  const instantMs = Date.parse(instant);
+  const cutoffMs = Date.parse(cutoff) + cutoffOffsetMs;
+  if (instantMs !== cutoffMs) return instantMs < cutoffMs;
+  // ISO input can carry more fractional precision than Date.parse retains.
+  const submillisecond = (value: string) => (/\.\d{3}(\d+)/u.exec(value)?.[1] ?? "").replace(/0+$/u, "");
+  return submillisecond(instant) <= submillisecond(cutoff);
+}
+
+function independentReviewTime(fixture: ProviderEvalFixture, cutoff: string) {
   if (fixture.review.status !== "reviewed" || !isIndependentReviewer(fixture.review.reviewer, fixture.review.author)) return null;
   const date = reviewDate.safeParse(fixture.review.reviewedAt);
-  if (!date.success) return null;
-  const time = Date.parse(date.data);
-  return Number.isFinite(time) && time <= cutoff ? time : null;
+  return date.success && timestampAtOrBefore(date.data, cutoff) ? date.data : null;
 }
 function percentile(values: number[], percentileValue: number) {
   if (!values.length) return null;
@@ -175,8 +182,8 @@ export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderMode
     candidate(evidence.profileId);
     if (availableProfiles.has(evidence.profileId)) throw new Error("Duplicate provider availability evidence.");
     availableProfiles.add(evidence.profileId);
-    if (Date.parse(evidence.expiresAt) <= Date.parse(evidence.checkedAt)
-      || Date.parse(evidence.expiresAt) - Date.parse(evidence.checkedAt) > 30 * 24 * 60 * 60 * 1000) {
+    if (timestampAtOrBefore(evidence.expiresAt, evidence.checkedAt)
+      || !timestampAtOrBefore(evidence.expiresAt, evidence.checkedAt, 30 * 24 * 60 * 60 * 1000)) {
       throw new Error("Provider availability evidence must expire within 30 days.");
     }
   }
@@ -226,9 +233,12 @@ export function buildProviderModelLiveEvalTemplate(): ProviderModelLiveEvalTempl
 export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLiveEvalTemplate,
   fixtures: ProviderEvalFixture[] = taxProviderModelEvalFixtures, reportAt = new Date().toISOString()) {
   const validated = parseProviderModelLiveEvalTemplate(template);
-  const reportCutoff = Date.parse(z.iso.datetime({ offset: true }).parse(reportAt));
+  const reportCutoff = z.iso.datetime({ offset: true }).parse(reportAt);
+  const reportEntries = validated.entries.filter(entry => entry.attempts.every(attempt => timestampAtOrBefore(attempt.startedAt, reportCutoff)));
+  const reportPreflights = (validated.preflightEntries ?? []).filter(entry => timestampAtOrBefore(entry.at, reportCutoff));
+  const reportAvailability = (validated.availability ?? []).filter(evidence => timestampAtOrBefore(evidence.checkedAt, reportCutoff));
   const fixtureIds = new Set<string>();
-  const reviewTimes = new Map<string, number>();
+  const reviewTimes = new Map<string, string>();
   for (const fixture of fixtures) {
     const canonical = taxProviderModelEvalFixtures.find(item => item.id === fixture.id);
     const { review: _review, ...content } = fixture;
@@ -245,7 +255,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const reviewedCount = reviewTimes.size;
   const currentCorpusDigest = providerEvalCorpusDigest();
   const providerReferences = new Map<string, number>();
-  for (const entry of validated.entries) {
+  for (const entry of reportEntries) {
     const measurement = entry.measurement;
     if (measurement?.runPurpose === "qualification" && measurement.responseReference) {
       const reference = measurement.responseReference;
@@ -271,8 +281,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const groups = providerModelCandidates.flatMap(profile => (Object.keys(AI_TASKS) as AiTask[]).map(task => {
     const filingSeasonLifecycle = publicModelLifecycle(profile.model, providerModelPricingSnapshot.filingSeasonDate);
     const cases = fixtures.filter(fixture => fixture.task === task);
-    const entries = validated.entries.filter(entry => entry.profileId === profile.id && cases.some(fixture => fixture.id === entry.fixtureId));
-    const availability = validated.availability?.find(entry => entry.profileId === profile.id);
+    const entries = reportEntries.filter(entry => entry.profileId === profile.id && cases.some(fixture => fixture.id === entry.fixtureId));
+    const availability = reportAvailability.find(entry => entry.profileId === profile.id);
     const scored = entries.map(entry => {
       const fixture = cases.find(item => item.id === entry.fixtureId);
       if (!fixture) throw new Error("Evaluation case is missing.");
@@ -287,7 +297,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const filingCost = scored.reduce((sum, item) => sum.plus(item.result.filingSeasonCostUsd ?? "0"), new Money(0));
     const costKnown = scored.length > 0 && scored.every(item => item.result.actualCostUsd !== null);
     const preflightCases = cases.filter(fixture => preparedCases.get(fixture.id)?.kind === "preflight");
-    const preflightEntries = (validated.preflightEntries ?? []).filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
+    const preflightEntries = reportPreflights.filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
     const evidence = [...entries.map(entry => entry.measurement), ...preflightEntries];
     const groupKey = `${profile.id}:${task}`;
     groupPlans.set(groupKey, new Set(evidence.flatMap(item => item?.runPurpose === "qualification" ? [item.planDigest] : [])));
@@ -306,9 +316,9 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     if (profile.role === "candidate" && filingSeasonLifecycle.status === "shutdown") blockers.push("candidate-shutdown-before-filing-season");
     if (!availability || availability.status !== "available" || !availability.structuredOutput || !availability.reasoningEffort || !availability.reportedUsage
       || entries.some(entry => entry.attempts.some(attempt => {
-        const evidence = validated.availability?.find(item => item.profileId === attempt.profileId);
+        const evidence = reportAvailability.find(item => item.profileId === attempt.profileId);
         return !evidence || evidence.status !== "available" || !evidence.structuredOutput || !evidence.reasoningEffort || !evidence.reportedUsage
-          || Date.parse(attempt.startedAt) < Date.parse(evidence.checkedAt) || Date.parse(attempt.startedAt) >= Date.parse(evidence.expiresAt);
+          || !timestampAtOrBefore(evidence.checkedAt, attempt.startedAt) || timestampAtOrBefore(evidence.expiresAt, attempt.startedAt);
       }))) blockers.push("account-capability-unverified-or-unavailable");
     if (entries.some(entry => entry.measurement?.normalizationStatus !== "bound")) blockers.push("application-normalization-unverified");
     if (scored.some(item => item.entry.measurement?.runPurpose !== "qualification" || !item.result.provenanceMatches)
@@ -319,7 +329,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     })) blockers.push("provider-response-evidence-missing-or-reused");
     const reviewInTime = (fixtureId: string, at: string) => {
       const reviewedAt = reviewTimes.get(fixtureId);
-      return reviewedAt !== undefined && reviewedAt <= Date.parse(at);
+      return reviewedAt !== undefined && timestampAtOrBefore(reviewedAt, at);
     };
     if (reviewedCount < evaluationGates.minimumReviewedCases || cases.some(fixture => !reviewTimes.has(fixture.id))
       || entries.some(entry => entry.attempts.some(attempt => !reviewInTime(entry.fixtureId, attempt.startedAt)))
@@ -351,12 +361,12 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const comparisonPlans = new Set([group, ...baselines].flatMap(item => [...(groupPlans.get(`${item.profileId}:${item.task}`) ?? [])]));
     if (comparisonPlans.size > 1) group.blockers.push("qualification-comparison-mixed-plans");
     if (baselines.some(item => !comparableBaselines.has(`${item.profileId}:${item.task}`))) group.blockers.push("baseline-comparison-incomplete");
-    const candidateEntries = validated.entries.filter(entry => entry.profileId === group.profileId && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
+    const candidateEntries = reportEntries.filter(entry => entry.profileId === group.profileId && fixtures.find(fixture => fixture.id === entry.fixtureId)?.task === group.task);
     for (const entry of candidateEntries) {
       const fixture = fixtures.find(item => item.id === entry.fixtureId);
       if (!fixture) throw new Error("Evaluation case is missing.");
       const score = scoreEntry(entry, fixture);
-      if (!score.criticalCorrect && validated.entries.some(other => candidate(other.profileId).role === "baseline"
+      if (!score.criticalCorrect && reportEntries.some(other => candidate(other.profileId).role === "baseline"
         && other.fixtureId === entry.fixtureId && other.repeat === entry.repeat && scoreEntry(other, fixture).criticalCorrect)) {
         group.blockers.push("critical-field-regression"); break;
       }
@@ -371,7 +381,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     group.eligibleForPromotionReview = group.blockers.length === 0;
   }
   return { version: 2, fixtureCount: fixtures.length, independentlyReviewedCases: reviewedCount,
-    entries: validated.entries.length, groups, productionPromotion: false,
+    entries: reportEntries.length, groups, productionPromotion: false,
     limitation: "Eligibility supports a human promotion review only. Zero observed failures is not proof. No route is activated by this report." };
 }
 
