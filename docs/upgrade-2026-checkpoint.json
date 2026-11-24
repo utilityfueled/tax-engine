@@ -138,6 +138,17 @@
       "currentLocalChromium": {"passed": 652, "failed": 0, "originalSkips": 5, "requestWindows": 8},
       "currentLocalSpecReferencesPassed": 9986,
       "currentLocalLint": {"errors": 0, "warnings": 12204},
+      "currentCI": {
+        "run": 45417655946,
+        "coverageJob": 138528177833,
+        "postgresql": "16.16",
+        "coverageTestsPassed": 30458,
+        "testFilesPassed": 2217,
+        "branchesPercent": 88.69,
+        "originalBranchGatePercent": 85,
+        "unitShardsSpecLintBuildAndTypecheck": "Passed",
+        "unitTestStatusJob": {"job": 138568306476, "status": "Queued at evidence capture"}
+      },
       "currentOrdinaryWeb": {
         "run": 45417655999,
         "runnerImage": "ubuntu-26.04/20261116.202.1",

@@ -12,8 +12,9 @@ Use the linked progress sections when investigating individual packages.
 - The current application archive `f3163949` passed all 11 local checks.
   Unit and coverage each passed 30,377 tests with 81 conditional skips
   and 88.31% branches. Chromium passed all 652 active cases with five
-  original skips, as did the exact pre-change baseline. The equivalent
-  [strict ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946)
+  original skips, as did the exact pre-change baseline. The exact
+  PostgreSQL CI coverage job passed 30,458 tests at 88.69% branches.
+  The code-equivalent [strict ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946)
   passed image build, smoke, recovery and archive verification. Its
   Chromium suite passed 642 and missed ten Ohio deadlines with five
   original skips. The same ten cases failed in the earlier ARM64 run.

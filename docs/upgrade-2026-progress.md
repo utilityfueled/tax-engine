@@ -18,6 +18,12 @@ Unit and coverage each reported 30,377 passes, 81 conditional skips, and
 errors and 12,204 warnings. The original Chromium suite again passed all
 652 active cases in eight request windows with five original skips.
 
+The exact `f3163949` CI coverage job used PostgreSQL 16.16 and passed
+30,458 tests across 2,217 files, with 88.69% branch coverage. Both unit
+shards, spec validation, lint, build and type checks also passed. The
+final unit-test status job was still queued when the evidence was captured.
+[Exact CI coverage job](https://github.com/utilityfueled/tax-engine/actions/runs/45417655946/job/138528177833).
+
 The native ARM64 rehearsal on code-equivalent `4ccb88b0` passed native
 image build, smoke, Compose upgrade and recovery, independent archive
 verification, image scanning and cleanup. The unchanged strict Chromium
