@@ -29,8 +29,11 @@ the original action from starting or replace its error after the short
 measurement budget elapses. All 56 diagnostic tests, 60 orchestration
 tests, and four local Chromium school-district journeys passed. The
 exact browser source audit, scoped lint, web types and diff check also
-passed. The Linux comparison is running on `33b6a593`; it has yet to
-produce scheduler results. [Comparison run](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011).
+passed. The exact `33b6a593` managed job subsequently passed all 652
+active tests with five original skips on Ubuntu 26.04 image
+`20261116.88`. The strict container and scheduler comparison are in
+progress. [Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011/job/138477436768) ·
+[Comparison run](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011).
 
 ## November 24 Pennsylvania balance receipt confirmations
 
@@ -97,6 +100,15 @@ median improvement. Both fell below the predeclared 10% threshold.
 The managed-browser timing difference remains open.
 [CPython runner builds](https://github.com/actions/python-versions/blob/main/versions-manifest.json) ·
 [Exact benchmark run](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980).
+
+The isolated benchmark used Ubuntu 24.04 image `20261116.133`.
+The managed run with two timeouts used Ubuntu 26.04 image
+`20261116.202`. Its Playwright schedule shows another RRTA payroll
+journey overlapping almost all four seconds of both timeout intervals.
+The schedule establishes overlap. Process-level attribution remains
+open. `a62698e8` uses the managed browser selector and checks for
+Ubuntu 26.04 before repeating the same comparison.
+[Bound Ubuntu 26.04 run](https://github.com/utilityfueled/tax-engine/actions/runs/45409802503).
 
 ## November 24 Pennsylvania extension receipts
 

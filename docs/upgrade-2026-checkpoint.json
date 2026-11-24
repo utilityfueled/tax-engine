@@ -50,7 +50,11 @@
       "pairedImprovementPercentByViewport": {"390": 4.19, "1280": 4.38},
       "medianMillisecondsByViewport": {"390": [1830.2, 1750.5], "1280": [1823.1, 1740.6]},
       "performanceThresholdPercent": 10,
-      "performanceThresholdMet": false
+      "performanceThresholdMet": false,
+      "benchmarkRunnerImage": "ubuntu-24.04/20261116.133",
+      "timedOutManagedRunnerImage": "ubuntu-26.04/20261116.202",
+      "concurrentTestWindow": "rrta-payroll-native.spec.ts overlapped 4,008 ms and 4,014 ms of the two saved-PDF inspection timeouts. Playwright intervals alone cannot attribute resource use.",
+      "matchedOSRepeat": {"commit": "a62698e80f912b723abb8909db56df06a1e4dd8a", "githubRun": 45409802503, "status": "queued on the bound diagnostic revision"}
     },
     "nov24OhioLinuxScheduler": {
       "diagnosticCommit": "33b6a5938b8ecede02b59adbc72d81073d9ae343",
@@ -62,6 +66,7 @@
       "localBrowserLog": ".local/upgrade-evidence/nov24-strict-browser-differential/scheduler-bounded-browser.log",
       "otherChecks": ["independent engineering review", "web types", "scoped lint", "browser source audit", "diff check"],
       "githubComparison": 45403356011,
+      "managedBrowser": {"job": 138477436768, "passed": 652, "failed": 0, "originalSkips": 5, "runnerImage": "ubuntu-26.04/20261116.88"},
       "githubComparisonStatus": "in progress on the bound diagnostic revision"
     },
     "nov24PennsylvaniaBalanceConfirmation": {
