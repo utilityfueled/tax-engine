@@ -25,6 +25,15 @@ lines:
     testRef: "tests/engine/schedules/schedule-a-property-tax-year.test.ts::holds positive property tax from other-year mortgage statements on the 2026 Schedule A worksheet"
     testRefs:
       - "tests/engine/schedules/schedule-a-property-tax-year.test.ts::keeps matching and legacy undated mortgage amounts on the 2026 worksheet up to and beyond the SALT cap"
+  - line: "5e-salt-phase-down-precision"
+    description: "Calculate the phased-down SALT limit before rounding Schedule A line 5e"
+    formula: >-
+      Subtract 30% of positive MAGI above $505,000 ($252,500 for MFS) from
+      $40,400. Apply the $10,000 floor, then halve for MFS. Preserve the exact
+      Decimal cap through comparison with actual SALT paid. Round the lesser
+      amount to whole dollars when reporting Schedule A line 5e.
+    irsRef: "IRC 164(b)(6)-(7); IRC 6102(c); Treasury Regulations 301.6102-1(c); draft 2026 Schedule A line 5e"
+    testRef: "tests/engine/federal-salt-facts.test.ts::rounds line 5e after the exact 2026 phase-down for $status"
   - line: "8d-mortgage-insurance"
     description: "Restored qualified mortgage insurance deduction"
     formula: "Use explicitly allocated current-year premiums for qualified providers, acquisition debt and qualified residences under contracts issued after 2006. Reduce the combined eligible amount by 10% for each $1,000 or fraction of AGI over $100,000 (MFS $500 over $50,000), floored at zero. Preserve 2025 zero deduction."

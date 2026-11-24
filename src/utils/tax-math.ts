@@ -364,8 +364,9 @@ export function calculateDeductibleMortgageInterest(
 }
 
 /**
- * Spec: spec/federal/schedule-a.yaml line 5e, 2025 worksheet lines 5-10.
- * MFS halves line 9 AFTER the phase-down and minimum cap are applied.
+ * Schedule A line 5e uses the exact worksheet cap to compare with taxes paid.
+ * MFS halves the cap after the phase-down and minimum are applied.
+ * Spec: spec/federal/schedule-a.yaml and spec/federal/schedule-a-2026.yaml.
  */
 export function calculateSALTLimit(
   magi: Decimal,
@@ -374,7 +375,7 @@ export function calculateSALTLimit(
 ): Decimal {
   const divisor = filingStatus === "married_filing_separately" ? 2 : 1;
   const threshold = constants.saltPhaseDown.magiThreshold.dividedBy(divisor);
-  const reduction = roundDollar(zeroFloor(magi.minus(threshold)).times(constants.saltPhaseDown.rate));
+  const reduction = zeroFloor(magi.minus(threshold)).times(constants.saltPhaseDown.rate);
   return Decimal.max(constants.saltPhaseDown.minimumCap, constants.saltCap.minus(reduction)).dividedBy(divisor);
 }
 

@@ -29,8 +29,10 @@ describe("Independent 2026 constant data", () => {
   });
   it.each([
     ["single", "504999", "40400"], ["single", "505000", "40400"],
-    ["single", "505010", "40397"], ["single", "606333.33", "10000"],
-    ["married_filing_separately", "252500", "20200"], ["married_filing_separately", "262500", "18700"],
+    ["single", "505005", "40398.5"], ["single", "505010", "40397"],
+    ["single", "606333.33", "10000.001"], ["single", "606333.34", "10000"],
+    ["married_filing_separately", "252500", "20200"], ["married_filing_separately", "252504", "20199.4"],
+    ["married_filing_separately", "262500", "18700"],
   ] as const)("calculates SALT cap for %s at %s", (status, magi, expected) => {
     expect(calculateSALTLimit(d(magi), status, FEDERAL_2026_CONSTANTS).toString()).toBe(expected);
   });

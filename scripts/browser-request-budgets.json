@@ -1594,7 +1594,7 @@
     "src/utils/schedule-c-standard-mileage.ts": "6760ec121bd19caddbf6d9481a2d255929fad02a9beaa504b7d5f4e7141a77d3",
     "src/utils/sum-source-money-ratios.ts": "c21582d441460ef976e4beca373f1e852ecc13e9a59337ddd7135c5e3d3e6a14",
     "src/utils/sum-source-money.ts": "1d6cfcbd55fe443afb215d2aaa185c4c684b1ce12f82d407e679d7a6f630da8c",
-    "src/utils/tax-math.ts": "aec14e30329be6ed3daf694ebc142c993ef332ff28ab493facab3381b19e587b",
+    "src/utils/tax-math.ts": "edaa5be5b1a30c35a17a3dbf677a8ffe81143e9dbed1574596dbcf9a8b46d043",
     "tests/fixtures/alternative-charitable-nol.ts": "50f42d416d4ebba9b91279ea4a597234efc7385ddc806b73ab4c312144392d8c",
     "tests/fixtures/assert-pa-guided-payment-boundary.ts": "b8d19ca9499bfd1e4a933d1771e578fc6e3f5f141f9be41a29f93b948def46e3",
     "tests/fixtures/browser-pa-digital-actual-sources.ts": "13d3d14e7a384aba9f850bf80c2616d774ab1de51aedbaac0037441b2ed91777",

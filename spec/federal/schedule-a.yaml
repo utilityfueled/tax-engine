@@ -107,16 +107,17 @@ lines:
       MAGI = AGI + excluded Puerto Rico income + Form 2555 lines 45 and 50
         + Form 4563 line 15.
       Threshold = $500,000 ($250,000 MFS).
-      Worksheet line 7 = roundDollar(max(0, MAGI - threshold) * 0.30).
+      Worksheet line 7 = max(0, MAGI - threshold) * 0.30, using Decimal without rounding.
       Worksheet line 9 = max($10,000, $40,000 - line 7).
       Limit = line 9 (HALF of line 9 for MFS).
       Line 5e = roundDollar(min(line 5d, limit)).
-    irsRef: "2025 Schedule A Instructions, State and Local Tax Deduction Worksheet, lines 1-10; IRC 164(b)(6) as amended by P.L. 119-21"
+    irsRef: "2025 Schedule A Instructions, State and Local Tax Deduction Worksheet, lines 1-10; IRC 164(b)(6)-(7); IRC 6102(c); Treasury Regulations 301.6102-1(c)"
     notes: |
       Retrieved 2026-10-24; rule version 2025.2; independent review pending.
       MFS halves the result AFTER the 30% reduction and $10,000 floor.
       Thus the MFS maximum is $20,000 and floor $5,000.
-      Sum source amounts using Decimal before rounding a reported line.
+      Preserve exact worksheet amounts through the floor, MFS division and
+      comparison with taxes paid. Round the reported Schedule A line 5e once.
       No filing qualification is inferred from these regression fixtures.
     edgeCases:
       - "$20,000 paid with $100,000 AGI is fully deductible"
