@@ -1200,7 +1200,7 @@
     "src/engine/state/pa-working-pennsylvanians-tax-credit.ts": "3acd3882cf0d260c93c76f8325301a772036c2a7f663d8e4efce632971b79223",
     "src/engine/state/wa-capital-gains.ts": "8e7d0df2a92932bec530574773dc32848e05ca69f7e514f05997f5f759c839df",
     "src/index.ts": "32614a6dcc56475e643840161b6cdd19699aa815c46d6370633732b8f73fac18",
-    "src/ingest/loader.ts": "2850efd7ea2b101183c8b006f804032674bc6e2ce16ad302380602c7d9ed9cf0",
+    "src/ingest/loader.ts": "878c420556e26489503c706a79b853ecd57f47e1cfbf127875d3d2c1f12c5a4f",
     "src/models/adoption-prior-benefits.ts": "90444b35e26998bc55a13167b21dfffc30ab9c528b5a483d26a00afc375437c9",
     "src/models/charitable-carryover-sources.ts": "db48215e47773d3d5c1b170ad4a7946eb4068e87e65f1184e0de86fbe31288b1",
     "src/models/cod-attribute-sources.ts": "f935561a9cddd93a59a80bd03b3c2c0a7c190888523568f85bd213049bf12e1e",
