@@ -9,9 +9,13 @@ permissions:
 jobs:
   compare:
     if: ${{ github.repository == 'utilityfueled/tax-engine' && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Verify the managed browser runner OS
+        run: |
+          . /etc/os-release
+          test "$ID" = ubuntu && test "$VERSION_ID" = 26.04
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
