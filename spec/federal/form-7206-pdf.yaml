@@ -1,7 +1,7 @@
 form: "Form 7206 physical review map"
 fullName: "Separate actual-business health insurance review forms"
 taxYear: 2025
-irsReference: "https://www.irs.gov/pub/irs-pdf/f7206.pdf"
+irsReference: "https://www.irs.gov/pub/irs-prior/f7206--2025.pdf"
 notes: "Final 2025 template created October 2, 2025; SHA256 822203c9bbd958e651e243bbf6353c4c8e78abbde412e06caf6db5f88fe68ee1. Source and widget inspection do not establish independent filing qualification."
 lines:
   - line: "identity"

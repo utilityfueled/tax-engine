@@ -337,5 +337,5 @@ lines:
     irsRef: "2025 Form 8889, printed lines 18-21; IRC 223(f)(4)(C) and 223(b)(8)(B)"
     inputs:
       - "Form 8889 Line 20"
-    notes: "This amount flows to Schedule 2 (Form 1040) Line 17d. The printed 2025 Form 8889 line 21 applies 10% to line 20, the sum of lines 18 and 19. The tax is zero when the death-or-disability exception excuses both recapture amounts. Source refreshed 2026-10-25: https://www.irs.gov/pub/irs-pdf/f8889.pdf."
+    notes: "This amount flows to Schedule 2 (Form 1040) Line 17d. The printed 2025 Form 8889 line 21 applies 10% to line 20, the sum of lines 18 and 19. The tax is zero when the death-or-disability exception excuses both recapture amounts. Source refreshed 2026-10-25: https://www.irs.gov/pub/irs-prior/f8889--2025.pdf."
     testRef: "tests/engine/forms/form-8889.test.ts::Form 8889 Line 21 - excused testing-period failures do not create recapture tax"

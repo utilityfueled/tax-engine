@@ -1,7 +1,7 @@
 form: "Form 8606 whole-dollar calculation"
 fullName: "IRA basis allocation and monetary line rounding"
 taxYear: 2025
-irsReference: "https://www.irs.gov/pub/irs-pdf/f8606.pdf"
+irsReference: "https://www.irs.gov/pub/irs-prior/f8606--2025.pdf"
 notes: |
   Official Form8606 and instructions plus Form1040 instructions, Rounding Off to
   Whole Dollars, refreshed2026-10-25. The engine elects whole-dollar form values.
