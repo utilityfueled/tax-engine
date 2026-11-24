@@ -78,7 +78,7 @@ test('entry wrapper inverts to exact original test source bytes',async()=>{
  const wrapper='await withOriginalEntryMetrics(page, async () => {\n          await typeOriginals(page, facts, viewport.width === 1280);\n        });';
  assert.equal(source.split(importLine).length,2);assert.equal(source.split(wrapper).length,2);
  const original=source.replace(importLine,'').replace(wrapper,'await typeOriginals(page, facts, viewport.width === 1280);');
- assert.equal(createHash('sha256').update(original).digest('hex'),'6d52ee9b7e33b63d7ec37a1ab23452e0657307dcd61e8b7bd83ea5884a7476fb');
+ assert.equal(createHash('sha256').update(original).digest('hex'),'d5d2b50e19698013b1f9b4fc465b19f657e9b0e89456e8d9cf6347ad2e0e7889');
 });
 function harness(overrides={}) {
  const session=new EventEmitter(), commands=[],records=[];let n=0,body=0;
@@ -286,10 +286,15 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
 
 test('diagnostic source pins refresh without changing original budgets or collection',async()=>{
  const read=async name=>readFile(new URL('../../'+name,import.meta.url),'utf8'),sha=text=>createHash('sha256').update(text).digest('hex');
- const [auditText,casesText,fullText,source]=await Promise.all([read('scripts/browser-request-budgets.json'),read('scripts/browser-cpu-diagnostics/cases.json'),read('scripts/browser-cpu-diagnostics/full-batches.json'),read('apps/web/tests/oh-resident-credit-native.spec.ts')]);
- const audit=JSON.parse(auditText),cases=JSON.parse(casesText),full=JSON.parse(fullText),path='apps/web/tests/oh-resident-credit-native.spec.ts';
- assert.equal(audit.sourceHashes[path],sha(source));assert.equal(full.sourceSha256[path],sha(source));assert.equal(cases.auditSha256,sha(auditText));
- assert.equal(cases.targetSourceSha256['oh-resident-credit-native.spec.ts'],sha(source.replace('../scripts/browser-cpu-diagnostics/fixture','@playwright/test')));
+ const [auditText,casesText,fullText]=await Promise.all([read('scripts/browser-request-budgets.json'),read('scripts/browser-cpu-diagnostics/cases.json'),read('scripts/browser-cpu-diagnostics/full-batches.json')]);
+ const audit=JSON.parse(auditText),cases=JSON.parse(casesText),full=JSON.parse(fullText);
+ assert.equal(cases.auditSha256,sha(auditText));
+ for(const [file,hash] of Object.entries(cases.targetSourceSha256)) {
+  const path='apps/web/tests/'+file,source=await read(path);
+  assert.equal(audit.sourceHashes[path],sha(source),path);
+  assert.equal(hash,sha(source.replace('../scripts/browser-cpu-diagnostics/fixture','@playwright/test')),path);
+ }
+ for(const [path,hash] of Object.entries(full.sourceSha256)) assert.equal(hash,sha(await read(path)),path);
  const project=(data,keys)=>Object.fromEntries(Object.entries(data).filter(([key])=>!keys.includes(key)));
  // The current audit adds two deductions cases and moves two request call sites.
  assert.equal(sha(JSON.stringify(project(audit,['sourceHashes']))),'f0b4f93c11260d72e39ea769b87028195048a765ef647e02fb316c1938312198');

@@ -44,7 +44,10 @@ export async function saved(page: Page, id: string): Promise<GuidedFlowState> {
   }, id);
 }
 export async function packet(page: Page, id: string): Promise<OhioResidentCreditDraft> {
-  return required((await saved(page, id)).sectionData['state-return']?.ohioResidency?.residentCreditSources);
+  return packetFromSaved(await saved(page, id));
+}
+export function packetFromSaved(state: GuidedFlowState): OhioResidentCreditDraft {
+  return required(state.sectionData['state-return']?.ohioResidency?.residentCreditSources);
 }
 export function captures(draft: OhioResidentCreditDraft) {
   return {
@@ -110,7 +113,9 @@ export async function confirm(page: Page, id: string) {
   await expect.poll(async () => (await saved(page, id)).sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).toBe(true);
   await page.getByRole('button', { name: residentCreditConfirmLabel, exact: true }).click();
   await expect.poll(async () => (await packet(page, id)).sourceFactsConfirmed).toBe(true);
-  expect((await saved(page, id)).sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).toBe(true);
+  const confirmed = await saved(page, id);
+  expect(confirmed.sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).toBe(true);
+  return confirmed;
 }
 export async function typeOriginals(page: Page, facts: ReturnType<typeof guidedResidentCreditFixture>, knownKinds = false) {
   for (const name of ['Review actual Virginia payments', 'Review actual Virginia received refunds']) await page.getByRole('button', { name, exact: true }).click();

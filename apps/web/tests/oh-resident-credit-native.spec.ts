@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import {
   cash, captures, changedReference, confirmedMoney, confirm, control, enter, geometry,
-  noCaptures, openWorkspace, packet, pendingMoney, personalSecrets,
+  noCaptures, openWorkspace, packet, packetFromSaved, pendingMoney, personalSecrets,
   pin, required, residentCreditAddLabel, residentCreditConfirmLabel, reviewDownload,
   saved, seedUnrelated, typeOriginals,
 } from './helpers/oh-resident-credit-browser';
@@ -32,17 +32,21 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
         for (const label of ['Virginia source year', 'Virginia owner', 'Virginia source reference', 'Virginia completed account unapplied payments']) {
           await expect(control(page, label)).toHaveValue('');
         }
-        let draft = await packet(page, id);
+        const added = await saved(page, id);
+        let draft = packetFromSaved(added);
         noCaptures(draft); expect(draft.sourceFactsConfirmed).toBeNull();
         expect(draft.paymentsReviewed).toBeNull(); expect(draft.refundsReviewed).toBeNull();
         expect(draft.completedAccount.payments).toBeNull(); expect(draft.completedAccount.refunds).toBeNull();
-        expect((await saved(page, id)).sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).not.toBe(true);
+        expect(added.sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).not.toBe(true);
         await native.getByRole('button', { name: residentCreditConfirmLabel, exact: true }).click();
         await expect(native.getByRole('alert')).toHaveCount(1);
-        noCaptures(await packet(page, id)); await pendingMoney(active);
+        await pendingMoney(active);
         await geometry(page, info, 'blank-source-validation', native, native.getByRole('alert'));
         const blank = await packet(page, id);
-        await page.reload(); expect(await packet(page, id)).toEqual(blank); noCaptures(await packet(page, id));
+        noCaptures(blank);
+        await page.reload();
+        const reopenedBlank = await packet(page, id);
+        expect(reopenedBlank).toEqual(blank); noCaptures(reopenedBlank);
         await expect(control(page, 'Virginia source year')).toHaveValue('');
         await pendingMoney(active);
 
@@ -53,8 +57,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
         expect(draft.filedReturn.federalAgi).toBe('100,000');
         expect(draft.filedReturn.incomeTaxBeforeCredits).toBe(cohort === 'cents' ? '2,500.5' : '2,500');
         await pendingMoney(active);
-        await confirm(page, id);
-        draft = await packet(page, id);
+        draft = packetFromSaved(await confirm(page, id));
         const receiptReference = required(required(facts.source.completedAccount.payments)[1]).sourceReference;
         pin(draft, cohort, receiptReference);
         expect(draft.originalW2).toEqual(JSON.parse(JSON.stringify(required(original.w2s[0]))));
@@ -64,34 +67,41 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
 
         const beforeEdit = structuredClone(draft), oldCaptures = captures(beforeEdit);
         await enter(page, 'Virginia completed account payment 2 source reference', changedReference);
-        draft = await packet(page, id);
-        expect(draft.sourceFactsConfirmed).not.toBe(true);
-        expect((await saved(page, id)).sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).not.toBe(true);
-        expect(captures(draft)).toEqual(oldCaptures);
-        expect(required(required(draft.completedAccount.payments)[1]).amount).toBe(required(required(beforeEdit.completedAccount.payments)[1]).amount);
-        expect(required(required(draft.completedAccount.payments)[1]).transactionOriginals).toEqual(required(required(beforeEdit.completedAccount.payments)[1]).transactionOriginals);
+        const savedEdit = await saved(page, id);
+        const edited = packetFromSaved(savedEdit);
+        expect(edited.sourceFactsConfirmed).not.toBe(true);
+        expect(savedEdit.sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).not.toBe(true);
+        expect(captures(edited)).toEqual(oldCaptures);
+        expect(required(required(edited.completedAccount.payments)[1]).amount).toBe(required(required(beforeEdit.completedAccount.payments)[1]).amount);
+        expect(required(required(edited.completedAccount.payments)[1]).transactionOriginals).toEqual(required(required(beforeEdit.completedAccount.payments)[1]).transactionOriginals);
         await pendingMoney(active);
         await geometry(page, info, 'same-cash-source-invalidated', native, control(page, 'Virginia completed account payment 2 source reference'));
-        const edited = await packet(page, id);
-        await page.reload(); expect(await packet(page, id)).toEqual(edited); expect(captures(await packet(page, id))).toEqual(oldCaptures);
-        await pendingMoney(active); await confirm(page, id); pin(await packet(page, id), cohort, changedReference);
+        await page.reload();
+        const reopenedEdit = await packet(page, id);
+        expect(reopenedEdit).toEqual(edited); expect(captures(reopenedEdit)).toEqual(oldCaptures);
+        await pendingMoney(active);
+        const confirmedEdit = packetFromSaved(await confirm(page, id));
+        pin(confirmedEdit, cohort, changedReference);
         await confirmedMoney(active, cohort);
 
         const beforeUnknown = structuredClone(await packet(page, id));
         await enter(page, 'Virginia completed account unapplied payments', '');
-        draft = await packet(page, id);
+        const savedUnknown = await saved(page, id);
+        draft = packetFromSaved(savedUnknown);
         expect(draft.completedAccount.unappliedPayments).toBe(''); expect(draft.sourceFactsConfirmed).not.toBe(true);
-        expect((await saved(page, id)).sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).not.toBe(true);
+        expect(savedUnknown.sectionData['state-return']?.ohioResidency?.sourceFactsConfirmed).not.toBe(true);
         expect(captures(draft)).toEqual(captures(beforeUnknown));
         await native.getByRole('button', { name: residentCreditConfirmLabel, exact: true }).click();
-        await expect(native.getByRole('alert')).toHaveCount(1); expect(captures(await packet(page, id))).toEqual(captures(beforeUnknown));
+        await expect(native.getByRole('alert')).toHaveCount(1);
         await pendingMoney(active);
         const unknown = await packet(page, id);
+        expect(captures(unknown)).toEqual(captures(beforeUnknown));
         await page.reload(); expect(await packet(page, id)).toEqual(unknown);
         await expect(control(page, 'Virginia completed account unapplied payments')).toHaveValue('');
         await pendingMoney(active);
-        await enter(page, 'Virginia completed account unapplied payments', '0'); await confirm(page, id);
-        const final = await packet(page, id); pin(final, cohort, changedReference); await confirmedMoney(active, cohort);
+        await enter(page, 'Virginia completed account unapplied payments', '0');
+        const final = packetFromSaved(await confirm(page, id));
+        pin(final, cohort, changedReference); await confirmedMoney(active, cohort);
         const current = await saved(page, id);
         expect(current.sectionData['income-w2']).toEqual(seed.sectionData['income-w2']);
         expect(current.sectionData['state-return']?.ohioPayments).toEqual(seed.sectionData['state-return']?.ohioPayments);
@@ -101,8 +111,9 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
         await openWorkspace(page);
         const first = await reviewDownload(page, info, cohort, 'initial'); expect(downloads).toHaveLength(1);
         await page.goto('/'); await page.goto(`/returns/${id}`);
-        expect(await packet(page, id)).toEqual(final);
-        expect((await saved(page, id)).sectionData['state-return']?.ohioPayments).toEqual(seed.sectionData['state-return']?.ohioPayments);
+        const reopenedWorkspace = await saved(page, id);
+        expect(packetFromSaved(reopenedWorkspace)).toEqual(final);
+        expect(reopenedWorkspace.sectionData['state-return']?.ohioPayments).toEqual(seed.sectionData['state-return']?.ohioPayments);
         const reviewButton = page.getByRole('button', { name: 'Download Review PDF', exact: true });
         await geometry(page, info, 'actual-workspace-reopened', reviewButton.locator('xpath=ancestor::section[1]'), reviewButton);
         const second = await reviewDownload(page, info, cohort, 'reopened');

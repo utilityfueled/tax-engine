@@ -33,7 +33,7 @@ lines:
     testRef: "tests/scripts/thread-tick-phase.test.mjs::outer receipt seals only independently validated source/image/inventory and file hash"
   - line: "exact-original-source-inverse"
     description: "One-call wrapper inverses to original test bytes"
-    formula: "Remove the one diagnostic import and inverse the one typeOriginals callback wrapper. Require exact original SHA2566d52ee9b7e33b63d7ec37a1ab23452e0657307dcd61e8b7bd83ea5884a7476fb. Every original input/action/assertion/deadline remains in the source."
+    formula: "Remove the one diagnostic import and inverse the one typeOriginals callback wrapper. Require exact unwrapped SHA256 d5d2b50e19698013b1f9b4fc465b19f657e9b0e89456e8d9cf6347ad2e0e7889. Every original input, action, assertion and deadline remains in the source."
     testRef: "tests/scripts/thread-tick-phase.test.mjs::entry wrapper inverts to exact original test source bytes"
   - line: "confirmed-observer-cleanup"
     description: "Reject observations when observer cleanup cannot be confirmed"
