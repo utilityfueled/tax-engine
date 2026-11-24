@@ -5,6 +5,45 @@
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
 
+- `21f7fd27` names the state return being prepared and explicitly asks
+  for Pennsylvania residency in the source form. Nineteen focused tests,
+  six desktop/mobile Chromium checks and the exact web build passed.
+  [State selection evidence](upgrade-2026-progress.md#november-23-pennsylvania-state-return-wording).
+
+- `c066ab20` verifies the cumulative AI spending bound under the owner
+  lock before a second provider attempt. Insufficient holds finalize the
+  first attempt, and retries return the same fallback. All 173 focused
+  tests passed against disposable PostgreSQL and a fake provider.
+  [Accounting and verification record](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold).
+
+- `8b1dbe36` holds a positive federal carry credit when a sole taxpayer
+  reports that no preceding return was filed. `67bea8b6` holds a Schedule H
+  FUTA No when verified nonexempt cash wages make a qualifying quarter
+  unavoidable. All 53 and 307 focused tests respectively passed.
+  [Payment and payroll results](upgrade-2026-progress.md#november-23-payment-and-payroll-source-reconciliation).
+
+- `2141344d` adds an independently reviewed native browser timing report
+  with case durations, original deadlines, and source and image identity.
+  The latest combined ARM64 rehearsal is queued under the same strict gate.
+  [Exact combined native rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506).
+
+- `ee9a728d` disallows child, other dependent, additional child and earned
+  income credits for an actual short accounting-period year. Ordinary
+  decedent eligibility is preserved. The 2025 review PDF clears the
+  affected dependent credit checkboxes. All 241 focused tests, 55 browser
+  orchestration and source-accounting tests, and 28 spec references passed.
+  The exact unit suite passed 30,248 tests.
+  [Authority and exact-source verification](upgrade-2026-progress.md#november-23-credits-on-a-short-accounting-year).
+
+- `a90b1242` preserves cents through the SALT phase-down, statutory
+  floor, and married-separate division for 2025 and 2026. Exact-source
+  local unit and coverage runs each passed 30,237 tests. Branch coverage
+  was 88.29%, and Chromium passed 650 cases with five expected skips.
+  The official 2026 Form 8960 draft and current regulation give different
+  Section 68 allocation methods.
+  That method still requires authority reconciliation and review.
+  [SALT and Form 8960 evidence](upgrade-2026-progress.md#november-23-salt-rounding-and-form-8960-authority).
+
 - `ffc9b3d5` requires actual cohabitation in the 2026 separate-return
   Social Security worksheets, including the relevant earlier year for a
   lump-sum election. `e3b3b2bd` reconciles documented timely Marketplace
@@ -16,7 +55,9 @@ deferred at the owner’s direction. Their readiness criteria remain open.
   same workflow as AMD64. All 101 focused tests passed. Exact `e3b3b2bd`
   passed all 11 local checks, with 30,230 unit tests, 88.29% branch
   coverage and 650 Chromium passes. The exact GitHub Docker build also
-  passed. Strict Linux image qualification awaits the remote results.
+  passed. The preceding native ARM64 run completed all eight browser
+  batches and cleanup, with 640 passes, five expected skips and ten Ohio
+  case deadlines. Strict Linux image qualification remains open.
   [Exact AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169) ·
   [Exact ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
 - The first managed job stopped at the pre-Chromium Web workflow hash.

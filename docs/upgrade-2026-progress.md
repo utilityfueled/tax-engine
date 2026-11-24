@@ -1,5 +1,209 @@
 # 2026 upgrade implementation evidence
 
+## November 23 Pennsylvania state return wording
+
+`21f7fd27` asks which state return the taxpayer is preparing. The control's
+accessible description explains how to select Pennsylvania for a return
+covering Pennsylvania income while living in another state. The Pennsylvania
+source question names the jurisdiction explicitly. The state source record
+binds its residency claim to the jurisdiction, owner and year. The older
+general taxpayer residency field has no jurisdiction and cannot establish
+a Pennsylvania mismatch on its own.
+
+Two focused expectations failed before the wording change. Afterward, 19
+focused tests, web typechecking, scoped lint and the production web build
+passed. Six Chromium tests covered the accessible state picker and an actual
+Pennsylvania save and reopen at both desktop and mobile widths. The tested
+patch matches the commit. Exact branch coverage was 88.28%, with 30,256
+tests passed. All eight static and build checks and the exact GitHub Docker
+build passed. The first full unit run overlapped coverage and browser work
+and reported 20 timeout failures. The exact standalone rerun is queued
+after the local Chromium suite. Vercel canceled the production build.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45311213842) ·
+[Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45311213803) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45311213930) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45311538275).
+
+## November 23 exact AI escalation hold
+
+`c066ab20` compares the first rejected attempt's exact cost plus the
+second attempt's full dispatch-time exposure against the original hold
+inside the owner's transaction. It rounds the combined cost once.
+Insufficient holds finalize the known first attempt before returning
+deterministic help. Parallel and repeated refusals preserve one charge.
+Cancellation propagates without recording a second attempt.
+
+In the offline regression, a 33-cent hold accepted a real ledger record
+of $0.5001 for the first fictional attempt and previously still started a
+second fake provider call. The corrected path makes only the first call,
+preserves the exact cost and makes the overrun available for reconciliation.
+A partial hold case also refuses the second call. A funded case combines
+$0.0171 and $0.012 of actual recorded usage and charges 3 cents.
+
+All 173 focused tests passed against disposable PostgreSQL and synthetic
+provider responses. An independent replay and cancellation review passed,
+and an independent run of 65 ledger and adapter tests passed on local
+PostgreSQL 16.14. The 21 spec references, focused lint, web typecheck,
+55 browser orchestration and source-accounting tests, and source audit
+passed. The exact combined unit and coverage runs each passed 30,256
+tests, with 88.28% branch coverage against the 85% requirement. The
+separate PostgreSQL run exercised the ledger cases skipped by default.
+All three typechecks, spec validation, the clean inventory check, lint,
+and both builds passed from the same archive. The offline AI evaluation
+artifacts matched the current source. The exact GitHub Docker build passed.
+All eight local Chromium batches passed with 650 cases and five original
+skips, completing all eleven required local commands on this revision.
+There were zero live provider calls. Vercel canceled production.
+Exact combined archive SHA-256 is
+`c0731e0d2a8fb6116fd3026a5bbba78f852e181539e29247bceea3ffae52d43b`.
+[Routing and accounting spec](ai-routing-accounting-spec.md) ·
+[Combined GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45308009106) ·
+[Combined Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45308009160) ·
+[Combined Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45308009041) ·
+[Exact combined native ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506).
+
+## November 23 payment and payroll source reconciliation
+
+`8b1dbe36` makes the guided Payments section and the canonical federal
+calculator hold a positive carry credit when the sole taxpayer reports
+having filed no preceding return. An actual zero or omitted prior history
+remains distinct. The existing joint credit path preserves a spouse's
+possible carryforward from a separate prior return. Before the fix, a
+fictional 2025 return counted a contradictory $872 credit and reported
+$387 due. The same actual payments after removing the unsupported credit
+yielded $1,320 due, including a $61 penalty. On Node 26.13.1, 53 focused
+tests, 55 browser orchestration and source-accounting tests, both typechecks,
+and 64 scoped spec references passed. Regeneration from an isolated tracked
+source tree produced an identical coverage inventory. Vercel canceled the
+production build. The first combined unit and coverage runs each reported
+one failing existing Form 2210 integration fixture that supplied a carry
+credit while reporting no prior return. `d3f9d4b1` gives that fixture
+an actual filed prior return and keeps the same assertions. All 21 focused
+tests passed. The original combined archive SHA-256 is
+`accb16dc7d1d7f27382f1f25564dba0fe9f4ab484bc150bc373b5ed1cfd206bb`.
+[Final 2025 Form 1040 instructions, line 26](https://www.irs.gov/instructions/i1040gi) ·
+[IRS Publication 505, credit an overpayment](https://www.irs.gov/publications/p505) ·
+[Combined GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45306547410) ·
+[Combined Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45306547439) ·
+[Combined Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45306547353).
+
+`67bea8b6` reconciles a payroll answer of No with confirmed FUTA wages
+paid by one employer. At $4,000 across the current year, at least one
+calendar quarter must have at least $1,000. The check preserves the
+reported answer below that bound and excludes family wages exempt from
+FUTA. Cash wages of $2,000.01 and $1,999.99 produce $24 under confirmed
+Section A facts. The 2025 return carries the $24 to Schedule 2 and Form
+1040 line 23. Three tests reproduced incorrect acceptance before the
+fix. All 307 focused tests, both typechecks, 81 spec references, the
+clean inventory check, and 55 browser orchestration and source-accounting
+tests passed. Vercel canceled the production build.
+[26 USC §3306](https://uscode.house.gov/us/usc/t26/s3306/) ·
+[IRS Publication 926](https://www.irs.gov/publications/p926) ·
+[Exact Schedule H CI](https://github.com/utilityfueled/tax-engine/actions/runs/45306065410).
+
+## November 23 native ARM64 timing evidence
+
+The preceding `e3b3b2bd` native rehearsal passed image smoke, independent
+archive verification, Compose recovery, image evidence collection and
+cleanup. Chromium passed 641 cases and hit nine 30-second Ohio case
+deadlines across batches 6 and 7. Five original cases remained skipped.
+[Completed ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812/job/138143336150).
+
+`2141344d` publishes bounded synthetic-browser case durations, original
+deadlines, statuses and fixed failure classifications or validated source
+coordinates. It binds the report to the candidate image, commit and
+original summary digest. Independent review replayed an existing Docker
+failure with 655 cases, eight batches, nine failures and five expected
+skips, retaining the exact 30-, 180- and 240-second deadlines. All 157
+focused tests, four spec references, typechecking and workflow lint passed.
+The original strict run result controls qualification. Vercel canceled
+the production build. The pending timing rehearsal was superseded by
+the exact combined revision carrying the same diagnostic workflow.
+[Original timing dispatch](https://github.com/utilityfueled/tax-engine/actions/runs/45305829812) ·
+[Exact combined native ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506).
+
+## November 23 credits on a short accounting year
+
+`ee9a728d` applies the section 24(f) and section 32(e) restrictions when
+the actual answer indicates a short year caused by an accounting-period
+change. An ordinary decedent return retains its applicable credits. A
+death date does not invalidate an affirmative accounting-change answer.
+The 2025 Form 1040 review PDF preserves dependent identities and clears
+the child and other dependent credit checkboxes on affected returns.
+Known duplicate household TINs still fail. A supplied EIC claimant packet
+still requires ordinary source reconciliation. Qualification of annualized
+short-year returns under section 443 remains open.
+[26 USC §24](https://uscode.house.gov/us/usc/t26/s24/) ·
+[26 USC §32](https://uscode.house.gov/us/usc/t26/s32/) ·
+[IRS Publication 538](https://www.irs.gov/publications/p538) ·
+[IRS Publication 559](https://www.irs.gov/publications/p559).
+
+Before implementation, the child-credit tests reproduced three incorrect
+amounts and one incorrect PDF checkbox. The earned income credit tests
+reproduced $649 in 2025 and $664 in the internal 2026 route on ineligible
+returns. A review test also caught the duplicate-identity regression
+before it was fixed. The final combined Node 26 run passed 241 focused
+tests, 55 browser orchestration and source-accounting tests, and all 28
+scoped spec references. Type checking, scoped lint and source audit passed.
+The exact unit and coverage runs each passed 30,248 tests after enabling
+the existing localhost test listener. Branch coverage was 88.29%.
+The initial sandboxed run retained its listener failure in local evidence.
+The exact archive SHA-256 is
+`b55990318a34f251a7923641e3665197700f7b0834675a93fc4ce0e47276fc17`.
+Vercel canceled the production build. Annual qualification stays closed.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45304543389) ·
+[Exact Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45304543199) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45304543163).
+
+## November 23 preceding native ARM64 qualification
+
+Exact `a1632117` passed the recovery and archive import checks. Its strict
+browser run completed all eight batches, with 640 passes, five original
+skips and ten 30-second deadline failures. Three failed in Ohio batch 6
+and seven in Ohio batch 7. The runtime container was removed. Independent
+log review found deadlines across navigation, editing, confirmation, reopen
+and route assertions. Two late POST observations occurred on the filing
+rejection check after a successful review download. The cause of the
+timeouts remains unresolved. Strict
+browser qualification remains open.
+[Native ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45296962451/job/138119704656).
+
+## November 23 SALT rounding and Form 8960 authority
+
+`a90b1242` preserves the exact Decimal cap through the 30% phase-down,
+statutory floor and married-separate division. Schedule A line 5e rounds
+the smaller of eligible taxes paid and the exact cap. With sufficient
+taxes paid, 2026 single SALT MAGI of $505,005 yields an exact cap of
+$40,398.50 and reported $40,399. Married-separate MAGI of $252,504
+yields $20,199.40 and reported $20,199. The corresponding 2025 cases
+yield reported $39,999 and $19,999. Seven arithmetic assertions failed
+before the fix. Under Node 26.13.1, 194 focused tests and 55 standalone
+browser workflow and source-accounting tests passed. The scoped
+Schedule A spec validation passed all 63 references. Vercel canceled
+the production build. [26 USC §164](https://uscode.house.gov/us/usc/t26/s164/) ·
+[26 USC §6102(c)](https://uscode.house.gov/us/usc/119-120/t26/s6102/) ·
+[Final 2025 Schedule A instructions](https://www.irs.gov/instructions/i1040sca).
+
+The exact application archive SHA-256 is
+`5922ae26b08d4184b9e5b8646e831fec3b5cc022716d165c1c666e5da5934991`.
+The eight exact core checks and coverage passed. The unit and coverage
+runs each passed 30,237 tests, with 79 original skips. Branch coverage
+was 88.29% against the existing 85% threshold. The Docker build passed.
+All eight Chromium batches completed with 650 passes, five original
+skips, zero failures and verified cleanup.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45303071080) ·
+[Exact Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45303071037) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45303070877).
+
+The Form 8960 source comparison reproduced a $158 NIIT difference between
+the current deduction-allocation resolver and the IRS's 2026 draft example.
+The draft and current regulation use different allocation methods. The
+draft's stated factor also differs from the statutory fraction. The
+2026 method stays unqualified pending final instructions and independent
+source review. Federal, Ohio, and Pennsylvania annual gates also still
+depend on final 2026 parent returns. [Source and figures](upgrade-2026-official-source-refresh-20261117-continuation.md#november-23-form-8960-and-the-section-68-allocation) ·
+[Reviewer worksheet](upgrade-2026-external-actions.md#november-23-form-8960-and-section-68).
+
 ## November 23 Social Security, Marketplace and native release evidence
 
 `ffc9b3d5` requires the actual cohabitation answer for positive 2026 net

@@ -1,5 +1,31 @@
 # Annual official forms recheck, November 17 at 19:31 UTC
 
+## November 23 Form 8960 and the Section 68 allocation
+
+The public Form 8960 instructions still identify 2025 as the final year.
+Two direct GETs of the draft delivered the same 25-page 2026 PDF. The
+server and draft catalog report November 18. The embedded PDF dates
+are October 15 and 16. The verified SHA-256 is
+`e0af7d344185a3dc0d50975261ab7cb3e7e0777d12c00cb2a91a83c61220cf40`.
+[Final 2025 instructions](https://www.irs.gov/instructions/i8960) ·
+[2026 draft](https://www.irs.gov/pub/irs-dft/i8960--dft.pdf#page=20) ·
+[IRS draft directory](https://www.irs.gov/downloads/irs-dft?order=name&page=1&sort=desc).
+
+The draft allocates a proportion of the regular Section 68 reduction to
+investment deductions. The existing regulation uses the lesser of the
+allocable deductions and the final allowed itemized total, with a reference
+to a subsection removed by the 2025 law. For the draft's wage and interest
+case, the current engine's source resolver accepts $77,000 of deductions
+and yields $12,274 of NIIT. The draft example allocates $4,162 of an
+$8,378 overall reduction and gives $72,838 of deductions and $12,432
+of NIIT. Statutory 2/37 reproduces the example. The draft worksheet's
+literal 0.054 gives a $8,370 overall reduction, $72,842 of deductions
+and the same $12,432 tax at whole dollars. Keep this 2026 method
+unqualified until the final instruction and controlling authority are
+reconciled. [26 USC §68](https://uscode.house.gov/us/usc/t26/s68/) ·
+[26 CFR §1.1411-4(f)(7)](https://www.ecfr.gov/current/title-26/section-1.1411-4) ·
+[Draft worksheet](https://www.irs.gov/pub/irs-dft/i8960--dft.pdf#page=21).
+
 ## November 23 Social Security and Marketplace source check
 
 The regular IRS Publication 915 is labeled for **2026 returns**. Its

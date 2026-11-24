@@ -1,5 +1,20 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 23 Form 8960 and Section 68
+
+Resolve whether the 2026 Section 68 reduction allocated to NIIT follows
+the existing regulation's lesser-of method or the proportional worksheet
+in the IRS draft. The regulation cites former §68(c). Independently derive
+the line 9 and 10 deductions and NIIT for a single filer with $1.6 million
+of wages, $400,000 of interest, $75,000 of allowed investment interest,
+$70,000 of allowed charity and $10,000 in capped SALT. Of the SALT, $2,000
+is properly allocable to investment income. Resolve the draft's 0.054
+worksheet factor against the statutory 2/37 and document the controlling
+authority and final form revision.
+[26 USC §68](https://uscode.house.gov/us/usc/t26/s68/) ·
+[26 CFR §1.1411-4(f)(7)](https://www.ecfr.gov/current/title-26/section-1.1411-4) ·
+[IRS draft example and worksheet](https://www.irs.gov/pub/irs-dft/i8960--dft.pdf#page=20).
+
 ## November 23 Social Security and Marketplace review
 
 Independently derive the current-year Social Security results for the
