@@ -158,6 +158,22 @@ it('PA ordinary return rejects one confirmation classified as both an estimate a
  f.facts.disposition={kind:'allocation',sourceReference:'Fictional duplicate-derived refund election',refundRequested:'211',nextYearCreditRequested:'0',donations:[]};
  expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/duplicate actual payment receipt/i);
 });
+it('PA ordinary return requires separate originals for an extension and balance payment',()=>{
+ const f=paOrdinaryReturnExtensionFixture();
+ const wage=f.input.w2s[0];
+ wage.stateTaxWithheld='1';
+ f.input.paResidencySources.wages[0].original=structuredClone(wage);
+ f.facts.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
+ f.sources.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
+ const extension=f.facts.payments.rows[0].original;
+ extension.amount='769';
+ f.facts.timing.kind='filed';
+ const originalBalance={...extension,kind:'balance' as const,confirmationNumber:'FICTIONAL-SEPARATE-BALANCE'};
+ f.facts.timing.remainingTaxPayment={status:'actual_payment',sourceReference:'Fictional original balance receipt',date:extension.date,amountAppliedToTax:'769',original:originalBalance};
+ expect(calculatePAOrdinaryReturn(f.input,f.facts,f.sources).pa40.taxDue.toString()).toBe('769');
+ originalBalance.confirmationNumber=` ${extension.confirmationNumber.toUpperCase()} `;
+ expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/duplicate actual payment receipt/i);
+});
 function pa2026ExtensionReviewFixture(status:'resident'|'part_year'|'nonresident'='resident'){
  const f=pa2026OrdinaryDraftFixture(status);
  const template=paOrdinaryReturnExtensionFixture(2026).facts.payments.rows[0];

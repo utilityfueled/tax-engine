@@ -52,21 +52,30 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown,un
  if(timing.kind===''||(timing.kind==='filed'?filingDate>asOf:filingDate<asOf))return fail('actual filed versus expected filing date contradicts as-of sources');
  if(timing.returnKind!=='original'||timing.filingExtension!=='none'||timing.paymentExtension!=='none')return fail('amended/extension timing requires its actual dated successor method');
  if(filingDate<`${y}-01-01`)return fail('filing date predates its source tax year');
+ const receiptConfirmations=new Set<string>();
+ // Every original is checked against the same owner, year and PA-40 account.
+ const recordReceiptConfirmation=(confirmationNumber:string)=>{
+  ref(confirmationNumber);
+  const confirmation=confirmationNumber.trim().replace(/\s+/g,' ').toUpperCase();
+  if(receiptConfirmations.has(confirmation))return fail('duplicate actual payment receipt identity');
+  receiptConfirmations.add(confirmation);
+ };
  const remaining=timing.remainingTaxPayment;ref(remaining.sourceReference);
  if(remaining.status==='actual_payment'||remaining.status==='expected_payment'){
   const paid=day(remaining.date);localMoney(remaining.amountAppliedToTax);if(paid!==`${y+1}-04-15`)return fail('remaining tax payment needs its actual dated successor method outside the first April15 endpoint');
   if(remaining.status==='actual_payment'){
    if(paid>asOf||!remaining.original)return fail('actual payment receipt cannot be future or missing');owner(remaining.original,input);
-   if(remaining.original.taxYear!==y||remaining.original.returnType!=='pa40'||remaining.original.kind!=='balance'||day(remaining.original.date)!==paid||!localMoney(remaining.original.amount).eq(localMoney(remaining.amountAppliedToTax)))return fail('actual original remaining payment identity/date/amount differs');ref(remaining.original.confirmationNumber);
+   if(remaining.original.taxYear!==y||remaining.original.returnType!=='pa40'||remaining.original.kind!=='balance'||day(remaining.original.date)!==paid||!localMoney(remaining.original.amount).eq(localMoney(remaining.amountAppliedToTax)))return fail('actual original remaining payment identity/date/amount differs');
+   recordReceiptConfirmation(remaining.original.confirmationNumber);
   }else if(paid<asOf||remaining.original)return fail('expected payment cannot be past or passed off as an actual receipt');
  }else if(remaining.status!=='no_remaining_tax'||remaining.original||remaining.amountAppliedToTax!==undefined||remaining.date!==undefined)return fail('remaining tax amount/date is unknown or contradicts no-remaining-tax source');
  const payments=facts.payments;if(payments.allPaymentsIncludedConfirmed!==true)return fail('complete actual payment sources are required');
- const quarterly:[Decimal,Decimal,Decimal,Decimal]=[new Money(0),new Money(0),new Money(0),new Money(0)];let estimates=new Money(0),extension=new Money(0);const receipts=new Set<string>();
+ const quarterly:[Decimal,Decimal,Decimal,Decimal]=[new Money(0),new Money(0),new Money(0),new Money(0)];let estimates=new Money(0),extension=new Money(0);
  let hasNonendpointEstimatedPayment=false,hasEarlyExtensionPayment=false;
  const firstExtensionDate=`${y+1}-01-01`,extensionDueDate=`${y+1}-04-15`;
  const dates=[`${y}-04-15`,`${y}-06-${y===2025?'16':'15'}`,`${y}-09-15`,`${y+1}-01-15`];
- for(const row of payments.rows){ref(row.sourceReference);const o=row.original;owner(o,input);ref(o.confirmationNumber);const paid=day(o.date),amount=localMoney(o.amount);if(o.taxYear!==y||o.returnType!=='pa40'||paid>asOf)return fail('actual receipt year/return/date is invalid or future');
-  const identityKey=stable({owner:ssn(o.accountSsn),year:o.taxYear,type:o.returnType,confirmation:o.confirmationNumber.trim().replace(/\s+/g,' ').toUpperCase()});if(receipts.has(identityKey))return fail('duplicate actual payment receipt identity');receipts.add(identityKey);
+ for(const row of payments.rows){ref(row.sourceReference);const o=row.original;owner(o,input);const paid=day(o.date),amount=localMoney(o.amount);if(o.taxYear!==y||o.returnType!=='pa40'||paid>asOf)return fail('actual receipt year/return/date is invalid or future');
+  recordReceiptConfirmation(o.confirmationNumber);
   if(o.kind==='estimated'){const installment=row.intendedInstallment;if(installment===null||installment<1||installment>4)return fail('actual installment period is missing');const endpoint=dates[installment-1],previous=installment===1?`${y}-01-01`:dates[installment-2];if(paid>endpoint||(installment===1?paid<previous:paid<=previous))return fail('actual installment date is outside its intended published period; dated successor method required');if(paid!==endpoint)hasNonendpointEstimatedPayment=true;quarterly[installment-1]=quarterly[installment-1].plus(amount);estimates=estimates.plus(amount);}
   else if(o.kind==='extension'){
    if(row.intendedInstallment!==null||paid<firstExtensionDate||paid>extensionDueDate)return fail('actual extension payment requires its separate original kind and a date from January 1 through April 15 after year end');

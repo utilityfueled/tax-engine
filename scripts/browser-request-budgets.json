@@ -1165,7 +1165,7 @@
     "src/engine/state/pa-ordinary-employee-sources.ts": "4b4e8fe990d2b2eb13e6103d476b2eb406c1c0de88a83bf2cf28b9ed9d4f8cc8",
     "src/engine/state/pa-ordinary-local-w2-boundary.ts": "61965f29be9991893344ba34f5f0a97ee7b62b811d5b38cb322c6f1cd698a126",
     "src/engine/state/pa-ordinary-oid-sources.ts": "9c556768e43f1a5fd855b280c6ea35131da5fe0353795d8c38b819da1a7abf5f",
-    "src/engine/state/pa-ordinary-return-facts.ts": "378214af9e1c2472f0df78a726473422f59882b97d432dcb103e24772c8bfbc5",
+    "src/engine/state/pa-ordinary-return-facts.ts": "28e65add082807504d58c8ac519fed9e33d1530d02f7e2e266a874d0952a10b6",
     "src/engine/state/pa-ordinary-return.ts": "5345ad771702a96e24bb66b8331cbc236fbbcb5afb13207cafc49d9bfe9ee454",
     "src/engine/state/pa-ordinary-royalty-sources.ts": "9d87ad8dec49c483b121df1f9f87baff73d0f1036128097cf58cfa3956919311",
     "src/engine/state/pa-ordinary-source-precision.ts": "327389ed7781753e787e4f28ede1c5e7ef8365abc6f777fc0af90bc353aa6283",
