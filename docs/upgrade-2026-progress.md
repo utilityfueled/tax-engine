@@ -17,10 +17,13 @@ All 2,539 Pennsylvania engine tests passed, including 18 new cases and
 the 2025 regressions. Independent source review confirmed the residency,
 eligibility and admission boundaries. The clean archived source passed
 209 focused tests, two source-audit checks, the generated inventory and
-9,980 spec references. TypeScript and scoped ESLint passed. The combined
-tracked source is queued for full local checks after the prior browser
-suite. The exact GitHub image build passed. GitHub CI, browser and
-ARM64 recovery checks continue. Vercel reported an ignored build.
+9,980 spec references. TypeScript and scoped ESLint passed. Full exact
+unit and coverage runs each passed 30,338 tests with 81 skips and 88.32%
+branch coverage. Local Chromium passed all 650 active cases with five
+original skips, completing all 11 local checks. The exact GitHub image
+build passed. ARM64 Compose recovery and archive verification passed.
+GitHub CI and strict browser checks continue. Vercel reported an ignored
+build.
 [Image workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350825798) ·
 [ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304).
 
@@ -43,8 +46,9 @@ tests and the other 2026 methods. On the clean candidate, 176 focused
 tests, two source-audit checks, the inventory and 9,979 spec references
 passed. TypeScript, scoped ESLint and independent source review passed.
 Full local unit and coverage runs each passed 30,319 tests with 81
-skipped, at 88.32% branch coverage. The combined tracked source archive
-contains the Ohio and short-year work.
+skipped, at 88.32% branch coverage. All 11 exact local checks passed,
+including 650 active Chromium cases and five original skips. The
+combined tracked source archive contains the Ohio and short-year work.
 
 ## November 24 employer cutoff payroll originals
 
@@ -146,6 +150,16 @@ Full local unit and coverage runs each passed 30,283 tests with 81
 skipped and 88.30% branch coverage. All 650 active local Chromium cases
 passed with the five original skips. The archived generated inventory
 was checked separately after correcting its missing entry.
+GitHub's ordinary self-host job also passed all 650 active cases. The
+strict AMD64 image passed recovery, independent archive verification and
+cleanup. At the existing 30-second limit it passed 643 active browser
+cases and missed seven Ohio deadlines. The timing review found the misses
+across header entry, saved-return reopen, disclosure, download and filing
+rejection. The elapsed measurements did not isolate a common application
+cost.
+[Ordinary self-host job](https://github.com/utilityfueled/tax-engine/actions/runs/45347093959/job/138284181510) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45347093959/job/138284180949) ·
+[Strict timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45347093959/artifacts/14900399670).
 
 ## November 24 CLI short accounting-year import
 

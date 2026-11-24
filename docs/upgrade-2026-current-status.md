@@ -12,8 +12,10 @@ Use the linked progress sections when investigating individual packages.
 - `9a45b970` adds a private Pennsylvania 2026 worksheet path that
   excludes verified government unemployment from state income and
   Schedule SP for residents, part-year residents and nonresidents. All
-  2,539 Pennsylvania tests passed. The exact GitHub image build passed.
-  The combined application is in the local and GitHub recovery checks.
+  2,539 Pennsylvania tests passed. All 11 exact local checks passed,
+  including 30,338 tests at 88.32% branch coverage and 650 active
+  Chromium cases. The exact GitHub image build passed. Strict Linux
+  browser qualification is still running.
   [Pennsylvania evidence](upgrade-2026-progress.md#november-24-pennsylvania-government-unemployment-exclusion).
 
 - `badcfd4b` adds an internal Ohio 2026 candidate that assigns ordinary
