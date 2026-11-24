@@ -7,6 +7,7 @@ import type {TaxYearInput} from '@/models/inputs.js';import type {CalculatedLine
 import {PAOrdinaryReturnFactsSchema,PA_SP_OTHER_LINES,type PAOrdinaryReturnFacts} from '@/models/pa-ordinary-return-facts.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';import {roundDollar} from '@/utils/decimal.js';import {AuditTrail} from '@/utils/audit.js';
 import {calculatePAResidencySources} from './pa-residency-sources.js';import {calculateScheduleSP} from './pa-schedule-sp.js';import {calculatePAUseTax} from './pa-use-tax.js';
+import type {PA2026GovernmentUnemploymentContext} from './pa-2026-unemployment-source.js';
 const fail=(s:string):never=>{throw new Error('PA ordinary return sources: '+s);};
 const ref=(s:string)=>{if(!s.trim())fail('actual source reference is required');};
 function money(s:unknown):Decimal{if(typeof s!=='string'||!/^\d+(\.\d+)?$/.test(s))return fail('actual nonnegative amount is missing; known zero must be explicit');const n=new Decimal(s);if(!n.isFinite())return fail('nonfinite source amount');return n;}
@@ -27,7 +28,7 @@ export interface PAOrdinaryReturnProjection{
  spOutsidePAIncome:Decimal;spOtherIncomeByLine:Record<string,Decimal>;spNontaxableIncome:Decimal;spDependentChildren:number;claimedAsDependent:boolean;claimingHouseholdQualifies?:boolean;
  actualPAServiceCompensation:Decimal;useTax:Decimal;timing:PAOrdinaryReturnFacts['timing'];refundRequested:Decimal;nextYearCreditRequested:Decimal;donations:Array<{code:string;amount:Decimal}>;lines:CalculatedLine[];
 }
-export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):PAOrdinaryReturnProjection{
+export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown,unemployment?:PA2026GovernmentUnemploymentContext):PAOrdinaryReturnProjection{
  const Money=Decimal.clone({precision:ordinarySourcePrecision(input,raw),rounding:Decimal.ROUND_HALF_UP});
  const localMoney=(value:unknown):Decimal=>new Money(money(value));
  const localWhole=(value:string):Decimal=>new Money(whole(value));
@@ -45,7 +46,7 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
   try{actualW2Rows.set(index,calculateW2StateLocalSources(input,index,w.stateLocalSources));}
   catch{return fail('retained W2 state/local sources need complete actual row-normalized successor evidence');}
  }
- const sourcePacket=(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources;const income=calculatePAResidencySources(input,sourcePacket);const residency=PAResidencySourcesSchema.parse(sourcePacket);
+ const sourcePacket=(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources;const income=calculatePAResidencySources(input,sourcePacket,unemployment);const residency=PAResidencySourcesSchema.parse(sourcePacket);
  const asOf=day(facts.timing.asOfDate),filingDate=day(facts.timing.date),timing=facts.timing;
  if(residency.employeeSources && day(residency.employeeSources.asOfDate)>asOf)return fail("actual employer/expense proof is later than confirmed filing source as-of");
  if(timing.kind===''||(timing.kind==='filed'?filingDate>asOf:filingDate<asOf))return fail('actual filed versus expected filing date contradicts as-of sources');

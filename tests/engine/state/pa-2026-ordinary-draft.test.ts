@@ -1,7 +1,7 @@
 import Decimal from 'decimal.js';
-import {Form1099IntSchema} from '@/models/inputs.js';
+import {Form1099GSchema,Form1099IntSchema} from '@/models/inputs.js';
 import {it,expect} from 'vitest';
-import {calculatePAOrdinaryReturn,calculatePA2026OrdinaryDraft} from '@/engine/state/pa-ordinary-return.js';
+import {calculatePAOrdinaryReturn,calculatePA2026OrdinaryDraft,calculatePA2026OrdinaryUnemploymentDraft} from '@/engine/state/pa-ordinary-return.js';
 import {calculatePAResidencySources} from '@/engine/state/pa-residency-sources.js';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {getConstants} from '@/models/constants.js';
@@ -17,6 +17,87 @@ it('PA2026 draft composes all actual residency sources without full federal admi
   const f=pa2026OrdinaryDraftFixture(status),before=JSON.stringify(f),r=calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources);
   expect(r.kind).toBe('pa-2026-ordinary-source-draft');expect(r.taxYear).toBe(2026);expect(r.pa.residencyStatus).toBe(status);expect(r.pa.pa40.totalPATaxableIncome.toFixed()).toBe(taxable);expect(r.pa.pa40.taxLiability.toFixed()).toBe(tax);expect(new Decimal(taxable).times('0.0307').toDecimalPlaces(0,Decimal.ROUND_HALF_UP).toFixed()).toBe(tax);expect(r.pa.pa40.netOverpayment.toFixed()).toBe('0');expect(r.pa.pa40.totalAmountDue.toFixed()).toBe('0');expect(r.pa.scheduleSP.eligibilityIncome.toFixed()).toBe('75000');expect(r.pa.scheduleSP.taxForgivenessCredit.toFixed()).toBe('0');expect(r.pa.rev1630.totalInterest.toFixed()).toBe('0');expect(r.pa.workingCredit.credit.toFixed()).toBe('0');expect(r.dependencyProof.federalEarnedIncomeCredit.toFixed()).toBe('0');expect(r.dependencyProof.maximumCompletedEitcPhaseout.toFixed()).toBe('70244');expect(r).not.toHaveProperty('federal');expect(JSON.stringify(f)).toBe(before);
  }
+});
+
+function pa2026UnemploymentFixture(status: 'resident' | 'part_year' | 'nonresident' = 'resident') {
+ const f = pa2026OrdinaryDraftFixture(status);
+ const original = Form1099GSchema.parse({
+  payer: 'Fictional State Unemployment Insurance Agency', sourceId: 'PRIVATE-PA-UC-ORIGINAL',
+  accountReference: 'PRIVATE-PA-UC-ACCOUNT', accountHolder: 'primary', taxYear: 2026, sourceFormRevision: '2026-12',
+  sourceFactsConfirmed: true, actualReceiptConfirmed: true, additionalWorksheetRequired: false,
+  programType: 'government-unemployment', unemploymentCompensation: '2600.25', federalWithheld: '260.02',
+  stateOrLocalTaxRefund: '0', rtaaPayments: '0', taxableGrants: '0', agriculturePayments: '0',
+  marketGain: '0', familyLeaveBenefits: '0', tradeOrBusinessRefund: false,
+  currentYearRepaid: '0', priorYearRepaid: '0', unrecoveredAfterTaxContributions: '0', stateTaxReporting: 'none',
+ });
+ f.input.form1099G = [original];
+ const {firstName,lastName,ssn} = f.input.taxpayer.primary;
+ const exclusionProof = {
+  sourceId: original.sourceId, sourceReference: 'Fictional actual 2026 government unemployment original',
+  recipient: {firstName,lastName,ssn}, currentUncorrectedNonvoidOriginalConfirmed: true,
+  allOriginalBoxesKnownConfirmed: true, ordinaryNoncontributoryStateUnemploymentConfirmed: true, noStateWithholdingConfirmed: true,
+ };
+ rebindPA2026Draft(f);
+ return {...f,original,exclusionProof};
+}
+
+it('PA2026 privately excludes government Box 1 from PA-40 and Schedule SP in every residency', () => {
+ for (const [status,paWages,tax] of [['resident','75000','2303'],['part_year','39000','1197'],['nonresident','9000','276']] as const) {
+  const control = pa2026OrdinaryDraftFixture(status);
+  const before = calculatePA2026OrdinaryDraft(control.input,control.facts,control.sources);
+  const f = pa2026UnemploymentFixture(status);
+  const unchanged = structuredClone(f);
+  const draft = calculatePA2026OrdinaryUnemploymentDraft(f.input,f.facts,f.sources,f.exclusionProof);
+  expect(draft.pa.residencyStatus).toBe(status);
+  expect(draft.pa.pa40.compensation.toFixed()).toBe(paWages);
+  expect(draft.pa.pa40.taxLiability.toFixed()).toBe(tax);
+  expect(draft.pa.pa40.stateWithholding.toFixed()).toBe(tax);
+  expect(draft.pa.pa40.totalPATaxableIncome.eq(before.pa.pa40.totalPATaxableIncome)).toBe(true);
+  expect(draft.pa.scheduleSP.eligibilityIncome.toFixed()).toBe('75000');
+  expect(draft.pa.scheduleSP.taxForgivenessCredit.isZero()).toBe(true);
+  expect(draft.dependencyProof.ordinaryWages.toFixed()).toBe('75000');
+  expect(draft.dependencyProof.federalEarnedIncomeCredit.isZero()).toBe(true);
+  expect(draft.pa.workingCredit.credit.isZero()).toBe(true);
+  expect(draft.readiness).toMatchObject({filingEligible:false,fullFederalCalculated:false});
+  expect(draft.pa.sourceCommitment).not.toBe(before.pa.sourceCommitment);
+  expect(draft.pa.lines.find(line => line.line === 'government-unemployment-exclusion')?.value.toFixed()).toBe('2600.25');
+  expect(f).toEqual(unchanged);
+ }
+});
+
+type PAUnemploymentFixture = ReturnType<typeof pa2026UnemploymentFixture>;
+it.each<[string, (f: PAUnemploymentFixture) => void]>([
+ ['wrong tax year', f => { f.original.taxYear = 2025; }],
+ ['wrong current revision', f => { f.original.sourceFormRevision = '2024-03'; }],
+ ['owner mismatch', f => { f.exclusionProof.recipient.ssn = '900-40-0912'; }],
+ ['wrong original ID', f => { f.exclusionProof.sourceId = 'PRIVATE-DIFFERENT-ORIGINAL'; }],
+ ['unconfirmed government program', f => { f.exclusionProof.ordinaryNoncontributoryStateUnemploymentConfirmed = false; }],
+ ['unsupported program type', f => { f.original.programType = 'employer-supplemental'; }],
+ ['uncertain actual receipt', f => { f.original.actualReceiptConfirmed = false; }],
+ ['unsupported original field', f => { f.original.refundTaxYear = 2025; }],
+ ['tax refund on alternate Box 2 field', f => { f.original.stateLocalIncomeTaxRefund = '1'; }],
+ ['Reemployment Trade Adjustment Assistance', f => { f.original.rtaaPayments = '1'; }],
+ ['paid family leave', f => { f.original.familyLeaveBenefits = '1'; }],
+ ['prior year repayment', f => { f.original.priorYearRepaid = '1'; }],
+ ['unrecovered after-tax contributions', f => { f.original.unrecoveredAfterTaxContributions = '1'; }],
+ ['unconfirmed state withholding', f => { f.exclusionProof.noStateWithholdingConfirmed = false; }],
+ ['positive state withholding', f => { f.original.stateWithheld = '1'; }],
+ ['additional original', f => { f.input.form1099G.push(structuredClone(f.original)); }],
+])('PA2026 private government unemployment rejects %s', (_label, mutate) => {
+ const f = pa2026UnemploymentFixture();
+ mutate(f);
+ rebindPA2026Draft(f);
+ expect(() => calculatePA2026OrdinaryUnemploymentDraft(f.input,f.facts,f.sources,f.exclusionProof)).toThrow(/2026 ordinary government unemployment/);
+});
+
+it('PA2026 private unemployment retains the canonical original and requires unchanged confirmations', () => {
+ const f = pa2026UnemploymentFixture();
+ expect(() => calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/additional retained income originals/);
+ expect(() => calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/additional retained income originals/);
+ f.original.unemploymentCompensation = '2600.26';
+ expect(() => calculatePA2026OrdinaryUnemploymentDraft(f.input,f.facts,f.sources,f.exclusionProof)).toThrow(/current originals differ from confirmed snapshot/);
+ const prior = paOrdinaryReturnFixture('resident',2025);
+ expect(() => calculatePA2026OrdinaryUnemploymentDraft(prior.input,prior.facts,prior.sources,f.exclusionProof)).toThrow(/actual2026/);
 });
 
 it.each([

@@ -1,4 +1,5 @@
 import {calculatePA2026OrdinaryDependencies,type PA2026OrdinaryDependencyProof} from './pa-2026-ordinary-dependencies.js';
+import {qualifyPA2026GovernmentUnemployment,readPA2026GovernmentUnemployment,type PA2026GovernmentUnemploymentContext} from './pa-2026-unemployment-source.js';
 import {calculatePAOrdinaryCareSources} from './pa-ordinary-care-sources.js';
 import type {ScheduleDCResult} from './pa-schedule-dc.js';
 import {calculatePAOIDPendingOHAccount,type PAOIDPendingOHAccountResult} from './pa-oid-pending-oh-account.js';
@@ -54,7 +55,7 @@ function money(value:unknown):Decimal{if(typeof value!=='string'||!/^\d+(\.\d+)?
 function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
 const ssn=(value:string)=>value.replace(/\D/g,'');
 const name=(value:string)=>value.trim().replace(/\s+/g,' ').toUpperCase();
-function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnCompletionSources,asOf:string,ordinaryRaw:unknown):{residentCredit:PAResidentCreditSourcesResult|undefined;localBoundary:PAOrdinaryReturnResult['localBoundary']}{
+function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnCompletionSources,asOf:string,ordinaryRaw:unknown,unemployment?:PA2026GovernmentUnemploymentContext):{residentCredit:PAResidentCreditSourcesResult|undefined;localBoundary:PAOrdinaryReturnResult['localBoundary']}{
  const t=input.taxpayer.primary,y=input.taxpayer.taxYear;
  if(sources.sourceTaxYear!==y||sources.sourceFactsConfirmed!==true||stable(sources.owner)!==stable({firstName:t.firstName,lastName:t.lastName,ssn:t.ssn}))fail('confirm complete actual owner/year sources');ref(sources.sourceReference);
  if(stable(sources.originalFederalSources)!==stable(snapshotPAOrdinaryReturnOriginals(input)))fail('completion original snapshot is stale; reconfirm actual original sources');
@@ -115,7 +116,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  for(const b of input.form1099B)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0)&&!settledInvestmentAccounts.some(account=>account.state===b.state))fail('actual other-state brokerage withholding requires its source-qualified settled-account successor');
  for(const b of input.form1099OID)for(const row of b.stateWithholding??[])if(row.state!=='PA'&&money(row.stateWithheld).gt(0)&&!(row.state==='OH'&&pendingOH))fail('actual other-state OID withholding requires its credit/refund successor');
  for(const[index,b]of input.form1099Misc.entries())if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0)&&!(b.state==='MI'&&refundedRoyalty?.coveredOriginalIndices.includes(index)))fail('actual other-state MISC withholding requires its credit/refund successor');
- for(const row of calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources).digitalSources?.stateWithholding??[])if(row.state!=='PA'&&row.amount.gt(0)&&!(row.state==='VA'&&refundedDigital))fail('actual other-state digital withholding requires its credit/refund successor');
+ for(const row of calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources,unemployment).digitalSources?.stateWithholding??[])if(row.state!=='PA'&&row.amount.gt(0)&&!(row.state==='VA'&&refundedDigital))fail('actual other-state digital withholding requires its credit/refund successor');
  const oc=sources.restrictedCredits;ref(oc.sourceReference);if(oc.status!=='none_available'||oc.allAwardsTransfersCarryforwardsReviewedConfirmed!==true||oc.originalAwards.length||oc.originalTransfers.length||oc.originalCarryforwards.length)fail('restricted credit awards/transfers/carryforwards are unknown or need their actual successor');
  // Actual care/benefit originals are replayed against the fresh federal result below.
  const nrk = sources.nrk1;
@@ -157,14 +158,21 @@ export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown
 }
 /** State-only source draft; does not admit a full federal result, prepared PDF or filing. */
 export function calculatePA2026OrdinaryDraft(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown):PA2026OrdinaryDraftResult{
+ return composePA2026Draft(input,ordinaryRaw,completionRaw);
+}
+/** Private state-only draft for a separately proven ordinary government unemployment original. */
+export function calculatePA2026OrdinaryUnemploymentDraft(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown,originalProof:unknown):PA2026OrdinaryDraftResult{
+ return composePA2026Draft(input,ordinaryRaw,completionRaw,qualifyPA2026GovernmentUnemployment(input,originalProof));
+}
+function composePA2026Draft(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown,unemployment?:PA2026GovernmentUnemploymentContext):PA2026OrdinaryDraftResult{
  if(input.taxpayer.taxYear!==2026)return fail('the state-only draft requires actual2026 originals');
- const composed=composePAOrdinaryReturn(input,ordinaryRaw,completionRaw,true);
+ const composed=composePAOrdinaryReturn(input,ordinaryRaw,completionRaw,true,unemployment);
  if(!composed.dependencyProof)return fail('state-only dependency proof is unavailable');
  return {kind:'pa-2026-ordinary-source-draft',taxYear:2026,pa:composed.result,dependencyProof:composed.dependencyProof,
   ...(composed.actualBalancePayment ? {actualBalancePayment:composed.actualBalancePayment} : {}),
   readiness:{filingEligible:false,fullFederalCalculated:false,blockers:['state-only-source-draft','full-federal-calculation-unavailable','final-2026-forms-unqualified','review-only-not-qualified-for-filing']}};
 }
-function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown,stateOnly:boolean):{
+function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown,stateOnly:boolean,unemployment?:PA2026GovernmentUnemploymentContext):{
  result:PAOrdinaryReturnResult;dependencyProof?:PA2026OrdinaryDependencyProof;
  actualBalancePayment?:PA2026OrdinaryDraftResult['actualBalancePayment'];
 }{
@@ -172,14 +180,14 @@ function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completi
  const localMoney=(value:Decimal):Decimal=>new Money(value);
  const zeroFloor=(value:Decimal):Decimal=>publicOrdinaryMoney(Money.max(value,0));
  const parsed=PAOrdinaryReturnCompletionSourcesSchema.safeParse(completionRaw);if(!parsed.success)return fail('complete actual completion source shape is unknown or unsupported');const sources=parsed.data;
- const p=calculatePAOrdinaryReturnFacts(input,ordinaryRaw),year=p.taxYear;
- const {residentCredit,localBoundary}=completeCreditSources(input,sources,p.timing.asOfDate,ordinaryRaw);
+ const p=calculatePAOrdinaryReturnFacts(input,ordinaryRaw,unemployment),year=p.taxYear;
+ const {residentCredit,localBoundary}=completeCreditSources(input,sources,p.timing.asOfDate,ordinaryRaw,unemployment);
  if(p.timing.date<`${year+1}-01-01`)return fail('an original annual filing cannot predate the end of its actual tax year');
- const income=calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources);
+ const income=calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources,unemployment);
  let dependencyProof:PA2026OrdinaryDependencyProof|undefined;
  let scheduleDC:ScheduleDCResult|undefined;
  let federalEarnedIncomeCredit:Decimal;
- if(stateOnly){dependencyProof=calculatePA2026OrdinaryDependencies(input,p,sources,income);federalEarnedIncomeCredit=dependencyProof.federalEarnedIncomeCredit;}
+ if(stateOnly){dependencyProof=calculatePA2026OrdinaryDependencies(input,p,sources,income,unemployment);federalEarnedIncomeCredit=dependencyProof.federalEarnedIncomeCredit;}
  else {
   const federal = calculateFederalTax(input);
   if (income.nrk1Withholding !== undefined && federal.deductionUsed !== 'standard') {
@@ -225,8 +233,10 @@ function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completi
   };
  }
  const applied=Decimal.min(workingCredit.credit,pa40.taxDue);
- const commitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:'pa-ordinary-return-v1',ordinarySourceCommitment:p.sourceCommitment,completion:sources}))));
+ const exclusion=unemployment && readPA2026GovernmentUnemployment(input,unemployment);
+ const commitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:'pa-ordinary-return-v1',ordinarySourceCommitment:p.sourceCommitment,completion:sources,governmentUnemploymentOriginal:exclusion?.proof}))));
  const audit=new AuditTrail();audit.record('PA-Ordinary-Return','source','Complete ordinary source commitment',zero,'SHA256 binds unchanged canonical/PA originals and actual complete eligibility sources',{sourceCommitment:commitment});
+ if(exclusion) audit.record('PA-Ordinary-Return','government-unemployment-exclusion','Actual government unemployment excluded from PA income and Schedule SP',new Decimal(exclusion.box1),'Gross Form 1099-G Box 1 excluded under 61 Pa. Code §101.6(c)(4) and PA DOR Tax Forgiveness guidance');
  if(actualBalancePayment){
   audit.record('PA-Ordinary-Return','actual-balance-payment','Actual timely PA-40 balance payment applied',actualBalancePayment.actualBalancePaymentApplied,'Matching original 2026 PA-40 balance receipt reconciles the fresh return tax');
   audit.record('PA-Ordinary-Return','outstanding-tax-balance','Outstanding balance after original receipt',actualBalancePayment.outstandingTaxBalance,'Fresh return balance less the actual applied receipt');

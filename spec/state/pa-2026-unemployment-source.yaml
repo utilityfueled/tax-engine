@@ -1,0 +1,28 @@
+form: "PA 2026 government unemployment original"
+fullName: "Ordinary government unemployment exclusion from Pennsylvania income and Schedule SP"
+taxYear: 2026
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html"
+reviewStatus: "Private calculation candidate; qualified independent review pending"
+lines:
+  - line: "government-unemployment-exclusion"
+    description: "Private 2026 ordinary W-2 draft with excluded government unemployment"
+    formula: |
+      Preserve ordinary W-2 derivation and source gates for full-year residents,
+      part-year residents and nonresidents. Separately admit one recipient-bound,
+      current uncorrected and nonvoid Form 1099-G (Rev. December 2026) for actual
+      ordinary noncontributory state unemployment insurance. Require complete
+      original boxes, positive gross Box 1, confirmed zero state withholding,
+      known-zero other income boxes and no repayment, contribution or special
+      program facts. Federal withholding on the original stays outside PA.
+      Exclude gross Box 1 entirely from PA-40 income under 61 Pa. Code
+      §101.6(c)(4) and from Schedule SP eligibility income under PA DOR guidance.
+      Residency and payroll periods continue to determine wage allocation only.
+      Existing wage and applicable age proofs must independently establish zero
+      federal EIC. Keep the original and separate evidence in source commitments.
+      Unknown facts hold; public entries, prior years and final forms retain
+      their separate gates.
+    sources:
+      - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html"
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/tax-forgiveness"
+      - "https://www.irs.gov/instructions/i1099g"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 privately excludes government Box 1 from PA-40 and Schedule SP in every residency"

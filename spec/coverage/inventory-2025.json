@@ -19553,6 +19553,25 @@
       ]
     },
     {
+      "key": "state/pa-2026-unemployment-source",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html",
+      "specPath": "spec/state/pa-2026-unemployment-source.yaml",
+      "enginePath": "src/engine/state/pa-2026-unemployment-source.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-40",
       "jurisdiction": "state",
       "taxYear": 2025,

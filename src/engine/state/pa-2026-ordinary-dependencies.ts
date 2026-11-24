@@ -13,6 +13,7 @@ import type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-retur
 import type {PAOrdinaryReturnProjection} from './pa-ordinary-return-facts.js';
 import type {PAResidencySourcesResult} from './pa-residency-sources.js';
 import {ordinarySourcePrecision,publicOrdinaryMoney} from './pa-ordinary-source-precision.js';
+import {readPA2026GovernmentUnemployment,type PA2026GovernmentUnemploymentContext} from './pa-2026-unemployment-source.js';
 export interface PA2026OrdinaryDependencyProof {
  methodVersion:'pa-2026-ordinary-dependencies-v1';ordinaryWages:Decimal;
  maximumCompletedEitcPhaseout:Decimal;federalEarnedIncomeCredit:Decimal;careCredit:Decimal;
@@ -44,12 +45,13 @@ export function validatePA2026EicChildInventory(input:TaxYearInput,raw:unknown,r
  return data;
 }
 /** Call only after the existing complete ordinary/residency source replay. No federal result is manufactured. */
-export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdinaryReturnProjection,sources:PAOrdinaryReturnCompletionSources,income:PAResidencySourcesResult):PA2026OrdinaryDependencyProof {
+export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdinaryReturnProjection,sources:PAOrdinaryReturnCompletionSources,income:PAResidencySourcesResult,unemployment?:PA2026GovernmentUnemploymentContext):PA2026OrdinaryDependencyProof {
  if(input.taxpayer.taxYear!==2026||p.taxYear!==2026)fail('the separately typed draft requires actual2026 sources');
  if(input.taxpayer.filingStatus!=='single'||p.facts.filing.maritalStatus!=='unmarried'||p.facts.filing.aliveEntireYear!==true)fail('only actual single living unmarried owners are supported');
  // Empty document arrays are normalization only. They never establish the complete
  // none facts: those are independently replayed from the confirmed source packets.
  const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit','scheduleBPartThree']);
+ if (unemployment && readPA2026GovernmentUnemployment(input, unemployment)) roots.add('form1099G');
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
  for(const[key,value]of Object.entries(input))if(!roots.has(key)&&value!==undefined&&!(emptyDocumentRoots.has(key)&&Array.isArray(value)&&value.length===0))fail('retained unsupported original or federal dependency: '+key);
  if(input.standardDeductionFacts!==undefined&&!StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts).success)fail('retained standard-deduction context is unsupported');

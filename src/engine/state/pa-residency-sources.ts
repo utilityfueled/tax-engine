@@ -18,6 +18,7 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { Form1099DivSchema, Form1099IntSchema, W2Schema, type TaxYearInput } from "@/models/inputs.js";
 import { PAResidencySourcesSchema, type PAResidencySources, type PAResidencyStatus } from "@/models/pa-residency.js";
 import { roundDollar } from "@/utils/decimal.js";
+import {readPA2026GovernmentUnemployment,type PA2026GovernmentUnemploymentContext} from './pa-2026-unemployment-source.js';
 import { AuditTrail } from "@/utils/audit.js";
 import { calculatePAReciprocalCompensation } from "./pa-reciprocity.js";
 import {calculatePAScheduleA,type PAScheduleAResult} from "./pa-schedule-a.js";
@@ -234,7 +235,7 @@ function readOrdinaryNrk1(input: TaxYearInput, source: PAResidencySources, statu
   return {businessIncome, nonresidentWithholding: new Decimal(statement.nonresidentWithholding)};
 }
 
-export function calculatePAResidencySources(input: TaxYearInput, rawSources: unknown): PAResidencySourcesResult {
+export function calculatePAResidencySources(input: TaxYearInput, rawSources: unknown, unemployment?: PA2026GovernmentUnemploymentContext): PAResidencySourcesResult {
   const Money=Decimal.clone({precision:ordinarySourcePrecision(input,rawSources),rounding:Decimal.ROUND_HALF_UP});
 function amount(value: unknown): Decimal {
   if (typeof value !== "string" || !/^\d+(\.\d+)?$/.test(value)) return error("actual nonnegative monetary amount is missing or invalid; enter known zero explicitly");
@@ -252,7 +253,9 @@ function amount(value: unknown): Decimal {
   if (source.otherPAIncomeClassesConfirmedNone !== true || source.otherPAAdjustmentsConfirmedNone !== true) return error("confirm complete ordinary source scope; unknown other classes/adjustments are not zero");
   for (const key of ["w2s", "form1099Int", "form1099Div", "form1099B", "form1099Nec", "form1099Misc", "scheduleK1"] as const) if (!Array.isArray(input[key])) return error("complete current canonical document arrays are required before source derivation");
   const personalDebtSources=calculatePAPersonalDebtAndForeignBankSources(input,{personalDebtDischarges:source.personalDebtDischarges,foreignBankTaxSources:source.foreignBankTaxSources});
+  const excludedUnemployment = unemployment && readPA2026GovernmentUnemployment(input, unemployment);
   for (const key of ["formW2G", "form1099G", "form1099K", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
+    if (key === "form1099G" && excludedUnemployment) continue;
     const rows = input[key]; if (Array.isArray(rows) && rows.length) return error("additional retained income originals need their actual PA class source method");
   }
   if (input.scheduleF !== undefined || input.cryptoIncome !== undefined || input.form4797 !== undefined || input.form6252.length || input.form6781 !== undefined || input.form8824.length) return error("additional retained income source needs its actual PA class source method");
