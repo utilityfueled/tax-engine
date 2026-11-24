@@ -1,5 +1,36 @@
 {
   "activeContinuation": {
+    "nov23Form2441SeparateReturn": {
+      "applicationCommit": "045a1d08081f1484bdd4c168dbe43d3e4ee8e875",
+      "combinedApplicationCommit": "2eb8088d0e3356309f61e35eb4e300d17ec69dfc",
+      "sourceArchiveSha256": "320a467cefabe4d9f3b20e2b4b878159cea9a7c62ac88de8985f4367d9f027d6",
+      "baselineRegressionFailures": 5,
+      "blankYearConfirmationBaselineFailures": 1,
+      "scopedTestsPassed": 267,
+      "specReferencesPassed": 55,
+      "independentCodeReview": "passed after blocking the MFS blank-year confirmation shortcut",
+      "productionDeploymentCanceled": true,
+      "public2026AnnualCalculationOrExport": "closed",
+      "sources": ["https://uscode.house.gov/us/usc/119-120/t26/s21/", "https://www.irs.gov/pub/irs-dft/i2441--dft.pdf"]
+    },
+    "nov23Form8839DuplicateChild": {
+      "applicationCommit": "2eb8088d0e3356309f61e35eb4e300d17ec69dfc",
+      "baselineRegressionFailures": 2,
+      "scopedTestsPassed": 150,
+      "scopedAuditTestsPassed": 79,
+      "specReferencesPassed": 65,
+      "independentCodeReview": "passed",
+      "githubRuns": {"ci": 45292857905, "web": 45292857924, "docker": 45292857728},
+      "dockerBuild": "passed",
+      "exactLocalUnit": {"passed": 30207, "skipped": 79, "filesPassed": 2201},
+      "exactLocalCoverage": {"passed": 30207, "skipped": 79, "branchCoveragePercent": 88.29},
+      "exactLocalBrowser": {"passed": 650, "skipped": 5, "failed": 0, "batches": 8},
+      "exactLocalChecksPassed": ["typecheck", "typecheck:contracts", "typecheck:web", "spec:validate", "spec:inventory:check", "lint", "build", "test", "test:coverage", "build:web", "test:web"],
+      "githubCiAndRuntimeAtLocalSignoff": "in progress",
+      "productionDeploymentCanceled": true,
+      "public2026AnnualCalculationOrExport": "closed",
+      "sources": ["https://uscode.house.gov/us/usc/119-124/t26/s23/", "https://www.irs.gov/instructions/i8839", "https://www.irs.gov/credits-deductions/individuals/adoption-credit"]
+    },
     "nov23Form8863StudentIdentity": {
       "applicationCommit": "f50e6261b3e1aea21c0823649c284cd8d0b32043",
       "studentIdentityCommit": "6bbc2f3c54b072e5caae2e0d59f3570629ade5e0",
@@ -19,6 +50,7 @@
       "githubRuns": {"ci": 45288279238, "web": 45288279172, "docker": 45288279081},
       "dockerBuild": "passed",
       "githubCiAndRuntimeAtLocalSignoff": "in progress",
+      "githubManagedBrowser": "passed as observed during the Form 2441 and Form 8839 verification",
       "productionDeploymentCanceled": true,
       "public2026AnnualCalculationOrExport": "closed"
     },

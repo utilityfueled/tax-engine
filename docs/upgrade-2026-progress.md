@@ -1,5 +1,59 @@
 # 2026 upgrade implementation evidence
 
+## November 23 dependent care and adoption source facts
+
+`045a1d08` fixes the 2026 guided Form 2441 Part II route for married
+filers filing separately and living apart. A saved claim with no benefits
+can reach the internal worksheet after confirming the three living-apart
+answers and all existing source facts. The $40,000 AGI fixture with $3,900
+in qualifying expenses and one qualifying individual produces a $1,110
+credit in the 2026 worksheet. The same 2025 fixture produces $660.
+Unknown answers, a nonzero or unknown Box 10 and unreconciled Part III
+records still require resolution. Five regressions were red before the
+guided change. A sixth reproduced MFS confirmation entered while the
+year was blank. The first correction also cleared an existing single-filer
+legacy confirmation. The final MFS-scoped reset preserves that unchanged
+test and holds the new blank-year case. All 267 focused tests, 55 Form 2441
+spec references, web typecheck and independent code review passed.
+[26 USC §21(a)(2) and (e)(4)](https://uscode.house.gov/us/usc/119-120/t26/s21/) ·
+[2026 draft Form 2441 instructions](https://www.irs.gov/pub/irs-dft/i2441--dft.pdf).
+
+`2eb8088d` protects the 2025 and 2026 Form 8839 per-child limits. Rows
+with the same known child identifier after normalization require reconciliation.
+On the 2026 draft calculator the duplicate had raised the credit from $17,670
+to $35,340 and the refundable amount from $5,120 to $10,240. Two tests
+reproduced duplicate acceptance before the fix. Same-name children with
+different identifiers still receive separate limits, and missing identifiers
+remain separate from the duplicate check. All 150 focused tests, 65 Form 8839
+spec references, typecheck and independent code review passed. The public
+2026 annual calculation and export gates remain closed for both forms.
+The regular IRS forms and instructions for both still identify tax year
+2025. Vercel canceled the automatic production builds for both commits.
+The 2026 forms still carry draft covers. The draft Form 2441 instructions
+retain the actual employer-plan limit on Line 21, as the existing Part III
+calculation already requires.
+[26 USC §23](https://uscode.house.gov/us/usc/119-124/t26/s23/) ·
+[Current Form 2441](https://www.irs.gov/pub/irs-pdf/f2441.pdf) ·
+[Current Form 8839](https://www.irs.gov/pub/irs-pdf/f8839.pdf) ·
+[Draft Form 2441](https://www.irs.gov/pub/irs-dft/f2441--dft.pdf) ·
+[Draft Form 8839](https://www.irs.gov/pub/irs-dft/f8839--dft.pdf) ·
+[IRS Form 8839 instructions](https://www.irs.gov/instructions/i8839) ·
+[IRS 2026 adoption-credit amounts](https://www.irs.gov/credits-deductions/individuals/adoption-credit).
+
+The exact `2eb8088d` archive under Node 26.13.1 passed all three type checks, both spec
+checks, lint, and both builds. The unit and coverage runs each passed
+30,207 tests with 79 existing skips. Branch coverage was 88.29% against
+the 85% gate. The standard Chromium suite passed 650 tests with five
+existing skips across eight batches. All 11 local checks passed with the
+existing samples and pinned Python prerequisite.
+The first local runtime attempts hit a sandbox denial on loopback sockets.
+The reruns used the same archive and test settings with loopback access.
+The exact remote Docker workflow passed. GitHub CI and runtime were still
+running at local signoff. The preceding `f50e6261` managed browser job passed.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45292857905) ·
+[Runtime checks](https://github.com/utilityfueled/tax-engine/actions/runs/45292857924) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45292857728).
+
 ## November 23 education student identity and Ohio render verification
 
 `6bbc2f3c` reconciles positive 2026 Form 8863 student records with the same

@@ -114,6 +114,15 @@ fixtures. Review evidence for the return claimant, the student’s TIN and
 each independent yes/no answer before accepting a credit in the annual gate.
 [Form 8863 fixtures and authorities](upgrade-2026-progress.md#november-23-education-student-identity-and-ohio-render-verification).
 
+Add the Form 2441 living-apart worksheet and Form 8839 child identity cases to
+the independent review. For adoption, review how applicants substantiate
+multiple domestic attempts to adopt one child, including different child
+identifiers, missing identifiers, prior-year coordination and the IRS
+examples involving twins. Reviewed support needs a worksheet associating
+expenses with each intended adoption before applying the per-child limits.
+[Form 2441 and 8839 source fixtures](upgrade-2026-progress.md#november-23-dependent-care-and-adoption-source-facts) ·
+[IRS Form 8839 instructions, Attempted Adoptions of U.S. Children](https://www.irs.gov/instructions/i8839).
+
 Pennsylvania's REV-276 permits an extension payment by the original due
 date. The current ordinary and married calculation paths accept extension
 receipts dated April 15. Extending either path to earlier receipts needs a

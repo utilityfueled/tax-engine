@@ -18,6 +18,17 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
 [Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
 [Pennsylvania apportionment](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+- `045a1d08` lets qualifying 2026 married-separate filers save and reopen
+  actual living-apart facts for Form 2441 Part II without dependent-care
+  benefits. It requires current-year confirmation. All 267 focused tests
+  passed. `2eb8088d` applies the Form 8839 limit once per known child in
+  2025 and 2026. All 150 focused tests passed. Both changes passed independent
+  code review. The annual 2026 calculation and export gates remain closed.
+  [Dependent-care and adoption evidence](upgrade-2026-progress.md#november-23-dependent-care-and-adoption-source-facts).
+- All 11 local checks passed on exact `2eb8088d`, including 30,207 unit tests,
+  88.29% branch coverage, and 650 Chromium tests. Docker passed remotely.
+  GitHub CI and runtime were still running at local signoff.
+  [Combined revision evidence](upgrade-2026-progress.md#november-23-dependent-care-and-adoption-source-facts).
 - `6bbc2f3c`, `e91dc09f` and `f50e6261` reconcile 2026 education identity against the same
   taxpayer or spouse on the saved return and in the calculator. The change
   holds a positive claim with contradictory timely-TIN and employment-valid
