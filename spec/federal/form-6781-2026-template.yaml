@@ -1,0 +1,91 @@
+form: "Form 6781 final 2026 physical candidate"
+fullName: "Gains and Losses From Section 1256 Contracts and Straddles"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f6781.pdf"
+revision: "Created 9/14/26"
+postedAt: "2026-11-24"
+retrievedAt: "2026-11-24T17:14Z"
+notes: |
+  This standalone internal review candidate covers original individual returns
+  with ordinary broker-reported Section 1256 activity. It uses the final Form
+  6781 and embedded instructions. Its two numeric transfers can be inspected
+  offline. Annual Schedule D and Form 8949 mapping, independent review, public
+  export, and filing require separate qualification.
+lines:
+  - line: "revision-and-layout"
+    description: "Pin the annual template and verify reopened review widgets"
+    formula: >-
+      Require SHA-256 40cf032ef46535e8695ffe22d6c76e0524f5be0eb9bc97ddd5a72207010c73c4,
+      four pages, and the exact native fields. Preserve review notices on each
+      page and reopen values and appearances. Leave the taxpayer ID, broker TIN,
+      account reference, original source identifier and recipient ID suffix out
+      of the review artifact. Refuse altered templates and values that cannot
+      fit or render accurately on the native fields.
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::reopens positive, negative and offsetting originals on the exact annual fields"
+  - line: "1-2"
+    description: "Use complete same-year broker original Box 11 amounts"
+    formula: >-
+      Require a confirmed complete inventory of one to three named broker 1099-B
+      uncorrected originals for the current single primary recipient, each with
+      a signed nonzero exact-cent Box 11. Compare the recipient name and ID
+      suffix with the valid current taxpayer identity and bind every statement to a distinct canonical 2026
+      original using its owner, source ID, broker name, payer TIN and account
+      reference. Reject duplicate statement IDs, duplicate payer/account pairs,
+      missing originals, incompatible brokerage transaction detail, and gross
+      gain or loss totals that conflict with the existing Form 6781 input. Two
+      distinct confirmed originals may share equal amounts. Print Form 1099-B
+      and the broker name on each line 1 row, and sum each sign separately on
+      line 2. The loss column already has preprinted parentheses on line 2.
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::holds incomplete, duplicate and conflicting broker originals"
+  - line: "elections-and-exclusions"
+    description: "Limit the projection to ordinary Part I"
+    formula: >-
+      Require explicit confirmation of the original calendar-year return and ordinary
+      mark-to-market treatment, with negative answers for elections A through D,
+      straddles, hedges, Section 988 elections, Form 1099-B adjustments,
+      unreported contracts, dealer activity, pass-through amounts and QOF
+      activity. Hold contradictory canonical
+      adjustments, carryback amounts or elections, straddle amounts, and retained
+      QOF facts. Leave all election boxes unchecked, line 4 blank, and Part II
+      blank. Zero-only activity and overflow beyond the three native
+      rows require separate review.
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::holds unknown elections, unsupported methods and incompatible return facts"
+  - line: "14"
+    description: "Require reviewed proof before leaving Part III blank"
+    formula: >-
+      Require a reference to the reviewed actual year-end position records and an
+      explicit confirmation that there are no reportable Part III positions.
+      This review includes eligible appreciated positions held at year end,
+      including deemed holdings of related parties, when any position has a
+      recognized loss. A net or positive broker Box 11 does not establish the
+      absence of a loss on individual contracts. Fail closed if the position
+      review, source reference or result is missing, or any position requires
+      reporting. Keep the private reference out of the PDF.
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::requires documented Part III review even when Box 11 is net positive"
+  - line: "living-calendar-year"
+    description: "Use the current living filer and ordinary accounting period"
+    formula: >-
+      Require the current canonical primary death status to explicitly establish
+      no death date. Refuse any retained primary or spouse death date in this
+      single living-filer cohort, even if the accounting-period change flag is
+      false. Retain the explicit calendar-year confirmation and hold conflicts
+      from a short accounting period, a dual-status or nonresident return, or
+      a resident joint election inconsistent with the single return.
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::holds decedent and contradictory calendar-year originals"
+  - line: "3-9"
+    description: "Project exact-cent net, carryback and 40/60 split"
+    formula: >-
+      Use the existing Form 6781 result for lines 3, 5 and 7 through 9 after
+      exact reconciliation. Leave line 6 blank when line 5 is a gain and print
+      -0- without a carryback election for an admitted non-gain. Preserve
+      exact-cent reporting throughout and add the actual cents before the
+      split, consistent with the IRS whole-dollar rounding guidance. Line 8 is
+      40 percent rounded to cents and line 9 is the residual after line 8, so signed amounts reconcile to
+      line 7. Return the Line 8 and 9 amounts as the numeric Form 6781
+      contributions to Schedule D lines 4 and 11. An offsetting set of two
+      distinct nonzero originals can produce a genuine net zero.
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::reopens positive, negative and offsetting originals on the exact annual fields"
+  - line: "closed-exports"
+    description: "Keep the candidate and the template outside public exports"
+    formula: "The 2026 template remains unregistered. The standalone candidate cannot change the legacy reference summary, public review policy, or filing policy."
+    testRef: "tests/pdf/form-6781-2026-candidate.test.ts::keeps the standalone candidate outside public review and filing exports"

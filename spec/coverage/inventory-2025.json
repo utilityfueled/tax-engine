@@ -5460,6 +5460,30 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-6781-2026-template",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f6781.pdf",
+      "specPath": "spec/federal/form-6781-2026-template.yaml",
+      "enginePath": "src/engine/forms/form-6781.ts",
+      "packetPath": "src/pdf/mappings/2026/form-6781-candidate.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-6781-2026-candidate.test.ts::holds incomplete, duplicate and conflicting broker originals",
+        "tests/pdf/form-6781-2026-candidate.test.ts::reopens positive, negative and offsetting originals on the exact annual fields",
+        "tests/pdf/form-6781-2026-candidate.test.ts::keeps the standalone candidate outside public review and filing exports"
+      ],
+      "implementationNote": "Links the existing 40/60 calculation to a standalone original-bound internal candidate on the final 2026 form. Qualified human review, the complete 2026 federal packet and public export remain open.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-7206",
       "jurisdiction": "federal",
       "taxYear": 2026,

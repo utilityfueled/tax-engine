@@ -34,6 +34,7 @@
     "paSupportEvidenceKey": "activeContinuation.nov24PAReviewDisclosure",
     "annualForm8801EvidenceKey": "activeContinuation.nov24FinalForm8801Source",
     "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
+    "annualForm6781CandidateEvidenceKey": "activeContinuation.nov24Form6781OriginalReviewCandidate",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
@@ -46,6 +47,17 @@
     ]
   },
   "activeContinuation": {
+    "nov24Form6781OriginalReviewCandidate": {
+      "focusedTestsPassed": 143,
+      "specReferencesResolved": 21,
+      "verifiedVisualWidgetValues": 14,
+      "originalAdmissionsCorrected": ["missing Part III evidence", "short decedent return"],
+      "independentSourceAndVisualReview": "passed",
+      "auditedSourcesVerified": 2064,
+      "qualifiedTaxReview": "open",
+      "publicExportEnabled": false,
+      "evidence": "docs/upgrade-2026-form-6781-final-source.md#standalone-review-candidate"
+    },
     "nov24PairedPaNativeControls": {
       "nativeEntriesPerJourney": 139,
       "textFillAndTabEntries": 118,

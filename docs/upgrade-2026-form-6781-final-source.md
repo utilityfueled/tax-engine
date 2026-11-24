@@ -5,3 +5,25 @@ The IRS posted the final 2026 Form 6781 on November 24, 2026. The current downlo
 A separate source comparison confirmed that supported individual lines 3–9, 11a/b and 13a/b and the transfers to Schedule D lines 4 and 11 are substantively unchanged from 2025. The printed labels for 11b and 13b now repeat the line number, and the instructions roll the election, carryover and carryback years forward. The existing reference summary reports aggregate amounts. Official PDF filling requires individual source rows, election facts and required statements. The currently published Schedule D and Form 8949 still print 2025. [2025 Form 6781](https://www.irs.gov/pub/irs-prior/f6781--2025.pdf) · [Schedule D](https://www.irs.gov/pub/irs-pdf/f1040sd.pdf) · [Form 8949](https://www.irs.gov/pub/irs-pdf/f8949.pdf)
 
 The PDF test failed with a missing blank before the asset was copied from the annual archive. All 73 focused tests passed on Node 26.13.1, all 14 scoped spec references resolved, and focused lint reported zero errors and two existing warnings. The receipt adds no registered export or calculation change.
+
+## Standalone review candidate
+
+The internal renderer admits one to three original same-year Form 1099-B Box
+11 statements for a confirmed living, single calendar-year filer. It matches
+each source to the current broker inventory and separately reconciles gains and
+losses. It requires confirmed negative elections and a documented review of
+year-end positions before leaving Part III blank. Unknown facts, duplicates,
+corrected statements, straddles and incompatible return periods stop the
+candidate. The renderer leaves the taxpayer ID and private source identifiers
+out of the four-page marked review artifact.
+
+The source test failed before the mapper existed. Independent review then
+reproduced two additional failures involving missing Part III proof and a
+midyear decedent's return. Both are held after correction. The focused suite
+passed 143 tests and all 21 spec references. Typecheck and scoped lint passed.
+A separate three-statement specimen reopened with all 14 expected canonical
+values and widget appearances. Visual review and an independent loss replay
+confirmed the sign, exact cents and numerical amounts for Schedule D lines 4
+and 11. The final Schedule D and Form 8949 companions, human review, and
+public review and filing qualification remain open.
+[Form 6781 and instructions](https://www.irs.gov/pub/irs-prior/f6781--2026.pdf).

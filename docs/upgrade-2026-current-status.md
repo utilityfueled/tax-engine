@@ -42,6 +42,11 @@ Use the linked progress sections when investigating individual packages.
   TIN facts used in five recent fixes. Reviewer findings remain open.
   [November 24 reviewer fixtures](upgrade-2026-external-actions.md#november-24-payment-and-dependent-tin-review).
 
+- The final 2026 Form 6781 now has an independently checked internal review
+  candidate for confirmed original broker statements. Final companion forms,
+  qualified tax review and public export remain open.
+  [Form 6781 evidence](upgrade-2026-form-6781-final-source.md#standalone-review-candidate).
+
 - Verified individual Pennsylvania estimates now reach federal Schedule A
   by actual payment date. A previously confirmed estimate that is edited or
   removed requires reconfirmation before the itemized preview resumes.
