@@ -14074,6 +14074,25 @@
       ]
     },
     {
+      "key": "federal/short-accounting-year-tax",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p538",
+      "specPath": "spec/federal/short-accounting-year-tax.yaml",
+      "enginePath": "src/engine/forms/short-accounting-year-tax.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/social-security-benefits-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2025,
