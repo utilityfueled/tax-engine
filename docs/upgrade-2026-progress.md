@@ -32,11 +32,30 @@ tests with 81 existing skips and 88.30% branch coverage. Chromium passed
 650 active cases in eight batches with five original skips and owned
 server cleanup, completing all eleven exact local checks. All eight
 GitHub CI jobs passed. Remote coverage passed all 30,353 tests in 2,210
-files at 88.68% branch coverage. Strict Linux results are pending.
+files at 88.68% branch coverage. Managed Linux passed all 650 active
+cases with five original skips. The first strict AMD64 attempt
+passed 648 active cases. Two desktop Ohio part-year school cases had
+downloaded and inspected their review PDFs and reached the existing
+30-second deadline during the final filing-rejection request. The
+isolated Compose recovery, independent archive, candidate scan and
+owned-container cleanup passed. The exact strict AMD64 job was queued
+once more, and exact ARM64 remains in progress.
+[First strict AMD64 attempt](https://github.com/utilityfueled/tax-engine/actions/runs/45328203260/job/138222783364).
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45328203164) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45328203124) ·
 [AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45328203260) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45328290048).
+
+The November 24 review packet adds paired cents and whole-dollar
+Form 6251 inputs, plus wage-only and positive-AMT twelve-month relief
+inputs. Independent agent source review checked the statutory
+boundaries. Qualified human calculations and expected outputs remain
+open. [Review packet](upgrade-2026-external-actions.md#minimum-tax-and-later-relief-cases-for-the-reviewer).
+
+A private diagnostic of the exact-label Playwright selector found
+that it resolved zero controls for two existing wrapped labels. The
+existing selector found both controls. No selector change was made and
+no matched timing was recorded.
 
 ## November 23 public federal calculation admission
 

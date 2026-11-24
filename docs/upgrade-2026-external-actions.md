@@ -17,6 +17,47 @@ and form instructions before qualifying any output.
 [26 USC §443](https://uscode.house.gov/us/usc/t26/s443/) ·
 [26 CFR §1.443-1](https://www.ecfr.gov/current/title-26/section-1.443-1).
 
+### Minimum-tax and later relief cases for the reviewer
+
+Use the same dates and living single filer. For each minimum-tax case,
+substitute $100,000 in wages and add a synthetic Form 1099-INT with the
+same amount in Boxes 8 and 9. The entire tax-exempt amount is specified
+private activity bond interest. There is no premium amortization,
+foreign tax credit, other adjustment or other income. Ordinary wage
+income is unchanged across each pair.
+
+| Boundary to exercise | Cents retained below | Cents retained above | Whole-dollar input below | Whole-dollar input above |
+| --- | ---: | ---: | ---: | ---: |
+| 26% to 28% AMT rate | $67,299.99 | $67,300.01 | $67,299 | $67,301 |
+| AMT exemption phaseout starts | $149,999.99 | $150,000.01 | $149,999 | $150,001 |
+| AMT exemption is exhausted | $240,099.99 | $240,100.01 | $240,099 | $240,101 |
+
+Independently record regular tax, short-period AMTI, annualized AMTI,
+the exemption, tentative minimum tax before and after the short-period
+fraction, the regular tax subtraction and the final Schedule 2 transfer.
+Record where cent precision ends and which final Form 6251 line or
+attachment carries each value. These pairs are proposed source inputs
+with expected amounts still pending independent review.
+[26 USC §55](https://uscode.house.gov/us/usc/t26/s55/) ·
+[26 USC §443(d)](https://uscode.house.gov/us/usc/t26/s443/) ·
+[Rev. Proc. 2025-32, §3.10](https://www.irs.gov/irb/2025-45_IRB) ·
+[Form 1099-INT Boxes 8 and 9](https://www.irs.gov/instructions/i1099int) ·
+[2026 draft Form 6251 instructions](https://www.irs.gov/pub/irs-dft/i6251--dft.pdf).
+
+For twelve-month relief, return to the $30,000 wage-only short period.
+Compare a taxpayer with no income from July through December and one
+with $120,000 of wages in those months. Both remain in existence through
+December 31, 2026, and the later wages belong to the next tax period.
+Repeat both cases with $230,000 of specified private activity bond
+interest in the short period, reported in Boxes 8 and 9, and no other
+preference or adjustment. The second pair exercises an AMT liability.
+For each case, independently derive the initial short-period tax, both
+statutory comparison amounts and any reduction. Record the supporting
+records and claim procedure. Confirm how the separate §443(d) tentative
+minimum tax enters the comparison before qualifying a relief calculation.
+[26 USC §443(b)(2) and (d)](https://uscode.house.gov/us/usc/t26/s443/) ·
+[26 CFR §1.443-1(b)(2)](https://www.ecfr.gov/current/title-26/section-1.443-1).
+
 ## November 23 Form 8960 and Section 68
 
 Resolve whether the 2026 Section 68 reduction allocated to NIIT follows

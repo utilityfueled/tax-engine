@@ -1,4 +1,17 @@
 {
+  "resume": {
+    "asOf": "2026-11-24",
+    "branch": "main",
+    "applicationCommit": "cee016b04ba57b7f00e004e5011125275dbb244b",
+    "statusDocument": "docs/upgrade-2026-current-status.md",
+    "evidenceKey": "activeContinuation.nov23GuidedShortAccountingPeriodIntake",
+    "remaining": [
+      "Verify the exact native ARM64 and repeat strict AMD64 browser results; preserve the original deadlines and recovery checks.",
+      "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
+      "Obtain independent AI evaluation review and comparable provider results before any promotion.",
+      "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
+    ]
+  },
   "activeContinuation": {
     "nov23GuidedShortAccountingPeriodIntake": {
       "applicationCommit": "cee016b04ba57b7f00e004e5011125275dbb244b",
@@ -18,9 +31,13 @@
       "githubDockerRun": 45328203124,
       "githubDockerConclusion": "success",
       "githubWebRun": 45328203260,
+      "exactManagedLinux": {"job": 138222783647, "passed": 650, "failed": 0, "originalSkips": 5},
+      "exactAmd64StrictFirstAttempt": {"job": 138222783364, "passed": 648, "ohioSchoolDeadlines": 2, "originalSkips": 5, "composeRecoveryPassed": true, "archivePassed": true, "scanPassed": true, "cleanupPassed": true},
+      "exactAmd64StrictRepeat": "queued",
+      "ohioNativeSelectorDiagnostic": {"adopted": false, "reason": "Pinned Playwright did not resolve two representative existing wrapped labels with the exact getByLabel candidate.", "matchedTimingAvailable": false},
       "nativeArm64Run": 45328290048,
       "vercelProduction": "CANCELED",
-      "remaining": "Collect exact strict Linux results. The source packet remains outside calculation input and Section 443 annualization is still held."
+      "remaining": "Collect exact ARM64 and repeat AMD64 results. The source packet remains outside calculation input and Section 443 annualization is still held."
     },
     "nov23PublicFederalAndOhioRender": {
       "applicationCommit": "0c33f92539493d6f51e8451730fa531323d9be71",

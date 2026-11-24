@@ -5,12 +5,18 @@
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
 
+Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
+for the exact application revision, current blockers and evidence key.
+Use the linked progress sections when investigating individual packages.
+
 - `cee016b0` lets a living single filer save actual dates for a regular
   month-end accounting-period change. Incomplete and confirmed drafts
   survive encrypted recovery. The dates and reference stay out of PDF
   and provider requests. Annualized amounts still require a qualified
-  calculation. All eleven exact local checks and all eight GitHub CI
-  jobs passed. Strict Linux checks are in progress.
+  calculation. All eleven exact local checks, all eight GitHub CI jobs
+  and all 650 active managed Linux cases passed. Strict AMD64 passed
+  recovery and archive verification and reached two browser deadlines.
+  The exact rerun and native ARM64 are in progress.
   [Intake evidence](upgrade-2026-progress.md#november-23-actual-short-accounting-period-intake).
 
 - `0c33f925` holds the public federal API and workspace recompute for a
@@ -107,11 +113,12 @@ deferred at the owner’s direction. Their readiness criteria remain open.
   Node timing-contract tests passed locally. The managed rerun is required.
   [Managed job evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169/job/138124985292).
 
-The refreshed federal, Ohio and Pennsylvania catalogs still show 2025
-as the final annual return year. The IRS labels its 2026 Form 1040 a
-draft. The annual calculation and export gates remain closed.
-[IRS Form 1040](https://www.irs.gov/forms-pubs/about-form-1040) ·
-[Ohio forms](https://tax.ohio.gov/home/forms/tax-forms) ·
+The November 24 source refresh found final annual returns for 2025 at
+the IRS, Ohio and Pennsylvania. The IRS still labels its 2026 Form 1040
+a draft. The annual calculation and export gates remain closed.
+[IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS 2026 draft](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Ohio IT 1040 bundle](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf) ·
 [Pennsylvania forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax).
 
 Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
@@ -876,16 +883,14 @@ AMD64 runner.
 
 | Package | Current evidence and remaining criterion |
 | --- | --- |
-| Taxpayer facts and federal law | The latest [adult student TIN reconciliation](upgrade-2026-progress.md#november-20-form-8863-adult-student-tin-reconciliation), [claimant DOB](upgrade-2026-progress.md#november-20-form-8863-claimant-birth-date) and [K-1 source-year](upgrade-2026-progress.md#november-20-future-year-schedule-k-1-originals) fixes passed. Qualified independent tax interpretations and expected outputs remain open. |
+| Taxpayer facts and federal law | The guided interview retains short-period dates and ties them to the taxpayer and return year. The public calculator holds annualized amounts. Qualified independent tax interpretations and expected outputs remain open. [Intake evidence](upgrade-2026-progress.md#november-23-actual-short-accounting-period-intake) · [Tax review cases](upgrade-2026-external-actions.md). |
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC and Forms 2106, 7206, 8829 and 8919 are pinned as disabled candidates. The latest Form 1040, general annual instructions and Tax/EIC tables still print 2025. Schedule B instructions now print 2026, while its blank prints 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
-| AI routing and exact billing | Forty-five tests against PostgreSQL include both sides of a UTC pricing rollover and exact provider cost independent of retail credits. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Pricing evidence](upgrade-2026-progress.md#november-20-exact-postgresql-billing-at-the-utc-rollover) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
+| AI routing and exact billing | Exact cost is recorded separately from whole retail credits. The hold for a second attempt checks the cumulative bound under the owner lock. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Billing evidence](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Protected Preview `cdfdd050` passed all 12 workspace lifecycle checks. Four read-only billing checks passed for each of two authorized actors on `1a9bfd0d`. Its configured prices match Stripe Sandbox, and the canceled actor displays enabled checkout choices. The webhook points to an older Preview. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Current checkout, signed delivery and exact credit reconciliation remain open. [Preview](upgrade-2026-progress.md#november-20-original-student-loan-and-retirement-statements) · [Billing baseline](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
 | Self-host recovery | Strict AMD64 and ARM64 on `1a9bfd0d` passed Compose recovery. Their browser runs passed 642 and 641 cases, respectively, with eight and nine Ohio deadlines. Managed Linux passed 648 cases with two RRTA saved-PDF inspection timeouts. Managed macOS passed all 650 active cases. All four runs retained five original skips. Linux browser qualification remains open. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573332) · [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573400) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44838794520/job/136650654231). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
-Read `activeContinuation.nov20ScheduleEicExactVerification`,
-`nov20AnnualCandidatesAndGuidedRehearsal`,
-`nov20OhioIncompleteGuidedValidation` or `nov20HostedEducationCrossRevision` in the
-[checkpoint](upgrade-2026-checkpoint.json) for exact runs and evidence paths.
+The `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
+points to current exact runs and evidence paths.
 Earlier verification remains in the [progress log](upgrade-2026-progress.md).
 The [execution brief](upgrade-2026-execution-brief.md) defines completion.
