@@ -207,8 +207,10 @@ test('diagnostic source pins refresh without changing original budgets or collec
  assert.equal(audit.sourceHashes[path],sha(source));assert.equal(full.sourceSha256[path],sha(source));assert.equal(cases.auditSha256,sha(auditText));
  assert.equal(cases.targetSourceSha256['oh-resident-credit-native.spec.ts'],sha(source.replace('../scripts/browser-cpu-diagnostics/fixture','@playwright/test')));
  const project=(data,keys)=>Object.fromEntries(Object.entries(data).filter(([key])=>!keys.includes(key)));
- assert.equal(sha(JSON.stringify(project(audit,['sourceHashes']))),'9b02fb1cec7f0ec815c5b54e35b2e469c12de9f3859adb9bf73b00d83518478a');
- assert.equal(sha(JSON.stringify(project(cases,['auditSha256','targetSourceSha256']))),'e12b15fe0536c166f6c15b0c9b460583c8588500f77a1839d822e78369ee2bed');
+ // The current audit adds two deductions cases and moves two request call sites.
+ assert.equal(sha(JSON.stringify(project(audit,['sourceHashes']))),'f0b4f93c11260d72e39ea769b87028195048a765ef647e02fb316c1938312198');
+ assert.equal(sha(JSON.stringify(project(cases,['auditSha256','targetSourceSha256']))),'f5b67f03b7c03f5b92635aa2cb2725d0fdf04006509a0dab81f104580657d1bb');
+ // The full-batch pin refers to its historical 655-case source selection.
  assert.equal(sha(JSON.stringify(project(full,['sourceSha256']))),'b08c9c74fca59e0f25c9f88fa8b00c7d10eac463f22b32d547252f2ba88378f2');
  assert.equal(full.fullCaseCount,655);assert.equal(cases.workers,2);assert.equal(cases.retries,0);assert.equal(cases.targetDeadlineMs,30000);
 });
