@@ -1,0 +1,100 @@
+form: "Form 4137 final 2026 physical source"
+fullName: "Social Security and Medicare Tax on Unreported Tip Income"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f4137.pdf"
+revision: "Created 4/30/26"
+postedAt: "2026-11-24"
+retrievedAt: "2026-11-24T21:51:40Z"
+sources:
+  - "https://www.irs.gov/pub/irs-prior/f4137--2026.pdf"
+  - "https://www.irs.gov/forms-pubs/about-form-4137"
+  - "https://www.irs.gov/downloads/irs-pdf"
+  - "https://www.irs.gov/instructions/iw2w3"
+  - "https://www.ssa.gov/oact/cola/cbb.html"
+  - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol20/pdf/CFR-2025-title26-vol20-sec301-6102-1.pdf"
+notes: |
+  The final IRS blank includes the annual instructions on two pages.
+  This standalone review worksheet uses the existing actual Form 4137
+  sources and payroll calculation described in form-4137.yaml and
+  form-4137-return.yaml. Final Form 1040 and Schedule 2, qualified review,
+  public workflow and filing qualification remain open.
+lines:
+  - line: "revision-and-transfers"
+    description: "Pin the final blank and its printed transfer destinations"
+    formula: >-
+      The current and annual archive bytes are identical at retrieval.
+      Require 84,583 bytes with SHA-256
+      9bd93a180bb4e438fc7fa6c0f912f696e14f40d3e8fb62e5749b8c925900980a,
+      printed year 2026 and footer Created 4/30/26. Line 4 prints Form
+      1040 line 1c, and line 13 prints Schedule 2 line 16a. Page 2 refers
+      to Schedule 2 line 17c for separately uncollected tip payroll tax
+      reported under W-2 Box 12 code A or B.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::pins the final IRS bytes and printed destinations"
+  - line: "native-widget-layout"
+    description: "Verify the complete native blank"
+    formula: >-
+      Confirm two US Letter pages, all 34 unique blank text fields and
+      their widgets on page 1, no page 2 widgets, five line 1 employer rows,
+      and the printed line 7 wage base. Its native widget stays blank.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::inventories every blank field on the two-page form"
+  - line: "source-and-privacy"
+    description: "Admit confirmed ordinary 2026 tip diaries and current payroll"
+    formula: >-
+      Require a single calendar-year primary recipient using confirmed 2026
+      employer and monthly source facts and explicit complete payroll
+      inventory confirmation. Require one to five ordinary employers each
+      linked to current, same-owner W-2s with known Boxes 3, 7 and 8.
+      Hold indistinguishable federal payroll copies from the same employer
+      even when state fields, EIN formatting or amount spelling differ.
+      Reconcile any positive Box 8 to an employer row. Require actual zero
+      RRTA, noncash and Medicare-only government amounts and a positive
+      exact line 6. Hold mixed owner and Form 8919. Use the existing payroll
+      source verification and amounts. Leave name, SSN and employer IDs blank.
+      Use local ordinal employer labels. Mark both pages for review only.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::holds unknown and incompatible source or payroll facts"
+  - line: "8-original-inventory"
+    description: "Hold indistinguishable copies before summing federal wages"
+    formula: >-
+      Compare actual federal employer identity and exact Boxes 3, 7 and 8.
+      A copied record in a different source slot does not add taxable wages.
+      Indistinguishable records need a separately established source method.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::holds federal payroll copies before they consume the wage base twice"
+  - line: "1d-and-8-w2-consistency"
+    description: "Reconcile reported cash tips and each W-2 wage-base limit"
+    formula: >-
+      Boxes 3 and 7 of one W-2 together cannot exceed $184,500.
+      Legitimate distinct statements can sum above this amount on line 8.
+      Compare the total of known Box 12 code TP amounts for each included
+      employer to reported tips on the employer row. Confirm equality
+      when all codes are known, and hold if partial known amounts exceed
+      the row. Preserve missing code TP as unknown, never as a substitute
+      for the diary or Box 7.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::reconciles code TP and applies the wage base per W-2 rather than to line 8"
+  - line: "1-through-6"
+    description: "Bind actual employer amounts and the monthly tip exclusion"
+    formula: >-
+      Line 1 columns c and d use the verified actual employer amounts. Line
+      2 totals received, line 3 totals reported, line 4 subtracts line 3
+      from line 2, line 5 sums verified unreported cash and charge tips in
+      monthly employer totals below $20, and line 6 subtracts line 5 from
+      line 4. Preserve zero. Hold independently rounded displayed rows or
+      line values that fail these arithmetic checks.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::renders source amounts and the ordinary wage-cap case without private identifiers"
+  - line: "7-through-13"
+    description: "Use the final 2026 wage base and existing exact payroll result"
+    formula: >-
+      Line 7 is preprinted at $184,500. Line 8 totals current Social
+      Security wages and tips. Line 9 is max(0, line 7 minus line 8).
+      In this ordinary cohort line 10 is min(line 6, line 9).
+      Line 11 and 12 are 6.2% of line 10 and 1.45% of line 6 respectively,
+      each rounded by the existing calculator. Line 13 is their sum.
+      Preserve zero. Hold if the displayed whole dollars fail to reconcile
+      to the exact calculation and corresponding displayed equations.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::keeps Medicare tax after the Social Security cap and holds conflicting displayed totals"
+  - line: "public-gate"
+    description: "Preserve review and filing qualification gates"
+    formula: >-
+      Load only the exact final candidate bytes. Keep the physical pin and
+      worksheet outside public review and filing registries. Never assume a
+      final Form 1040 or Schedule 2 map from the destinations printed here.
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::keeps the worksheet outside public review and filing"

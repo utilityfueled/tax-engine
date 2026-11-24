@@ -4781,6 +4781,31 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-4137-2026-template",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4137.pdf",
+      "specPath": "spec/federal/form-4137-2026-template.yaml",
+      "enginePath": "src/engine/forms/form-4137.ts",
+      "packetPath": "src/pdf/mappings/2026/form-4137-candidate.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-4137-2026-candidate.test.ts::renders source amounts and the ordinary wage-cap case without private identifiers",
+        "tests/pdf/form-4137-2026-candidate.test.ts::keeps Medicare tax after the Social Security cap and holds conflicting displayed totals",
+        "tests/pdf/form-4137-2026-candidate.test.ts::holds federal payroll copies before they consume the wage base twice",
+        "tests/pdf/form-4137-2026-candidate.test.ts::reconciles code TP and applies the wage base per W-2 rather than to line 8"
+      ],
+      "implementationNote": "The existing employer and payroll calculation feeds a standalone review worksheet. Final return transfers, public export and qualified tax review remain open.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-4137-return",
       "jurisdiction": "federal",
       "taxYear": 2026,
