@@ -13,8 +13,10 @@ Use the linked progress sections when investigating individual packages.
   credit browser journeys. All six scoped Chromium cases and 38 diagnostic
   checks passed with the original assertions and deadlines. All eleven
   exact local checks passed, including 652 active Chromium cases, 30,470
-  active unit tests and 88.38% branch coverage. Current Linux browser and
-  ARM64 recovery workflow results remain open.
+  active unit tests and 88.38% branch coverage. Managed Linux passed its
+  652 active browser cases. The strict image passed 646 active cases and
+  reached six Ohio deadlines. Recovery, rollback and archive verification
+  passed. The separate ARM64 run remains in progress.
   [Ohio browser evidence](upgrade-2026-progress.md#november-24-ohio-business-and-resident-credit-browser-checkpoints).
 
 - `a70ba4c7` pins the final 2026 Form 4137 and provides an internal
@@ -24,7 +26,8 @@ Use the linked progress sections when investigating individual packages.
   All eleven exact local checks passed, with 30,470 active unit and
   coverage tests, 88.38% branch coverage and 652 active Chromium cases.
   `03f367de` pins the historical and current rule-pack evidence to separate
-  IRS archives. All 24 focused tests and 38 diagnostic checks passed.
+  IRS archives. Its eleven exact local checks passed, including 30,471
+  active unit tests, 88.38% branch coverage and 652 active Chromium cases.
   Public export, final return transfer and qualified human review remain open.
   [Form 4137 source and evidence](upgrade-2026-form-4137-final-source.md).
 

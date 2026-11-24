@@ -18,9 +18,16 @@ All eleven exact local checks then passed. Unit and coverage each passed
 30,470 active cases with 81 conditional skips. Branch coverage was 88.38%,
 10,041 spec references resolved and Chromium passed all 652 active cases
 across eight windows with five original skips and verified teardown.
+Managed Linux also passed 652 active cases with five original skips.
+The strict AMD64 image passed 646 active cases with five original skips.
+Two desktop resident-credit and four school cases hit the existing
+30-second deadline. Recovery, rollback, independent archive verification
+and the bound image scan passed. The separate ARM64 run has started.
 Vercel canceled the automatic production build.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45503159782) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45503159877) ·
+[Managed Linux browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45503159877/job/138831411104) ·
+[Strict AMD64 browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45503159877/job/138831411607) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45503159775) ·
 [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45503211576).
 
@@ -62,7 +69,11 @@ respective IRS archives in both the rule packs and spec inventory.
 The new regression first failed on the historical citation. After the fix,
 all 24 focused tests, 38 diagnostic checks, 10,042 spec references and 2,069
 browser source hashes passed. Lint reported zero errors and one existing
-warning. Vercel canceled the automatic production build.
+warning. The entire 6,691-blob archive and 15 official sample hashes
+matched. All eleven local checks passed, including 30,471 active cases
+in unit and coverage, 81 original skips, 88.38% branch coverage and 652
+active Chromium cases with five original skips and verified teardown.
+Vercel canceled the automatic production build.
 [2025 authority](https://www.irs.gov/pub/irs-prior/f4137--2025.pdf) ·
 [2026 authority](https://www.irs.gov/pub/irs-prior/f4137--2026.pdf) ·
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45504699794) ·
@@ -96,11 +107,21 @@ The completed `f2ac230e` managed Linux job passed all 652 active browser
 cases with five original skips. Its strict AMD64 job passed 650 active
 cases with five original skips. Two desktop Ohio school cases exceeded the
 30-second deadline. Both had completed saved reopen and PDF inspection.
-`refund100` was awaiting the filing rejection. `covered` had received the
-rejection and the log lacks the exact final operation. Recovery, rollback,
-independent archive verification and image scan passed.
+`refund100` was awaiting the filing rejection. The `covered` trace reached
+the deadline during final home navigation after the rejection. Its runner
+then completed deletion and empty-storage assertions. Recovery, rollback,
+independent archive verification, cleanup and image scan passed.
 [Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134/job/138783307861) ·
 [Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134/job/138783307127).
+
+The exact `f2ac230e` ARM64 image passed 643 active browser cases with
+five original skips. Two Ohio business part-year cases, two resident-credit
+cases, one reciprocal refund and four school cases reached the existing
+30-second deadline. Compose upgrade and recovery, browser cleanup and the
+bound image scan passed. The sanitized timing artifact records the eight
+completed windows and teardown. The separate current ARM64 run is queued.
+[ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992/job/138806772347) ·
+[Current ARM64 revision](https://github.com/utilityfueled/tax-engine/actions/runs/45503211576).
 
 The exact `f84a7000` Linux runtime passed 650 of 652 active Chromium
 cases, with five original skips. Recovery, rollback, independent archive
