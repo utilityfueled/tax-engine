@@ -1,0 +1,60 @@
+form: "IRC Section 443"
+fullName: "Ordinary federal tax for a short accounting year"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p538"
+retrievedAt: "2026-11-24"
+reviewStatus: "Calculation candidate; qualified independent review pending"
+notes: |
+  Applies to a living single filer changing between regular month-end
+  accounting periods beginning in 2025 or 2026 whose AMT exemption is not
+  limited by the rules for children. The caller must establish the period
+  and derive both short-period tax bases from confirmed facts.
+  This worksheet handles ordinary rates and no credits. Preferential rates,
+  foreign credits, other taxes, uncommon tax periods, the twelve-month relief
+  claim and the treatment of inputs dependent on annualized income require
+  separate methods. No public whole-return estimate or form output is enabled.
+lines:
+  - line: "period-and-bases"
+    description: "Validate the scope and both actual short-period tax bases"
+    formula: >-
+      Require year 2025 or 2026, a single filing status, an integer count of
+      one to eleven whole months and explicit finite Decimal amounts for
+      modified taxable income and separately determined AMTI. The upstream
+      regular base uses actual allowable deductions, a zero standard deduction
+      and a zero personal exemption. Preserve the signed inputs in the audit
+      and floor only taxable amounts or tax at zero.
+    irsRef: "IRC §§63(c)(6)(C), 151(d)(5), 443(a)(1) and (b)(3); IRS Publication 538, Figuring Tax for Short Year"
+    testRef: "tests/engine/forms/short-accounting-year-tax.test.ts::rejects unsupported periods, years, filing statuses and tax bases"
+  - line: "regular-tax"
+    description: "Compute and prorate ordinary tax using the statutory rate schedule"
+    formula: >-
+      Multiply short-period modified taxable income by 12 and divide by the
+      number of short-period months. Apply the same year's single ordinary
+      rates to the nonnegative annual amount. Multiply annual tax by the
+      number of months and divide by 12. Apply scaled bracket boundaries to
+      the annual income numerator before division so an exact half-dollar
+      short-period result is preserved even for recurring annual amounts.
+    irsRef: "IRC §§3(b)(1), 443(b)(1) and 6102; Rev. Proc. 2024-40 §2.01 and Rev. Proc. 2025-32 §4.01, Table 3"
+    testRef: "tests/engine/forms/short-accounting-year-tax.test.ts::uses the statutory rate schedule and prorates tax before report rounding"
+  - line: "tentative-minimum-tax"
+    description: "Annualize AMTI separately and prorate the tentative minimum tax"
+    formula: >-
+      Multiply short-period AMTI by 12 and divide by the number of months.
+      Apply the year's exemption reduction to annualized AMTI. Subtract the
+      remaining exemption, floor the rate base at zero, apply 26 percent
+      through the year's breakpoint and 28 percent above it. Multiply the
+      resulting tax by the number of short-period months and divide by 12.
+      Apply the exemption and rate boundaries to the annual income numerator
+      before division and keep cents and fractional cents in all intermediate
+      amounts.
+    irsRef: "IRC §§55(b), 55(d), 443(d) and 6102; Rev. Proc. 2024-40 §2.11 and Rev. Proc. 2025-32 §4.10"
+    testRef: "tests/engine/forms/short-accounting-year-tax.test.ts::applies the AMT rate and exemption boundaries before proration"
+  - line: "additional-minimum-tax"
+    description: "Compare the two short-period tax amounts"
+    formula: >-
+      Additional minimum tax is the excess of the prorated tentative minimum
+      tax over prorated regular tax, floored at zero. Return the two component
+      amounts and the excess before any whole-dollar reporting. Physical return
+      lines and the relief claim require their separate verification.
+    irsRef: "IRC §§55(a), 443(b)(1) and 443(d)"
+    testRef: "tests/engine/forms/short-accounting-year-tax.test.ts::compares prorated regular and tentative minimum tax"

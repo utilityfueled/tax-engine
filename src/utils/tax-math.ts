@@ -14,7 +14,15 @@ import { d, zeroFloor, min, roundDollar } from "./decimal.js";
  */
 export function calculateTaxFromBrackets(
   taxableIncome: Decimal,
-  brackets: TaxBracket[]
+  brackets: readonly TaxBracket[]
+): Decimal {
+  return roundDollar(calculateUnroundedTaxFromBrackets(taxableIncome, brackets));
+}
+
+/** Rate-schedule arithmetic for worksheets with another step before reporting. */
+export function calculateUnroundedTaxFromBrackets(
+  taxableIncome: Decimal,
+  brackets: readonly TaxBracket[]
 ): Decimal {
   let tax = new Decimal(0);
   for (const bracket of brackets) {
@@ -23,7 +31,7 @@ export function calculateTaxFromBrackets(
     const taxableInBracket = upper.minus(bracket.min);
     tax = tax.plus(taxableInBracket.times(bracket.rate));
   }
-  return roundDollar(tax);
+  return tax;
 }
 
 type OrdinaryTaxConstants = Pick<YearConstants, "taxYear" | "taxBrackets">;
