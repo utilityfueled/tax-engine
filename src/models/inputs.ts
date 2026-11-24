@@ -2891,6 +2891,10 @@ export const Form8962Schema = z.object({
     advancePremiumTaxCredit: nonnegativePremium,
     coverageEligible: z.boolean(),
     incomeBasedSepEnrollment: z.boolean(),
+    zeroReportedPremiumPayment: z.object({
+      amountPaid: nonnegativePremium.optional(),
+      paidByUnextendedReturnDueDate: z.boolean().optional(),
+    }).optional(),
     qsehraAffordable: z.boolean().optional(),
     qsehraMonthlyPermittedBenefit: nonnegativePremium.optional(),
   })).refine(uniqueCoverageMonths,"Duplicate PTC reconciliation months are not allowed").optional(),

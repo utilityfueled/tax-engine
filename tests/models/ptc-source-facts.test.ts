@@ -20,6 +20,14 @@ describe("Premium tax credit source facts",()=>{
   expect(Form8962Schema.safeParse({monthlyReconciliation:[{...month,slcsp:"-1"}]}).success).toBe(false);
   expect(Form8962Schema.safeParse({monthlyReconciliation:[{...month,coverageEligible:undefined}]}).success).toBe(false);
  });
+ it("preserves independent zero-reported enrollment premium payment facts", () => {
+  const payment = { amountPaid: "499.88", paidByUnextendedReturnDueDate: false };
+  for (const evidence of [payment, { amountPaid: "499.88" }, { paidByUnextendedReturnDueDate: false }]) {
+   const actual = { ...month, zeroReportedPremiumPayment: evidence };
+   expect(Form8962Schema.parse({ monthlyReconciliation: [actual] }).monthlyReconciliation?.[0]).toEqual(actual);
+  }
+  expect(Form8962Schema.safeParse({ monthlyReconciliation: [{ ...month, zeroReportedPremiumPayment: { ...payment, amountPaid: "-1" } }] }).success).toBe(false);
+ });
  it("derives statement completeness before defaults and rejects duplicate source months",()=>{
   const statement={taxYear:2026,marketplace:"Actual marketplace",policyNumber:"POLICY1",monthlyPremiums:[month]};
   expect(Form1095ASchema.parse(statement).sourceFactsComplete).toBe(true);

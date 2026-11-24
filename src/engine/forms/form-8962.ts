@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus } from "@/models/constants.js";
+import { validateForm8962EnrollmentPremium } from "@/models/form-8962-premium-payment.js";
 import { assertMarketplaceStatementUsable, marketplacePolicyIdentity } from "@/models/form-8962-shared-policy.js";
 import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -36,6 +37,7 @@ export interface Form8962Facts {
     advancePremiumTaxCredit: string;
     coverageEligible: boolean;
     incomeBasedSepEnrollment: boolean;
+    zeroReportedPremiumPayment?: { amountPaid?: string; paidByUnextendedReturnDueDate?: boolean };
     qsehraAffordable?: boolean;
     qsehraMonthlyPermittedBenefit?: string;
   }[];
@@ -101,6 +103,7 @@ function assertMonth(month: number): void {
 interface Month {
   month: number; premium: Decimal; slcsp: Decimal; advance: Decimal;
   eligible: boolean; qsehraAffordable: boolean; qsehraBenefit: Decimal;
+  usedZeroReportedPremiumPayment?: boolean;
 }
 
 export function calculateForm8962(input: Form8962Input): Form8962Result {
@@ -196,7 +199,9 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       const slcsp = dollars(row.slcsp, "corrected SLCSP premium");
       const advance = dollars(row.advancePremiumTaxCredit, "monthly advance PTC");
       if (!advance.eq(original.advance)) throw new Error("Form 8962 monthly APTC does not reconcile to source statements");
-      if (premium.gt(original.premium)) throw new Error("Form 8962 eligible premium exceeds source enrollment premiums");
+      const ordinaryEligibleMonth = input.form1095A.length === 1 && row.coverageEligible === true && row.incomeBasedSepEnrollment === false
+        && !sharedPolicyAllocation && !marriageSources && !facts.qsehraAffected && !input.healthInsuranceCoordination;
+      const usedZeroReportedPremiumPayment = validateForm8962EnrollmentPremium(original, premium, row.zeroReportedPremiumPayment, ordinaryEligibleMonth);
       if (sharedPolicyAllocation && (!premium.eq(original.premium) || !slcsp.eq(original.slcsp))) throw new Error("Form8962 shared-policy reconciliation must equal the actual source-derived allocation");
       if (typeof row.coverageEligible !== "boolean" || typeof row.incomeBasedSepEnrollment !== "boolean") throw new Error("Form 8962 monthly coverage eligibility facts must be confirmed");
       if (facts.qsehraAffected && typeof row.qsehraAffordable !== "boolean") throw new Error("Form 8962 requires actual monthly QSEHRA affordability");
@@ -204,7 +209,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       if (!facts.qsehraAffected && (row.qsehraAffordable === true || (row.qsehraMonthlyPermittedBenefit !== undefined && !dollars(row.qsehraMonthlyPermittedBenefit, "monthly QSEHRA benefit").isZero()))) throw new Error("Form 8962 QSEHRA source facts conflict");
       months.push({ month: row.month, premium, slcsp, advance,
         eligible: row.coverageEligible && !(year === 2026 && row.incomeBasedSepEnrollment),
-        qsehraAffordable: row.qsehraAffordable === true, qsehraBenefit });
+        qsehraAffordable: row.qsehraAffordable === true, qsehraBenefit, usedZeroReportedPremiumPayment });
     }
     if (seen.size !== sourceMonths.size) throw new Error("Form 8962 requires reconciliation for every source month");
   } else {
@@ -229,7 +234,8 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
     return firstMonth !== undefined && form.monthlyPremiums.length === 12 && form.monthlyPremiums.every(row =>
       new Decimal(row.enrolleePremium).eq(firstMonth.enrolleePremium) && row.slcsp !== null && firstMonth.slcsp !== null && new Decimal(row.slcsp).eq(firstMonth.slcsp));
   })
-    && months.length === 12 && first !== undefined && months.every(month => month.premium.eq(first.premium) && month.slcsp.eq(first.slcsp) && month.eligible === first.eligible);
+    && months.length === 12 && first !== undefined && months.every(month => !month.usedZeroReportedPremiumPayment
+      && month.premium.eq(first.premium) && month.slcsp.eq(first.slcsp) && month.eligible === first.eligible);
   const calculationMethod = fullYearUnchanged && !sharedPolicyAllocation && !marriageSources ? "annual" : "monthly";
   const audit = new AuditTrail();
   if (sharedPolicyAllocation) audit.merge(sharedPolicyAllocation.lines);
@@ -274,7 +280,9 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
         const tentative = min(premium, maximum);
         const allowed = month.qsehraAffordable ? new Decimal(0) : roundDollar(zeroFloor(tentative.minus(month.qsehraBenefit)));
         ptcAllowed = ptcAllowed.plus(allowed);
-        record(`${line}a`, "Monthly eligible enrollment premium", premium, "Actual coverage-family enrollment premium");
+        record(`${line}a`, "Monthly eligible enrollment premium", premium, month.usedZeroReportedPremiumPayment
+          ? "Actual timely payment plus original advance credit. Form 1095-A column A reported zero."
+          : "Actual coverage-family enrollment premium");
         record(`${line}b`, "Monthly corrected household SLCSP", slcsp, "Actual household benchmark; do not sum duplicate policy benchmarks");
         record(`${line}c`, "Monthly contribution", monthlyContribution, "Line 8b, once for the tax family");
         record(`${line}d`, "Monthly maximum premium assistance", maximum, `max(0, line ${line}b - line ${line}c)`);

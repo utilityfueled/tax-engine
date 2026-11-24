@@ -2,6 +2,7 @@ form: "Premium tax credit source facts"
 taxYear: 2026
 references:
   - "https://www.irs.gov/instructions/i8962"
+  - "https://www.ecfr.gov/current/title-26/section-1.36B-3"
   - "https://www.irs.gov/publications/p974"
   - "https://www.irs.gov/irb/2025-32_IRB"
   - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm"
@@ -38,6 +39,11 @@ lines:
       silently replaced with ordinary monthly arithmetic.
     irsRef: "Form 8962 lines 11-23; Pub. 974 QSEHRA and special worksheets"
     testRef: "tests/models/ptc-source-facts.test.ts::preserves monthly PTC amounts and rejects duplicate reconciliation months"
+  - line: "zero-reported-premium-payment"
+    description: "Independent actual payment facts for an enrollment premium reported as zero"
+    formula: "An optional zeroReportedPremiumPayment contains a nonnegative amountPaid and the actual paidByUnextendedReturnDueDate answer. Preserve exact source cents and keep unknown values unknown. The calculator requires positive payment and affirmative timely payment to reconcile a higher premium in the supported ordinary method."
+    irsRef: "26 CFR 1.36B-3(c)(1)(ii), (d)(1)(i)"
+    testRef: "tests/models/ptc-source-facts.test.ts::preserves independent zero-reported enrollment premium payment facts"
   - line: "raw-statements"
     description: "Preserve source tax year and missing amounts before legacy defaults"
     formula: >-

@@ -124,6 +124,47 @@ describe("Form 8962 2026 source-backed reconciliation", () => {
     expect(calculateForm8962(fixture({ facts: { canBeClaimedAsDependent: true } })).ptcAllowed.toString()).toBe("0");
   });
 
+  it("uses independently confirmed timely payments for a zero reported enrollment premium", () => {
+    const actual = fixture({ months: 1, aptc: "100.12" });
+    const reconciliation = first(actual.facts.monthlyReconciliation);
+    const statementMonth = first(first(actual.form1095A).monthlyPremiums);
+    statementMonth.enrolleePremium = "0";
+    statementMonth.slcsp = "0";
+    reconciliation.zeroReportedPremiumPayment = { amountPaid: "499.88", paidByUnextendedReturnDueDate: true };
+    const result = calculateForm8962(actual);
+    expect(result.calculationMethod).toBe("monthly");
+    expect([value(result, "12a"), value(result, "12b"), value(result, "12c"), value(result, "24"), value(result, "25"), value(result, "26")])
+      .toEqual(["600", "600", "172", "428", "100", "328"]);
+    expect(statementMonth).toMatchObject({ enrolleePremium: "0", slcsp: "0", advancePremiumTaxCredit: "100.12" });
+
+    const payment = reconciliation.zeroReportedPremiumPayment;
+    for (const invalid of [undefined, {}, { amountPaid: "499.88" }, { paidByUnextendedReturnDueDate: true },
+      { ...payment, paidByUnextendedReturnDueDate: false }, { ...payment, amountPaid: "499.87" }]) {
+      expect(() => calculateForm8962({ ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation, zeroReportedPremiumPayment: invalid }] } })).toThrow(/premium/i);
+    }
+    const lateWithoutClaim = calculateForm8962({ ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation,
+      enrolleePremium: "0", coverageEligible: false, zeroReportedPremiumPayment: { paidByUnextendedReturnDueDate: false },
+    }] } });
+    expect([value(lateWithoutClaim, "24"), value(lateWithoutClaim, "25"), value(lateWithoutClaim, "29")]).toEqual(["0", "100", "100"]);
+    for (const unsupported of [
+      { ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation, coverageEligible: false }] } },
+      { ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation, incomeBasedSepEnrollment: true }] } },
+      { ...actual, facts: { ...actual.facts, qsehraAffected: true } },
+      { ...actual, form1095A: [...actual.form1095A, { ...first(actual.form1095A), policyNumber: "Other-Policy", monthlyPremiums: [{ ...statementMonth, advancePremiumTaxCredit: "0" }] }] },
+    ]) expect(() => calculateForm8962(unsupported)).toThrow(/premium|ordinary/i);
+    expect(() => calculateForm8962({ ...actual, form1095A: [{ ...first(actual.form1095A), monthlyPremiums: [{ ...statementMonth, enrolleePremium: "599.99" }] }] })).toThrow(/premium/i);
+    expect(() => calculateForm8962({ ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation, advancePremiumTaxCredit: "100.13" }] } })).toThrow(/APTC/i);
+
+    const fullYear = fixture({ aptc: "0", premium: "0", slcsp: "600" });
+    fullYear.facts.monthlyReconciliation = fullYear.facts.monthlyReconciliation.map(row => ({ ...row,
+      enrolleePremium: "600", zeroReportedPremiumPayment: { amountPaid: "600", paidByUnextendedReturnDueDate: true },
+    }));
+    const monthly = calculateForm8962(fullYear);
+    expect(monthly.calculationMethod).toBe("monthly");
+    expect(value(monthly, "11a")).toBeUndefined();
+    expect(value(monthly, "24")).toBe("5136");
+  });
+
   it("uses one rounded monthly contribution for multiple policies", () => {
     const input = fixture({ months: 6 });
     input.form1095A = [

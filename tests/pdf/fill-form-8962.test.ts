@@ -10,6 +10,7 @@ import { PDFDocument } from "pdf-lib";
 import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
+import { TaxYearInputSchema } from "@/models/inputs.js";
 import {
   buildForm8962ReferenceSummary,
   fillForm8962Reference,
@@ -115,6 +116,24 @@ describe("Form 8962 packet reference summary", () => {
     } finally {
       await rm(outputDir, { recursive: true, force: true });
     }
+  });
+
+  it("preserves the original zero beside the substantiated review premium", () => {
+    const statementMonth = { month: 1, enrolleePremium: "0", slcsp: "0", advancePremiumTaxCredit: "0" };
+    const source = TaxYearInputSchema.parse({ ...marketplaceFixture,
+      form1095A: [{ taxYear: 2025, marketplace: "Synthetic Marketplace", policyNumber: "SYNTHETIC-1", monthlyPremiums: [statementMonth] }],
+      form8962: { taxFamilySize: 1, fplRegion: "contiguous", requiredFilingDependentsModifiedAGI: "0", householdFactsConfirmed: true,
+        canBeClaimedAsDependent: false, belowPovertyException: "none", coverageFactsConfirmed: true, allocationRequired: false,
+        alternativeMarriageCalculationElected: false, selfEmployedHealthInsuranceCoordinationRequired: false, lawfulPresenceReconciliationRequired: false,
+        qsehraAffected: false, monthlyReconciliation: [{ ...statementMonth, enrolleePremium: "600", slcsp: "600", coverageEligible: true,
+          incomeBasedSepEnrollment: false, zeroReportedPremiumPayment: { amountPaid: "600", paidByUnextendedReturnDueDate: true } }],
+      },
+    });
+    const summary = buildForm8962ReferenceSummary(source.form1095A, calculateFederalTax(source));
+    expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
+    expect(summary.policies[0]).toMatchObject({ annualEnrollmentPremium: "0", annualSLCSP: "0", annualAdvancePTC: "0" });
+    expect(summary.lines.find(line => line.line === "12a")?.value).toBe("600");
+    expect(summary.lines.find(line => line.line === "12e")?.value).toBe("551");
   });
 
   it("fillReturn includes a Form 8962 reference summary when marketplace statements are present", async () => {

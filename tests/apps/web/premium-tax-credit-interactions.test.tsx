@@ -4,7 +4,7 @@ import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { PremiumTaxCreditSourceDetails } from "@/components/guided-interview/premium-tax-credit-source-details";
-import { type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
+import { emptyPremiumTaxCreditFacts, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
 
 it("collects actual policy and coverage answers without inferred amounts", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -49,5 +49,73 @@ it("collects actual policy and coverage answers without inferred amounts", async
     await click("Policy 1 month 1: Remove original month"); await click("Policy 1: Remove policy"); await click("Coverage month 1: Remove month");
     expect(latest?.policies).toEqual([]); expect(latest?.monthlyReconciliation).toEqual([]);
     await click("Remove Marketplace coverage worksheet"); expect(latest).toBeUndefined();
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+it("collects zero-reported enrollment premium payment independently", async () => {
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  const reported = { month: "1", enrolleePremium: "0", slcsp: "0", advancePremiumTaxCredit: "0" };
+  const initial: PremiumTaxCreditData = { ...emptyPremiumTaxCreditFacts, sourceTaxYear: "2026", sourceFactsConfirmed: true,
+    allocationRequired: false, alternativeMarriageCalculationElected: false,
+    lawfulPresenceReconciliationRequired: false, selfEmployedHealthInsuranceCoordinationRequired: false, qsehraAffected: false,
+    policies: [{ taxYear: "2026", marketplace: "Synthetic Marketplace", policyNumber: "Synthetic-1", monthlyPremiums: [reported, { ...reported, month: "2", enrolleePremium: "500" }] }],
+    monthlyReconciliation: [{ ...reported, enrolleePremium: "600.25", slcsp: "600", coverageEligible: true, incomeBasedSepEnrollment: false }],
+  };
+  let latest: PremiumTaxCreditData | undefined;
+  function Harness() {
+    const [data, setData] = useState<PremiumTaxCreditData | undefined>(initial);
+    return <PremiumTaxCreditSourceDetails taxYear={2026} data={data} onChange={next => { latest = next; setData(next); }} />;
+  }
+  const control = (label: string) => [...container.querySelectorAll("label")]
+    .find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector("input, select");
+  const timelyLabel = "Coverage month 1: You paid the premium by the unextended return due date";
+  const amountLabel = "Coverage month 1: Premium amount you paid";
+  async function change(label: string, value: string) {
+    const field = control(label);
+    if (!field) throw new Error(`Missing ${label}`);
+    const select = field instanceof HTMLSelectElement;
+    const setter = Object.getOwnPropertyDescriptor(select ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error(`Missing value setter for ${label}`);
+    await act(async () => { setter.call(field, value); field.dispatchEvent(new Event(select ? "change" : "input", { bubbles: true })); });
+  }
+  async function enterPayment() {
+    expect((control(timelyLabel) as HTMLSelectElement | undefined)?.value).toBe("");
+    await change(timelyLabel, "true");
+    expect((control(amountLabel) as HTMLInputElement | undefined)?.value).toBe("");
+    await change(amountLabel, "600.25");
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment).toEqual({ amountPaid: "600.25", paidByUnextendedReturnDueDate: true });
+  }
+  try {
+    await act(async () => root.render(<Harness />));
+    await enterPayment();
+    expect(latest?.sourceFactsConfirmed).toBeNull();
+    expect(latest?.policies[0]?.monthlyPremiums[0]).toEqual(reported);
+
+    await change("Policy 1 month 2: Original enrollment premium", "501");
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment?.amountPaid).toBe("600.25");
+    await change("Policy 1: Policy number", "Synthetic-Replacement");
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment).toBeUndefined();
+    await enterPayment();
+    await change("Policy 1: Statement tax year", "2025");
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment).toBeUndefined();
+    await change("Policy 1: Statement tax year", "2026");
+    await enterPayment();
+    await change("Marketplace worksheet tax year", "2025");
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment).toBeUndefined();
+    await change("Marketplace worksheet tax year", "2026");
+    await enterPayment();
+    await change("Policy 1 month 1: Original enrollment premium", "600.25");
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment).toBeUndefined();
+    expect(control(timelyLabel)).toBeUndefined();
+    await change("Policy 1 month 1: Original enrollment premium", "0");
+    await enterPayment();
+    const remove = [...container.querySelectorAll("button")].find(button => button.textContent === "Policy 1 month 1: Remove original month");
+    if (!remove) throw new Error("Missing matching original month control");
+    await act(async () => remove.click());
+    expect(latest?.monthlyReconciliation[0]?.zeroReportedPremiumPayment).toBeUndefined();
+    expect(control(timelyLabel)).toBeUndefined();
+    expect(latest?.monthlyReconciliation[0]).toMatchObject({ coverageEligible: true, incomeBasedSepEnrollment: false, enrolleePremium: "600.25" });
   } finally { await act(async () => root.unmount()); container.remove(); }
 });

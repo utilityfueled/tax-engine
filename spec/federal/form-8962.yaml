@@ -8,6 +8,8 @@ references:
   - "https://www.govinfo.gov/content/pkg/FR-2025-01-17/html/2025-01377.htm"
   - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm"
   - "https://www.ecfr.gov/current/title-26/section-1.36B-2"
+  - "https://www.ecfr.gov/current/title-26/section-1.36B-3"
+  - "https://www.irs.gov/pub/irs-dft/i8962--dft.pdf"
 notes: >-
   Refreshed 2026-10-25. Final IRS instructions available are for 2025; their
   physical line identifiers describe the audit, not a qualified 2026 form.
@@ -127,6 +129,25 @@ lines:
       Require one complete monthly reconciliation row per source month.
     irsRef: "Form 8962 lines 12-23; PL 119-21 section 71304"
     testRef: "tests/engine/forms/form-8962-2026.test.ts::uses one rounded monthly contribution for multiple policies"
+  - line: "zero-reported-premium-payment"
+    description: "Recover a timely paid enrollment premium reported as zero in Form 1095-A column A"
+    formula: >-
+      For one current-year policy in an otherwise ordinary reconciliation, an
+      eligible source month with an original column A of zero may use the actual
+      enrollment premium paid by the unextended return due date. Require an
+      independently entered positive taxpayer payment, an affirmative timely
+      payment answer, and exact equality between eligible enrollment premium and
+      that payment plus the original source APTC. Keep original amounts and APTC.
+      Use the monthly method. Missing, late or conflicting payment evidence does
+      not establish a higher premium. The ordinary premium ceiling applies to
+      nonzero source premiums. Shared allocation, alternative marriage, lawful
+      presence, QSEHRA and self-employed health coordination need separate methods.
+    irsRef: "26 CFR 1.36B-3(c)(1)(ii), (d)(1)(i); Form 8962 lines 12-23, columns (a) and (b)"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses independently confirmed timely payments for a zero reported enrollment premium"
+  - line: "zero-reported-premium-reference"
+    description: "Keep statement and calculated premium distinct in the reference summary"
+    formula: "Policy totals show the original Form 1095-A amounts. Monthly column (a) shows the independently substantiated enrollment premium. The reference summary remains review-only."
+    testRef: "tests/pdf/fill-form-8962.test.ts::preserves the original zero beside the substantiated review premium"
   - line: "qsehra"
     description: "QSEHRA adjustment"
     formula: >-

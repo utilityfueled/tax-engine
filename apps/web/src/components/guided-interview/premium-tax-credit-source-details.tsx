@@ -1,7 +1,9 @@
 "use client";
 import type { HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 
-import { emptyMarketplaceCoverageMonth, emptyMarketplaceMonth, emptyPremiumTaxCreditFacts, type MarketplacePolicyData, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
+import { emptyMarketplaceCoverageMonth, emptyMarketplaceMonth, emptyPremiumTaxCreditFacts, isOrdinarySingleMarketplacePolicy, type MarketplacePolicyData, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
+import { parseGuidedDisplayAmount } from "@/lib/guided-currency";
+import { marketplacePolicyIdentity } from "@/models/form-8962-shared-policy";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
@@ -21,10 +23,28 @@ const coverageFlags = [
   ["selfEmployedHealthInsuranceCoordinationRequired", "Self-employed health insurance coordination is required"], ["qsehraAffected", "QSEHRA affects this coverage"],
   ["lawfulPresenceReconciliationRequired", "Lawful-presence premium allocation is required"], ["coverageFactsConfirmed", "Monthly coverage worksheet checked"],
 ] as const;
+
+function originalSourceForPayment(data: PremiumTaxCreditData, month: string) {
+  const [policy] = data.policies;
+  if (!policy || data.policies.length !== 1 || !month || policy.statementStatus === "voided") return undefined;
+  const matchingMonths = policy.monthlyPremiums.filter(row => Number(row.month) === Number(month));
+  if (matchingMonths.length !== 1) return undefined;
+  return { policy: marketplacePolicyIdentity(policy.marketplace, policy.policyNumber), worksheetYear: data.sourceTaxYear.trim(),
+    statementYear: policy.taxYear.trim(), statementStatus: policy.statementStatus, month: matchingMonths[0] };
+}
+
 export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, taxYear, healthInsurance, onChange }: { healthInsurance?: HealthInsuranceData; data?: PremiumTaxCreditData; personal?: PersonalInfoData; filingStatus?: FilingStatus | null; taxYear?: number | null; onChange: (data: PremiumTaxCreditData | undefined) => void }) {
   if (!data) return <section><h4>Marketplace coverage and premium tax credit</h4><p className="guided-hint">Use your original Forms1095-A and the actual household coverage worksheet. Advance credits must be reconciled even when no additional credit is allowed.</p><button type="button" onClick={() => onChange({ ...emptyPremiumTaxCreditFacts, policies: [], monthlyReconciliation: [] })}>Add Marketplace coverage worksheet</button></section>;
   const update = (patch: Partial<PremiumTaxCreditData>) => {
     const next = { ...data, ...patch };
+    if (next.policies !== data.policies || next.sourceTaxYear !== data.sourceTaxYear) {
+      next.monthlyReconciliation = next.monthlyReconciliation.map(row => {
+        if (!row.zeroReportedPremiumPayment) return row;
+        const original = originalSourceForPayment(data, row.month);
+        if (original && !guidedSourceValuesChanged(original, originalSourceForPayment(next, row.month))) return row;
+        return { ...row, zeroReportedPremiumPayment: undefined };
+      });
+    }
     if (guidedSourceValuesChanged(data, next)) {
       next.sourceFactsConfirmed = null;
       if (next.marriageSources) next.marriageSources = invalidateMarriageSources(next.marriageSources);
@@ -32,6 +52,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     }
     onChange(next);
   };
+  const ordinarySinglePolicy = isOrdinarySingleMarketplacePolicy(data);
   return <section><h4>Marketplace coverage and premium tax credit</h4>
     <p className="guided-hint">Enter actual source amounts, including zero when established. Keep the statement's original benchmark separate from the corrected household benchmark. Use the <a href="https://www.irs.gov/instructions/i8962" target="_blank" rel="noreferrer">Form8962 instructions</a> for coverage-family eligibility, exceptions and required-filing dependent income. The return calculates your modified AGI.</p>
     <div className="guided-form-grid">
@@ -84,11 +105,28 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     {data.monthlyReconciliation.map((row, rowIndex) => {
       const prefix = `Coverage month ${rowIndex + 1}`;
       const set = (patch: Partial<typeof row>) => update({ monthlyReconciliation: data.monthlyReconciliation.map((current, index) => index === rowIndex ? { ...current, ...patch } : current) });
+      const payment = row.zeroReportedPremiumPayment;
+      const original = ordinarySinglePolicy ? originalSourceForPayment(data, row.month) : undefined;
+      const reportedPremium = original?.month?.enrolleePremium;
+      const zeroReported = original?.statementYear === String(taxYear) && original?.worksheetYear === String(taxYear)
+        && row.coverageEligible === true && row.incomeBasedSepEnrollment === false
+        && reportedPremium?.trim() && parseGuidedDisplayAmount(reportedPremium).isZero();
       return <fieldset key={rowIndex}><legend>{prefix}</legend><div className="guided-form-grid">
-        <Choice label={`${prefix}: Month`} value={row.month} choices={months} onChange={month => set({ month })} />
+        <Choice label={`${prefix}: Month`} value={row.month} choices={months} onChange={month => set({ month, zeroReportedPremiumPayment: undefined })} />
         {([["enrolleePremium", "Eligible enrollment premium"], ["slcsp", "Corrected household SLCSP premium"], ["advancePremiumTaxCredit", "Reconciled advance credit"]] as const).map(([field, label]) => <CurrencyField key={field} label={`${prefix}: ${label}`} value={row[field]} onChange={value => set({ [field]: value })} />)}
         <BooleanFact label={`${prefix}: Coverage is eligible for the credit`} value={row.coverageEligible} onChange={coverageEligible => set({ coverageEligible })} />
         <BooleanFact label={`${prefix}: Income-based special enrollment applies`} value={row.incomeBasedSepEnrollment} onChange={incomeBasedSepEnrollment => set({ incomeBasedSepEnrollment })} />
+        {(zeroReported || payment) && <>
+          <BooleanFact label={`${prefix}: You paid the premium by the unextended return due date`} value={payment?.paidByUnextendedReturnDueDate}
+            onChange={paidByUnextendedReturnDueDate => set({ zeroReportedPremiumPayment: paidByUnextendedReturnDueDate === null ? undefined : {
+              paidByUnextendedReturnDueDate, amountPaid: paidByUnextendedReturnDueDate ? payment?.amountPaid : undefined,
+            } })} />
+          {payment?.paidByUnextendedReturnDueDate === true && <>
+            <CurrencyField label={`${prefix}: Premium amount you paid`} value={payment.amountPaid ?? ""}
+              onChange={amountPaid => set({ zeroReportedPremiumPayment: { ...payment, amountPaid } })} />
+            <p className="guided-hint">Enter only what you paid. Include any advance credit in the eligible enrollment premium above.</p>
+          </>}
+        </>}
         {(data.qsehraAffected === true || row.qsehraAffordable != null || row.qsehraMonthlyPermittedBenefit !== undefined) && <>
           <BooleanFact label={`${prefix}: QSEHRA is affordable`} value={row.qsehraAffordable} onChange={qsehraAffordable => set({ qsehraAffordable })} />
           <CurrencyField label={`${prefix}: QSEHRA permitted benefit`} value={row.qsehraMonthlyPermittedBenefit ?? ""} onChange={qsehraMonthlyPermittedBenefit => set({ qsehraMonthlyPermittedBenefit })} />

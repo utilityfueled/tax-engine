@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { buildHealthInsuranceInput } from "./guided-health-insurance-facts";
 import { bindGuidedMarriageSources, type MarriagePolicyData } from "./guided-marriage-policy";
 import { Form8962Schema, type TaxYearInput, type Form7206Input } from "@/models/inputs";
+import { validateForm8962EnrollmentPremium } from "@/models/form-8962-premium-payment";
 import { marketplacePolicyIdentity } from "@/models/form-8962-shared-policy";
 import type { FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -16,6 +17,7 @@ export interface MarketplacePolicyData {
 }
 export interface MarketplaceCoverageMonthData extends MarketplaceMonthData {
   coverageEligible: boolean | null; incomeBasedSepEnrollment: boolean | null;
+  zeroReportedPremiumPayment?: { amountPaid?: string; paidByUnextendedReturnDueDate?: boolean | null };
   qsehraAffordable?: boolean | null; qsehraMonthlyPermittedBenefit?: string;
 }
 export interface PremiumTaxCreditData {
@@ -55,6 +57,13 @@ function fact(value: boolean | null | undefined, label: string): boolean {
 function month(row: MarketplaceMonthData, label: string) {
   return { month: integer(row.month, `${label} month`), enrolleePremium: money(row.enrolleePremium, `${label} enrollment premium`),
     slcsp: money(row.slcsp, `${label} SLCSP benchmark premium`), advancePremiumTaxCredit: money(row.advancePremiumTaxCredit, `${label} advance credit`) };
+}
+
+export function isOrdinarySingleMarketplacePolicy(data: PremiumTaxCreditData): boolean {
+  return data.policies.length === 1 && data.allocationRequired === false && !data.sharedPolicyAllocations
+    && data.alternativeMarriageCalculationElected === false && !data.marriageSources
+    && data.selfEmployedHealthInsuranceCoordinationRequired === false && data.qsehraAffected === false
+    && data.lawfulPresenceReconciliationRequired === false;
 }
 
 /** Collect sources without supplying a placeholder MAGI or calculating eligibility. */
@@ -106,17 +115,27 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     sourceMonths.clear();
     for (const row of shared.allocation.householdMonths) sourceMonths.set(row.month, { premium: row.premium, advance: row.advance });
   }
+  const ordinarySinglePolicy = isOrdinarySingleMarketplacePolicy(data);
   const reconciliation = data.monthlyReconciliation?.map(row => {
     const actual = month(row, "household coverage"); const source = sourceMonths.get(actual.month);
     if (!source) throw new Error("The household month has no actual original statement.");
     const allocated = shared?.allocation.householdMonths.find(entry => entry.month === actual.month);
     if (allocated && (!allocated.premium.eq(actual.enrolleePremium) || !allocated.slcsp.eq(actual.slcsp) || !allocated.advance.eq(actual.advancePremiumTaxCredit))) throw new Error("Reconcile shared household amounts to the actual original sources and allocation.");
     if (!source.advance.eq(actual.advancePremiumTaxCredit)) throw new Error("Reconcile household advance credit to the exact original monthly total.");
-    if (new Decimal(actual.enrolleePremium).gt(source.premium)) throw new Error("Eligible enrollment premium cannot exceed the original monthly premiums.");
+    const coverageEligible = fact(row.coverageEligible, "monthly coverage eligibility");
+    const incomeBasedSepEnrollment = fact(row.incomeBasedSepEnrollment, "monthly income-based special enrollment answer");
+    const payment = row.zeroReportedPremiumPayment;
+    const zeroReportedPremiumPayment = payment && {
+      amountPaid: payment.amountPaid?.trim() ? money(payment.amountPaid, "actual enrollment premium payment") : undefined,
+      paidByUnextendedReturnDueDate: payment.paidByUnextendedReturnDueDate ?? undefined,
+    };
+    validateForm8962EnrollmentPremium(source, new Decimal(actual.enrolleePremium), zeroReportedPremiumPayment,
+      ordinarySinglePolicy && coverageEligible && !incomeBasedSepEnrollment);
     const qsehraBenefit = row.qsehraMonthlyPermittedBenefit?.trim() ? money(row.qsehraMonthlyPermittedBenefit, "QSEHRA monthly permitted benefit") : undefined;
     if (qsehra) { fact(row.qsehraAffordable, "monthly QSEHRA affordability"); money(row.qsehraMonthlyPermittedBenefit, "QSEHRA monthly permitted benefit"); }
     if (!qsehra && (row.qsehraAffordable === true || (qsehraBenefit !== undefined && !new Decimal(qsehraBenefit).isZero()))) throw new Error("Monthly QSEHRA facts contradict the household answer.");
-    return { ...actual, coverageEligible: fact(row.coverageEligible, "monthly coverage eligibility"), incomeBasedSepEnrollment: fact(row.incomeBasedSepEnrollment, "monthly income-based special enrollment answer"),
+    return { ...actual, coverageEligible, incomeBasedSepEnrollment,
+      ...(zeroReportedPremiumPayment ? { zeroReportedPremiumPayment } : {}),
       qsehraAffordable: row.qsehraAffordable ?? undefined, qsehraMonthlyPermittedBenefit: qsehraBenefit };
   });
   if (!reconciliation || new Set(reconciliation.map(row => row.month)).size !== sourceMonths.size) throw new Error("Complete the household reconciliation for every original source month.");

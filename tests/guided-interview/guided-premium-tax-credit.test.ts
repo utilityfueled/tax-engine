@@ -1,9 +1,11 @@
 // Spec: spec/federal/guided-premium-tax-credit.yaml.
 import { expect, it } from "vitest";
+import Decimal from "decimal.js";
 import { buildPremiumTaxCreditInputs, emptyPremiumTaxCreditFacts, premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyCreditsData, loadGuidedFlowState, saveGuidedFlowState, startInterview, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { calculateFederalTax } from "@/engine/federal";
+import { calculatePremiumTaxCreditReturn } from "@/engine/forms/premium-tax-credit-return";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { completeDependent, completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
@@ -99,6 +101,42 @@ it("calculates the independent actual coverage credit in the guided return", () 
   expect(result.form8962?.ptcAllowed.toFixed()).toBe("5412");
   expect(result.form8962?.netPTC.toFixed()).toBe("1812");
   expect(result.agi.toFixed()).toBe("30000");
+});
+it("reopens and calculates a timely paid zero-reported Marketplace premium", () => {
+  const data = actualPremiumTaxCredit();
+  data.sourceTaxYear = "2026";
+  const [policy] = data.policies;
+  const [month] = data.monthlyReconciliation;
+  if (!policy || !month) throw new Error("Expected one original policy and coverage month.");
+  data.policies = [{ ...policy, taxYear: "2026", monthlyPremiums: [
+    { month: "1", enrolleePremium: "0", slcsp: "0", advancePremiumTaxCredit: "0" },
+  ] }];
+  const payment = { amountPaid: "600", paidByUnextendedReturnDueDate: true };
+  const paidMonth = { ...month, enrolleePremium: "600", slcsp: "600", advancePremiumTaxCredit: "0", zeroReportedPremiumPayment: payment };
+  data.monthlyReconciliation = [paidMonth];
+  let state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null }, 2026);
+  state = updateSectionData(state, "personal-info", completePersonalInfo);
+  state = updateSectionData(state, "income-w2", { entries: [{ ...completeW2Entry, sourceTaxYear: "2026", wages: "31300", socialSecurityWages: "31300", medicareWages: "31300" }] });
+  state.sectionData.credits = { ...emptyCreditsData, premiumTaxCredit: data };
+  const saved = new Map<string, string>();
+  const storage = { getItem: (key: string) => saved.get(key) ?? null, setItem: (key: string, value: string) => saved.set(key, value) } as Storage;
+  expect(saveGuidedFlowState(storage, "synthetic-ptc-payment", state)).toBe(true);
+  const reopened = loadGuidedFlowState(storage, "synthetic-ptc-payment");
+  if (!reopened) throw new Error("Expected the saved Marketplace worksheet to reopen.");
+  expect(reopened.sectionData.credits?.premiumTaxCredit).toEqual(data);
+  expect(validateSection(reopened, "credits").status).toBe("complete");
+  const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+  expect(canonical.form1095A[0]?.monthlyPremiums[0]).toEqual({ month: 1, enrolleePremium: "0", slcsp: "0", advancePremiumTaxCredit: "0" });
+  expect(canonical.form8962?.monthlyReconciliation?.[0]?.zeroReportedPremiumPayment).toEqual(payment);
+  const zero = new Decimal(0);
+  const credit = calculatePremiumTaxCreditReturn({ input: canonical, agi: new Decimal("31300"), taxExemptInterest: zero,
+    foreignIncomeReduction: zero, foreignHousingDeduction: zero, socialSecurityBenefitsGross: zero, socialSecurityBenefitsTaxable: zero,
+  });
+  expect(credit.netPTC.toFixed()).toBe("428");
+  expect(() => calculateFederalTax(canonical)).toThrow(/2026.*calculation is unavailable/i);
+
+  payment.paidByUnextendedReturnDueDate = false;
+  expect(() => buildPremiumTaxCreditInputs(data, 2026, "single", completePersonalInfo)).toThrow(/premium/i);
 });
 it("invalidates coverage confirmation after actual source changes without a confirmation cycle", () => {
   const state = stateWithCoverage();
