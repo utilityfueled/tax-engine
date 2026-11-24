@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
+import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, summarizeProviderEvalJournal, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
@@ -97,21 +97,39 @@ describe("guarded repeated provider executor", () => {
   });
   it("retains failed-output charges and resumes without additional requests", async () => {
     const state = setup(); let calls = 0;
-    const transport = async () => { calls++; return { ...good, payload: calls === 1 ? { probe: "ok" } : { invalid: true } }; };
+    const transport = async () => { calls++; return { ...good, status: calls === 2 ? "incomplete" as const : "completed" as const,
+      payload: calls === 1 ? { probe: "ok" } : { invalid: true } }; };
     const first = await executeProviderEval({ ...state, transport });
     const resumed = await executeProviderEval({ ...state, transport });
     expect(calls).toBe(4); expect(first.knownProviderCostUsd).toBe("0.00024");
     expect(resumed.knownProviderCostUsd).toBe("0.00024");
     expect(first.template.entries.map(entry => entry.repeat)).toEqual([1, 2, 3]);
-    expect(first.template.entries.every(entry => entry.applicationSchemaValid === false)).toBe(true);
+    expect(first.template.entries.map(entry => entry.applicationSchemaValid)).toEqual([null, false, false]);
+    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, { attemptId: "luna-high:case-income-w2-zero-withholding:1",
+      evidenceReference: "would-duplicate-matched-usage", billedModel: "gpt-6-luna", usage: good.usage, at })).toThrow(/once/);
   });
-  it("rejects undocumented model suffixes without discarding charged usage", async () => {
-    const state = setup(); let calls = 0;
-    const result = await executeProviderEval({ ...state, transport: async () => { calls++; return { ...good, reportedModel: "gpt-6-luna-unverified-snapshot" }; } });
-    expect(calls).toBe(1);
-    expect(result.knownProviderCostUsd).toBe("0.00006");
-    expect(result.template.availability?.[0]?.status).toBe("failed");
-    expect(result.template.entries).toEqual([]);
+  it.each([null, "gpt-6.1-sol", "gpt-6-luna-unverified-snapshot"])("holds live usage without matching model evidence and resumes without repeating it (%s)", async reportedModel => {
+    const state = setup("0.015");
+    const responseReference = "synthetic-unverified-response";
+    const transport = vi.fn().mockResolvedValueOnce(good).mockResolvedValueOnce({ ...good, reportedModel, responseReference,
+      usage: { inputTokens: 100, outputTokens: 4096 } }).mockResolvedValue(good);
+    const first = await executeProviderEval({ ...state, transport });
+    expect(first).toMatchObject({ stoppedReason: "unknown-usage", unknownMaximumUsd: "0.0111056", knownProviderCostUsd: "0.00006",
+      legacyUnverifiedProviderCostUsd: "0" });
+    const attemptId = "luna-high:case-income-w2-zero-withholding:1";
+    const hashedReference = providerEvalDigest(responseReference);
+    expect(state.records.at(-1)).toMatchObject({ type: "result", attemptId, reportedModel: null, usage: null, evaluation: null,
+      responseReference: hashedReference });
+    expect(first.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: null }], measurement: { responseReference: hashedReference } });
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "unknown-usage" });
+    expect(transport).toHaveBeenCalledTimes(2);
+    const evidence = { attemptId, evidenceReference: "verified-invoice-row", billedModel: "gpt-6-luna", usage: good.usage, at };
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, evidence));
+    const resumed = await executeProviderEval({ ...state, transport });
+    expect(resumed).toMatchObject({ stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00024" });
+    expect(resumed.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: good.usage }], measurement: { responseReference: hashedReference } });
+    expect(transport.mock.calls.map(([request]) => request.attemptId)).toEqual(["luna-high:capability:0", attemptId,
+      "luna-high:case-income-w2-zero-withholding:2", "luna-high:case-income-w2-zero-withholding:3"]);
   });
   it("resumes after referenced usage reconciliation without repeating the uncertain case", async () => {
     const state = setup(); const seen: string[] = [];
@@ -122,12 +140,73 @@ describe("guarded repeated provider executor", () => {
     const first = await executeProviderEval({ ...state, transport });
     expect(first.stoppedReason).toBe("unknown-usage");
     const attemptId = "luna-high:case-income-w2-zero-withholding:1";
-    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, { attemptId, evidenceReference: "synthetic-usage-statement-1", usage: { inputTokens: 100, outputTokens: 200 }, at }));
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, { attemptId, evidenceReference: "synthetic-usage-statement-1", billedModel: "gpt-6-luna", usage: { inputTokens: 100, outputTokens: 200 }, at }));
     const resumed = await executeProviderEval({ ...state, transport });
     expect(seen).toHaveLength(4); expect(new Set(seen).size).toBe(4);
     expect(resumed.knownProviderCostUsd).toBe("0.00029"); expect(resumed.unknownMaximumUsd).toBe("0");
     expect(resumed.template.entries[0]?.output).toBeNull();
-    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, { attemptId, evidenceReference: "second", usage: good.usage, at })).toThrow(/once/);
+    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, { attemptId, evidenceReference: "second", billedModel: "gpt-6-luna", usage: good.usage, at })).toThrow(/once/);
+  });
+  it("keeps a timed-out attempt held when reconciliation names a different billed model", async () => {
+    const state = setup("0.015");
+    const transport = vi.fn().mockResolvedValueOnce(good).mockRejectedValueOnce(new Error("synthetic timeout")).mockResolvedValue(good);
+    const stopped = await executeProviderEval({ ...state, transport });
+    expect(stopped).toMatchObject({ stoppedReason: "unknown-usage", unknownMaximumUsd: "0.0111056", knownProviderCostUsd: "0.00006" });
+    const record = { attemptId: "luna-high:case-income-w2-zero-withholding:1", evidenceReference: "synthetic-invoice-row",
+      billedModel: "gpt-6.1-sol", usage: { inputTokens: 100, outputTokens: 4096 }, at };
+    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, record)).toThrow(/billed model.*approved profile/i);
+    const mismatched: EvalJournalRecord = { type: "reconcile", ...record };
+    expect(() => validateProviderEvalJournal(state.plan, [...state.records, mismatched])).toThrow(/billed model.*approved profile/i);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "unknown-usage",
+      unknownMaximumUsd: "0.0111056", knownProviderCostUsd: "0.00006" });
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
+  it("keeps old reconciliation costs visible and awaits verified model evidence before resuming", async () => {
+    const state = setup();
+    const transport = vi.fn().mockResolvedValueOnce(good).mockRejectedValueOnce(new Error("synthetic timeout")).mockResolvedValue(good);
+    await executeProviderEval({ ...state, transport });
+    const legacy = { attemptId: "luna-high:case-income-w2-zero-withholding:1", evidenceReference: "legacy-statement",
+      usage: { inputTokens: 100, outputTokens: 200 }, at };
+    await state.append({ type: "reconcile", ...legacy });
+    validateProviderEvalJournal(state.plan, state.records);
+    const historical = summarizeProviderEvalJournal(state.plan, state.records);
+    expect(historical).toMatchObject({ unknownMaximumUsd: "0.0111056", knownProviderCostUsd: "0.00006",
+      legacyUnverifiedProviderCostUsd: "0.00011" });
+    expect(historical.template.entries[0]?.attempts[0]?.usage).toBeNull();
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "unknown-usage" });
+    expect(transport).toHaveBeenCalledTimes(2);
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, { ...legacy, billedModel: "gpt-6-luna",
+      evidenceReference: "verified-invoice-row", usage: { inputTokens: 100, outputTokens: 300 } }));
+    const resumed = await executeProviderEval({ ...state, transport });
+    expect(resumed).toMatchObject({ stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00034",
+      legacyUnverifiedProviderCostUsd: "0" });
+    expect(resumed.template.entries[0]?.attempts[0]?.usage).toEqual({ inputTokens: 100, outputTokens: 300 });
+    expect(resumed.template.entries[0]?.output).toBeNull();
+    expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it.each([null, "gpt-6.1-sol"])("keeps older result usage without matching identity held until verified reconciliation (%s)", async reportedModel => {
+    const state = setup();
+    const transport = vi.fn().mockResolvedValueOnce(good).mockResolvedValueOnce({ ...good, reportedModel, usage: null }).mockResolvedValue(good);
+    await executeProviderEval({ ...state, transport });
+    const attemptId = "luna-high:case-income-w2-zero-withholding:1";
+    const result = state.records.pop();
+    if (result?.type !== "result" || result.attemptId !== attemptId) throw new Error("Missing synthetic result");
+    await state.append({ ...result, reportedModel, usage: { inputTokens: 100, outputTokens: 200 } });
+    validateProviderEvalJournal(state.plan, state.records);
+    const historical = await executeProviderEval({ ...state, transport });
+    expect(historical).toMatchObject({ stoppedReason: "unknown-usage", unknownMaximumUsd: "0.0111056", knownProviderCostUsd: "0.00006",
+      legacyUnverifiedProviderCostUsd: "0.00011" });
+    expect(historical.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: null }], measurement: { reportedModel: null } });
+    expect(transport).toHaveBeenCalledTimes(2);
+    const evidence = { attemptId, evidenceReference: "verified-invoice-row", billedModel: "gpt-6-luna",
+      usage: { inputTokens: 100, outputTokens: 300 }, at };
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, evidence));
+    expect(() => reconcileProviderEvalAttempt(state.plan, state.records, evidence)).toThrow(/once/);
+    const resumed = await executeProviderEval({ ...state, transport });
+    expect(resumed).toMatchObject({ stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00034",
+      legacyUnverifiedProviderCostUsd: "0" });
+    expect(resumed.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: evidence.usage }], measurement: { reportedModel: null } });
+    expect(transport).toHaveBeenCalledTimes(4);
   });
   it("requires durable dispatch and current capability evidence before more calls", async () => {
     let calls = 0;
@@ -165,7 +244,7 @@ describe("guarded repeated provider executor", () => {
     validateProviderEvalJournal(state.plan, state.records);
     expect(() => validateProviderEvalJournal(state.plan, [...state.records, marker])).toThrow(/unsent/i);
     expect(() => reconcileProviderEvalAttempt(state.plan, state.records, {
-      attemptId: "luna-high:capability:0", evidenceReference: "test-only", usage: good.usage, at,
+      attemptId: "luna-high:capability:0", evidenceReference: "test-only", billedModel: "gpt-6-luna", usage: good.usage, at,
     })).toThrow(/unresolved/);
     const resumed = await executeProviderEval({ ...state, transport: async () => { transportCalls++; return good; } });
     expect(resumed).toMatchObject({ dispatchedRequests: 0, notSentRequests: 1, unknownMaximumUsd: "0" });

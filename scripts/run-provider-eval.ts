@@ -8,7 +8,7 @@ import { openProviderEvalJournal } from "./lib/provider-eval-journal";
 import { requireDistinctProviderEvalPaths } from "./lib/provider-eval-paths";
 import type { ProviderEvalFixture } from "../packages/engine/src/provider-eval-fixtures";
 const args = process.argv.slice(2); const command = args.shift();
-const known = new Set(["run-id", "purpose", "profiles", "fixtures", "max-usd", "max-requests", "expires-at", "plan", "approval-template", "approval", "journal", "output", "reviewed-fixtures", "live-authorized", "attempt", "usage", "reference"]);
+const known = new Set(["run-id", "purpose", "profiles", "fixtures", "max-usd", "max-requests", "expires-at", "plan", "approval-template", "approval", "journal", "output", "reviewed-fixtures", "live-authorized", "attempt", "usage", "reference", "billed-model"]);
 const options = new Map<string, string>();
 for (const arg of args) {
   const match = /^--([a-z-]+)(?:=(.*))?$/.exec(arg);
@@ -59,14 +59,14 @@ try {
       required("approval");
       if (options.get("live-authorized") !== "true") throw new Error("Live execution needs --live-authorized and a separately approved exact plan. This flag is not authorization.");
     }
-    if (command === "reconcile") { required("usage"); required("attempt"); required("reference"); }
+    if (command === "reconcile") { required("usage"); required("attempt"); required("reference"); required("billed-model"); }
     const plan = validatePlan(await json(required("plan")));
     const journal = await openProviderEvalJournal(required("journal"));
     try {
       validateProviderEvalJournal(plan, journal.records);
       if (command === "reconcile") {
         const usage = await json(required("usage"));
-        const record = reconcileProviderEvalAttempt(plan, journal.records, { attemptId: required("attempt"), evidenceReference: required("reference"),
+        const record = reconcileProviderEvalAttempt(plan, journal.records, { attemptId: required("attempt"), evidenceReference: required("reference"), billedModel: required("billed-model"),
           usage: usage as Parameters<typeof reconcileProviderEvalAttempt>[2]["usage"], at: new Date().toISOString() });
         await journal.append(record);
         console.log(JSON.stringify({ reconciled: record.type === "reconcile" ? record.attemptId : null, liveRequests: 0 }));

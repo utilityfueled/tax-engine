@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, stat, symlink, link, writeFile } from "node:fs/p
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { createProviderEvalPlan } from "../../scripts/lib/provider-eval-runner";
+import { createProviderEvalPlan, executeProviderEval, providerEvalDigest } from "../../scripts/lib/provider-eval-runner";
 import { openProviderEvalJournal } from "../../scripts/lib/provider-eval-journal";
 const exec = promisify(execFile);
 describe("offline evaluation CLI", () => {
@@ -23,6 +23,47 @@ describe("offline evaluation CLI", () => {
       await expect(invoke("execute", `--plan=${plan}`, `--approval=${approval}`, `--journal=${journal}`, "--live-authorized")).rejects.toMatchObject({ stderr: expect.stringContaining("--output") });
       await expect(stat(journal)).rejects.toMatchObject({ code: "ENOENT" });
       await expect(invoke("execute", `--plan=${plan}`, `--approval=${approval}`, `--journal=${journal}`, `--output=${path.join(directory, "result.json")}`)).rejects.toMatchObject({ stderr: expect.stringContaining("--live-authorized") });
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  });
+  it("requires the evidenced billed model for offline reconciliation", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "ai-eval-cli-"));
+    const planFile = path.join(directory, "plan.json"); const journalFile = path.join(directory, "run.jsonl");
+    const usageFile = path.join(directory, "usage.json"); const outputFile = path.join(directory, "result.json");
+    const at = "2026-10-25T12:00:00.000Z";
+    const plan = createProviderEvalPlan({ runId: "reconciliation", purpose: "capability", profileIds: ["baseline-gpt-5-mini"],
+      maximumProviderUsd: "1", maximumRequests: 1, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
+    const approval = { version: 1, planDigest: providerEvalDigest(plan), authorizedBy: "synthetic-only",
+      authorizationReference: "synthetic-only", approvedAt: at, expiresAt: plan.expiresAt, maximumProviderUsd: "1",
+      maximumRequests: 1, accountReference: "synthetic-only", syntheticOnly: true };
+    const invoke = (...args: string[]) => exec(process.execPath, ["--import", "tsx", "scripts/run-provider-eval.ts", ...args,
+      `--plan=${planFile}`, `--journal=${journalFile}`], { env: { PATH: process.env.PATH } });
+    try {
+      await writeFile(planFile, JSON.stringify(plan));
+      await writeFile(usageFile, JSON.stringify({ inputTokens: 100, outputTokens: 100 }));
+      const journal = await openProviderEvalJournal(journalFile);
+      try {
+        const stopped = await executeProviderEval({ plan, approval, ...journal, now: () => at,
+          transport: async () => { throw new Error("synthetic timeout"); } });
+        expect(stopped.stoppedReason).toBe("unknown-usage");
+        await journal.append({ type: "reconcile", attemptId: "baseline-gpt-5-mini:capability:0", evidenceReference: "legacy-invoice-row",
+          usage: { inputTokens: 100, outputTokens: 50 }, at });
+      } finally { await journal.close(); }
+      const original = await readFile(journalFile, "utf8");
+      const historical = await invoke("report", `--output=${outputFile}`);
+      expect(JSON.parse(historical.stdout)).toMatchObject({ knownProviderCostUsd: "0", legacyUnverifiedProviderCostUsd: "0.000125",
+        dispatchedRequests: 1 });
+      expect(JSON.parse(await readFile(outputFile, "utf8")).availability).toMatchObject([{ status: "failed", reportedUsage: false }]);
+      const reconcile = (...args: string[]) => invoke("reconcile", "--attempt=baseline-gpt-5-mini:capability:0",
+        `--usage=${usageFile}`, "--reference=synthetic-invoice-row", ...args);
+      await expect(reconcile()).rejects.toMatchObject({ stderr: expect.stringContaining("--billed-model") });
+      await expect(reconcile("--billed-model=gpt-6.1-sol")).rejects.toMatchObject({ stderr: expect.stringMatching(/billed model.*approved profile/i) });
+      expect(await readFile(journalFile, "utf8")).toBe(original);
+      const accepted = await reconcile("--billed-model=gpt-5-mini-2025-08-07");
+      expect(JSON.parse(accepted.stdout)).toMatchObject({ reconciled: "baseline-gpt-5-mini:capability:0", liveRequests: 0 });
+      expect(await readFile(journalFile, "utf8")).toContain('"billedModel":"gpt-5-mini-2025-08-07"');
+      const reported = await invoke("report", `--output=${outputFile}`);
+      expect(JSON.parse(reported.stdout)).toMatchObject({ knownProviderCostUsd: "0.000225", unknownMaximumUsd: "0" });
+      expect(JSON.parse(await readFile(outputFile, "utf8")).availability).toMatchObject([{ status: "failed" }]);
     } finally { await rm(directory, { recursive: true, force: true }); }
   });
   it("rejects canonical and inode output aliases before touching the journal", async () => {

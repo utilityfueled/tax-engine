@@ -57,9 +57,10 @@ review the actual plan, approval and durable journal alongside exported records.
 Both dispatch and scoring require the reported model to match the final attempted
 profile, including an explicit Sol High escalation. The shared allowlist accepts
 documented aliases/snapshots only; an unknown model or invented suffix cannot
-qualify. The allowlist is part of the frozen execution policy. Known attempt
-usage and its recorded profile cost remain visible after an identity failure;
-that retention does not authenticate the responding model or its true invoice.
+qualify. The allowlist is part of the frozen execution policy. A missing or
+mismatched model leaves the attempt's maximum budget held until authoritative
+usage evidence identifies the approved model. The executor keeps the hashed
+response reference to help locate that evidence.
 
 The public provider documentation snapshot is separate from account evidence and
 is included in the approved request contract. GPT-5 Mini's published shutdown is
@@ -161,22 +162,35 @@ responses, counts toward the same Decimal budget. Maximum reservations
 conservatively cover the bounded input and output and supported cache and
 regional rates. Actual authoritative usage settles at its dispatch date.
 Output includes reasoning tokens once.
-Unpriced service tiers/cache durations, unknown usage and unexpected model
-responses do not become passing results. A known overrun is retained exactly and
-blocks more spending; no automatic extra authorization is assumed.
+Unpriced service tiers or cache durations, unknown usage and unexpected models
+retain their holds and stop more requests. When the response establishes the
+approved model, known usage remains billable even for a failed or refused output.
+A known overrun is retained exactly and blocks more spending.
 
 ## Usage reconciliation and reporting
 
 After obtaining the provider's authoritative usage for an uncertain attempt,
-save only its supported usage fields in a private JSON file and record the
-durable account usage/invoice reference. Reconciliation closes cost uncertainty
-once; it does not fabricate the missing response, capability or human review.
+save its supported usage fields in a private JSON file. Supply the durable
+account usage or invoice reference and the billed model ID that evidence names.
+Reconciliation releases the hold only if that ID matches the approved model or
+a documented snapshot in the same pricing profile. The missing response,
+capability and human review remain unverified.
+
+Older reconciliation records without a billed model and result records with
+usage but no matching model remain in the journal. While those attempts are
+unresolved, reports show their assumed-profile costs separately as
+`legacyUnverifiedProviderCostUsd`. Those attempts keep their full budget holds
+and export unknown usage to the scorer. Append one reconciliation
+with verified model evidence to release the hold and count the exact cost once.
+If the evidence names a different model, leave the hold in place pending
+investigation. Use a CLI that supports `--billed-model` to open journals with
+the new records.
 
 ```sh
 node --import tsx scripts/run-provider-eval.ts reconcile \
   --plan=.local/ai-eval/plan.json --journal=.local/ai-eval/attempts.jsonl \
   --attempt=EXACT_ATTEMPT_ID --usage=.local/ai-eval/actual-usage.json \
-  --reference=ACTUAL_USAGE_EVIDENCE_REFERENCE
+  --reference=ACTUAL_USAGE_EVIDENCE_REFERENCE --billed-model=ACTUAL_BILLED_MODEL_ID
 node --import tsx scripts/run-provider-eval.ts report \
   --plan=.local/ai-eval/plan.json --journal=.local/ai-eval/attempts.jsonl \
   --output=.local/ai-eval/results.json

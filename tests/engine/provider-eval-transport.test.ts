@@ -67,6 +67,17 @@ describe("official evaluation transport", () => {
       expect(JSON.stringify(result)).not.toContain("private");
     }
   });
+  it("preserves a body-only provider reference when the response omits the model", async () => {
+    const openAiBody = { ...openai, model: undefined };
+    const googleBody = { responseId: "synthetic-gemini-response", candidates: [{ finishReason: "STOP" }],
+      usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50 } };
+    for (const [profileId, body, responseReference] of [["luna-high", openAiBody, openAiBody.id],
+      ["gemini-flash-high", googleBody, googleBody.responseId]] as const) {
+      const transport = createLiveProviderEvalTransport({ profileIds: [profileId], apiKeys: { openai: "synthetic", google: "synthetic" },
+        fetchFn: async () => response(body) });
+      await expect(transport(request(profileId))).resolves.toMatchObject({ reportedModel: null, usage: null, responseReference });
+    }
+  });
   it("records unavailable or unknown usage without echoing raw service errors", async () => {
     for (const [payload, status] of [[{ secret: "sensitive provider error" }, 403], [{ ...openai, service_tier: "priority" }, 200], [{ ...openai, usage: { input_tokens: 10, output_tokens: 10, input_tokens_details: { cache_write_tokens: 5 } } }, 200]] as const) {
       const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn: async () => response(payload, status) });

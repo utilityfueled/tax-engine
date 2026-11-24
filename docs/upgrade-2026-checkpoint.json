@@ -12,9 +12,11 @@
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
     "stateEstimateYearEvidenceKey": "activeContinuation.nov24StateEstimatedPaymentApplicationYear",
     "ohioEstimateNavigationEvidenceKey": "activeContinuation.nov24OhioSavedEstimateNavigation",
+    "dependentAotcTinEvidenceKey": "activeContinuation.nov24AotcDependentTinConflict",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "aiAttemptTokenCapsEvidenceKey": "activeContinuation.nov24AIEvaluationAttemptTokenCaps",
+    "aiBilledModelEvidenceKey": "activeContinuation.nov24ProviderEvalModelBoundAccounting",
     "publicProviderEvidenceKey": "activeContinuation.nov24ExactPublicProviderCatalog",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
@@ -37,6 +39,14 @@
     ]
   },
   "activeContinuation": {
+    "nov24ProviderEvalModelBoundAccounting": {
+      "focusedTestsPassed": 89,
+      "separateFocusedTestsPassed": 37,
+      "specReferencesResolved": 18,
+      "independentSourceReview": "passed",
+      "liveProviderRequests": 0,
+      "evidence": "docs/upgrade-2026-progress.md#november-24-ai-evaluation-billed-model"
+    },
     "nov24AotcDependentTinConflict": {
       "focusedTestsPassed": 239,
       "separateFocusedTestsPassed": 35,

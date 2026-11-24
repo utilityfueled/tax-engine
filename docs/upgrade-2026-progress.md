@@ -1,5 +1,19 @@
 # 2026 upgrade implementation evidence
 
+## November 24 AI evaluation billed model
+
+Live evaluation usage settles a budget hold only when the response identifies
+the approved model or a matching documented snapshot. For ambiguous responses,
+the executor retains the hold and preserves a hashed response reference when
+available. The operator can append matching billed-model evidence to settle
+historical ambiguity without replaying the call. A settlement establishes cost
+only. Outputs without a verified response model remain unqualified.
+
+The synthetic regressions failed before the fix. Afterward, 89 focused tests,
+18 spec references, typecheck and scoped lint passed. A separate run passed all
+37 runner, transport and CLI tests. Independent source review passed. No live
+provider call or promotion occurred.
+
 ## November 24 dependent AOTC TIN answers
 
 A positive 2025 AOTC claim now requires correction when the taxpayer confirms

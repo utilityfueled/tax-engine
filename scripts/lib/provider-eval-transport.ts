@@ -10,6 +10,8 @@ const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), 
   usage: z.object({ input_tokens: token, output_tokens: token, input_tokens_details: z.object({ cached_tokens: token.optional(),
     cache_write_tokens: token.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: token, ttl_12h_tokens: token }).optional() }).optional() }) });
 const googleEnvelope = geminiTextResponseSchema.extend({ modelVersion: z.string(), responseId: z.string().optional() });
+const openAiBodyReference = openAiEnvelope.pick({ id: true });
+const googleBodyReference = googleEnvelope.pick({ responseId: true });
 async function readBounded(response: Response) {
   if (!response.body || Number(response.headers.get("content-length")) > contract.responseByteLimit) throw new Error("Bounded response unavailable.");
   const reader = response.body.getReader(); let size = 0; const chunks: Uint8Array[] = [];
@@ -61,8 +63,8 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
       const payload = await readBounded(response);
       let outputText: string; let usage; let complete: boolean; let reportedModel: string;
       if (openai) {
+        responseReference ??= openAiBodyReference.safeParse(payload).data?.id ?? null;
         const envelope = openAiEnvelope.parse(payload);
-        responseReference ??= envelope.id ?? null;
         if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced tier.");
         const details = envelope.usage.input_tokens_details; const writes = details?.cache_write_tokens_details;
         if ((details?.cache_write_tokens ?? 0) !== (writes?.ttl_30m_tokens ?? 0) + (writes?.ttl_12h_tokens ?? 0)) throw new Error("Unpriced cache duration.");
@@ -72,9 +74,10 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
         outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message" ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
         reportedModel = envelope.model;
       } else {
+        responseReference = googleBodyReference.safeParse(payload).data?.responseId ?? responseReference;
         const envelope = googleEnvelope.parse(payload);
         ({ completed: complete, outputText, usage } = readGeminiTextResponse(envelope));
-        reportedModel = envelope.modelVersion; responseReference = envelope.responseId ?? responseReference;
+        reportedModel = envelope.modelVersion;
       }
       let parsedOutput: unknown = null;
       try { parsedOutput = JSON.parse(outputText); } catch { /* Known usage remains billable even when output is invalid. */ }

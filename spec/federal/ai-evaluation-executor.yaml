@@ -8,8 +8,9 @@ notes: |
   limits. A separate explicit human approval reference must bind that exact plan.
   Capability probes and failed attempts consume the same exact Decimal budget.
   A durable dispatch record precedes each request. Unknown usage retains its full
-  maximum and stops; resume never repeats a dispatched attempt. Only authoritative
-  referenced usage reconciliation closes it. No silent retries or provider switches.
+  maximum and stops, including when the response cannot establish the approved
+  model. Resume never repeats a dispatched attempt. Only authoritative
+  referenced usage reconciliation with a matching billed model closes it. No silent retries or provider switches.
   Application validation comes from actual versioned schemas, not normalized JSON.
   Unsupported normalization remains a blocker; implemented bindings are revalidated from actual application output.
 lines:
@@ -58,8 +59,22 @@ lines:
     testRef: "tests/engine/provider-eval-runner.test.ts::retains failed-output charges and resumes without additional requests"
   - line: "reconciliation"
     description: "An authoritative usage correction resolves cost uncertainty only"
-    formula: "Reconcile a dispatched unknown-usage attempt once using actual usage and a durable reference; never invent its missing answer or reissue it."
+    formula: >-
+      Reconcile a dispatched unknown-usage attempt once using actual usage, a
+      durable reference and the billed model documented by that evidence. The
+      model must match the approved profile or its documented snapshot before
+      the hold can be released. Never invent its missing answer or reissue it.
+      Older reconciliation rows without a billed model and older result rows
+      containing usage without a matching model remain readable. Their
+      assumed-profile costs remain visible separately. Keep the full hold and
+      exclude their usage from qualification until an authoritative, model-bound
+      reconciliation is appended.
     testRef: "tests/engine/provider-eval-runner.test.ts::resumes after referenced usage reconciliation without repeating the uncertain case"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::keeps a timed-out attempt held when reconciliation names a different billed model"
+      - "tests/engine/provider-eval-runner.test.ts::keeps old reconciliation costs visible and awaits verified model evidence before resuming"
+      - "tests/engine/provider-eval-runner.test.ts::keeps older result usage without matching identity held until verified reconciliation (%s)"
+      - "tests/engine/provider-eval-cli.test.ts::requires the evidenced billed model for offline reconciliation"
   - line: "dispatch-order"
     description: "No paid request precedes durable accounting identity"
     formula: "A failed or ineffective append prevents dispatch; cancellation and expired capability evidence stop before the next request."
@@ -97,5 +112,14 @@ lines:
     testRef: "tests/engine/provider-eval-runner.test.ts::rejects same-ID model and request policy changes after planning"
   - line: "response-model"
     description: "Reported identity is explicit rather than inferred from an alias prefix"
-    formula: "Use the same documented alias/snapshot allowlist as the independent scorer and freeze it into approval; an unexpected suffix fails the capability check while reported usage remains charged."
-    testRef: "tests/engine/provider-eval-runner.test.ts::rejects undocumented model suffixes without discarding charged usage"
+    formula: >-
+      Use the documented alias and snapshot allowlist frozen into approval.
+      Reported usage settles only if the response establishes the approved
+      model, including when the output fails or is refused. A missing or
+      mismatched model keeps the maximum hold, blocks later requests and
+      excludes the output from evaluation. Retain the hashed provider response
+      reference for authoritative reconciliation.
+    testRef: "tests/engine/provider-eval-runner.test.ts::holds live usage without matching model evidence and resumes without repeating it (%s)"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::retains failed-output charges and resumes without additional requests"
+      - "tests/engine/provider-eval-transport.test.ts::preserves a body-only provider reference when the response omits the model"

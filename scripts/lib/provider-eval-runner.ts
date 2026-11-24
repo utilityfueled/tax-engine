@@ -53,7 +53,7 @@ export type EvalJournalRecord =
   | { type: "result"; attemptId: string; status: ProviderEvalTransportResult["status"]; httpStatus?: number; usage: AiTokenUsage | null;
       elapsedMs: number; reportedModel: string | null; responseReference: string | null; capabilityPassed: boolean; evaluation: Evaluation | null }
   | { type: "not-sent"; attemptId: string; reason: "cancelled-before-send" }
-  | { type: "reconcile"; attemptId: string; evidenceReference: string; usage: AiTokenUsage; at: string };
+  | { type: "reconcile"; attemptId: string; evidenceReference: string; billedModel?: string; usage: AiTokenUsage; at: string };
 function profile(id: string): EvalProfile {
   const item = providerModelCandidates.find(item => item.id === id);
   if (!item) throw new Error("Unknown evaluation profile.");
@@ -150,6 +150,9 @@ function requestFor(item: EvalProfile, fixture: ProviderEvalFixture | undefined,
 export function maximumProviderAttemptUsd(request: ProviderEvalRequest, at: string): string {
   return maximumAiRequestCost(request.profile.model, at, request.maxInputTokens, request.maxOutputTokens).providerCostUsd;
 }
+function requireMatchingBilledModel(requestedModel: string, billedModel: string | undefined) {
+  if (!matchesProviderEvalModel(requestedModel, billedModel)) throw new Error("Reconciliation evidence must name a billed model that matches the approved profile.");
+}
 export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   validatePlan(plan);
   const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [], availability: [], preflightEntries: records.flatMap(record => {
@@ -162,31 +165,48 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
   if (new Set(dispatches.map(item => item.attemptId)).size !== dispatches.length) throw new Error("Duplicate durable dispatch identity.");
   const notSent = new Set(records.flatMap(item => item.type === "not-sent" ? [item.attemptId] : []));
   let dispatchedRequests = 0;
-  let known = new Money(0); let held = new Money(0); let overrun = false;
+  let known = new Money(0); let held = new Money(0); let legacyUnverified = new Money(0); let overrun = false;
   const bindingBlockers = new Set<string>();
   for (const dispatch of dispatches) {
     const results = records.filter((item): item is Extract<EvalJournalRecord, { type: "result" }> => item.type === "result" && item.attemptId === dispatch.attemptId);
     const reconciliations = records.filter((item): item is Extract<EvalJournalRecord, { type: "reconcile" }> => item.type === "reconcile" && item.attemptId === dispatch.attemptId);
-    if (results.length > 1 || reconciliations.length > 1 || (results[0]?.usage && reconciliations.length)) throw new Error("Duplicate or incompatible settlement.");
+    const [result] = results;
+    const requestedModel = profile(dispatch.profileId).model;
+    const modelMatches = matchesProviderEvalModel(requestedModel, result?.reportedModel);
+    const resultUsage = modelMatches ? result?.usage ?? null : null;
+    const [firstReconciliation, subsequentReconciliation] = reconciliations;
+    if (results.length > 1 || reconciliations.length > 2 || (resultUsage && reconciliations.length)
+      || (subsequentReconciliation && (firstReconciliation.billedModel !== undefined || subsequentReconciliation.billedModel === undefined))) {
+      throw new Error("Duplicate or incompatible settlement.");
+    }
     if (notSent.has(dispatch.attemptId)) {
       if (results.length || reconciliations.length) throw new Error("Unsent attempt cannot have a provider settlement.");
       continue;
     }
     dispatchedRequests++;
-    const result = results[0]; const usage = reconciliations[0]?.usage ?? result?.usage ?? null;
-    if (usage) { const cost = calculateAiCost(profile(dispatch.profileId).model, dispatch.startedAt, evalUsageSchema.parse(usage)).providerCostUsd;
+    const reconciliation = subsequentReconciliation ?? firstReconciliation;
+    let usage = resultUsage;
+    if (reconciliation?.billedModel !== undefined) {
+      requireMatchingBilledModel(requestedModel, reconciliation.billedModel);
+      usage = reconciliation.usage;
+    } else {
+      const assumedUsage = reconciliation?.usage ?? (modelMatches ? null : result?.usage);
+      if (assumedUsage) legacyUnverified = legacyUnverified.plus(calculateAiCost(requestedModel, dispatch.startedAt, evalUsageSchema.parse(assumedUsage)).providerCostUsd);
+    }
+    if (usage) { const cost = calculateAiCost(requestedModel, dispatch.startedAt, evalUsageSchema.parse(usage)).providerCostUsd;
       known = known.plus(cost); overrun ||= new Money(cost).gt(dispatch.maximumUsd); }
     else held = held.plus(dispatch.maximumUsd);
     if (dispatch.kind === "capability") {
-      template.availability?.push({ profileId: dispatch.profileId, status: result?.capabilityPassed && usage ? "available" : result?.status === "unavailable" ? "unavailable" : "failed",
+      const capabilityPassed = !!resultUsage && result?.capabilityPassed === true;
+      template.availability?.push({ profileId: dispatch.profileId, status: capabilityPassed ? "available" : result?.status === "unavailable" ? "unavailable" : "failed",
         checkedAt: dispatch.startedAt, expiresAt: new Date(Date.parse(dispatch.startedAt) + PROVIDER_EVAL_CONTRACT.capabilityLifetimeMs).toISOString(),
-        evidenceReference: `run:${plan.runId}:${dispatch.attemptId}`, structuredOutput: result?.capabilityPassed ?? false,
-        reasoningEffort: result?.capabilityPassed ?? false, reportedUsage: !!usage,
-        reason: result?.capabilityPassed ? "Account accepted the selected model/effort and returned the strict probe with reported usage. This does not prove reasoning quality or account retention settings." : "Capability request failed, was unavailable or lacked authoritative usage/model/schema evidence." });
+        evidenceReference: `run:${plan.runId}:${dispatch.attemptId}`, structuredOutput: capabilityPassed,
+        reasoningEffort: capabilityPassed, reportedUsage: !!usage,
+        reason: capabilityPassed ? "Account accepted the selected model/effort and returned the strict probe with reported usage. This does not prove reasoning quality or account retention settings." : "Capability request failed, was unavailable or lacked authoritative usage/model/schema evidence." });
     } else if (dispatch.fixtureId) {
       const fixture = taxProviderModelEvalFixtures.find(item => item.id === dispatch.fixtureId);
       if (!fixture) throw new Error("Journal fixture is unknown.");
-      const evaluation = result?.evaluation;
+      const evaluation = resultUsage ? result?.evaluation : null;
       if (evaluation?.blocker) bindingBlockers.add(`${fixture.task}:${evaluation.blocker}`);
       template.entries.push({ profileId: dispatch.profileId, fixtureId: dispatch.fixtureId, fixtureVersion: 1, repeat: dispatch.repeat,
         elapsedMs: result?.elapsedMs ?? null, applicationSchemaValid: evaluation?.applicationSchemaValid ?? null,
@@ -195,10 +215,11 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
         measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: AI_TASKS[fixture.task].promptVersion,
           schemaVersion: AI_TASKS[fixture.task].schemaVersion, normalizationStatus: evaluation?.normalizationStatus ?? "failed",
           applicationOutput: evaluation?.applicationOutput ?? null, privacyFailure: evaluation?.privacyFailure ?? false,
-          responseReference: result?.responseReference ?? null, reportedModel: result?.reportedModel ?? null } });
+          responseReference: result?.responseReference ?? null, reportedModel: modelMatches ? result?.reportedModel ?? null : null } });
     }
   }
-  return { template, knownProviderCostUsd: known.toFixed(), unknownMaximumUsd: held.toFixed(), dispatchedRequests, notSentRequests: notSent.size,
+  return { template, knownProviderCostUsd: known.toFixed(), unknownMaximumUsd: held.toFixed(), legacyUnverifiedProviderCostUsd: legacyUnverified.toFixed(),
+    dispatchedRequests, notSentRequests: notSent.size,
     bindingBlockers: [...bindingBlockers], overrun, productionPromotion: false as const };
 }
 export async function executeProviderEval(input: { plan: unknown; approval: unknown; records: EvalJournalRecord[];
@@ -278,13 +299,13 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
       let result: ProviderEvalTransportResult;
       try { result = await input.transport(request, input.signal); }
       catch { result = { status: "failed", usage: null, elapsedMs: 0, reportedModel: null, responseReference: null, payload: null }; }
-      let usage: AiTokenUsage | null = null;
-      try { if (result.usage) { usage = evalUsageSchema.parse(result.usage); calculateAiCost(item.model, startedAt, usage); } } catch { usage = null; }
-      const withinBudget = !!usage && usage.inputTokens <= request.maxInputTokens && usage.outputTokens <= request.maxOutputTokens;
       const modelMatches = matchesProviderEvalModel(item.model, result.reportedModel);
-      const capabilityPassed = !fixture && result.status === "completed" && withinBudget && modelMatches
+      let usage: AiTokenUsage | null = null;
+      try { if (modelMatches && result.usage) { usage = evalUsageSchema.parse(result.usage); calculateAiCost(item.model, startedAt, usage); } } catch { usage = null; }
+      const withinBudget = !!usage && usage.inputTokens <= request.maxInputTokens && usage.outputTokens <= request.maxOutputTokens;
+      const capabilityPassed = !fixture && result.status === "completed" && withinBudget
         && z.strictObject({ probe: z.literal("ok") }).safeParse(result.payload).success;
-      const evaluation = fixture && result.status === "completed" && withinBudget && modelMatches ? validateProviderEvalOutput(fixture, result.payload) : null;
+      const evaluation = fixture && result.status === "completed" && withinBudget ? validateProviderEvalOutput(fixture, result.payload) : null;
       const httpStatus = evalHttpStatusSchema.safeParse(result.httpStatus);
       await persist({ type: "result", attemptId, status: result.status, usage,
         ...(httpStatus.success ? { httpStatus: httpStatus.data } : {}),
@@ -297,15 +318,21 @@ export async function executeProviderEval(input: { plan: unknown; approval: unkn
   return finish(new Money(final.unknownMaximumUsd).gt(0) ? "unknown-usage" : final.overrun ? "provider-overrun" : "completed");
 }
 export function reconcileProviderEvalAttempt(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[], input: {
-  attemptId: string; evidenceReference: string; usage: AiTokenUsage; at: string;
+  attemptId: string; evidenceReference: string; billedModel: string; usage: AiTokenUsage; at: string;
 }): EvalJournalRecord {
   validatePlan(plan);
   validateProviderEvalJournal(plan, records);
-  const dispatch = records.find(item => item.type === "dispatch" && item.attemptId === input.attemptId);
-  if (!dispatch || dispatch.type !== "dispatch" || records.some(item => (item.type === "result" && item.attemptId === input.attemptId && item.usage !== null)
-    || ((item.type === "reconcile" || item.type === "not-sent") && item.attemptId === input.attemptId))) throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
-  if (!input.evidenceReference.trim() || input.evidenceReference.length > 500 || !Number.isFinite(Date.parse(input.at))) throw new Error("Authoritative reconciliation reference and time are required.");
-  const usage = evalUsageSchema.parse(input.usage); calculateAiCost(profile(dispatch.profileId).model, dispatch.startedAt, usage);
+  const dispatch = records.find((item): item is Extract<EvalJournalRecord, { type: "dispatch" }> => item.type === "dispatch" && item.attemptId === input.attemptId);
+  if (!dispatch) throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
+  const requestedModel = profile(dispatch.profileId).model;
+  if (records.some(item => "attemptId" in item && item.attemptId === input.attemptId
+    && ((item.type === "result" && item.usage !== null && matchesProviderEvalModel(requestedModel, item.reportedModel))
+      || item.type === "not-sent" || (item.type === "reconcile" && item.billedModel !== undefined)))) {
+    throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
+  }
+  if (!input.evidenceReference.trim() || input.evidenceReference.length > 500 || !instant.safeParse(input.at).success) throw new Error("Authoritative reconciliation reference and time are required.");
+  requireMatchingBilledModel(requestedModel, input.billedModel);
+  const usage = evalUsageSchema.parse(input.usage); calculateAiCost(requestedModel, dispatch.startedAt, usage);
   return { type: "reconcile", ...input, usage };
 }
 
@@ -321,7 +348,8 @@ const recordSchema = z.discriminatedUnion("type", [
     httpStatus: evalHttpStatusSchema.optional(), usage: evalUsageSchema.nullable(), elapsedMs: z.number().finite().nonnegative(), reportedModel: z.string().nullable(),
     responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
   z.strictObject({ type: z.literal("not-sent"), attemptId: z.string(), reason: z.literal("cancelled-before-send") }),
-  z.strictObject({ type: z.literal("reconcile"), attemptId: z.string(), evidenceReference: z.string().trim().min(1).max(500), usage: evalUsageSchema, at: instant }),
+  z.strictObject({ type: z.literal("reconcile"), attemptId: z.string(), evidenceReference: z.string().trim().min(1).max(500),
+    billedModel: z.string().min(1).max(200).optional(), usage: evalUsageSchema, at: instant }),
 ]);
 export function parseEvalJournalRecord(value: unknown): EvalJournalRecord {
   return recordSchema.parse(value) as EvalJournalRecord;
@@ -365,7 +393,7 @@ export function validateProviderEvalJournal(plan: ProviderEvalPlan, records: rea
         if (previous.type !== "dispatch" || previous.attemptId !== record.attemptId) throw new Error("Unsent attempt must immediately follow its dispatch.");
         notSent.add(record.attemptId);
       }
-      else { if (reconciled.has(record.attemptId)) throw new Error("Duplicate journal reconciliation."); reconciled.add(record.attemptId); }
+      else reconciled.add(record.attemptId);
     }
   });
   summarizeProviderEvalJournal(plan, records);
