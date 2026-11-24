@@ -57,6 +57,7 @@
       "specReferencesResolved": 5,
       "auditedSourcesVerified": 2062,
       "independentSourceReview": "passed",
+      "strictLinuxRunId": 45472505533,
       "strictLinuxResult": "pending",
       "evidence": "docs/upgrade-2026-progress.md#november-24-paired-pennsylvania-browser-timing"
     },

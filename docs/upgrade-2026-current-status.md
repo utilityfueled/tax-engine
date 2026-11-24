@@ -35,7 +35,12 @@ Use the linked progress sections when investigating individual packages.
 - The paired Pennsylvania browser journeys passed locally in 4.15 and
   3.60 seconds after removing repeated control lookups. Both journeys keep
   all 139 native entries and their assertions. Strict Linux timing is pending.
-  [Browser evidence](upgrade-2026-progress.md#november-24-paired-pennsylvania-browser-timing).
+  [Browser evidence](upgrade-2026-progress.md#november-24-paired-pennsylvania-browser-timing) ·
+  [Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45472505533).
+
+- The qualified review packet now includes the actual payment and dependent
+  TIN facts used in five recent fixes. Reviewer findings remain open.
+  [November 24 reviewer fixtures](upgrade-2026-external-actions.md#november-24-payment-and-dependent-tin-review).
 
 - Verified individual Pennsylvania estimates now reach federal Schedule A
   by actual payment date. A previously confirmed estimate that is edited or

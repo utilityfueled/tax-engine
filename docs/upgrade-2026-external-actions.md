@@ -1,5 +1,61 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 24 payment and dependent TIN review
+
+Derive the federal cash-year Schedule A line 5a amounts and the separate
+state or district return-year amounts at exact cents before comparing
+rounded form lines. These synthetic originals await qualified review.
+[2025 Schedule A instructions](https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3).
+
+- Paired Pennsylvania separate PA-40s on one joint federal return
+  (`f84a7000`). Primary and spouse have $50,000 and $30,000 of wages and
+  $1,535 and $921 of PA withholding. The primary has separate $100.25 and
+  $99.25 estimates on April 15 and June 16, 2025, a $50.50 refund elected
+  on the filed 2024 return and still applied to the 2025 account, and a
+  $75.50 extension payment on April 15, 2026. The spouse has an $80.49
+  estimate on April 15, 2025, and no carry or extension. Derive each
+  owner's PA payment lines and the joint federal deduction. Unreconciled
+  transfers and competing generic payment entries stay held.
+  [Paired fixture](../tests/fixtures/pa-married-payments.ts) ·
+  [2025 PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf).
+- Individual Pennsylvania (`8dbe349d`). Use $50,000 wages, $120 interest
+  and $1,539 PA withholding. The filed 2024 PA-40 election and complete
+  2025 account both document $25.25 applied with no reversal. Repeat with
+  estimates of $100 on April 15, 2025 and $50 on January 15, 2026. Compare
+  a matching $25.250 mirror with a $25.24 conflict. Payments on a prior
+  return balance still require their separate dated records.
+  [Individual fixture](../tests/guided-interview/guided-pa-estimates-schedule-a.test.ts).
+- Ohio IT 1040 (`f1abf676`). Use $60,000 wages and $2,000 Ohio withholding,
+  a $250.25 election on the filed 2024 return, and $200.25 proved applied to
+  2025. In a separate case with $1,200 withholding, the $31.25 receipt
+  documents $17 applied to income-tax principal. Compare December 31, 2025
+  with January 2, 2026. A gross-only in-year extension and a balance
+  without verified principal remain held for Schedule A.
+  [Ohio fixtures](../tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts) ·
+  [2025 Ohio IT 1040 instructions](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf).
+- Ohio SD 100 (`18a8517c`). Use $80,000 wages and $3,000 Ohio withholding.
+  Hillsdale LSD 0302 has $600 of separate school withholding and four
+  independently confirmed $100 estimates dated April 15, June 16,
+  September 15, 2025 and January 15, 2026. In the prior-refund case use
+  $1,100 school withholding, zero estimates, $125 elected from 2024 and
+  $100 verified applied. In the estimates case, add a separate IT 1040
+  receipt for $100 on April 15, 2025, then reuse its confirmation across
+  accounts as the conflict control. Unverified and unsupported methods
+  stay held.
+  [SD 100 fixtures](../tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts) ·
+  [2025 SD 100 instructions](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=58).
+- Dependent timely TIN (`b437f058`). Use a 2025 single filer with $50,000
+  wages, one verified dependent student on both claims and $4,000 of
+  otherwise qualifying AOTC expenses with zero prior claims. Compare
+  confirmed issuance by the return due date, including extensions, for
+  the Form 8863 claim with an explicit negative timely-TIN answer for the
+  active ODC claim. For the reverse case, assume a qualifying ITIN or ATIN
+  application by the due date with actual issuance after it. Derive both credit
+  treatments independently. LLC, 2026 and cases lacking an explicit
+  same-dependent conflict remain outside this reconciliation.
+  [2025 Form 8863 instructions](https://www.irs.gov/pub/irs-prior/i8863--2025.pdf#page=1) ·
+  [2025 Schedule 8812 instructions](https://www.irs.gov/pub/irs-prior/i1040s8--2025.pdf#page=2).
+
 ## November 24 charitable cash and tangible property
 
 Independently derive Schedule A treatment for a $70 cash payment with
