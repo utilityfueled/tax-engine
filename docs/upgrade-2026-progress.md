@@ -1,5 +1,51 @@
 # 2026 upgrade implementation evidence
 
+## November 24 current Linux and local verification
+
+The exact `f84a7000` Linux runtime passed 650 of 652 active Chromium
+cases, with five original skips. Recovery, rollback, independent archive
+restore, image scan and teardown passed. The desktop Ohio part-year
+`refund100` case reached the 30-second limit while waiting for the review
+download. The desktop `covered` case reached it at the filing rejection.
+Both mobile counterparts passed. Each retained desktop trace has 197
+native fills and 197 Tab presses. The traces lack the network records
+needed to attribute the waits to the server.
+[Linux runtime job](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057/job/138692709406).
+The exact managed Linux job also passed 650 cases with five original
+skips. Its two failures were RRTA saved-PDF inspections at the existing
+four-second limit. The desktop subprocess reported its completion
+phase at 3.949 seconds, then exceeded the parent deadline. The mobile
+subprocess last reported entry into page text extraction at 2.837 seconds.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057/job/138692709699).
+
+`90336daf` uses one saved snapshot for each group of related Ohio state
+assertions. The review compared all 96 assertion sites and verified eight
+fewer reads per journey. Native input, requests, screenshots, PDF,
+filing rejection, deletion and the original timing limits are retained.
+The removed reads took 625 ms and 320 ms in the two earlier failing
+traces. Scoped ESLint, seven spec references and 2,066 request-audit
+entries passed. The exact change still needs browser timing evidence.
+[Ohio part-year browser spec](../spec/state/oh-school-district-part-year-native-browser.yaml) ·
+[Exact commit](https://github.com/utilityfueled/tax-engine/commit/90336dafcc055b2b6551c5de534e40c31f2df22f).
+
+The `f8a451b1` archive matched 6,678 tracked blobs and 15 official
+sample hashes. All ten non-browser checks passed. Unit and coverage
+each passed 30,440 tests, with 81 original conditional skips, 88.36%
+branch coverage and 10,021 resolved spec references. Its Chromium run
+is recorded separately. The `0bc58a05` first unit run passed 30,442
+tests and hit three existing five-second test deadlines during an older
+Chromium run. Its coverage suite passed all 30,445 active tests, with
+81 conditional skips and 88.37% branch coverage. The exact `90336daf`
+archive matched 6,680 tracked blobs
+and 15 sample hashes. Its unit and coverage suites are scheduled outside
+other local browser and build work. The earlier failed results remain
+in the evidence.
+
+[Exact `f8a451b1` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45475481555) ·
+[Exact `f8a451b1` ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45475606822) ·
+[Exact `90336daf` CI](https://github.com/utilityfueled/tax-engine/actions/runs/45479778786) ·
+[Exact `90336daf` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45479778669).
+
 ## November 24 Ohio school replay compatibility
 
 Exact `2be7b99f` unit and coverage runs each found the same 37 Ohio failures.
