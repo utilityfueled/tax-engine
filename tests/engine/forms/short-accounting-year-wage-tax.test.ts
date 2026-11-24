@@ -28,6 +28,31 @@ function originalPayroll(taxYear = 2026) {
   };
 }
 
+function cutoffPayroll(taxYear = 2026) {
+  const { period } = originalPayroll(taxYear);
+  const { ownerReference, startsOn, endsOn } = period;
+  const sourceIdentity = { taxYear, ownerReference, startsOn, endsOn };
+  return {
+    period,
+    cutoffSummary: {
+      ...sourceIdentity, accountHolder: "primary", employerEin: "00-0000001", sourceReference: "original-cutoff-summary",
+      originalIssuerSummaryConfirmed: true, federalTaxableWages: "30000.00", federalWithheld: "3000.00",
+    },
+    payroll: {
+      ...sourceIdentity, employerEin: "000000001", sourceReference: "original-payroll-ledger",
+      cutoffSummarySourceReference: "original-cutoff-summary", originalPayrollLedgerConfirmed: true,
+      cashBasisActualAndConstructiveDatesConfirmed: true, soleEmployerConfirmed: true, cutoffPayrollCompleteConfirmed: true,
+      ordinaryWagesOnlyConfirmed: true, noDeductionsCreditsOrAmtAdjustmentsConfirmed: true,
+      payments: [
+        { sourceId: "p1", receivedOn: `${taxYear}-01-02`, unconditionallyAvailableOn: startsOn,
+          wages: "10000.11", federalWithheld: "1000.01" },
+        { sourceId: "p2", receivedOn: `${taxYear}-07-01`, unconditionallyAvailableOn: endsOn,
+          wages: "19999.89", federalWithheld: "1999.99" },
+      ],
+    },
+  };
+}
+
 describe("actual short accounting-year wage sources", () => {
   it("derives both tax bases from inclusive actual receipts with no withholding output", () => {
     const result = calculateOrdinaryShortAccountingYearWageTax(originalPayroll());
@@ -78,6 +103,62 @@ describe("actual short accounting-year wage sources", () => {
       { payments: [first, second, third, { ...fourth, federalWithheld: "499.44" }] },
       { payments: [first, second, third, { ...fourth, federalWithheld: undefined }] },
       { payments: [first, second, third, { ...fourth, wages: "NaN" }] },
+    ]) {
+      expect(calculateOrdinaryShortAccountingYearWageTax({ ...input, payroll: { ...input.payroll, ...payroll } })).toBeNull();
+    }
+  });
+
+  it("derives both cutoff tax bases before a calendar W-2 is available", () => {
+    // Validates the spec's cutoff-original-reconciliation and short-period-wage-bases lines.
+    for (const taxYear of [2025, 2026]) {
+      const result = calculateOrdinaryShortAccountingYearWageTax(cutoffPayroll(taxYear));
+      expect(result?.shortPeriodWages).toEqual(d("30000"));
+      expect(result?.tax).toEqual(calculateOrdinaryShortAccountingYearWageTax(originalPayroll(taxYear))?.tax);
+      expect(Object.keys(result ?? {})).toEqual(["shortPeriodWages", "tax"]);
+    }
+    const input = cutoffPayroll();
+    expect(calculateOrdinaryShortAccountingYearWageTax({
+      ...input,
+      cutoffSummary: { ...input.cutoffSummary, federalTaxableWages: "0", federalWithheld: "0.00" },
+      payroll: { ...input.payroll, payments: [] },
+    })).toEqual({ shortPeriodWages: d("0"), tax: expect.objectContaining({ regularTax: d("0"), additionalMinimumTax: d("0") }) });
+  });
+
+  it("requires exactly one complete source method", () => {
+    const cutoff = cutoffPayroll();
+    const original = originalPayroll();
+    expect(calculateOrdinaryShortAccountingYearWageTax({ ...cutoff, w2: original.w2 })).toBeNull();
+    expect(calculateOrdinaryShortAccountingYearWageTax({ ...original, cutoffSummary: cutoff.cutoffSummary })).toBeNull();
+    expect(calculateOrdinaryShortAccountingYearWageTax({ ...cutoff, cutoffSummary: undefined })).toBeNull();
+    expect(calculateOrdinaryShortAccountingYearWageTax({ ...cutoff, payroll: undefined })).toBeNull();
+  });
+
+  it("holds an incomplete, mismatched or unreconciled cutoff packet", () => {
+    const input = cutoffPayroll();
+    const [first, second] = input.payroll.payments;
+    for (const cutoffSummary of [
+      { taxYear: 2025 }, { ownerReference: "other" }, { accountHolder: "spouse" }, { employerEin: "00-0000002" },
+      { startsOn: "2026-01-02" }, { endsOn: "2026-06-29" }, { endsOn: "2026-12-31" },
+      { originalIssuerSummaryConfirmed: false }, { sourceReference: "other" }, { federalTaxableWages: "30000.01" },
+      { federalWithheld: "2999.99" }, { federalWithheld: undefined },
+    ]) {
+      expect(calculateOrdinaryShortAccountingYearWageTax({ ...input, cutoffSummary: { ...input.cutoffSummary, ...cutoffSummary } }))
+        .toBeNull();
+    }
+    for (const payroll of [
+      { taxYear: 2025 }, { ownerReference: "other" }, { employerEin: "00-0000002" },
+      { startsOn: "2025-12-31" }, { endsOn: "2026-07-31" }, { sourceReference: "original-cutoff-summary" },
+      { cutoffSummarySourceReference: "other" }, { originalPayrollLedgerConfirmed: false },
+      { cashBasisActualAndConstructiveDatesConfirmed: false }, { soleEmployerConfirmed: false },
+      { cutoffPayrollCompleteConfirmed: false }, { ordinaryWagesOnlyConfirmed: false },
+      { noDeductionsCreditsOrAmtAdjustmentsConfirmed: false }, { payments: [] }, { payments: [first] },
+      { payments: [{ ...first, unconditionallyAvailableOn: "2025-12-31" }, second] },
+      { payments: [first, { ...second, unconditionallyAvailableOn: "2026-07-01" }] },
+      { payments: [first, { ...second, receivedOn: "2026-06-29" }] },
+      { payments: [first, { ...second, receivedOn: undefined }] },
+      { payments: [first, { ...second, unconditionallyAvailableOn: undefined }] },
+      { payments: [first, { ...second, sourceId: first.sourceId }] },
+      { payments: [first, { ...second, federalWithheld: undefined }] },
     ]) {
       expect(calculateOrdinaryShortAccountingYearWageTax({ ...input, payroll: { ...input.payroll, ...payroll } })).toBeNull();
     }

@@ -5,14 +5,19 @@ irsReference: "https://www.irs.gov/instructions/iw2w3"
 retrievedAt: "2026-11-24"
 reviewStatus: "Private calculation candidate; qualified independent review pending"
 notes: |
-  This retrospective worksheet uses a complete calendar-year payroll history
-  and its matching original Form W-2. A wage-only short year ending before a
-  calendar Form W-2 becomes available still needs a separate source method.
+  This worksheet accepts either a complete calendar-year payroll history and
+  its matching original Form W-2, or a complete original payroll ledger
+  through the short-period close and a separate original cutoff summary from
+  the same employer. The cutoff source method is a private evidence rule
+  for reconstructing the tax bases under the general recordkeeping rules.
+  It establishes neither IRS acceptance of a specific evidence packet nor
+  eligibility to use Form 4852 or file with a substitute Form W-2.
   Scope is a living single cash-basis filer's confirmed regular change from
   a calendar year to a fiscal month end in 2025 or 2026. The taxpayer's 24th
   birthday must have occurred by the period end for this candidate. The
-  reportable share comes from original payment records. Public calculation
-  and filing remain on hold.
+  private tax bases come from ordinary payment records with nonnegative
+  amounts. Signed payroll corrections require separate treatment. Public
+  calculation and filing remain on hold.
 lines:
   - line: "period-and-source-identity"
     description: "Bind the confirmed short period and original payroll to one taxpayer and employer"
@@ -20,12 +25,12 @@ lines:
       Accept January 1 through an actual January to November month end of the
       same year. The date of birth must satisfy the guided intake's existing
       lower bound of January 1, 1850. Require explicit confirmation of the
-      change, wage-only cash basis facts, one original W-2, complete payroll
+      change, wage-only cash basis facts, one employer's complete originals
       and the absence of deductions, credits and AMT adjustments. Match year,
-      primary owner and employer on the actual source records. Require an
-      original identifier, actual receipt and first date the payment was
-      available without substantial restriction for every payroll record.
-    irsRef: "IRC §§1(g)(2), 59(j), 63(c)(6)(C), 443(a)(1), 443(b)(1); 26 CFR §1.451-1(a)"
+      primary owner and EIN on the actual source records. Require an original
+      identifier, actual receipt and first date the payment was available
+      without substantial restriction for every payroll record.
+    irsRef: "IRC §§1(g)(2), 59(j), 63(c)(6)(C), 443(a)(1), 443(b)(1), 6001; 26 CFR §§1.451-1(a), 1.451-2(a), 1.6001-1(a)"
     testRef: "tests/engine/forms/short-accounting-year-wage-tax.test.ts::requires an eligible actual period and matching confirmed originals"
   - line: "calendar-original-reconciliation"
     description: "Reconcile the payroll inventory to original W-2 Boxes 1 and 2"
@@ -37,6 +42,20 @@ lines:
       holds the result.
     irsRef: "Instructions for Forms W-2 and W-3, calendar year, Box 1 and Box 2"
     testRef: "tests/engine/forms/short-accounting-year-wage-tax.test.ts::holds incomplete duplicate out-of-year or unreconciled payroll"
+  - line: "cutoff-original-reconciliation"
+    description: "Reconcile a complete original ledger to its separate employer-issued cutoff summary"
+    formula: >-
+      Bind both originals to the same primary taxpayer, tax year and employer
+      EIN, with distinct source identifiers and the ledger's explicit reference
+      to the summary. Both must state the January 1 opening and the confirmed
+      month-end close. Require complete wage and withholding entries with unique
+      original payment identifiers and controlling receipt dates within the
+      stated window. Compare exact Decimal sums of federal taxable wages on
+      the Form W-2 Box 1 basis and actual federal income tax withheld to the
+      two independently stated cutoff totals. An empty inventory reconciles
+      only to two explicit zero totals.
+    irsRef: "IRC §6001; 26 CFR §§1.6001-1(a), 1.451-1(a), 1.451-2(a); Instructions for Forms W-2 and W-3, Box 1 and Box 2 for wage and withholding terminology"
+    testRef: "tests/engine/forms/short-accounting-year-wage-tax.test.ts::holds an incomplete, mismatched or unreconciled cutoff packet"
   - line: "short-period-wage-bases"
     description: "Use wages received within the inclusive short period for both ordinary bases"
     formula: >-
@@ -46,7 +65,7 @@ lines:
       With the stated facts the same
       exact wages are modified taxable income and AMTI. Use the ordinary
       Section 443 candidate with the verified count of months. Withholding
-      is for calendar source reconciliation. This worksheet produces no
+      is for source reconciliation. This worksheet produces no
       withholding credit, refund or balance. For regular chapter 24 wage
       withholding, §31(a)(2) places the credit in the last taxable year
       beginning in that calendar year.
