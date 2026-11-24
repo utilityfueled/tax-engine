@@ -8,6 +8,9 @@ import {buildGuidedPAOrdinarySourceInput,jumpToSection,shouldPromptBeforeAdvance
 import {confirmGuidedPAOrdinaryReturnFacts,updateGuidedPAOrdinaryReturnFacts} from '@/lib/guided-pa-ordinary-return-facts';
 import {confirmGuidedPAOrdinaryReturnCompletionSources} from '@/lib/guided-pa-ordinary-return-completion';
 import {buildGuidedOhioOverlay,buildGuidedStateOriginals} from '@/lib/guided-state-engine-inputs';
+import {confirmGuidedOhioPaymentFacts} from '@/lib/guided-ohio-payment-facts';
+import {confirmGuidedOhioResidencyFacts} from '@/lib/guided-ohio-residency-facts';
+import {computeGuidedPreview} from '@/lib/guided-preview-compute';
 import {guidedOhioSourceFlow} from '../fixtures/guided-state-originals';
 import {guidedPACompleteOriginals} from '../fixtures/guided-pa-complete-originals';
 import {guidedPAOrdinaryPanelFixture,paPanelStatuses,required} from '../fixtures/guided-pa-ordinary-panels';
@@ -16,6 +19,87 @@ it('state actual payment ledger does not double add matching legacy Ohio receipt
 it('state actual payment ledger rejects unmatched and duplicate legacy Ohio claims',()=>{for(const mode of ['amount','date','duplicate'] as const){const {s,d,i}=ohio();if(mode==='duplicate')d.stateEstimatedPayments.push({...d.stateEstimatedPayments[0]});else{const row=d.stateEstimatedPayments[0];if(!row)throw Error('Saved row missing');row[mode]=mode==='amount'?'100.01':'2025-06-16';}expect(()=>buildGuidedOhioOverlay(i,s,new Decimal(0))).toThrow(/actual|receipt|source|reconcil/i);}});
 it('state actual payment ledger preserves unsupported additional withholding claims for reconciliation',()=>{const {s,d,i}=ohio();d.additionalStateWithholdingEntries=[{payer:'Actual unbound bank record',documentType:'1099-INT',state:'OH',taxYear:'2025',amount:'50.01'}];const before=structuredClone(s);expect(()=>buildGuidedOhioOverlay(i,s,new Decimal(0))).toThrow(/actual|source|withhold|reconcil/i);expect(s).toEqual(before);});
 it('state actual payment ledger cannot silently discard saved PA estimated amounts',()=>{const s=guidedPACompleteOriginals(),d=s.sectionData['state-return'],raw=buildTaxInputFromGuidedData(s);if(!d||!raw)throw Error('Actual PA sources missing');d.stateEstimatedPayments=[{state:'PA',date:'2025-04-15',amount:'100.01'}];const before=structuredClone(s);expect(()=>buildGuidedStateOriginals(TaxYearInputSchema.parse(raw),s)).toThrow(/actual|receipt|source|reconcil/i);expect(s).toEqual(before);});
+
+it('2025 Ohio navigation reconciles saved estimates before Continue', () => {
+  const cases = [
+    { name: 'different cents', saved: ['100.01'], receipts: ['100'], total: null },
+    { name: 'missing receipt', saved: ['100'], receipts: [], total: null },
+    { name: 'receipt used twice', saved: ['100', '100'], receipts: ['100'], total: null },
+    { name: 'matching exact amount', saved: ['100.00'], receipts: ['100'], total: '100' },
+    { name: 'matching exact cents', saved: ['100.01'], receipts: ['100.01'], total: '100' },
+    { name: 'equal amounts on distinct receipts', saved: ['100', '100.00'], receipts: ['100', '100'], total: '200' },
+    { name: 'matching confirmed zero', saved: ['0'], receipts: ['0.00'], total: '0' },
+    { name: 'removed saved claim', saved: [], receipts: ['100'], total: '100' },
+  ];
+  for (const { name, saved, receipts, total } of cases) {
+    let state: GuidedFlowState = JSON.parse(JSON.stringify(guidedOhioSourceFlow('full_year_resident')));
+    const data = required(state.sectionData['state-return']);
+    const date = '2025-04-15';
+    state = updateSectionData(state, 'state-return', {
+      ...data,
+      stateEstimatedPayments: saved.map(amount => ({ date, amount, state: 'OH' })),
+    });
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    const taxpayer = input.taxpayer.primary;
+    const payments = required(data.ohioPayments);
+    const received = receipts.reduce((sum, amount) => sum.plus(amount), new Decimal(0));
+    const expectedBalance = new Decimal('2323').minus(received.toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
+    const paymentRows = receipts.map((amount, index) => ({
+      sourceId: `Fictional-April-receipt-${index + 1}`,
+      sourceReference: `Actual fictional April receipt ${index + 1}`,
+      accountHolder: 'primary',
+      taxYear: 2025,
+      returnType: 'it1040',
+      kind: 'estimated',
+      date,
+      amount,
+      appliedToThisReturnConfirmed: true,
+      original: {
+        accountName: taxpayer.firstName + ' ' + taxpayer.lastName,
+        accountSsn: taxpayer.ssn,
+        taxYear: 2025,
+        returnType: 'it1040',
+        kind: 'estimated',
+        date,
+        amount,
+        confirmationNumber: `Fictional-confirmation-${index + 1}`,
+      },
+    }));
+    state = updateSectionData(state, 'state-return', {
+      ...required(state.sectionData['state-return']),
+      ohioPayments: {
+        ...payments,
+        paymentRows,
+        remainingTaxPayment: {
+          status: 'expected_payment',
+          sourceReference: 'Actual fictional remaining payment intention',
+          sourceFactsConfirmed: true,
+          date: '2026-04-15',
+          amountAppliedToTax: expectedBalance.toFixed(),
+        },
+      },
+    });
+    const current = required(state.sectionData['state-return']);
+    state = updateSectionData(state, 'state-return', {
+      ...current,
+      ohioResidency: confirmGuidedOhioResidencyFacts(input, current.ohioResidency),
+      ohioPayments: confirmGuidedOhioPaymentFacts(input, current.ohioPayments),
+    });
+    const reopened = jumpToSection(state, 'state-return');
+    const before = structuredClone(reopened);
+    const prompt = shouldPromptBeforeAdvance(reopened);
+    const preview = computeGuidedPreview(reopened);
+    if (total === null) {
+      expect.soft(prompt?.fieldErrors?.stateEstimatedPayments ?? '', name).toMatch(/distinct actual original receipt/);
+      expect.soft(prompt?.allowSkip, name).toBe(false);
+      expect.soft(preview?.state, name).toBeNull();
+    } else {
+      expect.soft(prompt, name).toBeNull();
+      expect.soft(preview?.state, name).toMatchObject({ stateWithholding: total });
+    }
+    expect(reopened).toEqual(before);
+  }
+});
 
 it('2025 PA navigation reconciles saved estimates before Continue', () => {
   for (const status of paPanelStatuses) {

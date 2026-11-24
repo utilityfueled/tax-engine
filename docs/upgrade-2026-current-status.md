@@ -9,6 +9,10 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Ohio State Return now flags a saved estimate without a distinct actual
+  IT 1040 receipt before Continue. The focused suite passed 80 tests.
+  [Ohio navigation evidence](upgrade-2026-progress.md#november-24-ohio-saved-estimate-navigation).
+
 - The verified `e2d50f12` archive passed 30,385 unit tests and the same
   30,385 coverage tests with 81 conditional skips and 88.32% branch
   coverage. All 652 active Chromium cases passed in eight batches with

@@ -78,7 +78,7 @@ import {
   adjustmentFactErrors, alimonySourceFactsChanged, hasAlimonyAmounts, hasHouseholdAmounts,
   hasRetainedAlimonyContext, hasRetainedHouseholdContext, householdFactErrors, householdSourceFactsChanged,
 } from "./guided-adjustment-facts";
-import { assertSavedStateEstimatesMatchReceipts, statePaymentFactErrors } from "./guided-state-facts";
+import { assertSavedStateEstimatesMatchReceipts, stateEstimatedPaymentFactErrors, statePaymentFactErrors } from "./guided-state-facts";
 import {zeroIncomeMiscSourceFactErrors,type ZeroIncomeMiscSourceDraft} from './guided-zero-income-misc-sources';
 import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
 import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
@@ -2830,6 +2830,11 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: Tax
     catch (error) { errors.ohioResidency = error instanceof Error ? error.message : "Reconcile the actual Ohio residency sources."; }
     try { payments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
     catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
+    const savedEstimates = data?.stateEstimatedPayments;
+    if (payments && savedEstimates?.length && !Object.keys(stateEstimatedPaymentFactErrors(savedEstimates, "OH")).length) {
+      try { assertSavedStateEstimatesMatchReceipts(savedEstimates, payments.paymentRows); }
+      catch (error) { errors.stateEstimatedPayments = error instanceof Error ? error.message : "Reconcile saved Ohio estimated payments."; }
+    }
     if(data?.ohioResidency?.residentCreditSources){
       try {
         buildGuidedOhioResidentCreditSources(

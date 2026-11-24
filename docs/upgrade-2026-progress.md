@@ -1,5 +1,17 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio saved-estimate navigation
+
+The guided Ohio State Return checks saved estimates against the actual
+IT 1040 payment receipts before Continue, using the same matcher as the
+preview and export. A missing receipt, a cent mismatch or a second claim
+on one receipt prompts review. Confirmed zero, distinct equal receipts
+and explicit removal are covered.
+
+The regression reproduced all three missing prompts before the fix. All
+80 focused tests, 72 scoped spec references and web type checking passed.
+The isolated browser audit matched all 2,062 source hashes.
+
 ## November 24 exact state and AI application verification
 
 The `e2d50f12` archive matched 6,666 tracked blobs. An offline frozen

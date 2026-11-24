@@ -104,7 +104,7 @@ describe("classified deduction and state facts", () => {
       { payer: "Example Brokerage", documentType: "1099-DIV", state: "OH", taxYear: "2025", amount: "0" },
     ], stateEstimatedPayments: [{ state: "OH", date: "2025-09-15", amount: "0" }, { state: "OH", date: "2026-01-15", amount: "9007199254740993.01" }] });
     explicitlyConfirmFullYearOhioNavigationFixture(state);
-    expect(validateSection(state, "state-return").status).toBe("complete");
+    expect(validateSection(state, "state-return").fieldErrors?.stateEstimatedPayments).toMatch(/distinct actual original receipt/);
     expect(buildTaxInputFromGuidedData(state)?.scheduleA?.additionalStateLocalIncomeTaxes).toBe("0.3");
     expect(buildTaxInputFromGuidedData(state)?.adjustments?.estimatedTaxPayments).toEqual([{ type: "state", state: "OH", date: "2025-09-15", amount: "0" }, { type: "state", state: "OH", date: "2026-01-15", amount: "9007199254740993.01" }]);
   });
