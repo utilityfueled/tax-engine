@@ -9,6 +9,10 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Two verified separate Pennsylvania payment accounts now feed the same
+  federal Schedule A calculation used in preview and saved PDF review.
+  [Paired Pennsylvania evidence](upgrade-2026-progress.md#november-24-separate-pennsylvania-accounts-on-schedule-a).
+
 - Verified individual Pennsylvania estimates now reach federal Schedule A
   by actual payment date. A previously confirmed estimate that is edited or
   removed requires reconfirmation before the itemized preview resumes.
@@ -17,6 +21,10 @@ Use the linked progress sections when investigating individual packages.
 - AI evaluation keeps the full budget hold when the provider response or a
   reconciliation cannot identify a billed model that matches the plan.
   [Accounting evidence](upgrade-2026-progress.md#november-24-ai-evaluation-billed-model).
+
+- Exact `3f0e9cb4` passed both full non-browser suites with 30,396 tests and
+  88.32% branch coverage. The archive also passed both builds, all three
+  typechecks, lint, spec validation and inventory. [Verification evidence](upgrade-2026-progress.md#november-24-exact-billed-model-revision).
 
 - The 2025 guided interview and federal calculation now hold a dependent’s
   AOTC when its timely-TIN answer conflicts with an active ODC answer.

@@ -29,3 +29,20 @@ lines:
     description: Finite documented prior filing and credit application chronology
     formula: This first method requires the original separate prior return filed between Jan1 and its April15 due date, no later than the actual unchanged carryover application on April15. A later filed prior return or retroactive/account adjustment requires its own actual dated successor; do not infer a pre-filing election.
     testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments reject unsupported prior filing after carryover application"
+  - line: "federal-schedule-a-5a"
+    description: Cash-year estimates and verified prior refunds on the actual joint federal return
+    formula: Replay the complete 2025 paired Pennsylvania M original packet and both individual accounts before deriving the federal projection. Include each distinct owner-bound state estimate paid in calendar 2025 at exact cents and each actual 2024 refund independently proved elected and applied to 2025. A January 2026 installment or extension stays in its owner's PA-40 amount and outside the 2025 federal deduction. Equivalent receipt amounts or dates on distinct actual originals do not collapse. Use the same original-bound result for canonical federal calculation, guided preview and saved PDF review. Retained generic adjustment inputs, invalid account proof and stale federal originals remain held.
+    irsRef: "2025 Schedule A Instructions, Line 5a, https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"
+    testRef: "tests/engine/state/pa-married-payment-schedule-a.test.ts::uses distinct verified owner receipts in the actual joint federal cash year"
+    testRefs:
+      - "tests/engine/state/pa-married-payment-schedule-a.test.ts::includes a verified prior refund election and excludes the following-year extension"
+      - "tests/engine/state/pa-married-payment-schedule-a.test.ts::compares the verified total under automatic itemization and preserves an explicit standard election"
+      - "tests/engine/state/pa-married-payment-schedule-a.test.ts::holds stale, duplicate or competing original sources in canonical federal calculation"
+      - "tests/apps/web/pa-married-payment-schedule-a.test.ts::uses the verified paid amounts in guided preview and the saved federal review PDF"
+  - line: "federal-schedule-a-confirmation"
+    description: Retain the selected year of previously confirmed deductible household payments across edits
+    formula: The first incomplete payment packet does not add a deduction. A confirmed positive in-year estimate or applied prior refund marks that paired household's year only after replay against the current federal originals. An edit or removal of the known source holds the itemized or automatic federal preview through a saved reopen until the original household accounts are reconciled again. A confirmed replacement with no deductible payments clears the hold only after the current federal originals match and the reviewed household replays. A saved confirmation flag with missing, malformed or stale proof cannot establish zero. Standard deduction preview and the ordinary single-person method retain their original boundaries.
+    testRef: "tests/apps/web/pa-married-payment-schedule-a.test.ts::holds a previously used receipt after a saved edit or removal until reconfirmed"
+    testRefs:
+      - "tests/apps/web/pa-married-payment-schedule-a.test.ts::retains a saved paired payment hold when a known-none confirmation lacks federal originals"
+      - "tests/apps/web/pa-married-payment-schedule-a.test.ts::holds a known-none saved packet with stale same-year originals after unrelated changes"

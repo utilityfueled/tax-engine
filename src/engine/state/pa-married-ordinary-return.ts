@@ -5,8 +5,8 @@ import {calculatePAMarriedResidencySources} from './pa-married-residency-sources
 import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
 import {PAMarriedOrdinarySourcesSchema,type PAMarriedOrdinarySources} from '@/models/pa-married-ordinary-sources.js';
-import {W2Schema,type TaxYearInput} from '@/models/inputs.js';
-import type {CalculatedLine} from '@/models/outputs.js';
+import {AdjustmentsSchema,W2Schema,type TaxYearInput} from '@/models/inputs.js';
+import type {CalculatedLine,TaxReturnResult} from '@/models/outputs.js';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {calculateW2StateLocalSources} from '@/engine/forms/w2-state-local.js';
 import {AuditTrail} from '@/utils/audit.js';
@@ -57,6 +57,10 @@ function semantic(value:unknown,key=''):unknown{
  return value;
 }
 export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown):PAMarriedOrdinaryReturnResult{
+ return calculatePAMarriedOrdinaryReturnWithFederal(input,raw).pennsylvania;
+}
+
+export function calculatePAMarriedOrdinaryReturnWithFederal(input:TaxYearInput,raw:unknown):{pennsylvania:PAMarriedOrdinaryReturnResult;federal:TaxReturnResult}{
  const parsed=PAMarriedOrdinarySourcesSchema.safeParse(raw);if(!parsed.success)return fail('complete actual source packet shape is missing or unsupported');
  if(input.paMarriedOrdinarySources!==undefined&&stable(input.paMarriedOrdinarySources)!==stable(raw))return fail('attached canonical source packet conflicts with supplied actual source facts');
  const sources=parsed.data,y=input.taxpayer.taxYear,mode=sources.filingMode;
@@ -135,8 +139,22 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
    aggregate(tag).sp=aggregate(tag).sp.plus(exact);
   }
  }
- // Compute the actual federal household exactly once. No synthetic filing status or source reassignment.
- const federal=calculateFederalTax(input),rawTotal=sum([...aggregates.values()].map(a=>a.raw));
+ // The federal household stays joint. Use only the verified account payments in this
+ // calculation copy. The original packet remains bound to the untouched federal input.
+ let federalInput=input;
+ if(paymentAccounts){
+  const {paMarriedOrdinarySources:_packet,...household}=input;
+  const accounts=[...paymentAccounts.values()];
+  federalInput={...household,adjustments:AdjustmentsSchema.parse({
+   estimatedTaxPayments:accounts.flatMap(account=>account.estimatedReceipts.map(receipt=>({
+    ...receipt,type:'state',state:'PA',application:{taxYear:y,confirmed:true},
+   }))),
+   priorYearAppliedCredits:accounts.filter(account=>account.creditFromPriorYear.gt(0)).map(account=>({
+    sourceTaxYear:y-1,amount:account.creditFromPriorYear.toFixed(),type:'state',state:'PA',
+   })),
+  })};
+ }
+ const federal=calculateFederalTax(federalInput),rawTotal=sum([...aggregates.values()].map(a=>a.raw));
  const worldwideTotal=sum([...aggregates.values()].map(a=>a.worldwide));
  if(!federal.agi.eq(worldwideTotal))return fail('actual federal income/adjustments contradict the complete wages-only household source method');
  if(mode==='M'&&federal.earnedIncomeCredit.gt(0))return fail('positive actual joint federal EIC needs the separate-PA greater-tax and both-eligible source successor');
@@ -170,5 +188,6 @@ export function calculatePAMarriedOrdinaryReturn(input:TaxYearInput,raw:unknown)
  const commitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:'pa-married-ordinary-return-v1',originals:snapshotPAMarriedOrdinaryOriginals(input),sources:raw}))));
  const audit=new AuditTrail();if(residency)for(const tag of ['primary','spouse'] as const){const own=ownerTotals(tag),calendar=residency.get(tag);if(!calendar)return fail('actual owner calendar missing');audit.record('PA-Married-Residency',tag+'-worldwide','Actual owner worldwide ordinary cash compensation',own.worldwide,'Complete current original Box1 and dated payroll; not limited to PA taxable cash');audit.record('PA-Married-Residency',tag+'-taxable','Actual owner PA taxable ordinary cash compensation',own.raw,'Actual resident-period gross plus nonresident PA services; no day ratio',{status:calendar.status});}for(const row of reportedW2LocalRows)audit.record('PA-Married-Ordinary',`reported-local-${row.originalIndex}-${row.printedRow}`,'Actual reported local withholding; separate local return required',row.withheld,'Actual original W2 local row only; excluded from PA withholding credit',{originalIndex:String(row.originalIndex),printedRow:String(row.printedRow),accountHolder:row.accountHolder});audit.record('PA-Married-Ordinary','source','Complete two-owner original commitment',zero(),'Stable SHA256 binds raw household originals and actual source packet',{sourceCommitment:commitment});
  for(const r of returns){for(const line of [...r.pa40.lines,...r.scheduleSP.lines,...(r.scheduleDC?.lines??[]),...r.rev1630.lines,...r.workingCredit.lines])audit.record(line.form,`${r.accountHolder}:${line.line}`,line.description,line.value,line.formula,line.inputs);}
- return {methodVersion:'pa-married-ordinary-return-v1',taxYear:y,filingMode:mode as 'J'|'M',sourceCommitment:commitment,federal:{filingStatus:input.taxpayer.filingStatus,adjustedGrossIncome:publicOrdinaryMoney(federal.agi),earnedIncomeCredit:publicOrdinaryMoney(federal.earnedIncomeCredit)},perOwner:(['primary','spouse'] as const).map(tag=>{const a=ownerTotals(tag);return {accountHolder:tag,rawCompensation:publicOrdinaryMoney(a.raw),rawPAWithholding:publicOrdinaryMoney(a.wh),reportedCompensation:publicOrdinaryMoney(reportedComp(tag)),reportedPAWithholding:publicOrdinaryMoney(roundDollar(a.wh)),spOtherIncome:publicOrdinaryMoney(roundDollar(a.sp)),actualPAServiceCompensation:publicOrdinaryMoney(a.paServices)};}),returns,localBoundary:{status:'separate_return_required',jurisdictions:coverage.localJurisdictions.map(l=>l.name),...(reportedW2LocalRows.length?{reportedW2LocalRows}:{})},readiness:{filingEligible:false,formStatus:y===2025?'actual_2025_review_only':'draft_2026_review_only',blockers:[...(residency?['mixed-residency-native-and-paper-unqualified']:[]),'review-only-not-qualified-for-filing','married-native-and-public-export-integration-pending','separate-local-return-required',...(y===2026?['final-2026-forms-unqualified']:[]),...(federal.earnedIncomeCredit.gt(0)?['filed-federal1040-copy-required-for-department-processing']:[])]},lines:publicOrdinaryLines(audit.getLines())};
+ const pennsylvania:PAMarriedOrdinaryReturnResult={methodVersion:'pa-married-ordinary-return-v1',taxYear:y,filingMode:mode as 'J'|'M',sourceCommitment:commitment,federal:{filingStatus:input.taxpayer.filingStatus,adjustedGrossIncome:publicOrdinaryMoney(federal.agi),earnedIncomeCredit:publicOrdinaryMoney(federal.earnedIncomeCredit)},perOwner:(['primary','spouse'] as const).map(tag=>{const a=ownerTotals(tag);return {accountHolder:tag,rawCompensation:publicOrdinaryMoney(a.raw),rawPAWithholding:publicOrdinaryMoney(a.wh),reportedCompensation:publicOrdinaryMoney(reportedComp(tag)),reportedPAWithholding:publicOrdinaryMoney(roundDollar(a.wh)),spOtherIncome:publicOrdinaryMoney(roundDollar(a.sp)),actualPAServiceCompensation:publicOrdinaryMoney(a.paServices)};}),returns,localBoundary:{status:'separate_return_required',jurisdictions:coverage.localJurisdictions.map(l=>l.name),...(reportedW2LocalRows.length?{reportedW2LocalRows}:{})},readiness:{filingEligible:false,formStatus:y===2025?'actual_2025_review_only':'draft_2026_review_only',blockers:[...(residency?['mixed-residency-native-and-paper-unqualified']:[]),'review-only-not-qualified-for-filing','married-native-and-public-export-integration-pending','separate-local-return-required',...(y===2026?['final-2026-forms-unqualified']:[]),...(federal.earnedIncomeCredit.gt(0)?['filed-federal1040-copy-required-for-department-processing']:[])]},lines:publicOrdinaryLines(audit.getLines())};
+ return {pennsylvania,federal};
 }

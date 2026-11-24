@@ -1,5 +1,25 @@
 # 2026 upgrade implementation evidence
 
+## November 24 separate Pennsylvania accounts on Schedule A
+
+The 2025 paired Pennsylvania separate-return path now uses both owners’
+verified cash-year receipts and posted prior refunds for federal Schedule A.
+It preserves the owners’ separately verified state accounts, distinct
+confirmations, full cents, and the existing federal household. Direct
+calculation, guided preview and the saved federal and PA PDFs use the
+same verified calculation. When a previously confirmed receipt is edited or
+removed, the saved guided return requires reconfirmation before automatic or
+itemized preview resumes. Confirmation must replay against current federal
+originals, including on a restored return with a stale same-year W-2.
+[2025 Schedule A instructions](https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3).
+
+Calculation, saved-reopen and physical PDF regressions failed before the
+fix. Afterward, 459 focused tests, seven spec references, both typechecks
+and scoped lint passed. A separate 70-test engine and PDF review and an
+isolated 14-test replay passed, along with the inventory check and all 2,062
+browser audit hashes. Independent guided source review passed. Qualified tax
+review and final form qualification remain open.
+
 ## November 24 individual Pennsylvania estimates on Schedule A
 
 The 2025 individual Pennsylvania originals now supply federal line 5a by
@@ -16,6 +36,20 @@ related tests, 64 Schedule A references, web typecheck, and the browser audit
 closure of 2,062 files passed. An isolated replay passed 12 tests and the
 inventory check. Independent source review passed. Qualified tax review and
 2026 form qualification remain open.
+
+## November 24 exact billed-model revision
+
+The `3f0e9cb4` archive verified all 6,666 tracked blobs and 15 sample-document
+hashes. On Node 26.13.1, full unit and coverage runs each passed 30,396 tests with
+81 conditional skips. Branch coverage was 88.32%. All three typechecks, both
+builds, lint, inventory and all 9,991 spec references passed. Docker Compose
+5.5.1 also resolved the self-host configuration offline with both published
+ports bound to loopback, a read-only web filesystem and a healthy database
+dependency. The initial restricted run denied the existing localhost test
+listener and an overlapping attempt hit test deadlines. The successful full
+unit and coverage runs executed separately with the original thresholds.
+Linux browser qualification is still pending. Vercel skipped the source push’s
+automatic production build.
 
 ## November 24 AI evaluation billed model
 

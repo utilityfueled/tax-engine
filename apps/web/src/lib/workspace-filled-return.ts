@@ -2,7 +2,7 @@ import {prepareRRTAPayrollReview,requiresRRTAPayrollReview} from '@/pdf/rrta-pay
 import {readGuidedRRTAPaperSources} from './guided-rrta-paper-sources';
 import {prepareForm2210Review,requiresForm2210ScheduleAiReview,hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {assertNoPAMarriedPaperExport,isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
-import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return';
+import {calculatePAMarriedOrdinaryReturnWithFederal} from '@/engine/state/pa-married-ordinary-return';
 import {preparePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context';
 import { prepareOhioResidencyReviewWithFederalResult } from "@/engine/state/oh-residency-source.js";
 import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
@@ -474,16 +474,17 @@ function buildPacketSummary(
   };
 }
 
-function attachPennsylvaniaReturn(
+function calculateWorkspaceReviewResult(
   taxInput: TaxYearInput,
-  result: ReturnType<typeof calculateFederalTax>,
   stateCode: string | null,
+  ohioFederalResult?: ReturnType<typeof calculateFederalTax>,
 ) {
-  if (stateCode !== "PA") return result;
-  if(taxInput.paMarriedOrdinarySources!==undefined){
-    return {...result,stateReturns:{...(result.stateReturns??{}),
-      pennsylvania:calculatePAMarriedOrdinaryReturn(taxInput,taxInput.paMarriedOrdinarySources)}};
+  if (stateCode === "PA" && taxInput.paMarriedOrdinarySources !== undefined) {
+    const {federal, pennsylvania} = calculatePAMarriedOrdinaryReturnWithFederal(taxInput, taxInput.paMarriedOrdinarySources);
+    return {...federal, stateReturns: {...federal.stateReturns, pennsylvania}};
   }
+  const result = ohioFederalResult ?? calculateFederalTax(taxInput);
+  if (stateCode !== "PA") return result;
   assertNoPAMarriedPaperExport(taxInput,result.stateReturns?.pennsylvania);
   return {...result,stateReturns:{...(result.stateReturns??{}),
     pennsylvania:calculatePAOrdinaryReturn(taxInput,taxInput.paOrdinaryReturnFacts,taxInput.paOrdinaryReturnCompletionSources)}};
@@ -696,11 +697,7 @@ export async function buildWorkspaceFilledReturnDownload(
 
   const stateCode = resolveStateCode(workspace, resolved.taxInput, guidedFlowState);
   const ohioReview = stateCode === "OH" ? prepareOhioResidencyReviewWithFederalResult(resolved.taxInput) : undefined;
-  const completeResult = attachPennsylvaniaReturn(
-    resolved.taxInput,
-    ohioReview?.federalResult ?? calculateFederalTax(resolved.taxInput),
-    stateCode,
-  );
+  const completeResult = calculateWorkspaceReviewResult(resolved.taxInput, stateCode, ohioReview?.federalResult);
   // Identity participates in household matching and state worksheets. Keep it
   // intact through calculation, then redact only copies passed to renderers.
   const capitalGainReview = prepareForm8949Review(resolved.taxInput);

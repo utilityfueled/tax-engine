@@ -228,9 +228,13 @@ import {
 } from "./forms/crypto-lot-matching.js";
 import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestrator.js";
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
+import { calculatePAMarriedOrdinaryReturnWithFederal } from "./state/pa-married-ordinary-return.js";
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 export function calculateFederalTax(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  if (input.paMarriedOrdinarySources?.paymentSources !== undefined) {
+    return calculatePAMarriedOrdinaryReturnWithFederal(input, input.paMarriedOrdinarySources).federal;
+  }
   if (input.form5329EducationSource) {
     const today = currentLocalCivilDate();
     // This observation date belongs to the calculation caller, outside return data.

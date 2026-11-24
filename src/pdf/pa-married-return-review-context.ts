@@ -4,8 +4,7 @@ import {isDeepStrictEqual} from 'node:util';
 import Decimal from 'decimal.js';
 import {TaxYearInputSchema,type TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
-import {calculateFederalTax} from '@/engine/federal.js';
-import {calculatePAMarriedOrdinaryReturn,type PAMarriedOrdinaryReturnProjection,type PAMarriedOrdinaryReturnResult} from '@/engine/state/pa-married-ordinary-return.js';
+import {calculatePAMarriedOrdinaryReturn,calculatePAMarriedOrdinaryReturnWithFederal,type PAMarriedOrdinaryReturnProjection,type PAMarriedOrdinaryReturnResult} from '@/engine/state/pa-married-ordinary-return.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
 import {projectPACareOwnedPaper,assertPACarePublicDisplayPrivacy,type PACareOwnedPaper} from './pa-care-review-facts.js';
 import {redactReviewIdentifiers} from './redact-review-identifiers.js';
@@ -40,10 +39,9 @@ export function preparePAMarriedReturnReview(input:TaxYearInput):PreparedPAMarri
  // Actual care admission additionally requires its reviewed documentary projection.
  const careRequested=input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.paMarriedOrdinarySources.care!==undefined;
  if(careRequested&&!input.paMarriedOrdinarySources.care?.careSources?.paperIdentitySources)fail('actual care paper requires its documentary identity projection successor');
- const original=structuredClone(input),expected=calculatePAMarriedOrdinaryReturn(original,original.paMarriedOrdinarySources);
+ const original=structuredClone(input),{pennsylvania:expected,federal}=calculatePAMarriedOrdinaryReturnWithFederal(original,original.paMarriedOrdinarySources);
  if(expected.returns.some(row=>row.scheduleSP.dependents!==original.taxpayer.dependents.length))fail('actual child count differs from original-bound Schedule SP');
  if(original.taxpayer.dependents.length>9&&expected.returns.some(row=>row.scheduleSP.taxForgivenessCredit.gt(0)))fail('more than nine claimed SP children require a reviewed continuation projection');
- const federal=calculateFederalTax(original);
  if(careRequested){const dc=expected.returns.length===1?expected.returns[0]?.scheduleDC:undefined,source=original.paMarriedOrdinarySources?.care?.careSources;if(!dc||!source)fail('actual care paper requires its supported joint source method');projectPACareOwnedPaper(original,source,dc,federal);}
  if(!expected.federal.earnedIncomeCredit.isZero()||expected.returns.some(row=>!row.workingCredit.credit.isZero()||!row.rev1630.totalInterest.isZero()||!row.pa40.refundableCredits.isZero()))fail('actual positive working credit or penalty needs its separately reviewed paper successor');
  const token=Object.freeze({[brand]:true as const});

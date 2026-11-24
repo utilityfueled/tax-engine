@@ -10,6 +10,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { assertSupportedWholeReturnAccountingPeriod } from "./guided-standard-deduction-facts";
 import { calculateFederalTax } from "@/engine/federal";
 import {calculatePAOrdinaryReturn} from "@/engine/state/pa-ordinary-return";
+import { calculatePAMarriedOrdinaryReturnWithFederal } from "@/engine/state/pa-married-ordinary-return";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
 import { isPAMarriedOrdinaryReturnResult } from "@/engine/state/pa-return-result";
 import { PAMarriedOrdinarySourcesSchema } from "@/models/pa-married-ordinary-sources";
@@ -30,11 +31,12 @@ import { STATE_CONSTANTS } from "@/models/state-constants";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { TaxReturnResult } from "@/models/outputs";
 import type { FilingStatus as EngineFilingStatus } from "@/models/constants";
-import type {
-  GuidedFlowState,
-  PersonalInfoData,
-  StateReturnData,
-  W2EntryData,
+import {
+  hasConfirmedPAMarriedFederalOriginals,
+  type GuidedFlowState,
+  type PersonalInfoData,
+  type StateReturnData,
+  type W2EntryData,
 } from "./guided-interview-flow";
 import {
   buildTaxInputFromGuidedData,
@@ -234,6 +236,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
     onInput?.(baseInput);
     let taxInput = baseInput;
     let result: ReturnType<typeof calculateFederalTax>;
+    let marriedComposition: ReturnType<typeof calculatePAMarriedOrdinaryReturnWithFederal> | undefined;
     try {
       assertSupportedWholeReturnAccountingPeriod(baseInput.standardDeductionFacts);
       const stateData = state.sectionData["state-return"];
@@ -265,7 +268,20 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
           };
         }
       }
-      result = calculateFederalTax(taxInput);
+      if (state.segmentation.stateCode === "PA") {
+        const marriedDraft = stateData?.paMarriedOrdinarySources;
+        const canItemize = baseInput.deductionElection !== "standard" && baseInput.deductionElection !== "nonitemized";
+        const previouslyConfirmedPayments = canItemize && baseInput.taxpayer.filingStatus === "married_filing_jointly"
+          && stateData?.lastConfirmedPAMarriedPaymentYear === baseInput.taxpayer.taxYear;
+        if (previouslyConfirmedPayments && !hasConfirmedPAMarriedFederalOriginals(marriedDraft, baseInput.taxpayer.taxYear)) {
+          throw new Error("Confirm the Pennsylvania household and its actual payments for this tax year.");
+        }
+        if (previouslyConfirmedPayments || (marriedDraft?.sourceFactsConfirmed === true && marriedDraft.paymentSources !== undefined)
+          || baseInput.paMarriedOrdinarySources?.paymentSources !== undefined) {
+          marriedComposition = calculatePAMarriedOrdinaryReturnWithFederal(baseInput, readGuidedPAMarriedDraft(baseInput, stateData));
+        }
+      }
+      result = marriedComposition?.federal ?? calculateFederalTax(taxInput);
     } catch (error) {
       onBlocked(error instanceof Error ? error.message : "This return cannot be figured yet.");
       return null;
@@ -286,7 +302,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
         assertQofStateMethod(taxInput, stateCode);
         assertClaimOfRightStateMethod(taxInput, stateCode);
         if (stateCode === "PA") {
-          const married = calculateGuidedPAMarriedPreview(taxInput, state.sectionData["state-return"]);
+          const married = marriedComposition?.pennsylvania ?? calculateGuidedPAMarriedPreview(taxInput, state.sectionData["state-return"]);
           if (married && isPAMarriedOrdinaryReturnResult(married)) {
             if (married.filingMode === 'M') {
               separateMetrics = {

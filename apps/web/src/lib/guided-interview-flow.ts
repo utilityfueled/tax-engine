@@ -14,6 +14,7 @@ import {ohioBusinessActualValues,invalidateOhioBusiness} from './guided-ohio-bus
 import {buildGuidedOhioResidentCreditSources,ohioResidentCreditActualValues,invalidateOhioResidentCredit,type OhioResidentCreditDraft} from './guided-ohio-resident-credit-sources';
 import {buildGuidedOhioSchoolDistrictFacts,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
 import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
+import {PAMarriedPaymentSourcesSchema} from '@/models/pa-married-payment-sources';
 import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guided-interview-bridge";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { PAOrdinaryReturnFacts } from "@/models/pa-ordinary-return-facts";
@@ -1406,6 +1407,8 @@ export const emptyStateEstimatedPayment: StateEstimatedPaymentEntry = {
 
 export interface StateReturnData {
   paMarriedOrdinarySources?: import('@/models/pa-married-ordinary-sources').PAMarriedOrdinarySources;
+  /** Year of a deductible payment in the last confirmed paired PA inventory. */
+  lastConfirmedPAMarriedPaymentYear?: number;
   zeroIncomeMiscSources?: ZeroIncomeMiscSourceDraft[];
   stateEstimatedPayments: StateEstimatedPaymentEntry[];
   additionalStateWithholding: string;
@@ -1988,7 +1991,8 @@ function ohioDraftSourceValuesChanged<T>(
 
 function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   if (!value) return value;
-  const { paMarriedOrdinarySources: _married, paOrdinaryReturnFacts: _ordinary, lastConfirmedPAEstimateYear: _estimate,
+  const { paMarriedOrdinarySources: _married, lastConfirmedPAMarriedPaymentYear: _marriedPayment,
+    paOrdinaryReturnFacts: _ordinary, lastConfirmedPAEstimateYear: _estimate,
     paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
   return dependencies;
 }
@@ -2010,9 +2014,68 @@ function retainedPAEstimateYear(year: number, current: StateReturnData, previous
   return isConfirmed(prior) && hasInYearEstimate(prior) ? year : undefined;
 }
 
+export function hasConfirmedPAMarriedFederalOriginals(
+  facts: StateReturnData['paMarriedOrdinarySources'], year: number,
+): facts is NonNullable<StateReturnData['paMarriedOrdinarySources']> {
+  if (facts?.sourceTaxYear !== year || facts.sourceFactsConfirmed !== true) return false;
+  const originals = facts.originalFederalSources;
+  if (!Array.isArray(originals?.w2s)) return false;
+  const snapshot = TaxYearInputSchema.safeParse(originals);
+  if (!snapshot.success) return false;
+  const { taxpayer } = snapshot.data;
+  return taxpayer.taxYear === year && taxpayer.filingStatus === 'married_filing_jointly' && taxpayer.spouse !== undefined;
+}
+
+function retainedPAMarriedPaymentYear(year: number, nextState: GuidedFlowState, priorState: GuidedFlowState): number | undefined {
+  const actualAmount = (amount: string) => /^\d+(\.\d+)?$/u.test(amount);
+  const hasDeductiblePayment = (facts: StateReturnData['paMarriedOrdinarySources']): boolean | undefined => {
+    if (!hasConfirmedPAMarriedFederalOriginals(facts, year)) return undefined;
+    if (facts.paymentSources === undefined) {
+      return Array.isArray(facts.owners) && facts.owners.length === 2 && facts.owners.every(owner => {
+        const payments = owner?.payments;
+        return payments?.allCurrentPaymentsReviewedConfirmed === true && payments.estimatedPaymentsStatus === 'known_none'
+          && payments.extensionPaymentsStatus === 'known_none' && payments.priorCreditStatus === 'known_none'
+          && Array.isArray(payments.originalReceipts) && payments.originalReceipts.length === 0;
+      }) ? false : undefined;
+    }
+    const packet = PAMarriedPaymentSourcesSchema.safeParse(facts.paymentSources);
+    if (facts.filingMode !== 'M' || !packet.success || packet.data.sourceTaxYear !== year
+      || packet.data.sourceFactsConfirmed !== true || packet.data.accounts.length !== 2) return undefined;
+    const {accounts} = packet.data;
+    if (accounts.some(account => !actualAmount(account.originalAccount.availablePriorCredit)
+      || account.receipts.some(({original}) => !actualAmount(original.amount) || !/^\d{4}-\d{2}-\d{2}$/u.test(original.date)))) return undefined;
+    return accounts.some(account => account.receipts.some(({ original }) => original.kind === 'estimated'
+      && original.date.startsWith(`${year}-`) && parseGuidedCurrency(original.amount).gt(0))
+      || account.priorCredit.status === 'actual_credit' && parseGuidedCurrency(account.originalAccount.availablePriorCredit).gt(0));
+  };
+  const current = nextState.sectionData['state-return'];
+  const previous = priorState.sectionData['state-return'];
+  const currentPayments = hasDeductiblePayment(current?.paMarriedOrdinarySources);
+  const previousPayments = previous?.lastConfirmedPAMarriedPaymentYear === year
+    || (hasDeductiblePayment(previous?.paMarriedOrdinarySources) === true && replaysConfirmedHousehold(priorState, previous));
+  if (currentPayments !== undefined && currentPayments !== previousPayments && replaysConfirmedHousehold(nextState, current)) {
+    return currentPayments ? year : undefined;
+  }
+  return previousPayments ? year : undefined;
+}
+
+/** Changing the retained year requires fresh replay against the guided originals. */
+function replaysConfirmedHousehold(state: GuidedFlowState, data: StateReturnData | undefined): boolean {
+  if (!data?.paMarriedOrdinarySources) return false;
+  const input = buildGuidedPAOrdinarySourceInput(state);
+  if (!input) return false;
+  try {
+    assertMarriedPASavedLedger(data);
+    buildGuidedPAMarriedOrdinarySources(input, data.paMarriedOrdinarySources);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** PA statement fields and refreshed PA custody snapshots do not change a federal K-1. */
 function paNrk1FederalDependencies(value: StateReturnData) {
-  const { paResidencySources, paOrdinaryReturnFacts, lastConfirmedPAEstimateYear: _estimate,
+  const { paResidencySources, paOrdinaryReturnFacts, lastConfirmedPAEstimateYear: _estimate, lastConfirmedPAMarriedPaymentYear: _marriedPayment,
     paOrdinaryReturnCompletionSources, ...stateSources } = value;
   return {
     ...stateSources,
@@ -2539,14 +2602,23 @@ export function updateSectionData(
       } } : {}),
     },
   };
-  const nextStateReturn = nextState.sectionData["state-return"];
+  let nextStateReturn = nextState.sectionData["state-return"];
   if (state.taxYear === 2025 && state.segmentation.stateCode === "PA" && nextStateReturn && !nextStateReturn.paMarriedOrdinarySources) {
     const lastConfirmedPAEstimateYear = retainedPAEstimateYear(state.taxYear, nextStateReturn, previousStateReturn);
     if (lastConfirmedPAEstimateYear !== nextStateReturn.lastConfirmedPAEstimateYear) {
       const { lastConfirmedPAEstimateYear: _previousYear, ...current } = nextStateReturn;
-      nextState.sectionData["state-return"] = lastConfirmedPAEstimateYear === undefined ? current : { ...current, lastConfirmedPAEstimateYear };
+      nextStateReturn = lastConfirmedPAEstimateYear === undefined ? current : { ...current, lastConfirmedPAEstimateYear };
     }
   }
+  if (state.taxYear === 2025 && state.segmentation.stateCode === "PA" && nextStateReturn
+    && (nextStateReturn.paMarriedOrdinarySources || previousStateReturn?.paMarriedOrdinarySources || previousStateReturn?.lastConfirmedPAMarriedPaymentYear !== undefined)) {
+    const lastConfirmedPAMarriedPaymentYear = retainedPAMarriedPaymentYear(state.taxYear, nextState, state);
+    if (lastConfirmedPAMarriedPaymentYear !== nextStateReturn.lastConfirmedPAMarriedPaymentYear) {
+      const { lastConfirmedPAMarriedPaymentYear: _previousYear, ...current } = nextStateReturn;
+      nextStateReturn = lastConfirmedPAMarriedPaymentYear === undefined ? current : { ...current, lastConfirmedPAMarriedPaymentYear };
+    }
+  }
+  if (nextStateReturn !== nextState.sectionData["state-return"]) nextState.sectionData["state-return"] = nextStateReturn;
   if (sectionId === "credits" && Boolean(credits?.saversCredit) !== Boolean(savedSaversCredit)) {
     const current = getGuidedSectionRoute(state)[state.currentSectionIndex];
     if (current) return jumpToSection(nextState, current.id);
