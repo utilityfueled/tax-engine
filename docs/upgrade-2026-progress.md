@@ -1,5 +1,37 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio header source comparisons
+
+`bbebe675` uses the existing identity-aware comparator for business and
+resident-credit dependencies. Two ordinary Ohio header edits recorded
+four unnecessary source projections apiece before the change. Both
+now skip those projections. Rebuilt or edited roots retain the original
+value comparisons and confirmation invalidation. All 97 focused tests,
+root and web types, and the complete browser source audit passed. Scoped
+lint retained three existing warnings. Independent engineering review
+checked the normal editor's immutable draft updates and passed seven
+focused tests. Strict Linux timing for the change is unmeasured.
+
+## November 24 Pennsylvania review disclosure
+
+`f3163949` lists the source requirements for existing official Schedule
+NRH and G-L review copies in `/support`. The guided workspace packet
+produced G-L for resident and part-year fixtures. The nonresident packet
+integration confirms NRH and the filing hold. The disclosure regression
+failed before the copy changed. All 27 focused tests, scoped lint and the
+complete browser source audit passed. GitHub reported that Vercel skipped
+the production build. [Commit](https://github.com/utilityfueled/tax-engine/commit/f3163949210f031ad1bdacdd6cd3a5acac3494d0).
+
+## November 24 final Form 8801 source
+
+`fee02a61` pins the final 2026 blank with a disabled Part II candidate.
+The 55 printed lines match the draft after removing markings and layout
+differences. All 23 focused tests and all 56 spec references passed.
+`37af867c` followed with the exact browser source and diagnostic hash
+pins. Public review and filing are unavailable pending final annual
+dependencies and independent review.
+[Form 8801 evidence](upgrade-2026-form-8801-final-source.md).
+
 ## November 24 exact main unit and coverage run
 
 The isolated `5f32cf32` archive matched all 6,660 tracked blobs. Unit and

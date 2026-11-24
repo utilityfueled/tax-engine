@@ -9,6 +9,22 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
+  Part II widgets under a disabled candidate. The form adds no public
+  output. Current instructions and final Form 6251 still print 2025.
+  [Official source receipt](upgrade-2026-form-8801-final-source.md).
+
+- `bbebe675` skips redundant residency and child source comparisons
+  when an Ohio header edit leaves those records untouched. Existing
+  source confirmation invalidation is covered by 97 focused tests.
+  Strict Linux timing for this change is pending.
+  [Ohio reducer evidence](upgrade-2026-progress.md#november-24-ohio-header-source-comparisons).
+
+- `f3163949` describes the actual 2025 Pennsylvania Schedule NRH and
+  G-L review downloads on `/support`. All 27 focused tests passed, and
+  Vercel skipped the production build.
+  [Pennsylvania disclosure evidence](upgrade-2026-progress.md#november-24-pennsylvania-review-disclosure).
+
 - The exact `5f32cf32` archive passed 30,367 unit and coverage tests
   in each run, with 81 conditional skips and 88.31% branches. Build,
   web types, lint and verification of all 9,986 spec test references

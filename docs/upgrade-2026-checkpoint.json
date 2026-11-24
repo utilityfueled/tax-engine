@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",
+    "applicationCommit": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
     "verificationCommit": "26348f19",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
@@ -14,6 +14,9 @@
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
     "strictFullSchedulerEvidenceKey": "activeContinuation.nov24OhioFullLinuxScheduler",
+    "ohioHeaderComparisonEvidenceKey": "activeContinuation.nov24OhioHeaderSourceComparisons",
+    "paSupportEvidenceKey": "activeContinuation.nov24PAReviewDisclosure",
+    "annualForm8801EvidenceKey": "activeContinuation.nov24FinalForm8801Source",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
@@ -101,6 +104,33 @@
       "ordinaryChromiumSchedulerOutput": false,
       "independentReview": "Workflow admission and browser source hashes verified",
       "limits": "Existing cases, timeouts, retries, worker counts and request budgets preserved"
+    },
+    "nov24OhioHeaderSourceComparisons": {
+      "applicationCommit": "bbebe6750fe1f384b0b91540ea7cc4f8d0c00d88",
+      "focusedTestsPassed": 97,
+      "beforeAfterSharedResidencyChildProjections": [4, 0],
+      "independentEngineeringTestsPassed": 7,
+      "invalidation": "Edited or rebuilt roots retain old comparisons and invalidation",
+      "strictLinuxTiming": "Unmeasured"
+    },
+    "nov24PAReviewDisclosure": {
+      "applicationCommit": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
+      "scope": "Actual 2025 source-complete Schedule NRH and G-L review without filing",
+      "focusedTestsPassed": 27,
+      "browserSourceAudit": "Passed",
+      "vercel": "Canceled by Ignored Build Step"
+    },
+    "nov24FinalForm8801Source": {
+      "candidateCommit": "fee02a6144b9b3b5b72fe6f6c78500c43ccacb65",
+      "browserAuditCommit": "37af867c9cbc3c8097cb9b3d7734d783ade980b5",
+      "source": "https://www.irs.gov/pub/irs-prior/f8801--2026.pdf",
+      "postedDate": "2026-11-23",
+      "sha256": "782d879f1d6e3ca636c129a61092f957f86e028e056e5261e5feb3895410d8f1",
+      "focusedTestsPassed": 23,
+      "validSpecReferences": 56,
+      "partIIWidgetsVerified": 11,
+      "status": "Disabled candidate. Final instructions, 2026 Form 6251, current-year transfers, and independent tax and map review remain open",
+      "evidence": "docs/upgrade-2026-form-8801-final-source.md"
     },
     "nov24PennsylvaniaBalanceConfirmation": {
       "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",
