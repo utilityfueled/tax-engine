@@ -17,6 +17,7 @@
     "ohioEstimateNavigationEvidenceKey": "activeContinuation.nov24OhioSavedEstimateNavigation",
     "ohioIt1040ScheduleAPaymentEvidenceKey": "activeContinuation.nov24OhioIt1040ScheduleAPayments",
     "ohioSchoolScheduleAPaymentEvidenceKey": "activeContinuation.nov24OhioSchoolDistrictScheduleAPayments",
+    "ohioSchoolScheduleACompatibilityEvidenceKey": "activeContinuation.nov24OhioSchoolDistrictReplayCompatibility",
     "dependentAotcTinEvidenceKey": "activeContinuation.nov24AotcDependentTinConflict",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
@@ -47,6 +48,18 @@
     ]
   },
   "activeContinuation": {
+    "nov24OhioSchoolDistrictReplayCompatibility": {
+      "initialCombinedRevision": "2be7b99f",
+      "initialOhioFailures": 37,
+      "broadOhioAndGuidedTestsPassed": 2638,
+      "finalIsolatedTestsPassed": 128,
+      "independentReplayTestsPassed": 113,
+      "dedicatedSpecReferencesResolved": 9,
+      "auditedSourcesVerified": 2065,
+      "predecessorCommitmentsAndWorkCountsPreserved": true,
+      "inventoryCheck": "passed",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-ohio-school-replay-compatibility"
+    },
     "nov24Form6781OriginalReviewCandidate": {
       "focusedTestsPassed": 143,
       "specReferencesResolved": 21,

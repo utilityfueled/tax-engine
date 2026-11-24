@@ -47,7 +47,7 @@ function actualSsn(value: string): string {
   return result;
 }
 /** Bound exact addition/multiplication by actual digits/scale/count, not a money cap. */
-function exactArithmetic(input: unknown): typeof Decimal {
+export function exactOhioSchoolArithmetic(input: unknown): typeof Decimal {
   let integerDigits = 1, scale = 0, count = 0;
   const visit = (value: unknown) => {
     if (typeof value === 'string' && /^-?\d+(?:\.\d+)?$/.test(value)) {
@@ -74,8 +74,6 @@ export interface OhioSchoolDistrictSourceProjection {
   readonly sdWithholding: Decimal;
   readonly estimatedPayments: Decimal;
   readonly estimatedPaymentSchedule: EstimatedPaymentEntry[];
-  /** Separately reconciled tax principal for the 2025 federal cash year. */
-  readonly scheduleAIncomeTaxes: { readonly estimatedPrincipal: string; readonly appliedPriorCredit: string };
   readonly priorYearTaxLiability?: Decimal;
   readonly priorYearTimelyFiled: boolean;
   readonly creditCarryforward: Decimal;
@@ -92,7 +90,7 @@ export function buildOhioSchoolDistrictSource(
   const facts = parsed.data;
   if (facts.taxYear !== 2025 || input.taxpayer.taxYear !== 2025 || federal.taxYear !== 2025 || ohio.taxYear !== 2025) fail('only the actual2025 school district year method is available');
   if (input.taxpayer.filingStatus !== 'single' || federal.filingStatus !== 'single' || ohio.filingStatus !== 'single' || input.taxpayer.spouse) fail('the first single primary ordinary cohort requires its separate actual owner method');
-  const Exact = exactArithmetic(input);
+  const Exact = exactOhioSchoolArithmetic(input);
   const money = (value: string, role: string, whole = false): Decimal => {
     if (typeof value !== 'string' || !/^\d+(?:\.\d{1,2})?$/.test(value.trim())) fail(`actual ${role} amount is unknown or invalid`);
     const result = new Exact(value);
@@ -306,7 +304,6 @@ export function buildOhioSchoolDistrictSource(
   const schedule: EstimatedPaymentEntry[] = [];
   const endpoints = ['2025-04-15', '2025-06-16', '2025-09-15', '2026-01-15'];
   let actualCash = new Exact(0);
-  let cashIn2025 = new Exact(0);
   for (const row of p.paymentRows) {
     const receipt = row.original, date = actualDate(row.date), amount = money(row.amount, 'SD estimated payment', true);
     if (row.taxYear !== 2025 || receipt.taxYear !== 2025 || receipt.date !== row.date || receipt.returnType !== row.returnType
@@ -318,7 +315,6 @@ export function buildOhioSchoolDistrictSource(
     if (sourceIds.has(normalized(row.sourceId)) || confirmations.has(confirmation)) fail('duplicate actual cash/receipt identity across the separate tax accounts');
     sourceIds.add(normalized(row.sourceId)); confirmations.add(confirmation);
     schedule.push({ date, amount: new Decimal(amount.toString()) }); actualCash = actualCash.plus(amount);
-    if (date.startsWith('2025-')) cashIn2025 = cashIn2025.plus(amount);
   }
   if (!actualCash.eq(money(account.estimatedPaymentsCredited, 'complete agency account estimated total', true))) fail('actual complete agency account payment totals do not reconcile');
   let priorLiability: Decimal | undefined, timely = false;
@@ -417,7 +413,7 @@ export function buildOhioSchoolDistrictSource(
     'Current private originals; commitment only, never private source references', { 'Original source commitment': sourceDigest, 'State method version': methodVersion, 'Tax year': '2025' });
   return { methodVersion, sourceDigest, ...(payoff.status !== 'no_remaining_tax' ? { remainingTaxPayment } : {}), district, residentIncome,
     sdWithholding: new Decimal(schoolWithholding.toString()), estimatedPayments: new Decimal(estimates.toString()),
-    estimatedPaymentSchedule: schedule, scheduleAIncomeTaxes: { estimatedPrincipal: cashIn2025.toFixed(), appliedPriorCredit: priorApplied.toFixed() },
+    estimatedPaymentSchedule: schedule,
     priorYearTaxLiability: priorLiability, priorYearTimelyFiled: timely,
     creditCarryforward: new Decimal(outgoing.toString()), lines: audit.getLines(),
   };

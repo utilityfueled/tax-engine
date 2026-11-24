@@ -37,6 +37,21 @@ function sameSourceMaterial(left: unknown, right: unknown): boolean {
 function fail(message: string): never {
     throw new Error(`Ohio actual residency sources: ${message}`);
 }
+export function assertCurrentOhioFederalResult(fresh: TaxReturnResult, result: TaxReturnResult): void {
+    if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(result)))
+        fail('saved federal result is stale');
+}
+
+/** The adapter and its residency and district validation read these federal amounts and forms. */
+export function sameOhioFederalAdapterMaterial(left: TaxReturnResult, right: TaxReturnResult): boolean {
+    const fields = [
+        'taxYear', 'filingStatus', 'agi', 'adjustmentsToIncome', 'totalWages', 'totalInterest', 'totalDividends',
+        'capitalGainLoss', 'iraDistributionsTaxable', 'pensionDistributionsTaxable', 'otherIncome',
+        'taxExemptInterest', 'socialSecurityBenefitsTaxable', 'earnedIncomeCredit',
+        'schedule1', 'scheduleB', 'scheduleC', 'scheduleF', 'form2441', 'form8815',
+    ] as const satisfies ReadonlyArray<keyof TaxReturnResult>;
+    return fields.every(field => sameSourceMaterial(left[field], right[field]));
+}
 function withoutFacts(input: TaxYearInput) {
     const { ohioResidency: _, ohioPayments: _payments, ohioSchoolDistrict: _school, ohioReturnHeaderSources: _header, scheduleBPartThree: _scheduleB, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
     return source;
@@ -194,8 +209,7 @@ export function buildOhioResidencySource(
         fail('current private federal original source snapshot is missing or changed');
     }
     const fresh = readOhioCurrentFederalCalculation(input, currentFederal) ?? calculateFederalTax(input);
-    if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(result)))
-        fail('saved federal result is stale');
+    assertCurrentOhioFederalResult(fresh, result);
     // Spec: state/oh-school-source-same-invocation.yaml. Keep this first validation in order.
     let schoolDistrictSource: OhioSchoolDistrictSourceProjection | undefined;
     if (input.ohioSchoolDistrict) {

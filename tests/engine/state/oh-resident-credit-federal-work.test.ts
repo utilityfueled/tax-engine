@@ -18,11 +18,12 @@ vi.mock('@noble/hashes/sha2.js', async original => {
     return actual.sha256(bytes);
   }, actual.sha256) };
 });
-vi.mock('@/engine/federal.js', async original => {
-  const actual = await original<typeof import('@/engine/federal.js')>();
-  return { ...actual, calculateFederalTax: (...args: Parameters<typeof actual.calculateFederalTax>) => {
+// Every completed federal pass in this finite fixture runs the genuine original payment validator once.
+vi.mock('@/engine/forms/federal-payment-date-sources.js', async original => {
+  const actual = await original<typeof import('@/engine/forms/federal-payment-date-sources.js')>();
+  return { ...actual, assertFederalPaymentSources: (...args: Parameters<typeof actual.assertFederalPaymentSources>) => {
     work.freshFederal++;
-    return actual.calculateFederalTax(...args);
+    return actual.assertFederalPaymentSources(...args);
   } };
 });
 function completeFixture() {

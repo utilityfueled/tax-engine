@@ -230,9 +230,8 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 import { calculatePAMarriedOrdinaryReturnWithFederal } from "./state/pa-married-ordinary-return.js";
 import { verifyOhioSchoolScheduleAPayments } from "./state/oh-source-adapter-invocation.js";
-import type { OhioSchoolDistrictSourceProjection } from "./state/oh-sd-100-sources.js";
 
-type OhioSchoolScheduleAPayments = OhioSchoolDistrictSourceProjection["scheduleAIncomeTaxes"];
+type OhioSchoolScheduleAPayments = ReturnType<typeof verifyOhioSchoolScheduleAPayments>["payments"];
 const ohioSchoolScheduleAPaymentProof = Symbol("verified Ohio school district deductions");
 type OhioSchoolCalculation = { readonly phase: "preliminary" }
   | { readonly phase: "final"; readonly payments: OhioSchoolScheduleAPayments };
@@ -244,32 +243,41 @@ export function readOhioSchoolScheduleAPayments(input: TaxYearInput): OhioSchool
   return school?.phase === "final" ? school.payments : undefined;
 }
 
+function withOhioSchoolCalculation(input: TaxYearInput, proof: OhioSchoolCalculation): TaxYearInput {
+  return Object.freeze({ ...input, [ohioSchoolScheduleAPaymentProof]: Object.freeze(proof) });
+}
+
 export function requiresOhioSchoolScheduleAPaymentProof(input: TaxYearInput): boolean {
   if (input.taxpayer.taxYear !== 2025 || !input.ohioSchoolDistrict
     || input.deductionElection === "standard" || input.deductionElection === "nonitemized") return false;
   const payments = input.ohioSchoolDistrict.payments;
+  const knownZero = (amount: unknown) => typeof amount === "string" && /^0+(?:\.0{1,2})?$/.test(amount.trim());
   return !Array.isArray(payments?.paymentRows) || payments.paymentRows.length > 0
     || payments.priorCreditCarryforward?.status !== "none"
-    || payments.priorReturn?.status === "filed_return" && !d(payments.priorReturn.electedCreditCarryforward).isZero()
-    || !/^0+(?:\.0{1,2})?$/.test(payments.account?.estimatedPaymentsCredited ?? "")
-    || !/^0+(?:\.0{1,2})?$/.test(payments.account?.priorCreditApplied ?? "");
+    || payments.priorReturn?.status === "filed_return" && !knownZero(payments.priorReturn.electedCreditCarryforward)
+    || !knownZero(payments.account?.estimatedPaymentsCredited)
+    || !knownZero(payments.account?.priorCreditApplied);
 }
 
 /** Spec: state/oh-sd-100-federal-schedule-a.yaml. Resolve the local account before final deductions. */
 export function calculateFederalTax(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
   if (!requiresOhioSchoolScheduleAPaymentProof(input)) return calculateFederalTaxReturn(input, context);
-  const { current, payments } = verifyOhioSchoolScheduleAPayments(input, context);
-  if (d(payments.estimatedPrincipal).isZero() && d(payments.appliedPriorCredit).isZero()) return calculateFederalTaxReturn(current, context);
-  // Local immutable context follows same-return spreads and stays out of original JSON snapshots.
-  const proof: OhioSchoolCalculation = Object.freeze({ phase: "final", payments });
-  const verified = Object.freeze({ ...current, [ohioSchoolScheduleAPaymentProof]: proof });
-  return calculateFederalTaxReturn(verified, context);
+  return calculateFederalTaxWithOhioSchoolProof(input, context).federal;
+}
+
+/** Complete the federal calculation with the school projection verified in this invocation. */
+export function calculateFederalTaxWithOhioSchoolProof(input: TaxYearInput, context?: { asOfDate?: string }) {
+  const { current, payments, adapted, beforeSchoolDeduction } = verifyOhioSchoolScheduleAPayments(
+    input, current => calculateFederalTaxBeforeOhioSchoolScheduleA(current, context),
+  );
+  const finalInput = d(payments.estimatedPrincipal).isZero() && d(payments.appliedPriorCredit).isZero()
+    ? current : withOhioSchoolCalculation(current, { phase: "final", payments });
+  return { federal: calculateFederalTaxReturn(finalInput, context), adapted, beforeSchoolDeduction };
 }
 
 /** For the private Ohio source replay only. Final settlement uses the completed deduction. */
-export function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
-  const phase: OhioSchoolCalculation = Object.freeze({ phase: "preliminary" });
-  return calculateFederalTaxReturn(Object.freeze({ ...input, [ohioSchoolScheduleAPaymentProof]: phase }), context);
+function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  return calculateFederalTaxReturn(withOhioSchoolCalculation(input, { phase: "preliminary" }), context);
 }
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */

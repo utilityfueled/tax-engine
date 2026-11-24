@@ -23,6 +23,11 @@ Use the linked progress sections when investigating individual packages.
   and historical PDF review check the same current originals.
   [School district payment evidence](upgrade-2026-progress.md#november-24-ohio-school-district-payments-on-schedule-a).
 
+- The Ohio replay correction passed 128 isolated and 113 independent tests.
+  Existing district source commitments and replay counts pass their original
+  checks. Combined verification remains open.
+  [Replay compatibility evidence](upgrade-2026-progress.md#november-24-ohio-school-replay-compatibility).
+
 - A verified prior-year refund applied to an individual 2025 Pennsylvania
   return now counts once in federal Schedule A. The guided preview holds
   stale saved originals until the current account and election reconcile.

@@ -9,10 +9,12 @@ import {buildOhioPaymentSource} from '@/engine/state/oh-payment-source.js';
 import {buildOhioSchoolDistrictSource} from '@/engine/state/oh-sd-100-sources.js';
 import {prepareOhioResidencyReview,resolveOhioResidencyReview,type PreparedOhioResidencyReview} from '@/engine/state/oh-residency-source.js';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
+import {OhioSchoolDistrictFactsSchema} from '@/models/ohio-school-district.js';
 import {schoolOfficialFixture,schoolOfficialCases,schoolOfficialOracles} from '../../fixtures/oh-school-district-official-review.js';
 import {schoolPyHeaderPacket,schoolPyPaperCases} from '../../fixtures/oh-school-district-part-year-official-review.js';
 import {schoolDistrictSourcesFixture,bindSchoolDistrictFixture,type SchoolDistrictFixtureInput} from '../../fixtures/oh-school-district-sources.js';
 import {schoolDistrictPartYearFixture} from '../../fixtures/oh-school-district-part-year-sources.js';
+import {assertOhioSchoolFederalDelta} from '../../fixtures/oh-school-federal-schedule-a-predecessor.js';
 
 function required<T>(value:T|null|undefined):T{if(value==null)throw Error('Explicit fictional original required');return value;}
 function record(value:unknown):Record<string,unknown>{if(value===null||typeof value!=='object'||Array.isArray(value))throw Error('Explicit fictional object required');return value as Record<string,unknown>;}
@@ -37,9 +39,42 @@ const baselineHashes:Readonly<Record<string,string>>={
   "part-year-header-covered": "b472fec86b3579c1263acc3106a1e1166ff8fecdfbcc6afa524c464cd5454d48"
 };
 const cases=[...schoolOfficialCases.map(kind=>({name:kind,input:()=>schoolOfficialFixture(kind),itTax:'1767',sdTax:'1000',withheld:schoolOfficialOracles[kind].withheld,refund:schoolOfficialOracles[kind].refund})),...schoolPyPaperCases.map(c=>({name:`part-year-header-${c.name}`,input:()=>schoolPyHeaderPacket(c).withHeader,itTax:'811',sdTax:'500',withheld:c.withheld,refund:c.refund}))];
+it('preserves padded school tax amounts and exact federal payments',()=>{
+ const line5a=(input:SchoolDistrictFixtureInput)=>calculateFederalTax(input).allLines.find(line=>line.form==='Sched A'&&line.line==='5a')?.value.toFixed();
+ for(const [amount,total] of [['100','4200'],['1000000000000000000000','1000000000000000004100']]){
+  const input=schoolOfficialFixture('prior'), payments=input.ohioSchoolDistrict.payments;
+  if(payments.priorReturn.status!=='filed_return'||payments.priorCreditCarryforward.status!=='actual_credit')throw Error('Expected actual prior school credit');
+  Object.assign(payments.priorReturn,{line19:amount,electedCreditCarryforward:amount});
+  Object.assign(payments.priorCreditCarryforward,{electedAmount:amount,availableForThisReturn:amount});
+  payments.account.priorCreditApplied=amount;
+  expect(line5a(input)).toBe(total);
+  const before=OhioSchoolDistrictFactsSchema.parse(input.ohioSchoolDistrict);
+  payments.account.priorCreditApplied=`  ${amount}  `;
+  expect(OhioSchoolDistrictFactsSchema.parse(input.ohioSchoolDistrict)).toEqual(before);
+  expect.soft(()=>expect(line5a(input)).toBe(total)).not.toThrow();
+ }
+ const estimates=schoolOfficialFixture('estimates'), payments=estimates.ohioSchoolDistrict.payments;
+ const before=OhioSchoolDistrictFactsSchema.parse(estimates.ohioSchoolDistrict);
+ for(const row of payments.paymentRows){
+  row.amount=` ${row.amount} `;
+  row.original.amount=` ${row.original.amount} `;
+ }
+ payments.account.estimatedPaymentsCredited=' 400 ';
+ payments.account.priorCreditApplied=' 0 ';
+ expect(OhioSchoolDistrictFactsSchema.parse(estimates.ohioSchoolDistrict)).toEqual(before);
+ expect.soft(()=>expect(line5a(estimates)).toBe('3900')).not.toThrow();
+ const zero=schoolOfficialFixture('prior'), knownNone=zero.ohioSchoolDistrict.payments;
+ if(knownNone.priorReturn.status!=='filed_return')throw Error('Expected actual prior school return');
+ knownNone.priorReturn.electedCreditCarryforward=' 0 ';
+ knownNone.priorCreditCarryforward={status:'none',sourceReference:'Fictional account verifies no election or application'};
+ knownNone.account.priorCreditApplied=' 0 ';
+ expect(OhioSchoolDistrictFactsSchema.safeParse(zero.ohioSchoolDistrict).success).toBe(true);
+ expect.soft(()=>expect(line5a(zero)).toBe('4100')).not.toThrow();
+});
 it.each(cases.map(c=>[c.name,c] as const))('preserves complete school baseline and commitments for %s',(_name,c)=>{
  const input=c.input(),before=copy(input),federal=calculateFederalTax(input),adapted=buildOhioResidentReturnInput(input,federal),state=calculateOhioResidentReturn(adapted),payment=buildOhioPaymentSource(input,input.ohioPayments),school=required(adapted.schoolDistrictSource);
- expect(hash({federal,adapted,state,payment,school})).toBe(required(baselineHashes[c.name]));
+ const predecessorFederal=assertOhioSchoolFederalDelta(input,federal,c.name);
+ expect(hash({federal:predecessorFederal,adapted,state,payment,school})).toBe(required(baselineHashes[c.name]));
  expect([state.it1040.line10_taxAfterCredits,state.sd100?.line8_totalTaxAfterCredits,state.sd100?.line11_sdWithholding,state.sd100?.line21_refund].map(value=>required(value).toString())).toEqual([c.itTax,c.sdTax,c.withheld,c.refund]);
  expect(school.sourceDigest).toMatch(/^[a-f0-9]{64}$/);
  expect(JSON.stringify(state.lines)).toContain(school.sourceDigest);

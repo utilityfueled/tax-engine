@@ -1,10 +1,10 @@
 /** Spec: state/oh-school-header-same-invocation.yaml. Active synchronous scope only. */
 import Decimal from 'decimal.js';
-import {calculateFederalTax, calculateFederalTaxBeforeOhioSchoolScheduleA} from '@/engine/federal.js';
+import {calculateFederalTax} from '@/engine/federal.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
 import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
-import type {OhioSchoolDistrictSourceProjection} from './oh-sd-100-sources.js';
+import {exactOhioSchoolArithmetic} from './oh-sd-100-sources.js';
 const brand=Symbol('completed current Ohio school adapter');
 export interface OhioSourceAdapterInvocation{readonly [brand]:true}
 const active=new WeakMap<OhioSourceAdapterInvocation,{material:string;method:string|undefined}>();
@@ -81,16 +81,29 @@ export function readOhioCurrentFederalCalculation(
 
 /** Spec: state/oh-sd-100-federal-schedule-a.yaml. A calculation supplies its own preliminary result. */
 export function verifyOhioSchoolScheduleAPayments(
-  input: TaxYearInput, context?: { asOfDate?: string },
-): { current: TaxYearInput; payments: OhioSchoolDistrictSourceProjection['scheduleAIncomeTaxes'] } {
+  input: TaxYearInput, calculatePreliminary: (input: TaxYearInput) => TaxReturnResult,
+) {
   const current = immutableSchoolInput(input);
   if (!current) throw Error('Ohio school district tax deductions require complete plain current originals.');
-  const beforeSchoolDeduction = calculateFederalTaxBeforeOhioSchoolScheduleA(current, context);
+  const beforeSchoolDeduction = calculatePreliminary(current);
   const adapted = buildOhioResidentReturnInput(current, beforeSchoolDeduction, undefined,
     new CurrentFederalCalculation(current, beforeSchoolDeduction));
-  const payments = adapted.schoolDistrictSource?.scheduleAIncomeTaxes;
-  if (!payments) throw Error('Ohio school district tax deductions require reconciled current payment sources.');
-  return { current, payments: Object.freeze(payments) };
+  if (!adapted.schoolDistrictSource || !current.ohioSchoolDistrict) {
+    throw Error('Ohio school district tax deductions require reconciled current payment sources.');
+  }
+  const schedule = adapted.schoolDistrictSource.estimatedPaymentSchedule;
+  // The adapter already validated the account amount using the school schema's trimmed decimal format.
+  const priorCredit = current.ohioSchoolDistrict.payments.account.priorCreditApplied.trim();
+  const Exact = exactOhioSchoolArithmetic([priorCredit, ...schedule.map(row => new Decimal(row.amount).toFixed())]);
+  const appliedPriorCredit = new Exact(priorCredit);
+  const inCashYear = schedule
+    .reduce((total, row) => row.date.startsWith('2025-') ? total.plus(row.amount) : total, new Exact(0));
+  // The verified schedule includes the applied credit at its 2025 endpoint.
+  const payments = Object.freeze({
+    estimatedPrincipal: inCashYear.minus(appliedPriorCredit).toFixed(),
+    appliedPriorCredit: appliedPriorCredit.toFixed(),
+  });
+  return { current, payments, adapted, beforeSchoolDeduction };
 }
 function arrayData(value:unknown[]):unknown[]{
  if(Object.getPrototypeOf(value)!==Array.prototype||Object.getOwnPropertySymbols(value).length||Object.getOwnPropertyNames(value).length!==value.length+1)throw Error('Unsupported source proof array');

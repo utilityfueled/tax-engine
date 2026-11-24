@@ -24,7 +24,18 @@ lines:
       SD 100 payments. The same actual confirmation cannot serve both accounts.
       Do not use a generic OH row as evidence for both accounts. Hold unresolved
       overlap instead of silently letting a generic aggregate duplicate cash.
+      Federal payment evidence is computed from the verified dated schedule
+      and the reconciled applied credit during the current invocation. Keep
+      the native Ohio projection and existing source commitments unchanged.
     testRef: "tests/guided-interview/oh-sd-100-federal-schedule-a.test.ts::deducts three native school estimates and leaves the January installment on the Ohio return"
+  - line: "5a-school-payment-lexemes"
+    description: "Preserve accepted school account and receipt amount normalization"
+    formula: |
+      Accept the same whitespace around decimal amounts as the current school
+      originals schema. Size federal receipt arithmetic from normalized verified
+      amounts and include only the exact 2025 principal and applied prior refund.
+      Known-zero routing uses the same trimmed decimal format.
+    testRef: "tests/engine/state/oh-school-source-material-equality.test.ts::preserves padded school tax amounts and exact federal payments"
   - line: "5a-distinct-ohio-accounts"
     description: "Independent state and school transactions"
     formula: |

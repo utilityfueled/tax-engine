@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio school replay compatibility
+
+Exact `2be7b99f` unit and coverage runs each found the same 37 Ohio failures.
+The correction preserves existing district projection bytes, source
+commitments and replay counts. Fresh state replay still compares the complete
+current federal return. It reuses the verified district work only when the
+federal facts Ohio consumes match after settlement. Existing predecessor
+hashes still pass. Four paid cases independently verify the exact federal
+amounts and explain their changed audit lines. Older payable federal results
+are rejected as stale. Padded money stays valid and exact, including the
+large-amount case.
+
+The final Ohio and guided run passed 2,638 tests and the isolated replay
+passed 128. An independent source and
+physical PDF replay passed 113. All nine spec references, inventory and 2,065
+browser audit hashes passed. Combined verification remains open.
+
 ## November 24 paired Pennsylvania browser timing
 
 The earlier strict Linux trace reached the final saved-state match at 29.84

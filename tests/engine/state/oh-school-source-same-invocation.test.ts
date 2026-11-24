@@ -2,8 +2,10 @@
 import{expect,it,vi,beforeEach}from'vitest';import{createHash}from'node:crypto';
 import{calculateFederalTax}from'@/engine/federal.js';import{buildOhioResidentReturnInput,type OhioOverlayInput}from'@/engine/state/oh-input-adapter.js';import{calculateOhioResidentReturn,type OhioResidentReturnInput}from'@/engine/state/oh-return.js';import{buildOhioPaymentSource}from'@/engine/state/oh-payment-source.js';import{buildOhioSchoolDistrictSource,type OhioSchoolDistrictSourceProjection}from'@/engine/state/oh-sd-100-sources.js';import{buildOhioResidencySource}from'@/engine/state/oh-residency-source.js';
 import{schoolOfficialFixture,schoolOfficialCases}from'../../fixtures/oh-school-district-official-review.js';import{schoolDistrictPartYearFixture}from'../../fixtures/oh-school-district-part-year-sources.js';import{schoolBalanceFixture}from'../../fixtures/oh-sd-100-remaining-balance.js';import{schoolDistrictSourcesFixture,schoolDistrictEstimatedFixture}from'../../fixtures/oh-school-district-sources.js';
+import{assertOhioSchoolFederalDelta}from'../../fixtures/oh-school-federal-schedule-a-predecessor.js';
 const work=vi.hoisted(()=>({school:0,payment:0,federal:0,it:0,projections:[] as OhioSchoolDistrictSourceProjection[],dropProjection:false}));
-vi.mock('@/engine/federal.js',async original=>{const a=await original<typeof import('@/engine/federal.js')>();return{...a,calculateFederalTax:(...args:Parameters<typeof a.calculateFederalTax>)=>{work.federal++;return a.calculateFederalTax(...args);}};});
+// All fixture federal calculations, including the private preliminary and final passes, validate payment originals once.
+vi.mock('@/engine/forms/federal-payment-date-sources.js',async original=>{const a=await original<typeof import('@/engine/forms/federal-payment-date-sources.js')>();return{...a,assertFederalPaymentSources:(...args:Parameters<typeof a.assertFederalPaymentSources>)=>{work.federal++;return a.assertFederalPaymentSources(...args);}};});
 vi.mock('@/engine/state/oh-payment-source.js',async original=>{const a=await original<typeof import('@/engine/state/oh-payment-source.js')>();return{...a,buildOhioPaymentSource:(...args:Parameters<typeof a.buildOhioPaymentSource>)=>{work.payment++;return a.buildOhioPaymentSource(...args);}};});
 vi.mock('@/engine/state/oh-sd-100-sources.js',async original=>{const a=await original<typeof import('@/engine/state/oh-sd-100-sources.js')>();return{...a,buildOhioSchoolDistrictSource:(...args:Parameters<typeof a.buildOhioSchoolDistrictSource>)=>{work.school++;const projection=a.buildOhioSchoolDistrictSource(...args);work.projections.push(projection);return projection;}};});
 vi.mock('@/engine/state/oh-return.js',async original=>{const a=await original<typeof import('@/engine/state/oh-return.js')>();return{...a,calculateOhioResidentReturn:(...args:Parameters<typeof a.calculateOhioResidentReturn>)=>{work.it++;return a.calculateOhioResidentReturn(...args);}};});
@@ -112,12 +114,14 @@ it.each(cohorts.map(c=>[c.name,c]as const))('preserves complete predecessor byte
   expect(state.it1040.line17_totalPayments.toString()).toBe('3400');
   expect(state.sd100?.line12_estimatedPayments.toString()).toBe('400');
   expect(state.sd100?.line13_totalPayments.toString()).toBe('1000');
-  expect(federal.allLines.find(line=>line.form==='Sched A'&&line.line==='5a')?.value.toString()).toBe('3900');
-  expect(federal.itemizedDeductions.toString()).toBe('3900');
+  expect(federal.allLines.find(line=>line.form==='Sched A'&&line.line==='5a')?.value.toString()).toBe('4200');
+  expect(federal.itemizedDeductions.toString()).toBe('4200');
   expect(federal.deductionUsed).toBe('standard');
   expect(federal.taxableIncome.toString()).toBe('64250');
  }
- expect(hash({input,federal,adapted,state,payment,school:adapted.schoolDistrictSource})).toBe(required(baselineHashes[c.name]));
+ const predecessorFederal=assertOhioSchoolFederalDelta(input,federal,c.name.replace(/^full-/, ''));
+ expect(hash({input,federal:predecessorFederal,adapted,state,payment,school:adapted.schoolDistrictSource})).toBe(required(baselineHashes[c.name]));
+ if(predecessorFederal!==federal) expect(() => buildOhioResidentReturnInput(input,predecessorFederal)).toThrow('saved federal result is stale');
  expect(JSON.stringify(input)).toBe(before);expect(JSON.stringify(federal)).toBe(fbefore);
 });
 it.each(errorOracles.map(row=>[row.key,row]as const))('preserves predecessor first-error order for %s',(key,oracle)=>{

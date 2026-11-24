@@ -6,7 +6,8 @@ import {buildOhioPaymentSource} from './oh-payment-source.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import type {OhioPaymentFacts} from '@/models/ohio-payments.js';
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
-import {buildOhioResidencySource} from "./oh-residency-source.js";
+import {assertCurrentOhioFederalResult, buildOhioResidencySource, sameOhioFederalAdapterMaterial} from "./oh-residency-source.js";
+import { calculateFederalTaxWithOhioSchoolProof, requiresOhioSchoolScheduleAPaymentProof } from "@/engine/federal.js";
 import type { OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
 /**
  * Ohio Input Adapter — bridges federal tax documents and results to Ohio engine input.
@@ -768,6 +769,13 @@ export function buildOhioResidentReturnInput(
   if(schoolDistrictFacts){
     if(!canonical||!canonicalPayments)throw new Error('Ohio actual school district sources: independent canonical residency and IT1040 payment sources are required');
     if(Object.entries(overlay).some(([key,value])=>value!==undefined&&key!=='residency'&&key!=='payments'))throw new Error('Ohio actual school district sources: finite source-bound return does not accept unbound district or state overrides');
+    if (!currentFederal && federalResult.taxYear === taxInput.taxpayer.taxYear
+      && federalResult.filingStatus === taxInput.taxpayer.filingStatus && requiresOhioSchoolScheduleAPaymentProof(taxInput)) {
+      // Reuse the verified current Ohio projection only when its federal inputs survived final settlement.
+      const fresh = calculateFederalTaxWithOhioSchoolProof(taxInput);
+      assertCurrentOhioFederalResult(fresh.federal, federalResult);
+      if (sameOhioFederalAdapterMaterial(fresh.beforeSchoolDeduction, fresh.federal)) return fresh.adapted;
+    }
   }
   if(paymentFacts){
     const forbidden=['underpaymentPenalty','useTax','estimatedPayments','refundableCredits','amendedPriorOverpayment','latePaymentInterest','creditCarryforward','donations','computeUnderpaymentPenalty','priorYearTaxLiability','priorYearTimelyFiled','estimatedPaymentSchedule','ohioWithholdingOverride'] as const;
