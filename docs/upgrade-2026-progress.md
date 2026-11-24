@@ -1,5 +1,60 @@
 # 2026 upgrade implementation evidence
 
+## November 24 actual short-year payroll sources
+
+`703c0a1d` connects the private ordinary wage-only worksheet to a
+confirmed January-to-fiscal-month-end change in 2025 or 2026. It checks
+the primary owner, employer, calendar year and the original W-2
+reference. The calendar payroll inventory must reconcile to Boxes 1
+and 2 at cent precision. The confirmed date when each payment was
+available assigns that payment to the short period. The worksheet
+produces the two tax components only. Section 31 places ordinary wage
+withholding in the last taxable year that begins in its calendar year.
+[IRC §31](https://uscode.house.gov/us/usc/t26/s31/) ·
+[26 CFR §1.451-1](https://www.ecfr.gov/current/title-26/section-1.451-1) ·
+[26 CFR §1.451-2](https://www.ecfr.gov/current/title-26/section-1.451-2) ·
+[IRS W-2 instructions](https://www.irs.gov/instructions/iw2w3).
+
+Independent engineering review identified two gaps before commit. The
+first allowed implausible birth dates outside the guided range. The
+second allowed a June 30 payroll amount collected July 1 to fall on the
+wrong side of the cutoff. The revised source contract records confirmed
+availability and collection separately. Independent boundary checks
+passed. All 21 focused tax and public API tests, typecheck, scoped lint,
+9,980 spec references and the generated inventory check passed. The
+calendar W-2 requirement makes this a retrospective method. The earlier
+filing case needs another record and qualified review. Public estimates
+and form outputs are held. Vercel reported that it canceled the build.
+
+## November 24 ordinary short accounting-year tax
+
+`bc2fb70f` computes the ordinary-rate Section 443 candidate for a living
+single filer with established short-period regular and AMT bases, no
+credits and a regular one- through eleven-month accounting-period change.
+It uses the statutory rate schedules for 2025 and 2026 and annualizes
+AMTI separately. The worksheet requires bases established from original
+records, and public admission remains on hold.
+[IRC §3](https://uscode.house.gov/us/usc/t26/s3/) ·
+[IRC §443](https://uscode.house.gov/us/usc/t26/s443/) ·
+[IRS Rev. Proc. 2024-40](https://www.irs.gov/irb/2024-45_IRB) ·
+[IRS Rev. Proc. 2025-32](https://www.irs.gov/irb/2025-45_IRB).
+
+Independent engineering review reproduced an exact $6.50 short-year
+result that rounded down after division produced a repeating decimal.
+The revised worksheet applies rates and thresholds to common numerators
+and divides only for output. Both half-dollar reproductions and 528
+comparisons against a separate exact calculation passed. The tests also
+cover the minimum-tax exemption and rate boundaries, signed bases and
+existing calculator behavior. All 240 focused tests, two source-audit
+checks, typecheck, scoped lint and 9,977 spec references passed.
+
+The clean archive exposed a missing generated inventory entry.
+`924a46bc` adds that entry and passes the generator check. The separate
+unstaged SQLite inventory entry remains in the original checkout.
+Full local unit and coverage runs each passed 30,283 tests with 81
+skipped and 88.30% branch coverage. Browser and GitHub jobs are tracked
+in the checkpoint.
+
 ## November 24 CLI short accounting-year import
 
 `c5c11f1a` accepts an optional `standard-deduction-facts.json` using

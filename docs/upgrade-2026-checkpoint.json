@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "35d69e981d5d658b450249d8151d20b81085cf70",
+    "applicationCommit": "703c0a1dc8e37bc3f72db3c45090387eebe07fdf",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov24CliShortAccountingYear",
+    "evidenceKey": "activeContinuation.nov24ShortYearPayroll",
     "remaining": [
       "Qualify the strict Linux browser suites. Recovery, archives, candidate scanning and cleanup passed, but managed Linux and strict AMD64 on 35d69e98 and strict ARM64 on cee016b0 exceeded existing deadlines. Preserve the original browser and PDF inspection limits.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
@@ -13,6 +13,32 @@
     ]
   },
   "activeContinuation": {
+    "nov24ShortYearPayroll": {
+      "applicationCommit": "703c0a1dc8e37bc3f72db3c45090387eebe07fdf",
+      "scope": "Retrospective private 2025/2026 Section 443 calculation from a complete ordinary payroll history and matching calendar-year W-2. Public amounts remain held for qualification.",
+      "focusedTestsPassed": 21,
+      "specReferencesPassed": 9980,
+      "independentEngineeringReview": "passed after birth date and constructive receipt fixes",
+      "localEvidence": ".local/upgrade-evidence/nov24-short-year-payroll",
+      "remoteRuns": {"ci": 45347965452, "web": 45347965352, "docker": 45347965235},
+      "vercel": "Canceled by Ignored Build Step",
+      "remaining": ["Establish a source method for short-year filing before the calendar-year W-2 is available.", "Obtain qualified tax review and final form mapping."]
+    },
+    "nov24OrdinaryShortAccountingYearTax": {
+      "applicationCommit": "bc2fb70fa14ee33ccc7238a9a0d9d47f3407cddf",
+      "inventoryCommit": "924a46bc3ac7e29d13f65e593dc16e0f0d76aff3",
+      "scope": "Internal 2025/2026 Section 443 regular and minimum-tax worksheet with exact proration of established ordinary short-period bases. Public estimates are held for qualified review.",
+      "focusedTestsPassed": 240,
+      "browserSourceAuditTestsPassed": 2,
+      "specReferencesPassed": 9977,
+      "independentEngineeringReview": "seven-month regular and AMT half-dollar ties reproduced, corrected and retested against 528 exact rational comparisons",
+      "inventoryCheck": "missing entry on initial archive, generated and checked on 924a46bc",
+      "localFullTests": {"passed": 30283, "skipped": 81, "branchCoveragePercent": 88.30},
+      "inventoryBoundRemoteRuns": {"ci": 45347093915, "web": 45347093959, "docker": 45347093879},
+      "vercel": "Canceled by Ignored Build Step",
+      "localEvidence": ".local/upgrade-evidence/nov24-short-year-arithmetic-bc2fb70f",
+      "remaining": ["Date and verify actual payroll originals for the private wage-only base derivation.", "Obtain qualified tax and final form review before changing public admission."]
+    },
     "nov24CliShortAccountingYear": {
       "applicationCommit": "c5c11f1a6d3548457f23ed7eba5230dfeaa289d7",
       "scope": "The optional CLI standard deduction facts file rejects malformed or unknown keys and passes the explicit short-year fact to the public Section 443 calculation guard. Object imports keep their prior contract.",

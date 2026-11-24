@@ -9,6 +9,21 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `703c0a1d` supplies the internal wage-only worksheet with dated payroll
+  amounts that reconcile to an original calendar-year W-2. It handles the
+  short-period cutoff for payments available before collection. The
+  current method applies after the calendar-year W-2 is available. A
+  timely source method and qualified tax review are still needed.
+  [Payroll evidence](upgrade-2026-progress.md#november-24-actual-short-year-payroll-sources).
+
+- `bc2fb70f` implements the internal Section 443 worksheet for ordinary
+  regular and minimum tax. It uses separate short-period bases and keeps
+  half-dollar ties exact. `924a46bc` adds the worksheet to the generated
+  coverage inventory. Exact unit and coverage runs each passed 30,283
+  tests at 88.30% branch coverage. Public output still requires qualified
+  tax review and final form mapping.
+  [Arithmetic evidence](upgrade-2026-progress.md#november-24-ordinary-short-accounting-year-tax).
+
 - `c5c11f1a` carries the CLI’s actual short-year answer into the same
   Section 443 hold as object input and the guided interview. It validates
   the new optional file and rejects misspelled facts. All 34 focused

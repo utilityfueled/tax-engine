@@ -13,9 +13,21 @@ other income, deductions or credits. Confirm the wage-only result,
 the separate minimum-tax calculation, and how the twelve-month relief
 procedure differs from the ordinary method. Record the applicable rounding
 and form instructions before qualifying any output.
+[26 USC §3](https://uscode.house.gov/us/usc/t26/s3/) ·
 [26 USC §63(c)(6)](https://uscode.house.gov/us/usc/t26/s63/) ·
 [26 USC §443](https://uscode.house.gov/us/usc/t26/s443/) ·
 [26 CFR §1.443-1](https://www.ecfr.gov/current/title-26/section-1.443-1).
+
+The retrospective payroll worksheet can exercise the wage-only case
+using January 1 and June 30 pay records that total $30,000 and July 1
+and December 31 records that total $40,000. Calendar W-2 Boxes 1 and 2
+are $70,000 and $7,000. Confirm the two exact reconciliations, the
+June 30 unrestricted availability case when collection occurs July 1,
+and the application of §31(a)(2) to withholding. Determine which
+original payroll records can support a short period due before the
+calendar W-2 arrives.
+[26 USC §31](https://uscode.house.gov/us/usc/t26/s31/) ·
+[26 CFR §1.451-2](https://www.ecfr.gov/current/title-26/section-1.451-2).
 
 ### Minimum-tax and later relief cases for the reviewer
 
@@ -37,10 +49,14 @@ the exemption, tentative minimum tax before and after the short-period
 fraction, the regular tax subtraction and the final Schedule 2 transfer.
 Record where cent precision ends and which final Form 6251 line or
 attachment carries each value. These pairs are proposed source inputs
-with expected amounts still pending independent review.
+with expected amounts still pending qualified review. The engineering
+worksheet's 2026 wage-only result is $7,912 annual regular tax and $3,956
+after proration. The worksheet reports zero tentative minimum tax for
+that case. Qualified review of the source facts and form treatment is
+still pending.
 [26 USC §55](https://uscode.house.gov/us/usc/t26/s55/) ·
 [26 USC §443(d)](https://uscode.house.gov/us/usc/t26/s443/) ·
-[Rev. Proc. 2025-32, §3.10](https://www.irs.gov/irb/2025-45_IRB) ·
+[Rev. Proc. 2025-32, §4.10](https://www.irs.gov/irb/2025-45_IRB) ·
 [Form 1099-INT Boxes 8 and 9](https://www.irs.gov/instructions/i1099int) ·
 [2026 draft Form 6251 instructions](https://www.irs.gov/pub/irs-dft/i6251--dft.pdf).
 
