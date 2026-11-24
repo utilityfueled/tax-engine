@@ -5,6 +5,18 @@
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
 
+- `ffc9b3d5` requires actual cohabitation in the 2026 separate-return
+  Social Security worksheets, including the relevant earlier year for a
+  lump-sum election. `e3b3b2bd` reconciles documented timely Marketplace
+  premiums reported as zero for an ordinary single policy while preserving
+  the original statement. All 209 and 219 focused tests respectively passed.
+  Final 2026 Publication 915 is available. The annual calculation and export
+  gates remain closed. [Source and test evidence](upgrade-2026-progress.md#november-23-social-security-marketplace-and-native-release-evidence).
+- `5380da8c` adds candidate-bound native ARM64 scan evidence, using the
+  same workflow as AMD64. All 101 focused tests passed. Exact local checks
+  for the three combined changes are in progress, and the exact native
+  rehearsal is queued. [Exact ARM64 recovery run](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
+
 The refreshed federal, Ohio and Pennsylvania catalogs still show 2025
 as the final annual return year. The IRS labels its 2026 Form 1040 a
 draft. The annual calculation and export gates remain closed.

@@ -1,5 +1,54 @@
 # 2026 upgrade implementation evidence
 
+## November 23 Social Security, Marketplace and native release evidence
+
+`ffc9b3d5` requires the actual cohabitation answer for positive 2026 net
+Social Security benefits on a married-separate return. Worksheet 2 requires
+the earlier year's answer when relevant. Two baseline regressions failed.
+The final IRS example controls produce $3,400 or $0 from the same $4,000 of
+benefits and $8,000 of wages, depending on cohabitation. All 209 focused tests
+and 50 spec references passed. A separate reviewer ran 70 tests.
+[2026 Publication 915 example](https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=11) ·
+[Worksheet 2](https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=18).
+
+`e3b3b2bd` keeps the original Form 1095-A and advance credits and accepts
+an actual timely enrollment premium payment when column A is zero for an
+eligible month of one ordinary policy. Source changes clear stale payment
+evidence. The 2026 draft calculation gives a $172 contribution and $428
+credit for the synthetic $600 payment and $600 benchmark, $31,300 household
+income and a family size of one. Five calculator regressions and one
+source-edit regression failed before their fixes. All 219 focused tests and
+141 spec references passed. A separate review ran 40 focused tests and both
+browser source-accounting tests. The public annual calculation and export
+gates remain closed. [Final 2025 instructions](https://www.irs.gov/instructions/i8962) ·
+[Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf) ·
+[26 CFR §1.36B-3](https://www.ecfr.gov/current/title-26/section-1.36B-3).
+
+`5380da8c` shares the pinned immutable-candidate SBOM and Grype workflow
+between native AMD64 and ARM64. The critical and independent archive gates
+remain in force. All 101 focused tests, 9 spec references, and workflow
+lint passed. A separate review reproduced the 101 passes. All three commits
+were pushed to `main`. Vercel reports canceled production builds for all three.
+
+The exact `e3b3b2bd` local archive has SHA-256
+`b7280c3b0d392b5d14155542bff7d9ca5e4330fa240d80eea9fc1f715ec89920`.
+Its local checks are in progress with Node 26.13.1, the same sample PDFs
+as the preceding run, the pinned pypdf environment and Chromium.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45298543669) ·
+[GitHub web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45298543169) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45298543013) ·
+[Exact ARM64 workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812).
+
+The preceding `f50e6261` strict AMD64 job passed recovery, upgrade,
+rollback, independent archive and scan source verification. Chromium passed
+636, skipped five existing cases and missed deadlines in 14 cases, including
+11 Ohio, one passenger vehicle and two RRTA saved-PDF inspections. A bounded
+RRTA performance check on two existing synthetic PDFs found no material
+speedup. The native `a1632117` rehearsal reached the strict ARM64 browser
+stage and predates the shared scan workflow.
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45288279172/job/138090165569) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45296962451).
+
 ## November 23 dependent care and adoption source facts
 
 `045a1d08` fixes the 2026 guided Form 2441 Part II route for married

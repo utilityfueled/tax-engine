@@ -1,5 +1,35 @@
 {
   "activeContinuation": {
+    "nov23SocialSecuritySeparateCohabitation": {
+      "applicationCommit": "ffc9b3d58b2a327b76d854305d4580b8214fd87e",
+      "baselineRegressionFailures": 2,
+      "scopedTestsPassed": 209,
+      "reviewerTestsPassed": 70,
+      "specReferencesPassed": 50,
+      "productionDeploymentCanceled": true,
+      "source": "https://www.irs.gov/pub/irs-prior/p915--2026.pdf",
+      "sourceSha256": "96379c9698f185cced2107ce22bb7ed27da5a974e3ef7bca5df2d75e62f6d65a"
+    },
+    "nov23MarketplacePremiumPayment": {
+      "applicationCommit": "e3b3b2bd487db1437fc1ed820608c6e22f1959ab",
+      "sourceArchiveSha256": "b7280c3b0d392b5d14155542bff7d9ca5e4330fa240d80eea9fc1f715ec89920",
+      "baselineRegressionFailures": 6,
+      "scopedTestsPassed": 219,
+      "reviewerTestsPassed": 42,
+      "specReferencesPassed": 141,
+      "productionDeploymentCanceled": true,
+      "githubRuns": {"ci": 45298543669, "web": 45298543169, "docker": 45298543013, "nativeArm64": 45299047812},
+      "public2026AnnualCalculationOrExport": "closed"
+    },
+    "nov23NativeReleaseEvidence": {
+      "applicationCommit": "5380da8c051d395a8815860602acaf4383e247f6",
+      "scopedTestsPassed": 101,
+      "reviewerTestsPassed": 101,
+      "specReferencesPassed": 9,
+      "productionDeploymentCanceled": true,
+      "precedingArm64Run": 45296962451,
+      "precedingStrictAmd64": {"run": 45288279172, "job": 138090165569, "passed": 636, "failed": 14, "skipped": 5}
+    },
     "nov23Form2441SeparateReturn": {
       "applicationCommit": "045a1d08081f1484bdd4c168dbe43d3e4ee8e875",
       "combinedApplicationCommit": "2eb8088d0e3356309f61e35eb4e300d17ec69dfc",

@@ -1,5 +1,31 @@
 # Annual official forms recheck, November 17 at 19:31 UTC
 
+## November 23 Social Security and Marketplace source check
+
+The regular IRS Publication 915 is labeled for **2026 returns**. Its
+first page carries the November 16, 2026 production date. Worksheet 1
+uses the zero base amount for married taxpayers filing separately who
+lived with each other during the return year. Worksheet 2 asks about
+cohabitation during the earlier year for the lump-sum election.
+The 34-page PDF SHA-256 is
+`96379c9698f185cced2107ce22bb7ed27da5a974e3ef7bca5df2d75e62f6d65a`.
+[Publication 915](https://www.irs.gov/publications/p915) ·
+[Current IRS PDF](https://www.irs.gov/pub/irs-pdf/p915.pdf).
+
+The regular Form 1040, Form 8962 and Form 8962 instructions still identify
+tax year 2025. The Form 8962 instructions and the 2026 draft each describe
+the documented timely payment of an otherwise eligible enrollment premium
+when Form 1095-A states zero. Section 1.36B-3 supplies the underlying
+coverage-month payment rule. The regular publications and the draft
+instruction check leave the 2026 annual filing gate closed.
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Form 8962](https://www.irs.gov/pub/irs-pdf/f8962.pdf) ·
+[Final 2025 Form 8962 instructions](https://www.irs.gov/instructions/i8962) ·
+[Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf) ·
+[26 CFR §1.36B-3](https://www.ecfr.gov/current/title-26/section-1.36B-3).
+
+## November 17 endpoint and byte checks
+
 Twenty unauthenticated official GETs completed at 19:31:21–19:31:24 UTC:
 eight HTTP 200 responses, twelve HTTP 404 responses, seven PDFs and no transport
 failures. Nineteen bodies match the November 15 receipts exactly. The remaining

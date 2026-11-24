@@ -1,5 +1,24 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 23 Social Security and Marketplace review
+
+Independently derive the current-year Social Security results for the
+married-separate example in final 2026 Publication 915. Also check how the
+earlier year's cohabitation answer changes Worksheet 2 for a lump-sum
+payment and when that earlier year's answer is immaterial.
+[2026 Publication 915](https://www.irs.gov/pub/irs-prior/p915--2026.pdf).
+
+Independently derive monthly Form 8962 columns for an ordinary one-policy
+return when original Form 1095-A column A is zero and the taxpayer has
+proof of payment by the unextended filing deadline. The fictional case has
+$600 paid, a $600 confirmed benchmark, zero advance credit, $31,300
+household MAGI and a tax family of one. Check the treatment of any
+original advance credit and verify the calculation against the final 2026
+instructions when available.
+[2025 instructions](https://www.irs.gov/instructions/i8962) ·
+[2026 draft](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf) ·
+[26 CFR §1.36B-3](https://www.ecfr.gov/current/title-26/section-1.36B-3).
+
 ## November 23 disability pension review
 
 Independently derive the federal classification and Form 1040 transfer for
