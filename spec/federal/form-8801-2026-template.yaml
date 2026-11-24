@@ -1,0 +1,70 @@
+form: "Form 8801 final 2026 no-credit review candidate"
+fullName: "Credit for Prior Year Minimum Tax"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f8801.pdf"
+revision: "Created 5/27/26"
+postedAt: "2026-11-23"
+sources:
+  - "https://www.irs.gov/pub/irs-prior/f6251--2025.pdf"
+  - "https://www.irs.gov/pub/irs-prior/i6251--2025.pdf"
+  - "https://www.irs.gov/pub/irs-prior/f8801--2025.pdf"
+notes: |
+  The final 2026 form directs the filer to stop at line 21 if the signed
+  credit pool is zero or negative. This standalone internal review worksheet
+  covers that branch with a prior single domestic ordinary standard-deduction
+  return. The 2025 companion sources establish original prior-year values.
+  Final 2026 instructions and current-year companion forms remain separate
+  prerequisites for qualifying any continuation past line 21.
+lines:
+  - line: "originals"
+    description: "Bind both operative 2025 originals to the current primary filer"
+    formula: >-
+      Require separate private references and independently confirmed form type,
+      year, primary name and taxpayer ID suffix for the operative filed 2025
+      Form 6251 and Form 8801. Match both to the current living calendar-year
+      single filer, and require the complete confirmed canonical prior amounts
+      to reconcile. Require an explicit prior single domestic Form 1040 with
+      the ordinary standard deduction, confirmed Form 6251 line 2a as the only
+      exclusion item, and confirmed absence of Form 2555, Form 1040-NR,
+      preferential-rate worksheets, NOL, minimum tax foreign tax credit and
+      unallowed legacy qualified EV credit. Reject missing, duplicate, stale,
+      contradictory or unsupported facts, including nonzero signed legacy
+      capital-gain or nonresident real-property amounts. Require whole-dollar prior Form 6251
+      fields and Form 8801 line 26. The independently transcribed Form 6251 lines 9, 10 and 11 must
+      satisfy line 11 = max(0, line 9 - line 10). Line 9 is an original value
+      and can reflect other prior deferrals or credits.
+    testRef: "tests/pdf/form-8801-2026-candidate.test.ts::holds missing or contradictory original return evidence"
+  - line: "1-15"
+    description: "Project the prior-year exclusion calculation"
+    formula: >-
+      Use the existing Decimal source-year calculation with the actual 2025
+      Form 6251 lines 1b plus 2e, and line 2a as the confirmed sole exclusion.
+      Compute Part I with the printed prior-year single exemption, phaseout
+      and ordinary rates using the existing whole-dollar calculation. Use actual
+      Form 6251 line 10 on line 14 whenever reached. If line 4 is zero leave
+      lines 5 through 14 blank. If line 10 is zero leave lines 11 through 14
+      blank. Use the printed -0- convention on instructed Part I lines,
+      including line 15 on both stop branches. This cohort leaves Part III blank.
+    testRef: "tests/pdf/form-8801-2026-candidate.test.ts::preserves both printed Part I stop branches"
+  - line: "16-21"
+    description: "Use the signed source-year adjustment and independently matched carry"
+    formula: >-
+      Copy actual Form 6251 line 11 to line 16, line 15 to line 17, and the
+      signed difference to line 18. Line 19 is the exact matched 2025 Form
+      8801 line 26, including an explicitly documented zero. Require known
+      zero on line 20, and use the signed whole-dollar sum of lines 18 through
+      20 on line 21. Zero and negative amounts end the worksheet on line 21. Require
+      final current-year forms for a positive line 21 and refuse current-year
+      tax or tentative minimum tax substitutes from the source packet.
+    testRef: "tests/pdf/form-8801-2026-candidate.test.ts::holds a positive pool and supplied substitutes for current-year forms"
+  - line: "physical-template"
+    description: "Reopen exact native values, appearances and blank later fields"
+    formula: >-
+      Require the pinned IRS PDF SHA-256
+      782d879f1d6e3ca636c129a61092f957f86e028e056e5261e5feb3895410d8f1.
+      Reopen and check native values, matching appearances and the review
+      notice on all four pages. Leave all ID widgets, lines 22 through 26 and
+      Part III blank. Keep private source locators and ID suffixes out of the
+      artifact. The template and candidate remain unregistered for public
+      review export and filing.
+    testRef: "tests/pdf/form-8801-2026-candidate.test.ts::reopens exact native values and stops at zero or negative line 21"

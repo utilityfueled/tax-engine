@@ -7,3 +7,22 @@ The final blank matches the draft on printed lines 1–55 after removing the dra
 The disabled candidate identifies the Part II widgets. A synthetic test exercises the existing calculation and reopens an in-memory watermarked copy with line 18 of −$694, available credit of $4,306, allowed credit of $3,000 and carryforward of $1,306. Final instructions, final current-year Form 6251, current-year transfers, and independent tax and map review remain open. The current instructions and current final Form 6251 both print 2025. [Form 8801 instructions](https://www.irs.gov/pub/irs-pdf/i8801.pdf) · [Current Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) · [2026 Form 6251 draft](https://www.irs.gov/pub/irs-dft/f6251--dft.pdf)
 
 The three new tests failed before the official blank and candidate were added. On Node 26.13.1 all 23 focused tests passed. Scoped lint passed, and the spec retained all 56 valid references. Engineering review checked the citations, asset checksum, transfer fields and absence from the public review and filing registries.
+
+## Standalone no-credit review candidate
+
+The internal renderer uses operative 2025 Forms 6251 and 8801 with distinct
+private source references and independently matched owner facts. It reconciles
+whole-dollar prior Form 6251 amounts and the actual filed Form 8801 line 26.
+It admits the finite ordinary single-filer cohort and follows the final 2026
+printed stop instructions in Parts I and II. A zero or negative line 21 leaves
+lines 22–26 blank. A positive line 21 requires the final current-year forms.
+The taxpayer identifying number and source references stay off the document.
+
+Fifty-eight focused tests, scoped lint and independent review passed. An
+independent reopen and visual check matched 11 canonical values and native
+widget appearances. The negative specimen showed line 18 of −$3,189, prior
+carry of $3,188 and line 21 of −$1, with the review notice on all four pages.
+Final instructions, the positive-pool branch, qualified human review and
+public export remain open.
+[Final Form 8801](https://www.irs.gov/pub/irs-prior/f8801--2026.pdf) ·
+[2025 Form 6251](https://www.irs.gov/pub/irs-prior/f6251--2025.pdf).

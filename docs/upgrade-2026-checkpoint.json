@@ -34,6 +34,7 @@
     "ohioBrowserStorageEvidenceKey": "activeContinuation.nov24OhioFocusedBrowserStorageTiming",
     "paSupportEvidenceKey": "activeContinuation.nov24PAReviewDisclosure",
     "annualForm8801EvidenceKey": "activeContinuation.nov24FinalForm8801Source",
+    "annualForm8801CandidateEvidenceKey": "activeContinuation.nov24Form8801NoCreditReviewCandidate",
     "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
     "annualForm6781CandidateEvidenceKey": "activeContinuation.nov24Form6781OriginalReviewCandidate",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
@@ -48,6 +49,16 @@
     ]
   },
   "activeContinuation": {
+    "nov24Form8801NoCreditReviewCandidate": {
+      "focusedTestsPassed": 58,
+      "independentFocusedTestsPassed": 7,
+      "verifiedVisualWidgetValues": 11,
+      "auditedSourcesVerified": 2066,
+      "positivePoolRequiresFinalCurrentForms": true,
+      "qualifiedTaxReview": "open",
+      "publicExportEnabled": false,
+      "evidence": "docs/upgrade-2026-form-8801-final-source.md#standalone-no-credit-review-candidate"
+    },
     "nov24OhioSchoolDistrictReplayCompatibility": {
       "initialCombinedRevision": "2be7b99f",
       "initialOhioFailures": 37,

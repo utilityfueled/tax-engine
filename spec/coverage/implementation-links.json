@@ -874,6 +874,17 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/form-8801-2026-template",
+      "enginePath": "src/engine/forms/form-8801.ts",
+      "packetPath": "src/pdf/mappings/2026/form-8801-candidate.ts",
+      "testRefs": [
+        "tests/pdf/form-8801-2026-candidate.test.ts::holds missing or contradictory original return evidence",
+        "tests/pdf/form-8801-2026-candidate.test.ts::preserves both printed Part I stop branches",
+        "tests/pdf/form-8801-2026-candidate.test.ts::reopens exact native values and stops at zero or negative line 21"
+      ],
+      "note": "Links the actual prior-year source replay to the final 2026 stop-at-line-21 review candidate. Positive pools, public exports and qualified human review remain open."
+    },
+    {
       "key": "federal/form-8814-rounding",
       "enginePath": "src/engine/forms/form-8814.ts",
       "testRefs": [

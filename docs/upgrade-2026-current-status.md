@@ -52,6 +52,11 @@ Use the linked progress sections when investigating individual packages.
   qualified tax review and public export remain open.
   [Form 6781 evidence](upgrade-2026-form-6781-final-source.md#standalone-review-candidate).
 
+- The final 2026 Form 8801 internal worksheet now handles verified prior
+  originals through the no-credit stop at line 21. A positive pool still
+  needs the final current-year forms.
+  [Form 8801 evidence](upgrade-2026-form-8801-final-source.md#standalone-no-credit-review-candidate).
+
 - Verified individual Pennsylvania estimates now reach federal Schedule A
   by actual payment date. A previously confirmed estimate that is edited or
   removed requires reconfirmation before the itemized preview resumes.
