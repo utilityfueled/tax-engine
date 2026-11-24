@@ -9,15 +9,20 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- The exact `5f32cf32` archive passed 30,367 unit and coverage tests
+  in each run, with 81 conditional skips and 88.31% branches.
+  [Exact local checks](upgrade-2026-progress.md#november-24-exact-main-unit-and-coverage-run).
+
 - `33b6a593` adds renderer scheduler observations to the opt-in Linux
   comparison of Ohio journeys. All 116 focused tests and four local
   Chromium cases passed. The exact Linux comparison is running at the
   original deadlines. [Scheduler evidence](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison).
 
 - `ae399bd1` compares the current and candidate Python versions on the
-  same Ubuntu runner with the two exact retained RRTA inputs. The
-  existing inspection deadline and output checks are part of the
-  comparison. All 41 focused tests passed. [Exact benchmark run](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980).
+  same Ubuntu runner with the two exact retained RRTA inputs. Both
+  validator suites and all 104 attempts passed. Python 3.14.10 improved
+  paired median times by 4.19% and 4.38%, below the 10% threshold.
+  [Exact benchmark run](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980).
 
 - `a2568205` requires separate actual confirmations for Pennsylvania
   extension and balance payments. Exact unit and coverage runs both passed

@@ -1,5 +1,14 @@
 # 2026 upgrade implementation evidence
 
+## November 24 exact main unit and coverage run
+
+The isolated `5f32cf32` archive matched all 6,660 tracked blobs. Unit and
+coverage runs both passed 30,367 tests with 81 conditional skips on
+Node 26.13.1. Branch coverage was 88.31% against the 85% requirement.
+The first execution under the default tool sandbox could not open the
+suite's required loopback listener. The allowed localhost run and
+coverage calculation both completed with the existing test settings.
+
 ## November 24 Ohio Linux scheduler comparison
 
 `33b6a593` adds optional Linux scheduler measurements to the existing
@@ -80,7 +89,12 @@ all 104 subprocess receipts, including warm-ups and failures, with the
 original phase telemetry, output limit and deadline. It reports a paired
 median only when every full output matches the pinned expected output.
 Forty-one focused tests, lint, types, workflow validation and both local
-output hashes passed. The exact Linux run is queued.
+output hashes passed. Both Linux validator suites and all 104 Linux
+attempts passed with the exact expected outputs. At 390 px, the median
+times were 1,830.2 ms and 1,750.5 ms, a 4.19% paired median improvement.
+At 1280 px, the medians were 1,823.1 ms and 1,740.6 ms, a 4.38% paired
+median improvement. Both fell below the predeclared 10% threshold.
+The managed-browser timing difference remains open.
 [CPython runner builds](https://github.com/actions/python-versions/blob/main/versions-manifest.json) ·
 [Exact benchmark run](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980).
 
