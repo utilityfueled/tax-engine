@@ -133,6 +133,7 @@ describe("measured task model evaluation", () => {
   it("retains actual and January costs for rejected outputs, including the one escalation", () => {
     const entry = run(extraction, "gemini-flash-high");
     entry.applicationSchemaValid = false;
+    entry.elapsedMs = 3000;
     entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", usage: { inputTokens: 1000, outputTokens: 1000 } });
     expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, actualCostUsd: "0.0165", filingSeasonCostUsd: "0.021" });
   });
@@ -196,6 +197,7 @@ describe("measured task model evaluation", () => {
     if (!initial || !entry.measurement) throw new Error("Missing initial attempt evidence.");
     const escalation = { profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", usage: { inputTokens: 1000, outputTokens: 8192 } };
     entry.attempts.push(escalation);
+    entry.elapsedMs = 2000;
     entry.measurement.reportedModel = "gpt-6.1-sol";
     expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: true, actualCostUsd: "0.08842", filingSeasonCostUsd: "0.09292" });
 
@@ -304,6 +306,7 @@ describe("measured task model evaluation", () => {
       throw new Error("Missing synthetic cutoff evidence.");
     }
     escalated.attempts.push({ profileId: escalationProfile.id, startedAt: eventAt, usage: { inputTokens: 1000, outputTokens: 1000 } });
+    escalated.elapsedMs = 1500;
     escalated.measurement.reportedModel = escalationProfile.model;
     baselineAttempt.startedAt = eventAt;
     baseline.measurement.planDigest = providerEvalDigest("future synthetic baseline plan");
@@ -431,6 +434,50 @@ describe("measured task model evaluation", () => {
     const group = summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction")!;
     expect(group.p95LatencyMs).toBe(15000);
     expect(group.blockers).toContain("latency-budget");
+  });
+  it("blocks a full held-out cohort with understated escalation latency while retaining exact costs", () => {
+    const fixtures = reviewedFixtures("2026-10-24");
+    const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+    expect(cases.filter(fixture => fixture.split === "held-out")).toHaveLength(10);
+    const profiles = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"];
+    const entries = profiles.flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+    const candidateEntries = entries.filter(entry => entry.profileId === "luna-high");
+    for (const entry of candidateEntries) {
+      if (!entry.measurement) throw new Error("Missing synthetic measurement");
+      entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:01:00Z", usage: { inputTokens: 10, outputTokens: 10 } });
+      entry.measurement.reportedModel = "gpt-6.1-sol";
+    }
+    const candidate = () => summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures, reportAt)
+      .groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+
+    expect(candidate()).toMatchObject({ eligibleForPromotionReview: false, completedRuns: 0, acceptedRuns: 0,
+      p50LatencyMs: null, p95LatencyMs: null, providerCostUsd: "0.0648", filingSeasonCostUsd: "0.0648",
+      blockers: expect.arrayContaining(["attempt-timing-inconsistent"]) });
+
+    for (const entry of candidateEntries) entry.elapsedMs = 60001;
+    expect(candidate()).toMatchObject({ eligibleForPromotionReview: false, completedRuns: 90, acceptedRuns: 90,
+      p50LatencyMs: 60001, p95LatencyMs: 60001, providerCostUsd: "0.0648", filingSeasonCostUsd: "0.0648",
+      blockers: ["latency-budget"] });
+  });
+  it("checks escalation chronology at submillisecond precision", () => {
+    const entry = run(extraction);
+    const [initial] = entry.attempts;
+    if (!initial || !entry.measurement) throw new Error("Missing synthetic attempt evidence");
+    initial.startedAt = "2026-10-24T12:00:00.999999Z";
+    const escalation = { ...initial, profileId: "sol-high", startedAt: "2026-10-24T12:00:01.000001Z" };
+    entry.attempts.push(escalation);
+    entry.measurement.reportedModel = "gpt-6.1-sol";
+    const evaluate = () => scoreProviderEvalEntry(entry, extraction);
+
+    entry.elapsedMs = 0.002;
+    expect(evaluate()).toMatchObject({ accepted: true, attemptTimingConsistent: true, actualCostUsd: "0.0126" });
+    entry.elapsedMs = 0.0019999;
+    expect(evaluate()).toMatchObject({ accepted: false, attemptTimingConsistent: false, actualCostUsd: "0.0126" });
+    escalation.startedAt = "2026-10-24T12:00:00.999998Z";
+    entry.elapsedMs = 1000;
+    expect(evaluate()).toMatchObject({ accepted: false, attemptTimingConsistent: false, actualCostUsd: "0.0126" });
+    escalation.startedAt = initial.startedAt;
+    expect(evaluate()).toMatchObject({ accepted: true, attemptTimingConsistent: true, actualCostUsd: "0.0126" });
   });
   it("requires account capability evidence for every escalation at the attempt time", () => {
     const entry = run(extraction); entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-25T12:00:00Z", usage: { inputTokens: 1, outputTokens: 1 } });

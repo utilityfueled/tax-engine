@@ -76,6 +76,18 @@ lines:
     testRefs:
       - "tests/engine/provider-model-eval.test.ts::keeps submillisecond case reviews and capability windows in event order"
       - "tests/engine/provider-model-eval.test.ts::enforces positive capability windows up to exactly 30 days"
+  - line: "attempt-timing"
+    description: "Qualification latency spans the logical task and any escalation"
+    formula: >-
+      The second attempt cannot start before the first. Measured elapsed time
+      must cover at least the span between attempt starts, including reported
+      submillisecond precision. Equal start stamps are allowed at the recorded
+      precision. Exclude incoherent measurements from latency percentiles and
+      promotion eligibility while preserving exact incurred costs for every
+      attempt. Keep the predeclared P50 and P95 thresholds.
+    testRef: "tests/engine/provider-model-eval.test.ts::blocks a full held-out cohort with understated escalation latency while retaining exact costs"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::checks escalation chronology at submillisecond precision"
   - line: "comparison-evidence-coherence"
     description: "Require a coherent qualification comparison with distinct private response references"
     formula: >-

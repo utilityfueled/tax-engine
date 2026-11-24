@@ -83,13 +83,32 @@ function isIndependentReviewer(reviewer: unknown, author: unknown) {
 
 const reviewDate = z.union([z.iso.date(), z.iso.datetime({ offset: true })]);
 
+// ISO input can carry more fractional precision than Date.parse retains.
+function submillisecondDigits(value: string) {
+  return (/\.\d{3}(\d+)/u.exec(value)?.[1] ?? "").replace(/0+$/u, "");
+}
+
 function timestampAtOrBefore(instant: string, cutoff: string, cutoffOffsetMs = 0): boolean {
   const instantMs = Date.parse(instant);
   const cutoffMs = Date.parse(cutoff) + cutoffOffsetMs;
   if (instantMs !== cutoffMs) return instantMs < cutoffMs;
-  // ISO input can carry more fractional precision than Date.parse retains.
-  const submillisecond = (value: string) => (/\.\d{3}(\d+)/u.exec(value)?.[1] ?? "").replace(/0+$/u, "");
-  return submillisecond(instant) <= submillisecond(cutoff);
+  return submillisecondDigits(instant) <= submillisecondDigits(cutoff);
+}
+
+function hasConsistentAttemptTiming({ attempts, elapsedMs }: ProviderModelLiveEvalEntry) {
+  const [initial, escalation] = attempts;
+  if (!escalation) return true;
+  if (!timestampAtOrBefore(initial.startedAt, escalation.startedAt)) return false;
+  if (elapsedMs === null) return true;
+
+  const startFraction = submillisecondDigits(initial.startedAt);
+  const endFraction = submillisecondDigits(escalation.startedAt);
+  const [elapsedWhole, elapsedFraction = ""] = new Money(elapsedMs).toFixed().split(".");
+  const precision = Math.max(startFraction.length, endFraction.length, elapsedFraction.length);
+  // Compare integers at a shared precision so fractional timestamps never round away.
+  const scaledMilliseconds = (whole: number | string, fraction: string) => BigInt(`${whole}${fraction.padEnd(precision, "0")}`);
+  const wholeSpanMs = Date.parse(escalation.startedAt) - Date.parse(initial.startedAt);
+  return scaledMilliseconds(wholeSpanMs, endFraction) - scaledMilliseconds(0, startFraction) <= scaledMilliseconds(elapsedWhole, elapsedFraction);
 }
 
 function independentReviewTime(fixture: ProviderEvalFixture, cutoff: string) {
@@ -126,6 +145,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     && matchesProviderEvalModel(candidate(finalAttempt.profileId).model, entry.measurement?.reportedModel);
   const modelLifecycleValid = entry.attempts.length > 0
     && entry.attempts.every(attempt => publicModelLifecycle(candidate(attempt.profileId).model, attempt.startedAt).status !== "shutdown");
+  const attemptTimingConsistent = hasConsistentAttemptTiming(entry);
   const qualifiedModel = modelMatches && modelLifecycleValid;
   const tokenBudgetExceeded = entry.attempts.some(({ usage }) => usage !== null
     && (usage.inputTokens > policy.maxInputTokens || usage.outputTokens > policy.maxOutputTokens));
@@ -150,7 +170,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const grounding = qualifiedOutput && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
   const canonicalAuthor = taxProviderModelEvalFixtures.find(item => item.id === fixture.id)?.review.author;
-  const complete = qualifiedOutput && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
+  const complete = qualifiedOutput && attemptTimingConsistent && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
     && isIndependentReviewer(entry.independentReview.reviewer, canonicalAuthor)
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const otherwiseAcceptable = complete && schemaValid && !!output && !safetyFailure
@@ -168,7 +188,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     actualCost = actualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
     filingSeasonCost = filingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
   }
-  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered,
+  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, attemptTimingConsistent, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
     criticalCorrect: qualifiedOutput && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
@@ -295,7 +315,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const fields = scored.reduce((sum, item) => sum + item.result.requiredFields, 0);
     const exact = scored.reduce((sum, item) => sum + item.result.exactFields, 0);
     const accepted = scored.filter(item => item.result.accepted).length;
-    const latencies = entries.flatMap(entry => entry.elapsedMs === null ? [] : [entry.elapsedMs]);
+    const latencies = scored.flatMap(({ entry, result }) => entry.elapsedMs === null || !result.attemptTimingConsistent ? [] : [entry.elapsedMs]);
     const measuredCost = scored.reduce((sum, item) => sum.plus(item.result.actualCostUsd ?? "0"), new Money(0));
     const filingCost = scored.reduce((sum, item) => sum.plus(item.result.filingSeasonCostUsd ?? "0"), new Money(0));
     const costKnown = scored.length > 0 && scored.every(item => item.result.actualCostUsd !== null);
@@ -316,6 +336,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const costPerAccepted = costKnown && accepted ? filingCost.div(accepted).toFixed() : null;
     const blockers: string[] = [];
     if (scored.some(item => !item.result.modelLifecycleValid)) blockers.push("model-shutdown-at-attempt");
+    if (scored.some(item => !item.result.attemptTimingConsistent)) blockers.push("attempt-timing-inconsistent");
     if (scored.some(item => item.result.tokenBudgetExceeded)) blockers.push("attempt-token-budget-exceeded");
     if (profile.role === "candidate" && filingSeasonLifecycle.status === "shutdown") blockers.push("candidate-shutdown-before-filing-season");
     if (!availability || availability.status !== "available" || !availability.structuredOutput || !availability.reasoningEffort || !availability.reportedUsage
