@@ -1540,6 +1540,17 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/schedule-b-2026-template",
+      "enginePath": "src/engine/schedules/schedule-b.ts",
+      "packetPath": "src/pdf/mappings/2026/schedule-b-candidate.ts",
+      "testRefs": [
+        "tests/pdf/schedule-b-2026-candidate.test.ts::reopens exact ordinary originals as redacted whole-dollar review values",
+        "tests/pdf/schedule-b-2026-candidate.test.ts::holds missing extra duplicated stale and conflicting originals",
+        "tests/pdf/schedule-b-2026-candidate.test.ts::holds different actual account references"
+      ],
+      "note": "Links the existing exact interest and dividend method to the disabled, original-bound 2026 review worksheet. Public exports, final Form 1040 transfers and qualified human review remain open."
+    },
+    {
       "key": "federal/schedule-d-digital-sources",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

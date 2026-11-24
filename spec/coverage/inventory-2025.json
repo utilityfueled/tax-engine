@@ -13234,17 +13234,21 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040sb.pdf",
       "specPath": "spec/federal/schedule-b-2026-template.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/schedules/schedule-b.ts",
+      "packetPath": "src/pdf/mappings/2026/schedule-b-candidate.ts",
+      "implementationTestRefs": [
+        "tests/pdf/schedule-b-2026-candidate.test.ts::reopens exact ordinary originals as redacted whole-dollar review values",
+        "tests/pdf/schedule-b-2026-candidate.test.ts::holds missing extra duplicated stale and conflicting originals",
+        "tests/pdf/schedule-b-2026-candidate.test.ts::holds different actual account references"
+      ],
+      "implementationNote": "Links the existing exact interest and dividend method to the disabled, original-bound 2026 review worksheet. Public exports, final Form 1040 transfers and qualified human review remain open.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },

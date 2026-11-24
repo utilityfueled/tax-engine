@@ -10,11 +10,12 @@ sources:
   - "https://www.irs.gov/forms-pubs/about-schedule-b-form-1040"
   - "https://www.irs.gov/forms-instructions-and-publications?find=1040&items_per_page=25&order=posted_date&page=0&sort=desc"
   - "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf"
+  - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol20/pdf/CFR-2025-title26-vol20-sec301-6102-1.pdf"
 notes: |
-  The final blank and annual instructions support a disabled source pin only.
-  The annual Form 1040 companion, mapped values and independent qualification
-  remain open. The existing tax engine and public PDFs have no dependency on
-  this source record.
+  The final blank and annual instructions support a disabled standalone
+  review candidate for one ordinary domestic return cohort. The annual Form
+  1040 companion and independent qualification remain open. The existing tax
+  engine and public PDFs have no dependency on this candidate.
 lines:
   - line: "revision-and-layout"
     description: "Pin the exact current and annual archive blank"
@@ -36,11 +37,57 @@ lines:
       Preserve the nested ReadOrder and TagcorrectingSubform names in the
       physical source record.
     testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::inventories the exact blank text and checkbox widgets"
+  - line: "1-and-5-originals"
+    description: "Reconcile the complete 2026 interest and dividend original inventory"
+    formula: >-
+      Require confirmed operative 2026 ordinary Forms 1099-INT Box 1 and/or
+      1099-DIV Box 1a with positive exact-cent amounts, and a complete income
+      inventory for the matching living single primary recipient. Each
+      original's independently transcribed recipient name and ID suffix must
+      match that current taxpayer. Match each
+      canonical statement one-to-one by form kind, year, owner, verified full
+      payer TIN and actual complete account reference. Ignore only exterior
+      account reference spacing. Preserve its case, punctuation and internal
+      spacing. Match the actual payer name and amount independently. Require
+      distinct private original references and reject equal keys, missing or extra statements, corrected
+      documents, unresolved identity, insufficient evidence, conflicting
+      amounts and unsupported applicable additional boxes. Distinct accounts
+      can have equal amounts. Hold nominee, seller-financed, non-statement,
+      Treasury, OID, pass-through, child election, other adjusted income and
+      foreign or trust methods. Limit native rows to 14 interest and 15
+      dividend originals.
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::holds missing extra duplicated stale and conflicting originals"
+  - line: "1-and-5-account-identity"
+    description: "Keep distinct recorded account references separate"
+    formula: "An otherwise matching statement cannot bind to an account whose exact reference differs."
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::holds different actual account references"
+  - line: "2-4-6-display"
+    description: "Use existing exact Schedule B totals and reconcile displayed dollars"
+    formula: >-
+      Require the ordinary domestic originals to make Schedule B required
+      under the existing calculation. Use exact Decimal amounts for payer
+      values, line 2 and line 4 interest totals, and line 6 ordinary dividends.
+      Round the exact sum once for each displayed total. Round each native
+      row independently and hold if the sum of displayed rows disagrees with
+      the displayed total. Leave line 3 and any inactive section blank. Use
+      distinct source-kind and ordinal review labels in canonical order and
+      keep actual payer names, taxpayer name and taxpayer and source IDs off
+      the PDF. Mark the standalone artifact for review only.
+    irsRef: "26 CFR 301.6102-1(c), retain cents when computing the amount of a line total"
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::reopens exact ordinary originals as redacted whole-dollar review values"
+    testRefs:
+      - "tests/pdf/schedule-b-2026-candidate.test.ts::holds rounded display conflicts nonrequired schedules and overflow"
+  - line: "7-8-ordinary-domestic"
+    description: "Print only confirmed foreign account and trust answers"
+    formula: >-
+      Require explicit No for the applicable questions at lines 7a and 8.
+      Leave the conditional FBAR follow-up boxes and both country fields blank.
+      Hold unknown or affirmative answers and contradictory supporting facts.
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::holds unsupported amounts methods and foreign account or trust facts"
   - line: "closed-exports"
     description: "Preserve all qualification gates"
     formula: >-
-      Record source provenance and native field names only. Keep the asset
-      and immutable source record outside the public export and filing
-      registries. Final Form 1040 materials, an actual mapper and independent
+      Keep the pinned asset and standalone mapper outside the public export
+      and filing registries. Final Form 1040 materials and independent
       qualification are needed before any annual transfer or public export.
     testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::keeps the source pin outside public review and filing"
