@@ -6,8 +6,9 @@ import ts from 'typescript';
 import {schoolPartYearNativeKind} from '../../../apps/web/tests/helpers/school-part-year-native-kinds';
 
 const root=process.cwd(), candidate=root;
-const paths=['oh-business-native','oh-business-part-year-native','oh-reciprocal-native','pa-married-payment-native','pa-royalty-sources','passenger-native-source-collector'].map(n=>'apps/web/tests/'+n+'.spec.ts').concat('apps/web/tests/helpers/oh-resident-credit-browser.ts');
+const paths=['oh-business-native','oh-business-part-year-native','oh-reciprocal-native','pa-royalty-sources','passenger-native-source-collector'].map(n=>'apps/web/tests/'+n+'.spec.ts').concat('apps/web/tests/helpers/oh-resident-credit-browser.ts');
 const schoolPath='apps/web/tests/oh-school-district-part-year-native.spec.ts';
+const paPath='apps/web/tests/pa-married-payment-native.spec.ts';
 const schoolInput='School account reference', schoolSelect='School account return type';
 function required<T>(value:T|undefined):T{if(value===undefined)throw Error('Required test fact');return value;}
 type NodeLike={tagName:string;id:string};
@@ -56,6 +57,49 @@ describe('native exact control snapshot',()=>{
  it('propagates wrong type and action rejections without subsequent actions',async()=>{for(const file of paths){for(const [node,reject,wanted]of [[{tagName:'BUTTON',id:'wrong'},undefined,['fill:wrong:actual']],[select,'selectOption',['selectOption:original:actual']],[input,'fill',['fill:original:actual']],[input,'press',['fill:original:actual','press:original:Tab']]]as const){const r=await run(file,{frames:[[node]],reject});expect(r.error,file).not.toBeNull();expect(r.actions,file).toEqual(wanted);}}});
  it('fails closed if current action match disappears or becomes duplicate',async()=>{for(const file of paths)for(const replacement of [[],[input,select]]){const r=await run(file,{frames:[[input]],afterSnapshot:replacement});expect(r.error,file).toBe('strict count');expect(r.actions,file).toEqual([]);}});
  it('takes a fresh snapshot on repeated calls to the same locator',async()=>{const h=harness({frames:[[input],[select]]}),read=helper({expect:h.pw});expect(read).toBeTypeOf('function');expect(await required(read)(h.field)).toBe('INPUT');expect(await required(read)(h.field)).toBe('SELECT');expect(h.reads).toEqual(['evalOnSelectorAll','evalOnSelectorAll']);});
+});
+
+it('runs paired Pennsylvania’s actual input and select entries through the strict known-control helper', async () => {
+ const source=ts.createSourceFile(paPath,readFileSync(path.join(root,paPath),'utf8'),ts.ScriptTarget.Latest,true);
+ const imported=source.statements.filter(ts.isImportDeclaration).find(node=>node.moduleSpecifier.getText(source)==="'./helpers/known-native-control'");
+ const names=imported?.importClause?.namedBindings;
+ if(!names||!ts.isNamedImports(names))throw Error('Missing paired Pennsylvania known-control import');
+ const entry=required(names.elements.find(name=>name.propertyName?.text==='enterKnownNativeControl'));
+ const inputLabel='Separate PA payment source tax year',selectLabel='Payment account 1 complete account checked';
+ const calls=new Map<string,string>();
+ function findEntries(node:ts.Node) {
+  if(ts.isCallExpression(node)&&node.expression.getText(source)===entry.name.text){
+   const label=node.arguments[1]?.getText(source);
+   if(label==="'Separate PA payment source tax year'")calls.set(inputLabel,node.getText(source));
+   if(label==="prefix+' complete account checked'")calls.set(selectLabel,node.getText(source));
+  }
+  ts.forEachChild(node,findEntries);
+ }
+ findEntries(source);
+ const replacement={...input,id:'replacement'},tabTarget={...input,id:'tab-target'};
+ const cases=[
+  [inputLabel,{frames:[[input]],afterLabel:[replacement],afterFill:[tabTarget]},null,['fill:replacement:2025','press:tab-target:Tab']],
+  [selectLabel,{frames:[[]],afterLabel:[select]},null,['selectOption:original:true']],
+  [inputLabel,{frames:[[input]],labelCount:2},'label count',[]],
+  [inputLabel,{frames:[[input]],afterLabel:[]},'strict count',[]],
+  [inputLabel,{frames:[[input]],afterLabel:[input,select]},'strict count',[]],
+  [inputLabel,{frames:[[input]],afterFill:[]},'strict count',['fill:original:2025']],
+  [inputLabel,{frames:[[select]]},'fill rejected',['fill:original:2025']],
+  [selectLabel,{frames:[[input]]},'select rejected',['selectOption:original:true']],
+  [inputLabel,{frames:[[input]],reject:'press'},'press rejected',['fill:original:2025','press:original:Tab']],
+ ] satisfies Array<[string,Scenario,string|null,string[]]>;
+ for(const [label,scenario,error,actions] of cases){
+  const h=harness(scenario);
+  const action=loadHelper({expect:h.pw},root,'known-native-control.ts',required(entry.propertyName).text);
+  expect(action).toBeTypeOf('function');
+  const invoke=new Function(entry.name.text,'page','prefix','return '+required(calls.get(label)));
+  if(error===null)await invoke(action,h.page,'Payment account 1');
+  else await expect(invoke(action,h.page,'Payment account 1')).rejects.toThrow(error);
+  expect(h.labels).toEqual([label]);
+  expect(h.reads).toEqual(['expect-label']);
+  expect(h.polls).toEqual([]);
+  expect(h.actions).toEqual(actions);
+ }
 });
 
 describe('part-year School known native controls',()=>{

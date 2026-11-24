@@ -8,7 +8,7 @@ notes: |
   qualification. All real locator actions, target facts, assertions, protected
   request limits, overall deadlines, workers and retry contracts stay intact.
   The dynamic entry wrappers retain the snapshot protocol. The part-year School
-  wrapper uses its fixture-defined native kinds.
+  and paired Pennsylvania wrappers use their fixture-defined native kinds.
 lines:
   - line: "exact-current-control"
     description: "Poll a current locator snapshot before acting"
@@ -22,6 +22,10 @@ lines:
     description: "Keep the separate school duplicate-label assertion"
     formula: "The part-year School helper validates the fixture kind and gates actions on exactly one current label. Its native actions resolve the current input or select again, enforce target uniqueness and kind, and propagate rejection before any later action. The known-kind School path performs zero tag snapshots."
     testRef: "tests/apps/web/native-control-snapshot.test.ts::preserves the independent school label assertion"
+  - line: "independent-pennsylvania-label"
+    description: "Exercise the actual paired Pennsylvania known-kind actions"
+    formula: "Resolve a text entry and a select entry from the paired Pennsylvania browser fixture. Require a unique current label and control, retain native fill and Tab or selectOption, and stop after a rejected action. Verify control replacement and dynamic appearance without a tag snapshot."
+    testRef: "tests/apps/web/native-control-snapshot.test.ts::runs paired Pennsylvania’s actual input and select entries through the strict known-control helper"
   - line: "protocol-efficiency-boundary"
     description: "Count actual installed read-only protocol composition"
     formula: "For a stable existing match, replace original count assertion plus Locator.evaluate element resolution, evaluation and disposal (four protocol calls) with one evalOnSelectorAll protocol call. Preserve default polling intervals and the 5000ms assertion bound; client polling and server polling differ for dynamic counts. No elapsed container pass is inferred."

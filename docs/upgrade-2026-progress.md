@@ -16,6 +16,13 @@ successful cleanup. The DOM regression, five spec references, scoped lint and
 Node and failed to start its worker. The rerun used Node 26.13.1. Strict Linux
 timing on the updated fixture remains pending.
 
+The combined unit run exposed six checks that still looked for the removed
+Pennsylvania snapshot wrapper. The harness continues to run those original
+checks against all six live snapshot consumers and now checks actual
+Pennsylvania fixture calls through the typed helper. It covers late controls,
+replacements, missing and duplicate matches, wrong types and action rejection.
+The isolated replay passed 17 tests, five spec references and scoped lint.
+
 ## November 24 Ohio school district payments on Schedule A
 
 Verified 2025 SD 100 estimates and prior refunds posted to the district account
