@@ -12,8 +12,9 @@
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
+    "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
     "remaining": [
-      "Qualify Linux browsers with original limits. On 4ee0721b strict AMD64 missed four Ohio deadlines and managed Chromium missed two RRTA saved-PDF deadlines. On d439de12, with the same application source, strict ARM64 missed ten Ohio deadlines. Recovery and archive verification passed on both strict architectures. The earlier matched local traces do not attribute the Linux bottleneck.",
+      "Qualify Linux browsers with original limits. On a2568205 strict AMD64 missed six Ohio deadlines. On 4ee0721b managed Chromium missed two RRTA saved-PDF deadlines. On d439de12 strict ARM64 missed ten Ohio deadlines. Strict recovery and archive verification passed. The opt-in Linux scheduler comparison for 33b6a593 is running.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -21,6 +22,18 @@
     ]
   },
   "activeContinuation": {
+    "nov24OhioLinuxScheduler": {
+      "diagnosticCommit": "33b6a5938b8ecede02b59adbc72d81073d9ae343",
+      "scope": "Opt-in Linux comparison of the existing Ohio browser journeys. Renderer main-thread counters are aggregated across a worker browser, and optional CPU pressure is host-wide.",
+      "sampleBudgetMs": 125,
+      "diagnosticTestsPassed": 56,
+      "orchestrationTestsPassed": 60,
+      "localSchoolChromium": {"passed": 4, "failed": 0, "skipped": 0},
+      "localBrowserLog": ".local/upgrade-evidence/nov24-strict-browser-differential/scheduler-bounded-browser.log",
+      "otherChecks": ["independent engineering review", "web types", "scoped lint", "browser source audit", "diff check"],
+      "githubComparison": 45403356011,
+      "githubComparisonStatus": "in progress on the bound diagnostic revision"
+    },
     "nov24PennsylvaniaBalanceConfirmation": {
       "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",
       "localEvidence": ".local/upgrade-evidence/nov24-pa-early-extension",
@@ -33,6 +46,7 @@
       "engineeringReview": "Distinct extension and balance originals passed. The red case reproduced a reused confirmation, and independent review verified its rejection after the fix.",
       "githubCI": 45394897639,
       "githubWeb": 45394897640,
+      "strictAMD64": {"job": 138447946329, "passed": 646, "failedDeadlines": 6, "originalSkips": 5, "recoveryRollback": "passed", "independentArchive": "passed", "imageScan": "passed"},
       "githubDockerPassed": 45394897728,
       "vercel": "Canceled by Ignored Build Step"
     },

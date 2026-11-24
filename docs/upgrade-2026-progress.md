@@ -1,5 +1,28 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio Linux scheduler comparison
+
+`33b6a593` adds optional Linux scheduler measurements to the existing
+same-runner strict container and managed Chromium comparison. It samples
+the Playwright worker browser's renderer main threads immediately before
+and after the original school-district header entry. It records CPU time,
+runnable wait and timeslices only with stable renderer identities and
+usable counters. The reported host-wide CPU pressure covers all runner
+workloads. Sampling ends at header entry, before the later review
+requests. Each snapshot may use up to 125 ms of the existing 30-second
+journey limit. Only the opt-in comparison samples counters. It uses the
+original cases, request windows and configured worker and retry limits.
+[Linux scheduler counters](https://docs.kernel.org/scheduler/sched-stats.html#proc-pid-schedstat) ·
+[Linux CPU pressure](https://docs.kernel.org/accounting/psi.html).
+
+Independent review verified that a stalled measurement cannot prevent
+the original action from starting or replace its error after the short
+measurement budget elapses. All 56 diagnostic tests, 60 orchestration
+tests, and four local Chromium school-district journeys passed. The
+exact browser source audit, scoped lint, web types and diff check also
+passed. The Linux comparison is running on `33b6a593`; it has yet to
+produce scheduler results. [Comparison run](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011).
+
 ## November 24 Pennsylvania balance receipt confirmations
 
 `a2568205` extends the confirmation check to a retained actual PA-40
@@ -14,6 +37,14 @@ browser source audit passed. The exact GitHub Docker build passed and
 Vercel skipped the production build. [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45394897639) ·
 [GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640) ·
 [GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45394897728).
+
+The exact strict AMD64 browser job passed 646 cases with five original
+skips. Six Ohio cases reached the original 30-second deadline across the
+business part-year, resident-credit and school-district part-year
+journeys. Compose recovery and rollback, independent archive verification
+and the image scan completed successfully. At that check, seven CI jobs
+had passed and the coverage and managed Chromium jobs were still running.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640/job/138447946329).
 
 ## November 24 Pennsylvania extension receipts
 

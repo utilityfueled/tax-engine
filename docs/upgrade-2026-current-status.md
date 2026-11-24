@@ -9,9 +9,17 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `33b6a593` adds renderer scheduler observations to the opt-in Linux
+  comparison of Ohio journeys. All 116 focused tests and four local
+  Chromium cases passed. The exact Linux comparison is running at the
+  original deadlines. [Scheduler evidence](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison).
+
 - `a2568205` requires separate actual confirmations for Pennsylvania
   extension and balance payments. Exact unit and coverage runs both passed
-  30,364 tests with 81 skips and 88.31% branches. [Balance evidence](upgrade-2026-progress.md#november-24-pennsylvania-balance-receipt-confirmations).
+  30,364 tests with 81 skips and 88.31% branches. Strict AMD64 passed
+  646 browser cases with five original skips and six Ohio deadline
+  misses. Recovery, rollback, archive verification and the image scan
+  passed. [Balance evidence](upgrade-2026-progress.md#november-24-pennsylvania-balance-receipt-confirmations).
 
 - `4ee0721b` reports verified Pennsylvania extension receipts before the
   due date in the 2025 review methods and the 2026 state-only draft when
