@@ -12,6 +12,7 @@
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
     "stateEstimateYearEvidenceKey": "activeContinuation.nov24StateEstimatedPaymentApplicationYear",
     "individualPaScheduleAEstimateEvidenceKey": "activeContinuation.nov24IndividualPaScheduleAEstimates",
+    "individualPaScheduleAAppliedRefundEvidenceKey": "activeContinuation.nov24IndividualPaScheduleAAppliedRefunds",
     "pairedPaScheduleAEstimateEvidenceKey": "activeContinuation.nov24PairedPaScheduleAPayments",
     "ohioEstimateNavigationEvidenceKey": "activeContinuation.nov24OhioSavedEstimateNavigation",
     "dependentAotcTinEvidenceKey": "activeContinuation.nov24AotcDependentTinConflict",
@@ -42,6 +43,16 @@
     ]
   },
   "activeContinuation": {
+    "nov24IndividualPaScheduleAAppliedRefunds": {
+      "focusedTestsPassed": 97,
+      "isolatedReplayTestsPassed": 9,
+      "specReferencesResolved": 65,
+      "auditedSourcesVerified": 2062,
+      "inventoryCheck": "passed",
+      "independentSourceReview": "passed",
+      "qualifiedTaxReview": "open",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-individual-pennsylvania-applied-refunds"
+    },
     "nov24PairedPaScheduleAPayments": {
       "focusedTestsPassed": 459,
       "independentEnginePdfTestsPassed": 70,

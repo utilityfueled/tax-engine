@@ -12,7 +12,7 @@ export function canUseOhioEstimatesForScheduleA(input:TaxYearInput):boolean {
   return input.taxpayer.taxYear===2025 && input.deductionElection!=="standard" && input.deductionElection!=="nonitemized";
 }
 
-export function canUsePennsylvaniaEstimatesForScheduleA(input:TaxYearInput):boolean {
+export function canUsePennsylvaniaPaymentsForScheduleA(input:TaxYearInput):boolean {
   const {taxpayer,deductionElection,paMarriedOrdinarySources}=input;
   return taxpayer.taxYear===2025 && !taxpayer.spouse && !paMarriedOrdinarySources
     && taxpayer.filingStatus!=="married_filing_jointly" && taxpayer.filingStatus!=="married_filing_separately"
@@ -43,21 +43,24 @@ function ohioEstimatedPaymentOriginals(input:TaxYearInput) {
   return estimates;
 }
 
-function pennsylvaniaEstimatedPaymentOriginals(input:TaxYearInput):ActualEstimate[]|undefined {
+function pennsylvaniaPaymentOriginals(input:TaxYearInput) {
   const packet=input.paOrdinaryReturnFacts;
-  if(!packet || !canUsePennsylvaniaEstimatesForScheduleA(input)) return undefined;
+  if(!packet || !canUsePennsylvaniaPaymentsForScheduleA(input)) return undefined;
   const year=input.taxpayer.taxYear;
   const hasSavedEstimate=input.adjustments?.estimatedTaxPayments.some(payment=>payment.type==="state"
     && payment.state?.trim().toUpperCase()==="PA" && (payment.application?.taxYear ?? year)===year);
-  if(!hasSavedEstimate && !packet.payments.rows.some(row=>row.original.kind==="estimated")) return undefined;
+  const hasSavedCredit=input.adjustments?.priorYearAppliedCredits.some(credit=>credit.type==="state"
+    && credit.state?.trim().toUpperCase()==="PA");
+  if(!hasSavedEstimate && !hasSavedCredit && packet.payments.priorCredit.status!=="available"
+    && !packet.payments.rows.some(row=>row.original.kind==="estimated")) return undefined;
 
-  const {facts}=calculatePAOrdinaryReturnFacts(input,packet);
+  const {facts,priorCreditCarryforward}=calculatePAOrdinaryReturnFacts(input,packet);
   const estimates=facts.payments.rows.filter(row=>row.original.kind==="estimated").map(row=>row.original);
   if(d(input.scheduleA?.additionalStateLocalIncomeTaxes).gt(0)
-    && estimates.some(row=>row.date.startsWith(`${year}-`) && d(row.amount).gt(0))) {
-    throw new Error("Reconcile the additional state and local income tax total with the Pennsylvania estimated payment receipts. Separate payments need their own dated records.");
+    && (priorCreditCarryforward.gt(0) || estimates.some(row=>row.date.startsWith(`${year}-`) && d(row.amount).gt(0)))) {
+    throw new Error("Reconcile the additional state and local income tax total with the Pennsylvania payment originals. Separate payments need their own records.");
   }
-  return estimates;
+  return {estimates,priorCredit:priorCreditCarryforward,verifyEstimateMirrors:hasSavedEstimate || estimates.length>0};
 }
 
 function removeSavedMirrors(estimates:Estimate[], originals:ActualEstimate[], stateCode:"OH"|"PA", appliedYear?:number):Estimate[] {
@@ -78,14 +81,14 @@ function removeSavedMirrors(estimates:Estimate[], originals:ActualEstimate[], st
 export function calculateStateTaxPaymentsInYear(input:TaxYearInput):Decimal {
   const year=input.taxpayer.taxYear;
   const ohioOriginals=ohioEstimatedPaymentOriginals(input);
-  const pennsylvaniaOriginals=pennsylvaniaEstimatedPaymentOriginals(input);
+  const pennsylvaniaOriginals=pennsylvaniaPaymentOriginals(input);
   let estimates=input.adjustments?.estimatedTaxPayments ?? [];
   // Older saved estimates have no confirmation number. Reconcile mirrors by
   // date and exact amount, then use each jurisdiction's actual receipt ledger.
   if(ohioOriginals) estimates=removeSavedMirrors(estimates,ohioOriginals,"OH");
-  if(pennsylvaniaOriginals) estimates=removeSavedMirrors(estimates,pennsylvaniaOriginals,"PA",year);
-  let total=d(0);
-  const originalEstimates=[...(ohioOriginals??[]),...(pennsylvaniaOriginals??[])].map(({date,amount})=>({date,amount,type:"state" as const}));
+  if(pennsylvaniaOriginals?.verifyEstimateMirrors) estimates=removeSavedMirrors(estimates,pennsylvaniaOriginals.estimates,"PA",year);
+  let total=d(pennsylvaniaOriginals?.priorCredit);
+  const originalEstimates=[...(ohioOriginals??[]),...(pennsylvaniaOriginals?.estimates??[])].map(({date,amount})=>({date,amount,type:"state" as const}));
   for(const payment of [...estimates,...(input.adjustments?.extensionPayments ?? []),...originalEstimates]) {
     if(payment.type!=="state") continue;
     const parsed=/^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? new Date(`${payment.date}T00:00:00Z`) : undefined;
@@ -94,11 +97,25 @@ export function calculateStateTaxPaymentsInYear(input:TaxYearInput):Decimal {
     if(!amount.isFinite() || amount.lt(0)) throw new Error("State tax payment must be finite and nonnegative");
     if(parsed.getUTCFullYear()===year) total=total.plus(amount);
   }
+  let matchedPennsylvaniaCredit=false;
   for(const credit of input.adjustments?.priorYearAppliedCredits ?? []) {
     if(credit.type!=="state") continue;
-    if(credit.sourceTaxYear!==year-1) throw new Error("State applied credit source year must be the immediately prior return year");
     const amount=d(credit.amount);
     if(!amount.isFinite() || amount.lt(0)) throw new Error("State applied credit must be finite and nonnegative");
+    if(pennsylvaniaOriginals) {
+      const state=credit.state?.trim().toUpperCase();
+      if(state==="PA") {
+        if(matchedPennsylvaniaCredit || credit.sourceTaxYear!==year-1 || !amount.eq(pennsylvaniaOriginals.priorCredit)) {
+          throw new Error("Reconcile the saved Pennsylvania prior-year credit with the original applied refund.");
+        }
+        matchedPennsylvaniaCredit=true;
+        continue;
+      }
+      if(!state && amount.gt(0) && pennsylvaniaOriginals.priorCredit.gt(0)) {
+        throw new Error("Identify the jurisdiction of the saved prior-year credit before reconciling the Pennsylvania applied refund.");
+      }
+    }
+    if(credit.sourceTaxYear!==year-1) throw new Error("State applied credit source year must be the immediately prior return year");
     total=total.plus(amount);
   }
   return total;

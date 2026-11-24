@@ -1424,7 +1424,7 @@ export interface StateReturnData {
   paResidencySources?: PAResidencySources;
   paReciprocitySources?: PAReciprocitySources;
   paOrdinaryReturnFacts?: PAOrdinaryReturnFacts;
-  /** Year of a positive in-year estimate in the last confirmed PA inventory, if any. */
+  /** Existing storage key for the year of a positive estimate or applied refund in the last confirmed PA inventory. */
   lastConfirmedPAEstimateYear?: number;
   paOrdinaryReturnCompletionSources?: GuidedPAOrdinaryReturnCompletionSources;
 }
@@ -1997,21 +1997,42 @@ function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   return dependencies;
 }
 
-function retainedPAEstimateYear(year: number, current: StateReturnData, previous: StateReturnData | undefined): number | undefined {
+function retainedPAIndividualPaymentYear(year: number, nextState: GuidedFlowState, previous: StateReturnData | undefined): number | undefined {
   const isConfirmed = (facts: PAOrdinaryReturnFacts | undefined): facts is PAOrdinaryReturnFacts =>
     facts?.sourceTaxYear === year && facts.sourceFactsConfirmed === true && facts.originalFederalSources != null;
+  const positiveAmount = (amount: unknown) => typeof amount === "string" && /^\d+(\.\d+)?$/u.test(amount) && parseGuidedCurrency(amount).gt(0);
   const hasInYearEstimate = (facts: PAOrdinaryReturnFacts) => Array.isArray(facts.payments?.rows)
     && facts.payments.rows.some(row => {
       const original = row?.original;
       return original?.kind === "estimated" && typeof original.date === "string" && original.date.startsWith(`${year}-`)
-        && typeof original.amount === "string" && /^\d+(\.\d+)?$/u.test(original.amount) && parseGuidedCurrency(original.amount).gt(0);
+        && positiveAmount(original.amount);
     });
-  const facts = current.paOrdinaryReturnFacts;
-  if (isConfirmed(facts)) return hasInYearEstimate(facts) ? year : undefined;
-  if (previous?.lastConfirmedPAEstimateYear === year) return year;
+  const hasAppliedRefund = (facts: PAOrdinaryReturnFacts) => {
+    const credit = facts.payments?.priorCredit;
+    return credit?.status === "available" && facts.payments.priorReturn?.status === "return"
+      && credit.priorOriginalElection?.taxYear === year - 1 && credit.currentOriginalAccount?.taxYear === year
+      && credit.currentOriginalAccount.noOffsetsReversalsOrRefundsConfirmed === true
+      && positiveAmount(credit.currentOriginalAccount.availableCredit);
+  };
+  const hasDeductiblePayment = (facts: PAOrdinaryReturnFacts) => hasInYearEstimate(facts) || hasAppliedRefund(facts);
+  const facts = nextState.sectionData["state-return"]?.paOrdinaryReturnFacts;
+  const confirmed = isConfirmed(facts);
+  if (confirmed && hasDeductiblePayment(facts)) return year;
   const prior = previous?.paOrdinaryReturnFacts;
   // Older drafts have no marker, but a still-confirmed inventory can establish it.
-  return isConfirmed(prior) && hasInYearEstimate(prior) ? year : undefined;
+  const hadPayment = previous?.lastConfirmedPAEstimateYear === year || (isConfirmed(prior) && hasDeductiblePayment(prior));
+  if (!hadPayment) return undefined;
+  if (!confirmed) return year;
+
+  // A retained payment can be cleared only by a current, replayed confirmation.
+  const input = buildGuidedPAOrdinarySourceInput(nextState);
+  if (!input) return year;
+  try {
+    buildGuidedPAOrdinaryReturnFacts(input, facts);
+    return undefined;
+  } catch {
+    return year;
+  }
 }
 
 export function hasConfirmedPAMarriedFederalOriginals(
@@ -2604,7 +2625,7 @@ export function updateSectionData(
   };
   let nextStateReturn = nextState.sectionData["state-return"];
   if (state.taxYear === 2025 && state.segmentation.stateCode === "PA" && nextStateReturn && !nextStateReturn.paMarriedOrdinarySources) {
-    const lastConfirmedPAEstimateYear = retainedPAEstimateYear(state.taxYear, nextStateReturn, previousStateReturn);
+    const lastConfirmedPAEstimateYear = retainedPAIndividualPaymentYear(state.taxYear, nextState, previousStateReturn);
     if (lastConfirmedPAEstimateYear !== nextStateReturn.lastConfirmedPAEstimateYear) {
       const { lastConfirmedPAEstimateYear: _previousYear, ...current } = nextStateReturn;
       nextStateReturn = lastConfirmedPAEstimateYear === undefined ? current : { ...current, lastConfirmedPAEstimateYear };

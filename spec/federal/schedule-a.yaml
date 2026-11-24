@@ -349,6 +349,16 @@ lines:
       - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::holds removal of the last previously confirmed Pennsylvania receipt until the empty ledger is confirmed"
       - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::requires distinct verified Pennsylvania identity, exact mirrors and an unambiguous deduction"
 
+  - line: "5a-pa-prior-refund-application"
+    description: "Use a verified 2024 Pennsylvania refund applied to the individual 2025 return"
+    formula: "Replay the actual prior PA-40 election and matching unchanged current account through the confirmed ordinary individual source packet. Transfer the exact applied credit to Schedule A line 5a for 2025. Reconcile a single matching generic PA prior-year credit by source year and exact amount. Hold a different amount, year, duplicate PA credit or competing jurisdiction-unknown credit. Keep explicitly unrelated state or federal credits separate. A confirmed no-credit Pennsylvania account conflicts with a positive generic PA prior-year credit. Preserve the existing estimate cash-year method."
+    notes: "A positive confirmed applied refund uses the existing persisted individual payment confirmation rule. Editing or removing the source requires explicit current-year reconfirmation, including after reopening. Clearing the retained payment hold on a confirmed empty inventory requires replay against current canonical originals on edits as well as reads. A newly unconfirmed record supplies no deduction. The current Pennsylvania extension and balance methods admit only cash dates in the following year."
+    irsRef: "2025 Schedule A Instructions, Line 5a, https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"
+    testRef: "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::includes the verified prior Pennsylvania refund in guided and canonical line 5a"
+    testRefs:
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::reconciles one matching generic Pennsylvania applied refund and preserves unrelated credits"
+      - "tests/guided-interview/guided-pa-estimates-schedule-a.test.ts::holds a changed Pennsylvania prior refund after reopening until the current originals are confirmed"
+
   - line: "16-oid-premium"
     description: "Allowable excess bond premium"
     formula: "Add source-calculated allowable section171 excess premium to Schedule A line16 with gambling deductions, retaining unused premium carry separately. Identify audit values by both form and line; another worksheet line16 is not the Schedule A total. Count actual OID state withholding once on line5a."

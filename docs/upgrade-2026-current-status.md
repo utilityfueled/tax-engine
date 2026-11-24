@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- A verified prior-year refund applied to an individual 2025 Pennsylvania
+  return now counts once in federal Schedule A. The guided preview holds
+  stale saved originals until the current account and election reconcile.
+  [Applied refund evidence](upgrade-2026-progress.md#november-24-individual-pennsylvania-applied-refunds).
+
 - Two verified separate Pennsylvania payment accounts now feed the same
   federal Schedule A calculation used in preview and saved PDF review.
   [Paired Pennsylvania evidence](upgrade-2026-progress.md#november-24-separate-pennsylvania-accounts-on-schedule-a).

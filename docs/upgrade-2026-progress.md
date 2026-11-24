@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## November 24 individual Pennsylvania applied refunds
+
+An actual prior PA refund credited to the current individual return now
+appears in federal Schedule A line 5a for 2025. The verified $25.25 scenario
+raises the exact line from $1,539 to $1,564.25 and preserves the PA refund of
+$25. One exact generic mirror counts once. A conflicting or ambiguous mirror
+requires correction, and a separately identified other-state credit remains
+independent. [2025 Schedule A instructions](https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3).
+
+The regression also saves and reopens an already confirmed payment account.
+A malformed or valid-shaped stale federal snapshot stays held after an
+unrelated edit. The guided flow replays current originals before clearing a
+previous hold after an empty account is confirmed. The 97 scoped tests,
+65 Schedule A references, web typecheck and 2,062 browser audit hashes passed.
+Independent source review and the isolated nine-test replay and inventory
+check passed.
+An individual PA balance from a prior return paid during 2025 still requires
+its separate dated payment record. Qualified tax review remains open.
+
 ## November 24 separate Pennsylvania accounts on Schedule A
 
 The 2025 paired Pennsylvania separate-return path now uses both owners’

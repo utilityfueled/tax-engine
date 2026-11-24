@@ -1,9 +1,10 @@
 // Spec: spec/federal/schedule-a.yaml, 5a-pa-estimated-payment-originals.
 import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal";
+import { snapshotPAOrdinaryReturnOriginals } from "@/engine/state/pa-ordinary-return-facts";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { buildGuidedPAOrdinarySourceInput, emptyDeductionData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { buildGuidedPAOrdinarySourceInput, emptyDeductionData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { confirmGuidedPAOrdinaryReturnCompletionSources } from "@/lib/guided-pa-ordinary-return-completion";
 import { confirmGuidedPAOrdinaryReturnFacts, updateGuidedPAOrdinaryReturnFacts } from "@/lib/guided-pa-ordinary-return-facts";
 import { confirmGuidedPAResidencySources } from "@/lib/guided-pa-residency-facts";
@@ -11,8 +12,8 @@ import { computeGuidedPreview, computeGuidedPreviewOutcome } from "@/lib/guided-
 import { buildGuidedStateOriginals } from "@/lib/guided-state-engine-inputs";
 import { guidedPAOrdinaryPanelFixture, required } from "../fixtures/guided-pa-ordinary-panels";
 
-function establishEstimates({ amounts, refund, saved = [], january, itemized = false }: {
-  amounts: string[]; refund: string; saved?: string[]; january?: string; itemized?: boolean;
+function establishEstimates({ amounts, refund, saved = [], january, itemized = false, priorRefund }: {
+  amounts: string[]; refund: string; saved?: string[]; january?: string; itemized?: boolean; priorRefund?: string;
 }) {
   const { data, facts, sources, state: starting } = guidedPAOrdinaryPanelFixture();
   let state = starting;
@@ -44,8 +45,19 @@ function establishEstimates({ amounts, refund, saved = [], january, itemized = f
   const rows = amounts.map((amount, index) => estimate(amount, index, 1, "2025-04-15"));
   if (january) rows.push(estimate(january, amounts.length, 4, "2026-01-15"));
   const asOfDate = january ? "2026-02-01" : facts.timing.asOfDate;
+  const account = { accountName: `${taxpayer.firstName} ${taxpayer.lastName}`, accountSsn: taxpayer.ssn };
   const draft = updateGuidedPAOrdinaryReturnFacts(facts, {
-    payments: { ...facts.payments, rows }, timing: { ...facts.timing, asOfDate },
+    payments: {
+      ...facts.payments, rows,
+      ...(priorRefund === undefined ? {} : {
+        priorReturn: { status: "return", sourceReference: "Fictional filed 2024 PA-40", filedConfirmed: true, fullYearResidentConfirmed: true,
+          original: { ...account, taxYear: 2024, returnType: "pa40", residency: "resident", filingStatus: "S", filedOn: "2025-03-01", taxableIncome: "10000", taxForgivenessCredit: "0" } },
+        priorCredit: { status: "available", sourceReference: "Fictional 2024 election and unchanged 2025 account",
+          priorOriginalElection: { ...account, taxYear: 2024, creditElected: priorRefund },
+          currentOriginalAccount: { ...account, taxYear: 2025, availableCredit: priorRefund, noOffsetsReversalsOrRefundsConfirmed: true } },
+      }),
+    },
+    timing: { ...facts.timing, asOfDate },
     disposition: { kind: "allocation", sourceReference: "Fictional overpayment allocation", refundRequested: refund, nextYearCreditRequested: "0", donations: [] },
   });
   editState({ paOrdinaryReturnFacts: draft });
@@ -59,6 +71,20 @@ function establishEstimates({ amounts, refund, saved = [], january, itemized = f
   editState({ paOrdinaryReturnCompletionSources: completion });
   const canonical = buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), state);
   return { state, canonical };
+}
+
+function reopen(state: GuidedFlowState) {
+  const values = new Map<string, string>();
+  const storage: Storage = {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => { values.set(key, value); },
+    removeItem: key => { values.delete(key); },
+    clear: () => values.clear(),
+    key: index => [...values.keys()][index] ?? null,
+    get length() { return values.size; },
+  };
+  expect(saveGuidedFlowState(storage, "fictional-pa-payments", state)).toBe(true);
+  return required(loadGuidedFlowState(storage, "fictional-pa-payments"));
 }
 
 it("includes only in-year verified Pennsylvania estimates in guided and canonical federal calculations", () => {
@@ -110,19 +136,6 @@ it("holds a changed previously verified Pennsylvania receipt until reviewed agai
 
 it("holds removal of the last previously confirmed Pennsylvania receipt until the empty ledger is confirmed", () => {
   const { state } = establishEstimates({ amounts: ["100"], refund: "100", itemized: true });
-  const values = new Map<string, string>();
-  const storage: Storage = {
-    getItem: key => values.get(key) ?? null,
-    setItem: (key, value) => { values.set(key, value); },
-    removeItem: key => { values.delete(key); },
-    clear: () => values.clear(),
-    key: index => [...values.keys()][index] ?? null,
-    get length() { return values.size; },
-  };
-  const reopen = (draft: typeof state) => {
-    expect(saveGuidedFlowState(storage, "fictional-pa-last-estimate", draft)).toBe(true);
-    return required(loadGuidedFlowState(storage, "fictional-pa-last-estimate"));
-  };
   const restored = reopen(state);
   const data = required(restored.sectionData["state-return"]);
   const facts = required(data.paOrdinaryReturnFacts);
@@ -208,4 +221,79 @@ it("requires distinct verified Pennsylvania identity, exact mirrors and an unamb
   const standard = check({ scheduleA: undefined, deductionElection: "standard" });
   expect(standard.deductionUsed).toBe("standard");
   expect(standard.allLines.find(line => line.form === "Sched A" && line.line === "5a")?.value.toFixed()).toBe("1539");
+});
+
+const line5a = (result: ReturnType<typeof calculateFederalTax>) =>
+  result.allLines.find(line => line.form === "Sched A" && line.line === "5a")?.value.toFixed();
+
+it("includes the verified prior Pennsylvania refund in guided and canonical line 5a", () => {
+  const { state, canonical } = establishEstimates({ amounts: [], refund: "25", itemized: true, priorRefund: "25.25" });
+  expect(validateSection(state, "state-return").status).toBe("complete");
+  expect.soft(computeGuidedPreview(reopen(state))).toMatchObject({ taxableIncome: "30556", state: { stateWithholding: "1564", stateRefund: "25" } });
+  const federal = calculateFederalTax(canonical);
+  expect.soft(line5a(federal)).toBe("1564.25");
+  expect.soft(federal.deductionAmount.toFixed()).toBe("19564");
+
+  const { canonical: combined } = establishEstimates({ amounts: ["100"], refund: "175", january: "50", priorRefund: "25.25" });
+  expect.soft(line5a(calculateFederalTax(combined))).toBe("1664.25");
+});
+
+it("reconciles one matching generic Pennsylvania applied refund and preserves unrelated credits", () => {
+  const { canonical } = establishEstimates({ amounts: [], refund: "25", itemized: true, priorRefund: "25.25" });
+  const native = required(canonical.paOrdinaryReturnFacts);
+  const mirror = { sourceTaxYear: 2024, type: "state", state: "pa", amount: "25.250" };
+  const other = { ...mirror, state: "CA", amount: "3.75" };
+  const federal = { ...mirror, state: undefined, type: "federal", amount: "10" };
+  const withCredits = (credits: object[], packet = native) => {
+    const input = TaxYearInputSchema.parse({ ...canonical, adjustments: { priorYearAppliedCredits: credits } });
+    return calculateFederalTax({ ...input, paOrdinaryReturnFacts: confirmGuidedPAOrdinaryReturnFacts(input, packet) });
+  };
+  const genericOnly = TaxYearInputSchema.parse({ ...canonical, paOrdinaryReturnFacts: undefined, adjustments: { priorYearAppliedCredits: [mirror] } });
+  expect(line5a(calculateFederalTax(genericOnly))).toBe("1564.25");
+  expect.soft(line5a(withCredits([mirror, other, federal]))).toBe("1568");
+  expect.soft(line5a(withCredits([other]))).toBe("1568");
+  for (const credits of [[mirror, mirror], [{ ...mirror, sourceTaxYear: 2023 }], [{ ...mirror, amount: "25.24" }], [{ ...mirror, state: undefined }]]) {
+    expect.soft(() => withCredits(credits)).toThrow(/Pennsylvania.*prior|prior.*Pennsylvania/i);
+  }
+  const noCredit = { ...native, payments: { ...native.payments, priorCredit: { status: "none", sourceReference: "Fictional confirmed no credit" } } };
+  expect.soft(() => withCredits([mirror], noCredit)).toThrow(/Pennsylvania.*prior|prior.*Pennsylvania/i);
+});
+
+it("holds a changed Pennsylvania prior refund after reopening until the current originals are confirmed", () => {
+  const { state, canonical } = establishEstimates({ amounts: [], refund: "25", itemized: true, priorRefund: "25.25" });
+  const saved = reopen(state);
+  const data = required(saved.sectionData["state-return"]);
+  const facts = required(data.paOrdinaryReturnFacts);
+  const replaceSnapshot = (originalFederalSources: Record<string, unknown>) => reopen({ ...saved, sectionData: {
+    ...saved.sectionData, "state-return": { ...data, paOrdinaryReturnFacts: { ...facts, originalFederalSources } },
+  } });
+  expect.soft(computeGuidedPreviewOutcome(replaceSnapshot({ w2s: [null] }))).toMatchObject({ metrics: null });
+  const staleInput = structuredClone(canonical);
+  required(staleInput.w2s[0]).employer.name = "Different original employer at unchanged wages";
+  const staleSnapshot = snapshotPAOrdinaryReturnOriginals(staleInput);
+  expect(TaxYearInputSchema.safeParse(staleSnapshot).success).toBe(true);
+  expect.soft(computeGuidedPreviewOutcome(replaceSnapshot(staleSnapshot))).toMatchObject({ metrics: null, blockedBy: expect.stringMatching(/current originals differ/i) });
+
+  const removed = reopen(updateSectionData(saved, "state-return", {
+    ...data, paOrdinaryReturnFacts: updateGuidedPAOrdinaryReturnFacts(facts, {
+      payments: { ...facts.payments, priorCredit: { status: "none", sourceReference: "Fictional actual no credit remains" } },
+      disposition: { ...facts.disposition, kind: "no_overpayment", refundRequested: "0" },
+    }),
+  }));
+  expect.soft(computeGuidedPreviewOutcome(removed)).toMatchObject({ metrics: null, blockedBy: expect.stringMatching(/confirm.*actual sources/i) });
+  const pending = required(removed.sectionData["state-return"]);
+  for (const invalidSnapshot of [staleSnapshot, { w2s: [null] }]) {
+    const staleReopenedEmpty = reopen({ ...removed, sectionData: { ...removed.sectionData, "state-return": {
+      ...pending, paOrdinaryReturnFacts: { ...required(pending.paOrdinaryReturnFacts), sourceFactsConfirmed: true, originalFederalSources: invalidSnapshot },
+    } } });
+    expect.soft(computeGuidedPreviewOutcome(staleReopenedEmpty)).toMatchObject({ metrics: null, blockedBy: expect.stringMatching(/current originals differ/i) });
+    const unrelatedSave = reopen(updateSectionData(staleReopenedEmpty, "deductions", staleReopenedEmpty.sectionData.deductions));
+    expect.soft(unrelatedSave.sectionData["state-return"]?.lastConfirmedPAEstimateYear).toBe(2025);
+    expect.soft(computeGuidedPreviewOutcome(unrelatedSave)).toMatchObject({ metrics: null, blockedBy: expect.stringMatching(/current originals differ/i) });
+  }
+  const confirmed = updateSectionData(removed, "state-return", {
+    ...pending, paOrdinaryReturnFacts: confirmGuidedPAOrdinaryReturnFacts(required(buildGuidedPAOrdinarySourceInput(removed)), pending.paOrdinaryReturnFacts),
+  });
+  expect(reopen(confirmed).sectionData["state-return"]).not.toHaveProperty("lastConfirmedPAEstimateYear");
+  expect.soft(computeGuidedPreviewOutcome(reopen(confirmed))).toMatchObject({ metrics: { taxableIncome: "30581", state: { stateRefund: "0" } }, blockedBy: null });
 });
