@@ -359,7 +359,7 @@ describe("Schedule H — Household Employment Taxes", () => {
 
   it("Schedule H - FUTA does not apply when futaApplies is false", () => {
     const result = calculateScheduleH({
-      employees: [makeEmployee("10000")],
+      employees: [makeEmployee("3000")],
       futaApplies: false,
       futaSectionA: true,
       constants: CONSTANTS_2025,

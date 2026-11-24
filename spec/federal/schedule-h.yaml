@@ -105,6 +105,12 @@ lines:
     irsRef: "Schedule H Instructions Line 8"
     testRef: "tests/engine/forms/schedule-h.test.ts::Schedule H total flows to Schedule 2 Line 9"
 
+  - line: "9"
+    description: "Reject a contradictory negative quarterly FUTA answer"
+    formula: "If actual current-year cash wages for one employer total at least four times the $1,000 quarterly threshold, at least one quarter reached $1,000. Reject an explicit No in that case. Compare exact amounts without rounding or the $7,000 per-employee tax-base cap. Count only verified employee cash wages, excluding spouse, child under 21 and parent wages. Use the actual current and prior-year applicability answer if the annual lower bound is inconclusive."
+    irsRef: "IRC §3306(a)(3), (c)(2), (c)(5); Schedule H Instructions Line 9"
+    testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::rejects a negative FUTA answer when employee wages guarantee a qualifying quarter"
+
   - line: "15"
     description: "Total cash wages subject to FUTA tax"
     formula: "Sum each employee's wages capped at $7,000, independently of the Social Security wage threshold or under-18 exemption; exclude spouse, child <21, and parent"

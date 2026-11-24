@@ -1,5 +1,6 @@
 import { healthInsuranceFactErrors } from "./guided-health-insurance-facts";
 import Decimal from "decimal.js";
+import { householdFutaNoError } from "@/engine/forms/schedule-h";
 import { hsaFactErrors } from "./guided-hsa-facts";
 import { educatorFactErrors } from "./guided-educator-facts";
 import { studentLoanFactErrors, type StudentLoanEducationSources } from "./guided-student-loan-facts";
@@ -193,6 +194,10 @@ export function householdFactErrors(data: OtherTaxesData | undefined, taxYear?: 
   if (hasHouseholdAmounts(data) && data.householdAmountsTaxYear !== undefined
     && (taxYear == null || data.householdAmountsTaxYear !== taxYear)) {
     errors.householdAmountsTaxYear = "Review and confirm household payroll and FUTA facts for the selected tax year.";
+  }
+  if (data.futaApplies === false && !Object.keys(errors).length) {
+    const error = householdFutaNoError(employees.map(employee => ({ ...employee, cashWages: parseGuidedCurrency(employee.cashWages) })));
+    if (error) errors.futaApplies = error;
   }
   return errors;
 }

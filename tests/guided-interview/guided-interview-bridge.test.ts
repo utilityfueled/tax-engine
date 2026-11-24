@@ -1849,7 +1849,8 @@ describe("buildTaxInputFromGuidedData retirement and SS and unemployment", () =>
       ...emptyOtherTaxesData,
       householdEmploymentWages: "5000",
       householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "5000" }],
-      futaApplies: false,
+      futaApplies: true,
+      futaSectionA: true,
     });
     const input = buildTaxInputFromGuidedData(state);
     expect(input).not.toBeNull();
@@ -1914,11 +1915,13 @@ describe("buildScheduleHInput", () => {
       ...emptyOtherTaxesData,
       householdEmploymentWages: "4500",
       householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "4500" }],
-      futaApplies: false,
+      futaApplies: true,
+      futaSectionA: true,
     });
     expect(result).toEqual({
       employees: [{ ...completeHouseholdEmployee, cashWages: "4500" }],
-      futaApplies: false,
+      futaApplies: true,
+      futaSectionA: true,
     });
   });
 
@@ -1927,11 +1930,13 @@ describe("buildScheduleHInput", () => {
       ...emptyOtherTaxesData,
       householdEmploymentWages: "12,500",
       householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "12,500" }],
-      futaApplies: false,
+      futaApplies: true,
+      futaSectionA: true,
     });
     expect(result).toEqual({
       employees: [{ ...completeHouseholdEmployee, cashWages: "12500" }],
-      futaApplies: false,
+      futaApplies: true,
+      futaSectionA: true,
     });
   });
 

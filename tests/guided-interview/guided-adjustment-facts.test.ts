@@ -44,6 +44,23 @@ describe("actual adjustment and employee facts", () => {
     expect(result?.scheduleH).toMatchObject({ employees: [employee, { ...employee, name: "Second Employee", cashWages: "2000.02" }], futaApplies: false });
     expect(buildTaxInputFromGuidedData(stateWith("other-taxes", { ...data, futaApplies: undefined }))).toBeNull();
   });
+  it("holds a contradicted quarterly FUTA answer before building the return", () => {
+    const employee = { name: "First Employee", cashWages: "2,000.01", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };
+    const second = { ...employee, name: "Second Employee", cashWages: "1999.99" };
+    const data = { ...emptyOtherTaxesData, householdEmployees: [employee, second], futaApplies: false };
+    const state = stateWith("other-taxes", data);
+    expect(householdFactErrors(data, 2026)).toHaveProperty("futaApplies", expect.stringMatching(/cash wages.*\$1,000.*quarter/i));
+    expect(validateSection(state, "other-taxes").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(buildTaxInputFromGuidedData(stateWith("other-taxes", { ...data, futaApplies: true, futaSectionA: true }))?.scheduleH?.futaApplies).toBe(true);
+
+    const unknown = householdFactErrors({ ...data, householdEmployees: [employee, { ...second, isParent: null }] }, 2026);
+    expect(unknown).toHaveProperty("employee-1-isParent");
+    expect(unknown).not.toHaveProperty("futaApplies");
+    const stale = householdFactErrors({ ...data, householdAmountsTaxYear: 2025 }, 2026);
+    expect(stale).toHaveProperty("householdAmountsTaxYear");
+    expect(stale).not.toHaveProperty("futaApplies");
+  });
   it("rejects malformed amounts and unknown joint-return coverage without throwing", () => {
     expect(adjustmentFactErrors({ ...emptyAdjustmentData, iraDeduction: "-", alimonyPaid: "-1" })).toHaveProperty("iraDeduction");
     const iraContributions = { primaryContributions: "100", primaryIsActiveParticipant: false, spouseContributions: "0", spouseIsActiveParticipant: null };

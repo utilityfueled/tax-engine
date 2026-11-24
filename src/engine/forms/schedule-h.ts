@@ -83,6 +83,22 @@ export interface ScheduleHResult {
   lines: CalculatedLine[];
 }
 
+type FutaEmployee = Pick<HouseholdEmployee, "cashWages">
+  & Partial<Record<"isSpouse" | "isChildUnder21" | "isParent", boolean | null>>;
+
+function countsForFuta(employee: FutaEmployee): boolean {
+  return employee.isSpouse === false && employee.isChildUnder21 === false && employee.isParent === false;
+}
+
+/** A calendar year has four quarters. A smaller wage total leaves the actual quarterly answer open. */
+export function householdFutaNoError(employees: readonly FutaEmployee[], quarterlyThreshold = d("1000")): string | undefined {
+  const qualifyingCashWages = sum(...employees.filter(countsForFuta).map(employee => d(employee.cashWages)));
+  if (qualifyingCashWages.gte(quarterlyThreshold.times(4))) {
+    return "Current household employee cash wages show that at least $1,000 was paid in one calendar quarter. Review the FUTA answer.";
+  }
+  return undefined;
+}
+
 export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
   const audit = new AuditTrail();
   const c = input.constants;
@@ -128,6 +144,11 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
       label,
       wages,
     });
+  }
+
+  if (!input.futaApplies) {
+    const error = householdFutaNoError(input.employees, c.futaQuarterlyThreshold);
+    if (error) throw new Error(error);
   }
 
   // ── Part I: Social Security, Medicare, and Federal Income Taxes ──
@@ -198,7 +219,7 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
     // or its unrelated under-18 principal-occupation exception.
     const futaWages = sum(
       ...input.employees
-        .filter((emp) => !emp.isSpouse && !emp.isChildUnder21 && !emp.isParent)
+        .filter(countsForFuta)
         .map((emp) => Decimal.min(d(emp.cashWages), c.futaWageBase))
     );
 

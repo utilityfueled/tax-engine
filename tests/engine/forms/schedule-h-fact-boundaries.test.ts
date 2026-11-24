@@ -1,16 +1,44 @@
 // Specs: spec/federal/schedule-h.yaml and spec/federal/2026/schedule-h.yaml
 import { describe, expect, it } from "vitest";
 import { calculateScheduleH } from "@/engine/forms/schedule-h.js";
-import { getConstants } from "@/models/constants.js";
-import Decimal from "decimal.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { ScheduleHSchema } from "@/models/inputs.js";
+import { calculateFederalTax } from "@/engine/federal.js";
+import { simpleW2Fixture } from "../../fixtures/simple-w2.js";
 
 const employee = { name: "Actual Employee", cashWages: "0", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };
 // Official Publication 926 (2026) values; whole-return 2026 readiness stays closed.
-const constants = { ...getConstants(2025).householdEmployment, cashWageThreshold: new Decimal(3000), socialSecurityWageBase: new Decimal(184500) };
+const constants = FEDERAL_2026_CONSTANTS.householdEmployment;
 const period = { state: "OH", periodStart: "2026-01-01", periodEnd: "2026-12-31", taxableWages: "7000", experienceRate: "0.03", contributionsPaidTimely: "210" };
 
 describe("Schedule H independent tax bases", () => {
+  it("rejects a negative FUTA answer when employee wages guarantee a qualifying quarter", () => {
+    const employees = [{ ...employee, cashWages: "2000.01" }, { ...employee, name: "Second Employee", cashWages: "1999.99" }];
+    const no = ScheduleHSchema.parse({ employees, futaApplies: false });
+    const yes = ScheduleHSchema.parse({ employees, futaApplies: true, futaSectionA: true });
+    const correct = calculateScheduleH({ ...yes, taxYear: 2026, constants });
+    expect(correct.line8.toFixed(2)).toBe("0.00");
+    expect(correct.futaTax.toFixed(2)).toBe("24.00");
+    expect(() => calculateScheduleH({ ...no, taxYear: 2026, constants })).toThrow(/cash wages.*\$1,000.*quarter/i);
+    expect(() => calculateFederalTax({ ...simpleW2Fixture, scheduleH: no })).toThrow(/cash wages.*\$1,000.*quarter/i);
+    const federal = calculateFederalTax({ ...simpleW2Fixture, scheduleH: yes });
+    expect(federal.schedule2?.householdEmploymentTax.toFixed(2)).toBe("24.00");
+    expect(federal.totalAdditionalTaxes.toFixed(2)).toBe("24.00");
+  });
+  it("preserves actual answers below the annual bound and excludes family wages", () => {
+    const employees = [
+      { ...employee, cashWages: "1999.98", isUnder18NonPrincipal: true },
+      { ...employee, cashWages: "2000.01" },
+      { ...employee, cashWages: "7000", isSpouse: true },
+      { ...employee, cashWages: "7000", isChildUnder21: true },
+      { ...employee, cashWages: "7000", isParent: true, parentCareExceptionApplies: true },
+    ];
+    const input = { employees, taxYear: 2026, constants };
+    expect(calculateScheduleH({ ...input, futaApplies: false }).futaTax.toFixed(2)).toBe("0.00");
+    expect(calculateScheduleH({ ...input, futaApplies: true, futaSectionA: true }).futaTax.toFixed(2)).toBe("24.00");
+    expect(() => calculateScheduleH({ ...input, futaApplies: undefined })).toThrow(/actual.*FUTA/i);
+    expect(() => calculateScheduleH({ ...input, employees: [{ ...employees[0], cashWages: "1999.99" }, ...employees.slice(1)], futaApplies: false })).toThrow(/cash wages.*\$1,000.*quarter/i);
+  });
   it("retains FUTA and withholding below the Social Security wage threshold", () => {
     const result = calculateScheduleH({ employees: [{ ...employee, cashWages: "1000.01", federalIncomeTaxWithheld: "100.01" }, { ...employee, name: "Second Employee", cashWages: "999.99" }], futaApplies: true, futaSectionA: true, constants });
     expect(result.line1.toFixed(2)).toBe("0.00");
