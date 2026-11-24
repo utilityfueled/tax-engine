@@ -1,0 +1,46 @@
+form: "Schedule B final 2026 physical source"
+fullName: "Interest and Ordinary Dividends"
+taxYear: 2026
+reference: "https://www.irs.gov/pub/irs-pdf/f1040sb.pdf"
+revision: "Created 6/9/26"
+postedAt: "2026-11-24"
+retrievedAt: "2026-11-24T20:32:40Z"
+sources:
+  - "https://www.irs.gov/pub/irs-prior/f1040sb--2026.pdf"
+  - "https://www.irs.gov/forms-pubs/about-schedule-b-form-1040"
+  - "https://www.irs.gov/forms-instructions-and-publications?find=1040&items_per_page=25&order=posted_date&page=0&sort=desc"
+  - "https://www.irs.gov/pub/irs-pdf/i1040sb.pdf"
+notes: |
+  The final blank and annual instructions support a disabled source pin only.
+  The annual Form 1040 companion, mapped values and independent qualification
+  remain open. The existing tax engine and public PDFs have no dependency on
+  this source record.
+lines:
+  - line: "revision-and-layout"
+    description: "Pin the exact current and annual archive blank"
+    formula: >-
+      Require the final 72,863-byte IRS blank with SHA-256
+      f4b1827b12113dcdc2b5e14181b3c658fa5553a277dea02e5106000b592815af,
+      printed tax year 2026 and footer Created 6/9/26, and one US Letter page.
+      Current and annual archive bytes matched at retrieval. The final source
+      prints the Part I line 4 transfer to Form 1040 or 1040-SR line 2b and
+      the Part II line 6 transfer to line 3b.
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::pins the final bytes and checks the printed year and destinations"
+  - line: "native-widgets"
+    description: "Confirm the complete blank AcroForm inventory"
+    formula: >-
+      Confirm 72 page widgets, attached to one page, with distinct field
+      names. The 66 blank text widgets include the header, 14 interest and
+      15 dividend row pairs, their summary amounts and two country fields.
+      The six unchecked boxes are the three printed Part III Yes/No pairs.
+      Preserve the nested ReadOrder and TagcorrectingSubform names in the
+      physical source record.
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::inventories the exact blank text and checkbox widgets"
+  - line: "closed-exports"
+    description: "Preserve all qualification gates"
+    formula: >-
+      Record source provenance and native field names only. Keep the asset
+      and immutable source record outside the public export and filing
+      registries. Final Form 1040 materials, an actual mapper and independent
+      qualification are needed before any annual transfer or public export.
+    testRef: "tests/pdf/schedule-b-2026-candidate.test.ts::keeps the source pin outside public review and filing"

@@ -1542,6 +1542,7 @@
     "src/pdf/mappings/2026/form-8889-candidate.ts": "a60615ab1bce8f162110d84bc175722964ead44b3986b948ab5f2a2212b83d45",
     "src/pdf/mappings/2026/form-8919-candidate.ts": "2bc2701ac37ca7a8e7e19e9e69ca70abedc02eb998a1b572eea7df195fd4e9a1",
     "src/pdf/mappings/2026/schedule-8812-candidate.ts": "2d5dd180e0719435d5e13e5c79578a5edda1ca096a2371bdaea434ee4dad77e0",
+    "src/pdf/mappings/2026/schedule-b-candidate.ts": "0211d2477bef7e9b9c535197f487b04a240d63233b1471a14400206692038016",
     "src/pdf/mappings/2026/schedule-c-candidate.ts": "b2a53d5bfadc3708a1c6f3ceb1a7f22e9628c93504d9d8cb1ab487c190b8b2be",
     "src/pdf/mappings/2026/schedule-c-mileage-projection.ts": "1e4b9dcf95a0ea369030846ab545997d517cb2b2635bfc036f65ceb766909cd0",
     "src/pdf/mappings/2026/schedule-c-source-projection.ts": "c5ccff23fd168bb97bcae08932de45ed098db0d35c91457583785b0c0ec7dea7",
