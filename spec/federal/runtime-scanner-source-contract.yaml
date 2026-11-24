@@ -14,6 +14,16 @@ lines:
   - line: "scanner-source-and-threshold"
     formula: "Produce both SBOM formats from the immutable candidate. Bind the CycloneDX container identity and revision to the checked image config, bind the Grype source to the verified Syft source, and require the same verified input and inventory bytes after scanning. Reject ambiguous metadata, retain every reported match, and continue failing on critical findings."
     testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::retains the immutable image binding and critical vulnerability policy"
+  - line: "scanner-native-architecture"
+    description: "Use one scanner binding for both native release workflows"
+    formula: >-
+      The AMD64 and native ARM64 workflows use the same pinned Syft and Grype actions and byte-binding verifier.
+      Supply the expected architecture explicitly from each workflow. Require the inspected candidate, Syft
+      metadata, config, selected OCI index entry, independent archive receipts and Grype source to agree with
+      that architecture. ARM64 accepts absent, empty or v8 OCI variants; AMD64 accepts only absent or empty.
+      Preserve the immutable candidate and revision, both SBOM formats, the existing binding receipt schema,
+      the critical-finding gate, and evidence retention even when scanning fails.
+    testRef: "tests/runtime/runtime-scanner-source-contract.test.ts::binds native ARM64 inventories and scan using the real verifier"
   - line: "archive-info-diagnostics"
     formula: "An owned native fresh-store info failure remains unverified and preserves its actual nonzero status before any image load. Retain only the first 8192 stderr bytes with explicit truncation and a generated-scratch placeholder; drain excess without retaining it. Capture successful info warnings too, but reject malformed or nonempty store metadata with all original immutable-image, native, capacity, import and cleanup gates unchanged."
     testRef: "tests/runtime/container-archive-diagnostics.test.ts::retains bounded owned info failure diagnostics without loading the archive"

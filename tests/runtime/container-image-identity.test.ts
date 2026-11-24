@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-const workflowSteps=parse(readFileSync('.github/workflows/web.yml','utf8')).jobs.container.steps;
+const webWorkflow=parse(readFileSync('.github/workflows/web.yml','utf8')).jobs.container.steps;
+const armWorkflow=parse(readFileSync('.github/workflows/arm64-recovery.yml','utf8')).jobs.recovery.steps;
 // Spec: spec/federal/runtime-scanner-source-contract.yaml image-identity-chain.
 const sha=(x:string)=>`sha256:${createHash('sha256').update(x).digest('hex')}`;
 const rev='b'.repeat(40),layer='synthetic layer bytes';
@@ -52,12 +53,13 @@ describe('Native image content identity chain',()=>{
  it.each(['missing-platform','unknown-platform','ambiguous','wrong-platform','missing-config','corrupt-layer','wrong-config','wrong-revision','duplicate-member','traversal'])('rejects %s instead of accepting RootFS alone',mode=>{const x=run(mode);expect(x.status).not.toBe(0);expect(x.receipt).toBeNull();});
 });
 
-function scannerChain(mode='valid') {
- const f=run();if(f.status!==0)throw new Error(f.stderr);
+function scannerChain(mode='valid',architecture:'amd64'|'arm64'='amd64') {
+ const variant=architecture==='arm64'?'v8':undefined;
+ const f=run('valid',architecture,architecture,'index',variant,variant);if(f.status!==0)throw new Error(f.stderr);
  const dir=mkdtempSync(join(tmpdir(),'tax-chain-scanner-'));
  try {
   const config=JSON.parse(f.config),labels=config.config.Labels;
-  const target={imageID:f.configDigest,userInput:f.targetDigest,os:'linux',architecture:'amd64',labels,config:Buffer.from(f.config).toString('base64')};
+  const target={imageID:f.configDigest,userInput:f.targetDigest,os:'linux',architecture,labels,config:Buffer.from(f.config).toString('base64')};
   const identity={...f.receipt};
   const files:Record<string,unknown>={
    'container-candidate.json':f.candidate,
@@ -69,19 +71,37 @@ function scannerChain(mode='valid') {
   if(mode==='foreign-input')target.userInput=f.configDigest;
   if(mode==='corrupt-manifest')identity.manifestBytes=Buffer.from('{}').toString('base64');
   if(mode==='corrupt-target')identity.targetBytes=Buffer.from('{}').toString('base64');
+  if(mode==='wrong-receipt-platform')identity.platform='linux/amd64';
   for(const [name,body] of Object.entries(files))if(!(mode==='missing-chain'&&name==='container-image-identity.json'))writeFileSync(join(dir,name),JSON.stringify(body));
   // This binds the exact JSON bytes, as the archive script does after checking them.
   identity.candidateSha256=createHash('sha256').update(readFileSync(join(dir,'container-candidate.json'))).digest('hex');
   if(mode!=='missing-chain')writeFileSync(join(dir,'container-image-identity.json'),JSON.stringify(identity));
-  writeFileSync(join(dir,'container-archive-verification.json'),JSON.stringify({source:rev,imageId:f.targetDigest,archiveSha256:identity.archiveSha256,imageIdentitySha256:mode==='substituted-chain'?'0'.repeat(64):createHash('sha256').update(JSON.stringify(identity)).digest('hex')}));
-  const step=workflowSteps.find((x:{name?:string})=>x.name==='Verify immutable SBOM source');
-  const result=spawnSync('bash',['-e','-c',step.run],{cwd:dir,encoding:'utf8',timeout:5000,env:{PATH:process.env.PATH,CANDIDATE_IMAGE_ID:f.targetDigest,GITHUB_SHA:rev,REQUIRE_SCAN:'false',GITHUB_OUTPUT:join(dir,'output')}});
+  writeFileSync(join(dir,'container-archive-verification.json'),JSON.stringify({
+   source:rev,imageId:f.targetDigest,platform:mode==='wrong-archive-platform'?'linux/amd64':`linux/${architecture}`,
+   archiveSha256:identity.archiveSha256,imageIdentitySha256:mode==='substituted-chain'?'0'.repeat(64):createHash('sha256').update(JSON.stringify(identity)).digest('hex'),
+  }));
+  const workflow=architecture==='arm64'?armWorkflow:webWorkflow;
+  const action=workflow.find((x:{uses?:string})=>x.uses==='./.github/actions/container-runtime-scan');
+  if(!action)throw new Error('Missing the shared container scanner action');
+  const steps=parse(readFileSync(join(action.uses,'action.yml'),'utf8')).runs.steps;
+  const step=steps.find((x:{name?:string})=>x.name==='Verify immutable SBOM source');
+  if(!step)throw new Error('Missing workflow SBOM verification');
+  const result=spawnSync('bash',['-e','-c',step.run],{
+   cwd:dir,encoding:'utf8',timeout:5000,env:{PATH:process.env.PATH,CANDIDATE_IMAGE_ID:f.targetDigest,GITHUB_SHA:rev,
+    GITHUB_WORKSPACE:resolve('.'),EXPECTED_ARCHITECTURE:action.with['expected-architecture'],REQUIRE_SCAN:'false',GITHUB_OUTPUT:join(dir,'output')},
+  });
   return {status:result.status,stderr:result.stderr};
  }finally{rmSync(dir,{recursive:true,force:true});}
 }
 describe('Workflow selected native config binding',()=>{
  it('executes the real SBOM gate with distinct index and config identities',()=>{const x=scannerChain();expect(x.status,x.stderr).toBe(0);});
  it.each(['foreign-config','foreign-input','corrupt-manifest','corrupt-target','missing-chain','substituted-chain'])('rejects %s at the real SBOM gate',mode=>{expect(scannerChain(mode).status).not.toBe(0);});
+ it('binds a native v8 ARM64 OCI index without conflating its config digest',()=>{
+  const x=scannerChain('valid','arm64');expect(x.status,x.stderr).toBe(0);
+ });
+ it.each(['wrong-receipt-platform','wrong-archive-platform'])('rejects %s for a native ARM64 OCI index',mode=>{
+  expect(scannerChain(mode,'arm64').status).not.toBe(0);
+ });
 });
 
 // Spec: spec/federal/runtime-scanner-source-contract.yaml archive-native-platform.

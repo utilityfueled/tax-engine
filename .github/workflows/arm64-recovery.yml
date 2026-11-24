@@ -166,6 +166,13 @@ jobs:
           fi
           jq -c '{status, cleanup, batchesCompleted, caseCount, failed, skipped}' "${summaries[0]}"
           sha256sum "${summaries[0]}"
+      - name: Scan and bind immutable ARM64 candidate evidence
+        uses: ./.github/actions/container-runtime-scan
+        if: ${{ !cancelled() && (steps.arm_archive.outcome == 'success' || steps.arm_archive.outcome == 'failure') }}
+        with:
+          candidate-image-id: ${{ steps.images.outputs.candidate }}
+          expected-architecture: arm64
+          archive-outcome: ${{ steps.arm_archive.outcome }}
       - name: Upload the ARM64 archive verification receipts
         if: ${{ !cancelled() && (steps.arm_archive.outcome == 'success' || steps.arm_archive.outcome == 'failure') }}
         uses: actions/upload-artifact@v4
@@ -173,8 +180,14 @@ jobs:
           name: native-arm64-archive-evidence
           retention-days: 7
           path: |
+            container.cdx.json
+            container.syft.json
+            container-syft-tool.txt
+            container-source-binding.json
             container-image-identity.json
             container-archive-verification.json
+            container-candidate.json
+            container-vulnerabilities.json
       - name: Enforce the ARM64 archive result
         if: ${{ !cancelled() && steps.images.outcome == 'success' }}
         env:

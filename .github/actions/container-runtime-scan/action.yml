@@ -1,0 +1,64 @@
+name: Immutable container runtime scan
+description: Generate and bind both SBOM formats and the scan to an immutable native candidate.
+inputs:
+  candidate-image-id:
+    description: Exact immutable Docker image ID
+    required: true
+  expected-architecture:
+    description: Expected Linux architecture from the calling workflow
+    required: true
+  archive-outcome:
+    description: Outcome of the independent archive verification
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: anchore/sbom-action/download-syft@v0
+      id: syft
+      if: ${{ !cancelled() }}
+      with:
+        syft-version: v1.57.1
+    - name: Generate both SBOM formats from the immutable candidate
+      id: sbom
+      if: ${{ !cancelled() && steps.syft.outcome == 'success' }}
+      env:
+        CANDIDATE_IMAGE_ID: ${{ inputs.candidate-image-id }}
+        SYFT_CMD: ${{ steps.syft.outputs.cmd }}
+        SYFT_CHECK_FOR_APP_UPDATE: "false"
+      shell: bash
+      run: |
+        "$SYFT_CMD" version > container-syft-tool.txt
+        grep -Eq '^Version:[[:space:]]+1[.]57[.]1$' container-syft-tool.txt
+        sha256sum "$SYFT_CMD" >> container-syft-tool.txt
+        "$SYFT_CMD" scan "docker:$CANDIDATE_IMAGE_ID" -o json=container.syft.json -o cyclonedx-json=container.cdx.json
+    - name: Verify immutable SBOM source
+      id: source_binding
+      if: ${{ !cancelled() && steps.sbom.outcome == 'success' }}
+      env:
+        CANDIDATE_IMAGE_ID: ${{ inputs.candidate-image-id }}
+        EXPECTED_ARCHITECTURE: ${{ inputs.expected-architecture }}
+        REQUIRE_SCAN: "false"
+      shell: bash
+      run: python3 -E "$GITHUB_WORKSPACE/scripts/lib/verify-container-scanner-binding.py"
+    - uses: anchore/scan-action@v7
+      id: scan
+      if: ${{ !cancelled() && steps.source_binding.outcome == 'success' }}
+      with:
+        sbom: container.syft.json
+        grype-version: v0.121.3
+        output-format: json
+        output-file: container-vulnerabilities.json
+        # Keep every finding in the report. Noncritical findings still require
+        # the separate owned, expiring release disposition; CI is not approval.
+        fail-build: true
+        severity-cutoff: critical
+    - name: Verify scan source against the immutable candidate
+      if: ${{ !cancelled() && steps.scan.outcome != 'skipped' && steps.source_binding.outcome == 'success' }}
+      env:
+        ARCHIVE_OUTCOME: ${{ inputs.archive-outcome }}
+        CANDIDATE_IMAGE_ID: ${{ inputs.candidate-image-id }}
+        EXPECTED_ARCHITECTURE: ${{ inputs.expected-architecture }}
+        REQUIRE_SCAN: "true"
+        PRIOR_BINDING_SHA256: ${{ steps.source_binding.outputs.receipt_sha256 }}
+      shell: bash
+      run: python3 -E "$GITHUB_WORKSPACE/scripts/lib/verify-container-scanner-binding.py"
