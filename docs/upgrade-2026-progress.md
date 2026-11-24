@@ -1,5 +1,13 @@
 # 2026 upgrade implementation evidence
 
+## November 24 final Form 6781 source
+
+The current IRS download and 2026 annual archive matched. The archived
+blank has four US Letter pages and embedded instructions. A separate
+source comparison confirmed the supported individual amounts and Schedule D
+transfers. The focused suite passed 73 tests and resolved 14 spec references.
+[Source receipt](upgrade-2026-form-6781-final-source.md).
+
 ## November 24 exact local baseline and current runs
 
 The `1d4f3a3f` archive matched 6,660 tracked blobs. An offline frozen

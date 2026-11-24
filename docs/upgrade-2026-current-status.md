@@ -25,6 +25,11 @@ Use the linked progress sections when investigating individual packages.
   missed two RRTA inspections. Both retained five original skips.
   AMD64 recovery, rollback and independent archive verification passed.
 
+- The final 2026 Form 6781 and its embedded instructions are pinned.
+  All 73 focused tests passed. Official PDF output still requires source
+  rows, elections, statements and qualification of the annual transfers.
+  [Form 6781 source receipt](upgrade-2026-form-6781-final-source.md).
+
 - `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
   Part II widgets under a disabled candidate. The form adds no public
   output. Current instructions and final Form 6251 still print 2025.

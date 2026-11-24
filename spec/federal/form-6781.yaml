@@ -1,7 +1,10 @@
 form: "Form 6781"
 fullName: "Gains and Losses From Section 1256 Contracts and Straddles"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i6781"
+irsReference: "https://www.irs.gov/pub/irs-prior/f6781--2025.pdf"
+sources:
+  - "https://www.irs.gov/pub/irs-prior/f6781--2025.pdf (final 2025 form and embedded instructions)"
+  - "https://www.irs.gov/pub/irs-prior/f6781--2026.pdf (final 2026 form and embedded instructions; posted 2026-11-24)"
 
 notes: |
   This slice implements the mark-to-market treatment for section 1256 contracts
@@ -29,6 +32,9 @@ notes: |
   Lines 4 and 11 based on their actual holding period character.
 
 businessRuleValidation:
+  - rule: "final-2026-source"
+    description: "Preserve the final 2026 blank and embedded instructions as source evidence. The supported totals and Schedule D transfers have the same meaning as in 2025. Official PDF filling still requires source rows, election facts, required statements, and current-year transfer and mapping qualification."
+    testRef: "tests/pdf/fill-form-6781.test.ts::pins the 2026 IRS blank and its four-page layout"
   - rule: "reference-summary-packet"
     description: "Inventory support counts this form as packet-complete only when regression coverage proves the emitted artifact stays labeled as a non-filing reference summary and only surfaces the supported Form 6781 Lines 3 through 9, 11a, 11b, 13a, and 13b plus the resulting Schedule D Line 4 and Line 11 carry amounts."
     testRef: "tests/pdf/fill-form-6781.test.ts::buildForm6781ReferenceSummary keeps the packet artifact reference-only and limited to supported section 1256 and straddle outputs"

@@ -18,6 +18,7 @@
     "ohioHeaderComparisonEvidenceKey": "activeContinuation.nov24OhioHeaderSourceComparisons",
     "paSupportEvidenceKey": "activeContinuation.nov24PAReviewDisclosure",
     "annualForm8801EvidenceKey": "activeContinuation.nov24FinalForm8801Source",
+    "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
@@ -30,6 +31,18 @@
     ]
   },
   "activeContinuation": {
+    "nov24FinalForm6781Source": {
+      "sourceUrl": "https://www.irs.gov/pub/irs-prior/f6781--2026.pdf",
+      "postedDate": "2026-11-24",
+      "retrievedAt": "2026-11-24T17:14:21Z",
+      "bytes": 121700,
+      "sha256": "40cf032ef46535e8695ffe22d6c76e0524f5be0eb9bc97ddd5a72207010c73c4",
+      "focusedTestsPassed": 73,
+      "specReferencesResolved": 14,
+      "independentEngineeringSourceComparison": "Supported individual amounts and Schedule D transfers match 2025. Embedded instruction years advance. No qualified tax review was performed.",
+      "printedExportQualified": false,
+      "sourceReceipt": "docs/upgrade-2026-form-6781-final-source.md"
+    },
     "nov24Main5f32UnitCoverage": {
       "verifiedCommit": "5f32cf32f5ee8bd902e927b107f1ac8813cd2f6e",
       "archiveBlobsVerified": 6660,
