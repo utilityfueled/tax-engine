@@ -16,6 +16,7 @@
     "strictSchedulerEvidenceKey": "activeContinuation.nov24OhioLinuxScheduler",
     "strictFullSchedulerEvidenceKey": "activeContinuation.nov24OhioFullLinuxScheduler",
     "ohioHeaderComparisonEvidenceKey": "activeContinuation.nov24OhioHeaderSourceComparisons",
+    "ohioBrowserStorageEvidenceKey": "activeContinuation.nov24OhioFocusedBrowserStorageTiming",
     "paSupportEvidenceKey": "activeContinuation.nov24PAReviewDisclosure",
     "annualForm8801EvidenceKey": "activeContinuation.nov24FinalForm8801Source",
     "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
@@ -31,7 +32,23 @@
     ]
   },
   "activeContinuation": {
+    "nov24OhioFocusedBrowserStorageTiming": {
+      "applicationCommit": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
+      "environment": "local macOS Chromium on a clone of the archived production build",
+      "passed": 3,
+      "failed": 0,
+      "deadlineMs": 30000,
+      "retries": 0,
+      "entryPhases": [
+        {"case": "resident credit desktop", "wallMs": 2758.0, "storageCalls": 597, "storageMs": 5.0},
+        {"case": "school header desktop", "wallMs": 1556.6, "storageCalls": 141, "storageMs": 1.0},
+        {"case": "school header mobile", "wallMs": 1395.6, "storageCalls": 141, "storageMs": 0.9}
+      ],
+      "linuxQualified": false,
+      "evidence": ".local/upgrade-evidence/nov24-ohio-browser-storage-timing/"
+    },
     "nov24FinalForm6781Source": {
+      "intakeCommit": "880704df8910c36e77be3aef5b375ab2a347a895",
       "sourceUrl": "https://www.irs.gov/pub/irs-prior/f6781--2026.pdf",
       "postedDate": "2026-11-24",
       "retrievedAt": "2026-11-24T17:14:21Z",

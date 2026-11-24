@@ -28,7 +28,13 @@ Use the linked progress sections when investigating individual packages.
 - The final 2026 Form 6781 and its embedded instructions are pinned.
   All 73 focused tests passed. Official PDF output still requires source
   rows, elections, statements and qualification of the annual transfers.
-  [Form 6781 source receipt](upgrade-2026-form-6781-final-source.md).
+  [Form 6781 source receipt](upgrade-2026-form-6781-final-source.md) ·
+  [Commit 880704df](https://github.com/utilityfueled/tax-engine/commit/880704df8910c36e77be3aef5b375ab2a347a895).
+
+- Three focused Ohio journeys passed on the archived macOS production
+  build. Timed synchronous storage took 0.9–5.0 ms during entries that
+  took 1.4–2.8 seconds. Strict Linux storage cost remains unmeasured.
+  [Storage timing evidence](upgrade-2026-progress.md#november-24-focused-ohio-browser-storage-timing).
 
 - `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
   Part II widgets under a disabled candidate. The form adds no public

@@ -1,5 +1,30 @@
 # 2026 upgrade implementation evidence
 
+## November 24 focused Ohio browser storage timing
+
+The local macOS Chromium probe ran against the `f3163949` production
+build. All three synthetic cases passed with the original 30-second
+deadlines and no retries. The cases elapsed 8.560 seconds for desktop
+resident credit and 11.402 and 9.972 seconds for desktop and mobile school
+district refund. Only the selected phases recorded storage timings.
+
+| Phase | Wall time (ms) | Native storage calls | Native storage time (ms) |
+| --- | ---: | ---: | ---: |
+| Resident-credit entry, desktop | 2758.0 | 597 | 5.0 |
+| School header, desktop | 1556.6 | 141 | 1.0 |
+| School header, mobile | 1395.6 | 141 | 0.9 |
+| Resident-credit saved reopen, desktop | 367.9 | 6 | 0.0 |
+| School saved reopen, desktop | 1047.6 | 22 | 0.1 |
+| School saved reopen, mobile | 710.2 | 22 | 0.6 |
+
+The probe measured workspace and draft reads and writes without recording
+stored values. Trusted input and change dispatch took 349–736 ms across
+the entry phases. That interval combines event dispatch, validation,
+reducer and render activity. Local measurements do not isolate those
+costs or establish strict Linux timing. The application save path did not change.
+Aggregate records are retained under
+`.local/upgrade-evidence/nov24-ohio-browser-storage-timing/`.
+
 ## November 24 final Form 6781 source
 
 The current IRS download and 2026 annual archive matched. The archived
