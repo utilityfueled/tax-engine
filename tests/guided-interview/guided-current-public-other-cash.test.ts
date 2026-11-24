@@ -25,7 +25,7 @@ it('preserves actual cash recipient categories without changing the closed year 
     mortgageInterest: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '7000', charitableCarryoverSources: history,
     donationEntries: (['fifty-percent', 'private-nonoperating'] as const).map((recipientCategory, index) => ({
-      ...emptyDonationEntry, organization: `Actual recipient ${index + 1}`, type: 'cash', amount: index === 0 ? '4000' : '3000',
+      ...emptyDonationEntry, organization: `Actual recipient ${index + 1}`, type: 'cash', cashAmountBasis: 'net-contribution', amount: index === 0 ? '4000' : '3000',
       date: '2026-05-15', qualifiedOrganization: true, recipientCategory, supportingOrganization: false, donorAdvisedFund: false,
     })) };
   const before = JSON.stringify(state);

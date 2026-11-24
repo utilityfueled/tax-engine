@@ -26,6 +26,7 @@ it('keeps nonitemizer recipient answers unknown for explicitly itemized cash gif
       ...emptyDonationEntry,
       organization: 'Synthetic qualified public charity',
       type: 'cash',
+      cashAmountBasis: 'net-contribution',
       amount: '1500.25',
       date: '2026-05-01',
       qualifiedOrganization: true,
@@ -56,7 +57,7 @@ it('preserves the full ordinary receipt packet and closed year boundaries',async
  const history=actualGuidedCharitableCarryover();history.sourceTaxYear='2026';history.vintages=[];
  const receipts=currentCategoryFixture('1000','500','1000','2000','1500').donations;
  state.sectionData.deductions={...emptyDeductionData,method:'nonitemized',medicalExpenses:'0',stateLocalTaxes:'0',realEstateTaxes:'0',mortgageInterest:'0',casualtyLosses:'0',otherItemized:'0',gamblingWinnings:'0',nonW2IncomeTaxesDeductedElsewhere:'0',charitableContributions:'6000',charitableCarryoverSources:history,
- donationEntries:receipts.map(row=>({...emptyDonationEntry,organization:row.organization,type:row.type,amount:row.amount,date:row.dateOfDonation,costBasis:row.costBasis??'',isLongTermCapitalGain:row.isLongTermCapitalGain??null,qualifiedOrganization:row.qualifiedOrganization,recipientCategory:row.recipientCategory,supportingOrganization:false,donorAdvisedFund:false}))};
+ donationEntries:receipts.map(row=>({...emptyDonationEntry,organization:row.organization,type:row.type,...(row.type==='cash'?{cashAmountBasis:'net-contribution' as const}:{}),amount:row.amount,date:row.dateOfDonation,costBasis:row.costBasis??'',isLongTermCapitalGain:row.isLongTermCapitalGain??null,qualifiedOrganization:row.qualifiedOrganization,recipientCategory:row.recipientCategory,supportingOrganization:false,donorAdvisedFund:false}))};
  const before=JSON.stringify(state);const validation=validateSection(state,'deductions');expect(validation.status,JSON.stringify(validation)).toBe('complete');
  const input=TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));expect(input.donations.map(row=>[row.type,row.amount,row.recipientCategory])).toEqual(receipts.map(row=>[row.type,row.amount,row.recipientCategory]));
  const r=calculateScheduleA(input,d('10000'),'married_filing_separately',FEDERAL_2026_CONSTANTS);expect(r.charitableTotal.toFixed()).toBe('5450');expect(r.currentCharitableCandidates?.nonitemizedCarryforwards.map(row=>[row.category,row.medium,row.amount.toFixed()])).toEqual([['capital_gain_20','noncash','550']]);

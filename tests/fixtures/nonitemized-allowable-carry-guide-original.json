@@ -30,6 +30,7 @@
         {
           "organization": "Fictional current public cash recipient",
           "type": "cash",
+          "cashAmountBasis": "net-contribution",
           "amount": "70000.01",
           "costBasis": "",
           "date": "2026-06-01",

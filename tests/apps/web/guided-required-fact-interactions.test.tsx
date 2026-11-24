@@ -288,6 +288,40 @@ describe("required fact interaction boundaries", () => {
     expect(latest.mortgageInterest).toBe("");
   });
 
+  it("retains the restored cash amount and reconfirms consideration after source edits", async () => {
+    const gift: DonationEntryData = { ...emptyDonationEntry, type: "cash", organization: "Fictional Dinner Charity",
+      amount: "70", date: "2025-02-28", qualifiedOrganization: true, recipientCategory: "fifty-percent" };
+    const original = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+    original.sectionData.deductions = { ...emptyDeductionData, method: "itemized", charitableContributions: "70.00", donationEntries: [gift],
+      charitableCarryoverSources: { sourceFactsConfirmed: true } };
+    const storageKey = { storageKey: "guided-cash-acknowledgment" };
+    expect(saveGuidedFlowState(window.localStorage, storageKey, original)).toBe(true);
+    const restored = loadGuidedFlowState(window.localStorage, storageKey);
+    window.localStorage.removeItem(storageKey.storageKey);
+    let latest = restored?.sectionData.deductions ?? emptyDeductionData;
+    function Harness() { const [data, setData] = useState(latest); return <DeductionSourceDetails data={data} onChange={next => { latest = next; setData(next); }} />; }
+    await act(async () => root.render(<Harness />));
+    expect(control("Cash amount").value).toBe("70");
+    expect(control("Cash amount basis").value).toBe("");
+    expect(latest.charitableCarryoverSources?.sourceFactsConfirmed).toBe(true);
+    expect(() => buildDonationsInput(latest, 2025)).toThrow(/gross|net/);
+    await change("Cash amount basis", "gross-payment");
+    await change("Fair market value of goods or services", "40");
+    await change("Did you intend to contribute the excess as a gift?", "true");
+    expect(buildDonationsInput(latest, 2025)[0].amount).toBe("30");
+    expect(latest.charitableContributions).toBe("70.00");
+    expect(latest.charitableCarryoverSources?.sourceFactsConfirmed).toBeNull();
+    await change("Fair market value of goods or services", "41");
+    expect(control("Did you intend to contribute the excess as a gift?").value).toBe("");
+    expect(() => buildDonationsInput(latest, 2025)).toThrow(/intend/);
+    await change("Donation date", "2025-03-01");
+    expect(control("Fair market value of goods or services").value).toBe("");
+    await change("Donation type", "property");
+    await change("Donation type", "cash");
+    expect(control("Cash amount basis").value).toBe("");
+    expect(latest.donationEntries?.[0]).toMatchObject({ amount: "70", cashAmountBasis: null });
+  });
+
   it.each(["cash", "appreciated_stock"] as const)("reconfirms 2026 donation eligibility after a saved recipient changes (%s)", async type => {
     let state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
     state.taxYear = 2026;
@@ -299,7 +333,7 @@ describe("required fact interaction boundaries", () => {
       costBasis: stock ? "0" : "", isLongTermCapitalGain: stock ? true : null,
       recipientCategory, isPrivateFoundation: stock,
       qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false,
-      ...(stock ? { qualifiedAppreciatedStock: true } : {}),
+      ...(stock ? { qualifiedAppreciatedStock: true } : { cashAmountBasis: "net-contribution" }),
     };
     state.sectionData.deductions = { ...emptyDeductionData, method: "standard", charitableContributions: original.amount, donationEntries: [original] };
 
@@ -326,6 +360,7 @@ describe("required fact interaction boundaries", () => {
     expect(state.sectionData.deductions?.donationEntries).toEqual([{
       ...original, organization: newName, isPrivateFoundation: null, recipientCategory: null,
       qualifiedOrganization: null, supportingOrganization: null, donorAdvisedFund: null, qualifiedAppreciatedStock: null,
+      ...(stock ? {} : { cashAmountBasis: null }),
     }]);
     expect(state.sectionData.deductions?.charitableContributions).toBe("750.01");
     expect(control("Recipient qualifies for a charitable contribution deduction").value).toBe("");
@@ -337,6 +372,7 @@ describe("required fact interaction boundaries", () => {
     await change("Recipient is a supporting organization", String(!stock));
     await change("Gift was to a donor-advised fund", "false");
     if (stock) await change("Gift is qualified appreciated stock", "false");
+    else await change("Cash amount basis", "net-contribution");
     expect(validateSection(state, "deductions").status).toBe("complete");
     expect(buildTaxInputFromGuidedData(state)?.donations?.[0]).toMatchObject({
       organization: newName, type, amount: "750.01", dateOfDonation: "2026-06-04", recipientCategory,

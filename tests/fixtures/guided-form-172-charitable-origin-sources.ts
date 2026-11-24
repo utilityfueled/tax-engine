@@ -24,7 +24,7 @@ export function guidedCurrentCharitableOriginals() {
       marketDiscount: '0', bondPremium: '0', treasuryBondPremium: '0', taxExemptBondPremium: '0', stateTaxReporting: 'none' as const },
     deductions: { method: 'itemized' as const, medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '20000', personalPropertyTaxes: '0',
       mortgageInterest: '0', charitableContributions: '', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0', gamblingLosses: '0', nonW2IncomeTaxesDeductedElsewhere: '0',
-      donationEntries: [{ organization: 'Fictional current-origin charity', type: 'cash' as const, amount: '20,000.49', date: '2025-05-01',
+      donationEntries: [{ organization: 'Fictional current-origin charity', type: 'cash' as const, cashAmountBasis: 'net-contribution' as const, amount: '20,000.49', date: '2025-05-01',
         qualifiedOrganization: true, recipientCategory: 'fifty-percent' as const, isPrivateFoundation: false,
         costBasis: '', isLongTermCapitalGain: null, supportingOrganization: false, donorAdvisedFund: false }] },
     prior, current: structuredClone(actualCurrentLossOrigin),

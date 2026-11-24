@@ -3,12 +3,13 @@ import { MortgageInsurancePrepaidFields } from './mortgage-insurance-prepaid-fie
 import { invalidateMortgagePrepaid } from '@/lib/guided-mortgage-insurance-prepaid';
 
 import { type DeductionData, type DonationEntryData, type MortgageEntryData, type FilingStatus, emptyDonationEntry, emptyMortgageEntry } from "@/lib/guided-interview-flow";
-import { sumGuidedDisplayAmounts } from "@/lib/guided-currency";
+import { parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
+import { sumSourceMoney } from "@/utils/sum-source-money";
 import { CurrencyField } from "./currency-field";
 import { MortgageSourceFields } from "./mortgage-source-fields";
 import { MortgageWorksheetDetails } from "./mortgage-worksheet-details";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
-import { amountError } from "@/lib/guided-required-facts";
+import { amountError, guidedAmountChanged } from "@/lib/guided-required-facts";
 
 function TextFact({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: "text" | "date" }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><input type={type} className="guided-input" value={value} onChange={(event) => onChange(event.target.value)} aria-required="true" /></label>;
@@ -30,9 +31,14 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
       ...(changed && data.mortgageWorksheet ? { mortgageWorksheet: { ...data.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) });
   }
   function setDonations(entries: DonationEntryData[]) {
-    const total = sumGuidedDisplayAmounts(entries.map((entry) => entry.amount));
+    const amountsChanged = entries.length !== donations.length || entries.some((entry, index) => guidedAmountChanged(donations[index]?.amount, entry.amount));
+    let total = data.charitableContributions;
+    if (amountsChanged) {
+      const amounts = entries.map(entry => parseGuidedDisplayAmount(entry.amount));
+      if (amounts.every(amount => amount.isFinite())) total = sumSourceMoney(...amounts).toFixed();
+    }
     const changed = guidedSourceValuesChanged(data.donationEntries, entries);
-    onChange({ ...data, donationEntries: entries, charitableContributions: total.isFinite() ? total.toFixed() : data.charitableContributions,
+    onChange({ ...data, donationEntries: entries, charitableContributions: total,
       ...(changed && data.charitableCarryoverSources ? { charitableCarryoverSources: { ...data.charitableCarryoverSources, sourceFactsConfirmed: null } } : {}) });
   }
   return <>
@@ -64,6 +70,13 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     {includeDonations && <><h4>Charitable contributions</h4>
     {donations.map((entry, index) => {
       const update = (change: Partial<DonationEntryData>) => setDonations(donations.map((item, i) => i === index ? { ...item, ...change } : item));
+      const clearBenefit = { cashBenefitValue: undefined, cashExcessGiftIntended: undefined };
+      const clearCashBasis = { cashAmountBasis: null, ...clearBenefit };
+      const isGross = entry.type === "cash" && entry.cashAmountBasis === "gross-payment";
+      const benefit = parseGuidedDisplayAmount(entry.cashBenefitValue);
+      const confirmExcess = isGross && benefit.gt(0) && parseGuidedDisplayAmount(entry.amount).gt(benefit);
+      const amountLabel = entry.type !== "cash" ? "Donation amount / fair market value"
+        : isGross ? "Gross cash payment" : entry.cashAmountBasis === "net-contribution" ? "Net charitable contribution" : "Cash amount";
       const updateRecipient = (organization: string) => {
         if (organization.trim() === entry.organization.trim()) {
           update({ organization });
@@ -77,13 +90,31 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
           supportingOrganization: null,
           donorAdvisedFund: null,
           qualifiedAppreciatedStock: null,
+          ...(entry.type === "cash" ? clearCashBasis : {}),
         });
       };
       return <fieldset className="guided-fieldset" key={index}><legend>Donation #{index + 1}</legend><div className="guided-form-grid">
         <TextFact label="Donation recipient" value={entry.organization} onChange={updateRecipient} />
-        <label className="guided-field"><span className="guided-field-label">Donation type</span><select className="guided-input" value={entry.type} onChange={(event) => update({ type: event.target.value as DonationEntryData["type"] })}><option value="">Choose the actual type</option><option value="cash">Cash</option><option value="appreciated_stock">Appreciated stock</option><option value="property">Property</option><option value="other">Other noncash property</option></select></label>
-        <CurrencyField label="Donation amount / fair market value" value={entry.amount} onChange={(amount) => update({ amount })} required />
-        <TextFact label="Donation date" value={entry.date} type="date" onChange={(date) => update({ date })} />
+        <label className="guided-field"><span className="guided-field-label">Donation type</span><select className="guided-input" value={entry.type} onChange={(event) => {
+          const type = event.target.value as DonationEntryData["type"];
+          update({ type, ...(type !== entry.type && (type === "cash" || entry.type === "cash") ? clearCashBasis : {}) });
+        }}><option value="">Choose the actual type</option><option value="cash">Cash</option><option value="appreciated_stock">Appreciated stock</option><option value="property">Property</option><option value="other">Other noncash property</option></select></label>
+        {entry.type === "cash" && <label className="guided-field"><span className="guided-field-label">Cash amount basis</span><select className="guided-input" value={entry.cashAmountBasis ?? ""} onChange={event => {
+          const cashAmountBasis = (event.target.value || null) as DonationEntryData["cashAmountBasis"];
+          update({ cashAmountBasis, ...(cashAmountBasis !== entry.cashAmountBasis ? clearBenefit : {}) });
+        }}><option value="">Confirm from your records</option><option value="net-contribution">Net charitable contribution on the acknowledgment</option><option value="gross-payment">Gross payment before subtracting benefits</option></select></label>}
+        <CurrencyField label={amountLabel} value={entry.amount} onChange={amount => update({ amount,
+          ...(isGross && guidedAmountChanged(entry.amount, amount) ? { cashExcessGiftIntended: undefined } : {}),
+        })} required />
+        <TextFact label="Donation date" value={entry.date} type="date" onChange={date => update({ date,
+          ...(isGross && date !== entry.date ? clearBenefit : {}),
+        })} />
+        {isGross && <CurrencyField label="Fair market value of goods or services" value={entry.cashBenefitValue ?? ""}
+          hint="Include goods or services you received or expected. Enter zero only when there were none. Use the net amount on the acknowledgment if an exception applies."
+          onChange={cashBenefitValue => update({ cashBenefitValue,
+            ...(guidedAmountChanged(entry.cashBenefitValue, cashBenefitValue) ? { cashExcessGiftIntended: undefined } : {}),
+          })} required />}
+        {confirmExcess && <BooleanFact label="Did you intend to contribute the excess as a gift?" value={entry.cashExcessGiftIntended} onChange={cashExcessGiftIntended => update({ cashExcessGiftIntended })} />}
         <label className="guided-field"><span className="guided-field-label">Recipient tax category</span><select className="guided-input"
           value={entry.recipientCategory === undefined && entry.isPrivateFoundation === false ? "legacy-public" : entry.recipientCategory ?? ""}
           onChange={(event) => update({ recipientCategory: event.target.value === "" ? null : event.target.value as DonationEntryData["recipientCategory"] })}>

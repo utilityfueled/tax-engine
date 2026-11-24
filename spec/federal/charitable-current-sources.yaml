@@ -22,6 +22,25 @@ lines:
     description: "Source intake collects the same actual qualification in either supported year"
     formula: "A2025 itemizer must answer recipient qualification just like a2026 itemizer; false remains false, missing stays pending.2026 standard-method sources separately require supporting-organization and donor-advised-fund answers."
     testRef: "tests/guided-interview/guided-required-facts.test.ts::requires actual charity qualification for 2025 without replacing false"
+  - line: "guided-cash-consideration"
+    description: "Use the net charitable portion of an ordinary cash payment"
+    formula: >-
+      In 2025 and 2026, a positive guided cash gift to a qualified recipient
+      requires the actual amount basis. Accept the net charitable contribution
+      on the acknowledgment as entered. For a gross payment including a
+      purchase or benefit, require the actual nonnegative fair market value of
+      goods or services received or expected, including explicit zero. When a
+      positive payment exceeds a positive benefit, require the actual intent
+      to contribute the excess. The contribution is the excess when intended,
+      and zero when the payment does not exceed the benefit or the excess was
+      not intended as a contribution. Preserve exact source amounts, the saved
+      entered total and the legacy amount pending clarification. Forward only
+      the net amount to the existing charitable cash contract, without
+      changing direct inputs that already state the net amount. This source
+      method does not determine special benefit exceptions or mixed-property
+      valuation.
+    irsRef: "26 CFR §1.170A-1(h)(1)–(2); IRS Instructions for Schedule A (Form 1040), Line 11; IRS Publication 526"
+    testRef: "tests/guided-interview/guided-required-facts.test.ts::uses the net cash gift on Schedule A and preserves the net object contract"
   - line: "nol-eligibility"
     description: "Known ineligible receipts do not enter the charitable NOL replay"
     formula: "Both actual and counterfactual current-public-cash sums use the same validated eligible current receipts. A known nonqualified gift remains in original input but creates no deduction, carry or nonexcess source amount. Unknown qualification still rejects."

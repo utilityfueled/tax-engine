@@ -14,7 +14,7 @@ export function actualNonitemizedGuide() {
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '75000', federalWithheld: '15000' }] };
   state.sectionData.deductions = { ...emptyDeductionData, method: 'nonitemized', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '1500',
-    donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public charity', type: 'cash', amount: '1500', date: '2026-05-15',
+    donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '1500', date: '2026-05-15',
       qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }] };
   return state;
 }

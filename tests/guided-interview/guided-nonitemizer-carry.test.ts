@@ -23,7 +23,7 @@ it('preserves actual cash history while keeping the real year and export gates c
   const history = actualGuidedCharitableCarryover(); history.sourceTaxYear = '2026'; history.vintages = [];
   state.sectionData.deductions = { ...emptyDeductionData, method: 'nonitemized', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '9000.99', charitableCarryoverSources: history,
-    donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public charity', type: 'cash', amount: '9000.99', date: '2026-05-15',
+    donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '9000.99', date: '2026-05-15',
       qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }] };
   const before = JSON.stringify(state);
   expect(validateSection(state, 'deductions').status).toBe('complete');

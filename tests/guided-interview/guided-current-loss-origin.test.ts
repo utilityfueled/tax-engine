@@ -92,7 +92,7 @@ it('invalidates current source edits without inventing a calculated loss', () =>
 it('preserves unsupported source methods and the closed year boundary', () => {
   const state = fixture();
   state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', charitableContributions: '5000',
-    donationEntries: [{ qualifiedOrganization: true, organization: 'Actual Charity', type: 'cash', amount: '5000', date: '2025-10-01', costBasis: '', isLongTermCapitalGain: null, isPrivateFoundation: false }] };
+    donationEntries: [{ qualifiedOrganization: true, organization: 'Actual Charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '5000', date: '2025-10-01', costBasis: '', isLongTermCapitalGain: null, isPrivateFoundation: false }] };
   expect(state.sectionData.deductions.donationEntries?.[0]?.amount).toBe('5000');
   expect(validateSection(state, 'adjustments').status).toBe('partial');
   expect(buildTaxInputFromGuidedData(state)).toBeNull();

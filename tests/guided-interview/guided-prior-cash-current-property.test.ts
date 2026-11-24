@@ -27,7 +27,7 @@ it('preserves actual prior cash and current property without opening the year ga
   state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0',
     mortgageInterest: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0',
     nonW2IncomeTaxesDeductedElsewhere: '0', charitableContributions: '6000', charitableCarryoverSources: history,
-    donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public cash charity', type: 'cash', amount: '1000', date: '2026-05-15',
+    donationEntries: [{ ...emptyDonationEntry, organization: 'Actual public cash charity', type: 'cash', cashAmountBasis: 'net-contribution', amount: '1000', date: '2026-05-15',
       qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }, property] };
   const before = JSON.stringify(state);
   expect(validateSection(state, 'deductions').status).toBe('complete');

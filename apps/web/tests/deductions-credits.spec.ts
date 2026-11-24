@@ -68,10 +68,11 @@ async function navigateToCredits(page: import("@playwright/test").Page) {
 }
 
 /** Actual fictional cash-gift record; these are test facts, never UI defaults. */
-async function addCashDonation(page: Page) {
+async function addCashDonation(page: Page, basis: "net-contribution" | "gross-payment" = "net-contribution") {
   await page.getByRole("button", { name: "Add donation", exact: true }).click();
   await page.getByLabel("Donation recipient", { exact: true }).fill("Synthetic Public Charity");
   await page.getByRole("combobox", { name: "Donation type", exact: true }).selectOption("cash");
+  await page.getByRole("combobox", { name: "Cash amount basis", exact: true }).selectOption(basis);
   await page.getByLabel("Donation date", { exact: true }).fill("2025-06-01");
   for (const [name, value] of [
     ["Recipient tax category", "fifty-percent"],
@@ -79,7 +80,7 @@ async function addCashDonation(page: Page) {
     ["Recipient is a supporting organization", "false"],
     ["Gift was to a donor-advised fund", "false"],
   ]) await page.getByRole("combobox", { name, exact: true }).selectOption(value);
-  return page.getByRole("textbox", { name: /^Donation amount \/ fair market value/ });
+  return page.getByRole("textbox", { name: basis === "gross-payment" ? /^Gross cash payment/ : /^Net charitable contribution/ });
 }
 
 async function addSolarProperty(page: Page) {
@@ -265,6 +266,18 @@ test.describe("Deductions section — itemized deductions", () => {
     await expect(page.getByText(/standard deduction/i).last()).toBeVisible();
   });
 
+  test("uses the charitable portion of a cash payment when comparing deductions", async ({ page }) => {
+    await page.getByRole("radio", { name: /^itemize deductions/i }).click();
+    await (await addCashDonation(page, "gross-payment")).fill("70");
+    await page.getByRole("textbox", { name: /^Fair market value of goods or services/ }).fill("40");
+    const intent = page.getByRole("combobox", { name: "Did you intend to contribute the excess as a gift?", exact: true });
+    await expect(intent).toHaveValue("");
+    await expect(page.locator(".guided-deduction-comparison")).toHaveCount(0);
+    await intent.selectOption("true");
+    await expect(page.locator(".guided-deduction-comparison")).toContainText("$30");
+    await expect(page.getByRole("textbox", { name: /^Gross cash payment/ })).toHaveValue("70");
+  });
+
   test("raw expenses do not claim a tax-saving recommendation", async ({ page }) => {
     await page.getByRole("radio", { name: /^itemize deductions/i }).click();
 
@@ -389,7 +402,7 @@ test.describe("Deductions — data persistence", () => {
     await expect(page.getByRole("radio", { name: /^itemize deductions/i })).toBeChecked();
 
     // Charity data should persist
-    const restoredCharityInput = page.getByRole("textbox", { name: /^Donation amount \/ fair market value/ });
+    const restoredCharityInput = page.getByRole("textbox", { name: /^Net charitable contribution/ });
     await expect(restoredCharityInput).toHaveValue("7,500");
     await expect(page.getByLabel("Donation date", { exact: true })).toHaveValue("2025-06-01");
     await expect(page.getByLabel("Donation recipient", { exact: true })).toHaveValue("Synthetic Public Charity");

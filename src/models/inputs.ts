@@ -2908,7 +2908,7 @@ export const CharitableDonationSchema = z.object({
   donorAdvisedFund: z.boolean().optional(),
   qualifiedAppreciatedStock: z.boolean().optional(),
   type: z.enum(["cash", "appreciated_stock", "property", "other"]),
-  amount: decimal, // Fair market value
+  amount: decimal, // Net charitable contribution for cash; fair market value for property
   costBasis: optionalDecimalInput, // For appreciated property
   dateOfDonation: z.string(),
   isLongTermCapitalGain: z.boolean().optional(),

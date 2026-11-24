@@ -1,7 +1,8 @@
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
 import { isActualDate } from "@/utils/civil-date";
+import { sumSourceMoney } from "@/utils/sum-source-money";
 import Decimal from "decimal.js";
-import type { DeductionData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
+import type { DeductionData, DonationEntryData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { mortgageWorksheetFactErrors } from "./guided-mortgage-worksheet";
 
@@ -46,6 +47,29 @@ export function amountError(value: string | undefined, label: string): string | 
   return undefined;
 }
 
+export function guidedDonationValue(entry: DonationEntryData): Decimal {
+  const amount = parseGuidedCurrency(entry.amount);
+  if (entry.type !== "cash" || entry.qualifiedOrganization === false || amount.isZero()) return amount;
+  if (entry.cashAmountBasis === "net-contribution") {
+    if (hasEnteredAmount(entry.cashBenefitValue) || entry.cashExcessGiftIntended != null) {
+      throw new Error("Reconcile the gross-payment facts before using a net charitable contribution.");
+    }
+    return amount;
+  }
+  if (entry.cashAmountBasis !== "gross-payment") {
+    throw new Error("Confirm whether the saved cash amount is a net charitable contribution or a gross payment.");
+  }
+  const benefitError = amountError(entry.cashBenefitValue, "fair market value of goods or services");
+  if (benefitError) throw new Error(benefitError);
+  const benefit = parseGuidedCurrency(entry.cashBenefitValue);
+  if (benefit.isZero()) return amount;
+  if (amount.lte(benefit)) return new Decimal(0);
+  if (typeof entry.cashExcessGiftIntended !== "boolean") {
+    throw new Error("Confirm whether you intended to contribute the amount above the value of the goods or services.");
+  }
+  return entry.cashExcessGiftIntended ? sumSourceMoney(amount, benefit.negated()) : new Decimal(0);
+}
+
 export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
@@ -84,6 +108,10 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     if (!isActualDate(entry.date) || (taxYear != null && !entry.date.startsWith(`${taxYear}-`))) errors[`donation-${index}-date`] = "Enter the actual donation date in the selected tax year.";
     if (typeof entry.qualifiedOrganization !== "boolean") errors[`donation-${index}-qualification`] = "Confirm the recipient's actual charitable qualification.";
     if (entry.qualifiedOrganization === false) return;
+    if (entry.type === "cash" && entry.qualifiedOrganization === true && !error) {
+      try { guidedDonationValue(entry); }
+      catch (cause) { errors[`donation-${index}-cash-basis`] = cause instanceof Error ? cause.message : "Confirm the actual cash contribution amount."; }
+    }
     let privateNonoperating = false;
     try { privateNonoperating = resolveCharitableRecipient(entry).privateNonoperating; }
     catch { errors[`donation-${index}-classification`] = "Confirm the actual recipient tax category; the saved foundation answer is ambiguous."; }
@@ -103,7 +131,7 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
   // Legacy totals remain evidence until the user reconciles them with details.
   for (const [field, entries, amountField] of [["mortgageInterest", mortgages, "mortgageInterest"], ["charitableContributions", donations, "amount"]] as const) {
     if (entries.length && hasEnteredAmount(data[field]) && !Object.keys(errors).length) {
-      const total = entries.reduce((sum, entry) => sum.plus(parseGuidedCurrency((entry as unknown as Record<string, string>)[amountField])), new Decimal(0));
+      const total = sumSourceMoney(...entries.map(entry => parseGuidedCurrency((entry as unknown as Record<string, string>)[amountField])));
       if (!total.eq(parseGuidedCurrency(data[field]))) errors[field] = "The saved total and source entries differ; reconcile the amounts before calculating.";
     }
   }

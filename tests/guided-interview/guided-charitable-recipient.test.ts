@@ -10,7 +10,7 @@ import { emptyDeductionData, emptyDonationEntry, loadGuidedFlowState, saveGuided
 import { actualGuidedCharitableCarryover } from '../fixtures/guided-charitable-carryover';
 import { completePersonalInfo, completeW2Entry, startCompleteInterview } from './complete-facts';
 it('preserves actual category and legacy facts while revoking stale history confirmation',()=>{
- const old={...emptyDonationEntry,organization:'Actual operating foundation',type:'cash' as const,amount:'6000.01',date:'2025-05-01',qualifiedOrganization:true,isPrivateFoundation:true};
+ const old={...emptyDonationEntry,organization:'Actual operating foundation',type:'cash' as const,cashAmountBasis:'net-contribution' as const,amount:'6000.01',date:'2025-05-01',qualifiedOrganization:true,isPrivateFoundation:true};
  const data={...emptyDeductionData,method:'itemized' as const,charitableContributions:'6000.01',donationEntries:[old],charitableCarryoverSources:actualGuidedCharitableCarryover()};
  const before=JSON.stringify(data);
  expect(()=>buildDonationsInput(data,2025)).toThrow(/classification|category/i);

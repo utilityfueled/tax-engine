@@ -24,7 +24,7 @@ it('preserves all actual current and prior categories through existing intake',a
       adjustedThroughTaxYear:'2025',allHistoryIncluded:true,ordinaryPercentageMethodConfirmed:true,history:[]}));
   const receipts=nonitemizedCategoryFixture().donations;
   state.sectionData.deductions={...emptyDeductionData,method:'nonitemized',medicalExpenses:'0',stateLocalTaxes:'0',realEstateTaxes:'0',mortgageInterest:'0',casualtyLosses:'0',otherItemized:'0',gamblingWinnings:'0',nonW2IncomeTaxesDeductedElsewhere:'0',charitableContributions:'60000',charitableCarryoverSources:history,
-    donationEntries:receipts.map(row=>({...emptyDonationEntry,organization:row.organization,type:row.type,amount:row.amount,date:row.dateOfDonation,costBasis:row.costBasis??'',isLongTermCapitalGain:row.isLongTermCapitalGain??null,qualifiedOrganization:row.qualifiedOrganization,recipientCategory:row.recipientCategory,supportingOrganization:false,donorAdvisedFund:false}))};
+    donationEntries:receipts.map(row=>({...emptyDonationEntry,organization:row.organization,type:row.type,...(row.type==='cash'?{cashAmountBasis:'net-contribution' as const}:{}),amount:row.amount,date:row.dateOfDonation,costBasis:row.costBasis??'',isLongTermCapitalGain:row.isLongTermCapitalGain??null,qualifiedOrganization:row.qualifiedOrganization,recipientCategory:row.recipientCategory,supportingOrganization:false,donorAdvisedFund:false}))};
   const before=JSON.stringify(state),validation=validateSection(state,'deductions');expect(validation.status,JSON.stringify(validation)).toBe('complete');
   const input=TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
   expect(input.charitableCarryoverSources?.vintages?.map(row=>[row.contributionYear,row.category,row.medium,row.openingCarryforward]))

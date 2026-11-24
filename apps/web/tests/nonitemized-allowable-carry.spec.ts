@@ -23,7 +23,9 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(standard).toBeChecked();
       await expect(page.getByText('You can save 2026 facts. The 2026 rules and filing forms are not yet qualified.', { exact: true })).toBeVisible();
       await expect(page.locator('.guided-ticker-value-hero').first()).toHaveText('Enter more info for an estimate');
-      const amount = page.getByRole('textbox', { name: /^Donation amount \/ fair market value/ });
+      const basis = page.getByRole('combobox', { name: 'Cash amount basis', exact: true });
+      await expect(basis).toHaveValue('net-contribution');
+      const amount = page.getByRole('textbox', { name: /^Net charitable contribution/ });
       await amount.fill('70000.02'); await amount.press('Tab');
       await page.getByText('Charitable contributions carried from earlier years', { exact: true }).click();
       const confirmation = page.getByRole('combobox', { name: 'Charitable carryover sources checked after the last edit', exact: true });

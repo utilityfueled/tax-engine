@@ -236,7 +236,8 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
       { label: `Mortgage ${index + 1} annual insurance allocation (before limits)`, value: entry.hasMortgageInsuranceAllocation === true ? entry.insurancePremiumsAllocableToYear ?? "" : "" },
     ]),
     { label: "Non-W-2 withholding deducted elsewhere", value: current.nonW2IncomeTaxesDeductedElsewhere ?? "" },
-    { label: "Charitable contributions", value: current.charitableContributions },
+    { label: current.donationEntries?.some(entry => entry.type === "cash" && entry.cashAmountBasis === "gross-payment")
+      ? "Entered charitable amounts before subtracting benefits" : "Charitable contributions", value: current.charitableContributions },
   ].filter((item) => hasValue(item.value));
 
   return (

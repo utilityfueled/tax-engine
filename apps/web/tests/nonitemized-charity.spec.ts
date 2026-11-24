@@ -41,7 +41,8 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await page.getByRole('button', { name: 'Add donation', exact: true }).click();
       await page.getByRole('textbox', { name: 'Donation recipient', exact: true }).fill('Synthetic private current-charity source');
       await page.getByRole('combobox', { name: 'Donation type', exact: true }).selectOption('cash');
-      const amount = page.getByRole('textbox', { name: /^Donation amount \/ fair market value/ });
+      await page.getByRole('combobox', { name: 'Cash amount basis', exact: true }).selectOption('net-contribution');
+      const amount = page.getByRole('textbox', { name: /^Net charitable contribution/ });
       await amount.fill('1500.10'); await amount.press('Tab');
       await page.getByLabel('Donation date', { exact: true }).fill('2026-05-15');
       for (const [label, answer] of [

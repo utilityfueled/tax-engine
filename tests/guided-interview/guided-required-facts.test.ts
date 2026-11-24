@@ -1,11 +1,14 @@
 // Spec: spec/federal/guided-input.yaml
 import { describe, expect, it } from "vitest";
 import { buildDonationsInput, buildEducationInput, buildEstimatedPaymentsInput, buildForm1098Inputs, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
-import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant, completeMortgageSource, completeMortgageWorksheet, completeRetirementSource } from "./complete-facts";
+import { computeDeductionComparison, emptyCreditsData, emptyDeductionData, emptyEducationStudent, emptyRetirementEntry, validateSection, loadGuidedFlowState } from "@/lib/guided-interview-flow";
+import { calculateFederalTax } from "@/engine/federal";
+import { parseInput } from "@/ingest/loader";
+import { simpleW2Fixture } from "../fixtures/simple-w2";
+import { completePersonalInfo, startCompleteInterview, completeAocEligibility, completeEducationClaimant, completeMortgageSource, completeMortgageWorksheet, completeRetirementSource, completeW2Entry } from "./complete-facts";
 
 const mortgage = { ...completeMortgageSource, lender: "Actual Bank", mortgageInterest: "123.45", interestPaidByReturnAmount: "123.45", outstandingPrincipal: "0", originationDate: "2016-06-05" };
-const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false, qualifiedOrganization: true };
+const donation = { organization: "Actual Charity", type: "cash" as const, amount: "12.34", date: "2025-02-28", costBasis: "", isLongTermCapitalGain: null, isPrivateFoundation: false, qualifiedOrganization: true, cashAmountBasis: "net-contribution" as const };
 const retirement = { ...completeRetirementSource, payer: "Actual Plan", grossDistribution: "1000", taxableAmount: "0", distributionCode: "7" };
 const stateWith = (section: string, data: unknown) => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
@@ -13,6 +16,46 @@ const stateWith = (section: string, data: unknown) => {
 };
 
 describe("required guided source facts", () => {
+  it("uses the net cash gift on Schedule A and preserves the net object contract", () => {
+    const gift = { ...donation, amount: "70", cashAmountBasis: "gross-payment" as const, cashBenefitValue: "40", cashExcessGiftIntended: true };
+    const deductions = { ...emptyDeductionData, method: "itemized" as const, charitableContributions: "70", donationEntries: [gift] };
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+    state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "85000" }] };
+    state.sectionData.deductions = deductions;
+    expect(validateSection(state, "deductions").status).toBe("complete");
+    const normalized = buildTaxInputFromGuidedData(state);
+    expect(normalized?.donations[0].amount).toBe("30");
+    expect(computeDeductionComparison("single", deductions, 2025).itemizedTotal).toBe("30");
+    expect(calculateFederalTax(parseInput(normalized)).scheduleA.cashCharitable.toFixed()).toBe("30");
+    const netObject = parseInput({ ...simpleW2Fixture, deductionElection: "itemized", donations: [{ organization: "Actual Charity", type: "cash", amount: "30", dateOfDonation: "2025-02-28", recipientCategory: "fifty-percent", qualifiedOrganization: true }] });
+    expect(calculateFederalTax(netObject)
+      .scheduleA.cashCharitable.toFixed()).toBe("30");
+    expect(state.sectionData.deductions?.donationEntries).toEqual([gift]);
+    expect(state.sectionData.deductions?.charitableContributions).toBe("70");
+  });
+
+  it("holds ambiguous restored cash gifts and incomplete gross receipts", () => {
+    const gift = { ...donation, cashAmountBasis: "gross-payment" as const, amount: "70", cashBenefitValue: "40", cashExcessGiftIntended: true };
+    const deductions = { ...emptyDeductionData, method: "itemized" as const, donationEntries: [gift], charitableContributions: "70" };
+    for (const missing of [
+      { cashAmountBasis: undefined, cashBenefitValue: undefined, cashExcessGiftIntended: undefined },
+      { cashBenefitValue: "" }, { cashBenefitValue: "-0.01" }, { cashExcessGiftIntended: undefined },
+      { cashAmountBasis: "net-contribution" as const },
+    ]) {
+      const draft = { ...gift, ...missing };
+      const original = stateWith("deductions", { ...deductions, donationEntries: [draft] });
+      const loaded = loadGuidedFlowState({ getItem: () => JSON.stringify(original) } as unknown as Storage, "legacy-cash-basis");
+      expect(loaded?.sectionData.deductions?.donationEntries).toEqual([JSON.parse(JSON.stringify(draft))]);
+      expect(validateSection(loaded!, "deductions").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(loaded!)).toBeNull();
+    }
+    const cashAmount = (overrides: Partial<typeof gift>) => buildDonationsInput({ ...deductions, charitableContributions: "", donationEntries: [{ ...gift, ...overrides }] }, 2025)[0].amount;
+    expect(cashAmount({ cashBenefitValue: "0", cashExcessGiftIntended: undefined })).toBe("70");
+    expect(cashAmount({ cashExcessGiftIntended: false })).toBe("0");
+    expect(cashAmount({ cashBenefitValue: "70", cashExcessGiftIntended: undefined })).toBe("0");
+    expect(cashAmount({ amount: "900719925474099312345.31", cashBenefitValue: "0.11" })).toBe("900719925474099312345.2");
+  });
+
   it("requires actual charity qualification for 2025 without replacing false", () => {
     const data = { ...emptyDeductionData, method: "itemized" as const, donationEntries: [{ ...donation, qualifiedOrganization: undefined }] };
     expect(() => buildDonationsInput(data, 2025)).toThrow(/qualification|qualif/i);

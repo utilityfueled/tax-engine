@@ -192,7 +192,7 @@ it('uses in-year Ohio receipt originals for guided and saved Schedule A review',
 it('includes Ohio estimate originals with automatic itemization from confirmed donations',async()=>{
  const {state}=completeTreasuryRouting('OH',false);
  const deductions={...emptyDeductionData,donationEntries:[{...emptyDonationEntry,organization:'Fictional public charity',type:'cash' as const,
-  amount:'14000',date:'2025-05-15',qualifiedOrganization:true,isPrivateFoundation:false,donorAdvisedFund:false,supportingOrganization:false}]};
+  cashAmountBasis:'net-contribution' as const,amount:'14000',date:'2025-05-15',qualifiedOrganization:true,isPrivateFoundation:false,donorAdvisedFund:false,supportingOrganization:false}]};
  // A legacy saved draft may omit the deduction election while retaining the actual donation.
  Reflect.deleteProperty(deductions,'method');
  state.sectionData.deductions=deductions;

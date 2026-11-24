@@ -66,11 +66,12 @@ import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanDat
  */
 
 import Decimal from "decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
-import { allPaymentFactErrors, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import {
@@ -323,15 +324,15 @@ export function computeDeductionComparison(
     data.personalPropertyTaxes ?? "",
     data.mortgageInterest,
     ...(data.mortgageEntries ?? []).flatMap(entry => [entry.pointsPaid ?? "", entry.propertyTaxPaid ?? "", ...(taxYear === 2026 && entry.hasMortgageInsuranceAllocation === true ? [originalAllocations.get(entry) ?? entry.insurancePremiumsAllocableToYear ?? ""] : [])]),
-    data.charitableContributions,
+    data.donationEntries?.length ? sumSourceMoney(...data.donationEntries.map(guidedDonationValue)).toFixed() : data.charitableContributions,
     data.casualtyLosses,
     ...(data.investmentInterestExpense !== undefined || data.gamblingLosses !== undefined || data.gamblingExpenses !== undefined
       ? [data.investmentInterestExpense ?? "", data.gamblingLosses ?? "", data.gamblingExpenses ?? ""]
       : [data.otherItemized]),
   ];
 
-  const itemizedTotal = fields.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
-  const diff = itemizedTotal.minus(standardAmount);
+  const itemizedTotal = sumSourceMoney(...fields.map(parseGuidedCurrency));
+  const diff = sumSourceMoney(itemizedTotal, new Decimal(-standardAmount));
   return {
     standardAmount,
     itemizedTotal: itemizedTotal.toFixed(),
@@ -1012,6 +1013,9 @@ export interface DonationEntryData {
   organization: string;
   type: "" | "cash" | "appreciated_stock" | "property" | "other";
   amount: string;
+  cashAmountBasis?: "net-contribution" | "gross-payment" | null;
+  cashBenefitValue?: string;
+  cashExcessGiftIntended?: boolean | null;
   date: string;
   costBasis: string;
   isLongTermCapitalGain: boolean | null;
