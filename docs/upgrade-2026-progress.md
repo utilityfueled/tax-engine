@@ -1,5 +1,12 @@
 # 2026 upgrade implementation evidence
 
+## November 24 generated inventory authorities
+
+The exact `e2d50f12` archive reported stale coverage inventory. An
+isolated regeneration produced four source authority updates from the
+already-pinned 2025 IRS archives. The 1,128-entry regenerated inventory
+passed `pnpm spec:inventory:check`.
+
 ## November 24 state estimated payment application years
 
 Generic guided estimates require the applied return year from the

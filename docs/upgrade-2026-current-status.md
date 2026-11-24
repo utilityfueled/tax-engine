@@ -12,7 +12,12 @@ Use the linked progress sections when investigating individual packages.
 - Guided state estimates now retain the confirmed applied tax year.
   A verified prior-year payment is excluded from the current state
   balance and remains available for its actual federal cash year.
-  All 396 focused tests passed. [State payment evidence](upgrade-2026-progress.md#november-24-state-estimated-payment-application-years).
+  All 396 focused tests passed. [State payment evidence](upgrade-2026-progress.md#november-24-state-estimated-payment-application-years) ·
+  [Commit e2d50f12](https://github.com/utilityfueled/tax-engine/commit/e2d50f12ce356d407b7d41c96c23281fbded3c82).
+
+- The exact-source inventory check detected four outdated IRS authority
+  links. Regenerating the 1,128-entry inventory corrected them, and the
+  inventory check passed. [Inventory evidence](upgrade-2026-progress.md#november-24-generated-inventory-authorities).
 
 - The offline AI scorer now excludes attempts over the task token cap
   from promotion eligibility and retains the exact billed cost.
