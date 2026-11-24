@@ -14,6 +14,13 @@ The synthetic regressions failed before the fix. Afterward, 89 focused tests,
 37 runner, transport and CLI tests. Independent source review passed. No live
 provider call or promotion occurred.
 
+An offline report of the saved November 5 development journal used the pinned
+executor at `b828ee4d` with matching tsx, decimal.js, and Zod versions. It
+reproduced 108 dispatches, $0.14829345 in known comparison cost and a $0.022384
+timeout hold. The journal hash still matched the original. The current CLI
+rejects that historical request contract, so the archived report remains tied
+to its executor revision. The timeout still requires authoritative usage.
+
 ## November 24 dependent AOTC TIN answers
 
 A positive 2025 AOTC claim now requires correction when the taxpayer confirms

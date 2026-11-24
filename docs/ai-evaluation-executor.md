@@ -186,6 +186,11 @@ If the evidence names a different model, leave the hold in place pending
 investigation. Use a CLI that supports `--billed-model` to open journals with
 the new records.
 
+The reporter validates the recorded plan’s request policy. For a historical
+plan whose policy has changed, use its pinned source revision in `report` mode
+with credentials absent from the environment. Keep the original plan and
+journal bytes intact. Replay and promotion require separate authorization.
+
 ```sh
 node --import tsx scripts/run-provider-eval.ts reconcile \
   --plan=.local/ai-eval/plan.json --journal=.local/ai-eval/attempts.jsonl \

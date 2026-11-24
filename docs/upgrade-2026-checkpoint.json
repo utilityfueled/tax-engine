@@ -45,6 +45,14 @@
       "specReferencesResolved": 18,
       "independentSourceReview": "passed",
       "liveProviderRequests": 0,
+      "historicalOfflineReport": {
+        "executorCommit": "b828ee4d",
+        "originalJournalHashVerified": true,
+        "dispatchedRequests": 108,
+        "knownComparisonCostUsd": "0.14829345",
+        "unresolvedHoldUsd": "0.022384",
+        "exactSourceEvidence": ".local/upgrade-evidence/nov24-exact-main-3f0e9cb4/historical-eval/original-policy-report.json"
+      },
       "evidence": "docs/upgrade-2026-progress.md#november-24-ai-evaluation-billed-model"
     },
     "nov24AotcDependentTinConflict": {
