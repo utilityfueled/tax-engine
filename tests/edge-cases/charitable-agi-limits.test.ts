@@ -368,13 +368,17 @@ describe("Charitable AGI limits", () => {
     expect(result.nonCashCharitable.toNumber()).toBe(50000); // Capped at 50% of $100K
   });
 
-  it("donation type 'other' (LTCG) — subject to 30% AGI limit", () => {
-    // An "other" type with isLongTermCapitalGain=true falls into the appreciated bucket.
+  it("donation type 'other' (LTCG) with related use — subject to 30% AGI limit", () => {
+    // The museum displays the collection in its public education program.
     // AGI = $100K. 30% = $30K. "Other LTCG" donation $40K → capped at $30K.
     const input = makeFixtureWithDonations([
       { qualifiedOrganization: true, isPrivateFoundation: false,
         organization: "Art Collection", type: "other", amount: "40000",
         dateOfDonation: "2025-07-01", costBasis: "5000", isLongTermCapitalGain: true,
+        recipientCategory: "fifty-percent", tangiblePropertyUse: {
+          sourceReference: "synthetic-museum-display", doneeUse: "related",
+          ordinaryWholeInterestConfirmed: true, noAdditionalValuationRuleConfirmed: true,
+        },
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);

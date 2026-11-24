@@ -1016,6 +1016,12 @@ export interface DonationEntryData {
   cashAmountBasis?: "net-contribution" | "gross-payment" | null;
   cashBenefitValue?: string;
   cashExcessGiftIntended?: boolean | null;
+  tangiblePropertyUse?: {
+    sourceReference?: string;
+    doneeUse?: "related" | "unrelated" | null;
+    ordinaryWholeInterestConfirmed?: boolean | null;
+    noAdditionalValuationRuleConfirmed?: boolean | null;
+  };
   date: string;
   costBasis: string;
   isLongTermCapitalGain: boolean | null;

@@ -53,7 +53,11 @@ describe("Crypto charitable source integration", () => {
     expect(result.carryforwards.charitableContributions.toString()).toBe("10500");
     expect(result.allLines.filter(line => line.form === "Sched A" && line.line === "12-crypto")).toHaveLength(0);
     const combined = calculateFederalTax(input(2026, [gift({ fairMarketValueAtDonation: "20000" })], {
-      donations: [{ organization: "Actual public charity", qualifiedOrganization: true, isPrivateFoundation: false, type: "property", amount: "20000", costBasis: "10000", dateOfDonation: "2026-05-01", isLongTermCapitalGain: true }],
+      donations: [{ organization: "Actual public charity", qualifiedOrganization: true, recipientCategory: "fifty-percent",
+        type: "property", amount: "20000", costBasis: "10000", dateOfDonation: "2026-05-01", isLongTermCapitalGain: true,
+        tangiblePropertyUse: { sourceReference: "synthetic-public-curriculum-use", doneeUse: "related",
+          ordinaryWholeInterestConfirmed: true, noAdditionalValuationRuleConfirmed: true },
+      }],
     }));
     expect(combined.scheduleA?.nonCashCharitable.toString()).toBe("29500");
     expect(combined.carryforwards.charitableContributions.toString()).toBe("10500");

@@ -1,10 +1,15 @@
 /** Original receipt valuation shared by Schedule A and selected carry candidates. */
-import type { TaxYearInput } from '@/models/inputs.js';
+import { CharitableTangiblePropertyUseSchema, type TaxYearInput } from '@/models/inputs.js';
 import type { CharitableContributionWorksheetInput } from '@/engine/forms/charitable-contribution-worksheet.js';
 import { eligibleCurrentCharitableDonations } from '@/engine/forms/charitable-current-sources.js';
 import { resolveCharitableRecipient } from './charitable-recipient.js';
 import { calculateK1CharitableReturnSources } from '@/engine/forms/k1-charitable-return-sources.js';
+import type Decimal from 'decimal.js';
 import { d, min } from './decimal.js';
+
+export function valueOrdinaryTangibleProperty(fairMarketValue: Decimal, adjustedBasis: Decimal, doneeUse: 'related' | 'unrelated'): Decimal {
+  return doneeUse === 'unrelated' ? min(fairMarketValue, adjustedBasis) : fairMarketValue;
+}
 
 export function readCurrentCharitableReceiptAmounts(input: TaxYearInput, options?: {
   /** The current-only carry method has no tangible-property related-use election. */
@@ -17,6 +22,7 @@ export function readCurrentCharitableReceiptAmounts(input: TaxYearInput, options
     const recipient = resolveCharitableRecipient(donation);
     const otherRecipient = recipient.percentageCategory === 'other-thirty-percent';
     let contributionValue = d(donation.amount);
+    let capitalGainCategory = donation.isLongTermCapitalGain === true;
     if (donation.type !== 'cash') {
       if (donation.isLongTermCapitalGain === undefined) throw new Error('Charitable property long-term holding status is unknown');
       if (options?.capitalStockOnly && donation.isLongTermCapitalGain && donation.type !== 'appreciated_stock') {
@@ -35,11 +41,23 @@ export function readCurrentCharitableReceiptAmounts(input: TaxYearInput, options
           throw new Error('Private-foundation capital gain gift requires qualified appreciated stock or actual basis-reduction qualification');
         }
         contributionValue = min(contributionValue, d(donation.costBasis));
+      } else if (donation.type === 'property' || donation.type === 'other') {
+        if (donation.recipientCategory !== 'fifty-percent') {
+          throw new Error('Charitable capital property requires an actual 50%-limit recipient for the ordinary tangible property method');
+        }
+        const use = CharitableTangiblePropertyUseSchema.safeParse(donation.tangiblePropertyUse);
+        if (!use.success) throw new Error('Charitable capital property requires actual ordinary tangible property and donee use facts');
+        const basis = d(donation.costBasis);
+        if (donation.costBasis === undefined || !basis.isFinite() || basis.lt(0)) {
+          throw new Error('Charitable tangible property requires actual adjusted tax basis');
+        }
+        contributionValue = valueOrdinaryTangibleProperty(contributionValue, basis, use.data.doneeUse);
+        capitalGainCategory = use.data.doneeUse === 'related';
       }
     }
     const category = donation.type === 'cash'
       ? otherRecipient ? 'cashPrivate' : 'cashPublic'
-      : donation.isLongTermCapitalGain
+      : capitalGainCategory
         ? otherRecipient ? 'capitalGainPrivate' : 'capitalGainPublic'
         : otherRecipient ? 'noncashPrivate' : 'noncashPublic';
     amounts[category] = amounts[category].plus(contributionValue);

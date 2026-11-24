@@ -73,7 +73,7 @@ import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
-import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, guidedDonationValue, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
@@ -478,6 +478,7 @@ export function buildDonationsInput(deductionData: DeductionData | undefined, ta
     supportingOrganization: entry.supportingOrganization ?? undefined,
     donorAdvisedFund: entry.donorAdvisedFund ?? undefined,
     qualifiedAppreciatedStock: entry.qualifiedAppreciatedStock ?? undefined,
+    tangiblePropertyUse: readGuidedTangiblePropertyUse(entry),
   }));
 }
 

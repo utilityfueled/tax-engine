@@ -1,0 +1,59 @@
+form: "Schedule A ordinary tangible property"
+fullName: "Actual donee use of ordinary long-term tangible personal property"
+taxYear: 2025
+reference: "https://uscode.house.gov/us/usc/t26/s170/"
+notes: |
+  A direct ordinary long-term tangible personal property gift to a qualifying
+  50%-limit organization uses the applicable contribution amount before any
+  worksheet limits or floor. The draft 2026 computation uses the same
+  receipt source before its year-specific limits. Separate public
+  readiness decisions still apply.
+lines:
+  - line: "unrelated-use"
+    description: "Reduce the gross value for documented unrelated use by the donee"
+    formula: |
+      Keep the entered amount as gross fair market value and costBasis as actual
+      adjusted tax basis. Require affirmative ordinary whole-interest tangible
+      property and donee-use evidence, a private source reference, and affirmative
+      confirmation that no additional valuation rule applies. Actual use or the
+      donor's reasonable anticipation at contribution must establish the result.
+      Sale to fund the donee's exempt purpose can establish unrelated use of the
+      property itself. Unresolved disposition certifications and later-year
+      recapture require separate evidence and methods.
+      Under IRC §170(e)(1)(B)(i)(I), remove the full hypothetical long-term gain
+      for an unrelated use. For the admitted ordinary whole-interest gift this
+      is min(FMV, adjusted basis). Use the 50% noncash category for the reduced
+      public gift because §170(b)(1)(C)(i) excludes §170(e)(1)(B) reductions from
+      the special capital-gain property cap. A qualified related-use gift keeps
+      the admitted gross FMV in the public capital-gain category. Existing limits
+      and the applicable 2026 floor apply after this valuation and classification.
+    sources:
+      - "https://www.irs.gov/publications/p526"
+      - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/xhtml/CFR-2025-title26-vol4-chapI.html"
+    testRef: "tests/engine/schedules/schedule-a-tangible-property-use.test.ts::reduces unrelated use to adjusted basis through the canonical 2025 return"
+  - line: "admission-and-privacy"
+    description: "Hold unknown and unsupported applicable property without changing its original amounts"
+    formula: |
+      Qualified long-term property or other noncash entries whose existing
+      ordinary valuation would use unreduced FMV require actual supported
+      classification for this method. Do not infer tangible property, use or
+      affirmative confirmation from the amount, basis, date or holding status.
+      Preserve cash, stock, already reduced ordinary-income and nonoperating
+      foundation source methods. Keep stock-only NOL and carry methods outside
+      this admission. Other assets, other recipient classes and specialized
+      valuations or dispositions require their own source methods. No private
+      proof reference enters public outputs or audit lines.
+    testRef: "tests/engine/schedules/schedule-a-tangible-property-use.test.ts::holds an unclassified appreciated property gift and preserves the original values"
+  - line: "guided-source"
+    description: "Collect the donee's documented use before valuing an ordinary tangible gift"
+    formula: |
+      A positive qualified gift entered as generic property or other noncash
+      property with confirmed long-term capital gain status requires an
+      explicit 50%-limit recipient, actual adjusted basis, a donee-use record,
+      and affirmative ordinary whole-interest and valuation scope facts.
+      Preserve an incomplete gift's original amount and basis without
+      assuming a use or transferring an unconfirmed record. A verified gift
+      with gross FMV 500 and basis 100 transfers both original amounts and
+      its actual unrelated use to the Schedule A calculation. The guided
+      comparison uses the same 100 value before applicable deduction limits.
+    testRef: "tests/guided-interview/guided-charitable-tangible-property-use.test.ts::requires and passes through verified donee use without changing original value or basis"

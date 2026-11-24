@@ -833,6 +833,30 @@
       ]
     },
     {
+      "key": "federal/charitable-tangible-property-use",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/t26/s170/",
+      "specPath": "spec/federal/charitable-tangible-property-use.yaml",
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-a-tangible-property-use.test.ts::reduces unrelated use to adjusted basis through the canonical 2025 return",
+        "tests/guided-interview/guided-charitable-tangible-property-use.test.ts::requires and passes through verified donee use without changing original value or basis"
+      ],
+      "implementationNote": "The supported Schedule A allocation uses documented donee use and actual adjusted basis. Final 2026 forms, filing, and qualified tax review remain outside this source mapping.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-total-excess-conservation-2026",
       "jurisdiction": "federal",
       "taxYear": 2026,

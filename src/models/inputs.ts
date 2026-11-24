@@ -2900,6 +2900,13 @@ export const Form8962Schema = z.object({
   })).refine(uniqueCoverageMonths,"Duplicate PTC reconciliation months are not allowed").optional(),
 });
 
+export const CharitableTangiblePropertyUseSchema = z.object({
+  sourceReference: z.string().trim().min(1),
+  doneeUse: z.enum(["related", "unrelated"]),
+  ordinaryWholeInterestConfirmed: z.literal(true),
+  noAdditionalValuationRuleConfirmed: z.literal(true),
+}).strict();
+
 export const CharitableDonationSchema = z.object({
   organization: z.string(),
   /** Actual charitable qualification under IRC170(c); omission remains unknown in either supported year. */
@@ -2912,6 +2919,8 @@ export const CharitableDonationSchema = z.object({
   costBasis: optionalDecimalInput, // For appreciated property
   dateOfDonation: z.string(),
   isLongTermCapitalGain: z.boolean().optional(),
+  /** Verified donee use of an ordinary whole-interest tangible gift. */
+  tangiblePropertyUse: CharitableTangiblePropertyUseSchema.optional(),
   /** Actual IRC170(b)(1)(A)/(F) recipient category; no default or inference from the legacy flag. */
   recipientCategory: z.enum(["fifty-percent", "private-nonoperating", "other-thirty-percent"]).optional(),
   /** Saved legacy foundation/second-category answer. True is ambiguous; preserve it for source migration. */

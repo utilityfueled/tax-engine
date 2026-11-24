@@ -9,7 +9,7 @@ import { CurrencyField } from "./currency-field";
 import { MortgageSourceFields } from "./mortgage-source-fields";
 import { MortgageWorksheetDetails } from "./mortgage-worksheet-details";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
-import { amountError, guidedAmountChanged } from "@/lib/guided-required-facts";
+import { amountError, guidedAmountChanged, requiresGuidedTangiblePropertyUse } from "@/lib/guided-required-facts";
 
 function TextFact({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: "text" | "date" }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><input type={type} className="guided-input" value={value} onChange={(event) => onChange(event.target.value)} aria-required="true" /></label>;
@@ -69,7 +69,16 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
     </>}
     {includeDonations && <><h4>Charitable contributions</h4>
     {donations.map((entry, index) => {
-      const update = (change: Partial<DonationEntryData>) => setDonations(donations.map((item, i) => i === index ? { ...item, ...change } : item));
+      const update = (change: Partial<DonationEntryData>) => {
+        const changesProperty = entry.tangiblePropertyUse !== undefined && (
+          (Object.hasOwn(change, "amount") && guidedAmountChanged(entry.amount, change.amount))
+          || (Object.hasOwn(change, "costBasis") && guidedAmountChanged(entry.costBasis, change.costBasis))
+          || (["organization", "type", "date", "qualifiedOrganization", "recipientCategory", "isLongTermCapitalGain"] as const)
+            .some(field => Object.hasOwn(change, field) && change[field] !== entry[field])
+        );
+        setDonations(donations.map((item, i) => i === index
+          ? { ...item, ...change, ...(changesProperty ? { tangiblePropertyUse: undefined } : {}) } : item));
+      };
       const clearBenefit = { cashBenefitValue: undefined, cashExcessGiftIntended: undefined };
       const clearCashBasis = { cashAmountBasis: null, ...clearBenefit };
       const isGross = entry.type === "cash" && entry.cashAmountBasis === "gross-payment";
@@ -132,10 +141,33 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
           <CurrencyField label="Donated property's cost basis" value={entry.costBasis} onChange={(costBasis) => update({ costBasis })} required />
           <BooleanFact label="Long-term capital gain property" value={entry.isLongTermCapitalGain} onChange={(isLongTermCapitalGain) => update({ isLongTermCapitalGain })} />
           {entry.recipientCategory === "private-nonoperating" && entry.isLongTermCapitalGain && <BooleanFact label="Gift is qualified appreciated stock" value={entry.qualifiedAppreciatedStock} onChange={(qualifiedAppreciatedStock) => update({ qualifiedAppreciatedStock })} />}
+          {requiresGuidedTangiblePropertyUse(entry) && entry.recipientCategory === "fifty-percent" && <TangiblePropertyUseFields
+            value={entry.tangiblePropertyUse ?? {}}
+            onChange={tangiblePropertyUse => update({ tangiblePropertyUse })} />}
         </>}
       </div><button type="button" className="utility-button" onClick={() => setDonations(donations.filter((_, i) => i !== index))}>Remove donation #{index + 1}</button></fieldset>;
     })}
     <button type="button" className="utility-button" onClick={() => setDonations([...donations, { ...emptyDonationEntry }])}>Add donation</button>
     </>}
+  </>;
+}
+
+type TangiblePropertyUseData = NonNullable<DonationEntryData["tangiblePropertyUse"]>;
+
+function TangiblePropertyUseFields({ value, onChange }: { value: TangiblePropertyUseData; onChange: (data: TangiblePropertyUseData) => void }) {
+  return <>
+    <TextFact label="Donee-use record reference" value={value.sourceReference ?? ""}
+      onChange={sourceReference => onChange({ sourceReference })} />
+    <label className="guided-field"><span className="guided-field-label">Documented use by the organization</span>
+      <select className="guided-input" value={value.doneeUse ?? ""} onChange={event => {
+        const doneeUse = (event.target.value || null) as TangiblePropertyUseData["doneeUse"];
+        onChange({ ...value, doneeUse, noAdditionalValuationRuleConfirmed: null });
+      }}><option value="">Choose the documented use</option><option value="related">Used for its exempt purpose</option>
+        <option value="unrelated">Unrelated use, such as sale to raise funds</option></select>
+    </label>
+    <BooleanFact label="I gave my entire interest in ordinary tangible personal property" value={value.ordinaryWholeInterestConfirmed}
+      onChange={ordinaryWholeInterestConfirmed => onChange({ ...value, ordinaryWholeInterestConfirmed })} />
+    <BooleanFact label="No other special valuation or recapture rule applies" value={value.noAdditionalValuationRuleConfirmed}
+      onChange={noAdditionalValuationRuleConfirmed => onChange({ ...value, noAdditionalValuationRuleConfirmed })} />
   </>;
 }

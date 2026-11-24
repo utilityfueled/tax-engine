@@ -139,6 +139,15 @@
       "note": "Original regular and alternative attributes reconcile current use before statutory COD reductions. Reference exports preserve current form lines and label source-validated final carries separately. Ordinary foreign/NOL and signed current MTC follow-through remain distinct; no final2026, filing or human qualification."
     },
     {
+      "key": "federal/charitable-tangible-property-use",
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "testRefs": [
+        "tests/engine/schedules/schedule-a-tangible-property-use.test.ts::reduces unrelated use to adjusted basis through the canonical 2025 return",
+        "tests/guided-interview/guided-charitable-tangible-property-use.test.ts::requires and passes through verified donee use without changing original value or basis"
+      ],
+      "note": "The supported Schedule A allocation uses documented donee use and actual adjusted basis. Final 2026 forms, filing, and qualified tax review remain outside this source mapping."
+    },
+    {
       "key": "federal/cod-partial-personal-insolvency",
       "enginePath": "src/engine/forms/cod-nol-reductions.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",

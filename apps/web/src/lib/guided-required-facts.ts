@@ -1,4 +1,6 @@
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
+import { CharitableTangiblePropertyUseSchema } from "@/models/inputs";
+import { valueOrdinaryTangibleProperty } from "@/utils/charitable-current-receipts";
 import { isActualDate } from "@/utils/civil-date";
 import { sumSourceMoney } from "@/utils/sum-source-money";
 import Decimal from "decimal.js";
@@ -49,6 +51,11 @@ export function amountError(value: string | undefined, label: string): string | 
 
 export function guidedDonationValue(entry: DonationEntryData): Decimal {
   const amount = parseGuidedCurrency(entry.amount);
+  if (requiresGuidedTangiblePropertyUse(entry)) {
+    const use = readGuidedTangiblePropertyUse(entry);
+    if (!use) throw new Error(tangiblePropertyUseError(entry));
+    return valueOrdinaryTangibleProperty(amount, parseGuidedCurrency(entry.costBasis), use.doneeUse);
+  }
   if (entry.type !== "cash" || entry.qualifiedOrganization === false || amount.isZero()) return amount;
   if (entry.cashAmountBasis === "net-contribution") {
     if (hasEnteredAmount(entry.cashBenefitValue) || entry.cashExcessGiftIntended != null) {
@@ -68,6 +75,23 @@ export function guidedDonationValue(entry: DonationEntryData): Decimal {
     throw new Error("Confirm whether you intended to contribute the amount above the value of the goods or services.");
   }
   return entry.cashExcessGiftIntended ? sumSourceMoney(amount, benefit.negated()) : new Decimal(0);
+}
+
+export function requiresGuidedTangiblePropertyUse(entry: DonationEntryData): boolean {
+  return (entry.type === "property" || entry.type === "other") && entry.isLongTermCapitalGain === true
+    && entry.qualifiedOrganization === true && entry.recipientCategory !== "private-nonoperating"
+    && parseGuidedDisplayAmount(entry.amount).gt(0);
+}
+
+export function readGuidedTangiblePropertyUse(entry: DonationEntryData) {
+  return requiresGuidedTangiblePropertyUse(entry) && entry.recipientCategory === "fifty-percent"
+    ? CharitableTangiblePropertyUseSchema.safeParse(entry.tangiblePropertyUse).data : undefined;
+}
+
+function tangiblePropertyUseError(entry: DonationEntryData): string {
+  return entry.recipientCategory === "fifty-percent"
+    ? "Confirm actual donee use and the source facts for this ordinary tangible property gift."
+    : "This capital property method requires an actual 50%-limit organization. Confirm the recipient's category from your records.";
 }
 
 export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown): Record<string, string> {
@@ -115,6 +139,9 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     let privateNonoperating = false;
     try { privateNonoperating = resolveCharitableRecipient(entry).privateNonoperating; }
     catch { errors[`donation-${index}-classification`] = "Confirm the actual recipient tax category; the saved foundation answer is ambiguous."; }
+    if (requiresGuidedTangiblePropertyUse(entry) && !readGuidedTangiblePropertyUse(entry)) {
+      errors[`donation-${index}-tangible-property-use`] = tangiblePropertyUseError(entry);
+    }
     if (taxYear === 2026 && data.method !== "itemized") {
       for (const field of ["qualifiedOrganization", "supportingOrganization", "donorAdvisedFund"] as const) {
         if (typeof entry[field] !== "boolean") errors[`donation-${index}-${field}`] = "Confirm the recipient's eligibility for the 2026 nonitemizer deduction.";

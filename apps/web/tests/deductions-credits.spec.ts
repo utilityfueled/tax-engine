@@ -278,6 +278,31 @@ test.describe("Deductions section — itemized deductions", () => {
     await expect(page.getByRole("textbox", { name: /^Gross cash payment/ })).toHaveValue("70");
   });
 
+  test("uses adjusted basis for an unrelated-use tangible gift after confirming the source", async ({ page }) => {
+    await page.getByRole("radio", { name: /^itemize deductions/i }).click();
+    await page.getByRole("button", { name: "Add donation", exact: true }).click();
+    await page.getByLabel("Donation recipient", { exact: true }).fill("Example University");
+    await page.getByLabel("Donation date", { exact: true }).fill("2025-04-02");
+    const choice = (name: string) => page.getByRole("combobox", { name, exact: true });
+    await choice("Donation type").selectOption("property");
+    await choice("Recipient tax category").selectOption("fifty-percent");
+    await choice("Recipient qualifies for a charitable contribution deduction").selectOption("true");
+    await page.getByRole("textbox", { name: /^Donation amount \/ fair market value/ }).fill("500");
+    const adjustedBasis = page.getByRole("textbox", { name: /^Donated property's cost basis/ });
+    await adjustedBasis.fill("100");
+    await choice("Long-term capital gain property").selectOption("true");
+    const sourceReference = page.getByLabel("Donee-use record reference", { exact: true });
+    await expect(page.locator(".guided-deduction-comparison")).toHaveCount(0);
+    await sourceReference.fill("University sale confirmation, April 2");
+    await choice("Documented use by the organization").selectOption("unrelated");
+    await choice("I gave my entire interest in ordinary tangible personal property").selectOption("true");
+    await choice("No other special valuation or recapture rule applies").selectOption("true");
+    await expect(page.locator(".guided-deduction-comparison")).toContainText("$100");
+    await adjustedBasis.fill("101");
+    await expect(sourceReference).toHaveValue("");
+    await expect(page.locator(".guided-deduction-comparison")).toHaveCount(0);
+  });
+
   test("raw expenses do not claim a tax-saving recommendation", async ({ page }) => {
     await page.getByRole("radio", { name: /^itemize deductions/i }).click();
 

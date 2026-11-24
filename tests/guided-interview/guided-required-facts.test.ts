@@ -45,9 +45,10 @@ describe("required guided source facts", () => {
       const draft = { ...gift, ...missing };
       const original = stateWith("deductions", { ...deductions, donationEntries: [draft] });
       const loaded = loadGuidedFlowState({ getItem: () => JSON.stringify(original) } as unknown as Storage, "legacy-cash-basis");
-      expect(loaded?.sectionData.deductions?.donationEntries).toEqual([JSON.parse(JSON.stringify(draft))]);
-      expect(validateSection(loaded!, "deductions").status).toBe("partial");
-      expect(buildTaxInputFromGuidedData(loaded!)).toBeNull();
+      if (!loaded) throw new Error("Expected the saved cash gift to reopen.");
+      expect(loaded.sectionData.deductions?.donationEntries).toEqual([JSON.parse(JSON.stringify(draft))]);
+      expect(validateSection(loaded, "deductions").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(loaded)).toBeNull();
     }
     const cashAmount = (overrides: Partial<typeof gift>) => buildDonationsInput({ ...deductions, charitableContributions: "", donationEntries: [{ ...gift, ...overrides }] }, 2025)[0].amount;
     expect(cashAmount({ cashBenefitValue: "0", cashExcessGiftIntended: undefined })).toBe("70");
