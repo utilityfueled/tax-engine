@@ -1,5 +1,48 @@
 # 2026 upgrade implementation evidence
 
+## November 24 CLI short accounting-year import
+
+`c5c11f1a` accepts an optional `standard-deduction-facts.json` using
+the existing type contract. The directory importer adds strict key
+validation for that file. A confirmed short-year change reaches the
+public calculation hold. Missing and explicit full-year facts keep
+their previous outputs. Object imports keep their previous validation.
+Three failing checks exposed the missing source. Independent review
+identified a fourth case where a misspelled key was silently stripped.
+All four now reject invalid work or retain the reported fact.
+
+All 34 focused tests, 59 Form 1040 spec references, scoped lint and
+typecheck passed. Five actual CLI subprocess cases checked absent,
+false, true, wrong-type and misspelled facts, including exit status and
+the absence of a tax summary when held. Object-import compatibility
+was checked separately. The initial exact browser intake rejected the
+stale loader fingerprint. The first full local unit run also encountered
+the sandbox's loopback restriction. `71a2c6e6` changes only the reviewed
+loader fingerprint. The first full rerun detected one remaining stale
+checksum in the optional browser diagnostic manifest. `35d69e98`
+updates that checksum. Both source bindings and all 62 orchestration,
+diagnostic and fixture checks passed. The browser actions, budgets and
+limits are unchanged. All eight exact static and build checks and the
+remote Docker build passed on `35d69e98`. Both local unit and coverage
+runs passed 30,276 tests with 81 existing skips. Branch coverage was
+88.30% against the 85% gate. Local Chromium passed 650 active cases in
+eight batches with five original skips and confirmed owned-server cleanup.
+All eleven exact local checks passed. Vercel canceled the production build.
+Managed Linux passed 648 active cases and reached two RRTA saved-PDF
+inspection deadlines. It retained five original skips. All eight GitHub
+CI jobs passed. Remote coverage passed 30,357 tests in 2,210 files at
+88.68% branch coverage. Strict AMD64 passed 635 active cases with five
+original skips. Twelve Ohio cases, one Pennsylvania payment case and
+one vehicle source case reached the unchanged 30-second deadline. One
+RRTA case reached the saved-PDF inspection deadline. Compose recovery,
+independent archive verification, scanning, artifact upload and owned
+container cleanup passed. Strict browser qualification remains open.
+[IRC Section 443](https://uscode.house.gov/us/usc/t26/s443/) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45337535301) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45337535199) ·
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45337535163/job/138253064371) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45337535163/job/138253064692).
+
 ## November 23 actual short accounting-period intake
 
 `cee016b0` records the inclusive start and end dates and a local source
@@ -38,13 +81,27 @@ passed 648 active cases. Two desktop Ohio part-year school cases had
 downloaded and inspected their review PDFs and reached the existing
 30-second deadline during the final filing-rejection request. The
 isolated Compose recovery, independent archive, candidate scan and
-owned-container cleanup passed. The exact strict AMD64 job was queued
-once more, and exact ARM64 remains in progress.
+owned-container cleanup passed. Exact ARM64 passed 641 active browser
+cases and retained five original skips. Nine Ohio cases reached the
+unchanged 30-second deadline across business, reciprocal, resident-credit
+and school district journeys. ARM64 Compose recovery, independent archive
+verification, candidate scanning and container cleanup all passed. The
+strict AMD64 repeat passed 633 active cases with the five original
+skips. Thirteen Ohio cases and two Pennsylvania married-payment cases
+reached the original whole-case deadline. Both RRTA cases reached the
+bounded saved-PDF inspection deadline. Compose recovery, archive
+verification, candidate scanning and owned-browser-container removal
+passed. All four school cases on the first AMD64 runner completed the
+saved-PDF inspection. On the repeat, two completed header entry and none
+completed saved reopen before the deadline. The stages that completed
+varied across identical source and test commands. The strict browser
+gate remains open.
 [First strict AMD64 attempt](https://github.com/utilityfueled/tax-engine/actions/runs/45328203260/job/138222783364).
+[Strict AMD64 repeat](https://github.com/utilityfueled/tax-engine/actions/runs/45328203260/job/138242265802).
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45328203164) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45328203124) ·
 [AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45328203260) ·
-[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45328290048).
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45328290048/job/138237070258).
 
 The November 24 review packet adds paired cents and whole-dollar
 Form 6251 inputs, plus wage-only and positive-AMT twelve-month relief
@@ -56,6 +113,12 @@ A private diagnostic of the exact-label Playwright selector found
 that it resolved zero controls for two existing wrapped labels. The
 existing selector found both controls. No selector change was made and
 no matched timing was recorded.
+
+A separate matched experiment compared duplicate fingerprint work on
+confirmed Ohio school renders. Median process CPU was 18.077 ms before
+and 17.746 ms after, with overlapping ranges across six processes per
+revision and 120 measured renders per process. Thirty-seven parity
+tests passed in each private tree. The candidate was not adopted.
 
 ## November 23 public federal calculation admission
 

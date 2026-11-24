@@ -9,6 +9,20 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `c5c11f1a` carries the CLI’s actual short-year answer into the same
+  Section 443 hold as object input and the guided interview. It validates
+  the new optional file and rejects misspelled facts. All 34 focused
+  tests and five actual CLI cases passed. `71a2c6e6` binds the browser
+  audit to the reviewed loader, and `35d69e98` updates the dependent
+  diagnostic checksum. Exact unit and coverage runs each passed 30,276
+  tests at 88.30% branch coverage. All eleven exact local checks passed,
+  including 650 active Chromium cases. The GitHub Docker job also passed.
+  Managed Linux passed 648 active cases and reached two RRTA saved-PDF
+  inspection deadlines. All eight GitHub CI jobs passed. Strict AMD64
+  passed 635 active cases and reached fifteen browser deadlines. Its
+  Compose recovery, independent archive, scan and cleanup passed.
+  [CLI evidence](upgrade-2026-progress.md#november-24-cli-short-accounting-year-import).
+
 - `cee016b0` lets a living single filer save actual dates for a regular
   month-end accounting-period change. Incomplete and confirmed drafts
   survive encrypted recovery. The dates and reference stay out of PDF
@@ -16,7 +30,9 @@ Use the linked progress sections when investigating individual packages.
   calculation. All eleven exact local checks, all eight GitHub CI jobs
   and all 650 active managed Linux cases passed. Strict AMD64 passed
   recovery and archive verification and reached two browser deadlines.
-  The exact rerun and native ARM64 are in progress.
+  ARM64 passed recovery and archive verification and reached nine browser
+  deadlines. The strict AMD64 repeat passed recovery and archive checks
+  and reached seventeen browser deadlines across Ohio, Pennsylvania and RRTA.
   [Intake evidence](upgrade-2026-progress.md#november-23-actual-short-accounting-period-intake).
 
 - `0c33f925` holds the public federal API and workspace recompute for a
@@ -887,7 +903,7 @@ AMD64 runner.
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC and Forms 2106, 7206, 8829 and 8919 are pinned as disabled candidates. The latest Form 1040, general annual instructions and Tax/EIC tables still print 2025. Schedule B instructions now print 2026, while its blank prints 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
 | AI routing and exact billing | Exact cost is recorded separately from whole retail credits. The hold for a second attempt checks the cumulative bound under the owner lock. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Billing evidence](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Protected Preview `cdfdd050` passed all 12 workspace lifecycle checks. Four read-only billing checks passed for each of two authorized actors on `1a9bfd0d`. Its configured prices match Stripe Sandbox, and the canceled actor displays enabled checkout choices. The webhook points to an older Preview. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Current checkout, signed delivery and exact credit reconciliation remain open. [Preview](upgrade-2026-progress.md#november-20-original-student-loan-and-retirement-statements) · [Billing baseline](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Strict AMD64 and ARM64 on `1a9bfd0d` passed Compose recovery. Their browser runs passed 642 and 641 cases, respectively, with eight and nine Ohio deadlines. Managed Linux passed 648 cases with two RRTA saved-PDF inspection timeouts. Managed macOS passed all 650 active cases. All four runs retained five original skips. Linux browser qualification remains open. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573332) · [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/44838740419/job/136641573400) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/44838794520/job/136650654231). |
+| Self-host recovery | Exact `35d69e98` passed 650 local Chromium cases, 648 managed Linux cases and 635 strict AMD64 cases. The latest tested ARM64 source, `cee016b0`, passed 641 strict cases. All retained five original skips. Native recovery, independent archives, scanning and cleanup passed. Managed and native Linux browser qualification remains open. [Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45337535163/job/138253064371) · [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45337535163/job/138253064692) · [Strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45328290048/job/138237070258). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 The `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)

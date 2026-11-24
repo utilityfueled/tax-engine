@@ -2,17 +2,45 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "cee016b04ba57b7f00e004e5011125275dbb244b",
+    "applicationCommit": "35d69e981d5d658b450249d8151d20b81085cf70",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov23GuidedShortAccountingPeriodIntake",
+    "evidenceKey": "activeContinuation.nov24CliShortAccountingYear",
     "remaining": [
-      "Verify the exact native ARM64 and repeat strict AMD64 browser results; preserve the original deadlines and recovery checks.",
+      "Qualify the strict Linux browser suites. Recovery, archives, candidate scanning and cleanup passed, but managed Linux and strict AMD64 on 35d69e98 and strict ARM64 on cee016b0 exceeded existing deadlines. Preserve the original browser and PDF inspection limits.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
   "activeContinuation": {
+    "nov24CliShortAccountingYear": {
+      "applicationCommit": "c5c11f1a6d3548457f23ed7eba5230dfeaa289d7",
+      "scope": "The optional CLI standard deduction facts file rejects malformed or unknown keys and passes the explicit short-year fact to the public Section 443 calculation guard. Object imports keep their prior contract.",
+      "focusedTestsPassed": 34,
+      "cliCasesPassed": 5,
+      "objectImportCompatibilityPassed": true,
+      "form1040SpecReferencesPassed": 59,
+      "independentSourceReview": "passed after typo validation fix",
+      "initialExact": {"githubCiRun": 45336063507, "githubDockerRun": 45336063365, "githubWebRun": 45336063489, "localBrowserIntake": "stopped before execution on the stale loader audit digest", "localFullUnit": "sandbox denied loopback TLS"},
+      "firstAuditCommit": {"commit": "71a2c6e6599afd53b70fb1ddc7f057ab2140d647", "githubCiRun": 45336629688, "githubDockerRun": 45336629687, "githubWebRun": 45336629550, "localFullUnit": "one stale dependent diagnostic checksum assertion", "localCoverage": "superseded runner stopped after stalling, before browser execution"},
+      "verificationCommit": "35d69e981d5d658b450249d8151d20b81085cf70",
+      "sourceArchiveSha256": "b70ed700e07bd2070a4b447782ebe0edc63a6f19bc1fab9ca97a9ae2c60f7a8d",
+      "browserSourceAuditFocusedTestsPassed": 62,
+      "localExactEvidence": ".local/upgrade-evidence/nov24-cli-short-year-35d69e98/local-checks.tsv",
+      "localExactStaticAndBuildChecksPassed": 8,
+      "localExactUnit": {"passed": 30276, "skipped": 81},
+      "localExactCoverage": {"passed": 30276, "skipped": 81, "branchCoveragePercent": 88.30, "requiredBranchCoveragePercent": 85},
+      "localExactChromium": {"passed": 650, "originalSkips": 5, "batches": 8, "cleanupPassed": true},
+      "githubCiRun": 45337535301,
+      "githubCi": {"jobsPassed": 8, "testsPassed": 30357, "testFilesPassed": 2210, "branchCoveragePercent": 88.68},
+      "githubDockerRun": 45337535199,
+      "githubDockerConclusion": "success",
+      "githubWebRun": 45337535163,
+      "githubManagedLinux": {"job": 138253064371, "passed": 648, "rrtaSavedPdfDeadlines": 2, "originalSkips": 5},
+      "githubExactAmd64": {"job": 138253064692, "passed": 635, "ohioDeadlines": 12, "pennsylvaniaDeadlines": 1, "vehicleSourceDeadlines": 1, "rrtaSavedPdfDeadlines": 1, "originalSkips": 5, "composeRecoveryPassed": true, "archivePassed": true, "scanPassed": true, "cleanupPassed": true},
+      "vercelProduction": "CANCELED",
+      "previousApplicationEvidenceKey": "activeContinuation.nov23GuidedShortAccountingPeriodIntake"
+    },
     "nov23GuidedShortAccountingPeriodIntake": {
       "applicationCommit": "cee016b04ba57b7f00e004e5011125275dbb244b",
       "sourceArchiveSha256": "87c1aff7744e5105ba4d37a8f21357a0cbba3aa2f8460378eff34a4fc150bf8c",
@@ -33,11 +61,13 @@
       "githubWebRun": 45328203260,
       "exactManagedLinux": {"job": 138222783647, "passed": 650, "failed": 0, "originalSkips": 5},
       "exactAmd64StrictFirstAttempt": {"job": 138222783364, "passed": 648, "ohioSchoolDeadlines": 2, "originalSkips": 5, "composeRecoveryPassed": true, "archivePassed": true, "scanPassed": true, "cleanupPassed": true},
-      "exactAmd64StrictRepeat": "queued",
+      "exactAmd64StrictRepeat": {"job": 138242265802, "passed": 633, "ohioDeadlines": 13, "pennsylvaniaDeadlines": 2, "rrtaSavedPdfDeadlines": 2, "originalSkips": 5, "composeRecoveryPassed": true, "archivePassed": true, "scanPassed": true, "cleanupPassed": true},
       "ohioNativeSelectorDiagnostic": {"adopted": false, "reason": "Pinned Playwright did not resolve two representative existing wrapped labels with the exact getByLabel candidate.", "matchedTimingAvailable": false},
+      "ohioConfirmedRenderDiagnostic": {"adopted": false, "reason": "Ranges overlapped and confirmed-render process CPU changed by 0.331 ms per render in local measurements.", "baselineMedianMs": 18.077, "candidateMedianMs": 17.746, "processesPerRevision": 6, "rendersPerProcess": 120, "matchingParityTestsPerRevision": 37, "evidence": ".local/upgrade-evidence/nov24-confirmed-school-cpu-negative/results.json"},
       "nativeArm64Run": 45328290048,
+      "exactNativeArm64": {"job": 138237070258, "passed": 641, "ohioDeadlines": 9, "originalSkips": 5, "composeRecoveryPassed": true, "archivePassed": true, "scanPassed": true, "cleanupPassed": true},
       "vercelProduction": "CANCELED",
-      "remaining": "Collect exact ARM64 and repeat AMD64 results. The source packet remains outside calculation input and Section 443 annualization is still held."
+      "remaining": "Strict AMD64 and ARM64 browser qualification remain open. The source packet remains outside calculation input and Section 443 annualization is still held."
     },
     "nov23PublicFederalAndOhioRender": {
       "applicationCommit": "0c33f92539493d6f51e8451730fa531323d9be71",
