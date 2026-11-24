@@ -9,19 +9,40 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `9a45b970` adds a private Pennsylvania 2026 worksheet path that
+  excludes verified government unemployment from state income and
+  Schedule SP for residents, part-year residents and nonresidents. All
+  2,539 Pennsylvania tests passed. The exact GitHub image build passed.
+  The combined application is in the local and GitHub recovery checks.
+  [Pennsylvania evidence](upgrade-2026-progress.md#november-24-pennsylvania-government-unemployment-exclusion).
+
+- `badcfd4b` adds an internal Ohio 2026 candidate that assigns ordinary
+  unemployment receipts for a single part-year resident or nonresident.
+  All 2,441 Ohio tests passed, including 29 new cases. Full local unit and
+  coverage runs each passed 30,319 tests at 88.32% branch coverage. Final
+  Ohio forms and qualified review remain open.
+  [Ohio evidence](upgrade-2026-progress.md#november-24-ohio-unemployment-for-part-year-residents-and-nonresidents).
+
+- `355d3fec` adds a private wage source path for a short return due before
+  the calendar W-2 arrives. It reconciles one employer's complete dated
+  payroll ledger to an independently identified issuer cutoff summary.
+  The latest exact focused checks passed. Qualified tax review and final
+  reporting remain open.
+  [Cutoff evidence](upgrade-2026-progress.md#november-24-employer-cutoff-payroll-originals).
+
 - `703c0a1d` supplies the internal wage-only worksheet with dated payroll
   amounts that reconcile to an original calendar-year W-2. It handles the
-  short-period cutoff for payments available before collection. The
-  current method applies after the calendar-year W-2 is available. A
-  timely source method and qualified tax review are still needed.
+  short-period cutoff for payments available before collection. This
+  source method applies after the calendar-year W-2 is available.
   [Payroll evidence](upgrade-2026-progress.md#november-24-actual-short-year-payroll-sources).
 
 - `bc2fb70f` implements the internal Section 443 worksheet for ordinary
   regular and minimum tax. It uses separate short-period bases and keeps
   half-dollar ties exact. `924a46bc` adds the worksheet to the generated
   coverage inventory. Exact unit and coverage runs each passed 30,283
-  tests at 88.30% branch coverage. Public output still requires qualified
-  tax review and final form mapping.
+  tests at 88.30% branch coverage, and exact local Chromium passed all
+  650 active cases. Public output still requires qualified tax review and
+  final form mapping.
   [Arithmetic evidence](upgrade-2026-progress.md#november-24-ordinary-short-accounting-year-tax).
 
 - `c5c11f1a` carries the CLI’s actual short-year answer into the same

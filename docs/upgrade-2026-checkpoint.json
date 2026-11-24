@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "703c0a1dc8e37bc3f72db3c45090387eebe07fdf",
+    "applicationCommit": "9a45b970305442188962e0c69163f15c81496799",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov24ShortYearPayroll",
+    "evidenceKey": "activeContinuation.nov24PAUnemploymentDraft",
     "remaining": [
       "Qualify the strict Linux browser suites. Recovery, archives, candidate scanning and cleanup passed, but managed Linux and strict AMD64 on 35d69e98 and strict ARM64 on cee016b0 exceeded existing deadlines. Preserve the original browser and PDF inspection limits.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
@@ -13,6 +13,46 @@
     ]
   },
   "activeContinuation": {
+    "nov24PAUnemploymentDraft": {
+      "applicationCommit": "9a45b970305442188962e0c69163f15c81496799",
+      "scope": "Private 2026 Pennsylvania ordinary wage draft accepts one verified government unemployment original, excludes it from state income and Schedule SP for all three residency statuses, and preserves the public gate.",
+      "pennsylvaniaTestsPassed": 2539,
+      "newCasesPassed": 18,
+      "cleanFocusedTestsPassed": 209,
+      "browserSourceAuditTestsPassed": 2,
+      "specReferencesPassed": 9980,
+      "independentEngineeringReview": "passed",
+      "localEvidence": ".local/upgrade-evidence/nov24-pa-unemployment",
+      "remoteRuns": {"ci": 45350826062, "web": 45350825703, "docker": 45350825798, "nativeArm64": 45350876304},
+      "docker": "Passed on the exact application revision",
+      "vercel": "Canceled by Ignored Build Step",
+      "remaining": ["Complete latest exact local and remote qualification checks.", "Obtain qualified tax review and final Pennsylvania artifacts."]
+    },
+    "nov24OhioUnemploymentDraft": {
+      "applicationCommit": "badcfd4b6e65df0ccf637fc7d60b7e40a9d675e5",
+      "scope": "Private 2026 source-bound Ohio unemployment computation for single under-65 part-year and nonresident W-2 filers with one qualifying Form 1099-G. Public qualification remains open.",
+      "ohioTestsPassed": 2441,
+      "newCasesPassed": 29,
+      "cleanFocusedTestsPassed": 176,
+      "browserSourceAuditTestsPassed": 2,
+      "specReferencesPassed": 9979,
+      "independentEngineeringReview": "passed",
+      "localEvidence": ".local/upgrade-evidence/nov24-ohio-unemployment-draft",
+      "localFullTests": {"passed": 30319, "skipped": 81, "branchCoveragePercent": 88.32},
+      "remoteRuns": {"ci": 45349613445, "web": 45349613426, "docker": 45349613349},
+      "remaining": ["Complete the latest full checks from the combined tracked source.", "Verify final Ohio artifacts and obtain qualified independent review."]
+    },
+    "nov24ShortYearCutoff": {
+      "applicationCommit": "355d3fec5858596c44a6e21d3e57b399043ab376",
+      "scope": "Private early short-year wage bases from a complete employer payroll ledger and a separate issuer cutoff summary, with exact reconciliation and coverage period matching.",
+      "focusedTestsPassed": 84,
+      "browserSourceAuditTestsPassed": 2,
+      "specReferencesPassed": 9978,
+      "independentEngineeringReview": "passed",
+      "localEvidence": ".local/upgrade-evidence/nov24-short-year-cutoff",
+      "remoteRuns": {"ci": 45348868042, "web": 45348867911, "docker": 45348867914},
+      "remaining": "Qualified tax/source review and final reporting mapping."
+    },
     "nov24ShortYearPayroll": {
       "applicationCommit": "703c0a1dc8e37bc3f72db3c45090387eebe07fdf",
       "scope": "Retrospective private 2025/2026 Section 443 calculation from a complete ordinary payroll history and matching calendar-year W-2. Public amounts remain held for qualification.",
@@ -22,7 +62,7 @@
       "localEvidence": ".local/upgrade-evidence/nov24-short-year-payroll",
       "remoteRuns": {"ci": 45347965452, "web": 45347965352, "docker": 45347965235},
       "vercel": "Canceled by Ignored Build Step",
-      "remaining": ["Establish a source method for short-year filing before the calendar-year W-2 is available.", "Obtain qualified tax review and final form mapping."]
+      "remaining": ["Review the later employer cutoff source candidate for short-year filing before the calendar W-2 arrives.", "Obtain qualified tax review and final form mapping."]
     },
     "nov24OrdinaryShortAccountingYearTax": {
       "applicationCommit": "bc2fb70fa14ee33ccc7238a9a0d9d47f3407cddf",
@@ -33,7 +73,7 @@
       "specReferencesPassed": 9977,
       "independentEngineeringReview": "seven-month regular and AMT half-dollar ties reproduced, corrected and retested against 528 exact rational comparisons",
       "inventoryCheck": "missing entry on initial archive, generated and checked on 924a46bc",
-      "localFullTests": {"passed": 30283, "skipped": 81, "branchCoveragePercent": 88.30},
+      "localFullTests": {"passed": 30283, "skipped": 81, "branchCoveragePercent": 88.30, "chromiumPassed": 650, "chromiumOriginalSkips": 5},
       "inventoryBoundRemoteRuns": {"ci": 45347093915, "web": 45347093959, "docker": 45347093879},
       "vercel": "Canceled by Ignored Build Step",
       "localEvidence": ".local/upgrade-evidence/nov24-short-year-arithmetic-bc2fb70f",

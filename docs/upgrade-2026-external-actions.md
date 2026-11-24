@@ -1,5 +1,27 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 24 Pennsylvania and Ohio unemployment originals
+
+Independently derive each expected result from the documented synthetic
+originals and check the final 2026 form destinations once published.
+
+- Pennsylvania. Start with $75,000 in annual W-2 wages. Use $75,000,
+  $39,000 and $9,000 of Pennsylvania wages for the full-year resident,
+  part-year resident and nonresident cases. Add one qualifying government
+  Form 1099-G with $2,600.25 in Box 1 and $260.02 in federal withholding.
+  Derive Pennsylvania taxable compensation, Schedule SP eligibility
+  income and tax for each case. Compare each result with the same wages
+  alone. [61 Pa. Code §101.6(c)(4)](https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html) ·
+  [Pennsylvania Schedule SP guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/tax-forgiveness).
+- Ohio. Start with $50,000 in annual W-2 wages and $1,000 of gross Box 1
+  from an Ohio agency. Assign the $600 June 30 receipt and $400 July 1
+  receipt for a taxpayer moving into Ohio July 1, with $30,000 of Ohio
+  wages. Repeat for a full-year nonresident with $10,000 of Ohio wages.
+  Derive adjusted gross income, the IT NRC amounts and credit, and the
+  resulting tax and refund with $1,000 in actual W-2 Ohio withholding.
+  [Ohio R.C. 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+  [Ohio unemployment guidance](https://tax.ohio.gov/help-center/faqs/income-allocation-of-compensation-wages-stock-options-etc).
+
 ## November 23 short accounting-period review
 
 The guided draft now retains the actual dates for a living single filer
@@ -23,9 +45,12 @@ using January 1 and June 30 pay records that total $30,000 and July 1
 and December 31 records that total $40,000. Calendar W-2 Boxes 1 and 2
 are $70,000 and $7,000. Confirm the two exact reconciliations, the
 June 30 unrestricted availability case when collection occurs July 1,
-and the application of §31(a)(2) to withholding. Determine which
-original payroll records can support a short period due before the
-calendar W-2 arrives.
+and the application of §31(a)(2) to withholding. For a short return due
+before the annual W-2 arrives, review the alternative private candidate
+that reconciles a complete dated payroll ledger against a separate original
+employer cutoff summary for the exact short period. Evaluate whether the
+records and cutoff would support the candidate's tax bases and current
+filing instructions.
 [26 USC §31](https://uscode.house.gov/us/usc/t26/s31/) ·
 [26 CFR §1.451-2](https://www.ecfr.gov/current/title-26/section-1.451-2).
 

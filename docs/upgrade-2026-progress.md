@@ -1,5 +1,96 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Pennsylvania government unemployment exclusion
+
+`9a45b970` adds a private Pennsylvania 2026 ordinary W-2 draft for one
+supported original Form 1099-G. It matches the current original and
+recipient, excludes gross government unemployment from Pennsylvania
+income and Schedule SP, and preserves wage-based allocation and
+withholding for full-year residents, part-year residents and nonresidents.
+The existing sources still establish the federal earned income credit
+dependency. Public admission, annual forms and filing remain on hold.
+[61 Pa. Code §101.6(c)(4)](https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html) ·
+[Pennsylvania Schedule SP guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/tax-forgiveness) ·
+[IRS Form 1099-G instructions](https://www.irs.gov/instructions/i1099g).
+
+All 2,539 Pennsylvania engine tests passed, including 18 new cases and
+the 2025 regressions. Independent source review confirmed the residency,
+eligibility and admission boundaries. The clean archived source passed
+209 focused tests, two source-audit checks, the generated inventory and
+9,980 spec references. TypeScript and scoped ESLint passed. The combined
+tracked source is queued for full local checks after the prior browser
+suite. The exact GitHub image build passed. GitHub CI, browser and
+ARM64 recovery checks continue. Vercel reported an ignored build.
+[Image workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350825798) ·
+[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304).
+
+## November 24 Ohio unemployment for part-year residents and nonresidents
+
+`badcfd4b` adds a private 2026 candidate for a single under-65 filer
+with ordinary W-2 wages and one current original Form 1099-G for state
+unemployment benefits. It reconciles gross Box 1 to original dated
+receipts, adds it to AGI once and uses actual Ohio domicile on the
+receipt date for the IT NRC calculation. Other programs, repayment,
+corrected or void forms and unsupported credit or settlement facts require
+separate review. The private draft is incomplete and filing-ineligible.
+[Ohio R.C. 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Ohio unemployment guidance](https://tax.ohio.gov/help-center/faqs/income-allocation-of-compensation-wages-stock-options-etc) ·
+[Form 1099-G](https://www.irs.gov/pub/irs-pdf/f1099g.pdf).
+
+The new receipt-date case held before implementation. All 2,441 Ohio
+tests passed, including the 29 new cases, the existing 2025 unemployment
+tests and the other 2026 methods. On the clean candidate, 176 focused
+tests, two source-audit checks, the inventory and 9,979 spec references
+passed. TypeScript, scoped ESLint and independent source review passed.
+Full local unit and coverage runs each passed 30,319 tests with 81
+skipped, at 88.32% branch coverage. The combined tracked source archive
+contains the Ohio and short-year work.
+
+## November 24 employer cutoff payroll originals
+
+`355d3fec` adds a second private short-year source method for one
+employer. The original dated ledger and the separate issuer summary
+must cover the same January 1 through fiscal month-end period and match
+the taxpayer, issuer, wage totals and actual withholding to the cent.
+The existing calendar W-2 method still covers retrospective cases.
+The required records establish the candidate's tax bases. Filing and
+form outputs remain on hold.
+[IRC §6001](https://uscode.house.gov/us/usc/t26/s6001/) ·
+[26 CFR §1.6001-1](https://www.ecfr.gov/current/title-26/section-1.6001-1) ·
+[26 CFR §1.451-2](https://www.ecfr.gov/current/title-26/section-1.451-2).
+
+The first cutoff test held a valid file before implementation. On the
+reviewed source, all 84 focused tests, both source-audit checks, the
+inventory and all 9,978 exact spec references passed. Independent review
+found the two methods enforce separate source shapes, exact reconciliation
+and constructive receipt across the period end. The reviewer checked code
+and test coverage. Qualified review of the source method is still open.
+
+## November 24 official artifact and provider recheck
+
+The current IRS Form 6251 is still the 2025 final form, with a 2026
+draft available. Pennsylvania's individual return index still points to
+2025 PA-40. Ohio announced the 2026 form and instruction drafts, and its
+IT NRC index shows 2025 as the latest annual release. Final artifact
+qualification is still open for the selected filing scopes.
+[Final IRS Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) ·
+[2026 IRS draft](https://www.irs.gov/pub/irs-dft/f6251--dft.pdf) ·
+[Pennsylvania PIT index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio alerts archive](https://tax.ohio.gov/individual/resources/individualincome) ·
+[Ohio IT NRC index](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms).
+
+The configured OpenAI and Google standard text rates and model IDs match
+the current public catalogs. OpenAI lists December 11 as the GPT-5 Mini
+retirement date. Google publishes a January 1 price change for Gemini
+3.8 Flash without specifying a timezone. The application's effective-date
+boundary uses UTC. Project availability and repeated held-out evaluations
+still need provider evidence and independent labels.
+[OpenAI model lifecycle](https://developers.openai.com/api/docs/deprecations) ·
+[Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash) ·
+[Google model lifecycle](https://aistudio.google.com/docs/deprecations#gemini-3-preview-models).
+
 ## November 24 actual short-year payroll sources
 
 `703c0a1d` connects the private ordinary wage-only worksheet to a
@@ -52,8 +143,9 @@ The clean archive exposed a missing generated inventory entry.
 `924a46bc` adds that entry and passes the generator check. The separate
 unstaged SQLite inventory entry remains in the original checkout.
 Full local unit and coverage runs each passed 30,283 tests with 81
-skipped and 88.30% branch coverage. Browser and GitHub jobs are tracked
-in the checkpoint.
+skipped and 88.30% branch coverage. All 650 active local Chromium cases
+passed with the five original skips. The archived generated inventory
+was checked separately after correcting its missing entry.
 
 ## November 24 CLI short accounting-year import
 
