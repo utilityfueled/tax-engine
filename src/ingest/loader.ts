@@ -4,7 +4,11 @@
 
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
-import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { StandardDeductionFactsSchema, TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+
+const TaxYearDirectoryInputSchema = TaxYearInputSchema.safeExtend({
+  standardDeductionFacts: StandardDeductionFactsSchema.strict().optional(),
+});
 
 /**
  * Load tax data from a directory of JSON files.
@@ -22,8 +26,10 @@ export function loadFromDirectory(dirPath: string): TaxYearInput {
     throw new Error(`taxpayer.json not found in ${dirPath}`);
   }
 
+  const standardDeductionFacts = readJson("standard-deduction-facts.json");
   const raw = {
     taxpayer,
+    ...(standardDeductionFacts === undefined ? {} : { standardDeductionFacts }),
     w2s: readJson("w2s.json") ?? [],
     form1099Int: readJson("1099-int.json") ?? [],
     form1099Div: readJson("1099-div.json") ?? [],
@@ -47,7 +53,7 @@ export function loadFromDirectory(dirPath: string): TaxYearInput {
     adjustments: readJson("adjustments.json"),
   };
 
-  return TaxYearInputSchema.parse(raw);
+  return TaxYearDirectoryInputSchema.parse(raw);
 }
 
 /**

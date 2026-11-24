@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, describe, expect, it } from "vitest";
+import { calculateFederalTax } from "@/engine/public-federal-return.js";
 import { loadFromDirectory } from "@/ingest/loader.js";
 import { complexMFJFixture, simpleW2Fixture } from "../fixtures/simple-w2.js";
 
@@ -25,6 +26,50 @@ afterEach(() => {
 });
 
 describe("loadFromDirectory", () => {
+  it("holds the public calculation for a short accounting year imported from a directory", () => {
+    const dir = writeJsonDirectory({
+      "taxpayer.json": simpleW2Fixture.taxpayer,
+      "w2s.json": simpleW2Fixture.w2s,
+      "standard-deduction-facts.json": { shortTaxYear: true },
+    });
+
+    const input = loadFromDirectory(dir);
+
+    expect(input.standardDeductionFacts?.shortTaxYear).toBe(true);
+    expect(() => calculateFederalTax(input)).toThrow(/accounting-period change.*annualized tax calculation is unavailable/i);
+  });
+
+  it("preserves a missing file and an explicit full accounting year", () => {
+    const files = { "taxpayer.json": simpleW2Fixture.taxpayer, "w2s.json": simpleW2Fixture.w2s };
+    const legacy = loadFromDirectory(writeJsonDirectory(files));
+    const fullYear = loadFromDirectory(writeJsonDirectory({
+      ...files,
+      "standard-deduction-facts.json": { shortTaxYear: false },
+    }));
+
+    expect(legacy).not.toHaveProperty("standardDeductionFacts");
+    expect(fullYear.standardDeductionFacts?.shortTaxYear).toBe(false);
+    expect(calculateFederalTax(fullYear).totalTax).toEqual(calculateFederalTax(legacy).totalTax);
+  });
+
+  it("rejects a malformed accounting-period answer from a directory", () => {
+    const dir = writeJsonDirectory({
+      "taxpayer.json": simpleW2Fixture.taxpayer,
+      "standard-deduction-facts.json": { shortTaxYear: "false" },
+    });
+
+    expect(() => loadFromDirectory(dir)).toThrow(/shortTaxYear/);
+  });
+
+  it("rejects an unrecognized short-year key in the standard deduction file", () => {
+    const dir = writeJsonDirectory({
+      "taxpayer.json": simpleW2Fixture.taxpayer,
+      "standard-deduction-facts.json": { shortTaxyear: true },
+    });
+
+    expect(() => loadFromDirectory(dir)).toThrow(/shortTaxyear/);
+  });
+
   it("loads retirement and HSA JSON files with advanced schema fields", () => {
     const dir = writeJsonDirectory({
       "taxpayer.json": simpleW2Fixture.taxpayer,

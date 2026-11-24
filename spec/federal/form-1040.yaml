@@ -26,6 +26,17 @@ lines:
       no accounting-period answer retain their existing calculation behavior.
     irsRef: "26 U.S.C. §443(a)–(d), https://uscode.house.gov/us/usc/t26/s443/ and 26 CFR §1.443-1, https://www.ecfr.gov/current/title-26/section-1.443-1"
     testRef: "tests/public-api.test.ts::holds the public federal return for an accounting-period change"
+  - line: "short-accounting-year-directory-import"
+    description: "Carry the reported accounting period from a CLI input directory"
+    formula: >-
+      Validate optional standard-deduction-facts.json using the same
+      standard deduction contract as object imports. Pass shortTaxYear unchanged
+      into the public whole-return guard. Reject malformed facts and
+      unrecognized keys in the sidecar. Preserve a missing file and an
+      explicit false answer without inferring a date or an accounting-period
+      change.
+    irsRef: "26 U.S.C. §443(a)(1) and (b)(1), https://uscode.house.gov/us/usc/t26/s443/"
+    testRef: "tests/ingest/loader.test.ts::holds the public calculation for a short accounting year imported from a directory"
   - line: "short-accounting-year-workspace-recompute"
     description: "Hold a workspace recompute even when the short-period sources reconcile"
     formula: >-

@@ -57,6 +57,12 @@ pnpm dev
 pnpm test
 ```
 
+For CLI estimates, run `pnpm calculate <input-directory>` with a
+`taxpayer.json` and any applicable source files. Put known standard
+deduction facts in `standard-deduction-facts.json`. A confirmed short
+year caused by a change of accounting period uses `{"shortTaxYear":true}`.
+The CLI stops because Section 443 annualization is still unavailable.
+
 ### Useful commands
 
 ```bash
