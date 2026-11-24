@@ -7,8 +7,13 @@ notes: |
   Sharon and Wilbert examples show that a change of claimant does not reset
   the student's history. The 2026 draft instructions repeat this rule at
   https://www.irs.gov/pub/irs-dft/i8863--dft.pdf. This spec governs guided
-  history provenance only.
+  history and dependent student identity facts.
 lines:
+  - line: "dependent-student-tin-2025"
+    description: "Reconcile explicit 2025 dependent AOTC and ODC timely TIN answers"
+    formula: "For positive AOTC expenses and an actual same-dependent TIN on a 2025 return, hold a student's affirmative timely issuance answer when the active Credit for Other Dependents answer explicitly denies timely TIN eligibility. A timely ITIN or ATIN application can count as timely issuance for ODC, so a positive ODC answer can coexist with a negative AOTC answer. Keep exact zero, unanswered and unrelated facts unchanged. Do not expose identifiers in validation feedback."
+    irsRef: "2025 Form 8863 instructions, Taxpayer identification number needed by due date of return; https://www.irs.gov/pub/irs-prior/i8863--2025.pdf#page=1; 2025 Schedule 8812 instructions, Dependent required to have a TIN; https://www.irs.gov/pub/irs-prior/i1040s8--2025.pdf#page=2"
+    testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::holds the same dependent's conflicting 2025 AOTC and ODC timely TIN answers after reopen"
   - line: "student-identity"
     description: "Reconfirm prior AOTC claim history when the student changes"
     formula: "Bind the prior-claim answer and student credit sources to the actual normalized student TIN. An edit that assigns an answered row to a different or newly identified student retains the old answers for review but requires a fresh claim-count selection and separate confirmation of that student's actual education sources. Retained expenses, institution and 1098-T evidence, timely identification, enrollment, completed education and conviction answers are not sufficient until reviewed for the identified student. A rejected or unconfirmed answer cannot supply a zero or a credit to Form 8863."

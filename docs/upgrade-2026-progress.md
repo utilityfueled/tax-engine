@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 24 dependent AOTC TIN answers
+
+A positive 2025 AOTC claim now requires correction when the taxpayer confirms
+timely TIN issuance for a dependent but explicitly denies it on an active ODC
+claim for the same dependent. The guided interview and the federal calculation
+apply the same check. The reverse combination remains supported because ODC can
+deem a TIN timely when a qualifying application was filed on time. The error
+omits the TIN. [Form 8863 instructions](https://www.irs.gov/pub/irs-prior/i8863--2025.pdf#page=1)
+and [Schedule 8812 instructions](https://www.irs.gov/pub/irs-prior/i1040s8--2025.pdf#page=2).
+
+The two new regressions failed before the fix. Afterward, 239 focused tests
+and 57 scoped spec references passed, both typechecks passed, and lint reported
+zero errors and 14 existing warnings. A separate focused run passed 35 tests,
+and the browser request audit verified 2,062 paths. Independent source review
+passed. Qualified tax review remains open.
+
 ## November 24 Ohio saved-estimate navigation
 
 The guided Ohio State Return checks saved estimates against the actual

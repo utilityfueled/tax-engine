@@ -66,6 +66,31 @@ function calculateAotc(state: GuidedFlowState) {
 }
 
 describe("guided AOTC prior-claim history", () => {
+  it("holds the same dependent's conflicting 2025 AOTC and ODC timely TIN answers after reopen", () => {
+    const { state, first } = educationInterview();
+    const personal = state.sectionData["personal-info"];
+    if (!personal || !first.studentTaxId) throw new Error("Missing synthetic dependent student identity");
+    const [matching, other] = personal.dependents;
+    const student = { ...first, studentTaxId: first.studentTaxId.replaceAll("-", "") };
+    const withDependent = (dependents: typeof personal.dependents) => updateSectionData(state, "personal-info", { ...personal, dependents });
+
+    const conflicting = withDependent([{ ...matching, odcTinEligible: false }, other]);
+    const reopened = reopen(replaceStudents(conflicting, [student]));
+    expect(validateSection(reopened, "personal-info").status).toBe("complete");
+    const creditFacts = validateSection(reopened, "credits");
+    expect(creditFacts.status).toBe("partial");
+    expect(creditFacts.fieldErrors?.["student-0-tin"]).toEqual(expect.stringMatching(/reconcile.*timely TIN.*Credit for Other Dependents/i));
+    expect(creditFacts.message).not.toContain(student.studentTaxId);
+    expect(buildTaxInputFromGuidedData(reopened)).toBeNull();
+
+    const corrected = withDependent([matching, { ...other, odcTinEligible: false }]);
+    expect(calculateAotc(reopen(replaceStudents(corrected, [student])))).toBe("2500");
+    expect(calculateAotc(reopen(replaceStudents(corrected, [{ ...student, studentTinEligible: false }])))).toBe("0");
+    expect(calculateAotc(reopen(replaceStudents(conflicting, [{ ...student, qualifiedExpenses: "0.00" }])))).toBe("0");
+    const inactiveOdc = withDependent([{ ...matching, qualifiesForODC: false, odcTinEligible: false }, other]);
+    expect(calculateAotc(reopen(replaceStudents(inactiveOdc, [student])))).toBe("2500");
+  });
+
   it("holds a conflicting 2026 spouse claimant TIN when the primary is the student", () => {
     const starting = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
     const base = withOriginalWages({ ...starting, taxYear: 2026 }, "2026");

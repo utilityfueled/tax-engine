@@ -9,6 +9,10 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- The 2025 guided interview and federal calculation now hold a dependent’s
+  AOTC when its timely-TIN answer conflicts with an active ODC answer.
+  [Education evidence](upgrade-2026-progress.md#november-24-dependent-aotc-tin-answers).
+
 - Ohio State Return now flags a saved estimate without a distinct actual
   IT 1040 receipt before Continue. The focused suite passed 80 tests.
   [Ohio navigation evidence](upgrade-2026-progress.md#november-24-ohio-saved-estimate-navigation).

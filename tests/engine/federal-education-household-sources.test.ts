@@ -188,6 +188,46 @@ it("reconciles 2025 taxpayer and student TINs with surrounding whitespace", () =
     .toThrow(/student identity does not match the actual return household role/i);
 });
 
+it("holds affirmative 2025 dependent AOTC issuance contradicted by the same active ODC answer", () => {
+  const input = claim(true, true);
+  const education = input.educationExpenses;
+  if (!education) throw new Error("Expected a synthetic education claim");
+  const dependent = { firstName: "Morgan", lastName: "Example", ssn: "333-44-5555", relationship: "child",
+    dateOfBirth: "2004-01-02", monthsLivedWithYou: 12, qualifiesForCTC: false, qualifiesForODC: true, odcTinEligible: false };
+  const student = { ...education.aocStudents[0], name: "Morgan Example", studentRole: "dependent" as const,
+    studentTaxId: "333445555", studentSsnEligible: true };
+  const actual = TaxYearInputSchema.parse({ ...input,
+    taxpayer: { ...input.taxpayer, taxYear: 2025, dependents: [dependent] },
+    educationExpenses: { ...education, aocStudents: [student] },
+  });
+  const original = structuredClone(actual);
+  const message = /^Form 8863: reconcile the dependent student's timely TIN answer with the Credit for Other Dependents answer\.$/i;
+  expect(() => calculateFederalTax(actual)).toThrow(message);
+  expect(actual).toEqual(original);
+
+  function control(nextDependent: (typeof actual.taxpayer.dependents)[number] = dependent, nextStudent = student) {
+    return calculateFederalTax(TaxYearInputSchema.parse({ ...actual,
+      taxpayer: { ...actual.taxpayer, dependents: [nextDependent] },
+      educationExpenses: { ...education, aocStudents: [nextStudent] },
+    }));
+  }
+  expect(control({ ...dependent, odcTinEligible: true }).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  const deemedTimelyForOdc = control({ ...dependent, odcTinEligible: true }, { ...student, studentTinEligible: false });
+  expect(deemedTimelyForOdc.form8863?.aocAfterPhaseOut.toFixed()).toBe("0");
+  expect(deemedTimelyForOdc.childTaxCredit.toFixed()).toBe("500");
+  expect(control({ ...dependent, odcTinEligible: undefined }).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(control(dependent, { ...student, studentTinEligible: undefined }).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(control({ ...dependent, qualifiesForODC: false }).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(control({ ...dependent, ssn: "333-44-5556" }).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+  expect(control(dependent, { ...student, qualifiedExpenses: "0.00" }).form8863?.aocAfterPhaseOut.toFixed()).toBe("0");
+  const llc = calculateFederalTax({ ...actual, educationExpenses: { ...education, aocStudents: [], llcExpenses: "4000",
+    llcStudents: [{ ...student, courseEligibilityConfirmed: true }] } });
+  expect(llc.form8863?.totalNonrefundable.toFixed()).toBe("800");
+  const current = TaxYearInputSchema.parse({ ...actual, taxpayer: { ...actual.taxpayer, taxYear: 2026 },
+    educationExpenses: { ...education, aocStudents: [{ ...student, studentTaxId: dependent.ssn }] } });
+  expect(calculateFederalTax(current).form8863?.aocAfterPhaseOut.toFixed()).toBe("2500");
+});
+
 it("keeps the 2026 explicit student TIN requirement when the household has an answer", () => {
   expect(() => calculateFederalTax(adultStudentClaim("spouse", false)))
     .toThrow(/actual student timely TIN facts required for2026/);

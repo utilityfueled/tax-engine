@@ -4291,12 +4291,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         }
       }
     }
-    function educationStudentForCalculation<Student extends (typeof educationStudents)[number]>(student: Student) {
+    function educationStudentForCalculation<Student extends (typeof educationStudents)[number]>(student: Student, isAocStudent: boolean) {
       const qualifiedExpenses = d(student.qualifiedExpenses);
       if (year < 2025 || !qualifiedExpenses.gt(0) || !student.studentTaxId) return { ...student, qualifiedExpenses };
       const studentTin = year === 2025 ? student.studentTaxId.trim() : student.studentTaxId;
       const id = studentTin.replaceAll("-", "");
       const isJointSpouseStudent = student.studentRole === "spouse" && filingStatus === "married_filing_jointly";
+      if (year === 2025 && isAocStudent && student.studentRole === "dependent" && student.studentTinEligible === true
+        && /^\d{9}$/.test(id) && input.taxpayer.dependents.some(dependent => dependent.ssn.trim().replaceAll("-", "") === id
+          && dependent.qualifiesForODC === true && dependent.odcTinEligible === false)) {
+        throw new Error("Form 8863: reconcile the dependent student's timely TIN answer with the Credit for Other Dependents answer.");
+      }
       if (year >= 2026) {
         const actual = student.studentRole === "primary" ? [input.taxpayer.primary.ssn] : student.studentRole === "spouse" ? [input.taxpayer.spouse?.ssn] : input.taxpayer.dependents.map(dep => dep.ssn);
         if (!actual.some(tin => tin?.replaceAll("-", "") === id)) throw new Error("Form8863 student identity does not match the actual return household role");
@@ -4319,8 +4324,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         (year === 2025 || student.studentSsnEligible === true);
       return { ...student, ...(knownIneligible ? { studentTinEligible: false } : {}), qualifiedExpenses };
     }
-    const aocStudents = education.aocStudents.map(educationStudentForCalculation);
-    const llcStudents = education.llcStudents?.map(educationStudentForCalculation);
+    const aocStudents = education.aocStudents.map(student => educationStudentForCalculation(student, true));
+    const llcStudents = education.llcStudents?.map(student => educationStudentForCalculation(student, false));
     const educationPossession = d(education.possessionIncomeExclusion);
     if (!educationPossession.isFinite() || educationPossession.isNegative()) throw new Error("Form8863 possession exclusion must be finite and nonnegative");
     form8863 = calculateForm8863({

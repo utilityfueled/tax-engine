@@ -37,6 +37,15 @@
     ]
   },
   "activeContinuation": {
+    "nov24AotcDependentTinConflict": {
+      "focusedTestsPassed": 239,
+      "separateFocusedTestsPassed": 35,
+      "specReferencesResolved": 57,
+      "auditedSourcesVerified": 2062,
+      "independentSourceReview": "passed",
+      "qualifiedTaxReview": "open",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-dependent-aotc-tin-answers"
+    },
     "nov24OhioSavedEstimateNavigation": {
       "focusedTestsPassed": 80,
       "focusedTestFiles": 8,

@@ -79,7 +79,8 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
     const key = `student-${index}`;
     // Prior claim history is never a default: preserve the existing legacy reconfirmation gate.
     if (!student.name.trim()) errors[`${key}-name`] = "Enter the actual student name.";
-    if (!validAmount(student.qualifiedExpenses)) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
+    const hasValidExpenses = validAmount(student.qualifiedExpenses);
+    if (!hasValidExpenses) errors[`${key}-amount`] = "Enter actual qualified education expenses, including zero.";
     if (!/^[0-4]$/.test(student.priorYearsClaimed) || student.requiresPriorYearsConfirmation) errors[`${key}-history`] = "Confirm actual prior AOTC claim history (0–4); older prefilled zero requires reconfirmation.";
     if (student.sourceFactsConfirmed !== undefined && student.sourceFactsConfirmed !== true) errors[`${key}-source-review`] = "Review and confirm the actual AOTC education records for this student and tax year.";
     const enrollmentAllowsAoc = student.priorYearsClaimed !== "4" && student.completedFirstFourYearsBeforeYear !== true
@@ -88,6 +89,14 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
       && student.form1098TRequirementMet !== false && student.studentTinEligible !== false
       && !(taxYear === 2026 && student.studentRole === "dependent" && student.studentSsnEligible === false);
     studentFacts(student, key, claimantMayQualifyForAoc && enrollmentAllowsAoc && sourceFactsAllowAoc);
+    if (taxYear === 2025 && student.studentRole === "dependent" && student.studentTinEligible === true
+      && hasValidExpenses && parseGuidedCurrency(student.qualifiedExpenses).gt(0)) {
+      const studentId = cleanId(student.studentTaxId);
+      if (/^\d{9}$/.test(studentId) && personal?.dependents?.some(dependent => cleanId(dependent.ssn) === studentId
+        && dependent.qualifiesForODC === true && dependent.odcTinEligible === false)) {
+        errors[`${key}-tin`] = "Reconcile this student's timely TIN answer with the Credit for Other Dependents answer in Personal Info.";
+      }
+    }
     for (const field of ["completedFirstFourYearsBeforeYear", "enrolledAtLeastHalfTime", "pursuingDegreeOrCredential", "felonyDrugConviction"] as const) if (typeof student[field] !== "boolean") errors[`${key}-${field}`] = "Confirm all actual AOTC eligibility facts.";
     if (!/^\d{9}$/.test(cleanId(student.institutionEin)) || !student.institutions?.some(institution => cleanId(institution.ein) === cleanId(student.institutionEin))) errors[`${key}-ein`] = "Enter the actual AOTC institution EIN and matching institution record.";
   });
