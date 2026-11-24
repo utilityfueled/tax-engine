@@ -275,10 +275,10 @@ jobs:
           # Let the last full-suite request window expire before reusing the app.
           sleep 65
           strict=0
-          PLAYWRIGHT_DISABLE_WEBSERVER=true PLAYWRIGHT_BASE_URL=http://127.0.0.1:3109 \
+          TAX_BROWSER_OHIO_SCHEDULER_MODE=container PLAYWRIGHT_DISABLE_WEBSERVER=true PLAYWRIGHT_BASE_URL=http://127.0.0.1:3109 \
             pnpm test:web "${args[@]}" 2>&1 | tee ohio-same-runner-container.log || strict=$?
           managed=0
-          pnpm test:web "${args[@]}" 2>&1 | tee ohio-same-runner-managed.log || managed=$?
+          TAX_BROWSER_OHIO_SCHEDULER_MODE=managed pnpm test:web "${args[@]}" 2>&1 | tee ohio-same-runner-managed.log || managed=$?
           printf 'container=%s\nmanaged=%s\n' "$strict" "$managed" > ohio-same-runner-status.txt
           test "$strict" -eq 0 && test "$managed" -eq 0
       - name: Verify Docker archive in an independent native image store

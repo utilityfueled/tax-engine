@@ -348,6 +348,10 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
     await verifyAudit(root, audit);
     need(!parentEnv.PLAYWRIGHT_USE_DEV_SERVER, 'Production browser suite requires production runtime');
     const external = parentEnv.PLAYWRIGHT_DISABLE_WEBSERVER === 'true';
+    const comparisonMode = external ? 'container' : 'managed';
+    const schedulerComparison = parentEnv.GITHUB_ACTIONS === 'true' &&
+        parentEnv.GITHUB_EVENT_NAME === 'workflow_dispatch' &&
+        parentEnv.TAX_BROWSER_OHIO_SCHEDULER_MODE === comparisonMode;
     const native = nativeAdmission(parentEnv, external);
     if (native) {
         const deadlines = parsed.args.flatMap((a, i) => a === '--timeout' ? [parsed.args[i + 1]] : a.startsWith('--timeout=') ? [a.slice(10)] : []);
@@ -437,7 +441,12 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
                 alive: () => !interrupted && (external || server?.child.exitCode === null && server?.child.signalCode === null), cleanup: async () => { cleanupAttempted = true; const ok = external || await stopOwned(server); await save('cleanup.json', { ownedServerPid: server?.child.pid ?? null, external, closed: ok }); return ok; },
                 record: value => save(`batch-${value.batch}-receipt.json`, value), run: async (batch, i) => {
                     const report = path.join(out, `batch-${i + 1}.json`);
-                    browser = launch(process.execPath, [cli, 'test', ...parsed.args, '--test-list', batch.list, '--output', path.join(out, `batch-${i + 1}-artifacts`), '--reporter=line,json'], { cwd: app, env: { ...env, PLAYWRIGHT_JSON_OUTPUT_FILE: report }, log: path.join(out, `batch-${i + 1}`), stream: true });
+                    browser = launch(process.execPath, [cli, 'test', ...parsed.args, '--test-list', batch.list, '--output', path.join(out, `batch-${i + 1}-artifacts`), '--reporter=line,json'], {
+                        cwd: app,
+                        env: { ...env, ...(schedulerComparison ? { TAX_BROWSER_OHIO_SCHEDULER_MODE: comparisonMode } : {}), PLAYWRIGHT_JSON_OUTPUT_FILE: report },
+                        log: path.join(out, `batch-${i + 1}`),
+                        stream: true,
+                    });
                     const r = await browser.closed;
                     browser = null;
                     await save(`batch-${i + 1}-exit.json`, { exit: r.exit, signal: r.signal, captureFailed: Boolean(r.ioError) });

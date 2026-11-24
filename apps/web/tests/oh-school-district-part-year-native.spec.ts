@@ -3,6 +3,7 @@ import {enterKnownNativeControl} from './helpers/known-native-control';
 import {schoolPartYearNativeKind} from './helpers/school-part-year-native-kinds';
 import {schoolParentHeaderNativeKind} from './helpers/ohio-strict-native-kinds';
 import {expect,test,type Page,type Locator,type TestInfo} from '../scripts/browser-cpu-diagnostics/fixture';
+import {observeRendererScheduler} from './helpers/renderer-scheduler.mjs';
 import {readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
@@ -220,8 +221,10 @@ for(const viewport of[{width:1280,height:900},{width:390,height:844}])for(const 
   await confirmSchool(page,id);finishFirstSchoolConfirmation?.();
   await results(page,c);const confirmedSchool=structuredClone(required((await stateData(page,id)).ohioSchoolDistrict));expect(confirmedSchool.originalFederalSources).toEqual(JSON.parse(JSON.stringify(original)));expect(confirmedSchool.partYearWageSources?.payrollOriginals.map(p=>p.grossWages)).toEqual(['40000','20000']);expect(confirmedSchool.payments.account.estimatedPaymentsCredited).toBe('0');expect(confirmedSchool.payments.account.priorCreditApplied).toBe('0');await geometry(page,info,'school-confirmed',school,page.getByRole('button',{name:sdConfirmLabel,exact:true}));
   await page.getByRole('button',{name:'Add actual Ohio resident return header sources',exact:true}).click();const header=active.locator('.guided-card').filter({has:page.getByRole('heading',{name:'Ohio resident return header originals',exact:true})});for(const label of['Header source tax year','Header original SSN','Actual school district number','Actual county name'])await expect(control(page,label)).toHaveValue('');await header.getByRole('button',{name:headerConfirm,exact:true}).click();expect(required((await stateData(page,id)).ohioReturnHeaderSources).sourceFactsConfirmed).toBeNull();expect(required((await stateData(page,id)).ohioReturnHeaderSources).confirmedHeaderSources).toBeUndefined();await validationReadability(page,info,'header-blank-validation',header);await geometry(page,info,'header-blank-validation',header,header.getByRole('button',{name:headerConfirm,exact:true}));
-  const finishHeaderEntry=beginPhase('header-entry');
-  await enterHeader(page,packet.header);finishHeaderEntry();
+  await observeRendererScheduler(page.context().browser(), async () => {
+    const finishHeaderEntry=beginPhase('header-entry');
+    await enterHeader(page,packet.header);finishHeaderEntry();
+  });
   const finishFirstHeaderConfirmation=observeSchoolPhases?beginPhase('header-first-confirmation'):undefined;
   await confirmHeader(page,id);finishFirstHeaderConfirmation?.();
   const confirmedHeader=structuredClone(required((await stateData(page,id)).ohioReturnHeaderSources));expect(confirmedHeader.originalFederalSources).toEqual(JSON.parse(JSON.stringify(original)));expect(confirmedHeader.confirmedHeaderSources).toHaveProperty('countyOriginal.countyName','Ashland');expect(confirmedHeader.confirmedHeaderSources).toHaveProperty('residence.originalAddress.street','302 Fictional July District Lane');expect(original.taxpayer.address.state).toBe('VA');await geometry(page,info,'header-confirmed',header,page.getByRole('button',{name:headerConfirm,exact:true}));

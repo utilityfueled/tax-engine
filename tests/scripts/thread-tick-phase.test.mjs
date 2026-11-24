@@ -10,6 +10,65 @@ import * as phaseModule from '../../scripts/browser-cpu-diagnostics/phase.mjs';
 import {EventEmitter} from 'node:events';
 import {withPhaseMetrics, NAMES, bindPhaseReceipt, sanitizePhaseRecord, SUPPORTED_CHROMIUM_REVISION} from '../../scripts/browser-cpu-diagnostics/phase.mjs';
 import {withOriginalEntryMetrics,registerOriginalEntryMetrics} from '../../scripts/browser-cpu-diagnostics/phase-hook.mjs';
+import {measureRendererScheduler, readRendererScheduler, rendererSchedulerDelta} from '../../apps/web/tests/helpers/renderer-scheduler.mjs';
+
+test('Ohio scheduler observations report matching renderer deltas and exclude process identifiers', async () => {
+ const renderer = {type:'renderer', id:42};
+ async function sample(stats, pressure, enabled = '1', info = [renderer, {type:'browser', id:50}]) {
+  const data = new Map([
+   ['/proc/sys/kernel/sched_schedstats', enabled],
+   ['/proc/pressure/cpu', `some avg10=1.02 avg60=0.40 avg300=0.45 total=${pressure}\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n`],
+   [`/proc/${info[0].id}/schedstat`, stats],
+  ]);
+  return readRendererScheduler(info, async file => {
+   assert.ok(data.has(file), 'Expected only the scheduler counters');
+   return data.get(file);
+  });
+ }
+ const before = await sample('9007199254740993 50 19\n', '500');
+ const after = await sample('9007199254741093 70 26\n', '610');
+ assert.deepEqual(rendererSchedulerDelta(before, after), {
+  status:'measured', rendererMainThreads:1, cpuNanoseconds:'100',
+  runnableWaitNanoseconds:'20', timeslices:'7', hostCpuPressureMicroseconds:'110',
+ });
+ const disabled = await sample('9007199254741093 70 26', '610', '0');
+ assert.deepEqual(rendererSchedulerDelta(before, disabled), {status:'host-pressure-only', hostCpuPressureMicroseconds:'110'});
+ const disabledBefore = await sample('0 0 0', '500', '0');
+ const disabledAfter = await sample('0 0 0', '610', '0');
+ assert.deepEqual(rendererSchedulerDelta(disabledBefore, disabledAfter), {status:'host-pressure-only', hostCpuPressureMicroseconds:'110'});
+ const replaced = await sample('9007199254741093 70 26', '610', '1', [{type:'renderer', id:43}]);
+ assert.deepEqual(rendererSchedulerDelta(before, replaced), {status:'host-pressure-only', hostCpuPressureMicroseconds:'110'});
+ assert.deepEqual(rendererSchedulerDelta(after, before), {status:'unavailable'});
+ await assert.rejects(sample('unparseable', '610'));
+});
+
+test('a stalled scheduler snapshot cannot prevent header entry or replace its error', {timeout:2000}, async () => {
+ const never = new Promise(() => {});
+ const original = new Error('original header entry failure');
+ let detached = 0;
+ const session = {send: () => never, detach: () => { detached++; return never; }};
+ const reports = [];
+ await assert.rejects(
+  measureRendererScheduler({newBrowserCDPSession: async () => session}, async () => { throw original; }, report => reports.push(report)),
+  error => error === original,
+ );
+ assert.equal(detached, 1);
+ assert.deepEqual(reports, [{status:'unavailable'}]);
+});
+
+test('late scheduler session acquisition still detaches after the original action returns', {timeout:2000}, async () => {
+ const pending = Promise.withResolvers();
+ let detached = 0;
+ const reports = [];
+ assert.equal(
+  await measureRendererScheduler({newBrowserCDPSession: () => pending.promise}, async () => 'original result', report => reports.push(report)),
+  'original result',
+ );
+ pending.resolve({detach: async () => { detached++; }});
+ await new Promise(resolve => setImmediate(resolve));
+ assert.equal(detached, 1);
+ assert.deepEqual(reports, [{status:'unavailable'}]);
+});
 
 const binding={sourceSha:'a'.repeat(40),imageId:'sha256:'+'b'.repeat(64),inventorySha256:'c'.repeat(64),chromiumRevision:SUPPORTED_CHROMIUM_REVISION};
 const context={id:1,uniqueId:'PRIVATE-CONTEXT',auxData:{isDefault:true,frameId:'PRIVATE-FRAME'}};
@@ -182,6 +241,8 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  assert.equal(comparison[0]['timeout-minutes'],18);
  assert.equal(comparison[0]['continue-on-error'],undefined);
  assert.match(comparison[0].run,/--workers=2 --retries=0 --timeout=30000/u);
+ assert.match(comparison[0].run,/TAX_BROWSER_OHIO_SCHEDULER_MODE=container PLAYWRIGHT_DISABLE_WEBSERVER=true/u);
+ assert.match(comparison[0].run,/TAX_BROWSER_OHIO_SCHEDULER_MODE=managed pnpm test:web/u);
  for(const delta of [traceInput,traceBlock,traceGroup,ohioInput,ohioBlock,ohioGroup,'            ohio-same-runner-*.log\n            ohio-same-runner-status.txt\n']){
   assert.equal(original.split(delta).length,2);
   original=original.replace(delta,'');
