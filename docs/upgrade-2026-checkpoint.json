@@ -10,7 +10,7 @@
     "evidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "remaining": [
-      "Qualify strict Linux browsers with original limits. Exact 9a45b970 recovery, archive and cleanup passed on both architectures. ARM64 missed 10 Ohio browser deadlines. AMD64 missed 11 Ohio browser deadlines and two RRTA saved-PDF inspection deadlines. A later unchanged baseline missed two deadlines; the optional measurements stopped when public job metadata returned HTTP 403.",
+      "Qualify strict Linux browsers with original limits. Exact 924c3545 passed 652 active managed Chromium cases. Strict AMD64 missed six Ohio deadlines and strict ARM64 missed nine. Smoke, Compose recovery, archive verification, scan binding and cleanup passed on both architectures. Earlier same-runner controls reproduced the same six failures in the managed app and runtime image, and optional measurements stopped when public job metadata returned HTTP 403.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -33,9 +33,15 @@
       "localVerification": {"checksPassed": 11, "testsPassed": 30351, "testSkips": 81, "branchCoveragePercent": 88.3, "chromiumPassed": 652, "chromiumFailures": 0, "chromiumOriginalSkips": 5, "earlierAttempts": "The restricted run denied the localhost TLS bind. An overlapping run hit eight deadlines. The serialized localhost reruns passed with original limits."},
       "remoteRuns": {"ci": 45374061387, "web": 45374061266, "docker": 45374061272, "nativeArm64": 45374094541},
       "docker": "passed on 924c3545",
-      "recovery": {"amd64Job": 138375419756, "arm64Job": 138375540992, "smokeAndCompose": "passed on both architectures", "arm64IndependentArchive": "passed"},
+      "remoteCi": {"checksPassed": 8, "coverageJob": 138375419826, "testsPassed": 30432, "branchCoveragePercent": 88.68},
+      "managedChromium": {"job": 138375419853, "passed": 652, "failures": 0, "originalSkips": 5},
+      "strictAmd64": {"job": 138375419756, "passed": 646, "failures": 6, "originalSkips": 5, "failureFamilies": ["Ohio part-year business", "Ohio resident credit", "Ohio part-year school district"], "smokeRecoveryArchiveScanCleanup": "passed"},
+      "strictArm64": {"job": 138375540992, "timingArtifact": 14915016363, "passed": 643, "failures": 9, "originalSkips": 5, "failureFamilies": ["Ohio part-year business", "Ohio reciprocity", "Ohio resident credit", "Ohio part-year school district"], "smokeRecoveryArchiveScanCleanup": "passed"},
+      "amd64Scan": {"artifact": 14912954682, "matches": 192, "uniqueAdvisories": 86, "highMatches": 70, "criticalMatches": 0, "fixableHighCriticalMatches": 0, "previousGlibcAdvisoryMatches": 0},
+      "arm64Scan": {"artifact": 14914152463, "matches": 192, "uniqueAdvisories": 86, "highMatches": 70, "criticalMatches": 0, "fixableHighCriticalMatches": 0, "previousGlibcAdvisoryMatches": 0},
+      "recovery": {"amd64Job": 138375419756, "arm64Job": 138375540992, "smokeComposeIndependentArchiveScanCleanup": "passed on both architectures"},
       "vercel": "Canceled by Ignored Build Step",
-      "remaining": "Complete exact GitHub CI, AMD64 archive, Linux browser and scan verification. Document residual advisory dispositions separately."
+      "remaining": "Qualify strict Linux browser flows within their original deadlines and resolve or assign applicable residual advisories before release."
     },
     "nov24AIEvaluationCutoff": {
       "applicationCommit": "edb68f0ed9480328aac61928fa80304ba6c9f0ff",

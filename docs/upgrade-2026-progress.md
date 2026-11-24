@@ -21,17 +21,38 @@ tests passed on Node 26. Eight installer process controls verified the
 upstream-fixed and pinned-update paths and rejection of unexpected versions.
 Spec validation passed all 9,985 references. Independent engineering review
 verified the full smoke package proof. The exact Docker build passed. AMD64
-and ARM64 passed smoke and isolated Compose recovery, and ARM64 independently
-verified archive import. Strict browser and scan checks continue. Vercel
-skipped the production build.
+and ARM64 passed smoke and isolated Compose recovery, and both independently
+verified archive import. Vercel skipped the production build.
 
 All 11 local checks passed from the tracked archive of `924c3545`. Both
 unit and coverage runs passed 30,351 tests, with 81 skips and 88.30% branch
 coverage. Local Chromium passed 652 active cases and retained five original
 skips. The first restricted run denied the loopback TLS bind. A later
 overlapping unit run hit eight deadlines. All three localhost suites passed
-in the serialized retries with the original limits.
+in the serialized retries with the original limits. All eight GitHub CI
+jobs passed, with 30,432 coverage tests and 88.68% branch coverage.
+The managed Linux Chromium run also passed all 652 active cases and
+retained the five original skips.
+Strict AMD64 passed 646 cases and missed six Ohio browser deadlines across
+part-year business, resident credit and part-year school districts. It
+retained five skips. Exact smoke, Compose recovery, independent archive,
+image scanning and cleanup passed. Strict ARM64 passed 643 cases and missed
+nine 30-second Ohio deadlines. The failures covered two business cases,
+one reciprocal refund, two resident-credit cases and four part-year school
+district cases. It retained five skips. Smoke, Compose recovery and rollback,
+independent archive verification, scan binding and cleanup all passed.
+[ARM64 timing evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45374094541/artifacts/14915016363).
+
+The scans bound to the independently verified AMD64 and ARM64 archives
+each reported 192 matches across 86 advisory IDs, including 70 high and
+zero critical matches. Neither reported any high or critical matches with
+an available fix. Neither `CVE-2026-19499` nor `CVE-2026-5435` appeared.
+Applicable remaining findings still require release dispositions.
+[AMD64 archive evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45374061266/artifacts/14912954682) ·
+[ARM64 archive evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45374094541/artifacts/14914152463).
+
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45374061387) ·
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45374061266/job/138375419853) ·
 [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45374061266) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45374094541) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45374061272).

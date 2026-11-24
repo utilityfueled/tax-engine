@@ -13,8 +13,15 @@ Use the linked progress sections when investigating individual packages.
   Debian's fixed glibc and zlib packages. PPC64LE and S390X retain their
   pinned zlib install. The four published images were inspected by digest.
   All 11 local checks passed, including 30,351 tests, 88.30% branch coverage
-  and 652 active Chromium cases. The exact Docker build, smoke and Compose
-  recovery passed on both release architectures. Strict browser checks continue.
+  and 652 active Chromium cases. All eight GitHub CI jobs passed, including
+  30,432 coverage tests at 88.68%. The exact Docker build, smoke and Compose
+  recovery passed on both release architectures. Managed Linux passed all
+  652 active Chromium cases. Strict AMD64 passed 646 browser cases and missed
+  six Ohio deadlines. Strict ARM64 passed 643 and missed nine Ohio deadlines.
+  Independent archive verification, scan and cleanup passed on both. Each
+  image reported 192 advisory matches, including 70 high and zero critical.
+  The two prior fixable high glibc findings were absent. Applicable residual
+  advisories still require release dispositions.
   Vercel skipped the production build.
   [Image refresh evidence](upgrade-2026-progress.md#november-24-node-base-image-refresh).
 
