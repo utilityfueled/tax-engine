@@ -166,6 +166,25 @@ jobs:
           fi
           jq -c '{status, cleanup, batchesCompleted, caseCount, failed, skipped}' "${summaries[0]}"
           sha256sum "${summaries[0]}"
+      - name: Prepare sanitized ARM64 browser timing
+        id: browser_observation
+        if: ${{ !cancelled() && (steps.strict_browser.outcome == 'success' || steps.strict_browser.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
+        run: |
+          mapfile -d '' -t summaries < <(find apps/web/test-results -maxdepth 2 -name summary.json -print0)
+          test "${#summaries[@]}" -eq 1
+          node scripts/browser-recovery-observation.mjs "${summaries[0]}" "$GITHUB_SHA" "$CANDIDATE_IMAGE_ID" > "$RUNNER_TEMP/arm64-browser-observation.json"
+      - name: Upload sanitized ARM64 browser timing
+        if: ${{ !cancelled() && steps.browser_observation.outcome == 'success' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-arm64-browser-timing
+          path: ${{ runner.temp }}/arm64-browser-observation.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Scan and bind immutable ARM64 candidate evidence
         uses: ./.github/actions/container-runtime-scan
         if: ${{ !cancelled() && (steps.arm_archive.outcome == 'success' || steps.arm_archive.outcome == 'failure') }}
