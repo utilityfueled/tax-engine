@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 24 cash gifts with return benefits
+
+`c2b05a1c` asks whether an actual guided cash amount is the net
+charitable contribution on the acknowledgment or a gross payment before
+goods or services. The verified $70/$40 IRS example flows to $30 on 2025
+Schedule A line 11. Incomplete saved amounts and original entered totals
+remain intact until resolved. Existing canonical net cash inputs and
+specialized NOL admission retain their existing meaning.
+[IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca) ·
+[26 CFR §1.170A-1(h)](https://www.ecfr.gov/current/title-26/section-1.170A-1).
+
+Independent engineering review passed. The isolated source passed 650
+focused tests, 38 Chromium cases, 9,981 spec references and the inventory
+check. The browser source audit retains the same request limits. Final
+2026 form and qualified-review decisions remain open.
+
 ## November 24 Pennsylvania government unemployment exclusion
 
 `9a45b970` adds a private Pennsylvania 2026 ordinary W-2 draft for one
@@ -23,16 +39,18 @@ branch coverage. Local Chromium passed all 650 active cases with five
 original skips, completing all 11 local checks. All eight exact GitHub CI
 jobs passed, including 30,419 coverage tests and 88.70% branch coverage.
 The managed Linux browser job passed 650 cases with five original skips.
-The exact GitHub image build passed. ARM64 image smoke, Compose recovery,
-independent archive verification and cleanup passed. The unchanged ARM64 browser run passed
-640 cases, exceeded 10 Ohio deadlines and retained the five original
-skips. Its timing artifact shows failures around several different
-actions. A bounded performance workflow on the same application code
+The exact GitHub image build passed. Both architectures passed image
+smoke, Compose recovery, independent archive verification and cleanup.
+Strict ARM64 passed 640 and exceeded 10 Ohio deadlines. Strict AMD64
+passed 637 and exceeded 11 Ohio browser deadlines and two RRTA saved-PDF
+inspection deadlines. Both retained the five original skips. A bounded
+performance workflow on the same application code
 will collect entry-phase measurements if its original strict AMD64 run
 fails. Vercel reported an ignored build.
 [CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350826062) ·
 [Managed Linux browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45350825703/job/138296525535) ·
 [Image workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350825798) ·
+[Strict AMD64 runtime job](https://github.com/utilityfueled/tax-engine/actions/runs/45350825703/job/138296525423) ·
 [ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304) ·
 [ARM64 timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304/artifacts/14903472814) ·
 [Bounded performance workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45359637143).

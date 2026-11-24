@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `c2b05a1c` distinguishes a gross payment from an already-net charitable
+  cash amount in the guided interview. A $70 payment with a $40 benefit
+  produces a $30 contribution. The package passed 650 focused tests and
+  38 Chromium cases on the isolated source. Final qualification still
+  requires the combined checks and qualified review.
+  [Cash gift evidence](upgrade-2026-progress.md#november-24-cash-gifts-with-return-benefits).
+
 - `9a45b970` adds a private Pennsylvania 2026 worksheet path that
   excludes verified government unemployment from state income and
   Schedule SP for residents, part-year residents and nonresidents. All
@@ -18,7 +25,8 @@ Use the linked progress sections when investigating individual packages.
   tests and 88.70% branch coverage. Managed Linux passed all 650 browser
   cases. The image build and ARM64 recovery passed.
   Strict ARM64 passed 640 browser cases and missed 10 Ohio deadlines.
-  Strict AMD64 and the bounded performance measurement continue.
+  Strict AMD64 passed 637 and missed 11 Ohio browser deadlines and two
+  RRTA saved-PDF inspection deadlines. A bounded measurement continues.
   [Pennsylvania evidence](upgrade-2026-progress.md#november-24-pennsylvania-government-unemployment-exclusion).
 
 - `badcfd4b` adds an internal Ohio 2026 candidate that assigns ordinary

@@ -2,17 +2,27 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "9a45b970305442188962e0c69163f15c81496799",
+    "applicationCommit": "c2b05a1c2958f5cf7da1413e3300a607b3fd04c7",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov24PAUnemploymentDraft",
+    "evidenceKey": "activeContinuation.nov24GuidedCashGift",
     "remaining": [
-      "Qualify the strict Linux browser suites. Exact 9a45b970 ARM64 recovery, archive and cleanup passed, and 10 Ohio browser cases exceeded existing deadlines. Preserve the original browser and PDF inspection limits.",
+      "Qualify strict Linux browsers with original limits. Exact 9a45b970 recovery, archive and cleanup passed on both architectures. ARM64 missed 10 Ohio browser deadlines. AMD64 missed 11 Ohio browser deadlines and two RRTA saved-PDF inspection deadlines. Bounded measurement run 45359637143 is still open.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
   "activeContinuation": {
+    "nov24GuidedCashGift": {
+      "applicationCommit": "c2b05a1c2958f5cf7da1413e3300a607b3fd04c7",
+      "scope": "Verify the entered basis of a guided charitable cash amount. Subtract actual return benefits only from gross payments and preserve saved incomplete facts and canonical net input.",
+      "localEvidence": ".local/upgrade-evidence/nov24-guided-cash-donation",
+      "cleanFocusedTestsPassed": 650,
+      "cleanChromiumTestsPassed": 38,
+      "specReferencesPassed": 9981,
+      "independentEngineeringReview": "passed",
+      "remaining": "Finish documented tangible property intake and valuation separately, then run combined exact checks. Keep final 2026 and qualified review gates open."
+    },
     "nov24PAUnemploymentDraft": {
       "applicationCommit": "9a45b970305442188962e0c69163f15c81496799",
       "scope": "Private 2026 Pennsylvania ordinary wage draft accepts one verified government unemployment original, excludes it from state income and Schedule SP for all three residency statuses, and preserves the public gate.",
@@ -30,6 +40,7 @@
       "vercel": "Canceled by Ignored Build Step",
       "localFullTests": {"passed": 30338, "skipped": 81, "branchCoveragePercent": 88.32, "chromiumPassed": 650, "chromiumOriginalSkips": 5, "allChecksPassed": 11},
       "nativeArm64": {"smokeRecoveryArchiveAndCleanupPassed": true, "strictBrowserPassed": 640, "strictBrowserDeadlines": 10, "originalSkips": 5, "timingArtifact": 14903472814},
+      "strictAmd64": {"job": 138296525423, "recoveryArchiveScanAndCleanupPassed": true, "browserPassed": 637, "ohioDeadlines": 11, "rrtaPdfInspectionDeadlines": 2, "originalSkips": 5, "runtimeArtifact": 14905771184},
       "boundedBrowserMeasurement": {"run": 45359637143, "sourceCommit": "406aab41", "applicationDiff": "none relative to 9a45b970", "scope": "Existing strict AMD64 baseline first, followed by original Ohio batches with entry phase metrics only if the baseline fails"},
       "remaining": ["Complete exact strict Linux browser qualification.", "Obtain qualified tax review and final Pennsylvania artifacts."]
     },
