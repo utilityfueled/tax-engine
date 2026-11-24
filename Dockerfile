@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS base
+FROM node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067 AS base
 ENV PNPM_HOME="/pnpm"
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PATH="$PNPM_HOME:$PATH"
@@ -30,7 +30,7 @@ COPY . .
 RUN NODE_OPTIONS="--max-old-space-size=${NODE_BUILD_MAX_OLD_SPACE_MB}" pnpm --filter @tax-engine/web build
 
 # Production runner
-FROM node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS runner
+FROM node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067 AS runner
 RUN --mount=type=bind,source=scripts/install-debian-zlib.mjs,target=/tmp/install-debian-zlib.mjs,readonly \
     node /tmp/install-debian-zlib.mjs
 ENV NODE_ENV=production

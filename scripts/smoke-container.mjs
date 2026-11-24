@@ -98,7 +98,7 @@ try {
   // The exact filesystem-layer prefix proves shared base contents; a tag alone does not.
   const runnerBaseReference = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8")
     .match(/^FROM (\S+) AS runner$/mu)?.[1];
-  assert.equal(runnerBaseReference, "node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc", "Use the shipped fixed runner base for the package proof.");
+  assert.equal(runnerBaseReference, "node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067", "Use the shipped fixed runner base for the package proof.");
   const baseline = JSON.parse(docker("image", "inspect", runnerBaseReference))[0];
   const candidate = JSON.parse(docker("image", "inspect", metadata.Image))[0];
   assert.equal(candidate.Id, metadata.Image);
@@ -123,19 +123,29 @@ try {
   };
   const beforePackages = orderedRows(baselineRows);
   const afterPackages = orderedRows(processEvidence.debianPackages);
+  const hasUpstreamFixes = baseline.Architecture === "amd64" || baseline.Architecture === "arm64";
+  assert.ok(hasUpstreamFixes || ["ppc64le", "s390x"].includes(baseline.Architecture), "Review the Debian base for this architecture first.");
+  const expectedGlibcVersion = hasUpstreamFixes ? "2.41-12+deb13u5" : "2.41-12+deb13u4";
+  const fixedZlibVersion = "1:1.3.dfsg+really1.3.1-1+deb13u1";
+  const basePackageVersions = [
+    ["libc-bin", expectedGlibcVersion],
+    ["libc6", expectedGlibcVersion],
+    ["zlib1g", hasUpstreamFixes ? fixedZlibVersion : "1:1.3.dfsg+really1.3.1-1+b1"],
+  ];
+  for (const [pkg, version] of basePackageVersions) {
+    const matchingRows = beforePackages.filter(([name]) => name.split(":")[0] === pkg);
+    assert.deepEqual(matchingRows.map(row => row.slice(1)), [[version, "installed"]], `Require the reviewed ${pkg} on the immutable base.`);
+  }
   const targets = new Set(["apt", "libapt-pkg7.0", "mount"]);
   const removedPackages = beforePackages.filter(([name]) => targets.has(name.split(":")[0]));
   assert.deepEqual(removedPackages.map(([name]) => name.split(":")[0]).sort(), [...targets].sort());
   assert.ok(removedPackages.every(([, , status]) => status === "installed"));
-  const zlibPackages = beforePackages.filter(([name]) => name.split(":")[0] === "zlib1g");
-  assert.equal(zlibPackages.length, 1);
-  const [zlibBefore] = zlibPackages;
-  assert.deepEqual(zlibBefore.slice(1), ["1:1.3.dfsg+really1.3.1-1+b1", "installed"]);
-  const zlibAfter = [zlibBefore[0], "1:1.3.dfsg+really1.3.1-1+deb13u1", "installed"];
+  const zlibBefore = beforePackages.find(([name]) => name.split(":")[0] === "zlib1g");
+  const zlibAfter = [zlibBefore[0], fixedZlibVersion, "installed"];
   const expectedPackages = beforePackages.filter(([name]) => !targets.has(name.split(":")[0]))
-    .map(row => row === zlibBefore ? zlibAfter : row);
+    .map(row => !hasUpstreamFixes && row === zlibBefore ? zlibAfter : row);
   assert.deepEqual(afterPackages, expectedPackages,
-    "Require the exact Debian zlib1g security update and the APT and mount purges while preserving every other package record.");
+    "Require the reviewed Debian packages, the architecture-specific zlib update and the APT and mount purges.");
   const planArguments = ["run", "--rm", "--network", "none", "--user", "0", "--entrypoint", "/usr/bin/dpkg",
     baseline.Id, "--no-act", "--purge", ...targets];
   const removalPlan = spawnSync(runtime, [...connection.args, ...planArguments], { encoding: "utf8", env: connection.env });
@@ -147,7 +157,8 @@ try {
       layers: baseline.RootFS.Layers },
     candidate: { id: candidate.Id, os: candidate.Os, architecture: candidate.Architecture, layers: candidate.RootFS.Layers,
       sourceRevision: candidate.Config?.Labels?.["org.opencontainers.image.revision"] ?? null },
-    beforePackages, afterPackages, removedPackages, updatedPackages: [{ before: zlibBefore, after: zlibAfter }],
+    beforePackages, afterPackages, removedPackages,
+    updatedPackages: hasUpstreamFixes ? [] : [{ before: zlibBefore, after: zlibAfter }],
     removalPlan: { arguments: planArguments, status: removalPlan.status, stdout: removalPlan.stdout, stderr: removalPlan.stderr },
   };
   assert.equal(processEvidence.providerKeys, false);

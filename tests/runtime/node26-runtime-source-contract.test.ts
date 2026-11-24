@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 // spec/federal/node26-runtime-source-contract.yaml; source-only controls.
 const read = (name: string) => readFileSync(resolve(process.cwd(), name), "utf8");
-const base = "node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc";
+const base = "node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067";
 const integrity = "sha512-9ieo6XE0Ov5J39D2PQKCNCAd+oMdXLWIcz4eX42ya/FpiaMhYatcG02zsf28NzFgYGtbieAC323RmoWt+R/FqA==";
-const oldZlib = "1:1.3.dfsg+really1.3.1-1+b1";
 const fixedZlib = "1:1.3.dfsg+really1.3.1-1+deb13u1";
+const fixedGlibc = "2.41-12+deb13u5";
 describe("Node 26 runtime source contract", () => {
   it("declares Node 26 at both deployable package roots without changing retained pins", () => {
     const root = JSON.parse(read("package.json"));
@@ -45,8 +45,11 @@ describe("Node 26 runtime source contract", () => {
     expect(docker).toContain("npm install --global --ignore-scripts --no-audit --no-fund /tmp/pnpm-10.34.8.tgz");
     expect(docker.indexOf('createHash("sha512")')).toBeLessThan(docker.indexOf("npm install --global"));
   });
-  it("installs the exact Debian zlib fix in both image stages", () => {
+  it("requires the platform-specific Debian package versions and pins", () => {
     const docker = read("Dockerfile");
+    expect(docker.match(/^FROM node:\S+ AS (?:base|runner)$/gmu)).toEqual([
+      `FROM ${base} AS base`, `FROM ${base} AS runner`,
+    ]);
     const install = "node /tmp/install-debian-zlib.mjs";
     expect(docker.match(/source=scripts\/install-debian-zlib\.mjs,target=\/tmp\/install-debian-zlib\.mjs,readonly/g)).toHaveLength(2);
     const [buildStage, runnerStage] = docker.split(`FROM ${base} AS runner`);
@@ -56,21 +59,30 @@ describe("Node 26 runtime source contract", () => {
     expect(runnerStage.indexOf(install)).toBeLessThan(runnerStage.indexOf("dpkg --purge apt libapt-pkg7.0"));
 
     const helper = read("scripts/install-debian-zlib.mjs");
+    expect(helper).toContain('architecture === "amd64" || architecture === "arm64"');
     expect(helper).toContain(fixedZlib);
-    expect(helper).toContain('https://snapshot.debian.org/file/');
+    expect(helper).toContain('installedPackage() !== `${expectedVersion}\\tinstall ok installed`');
+    expect(helper.indexOf('if (hasUpstreamFix) process.exit(0)')).toBeLessThan(helper.indexOf('await fetch('));
     for (const [architecture, snapshot, size, hash] of [
-      ["amd64", "d2eca18b98f94b9179c90e09da4760a27ad1e107", 88720, "8c27c342230503b73dfde629642c3b352e87b554e06d60cf58772f236a305ceb"],
-      ["arm64", "3ba1e9072e91c9d9034c778b94c58e40047ac566", 85028, "0e41b3d7ad8ad7fcd36dd4d61ca91a70018478fc4af652e044f4be770784ddff"],
       ["ppc64el", "9bb7bc7fd22cb73ca85eb7163277e97a6218d4ae", 87340, "b78324aed52229bf4b984553f68bf710b2faa41da43250355d072d2ab2f2d11c"],
       ["s390x", "a1b69065c75effb594bdd7b972e0241b16e3a70d", 86816, "b1ba54fa14d8bd9ecb4ef322ca4bc5abb67a68ce5914712bacd401b122d959e5"],
     ] as const) {
       expect(helper).toContain(`${architecture}: { snapshot: "${snapshot}", bytes: ${size}, sha256: "${hash}" }`);
     }
+    expect(helper).toContain('https://snapshot.debian.org/file/');
     expect(helper).toContain('redirect: "error"');
     expect(helper).toContain("AbortSignal.timeout(");
-    expect(helper).toContain("createHash(\"sha256\")");
+    expect(helper).toContain('createHash("sha256")');
     expect(helper).toContain('execFileSync("dpkg", ["--install", archive]');
-    expect(helper).toContain('execFileSync("dpkg-query"');
+
+    const smoke = read("scripts/smoke-container.mjs");
+    expect(smoke).toContain(`const expectedGlibcVersion = hasUpstreamFixes ? "${fixedGlibc}" : "2.41-12+deb13u4"`);
+    expect(smoke).toContain(`const fixedZlibVersion = "${fixedZlib}"`);
+    expect(smoke).toContain('["libc-bin", expectedGlibcVersion]');
+    expect(smoke).toContain('["libc6", expectedGlibcVersion]');
+    expect(smoke).toContain('["zlib1g", hasUpstreamFixes ? fixedZlibVersion : "1:1.3.dfsg+really1.3.1-1+b1"]');
+    expect(smoke).toContain('assert.deepEqual(matchingRows.map(row => row.slice(1)), [[version, "installed"]]');
+    expect(smoke).toContain('updatedPackages: hasUpstreamFixes ? [] : [{ before: zlibBefore, after: zlibAfter }]');
   });
   it("retains source guards for actual runtime identity and Linux dependency proof", () => {
     const smoke = read("scripts/smoke-container.mjs");
@@ -80,9 +92,8 @@ describe("Node 26 runtime source contract", () => {
     expect(smoke).toContain(`assert.equal(runnerBaseReference, "${base}"`);
     expect(smoke).toContain('const targets = new Set(["apt", "libapt-pkg7.0", "mount"])');
     expect(smoke).toContain("beforePackages.filter");
-    expect(smoke).toContain(`assert.deepEqual(zlibBefore.slice(1), ["${oldZlib}", "installed"])`);
-    expect(smoke).toContain(`const zlibAfter = [zlibBefore[0], "${fixedZlib}", "installed"]`);
-    expect(smoke).toContain(".map(row => row === zlibBefore ? zlibAfter : row)");
+    expect(smoke).toContain('const expectedPackages = beforePackages.filter(([name]) => !targets.has(name.split(":")[0]))');
+    expect(smoke).toContain("assert.deepEqual(afterPackages, expectedPackages");
     expect(smoke).toContain('assert.equal(processEvidence.uid, 1001)');
     expect(smoke).toContain('assert.equal(processEvidence.packageTools, false)');
   });

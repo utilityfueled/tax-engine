@@ -191,6 +191,7 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
   ["git rev-parse HEAD 'HEAD^{tree}'",'git rev-parse HEAD HEAD^{tree}'],
   ['for ((attempt=1; attempt<=60; attempt++)); do','for attempt in $(seq 1 60); do'],
   ['      - name: Verify original-entry timing contracts\n        run: node --test tests/scripts/thread-tick-phase.test.mjs tests/scripts/full-batch-public-cpu-diagnostic.test.mjs\n',''],
+  ['node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067','node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc'],
  ];
  for(const[after,before]of reviewedDeltas){
   assert.equal(original.split(after).length,2);
