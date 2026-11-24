@@ -49,9 +49,13 @@ Use the linked progress sections when investigating individual packages.
   deadlines. Its header entry median was 5,238 ms.
   [Scheduler evidence](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison).
 
-- `3f4141fe` extends the opt-in measurements to the full Linux jobs,
-  with explicit workload labels. The full and focused measurements are
-  running in [GitHub Actions](https://github.com/utilityfueled/tax-engine/actions/runs/45415466985).
+- The full Linux comparison on `3f4141fe` recorded 11 Ohio deadline
+  failures and two RRTA inspection timeouts in strict AMD64. Managed
+  Chromium missed the same two RRTA inspections. Both focused modes
+  missed the same six Ohio deadlines. The strict full workload showed more
+  renderer CPU time and runnable wait in two usable header samples.
+  [Full comparison](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison) ·
+  [Current ordinary Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45417655999).
 
 - `ae399bd1` compares the current and candidate Python versions on the
   same Ubuntu runner with the two exact retained RRTA inputs. Both

@@ -30,6 +30,15 @@ qualification open. [Current ARM64 job](https://github.com/utilityfueled/tax-eng
 [Current timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946/artifacts/14938704508) ·
 [Earlier timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45389977101/artifacts/14922412389).
 
+The retained ARM64 phase markers put header entry 20.0–21.1 seconds
+after the Playwright dispatch message in the two mobile school cases and
+26.9–29.8 seconds after dispatch in the two desktop cases. The mobile
+header phases completed in 5.47 and 5.75 seconds before the cases later
+stopped after reopening. Both desktop cases stopped during header entry.
+Reporter timestamps describe wall progression. The 30-second test
+deadline uses Playwright's own clock. The evidence shows several distinct
+stopping points and leaves the slow operation unestablished.
+
 `a3f5f225` pins three specs and two evidence links to the 2025 IRS Form
 8801 annual archive. The generic form URL now serves 2026. The exact
 spec overlay resolved all 9,986 references and changed no formulas.
@@ -135,6 +144,31 @@ the browser source audit passed. Independent review checked the workflow
 gate and source hashes. The first local ordinary run stopped at source
 drift during a concurrent edit. A settled rerun passed all four Ohio
 Chromium cases with no scheduler output. [Actual full workload run](https://github.com/utilityfueled/tax-engine/actions/runs/45415466985).
+
+The measured run used Ubuntu 26.04 image revision 20261116.202.1 in
+both full jobs. Strict AMD64 passed 639, missed 11 Ohio 30-second
+deadlines and two four-second RRTA saved-PDF inspections, and retained
+five original skips. Managed Chromium passed 650 and missed the same
+two RRTA inspections with five original skips. Each same-runner focused
+leg passed four and missed the same six Ohio deadlines. Compose
+recovery, rollback, independent archive verification and image scanning
+passed in the strict job.
+
+| Header-entry workload | Usable samples | Renderer CPU median | Renderer runnable wait median |
+| --- | ---: | ---: | ---: |
+| Strict AMD64 full | 2 of 4 | 5.120 s | 822.6 ms |
+| Strict AMD64 focused | 4 of 4 | 3.779 s | 33.9 ms |
+| Managed focused on the strict runner | 4 of 4 | 3.781 s | 34.5 ms |
+| Managed full on its separate runner | 4 of 4 | 5.075 s | 625.3 ms |
+
+Independent review confirmed the exact counts and focused failure set.
+The full workload samples showed more CPU time and runnable wait in
+both modes. The strict full samples cover only two mobile cases. The
+managed full job is on a separate runner, and timing variation and
+measurement coverage limit attribution. The run leaves the original
+browser gates open. [Strict and focused job](https://github.com/utilityfueled/tax-engine/actions/runs/45415466985/job/138520368386) ·
+[Managed full job](https://github.com/utilityfueled/tax-engine/actions/runs/45415466985/job/138520368848) ·
+[Current ordinary Web job](https://github.com/utilityfueled/tax-engine/actions/runs/45417655999).
 
 ## November 24 Pennsylvania balance receipt confirmations
 

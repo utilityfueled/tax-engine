@@ -21,7 +21,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Qualify Linux browsers with original limits. On 33b6a593 the managed browser passed 652 active cases. The strict AMD64 suite missed six Ohio deadlines, and both focused Ohio comparison legs passed ten cases. Strict ARM64 on 4ccb88b0 missed the same ten Ohio cases as d439de12. Strict recovery and archive verification passed.",
+      "Qualify Linux browsers with original limits. The latest measured full run missed 11 Ohio deadlines and two RRTA inspections in strict AMD64, and two RRTA inspections in managed Chromium. Strict ARM64 on 4ccb88b0 missed the same ten Ohio cases as d439de12. Strict recovery and archive verification passed. The current ordinary Linux run is 45417655999.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -98,13 +98,27 @@
     "nov24OhioFullLinuxScheduler": {
       "diagnosticCommit": "3f4141fe834ff57cec53a420a68e820d01b33bc4",
       "githubComparison": 45415466985,
-      "status": "Opt-in Linux comparison reached the full strict browser step. Terminal results pending.",
+      "status": "Completed with original browser gates open",
       "diagnosticTestsPassed": 56,
       "orchestrationAndCPUTestsPassed": 62,
       "ordinaryChromiumTestsPassed": 4,
       "ordinaryChromiumSchedulerOutput": false,
       "independentReview": "Workflow admission and browser source hashes verified",
-      "limits": "Existing cases, timeouts, retries, worker counts and request budgets preserved"
+      "limits": "Existing cases, timeouts, retries, worker counts and request budgets preserved",
+      "runnerImage": "ubuntu-26.04/20261116.202.1",
+      "strictJob": 138520368386,
+      "managedJob": 138520368848,
+      "strictFull": {"passed": 639, "ohioDeadlineFailures": 11, "rrtaInspectionTimeouts": 2, "originalSkips": 5},
+      "managedFull": {"passed": 650, "rrtaInspectionTimeouts": 2, "originalSkips": 5},
+      "focusedPerMode": {"passed": 4, "ohioDeadlineFailures": 6, "matchedFailureCaseTitles": 6},
+      "headerRenderer": {
+        "strictFull": {"measured": 2, "unavailable": 2, "medianCPUms": 5120.03, "medianRunnableWaitMs": 822.64},
+        "strictFocused": {"measured": 4, "medianCPUms": 3779.13, "medianRunnableWaitMs": 33.86},
+        "managedFocusedSameRunner": {"measured": 4, "medianCPUms": 3780.84, "medianRunnableWaitMs": 34.51},
+        "managedFullSeparateRunner": {"measured": 4, "medianCPUms": 5074.59, "medianRunnableWaitMs": 625.28}
+      },
+      "localEvidence": ".local/upgrade-evidence/nov24-strict-browser-differential",
+      "ordinaryCurrentWeb": 45417655999
     },
     "nov24ExactLocalBaselineAndCurrentRuns": {
       "baselineRevision": "1d4f3a3f62c845abfb9dc91d18afad0f7a9b2080",
@@ -136,7 +150,8 @@
         "timingArtifact": 14938704508,
         "priorTimingArtifact": 14922412389,
         "matchedPriorFailingCaseIds": 10,
-        "localComparison": ".local/upgrade-evidence/nov24-9a45-arm64-timing-review/CURRENT-ARM64-COMPARISON.json"
+        "localComparison": ".local/upgrade-evidence/nov24-9a45-arm64-timing-review/CURRENT-ARM64-COMPARISON.json",
+        "localSchoolPhaseComparison": ".local/upgrade-evidence/nov24-9a45-arm64-timing-review/CURRENT-ARM64-SCHOOL-PHASES.json"
       },
       "priorYearCitationCommit": "a3f5f225504bc0d8fca8822bf50a5c9c625bfc08",
       "priorYearCitationExactSpecReferencesPassed": 9986,
