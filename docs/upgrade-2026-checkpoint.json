@@ -49,6 +49,18 @@
       "githubWeb": 45394897640,
       "strictAMD64": {"job": 138447946329, "passed": 646, "failedDeadlines": 6, "originalSkips": 5, "recoveryRollback": "passed", "independentArchive": "passed", "imageScan": "passed"},
       "managedChromium": {"job": 138447946621, "passed": 650, "savedRRTAPDFTimeouts": 2, "originalSkips": 5, "subprocessDeadlineMs": 4000},
+      "rrtaComparableInputs": {
+        "githubArtifact": 14923508728,
+        "privateEvidence": ".local/upgrade-evidence/nov24-pa-early-extension/rrta-input-comparison",
+        "localChromiumOriginalCasesPassed": 2,
+        "rawManagedPDFLocalReplayMs": [830, 829],
+        "originalSubprocessDeadlineMs": 4000,
+        "originalOutputLimitBytes": 65536,
+        "localPython": "3.14.6",
+        "managedPython": "3.13",
+        "pypdf": "6.10.0",
+        "comparison": "Both pairs match ordered page-content and extracted-text hashes, object-type counts and all decoded streams except one object stream with two timestamp values. Both raw managed files pass the unchanged local inspector. Managed Linux timing remains open."
+      },
       "githubDockerPassed": 45394897728,
       "vercel": "Canceled by Ignored Build Step"
     },

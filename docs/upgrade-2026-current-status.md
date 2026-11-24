@@ -20,8 +20,12 @@ Use the linked progress sections when investigating individual packages.
   passed, including 30,445 coverage tests with 88.69% branches. Strict
   AMD64 passed 646 browser cases and missed six Ohio deadlines. Managed
   Chromium passed 650 and missed two RRTA saved-PDF inspection deadlines.
-  Both retained five original skips. Recovery, rollback, archive verification and the image scan
-  passed. [Balance evidence](upgrade-2026-progress.md#november-24-pennsylvania-balance-receipt-confirmations).
+  Both retained five original skips. Recovery, rollback, archive
+  verification and the image scan passed. Both managed RRTA inputs
+  passed the original inspection limit when replayed on macOS. The
+  managed and local decoded streams differed only in two timestamps.
+  [Balance evidence](upgrade-2026-progress.md#november-24-pennsylvania-balance-receipt-confirmations) ·
+  [RRTA input comparison](upgrade-2026-progress.md#retained-rrta-input-comparison).
 
 - `4ee0721b` reports verified Pennsylvania extension receipts before the
   due date in the 2025 review methods and the 2026 state-only draft when

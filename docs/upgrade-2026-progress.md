@@ -54,6 +54,25 @@ marker records entry into page-text extraction.
 [Managed Chromium job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640/job/138447946621) ·
 [Coverage job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897639/job/138447935597).
 
+### Retained RRTA input comparison
+
+Both original managed timeout PDFs were available in the exact run's
+browser artifact. The two unchanged local Chromium cases passed. At each
+width, the retained and local PDFs had identical ordered page content and
+extracted text, and identical object-type counts. Each pair contained
+16 pages and 852 decoded streams. The one differing decoded stream was
+an object stream containing two changed PDF timestamps. The normalized
+stream comparison and raw files were retained separately.
+
+The unmodified inspector accepted both exact managed inputs on macOS in
+829–830 ms under the original four-second and 65,536-byte limits. Local
+Python was 3.14.6, while the managed job used Python 3.13, with pypdf
+6.10.0 in both. A separate macOS profile spent most time in content and
+object parsing. The observed input differences are confined to the two
+timestamps at the decoded-stream level. The cause of the managed Linux
+timing difference is still open.
+[Exact managed run artifacts](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640#artifacts).
+
 ## November 24 Pennsylvania extension receipts
 
 `4ee0721b` reports verified January 1 through April 15 extension receipts
