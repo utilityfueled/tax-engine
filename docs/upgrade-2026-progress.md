@@ -1,5 +1,37 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Pennsylvania extension receipts
+
+`4ee0721b` reports verified January 1 through April 15 extension receipts
+on PA-40 line 16 in the applicable 2025 ordinary and separate-owner
+married methods. Early payments require independently established relief
+from estimated-tax interest. One confirmation can fund only one receipt
+even when the payment kind, casing or spacing differs. The 2026 state-only
+draft replayed resident, part-year and nonresident originals with
+withholding that covers the full tax and a reconciled overpayment.
+Quarterly estimates, the nonresident small-balance method and filing
+eligibility retain their separate gates. [REV-276](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/rev-276.pdf) ·
+[PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+[REV-1630](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf).
+
+Independent engineering review reproduced a January duplicate and verified
+the correction. The exact tracked source on Node 26.13.1 passed 30,363 unit
+tests with 81 skips, 226 focused tests, 37 Node browser-audit tests, root,
+contracts and web type checks, lint, spec validation and inventory, and the
+engine and web builds. Coverage passed 30,363 tests at 88.31% branches.
+With 15 verified sample documents present, the standard Chromium wrapper
+passed all six selected Pennsylvania journeys at desktop and mobile widths
+with the existing request limits and deadlines. The first browser attempt
+stopped before any test because the tracked-only checkout lacked the sample
+directory. A unit run alongside browser and coverage work timed out in
+nine cases. Running the unit suite alone with the samples passed 30,363
+tests with the same 81 skips and the original timeouts. GitHub Docker
+passed and Vercel skipped the production build. The remaining dated-interest
+question is in the [independent review handoff](upgrade-2026-external-actions.md#current-external-inputs--november-21).
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45387470599) ·
+[GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45387470531) ·
+[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45387470691).
+
 ## November 24 paired Ohio browser traces
 
 Paired all six strict AMD64 failures from exact `924c3545` with the same

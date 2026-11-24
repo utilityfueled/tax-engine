@@ -9,6 +9,14 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `4ee0721b` reports verified Pennsylvania extension receipts before the
+  due date in the 2025 review methods and the 2026 state-only draft when
+  independently established tax coverage permits. The 2026 draft keeps
+  the full withholding and refund reconciliation requirements in all three
+  residency paths. The exact source passed 30,363 unit tests with 81 skips,
+  88.31% branch coverage and all six selected Pennsylvania Chromium journeys.
+  [Payment evidence](upgrade-2026-progress.md#november-24-pennsylvania-extension-receipts).
+
 - `924c3545` pins the refreshed official Node base. AMD64 and ARM64 inherit
   Debian's fixed glibc and zlib packages. PPC64LE and S390X retain their
   pinned zlib install. The four published images were inspected by digest.

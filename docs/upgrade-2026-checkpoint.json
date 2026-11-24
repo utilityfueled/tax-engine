@@ -2,12 +2,13 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "edb68f0ed9480328aac61928fa80304ba6c9f0ff",
+    "applicationCommit": "4ee0721b740ad383d8c282c1f7ab1e4b3a424111",
     "verificationCommit": "26348f19",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
+    "evidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
+    "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "remaining": [
@@ -19,6 +20,27 @@
     ]
   },
   "activeContinuation": {
+    "nov24PennsylvaniaExtensionReceipts": {
+      "applicationCommit": "4ee0721b740ad383d8c282c1f7ab1e4b3a424111",
+      "localEvidence": ".local/upgrade-evidence/nov24-pa-early-extension",
+      "node": "26.13.1",
+      "unitPassed": 30363,
+      "unitSkipped": 81,
+      "parallelUnitTimeouts": 9,
+      "unitAloneWithVerifiedSamplesPassed": true,
+      "coveragePassed": 30363,
+      "branchCoveragePercent": 88.31,
+      "scopedPennsylvaniaChromium": {"passed": 6, "failed": 0, "skipped": 0, "verifiedSampleDocuments": 15},
+      "focusedPassed": 226,
+      "nodeBrowserAuditTestsPassed": 37,
+      "engineeringReview": "Duplicate confirmation across payment kinds reproduced, fixed and independently rechecked.",
+      "staticAndBuildChecks": "Root, contract and web types, lint, spec validation, inventory, engine build and web build passed.",
+      "githubCI": 45387470599,
+      "githubDockerPassed": 45387470531,
+      "githubWeb": 45387470691,
+      "vercel": "Canceled by Ignored Build Step",
+      "limits": "Dated interest for an early extension payment that affects an existing underpayment, final 2026 form qualification and independent human tax review remain open. The 2026 draft requires independently sufficient withholding and reconciled overpayment and remains review-only."
+    },
     "nov24OhioStrictTraceComparison": {
       "applicationCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
       "localEvidence": ".local/upgrade-evidence/nov24-strict-browser-differential",
