@@ -2,17 +2,47 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "c2b05a1c2958f5cf7da1413e3300a607b3fd04c7",
+    "applicationCommit": "edb68f0ed9480328aac61928fa80304ba6c9f0ff",
+    "verificationCommit": "26348f19",
     "statusDocument": "docs/upgrade-2026-current-status.md",
-    "evidenceKey": "activeContinuation.nov24GuidedCashGift",
+    "evidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "remaining": [
-      "Qualify strict Linux browsers with original limits. Exact 9a45b970 recovery, archive and cleanup passed on both architectures. ARM64 missed 10 Ohio browser deadlines. AMD64 missed 11 Ohio browser deadlines and two RRTA saved-PDF inspection deadlines. Bounded measurement run 45359637143 is still open.",
+      "Qualify strict Linux browsers with original limits. Exact 9a45b970 recovery, archive and cleanup passed on both architectures. ARM64 missed 10 Ohio browser deadlines. AMD64 missed 11 Ohio browser deadlines and two RRTA saved-PDF inspection deadlines. A later unchanged baseline missed two deadlines; the optional measurements stopped when public job metadata returned HTTP 403.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
   "activeContinuation": {
+    "nov24AIEvaluationCutoff": {
+      "applicationCommit": "edb68f0ed9480328aac61928fa80304ba6c9f0ff",
+      "scope": "Apply one inclusive exact report timestamp to offline scores, costs, preflight and capability evidence, and baseline comparisons. Review chronology and capability windows preserve submillisecond precision.",
+      "localEvidence": ".local/upgrade-evidence/nov24-eval-report-cutoff",
+      "cleanFocusedTestsPassed": 105,
+      "additionalDiagnosticTestsPassed": 18,
+      "specReferencesPassed": 9985,
+      "independentEngineeringReview": "passed",
+      "vercel": "Canceled by Ignored Build Step",
+      "verificationCommit": "26348f19",
+      "verificationEvidence": ".local/upgrade-evidence/nov24-combined-final",
+      "remoteRuns": {"ci": 45367064519, "web": 45367064064, "docker": 45367064051},
+      "localVerification": {"checksPassed": 10, "testsPassed": 30351, "testSkips": 81, "branchCoveragePercent": 88.3, "chromium": "running"},
+      "docker": "Passed on exact verification commit 26348f19",
+      "remaining": "Complete exact combined verification. Independent human case review and repeated comparable live evidence are still required."
+    },
+    "nov24OrdinaryTangibleCharity": {
+      "applicationCommit": "723248b7b825fb7195bda3f1079e08a427f197ff",
+      "scope": "Ordinary long-term tangible personal property donated outright to a verified 50%-limit organization. Collect actual donee use. Reduce unrelated use to basis if lower and retain the applicable percentage category. Hold missing or unsupported facts.",
+      "localEvidence": ".local/upgrade-evidence/nov24-tangible-property-use",
+      "cleanFocusedTestsPassed": 887,
+      "cleanChromiumTestsPassed": 35,
+      "specReferencesPassed": 9984,
+      "independentEngineeringReview": "passed, with guided comparison and stale-confirmation gaps subsequently fixed and tested",
+      "remoteRuns": {"ci": 45364165585, "web": 45364165533, "docker": 45364165510, "nativeArm64": 45364293218},
+      "vercel": "Canceled by Ignored Build Step",
+      "diagnosticManifestCorrection": "919b3b71 binds the optional diagnostic to the reviewed browser audit bytes. The original unit and coverage runs captured the obsolete checksum failure. No runtime limits changed.",
+      "remaining": "Complete exact full verification. Qualified tax review and final 2026 forms are still required."
+    },
     "nov24GuidedCashGift": {
       "applicationCommit": "c2b05a1c2958f5cf7da1413e3300a607b3fd04c7",
       "scope": "Verify the entered basis of a guided charitable cash amount. Subtract actual return benefits only from gross payments and preserve saved incomplete facts and canonical net input.",
@@ -21,7 +51,7 @@
       "cleanChromiumTestsPassed": 38,
       "specReferencesPassed": 9981,
       "independentEngineeringReview": "passed",
-      "remaining": "Finish documented tangible property intake and valuation separately, then run combined exact checks. Keep final 2026 and qualified review gates open."
+      "remaining": "Run combined exact checks on successor 723248b7. Keep final 2026 and qualified review gates open."
     },
     "nov24PAUnemploymentDraft": {
       "applicationCommit": "9a45b970305442188962e0c69163f15c81496799",
@@ -41,7 +71,7 @@
       "localFullTests": {"passed": 30338, "skipped": 81, "branchCoveragePercent": 88.32, "chromiumPassed": 650, "chromiumOriginalSkips": 5, "allChecksPassed": 11},
       "nativeArm64": {"smokeRecoveryArchiveAndCleanupPassed": true, "strictBrowserPassed": 640, "strictBrowserDeadlines": 10, "originalSkips": 5, "timingArtifact": 14903472814},
       "strictAmd64": {"job": 138296525423, "recoveryArchiveScanAndCleanupPassed": true, "browserPassed": 637, "ohioDeadlines": 11, "rrtaPdfInspectionDeadlines": 2, "originalSkips": 5, "runtimeArtifact": 14905771184},
-      "boundedBrowserMeasurement": {"run": 45359637143, "sourceCommit": "406aab41", "applicationDiff": "none relative to 9a45b970", "scope": "Existing strict AMD64 baseline first, followed by original Ohio batches with entry phase metrics only if the baseline fails"},
+      "boundedBrowserMeasurement": {"run": 45359637143, "sourceCommit": "406aab41", "applicationDiff": "none relative to 9a45b970", "browserPassed": 648, "browserDeadlines": 2, "originalSkips": 5, "recoveryArchiveScanAndCleanupPassed": true, "phaseMeasurements": "unavailable, public current-job metadata HTTP 403 for both original batches", "artifacts": [14906678657, 14905869522], "caseCountBinding": "51c11da2 validates the full count of 657 against the unchanged per-file audit limits"},
       "remaining": ["Complete exact strict Linux browser qualification.", "Obtain qualified tax review and final Pennsylvania artifacts."]
     },
     "nov24OhioUnemploymentDraft": {

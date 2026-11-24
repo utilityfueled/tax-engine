@@ -9,6 +9,23 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `edb68f0e` excludes future-dated evidence from offline AI evaluation
+  reports. The isolated source passed 105 focused tests and 18 additional
+  diagnostic checks. Independent human labels and comparable live runs
+  remain open. [Evaluation evidence](upgrade-2026-progress.md#november-24-offline-ai-evaluation-report-time).
+
+- Combined verification at `26348f19` passed ten of eleven local checks,
+  including 30,351 tests in both runs, 88.30% branch coverage and the
+  exact GitHub Docker build. Full Chromium and the remote workflows
+  continue. [Exact image build](https://github.com/utilityfueled/tax-engine/actions/runs/45367064051).
+
+- `723248b7` collects documented use of an ordinary long-term tangible
+  gift to an actual 50%-limit organization. A $500 gift with $100 basis
+  sold by the charity to raise funds now uses $100. The isolated source
+  passed 887 focused tests and 35 Chromium cases. Combined verification
+  continues on the pushed revision. Vercel skipped its build.
+  [Tangible gift evidence](upgrade-2026-progress.md#november-24-documented-use-of-tangible-charitable-gifts).
+
 - `c2b05a1c` distinguishes a gross payment from an already-net charitable
   cash amount in the guided interview. A $70 payment with a $40 benefit
   produces a $30 contribution. The package passed 650 focused tests and
@@ -26,7 +43,9 @@ Use the linked progress sections when investigating individual packages.
   cases. The image build and ARM64 recovery passed.
   Strict ARM64 passed 640 browser cases and missed 10 Ohio deadlines.
   Strict AMD64 passed 637 and missed 11 Ohio browser deadlines and two
-  RRTA saved-PDF inspection deadlines. A bounded measurement continues.
+  RRTA saved-PDF inspection deadlines. A later strict sample passed 648
+  and missed two deadlines. GitHub returned HTTP 403 for the optional
+  phase measurements.
   [Pennsylvania evidence](upgrade-2026-progress.md#november-24-pennsylvania-government-unemployment-exclusion).
 
 - `badcfd4b` adds an internal Ohio 2026 candidate that assigns ordinary

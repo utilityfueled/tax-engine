@@ -1,5 +1,18 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 24 charitable cash and tangible property
+
+Independently derive Schedule A treatment for a $70 cash payment with
+a $40 fundraising dinner benefit and a separately documented long-term
+painting with $500 fair market value and $100 adjusted basis donated to
+a university. Compare an immediate sale to fund education with the
+university's documented use of the painting in its teaching collection.
+Verify the contribution values, percentage categories, support for the
+donee-use evidence and 2026 form transfers against the final instructions.
+[IRS Schedule A instructions](https://www.irs.gov/instructions/i1040sca) ·
+[IRC §170](https://uscode.house.gov/us/usc/t26/s170/) ·
+[Publication 526](https://www.irs.gov/publications/p526).
+
 ## November 24 Pennsylvania and Ohio unemployment originals
 
 Independently derive each expected result from the documented synthetic

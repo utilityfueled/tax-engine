@@ -1,5 +1,62 @@
 # 2026 upgrade implementation evidence
 
+## November 24 offline AI evaluation report time
+
+`edb68f0e` fixes reports that previously counted later preflight,
+capability or provider-attempt evidence. The exact inclusive report
+cutoff applies before scores, costs, duplicate response checks and
+baseline comparisons. Review and capability chronology retain
+submillisecond precision. An attempt start does not establish response
+completion or review time. Existing generated evidence remains unchanged.
+
+Independent engineering review passed. The isolated source passed 105
+focused tests, 18 additional diagnostic tests, all 9,985 spec references
+and the inventory check. Independent human labels and repeated live
+comparisons remain required. This package made no provider calls.
+
+The combined suite also revealed a historical pricing fixture whose
+December 10 attempt depends on the report clock. `26348f19` gives the
+test explicit before-attempt and at-attempt report times and retains the
+full exact-cost assertions. Both offline suites passed all 38 tests.
+The exact final archive passed ten local checks, including 30,351 tests
+in each of the unit and coverage runs, 81 skips and 88.30% branch
+coverage. The exact Docker build passed. Full Chromium and the remaining
+remote workflows continue.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45367064051) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45367064519) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45367064064).
+
+## November 24 documented use of tangible charitable gifts
+
+`723248b7` requires ordinary tangible gift facts and documented donee use
+for an applicable long-term gift to a verified 50%-limit organization.
+For unrelated use, the value is the lesser of fair market value and
+adjusted basis, in the 50% noncash category. Related use retains fair
+market value under the 30% capital-gain category. The guide carries the
+original amounts through and clears the evidence confirmation when the
+gift is edited. Specialized stock-only methods remain held.
+[IRC §170(e)(1)(B)(i)(I) and (b)(1)(C)(i)](https://uscode.house.gov/us/usc/t26/s170/) ·
+[IRS Publication 526](https://www.irs.gov/publications/p526).
+
+The canonical red test reproduced $500 where the verified adjusted basis
+was $100. A separately filled 2025 Schedule A reopened with $100 on lines
+12 and 14 and without the raw source reference in its PDF objects. The
+isolated source passed 887 focused tests, 35 Chromium cases including
+evidence reset, 9,984 spec references and inventory and type checks. A
+separate engineering review identified and verified the scope of the
+guided-comparison discrepancy. The corrected comparison uses the same
+verified gift value. Combined checks continue on the pushed source, and
+Vercel skipped the build.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45364165585) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45364165533) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45364165510) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45364293218).
+
+The first combined unit and coverage attempts found one stale digest in
+the optional browser diagnostic selection. `919b3b71` binds it to the
+reviewed browser audit bytes. All 27 diagnostic tests and 18 further
+fixed-batch tests passed. The original failure remains in the evidence.
+
 ## November 24 cash gifts with return benefits
 
 `c2b05a1c` asks whether an actual guided cash amount is the net
@@ -44,9 +101,13 @@ smoke, Compose recovery, independent archive verification and cleanup.
 Strict ARM64 passed 640 and exceeded 10 Ohio deadlines. Strict AMD64
 passed 637 and exceeded 11 Ohio browser deadlines and two RRTA saved-PDF
 inspection deadlines. Both retained the five original skips. A bounded
-performance workflow on the same application code
-will collect entry-phase measurements if its original strict AMD64 run
-fails. Vercel reported an ignored build.
+performance workflow on the same application code passed 648 browser
+cases, missed two deadlines and retained five skips. Recovery, archive,
+scan and cleanup passed. It recorded HTTP 403 when reading the current
+job's public metadata for each optional measurement. Neither batch
+produced phase timings. `51c11da2` separately binds the optional sampler
+to the new audited total of 657 without changing browser limits.
+Vercel reported an ignored build.
 [CI workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350826062) ·
 [Managed Linux browser job](https://github.com/utilityfueled/tax-engine/actions/runs/45350825703/job/138296525535) ·
 [Image workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350825798) ·
