@@ -162,6 +162,57 @@ describe("measured task model evaluation", () => {
     const rejected = summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures);
     expect(rejected.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction")!.blockers).toContain("critical-field-regression");
   });
+  it("blocks an over-budget held-out attempt while retaining exact cost", () => {
+    const fixtures = reviewedFixtures("2026-10-24");
+    const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+    const profiles = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"];
+    const entries = profiles.flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+    const heldOutCase = cases.find(fixture => fixture.id === "case-income-w2-injection" && fixture.split === "held-out");
+    if (!heldOutCase) throw new Error("Missing frozen held-out case.");
+    const heldOutEntry = entries.find(entry => entry.profileId === "luna-high" && entry.fixtureId === heldOutCase.id && entry.repeat === 1);
+    const attempt = heldOutEntry?.attempts[0];
+    if (!attempt) throw new Error("Missing held-out attempt.");
+    const summarize = () => summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures, reportAt)
+      .groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+
+    attempt.usage = { inputTokens: 24000, outputTokens: 8192 };
+    expect(summarize()).toMatchObject({ acceptedRuns: 90, completedRuns: 90, eligibleForPromotionReview: true, blockers: [] });
+
+    for (const [usage, cost] of [
+      [{ inputTokens: 1000, outputTokens: 8193 }, "0.0575965"],
+      [{ inputTokens: 24001, outputTokens: 1000 }, "0.0563001"],
+    ] as const) {
+      attempt.usage = usage;
+      expect(summarize()).toMatchObject({
+        acceptedRuns: 89, completedRuns: 89, schemaValidity: 89 / 90, eligibleForPromotionReview: false,
+        blockers: expect.arrayContaining(["attempt-token-budget-exceeded"]),
+        providerCostUsd: cost, filingSeasonCostUsd: cost,
+      });
+    }
+  });
+  it("applies the same fixture budget to the initial and Sol High attempts", () => {
+    const entry = run(extraction, "gemini-flash-high");
+    const initial = entry.attempts[0];
+    if (!initial || !entry.measurement) throw new Error("Missing initial attempt evidence.");
+    const escalation = { profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", usage: { inputTokens: 1000, outputTokens: 8192 } };
+    entry.attempts.push(escalation);
+    entry.measurement.reportedModel = "gpt-6.1-sol";
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: true, actualCostUsd: "0.08842", filingSeasonCostUsd: "0.09292" });
+
+    escalation.usage.outputTokens = 8193;
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, complete: false, schemaValid: false,
+      criticalCorrect: false, actualCostUsd: "0.08843", filingSeasonCostUsd: "0.09293" });
+
+    escalation.usage.outputTokens = 1000;
+    initial.usage = { inputTokens: 1000, outputTokens: 8193 };
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, complete: false, schemaValid: false,
+      criticalCorrect: false, actualCostUsd: "0.04347375", filingSeasonCostUsd: "0.0749475" });
+
+    initial.usage = null;
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, complete: false, actualCostUsd: null });
+    initial.usage = { inputTokens: 1000, outputTokens: 1000, cachedInputTokens: 1001 };
+    expect(() => scoreProviderEvalEntry(entry, extraction)).toThrow(/cache token counts exceed total input/i);
+  });
   it("qualifies a measured quality gain against both cheaper baselines", () => {
     const { summarize, reviewedEntry, baselineIds } = qualityComparison();
     const candidateGroup = () => summarize().groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");

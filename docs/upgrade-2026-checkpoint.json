@@ -10,6 +10,7 @@
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
+    "aiAttemptTokenCapsEvidenceKey": "activeContinuation.nov24AIEvaluationAttemptTokenCaps",
     "publicProviderEvidenceKey": "activeContinuation.nov24ExactPublicProviderCatalog",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
@@ -32,6 +33,14 @@
     ]
   },
   "activeContinuation": {
+    "nov24AIEvaluationAttemptTokenCaps": {
+      "focusedTestsPassed": 85,
+      "specReferencesResolved": 12,
+      "auditedSourcesVerified": 2062,
+      "overBudgetBlocker": "attempt-token-budget-exceeded",
+      "providerCalls": 0,
+      "evidence": "docs/upgrade-2026-progress.md#november-24-ai-evaluation-attempt-token-caps"
+    },
     "nov24OhioFocusedBrowserStorageTiming": {
       "applicationCommit": "f3163949210f031ad1bdacdd6cd3a5acac3494d0",
       "environment": "local macOS Chromium on a clone of the archived production build",

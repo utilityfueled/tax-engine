@@ -127,6 +127,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const modelLifecycleValid = entry.attempts.length > 0
     && entry.attempts.every(attempt => publicModelLifecycle(candidate(attempt.profileId).model, attempt.startedAt).status !== "shutdown");
   const qualifiedModel = modelMatches && modelLifecycleValid;
+  const tokenBudgetExceeded = entry.attempts.some(({ usage }) => usage !== null
+    && (usage.inputTokens > policy.maxInputTokens || usage.outputTokens > policy.maxOutputTokens));
+  const qualifiedOutput = provenanceMatches && qualifiedModel && !tokenBudgetExceeded;
   const versionMatches = entry.measurement?.bindingVersion === PROVIDER_EVAL_BINDING_VERSION
     && entry.measurement.promptVersion === policy.promptVersion && entry.measurement.schemaVersion === policy.schemaVersion;
   const canonical = (value: unknown): string => JSON.stringify(value, (_key, item: unknown) => item && typeof item === "object" && !Array.isArray(item)
@@ -134,9 +137,9 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const observationsConsistent = canonical(output) === canonical(entry.output)
     && validated.applicationSchemaValid === entry.applicationSchemaValid
     && validated.normalizationStatus === entry.measurement?.normalizationStatus;
-  const schemaValid = validated.applicationSchemaValid && versionMatches && provenanceMatches && qualifiedModel;
+  const schemaValid = validated.applicationSchemaValid && versionMatches && qualifiedOutput;
   const fields = Object.entries(fixture.expected.fields);
-  const exact = provenanceMatches && qualifiedModel ? fields.filter(([key, expected]) => exactField(expected, output?.fields[key])).length : 0;
+  const exact = qualifiedOutput ? fields.filter(([key, expected]) => exactField(expected, output?.fields[key])).length : 0;
   const answered = output?.disposition === "answer";
   const answerable = fixture.expected.disposition === "answer";
   const engineOverride = Object.entries(output?.engineValues ?? {}).some(([key, value]) =>
@@ -144,10 +147,10 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const engineValuesComplete = Object.entries(fixture.expected.engineValues).every(([key, value]) =>
     exactField({ kind: "money", value }, output?.engineValues[key]));
   const inventedField = Object.keys(output?.fields ?? {}).some(key => !(key in fixture.expected.fields));
-  const grounding = provenanceMatches && qualifiedModel && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
+  const grounding = qualifiedOutput && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
   const canonicalAuthor = taxProviderModelEvalFixtures.find(item => item.id === fixture.id)?.review.author;
-  const complete = provenanceMatches && qualifiedModel && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
+  const complete = qualifiedOutput && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
     && isIndependentReviewer(entry.independentReview.reviewer, canonicalAuthor)
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const otherwiseAcceptable = complete && schemaValid && !!output && !safetyFailure
@@ -165,10 +168,10 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     actualCost = actualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
     filingSeasonCost = filingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
   }
-  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, safetyFailure, grounding, answerable, answered,
+  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
-    criticalCorrect: provenanceMatches && qualifiedModel && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
+    criticalCorrect: qualifiedOutput && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
     actualCostUsd: knownCost ? actualCost.toFixed() : null,
     filingSeasonCostUsd: knownCost ? filingSeasonCost.toFixed() : null };
 }
@@ -313,6 +316,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const costPerAccepted = costKnown && accepted ? filingCost.div(accepted).toFixed() : null;
     const blockers: string[] = [];
     if (scored.some(item => !item.result.modelLifecycleValid)) blockers.push("model-shutdown-at-attempt");
+    if (scored.some(item => item.result.tokenBudgetExceeded)) blockers.push("attempt-token-budget-exceeded");
     if (profile.role === "candidate" && filingSeasonLifecycle.status === "shutdown") blockers.push("candidate-shutdown-before-filing-season");
     if (!availability || availability.status !== "available" || !availability.structuredOutput || !availability.reasoningEffort || !availability.reportedUsage
       || entries.some(entry => entry.attempts.some(attempt => {

@@ -16,6 +16,19 @@ lines:
     description: "Recompute application validity and normalized observations"
     formula: "Reparse actual payload using the current task schema and frozen source context; claimed flags or fields cannot establish a passing result."
     testRef: "tests/engine/provider-eval-application.test.ts::refuses forged passing flags and normalized fields without valid actual output"
+  - line: "scorer-token-budget"
+    description: "Apply the frozen task token ceilings to every evaluated attempt"
+    formula: >-
+      Each attempt for a fixture, including an explicit Sol High escalation,
+      must fit the fixture task's input and total output ceilings. A distinct
+      complex-reconciliation fixture uses its own task ceilings. A structurally
+      valid payload from an over-budget chain cannot count toward completion,
+      schema validity, critical-field accuracy, or eligibility for promotion
+      review. Retain the exact cost of reported, priceable tokens from every
+      billed attempt. Unknown or inconsistent usage cannot establish a pass.
+    testRef: "tests/engine/provider-model-eval.test.ts::blocks an over-budget held-out attempt while retaining exact cost"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::applies the same fixture budget to the initial and Sol High attempts"
   - line: "synthetic-context"
     description: "Source and audit context remains distinct from golden answers"
     formula: "Transmit explicit fixture request context and requested field names only, never expected values or human review criteria; wrong-year context rejects before dispatch."

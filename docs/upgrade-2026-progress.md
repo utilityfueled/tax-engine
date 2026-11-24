@@ -1,5 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 24 AI evaluation attempt token caps
+
+Imported held-out results now use the same per-task input and output
+caps as the live runner. Either attempt in an admitted Sol High
+escalation can block eligibility when its reported usage exceeds the
+cap. Usage exactly at the cap passes the token check. The scorer still records
+known billed cost at both the attempt and filing-season rates.
+
+Two regressions failed before the fix. Node 26.13.1 passed all 85 focused
+tests. All 12 scoped references, typecheck and artifact sync passed.
+Focused lint reported zero errors and 23 existing warnings, and the
+isolated source audit matched 2,062 files. Independent engineering review
+confirmed the cap, spend and comparison behavior. The tests were offline
+and leave live provider and independent evaluation gates open.
+
 ## November 24 focused Ohio browser storage timing
 
 The local macOS Chromium probe ran against the `f3163949` production

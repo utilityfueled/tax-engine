@@ -9,6 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- The offline AI scorer now excludes attempts over the task token cap
+  from promotion eligibility and retains the exact billed cost.
+  All 85 focused tests passed. Live qualification and independent
+  evaluation review remain open.
+  [Scorer evidence](upgrade-2026-progress.md#november-24-ai-evaluation-attempt-token-caps).
+
 - The current application archive `f3163949` passed all 11 local checks.
   Unit and coverage each passed 30,377 tests with 81 conditional skips
   and 88.31% branches. Chromium passed all 652 active cases with five
