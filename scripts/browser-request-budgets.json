@@ -478,7 +478,7 @@
     "apps/web/src/lib/sentry.ts": "607246d4002d8519e9902c7b6b631b26dd658a1e9a35ea608acf1fdd5f883085",
     "apps/web/src/lib/structured-fact-copy.ts": "4e50fbb7ed1e2fac1e137fe2b8bf0430bd703076079a78663d213e15d62b9e5b",
     "apps/web/src/lib/support.ts": "8669e11fae6ec135dd0b444552c0802dc6b97c1904e951dbd7d863a3418cf01f",
-    "apps/web/src/lib/tax-year-support.ts": "536d9dc3a11b1e2304fd7c45d4b3285af5a25f5f106be7a014c95e7755220b26",
+    "apps/web/src/lib/tax-year-support.ts": "c9fce0ffa9d66a5f923e21f6290e2e578464bd0433726b940f64c41a0a2c00fb",
     "apps/web/src/lib/telemetry-privacy.ts": "5326d4964c002b5874111b461e523a08e3dbab3fa0606f801ed229f76e340464",
     "apps/web/src/lib/transient-tax-calculation.ts": "1c0de97dbe90849f785ccf7dff2a2ea14d7c267717f9b13322f29b1a90476e85",
     "apps/web/src/lib/transient-tax-explanation-request.ts": "86ae63a2ff49c1173c0f2344cbc9597899425e6f571b1f2c527e2e44e98e8b8c",

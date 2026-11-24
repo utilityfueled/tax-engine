@@ -19,6 +19,14 @@ describe("public scenario and output capability disclosure", () => {
     expect(html).toContain("no official California return PDF packet");
     expect(html).toContain("review downloads do not replace a backup");
   });
+
+  it("lists the source requirements for Pennsylvania Schedule NRH and Schedule G-L review copies", () => {
+    const html = renderToStaticMarkup(<SupportPage />);
+    expect(html).toContain("Schedule NRH for certain nonresidents with one full-year employer and signed working-day records");
+    expect(html).toContain("Schedule G-L for certain resident and part-year resident credits backed by original records of income tax paid to another state");
+    expect(html).toContain("No PA forms are qualified for filing");
+  });
+
   it("agrees with incomplete year and filing gates rather than module coverage labels", () => {
     expect(FEDERAL_RULE_PACKS[2026]?.calculationStatus).toBe("incomplete");
     expect(PDF_MAPPING_PACKS[2026].reviewAvailable).toBe(false);
