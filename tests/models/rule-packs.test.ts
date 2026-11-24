@@ -40,4 +40,25 @@ describe("explicit federal rule packs", () => {
       expect(pack.sources.some(source => source.url === "https://www.irs.gov/instructions/i8863" && source.retrievedAt === "2026-10-25")).toBe(true);
     }
   });
+
+  it("pins historic Form 4137 evidence and records the annual review template separately", () => {
+    const archived2025 = "https://www.irs.gov/pub/irs-prior/f4137--2025.pdf";
+    const archived2026 = "https://www.irs.gov/pub/irs-prior/f4137--2026.pdf";
+    const current = "https://www.irs.gov/pub/irs-pdf/f4137.pdf";
+    const historical = getRulePack(2025);
+    const annual = getRulePack(2026);
+    expect(historical.sources.map(source => source.url)).toContain(archived2025);
+    expect(historical.sources.map(source => source.url)).not.toContain(archived2026);
+    expect(annual.sources.map(source => source.url)).toContain(archived2025);
+    expect(annual.sources).toContainEqual(expect.objectContaining({
+      url: archived2026,
+      section: expect.stringContaining("Schedule 2 line 16a"),
+      retrievedAt: "2026-11-24",
+    }));
+    for (const pack of [historical, annual]) {
+      expect(pack.sources.map(source => source.url)).not.toContain(current);
+      expect(pack.filingQualified).toBe(false);
+    }
+    expect(annual.calculationStatus).toBe("incomplete");
+  });
 });

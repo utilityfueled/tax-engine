@@ -20,3 +20,8 @@ lines:
     formula: "Filing exports require independently reviewed scenarios and final, year-matching forms. No current pack has completed this qualification."
     irsRef: "Form 1040 instructions for the applicable tax year"
     testRef: "tests/models/rule-packs.test.ts::records sources and unfinished review without claiming filing readiness"
+  - line: "annual-payroll-source"
+    description: "Bind Form 4137 evidence to the published form year"
+    formula: "Keep the archived 2025 source in both packs for the established computation. Record the separate archived 2026 template and its printed Schedule 2 line 16a destination in the incomplete 2026 pack. Publishing the template does not qualify the annual calculation or export."
+    irsRef: "https://www.irs.gov/pub/irs-prior/f4137--2026.pdf"
+    testRef: "tests/models/rule-packs.test.ts::pins historic Form 4137 evidence and records the annual review template separately"

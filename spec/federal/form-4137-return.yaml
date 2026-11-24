@@ -1,7 +1,7 @@
 form: "Form4137 canonical owner payroll"
 fullName: "Separate taxpayer tip sources and return routing"
 taxYear: 2026
-irsReference: "https://www.irs.gov/pub/irs-pdf/f4137.pdf"
+irsReference: "https://www.irs.gov/pub/irs-prior/f4137--2025.pdf"
 notes: |
   Refreshed October25 against final2025 Form4137 instructions, Pub531,
   ScheduleSE lines8a-8d and Form8959 line2. Each spouse files a separate4137.
