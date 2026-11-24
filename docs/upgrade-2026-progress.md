@@ -1,5 +1,36 @@
 # 2026 upgrade implementation evidence
 
+## November 24 paired Ohio browser traces
+
+Paired all six strict AMD64 failures from exact `924c3545` with the same
+case IDs in a local run of that tracked archive. The standard wrapper
+passed all 14 Ohio business, reciprocity, resident-credit and part-year
+school-district journeys in two request windows. It used two workers,
+zero retries and the original 30-second deadline. Trace capture remained
+enabled for the local comparison. The first direct local run omitted the
+standard windows and produced five HTTP 429 failures. The windowed run
+passed and verified cleanup.
+
+The six remote trace spans were 30.14–31.92 seconds, including terminal
+command records. The matched local spans were 7.38–10.68 seconds. Across
+the six remote cases, total locator-resolution time for fill, Tab and
+select was 3.28–5.67 seconds per case. Fill after locator resolution took
+2.48–7.48 seconds per case remotely and 0.45–1.48 seconds locally. The
+projection reads trace timestamps and action categories only. These
+wall-clock intervals contain more than browser JavaScript time. Some
+cases also had slow download and review response waits.
+
+A separate local Chromium profile of actual resident-credit source entry
+completed in 2.10 seconds at normal speed and 7.32 seconds with 4× CPU
+throttling. Both instrumented journeys passed. The highest sampled public
+application site had 11 and 34 samples respectively at a one-millisecond
+sampling interval. The diagnostic entered the same originals and projected
+counters only. It provides local evidence about one phase. Linux CPU
+attribution and strict qualification remain open. No application or test
+changes were needed for the comparison.
+[Exact AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45374061266/job/138375419756) ·
+[Bound trace artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45374061266/artifacts/14912954682).
+
 ## November 24 Node base image refresh
 
 The exact `723248b7` AMD64 scan reported 220 matches across 100 advisory

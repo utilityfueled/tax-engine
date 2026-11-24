@@ -25,6 +25,13 @@ Use the linked progress sections when investigating individual packages.
   Vercel skipped the production build.
   [Image refresh evidence](upgrade-2026-progress.md#november-24-node-base-image-refresh).
 
+- The six failing AMD64 Chromium traces now have matched local traces.
+  The standard wrapper passed all 14 targeted Ohio journeys locally in two
+  request windows with the original 30-second deadlines and no retries.
+  Remote delays accumulated during native field entry and later review actions.
+  The local Chromium profile did not isolate a Linux application bottleneck.
+  [Ohio timing evidence](upgrade-2026-progress.md#november-24-paired-ohio-browser-traces).
+
 - `edb68f0e` excludes future-dated evidence from offline AI evaluation
   reports. The isolated source passed 105 focused tests and 18 additional
   diagnostic checks. Independent human labels and comparable live runs

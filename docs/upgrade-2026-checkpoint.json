@@ -9,8 +9,9 @@
     "statusDocument": "docs/upgrade-2026-current-status.md",
     "evidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
+    "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
     "remaining": [
-      "Qualify strict Linux browsers with original limits. Exact 924c3545 passed 652 active managed Chromium cases. Strict AMD64 missed six Ohio deadlines and strict ARM64 missed nine. Smoke, Compose recovery, archive verification, scan binding and cleanup passed on both architectures. Earlier same-runner controls reproduced the same six failures in the managed app and runtime image, and optional measurements stopped when public job metadata returned HTTP 403.",
+      "Qualify strict Linux browsers with original limits. Exact 924c3545 passed 652 active managed Chromium cases, while strict AMD64 missed six Ohio deadlines and strict ARM64 missed nine. Both architectures passed recovery and archive checks. The six AMD64 cases have matched local traces, and all 14 targeted local journeys passed in their original request windows. A local Chromium profile bounds one entry phase but leaves Linux bottleneck attribution open.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -18,6 +19,22 @@
     ]
   },
   "activeContinuation": {
+    "nov24OhioStrictTraceComparison": {
+      "applicationCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
+      "localEvidence": ".local/upgrade-evidence/nov24-strict-browser-differential",
+      "remoteAmd64Job": 138375419756,
+      "remoteAmd64Artifact": 14912954682,
+      "remoteAmd64ArtifactSha256": "c3fbb8c47f7f9eed2b83ca11e25027a1f07971b4c60da0d08b9fb814fe07e9b4",
+      "matchedTraces": 6,
+      "localWindowed": {"passed": 14, "failures": 0, "batches": 2, "workers": 2, "retries": 0, "deadlineMs": 30000, "cleanup": true, "trace": "on", "summarySha256": "ec5e1363990a1271c757d2b02bab10298241ec50caae74778eb771c01c35802d"},
+      "observedActionSpanMs": {"remoteAmd64": [30143, 31923], "localArm64": [7380, 10680]},
+      "nativeLocatorResolutionMs": {"remoteAmd64": [3279, 5671], "localArm64": [495, 810]},
+      "fillAfterLocatorResolutionMs": {"remoteAmd64": [2482, 7483], "localArm64": [450, 1481]},
+      "traceTimingSha256": "16b10559c1a0c23f1eac42f93c0b91e43f3f00f614ad81ec1d03604b7f761cca",
+      "actionPhaseSha256": "b707ab1285a2affec9add8df117700e5156e6515b073509121ce99167876dd99",
+      "localResidentCreditProfile": {"phase": "type-originals", "chromiumRevision": "f842f52ef39fd97b449eb27cff414bf05a98ddce", "rates": [1, 4], "bothJourneysPassed": true, "phaseElapsedMs": [2100, 7317], "topPublicAppChunkSiteSamples": [11, 34], "profileSha256": ["56d5381ba6b0c83c44bf639e6668ba4bf3c4c18240009f30338b069b85392af5", "ff4615ecef2415a350ccd5fc254d2ddad344869f1d49da35d83b2d36648f6e4f"]},
+      "limits": "The first direct local diagnostic omitted the audited request windows and hit HTTP 429. The normal windowed wrapper passed. Cross-machine trace intervals and local CPU profiles do not attribute the remote bottleneck. The exact Linux browser qualification remains open."
+    },
     "nov24NodeImageRefresh": {
       "applicationCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
       "officialNodeIndex": "sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067",
