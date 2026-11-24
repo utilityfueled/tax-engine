@@ -101,8 +101,11 @@ export async function measureRendererScheduler(browser, action, report) {
 /** Runs only in the opt-in Linux comparison. The default path makes no CDP or proc calls. */
 export function observeRendererScheduler(browser, action) {
   const mode = process.env.TAX_BROWSER_OHIO_SCHEDULER_MODE;
-  if (process.platform !== 'linux' || !['container', 'managed'].includes(mode) || !browser) return action();
+  const scope = process.env.TAX_BROWSER_OHIO_SCHEDULER_SCOPE;
+  if (process.platform !== 'linux' || !['container', 'managed'].includes(mode) || !['full', 'focused'].includes(scope) || !browser) {
+    return action();
+  }
   return measureRendererScheduler(browser, action, result => {
-    console.info(`OH_HEADER_RENDERER_SCHEDULER ${JSON.stringify({ mode, ...result })}`);
+    console.info(`OH_HEADER_RENDERER_SCHEDULER ${JSON.stringify({ mode, scope, ...result })}`);
   });
 }

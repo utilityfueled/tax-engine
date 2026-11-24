@@ -232,17 +232,37 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  const traceGroup="github.event_name == 'workflow_dispatch' && inputs.ohio_trace_pair && format('web-ohio-trace-pair-{0}', github.run_id) || ";
  const ohioInput=/^ {6}compare_ohio_runtimes:\n(?:^ {8}[^\n]*\n){4}/m;
  const ohioBlock=/^ {6}- name: Compare focused Ohio journeys on the same runner\n[\s\S]*?(?=^ {6}- name: Verify Docker archive)/m;
- const ohioGroup="github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes && format('web-ohio-comparison-{0}', github.run_id) || ";
+ const ohioDispatch="github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes";
+ const ohioGroup=`${ohioDispatch} && format('web-ohio-comparison-{0}', github.run_id) || `;
+ const schedulerValue=value=>`\${{ ${ohioDispatch} && '${value}' || '' }}`;
+ const managed=workflow.jobs.browser.steps.find(step=>step.run==='pnpm test:web');
+ const container=workflow.jobs.container.steps.find(step=>step.id==='container_browser');
+ assert.ok(managed);
+ assert.equal(container.run,'pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure');
+ for(const job of Object.values(workflow.jobs)){
+  assert.equal(job.env?.TAX_BROWSER_OHIO_SCHEDULER_MODE,undefined);
+  assert.equal(job.env?.TAX_BROWSER_OHIO_SCHEDULER_SCOPE,undefined);
+ }
+ for(const step of steps){
+  const mode=step===managed?'managed':step===container?'container':undefined;
+  assert.equal(step.env?.TAX_BROWSER_OHIO_SCHEDULER_MODE,mode&&schedulerValue(mode));
+  assert.equal(step.env?.TAX_BROWSER_OHIO_SCHEDULER_SCOPE,mode&&schedulerValue('full'));
+ }
+ const schedulerEnvLines=mode=>`          TAX_BROWSER_OHIO_SCHEDULER_MODE: ${schedulerValue(mode)}\n          TAX_BROWSER_OHIO_SCHEDULER_SCOPE: ${schedulerValue('full')}\n`;
  const comparison=workflow.jobs.container.steps.filter(step=>step.name==='Compare focused Ohio journeys on the same runner');
  assert.equal(comparison.length,1);
  assert.equal(workflow.on.workflow_dispatch.inputs.compare_ohio_runtimes.default,false);
- assert.match(comparison[0].if,/github.event_name == 'workflow_dispatch' && inputs.compare_ohio_runtimes/u);
+ assert.equal(comparison[0].if,`\${{ !cancelled() && ${ohioDispatch} && (steps.container_browser.outcome == 'success' || steps.container_browser.outcome == 'failure') }}`);
  assert.equal(comparison[0].id,'ohio_runtime_comparison');
  assert.equal(comparison[0]['timeout-minutes'],18);
  assert.equal(comparison[0]['continue-on-error'],undefined);
+ assert.deepEqual(comparison[0].env,{CANDIDATE_IMAGE_ID:'${{ steps.candidate.outputs.image_id }}'});
  assert.match(comparison[0].run,/--workers=2 --retries=0 --timeout=30000/u);
- assert.match(comparison[0].run,/TAX_BROWSER_OHIO_SCHEDULER_MODE=container PLAYWRIGHT_DISABLE_WEBSERVER=true/u);
- assert.match(comparison[0].run,/TAX_BROWSER_OHIO_SCHEDULER_MODE=managed pnpm test:web/u);
+ const focusedScope=' TAX_BROWSER_OHIO_SCHEDULER_SCOPE=focused';
+ assert.equal(comparison[0].run.split(`TAX_BROWSER_OHIO_SCHEDULER_MODE=container${focusedScope} PLAYWRIGHT_DISABLE_WEBSERVER=true`).length,2);
+ assert.equal(comparison[0].run.split(`TAX_BROWSER_OHIO_SCHEDULER_MODE=managed${focusedScope} pnpm test:web`).length,2);
+ assert.equal(comparison[0].run.split(focusedScope).length,3);
+ assert.equal(createHash('sha256').update(comparison[0].run.replaceAll(focusedScope,'')).digest('hex'),'517514634705730b704f5c9a8ae19cf7ff35a48e5121ca2167ec179f5e9c24bd');
  for(const delta of [traceInput,traceBlock,traceGroup,ohioInput,ohioBlock,ohioGroup,'            ohio-same-runner-*.log\n            ohio-same-runner-status.txt\n']){
   assert.equal(original.split(delta).length,2);
   original=original.replace(delta,'');
@@ -252,6 +272,8 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
   ["git rev-parse HEAD 'HEAD^{tree}'",'git rev-parse HEAD HEAD^{tree}'],
   ['for ((attempt=1; attempt<=60; attempt++)); do','for attempt in $(seq 1 60); do'],
   ['      - name: Verify original-entry timing contracts\n        run: node --test tests/scripts/thread-tick-phase.test.mjs tests/scripts/full-batch-public-cpu-diagnostic.test.mjs\n',''],
+  [`      - run: pnpm test:web\n        env:\n${schedulerEnvLines('managed')}`,'      - run: pnpm test:web\n'],
+  [schedulerEnvLines('container'),''],
   ['node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067','node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc'],
  ];
  for(const[after,before]of reviewedDeltas){

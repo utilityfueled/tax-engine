@@ -3,7 +3,25 @@ import { mkdtemp, writeFile, mkdir, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { options, rowsFromReport, auditCollection, planBatches, exactUnion, testList, reconcile, runSchedule, snapshot, verifyAudit, containerProof, environment, noEnvFiles } from '../../scripts/run-browser-tests.mjs';
+import { options, rowsFromReport, auditCollection, planBatches, exactUnion, testList, reconcile, runSchedule, snapshot, verifyAudit, containerProof, environment, ohioSchedulerEnvironment, noEnvFiles } from '../../scripts/run-browser-tests.mjs';
+
+describe('Ohio scheduler measurement environment', () => {
+    it.each([['container', true], ['managed', false]] as const)('forwards the admitted %s scopes only', (mode, external) => {
+        const dispatch = { GITHUB_ACTIONS: 'true', GITHUB_EVENT_NAME: 'workflow_dispatch', TAX_BROWSER_OHIO_SCHEDULER_MODE: mode };
+        for (const scope of ['full', 'focused']) {
+            const parent = { ...dispatch, TAX_BROWSER_OHIO_SCHEDULER_SCOPE: scope };
+            expect(ohioSchedulerEnvironment(parent, external)).toEqual({
+                TAX_BROWSER_OHIO_SCHEDULER_MODE: mode, TAX_BROWSER_OHIO_SCHEDULER_SCOPE: scope,
+            });
+            expect(ohioSchedulerEnvironment(parent, !external)).toEqual({});
+            expect(ohioSchedulerEnvironment({ ...parent, GITHUB_EVENT_NAME: 'push' }, external)).toEqual({});
+            expect(ohioSchedulerEnvironment({ ...parent, GITHUB_ACTIONS: 'false' }, external)).toEqual({});
+            expect(environment(parent)).not.toHaveProperty('TAX_BROWSER_OHIO_SCHEDULER_SCOPE');
+        }
+        expect(ohioSchedulerEnvironment(dispatch, external)).toEqual({});
+        expect(ohioSchedulerEnvironment({ ...dispatch, TAX_BROWSER_OHIO_SCHEDULER_SCOPE: 'other' }, external)).toEqual({});
+    });
+});
 type Rows = ReturnType<typeof rowsFromReport>;
 type TestAudit = {version:number;windowMs:number;maxRequests:number;files:Record<string,{caseCount:number;bounds:Record<string,number>;skippedTitles:string[][];bodyTimeoutMs?:number}>};
 const scopes = ['filled-return', 'provider', 'business-expense-analysis', 'self-employment-income-analysis'];

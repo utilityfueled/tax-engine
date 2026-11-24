@@ -241,6 +241,13 @@ export function environment(parent) {
             env[k] = parent[k];
     return { ...env, ...(parent.TAX_ENGINE_TEST_NEW212_TIMING === '1' ? { TAX_ENGINE_TEST_NEW212_TIMING: '1' } : {}), NEXT_TELEMETRY_DISABLED: '1', NODE_ENV: 'production', TAX_ENGINE_DEPLOYMENT_MODE: 'self-host', PLAYWRIGHT_DISABLE_WEBSERVER: 'true' };
 }
+export function ohioSchedulerEnvironment(parent, external) {
+    const mode = external ? 'container' : 'managed';
+    const scope = parent.TAX_BROWSER_OHIO_SCHEDULER_SCOPE;
+    if (parent.GITHUB_ACTIONS !== 'true' || parent.GITHUB_EVENT_NAME !== 'workflow_dispatch' ||
+        parent.TAX_BROWSER_OHIO_SCHEDULER_MODE !== mode || !['full', 'focused'].includes(scope)) return {};
+    return { TAX_BROWSER_OHIO_SCHEDULER_MODE: mode, TAX_BROWSER_OHIO_SCHEDULER_SCOPE: scope };
+}
 export async function noEnvFiles(root) {
     for (const dir of ['', 'apps/web'])
         for (const name of ['.env', '.env.local', '.env.production', '.env.production.local']) {
@@ -348,10 +355,7 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
     await verifyAudit(root, audit);
     need(!parentEnv.PLAYWRIGHT_USE_DEV_SERVER, 'Production browser suite requires production runtime');
     const external = parentEnv.PLAYWRIGHT_DISABLE_WEBSERVER === 'true';
-    const comparisonMode = external ? 'container' : 'managed';
-    const schedulerComparison = parentEnv.GITHUB_ACTIONS === 'true' &&
-        parentEnv.GITHUB_EVENT_NAME === 'workflow_dispatch' &&
-        parentEnv.TAX_BROWSER_OHIO_SCHEDULER_MODE === comparisonMode;
+    const schedulerEnvironment = ohioSchedulerEnvironment(parentEnv, external);
     const native = nativeAdmission(parentEnv, external);
     if (native) {
         const deadlines = parsed.args.flatMap((a, i) => a === '--timeout' ? [parsed.args[i + 1]] : a.startsWith('--timeout=') ? [a.slice(10)] : []);
@@ -443,7 +447,7 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
                     const report = path.join(out, `batch-${i + 1}.json`);
                     browser = launch(process.execPath, [cli, 'test', ...parsed.args, '--test-list', batch.list, '--output', path.join(out, `batch-${i + 1}-artifacts`), '--reporter=line,json'], {
                         cwd: app,
-                        env: { ...env, ...(schedulerComparison ? { TAX_BROWSER_OHIO_SCHEDULER_MODE: comparisonMode } : {}), PLAYWRIGHT_JSON_OUTPUT_FILE: report },
+                        env: { ...env, ...schedulerEnvironment, PLAYWRIGHT_JSON_OUTPUT_FILE: report },
                         log: path.join(out, `batch-${i + 1}`),
                         stream: true,
                     });
