@@ -24,8 +24,10 @@ Use the linked progress sections when investigating individual packages.
   same Ubuntu runner with the two exact retained RRTA inputs. Both
   validator suites and all 104 attempts passed. Python 3.14.10 improved
   paired median times by 4.19% and 4.38%, below the 10% threshold.
-  That run used Ubuntu 24.04. An exact repeat uses the managed job's
-  Ubuntu 26.04 image family. [First benchmark](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980) ·
+  That run used Ubuntu 24.04. A repeat on the failed managed job's
+  exact Ubuntu 26.04 image revision also passed all 104 inspections
+  within 2.06 seconds. The 4.91% improvement at both widths fell
+  below the same threshold. [First benchmark](https://github.com/utilityfueled/tax-engine/actions/runs/45406230980) ·
   [Ubuntu 26.04 repeat](https://github.com/utilityfueled/tax-engine/actions/runs/45409802503).
 
 - `a2568205` requires separate actual confirmations for Pennsylvania

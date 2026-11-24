@@ -110,6 +110,14 @@ open. `a62698e8` uses the managed browser selector and checks for
 Ubuntu 26.04 before repeating the same comparison.
 [Bound Ubuntu 26.04 run](https://github.com/utilityfueled/tax-engine/actions/runs/45409802503).
 
+The repeat used the same image revision, `20261116.202`, as the
+managed run with the timeouts. Both Python validator suites and all
+104 inspections passed. The slowest inspection was 2,050.1 ms. The
+paired median improvement was 4.91% at both widths, below the 10%
+threshold. This establishes isolated parity and timing on the matching
+image revision. The browser workload and physical runner are separate.
+[Matched-image job](https://github.com/utilityfueled/tax-engine/actions/runs/45409802503/job/138500212749).
+
 ## November 24 Pennsylvania extension receipts
 
 `4ee0721b` reports verified January 1 through April 15 extension receipts

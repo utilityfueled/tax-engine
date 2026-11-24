@@ -54,7 +54,20 @@
       "benchmarkRunnerImage": "ubuntu-24.04/20261116.133",
       "timedOutManagedRunnerImage": "ubuntu-26.04/20261116.202",
       "concurrentTestWindow": "rrta-payroll-native.spec.ts overlapped 4,008 ms and 4,014 ms of the two saved-PDF inspection timeouts. Playwright intervals alone cannot attribute resource use.",
-      "matchedOSRepeat": {"commit": "a62698e80f912b723abb8909db56df06a1e4dd8a", "githubRun": 45409802503, "status": "queued on the bound diagnostic revision"}
+      "matchedOSRepeat": {
+        "commit": "a62698e80f912b723abb8909db56df06a1e4dd8a",
+        "githubRun": 45409802503,
+        "githubJob": 138500212749,
+        "outputArtifact": 14930220553,
+        "runnerImage": "ubuntu-26.04/20261116.202",
+        "status": "completed successfully on the same image revision as the timed-out managed job",
+        "attemptsAccepted": 104,
+        "validatorSuitesPassed": 2,
+        "maximumElapsedMs": 2050.1,
+        "pairedImprovementPercentByViewport": {"390": 4.91, "1280": 4.91},
+        "medianMillisecondsByViewport": {"390": [1877.1, 1815.6], "1280": [1868.8, 1777.1]},
+        "performanceThresholdMet": false
+      }
     },
     "nov24OhioLinuxScheduler": {
       "diagnosticCommit": "33b6a5938b8ecede02b59adbc72d81073d9ae343",
