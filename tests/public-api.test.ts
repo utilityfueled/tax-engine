@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import {
+  calculateFederalTax,
   calculatePA40,
   calculatePALocalEIT,
   calculatePANonresidentReturn,
@@ -84,6 +85,7 @@ import {
   type ScheduleUEResult,
   type TaxYearInput,
 } from "@/index.js";
+import { simpleW2Fixture } from "./fixtures/simple-w2.js";
 
 function makeInput(overrides: Partial<TaxYearInput> = {}): TaxYearInput {
   return {
@@ -128,6 +130,30 @@ function makeInput(overrides: Partial<TaxYearInput> = {}): TaxYearInput {
 }
 
 describe("Public API", () => {
+  it("holds the public federal return for an accounting-period change", () => {
+    for (const primaryDeathDate of [null, "2025-09-30"]) {
+      const input = TaxYearInputSchema.parse({
+        ...simpleW2Fixture,
+        standardDeductionFacts: { ...simpleW2Fixture.standardDeductionFacts, shortTaxYear: true, primaryDeathDate },
+      });
+      expect(() => calculateFederalTax(input)).toThrow(/accounting-period change.*annualized tax calculation is unavailable/i);
+    }
+  });
+
+  it("continues calculating public federal returns for ordinary and legacy periods", () => {
+    const ordinary = TaxYearInputSchema.parse(simpleW2Fixture);
+    const ordinaryResult = calculateFederalTax(ordinary);
+    const decedent = TaxYearInputSchema.parse({
+      ...simpleW2Fixture,
+      standardDeductionFacts: { ...simpleW2Fixture.standardDeductionFacts, primaryDeathDate: "2025-09-30" },
+    });
+    const legacy = TaxYearInputSchema.parse({ ...simpleW2Fixture, standardDeductionFacts: undefined });
+
+    expect(ordinaryResult.totalTax.gt(0)).toBe(true);
+    expect(calculateFederalTax(decedent).totalTax.eq(ordinaryResult.totalTax)).toBe(true);
+    expect(calculateFederalTax(legacy).totalTax.eq(ordinaryResult.totalTax)).toBe(true);
+  });
+
   it("exports the TaxYearInput schema with PA resident and nonresident return supplements", () => {
     const paResidentReturn: PAResidentReturn = {
       estimatedPayments: "100",

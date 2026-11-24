@@ -16,6 +16,24 @@ reviewPdfMapping:
   testRef: "tests/pdf/form-1040-source-mapping.test.ts::places simple return values on official 2025 printed lines after serialization"
 
 lines:
+  - line: "short-accounting-year-public-calculation"
+    description: "Hold the public federal return calculation for an accounting-period change"
+    formula: >-
+      A confirmed short year caused by an accounting-period change requires
+      annualization under section 443. Reject the public whole-return
+      calculation before producing tax, refund or amount owed. An explicit
+      full-year answer, an ordinary decedent return and a legacy return with
+      no accounting-period answer retain their existing calculation behavior.
+    irsRef: "26 U.S.C. §443(a)–(d), https://uscode.house.gov/us/usc/t26/s443/ and 26 CFR §1.443-1, https://www.ecfr.gov/current/title-26/section-1.443-1"
+    testRef: "tests/public-api.test.ts::holds the public federal return for an accounting-period change"
+  - line: "short-accounting-year-workspace-recompute"
+    description: "Hold a workspace recompute even when the short-period sources reconcile"
+    formula: >-
+      Preserve the confirmed accounting-period-change fact in the source-bound
+      input. The exported preview returns no calculated metrics or lines while
+      section 443 annualization is unavailable.
+    irsRef: "26 U.S.C. §443(b)–(d), https://uscode.house.gov/us/usc/t26/s443/"
+    testRef: "tests/engine/workspace-calculation-context.test.ts::holds the exported workspace preview for an accounting-period change"
   - line: "savings-bond-exclusion-addbacks"
     description: "Actual exclusions are added back for education savings bond MAGI"
     formula: "Pre-bond-exclusion AGI plus studentloaninterest deduction, net2555lines45+50, and actual8839benefit exclusion; possession exclusions require their separate actual source contract"

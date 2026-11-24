@@ -6,7 +6,7 @@ import type {
   WorkspaceStructuredFactRecord
 } from "@tax-engine/contracts";
 import { isSupportedEngineTaxYear } from "@tax-engine/contracts";
-import { calculateFederalTax } from "../../../src/engine/federal";
+import { calculateFederalTax } from "../../../src/engine/public-federal-return";
 import type { TaxReturnResult } from "../../../src/models/outputs";
 import type { Taxpayer } from "../../../src/models/inputs";
 import { buildWorkspaceEngineInput, type WorkspaceEngineCalculationContext } from "./workspace-engine-input";

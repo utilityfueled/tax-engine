@@ -2,7 +2,7 @@
  * Tax Engine — public API
  */
 
-export { calculateFederalTax } from "./engine/federal.js";
+export { calculateFederalTax } from "./engine/public-federal-return.js";
 export {
   calculateGenericStateReturn,
   computeGraduatedTax,

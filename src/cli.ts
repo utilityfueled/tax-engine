@@ -4,7 +4,7 @@
  */
 
 import { resolve } from "path";
-import { calculateFederalTax } from "./engine/federal.js";
+import { calculateFederalTax } from "./engine/public-federal-return.js";
 import { loadFromDirectory } from "./ingest/loader.js";
 
 const inputDir = process.argv[2] || "data/input";

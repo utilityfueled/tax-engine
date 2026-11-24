@@ -38,6 +38,17 @@ it("calculates an independently known return from complete facts without changin
   expect(facts).toEqual(original);
 });
 
+it("holds the exported workspace preview for an accounting-period change", () => {
+  const context = actualContext();
+  context.taxInput.deductionElection = "itemized";
+  context.taxInput.standardDeductionFacts = { ...context.taxInput.standardDeductionFacts, shortTaxYear: true };
+
+  const input = buildWorkspaceEngineInput(documents, summary, facts, context.taxInput.taxpayer, context);
+  expect(input?.taxInput.standardDeductionFacts?.shortTaxYear).toBe(true);
+  const preview = buildWorkspaceEnginePreview(documents, summary, facts, context.taxInput.taxpayer, context);
+  expect(preview === null).toBe(true);
+});
+
 it("rejects conflicting source amounts identities years and duplicate bindings", () => {
   const context = actualContext();
   for (const patch of [{ wages: "50000.01" }, { employerEin: "98-7654321" }, { employerName: "Another Employer" }, { accountHolder: "spouse" as const }, { socialSecurityWages: "0" }]) {
