@@ -2,10 +2,10 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
-    "verificationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
+    "applicationCommit": "f84a70001729fe586807c1950c9f00e6939d7c05",
+    "verificationCommit": "f84a70001729fe586807c1950c9f00e6939d7c05",
     "generatedInventoryCommit": "0e8fd1397b449b885a546b6b44d984a7d19b8a9e",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov24ExactStateAndAIApplicationVerification",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov24ExactPennsylvaniaCandidateVerification",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
@@ -36,7 +36,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Qualify Linux browsers with original limits. Ordinary f3163949 missed seven Ohio deadlines in strict AMD64 and two RRTA inspections in managed Chromium. Strict ARM64 on code-equivalent 4ccb88b0 missed the same ten Ohio cases as d439de12. Strict recovery and archive verification passed.",
+      "Qualify current Linux candidate browsers with original limits. Earlier managed e2d50f12 browser and web build passed; its runtime-container job is running and f84a7000 Linux qualification was queued at the check. Prior strict AMD64 and ARM64 jobs had documented Ohio deadlines. Recovery and archive verification passed in those prior jobs.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -44,6 +44,24 @@
     ]
   },
   "activeContinuation": {
+    "nov24ExactPennsylvaniaCandidateVerification": {
+      "applicationCommit": "f84a70001729fe586807c1950c9f00e6939d7c05",
+      "verifiedTrackedBlobs": 6669,
+      "verifiedSampleDocuments": 15,
+      "localChecksPassed": 11,
+      "unitPassed": 30410,
+      "coverageTestsPassed": 30410,
+      "conditionalSkips": 81,
+      "branchCoveragePercent": 88.34,
+      "specReferencesResolved": 9994,
+      "browsersPassed": 652,
+      "browserOriginalSkips": 5,
+      "browserRequestBatches": 8,
+      "browserCleanupPassed": true,
+      "earlierManagedLinuxPassedRunId": 45449802299,
+      "exactLinuxRunId": 45463661057,
+      "evidence": "docs/upgrade-2026-progress.md#november-24-exact-pennsylvania-candidate-verification"
+    },
     "nov24OhioIt1040ScheduleAPayments": {
       "focusedTestsPassed": 91,
       "isolatedReplayTestsPassed": 16,

@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Exact `f84a7000` passed all 11 local checks, with 30,410 unit and coverage
+  cases, 88.34% branch coverage and 652 passing Chromium cases. The earlier
+  `e2d50f12` managed Linux browser and build jobs passed. Exact release
+  container qualification remains open. [Local and Linux evidence](upgrade-2026-progress.md#november-24-exact-pennsylvania-candidate-verification).
+
 - Verified Ohio IT 1040 carryovers and income-tax principal paid in 2025
   now reach Schedule A once. Same-year extension receipts require separate
   principal evidence. [Ohio payment evidence](upgrade-2026-progress.md#november-24-ohio-applied-refunds-and-balance-principal).

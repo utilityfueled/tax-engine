@@ -1,5 +1,22 @@
 # 2026 upgrade implementation evidence
 
+## November 24 exact Pennsylvania candidate verification
+
+The `f84a7000` archive verified 6,669 tracked blobs and all 15 sample-document
+hashes. All 11 local verification commands passed on Node 26.13.1. The unit
+and coverage suites each passed 30,410 tests with 81 conditional skips and
+88.34% branch coverage. All 9,994 spec references and inventory passed.
+Chromium passed all 652 active cases in eight original request windows, with
+five original skips and successful cleanup. This exact archive precedes the
+later Pennsylvania applied-refund and Ohio IT 1040 fixes.
+
+On the earlier exact `e2d50f12` Linux workflow, web build and managed browser
+jobs passed. Its runtime-container job was still running at this check.
+The `f84a7000` exact Linux workflow was queued. Vercel skipped automatic
+production builds for `f84a7000` and `f1abf676`.
+[Earlier Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45449802299) ·
+[Exact candidate Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057).
+
 ## November 24 Ohio applied refunds and balance principal
 
 Verified Ohio IT 1040 carryovers now reach federal Schedule A line 5a.
