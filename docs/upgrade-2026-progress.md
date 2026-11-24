@@ -42,9 +42,17 @@ The exact strict AMD64 browser job passed 646 cases with five original
 skips. Six Ohio cases reached the original 30-second deadline across the
 business part-year, resident-credit and school-district part-year
 journeys. Compose recovery and rollback, independent archive verification
-and the image scan completed successfully. At that check, seven CI jobs
-had passed and the coverage and managed Chromium jobs were still running.
-[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640/job/138447946329).
+and the image scan completed successfully. All eight GitHub CI jobs
+passed, including 30,445 coverage tests with 88.69% branches. Managed
+Chromium passed 650 cases with five original skips and two existing
+RRTA saved-PDF inspection timeouts at the four-second subprocess limit.
+The sanitized records show both reached page-text extraction after
+roughly 2.8 to 3.0 seconds. Both records also show CPU time close to wall
+time in the earlier content-stream processing phase. The last phase
+marker records entry into page-text extraction.
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640/job/138447946329) ·
+[Managed Chromium job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897640/job/138447946621) ·
+[Coverage job](https://github.com/utilityfueled/tax-engine/actions/runs/45394897639/job/138447935597).
 
 ## November 24 Pennsylvania extension receipts
 

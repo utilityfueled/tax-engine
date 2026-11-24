@@ -16,9 +16,11 @@ Use the linked progress sections when investigating individual packages.
 
 - `a2568205` requires separate actual confirmations for Pennsylvania
   extension and balance payments. Exact unit and coverage runs both passed
-  30,364 tests with 81 skips and 88.31% branches. Strict AMD64 passed
-  646 browser cases with five original skips and six Ohio deadline
-  misses. Recovery, rollback, archive verification and the image scan
+  30,364 tests with 81 skips and 88.31% branches. All eight GitHub CI jobs
+  passed, including 30,445 coverage tests with 88.69% branches. Strict
+  AMD64 passed 646 browser cases and missed six Ohio deadlines. Managed
+  Chromium passed 650 and missed two RRTA saved-PDF inspection deadlines.
+  Both retained five original skips. Recovery, rollback, archive verification and the image scan
   passed. [Balance evidence](upgrade-2026-progress.md#november-24-pennsylvania-balance-receipt-confirmations).
 
 - `4ee0721b` reports verified Pennsylvania extension receipts before the
