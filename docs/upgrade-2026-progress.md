@@ -21,11 +21,17 @@ eligibility and admission boundaries. The clean archived source passed
 unit and coverage runs each passed 30,338 tests with 81 skips and 88.32%
 branch coverage. Local Chromium passed all 650 active cases with five
 original skips, completing all 11 local checks. The exact GitHub image
-build passed. ARM64 Compose recovery and archive verification passed.
-GitHub CI and strict browser checks continue. Vercel reported an ignored
-build.
+build passed. ARM64 image smoke, Compose recovery, independent archive
+verification and cleanup passed. The unchanged ARM64 browser run passed
+640 cases, exceeded 10 Ohio deadlines and retained the five original
+skips. Its timing artifact shows failures around several different
+actions. A bounded performance workflow on the same application code
+will collect entry-phase measurements if its original strict AMD64 run
+fails. Vercel reported an ignored build.
 [Image workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45350825798) ·
-[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304).
+[ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304) ·
+[ARM64 timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45350876304/artifacts/14903472814) ·
+[Bounded performance workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45359637143).
 
 ## November 24 Ohio unemployment for part-year residents and nonresidents
 

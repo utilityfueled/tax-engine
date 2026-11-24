@@ -14,8 +14,9 @@ Use the linked progress sections when investigating individual packages.
   Schedule SP for residents, part-year residents and nonresidents. All
   2,539 Pennsylvania tests passed. All 11 exact local checks passed,
   including 30,338 tests at 88.32% branch coverage and 650 active
-  Chromium cases. The exact GitHub image build passed. Strict Linux
-  browser qualification is still running.
+  Chromium cases. The exact GitHub image build and ARM64 recovery passed.
+  Strict ARM64 passed 640 browser cases and missed 10 Ohio deadlines.
+  Strict AMD64 and the bounded performance measurement continue.
   [Pennsylvania evidence](upgrade-2026-progress.md#november-24-pennsylvania-government-unemployment-exclusion).
 
 - `badcfd4b` adds an internal Ohio 2026 candidate that assigns ordinary

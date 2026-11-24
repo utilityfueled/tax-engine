@@ -6,7 +6,7 @@
     "statusDocument": "docs/upgrade-2026-current-status.md",
     "evidenceKey": "activeContinuation.nov24PAUnemploymentDraft",
     "remaining": [
-      "Qualify the strict Linux browser suites. Recovery, archives, candidate scanning and cleanup passed, but managed Linux and strict AMD64 on 35d69e98 and strict ARM64 on cee016b0 exceeded existing deadlines. Preserve the original browser and PDF inspection limits.",
+      "Qualify the strict Linux browser suites. Exact 9a45b970 ARM64 recovery, archive and cleanup passed, and 10 Ohio browser cases exceeded existing deadlines. Preserve the original browser and PDF inspection limits.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
@@ -27,7 +27,8 @@
       "docker": "Passed on the exact application revision",
       "vercel": "Canceled by Ignored Build Step",
       "localFullTests": {"passed": 30338, "skipped": 81, "branchCoveragePercent": 88.32, "chromiumPassed": 650, "chromiumOriginalSkips": 5, "allChecksPassed": 11},
-      "nativeArm64RecoveryAndArchive": "Passed, strict browser still running",
+      "nativeArm64": {"smokeRecoveryArchiveAndCleanupPassed": true, "strictBrowserPassed": 640, "strictBrowserDeadlines": 10, "originalSkips": 5, "timingArtifact": 14903472814},
+      "boundedBrowserMeasurement": {"run": 45359637143, "sourceCommit": "406aab41", "applicationDiff": "none relative to 9a45b970", "scope": "Existing strict AMD64 baseline first, followed by original Ohio batches with entry phase metrics only if the baseline fails"},
       "remaining": ["Complete latest exact local and remote qualification checks.", "Obtain qualified tax review and final Pennsylvania artifacts."]
     },
     "nov24OhioUnemploymentDraft": {
