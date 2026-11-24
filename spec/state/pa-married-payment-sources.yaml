@@ -19,7 +19,7 @@ lines:
     testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments reject incomplete or contradictory originals %s"
   - line: "REV1630-6"
     description: Actual timely installments without inferred prior history
-    formula: Assign each actual estimate only to its documented due-date period; include unchanged prior credit applied by April15 in Q1. Extension paid April15 next year never enters Q4. Require all current installments sufficient or existing actual withholding-credit exemption; otherwise deny before a positive penalty without actual priorSP eligibility. No made-up safe harbor or dated-payment interest method.
+    formula: Assign each actual estimate only to its documented due-date period; include unchanged prior credit applied by April15 in Q1. An actual, separately identified extension payment from January 1 through April 15 after year end goes to only its owner's PA-40 line 16 under REV-276, with no estimated installment assignment. A positive receipt before April 15 requires independently established relief for that owner's REV-1630; otherwise require a dated-payment method. Require all current installments sufficient or existing actual withholding-credit exemption; otherwise deny before a positive penalty without actual priorSP eligibility. Preserve the separate calendar-year 2025 scope.
     testRef: "tests/engine/state/pa-married-payment-sources.test.ts::PA married payments fund actual installments without inventing priorSP history"
   - line: "boundaries"
     description: Separate method limits and private source commitment

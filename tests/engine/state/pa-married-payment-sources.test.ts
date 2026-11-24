@@ -54,6 +54,26 @@ describe('actual separate-owner payment composition',()=>{
  it('PA married payments do not use April15 extension cash to cure missed installments',()=>{
   const f=paMarriedPaymentsFixture({primaryEstimates:[],primaryExtension:'1600',priorCredit:'0',withholding:['0','921'],refunds:['65','80']});expect(()=>calculatePAMarriedOrdinaryReturn(f.input,f.sources)).toThrow(/prior.*(?:exemption|forgiveness|eligibility)/i);
  });
+ function setExtensionReceiptDate(f:ReturnType<typeof paMarriedPaymentsFixture>,date:string){
+  const account=f.sources.paymentSources.accounts[0];
+  for(const {original} of account.receipts) if(original.kind==='extension') original.date=date;
+  for(const original of account.originalAccount.receipts) if(original.kind==='extension') original.date=date;
+  for(const original of f.sources.owners[0].payments.originalReceipts) if(original.kind==='extension') original.date=date;
+ }
+ it('PA married payments report an early extension only for its owner with adequate installments',()=>{
+  const f=paMarriedPaymentsFixture({primaryEstimates:['350','350','350','350'],primaryExtension:'135',priorCredit:'0',withholding:['0','921'],refunds:['0','80']});
+  setExtensionReceiptDate(f,'2026-01-05');
+  const r=calculatePAMarriedOrdinaryReturn(f.input,f.sources);
+  expect(r.returns.map(v=>v.pa40.extensionPayment.toString())).toEqual(['135','0']);
+  expect(r.returns[0].rev1630.quarters.map(q=>q.estimatedPayment.toString())).toEqual(['350','350','350','350']);
+  expect(r.returns[0].rev1630.penaltyRequired).toBe(false);
+  expect(r.returns[0].pa40.totalAmountDue.toString()).toBe('0');
+ });
+ it('PA married payments require a dated method for an early extension and missed installments',()=>{
+  const f=paMarriedPaymentsFixture({primaryEstimates:[],primaryExtension:'1600',priorCredit:'0',withholding:['0','921'],refunds:['65','80']});
+  setExtensionReceiptDate(f,'2026-02-12');
+  expect(()=>calculatePAMarriedOrdinaryReturn(f.input,f.sources)).toThrow(/early extension.*dated/i);
+ });
  it('PA married payments retain explicit zero originals and sum cents before rounding',()=>{
   const f=paMarriedPaymentsFixture({primaryEstimates:['0','0'],primaryExtension:'0',priorCredit:'0',refunds:['0','80']});const r=calculatePAMarriedOrdinaryReturn(f.input,f.sources);expect(r.returns[0].pa40.estimatedPayments.toString()).toBe('0');expect(f.sources.owners[0].payments.estimatedPaymentsStatus).toBe('actual_receipts');expect(f.sources.owners[0].payments.originalReceipts).toHaveLength(2);
   const cents=paMarriedPaymentsFixture({primaryEstimates:['0.25','0.25'],primaryExtension:'0',priorCredit:'0',refunds:['1','80']});expect(calculatePAMarriedOrdinaryReturn(cents.input,cents.sources).returns[0].pa40.estimatedPayments.toString()).toBe('1');

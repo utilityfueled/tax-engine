@@ -4,7 +4,7 @@ import type {TaxYearInput} from '@/models/inputs.js';
 import type {PAMarriedOrdinarySources} from '@/models/pa-married-ordinary-sources.js';
 import {ordinarySourcePrecision} from './pa-ordinary-source-precision.js';
 type Owner='primary'|'spouse';
-export interface PAMarriedOwnerPayments {estimatedPayments:Decimal;extensionPayment:Decimal;creditFromPriorYear:Decimal;quarterlyEstimatedPayments:[Decimal,Decimal,Decimal,Decimal]}
+export interface PAMarriedOwnerPayments {estimatedPayments:Decimal;extensionPayment:Decimal;creditFromPriorYear:Decimal;quarterlyEstimatedPayments:[Decimal,Decimal,Decimal,Decimal];hasEarlyExtensionPayment:boolean}
 const fail=(detail:string):never=>{throw new Error('PA married payment sources: '+detail);};
 const normalize=(v:string)=>v.trim().replace(/\s+/gu,' ').toUpperCase();
 const ssn=(v:string)=>v.replace(/[-\s]/gu,'');
@@ -28,7 +28,7 @@ export function calculatePAMarriedPaymentSources(input:TaxYearInput,sources:PAMa
   if(account.filingStatus!=='M'||account.accountKind!=='individual'||day(account.asOfDate)!==asOf||account.allPaymentsCompleteConfirmed!==true||account.noTransfersOffsetsRefundsOrAdjustmentsConfirmed!==true)return fail('actual complete unchanged individual account is unknown; joint/transfer/adjustment successor required');
   const originals=row.receipts.map(r=>r.original),inventory=(rows:unknown[])=>rows.map(stable).sort();
   if(stable(inventory(originals))!==stable(inventory(account.receipts))||stable(inventory(originals))!==stable(inventory(owner.payments.originalReceipts)))return fail('actual posted and retained receipt inventories differ');
-  const result:PAMarriedOwnerPayments={estimatedPayments:zero(),extensionPayment:zero(),creditFromPriorYear:zero(),quarterlyEstimatedPayments:[zero(),zero(),zero(),zero()]};
+  const result:PAMarriedOwnerPayments={estimatedPayments:zero(),extensionPayment:zero(),creditFromPriorYear:zero(),quarterlyEstimatedPayments:[zero(),zero(),zero(),zero()],hasEarlyExtensionPayment:false};
   const refs=new Set<string>(),confirmations=new Set<string>();let estimateCount=0,extensionCount=0;
   for(const receipt of row.receipts){ref(receipt.sourceReference);const reference=normalize(receipt.sourceReference),o=receipt.original;checkIdentity(o,y);const confirmation=normalize(o.confirmationNumber);if(!confirmation)return fail('actual receipt confirmation missing');if(refs.has(reference)||confirmations.has(confirmation))return fail('duplicate actual receipt original or reference');refs.add(reference);confirmations.add(confirmation);
    const paid=day(o.date),cash=amount(o.amount);if(paid>asOf)return fail('actual receipt is after account asOf');
@@ -36,7 +36,10 @@ export function calculatePAMarriedPaymentSources(input:TaxYearInput,sources:PAMa
     const period=receipt.intendedInstallment;if(period===null||period<1||period>4)return fail('actual estimated installment missing');const previous=period===1?'2025-01-01':due[period-2];if(paid>due[period-1]||(period===1?paid<previous:paid<=previous))return fail('actual estimate outside intended published period; dated-payment successor required');
     result.estimatedPayments=result.estimatedPayments.plus(cash);result.quarterlyEstimatedPayments[period-1]=result.quarterlyEstimatedPayments[period-1].plus(cash);estimateCount++;
    }else if(o.kind==='extension'){
-    if(receipt.intendedInstallment!==null||paid!=='2026-04-15')return fail('actual extension requires original April15 receipt with no installment allocation');result.extensionPayment=result.extensionPayment.plus(cash);extensionCount++;hasExtension=true;
+    if(receipt.intendedInstallment!==null||paid<'2026-01-01'||paid>'2026-04-15')return fail('actual extension requires an original receipt dated January 1 through April 15 with no installment allocation');
+    result.extensionPayment=result.extensionPayment.plus(cash);
+    if(paid<'2026-04-15'&&cash.gt(0))result.hasEarlyExtensionPayment=true;
+    extensionCount++;hasExtension=true;
    }else return fail('actual receipt kind unsupported; balance/transfer successor required');
   }
   const prior=row.priorCredit;ref(prior.sourceReference);const available=amount(account.availablePriorCredit);

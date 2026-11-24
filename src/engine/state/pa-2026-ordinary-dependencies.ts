@@ -82,7 +82,8 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const care=sources.care;
  if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||care.careSources!==undefined)fail('complete actual no-care/no-benefit originals are required');
  if(Object.values(p.facts.sp.categories).some(row=>row.status!=='known_none'||row.entries.length))fail('other worldwide SP income requires its actual successor');
- if(sources.otherStateTaxes.status!=='none_paid'||p.facts.payments.rows.length||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');
+ const hasUnsupportedPrepayment=p.facts.payments.rows.some(row=>row.original.kind!=='extension'||sources.estimatedTaxReview2026!==undefined);
+ if(sources.otherStateTaxes.status!=='none_paid'||hasUnsupportedPrepayment||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');
  if (income.residencyStatus === 'resident' && r.residency.domicilePeriods.length === 2) {
   const jurisdictions = sources.otherStateTaxes.jurisdictions;
   if (jurisdictions.length !== 1 || jurisdictions[0].state !== 'FL') fail('the Florida move requires Florida as the sole complete zero-tax jurisdiction history');

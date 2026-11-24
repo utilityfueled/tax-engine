@@ -1,7 +1,8 @@
 /** Spec: state/pa-ordinary-return.yaml. All expected amounts pinned before product. */
 import {it,expect} from 'vitest';
-import {calculatePAOrdinaryReturn} from '@/engine/state/pa-ordinary-return.js';
+import {calculatePA2026OrdinaryDraft,calculatePAOrdinaryReturn} from '@/engine/state/pa-ordinary-return.js';
 import {paOrdinaryReturnFixture,paOrdinaryReturnReciprocalFixture,paOrdinaryReturnExtensionFixture,paOrdinaryReturnRefundFixture} from '../../fixtures/pa-ordinary-return.js';
+import {pa2026OrdinaryDraftFixture,rebindPA2026Draft} from '../../fixtures/pa-2026-ordinary-draft.js';
 import {snapshotPAOrdinaryReturnOriginals} from '@/engine/state/pa-ordinary-return-facts.js';
 import {ScheduleK1Schema, type TaxYearInput} from '@/models/inputs.js';
 import {preparePAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
@@ -129,6 +130,80 @@ it('PA ordinary return preserves explicit separate local obligations',()=>{
 });
 it('PA ordinary return binds sources and leaves originals unchanged',()=>{
  const f=paOrdinaryReturnFixture();const before=JSON.stringify(f);const p=calculatePAOrdinaryReturn(f.input,f.facts,f.sources);expect(JSON.stringify(f)).toBe(before);expect(p.sourceCommitment).toMatch(/^[a-f0-9]{64}$/);const audit=JSON.stringify(p.lines);for(const secret of [f.input.taxpayer.primary.ssn,'Avery','Fictional complete'])expect(audit).not.toContain(secret);f.sources.local.jurisdictions[0].sourceReference='Different actual reviewed municipal record';expect(calculatePAOrdinaryReturn(f.input,f.facts,f.sources).sourceCommitment).not.toBe(p.sourceCommitment);f.input.taxpayer.primary.firstName='Edited';expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/source|original|owner/i);
+});
+function pa2025ExtensionWithFundedInstallments(){
+ const f=paOrdinaryReturnExtensionFixture();
+ const extension=f.facts.payments.rows[0];
+ Object.assign(extension.original,{date:'2026-02-12',amount:'139'});
+ const dates=['2025-04-15','2025-06-16','2025-09-15','2026-01-15'];
+ for(const [index,date] of dates.entries()){
+  f.facts.payments.rows.push({sourceReference:`Fictional estimate ${index+1}`,intendedInstallment:index+1,original:{...extension.original,kind:'estimated',date,amount:'350',confirmationNumber:`Fictional-estimate-${index+1}`}});
+ }
+ return f;
+}
+it('PA ordinary return reports an early extension separately with adequate installments',()=>{
+ const f=pa2025ExtensionWithFundedInstallments();
+ const result=calculatePAOrdinaryReturn(f.input,f.facts,f.sources);
+ expect(result.pa40.estimatedPayments.toString()).toBe('1400');
+ expect(result.pa40.extensionPayment.toString()).toBe('139');
+ expect(result.pa40.totalAmountDue.toString()).toBe('0');
+ expect(result.rev1630.quarters.map(q=>q.estimatedPayment.toString())).toEqual(['350','350','350','350']);
+ expect(result.rev1630.penaltyRequired).toBe(false);
+ expect(result.readiness.filingEligible).toBe(false);
+});
+it('PA ordinary return rejects one confirmation classified as both an estimate and an extension',()=>{
+ const f=pa2025ExtensionWithFundedInstallments();
+ const quarterFour=f.facts.payments.rows[4].original;
+ f.facts.payments.rows[0].original={...quarterFour,kind:'extension',confirmationNumber:` ${quarterFour.confirmationNumber.toUpperCase()} `};
+ f.facts.disposition={kind:'allocation',sourceReference:'Fictional duplicate-derived refund election',refundRequested:'211',nextYearCreditRequested:'0',donations:[]};
+ expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/duplicate actual payment receipt/i);
+});
+function pa2026ExtensionReviewFixture(status:'resident'|'part_year'|'nonresident'='resident'){
+ const f=pa2026OrdinaryDraftFixture(status);
+ const template=paOrdinaryReturnExtensionFixture(2026).facts.payments.rows[0];
+ f.facts.timing.asOfDate='2027-04-15';
+ f.sources.otherStateTaxes.jurisdictions[0].completeThroughDate='2027-04-15';
+ f.facts.payments.rows=['2027-01-01','2027-04-15'].map((date,index)=>({...template,original:{...template.original,date,amount:'6.25',confirmationNumber:`Fictional-extension-${index+1}`}}));
+ f.facts.disposition={kind:'allocation',sourceReference:'Fictional refund election',refundRequested:'13',nextYearCreditRequested:'0',donations:[]};
+ return f;
+}
+it.each(['resident','part_year','nonresident'] as const)('PA2026 draft reports early extension receipts with independently sufficient withholding in %s',status=>{
+ const f=pa2026ExtensionReviewFixture(status);
+ const result=calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources);
+ expect(result.pa.pa40.extensionPayment.toString()).toBe('13');
+ expect(result.pa.pa40.estimatedPayments.toString()).toBe('0');
+ expect(result.pa.pa40.netOverpayment.toString()).toBe('13');
+ expect(result.pa.rev1630.penaltyRequired).toBe(false);
+ expect(result.pa.rev1630.quarters.map(q=>q.estimatedPayment.toString())).toEqual(['0','0','0','0']);
+ expect(result.readiness).toMatchObject({filingEligible:false,fullFederalCalculated:false});
+});
+it('PA2026 draft still requires withholding to cover the complete tax independently of extension cash',()=>{
+ const f=pa2026ExtensionReviewFixture();
+ f.input.w2s[0].stateTaxWithheld='2290';
+ rebindPA2026Draft(f);
+ expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/withholding.*cover fresh PA tax/i);
+});
+it('PA2026 draft still rejects quarterly estimates and an unreconciled extension refund',()=>{
+ const f=pa2026ExtensionReviewFixture();
+ f.facts.disposition.refundRequested='12';
+ expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/allocation.*reconcile/i);
+ const row=f.facts.payments.rows[0];
+ row.intendedInstallment=4;
+ row.original.kind='estimated';
+ expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/prepayments.*separate methods/i);
+});
+it('PA ordinary return requires a dated method for an early extension and missed installments',()=>{
+ const f=paOrdinaryReturnExtensionFixture();
+ f.facts.payments.rows[0].original.date='2026-02-12';
+ expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/early extension.*dated/i);
+});
+it.each(['2025-12-31','2026-04-16'])('PA ordinary return rejects an out-of-window extension receipt dated %s',date=>{
+ const f=paOrdinaryReturnExtensionFixture();
+ f.facts.timing.kind='filed';
+ f.facts.timing.asOfDate='2026-04-20';
+ f.sources.otherStateTaxes.jurisdictions[0].completeThroughDate='2026-04-20';
+ f.facts.payments.rows[0].original.date=date;
+ expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/extension payment.*original kind/i);
 });
 it('PA ordinary return retains draft2026 and actual source guards',()=>{
  const f=paOrdinaryReturnFixture('resident',2026);expect(()=>calculatePAOrdinaryReturn(f.input,f.facts,f.sources)).toThrow(/2026.*rule pack.*incomplete/i);const positive=paOrdinaryReturnExtensionFixture(2026);expect(()=>calculatePAOrdinaryReturn(positive.input,positive.facts,positive.sources)).toThrow(/2026.*rule pack.*incomplete/i);

@@ -270,11 +270,15 @@ expenses with each intended adoption before applying the per-child limits.
 [IRS Form 8839 instructions, Attempted Adoptions of U.S. Children](https://www.irs.gov/instructions/i8839).
 
 Pennsylvania's REV-276 permits an extension payment by the original due
-date. The current ordinary and married calculation paths accept extension
-receipts dated April 15. Extending either path to earlier receipts needs a
-reviewed worksheet distinguishing PA-40 Line 16 extension payments from
-late estimated payments and determining when a receipt changes REV-1630
-interest. [Pennsylvania filing instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+date. The ordinary and separate-owner married 2025 paths can report earlier
+extension receipts on PA-40 Line 16 when the taxpayer has independently
+established no estimated-tax interest. The 2026 state-only draft requires
+withholding to cover the full tax independently and a reconciled refund
+disposition. For any early extension receipt that could affect an existing
+underpayment, independently derive when Department application of that
+receipt changes REV-1630 interest and distinguish that treatment from late
+estimated payments. That dated method and the final 2026 form review remain
+open. [Pennsylvania filing instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
 [REV-276](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-276.pdf) ·
 [REV-1630](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf).
 

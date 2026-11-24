@@ -63,7 +63,7 @@ lines:
     testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return includes actual use tax and reconciles payment principal"
   - line: "rev1630"
     description: Actual receipt timing and published fixed-endpoint worksheet
-    formula: Reported13+17+21+22+23 only forREV2; actual estimates by published due date and available priorcarryQ1. April15 extension never becomes January15Q4. Require separate dated method when a later receipt can satisfy earlier positive underpayment. Preserve actual priorreturn/fullforgiveness distinctions and no inferred 2027rate.
+    formula: Reported13+17+21+22+23 only forREV2; actual estimates by published due date and available priorcarryQ1. Use each confirmed payment once per owner, year and return, including when the same confirmation is assigned different kinds. An actual, separately identified extension payment from January 1 through April 15 after year end goes to PA-40 line 16 under REV-276, with no estimated installment assignment. A positive receipt before April 15 requires REV-1630 to establish no penalty independently of the extension cash; otherwise require a dated-payment method. Require separate dated method when a later estimate can satisfy earlier positive underpayment. Preserve actual priorreturn/fullforgiveness distinctions and no inferred 2027rate.
     testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA ordinary return keeps April15 extension out of Q4 and preserves prior-source distinction"
   - line: "late-filing"
     description: Actual statutory late-filing minimum with timely principal

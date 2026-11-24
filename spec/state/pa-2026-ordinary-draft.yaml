@@ -97,6 +97,12 @@ lines:
       - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u332s"
       - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft reconciles a timely actual nonresident small balance separately from return tax"
+  - line: "review-only-extension-receipts"
+    description: "Separately reported extension receipts when withholding independently covers the complete state tax"
+    formula: "For the review-only ordinary 2026 draft, accept separately verified extension receipts dated January 1 through April 15, 2027. Withholding independently covers the complete PA tax as before. Report the exact sum rounded once on PA-40 line 16 without affecting REV-1630 or the wage dependency. Require a complete refund disposition. Do not combine these receipts with the nonresident small balance method, prior credit or quarterly estimates. Filing remains disabled."
+    sources:
+      - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/rev-276.pdf"
+    testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA2026 draft reports early extension receipts with independently sufficient withholding in %s"
   - line: "nonresident-small-balance-source-limits"
     description: "Reject stale projections, unknown or mismatched receipts, and the $14,000 or $430 boundaries"
     formula: "Require affirmative contemporaneous projection coverage, agreement with any retained projection source, exact current originals and a complete timely receipt. Earlier thresholds and the 2025 REV-1630 do not establish this 2026 boundary."
