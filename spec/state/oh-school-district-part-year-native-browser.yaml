@@ -61,3 +61,10 @@ unchecked_status_appearance_contract: "A selected status requires exactly one vi
 long_validation_readability_contract: "Blank-school and blank-header validation messages are scrollable page text, not controls required to fit in one viewport. Preserve each complete message, count1 and horizontal bounds. Independently scroll actual first and last text-character Ranges to viewport center and require each actual line rect fully in viewport and unobscured with the whole message unchanged; record phase-specific evidence. The original full-viewport anchor checks continue unchanged for every interactive control and other phase, including both blank-phase confirm buttons; do not hide, shorten, collapse or resize the alert or widen the viewport."
 
 readonly_helper_scheduling_contract: "Await the unchanged exact unique-control and unique-label assertions concurrently before the same live tag read and native fill/select/Tab. All original assertions, geometry, privacy, PDF, filing and deletion checks remain. Current strict qualification requires30seconds/zero retries/two workers; prior source-specific90second observations do not qualify current source."
+
+readonly_saved_checkpoint_contract: >-
+  Evaluate each saved draft once for related assertions at the same checkpoint. Check the initially absent
+  state sources, the confirmed residency and payment facts, each failed confirmation, both pending sources
+  after the same-cash edit, and the reopened state and W-2 from their respective coherent snapshots. Keep
+  separate reads across edits, confirmation actions and reloads. All native actions, assertions, artifacts,
+  requests and strict timing settings remain in place.
