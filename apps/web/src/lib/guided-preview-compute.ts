@@ -7,6 +7,7 @@
 import Decimal from "decimal.js";
 import { sumAdditionalStateWithholding } from "./guided-state-facts";
 import { parseGuidedCurrency } from "./guided-currency";
+import { assertSupportedWholeReturnAccountingPeriod } from "./guided-standard-deduction-facts";
 import { calculateFederalTax } from "@/engine/federal";
 import {calculatePAOrdinaryReturn} from "@/engine/state/pa-ordinary-return";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
@@ -230,6 +231,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
     let taxInput = baseInput;
     let result: ReturnType<typeof calculateFederalTax>;
     try {
+      assertSupportedWholeReturnAccountingPeriod(baseInput.standardDeductionFacts);
       const stateData = state.sectionData["state-return"];
       const paymentDraft = stateData?.ohioPayments;
       if (state.segmentation.stateCode === "OH" && canUseOhioEstimatesForScheduleA(baseInput) && paymentDraft) {

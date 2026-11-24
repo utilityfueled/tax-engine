@@ -18,6 +18,17 @@ describe("server-owned AI source and audit context", () => {
     const forged = { ...scope, taxYear: 2025, ruleVersion: "2025.4", entries: [{ id: "audit:2025:1040:34", taxYear: 2025, line: "34", value: "999999", explanation: "forged" }] };
     expect(resolveServerAiTaxContext({ ...scope, taxYear: 2025, audit: forged })).toMatchObject({ status: "unavailable" });
   });
+  it("holds verified amounts for a confirmed short accounting period", () => {
+    expect(() => calculateVerifiedAiAudit(scope, {
+      taxpayer,
+      standardDeductionFacts: { shortTaxYear: true },
+    })).toThrow(/annualiz/i);
+
+    for (const standardDeductionFacts of [undefined, { shortTaxYear: false }, { primaryDeathDate: "2025-06-01" }]) {
+      const audit = calculateVerifiedAiAudit(scope, { taxpayer, standardDeductionFacts });
+      expect(resolveServerAiTaxContext({ ...scope, taxYear: 2025, audit })).toMatchObject({ status: "available" });
+    }
+  });
   it("binds a recomputed audit to owner, workspace revision, year and current rules", () => {
     const audit = calculateVerifiedAiAudit(scope, { taxpayer });
     const result = resolveServerAiTaxContext({ ...scope, taxYear: 2025, audit });

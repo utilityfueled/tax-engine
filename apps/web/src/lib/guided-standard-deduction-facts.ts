@@ -52,3 +52,9 @@ export function buildStandardDeductionFacts(data: StandardDeductionData | undefi
     ...(data?.dependentEarnedIncome?.trim() ? { dependentEarnedIncome: data.dependentEarnedIncome.trim().replace(/,/g, "") } : {}),
   };
 }
+
+export function assertSupportedWholeReturnAccountingPeriod(facts?: Pick<StandardDeductionData, "shortTaxYear">): void {
+  if (facts?.shortTaxYear === true) {
+    throw new Error("This return has a short tax year because of an accounting-period change. The required annualized tax calculation is unavailable.");
+  }
+}

@@ -19,8 +19,20 @@ sources:
   - "https://www.irs.gov/pub/irs-prior/i8606--2025.pdf"
   - "https://www.irs.gov/pub/irs-prior/p575--2025.pdf"
   - "https://www.irs.gov/publications/p936"
+  - "https://uscode.house.gov/us/usc/t26/s443/"
 notes: Prospective software source-admission contract. Preserve existing validated tax methods and historical engine previews where the federal calculation accepts the original source. A server-calculated receipt verifies arithmetic and scope, not actual-world truth or filing readiness.
 lines:
+  - line: "short-accounting-period"
+    description: "Hold verified whole-return amounts for a confirmed short year caused by an accounting-period change"
+    formula: >-
+      Section 443(b) requires a different tax computation in an accounting-period
+      change. When the original answer confirms such a short year, refuse the
+      complete server calculation receipt before running the ordinary tax engine.
+      An ordinary decedent final return, an explicit No, or an omitted legacy answer
+      does not acquire that accounting-change classification here.
+    testRef: "tests/apps/web/ai-tax-context.test.ts::holds verified amounts for a confirmed short accounting period"
+    testRefs:
+      - "tests/apps/web/verified-ai-legacy-source-admission.test.ts::denies unresolved sources at the actual confirmed explanation POST"
   - line: "source-preview-separation"
     description: A confirmed explanation must not silently discard the historical mortgage source qualification or treat unknown retirement taxability as a complete source.
     formula: Before a confirmed receipt, reject an itemized positive mortgage deduction computed from an explicitly unverified historical balance preview, and a positive retirement packet with unresolved actual distribution code and taxability. Preserve engine previews without modifying their arithmetic.

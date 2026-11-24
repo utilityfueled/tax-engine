@@ -10,6 +10,7 @@ import { preparePAWorkingCreditReview } from "@/pdf/pa-working-credit-review-con
 import { hasInKindEducationReviewSources, prepareEducationReview } from "@/pdf/education-review-context.js";
 import { hasSavingsBondReviewSources, prepareSavingsBondReview } from "@/pdf/savings-bond-review-context.js";
 import { buildGuidedOhioOverlay, buildGuidedStateOriginals } from "./guided-state-engine-inputs";
+import { assertSupportedWholeReturnAccountingPeriod } from "./guided-standard-deduction-facts";
 import "server-only";
 import Decimal from "decimal.js";
 
@@ -656,7 +657,9 @@ function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | nul
     return null;
   }
 
-  return buildGuidedStateOriginals(TaxYearInputSchema.parse(rawInput), guidedFlowState);
+  const input = TaxYearInputSchema.parse(rawInput);
+  assertSupportedWholeReturnAccountingPeriod(input.standardDeductionFacts);
+  return buildGuidedStateOriginals(input, guidedFlowState);
 }
 
 function resolveFilledReturnTaxInput(

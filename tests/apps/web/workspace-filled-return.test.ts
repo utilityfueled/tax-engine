@@ -18,6 +18,7 @@ import { POST } from "../../../apps/web/src/app/api/workspace/filled-return/rout
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-interview-bridge";
+import { computeGuidedPreviewEvaluation, computeGuidedPreviewOutcome } from "../../../apps/web/src/lib/guided-preview-compute";
 import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import * as federalEngine from "../../../src/engine/federal";
@@ -439,6 +440,52 @@ function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
 }
 
 describe("workspace filled return download", () => {
+  it("holds the guided estimate for a confirmed accounting-period change after reopen", () => {
+    const state = createGuidedFlowState();
+    const facts = state.sectionData["personal-info"]?.standardDeductionFacts;
+    if (!facts) throw new Error("The guided fixture must contain standard deduction facts.");
+    facts.primaryDeceased = true;
+    facts.primaryDeathDate = "2025-09-30";
+    expect(computeGuidedPreviewOutcome(state)).toMatchObject({ metrics: expect.any(Object), blockedBy: null });
+
+    facts.shortTaxYear = true;
+    state.sectionData.deductions = { ...emptyDeductionData, method: "itemized" };
+    const reopened: GuidedFlowState = JSON.parse(JSON.stringify(state));
+    const evaluation = computeGuidedPreviewEvaluation(reopened);
+    expect(evaluation.input?.standardDeductionFacts).toMatchObject({ shortTaxYear: true, primaryDeathDate: "2025-09-30" });
+    expect(evaluation.preview).toEqual({ metrics: null, blockedBy: expect.stringMatching(/accounting-period change.*annualized tax calculation/i) });
+    expect(reopened).toEqual(state);
+
+    facts.shortTaxYear = null;
+    expect(computeGuidedPreviewOutcome(state)).toEqual({ metrics: null, blockedBy: null });
+  });
+
+  it("holds the filled return and public review endpoint for a confirmed accounting-period change", async () => {
+    const workspace = createWorkspace();
+    const guidedFlowState = createGuidedFlowState();
+    const facts = guidedFlowState.sectionData["personal-info"]?.standardDeductionFacts;
+    if (!facts) throw new Error("The guided fixture must contain standard deduction facts.");
+    facts.shortTaxYear = true;
+    guidedFlowState.sectionData.deductions = { ...emptyDeductionData, method: "itemized" };
+    const calculation = vi.spyOn(federalEngine, "calculateFederalTax");
+    try {
+      const downloadError: unknown = await buildWorkspaceFilledReturnDownload(workspace, guidedFlowState)
+        .then(() => null, (error: unknown) => error);
+      expect.soft(downloadError).toHaveProperty("message", expect.stringMatching(/accounting-period change.*annualized tax calculation/i));
+      const response = await POST(new Request("http://localhost/api/workspace/filled-return", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ workspace, guidedFlowState, purpose: "review" }),
+      }));
+      expect.soft(response.status).toBe(400);
+      expect.soft(response.headers.get("content-type")).toContain("application/json");
+      expect.soft(response.headers.get("content-disposition")).toBeNull();
+      expect(calculation).not.toHaveBeenCalled();
+    } finally {
+      calculation.mockRestore();
+    }
+  });
+
   it("rejects missing facts and mismatched years instead of falling back to a preview", async () => {
     const valid = createGuidedFlowState();
     await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), { ...valid, taxYear: null })).rejects.toThrow(/year/);
