@@ -4,16 +4,39 @@
     "branch": "main",
     "applicationCommit": "edb68f0ed9480328aac61928fa80304ba6c9f0ff",
     "verificationCommit": "26348f19",
+    "browserTimingCorrectionCommit": "8fa8ab22",
+    "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
     "evidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
+    "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "remaining": [
       "Qualify strict Linux browsers with original limits. Exact 9a45b970 recovery, archive and cleanup passed on both architectures. ARM64 missed 10 Ohio browser deadlines. AMD64 missed 11 Ohio browser deadlines and two RRTA saved-PDF inspection deadlines. A later unchanged baseline missed two deadlines; the optional measurements stopped when public job metadata returned HTTP 403.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
+      "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
   "activeContinuation": {
+    "nov24NodeImageRefresh": {
+      "applicationCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
+      "officialNodeIndex": "sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067",
+      "localEvidence": ".local/upgrade-evidence/nov24-node-image-refresh",
+      "scope": "AMD64 and ARM64 inherit Debian's fixed glibc and zlib. PPC64LE and S390X use the existing content-addressed zlib installation. Smoke verifies the original base layers and the retained package set.",
+      "previousAmd64Scan": {"artifact": 14909201799, "source": "723248b7", "matches": 220, "uniqueAdvisories": 100, "highMatches": 74, "criticalMatches": 0, "highFixAvailable": ["CVE-2026-19499", "CVE-2026-5435"]},
+      "registryPackageProofPlatforms": ["amd64", "arm64", "ppc64le", "s390x"],
+      "runtimeTestsPassed": 158,
+      "runtimeTestSkips": 1,
+      "originalEntryNodeTestsPassed": 53,
+      "installerProcessControlsPassed": 8,
+      "independentEngineeringReview": "passed",
+      "localVerification": {"checksPassed": 11, "testsPassed": 30351, "testSkips": 81, "branchCoveragePercent": 88.3, "chromiumPassed": 652, "chromiumFailures": 0, "chromiumOriginalSkips": 5, "earlierAttempts": "The restricted run denied the localhost TLS bind. An overlapping run hit eight deadlines. The serialized localhost reruns passed with original limits."},
+      "remoteRuns": {"ci": 45374061387, "web": 45374061266, "docker": 45374061272, "nativeArm64": 45374094541},
+      "docker": "passed on 924c3545",
+      "recovery": {"amd64Job": 138375419756, "arm64Job": 138375540992, "smokeAndCompose": "passed on both architectures", "arm64IndependentArchive": "passed"},
+      "vercel": "Canceled by Ignored Build Step",
+      "remaining": "Complete exact GitHub CI, AMD64 archive, Linux browser and scan verification. Document residual advisory dispositions separately."
+    },
     "nov24AIEvaluationCutoff": {
       "applicationCommit": "edb68f0ed9480328aac61928fa80304ba6c9f0ff",
       "scope": "Apply one inclusive exact report timestamp to offline scores, costs, preflight and capability evidence, and baseline comparisons. Review chronology and capability windows preserve submillisecond precision.",
@@ -26,9 +49,32 @@
       "verificationCommit": "26348f19",
       "verificationEvidence": ".local/upgrade-evidence/nov24-combined-final",
       "remoteRuns": {"ci": 45367064519, "web": 45367064064, "docker": 45367064051},
-      "localVerification": {"checksPassed": 10, "testsPassed": 30351, "testSkips": 81, "branchCoveragePercent": 88.3, "chromium": "running"},
+      "localVerification": {"checksPassed": 11, "testsPassed": 30351, "testSkips": 81, "branchCoveragePercent": 88.3, "chromiumPassed": 652, "chromiumFailures": 0, "chromiumOriginalSkips": 5},
+      "ciVerification": {"jobsPassed": 8, "testsPassed": 30432, "branchCoveragePercent": 88.68, "coverageJob": 138351406344},
+      "strictAmd64": {"job": 138351404827, "browserPassed": 645, "browserFailures": 7, "chromiumOriginalSkips": 5, "failureFamilies": ["Ohio part-year business", "Ohio resident credit", "Ohio part-year school district"], "passed": ["image smoke", "Compose upgrade, recovery and rollback", "independent Docker archive", "bound image scan", "cleanup"]},
       "docker": "Passed on exact verification commit 26348f19",
-      "remaining": "Complete exact combined verification. Independent human case review and repeated comparable live evidence are still required."
+      "managedBrowserCorrection": {
+        "originalFailedJob": 138351405626,
+        "cause": "The timing preflight still pinned the prior browser audit and case manifest. The managed job stopped before Chromium.",
+        "correctionCommit": "8fa8ab22",
+        "timingContractTestsPassedOnNode26": 53,
+        "selectionTestsPassed": 27,
+        "independentEngineeringReview": "passed",
+        "remoteRuns": {"ci": 45369760247, "web": 45369760238, "docker": 45369760081},
+        "ciVerification": {"jobsPassed": 8, "testsPassed": 30432, "branchCoveragePercent": 88.69, "coverageJob": 138360671177},
+        "managedChromium": {"job": 138360669935, "passed": 652, "failures": 0, "originalSkips": 5},
+        "strictAmd64": {"job": 138360669512, "passed": 638, "failures": 14, "originalSkips": 5, "failureFamilies": ["Ohio part-year business", "Ohio reciprocal wages", "Ohio resident credit", "Ohio part-year school district", "passenger original intake", "RRTA saved-PDF inspection"], "smokeRecoveryArchiveScanCleanup": "passed"},
+        "docker": "passed on 8fa8ab22",
+        "vercel": "Canceled by Ignored Build Step"
+      },
+      "advisoryRecheck": {
+        "lockSha256": "4a30d16012713f30ef5a88f71dd4b52923448452b97fc7290ac9f505ed8e1376",
+        "npmRegistryAudit": {"fullDependencies": 550, "productionDependencies": 457, "findingsInEitherScope": 0},
+        "frozenStrictPeerValidation": "A clean frozen install passed strict peer validation with lifecycle scripts disabled across all four workspaces at 8fa8ab22 with pnpm 10.34.8. Lockfile SHA-256 matched. The first offline materialization lacked a cached tarball.",
+        "initialAttempt": "The sandbox could not resolve the public registry. Both audits passed on retry without npm authentication.",
+        "officialSourceScope": "Checked upstream Next, Nodemailer, Node.js and PostgreSQL release and advisory pages. Image advisory disposition remains open."
+      },
+      "remaining": "Independent human case review and repeated comparable live evidence are still required. Strict Linux verification continues on the refreshed image."
     },
     "nov24OrdinaryTangibleCharity": {
       "applicationCommit": "723248b7b825fb7195bda3f1079e08a427f197ff",
@@ -39,9 +85,11 @@
       "specReferencesPassed": 9984,
       "independentEngineeringReview": "passed, with guided comparison and stale-confirmation gaps subsequently fixed and tested",
       "remoteRuns": {"ci": 45364165585, "web": 45364165533, "docker": 45364165510, "nativeArm64": 45364293218},
+      "strictAmd64": {"job": 138341477812, "browserPassed": 650, "browserFailures": 2, "originalSkips": 5, "failurePhase": "Ohio part-year school district desktop cases hit the 30-second deadline at the filing-rejection request", "passed": ["image smoke", "Compose upgrade and recovery", "independent Docker archive", "bound image scan"]},
+      "strictArm64": {"job": 138341903654, "browserPassed": 644, "browserFailures": 8, "originalSkips": 5, "failureFamilies": ["Ohio reciprocal wages", "Ohio resident credit", "Ohio part-year school district"], "passed": ["image smoke", "Compose upgrade and recovery", "independent Docker archive", "bound image scan"]},
       "vercel": "Canceled by Ignored Build Step",
       "diagnosticManifestCorrection": "919b3b71 binds the optional diagnostic to the reviewed browser audit bytes. The original unit and coverage runs captured the obsolete checksum failure. No runtime limits changed.",
-      "remaining": "Complete exact full verification. Qualified tax review and final 2026 forms are still required."
+      "remaining": "Combined local verification passed at 26348f19. Qualified tax review and final 2026 forms are still required."
     },
     "nov24GuidedCashGift": {
       "applicationCommit": "c2b05a1c2958f5cf7da1413e3300a607b3fd04c7",
@@ -51,7 +99,7 @@
       "cleanChromiumTestsPassed": 38,
       "specReferencesPassed": 9981,
       "independentEngineeringReview": "passed",
-      "remaining": "Run combined exact checks on successor 723248b7. Keep final 2026 and qualified review gates open."
+      "remaining": "Combined local verification passed at 26348f19. Final 2026 forms and qualified review remain open."
     },
     "nov24PAUnemploymentDraft": {
       "applicationCommit": "9a45b970305442188962e0c69163f15c81496799",

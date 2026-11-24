@@ -1,5 +1,41 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Node base image refresh
+
+The exact `723248b7` AMD64 scan reported 220 matches across 100 advisory
+IDs, including 74 high and zero critical matches. Debian publishes glibc
+`2.41-12+deb13u5` for the two fixable high findings in that scan.
+`924c3545` refreshes the official Node 26.13.1 base by immutable index.
+Digest-checked manifests, configs and package layers show that AMD64 and
+ARM64 include the fixed `libc-bin`, `libc6` and zlib packages. PPC64LE and
+S390X publish the earlier base packages and use the existing
+content-addressed zlib upgrade. Smoke verifies the exact package versions,
+layer prefix and the complete retained package set on each architecture.
+[Prior exact scan](https://github.com/utilityfueled/tax-engine/actions/runs/45364165533/artifacts/14909201799) ·
+[Official AMD64 image](https://hub.docker.com/layers/library/node/26.13-trixie-slim/images/sha256-73c2e404ecdc6a8a8d7febe36ac62fab221fb61627659334a8855a2c198da7a0) ·
+[Official ARM64 image](https://hub.docker.com/layers/library/node/26.13.1-trixie-slim/images/sha256-519b9d98b6eaca701fd4692e984f96f20e6a441030a2ea612cb329a30c810b5f) ·
+[Debian glibc](https://security-tracker.debian.org/tracker/source-package/glibc).
+
+All 158 focused runtime tests passed with one existing skip. The 53 timing
+tests passed on Node 26. Eight installer process controls verified the
+upstream-fixed and pinned-update paths and rejection of unexpected versions.
+Spec validation passed all 9,985 references. Independent engineering review
+verified the full smoke package proof. The exact Docker build passed. AMD64
+and ARM64 passed smoke and isolated Compose recovery, and ARM64 independently
+verified archive import. Strict browser and scan checks continue. Vercel
+skipped the production build.
+
+All 11 local checks passed from the tracked archive of `924c3545`. Both
+unit and coverage runs passed 30,351 tests, with 81 skips and 88.30% branch
+coverage. Local Chromium passed 652 active cases and retained five original
+skips. The first restricted run denied the loopback TLS bind. A later
+overlapping unit run hit eight deadlines. All three localhost suites passed
+in the serialized retries with the original limits.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45374061387) ·
+[AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45374061266) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45374094541) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45374061272).
+
 ## November 24 offline AI evaluation report time
 
 `edb68f0e` fixes reports that previously counted later preflight,
@@ -18,13 +54,58 @@ The combined suite also revealed a historical pricing fixture whose
 December 10 attempt depends on the report clock. `26348f19` gives the
 test explicit before-attempt and at-attempt report times and retains the
 full exact-cost assertions. Both offline suites passed all 38 tests.
-The exact final archive passed ten local checks, including 30,351 tests
-in each of the unit and coverage runs, 81 skips and 88.30% branch
-coverage. The exact Docker build passed. Full Chromium and the remaining
-remote workflows continue.
+The exact archive passed all 11 local checks, including 30,351 tests in
+each of the unit and coverage runs, 81 skips and 88.30% branch coverage.
+Chromium passed all 652 active cases in eight batches and retained five
+existing skips. The exact Docker build and all eight GitHub CI jobs passed.
+The GitHub coverage job passed all 30,432 tests at 88.68% branch coverage.
+Strict AMD64 passed candidate smoke, Compose upgrade and recovery, independent
+archive import, scan and cleanup. Its browser suite passed 645 cases, missed
+seven deadlines in the Ohio part-year business, resident-credit and school
+district tests, and retained five original skips.
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45367064051) ·
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45367064519) ·
-[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45367064064).
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45367064064/job/138351404827).
+
+The managed GitHub browser job for `26348f19` stopped in the timing-contract
+preflight before Chromium. The projected audit changed only the deductions
+case count and shifted request source lines. `51c11da2` sets the current
+case count to 657. `8fa8ab22` updates the corresponding test pins and keeps
+the full-batch diagnostic tied to its historical 655-case selection. The test
+enforces the reviewed budgets, two workers, zero retries and the 30-second
+target deadline. All 53 Node 26 timing tests and
+27 selection tests passed, along with an independent engineering review.
+The corrected Docker build and all eight CI jobs passed, with 30,432 tests
+at 88.69% branch coverage on GitHub. Managed Linux passed all 652 active
+Chromium cases and retained five original skips. Vercel skipped the build.
+Strict AMD64 passed 638 cases, missed 14 deadlines and retained five original
+skips. The failures were in four Ohio journeys, passenger original intake
+and RRTA saved-PDF inspection. Smoke, Compose recovery, archive import,
+image scan and cleanup passed.
+[Original preflight](https://github.com/utilityfueled/tax-engine/actions/runs/45367064064/job/138351405626) ·
+[Corrected Web](https://github.com/utilityfueled/tax-engine/actions/runs/45369760238) ·
+[Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45369760247) ·
+[Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45369760081) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45369760238/job/138360669512).
+
+## November 24 dependency source recheck
+
+The pinned Next.js 16.4.6 and Nodemailer 10.4.1 were compared with the
+maintainers' current advisory listings. Nodemailer 10.6.1 is available and
+its published changes concern DKIM and cookie handling. The pinned Node
+26.13.1 and PostgreSQL 16.16 match the reviewed November security releases
+for those branches. The public npm registry returned zero findings for 550
+dependencies in the full audit and 457 in the production audit after
+retrying the initial `ENOTFOUND` with network access. Both successful
+requests used the tracked lockfile, SHA-256 `4a30d16012713f30ef5a88f71dd4b52923448452b97fc7290ac9f505ed8e1376`,
+which also matches `8fa8ab22`. A clean frozen install with strict peer
+validation and lifecycle scripts disabled passed for all four workspaces
+on that revision after retrying an incomplete offline cache. The lock hash
+matches. Final image advisory disposition remains open.
+[Next.js advisories](https://github.com/vercel/next.js/security/advisories) ·
+[Nodemailer releases](https://github.com/nodemailer/nodemailer/releases) ·
+[Node 26.13.1](https://nodejs.org/en/blog/release/v26.13.1) ·
+[PostgreSQL 16.16](https://www.postgresql.org/docs/release/16.16/).
 
 ## November 24 documented use of tangible charitable gifts
 
@@ -51,6 +132,22 @@ Vercel skipped the build.
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45364165533) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45364165510) ·
 [ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45364293218).
+
+The `723248b7` strict AMD64 runtime passed smoke, Compose upgrade and
+recovery, independent Docker archive verification and the image scan.
+Its browser suite passed 650 cases, missed two 30-second deadlines and
+retained five original skips. Both misses were Ohio part-year school
+district desktop cases. They completed review PDF inspection and reached the
+filing-rejection request. The completed refund controls answered that request
+in tens of milliseconds. The captured wall timing alone does not establish
+the cause of the timeout.
+[Exact AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45364165533/job/138341477812).
+
+The same revision passed ARM64 smoke, Compose recovery, independent archive
+verification and image scanning. Strict Chromium passed 644 cases, missed
+eight deadlines across Ohio reciprocal wages, resident credit and part-year
+school districts, and retained five original skips.
+[Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45364293218/job/138341903654).
 
 The first combined unit and coverage attempts found one stale digest in
 the optional browser diagnostic selection. `919b3b71` binds it to the

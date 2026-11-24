@@ -9,28 +9,43 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `924c3545` pins the refreshed official Node base. AMD64 and ARM64 inherit
+  Debian's fixed glibc and zlib packages. PPC64LE and S390X retain their
+  pinned zlib install. The four published images were inspected by digest.
+  All 11 local checks passed, including 30,351 tests, 88.30% branch coverage
+  and 652 active Chromium cases. The exact Docker build, smoke and Compose
+  recovery passed on both release architectures. Strict browser checks continue.
+  Vercel skipped the production build.
+  [Image refresh evidence](upgrade-2026-progress.md#november-24-node-base-image-refresh).
+
 - `edb68f0e` excludes future-dated evidence from offline AI evaluation
   reports. The isolated source passed 105 focused tests and 18 additional
   diagnostic checks. Independent human labels and comparable live runs
   remain open. [Evaluation evidence](upgrade-2026-progress.md#november-24-offline-ai-evaluation-report-time).
 
-- Combined verification at `26348f19` passed ten of eleven local checks,
-  including 30,351 tests in both runs, 88.30% branch coverage and the
-  exact GitHub Docker build. Full Chromium and the remote workflows
-  continue. [Exact image build](https://github.com/utilityfueled/tax-engine/actions/runs/45367064051).
+- Combined verification at `26348f19` passed all 11 local checks, including
+  30,351 tests in both runs, 88.30% branch coverage and all 652 active Chromium
+  cases. The exact Docker build and all eight GitHub CI jobs passed, with
+  30,432 coverage tests at 88.68%. The managed GitHub job stopped
+  before Chromium at the old timing pin. `8fa8ab22` corrects the pin and passed all 53
+  preflight tests on Node 26 with independent engineering review. Its Docker
+  build, eight GitHub CI jobs and all 652 active managed Linux Chromium cases
+  passed. Vercel skipped its production build.
+  [Exact image build](https://github.com/utilityfueled/tax-engine/actions/runs/45367064051) ·
+  [Corrected browser workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45369760238).
 
 - `723248b7` collects documented use of an ordinary long-term tangible
   gift to an actual 50%-limit organization. A $500 gift with $100 basis
   sold by the charity to raise funds now uses $100. The isolated source
-  passed 887 focused tests and 35 Chromium cases. Combined verification
-  continues on the pushed revision. Vercel skipped its build.
+  passed 887 focused tests and 35 Chromium cases. The combined local
+  verification passed at `26348f19`. Vercel skipped its build.
   [Tangible gift evidence](upgrade-2026-progress.md#november-24-documented-use-of-tangible-charitable-gifts).
 
 - `c2b05a1c` distinguishes a gross payment from an already-net charitable
   cash amount in the guided interview. A $70 payment with a $40 benefit
   produces a $30 contribution. The package passed 650 focused tests and
-  38 Chromium cases on the isolated source. Final qualification still
-  requires the combined checks and qualified review.
+  38 Chromium cases on the isolated source. The combined local checks
+  passed at `26348f19`. Final qualification requires qualified review.
   [Cash gift evidence](upgrade-2026-progress.md#november-24-cash-gifts-with-return-benefits).
 
 - `9a45b970` adds a private Pennsylvania 2026 worksheet path that
