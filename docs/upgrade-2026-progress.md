@@ -2,6 +2,22 @@
 
 ## November 24 current Linux and local verification
 
+The exact `f2ac230e` archive matched 6,686 tracked blobs and all 15
+official sample hashes. All eleven required local checks passed with
+Node 26.13.1, pnpm 10.34.8, Python 3.14.6 and pypdf 6.10.0. Unit and
+coverage each passed 30,461 cases with 81 conditional skips. Branch
+coverage reached 88.37%, and all 10,033 spec lines had resolved test
+references. Chromium passed 652 active cases in all eight windows
+with five original skips and verified local listener cleanup. The
+exact remote CI, Web and Docker jobs were queued at verification,
+and the bound ARM64 recovery workflow was pending. Vercel recorded the
+automatic production build as canceled.
+
+[Current CI](https://github.com/utilityfueled/tax-engine/actions/runs/45489392245) ·
+[Current Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134) ·
+[Current Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45489392197) ·
+[Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992).
+
 The exact `f84a7000` Linux runtime passed 650 of 652 active Chromium
 cases, with five original skips. Recovery, rollback, independent archive
 restore, image scan and teardown passed. The desktop Ohio part-year
@@ -17,6 +33,15 @@ four-second limit. The desktop subprocess reported its completion
 phase at 3.949 seconds, then exceeded the parent deadline. The mobile
 subprocess last reported entry into page text extraction at 2.837 seconds.
 [Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057/job/138692709699).
+The separate `2be7b99f` managed Linux run completed all eight browser
+windows with 652 active passes and five original skips. This is evidence
+for that earlier tested revision. Its strict Linux job passed 643 active
+cases and retained five original skips. Nine Ohio cases reached the
+existing 30-second limit across business part-year, resident-credit
+and school part-year journeys. Recovery, rollback and independent archive
+restore passed. The optional CPU diagnostic exited unsuccessfully.
+[Earlier strict Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45472505533/job/138723958812) ·
+[Earlier managed Linux pass](https://github.com/utilityfueled/tax-engine/actions/runs/45472505533/job/138723958872).
 
 `90336daf` uses one saved snapshot for each group of related Ohio state
 assertions. The review compared all 96 assertion sites and verified eight
@@ -29,22 +54,100 @@ entries passed. The exact change still needs browser timing evidence.
 [Exact commit](https://github.com/utilityfueled/tax-engine/commit/90336dafcc055b2b6551c5de534e40c31f2df22f).
 
 The `f8a451b1` archive matched 6,678 tracked blobs and 15 official
-sample hashes. All ten non-browser checks passed. Unit and coverage
+sample hashes. All eleven checks passed. Unit and coverage
 each passed 30,440 tests, with 81 original conditional skips, 88.36%
-branch coverage and 10,021 resolved spec references. Its Chromium run
-is recorded separately. The `0bc58a05` first unit run passed 30,442
+branch coverage and 10,021 resolved spec references. Chromium passed
+652 active cases in eight windows with five original skips and verified
+local cleanup. The `0bc58a05` first unit run passed 30,442
 tests and hit three existing five-second test deadlines during an older
 Chromium run. Its coverage suite passed all 30,445 active tests, with
 81 conditional skips and 88.37% branch coverage. The exact `90336daf`
-archive matched 6,680 tracked blobs
-and 15 sample hashes. Its unit and coverage suites are scheduled outside
-other local browser and build work. The earlier failed results remain
-in the evidence.
+and `1910af95` archives each matched 6,680 tracked blobs and 15 sample
+hashes. The waiting local `0bc58a05` and `90336daf` browser runs were
+stopped before browser admission. The exact `1910af95` first attempt
+found two stale Ohio diagnostic fixture bindings and the shell denied the
+real loopback fixture. The controller stopped before Chromium. The
+metadata correction in `c12c6ad4` rebinds both the restored import and
+the actual qualification source. All 27 diagnostic tests and nine
+full-batch source hashes passed. The current `d3831073` archive matched
+6,685 blobs and 15 official samples. Its unchanged checks run with
+localhost available and its engine suites run outside browser or build
+work. All eleven checks passed. The unit and coverage suites each
+passed all 30,456 active cases with 81 conditional skips and 88.37%
+branch coverage. All 10,029 spec lines resolved. Local Chromium passed
+652 active cases with five original skips across eight windows and
+verified cleanup. Vercel recorded the automatic production attempt
+as canceled.
+Earlier failed and superseded results remain in the evidence.
 
 [Exact `f8a451b1` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45475481555) ·
 [Exact `f8a451b1` ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45475606822) ·
 [Exact `90336daf` CI](https://github.com/utilityfueled/tax-engine/actions/runs/45479778786) ·
-[Exact `90336daf` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45479778669).
+[Exact `90336daf` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45479778669) ·
+[Exact `1910af95` CI](https://github.com/utilityfueled/tax-engine/actions/runs/45481235928) ·
+[Exact `1910af95` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45481235600) ·
+[Exact `d3831073` CI](https://github.com/utilityfueled/tax-engine/actions/runs/45483317174) ·
+[Exact `d3831073` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45483317206) ·
+[Exact `d3831073` ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45484309448).
+
+## November 24 final Schedule B source
+
+`206e9b0e` pins the final 2026 Schedule B after checking the IRS catalog
+and matching the current and annual archive bytes. Independent inspection
+verified the SHA-256, 66 text fields, six unchecked boxes and the printed
+transfers to Form 1040 lines 2b and 3b. All 132 focused tests and the
+isolated inventory check passed. The new inventory entry records the
+missing mapper and packet qualification. Final annual Form 1040 materials
+and independent qualification remain open.
+[Source receipt](upgrade-2026-schedule-b-final-source.md) ·
+[IRS Schedule B](https://www.irs.gov/forms-pubs/about-schedule-b-form-1040).
+
+`f2ac230e` adds the standalone review worksheet for confirmed ordinary
+domestic interest and dividends. Each original must match the current
+recipient, complete account reference, payer and exact amount. The
+worksheet uses the existing Decimal totals and holds any displayed
+whole-dollar mismatch. The native PDF reopens with private identifiers
+omitted, payer ordinals displayed, and the conditional foreign account
+fields blank. Independent checks confirmed the above-threshold case and
+rejected account case, punctuation and internal spacing differences.
+All 163 focused tests, seven spec lines, lint, root and contract types,
+inventory and 2,068 browser audit entries passed. Public registration and
+annual Form 1040 transfer qualification remain open.
+[Standalone worksheet evidence](upgrade-2026-schedule-b-final-source.md#standalone-ordinary-review-candidate) ·
+[Exact `f2ac230e` CI](https://github.com/utilityfueled/tax-engine/actions/runs/45489392245) ·
+[Exact `f2ac230e` Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134) ·
+[Exact `f2ac230e` ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992).
+
+## November 24 2025 pension taxable amount
+
+`d3831073` holds a positive, dated 2025 non-IRA Code 1 or Code 7
+distribution when Box 2b is unchecked, Box 2a is blank, no positive
+Box 5 was recorded and the existing resolver would infer the gross
+amount. The regression preserves a reported zero and supported worksheets.
+The existing 2025 positive Box 5 and unconfirmed legacy paths remain
+unchanged. Both new cases reproduced the old gross fallback before the
+fix. Independent review confirmed the authority and boundaries. The
+isolated direct and guided checks passed all 104 cases, with scoped lint,
+inventory and the browser audit. The targeted tax and Schedule B specs
+resolved all 21 lines.
+[Pension spec](../spec/federal/form-1099-r.yaml) ·
+[2025 Form 1099-R instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=11) ·
+[2025 Form 1040 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28).
+
+## November 24 AI qualification latency evidence
+
+`1910af95` checks that an escalation starts at or after the initial
+attempt and that the reported elapsed time covers both start timestamps.
+The offline predecessor admitted 90 candidate runs at a one-second P95
+even though each escalation began 60 seconds later. The corrected run
+reports a timing blocker and keeps the exact $0.0648 incurred cost. An
+honest 60.001-second measurement still fails the unchanged latency
+budget. Independent review reproduced both the former false pass and the
+correction. All 76 focused tests, 13 spec references, generated inventory
+and all 2,066 browser source audit entries passed. No provider calls were
+made for this change.
+[Latency spec](../spec/federal/ai-evaluation-application.yaml) ·
+[Exact commit](https://github.com/utilityfueled/tax-engine/commit/1910af95be7b6ce74c1aa978b17932141bb71156).
 
 ## November 24 Ohio school replay compatibility
 

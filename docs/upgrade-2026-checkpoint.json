@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "90336dafcc055b2b6551c5de534e40c31f2df22f",
-    "verificationCommit": "f84a70001729fe586807c1950c9f00e6939d7c05",
-    "generatedInventoryCommit": "0bc58a05707b49d98b2ed57504a655cb31a7e7fe",
+    "applicationCommit": "f2ac230eb2fd8c384240a05527f519de475c55bc",
+    "verificationCommit": "f2ac230eb2fd8c384240a05527f519de475c55bc",
+    "generatedInventoryCommit": "f2ac230eb2fd8c384240a05527f519de475c55bc",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov24LatestLocalAndLinuxVerification",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
@@ -24,6 +24,7 @@
     "aiAttemptTokenCapsEvidenceKey": "activeContinuation.nov24AIEvaluationAttemptTokenCaps",
     "aiBilledModelEvidenceKey": "activeContinuation.nov24ProviderEvalModelBoundAccounting",
     "aiBilledModelExactLocalEvidenceKey": "activeContinuation.nov24ExactBilledModelLocalChecks",
+    "aiLatencyEvidenceKey": "activeContinuation.nov24EvalEscalationLatencyEvidence",
     "publicProviderEvidenceKey": "activeContinuation.nov24ExactPublicProviderCatalog",
     "runtimeEvidenceKey": "activeContinuation.nov24NodeImageRefresh",
     "strictTimingEvidenceKey": "activeContinuation.nov24OhioStrictTraceComparison",
@@ -37,11 +38,14 @@
     "annualForm8801CandidateEvidenceKey": "activeContinuation.nov24Form8801NoCreditReviewCandidate",
     "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
     "annualForm6781CandidateEvidenceKey": "activeContinuation.nov24Form6781OriginalReviewCandidate",
+    "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
+    "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
+    "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Qualify current managed and strict Linux browsers with original limits. The f84a7000 strict AMD64 image passed 650 cases and missed two desktop Ohio school deadlines, with five original skips. Build, recovery, archive verification, scan and cleanup passed. Exact 90336daf has its own CI and Web receipts.",
+      "Qualify current managed and strict Linux browsers with original limits. The f84a7000 strict AMD64 image passed 650 cases and missed two desktop Ohio school deadlines, with five original skips. Build, recovery, archive verification, scan and cleanup passed. Exact f2ac230e has its own CI, managed and strict Linux Web, and ARM64 recovery receipts.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -49,8 +53,51 @@
     ]
   },
   "activeContinuation": {
+    "nov24ScheduleBOrdinaryReview": {
+      "revision": "f2ac230eb2fd8c384240a05527f519de475c55bc",
+      "focusedTestsPassed": 163,
+      "specLinesPassed": 7,
+      "browserAuditEntriesPassed": 2068,
+      "nativePrivacyAndAppearanceChecked": true,
+      "exactAccountReferenceChecked": true,
+      "reviewLabel": "Internal only",
+      "ciRun": 45489392245,
+      "webRun": 45489392134,
+      "dockerRun": 45489392197,
+      "receipt": "docs/upgrade-2026-schedule-b-final-source.md"
+    },
+    "nov24ScheduleBFinalSource": {
+      "revision": "206e9b0e783433d718b8df66b1655ece2de7620b",
+      "postedDate": "2026-11-24",
+      "sha256": "f4b1827b12113dcdc2b5e14181b3c658fa5553a277dea02e5106000b592815af",
+      "byteLength": 72863,
+      "currentAndArchiveIdentical": true,
+      "nativeTextWidgets": 66,
+      "nativeBlankCheckboxWidgets": 6,
+      "focusedTestsPassed": 132,
+      "receipt": "docs/upgrade-2026-schedule-b-final-source.md",
+      "exportQualification": "Open"
+    },
+    "nov24ReportedPensionTaxableAmount": {
+      "revision": "d383107399a6b68a9167d0dfa68c99259fdd5a25",
+      "focusedTestsPassed": 104,
+      "predecessorRegressionFailures": 2,
+      "independentReview": "Passed",
+      "positiveBox5PredecessorPreserved": true,
+      "generatedInventoryChanged": false
+    },
+    "nov24EvalEscalationLatencyEvidence": {
+      "revision": "1910af95be7b6ce74c1aa978b17932141bb71156",
+      "falsePassReproduced": {"candidateRuns": 90, "reportedP95Ms": 1000, "escalationStartsAfterMs": 60000},
+      "independentRegressionPassed": true,
+      "blockedInvalidMeasurements": true,
+      "preservedExactProviderCostUsd": "0.0648",
+      "focusedTestsPassed": 76,
+      "specReferencesPassed": 13,
+      "providerCallsMade": 0
+    },
     "nov24LatestLocalAndLinuxVerification": {
-      "lastCompleteLocalRevision": "f84a70001729fe586807c1950c9f00e6939d7c05",
+      "lastCompleteLocalRevision": "f2ac230eb2fd8c384240a05527f519de475c55bc",
       "f84StrictAmd64": {
         "run": 45463661057,
         "job": 138692709406,
@@ -69,6 +116,8 @@
         "desktopLastPhase": "complete at 3949496 microseconds",
         "mobileLastPhase": "page_text at 2836664 microseconds"
       },
+      "earlier2beManagedLinux": {"run": 45472505533, "job": 138723958872, "activePassed": 652, "originalSkips": 5, "windows": 8},
+      "earlier2beStrictLinux": {"run": 45472505533, "job": 138723958812, "activePassed": 643, "deadlineFailures": 9, "originalSkips": 5, "recoveryPassed": true, "rollbackPassed": true, "independentArchiveRestorePassed": true, "optionalCpuDiagnosticPassed": false},
       "ohioSavedCheckpointChange": {
         "revision": "90336dafcc055b2b6551c5de534e40c31f2df22f",
         "redundantReadsRemovedPerCase": 8,
@@ -82,17 +131,22 @@
         "revision": "f8a451b1d3187566b1f14237f8d5a0731b08bc6c",
         "archivedTrackedBlobsVerified": 6678,
         "officialSampleHashesVerified": 15,
-        "checksPassedOutsideBrowser": 10,
+        "checksPassed": 11,
         "unitAndCoveragePassedEach": 30440,
         "conditionalSkipsEach": 81,
         "branchCoveragePercent": 88.36,
         "specReferencesPassed": 10021,
+        "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true},
         "webRun": 45475481555,
         "arm64Run": 45475606822
       },
       "0bcFirstUnitAttempt": {"passed": 30442, "testDeadlineFailures": 3, "conditionalSkips": 81, "concurrentLocalChromium": true},
       "0bcCoverage": {"passed": 30445, "conditionalSkips": 81, "branchCoveragePercent": 88.37},
-      "currentArchive": {"trackedBlobsVerified": 6680, "officialSampleHashesVerified": 15, "ciRun": 45479778786, "webRun": 45479778669, "dockerRun": 45479778324},
+      "90336dafArchive": {"trackedBlobsVerified": 6680, "officialSampleHashesVerified": 15, "ciRun": 45479778786, "webRun": 45479778669, "dockerRun": 45479778324},
+      "1910af95Archive": {"trackedBlobsVerified": 6680, "officialSampleHashesVerified": 15, "ciRun": 45481235928, "webRun": 45481235600, "dockerRun": 45481235711, "diagnosticFailures": 2, "localLoopbackBlocked": true, "stoppedBeforeBrowser": true},
+      "diagnosticBindings": {"revision": "c12c6ad4837aec066205e3102274d422d1e6f0bb", "focusedTestsPassed": 27, "fullBatchSourceHashesVerified": 9},
+      "previousD383Archive": {"revision": "d383107399a6b68a9167d0dfa68c99259fdd5a25", "trackedBlobsVerified": 6685, "officialSampleHashesVerified": 15, "localUnitPassed": 30456, "localCoveragePassed": 30456, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10029, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45483317174, "webRun": 45483317206, "dockerRun": 45483317231, "arm64Run": 45484309448, "automaticProductionBuildStatus": "Canceled"},
+      "currentArchive": {"revision": "f2ac230eb2fd8c384240a05527f519de475c55bc", "trackedBlobsVerified": 6686, "officialSampleHashesVerified": 15, "localUnitPassed": 30461, "localCoveragePassed": 30461, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10033, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45489392245, "webRun": 45489392134, "dockerRun": 45489392197, "arm64Run": 45491371992, "ciWebAndDockerStatusAtVerification": "Queued", "arm64StatusAtVerification": "Pending", "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-exact-main-f2ac230e"},
       "evidence": ".local/upgrade-evidence/nov24-non-hosted-followup"
     },
     "nov24Form8801NoCreditReviewCandidate": {

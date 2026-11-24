@@ -12,8 +12,9 @@ Use the linked progress sections when investigating individual packages.
 - Exact `f84a7000` passed all 11 local checks. Its strict Linux runtime
   passed 650 active Chromium cases, missed two desktop Ohio school
   deadlines and retained five original skips. Build, recovery and cleanup
-  passed. Exact `f8a451b1` passed all ten local checks outside Chromium
-  with 30,440 unit and coverage cases and 88.36% branch coverage.
+  passed. Exact `f2ac230e` passed all eleven local checks with 30,461 unit
+  and coverage cases, 88.37% branch coverage and 652 active Chromium cases.
+  The current Linux and ARM64 workflow results remain open.
   [Verification evidence](upgrade-2026-progress.md#november-24-current-linux-and-local-verification).
 
 - `90336daf` reuses the saved Ohio draft for related assertions at six
@@ -21,6 +22,22 @@ Use the linked progress sections when investigating individual packages.
   journey, all 96 assertion sites and the original timing limits.
   [Current local and CI evidence](upgrade-2026-progress.md#november-24-current-linux-and-local-verification) ·
   [Exact Web workflow](https://github.com/utilityfueled/tax-engine/actions/runs/45479778669).
+
+- `1910af95` blocks AI qualification when the reported elapsed time falls
+  short of its recorded escalation span. The regression preserves exact
+  incurred cost and the original latency limits.
+  [AI latency evidence](upgrade-2026-progress.md#november-24-ai-qualification-latency-evidence).
+
+- `206e9b0e` pins the final 2026 Schedule B from the IRS current and
+  annual archive copies. `f2ac230e` renders a standalone ordinary domestic
+  review worksheet from verified originals. Public export and the
+  final Form 1040 transfer remain open.
+  [Schedule B receipt and worksheet](upgrade-2026-schedule-b-final-source.md).
+
+- `d3831073` holds a dated 2025 ordinary pension when blank Box 2a would
+  otherwise be filled with the gross distribution. A reported zero and
+  supported worksheets keep their original treatment. All 104 focused
+  checks passed. [Pension evidence](upgrade-2026-progress.md#november-24-2025-pension-taxable-amount).
 
 - Verified Ohio IT 1040 carryovers and income-tax principal paid in 2025
   now reach Schedule A once. Same-year extension receipts require separate
@@ -33,7 +50,7 @@ Use the linked progress sections when investigating individual packages.
 
 - The Ohio replay correction passed 128 isolated and 113 independent tests.
   Existing district source commitments and replay counts pass their original
-  checks. Combined verification remains open.
+  checks. The exact revision also passed all eleven local checks.
   [Replay compatibility evidence](upgrade-2026-progress.md#november-24-ohio-school-replay-compatibility).
 
 - A verified prior-year refund applied to an individual 2025 Pennsylvania
@@ -47,7 +64,8 @@ Use the linked progress sections when investigating individual packages.
 
 - The paired Pennsylvania browser journeys passed locally in 4.15 and
   3.60 seconds after removing repeated control lookups. Both journeys keep
-  all 139 native entries and their assertions. Strict Linux timing is pending.
+  all 139 native entries and their assertions. The same source passed
+  managed Linux. The strict Linux run recorded nine Ohio deadlines.
   [Browser evidence](upgrade-2026-progress.md#november-24-paired-pennsylvania-browser-timing) ·
   [Exact Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45472505533).
 
@@ -1204,10 +1222,10 @@ AMD64 runner.
 | Package | Current evidence and remaining criterion |
 | --- | --- |
 | Taxpayer facts and federal law | The guided interview retains short-period dates and ties them to the taxpayer and return year. The public calculator holds annualized amounts. Qualified independent tax interpretations and expected outputs remain open. [Intake evidence](upgrade-2026-progress.md#november-23-actual-short-accounting-period-intake) · [Tax review cases](upgrade-2026-external-actions.md). |
-| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedule EIC and Forms 2106, 7206, 8829 and 8919 are pinned as disabled candidates. The latest Form 1040, general annual instructions and Tax/EIC tables still print 2025. Schedule B instructions now print 2026, while its blank prints 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Official sources](upgrade-2026-official-source-refresh-20261117-continuation.md). |
+| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedules B and EIC and Forms 2106, 7206, 8829 and 8919 have disabled source candidates. The current annual Form 1040, general instructions, Tax/EIC tables and main Pennsylvania and Ohio returns still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Schedule B source](upgrade-2026-schedule-b-final-source.md) · [IRS annual Form 1040](https://www.irs.gov/forms-pubs/about-form-1040) · [Pennsylvania PIT forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio tax forms](https://tax.ohio.gov/individual/get-a-form). |
 | AI routing and exact billing | Exact cost is recorded separately from whole retail credits. The hold for a second attempt checks the cumulative bound under the owner lock. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Billing evidence](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Protected Preview `cdfdd050` passed all 12 workspace lifecycle checks. Four read-only billing checks passed for each of two authorized actors on `1a9bfd0d`. Its configured prices match Stripe Sandbox, and the canceled actor displays enabled checkout choices. The webhook points to an older Preview. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Current checkout, signed delivery and exact credit reconciliation remain open. [Preview](upgrade-2026-progress.md#november-20-original-student-loan-and-retirement-statements) · [Billing baseline](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Exact `f84a7000` passed 652 local and 650 strict AMD64 Chromium cases. The strict run missed two desktop Ohio school deadlines. The earlier `f3163949`-equivalent ARM64 run passed 642 strict cases and missed ten deadlines. The original five skips remain. Both platform rehearsals passed recovery and archive verification. Current managed and native Linux browser qualification remains open. [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057/job/138692709406) · [Earlier strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946) · [Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45475606822). |
+| Self-host recovery | Exact `f84a7000` passed 652 local and 650 strict AMD64 Chromium cases. The strict run missed two desktop Ohio school deadlines. The earlier `f3163949`-equivalent ARM64 run passed 642 strict cases and missed ten deadlines. The original five skips remain. Both platform rehearsals passed recovery and archive verification. Current managed and native Linux browser qualification remains open. [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057/job/138692709406) · [Earlier strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946) · [Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45484309448). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 The `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)

@@ -1,5 +1,35 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 24 pension and Schedule B review
+
+For the 2025 pension case, review a dated original non-IRA distribution
+with $6,000 in Box 1, $125 of federal withholding, and Code 1 or 7.
+Compare unchecked and checked Box 2b when Box 2a is blank. Repeat with
+an explicit zero in Box 2a and then with a $1,200 Box 5 amount while
+Box 2a stays blank. Identify the evidence needed to distinguish actual
+nontaxable cost recovery from other amounts reported in Box 5. Derive
+Form 1040 lines 5a, 5b and 25b, and the applicable Form 5329 result.
+The engine holds the blank-amount gross fallback for the confirmed
+ordinary case. The separately documented 2025 Box 5 treatment still
+needs qualified review.
+[2025 payer instructions](https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf#page=11) ·
+[2025 Form 1040 instructions](https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28) ·
+[Pension fixtures](../tests/engine/federal-pension-box2a-2025.test.ts).
+
+For the standalone 2026 Schedule B worksheet, use two ordinary interest
+originals of $1,125.25 and $475.24 and two ordinary dividend originals of
+$820.80 and $780.80. The taxpayer has confirmed No to both applicable
+foreign account and trust questions. Derive exact and printed lines 2,
+4 and 6. Compare an exact $1,500.00 category with an exact $1,500.01
+category and confirm the treatment of the conditional follow-up fields.
+Identify the supported way to present any case where the individually
+rounded rows disagree with the independently rounded exact total. The
+internal candidate holds that display conflict. Final annual Form 1040
+materials are still needed for the transfer review.
+[Final 2026 Schedule B](https://www.irs.gov/pub/irs-prior/f1040sb--2026.pdf) ·
+[Final Schedule B instructions](https://www.irs.gov/pub/irs-pdf/i1040sb.pdf) ·
+[Standalone worksheet and fixtures](upgrade-2026-schedule-b-final-source.md#standalone-ordinary-review-candidate).
+
 ## November 24 payment and dependent TIN review
 
 Derive the federal cash-year Schedule A line 5a amounts and the separate
