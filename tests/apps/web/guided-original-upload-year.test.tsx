@@ -3,11 +3,12 @@ import { webcrypto } from "node:crypto";
 import React, { act, type ComponentProps } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ReturnWorkspaceScreen } from "@/components/return-workspace-screen";
-import { initialFlowState, saveGuidedFlowState } from "@/lib/guided-interview-flow";
+import { initialFlowState, loadGuidedFlowState, saveGuidedFlowState } from "@/lib/guided-interview-flow";
 import { parseUploadedDocumentText, prepareUploadableFiles } from "@/lib/uploaded-document-detection";
 import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
 import { ensureWorkspace, getWorkspace, ingestFiles } from "@/lib/workspace-storage";
 import { mountGuidedPanel } from "./guided-panel-dom";
+import { completePersonalInfo, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 vi.mock("next/link", () => ({ default: (props: ComponentProps<"a">) => <a {...props} /> }));
 vi.mock("@/lib/uploaded-document-detection", async importOriginal => ({
@@ -40,6 +41,34 @@ function prepareFiles(files: File[]) {
 function savePriorWages(id: string) {
   ingestFiles(localStorage, id, prepareFiles([new File([priorWages], priorWagesName)]));
 }
+
+it("omits private short-period facts from the actual filled-return request and retains the hold flag", async () => {
+  const id = "synthetic-short-period-pdf";
+  savePriorWages(id);
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+  const packet = { startsOn: "2025-11-01", endsOn: "2026-03-31", sourceReference: "Private PDF transport reference", sourceFactsConfirmed: true };
+  draft.sectionData["personal-info"] = { ...completePersonalInfo, standardDeductionFacts: { ...completePersonalInfo.standardDeductionFacts, shortTaxYear: true, shortAccountingPeriod: packet } };
+  saveGuidedFlowState(localStorage, id, draft);
+  localStorage.setItem(`tax-engine:guided-mode:${id}`, "false");
+  const fetchRequest = vi.fn<(url: string, init: RequestInit) => Promise<Response>>().mockResolvedValue(
+    Response.json({ error: "Annualized tax calculation is unavailable" }, { status: 422 })
+  );
+  vi.stubGlobal("fetch", fetchRequest);
+  const panel = await mountGuidedPanel(<ReturnWorkspaceScreen workspaceId={id} deploymentMode="self-host" />);
+  try {
+    await panel.click("Download Draft Filled Return PDF");
+    const request = fetchRequest.mock.calls.find(([url]) => url === "/api/workspace/filled-return")?.[1];
+    if (typeof request?.body !== "string") throw new Error("Missing filled-return JSON body");
+    expect(request.body).not.toContain("shortAccountingPeriod");
+    expect(request.body).not.toContain(packet.sourceReference);
+    expect(request.body).not.toContain(packet.startsOn);
+    expect(request.body).not.toContain(packet.endsOn);
+    expect(JSON.parse(request.body).guidedFlowState.sectionData["personal-info"].standardDeductionFacts.shortTaxYear).toBe(true);
+    expect(loadGuidedFlowState(localStorage, id)?.sectionData["personal-info"]?.standardDeductionFacts?.shortAccountingPeriod).toEqual(packet);
+  } finally {
+    await panel.dispose();
+  }
+});
 
 beforeEach(() => {
   vi.stubGlobal("crypto", webcrypto);

@@ -5,20 +5,12 @@ import { allowsBlankEicChildIdentifier } from "./guided-eic-separated-spouse";
 import { allowsBlankForm8862ChildIdentifier } from "./guided-form-8862";
 import type { DependentEntryData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { hasTaxId, isActualBirthDate } from "./guided-taxpayer-identity";
 
-export function isActualBirthDate(value: string | undefined, taxYear?: number | null): boolean {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
-    && value >= "1850-01-01" && (!taxYear || value <= `${taxYear}-12-31`);
-}
+export { isActualBirthDate } from "./guided-taxpayer-identity";
 
 export function isResidencyMonths(value: string | undefined): boolean {
   return typeof value === "string" && /^(?:[0-9]|1[0-2])$/.test(value);
-}
-
-function hasTaxId(value: string | undefined): boolean {
-  return !!value && /^\d{3}-?\d{2}-?\d{4}$/.test(value) && value.replace(/-/g, "") !== "000000000";
 }
 
 const stateCodes = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR VI GU AS MP AA AE AP".split(" "));

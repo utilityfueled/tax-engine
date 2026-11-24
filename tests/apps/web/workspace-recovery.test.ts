@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { exportWorkspaceRecovery, importWorkspaceRecovery, type RecoveryDocumentStore } from "../../../apps/web/src/lib/workspace-recovery";
 import { deleteWorkspace, ensureWorkspace, getWorkspace, ingestFiles, listWorkspaces, WORKSPACE_STORAGE_KEY } from "../../../apps/web/src/lib/workspace-storage";
-import { getGuidedFlowStorageKey, initialFlowState, startInterview } from "../../../apps/web/src/lib/guided-interview-flow";
+import { getGuidedFlowStorageKey, initialFlowState, loadGuidedFlowState, saveGuidedFlowState, startInterview } from "../../../apps/web/src/lib/guided-interview-flow";
 import { getLocalRecoveryStorageKey } from "../../../apps/web/src/lib/workspace-local-recovery";
+import { buildProviderInterviewAssistRequest } from "../../../apps/web/src/lib/provider-interview-request";
+import { startCompleteInterview } from "../../guided-interview/complete-facts";
 
 function storage() {
   const values = new Map<string, string>();
@@ -77,6 +79,29 @@ describe("full-fidelity encrypted local recovery", () => {
     const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
     const result = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
     expect(JSON.parse(f.local.getItem(getGuidedFlowStorageKey(result.workspaceId))!)).not.toHaveProperty("taxYear");
+  });
+  it.each([
+    { description: "incomplete", endsOn: "", sourceFactsConfirmed: null },
+    { description: "confirmed", endsOn: "2026-03-31", sourceFactsConfirmed: true },
+  ])("reopens $description short accounting period facts from encrypted recovery", async ({ endsOn, sourceFactsConfirmed }) => {
+    const f = fixture();
+    const flow = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+    const personal = flow.sectionData["personal-info"];
+    if (!personal) throw new Error("Expected synthetic taxpayer");
+    const packet = { startsOn: "2025-11-01", endsOn, sourceReference: "Private accounting reference", sourceFactsConfirmed };
+    personal.standardDeductionFacts = { ...personal.standardDeductionFacts, shortTaxYear: true, shortAccountingPeriod: packet };
+    expect(saveGuidedFlowState(f.local, "original", flow)).toBe(true);
+    const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
+    expect(await archive.text()).not.toContain(packet.sourceReference);
+    const result = await importWorkspaceRecovery(f.local, archive, password, { documents: f.documents });
+    const restored = loadGuidedFlowState(f.local, result.workspaceId);
+    expect(restored?.taxYear).toBe(2025);
+    expect(restored?.sectionData["personal-info"]?.standardDeductionFacts).toMatchObject({ shortTaxYear: true, shortAccountingPeriod: packet });
+    const workspace = getWorkspace(f.local, result.workspaceId);
+    if (!workspace) throw new Error("Expected restored workspace");
+    const providerRequest = JSON.stringify(buildProviderInterviewAssistRequest(workspace));
+    expect(providerRequest).not.toContain(packet.sourceReference);
+    expect(providerRequest).not.toContain("shortAccountingPeriod");
   });
   it("preserves a restored return when another tab saves an unrelated return", async () => {
     const f = fixture();

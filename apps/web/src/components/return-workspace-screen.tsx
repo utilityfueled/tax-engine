@@ -49,6 +49,7 @@ import {
 } from "@/lib/guided-interview-flow";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData, mapFilingStatus } from "@/lib/guided-interview-bridge";
+import { withoutPrivateShortAccountingPeriod } from "@/lib/guided-standard-deduction-facts";
 import { reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { getInterviewQuestionUiHint } from "@/lib/interview-question-ui";
@@ -937,15 +938,19 @@ export function ReturnWorkspaceScreen({
     setFilledReturnPending(true);
 
     try {
+      const guidedFlowState = persistedGuidedFlowState && {
+        ...persistedGuidedFlowState,
+        sectionData: {
+          ...persistedGuidedFlowState.sectionData,
+          "personal-info": withoutPrivateShortAccountingPeriod(persistedGuidedFlowState.sectionData["personal-info"])
+        }
+      };
       const response = await fetch("/api/workspace/filled-return", {
         method: "POST",
         headers: {
           "content-type": "application/json"
         },
-        body: JSON.stringify({
-          workspace,
-          guidedFlowState: persistedGuidedFlowState
-        })
+        body: JSON.stringify({ workspace, guidedFlowState })
       });
 
       if (!response.ok) {

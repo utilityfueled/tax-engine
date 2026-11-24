@@ -1,13 +1,26 @@
 "use client";
-import type { FilingStatus } from "@/lib/guided-interview-flow";
-import type { StandardDeductionData } from "@/lib/guided-standard-deduction-facts";
+import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
+import { readGuidedShortAccountingPeriod, type ShortAccountingPeriodData, type StandardDeductionData } from "@/lib/guided-standard-deduction-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 
-export function StandardDeductionSourceDetails({ data, filingStatus, onChange }: { data: StandardDeductionData | undefined; filingStatus: FilingStatus | null; onChange: (data: StandardDeductionData) => void }) {
+export function StandardDeductionSourceDetails({ data, filingStatus, taxYear, personal, onChange }: {
+  data: StandardDeductionData | undefined;
+  filingStatus: FilingStatus | null;
+  taxYear?: number | null;
+  personal?: PersonalInfoData;
+  onChange: (data: StandardDeductionData) => void;
+}) {
   const current = data ?? {};
   const update = (next: Partial<StandardDeductionData>) => onChange({ ...current, ...next });
   const spouseFacts = filingStatus === "mfj" || (filingStatus === "mfs" && current.claimSpouseAdditionalDeduction);
+  const shortPeriod = current.shortAccountingPeriod ?? { startsOn: "", endsOn: "", sourceReference: "", sourceFactsConfirmed: null };
+  const updatePeriod = (patch: Partial<ShortAccountingPeriodData>) => update({
+    shortAccountingPeriod: { ...shortPeriod, sourceFactsConfirmed: null, ...patch },
+  });
+  const readyPeriod = readGuidedShortAccountingPeriod({
+    ...current, shortAccountingPeriod: { ...shortPeriod, sourceFactsConfirmed: true },
+  }, filingStatus, taxYear, personal);
   return <fieldset className="guided-fieldset"><legend>Standard deduction eligibility</legend>
     <p className="guided-hint">Age comes from actual birth and death dates. Confirm blindness using the IRS definition and use claimable dependency even if another person chooses not to claim you. <a href="https://www.irs.gov/publications/p501" target="_blank" rel="noreferrer">Review Publication 501</a>.</p>
     <BooleanFact label="Were you blind under the IRS standard-deduction definition?" value={current.primaryBlind} onChange={primaryBlind => update({ primaryBlind })} />
@@ -17,6 +30,18 @@ export function StandardDeductionSourceDetails({ data, filingStatus, onChange }:
     <BooleanFact label="Were you a dual-status alien during this tax year?" value={current.dualStatusAlien} onChange={dualStatusAlien => update({ dualStatusAlien })} />
     <BooleanFact label="Were you a nonresident alien for the standard-deduction rules?" value={current.nonresidentAlien} onChange={nonresidentAlien => update({ nonresidentAlien })} />
     <BooleanFact label="Is this a short tax year because of an accounting-period change?" value={current.shortTaxYear} onChange={shortTaxYear => update({ shortTaxYear })} />
+    {current.shortTaxYear === true && filingStatus === "single" && <fieldset className="guided-fieldset">
+      <legend>Short accounting period</legend>
+      <p className="guided-hint">You can save these details as a draft. For a regular month-end change, enter one to eleven whole months beginning in the selected return year. Form 1128 line 2c is one place to find the dates.</p>
+      <TextFact label="Short period start date" type="date" value={shortPeriod.startsOn} onChange={startsOn => updatePeriod({ startsOn })} />
+      <TextFact label="Short period end date" type="date" value={shortPeriod.endsOn} onChange={endsOn => updatePeriod({ endsOn })} />
+      <TextFact label="Source reference" value={shortPeriod.sourceReference} onChange={sourceReference => updatePeriod({ sourceReference })} />
+      <p className="guided-hint">Use a document label you’ll recognize. To confirm, complete the taxpayer details above. Confirmation is available for living single filers.</p>
+      {readyPeriod && <BooleanFact label="Do the dates match this taxpayer’s prior return and the approval or applicable automatic approval procedure, with both accounting years using regular month ends?" value={shortPeriod.sourceFactsConfirmed} onChange={sourceFactsConfirmed => updatePeriod({ sourceFactsConfirmed })} />}
+      {readyPeriod && shortPeriod.sourceFactsConfirmed === true && <p className="guided-hint" role="status">
+        Recorded {readyPeriod.months} {readyPeriod.months === 1 ? "whole month" : "whole months"}. Annualized tax calculation remains unavailable.
+      </p>}
+    </fieldset>}
     {filingStatus === "mfj" && (current.dualStatusAlien || current.nonresidentAlien) && <BooleanFact label="Did you make the qualifying resident joint-return election for the standard deduction?" value={current.residentJointElection} onChange={residentJointElection => update({ residentJointElection })} />}
     {filingStatus === "mfs" && <>
       <BooleanFact label="Does your spouse itemize deductions on their separate return?" value={current.spouseItemizes} onChange={spouseItemizes => update({ spouseItemizes })} />

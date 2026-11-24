@@ -34,6 +34,24 @@ lines:
       section 443 annualization is unavailable.
     irsRef: "26 U.S.C. §443(b)–(d), https://uscode.house.gov/us/usc/t26/s443/"
     testRef: "tests/engine/workspace-calculation-context.test.ts::holds the exported workspace preview for an accounting-period change"
+  - line: "short-accounting-year-guided-period-facts"
+    description: "Save the actual short taxable period for a living single filer"
+    formula: >-
+      Retain the actual inclusive start and end dates, a local source reference,
+      and the filer's confirmation that the dates reconcile to the same
+      taxpayer's prior accounting year and the approval or applicable automatic
+      approval procedure. Form 1128 line 2c is one possible date source.
+      For changes between regular month-end annual periods,
+      require one to eleven whole months. The start year must match the
+      selected Form 1040 year. Derive the former year end as the day before the
+      start and the new year start as the day after the end. Preserve incomplete
+      and legacy drafts. Confirmation requires an actual living taxpayer whose
+      birth date is on or before the former year end. Changing source details,
+      taxpayer identity or chosen year requires reconfirmation. Keep these
+      draft facts outside calculation and provider requests and outside source
+      comparisons for other calculations. Retain the whole-return hold.
+    irsRef: "26 U.S.C. §443(a)(1), https://uscode.house.gov/us/usc/t26/s443/, Form 1128 Part I line 2c, https://www.irs.gov/pub/irs-pdf/f1128.pdf, and 2025 Form 1040 header, https://www.irs.gov/pub/irs-prior/f1040--2025.pdf"
+    testRef: "tests/guided-interview/guided-standard-deduction-facts.test.ts::records a confirmed short period across calendar years without projecting tax facts"
   - line: "savings-bond-exclusion-addbacks"
     description: "Actual exclusions are added back for education savings bond MAGI"
     formula: "Pre-bond-exclusion AGI plus studentloaninterest deduction, net2555lines45+50, and actual8839benefit exclusion; possession exclusions require their separate actual source contract"

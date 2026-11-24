@@ -161,10 +161,12 @@ function DependentCard({
 export function SectionPersonalInfo({
   data,
   filingStatus,
+  taxYear,
   onDataChange,
 }: {
   data: PersonalInfoData | undefined;
   filingStatus: FilingStatus | null;
+  taxYear?: number | null;
   onDataChange: (data: PersonalInfoData) => void;
 }) {
   const current = data ?? emptyPersonalInfo;
@@ -423,7 +425,7 @@ export function SectionPersonalInfo({
             ))}
           </div>
         )}
-        <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
+        <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} taxYear={taxYear} personal={current} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
         <EicClaimantSourceDetails data={current.eicClaimantEligibility} filingStatus={filingStatus} childless={!hasRecordedEicChild(current, filingStatus)} primaryDependent={current.standardDeductionFacts?.primaryCanBeClaimedAsDependent} spouseDependent={current.standardDeductionFacts?.spouseCanBeClaimedAsDependent} onChange={eicClaimantEligibility => onDataChange({ ...current, eicClaimantEligibility })} />
         <EicSeparatedSpouseDetails personal={current} filingStatus={filingStatus} onChange={eicSeparatedSpouseSources => onDataChange({ ...current, eicSeparatedSpouseSources })} />
         <EicDisallowanceHistoryDetails personal={current} filingStatus={filingStatus} onChange={eicDisallowanceHistory => onDataChange({ ...current, eicDisallowanceHistory })} />

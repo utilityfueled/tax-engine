@@ -56,7 +56,7 @@ import { form8919ReasonAFactErrors } from "./guided-form-8919-reason-a";
 import { hasMovingW2Source, invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
 import { healthInsuranceSourceErrors, invalidateHealthInsuranceSources, type HealthInsuranceData } from "./guided-health-insurance-facts";
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
-import type { StandardDeductionData } from "./guided-standard-deduction-facts";
+import { invalidateEditedShortAccountingPeriod, withoutPrivateShortAccountingPeriod, type StandardDeductionData } from "./guided-standard-deduction-facts";
 import { educatorFactErrors, educatorBondFactErrors, type EducatorSourceData } from "./guided-educator-facts";
 import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanData, type StudentLoanEducationSources } from "./guided-student-loan-facts";
 /**
@@ -1745,6 +1745,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   }
   const personal = state.sectionData["personal-info"];
   const spouse = personal?.spouse;
+  const shortAccountingPeriod = personal?.standardDeductionFacts?.shortAccountingPeriod;
   const filerYearFactsEntered = personal && [
     personal.usResidencyMonths, personal.stateResidency, personal.livedWithSpouseAtAnyTimeDuringYear,
     personal.employmentValidSsnIssuedByDueDate, personal.tinIssuedByDueDate,
@@ -1802,9 +1803,12 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           ...(directItemizedAmountFields.some(field => hasEnteredAmount(deductions[field])) ? { directItemizedAmountsTaxYear: null } : {}),
         },
       } : {}),
-      ...(personal && (filerYearFactsEntered || personal.dependents?.length) ? {
+      ...(personal && (filerYearFactsEntered || personal.dependents?.length || shortAccountingPeriod?.sourceFactsConfirmed === true) ? {
         "personal-info": {
           ...personal,
+          ...(shortAccountingPeriod?.sourceFactsConfirmed === true ? {
+            standardDeductionFacts: { ...personal.standardDeductionFacts, shortAccountingPeriod: { ...shortAccountingPeriod, sourceFactsConfirmed: null } },
+          } : {}),
           ...(filerYearFactsEntered ? {
             usResidencyMonths: "",
             stateResidency: null,
@@ -2099,6 +2103,9 @@ export function updateSectionData(
   sectionId: string,
   data: unknown,
 ): GuidedFlowState {
+  if (sectionId === "personal-info" && data) {
+    data = invalidateEditedShortAccountingPeriod(state.sectionData["personal-info"], data as PersonalInfoData, state.segmentation.filingStatus, state.taxYear);
+  }
   const previousDeductions = state.sectionData.deductions;
   if (sectionId === "deductions" && data && previousDeductions) {
     const next = data as DeductionData;
@@ -2150,7 +2157,13 @@ export function updateSectionData(
   // Retaining the reviewed bank-original snapshot is custody metadata, not new income.
   const educationDocumentaryValues = (value: unknown) => value && typeof value === 'object' && 'educationDistributions' in value
     ? { ...value, educationDistributions: educationOriginalValues(value.educationDistributions) } : value;
-  const documentaryValues=(value:unknown)=>sectionId==='additional-deductions'?rrtaDocumentaryValues(value):sectionId==='income-unemployment'?refundDocumentaryValues(value):sectionId==='credits'?educationDocumentaryValues(value):value;
+  const documentaryValues = (value: unknown) => {
+    if (sectionId === "personal-info") return withoutPrivateShortAccountingPeriod(value as PersonalInfoData | undefined);
+    if (sectionId === "additional-deductions") return rrtaDocumentaryValues(value);
+    if (sectionId === "income-unemployment") return refundDocumentaryValues(value);
+    if (sectionId === "credits") return educationDocumentaryValues(value);
+    return value;
+  };
   const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
   const previousStateReturn = state.sectionData["state-return"];
   const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
@@ -2185,7 +2198,10 @@ export function updateSectionData(
   const eicSeparatedSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicSeparatedSpouseSources;
   const eicCurrentSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicRecertificationSources;
   const eicHistorySourcesChanged = sectionId === "personal-info" && nextPersonal?.eicDisallowanceHistory
-    && eicHistorySourceValuesChanged(state.sectionData["personal-info"], nextPersonal) ? nextPersonal.eicDisallowanceHistory : undefined;
+    && eicHistorySourceValuesChanged(
+      withoutPrivateShortAccountingPeriod(state.sectionData["personal-info"]),
+      withoutPrivateShortAccountingPeriod(nextPersonal),
+    ) ? nextPersonal.eicDisallowanceHistory : undefined;
   const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
   const previousGovernment = state.sectionData["income-unemployment"];
   const farmSourcesChanged = nextGovernment?.cashFarm && (
@@ -2308,7 +2324,7 @@ export function updateSectionData(
   const minimumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "credits"].includes(sectionId) && nextCredits?.minimumTaxCredit;
   const premiumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "additional-deductions"].includes(sectionId) && nextCredits?.premiumTaxCredit;
   const educationSourcesChanged = !!nextCredits?.educationDistributions && (
-    ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
+    ((sectionId === "personal-info" || sectionId === "adjustments") && sourceValuesChanged) ||
     (sectionId === "income-investments" && nextCredits.educationDistributions?.forms?.some(row => row.bankInterestConversion) && sourceValuesChanged) ||
     (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation)
       || educationDistributionSourcesChanged(credits?.educationDistributions, nextCredits.educationDistributions)))

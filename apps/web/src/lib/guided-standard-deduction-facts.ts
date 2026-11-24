@@ -1,18 +1,94 @@
+import { isActualDate } from "@/utils/civil-date";
 import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
+import { hasTaxId, isActualBirthDate } from "./guided-taxpayer-identity";
 
 export { assertSupportedWholeReturnAccountingPeriod } from "@/engine/federal-return-admission";
+
+export interface ShortAccountingPeriodData {
+  startsOn: string;
+  endsOn: string;
+  sourceReference: string;
+  sourceFactsConfirmed: boolean | null;
+}
 
 export interface StandardDeductionData {
   primaryBlind?: boolean | null; spouseBlind?: boolean | null;
   primaryCanBeClaimedAsDependent?: boolean | null; spouseCanBeClaimedAsDependent?: boolean | null;
   spouseItemizes?: boolean | null; dualStatusAlien?: boolean | null; nonresidentAlien?: boolean | null;
   residentJointElection?: boolean | null; shortTaxYear?: boolean | null;
+  shortAccountingPeriod?: ShortAccountingPeriodData;
   dependentEarnedIncome?: string;
   primaryDeceased?: boolean | null; primaryDeathDate?: string;
   spouseDeceased?: boolean | null; spouseDeathDate?: string;
   claimSpouseAdditionalDeduction?: boolean | null; spouseHasGrossIncome?: boolean | null; spouseFilesReturn?: boolean | null;
 }
+
+function shortPeriodOwner(personal: PersonalInfoData | undefined) {
+  return {
+    firstName: personal?.firstName?.trim(),
+    middleName: personal?.middleName?.trim() || undefined,
+    lastName: personal?.lastName?.trim(),
+    ssn: personal?.ssn?.replace(/-/g, "") ?? "",
+    dateOfBirth: personal?.dateOfBirth,
+  };
+}
+
+export function readGuidedShortAccountingPeriod(
+  data: StandardDeductionData | undefined,
+  status: FilingStatus | null,
+  taxYear: number | null | undefined,
+  personal: PersonalInfoData | undefined,
+) {
+  const period = data?.shortAccountingPeriod;
+  if (status !== "single" || data?.shortTaxYear !== true || data.primaryDeceased !== false || data.primaryDeathDate?.trim() ||
+      period?.sourceFactsConfirmed !== true || typeof period.sourceReference !== "string" || !period.sourceReference.trim() ||
+      !isActualDate(period.startsOn) || !isActualDate(period.endsOn)) return null;
+
+  const owner = shortPeriodOwner(personal);
+  if (!owner.firstName || !owner.lastName || !hasTaxId(personal?.ssn) || !isActualBirthDate(owner.dateOfBirth, taxYear)) return null;
+
+  const formerClose = new Date(`${period.startsOn}T00:00:00Z`);
+  if (formerClose.getUTCFullYear() !== taxYear || formerClose.getUTCDate() !== 1) return null;
+
+  const newStart = new Date(`${period.endsOn}T00:00:00Z`);
+  newStart.setUTCDate(newStart.getUTCDate() + 1);
+  const months = 12 * (newStart.getUTCFullYear() - formerClose.getUTCFullYear()) + newStart.getUTCMonth() - formerClose.getUTCMonth();
+  if (newStart.getUTCDate() !== 1 || months < 1 || months > 11) return null;
+
+  formerClose.setUTCDate(0);
+  const formerYearEndsOn = formerClose.toISOString().slice(0, 10);
+  if (owner.dateOfBirth > formerYearEndsOn) return null;
+  return { formerYearEndsOn, newYearStartsOn: newStart.toISOString().slice(0, 10), months };
+}
+
+export function withoutPrivateShortAccountingPeriod(personal: PersonalInfoData | undefined): PersonalInfoData | undefined {
+  const facts = personal?.standardDeductionFacts;
+  if (!personal || !facts || typeof facts !== "object" || !("shortAccountingPeriod" in facts)) return personal;
+
+  const standardDeductionFacts = { ...facts };
+  delete standardDeductionFacts.shortAccountingPeriod;
+  return { ...personal, standardDeductionFacts };
+}
+
+export function invalidateEditedShortAccountingPeriod(
+  previous: PersonalInfoData | undefined,
+  next: PersonalInfoData,
+  status: FilingStatus | null,
+  taxYear: number | null | undefined,
+): PersonalInfoData {
+  const facts = next.standardDeductionFacts;
+  const period = facts?.shortAccountingPeriod;
+  if (period?.sourceFactsConfirmed !== true) return next;
+
+  if (!guidedSourceValuesChanged(previous?.standardDeductionFacts?.shortAccountingPeriod, period) &&
+      !guidedSourceValuesChanged(shortPeriodOwner(previous), shortPeriodOwner(next)) &&
+      readGuidedShortAccountingPeriod(facts, status, taxYear, next)) return next;
+
+  return { ...next, standardDeductionFacts: { ...facts, shortAccountingPeriod: { ...period, sourceFactsConfirmed: null } } };
+}
+
 const boolFields = ["primaryBlind", "spouseBlind", "primaryCanBeClaimedAsDependent", "spouseCanBeClaimedAsDependent", "spouseItemizes", "dualStatusAlien", "nonresidentAlien", "residentJointElection", "shortTaxYear", "claimSpouseAdditionalDeduction", "spouseHasGrossIncome", "spouseFilesReturn"] as const;
 function actualDate(value: string | undefined, year?: number | null, birth?: string) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;

@@ -516,6 +516,7 @@ function SectionContent({
           <SectionPersonalInfo
             data={getSectionData(state, "personal-info")}
             filingStatus={state.segmentation.filingStatus}
+            taxYear={state.taxYear}
             onDataChange={(data: PersonalInfoData) =>
               onStateChange(updateSectionData(state, "personal-info", data))
             }
