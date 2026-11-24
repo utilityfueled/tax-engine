@@ -5,6 +5,14 @@
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
 
+- `caa601bf` holds whole-return estimates, official review PDFs and
+  verified AI amounts when an actual change in accounting period requires
+  annualization. Four red checks reproduced the erroneous outputs.
+  All 11 exact local checks passed, with 30,259 unit tests, 88.28% branch
+  coverage and 650 active Chromium cases. The §443 computation needs
+  period facts and a qualified calculation method.
+  [Accounting-period gate evidence](upgrade-2026-progress.md#november-23-whole-return-short-accounting-period-admission).
+
 - `21f7fd27` names the state return being prepared and explicitly asks
   for Pennsylvania residency in the source form. Nineteen focused tests,
   six desktop/mobile Chromium checks and the exact web build passed.
@@ -24,8 +32,10 @@ deferred at the owner’s direction. Their readiness criteria remain open.
 
 - `2141344d` adds an independently reviewed native browser timing report
   with case durations, original deadlines, and source and image identity.
-  The latest combined ARM64 rehearsal is queued under the same strict gate.
-  [Exact combined native rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506).
+  The combined run passed Compose recovery and hit ten Ohio browser
+  deadlines. The latest exact ARM64 rehearsal is running under the same gate.
+  [Combined timing report](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506) ·
+  [Latest exact native rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45314287203).
 
 - `ee9a728d` disallows child, other dependent, additional child and earned
   income credits for an actual short accounting-period year. Ordinary

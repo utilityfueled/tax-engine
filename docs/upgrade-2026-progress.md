@@ -1,5 +1,35 @@
 # 2026 upgrade implementation evidence
 
+## November 23 whole-return short accounting-period admission
+
+`caa601bf` checks the confirmed accounting-period-change fact before the
+complete guided estimate, official review PDF calculation, and verified AI
+audit. On the baseline an actual short-period fixture produced ordinary
+whole-return metrics, a successful PDF response, a verified AI receipt and
+a successful explanation response. Those four regressions now hold the
+unsupported result. The guided interview reports the annualization reason.
+The actual review and verified explanation endpoints return their existing
+400 response. The explanation test observes zero provider or accounting
+attempts. Ordinary decedent and explicit No controls still produce verified
+amounts, and the original answer survives save and reopen.
+
+All 104 focused guided/PDF and AI tests passed. A separate seven-suite
+guided, PDF and federal check passed 112 tests, including credit components.
+Both specs validated 110 references. Web typechecking, scoped lint, 62
+browser audit tests and the clean tracked inventory check passed. The
+required facts and computation for §443 annualization remain open. Vercel
+canceled the production build.
+The exact source passed all eight static and build checks and the GitHub
+Docker build. The standalone exact unit and coverage commands each passed
+30,259 tests. Branch coverage was 88.28% against the 85% gate. The exact
+local Chromium run completed all eight batches with 650 passing cases
+and five original skips. This completed all eleven required local checks.
+[26 U.S.C. §443](https://uscode.house.gov/us/usc/t26/s443/) ·
+[IRS Publication 538](https://www.irs.gov/publications/p538) ·
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45316612124) ·
+[Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45314151484) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45314287203).
+
 ## November 23 Pennsylvania state return wording
 
 `21f7fd27` asks which state return the taxpayer is preparing. The control's
@@ -17,8 +47,13 @@ Pennsylvania save and reopen at both desktop and mobile widths. The tested
 patch matches the commit. Exact branch coverage was 88.28%, with 30,256
 tests passed. All eight static and build checks and the exact GitHub Docker
 build passed. The first full unit run overlapped coverage and browser work
-and reported 20 timeout failures. The exact standalone rerun is queued
-after the local Chromium suite. Vercel canceled the production build.
+and reported 20 failures with timeout diagnostics. Running the same unit
+command by itself passed 30,256 tests. The complete browser command first
+stopped at its approved source fingerprint check. `a2c07234` binds the
+14 reviewed wording and locator files and the companion diagnostic digest.
+All 62 focused audit tests passed. The exact corrected revision passed
+all 650 active Chromium cases across eight batches with five original
+skips. Vercel canceled both production builds.
 [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45311213842) ·
 [Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45311213803) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45311213930) ·
@@ -108,6 +143,18 @@ archive verification, Compose recovery, image evidence collection and
 cleanup. Chromium passed 641 cases and hit nine 30-second Ohio case
 deadlines across batches 6 and 7. Five original cases remained skipped.
 [Completed ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45299047812/job/138143336150).
+
+The exact combined `c066ab20` ARM64 run passed image smoke, independent
+archive verification, Compose recovery, image evidence collection and
+cleanup. All eight strict browser batches completed. They passed 640 cases,
+hit ten Ohio deadlines in batches 6 and 7, and retained five original
+skips. The candidate-bound timing artifact matched all 655 case IDs to
+the exact managed macOS suite. The ten failing cases passed locally in
+8.427–18.408 seconds and spent 31.595–33.530 seconds in the strict run.
+The captured failures span several operations. The timing comparison leaves
+their common cause unresolved. The exact latest `caa601bf` run follows
+under the same deadlines.
+[Combined ARM64 job and timing evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506/job/138167053818).
 
 `2141344d` publishes bounded synthetic-browser case durations, original
 deadlines, statuses and fixed failure classifications or validated source
