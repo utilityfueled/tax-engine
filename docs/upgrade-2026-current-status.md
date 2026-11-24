@@ -10,14 +10,18 @@ for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
 - The exact `5f32cf32` archive passed 30,367 unit and coverage tests
-  in each run, with 81 conditional skips and 88.31% branches.
+  in each run, with 81 conditional skips and 88.31% branches. Build,
+  web types, lint and verification of all 9,986 spec test references
+  also passed.
   [Exact local checks](upgrade-2026-progress.md#november-24-exact-main-unit-and-coverage-run).
 
 - `33b6a593` adds renderer scheduler observations to the opt-in Linux
   comparison of Ohio journeys. All 116 focused tests and four local
   Chromium cases passed. The exact managed Chromium run passed all 652
-  active cases with five original skips. The strict Linux comparison
-  is running at the original deadlines.
+  active cases with five original skips. Both focused Linux legs passed
+  ten cases each, with about 42 ms median renderer runnable wait in
+  each mode. The full strict run passed 646 and missed six Ohio
+  deadlines. Its header entry median was 5,238 ms.
   [Scheduler evidence](upgrade-2026-progress.md#november-24-ohio-linux-scheduler-comparison).
 
 - `ae399bd1` compares the current and candidate Python versions on the

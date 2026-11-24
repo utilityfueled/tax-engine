@@ -16,7 +16,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Qualify Linux browsers with original limits. On a2568205 strict AMD64 missed six Ohio deadlines and managed Chromium missed two RRTA saved-PDF deadlines. On d439de12 strict ARM64 missed ten Ohio deadlines. Strict recovery and archive verification passed. The opt-in Linux scheduler comparison for 33b6a593 is running.",
+      "Qualify Linux browsers with original limits. On 33b6a593 the managed browser passed 652 active cases. The strict AMD64 suite still missed six Ohio deadlines, and both focused Ohio comparison legs passed ten cases. On d439de12 strict ARM64 missed ten Ohio deadlines. Strict recovery and archive verification passed.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -33,6 +33,10 @@
       "conditionalSkips": 81,
       "branchCoveragePercent": 88.31,
       "initialSandboxRun": "The suite's loopback bind was denied in the default sandbox. The allowed localhost run and coverage passed.",
+      "build": "passed",
+      "webTypes": "passed",
+      "specTestReferencesVerified": 9986,
+      "lint": {"errors": 0, "warnings": 12204},
       "localEvidence": ".local/upgrade-evidence/nov24-verified-main-5f32cf32"
     },
     "nov24RRTALinuxComparison": {
@@ -80,7 +84,11 @@
       "otherChecks": ["independent engineering review", "web types", "scoped lint", "browser source audit", "diff check"],
       "githubComparison": 45403356011,
       "managedBrowser": {"job": 138477436768, "passed": 652, "failed": 0, "originalSkips": 5, "runnerImage": "ubuntu-26.04/20261116.88"},
-      "githubComparisonStatus": "in progress on the bound diagnostic revision"
+      "githubComparisonStatus": "finished; both focused legs passed and the original strict suite missed six Ohio deadlines",
+      "strictAMD64": {"job": 138477436836, "passed": 646, "failedDeadlines": 6, "originalSkips": 5, "recoveryRollback": "passed", "archive": "passed", "imageScan": "passed", "cleanup": "passed"},
+      "focused": {"containerPassed": 10, "managedPassed": 10, "headerMedianMs": {"container": 2805, "managed": 2952}, "rendererCPUTimeMedianMs": {"container": 2515.629, "managed": 2655.829}, "rendererRunnableWaitMedianMs": {"container": 41.826, "managed": 41.988}, "rendererSamplesPerMode": 4},
+      "fullStrictHeaderMedianMs": 5238,
+      "localProjection": ".local/upgrade-evidence/nov24-strict-browser-differential/SCHEDULER-RESULT.json"
     },
     "nov24PennsylvaniaBalanceConfirmation": {
       "applicationCommit": "a25682058f2165d1a91f749b7b994f254a8a7aa7",

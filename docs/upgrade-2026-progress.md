@@ -8,6 +8,9 @@ Node 26.13.1. Branch coverage was 88.31% against the 85% requirement.
 The first execution under the default tool sandbox could not open the
 suite's required loopback listener. The allowed localhost run and
 coverage calculation both completed with the existing test settings.
+The CLI build, web type check and spec validation passed. All 9,986
+spec test references resolved. Lint completed with zero errors and
+12,204 warnings.
 
 ## November 24 Ohio Linux scheduler comparison
 
@@ -31,9 +34,20 @@ tests, and four local Chromium school-district journeys passed. The
 exact browser source audit, scoped lint, web types and diff check also
 passed. The exact `33b6a593` managed job subsequently passed all 652
 active tests with five original skips on Ubuntu 26.04 image
-`20261116.88`. The strict container and scheduler comparison are in
-progress. [Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011/job/138477436768) ·
-[Comparison run](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011).
+`20261116.88`. The full strict AMD64 run passed 646 cases with
+five original skips and six Ohio deadline misses. Compose recovery,
+rollback, independent archive verification, image scanning and
+cleanup passed.
+[Managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011/job/138477436768) ·
+[Strict job](https://github.com/utilityfueled/tax-engine/actions/runs/45403356011/job/138477436836).
+
+Both focused legs passed all ten cases. The median school-district header
+entry was 2,805 ms in the container leg and 2,952 ms in the managed leg.
+The worker browser's renderer main-thread medians were 2,516 ms and
+2,656 ms of CPU time, and about 42 ms of runnable wait in both modes.
+The four corresponding header phases had a 5,238 ms median during the
+full strict run. Scheduler counters are available for the focused
+comparison. The full-suite slowdown still needs attribution.
 
 ## November 24 Pennsylvania balance receipt confirmations
 
