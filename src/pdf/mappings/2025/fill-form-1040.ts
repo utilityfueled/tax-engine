@@ -229,6 +229,7 @@ export async function fillForm1040(
   fields.setCheckBox(F.qss, status === "qualifying_surviving_spouse");
 
   // ── Dependents (up to 4) ──
+  const childCreditsAllowedForTaxYear = result.form8812?.shortTaxYearDisallowed !== true;
   const depFields = [
     { first: F.dep1FirstName, last: F.dep1LastName, ssn: F.dep1SSN, rel: F.dep1Relationship, ctc: F.dep1CTC, odc: F.dep1ODC },
     { first: F.dep2FirstName, last: F.dep2LastName, ssn: F.dep2SSN, rel: F.dep2Relationship, ctc: F.dep2CTC, odc: F.dep2ODC },
@@ -242,8 +243,8 @@ export async function fillForm1040(
     fields.setText(df.last, dep.lastName);
     fields.setText(df.ssn, stripSSN(dep.ssn));
     fields.setText(df.rel, dep.relationship);
-    fields.setCheckBox(df.ctc, dep.qualifiesForCTC);
-    fields.setCheckBox(df.odc, dep.qualifiesForODC ?? false);
+    fields.setCheckBox(df.ctc, childCreditsAllowedForTaxYear && dep.qualifiesForCTC);
+    fields.setCheckBox(df.odc, childCreditsAllowedForTaxYear && dep.qualifiesForODC === true);
   }
 
   // ── Page 1 Income Lines ──

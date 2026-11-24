@@ -29,6 +29,45 @@ function packet(joint = false) {
 }
 
 describe('actual EIC claimant eligibility', () => {
+  it('applies the short accounting-period year restriction to the canonical EIC', () => {
+    const input = source();
+    input.standardDeductionFacts = { ...input.standardDeductionFacts, shortTaxYear: false, primaryDeathDate: '2025-08-01' };
+    expect(credit(input)).toBe('649');
+
+    input.standardDeductionFacts = { ...input.standardDeductionFacts, shortTaxYear: true };
+    input.deductionElection = 'itemized';
+    expect(credit(input)).toBe('0');
+    const result = calculateFederalTax(TaxYearInputSchema.parse(input));
+    expect(result.allLines.find(line => line.form === 'EIC' && line.line === '27a')).toMatchObject({
+      formula: expect.stringMatching(/IRC32\(e\)/),
+    });
+  });
+
+  it('applies section 32(e) to indexed 2026 EIC with and without claimant sources', () => {
+    const input = source();
+    input.taxpayer.taxYear = 2026;
+    input.standardDeductionFacts = { ...input.standardDeductionFacts, shortTaxYear: false, primaryDeathDate: '2026-08-01' };
+    input.eic = { mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility: { ...packet(), sourceTaxYear: 2026 } };
+    const run = () => calculateEic({
+      claimantInput: input, disallowanceInput: { taxpayer: input.taxpayer, sources: fictionalEmptyEicHistory(input.taxpayer) },
+      filingStatus: 'single', qualifyingChildren: 0, earnedIncome: new Decimal(10000), agi: new Decimal(10000),
+      investmentIncome: new Decimal(0), mfsEicEligible: false,
+    }, FEDERAL_2026_CONSTANTS);
+    expect(run().credit.toFixed()).toBe('664');
+
+    input.standardDeductionFacts.shortTaxYear = true;
+    expect(run().credit.toFixed()).toBe('0');
+    expect(calculateEicClaimantEligibility(input, true).sourceFactsComplete).toBe(true);
+
+    required(input.eic.claimantEligibility).sourceTaxYear = 2025;
+    expect(run).toThrow(/source year/);
+    delete input.eic;
+    expect(run().credit.toFixed()).toBe('0');
+    expect(calculateEicClaimantEligibility(input, true)).toMatchObject({
+      sourceFactsComplete: false, disqualificationReason: expect.stringMatching(/IRC32\(e\)/),
+    });
+  });
+
   it('rejects known ineligible SSNs and nonresident claimants in the canonical return', () => {
     const control = source();
     expect(credit(control)).toBe('649'); // Published2025 maximum;10,000 is in the plateau.

@@ -3135,6 +3135,7 @@ export const StandardDeductionFactsSchema = z.object({
   dualStatusAlien: z.boolean().optional(),
   nonresidentAlien: z.boolean().optional(),
   residentJointElection: z.boolean().optional(),
+  /** The return covers a short taxable year because of an accounting-period change. */
   shortTaxYear: z.boolean().optional(),
   dependentEarnedIncome: optionalDecimalInput,
   primaryDeathDate: z.string().nullable().optional(),

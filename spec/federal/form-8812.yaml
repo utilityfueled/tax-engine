@@ -13,6 +13,12 @@ notes: |
   Maximum refundable per child: $1,700 (2025).
 
 lines:
+  - line: "short-tax-year-eligibility"
+    description: "Disallow section 24 credits on a return shortened by an accounting-period change"
+    formula: "For 2025 and 2026, apply IRC section 24(f) before counting claimed children or other dependents. A confirmed short year because of an accounting-period change makes CTC, ODC, and ACTC zero. A death date never overrides the confirmed closing cause. An ordinary decedent final return for which death ended the taxable period remains eligible under the ordinary credit rules, as does a full year. Preserve an omitted legacy accounting-period answer and skip the Schedule 8812 restriction audit when no credit is claimed. On a disallowed return, retain dependent identities and omit the CTC and ODC checkmarks on Form 1040."
+    irsRef: "https://uscode.house.gov/us/usc/t26/s24/; https://uscode.house.gov/us/usc/t26/s443/; https://www.irs.gov/publications/p538; https://www.irs.gov/publications/p559"
+    testRef: "tests/engine/federal-ctc-facts.test.ts::Schedule 8812 short taxable years under IRC section 24(f)"
+
   - line: "9"
     description: "Phase-out threshold"
     formula: "$400,000 if MFJ; $200,000 for all other filing statuses (single, HoH, MFS, QSS)"

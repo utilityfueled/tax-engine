@@ -41,6 +41,27 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
 
 const BLANK_PDF = "forms/blank/2025/f1040.pdf";
 
+it("clears section 24 boxes for an accounting-change short year while retaining the dependents", async () => {
+  // spec/federal/form-8812.yaml, short-tax-year-eligibility
+  const input = structuredClone(simpleW2Fixture);
+  input.taxpayer.dependents = [
+    { firstName: "Child", lastName: "Example", ssn: "900-70-0140", relationship: "child", dateOfBirth: "2017-05-08", monthsLivedWithYou: 6, qualifiesForCTC: true },
+    { firstName: "Other", lastName: "Example", ssn: "900-70-0141", relationship: "child", dateOfBirth: "2005-05-08", monthsLivedWithYou: 6, qualifiesForCTC: false, qualifiesForODC: true },
+  ];
+  const fullYear = await fillForm1040(input, calculateFederalTax(input), BLANK_PDF);
+  expect(isChecked(fullYear, FORM_1040_FIELDS.dep1CTC)).toBe(true);
+  expect(isChecked(fullYear, FORM_1040_FIELDS.dep2ODC)).toBe(true);
+
+  input.standardDeductionFacts = { ...input.standardDeductionFacts, shortTaxYear: true };
+  const shortYear = await fillForm1040(input, calculateFederalTax(input), BLANK_PDF);
+  expect(isChecked(shortYear, FORM_1040_FIELDS.dep1CTC)).toBe(false);
+  expect(isChecked(shortYear, FORM_1040_FIELDS.dep2ODC)).toBe(false);
+  expect(getFieldText(shortYear, FORM_1040_FIELDS.dep1FirstName)).toBe("Child");
+  expect(getFieldText(shortYear, FORM_1040_FIELDS.dep2FirstName)).toBe("Other");
+  expect(getFieldText(shortYear, FORM_1040_FIELDS.line19)).toBeUndefined();
+  expect(getFieldText(shortYear, FORM_1040_FIELDS.line28)).toBeUndefined();
+});
+
 // ─── Format Utility Tests ──────────────────────────────────────────────────
 
 describe("formatCurrency", () => {

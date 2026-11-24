@@ -61,15 +61,21 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
   for (const filer of filers) {
     if (filer.employmentValidSsnIssuedByDueDate === true && filer.tinIssuedByDueDate === false) throw new Error("EIC timely work-authorized SSN conflicts with the actual untimely taxpayer ID answer");
   }
+  // This answer records an accounting-period change. A reported death date
+  // does not change the reason for the short return.
+  const shortYearRestriction = standard?.shortTaxYear === true
+    ? "EIC is disallowed for a short tax year caused by an accounting-period change (IRC32(e))" : undefined;
   const primaryKnownNonresident = standard?.nonresidentAlien === true || standard?.dualStatusAlien === true
     ? true : standard?.nonresidentAlien === false && standard.dualStatusAlien === false ? false : undefined;
-  if (facts === undefined && taxpayer.taxYear === 2026) {
+  if (facts === undefined && (taxpayer.taxYear === 2026 || shortYearRestriction !== undefined)) {
     // A known negative is sufficient for zero, but never supplies other unknown
     // affirmative eligibility facts. An explicitly supplied packet still takes
     // the full reconciliation path below, including for a zero credit.
     let reason: string | undefined;
     let age: boolean | undefined;
-    if (filers.some(filer => filer.employmentValidSsnIssuedByDueDate === false)) {
+    if (shortYearRestriction) {
+      reason = shortYearRestriction;
+    } else if (filers.some(filer => filer.employmentValidSsnIssuedByDueDate === false)) {
       reason = "Each claimant, including both joint filers, must have a timely employment-valid SSN (Pub596 Rule2)";
     } else if (primaryKnownNonresident === true && (!joint || standard?.residentJointElection === false)) {
       reason = "A nonresident claimant requires a valid joint resident election (IRC32(c)(1)(D); Pub596 Rule4)";
@@ -109,6 +115,7 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
     ? "Each claimant, including both joint filers, must have a timely employment-valid SSN (Pub596 Rule2)"
     : nonresident && (!joint || election !== true)
       ? "A nonresident claimant requires a valid joint resident election (IRC32(c)(1)(D); Pub596 Rule4)" : undefined;
+  disqualificationReason ??= shortYearRestriction;
 
   // Rules10/13 share the same claimant restriction, including a filer who has
   // their own qualifying child. Preserve/reconcile the earlier source spelling.

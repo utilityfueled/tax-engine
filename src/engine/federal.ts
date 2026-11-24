@@ -4418,7 +4418,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (form8936) audit.merge(form8936.lines);
 
   // ── Form 8812: Child Tax Credit (nonrefundable + refundable ACTC) ──
-  const {qualifyingChildren, otherDependents} = calculateChildCreditEligibility(input);
+  const {qualifyingChildren, otherDependents, shortTaxYearDisallowed} = calculateChildCreditEligibility(input);
   const nontaxableCombatPay = qualifyingChildren > 0 ? resolveForm8812CombatPay(input) : undefined;
   let childCreditPuertoRico = input.childTaxCredit?.puertoRicoExcludedIncome === undefined ? undefined : d(input.childTaxCredit.puertoRicoExcludedIncome);
   let childCreditForm4563 = input.childTaxCredit?.form4563ExcludedIncome === undefined ? undefined : d(input.childTaxCredit.form4563ExcludedIncome);
@@ -4456,6 +4456,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     excessSocialSecurityWithholding: excessSSWithholding,
     qualifyingChildren,
     otherDependents,
+    shortTaxYearDisallowed,
     adjustedGrossIncome: agi,
     puertoRicoExcludedIncome: childCreditPuertoRico,
     form4563ExcludedIncome: childCreditForm4563,

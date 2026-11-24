@@ -113,6 +113,74 @@ describe("Schedule 8812 2026 claimed child's age", () => {
   });
 });
 
+describe("Schedule 8812 short taxable years under IRC section 24(f)", () => {
+  const otherDependent = {
+    ...child, firstName: "Other", ssn: "999-88-7776", dateOfBirth: "2005-01-01",
+    qualifiesForCTC: false, qualifiesForODC: true, odcTinEligible: true,
+  };
+
+  function returnInput(year: 2025 | 2026, shortTaxYear?: boolean, primaryDeathDate: string | null = null) {
+    const base = fixture({ taxYear: year, dependents: [child, otherDependent] });
+    return TaxYearInputSchema.parse({
+      ...base,
+      standardDeductionFacts: { ...base.standardDeductionFacts, shortTaxYear, primaryDeathDate },
+    });
+  }
+
+  it.each([2025, 2026] as const)("clears unavailable nonrefundable and refundable credits on an accounting-change return in %i", year => {
+    const input = returnInput(year, true);
+    const result = calculateFederalTax(TaxYearInputSchema.parse({
+      ...input,
+      w2s: input.w2s.map(w2 => ({
+        ...w2, wages: "6000", socialSecurityWages: "6000", medicareWages: "6000",
+        socialSecurityWithheld: "372", medicareWithheld: "87", federalWithheld: "2500",
+      })),
+      form1099Int: [{ payer: "Fictional bank", interestIncome: "12300" }],
+    }));
+    expect(result.earnedIncomeCredit.toFixed()).toBe("0");
+    expect(result.childTaxCredit.toFixed()).toBe("0");
+    expect(result.form8812?.actc.toFixed()).toBe("0");
+    expect(result.form8812?.lines.find(line => line.line === "4")?.value.toFixed()).toBe("0");
+    expect(result.form8812?.lines.find(line => line.line === "6")?.value.toFixed()).toBe("0");
+    expect(result.allLines.find(line => line.form === "1040" && line.line === "28")?.value.toFixed()).toBe("0");
+    expect(result.form8812?.lines.find(line => line.line === "short-tax-year-eligibility")?.formula).toContain("24(f)");
+  });
+
+  it.each([2025, 2026] as const)("retains the full-year and ordinary decedent credits in %i", year => {
+    const fullYear = calculateFederalTax(returnInput(year, false));
+    const decedent = calculateFederalTax(returnInput(year, false, `${year}-06-30`));
+    expect(fullYear.childTaxCredit.toFixed()).toBe("2700");
+    expect(decedent.childTaxCredit.eq(fullYear.childTaxCredit)).toBe(true);
+    expect(decedent.standardDeduction.eq(fullYear.standardDeduction)).toBe(true);
+  });
+
+  it("uses the actual accounting-period cause even when the return includes a death date", () => {
+    const input = returnInput(2026, true, "2026-09-15");
+    input.taxpayer.dependents = [otherDependent];
+    expect(calculateFederalTax(input).childTaxCredit.toFixed()).toBe("0");
+  });
+
+  it("still rejects duplicate household identifiers on an accounting-change return", () => {
+    const input = returnInput(2025, true);
+    input.taxpayer.dependents = [{ ...child, ssn: input.taxpayer.primary.ssn }, otherDependent];
+    expect(() => calculateFederalTax(input)).toThrow(/distinct actual TINs/);
+  });
+
+  it("rejects positive worksheet child counts alongside a known short-year disallowance", () => {
+    expect(() => calculateForm8812({
+      taxYear: 2026, filingStatus: "single", qualifyingChildren: 1, otherDependents: 0, shortTaxYearDisallowed: true,
+      agi: d("85000"), earnedIncome: d("85000"), taxLiability: d("10000"),
+    }, FEDERAL_2026_CONSTANTS)).toThrow(/short-year disallowance conflicts/i);
+  });
+
+  it("preserves an omitted legacy answer and skips the restriction audit without a claim", () => {
+    expect(calculateFederalTax(returnInput(2025)).childTaxCredit.toFixed()).toBe("2700");
+    const noClaim = returnInput(2026, true);
+    noClaim.taxpayer.dependents = [];
+    expect(calculateFederalTax(noClaim).form8812?.lines.some(line => line.line === "short-tax-year-eligibility")).toBe(false);
+  });
+});
+
 describe("Schedule 8812 original W-2 combat pay", () => {
   function combatReturn(year: 2025 | 2026, codeQ?: string, legacyAmount?: string) {
     const original = fixture();

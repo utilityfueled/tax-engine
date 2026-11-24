@@ -11,7 +11,7 @@ function knownHouseholdTin(value: string): string | undefined {
     ? value.replaceAll("-", "") : undefined;
 }
 
-export function calculateChildCreditEligibility(input: TaxYearInput): {qualifyingChildren:number;otherDependents:number} {
+export function calculateChildCreditEligibility(input: TaxYearInput): {qualifyingChildren:number;otherDependents:number;shortTaxYearDisallowed?:true} {
   const {taxpayer} = input;
   const strict = taxpayer.taxYear === 2026;
   const joint = taxpayer.filingStatus === "married_filing_jointly";
@@ -25,6 +25,10 @@ export function calculateChildCreditEligibility(input: TaxYearInput): {qualifyin
     if (tin === undefined) continue;
     if (suppliedTins.has(tin)) throw new Error("Child-credit household members require distinct actual TINs");
     suppliedTins.add(tin);
+  }
+  // This answer identifies an accounting-period change as the cause, even when a death date is present.
+  if (input.standardDeductionFacts?.shortTaxYear === true) {
+    return {qualifyingChildren:0,otherDependents:0,shortTaxYearDisallowed:true};
   }
   const primarySsn = taxpayer.primary.employmentValidSsnIssuedByDueDate;
   const spouseSsn = taxpayer.spouse?.employmentValidSsnIssuedByDueDate;

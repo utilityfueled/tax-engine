@@ -12,6 +12,8 @@ export interface Form8812Input {
   /** Counts already verified for age, dependency, citizenship and timely tax identifiers. */
   qualifyingChildren: number;
   otherDependents: number;
+  /** The federal return established a short accounting year under IRC section 24(f). */
+  shortTaxYearDisallowed?: true;
   /** Schedule 8812 line 3 MAGI, including section 911/931/933 addbacks. */
   agi: Decimal;
   adjustedGrossIncome?: Decimal;
@@ -36,6 +38,7 @@ export interface Form8812Input {
 }
 
 export interface Form8812Result {
+  shortTaxYearDisallowed?: true;
   ctcBeforeLimitation: Decimal;
   nonrefundableCTC: Decimal;
   unusedCTC: Decimal;
@@ -56,6 +59,11 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
   if (year !== 2025 && year !== 2026) throw new Error("Unsupported Schedule 8812 tax year");
   for (const count of [input.qualifyingChildren, input.otherDependents]) {
     if (!Number.isInteger(count) || count < 0) throw new Error("Invalid dependent count for Schedule 8812");
+  }
+  if (input.shortTaxYearDisallowed) {
+    if (input.qualifyingChildren + input.otherDependents > 0) throw new Error("Schedule 8812 short-year disallowance conflicts with eligible dependent counts");
+    audit.record("Form 8812", "short-tax-year-eligibility", "Child and dependent credits disallowed for a short accounting year",
+      new Decimal(0), "IRC §24(f): the return covers a short taxable year because of an accounting-period change");
   }
   for (const amount of [input.agi, input.earnedIncome, input.taxLiability]) {
     if (!amount.isFinite()) throw new Error("Schedule 8812 amount must be finite");
@@ -140,5 +148,8 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
     ["26", "Larger ACTC income limit", incomeLimit, "max(lines 20,25)"],
     ["27", "Additional Child Tax Credit", actc, input.filesForm2555 ? "Form 2555 disallows ACTC" : "min(lines 17,26)"],
   ] as const) if (value !== undefined) audit.record("Form 8812", line, description, value, formula);
-  return {ctcBeforeLimitation, nonrefundableCTC, unusedCTC, earnedIncomeExcess, fifteenPercent, payrollAlternative, potentialActc, creditLimitWorksheetBReservation, actc, lines:audit.getLines()};
+  return {
+    ...(input.shortTaxYearDisallowed && {shortTaxYearDisallowed:true}),
+    ctcBeforeLimitation, nonrefundableCTC, unusedCTC, earnedIncomeExcess, fifteenPercent, payrollAlternative, potentialActc, creditLimitWorksheetBReservation, actc, lines:audit.getLines(),
+  };
 }
