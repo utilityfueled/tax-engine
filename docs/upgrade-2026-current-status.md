@@ -9,8 +9,10 @@ deferred at the owner’s direction. Their readiness criteria remain open.
   verified AI amounts when an actual change in accounting period requires
   annualization. Four red checks reproduced the erroneous outputs.
   All 11 exact local checks passed, with 30,259 unit tests, 88.28% branch
-  coverage and 650 active Chromium cases. The §443 computation needs
-  period facts and a qualified calculation method.
+  coverage and 650 active Chromium cases. GitHub CI passed eight jobs,
+  including 30,340 coverage tests at 88.66%. Managed Linux also passed all
+  650 active cases. The §443 computation needs period facts and a qualified
+  calculation method.
   [Accounting-period gate evidence](upgrade-2026-progress.md#november-23-whole-return-short-accounting-period-admission).
 
 - `21f7fd27` names the state return being prepared and explicitly asks
@@ -33,9 +35,13 @@ deferred at the owner’s direction. Their readiness criteria remain open.
 - `2141344d` adds an independently reviewed native browser timing report
   with case durations, original deadlines, and source and image identity.
   The combined run passed Compose recovery and hit ten Ohio browser
-  deadlines. The latest exact ARM64 rehearsal is running under the same gate.
+  deadlines. The exact latest AMD64 and ARM64 runs both passed smoke,
+  Compose recovery, independent archive verification and cleanup. Their
+  strict browser suites each recorded ten deadline failures. Self-host
+  qualification remains open.
   [Combined timing report](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506) ·
-  [Latest exact native rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45314287203).
+  [Exact AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45314151484/job/138176802121) ·
+  [Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45314287203/job/138188946148).
 
 - `ee9a728d` disallows child, other dependent, additional child and earned
   income credits for an actual short accounting-period year. Ordinary

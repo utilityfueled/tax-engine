@@ -24,11 +24,27 @@ Docker build. The standalone exact unit and coverage commands each passed
 30,259 tests. Branch coverage was 88.28% against the 85% gate. The exact
 local Chromium run completed all eight batches with 650 passing cases
 and five original skips. This completed all eleven required local checks.
+Exact GitHub CI passed all eight jobs. Its coverage job passed all 30,340
+tests in 2,210 files at 88.66% branch coverage.
+Managed Linux Chromium passed all 650 active cases. Strict AMD64 completed
+all eight batches with 640 passes, five original skips, nine Ohio case
+deadlines and one four-second saved railroad PDF inspection deadline.
+Image smoke, Compose recovery and rollback, independent archive loading,
+candidate image evidence and browser cleanup passed.
+Strict ARM64 on the same revision passed image smoke, independent archive
+loading, Compose recovery, candidate image evidence and cleanup. It passed
+640 Chromium cases and hit ten Ohio deadlines across batches 6 and 7, with
+five original skips. The timing artifact matched all 655 case IDs to the
+exact managed macOS evidence. The ten counterpart cases passed in
+6.967–10.989 seconds on macOS. The strict observations ran 31.626–33.289
+seconds and reached several distinct failure locations. No common cause
+is established. Both strict platform gates remain open.
 [26 U.S.C. §443](https://uscode.house.gov/us/usc/t26/s443/) ·
 [IRS Publication 538](https://www.irs.gov/publications/p538) ·
 [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45316612124) ·
 [Web and AMD64 runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45314151484) ·
-[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45314287203).
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45314151484/job/138176802121) ·
+[Strict ARM64 job and timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45314287203/job/138188946148).
 
 ## November 23 Pennsylvania state return wording
 
@@ -152,8 +168,8 @@ skips. The candidate-bound timing artifact matched all 655 case IDs to
 the exact managed macOS suite. The ten failing cases passed locally in
 8.427–18.408 seconds and spent 31.595–33.530 seconds in the strict run.
 The captured failures span several operations. The timing comparison leaves
-their common cause unresolved. The exact latest `caa601bf` run follows
-under the same deadlines.
+their common cause unresolved. The subsequent `caa601bf` evidence above
+records the exact current result under the same deadlines.
 [Combined ARM64 job and timing evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45308354506/job/138167053818).
 
 `2141344d` publishes bounded synthetic-browser case durations, original
