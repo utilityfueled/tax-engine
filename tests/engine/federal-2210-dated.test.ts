@@ -19,7 +19,10 @@ describe("Federal dated estimated-tax integration",()=>{
     expect(r.allLines.find(line=>line.form==="1040"&&line.line==="38")?.value.toString()).toBe("268");
   });
   it("uses actual prior-credit dates and excludes state estimated payments",()=>{
-    const input=TaxYearInputSchema.parse({...base(),form2210:{...facts,priorYearCreditPayments:[{date:"2025-04-15",amount:"10000"}]},
+    const input=TaxYearInputSchema.parse({...base(),form2210:{...facts,priorYearTaxStatus:"return-filed",
+      priorYearFullYear:true,priorYearJointReturn:false,priorYearTaxComputationConfirmed:true,
+      priorYearTaxForForm2210:"11000",priorYearAgiForForm2210:"85000",
+      priorYearCreditPayments:[{date:"2025-04-15",amount:"10000"}]},
       adjustments:{priorYearAppliedCredits:[{sourceTaxYear:2024,type:"federal",amount:"10000"}],estimatedTaxPayments:[{date:"2025-04-15",type:"state",state:"CA",amount:"1000"}]}});
     expect(calculateFederalTax(input).form2210?.penalty.toString()).toBe("0");
     const invalid=TaxYearInputSchema.parse({...input,form2210:{...input.form2210,priorYearCreditPayments:[]}});
