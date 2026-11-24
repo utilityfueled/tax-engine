@@ -65,7 +65,10 @@ describe("dated public provider sources", () => {
     expect(calculateAiCost("gemini-3.8-flash", "2026-12-31T23:59:59Z", usage).providerCostUsd).toBe("5.075");
     expect(calculateAiCost("gemini-3.8-flash", "2027-01-01T00:00:00Z", usage).providerCostUsd).toBe("10.15");
     const { entry } = historicalEntry();
-    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry] });
+    const template = { version: 2 as const, entries: [entry] };
+    const preAttempt = summarizeProviderModelLiveEvalTemplate(template, taxProviderModelEvalFixtures, "2026-12-10T23:59:58.999Z");
+    expect(preAttempt.entries).toBe(0);
+    const summary = summarizeProviderModelLiveEvalTemplate(template, taxProviderModelEvalFixtures, before);
     const baseline = summary.groups.find(group => group.profileId === "baseline-gpt-5-mini" && group.task === "income-extraction");
     expect(baseline).toMatchObject({ providerCostUsd: "0.000225", filingSeasonCostUsd: "0.000225", filingSeasonLifecycle: { status: "shutdown", shutdownDate: "2026-12-11" }, filingSeasonCostKind: "historical-price-projection-retired-model" });
     expect(baseline?.eligibleForPromotionReview).toBe(false);
