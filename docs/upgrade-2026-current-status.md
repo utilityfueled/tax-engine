@@ -9,6 +9,10 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Verified Ohio IT 1040 carryovers and income-tax principal paid in 2025
+  now reach Schedule A once. Same-year extension receipts require separate
+  principal evidence. [Ohio payment evidence](upgrade-2026-progress.md#november-24-ohio-applied-refunds-and-balance-principal).
+
 - A verified prior-year refund applied to an individual 2025 Pennsylvania
   return now counts once in federal Schedule A. The guided preview holds
   stale saved originals until the current account and election reconcile.

@@ -19,7 +19,7 @@ import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guide
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { PAOrdinaryReturnFacts } from "@/models/pa-ordinary-return-facts";
 import { buildGuidedOhioResidencyFacts } from "./guided-ohio-residency-facts";
-import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
+import { buildGuidedOhioPaymentFacts, guidedOhioScheduleAPaymentClaim } from "./guided-ohio-payment-facts";
 import { buildGuidedOhioRetirementIncome, type OhioRetirementCreditDraft } from "./guided-ohio-retirement-credit";
 import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
@@ -1417,6 +1417,7 @@ export interface StateReturnData {
   ohioRetirementCredit?: OhioRetirementCreditDraft;
   ohioResidency?: OhioResidencyDraft;
   ohioPayments?: OhioPaymentDraft;
+  lastConfirmedOHScheduleAPaymentYear?: number;
   ohioReturnHeaderSources?: OhioReturnHeaderDraft;
   ohioSchoolDistrict?: OhioSchoolDistrictDraft;
   ohio2026SchoolSources?: Ohio2026SchoolDraft;
@@ -1995,6 +1996,32 @@ function paStateDependencyValues(value: StateReturnData | undefined): unknown {
     paOrdinaryReturnFacts: _ordinary, lastConfirmedPAEstimateYear: _estimate,
     paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
   return dependencies;
+}
+
+function retainedOhioScheduleAPaymentYear(year: number, nextState: GuidedFlowState, previous: StateReturnData | undefined): number | undefined {
+  const prior = previous?.ohioPayments;
+  const current = nextState.sectionData["state-return"]?.ohioPayments;
+  let pending = previous?.lastConfirmedOHScheduleAPaymentYear === year;
+  if (!pending && prior?.sourceFactsConfirmed === true && guidedOhioScheduleAPaymentClaim(prior, year) === "deductible") {
+    const snapshot = TaxYearInputSchema.safeParse(prior.originalFederalSources);
+    if (snapshot.success) {
+      try {
+        buildGuidedOhioPaymentFacts(prior, snapshot.data);
+        pending = true;
+      } catch { /* An incomplete legacy packet cannot establish prior verification. */ }
+    }
+  }
+  if (current === prior || current?.sourceFactsConfirmed !== true) return pending ? year : undefined;
+  const hasPayment = guidedOhioScheduleAPaymentClaim(current, year) === "deductible";
+  if (!pending && !hasPayment) return undefined;
+  if (!hasPayment) return computeGuidedPreviewEvaluation(nextState).sourceReplaySucceeded ? undefined : year;
+  try {
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(nextState));
+    buildGuidedOhioPaymentFacts(current, input);
+    return year;
+  } catch {
+    return pending ? year : undefined;
+  }
 }
 
 function retainedPAIndividualPaymentYear(year: number, nextState: GuidedFlowState, previous: StateReturnData | undefined): number | undefined {
@@ -2624,6 +2651,13 @@ export function updateSectionData(
     },
   };
   let nextStateReturn = nextState.sectionData["state-return"];
+  if (state.taxYear === 2025 && state.segmentation.stateCode === "OH" && nextStateReturn) {
+    const lastConfirmedOHScheduleAPaymentYear = retainedOhioScheduleAPaymentYear(state.taxYear, nextState, previousStateReturn);
+    if (lastConfirmedOHScheduleAPaymentYear !== nextStateReturn.lastConfirmedOHScheduleAPaymentYear) {
+      const { lastConfirmedOHScheduleAPaymentYear: _previousYear, ...current } = nextStateReturn;
+      nextStateReturn = lastConfirmedOHScheduleAPaymentYear === undefined ? current : { ...current, lastConfirmedOHScheduleAPaymentYear };
+    }
+  }
   if (state.taxYear === 2025 && state.segmentation.stateCode === "PA" && nextStateReturn && !nextStateReturn.paMarriedOrdinarySources) {
     const lastConfirmedPAEstimateYear = retainedPAIndividualPaymentYear(state.taxYear, nextState, previousStateReturn);
     if (lastConfirmedPAEstimateYear !== nextStateReturn.lastConfirmedPAEstimateYear) {
@@ -2953,8 +2987,8 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: Tax
     try { payments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
     catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
     const savedEstimates = data?.stateEstimatedPayments;
-    if (payments && savedEstimates?.length && !Object.keys(stateEstimatedPaymentFactErrors(savedEstimates, "OH")).length) {
-      try { assertSavedStateEstimatesMatchReceipts(savedEstimates, payments.paymentRows); }
+    if (payments && savedEstimates?.length && !Object.keys(stateEstimatedPaymentFactErrors(savedEstimates, "OH", state.taxYear)).length) {
+      try { assertSavedStateEstimatesMatchReceipts(savedEstimates, payments.paymentRows, state.taxYear === 2025 ? state.taxYear : undefined); }
       catch (error) { errors.stateEstimatedPayments = error instanceof Error ? error.message : "Reconcile saved Ohio estimated payments."; }
     }
     if(data?.ohioResidency?.residentCreditSources){

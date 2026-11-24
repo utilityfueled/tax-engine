@@ -19,11 +19,18 @@ export function canUsePennsylvaniaPaymentsForScheduleA(input:TaxYearInput):boole
     && deductionElection!=="standard" && deductionElection!=="nonitemized";
 }
 
-function ohioEstimatedPaymentOriginals(input:TaxYearInput) {
+function ohioPaymentOriginals(input:TaxYearInput) {
   const packet=input.ohioPayments;
   if(!packet || !canUseOhioEstimatesForScheduleA(input)) return undefined;
-  const savedOhioEstimate=input.adjustments?.estimatedTaxPayments.some(payment=>payment.type==="state" && payment.state?.trim().toUpperCase()==="OH");
-  if(!savedOhioEstimate && !packet.paymentRows.some(row=>row.kind==="estimated")) return undefined;
+  const year=input.taxpayer.taxYear;
+  const inCashYear=(row:ActualEstimate)=>row.date.startsWith(`${year}-`) && d(row.amount).gt(0);
+  const savedOhioEstimate=input.adjustments?.estimatedTaxPayments.some(payment=>payment.type==="state"
+    && payment.state?.trim().toUpperCase()==="OH" && (payment.application?.taxYear ?? year)===year);
+  const savedOhioCredit=input.adjustments?.priorYearAppliedCredits.some(credit=>credit.type==="state" && credit.state?.trim().toUpperCase()==="OH");
+  const payoff=packet.remainingTaxPayment;
+  if(!savedOhioEstimate && !savedOhioCredit && packet.priorCreditCarryforward?.status!=="actual_credit"
+    && !(payoff?.status==="actual_payment" && inCashYear({date:payoff.date,amount:payoff.amountAppliedToTax}))
+    && !packet.paymentRows.some(row=>row.kind==="estimated" || inCashYear(row))) return undefined;
 
   const {facts}=buildOhioPaymentSource(input,packet);
   const confirmations=new Set<string>();
@@ -36,11 +43,22 @@ function ohioEstimatedPaymentOriginals(input:TaxYearInput) {
     confirmations.add(key);
   }
   const estimates=facts.paymentRows.filter(row=>row.kind==="estimated");
-  if(d(input.scheduleA?.additionalStateLocalIncomeTaxes).gt(0)
-    && estimates.some(row=>row.date.startsWith(`${facts.taxYear}-`) && d(row.amount).gt(0))) {
-    throw new Error("Reconcile the additional state and local income tax total with the Ohio estimated payment receipts. Separate payments need their own dated records.");
+  if(facts.paymentRows.some(row=>row.kind==="extension" && inCashYear(row))) {
+    throw new Error("The actual Ohio extension receipt needs verified income tax principal for Schedule A.");
   }
-  return estimates;
+  const priorCredit=d(facts.priorCreditCarryforward.status==="actual_credit" ? facts.priorCreditCarryforward.availableForThisReturn : 0);
+  const remaining=facts.remainingTaxPayment;
+  const balance=remaining.status==="actual_payment" ? {date:remaining.date,amount:remaining.amountAppliedToTax} : undefined;
+  const balanceInYear=balance && inCashYear(balance) ? balance : undefined;
+  if(d(input.scheduleA?.additionalStateLocalIncomeTaxes).gt(0)) {
+    if(estimates.some(inCashYear)) {
+      throw new Error("Reconcile the additional state and local income tax total with the Ohio estimated payment receipts. Separate payments need their own dated records.");
+    }
+    if(priorCredit.gt(0) || balanceInYear) {
+      throw new Error("Reconcile the additional state and local income tax total with the Ohio payment originals. Separate payments need their own dated records.");
+    }
+  }
+  return {estimates,priorCredit,balance:balanceInYear,verifyEstimateMirrors:savedOhioEstimate || estimates.length>0};
 }
 
 function pennsylvaniaPaymentOriginals(input:TaxYearInput) {
@@ -80,16 +98,17 @@ function removeSavedMirrors(estimates:Estimate[], originals:ActualEstimate[], st
 
 export function calculateStateTaxPaymentsInYear(input:TaxYearInput):Decimal {
   const year=input.taxpayer.taxYear;
-  const ohioOriginals=ohioEstimatedPaymentOriginals(input);
+  const ohioOriginals=ohioPaymentOriginals(input);
   const pennsylvaniaOriginals=pennsylvaniaPaymentOriginals(input);
   let estimates=input.adjustments?.estimatedTaxPayments ?? [];
   // Older saved estimates have no confirmation number. Reconcile mirrors by
   // date and exact amount, then use each jurisdiction's actual receipt ledger.
-  if(ohioOriginals) estimates=removeSavedMirrors(estimates,ohioOriginals,"OH");
+  if(ohioOriginals?.verifyEstimateMirrors) estimates=removeSavedMirrors(estimates,ohioOriginals.estimates,"OH",year);
   if(pennsylvaniaOriginals?.verifyEstimateMirrors) estimates=removeSavedMirrors(estimates,pennsylvaniaOriginals.estimates,"PA",year);
-  let total=d(pennsylvaniaOriginals?.priorCredit);
-  const originalEstimates=[...(ohioOriginals??[]),...(pennsylvaniaOriginals?.estimates??[])].map(({date,amount})=>({date,amount,type:"state" as const}));
-  for(const payment of [...estimates,...(input.adjustments?.extensionPayments ?? []),...originalEstimates]) {
+  let total=d(pennsylvaniaOriginals?.priorCredit).plus(d(ohioOriginals?.priorCredit));
+  const originalPayments=[...(ohioOriginals?.estimates??[]),...(pennsylvaniaOriginals?.estimates??[]),...(ohioOriginals?.balance ? [ohioOriginals.balance] : [])]
+    .map(({date,amount})=>({date,amount,type:"state" as const}));
+  for(const payment of [...estimates,...(input.adjustments?.extensionPayments ?? []),...originalPayments]) {
     if(payment.type!=="state") continue;
     const parsed=/^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? new Date(`${payment.date}T00:00:00Z`) : undefined;
     if(!parsed || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0,10)!==payment.date) throw new Error("State tax deduction requires actual valid payment date");
@@ -97,23 +116,25 @@ export function calculateStateTaxPaymentsInYear(input:TaxYearInput):Decimal {
     if(!amount.isFinite() || amount.lt(0)) throw new Error("State tax payment must be finite and nonnegative");
     if(parsed.getUTCFullYear()===year) total=total.plus(amount);
   }
-  let matchedPennsylvaniaCredit=false;
+  const matchedPriorCredits=new Set<string>();
   for(const credit of input.adjustments?.priorYearAppliedCredits ?? []) {
     if(credit.type!=="state") continue;
     const amount=d(credit.amount);
     if(!amount.isFinite() || amount.lt(0)) throw new Error("State applied credit must be finite and nonnegative");
-    if(pennsylvaniaOriginals) {
-      const state=credit.state?.trim().toUpperCase();
-      if(state==="PA") {
-        if(matchedPennsylvaniaCredit || credit.sourceTaxYear!==year-1 || !amount.eq(pennsylvaniaOriginals.priorCredit)) {
-          throw new Error("Reconcile the saved Pennsylvania prior-year credit with the original applied refund.");
-        }
-        matchedPennsylvaniaCredit=true;
-        continue;
+    const state=credit.state?.trim().toUpperCase();
+    const original=state==="PA" ? pennsylvaniaOriginals?.priorCredit : state==="OH" ? ohioOriginals?.priorCredit : undefined;
+    if(state && original!==undefined) {
+      const stateName=state==="PA" ? "Pennsylvania" : "Ohio";
+      if(matchedPriorCredits.has(state) || credit.sourceTaxYear!==year-1 || !amount.eq(original)) {
+        const reason=state==="OH" ? " Each original can match only one distinct claim." : "";
+        throw new Error(`Reconcile the saved ${stateName} prior-year credit with the original applied refund.${reason}`);
       }
-      if(!state && amount.gt(0) && pennsylvaniaOriginals.priorCredit.gt(0)) {
-        throw new Error("Identify the jurisdiction of the saved prior-year credit before reconciling the Pennsylvania applied refund.");
-      }
+      matchedPriorCredits.add(state);
+      continue;
+    }
+    if(!state && amount.gt(0) && (pennsylvaniaOriginals?.priorCredit.gt(0) || ohioOriginals?.priorCredit.gt(0))) {
+      const stateName=pennsylvaniaOriginals?.priorCredit.gt(0) ? "Pennsylvania" : "Ohio";
+      throw new Error(`Identify the jurisdiction of the saved prior-year credit before reconciling the ${stateName} applied refund.`);
     }
     if(credit.sourceTaxYear!==year-1) throw new Error("State applied credit source year must be the immediately prior return year");
     total=total.plus(amount);

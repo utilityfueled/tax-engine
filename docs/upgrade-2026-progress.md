@@ -1,5 +1,25 @@
 # 2026 upgrade implementation evidence
 
+## November 24 Ohio applied refunds and balance principal
+
+Verified Ohio IT 1040 carryovers now reach federal Schedule A line 5a.
+A $200.25 posted refund counts once alongside any matching generic entry.
+A separate dated receipt for $31.25 proves $17 was applied to Ohio
+income-tax principal, so the 2025 federal result includes $17. Payments
+dated in 2026 stay with that federal cash year. An in-year extension receipt
+with only a gross amount requires documentation of its deductible principal.
+A verified payment toward 2024 made in 2025 enters the federal cash year
+while the native 2025 Ohio return uses its own receipt, including when the
+two payment dates and amounts match. An invalid no-remaining-tax answer
+retains the saved hold when the Ohio calculation shows an unpaid balance.
+[2025 Schedule A instructions](https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3).
+
+Seven focused regressions failed before the fixes. The 91 related checks,
+13 spec references and web typecheck passed afterward. Independent source
+review, an isolated 16-test replay, inventory and all 2,062 browser audit
+hashes also passed. Qualified tax review and final 2026 form qualification
+remain open.
+
 ## November 24 individual Pennsylvania applied refunds
 
 An actual prior PA refund credited to the current individual return now

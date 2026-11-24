@@ -15,6 +15,7 @@
     "individualPaScheduleAAppliedRefundEvidenceKey": "activeContinuation.nov24IndividualPaScheduleAAppliedRefunds",
     "pairedPaScheduleAEstimateEvidenceKey": "activeContinuation.nov24PairedPaScheduleAPayments",
     "ohioEstimateNavigationEvidenceKey": "activeContinuation.nov24OhioSavedEstimateNavigation",
+    "ohioIt1040ScheduleAPaymentEvidenceKey": "activeContinuation.nov24OhioIt1040ScheduleAPayments",
     "dependentAotcTinEvidenceKey": "activeContinuation.nov24AotcDependentTinConflict",
     "extensionReceiptEvidenceKey": "activeContinuation.nov24PennsylvaniaExtensionReceipts",
     "aiEvidenceKey": "activeContinuation.nov24AIEvaluationCutoff",
@@ -43,6 +44,16 @@
     ]
   },
   "activeContinuation": {
+    "nov24OhioIt1040ScheduleAPayments": {
+      "focusedTestsPassed": 91,
+      "isolatedReplayTestsPassed": 16,
+      "specReferencesResolved": 13,
+      "auditedSourcesVerified": 2062,
+      "inventoryCheck": "passed",
+      "independentSourceReview": "passed",
+      "qualifiedTaxReview": "open",
+      "evidence": "docs/upgrade-2026-progress.md#november-24-ohio-applied-refunds-and-balance-principal"
+    },
     "nov24IndividualPaScheduleAAppliedRefunds": {
       "focusedTestsPassed": 97,
       "isolatedReplayTestsPassed": 9,

@@ -61,6 +61,24 @@ function normalize(value: unknown, key = ''): unknown {
     }
     return value;
 }
+export function guidedOhioScheduleAPaymentClaim(data: OhioPaymentDraft | undefined, year: number): 'deductible' | 'extension' | undefined {
+    if (data?.taxYear !== String(year)) return undefined;
+    const positive = (value: unknown) => {
+        const amount = normalize(value, 'amount');
+        return typeof amount === 'string' && /^\d{1,15}(?:\.\d{1,2})?$/.test(amount) && new Decimal(amount).gt(0);
+    };
+    const inYear = (date: unknown) => typeof date === 'string' && date.startsWith(`${year}-`);
+    const credit = data.priorCreditCarryforward;
+    const balance = data.remainingTaxPayment;
+    if ((credit?.status === 'actual_credit' && positive(credit.availableForThisReturn))
+        || (balance?.status === 'actual_payment' && inYear(balance.date) && positive(balance.amountAppliedToTax))) {
+        return 'deductible';
+    }
+    if (Array.isArray(data.paymentRows) && data.paymentRows.some(row => row?.kind === 'extension' && inYear(row.date) && positive(row.amount))) {
+        return 'extension';
+    }
+    return undefined;
+}
 function raw(data: OhioPaymentDraft, original: RawFields): unknown {
     const prior = fields(data.priorReturn), carry = fields(data.priorCreditCarryforward), timing = fields(data.currentTiming), remaining = fields(data.remainingTaxPayment);
     return normalize({

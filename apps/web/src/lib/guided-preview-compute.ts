@@ -21,7 +21,7 @@ import { canUseOhioEstimatesForScheduleA, canUsePennsylvaniaPaymentsForScheduleA
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
 import { buildGuidedOhioOverlay, buildGuidedStateOriginals, readGuidedPAMarriedDraft } from "./guided-state-engine-inputs";
-import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
+import { buildGuidedOhioPaymentFacts, guidedOhioScheduleAPaymentClaim } from "./guided-ohio-payment-facts";
 import { buildGuidedPAMarriedOrdinarySources } from "./guided-pa-married-ordinary-sources";
 import {
   calculateGenericStateReturn,
@@ -238,16 +238,25 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
     let taxInput = baseInput;
     let result: ReturnType<typeof calculateFederalTax>;
     let marriedComposition: ReturnType<typeof calculatePAMarriedOrdinaryReturnWithFederal> | undefined;
+    let requiresOhioReplacementSettlement = false;
     try {
       assertSupportedWholeReturnAccountingPeriod(baseInput.standardDeductionFacts);
       const stateData = state.sectionData["state-return"];
       const paymentDraft = stateData?.ohioPayments;
-      if (state.segmentation.stateCode === "OH" && canUseOhioEstimatesForScheduleA(baseInput) && paymentDraft) {
+      if (state.segmentation.stateCode === "OH" && canUseOhioEstimatesForScheduleA(baseInput)) {
+        const year = baseInput.taxpayer.taxYear;
+        const requiresOhioPaymentProof = stateData?.lastConfirmedOHScheduleAPaymentYear === year;
+        if (requiresOhioPaymentProof && (paymentDraft?.taxYear !== String(year)
+          || paymentDraft.sourceFactsConfirmed !== true || paymentDraft.originalFederalSources == null)) {
+          throw new Error("Confirm the complete Ohio prior credit and balance payment records for this year.");
+        }
+        const ohioPaymentClaim = guidedOhioScheduleAPaymentClaim(paymentDraft, year);
+        requiresOhioReplacementSettlement = requiresOhioPaymentProof && ohioPaymentClaim !== "deductible";
         const hasSavedOhioEstimate = baseInput.adjustments?.estimatedTaxPayments.some(payment =>
-          payment.type === "state" && payment.state?.trim().toUpperCase() === "OH");
-        const hasSourcedEstimate = (paymentDraft.sourceFactsConfirmed === true || paymentDraft.originalFederalSources !== undefined)
-          && paymentDraft.paymentRows.some(row => row.kind === "estimated");
-        if (hasSourcedEstimate || hasSavedOhioEstimate) {
+          payment.type === "state" && payment.state?.trim().toUpperCase() === "OH" && (payment.application?.taxYear ?? year) === year);
+        const hasSourcedOhioPayment = paymentDraft && (paymentDraft.sourceFactsConfirmed === true || paymentDraft.originalFederalSources !== undefined)
+          && (paymentDraft.paymentRows?.some(row => row?.kind === "estimated") || ohioPaymentClaim);
+        if (paymentDraft && (requiresOhioPaymentProof || hasSavedOhioEstimate || hasSourcedOhioPayment)) {
           taxInput = {...baseInput, ohioPayments: buildGuidedOhioPaymentFacts(paymentDraft, baseInput)};
         }
       }
@@ -365,12 +374,20 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
             result.agi, result.taxableIncome, Number.isNaN(depCount) ? 0 : depCount,
             hasSpouse, stateWithholding, stateEstimatedPayments);
         }
-      } catch {
+      } catch (error) {
+        if (requiresOhioReplacementSettlement) {
+          onBlocked(error instanceof Error ? error.message : "Reconcile the actual Ohio remaining-tax settlement.");
+          return null;
+        }
         // Keep the federal result while the dedicated state's actual facts need reconciliation.
         stateResult = null;
       }
     }
 
+    if (requiresOhioReplacementSettlement && !stateResult) {
+      onBlocked("Reconcile the actual Ohio remaining-tax settlement.");
+      return null;
+    }
     if (stateResult || separateMetrics) onSourceReplay?.();
     const metrics=extractMetricsFromResult(result,stateResult);
     return separateMetrics?{...metrics,state:separateMetrics}:metrics;

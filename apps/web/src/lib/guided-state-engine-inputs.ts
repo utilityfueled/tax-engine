@@ -20,7 +20,7 @@ import type { PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator";
 import type { GuidedFlowState, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { assertKnownFacts } from "./guided-required-facts";
-import { assertSavedStateEstimatesMatchReceipts, statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
+import { assertSavedStateEstimatesMatchReceipts, confirmedStateEstimatedPaymentYear, statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 import { ohioInterestFactErrors, requiresOhioInterestAllocation } from "./guided-ohio-interest-facts";
 
 function actualStatePayments(state: GuidedFlowState, code: string): StateReturnData | undefined {
@@ -28,8 +28,10 @@ function actualStatePayments(state: GuidedFlowState, code: string): StateReturnD
   assertKnownFacts(statePaymentFactErrors(data, state.taxYear, code));
   return data;
 }
-function estimatedPayments(data: StateReturnData): string {
-  return data.stateEstimatedPayments.reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry.amount)), new Decimal(0)).toFixed();
+function estimatedPayments(data: StateReturnData, appliedYear?: number): string {
+  const rows = appliedYear === undefined ? data.stateEstimatedPayments
+    : data.stateEstimatedPayments.filter(entry => (confirmedStateEstimatedPaymentYear(entry) ?? appliedYear) === appliedYear);
+  return rows.reduce((sum, entry) => sum.plus(parseGuidedCurrency(entry.amount)), new Decimal(0)).toFixed();
 }
 
 /** Saved generic rows are retained evidence, never a second source of credit. */
@@ -50,7 +52,7 @@ function reconcileSavedStateLedger(data:StateReturnData|undefined,year:number,co
       reconcileGuidedRetirementWithholding(retirementOriginals,savedRetirement,year);
     }
   }
-  assertSavedStateEstimatesMatchReceipts(data.stateEstimatedPayments, receipts);
+  assertSavedStateEstimatesMatchReceipts(data.stateEstimatedPayments, receipts, code === "OH" && year === 2025 ? year : undefined);
 }
 
 /** The same actual payment overlay is used for the preview and saved review PDF. */
@@ -78,7 +80,7 @@ export function buildGuidedOhioOverlay(taxInput: TaxYearInput, state: GuidedFlow
       taxInput.form1099Int, taxInput.form1099Div, taxInput.form1099B, taxInput.form1099OID);
     result.ohioWithholdingOverride = sourceWithholding.plus(sumAdditionalStateWithholding(data)).toFixed();
   }
-  if (data?.stateEstimatedPayments.length) result.estimatedPayments = estimatedPayments(data);
+  if (data?.stateEstimatedPayments.length) result.estimatedPayments = estimatedPayments(data, state.taxYear === 2025 ? state.taxYear : undefined);
   return result;
 }
 

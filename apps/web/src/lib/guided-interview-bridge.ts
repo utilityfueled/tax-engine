@@ -77,7 +77,7 @@ import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, dedu
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
-import { statePaymentFactErrors, sumAdditionalStateWithholding, usesDedicatedStatePaymentReceipts } from "./guided-state-facts";
+import { confirmedStateEstimatedPaymentYear, statePaymentFactErrors, sumAdditionalStateWithholding, usesDedicatedStatePaymentReceipts } from "./guided-state-facts";
 import {buildGuidedZeroIncomeMiscSources} from './guided-zero-income-misc-sources';
 import {reconcileGuidedZeroIncomeMiscOriginalClaims} from './guided-zero-income-misc-withholding-reconciliation';
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
@@ -970,17 +970,19 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData, state.taxYear);
   const usesDedicatedReceipts = usesDedicatedStatePaymentReceipts(segmentation.stateCode);
+  const supportsEstimateApplication = !usesDedicatedReceipts || (state.taxYear === 2025 && segmentation.stateCode === "OH");
   const estimatedPayments = [
     ...(paymentData?.estimatedPayments ?? []).map(federalPaymentInput),
-    ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => ({
-      date: entry.date,
-      amount: toDecimalString(entry.amount),
-      type: "state" as const,
-      state: entry.state,
-      ...(!usesDedicatedReceipts && entry.application?.confirmed === true ? {
-        application: { taxYear: Number(entry.application.taxYear), confirmed: true as const },
-      } : {}),
-    })),
+    ...(stateReturnData?.stateEstimatedPayments ?? []).map((entry) => {
+      const taxYear = supportsEstimateApplication ? confirmedStateEstimatedPaymentYear(entry) : undefined;
+      return {
+        date: entry.date,
+        amount: toDecimalString(entry.amount),
+        type: "state" as const,
+        state: entry.state,
+        ...(taxYear !== undefined ? { application: { taxYear, confirmed: true as const } } : {}),
+      };
+    }),
   ];
   const extensionPayments = (paymentData?.extensionPayments ?? []).map(federalPaymentInput);
   const priorYearAppliedCredits = (paymentData?.priorYearAppliedCredits ?? []).map((entry) => ({ sourceTaxYear: Number(entry.sourceTaxYear), amount: toDecimalString(entry.amount), type: "federal" as const }));

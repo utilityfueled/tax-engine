@@ -28,3 +28,33 @@ lines:
     description: Require reconciliation of saved estimated payments before Continue on a 2025 Ohio return with confirmed actual IT 1040 payment originals.
     formula: After validating current Ohio payment originals, match each saved Ohio estimate to one distinct actual estimated receipt by date and exact Decimal amount. A missing receipt, a mismatch in cents, or a second claim on the same receipt requires review. Matching records, including confirmed zero, or removal of the saved claim clear the navigation error. The actual receipts remain the only source of credited payments.
     testRef: "tests/guided-interview/state-payment-source-reconciliation.test.ts::2025 Ohio navigation reconciles saved estimates before Continue"
+  - line: "oh-prior-credit-schedule-a"
+    description: Include the verified amount of the 2024 Ohio IT 1040 refund that the taxpayer elected and the current account credits to 2025 on federal Schedule A line 5a.
+    reference: "https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"
+    formula: Replay complete current Ohio originals, including the timely prior original, owner, election and actual current credit. Add the available credit at exact cents in the applied year and preserve Ohio return payment totals.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::uses the verified 2024 Ohio credit on 2025 Schedule A in guided and reopened returns"
+  - line: "oh-prior-credit-schedule-a-mirrors"
+    description: Reconcile canonical Ohio applied-credit mirrors independently of dated estimated payment receipts.
+    formula: Match a mirror once by jurisdiction, prior tax year and exact Decimal amount. Hold ambiguous, conflicting or duplicate claims and any additional state and local income tax aggregate that could overlap this positive credit. Add the credit alongside independently dated receipts.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::keeps actual cash receipts and canonical applied-credit mirrors separate"
+  - line: "oh-prior-credit-schedule-a-reconfirmation"
+    description: Require renewed proof of a previously confirmed positive Ohio refund credit or deductible balance principal before publishing another federal preview for that year.
+    formula: Keep the 2025 confirmation requirement when a previously verified deductible payment packet is removed, edited or reopens without its original snapshot. A current-year supported confirmation or complete proof of known none resolves the hold. Earlier returns and never-confirmed drafts do not receive inferred payments.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::holds a changed or missing previously confirmed Ohio credit until reconfirmed"
+  - line: "oh-balance-schedule-a-reconfirmation"
+    description: Clear a historical Ohio estimated-credit or balance deduction hold only after the replacement inventory and actual IT 1040 settlement both reconcile.
+    formula: A confirmed replacement asserting no remaining tax leaves the year pending until the state liability, payments and independent settlement facts reconcile. Save and reopen retain a pending contradiction; a genuine, reconciled replacement may release the hold.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::keeps the Ohio historical payment hold when confirmed known-none leaves unpaid tax"
+  - line: "oh-balance-principal-schedule-a"
+    description: Use the independently reconciled Ohio IT 1040 balance receipt amount applied to income tax in the federal cash year.
+    reference: "https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"
+    formula: Replay the actual current-account receipt and identify its confirmed amount applied to tax separately from the receipt total. Include only the principal paid in 2025, with its actual date, and keep the existing state settlement verification. Hold an additional state and local tax aggregate that could repeat principal. Expected principal and cash paid in 2026 make no contribution to 2025.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::uses only actual Ohio balance principal paid during the federal cash year"
+  - line: "oh-extension-principal-schedule-a"
+    description: Require principal resolution for positive in-year Ohio extension receipts before itemized calculation.
+    formula: An in-year Ohio extension receipt provides only a gross amount in current originals, so require separate federal resolution of income tax principal. A receipt actually paid in 2026 makes no contribution to 2025 even when credited to the 2025 account.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::holds a cash-year gross-only Ohio extension receipt for principal reconciliation"
+  - line: "oh-estimate-applied-year-schedule-a"
+    description: Keep verified Ohio estimates applied to another tax year separate from the selected return's receipt mirrors.
+    formula: Preserve explicit confirmed application in retained Ohio facts. Reconcile current-year or legacy yearless saved rows with distinct current originals. Include verified other-return amounts in Schedule A using their actual cash year without applying them to the selected Ohio return. Matching dates and amounts do not merge payments applied to distinct return years.
+    testRef: "tests/guided-interview/guided-ohio-prior-credit-schedule-a.test.ts::uses explicit prior-year Ohio estimates in the federal cash year without merging current state receipts"
