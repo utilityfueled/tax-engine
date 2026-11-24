@@ -14,6 +14,10 @@ The isolated revision matched 6,691 tracked blobs and all 15 official
 sample hashes. All six affected desktop/mobile Chromium cases passed with
 verified teardown. The 38 diagnostics passed and all 2,069 browser source
 hashes matched. Lint, web type checking, spec validation and inventory passed.
+All eleven exact local checks then passed. Unit and coverage each passed
+30,470 active cases with 81 conditional skips. Branch coverage was 88.38%,
+10,041 spec references resolved and Chromium passed all 652 active cases
+across eight windows with five original skips and verified teardown.
 Vercel canceled the automatic production build.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45503159782) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45503159877) ·
@@ -50,6 +54,26 @@ canceled the automatic production build.
 [Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45498838327) ·
 [Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45498837990).
 
+An independent release-surface check confirmed the candidate is private,
+with no public caller or filing registry entry. It found two references
+that described 2025 but pointed to the IRS current URL, which now serves
+2026. `03f367de` pins the 2025 method and annual 2026 template to their
+respective IRS archives in both the rule packs and spec inventory.
+The new regression first failed on the historical citation. After the fix,
+all 24 focused tests, 38 diagnostic checks, 10,042 spec references and 2,069
+browser source hashes passed. Lint reported zero errors and one existing
+warning. Vercel canceled the automatic production build.
+[2025 authority](https://www.irs.gov/pub/irs-prior/f4137--2025.pdf) ·
+[2026 authority](https://www.irs.gov/pub/irs-prior/f4137--2026.pdf) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45504699794) ·
+[Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45504699771).
+
+The November 24 follow-up catalog check at 22:43 UTC found no final
+companion forms. The current Form 1040 and Schedule 2 still printed 2025.
+[IRS catalog](https://www.irs.gov/forms-instructions-and-publications?items_per_page=25&order=posted_date&sort=desc) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Schedule 2](https://www.irs.gov/pub/irs-pdf/f1040s2.pdf).
+
 ## November 24 current Linux and local verification
 
 The exact `f2ac230e` archive matched 6,686 tracked blobs and all 15
@@ -67,6 +91,16 @@ automatic production build as canceled.
 [Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134) ·
 [Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45489392197) ·
 [Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992).
+
+The completed `f2ac230e` managed Linux job passed all 652 active browser
+cases with five original skips. Its strict AMD64 job passed 650 active
+cases with five original skips. Two desktop Ohio school cases exceeded the
+30-second deadline. Both had completed saved reopen and PDF inspection.
+`refund100` was awaiting the filing rejection. `covered` had received the
+rejection and the log lacks the exact final operation. Recovery, rollback,
+independent archive verification and image scan passed.
+[Managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134/job/138783307861) ·
+[Strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45489392134/job/138783307127).
 
 The exact `f84a7000` Linux runtime passed 650 of 652 active Chromium
 cases, with five original skips. Recovery, rollback, independent archive

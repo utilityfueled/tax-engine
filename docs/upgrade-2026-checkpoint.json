@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-24",
     "branch": "main",
-    "applicationCommit": "d316004fec0492a0e1754025c8b9af2beaaad5a5",
-    "verificationCommit": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
-    "generatedInventoryCommit": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
+    "applicationCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
+    "verificationCommit": "d316004fec0492a0e1754025c8b9af2beaaad5a5",
+    "generatedInventoryCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov24LatestLocalAndLinuxVerification",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
@@ -39,6 +39,7 @@
     "annualForm6781EvidenceKey": "activeContinuation.nov24FinalForm6781Source",
     "annualForm6781CandidateEvidenceKey": "activeContinuation.nov24Form6781OriginalReviewCandidate",
     "annualForm4137EvidenceKey": "activeContinuation.nov24Form4137",
+    "annualForm4137SourcePinsEvidenceKey": "activeContinuation.nov24Form4137SourcePins",
     "ohioBrowserSavedReadsEvidenceKey": "activeContinuation.nov24OhioSavedReadConsolidation",
     "annualScheduleBSourceEvidenceKey": "activeContinuation.nov24ScheduleBFinalSource",
     "annualScheduleBReviewEvidenceKey": "activeContinuation.nov24ScheduleBOrdinaryReview",
@@ -55,6 +56,21 @@
     ]
   },
   "activeContinuation": {
+    "nov24Form4137SourcePins": {
+      "revision": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
+      "historicalAuthority": "https://www.irs.gov/pub/irs-prior/f4137--2025.pdf",
+      "annualAuthority": "https://www.irs.gov/pub/irs-prior/f4137--2026.pdf",
+      "focusedTestsPassed": 24,
+      "diagnosticChecksPassed": 38,
+      "specReferencesPassed": 10042,
+      "browserAuditSourceHashes": 2069,
+      "publicReleaseGate": "Closed",
+      "ciRun": 45504699794,
+      "webRun": 45504699771,
+      "dockerRun": 45504699605,
+      "automaticProductionBuildStatus": "Canceled",
+      "evidence": ".local/upgrade-evidence/nov24-form-4137/provenance"
+    },
     "nov24OhioSavedReadConsolidation": {
       "revision": "d316004fec0492a0e1754025c8b9af2beaaad5a5",
       "trackedBlobsVerified": 6691,
@@ -66,6 +82,10 @@
       "browserAuditSourceHashes": 2069,
       "diagnosticChecksPassed": 38,
       "focusedBrowser": {"passed": 6, "originalTimeoutsRetained": true, "cleanupVerified": true},
+      "localChecksPassed": 11,
+      "localUnitAndCoverage": {"passedEach": 30470, "originalSkipsEach": 81, "branchPercent": 88.38, "unitWorkers": 8},
+      "localFullBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true},
+      "specReferencesPassed": 10041,
       "independentTechnicalReview": "Passed",
       "ciRun": 45503159782,
       "webRun": 45503159877,
@@ -143,7 +163,7 @@
       "providerCallsMade": 0
     },
     "nov24LatestLocalAndLinuxVerification": {
-      "lastCompleteLocalRevision": "a70ba4c740712ed15c086c9f01bccbe7e03711a5",
+      "lastCompleteLocalRevision": "d316004fec0492a0e1754025c8b9af2beaaad5a5",
       "f84StrictAmd64": {
         "run": 45463661057,
         "job": 138692709406,
@@ -165,6 +185,8 @@
       "earlier2beManagedLinux": {"run": 45472505533, "job": 138723958872, "activePassed": 652, "originalSkips": 5, "windows": 8},
       "f8ManagedLinux": {"run": 45475481555, "job": 138734449354, "activePassed": 650, "rrtaSavedPdfDeadlineFailures": 2, "originalSkips": 5, "lastChildPhases": ["desktop page_text at 3002163 microseconds", "mobile page_text at 2942682 microseconds"]},
       "f8StrictLinux": {"run": 45475481555, "job": 138734449285, "activePassed": 645, "deadlineFailures": 7, "originalSkips": 5, "passingStages": ["build", "recovery", "rollback", "independent archive restore", "scan", "cleanup"]},
+      "f2ManagedLinux": {"run": 45489392134, "job": 138783307861, "activePassed": 652, "originalSkips": 5, "windows": 8},
+      "f2StrictLinux": {"run": 45489392134, "job": 138783307127, "activePassed": 650, "originalSkips": 5, "deadlineFailures": ["Ohio school refund100 desktop while awaiting filing rejection", "Ohio school covered desktop after filing rejection"], "passingStages": ["build", "recovery", "rollback", "independent archive restore", "scan"]},
       "earlier2beStrictLinux": {"run": 45472505533, "job": 138723958812, "activePassed": 643, "deadlineFailures": 9, "originalSkips": 5, "recoveryPassed": true, "rollbackPassed": true, "independentArchiveRestorePassed": true, "optionalCpuDiagnosticPassed": false},
       "ohioSavedCheckpointChange": {
         "revision": "90336dafcc055b2b6551c5de534e40c31f2df22f",
@@ -195,7 +217,8 @@
       "diagnosticBindings": {"revision": "c12c6ad4837aec066205e3102274d422d1e6f0bb", "focusedTestsPassed": 27, "fullBatchSourceHashesVerified": 9},
       "previousD383Archive": {"revision": "d383107399a6b68a9167d0dfa68c99259fdd5a25", "trackedBlobsVerified": 6685, "officialSampleHashesVerified": 15, "localUnitPassed": 30456, "localCoveragePassed": 30456, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10029, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45483317174, "webRun": 45483317206, "dockerRun": 45483317231, "arm64Run": 45484309448, "automaticProductionBuildStatus": "Canceled"},
       "previousF2Archive": {"revision": "f2ac230eb2fd8c384240a05527f519de475c55bc", "trackedBlobsVerified": 6686, "officialSampleHashesVerified": 15, "localUnitPassed": 30461, "localCoveragePassed": 30461, "localConditionalSkips": 81, "localBranchesPercent": 88.37, "localSpecLinesPassed": 10033, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45489392245, "webRun": 45489392134, "dockerRun": 45489392197, "arm64Run": 45491371992, "ciWebAndDockerStatusAtVerification": "Queued", "arm64StatusAtVerification": "Pending", "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-exact-main-f2ac230e"},
-      "currentArchive": {"revision": "a70ba4c740712ed15c086c9f01bccbe7e03711a5", "officialSampleHashesVerified": 15, "localUnitPassed": 30470, "maxUnitWorkers": 8, "localCoveragePassed": 30470, "localConditionalSkips": 81, "localBranchesPercent": 88.38, "localSpecLinesPassed": 10041, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45498838276, "webRun": 45498838327, "dockerRun": 45498837990, "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-form-4137"},
+      "previousForm4137Archive": {"revision": "a70ba4c740712ed15c086c9f01bccbe7e03711a5", "officialSampleHashesVerified": 15, "localUnitPassed": 30470, "maxUnitWorkers": 8, "localCoveragePassed": 30470, "localConditionalSkips": 81, "localBranchesPercent": 88.38, "localSpecLinesPassed": 10041, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45498838276, "webRun": 45498838327, "dockerRun": 45498837990, "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-form-4137"},
+      "currentArchive": {"revision": "d316004fec0492a0e1754025c8b9af2beaaad5a5", "trackedBlobsVerified": 6691, "officialSampleHashesVerified": 15, "localUnitPassed": 30470, "maxUnitWorkers": 8, "localCoveragePassed": 30470, "localConditionalSkips": 81, "localBranchesPercent": 88.38, "localSpecLinesPassed": 10041, "localChecksPassed": 11, "localBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true}, "ciRun": 45503159782, "webRun": 45503159877, "dockerRun": 45503159775, "arm64Run": 45503211576, "automaticProductionBuildStatus": "Canceled", "evidence": ".local/upgrade-evidence/nov24-ohio-saved-reads"},
       "evidence": ".local/upgrade-evidence/nov24-non-hosted-followup"
     },
     "nov24Form8801NoCreditReviewCandidate": {

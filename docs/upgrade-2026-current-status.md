@@ -11,8 +11,10 @@ Use the linked progress sections when investigating individual packages.
 
 - `d316004f` reuses persisted Ohio drafts in the business and resident
   credit browser journeys. All six scoped Chromium cases and 38 diagnostic
-  checks passed with the original assertions and deadlines. Current Linux
-  browser and ARM64 recovery workflow results remain open.
+  checks passed with the original assertions and deadlines. All eleven
+  exact local checks passed, including 652 active Chromium cases, 30,470
+  active unit tests and 88.38% branch coverage. Current Linux browser and
+  ARM64 recovery workflow results remain open.
   [Ohio browser evidence](upgrade-2026-progress.md#november-24-ohio-business-and-resident-credit-browser-checkpoints).
 
 - `a70ba4c7` pins the final 2026 Form 4137 and provides an internal
@@ -21,6 +23,8 @@ Use the linked progress sections when investigating individual packages.
   The form prints $184,500 and the new Schedule 2 line 16a destination.
   All eleven exact local checks passed, with 30,470 active unit and
   coverage tests, 88.38% branch coverage and 652 active Chromium cases.
+  `03f367de` pins the historical and current rule-pack evidence to separate
+  IRS archives. All 24 focused tests and 38 diagnostic checks passed.
   Public export, final return transfer and qualified human review remain open.
   [Form 4137 source and evidence](upgrade-2026-form-4137-final-source.md).
 
