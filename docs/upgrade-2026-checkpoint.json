@@ -93,7 +93,16 @@
         {"case": "school header mobile", "wallMs": 1395.6, "storageCalls": 141, "storageMs": 0.9}
       ],
       "linuxQualified": false,
-      "evidence": ".local/upgrade-evidence/nov24-ohio-browser-storage-timing/"
+      "evidence": ".local/upgrade-evidence/nov24-ohio-browser-storage-timing/",
+      "navigationProbe": {
+        "applicationCommit": "e2d50f12ce356d407b7d41c96c23281fbded3c82",
+        "warmSamplesPerFixture": 24,
+        "ordinaryReaderCalls": [1, 1],
+        "retainedCanonicalReaderCalls": [2, 2],
+        "ordinaryReaderTimeMs": 0.289,
+        "retainedCanonicalReaderTimeMs": 0.698,
+        "evidence": ".local/upgrade-evidence/nov24-oh-navigation-reader.2btKsV/result.json"
+      }
     },
     "nov24FinalForm6781Source": {
       "intakeCommit": "880704df8910c36e77be3aef5b375ab2a347a895",

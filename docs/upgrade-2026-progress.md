@@ -87,9 +87,18 @@ The probe measured workspace and draft reads and writes without recording
 stored values. Trusted input and change dispatch took 349–736 ms across
 the entry phases. That interval combines event dispatch, validation,
 reducer and render activity. Local measurements do not isolate those
-costs or establish strict Linux timing. The application save path did not change.
+costs or establish strict Linux timing.
 Aggregate records are retained under
 `.local/upgrade-evidence/nov24-ohio-browser-storage-timing/`.
+
+On `e2d50f12` application source, a separate single-worker navigation
+probe called the residency and payment readers once each on the qualified
+ordinary fixture and twice each when it injected retained canonical
+records. Across 24 warm samples, the two readers together took about
+0.289 ms on the ordinary fixture and 0.698 ms on the retained fixture.
+These local synthetic measurements leave the Linux deadlines unresolved.
+The numeric probe is retained under
+`.local/upgrade-evidence/nov24-oh-navigation-reader.2btKsV/`.
 
 ## November 24 final Form 6781 source
 

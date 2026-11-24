@@ -57,7 +57,9 @@ Use the linked progress sections when investigating individual packages.
 
 - Three focused Ohio journeys passed on the archived macOS production
   build. Timed synchronous storage took 0.9–5.0 ms during entries that
-  took 1.4–2.8 seconds. Strict Linux storage cost remains unmeasured.
+  took 1.4–2.8 seconds. A separate navigation probe measured less than
+  1 ms in the residency and payment readers even with duplicate calls.
+  Strict Linux timing remains open.
   [Storage timing evidence](upgrade-2026-progress.md#november-24-focused-ohio-browser-storage-timing).
 
 - `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
