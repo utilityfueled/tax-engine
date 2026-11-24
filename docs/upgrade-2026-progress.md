@@ -39,6 +39,19 @@ Reporter timestamps describe wall progression. The 30-second test
 deadline uses Playwright's own clock. The evidence shows several distinct
 stopping points and leaves the slow operation unestablished.
 
+The ordinary exact `f3163949` Linux run passed the web production build.
+Strict AMD64 passed 645 and reached the original 30-second deadline in
+one Ohio business case, two resident-credit cases and four school cases.
+Managed Chromium passed 650 and reached the original four-second saved-PDF
+inspection deadline in both RRTA cases. Both executions retained five
+original skips and emitted zero renderer scheduler observations. Both
+used Ubuntu 26.04 image revision 20261116.202.1. Strict AMD64 Compose
+upgrade, recovery, rollback, independent archive verification, image
+scanning and cleanup passed. The normal execution confirms that browser
+qualification remains open with the current application and unchanged
+test limits. [Current strict job](https://github.com/utilityfueled/tax-engine/actions/runs/45417655999/job/138528175883) ·
+[Current managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45417655999/job/138528176037).
+
 `a3f5f225` pins three specs and two evidence links to the 2025 IRS Form
 8801 annual archive. The generic form URL now serves 2026. The exact
 spec overlay resolved all 9,986 references and changed no formulas.

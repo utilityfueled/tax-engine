@@ -18,6 +18,12 @@ Use the linked progress sections when investigating individual packages.
   Chromium suite passed 642 and missed ten Ohio deadlines with five
   original skips. The same ten cases failed in the earlier ARM64 run.
 
+- The [ordinary Linux run](https://github.com/utilityfueled/tax-engine/actions/runs/45417655999)
+  on exact `f3163949` built successfully. Strict AMD64 passed 645 cases
+  and missed seven Ohio deadlines. Managed Chromium passed 650 and
+  missed two RRTA inspections. Both retained five original skips.
+  AMD64 recovery, rollback and independent archive verification passed.
+
 - `fee02a61` pins the final 2026 Form 8801 blank and verifies the eleven
   Part II widgets under a disabled candidate. The form adds no public
   output. Current instructions and final Form 6251 still print 2025.
