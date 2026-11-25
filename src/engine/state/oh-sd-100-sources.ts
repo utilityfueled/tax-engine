@@ -16,7 +16,7 @@ import { calculateOhioSDResidentIncome, type OhioSDResidentIncomeResult, type Oh
 import { calculateOhioSD100, type SchoolDistrictEntry } from './oh-sd-100.js';
 import { calculateOhioITSD2210, type EstimatedPaymentEntry } from './oh-it-sd-2210.js';
 import { lookupOhioSchoolDistrictMetadata } from './oh-school-district-lookup.js';
-import { readOhioCurrentFederalCalculation, type OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
+import { ownsOhioPendingFederalResult, readOhioCurrentFederalCalculation, type OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
 
 function fail(message: string): never { throw new Error(`Ohio actual school district sources: ${message}`); }
 function stable(value: unknown): unknown {
@@ -254,7 +254,11 @@ export function buildOhioSchoolDistrictSource(
     }
   }
   const fresh = readOhioCurrentFederalCalculation(input, currentFederal) ?? calculateFederalTax(input);
-  if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(federal))) fail('saved federal result is stale, not the fresh current original calculation');
+  if (ownsOhioPendingFederalResult(input, federal, currentFederal)) {
+    JSON.stringify(stable(redactReviewIdentifiers(fresh)));
+  } else if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(federal))) {
+    fail('saved federal result is stale, not the fresh current original calculation');
+  }
   const wages = actualWages.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   if (!fresh.totalWages.eq(wages) || !fresh.agi.eq(wages) || !fresh.adjustmentsToIncome.isZero()) fail('actual ordinary compensation and fresh federal income do not reconcile; other income/adjustments need their source method');
   if (!new Exact(ohio.federalAgi).eq(fresh.agi) || ohio.exemptions !== 1 + input.taxpayer.dependents.length || ohio.isSenior === true) fail('actual Ohio input contradicts current original income/age/owner');

@@ -2,7 +2,8 @@
 import {test,expect,vi}from 'vitest';
 import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
-import {readOhioSchoolAdapterMethod,withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
+import * as reviewIdentifiers from '@/pdf/redact-review-identifiers';
+import {readOhioSchoolAdapterMethod,verifyOhioSchoolScheduleAPayments,withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
 import { buildSectionRoute, validateSection } from '@/lib/guided-interview-flow';
 import *as bridge from '@/lib/guided-interview-bridge';
@@ -112,6 +113,7 @@ test.each([0, 1] as const)('calculates federal tax once for the same pending sch
  const before = structuredClone(state);
  const calculate = vi.spyOn(federal, 'calculateFederalTax');
  const schoolSource = vi.spyOn(school, 'buildOhioSchoolDistrictSource');
+ const redact = vi.spyOn(reviewIdentifiers, 'redactReviewIdentifiers');
  try {
   const first = evaluateGuidedRender(state);
   expect(first.preview.metrics).toMatchObject({ agi: '60000', state: null });
@@ -119,6 +121,8 @@ test.each([0, 1] as const)('calculates federal tax once for the same pending sch
   expect(first.schoolDisplayObservation).toBeDefined();
   expect(schoolSource).toHaveBeenCalledTimes(1);
   const schoolInput = required(schoolSource.mock.calls[0]?.[0]);
+  const ownedFederalResult = required(schoolSource.mock.calls[0]?.[1]);
+  expect(redact.mock.calls.filter(([value]) => value === ownedFederalResult)).toHaveLength(2);
   expect(schoolInput).toBe(calculate.mock.calls.find(([input]) => input.ohioSchoolDistrict)?.[0]);
   expect(calculate.mock.calls.filter(([input]) => input.ohioSchoolDistrict)).toHaveLength(1);
   expect(calculate.mock.calls.filter(([input]) => !input.ohioSchoolDistrict)).toHaveLength(1);
@@ -133,6 +137,7 @@ test.each([0, 1] as const)('calculates federal tax once for the same pending sch
   expect(second.schoolDisplayObservation).not.toBe(first.schoolDisplayObservation);
   expect(calculate.mock.calls.filter(([input]) => input.ohioSchoolDistrict)).toHaveLength(2);
  } finally {
+  redact.mockRestore();
   schoolSource.mockRestore();
   calculate.mockRestore();
  }
@@ -154,6 +159,18 @@ test('keeps header proof binding and independent replay for unsupported canonica
   expect(calculate).toHaveBeenCalledTimes(3);
   expect(calculate.mock.calls.every(([input]) => input === unsupported)).toBe(true);
  } finally { calculate.mockRestore(); }
+});
+
+test('rejects a changing Schedule A preliminary result even with the same object identity', () => {
+ const { canonical } = schoolPyHeaderPacket();
+ let reads = 0;
+ expect(() => verifyOhioSchoolScheduleAPayments(canonical, current =>
+  Object.defineProperty(federal.calculateFederalTax(current), 'syntheticResultRevision', {
+   enumerable: true,
+   get: () => ++reads,
+  }),
+ )).toThrow('saved federal result is stale');
+ expect(reads).toBe(2);
 });
 
 test('keeps pending header rejection and the earlier invalid school guard in order', () => {

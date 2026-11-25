@@ -1,6 +1,6 @@
 import { buildOhioResidentCreditSource, type OhioResidentCreditSourceContext } from './oh-resident-credit-source.js';
 import { buildOhioSchoolDistrictSource, type OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
-import { readOhioCurrentFederalCalculation, type OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
+import { ownsOhioPendingFederalResult, readOhioCurrentFederalCalculation, type OhioCurrentFederalCalculation } from './oh-source-adapter-invocation.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
 import { calculateOhioReciprocalWageSourceWithPayment, type OhioReciprocalWageContext } from './oh-reciprocal-wage-source.js';
@@ -209,7 +209,12 @@ export function buildOhioResidencySource(
         fail('current private federal original source snapshot is missing or changed');
     }
     const fresh = readOhioCurrentFederalCalculation(input, currentFederal) ?? calculateFederalTax(input);
-    assertCurrentOhioFederalResult(fresh, result);
+    if (ownsOhioPendingFederalResult(input, result, currentFederal)) {
+        // Keep the original canonical traversal for the identical result owned by this call.
+        JSON.stringify(stable(redactReviewIdentifiers(fresh)));
+    } else {
+        assertCurrentOhioFederalResult(fresh, result);
+    }
     // Spec: state/oh-school-source-same-invocation.yaml. Keep this first validation in order.
     let schoolDistrictSource: OhioSchoolDistrictSourceProjection | undefined;
     if (input.ohioSchoolDistrict) {

@@ -27,12 +27,20 @@ lines:
       an explicitly unconfirmed header and no resident-credit child, calculate
       federal tax once from the privately owned, immutable canonical Ohio school
       input, including its actual residency and payment packets. Preserve both
-      original stale-result comparisons, their ordering, the full school and
+      stale-result checks at their original positions. Each check serializes the
+      complete redacted federal result once when its comparison operands are the
+      identical privately generated pending-header result. Distinct results and
+      Schedule A preliminary calculations retain the original two-operand
+      comparison. Preserve the full school and
       residency validation, the existing school method proof and the separate
       base federal preview. Standalone actions, nonplain material and inputs
       outside this scope retain independent federal replays. The next render
       repeats all validation using the newly projected input.
     testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::calculates federal tax once for the same pending school and residency input %s"
+  - line: "schedule-a-preliminary-result"
+    description: Keep both canonical reads of a supplied Schedule A preliminary result
+    formula: Only the pending-header adapter owns its result. The preliminary callback path retains both reads and rejects a result that changes between them.
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::rejects a changing Schedule A preliminary result even with the same object identity"
   - line: "pending-header-school-fallback"
     description: Preserve admission order and method proof during pending guided rendering
     formula: >-

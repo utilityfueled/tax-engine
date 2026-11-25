@@ -59,10 +59,12 @@ function immutableSchoolInput(input: TaxYearInput): TaxYearInput | undefined {
 class CurrentFederalCalculation {
   readonly #input: TaxYearInput;
   readonly #result: TaxReturnResult;
+  readonly #origin: 'pending-header' | 'schedule-a';
 
-  constructor(input: TaxYearInput, result: TaxReturnResult) {
+  constructor(input: TaxYearInput, result: TaxReturnResult, origin: 'pending-header' | 'schedule-a') {
     this.#input = input;
     this.#result = result;
+    this.#origin = origin;
   }
 
   static forInput(input: TaxYearInput, candidate: CurrentFederalCalculation | undefined): TaxReturnResult | undefined {
@@ -71,12 +73,23 @@ class CurrentFederalCalculation {
     }
     return undefined;
   }
+
+  static ownsPendingResult(input: TaxYearInput, result: TaxReturnResult, candidate: CurrentFederalCalculation | undefined): boolean {
+    return typeof candidate === 'object' && candidate !== null && #input in candidate
+      && candidate.#origin === 'pending-header' && candidate.#input === input && candidate.#result === result;
+  }
 }
 export type OhioCurrentFederalCalculation = CurrentFederalCalculation;
 export function readOhioCurrentFederalCalculation(
   input: TaxYearInput, candidate: OhioCurrentFederalCalculation | undefined,
 ): TaxReturnResult | undefined {
   return CurrentFederalCalculation.forInput(input, candidate);
+}
+
+export function ownsOhioPendingFederalResult(
+  input: TaxYearInput, result: TaxReturnResult, candidate: OhioCurrentFederalCalculation | undefined,
+): boolean {
+  return CurrentFederalCalculation.ownsPendingResult(input, result, candidate);
 }
 
 /** Spec: state/oh-sd-100-federal-schedule-a.yaml. A calculation supplies its own preliminary result. */
@@ -87,7 +100,7 @@ export function verifyOhioSchoolScheduleAPayments(
   if (!current) throw Error('Ohio school district tax deductions require complete plain current originals.');
   const beforeSchoolDeduction = calculatePreliminary(current);
   const adapted = buildOhioResidentReturnInput(current, beforeSchoolDeduction, undefined,
-    new CurrentFederalCalculation(current, beforeSchoolDeduction));
+    new CurrentFederalCalculation(current, beforeSchoolDeduction, 'schedule-a'));
   if (!adapted.schoolDistrictSource || !current.ohioSchoolDistrict) {
     throw Error('Ohio school district tax deductions require reconciled current payment sources.');
   }
@@ -149,7 +162,7 @@ export function withPendingOhioSchoolAdapterInvocation<T>(input: TaxYearInput, u
   const immutable = immutableSchoolInput(input);
   const current = immutable ?? input;
   const federal = calculateFederalTax(current);
-  const currentFederal = immutable ? new CurrentFederalCalculation(immutable, federal) : undefined;
+  const currentFederal = immutable ? new CurrentFederalCalculation(immutable, federal, 'pending-header') : undefined;
   return withCompletedSchoolAdapter(current, federal, use, currentFederal);
 }
 
