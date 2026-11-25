@@ -1,5 +1,62 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio dependent-care draft
+
+`26983a3c` adds a standalone statutory worksheet for one full-year Ohio
+joint household with two verified wage originals, one claimable child
+under 13 throughout the year and linked care payments from a verified
+spouse's own funds. The worksheet records exact cents before state
+liability and credit ordering. At $39,000 of AGI with $1,500 of verified
+care and adequate earnings, the federal tentative amount is $570 and
+the Ohio statutory amount is $142.50. At $39,001 they are $555 and
+$138.75. At $40,000 Ohio MAGI the Ohio amount is zero.
+
+The Ohio statute's federal §26 language needs qualified review for the
+25% tier. The 2025 Ohio booklet points to the liability-limited federal
+line 11. The worksheet's $285 statutory interpretation for $3,000 of
+care at $39,000 AGI could correspond to $170 under that prior instruction
+when the federal §26 capacity is $680. The worksheet stays outside
+the return and filing paths. The IRS final index still lists the 2025
+Form 2441 and instructions. [Ohio credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.054) ·
+[Ohio conformity](https://codes.ohio.gov/ohio-revised-code/section-5701.11) ·
+[2025 Ohio booklet, page 45](https://dam.assets.ohio.gov/image/upload/v1769706362/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=45) ·
+[IRS final index](https://www.irs.gov/forms-instructions-and-publications?find=2441) ·
+[Qualified review question](upgrade-2026-human-tax-review-packet.md#november-25-ohio-dependent-care-credit).
+
+Independent code review found missing payer and dependent-eligibility
+guards. Their regressions failed against the initial implementation
+and passed after both guards were added. The tracked-source
+qualification archive passed 149 focused tests, all 10,089 spec
+references, the regenerated inventory check, TypeScript, scoped lint
+and two browser source-audit controls. Generated inventory added one
+Ohio worksheet entry. The unrelated working-copy SQLite entry remains
+local. Vercel recorded the automatic production build as canceled.
+[GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45711786839) ·
+[GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45711786840) ·
+[GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45711786498).
+
+The Pennsylvania source recheck found that the official index still
+serves the 2025 PA-40 and instructions. The residency page still links
+the year-blank NRH revision `03-24 (FI)`. The published 2026
+REV-413(I) instructions are already in the source ledger.
+[Pennsylvania PIT index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Pennsylvania residency instructions](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
+
+## November 25 Ohio native label comparison
+
+The existing native-control helper passed all 15 Chromium cases in each
+of two comparison runs. Replacing its control locator with Playwright
+exact label lookup failed six of 15 cases in each of two candidate
+runs. The traces stopped at the Ohio school district residency and
+Virginia owner selects. Both versions used the same built app, two
+workers, zero retries and the existing 30-second deadline. The
+prototype was dropped. The strict Linux timing issue remains open.
+
+A separate direct-keyboard prototype reached the harness's outer
+150-second cutoff during its unchanged baseline leg. No candidate
+measurements were collected. The existing per-case deadline and runner
+configuration were used throughout.
+
 ## November 25 in-memory review cover
 
 `00ef7e7a` passes the generated summary `PDFDocument` directly to the
@@ -16,8 +73,15 @@ tests, web types, scoped lint, the source audit and its two controls
 passed. The isolated production web build passed all 15 cases in the
 existing local Ohio and Pennsylvania Chromium request window with two
 workers, zero retries and the original 30-second case deadline. The
-exact Docker build and eight local static checks passed. The remaining
-exact checks are pending. [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
+exact Docker build and eight local static checks passed. The exact
+local unit run passed 30,556 tests in 2,220 files with 81 skips. All
+eight exact Linux CI jobs passed. Its coverage job passed 30,637 tests
+at 88.84% branch coverage. The managed Linux browser passed all 652
+active cases with five existing skips. The strict AMD64 run passed 650
+cases. Two Ohio part-year school cases reached the 30-second deadline
+on the saved-workspace filing-rejection request. The independent ARM64
+and local coverage and browser checks are still running.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45709245932) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45709246061) ·
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45709442744).
@@ -39,6 +103,10 @@ accepted before the second fix. The final run passed all eight worksheet
 tests and 96 tests across the adjacent Ohio suite. Ohio spec validation
 resolved all 941 references. The exact Docker build, root types, scoped
 lint, the 2,071-path source audit and both source-audit controls passed.
+All eight exact Linux CI jobs passed. The coverage job passed 30,637
+tests at 88.84% branch coverage. Managed Linux Chromium passed all 652
+active cases with five existing skips. Strict AMD64 passed 639 cases
+and reached the 30-second deadline in 13 Ohio and RRTA cases.
 Review of the statute and agency guidance and an independent arithmetic
 check covered the period and precision. Qualified human review and
 final Ohio forms remain open. [Review packet](upgrade-2026-external-actions.md#elected-job-creation-award-for-one-direct-owner) ·

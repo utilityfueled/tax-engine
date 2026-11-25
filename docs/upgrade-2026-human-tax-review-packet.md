@@ -413,3 +413,33 @@ the individual return. The implementation holds the official review PDF
 until those attachments qualify. See `af96bd3a`.
 [2025 PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
 [2025 Schedule NRK-1](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforbusinesses/partnerships-s-corps-llcs/documents/2025/2025_pa-20s-pa-65nrk-1.pdf).
+## November 25 Ohio dependent-care credit
+
+Review one 2026 joint return with two full-year Ohio spouses, separately
+verified wages, one claimable child under 13 all year, and linked records
+showing that a spouse paid an unrelated Ohio care center so both spouses
+could work. Confirm the source restrictions and derive the federal and
+Ohio amounts independently. [Federal §21](https://uscode.house.gov/us/usc/119-120/t26/s21/)
+and [Ohio conformity statute](https://codes.ohio.gov/ohio-revised-code/section-5701.11).
+
+With $1,500 of qualifying expenses, adequate separate earnings, and
+$39,000 of federal AGI and Ohio MAGI, the worksheet expects a 38% federal
+rate, a $570 federal tentative credit and a $142.50 Ohio tentative credit.
+At $39,001, the figures are 37%, $555 and $138.75. At $40,000, the Ohio
+amount is $0. Check both the 100% Ohio tier below $20,000 and the 25% tier
+from $20,000 through $39,999.99. Confirm the reporting rounding separately.
+[Ohio credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.054)
+and [Ohio rounding statute](https://codes.ohio.gov/ohio-revised-code/section-5703.055).
+
+The interpretation to resolve is whether the instruction to disregard
+federal §26 applies to the 25% tier. The final 2025 Ohio booklet directs
+that tier to Form 2441 line 11, which can reflect the federal liability
+limit. At $39,000 of AGI with $3,000 of eligible care and $680 of available
+federal liability, the exact tentative federal amount is $1,140. At 25%,
+the statutory worksheet gives $285, and applying the prior line-11
+instruction gives $170. Verify the governing treatment and then determine
+the separate Ohio liability limit and ordering. The 2026 worksheet stays
+outside Ohio return and filing flows pending that review and the applicable
+final annual instructions. [2025 Ohio booklet, page 45](https://dam.assets.ohio.gov/image/upload/v1769706362/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=45),
+[Ohio credit ordering](https://codes.ohio.gov/ohio-revised-code/section-5747.98)
+and [IRS final Form 2441 index](https://www.irs.gov/forms-instructions-and-publications?find=2441).

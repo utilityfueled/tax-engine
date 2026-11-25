@@ -9,10 +9,18 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `26983a3c` computes the tentative 2026 Ohio dependent-care credit for
+  a full-year joint household with one verified child and documented
+  care paid by a spouse. All 149 focused tests passed. The final annual
+  instructions and qualified review of the federal liability limit
+  are needed before the worksheet can feed a return.
+  [Ohio dependent-care evidence](upgrade-2026-progress.md#november-25-ohio-dependent-care-draft).
+
 - `00ef7e7a` passes the generated review cover directly to the PDF merge.
   All 30 compared federal and Ohio pages rendered identically. The 68
   focused tests, 15 local Chromium cases, and the exact Docker build
-  passed. Exact unit, coverage, and native browser runs are pending.
+  passed. The exact unit run passed 30,556 tests. Coverage and native
+  browser runs are pending.
   Filing and strict Linux qualification remain open.
   [Review cover evidence](upgrade-2026-progress.md#november-25-in-memory-review-cover).
 
