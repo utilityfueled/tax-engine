@@ -34,6 +34,16 @@ lines:
     formula: "Highest balance; lender average; sum actual monthly balances / actual qualified-home months; (first+last)/2 only with no extra borrowing/no more than one month prepayment/level payments; current-year interest / lowest annual rate only when secured all year and paid at least monthly. Mixed/refinanced category sources require an actual completed allocation worksheet."
     irsRef: "Pub936 Table1 instructions Average Mortgage Balance"
     testRef: "tests/engine/forms/home-mortgage-interest.test.ts::uses published average balance methods instead of Form1098 Box2"
+  - line: "highest-balance-reconciliation"
+    description: "Reconcile the actual annual maximum with Form 1098 Box 2"
+    formula: >-
+      On a current source worksheet using the highest-balance method, compare the actual maximum with
+      the linked same-year Form 1098 Box 2 principal as exact nonnegative Decimal amounts before
+      rounding. Box 2 is a current-year snapshot at January 1, origination, or acquisition. Reject
+      a maximum below that snapshot. Equality, including actual zero, passes. Independently sourced
+      average balances and the historical method without a source worksheet retain their existing treatment.
+    irsRef: "https://www.irs.gov/pub/irs-prior/i1098--2025.pdf and https://www.irs.gov/instructions/i1098 (Box 2); Pub936 Table1 instructions Average Mortgage Balance"
+    testRef: "tests/engine/forms/home-mortgage-interest.test.ts::holds saved %i linked highest balance below actual Box 2 before rounding"
   - line: "average-source-reconciliation"
     description: "Bind the interest-rate numerator to actual current-year interest"
     formula: "Numerator equals return-paid plus other-person-paid current-year interest, less each payer current-year refund, plus actual current-year interest prepaid by each payer in an earlier year. Prior-paid return share also enters the deductible-interest source once; other-person share never enters this return deduction. Unknown source allocations and contradictory numerators reject."

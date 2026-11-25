@@ -202,6 +202,11 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
         }
         if (!paid.plus(others).eq(amount(form.mortgageInterestReceived, "Box1"))) throw new Error("Mortgage paid shares must reconcile to actual Box1");
         if (!pointPaid.plus(pointOthers).eq(amount(form.pointsPaid, "Box6"))) throw new Error("Mortgage paid points must reconcile to actual Box6");
+        if (loan.balance.method === "highest_balance") {
+          const maximum = amount(loan.balance.amount, "highest balance");
+          const principal = amount(form.outstandingMortgagePrincipal, "Form 1098 Box 2 principal");
+          if (maximum.lt(principal)) throw new Error("Mortgage highest balance cannot be below the actual Form 1098 Box 2 principal");
+        }
       } else unreportedLenders.push({ name: loan.lenderName, address: loan.lenderAddress, taxId: loan.lenderTaxId });
       if (loan.currentYearInterestOnly !== true) throw new Error("Mortgage prepaid or special-year interest requires an actual completed source allocation");
       const excluded = sum(amount(loan.interestDeductedElsewhere, "interest deducted elsewhere"), amount(loan.sameYearInterestRefund, "current-year interest refund"), amount(loan.nonqualifiedInterest, "nonqualified source interest"));

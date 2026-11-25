@@ -47,7 +47,33 @@ function jointReportedMortgageInput(
   return reportedMortgageInput(year, [first, second], [...accounts], true);
 }
 
+function savedMortgageLine8a(year: 2025 | 2026, method: "highest_balance" | "lender_average", amount: string, principal: string, interest = "40000") {
+  const account = "synthetic-loan-account";
+  const input = reportedMortgageInput(year, [mortgageLoan({
+    interestPaid: interest,
+    loanAccountReference: account,
+    balance: { method, amount, sourceReference: "Actual annual balance record" },
+  })], [account]);
+  const saved = parseInput(JSON.parse(JSON.stringify({
+    ...input,
+    form1098: input.form1098.map(form => ({ ...form, outstandingMortgagePrincipal: principal })),
+  })));
+  const scheduleA = year === 2025 ? calculateFederalTax(saved).scheduleA
+    : calculateScheduleA(saved, new Decimal("100000"), "single", FEDERAL_2026_CONSTANTS);
+  return scheduleA?.lines.find(line => line.form === "Sched A" && line.line === "8a")?.value.toFixed();
+}
+
 describe("Pub936 actual mortgage sources", () => {
+  it.each([2025, 2026] as const)("holds saved %i linked highest balance below actual Box 2 before rounding", year => {
+    for (const amount of ["750000", "899999.99"]) {
+      expect(() => savedMortgageLine8a(year, "highest_balance", amount, "900000")).toThrow(/highest balance.*Box 2/i);
+    }
+  });
+  it.each([2025, 2026] as const)("preserves saved %i equal maxima, actual zero and independently sourced lower averages", year => {
+    expect(savedMortgageLine8a(year, "highest_balance", "900000.00", "900000")).toBe("33320");
+    expect(savedMortgageLine8a(year, "highest_balance", "0.00", "0", "0")).toBe("0");
+    expect(savedMortgageLine8a(year, "lender_average", "750000", "900000")).toBe("40000");
+  });
   it("reconciles actual 2026 lender, statement and singleton account identity", () => {
     for (const [worksheetAccount, statementAccount] of [[undefined, undefined], [" loan-01 ", "loan-01"]]) {
       const input = reportedMortgageInput(2026, [mortgageLoan({ loanAccountReference: worksheetAccount })], [statementAccount]);
