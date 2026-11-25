@@ -3,14 +3,28 @@ import { webcrypto } from "node:crypto";
 import React, { act, type ComponentProps } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ReturnWorkspaceScreen } from "@/components/return-workspace-screen";
-import { initialFlowState, loadGuidedFlowState, saveGuidedFlowState } from "@/lib/guided-interview-flow";
+import { buildSectionRoute, collectGuidedReviewIssues, initialFlowState, loadGuidedFlowState, saveGuidedFlowState } from "@/lib/guided-interview-flow";
+import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { parseUploadedDocumentText, prepareUploadableFiles } from "@/lib/uploaded-document-detection";
 import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "@/lib/workspace-document-file-cache";
+import { buildWorkspaceFilingPackDownload } from "@/lib/workspace-filing-pack";
 import { ensureWorkspace, getWorkspace, ingestFiles } from "@/lib/workspace-storage";
 import { mountGuidedPanel } from "./guided-panel-dom";
-import { completePersonalInfo, startCompleteInterview } from "../../guided-interview/complete-facts";
+import { completePersonalInfo, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 vi.mock("next/link", () => ({ default: (props: ComponentProps<"a">) => <a {...props} /> }));
+vi.mock("@/lib/guided-interview-flow", async importOriginal => {
+  const original = await importOriginal<typeof import("@/lib/guided-interview-flow")>();
+  return { ...original, collectGuidedReviewIssues: vi.fn(original.collectGuidedReviewIssues) };
+});
+vi.mock("@/lib/guided-preview-compute", async importOriginal => {
+  const original = await importOriginal<typeof import("@/lib/guided-preview-compute")>();
+  return { ...original, computeGuidedPreview: vi.fn(original.computeGuidedPreview) };
+});
+vi.mock("@/lib/workspace-filing-pack", async importOriginal => {
+  const original = await importOriginal<typeof import("@/lib/workspace-filing-pack")>();
+  return { ...original, buildWorkspaceFilingPackDownload: vi.fn(original.buildWorkspaceFilingPackDownload) };
+});
 vi.mock("@/lib/uploaded-document-detection", async importOriginal => ({
   ...await importOriginal<typeof import("@/lib/uploaded-document-detection")>(),
   prepareUploadableFiles: vi.fn(),
@@ -25,6 +39,7 @@ const nec = "2026 Form 1099-NEC\nPayer's name: Fictional Client\n1 Nonemployee c
 const wages = "2026 W-2\nEmployer's name, address, and ZIP code\nFICTIONAL EMPLOYER\nEmployer's FED ID number\n04-3097449\n1 Wages, tips, other comp.\n42000.00\n2 Federal income tax withheld\n3100.00";
 const priorWagesName = "prior-wages.pdf";
 const priorWages = wages.replace("2026", "2025");
+const elementScroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollTo");
 const pdfText = new Map([
   ["client-nec.pdf", nec],
   ["employer-wages.pdf", wages],
@@ -41,6 +56,55 @@ function prepareFiles(files: File[]) {
 function savePriorWages(id: string) {
   ingestFiles(localStorage, id, prepareFiles([new File([priorWages], priorWagesName)]));
 }
+
+it("builds advanced review only when the workspace is in advanced mode", async () => {
+  const id = "synthetic-guided-active-workspace";
+  savePriorWages(id);
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+  saveGuidedFlowState(localStorage, id, draft);
+  const reviewWork = [collectGuidedReviewIssues, computeGuidedPreview, buildWorkspaceFilingPackDownload];
+  const clear = () => reviewWork.forEach(work => vi.mocked(work).mockClear());
+  const expectNoAdvancedReview = () => reviewWork.forEach(work => expect(work).not.toHaveBeenCalled());
+  clear();
+  const panel = await mountGuidedPanel(<ReturnWorkspaceScreen workspaceId={id} deploymentMode="self-host" />);
+  try {
+    expect(panel.control("Tax year for this interview").value).toBe("2025");
+    expectNoAdvancedReview();
+
+    await panel.click("Switch to advanced mode");
+    expect(panel.container.textContent).toContain("Start guided interview");
+    expect(collectGuidedReviewIssues).toHaveBeenCalledWith(expect.objectContaining({ taxYear: 2025 }));
+    expect(buildWorkspaceFilingPackDownload).toHaveBeenCalled();
+
+    clear();
+    await panel.click("Start guided interview");
+    expect(panel.control("Tax year for this interview").value).toBe("2025");
+    expectNoAdvancedReview();
+  } finally {
+    await panel.dispose();
+  }
+});
+
+it("restores the current guided fallback estimate in an advanced workspace", async () => {
+  const id = "synthetic-guided-fallback-estimate";
+  ensureWorkspace(localStorage, id);
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+  draft.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "6000", socialSecurityWages: "50000", socialSecurityWithheld: "3100", medicareWages: "50000", medicareWithheld: "725" }] };
+  draft.phase = "complete";
+  draft.completedSections = buildSectionRoute(draft.segmentation).map(section => section.id);
+  draft.currentSectionIndex = draft.completedSections.length - 1;
+  saveGuidedFlowState(localStorage, id, draft);
+  localStorage.setItem(`tax-engine:guided-mode:${id}`, "false");
+  vi.mocked(computeGuidedPreview).mockClear();
+  const panel = await mountGuidedPanel(<ReturnWorkspaceScreen workspaceId={id} deploymentMode="self-host" />);
+  try {
+    expect(panel.container.textContent).toContain("Start guided interview");
+    expect(computeGuidedPreview).toHaveBeenCalledWith(expect.objectContaining({ taxYear: 2025 }));
+    expect(vi.mocked(computeGuidedPreview).mock.results.at(-1)?.value).toMatchObject({ agi: "50000" });
+  } finally {
+    await panel.dispose();
+  }
+});
 
 it("omits private short-period facts from the actual filled-return request and retains the hold flag", async () => {
   const id = "synthetic-short-period-pdf";
@@ -75,6 +139,7 @@ beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
   vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+  Object.defineProperty(HTMLElement.prototype, "scrollTo", { value: vi.fn(), configurable: true });
   vi.mocked(deleteCachedWorkspaceDocumentFiles).mockClear();
   vi.mocked(storeNewWorkspaceDocumentFiles).mockClear();
   vi.mocked(prepareUploadableFiles).mockImplementation(async files => prepareFiles(files));
@@ -83,6 +148,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  if (elementScroll) Object.defineProperty(HTMLElement.prototype, "scrollTo", elementScroll);
+  else Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
   localStorage.clear();
 });
 

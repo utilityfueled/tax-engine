@@ -93,6 +93,12 @@ lines:
     formula: "A valid explicitly saved guided year supplies the workspace target year on sync and reopen, including a return with no uploads. Original source years remain unchanged. Unknown or legacy omitted guided years stay unknown."
     irsRef: "Form1040 actual tax year and records"
     testRef: "tests/apps/web/workspace-guided-year.test.ts::restores the actual guided year and completed facts after a cached workspace was read"
+  - line: "guided-active-workspace-review"
+    description: "Build the advanced review only when it is visible"
+    formula: "During the guided interview, the workspace uses the guided shell for draft recovery and estimates. Build the advanced issue summary, fallback estimate and return bundle only in advanced mode. On entry to advanced mode, derive them from the current workspace and draft before exposing draft-dependent review actions, and apply the existing year and readiness checks."
+    testRef: "tests/apps/web/guided-original-upload-year.test.tsx::builds advanced review only when the workspace is in advanced mode"
+    testRefs:
+      - "tests/apps/web/guided-original-upload-year.test.tsx::restores the current guided fallback estimate in an advanced workspace"
   - line: "conflicts"
     description: "Retain source-year conflicts and unknown documents"
     formula: "A guided year cannot overwrite a different or missing original document year. Conflicting years and unresolved original years retain explicit blockers and cannot produce a preview. Unsupported2026 remains gated even with completed actual facts."

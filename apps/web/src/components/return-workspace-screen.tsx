@@ -44,7 +44,6 @@ import {
   collectGuidedReviewIssues,
   loadGuidedFlowState,
   type GuidedFlowState,
-  type GuidedReviewIssue,
   type InterviewSectionId,
 } from "@/lib/guided-interview-flow";
 import { TaxYearInputSchema } from "@/models/inputs";
@@ -437,17 +436,7 @@ export function ReturnWorkspaceScreen({
     defaultPartnerReviewConsent
   );
   const [partnerReviewDownloadRun, setPartnerReviewDownloadRun] = useState<PartnerReviewDownloadRun | null>(null);
-  const [persistedGuidedFlowState, setPersistedGuidedFlowState] = useState<GuidedFlowState | null>(null);
-  const getTaxExplanationInput = useCallback(() => {
-    if (persistedGuidedFlowState?.phase !== "complete" || persistedGuidedFlowState.taxYear !== 2025) return null;
-    try {
-      const parsed = TaxYearInputSchema.safeParse(buildTaxInputFromGuidedData(persistedGuidedFlowState));
-      return parsed.success ? parsed.data : null;
-    } catch { return null; }
-  }, [persistedGuidedFlowState]);
-  const [guidedFallbackPreview, setGuidedFallbackPreview] = useState<RefundTickerPreviewData | null>(null);
   const [guidedResumeSectionId, setGuidedResumeSectionId] = useState<InterviewSectionId | null>(null);
-  const [guidedReviewIssues, setGuidedReviewIssues] = useState<GuidedReviewIssue[]>([]);
   const [guidedMode, setGuidedModeRaw] = useState(() => {
     const browserStorage = getBrowserStorage();
     return deploymentMode === "self-host" && browserStorage ? readGuidedModePreference(browserStorage, workspaceId) : true;
@@ -475,6 +464,60 @@ export function ReturnWorkspaceScreen({
   const guidedDraft = useMemo(() => localWorkspaceEditingEnabled ? workspaceId
     : ownerScopeKey && workspaceRevision ? hostedGuidedDraftId(ownerScopeKey, workspaceId, workspaceRevision) : null,
   [localWorkspaceEditingEnabled, ownerScopeKey, workspaceId, workspaceRevision]);
+
+  const advancedGuidedReview = useMemo(() => {
+    if (guidedMode || !workspace || workspace.id !== workspaceId || !guidedDraft) return null;
+    const browserStorage = getBrowserStorage();
+    const nextGuidedFlowState = browserStorage ? loadGuidedFlowState(browserStorage, guidedDraft) : null;
+    if (!nextGuidedFlowState) return null;
+
+    const issues = collectGuidedReviewIssues(nextGuidedFlowState);
+    const { filingStatus } = nextGuidedFlowState.segmentation;
+    let fallbackPreview: RefundTickerPreviewData | null = null;
+    if (!workspace.enginePreview
+      && (workspace.returnSummary.status === "ready-to-recompute" || workspace.returnSummary.status === "awaiting-interview")
+      && workspace.returnSummary.targetTaxYear !== null
+      && nextGuidedFlowState.taxYear === workspace.returnSummary.targetTaxYear
+      && filingStatus !== null
+    ) {
+      const guidedPreview = computeGuidedPreview(nextGuidedFlowState);
+      if (guidedPreview) fallbackPreview = {
+        filingStatus: mapFilingStatus(filingStatus),
+        taxYear: workspace.returnSummary.targetTaxYear,
+        filingState: nextGuidedFlowState.segmentation.stateCode ?? undefined,
+        metrics: {
+          totalIncome: guidedPreview.totalIncome,
+          agi: guidedPreview.agi,
+          taxableIncome: guidedPreview.taxableIncome,
+          totalTax: guidedPreview.totalTax,
+          totalPayments: guidedPreview.totalPayments,
+          refund: guidedPreview.refund,
+          amountOwed: guidedPreview.amountOwed
+        },
+        separateStateReturns:isSeparateStatePreview(guidedPreview.state)?guidedPreview.state:undefined,
+        stateMetrics: guidedPreview.state&&!isSeparateStatePreview(guidedPreview.state)
+          ? {
+              stateCode: guidedPreview.state.stateCode,
+              stateTax: guidedPreview.state.stateTax,
+              totalPayments: guidedPreview.state.stateWithholding,
+              refund: guidedPreview.state.stateRefund,
+              amountOwed: guidedPreview.state.stateAmountOwed
+            }
+          : undefined
+      };
+    }
+    return { state: nextGuidedFlowState, issues, fallbackPreview };
+  }, [guidedDraft, guidedMode, workspace, workspaceId]);
+  const persistedGuidedFlowState = advancedGuidedReview?.state ?? null;
+  const guidedFallbackPreview = advancedGuidedReview?.fallbackPreview ?? null;
+  const guidedReviewIssues = advancedGuidedReview?.issues ?? [];
+  const getTaxExplanationInput = useCallback(() => {
+    if (persistedGuidedFlowState?.phase !== "complete" || persistedGuidedFlowState.taxYear !== 2025) return null;
+    try {
+      const parsed = TaxYearInputSchema.safeParse(buildTaxInputFromGuidedData(persistedGuidedFlowState));
+      return parsed.success ? parsed.data : null;
+    } catch { return null; }
+  }, [persistedGuidedFlowState]);
 
   function setWorkspace(localWorkspace: ReturnWorkspaceRecord) {
     setWorkspaceSnapshot({ workspace: localWorkspace, workspaceRevision: null, ownerScopeKey: null, hasPrivateSnapshot: false });
@@ -614,75 +657,6 @@ export function ReturnWorkspaceScreen({
     setPartnerReviewDownloadRun(null);
   }, [workspace?.updatedAt]);
 
-  useEffect(() => {
-    if (!workspace) {
-      setPersistedGuidedFlowState(null);
-      setGuidedFallbackPreview(null);
-      setGuidedReviewIssues([]);
-      return;
-    }
-
-    const browserStorage = getBrowserStorage();
-
-    if (!browserStorage) {
-      setPersistedGuidedFlowState(null);
-      setGuidedFallbackPreview(null);
-      setGuidedReviewIssues([]);
-      return;
-    }
-
-    const nextGuidedFlowState = guidedDraft ? loadGuidedFlowState(browserStorage, guidedDraft) : null;
-    setPersistedGuidedFlowState(nextGuidedFlowState);
-    setGuidedReviewIssues(nextGuidedFlowState ? collectGuidedReviewIssues(nextGuidedFlowState) : []);
-
-    if (
-      workspace.enginePreview
-      || (
-        workspace.returnSummary.status !== "ready-to-recompute"
-        && workspace.returnSummary.status !== "awaiting-interview"
-      )
-      || workspace.returnSummary.targetTaxYear === null
-      || !nextGuidedFlowState
-      || nextGuidedFlowState.taxYear !== workspace.returnSummary.targetTaxYear
-      || nextGuidedFlowState.segmentation.filingStatus === null
-    ) {
-      setGuidedFallbackPreview(null);
-      return;
-    }
-
-    const guidedPreview = computeGuidedPreview(nextGuidedFlowState);
-
-    if (!guidedPreview) {
-      setGuidedFallbackPreview(null);
-      return;
-    }
-
-    setGuidedFallbackPreview({
-      filingStatus: mapFilingStatus(nextGuidedFlowState.segmentation.filingStatus as NonNullable<GuidedFlowState["segmentation"]["filingStatus"]>),
-      taxYear: workspace.returnSummary.targetTaxYear,
-      filingState: nextGuidedFlowState.segmentation.stateCode ?? undefined,
-      metrics: {
-        totalIncome: guidedPreview.totalIncome,
-        agi: guidedPreview.agi,
-        taxableIncome: guidedPreview.taxableIncome,
-        totalTax: guidedPreview.totalTax,
-        totalPayments: guidedPreview.totalPayments,
-        refund: guidedPreview.refund,
-        amountOwed: guidedPreview.amountOwed
-      },
-      separateStateReturns:isSeparateStatePreview(guidedPreview.state)?guidedPreview.state:undefined,
-      stateMetrics: guidedPreview.state&&!isSeparateStatePreview(guidedPreview.state)
-        ? {
-            stateCode: guidedPreview.state.stateCode,
-            stateTax: guidedPreview.state.stateTax,
-            totalPayments: guidedPreview.state.stateWithholding,
-            refund: guidedPreview.state.stateRefund,
-            amountOwed: guidedPreview.state.stateAmountOwed
-          }
-        : undefined
-    });
-  }, [guidedDraft, workspace]);
-
   async function uploadFiles(files: File[], guidedTaxYear?: number | null) {
     if (files.length === 0) {
       return "";
@@ -732,8 +706,7 @@ export function ReturnWorkspaceScreen({
 
   function resetWorkspaceUi() {
     setAnswerDrafts({}); setProviderSummaryRun(null); setProviderSummaryError(null);
-    setPersistedGuidedFlowState(null); setGuidedFallbackPreview(null); setGuidedResumeSectionId(null);
-    setGuidedReviewIssues([]); setGuidedModeRaw(false);
+    setGuidedResumeSectionId(null); setGuidedModeRaw(false);
     setPartnerReviewConsent(defaultPartnerReviewConsent); setPartnerReviewDownloadRun(null);
   }
 
@@ -1091,6 +1064,47 @@ export function ReturnWorkspaceScreen({
     );
   }
 
+  const hostedLocalSaveWarning = hostedLocalSaveFailed ? (
+    <p role="alert">The account copy was saved. This browser could not save the private local copy. Keep this page open until you have backed up your work.</p>
+  ) : null;
+  const hostedBackup = ownerScopeKey && workspaceRevision && hasPrivateSnapshot ? (
+    <WorkspaceRecoveryControls workspaceId={workspaceId} hosted={{ ownerScopeKey, current: { workspace, revision: workspaceRevision } }} />
+  ) : null;
+
+  if (guidedMode) {
+    return (
+      <div className="workspace-grid">
+        {hostedLocalSaveWarning}
+        {hostedBackup}
+        <GuidedInterviewShell
+          workspace={workspace}
+          guidedDraft={guidedDraft}
+          documentCacheWorkspaceId={documentCacheWorkspaceId}
+          documentAnalysisOwnerScopeKey={localWorkspaceEditingEnabled ? undefined : ownerScopeKey}
+          beforeGuidedWrite={localWorkspaceEditingEnabled ? () => {
+            requireCurrentLocalWorkspace(requireBrowserStorage(), workspace);
+          } : undefined}
+          onExitGuided={() => {
+            setGuidedMode(false);
+            setGuidedResumeSectionId(null);
+          }}
+          onUploadDocuments={uploadFiles}
+          resumeSectionId={guidedResumeSectionId}
+          onSyncToWorkspace={async (syntheticDocuments, factAnswers, guidedFlowState) => {
+            if (localWorkspaceEditingEnabled) {
+              setWorkspace(syncLocalGuidedFlowToWorkspace(requireBrowserStorage(), workspace, syntheticDocuments, factAnswers, guidedFlowState));
+            } else {
+              const synced = syncGuidedFlowToWorkspace(workspace, syntheticDocuments, factAnswers, guidedFlowState);
+              await persistHostedWorkspace(synced);
+            }
+            setGuidedMode(false);
+            setGuidedResumeSectionId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   const auditTrailEntries = [...workspace.auditTrail].reverse();
   const documentsById = new Map(workspace.documents.map((document) => [document.id, document]));
   const structuredFactsById = new Map(workspace.structuredFacts.map((fact) => [fact.id, fact]));
@@ -1132,12 +1146,6 @@ export function ReturnWorkspaceScreen({
     : canDownloadFilledReturnPdf
       ? "You can download a review PDF after completing the required taxpayer facts. It is not a filing copy. Save the workspace summary and audit notes as JSON."
       : "Your return is not filing-ready yet. Download a local draft return bundle with the current forms data, checklist, and review notes.";
-  const hostedLocalSaveWarning = hostedLocalSaveFailed ? (
-    <p role="alert">The account copy was saved. This browser could not save the private local copy. Keep this page open until you have backed up your work.</p>
-  ) : null;
-  const hostedBackup = ownerScopeKey && workspaceRevision && hasPrivateSnapshot ? (
-    <WorkspaceRecoveryControls workspaceId={workspaceId} hosted={{ ownerScopeKey, current: { workspace, revision: workspaceRevision } }} />
-  ) : null;
   const filingPackButtonLabel = canPresentCompletedBundle ? "Download Return Bundle (.json)" : "Download Draft Return Bundle (.json)";
   const missingItemsMemoIncluded = filingPackDownload?.filingPack.files.some(
     (file) => file.path === "05-missing-items-memo.txt"
@@ -1546,40 +1554,6 @@ export function ReturnWorkspaceScreen({
       ) : null}
     </RetroShell>
   ) : null;
-
-  if (guidedMode) {
-    return (
-      <div className="workspace-grid">
-        {hostedLocalSaveWarning}
-        {hostedBackup}
-        <GuidedInterviewShell
-          workspace={workspace}
-          guidedDraft={guidedDraft}
-          documentCacheWorkspaceId={documentCacheWorkspaceId}
-          documentAnalysisOwnerScopeKey={localWorkspaceEditingEnabled ? undefined : ownerScopeKey}
-          beforeGuidedWrite={localWorkspaceEditingEnabled ? () => {
-            requireCurrentLocalWorkspace(requireBrowserStorage(), workspace);
-          } : undefined}
-          onExitGuided={() => {
-            setGuidedMode(false);
-            setGuidedResumeSectionId(null);
-          }}
-          onUploadDocuments={uploadFiles}
-          resumeSectionId={guidedResumeSectionId}
-          onSyncToWorkspace={async (syntheticDocuments, factAnswers, guidedFlowState) => {
-            if (localWorkspaceEditingEnabled) {
-              setWorkspace(syncLocalGuidedFlowToWorkspace(requireBrowserStorage(), workspace, syntheticDocuments, factAnswers, guidedFlowState));
-            } else {
-              const synced = syncGuidedFlowToWorkspace(workspace, syntheticDocuments, factAnswers, guidedFlowState);
-              await persistHostedWorkspace(synced);
-            }
-            setGuidedMode(false);
-            setGuidedResumeSectionId(null);
-          }}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="workspace-grid">
