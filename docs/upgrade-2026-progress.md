@@ -1,5 +1,33 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio certified refundable jobs credits
+
+`5d8e8fd4` adds an internal credit draft for one direct individual with
+an actual 2026 Ohio Department of Development certificate. It carries
+the certified Decimal amount and January 1, 2026 deemed payment date
+for a job-creation award or a qualifying former job-retention award.
+An ordinary current-law retention award stays nonrefundable. The draft
+holds pass-through and megaproject cases, a short accounting year,
+conflicting ownership and legacy terms, and missing or unverified
+award facts. The audit omits holder identifiers and certificate details.
+The method does not calculate a refund or qualify annual forms or filing.
+[Refundable award statute](https://codes.ohio.gov/ohio-revised-code/section-5747.058) ·
+[Job creation](https://codes.ohio.gov/ohio-revised-code/section-122.17) ·
+[Former retention](https://codes.ohio.gov/ohio-revised-code/section-122.171/9-17-2014).
+
+Independent review reproduced acceptance of a certificate issued before
+the end of the annual reporting period. The new regression failed for a
+December 31, 2026 certificate. The corrected guard admits the January 1,
+2027 issue-date boundary and keeps the distinct January 1, 2026 statutory
+payment date. Independent review re-ran the four draft tests. All 225
+focused tests, 38 orchestration tests, browser source audit, scoped lint,
+and all 10,050 spec references passed. The Ohio catalog still lists the
+2025 main IT 1040 and SD 100, and lists its 2026 papers as drafts.
+[Creation reporting rule](https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07) ·
+[Retention reporting rule](https://codes.ohio.gov/ohio-administrative-code/rule-122:16-1-05) ·
+[Ohio annual form catalog](https://tax.ohio.gov/individual/get-a-form) ·
+[Ohio release archive](https://tax.ohio.gov/individual/resources/individualincome).
+
 ## November 25 Ohio pending-header calculation replay
 
 `5bbc0504` runs one full canonical serialization at each original
@@ -24,6 +52,11 @@ the original validation order and the Schedule A fallback. The browser
 source audit, 38 orchestration tests, scoped lint, inventory freshness
 and all 10,044 spec references passed. The isolated source matched all
 6,691 tracked blobs and 15 official sample-document checksums.
+The tracked-only `9dac7cb0` and `5bbc0504` benchmark independently
+reproduced a 16.02% and 19.16% median process CPU reduction on the same
+two local fixtures. Full synthetic outcome hashes matched in each case.
+The saved benchmark SHA-256 is
+`4beef97df8c6344d826e0306e495d049fbc4702a722a78116026e947879b4d10`.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45523012365) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45523012599) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45523012538) ·
@@ -49,8 +82,10 @@ check, scoped lint and all 10,043 spec references passed. Independent
 review found and rechecked two mask and placeholder cases. The local
 unit and coverage suites each passed 30,483 tests with 81 original
 skips and 88.38% branch coverage. The local types, builds and lint also
-passed. GitHub's exact-source Docker build passed. Browser runs are
-still in progress.
+passed. The local browser suite passed 652 active cases with five
+original skips across eight windows. The owned server closed. All eleven
+exact local checks passed. GitHub's exact-source Docker build passed.
+The Linux browser jobs are still in progress.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45521682742) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45521682739) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45521682807).

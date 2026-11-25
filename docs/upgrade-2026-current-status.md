@@ -9,18 +9,28 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `5d8e8fd4` validates a direct individual's certified Ohio refundable
+  job creation or grandfathered retention credit with exact cents and the
+  statutory payment date. Independent source review rechecked the
+  certificate issue-date correction. The draft remains filing-unqualified.
+  225 focused tests, the browser source audit and spec checks passed.
+  [Ohio jobs credit draft](upgrade-2026-progress.md#november-25-ohio-certified-refundable-jobs-credits).
+
 - `5bbc0504` avoids repeating the serialization of an internally owned
   federal result during a pending Ohio school header edit. Both original
   checks still run. Independent review, 202 focused tests, the browser
   source audit and spec checks passed. The exact native ARM64 rehearsal
-  was dispatched. [Ohio calculation replay](upgrade-2026-progress.md#november-25-ohio-pending-header-calculation-replay).
+  is running. The exact local comparison measured 16.02% and 19.16%
+  lower CPU per edit on two synthetic Ohio fixtures.
+  [Ohio calculation replay](upgrade-2026-progress.md#november-25-ohio-pending-header-calculation-replay).
 
 - `9dac7cb0` stops a repeated guided 1099-INT or 1099-DIV from being
   counted twice when both rows identify the same complete account. The
   taxpayer can reconcile the original and corrected entries. Independent
   review, 34 focused tests, the browser source audit and spec checks passed.
-  The full local unit and coverage runs passed 30,483 tests at 88.38%
-  branch coverage. Local and GitHub browser runs are in progress.
+  All eleven exact local checks passed. Unit and coverage runs passed
+  30,483 tests at 88.38% branch coverage. Local Chromium passed 652
+  active cases, with five original skips and verified server cleanup.
   [Investment statement evidence](upgrade-2026-progress.md#november-25-guided-investment-statement-reconciliation).
 
 - `d316004f` reuses persisted Ohio drafts in the business and resident
