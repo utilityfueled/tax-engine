@@ -17615,6 +17615,25 @@
       ]
     },
     {
+      "key": "state/oh-2026-refundable-jobs-credit-draft",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.058",
+      "specPath": "spec/state/oh-2026-refundable-jobs-credit-draft.yaml",
+      "enginePath": "src/engine/state/oh-2026-refundable-jobs-credit-draft.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-2026-resident-capital-gain-draft",
       "jurisdiction": "state",
       "taxYear": 2026,
