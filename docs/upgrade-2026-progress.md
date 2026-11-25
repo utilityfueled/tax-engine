@@ -1,5 +1,77 @@
 # 2026 upgrade implementation evidence
 
+## November 25 guided workspace and draft recovery
+
+`2c92aa8d` moves advanced issue, fallback estimate and download assembly
+out of the guided interview. Entering advanced mode uses the current
+workspace and draft before review actions are available. The previous code
+ran advanced review while guided mode was visible. All 35 focused tests
+and independent engineering review passed. That exact run passed the Web
+and Docker builds, types, spec validation and inventory. Local unit and
+coverage recorded timeout and worker-start failures. CI lint caught an
+unused import. Managed Linux passed 650 active cases. Two railroad
+retirement inspections hit the four-second deadline after reaching
+`page_text`. Strict AMD64 passed 645 active cases and hit seven Ohio
+30-second deadlines. Compose upgrade, recovery and rollback, independent
+archive verification and container removal passed. Both browser jobs kept
+the original five skips. [Exact Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45575228037).
+
+`f320a9fe` removes the second parse of identical saved bytes at guided
+mount. It still reads storage again and applies a replacement saved between
+render and effects, including in StrictMode. Save, reset and replacement
+clear the initial read metadata. The regression observed two parses before
+the fix and one afterward. All 37 focused tests passed, with six linked
+spec lines, web types and independent engineering review. `83e2eb6a`
+removes the unused import. Full lint has zero errors, with the existing
+warnings. The combined archive matches all 6,697 tracked blobs, 2,071
+browser source digests and 15 pinned sample documents. Browser deadlines,
+retries and assertions retain their existing settings.
+
+All eight ordinary CI jobs and the Docker build passed on `83e2eb6a`.
+Unit shards and coverage each reported 30,603 passing cases. CI measured
+92,612 of 104,290 branches at 88.80%. All eight local static checks
+passed and all 10,063 spec lines linked to tests. The initial combined
+local unit run timed out on one resident-credit case, and coverage lost
+one HSA worker at startup. The affected files passed 3/3 and 2/2 in
+isolation. The serial unit repeat passed 30,522 cases with the original
+81 skips. Local Chromium passed all 652 active cases in eight windows
+with the original five skips and verified test-server shutdown.
+The serial coverage repeat passed 30,521 cases and hit one 15-second
+Ohio school-header deadline. The unchanged affected file then passed
+all 20 cases in isolation. Ten of the eleven local checks passed.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45600174431) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45600174403).
+
+The combined managed Linux job passed 650 active cases. Its two railroad
+retirement inspections hit the four-second limit after entering
+`page_text`. The managed server closed. Strict AMD64 passed 639 active
+cases. Eleven Ohio cases hit their 30-second deadlines and two railroad
+retirement inspections hit the four-second limit. Both jobs kept all five
+original skips. Strict image smoke, Compose recovery and rollback,
+independent archive verification and container removal passed. The
+strict Ohio traces ended at different wait, request, evaluation and
+input actions. The four school traces each spent about 29.8 seconds
+across hundreds of actions, with no completed action over 0.9 seconds.
+[Combined Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45600174397).
+
+The native ARM64 rehearsal passed image smoke, Compose upgrade and
+recovery, independent archive verification and container cleanup. The
+browser job completed all eight windows with 642 active passes, ten
+Ohio 30-second deadlines and five original skips. The failures covered
+two NEW212, one reciprocal, three resident-credit and four part-year
+school cases. [Native ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45601121278).
+
+The agencies' latest annual PA-40, IT 1040 and SD 100 forms and
+instructions remain for 2025. Ohio's 2026-labeled voluntary disclosure
+bundle covers 2022–2025. The IRS current Form 8615 and instructions are
+also for 2025, with separate 2026 drafts. Final-form qualification gates
+remain open. [Pennsylvania DOR](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio instructions](https://tax.ohio.gov/individual/file-now/individual-and-school-district-income-tax-instructions) · [IRS Form 8615](https://www.irs.gov/forms-pubs/about-form-8615).
+
+The IRS confirmed the already-pinned final 2026 Form 8801 blank. The
+current Form 6251, its instructions, and the Form 8801 instructions are
+still for 2025. The 2026 minimum-tax-credit candidate remains disabled
+while those sources, transfer qualification and independent review are
+pending. [Form 8801](https://www.irs.gov/pub/irs-pdf/f8801.pdf) · [Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) · [6251 instructions](https://www.irs.gov/pub/irs-pdf/i6251.pdf) · [8801 instructions](https://www.irs.gov/pub/irs-pdf/i8801.pdf).
+
 ## November 25 AI evaluation accuracy and abstention
 
 `297f948a` prevents old binding, prompt or schema versions from earning

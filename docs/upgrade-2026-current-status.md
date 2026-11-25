@@ -9,6 +9,22 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `83e2eb6a` includes two guided workspace fixes and their lint correction.
+  Advanced review work starts when advanced mode opens. The guided shell
+  parses an unchanged saved draft once and applies a newer save it finds
+  before mount effects finish. All 37 focused tests, independent engineering
+  review, eight CI jobs and the Docker build passed. Managed Linux hit two
+  railroad retirement inspection deadlines. Strict AMD64 hit eleven Ohio
+  and two railroad retirement deadlines, and ARM64 hit ten Ohio deadlines.
+  Both strict runtimes passed recovery, archive verification and cleanup.
+  Local Chromium passed all 652 active cases. Ten local checks passed, and
+  the serial coverage repeat hit one Ohio school-header deadline. The
+  unchanged file passed all 20 cases in isolation. Exact CI coverage
+  passed at 88.80%.
+  The latest final annual Pennsylvania and Ohio parent forms are still
+  for 2025.
+  [Guided workspace evidence](upgrade-2026-progress.md#november-25-guided-workspace-and-draft-recovery).
+
 - `297f948a` fixes the offline AI scorecard. Stale evaluation versions
   keep their required fields and attempt cost but earn zero exact matches.
   Only validated explicit abstentions enter the abstention counts. All 94
