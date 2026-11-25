@@ -19,7 +19,24 @@ corrects that one pin. All 58 timing and source-audit controls passed
 with the existing two workers, zero strict retries, 30-second deadline
 and request ceilings. The source and browser test code are unchanged
 from `ac9ae969`. The exact archive matched 6,697 Git blobs and 15 pinned
-PDF samples. The corrected Docker build and web build passed.
+PDF samples. The corrected Docker build and web build passed. All eight
+Linux CI jobs passed. Coverage and the combined unit shards each passed
+30,606 cases across 2,228 files. Branch coverage reached 88.79%.
+Managed Chromium passed all 652 active cases across eight verified
+windows with the original five skips. Strict AMD64 passed smoke, Compose
+recovery, rollback, independent archive verification and container
+removal. It passed 639 browser cases with five original skips. Eleven
+Ohio cases hit the 30-second limit (two NEW212, one reciprocal refund,
+four resident credit and four part-year school), and two railroad
+retirement inspections hit the four-second limit. `ac9ae969` failed the
+same cases in its strict AMD64 job. [Corrected AMD64 evidence](https://github.com/utilityfueled/tax-engine/actions/runs/45634574414/artifacts/15037722259).
+The earlier ARM64 run on `ac9ae969` passed upgrade, recovery, archive
+enforcement and browser cleanup. It
+passed 644 active browser cases with five original skips and eight Ohio
+deadlines. One was NEW212, one was reciprocal refund, two were resident
+credit and four were part-year school. The archive and timing pin
+correction receives a separate native run on `867d5cd8`.
+[Earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45634211549/job/139275199126).
 [Original managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45634170296/job/139275040154) · [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45634574431) · [Corrected Web and AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45634574414) · [Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45634574352) · [Corrected native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45634648361).
 
 ## November 25 Ohio saved-estimate validation and local coverage
@@ -44,7 +61,11 @@ dump/restore. Chromium reported `ERR_NETWORK_CHANGED` on rollback
 navigation, before the browser suite started. Independent archive
 verification passed. The first failure is retained. Only the interrupted
 AMD64 job was restarted on the same application revision. The retry
-passed its Compose recovery and rollback step and started browser tests.
+passed Compose recovery, rollback, independent archive verification and
+container removal. Strict Chromium passed 645 cases with five original
+skips and seven Ohio 30-second deadlines. The failing groups were
+NEW212 (one), resident credit (two) and part-year school district (four).
+Both railroad retirement cases passed in this run.
 Managed Linux passed 651 cases with five original skips. The 390px
 railroad retirement saved-PDF inspection emitted its final phase marker
 at 3.855 seconds. The subprocess reached its four-second deadline before
@@ -55,7 +76,7 @@ skips and ten Ohio 30-second deadlines. The failing groups were NEW212
 (two), reciprocal refund (one), resident credit (three), and part-year
 school district (four). Compose recovery, independent archive verification
 and enforcement, and browser container removal passed.
-[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45622527172) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45622527031) · [First AMD64 artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103/artifacts/15027785511) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45622716031/job/139234822678).
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45622527172) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45622527031) · [First AMD64 artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103/artifacts/15027785511) · [AMD64 retry artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103/artifacts/15034718897) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45622716031/job/139234822678).
 
 Both earlier macOS coverage trouble spots passed all 22 affected cases
 under coverage instrumentation and their original deadlines. The focused
@@ -80,6 +101,22 @@ the original 81 skips. It reached the child-process timeout in the archive
 diagnostics and the 15-second test limit in Form 2210's two-owner K-1
 physical review. It exited before emitting a repository-wide coverage
 result. The independent exact Linux coverage result is recorded above.
+All eight remaining local pre-browser checks passed. Local Chromium
+passed 650 cases with five original skips. The 1280px and 390px railroad
+retirement inspectors each reached the four-second limit after entering
+the raw-graph phase. The browser server closed. Both attempts had already
+spent about 2.4 CPU seconds in content-context processing.
+An isolated A/B using both saved synthetic PDFs produced identical
+verified receipts. Parsing each geometry Decimal once changed median CPU
+by 1.09% slower and 2.02% faster respectively. The candidate was kept
+outside the checkout. The focused controls for all three initial unit
+timeouts passed four cases under the original deadlines.
+The full serial unit repeat lost one Vitest fork before a Pennsylvania
+fixture could run. All other 30,523 active tests passed with the original
+81 skips. The affected file passed in isolation. An instrumented repeat of
+both earlier coverage failures passed all 74 focused cases. Its subset
+reported insufficient global coverage, so it did not replace the full
+local coverage result.
 
 An independent prototype removed one duplicate residency projection from
 confirmed Ohio school, resident-credit and NEW212 renders. All 33 focused

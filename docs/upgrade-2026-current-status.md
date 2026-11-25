@@ -15,8 +15,11 @@ Use the linked progress sections when investigating individual packages.
   the browser source audit and independent engineering review passed.
   The first managed job stopped before running browser tests because of a
   stale diagnostic audit pin. `867d5cd8` corrects the pin, and all 58 timing
-  and source-audit controls passed. Exact Linux CI, Web, Docker and native
-  ARM64 checks are in progress on the corrected revision.
+  and source-audit controls passed. Exact Linux CI passed 30,606 cases at
+  88.79% branch coverage, and managed Chromium passed all 652 active cases.
+  The web and Docker builds passed. Strict AMD64 passed recovery, rollback,
+  archive checks and cleanup, and hit eleven Ohio and two railroad
+  retirement browser deadlines. The exact ARM64 and local checks continue.
   [Help rendering evidence](upgrade-2026-progress.md#november-25-guided-help-rendering).
 
 - `fbe2900a` validates each saved Ohio estimate once during navigation
@@ -26,9 +29,11 @@ Use the linked progress sections when investigating individual packages.
   All eight Linux CI jobs passed, including 88.80% branch coverage. Both
   builds passed. The first AMD64 job stopped before browser qualification
   after Chromium reported a network change during rollback navigation.
-  The same-revision AMD64 retry passed recovery and rollback. Managed
-  Linux hit one railroad retirement PDF deadline. ARM64 passed recovery,
-  archive verification and cleanup, and hit ten Ohio browser deadlines.
+  The same-revision AMD64 retry passed recovery, rollback, archive checks
+  and cleanup. The rerun missed seven Ohio browser deadlines. Managed
+  Linux hit one railroad retirement PDF deadline and local Chromium hit
+  two. Native ARM64 passed recovery, archive verification and cleanup, and
+  hit ten Ohio browser deadlines.
   The failing Linux fixtures have empty estimated-payment ledgers.
   [Saved-estimate evidence](upgrade-2026-progress.md#november-25-ohio-saved-estimate-validation-and-local-coverage).
 
