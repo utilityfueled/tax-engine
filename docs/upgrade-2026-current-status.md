@@ -9,6 +9,20 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `5bbc0504` avoids repeating the serialization of an internally owned
+  federal result during a pending Ohio school header edit. Both original
+  checks still run. Independent review, 202 focused tests, the browser
+  source audit and spec checks passed. The exact native ARM64 rehearsal
+  was dispatched. [Ohio calculation replay](upgrade-2026-progress.md#november-25-ohio-pending-header-calculation-replay).
+
+- `9dac7cb0` stops a repeated guided 1099-INT or 1099-DIV from being
+  counted twice when both rows identify the same complete account. The
+  taxpayer can reconcile the original and corrected entries. Independent
+  review, 34 focused tests, the browser source audit and spec checks passed.
+  The full local unit and coverage runs passed 30,483 tests at 88.38%
+  branch coverage. Local and GitHub browser runs are in progress.
+  [Investment statement evidence](upgrade-2026-progress.md#november-25-guided-investment-statement-reconciliation).
+
 - `d316004f` reuses persisted Ohio drafts in the business and resident
   credit browser journeys. All six scoped Chromium cases and 38 diagnostic
   checks passed with the original assertions and deadlines. All eleven

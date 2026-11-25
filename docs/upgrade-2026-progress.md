@@ -1,5 +1,68 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio pending-header calculation replay
+
+`5bbc0504` runs one full canonical serialization at each original
+Ohio residency and school check when both operands are the same
+privately computed pending-header result. The proof checks the exact
+input and result in the same synchronous call. Distinct or supplied
+results, including the Schedule A preliminary callback, retain the
+original comparisons and errors. The regressions record four full
+redactions before the change and two after it. A changing Schedule A
+preliminary result still fails even when the result object is shared.
+
+On two synthetic school fixtures, a private alternating baseline and
+prototype benchmark reduced median process CPU per edit by 20.7% and
+17.0% over four low-load processes with 112 measured edits per fixture
+in each. The state, preview and display digests matched. The prototype
+archives were removed. The measurements cover local application work
+and leave the 30-second Linux browser gate open.
+
+All 202 focused tests passed on Node 26.13.1. Independent review ran 51
+tests on Node 22.12.0 and verified the proof's creation and custody,
+the original validation order and the Schedule A fallback. The browser
+source audit, 38 orchestration tests, scoped lint, inventory freshness
+and all 10,044 spec references passed. The isolated source matched all
+6,691 tracked blobs and 15 official sample-document checksums.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45523012365) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45523012599) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45523012538) ·
+[Exact ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45523084019).
+
+## November 25 guided investment statement reconciliation
+
+`9dac7cb0` holds repeated Form 1099-INT and 1099-DIV rows with a
+matching, complete account identity before preview or calculation. Both
+entries stay available for review. A combined statement can still carry
+different form kinds for the same account. Distinct accounts, payer TINs
+and joint-return owners are counted separately. Masked references, bare
+short numeric references and missing or all-zero payer TINs do not
+establish a match. The change follows the IRS account designation and
+correction instructions and makes no change to tax arithmetic.
+[IRS Publication 1099, Parts H and L](https://www.irs.gov/publications/p1099).
+
+The independent baseline reproduced two $800.25 copies of one Form
+1099-INT unconditionally counting as $1,600.50 and triggering Schedule B.
+The new regression failed before the fix. All 34 focused tests, all 38
+browser pin tests, the browser source audit, the inventory freshness
+check, scoped lint and all 10,043 spec references passed. Independent
+review found and rechecked two mask and placeholder cases. The local
+unit and coverage suites each passed 30,483 tests with 81 original
+skips and 88.38% branch coverage. The local types, builds and lint also
+passed. GitHub's exact-source Docker build passed. Browser runs are
+still in progress.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45521682742) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45521682739) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45521682807).
+
+Two synthetic Ohio school-header fixtures on exact `03f367de` averaged
+0.296–0.307 ms for state updates and 15.033–15.192 ms for render and
+visible school status. Four paired comparator measurements put the old
+source comparison at 0.244–0.265 ms per edit. Instance-local reuse
+reduced that subphase but gave mixed end-to-end results across fixtures.
+The prototype was discarded. This local CPU measurement does not
+explain the Linux or native browser deadlines.
+
 ## November 25 exact Linux and ARM64 browser results
 
 Managed Linux at `03f367de` finished all eight Chromium windows with

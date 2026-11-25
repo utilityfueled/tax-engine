@@ -2,10 +2,12 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
+    "applicationCommit": "5bbc0504d02001a3a43e6e5280f443a688a7daa7",
     "verificationCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
     "generatedInventoryCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov24LatestLocalAndLinuxVerification",
+    "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
+    "pendingOhioResultEvidenceKey": "activeContinuation.nov25OhioPendingOwnedResultComparison",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
@@ -48,6 +50,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
+      "Finish exact 5bbc0504 Ohio pending-header qualification and observe native ARM64 rehearsal 45523084019. Finish the 9dac7cb0 investment statement browser runs. Start local 5bbc0504 checks after 9dac7cb0 releases the local browser server.",
       "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
@@ -56,6 +59,67 @@
     ]
   },
   "activeContinuation": {
+    "nov25OhioPendingOwnedResultComparison": {
+      "revision": "5bbc0504d02001a3a43e6e5280f443a688a7daa7",
+      "redRegression": {"failed": 2, "passed": 7, "rootRedactionsBefore": 4, "rootRedactionsAfter": 2},
+      "focusedTestsPassed": 202,
+      "independentTestsPassed": 51,
+      "independentTestNode": "22.12.0",
+      "diagnosticChecksPassed": 38,
+      "specReferencesPassed": 10044,
+      "trackedGitBlobsVerified": 6691,
+      "officialSampleHashesVerified": 15,
+      "prototypeBenchmark": {
+        "baseline": "9dac7cb0e09299362761786c16a761bcb8157818",
+        "processes": 4,
+        "editsPerFixturePerProcess": 112,
+        "medianProcessCpuReductionPercent": {"refund100": 20.7, "covered": 17.0},
+        "outcomeSha256": {
+          "refund100": "f9798b68494b9401675be086bfec482f0870e2d53b932d6f7d9564fc9da23b5b",
+          "covered": "48a498f8731d83cd533e01c0bbab0f9785db0c7db668c7de5afd1586314cb8d4"
+        },
+        "evidenceScope": "Local synthetic. Paired prototype archives removed. Strict Linux effect unverified."
+      },
+      "arm64Run": 45523084019,
+      "ciRun": 45523012365,
+      "webRun": 45523012599,
+      "dockerRun": 45523012538,
+      "localExactChecks": "Queued after local 9dac7cb0 browser cleanup.",
+      "evidence": ".local/upgrade-evidence/nov25-oh-pending-owned-comparison"
+    },
+    "nov25InvestmentStatementReconciliation": {
+      "revision": "9dac7cb0e09299362761786c16a761bcb8157818",
+      "authority": "https://www.irs.gov/publications/p1099",
+      "redRegression": {"failed": 1, "passed": 16},
+      "focusedTestsPassed": 34,
+      "independentFinalTestsPassed": 20,
+      "diagnosticChecksPassed": 38,
+      "specReferencesPassed": 10043,
+      "scopedLintPassed": true,
+      "browserSourceAuditPassed": true,
+      "inventoryFreshnessPassed": true,
+      "trackedGitBlobsVerified": 6691,
+      "officialSampleHashesVerified": 15,
+      "localUnit": {"passed": 30483, "originalSkips": 81, "workers": 8},
+      "localCoverage": {"passed": 30483, "originalSkips": 81, "branchPercent": 88.38},
+      "localExactChecks": "Running",
+      "ciRun": 45521682742,
+      "webRun": 45521682739,
+      "dockerRun": 45521682807,
+      "dockerStatus": "Success",
+      "evidence": ".local/upgrade-evidence/nov24-investment-statement-reconciliation"
+    },
+    "nov25OhioGuidedSourceComparisonCost": {
+      "revision": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
+      "fixtures": 2,
+      "timedEditsPerFixturePerArm": 112,
+      "beforeComparisonMsPerEdit": [0.244, 0.265],
+      "stateUpdateMsPerEdit": [0.296, 0.307],
+      "renderAndStatusMsPerEdit": [15.033, 15.192],
+      "pairedMeasurementSha256": "c1448dce9502107a3218cd806ac3c42e01aae18b655cbae9ab1ca6294f912e01",
+      "phaseMeasurementSha256": "4b15a2cea9be41069978f8e9ac9f80a9a61b35800b30c648d97874fc0f991125",
+      "decision": "Do not adopt the prototype after mixed full edit and render measurements. Evidence is local synthetic only."
+    },
     "nov24Form4137SourcePins": {
       "revision": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
       "historicalAuthority": "https://www.irs.gov/pub/irs-prior/f4137--2025.pdf",
