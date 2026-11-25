@@ -1,5 +1,69 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio saved-estimate validation and local coverage
+
+`fbe2900a` validates saved estimate fields once within Ohio navigation
+and shares that result with receipt matching. Federal input construction
+keeps its independent validation. With a confirmed actual receipt, the
+regression went from three amount checks to two. Invalid estimate fields,
+receipt mismatches and saved withholding errors retain their existing
+behavior. The focused suite passed 37 cases, the separate regression suite
+passed all eight, and web types, scoped lint, 16 spec references and
+independent engineering review passed. The archive matched 6,697 Git blobs,
+2,071 audited browser source digests and 15 pinned PDF sample hashes.
+The failing Linux fixtures have empty estimate ledgers, so this change
+provides no evidence of a shorter browser run.
+
+All eight exact Linux CI jobs passed on `fbe2900a`. Coverage passed
+30,605 cases across 2,228 files and reached 88.80% branches (92,612 of
+104,290). The Web and Docker builds passed. The first strict AMD64
+attempt passed the previous-image check, upgrade, database restart and
+dump/restore. Chromium reported `ERR_NETWORK_CHANGED` on rollback
+navigation, before the browser suite started. Independent archive
+verification passed. The first failure is retained. Only the interrupted
+AMD64 job was restarted on the same application revision. The retry
+passed its Compose recovery and rollback step and started browser tests.
+Managed Linux passed 651 cases with five original skips. The 390px
+railroad retirement saved-PDF inspection emitted its final phase marker
+at 3.855 seconds. The subprocess reached its four-second deadline before
+returning a verified result. The final marker alone earns no pass. The
+managed browser server closed.
+Native ARM64 passed 642 cases across eight batches with five original
+skips and ten Ohio 30-second deadlines. The failing groups were NEW212
+(two), reciprocal refund (one), resident credit (three), and part-year
+school district (four). Compose recovery, independent archive verification
+and enforcement, and browser container removal passed.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45622527172) · [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103) · [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45622527031) · [First AMD64 artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45622527103/artifacts/15027785511) · [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45622716031/job/139234822678).
+
+Both earlier macOS coverage trouble spots passed all 22 affected cases
+under coverage instrumentation and their original deadlines. The focused
+run reported insufficient coverage against the full-repository thresholds.
+macOS recorded sleep and wake transitions during the earlier full runs.
+The exact `83e2eb6a` full repeat passed 30,522 active cases with the
+original 81 skips and 88.42% branch coverage (92,221 of 104,290). The
+repeat held a process-scoped idle-sleep assertion and logged zero sleep
+or wake events over its 21 minutes. All eleven local checks now have
+passing results on `83e2eb6a`. The observation does not establish the
+cause of the earlier timeout.
+
+The initial macOS unit run on `fbe2900a` had 30,521 passes, 81 original
+skips and three five-second deadlines. They occurred in the saved
+multiple-expense ESA election, unflattened packet single write and
+cash-assistance workspace reopen cases. macOS logged four maintenance
+sleep transitions during that run. A focused control and a serial repeat
+are queued after the exact browser run.
+
+The initial two-worker local coverage run passed 30,522 cases and kept
+the original 81 skips. It reached the child-process timeout in the archive
+diagnostics and the 15-second test limit in Form 2210's two-owner K-1
+physical review. It exited before emitting a repository-wide coverage
+result. The independent exact Linux coverage result is recorded above.
+
+The current IRS Form 8960, Schedule A, and their instructions still show
+2025. The 2026 Schedule 3-A draft was available, and the current and archive
+final paths could not be verified. No filing or support gate moved.
+[Form 8960](https://www.irs.gov/pub/irs-pdf/f8960.pdf) · [8960 instructions](https://www.irs.gov/pub/irs-pdf/i8960.pdf) · [Schedule A](https://www.irs.gov/pub/irs-pdf/f1040sa.pdf) · [Schedule A instructions](https://www.irs.gov/pub/irs-pdf/i1040sca.pdf) · [Schedule 3-A draft](https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf).
+
 ## November 25 guided workspace and draft recovery
 
 `2c92aa8d` moves advanced issue, fallback estimate and download assembly

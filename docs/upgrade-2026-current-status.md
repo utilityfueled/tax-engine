@@ -9,6 +9,19 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `fbe2900a` validates each saved Ohio estimate once during navigation
+  before matching actual receipts. The existing receipt and withholding
+  checks remain in place. All 37 focused cases, the separate eight-case
+  regression repeat, web types, scoped lint, and engineering review passed.
+  All eight Linux CI jobs passed, including 88.80% branch coverage. Both
+  builds passed. The first AMD64 job stopped before browser qualification
+  after Chromium reported a network change during rollback navigation.
+  The same-revision AMD64 retry passed recovery and rollback. Managed
+  Linux hit one railroad retirement PDF deadline. ARM64 passed recovery,
+  archive verification and cleanup, and hit ten Ohio browser deadlines.
+  The failing Linux fixtures have empty estimated-payment ledgers.
+  [Saved-estimate evidence](upgrade-2026-progress.md#november-25-ohio-saved-estimate-validation-and-local-coverage).
+
 - `83e2eb6a` includes two guided workspace fixes and their lint correction.
   Advanced review work starts when advanced mode opens. The guided shell
   parses an unchanged saved draft once and applies a newer save it finds
@@ -17,10 +30,11 @@ Use the linked progress sections when investigating individual packages.
   railroad retirement inspection deadlines. Strict AMD64 hit eleven Ohio
   and two railroad retirement deadlines, and ARM64 hit ten Ohio deadlines.
   Both strict runtimes passed recovery, archive verification and cleanup.
-  Local Chromium passed all 652 active cases. Ten local checks passed, and
-  the serial coverage repeat hit one Ohio school-header deadline. The
-  unchanged file passed all 20 cases in isolation. Exact CI coverage
-  passed at 88.80%.
+  Local Chromium passed all 652 active cases. The first local serial
+  coverage run hit one Ohio school-header deadline. The unchanged file
+  passed all 20 cases in isolation. The full awake repeat passed 30,522
+  active cases and 88.42% branch coverage, closing the last of the eleven
+  local checks for that revision. Exact CI coverage passed at 88.80%.
   The latest final annual Pennsylvania and Ohio parent forms are still
   for 2025.
   [Guided workspace evidence](upgrade-2026-progress.md#november-25-guided-workspace-and-draft-recovery).
