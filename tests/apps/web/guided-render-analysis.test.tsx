@@ -14,8 +14,8 @@ vi.mock('@/lib/guided-oh-reciprocal-wages',async importOriginal=>{
 });
 vi.mock('@/lib/guided-interview-flow',async importOriginal=>{
  const actual=await importOriginal<typeof import('@/lib/guided-interview-flow')>();
- return {...actual,loadGuidedFlowState(...args:Parameters<typeof actual.loadGuidedFlowState>){
-  const state=actual.loadGuidedFlowState(...args);observed.loaded=state;return state;
+ return {...actual,parseGuidedFlowState(...args:Parameters<typeof actual.parseGuidedFlowState>){
+  const state=actual.parseGuidedFlowState(...args);observed.loaded=state;return state;
  }};
 });
 import * as flow from '@/lib/guided-interview-flow';
@@ -96,4 +96,39 @@ it('keeps actual workspace owner validation isolated on switch',async()=>{
   await dom.render(<GuidedInterviewShell workspace={wa} onExitGuided={()=>{}}/>);
   expect(stateStep(dom.container).classList.contains('guided-progress-step-done')).toBe(true);
  }finally{await dom.dispose();}
+});
+
+it("normalizes an unchanged saved draft once on mount", async () => {
+  const { state } = prepared();
+  const workspace = seed(state, "unchanged-draft");
+  const raw = required(localStorage.getItem(flow.getGuidedFlowStorageKey(workspace.id)));
+  const parse = vi.spyOn(JSON, "parse");
+  const dom = await mountGuidedPanel(<GuidedInterviewShell workspace={workspace} onExitGuided={() => {}} />);
+  try {
+    expect(stateStep(dom.container).classList.contains("guided-progress-step-done")).toBe(true);
+    expect(parse.mock.calls.filter(([value]) => value === raw)).toHaveLength(1);
+  } finally {
+    await dom.dispose();
+  }
+});
+
+it("loads a replacement draft saved before mount effects in StrictMode", async () => {
+  const { state } = prepared();
+  const workspace = seed(state, "replaced-draft");
+  const replacement = structuredClone(state);
+  required(replacement.sectionData["personal-info"]).lastName = "Replacement household";
+
+  function ReplaceDraftOnMount() {
+    React.useLayoutEffect(() => {
+      flow.saveGuidedFlowState(localStorage, workspace.id, replacement);
+    }, []);
+    return <GuidedInterviewShell workspace={workspace} onExitGuided={() => {}} />;
+  }
+
+  const dom = await mountGuidedPanel(<React.StrictMode><ReplaceDraftOnMount /></React.StrictMode>);
+  try {
+    expect(stateStep(dom.container).classList.contains("guided-progress-step-needs-review")).toBe(true);
+  } finally {
+    await dom.dispose();
+  }
 });

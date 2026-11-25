@@ -3450,7 +3450,14 @@ export function saveGuidedFlowState(storage: Storage, target: GuidedFlowStorageT
 
 export function loadGuidedFlowState(storage: Storage, target: GuidedFlowStorageTarget): GuidedFlowState | null {
   try {
-    const raw = storage.getItem(getGuidedFlowStorageKey(target));
+    return parseGuidedFlowState(storage.getItem(getGuidedFlowStorageKey(target)));
+  } catch {
+    return null;
+  }
+}
+
+export function parseGuidedFlowState(raw: string | null): GuidedFlowState | null {
+  try {
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as GuidedFlowState;

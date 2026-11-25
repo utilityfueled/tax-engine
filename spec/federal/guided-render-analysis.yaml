@@ -22,3 +22,8 @@ lines:
   - line: "workspace-owner-isolation"
     formula: 'Switching to another current workspace with stale owner snapshots cannot reuse the first owner complete status or source result.'
     testRef: "tests/apps/web/guided-render-analysis.test.tsx::keeps actual workspace owner validation isolated on switch"
+  - line: "unchanged-bootstrap-draft"
+    formula: 'Reuse the initialized guided draft when the mount recheck finds identical saved bytes for the same storage, draft key and target year. Re-read storage and apply changed bytes before leaving the saved draft visible.'
+    testRef: "tests/apps/web/guided-render-analysis.test.tsx::normalizes an unchanged saved draft once on mount"
+    testRefs:
+      - "tests/apps/web/guided-render-analysis.test.tsx::loads a replacement draft saved before mount effects in StrictMode"
