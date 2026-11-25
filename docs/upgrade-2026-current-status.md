@@ -1,6 +1,6 @@
 # Current 2026 upgrade status
 
-## Resume here · November 24
+## Resume here · November 25
 
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
@@ -16,8 +16,11 @@ Use the linked progress sections when investigating individual packages.
   active unit tests and 88.38% branch coverage. Managed Linux passed its
   652 active browser cases. The strict image passed 646 active cases and
   reached six Ohio deadlines. Recovery, rollback and archive verification
-  passed. The separate ARM64 run remains in progress.
-  [Ohio browser evidence](upgrade-2026-progress.md#november-24-ohio-business-and-resident-credit-browser-checkpoints).
+  passed. ARM64 passed 642 active browser cases and reached ten Ohio
+  deadlines. Native recovery, archive verification and container cleanup
+  passed.
+  [Ohio browser evidence](upgrade-2026-progress.md#november-24-ohio-business-and-resident-credit-browser-checkpoints) ·
+  [Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45503211576/job/138857085425).
 
 - `a70ba4c7` pins the final 2026 Form 4137 and provides an internal
   worksheet for confirmed current employer and payroll originals. It holds
@@ -28,8 +31,15 @@ Use the linked progress sections when investigating individual packages.
   `03f367de` pins the historical and current rule-pack evidence to separate
   IRS archives. Its eleven exact local checks passed, including 30,471
   active unit tests, 88.38% branch coverage and 652 active Chromium cases.
+  Managed Linux passed 650 active cases. Both RRTA saved-PDF inspections
+  hit the existing four-second subprocess deadline in page-text extraction.
+  Strict AMD64 passed 639 active cases. Eleven Ohio journeys and both
+  RRTA inspections hit their existing deadlines. Recovery, rollback and
+  independent archive verification passed.
   Public export, final return transfer and qualified human review remain open.
-  [Form 4137 source and evidence](upgrade-2026-form-4137-final-source.md).
+  [Form 4137 source and evidence](upgrade-2026-form-4137-final-source.md) ·
+  [Exact managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45504699771/job/138836764763) ·
+  [Exact strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45504699771/job/138836764543).
 
 - Exact `f84a7000` passed all 11 local checks. Its strict Linux runtime
   passed 650 active Chromium cases, missed two desktop Ohio school
@@ -1247,7 +1257,7 @@ AMD64 runner.
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedules B and EIC and Forms 2106, 7206, 8829 and 8919 have disabled source candidates. The current annual Form 1040, general instructions, Tax/EIC tables and main Pennsylvania and Ohio returns still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Schedule B source](upgrade-2026-schedule-b-final-source.md) · [IRS annual Form 1040](https://www.irs.gov/forms-pubs/about-form-1040) · [Pennsylvania PIT forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio tax forms](https://tax.ohio.gov/individual/get-a-form). |
 | AI routing and exact billing | Exact cost is recorded separately from whole retail credits. The hold for a second attempt checks the cumulative bound under the owner lock. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Billing evidence](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Protected Preview `cdfdd050` passed all 12 workspace lifecycle checks. Four read-only billing checks passed for each of two authorized actors on `1a9bfd0d`. Its configured prices match Stripe Sandbox, and the canceled actor displays enabled checkout choices. The webhook points to an older Preview. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Current checkout, signed delivery and exact credit reconciliation remain open. [Preview](upgrade-2026-progress.md#november-20-original-student-loan-and-retirement-statements) · [Billing baseline](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Exact `f84a7000` passed 652 local and 650 strict AMD64 Chromium cases. The strict run missed two desktop Ohio school deadlines. The earlier `f3163949`-equivalent ARM64 run passed 642 strict cases and missed ten deadlines. The original five skips remain. Both platform rehearsals passed recovery and archive verification. Current managed and native Linux browser qualification remains open. [Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45463661057/job/138692709406) · [Earlier strict ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45420399946) · [Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45484309448). |
+| Self-host recovery | Exact `03f367de` passed 652 local, 650 managed Linux and 639 strict AMD64 Chromium cases. Exact `d316004f` passed 642 strict ARM64 cases. The native rehearsals passed recovery and archive verification. Browser deadline misses keep qualification open. [Latest evidence](upgrade-2026-progress.md#november-25-exact-linux-and-arm64-browser-results). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 The `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)

@@ -1,5 +1,42 @@
 # 2026 upgrade implementation evidence
 
+## November 25 exact Linux and ARM64 browser results
+
+Managed Linux at `03f367de` finished all eight Chromium windows with
+650 active passes and five original skips. Both RRTA paper-review cases
+hit the existing four-second saved-PDF inspection deadline. Desktop
+entered page-text extraction at 3.329 seconds and mobile at 2.919 seconds.
+The bounded parent stopped them at 4.010 seconds in each case. Neither
+child reported a completed inspection. Local Chromium passed all 652
+active cases on the same revision. The Linux web build passed.
+[Exact managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45504699771/job/138836764763).
+
+Strict AMD64 at the same revision finished all eight windows with 639
+active passes and five original skips. Eleven Ohio cases reached 30
+seconds. They covered two business part-year, one reciprocal, four
+resident-credit and four school journeys. Both RRTA PDF children reached
+the four-second deadline after entering page-text extraction at 3.682
+seconds on desktop and 3.163 seconds on mobile. Compose upgrade,
+recovery and rollback, independent archive verification and the bound
+image scan passed.
+[Exact strict AMD64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45504699771/job/138836764543).
+
+The separate ARM64 run on `d316004f` finished all eight windows with 642
+active passes and five original skips. Ten Ohio journeys reached 30 seconds.
+They covered two business part-year, one reciprocal, three resident-credit,
+and four school cases. Compose upgrade and recovery, independent archive
+verification, container cleanup and the bound image scan passed. The
+sanitized timing receipt matched the run revision, counts and cleanup.
+[Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45503211576/job/138857085425).
+
+The federal current Form 1040 and Schedule 2 still print 2025. The
+Pennsylvania and Ohio annual return sources reviewed still point to
+2025. These sources leave the 2026 companion forms gate open.
+[IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS Schedule 2](https://www.irs.gov/pub/irs-pdf/f1040s2.pdf) ·
+[Pennsylvania PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
+[Ohio individual and school district instructions](https://tax.ohio.gov/individual/file-now/individual-and-school-district-income-tax-instructions).
+
 ## November 24 Ohio business and resident-credit browser checkpoints
 
 `d316004f` reuses saved-state snapshots within the existing browser
@@ -22,7 +59,8 @@ Managed Linux also passed 652 active cases with five original skips.
 The strict AMD64 image passed 646 active cases with five original skips.
 Two desktop resident-credit and four school cases hit the existing
 30-second deadline. Recovery, rollback, independent archive verification
-and the bound image scan passed. The separate ARM64 run has started.
+and the bound image scan passed. The separate ARM64 result appears in
+[the November 25 evidence](#november-25-exact-linux-and-arm64-browser-results).
 Vercel canceled the automatic production build.
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45503159782) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45503159877) ·
@@ -119,7 +157,8 @@ five original skips. Two Ohio business part-year cases, two resident-credit
 cases, one reciprocal refund and four school cases reached the existing
 30-second deadline. Compose upgrade and recovery, browser cleanup and the
 bound image scan passed. The sanitized timing artifact records the eight
-completed windows and teardown. The separate current ARM64 run is queued.
+completed windows and teardown. The newer `d316004f` ARM64 result appears in
+[the November 25 evidence](#november-25-exact-linux-and-arm64-browser-results).
 [ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45491371992/job/138806772347) ·
 [Current ARM64 revision](https://github.com/utilityfueled/tax-engine/actions/runs/45503211576).
 

@@ -1,6 +1,6 @@
 {
   "resume": {
-    "asOf": "2026-11-24",
+    "asOf": "2026-11-25",
     "branch": "main",
     "applicationCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
     "verificationCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
@@ -48,7 +48,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Qualify the current managed and strict Linux browsers and ARM64 recovery. Exact 03f367de passed all eleven local checks and has Web 45504699771. Exact d316004f passed managed Linux, missed six Ohio deadlines in the strict AMD64 image and has ARM64 45503211576 in progress. Recovery, rollback, independent archive verification and scan passed in its strict job.",
+      "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -67,6 +67,8 @@
       "localChecksPassed": 11,
       "localUnitAndCoverage": {"passedEach": 30471, "originalSkipsEach": 81, "branchPercent": 88.38, "unitWorkers": 8},
       "localFullBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true},
+      "managedLinuxBrowser": {"job": 138836764763, "passed": 650, "originalSkips": 5, "windows": 8, "rrtaSavedPdfDeadlineFailures": 2, "deadlineMs": 4000, "lastPhase": "page_text", "lastPhaseWallUs": [3328693, 2918655], "parentWallUs": [4009639, 4009702]},
+      "strictLinuxBrowser": {"job": 138836764543, "passed": 639, "originalSkips": 5, "windows": 8, "ohioJourneyDeadlineFailures": {"businessPartYear": 2, "reciprocal": 1, "residentCredit": 4, "school": 4}, "ohioDeadlineMs": 30000, "rrtaSavedPdfDeadlineFailures": 2, "rrtaDeadlineMs": 4000, "rrtaLastPhase": "page_text", "rrtaLastPhaseWallUs": [3681850, 3163202], "rrtaParentWallUs": [4010587, 4011505], "passingStages": ["build", "Compose upgrade, recovery and rollback", "independent archive verification", "scan"]},
       "publicReleaseGate": "Closed",
       "ciRun": 45504699794,
       "webRun": 45504699771,
@@ -90,6 +92,7 @@
       "localFullBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true},
       "managedLinuxBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "job": 138831411104},
       "strictLinuxBrowser": {"passed": 646, "originalSkips": 5, "windows": 8, "job": 138831411607, "deadlineFailures": {"Ohio resident credit desktop": 2, "Ohio school": 4}, "passingStages": ["build", "Compose upgrade, recovery and rollback", "independent archive verification", "scan"]},
+      "arm64Browser": {"job": 138857085425, "passed": 642, "originalSkips": 5, "windows": 8, "ohioJourneyDeadlineFailures": {"businessPartYear": 2, "reciprocal": 1, "residentCredit": 3, "school": 4}, "deadlineMs": 30000, "passingStages": ["build", "Compose upgrade and recovery", "independent archive verification", "scan", "cleanup"], "timingArtifact": "native-arm64-browser-timing", "timingReceiptSha256": "6260c950301ce42370bb813e43fd1e7ed9f4962fe91d4e5a458bce1bc8cbdf04", "qualified": false},
       "specReferencesPassed": 10041,
       "independentTechnicalReview": "Passed",
       "ciRun": 45503159782,
