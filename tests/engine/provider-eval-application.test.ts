@@ -28,7 +28,7 @@ describe("actual application evaluation", () => {
   it("refuses forged passing flags and normalized fields without valid actual output", () => {
     const f = fixture("case-income-w2-zero-withholding"); const result = validateProviderEvalOutput(f, income());
     const entry: ProviderModelLiveEvalEntry = { profileId: "luna-high", fixtureId: f.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1,
-      applicationSchemaValid: true, output: result.output, independentReview: { method: "human", reviewer: "unit-test-only", grounded: true, qualityAccepted: true, piiLeak: false },
+      applicationSchemaValid: true, output: result.output, independentReview: { method: "human", reviewer: "unit-test-only", reviewedAt: "2026-10-25T12:15:00Z", grounded: true, qualityAccepted: true, piiLeak: false },
       attempts: [{ profileId: "luna-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } }],
       measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3", normalizationStatus: "bound", applicationOutput: {}, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, schemaValid: false });
@@ -51,7 +51,7 @@ describe("actual application evaluation", () => {
   it("requires the final attempted model identity while retaining incurred costs", () => {
     const f = fixture("case-income-w2-zero-withholding"); const result = validateProviderEvalOutput(f, income());
     const entry: ProviderModelLiveEvalEntry = { profileId: "luna-high", fixtureId: f.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1,
-      applicationSchemaValid: true, output: result.output, independentReview: { method: "human", reviewer: "unit-test-only-not-real-review", grounded: true, qualityAccepted: true, piiLeak: false },
+      applicationSchemaValid: true, output: result.output, independentReview: { method: "human", reviewer: "unit-test-only-not-real-review", reviewedAt: "2026-10-25T12:15:00Z", grounded: true, qualityAccepted: true, piiLeak: false },
       attempts: [{ profileId: "luna-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } }],
       measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3", normalizationStatus: "bound", applicationOutput: income(), privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
     if (!entry.measurement) throw new Error("Missing test measurement.");
@@ -82,7 +82,7 @@ describe("actual application evaluation", () => {
     const payload = { disposition: "answer", sourceIds: [...f.sourceIds, ...context.excerpts.map(item => item.id), ...context.auditEntries.map(item => item.id)], answer: "These are the supplied audited values.", engineValues: [{ id: "1040:9", value: "75000" }, { id: "1040:10", value: "2000" }, { id: "1040:11", value: "73000" }] };
     const validated = validateProviderEvalOutput(f, payload);
     const entry: ProviderModelLiveEvalEntry = { profileId: "luna-high", fixtureId: f.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1, applicationSchemaValid: true, output: validated.output,
-      independentReview: { method: "human", reviewer: "unit-test-only-not-real-review", grounded: true, qualityAccepted: true, piiLeak: false },
+      independentReview: { method: "human", reviewer: "unit-test-only-not-real-review", reviewedAt: "2026-10-25T12:15:00Z", grounded: true, qualityAccepted: true, piiLeak: false },
       attempts: [{ profileId: "luna-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } }],
       measurement: { runPurpose: "qualification", ...provenance(f), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: "tax-explanation/4", schemaVersion: "tax-explanation/3", normalizationStatus: "bound", applicationOutput: payload, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-6-luna" } };
     expect(scoreProviderEvalEntry(entry, f).accepted).toBe(true);

@@ -45,7 +45,8 @@ const entrySchema = z.strictObject({
   elapsedMs: z.number().finite().nonnegative().nullable(),
   applicationSchemaValid: z.boolean().nullable(),
   output: normalizedOutputSchema.nullable(),
-  independentReview: z.strictObject({ method: z.literal("human"), reviewer: z.string().trim().min(1), grounded: z.boolean(), qualityAccepted: z.boolean(), piiLeak: z.boolean() }).nullable(),
+  independentReview: z.strictObject({ method: z.literal("human"), reviewer: z.string().trim().min(1),
+    reviewedAt: z.iso.datetime({ offset: true }).optional(), grounded: z.boolean(), qualityAccepted: z.boolean(), piiLeak: z.boolean() }).nullable(),
   measurement: z.strictObject({ runPurpose: z.enum(["smoke", "qualification"]), planDigest: z.string(), corpusDigest: z.string(), fixtureDigest: z.string().optional(), bindingVersion: z.string(), promptVersion: z.string(), schemaVersion: z.string(),
     normalizationStatus: z.enum(["bound", "unsupported", "failed"]), applicationOutput: z.json().nullable(),
     privacyFailure: z.boolean(), responseReference: z.string().nullable(), reportedModel: z.string().nullable() }).optional(),
@@ -95,20 +96,33 @@ function timestampAtOrBefore(instant: string, cutoff: string, cutoffOffsetMs = 0
   return submillisecondDigits(instant) <= submillisecondDigits(cutoff);
 }
 
-function hasConsistentAttemptTiming({ attempts, elapsedMs }: ProviderModelLiveEvalEntry) {
-  const [initial, escalation] = attempts;
-  if (!escalation) return true;
-  if (!timestampAtOrBefore(initial.startedAt, escalation.startedAt)) return false;
-  if (elapsedMs === null) return true;
-
-  const startFraction = submillisecondDigits(initial.startedAt);
-  const endFraction = submillisecondDigits(escalation.startedAt);
+function compareTimestampSpanToLatency(start: string, end: string, elapsedMs: number) {
+  const startFraction = submillisecondDigits(start);
+  const endFraction = submillisecondDigits(end);
   const [elapsedWhole, elapsedFraction = ""] = new Money(elapsedMs).toFixed().split(".");
   const precision = Math.max(startFraction.length, endFraction.length, elapsedFraction.length);
   // Compare integers at a shared precision so fractional timestamps never round away.
   const scaledMilliseconds = (whole: number | string, fraction: string) => BigInt(`${whole}${fraction.padEnd(precision, "0")}`);
-  const wholeSpanMs = Date.parse(escalation.startedAt) - Date.parse(initial.startedAt);
-  return scaledMilliseconds(wholeSpanMs, endFraction) - scaledMilliseconds(0, startFraction) <= scaledMilliseconds(elapsedWhole, elapsedFraction);
+  const wholeSpanMs = Date.parse(end) - Date.parse(start);
+  return scaledMilliseconds(wholeSpanMs, endFraction) - scaledMilliseconds(0, startFraction) - scaledMilliseconds(elapsedWhole, elapsedFraction);
+}
+
+function hasConsistentAttemptTiming({ attempts, elapsedMs }: ProviderModelLiveEvalEntry) {
+  const [initial, escalation] = attempts;
+  if (!escalation) return true;
+  return timestampAtOrBefore(initial.startedAt, escalation.startedAt)
+    && (elapsedMs === null || compareTimestampSpanToLatency(initial.startedAt, escalation.startedAt, elapsedMs) <= 0n);
+}
+
+function responseReviewAsOf({ independentReview, attempts, elapsedMs }: ProviderModelLiveEvalEntry, cutoff?: string) {
+  const reviewedAt = independentReview?.reviewedAt;
+  const finalAttempt = attempts.at(-1);
+  if (reviewedAt === undefined || elapsedMs === null || !finalAttempt
+    || !timestampAtOrBefore(attempts[0].startedAt, reviewedAt)
+    || !timestampAtOrBefore(finalAttempt.startedAt, reviewedAt)
+    || (cutoff !== undefined && !timestampAtOrBefore(reviewedAt, cutoff))
+    || compareTimestampSpanToLatency(attempts[0].startedAt, reviewedAt, elapsedMs) < 0n) return null;
+  return independentReview;
 }
 
 function independentReviewTime(fixture: ProviderEvalFixture, cutoff: string) {
@@ -131,7 +145,7 @@ function exactField(expected: { kind: "money" | "date" | "text"; value: string }
 export function scoreProviderEvalEntry(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) {
   return scoreForCorpus(entry, fixture, providerEvalCorpusDigest());
 }
-function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string) {
+function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string, cutoff?: string) {
   const provenanceMatches = hasCurrentProviderEvalProvenance(entry.measurement, fixture, currentCorpusDigest)
     && entry.fixtureId === fixture.id && entry.fixtureVersion === fixture.version;
   const validated = validateProviderEvalOutput(fixture, entry.measurement?.applicationOutput);
@@ -169,18 +183,19 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const engineValuesComplete = Object.entries(fixture.expected.engineValues).every(([key, value]) =>
     exactField({ kind: "money", value }, output?.engineValues[key]));
   const inventedField = Object.keys(output?.fields ?? {}).some(key => !(key in fixture.expected.fields));
-  const grounding = qualifiedOutput && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
+  const responseReview = responseReviewAsOf(entry, cutoff);
+  const grounding = qualifiedOutput && validated.normalizationStatus === "bound" && responseReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
   const canonicalAuthor = taxProviderModelEvalFixtures.find(item => item.id === fixture.id)?.review.author;
-  const complete = accuracyEligible && attemptTimingConsistent && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
-    && isIndependentReviewer(entry.independentReview.reviewer, canonicalAuthor)
+  const complete = accuracyEligible && attemptTimingConsistent && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && responseReview !== null
+    && isIndependentReviewer(responseReview.reviewer, canonicalAuthor)
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const otherwiseAcceptable = complete && schemaValid && !!output && !safetyFailure
     && !inventedField && engineValuesComplete && grounding
     && output.disposition === fixture.expected.disposition && exact === fields.length
     && output.category === fixture.expected.category;
-  const accepted = otherwiseAcceptable && entry.independentReview?.qualityAccepted === true;
-  const qualityOnlyRejection = otherwiseAcceptable && entry.independentReview?.qualityAccepted === false;
+  const accepted = otherwiseAcceptable && responseReview?.qualityAccepted === true;
+  const qualityOnlyRejection = otherwiseAcceptable && responseReview?.qualityAccepted === false;
   let actualCost = new Money(0);
   let filingSeasonCost = new Money(0);
   let knownCost = entry.attempts.length > 0;
@@ -299,7 +314,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const scoreEntry = (entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) => {
     const previous = entryScores.get(entry);
     if (previous) return previous;
-    const score = scoreForCorpus(entry, fixture, currentCorpusDigest);
+    const score = scoreForCorpus(entry, fixture, currentCorpusDigest, reportCutoff);
     entryScores.set(entry, score);
     return score;
   };

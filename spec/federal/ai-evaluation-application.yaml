@@ -76,6 +76,16 @@ lines:
     testRefs:
       - "tests/engine/provider-model-eval.test.ts::keeps submillisecond case reviews and capability windows in event order"
       - "tests/engine/provider-model-eval.test.ts::enforces positive capability windows up to exactly 30 days"
+  - line: "response-review-cutoff"
+    description: "Independent response review is usable as of its actual timestamp"
+    formula: >-
+      Retain legacy undated response reviews for inspection. Count accepted or
+      complete qualification evidence only when the independent human review has
+      an explicit timestamp at or before the report cutoff and at or after both
+      the final attempt start and the first attempt start plus measured logical
+      latency, including fractional milliseconds. Preserve known costs and
+      conservative safety flags for undated, premature or later reviews.
+    testRef: "tests/engine/provider-model-eval.test.ts::counts only dated response reviews that follow the measured result and meet the report cutoff"
   - line: "attempt-timing"
     description: "Qualification latency spans the logical task and any escalation"
     formula: >-

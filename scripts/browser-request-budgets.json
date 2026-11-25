@@ -729,7 +729,7 @@
     "packages/engine/src/provider-facing-interview-payload.ts": "59b43a42feab232be911948745c6f03f37f1404718eab5b50c2452945f1116b5",
     "packages/engine/src/provider-facing-partner-review-payload.ts": "c5b7b8c3ae50013687d4501c5182bf7f027b441d4555254a91c8ecb37967c5ff",
     "packages/engine/src/provider-facing-workspace-payload.ts": "387f2b6d4db48c5db12b63024e62fe9b9f62784674324da5f09a5709f5b3239d",
-    "packages/engine/src/provider-model-eval.ts": "910ee46c07f580c1695bbb0824f7785a0d109513a5139184c40805e39e3f6b83",
+    "packages/engine/src/provider-model-eval.ts": "6a5c0d1163b02f2b239f292f1fbb71633da4eabc3b743e1675a044efcb6ef643",
     "packages/engine/src/provider-payload-redactor.ts": "076303f299d73b47de8712513a0658b0fe0c56432ad65d1d3c197ec95acf0167",
     "packages/engine/src/return-summary.ts": "e5e29d5f07d9956a9a7281f3fb25f6ff245d2f73a948b83f6ef2f6ba86c34595",
     "packages/engine/src/workspace-engine-input.ts": "208c56a7611546810a46c35160a6268811ca42a91efe10607608ba11f7a05134",

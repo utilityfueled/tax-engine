@@ -32,7 +32,7 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
       promptVersion: AI_TASKS[fixture.task].promptVersion, schemaVersion: AI_TASKS[fixture.task].schemaVersion,
       normalizationStatus: validated.normalizationStatus, applicationOutput, privacyFailure: false,
       responseReference: providerEvalDigest(["unit-test-only", profileId, fixture.id, repeat]), reportedModel: profile.model },
-    independentReview: { method: "human", reviewer: "independent-test-reviewer", grounded: true, qualityAccepted: true, piiLeak: false },
+    independentReview: { method: "human", reviewer: "independent-test-reviewer", reviewedAt: "2026-10-24T12:05:00Z", grounded: true, qualityAccepted: true, piiLeak: false },
     attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
   };
 }
@@ -339,9 +339,10 @@ describe("measured task model evaluation", () => {
     const escalated = run(extraction, "luna-high", 2);
     const baseline = run(extraction, "baseline-gpt-5-mini");
     const baselineAttempt = baseline.attempts[0];
-    if (!preflight || !escalationProfile || !initial.measurement || !escalated.measurement || !baseline.measurement || !baselineAttempt?.usage) {
+    if (!preflight || !escalationProfile || !initial.measurement || !initial.independentReview || !escalated.measurement || !baseline.measurement || !baselineAttempt?.usage) {
       throw new Error("Missing synthetic cutoff evidence.");
     }
+    initial.independentReview.reviewedAt = "2026-10-24T12:00:01.1Z";
     escalated.attempts.push({ profileId: escalationProfile.id, startedAt: eventAt, usage: { inputTokens: 1000, outputTokens: 1000 } });
     escalated.elapsedMs = 1500;
     escalated.measurement.reportedModel = escalationProfile.model;
@@ -377,7 +378,7 @@ describe("measured task model evaluation", () => {
     const atCandidate = at.groups.find(group => group.profileId === "luna-high" && group.task === extraction.task);
     const atPreflight = at.groups.find(group => group.profileId === "sol-high" && group.task === preflight.task);
     expect(at.entries).toBe(3);
-    expect(atCandidate).toMatchObject({ completedRuns: 2, acceptedRuns: 2, blockers: expect.arrayContaining([
+    expect(atCandidate).toMatchObject({ completedRuns: 1, acceptedRuns: 1, blockers: expect.arrayContaining([
       "qualification-comparison-mixed-plans", "provider-response-evidence-missing-or-reused",
     ]) });
     expect(atPreflight).toMatchObject({ availability: { status: "available" }, deterministicPreflightRuns: 1, deterministicPreflightPassed: 1 });
@@ -387,6 +388,30 @@ describe("measured task model evaluation", () => {
     baselineAttempt.usage.inputTokens = -1;
     expect(() => summarizeProviderModelLiveEvalTemplate(template, fixtures, justBefore)).toThrow(/Invalid provider model live-eval file/);
     expect(() => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [] }, fixtures, "2026-10-32T12:00:00Z")).toThrow();
+  });
+  it("counts only dated response reviews that follow the measured result and meet the report cutoff", () => {
+    const fixtureReviews = reviewedFixtures("2026-10-24");
+    const entry = run(extraction);
+    const review = entry.independentReview;
+    if (!review) throw new Error("Missing synthetic response review.");
+    const firstAttempt = entry.attempts[0];
+    firstAttempt.startedAt = "2026-10-24T12:00:00.0001Z";
+    entry.elapsedMs = 1000.0002;
+    const summarize = (cutoff: string) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability }, fixtureReviews, cutoff)
+      .groups.find(item => item.profileId === entry.profileId && item.task === extraction.task);
+    const incomplete = { completedRuns: 0, acceptedRuns: 0, providerCostUsd: "0.0006" };
+    delete review.reviewedAt;
+    expect(summarize(reportAt)).toMatchObject(incomplete);
+    review.piiLeak = true;
+    expect(summarize(reportAt)?.blockers).toContain("observed-safety-failure");
+    review.piiLeak = false;
+    review.reviewedAt = "2026-10-24T07:00:01.0001001-05:00";
+    expect(summarize(reportAt)).toMatchObject(incomplete);
+    review.reviewedAt = "2026-10-24T07:00:01.0001002-05:00";
+    expect(summarize("2026-10-24T12:00:01.0001001Z")).toMatchObject(incomplete);
+    expect(summarize("2026-10-24T12:00:01.0001002Z")).toMatchObject({
+      completedRuns: 1, acceptedRuns: 1, providerCostUsd: "0.0006",
+    });
   });
   it("keeps submillisecond case reviews and capability windows in event order", () => {
     const tooEarly = "2026-10-24T12:00:01.12339Z";

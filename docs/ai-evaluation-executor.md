@@ -207,8 +207,11 @@ quality and PII exposure. Where possible, omit the provider label from
 the review material and associate the finding with the original case,
 profile and repeat afterward. Enter the actual human assessment in
 `independentReview` with `method` set to `human`, the reviewer identity,
-and the boolean `grounded`, `qualityAccepted` and `piiLeak` results.
-Leave `independentReview` null for unreviewed entries. Keep the response,
+the actual ISO timestamp in `reviewedAt`, and the boolean `grounded`,
+`qualityAccepted` and `piiLeak` results. The timestamp must follow the
+measured response and fall within the report cutoff. Legacy undated
+assessments remain available for inspection and cost reporting. Leave
+`independentReview` null for unreviewed entries. Keep the response,
 measurement and usage fields as recorded.
 
 ```sh
