@@ -19,6 +19,8 @@ retries. Eight native-control tests, 18 browser metadata and source-audit
 checks, 10,089 spec references, inventory, web types and scoped lint
 passed. Strict Linux qualification requires the exact-release runs.
 Vercel recorded the automatic production build as canceled.
+The exact Docker rerun passed after the evidence push superseded the
+first branch-scoped build.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45718984150) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45718984180) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45718984181) ·
@@ -55,6 +57,10 @@ references, the regenerated inventory check, TypeScript, scoped lint
 and two browser source-audit controls. Generated inventory added one
 Ohio worksheet entry. The unrelated working-copy SQLite entry remains
 local. Vercel recorded the automatic production build as canceled.
+All eight exact Linux CI jobs passed. Coverage recorded 30,644 tests
+and 88.84% branches. Managed Chromium passed 650 cases and hit its
+deadline in two RRTA cases. Strict AMD64 passed 639 cases and hit the
+deadline in 13 Ohio and RRTA cases. Both kept five existing skips.
 [GitHub CI](https://github.com/utilityfueled/tax-engine/actions/runs/45711786839) ·
 [GitHub Web](https://github.com/utilityfueled/tax-engine/actions/runs/45711786840) ·
 [GitHub Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45711786498).
@@ -127,8 +133,11 @@ and reached the deadline in seven Ohio cases. Both browser modes retained
 five existing skips. The local coverage and managed browser checks are
 still running.
 The local coverage log currently records one Pennsylvania Schedule SP
-packet timeout. The terminal receipt and a focused reproduction are
-pending.
+packet timeout. The terminal receipt and an isolated repeat are
+pending. A focused control on the other archive of the same
+revision passed in 2.245 seconds, with 0.759 seconds in Python PDF
+extraction. The one-case run kept the coverage thresholds and provides
+only scoped timing evidence.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45709245932) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45709246061) ·
