@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
+    "applicationCommit": "1736d19163478cb57f5e5c0ba6a69fd437be7c1c",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit.fullExact",
@@ -29,6 +29,7 @@
     "reviewCoverEvidenceKey": "activeContinuation.nov25ReviewCoverInMemory",
     "ohioDependentCareEvidenceKey": "activeContinuation.nov25OhioDependentCareCredit",
     "nativeLabelExperimentEvidenceKey": "activeContinuation.nov25NativeLabelComparison",
+    "ohioSchoolPdfInspectionEvidenceKey": "activeContinuation.nov25OhioSchoolPdfInspection",
     "ohioTraditionalSchoolEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
     "ohioStandaloneReplayEvidenceKey": "activeContinuation.nov25OhioStandaloneAdapterReuse",
     "ohioChildReplayPrototypeEvidenceKey": "activeContinuation.nov25OhioChildReplayPrototype",
@@ -83,6 +84,16 @@
     ]
   },
   "activeContinuation": {
+    "nov25OhioSchoolPdfInspection": {
+      "implementationCommit": "1736d19163478cb57f5e5c0ba6a69fd437be7c1c",
+      "scope": "Test inspector only. Reuse top-level parsed commands with a fallback for unexpected geometry operand types; nested and original-page scans retain their existing parser.",
+      "verifiedArchive": { "cases": 2, "pagesPerCase": 31, "sourceCellsPerCase": 165, "statusesPerCase": 22, "identicalJsonPerCase": true, "originalCpuSeconds": [5.927, 5.362], "candidateCpuSeconds": [4.575, 4.706], "receiptSha256": "2ee2c8c210ca681ee442ec75ef00bd85837aa4fe2def2f56d4077713792f678e" },
+      "localBrowser": { "pass": 4, "fail": 0, "skip": 0, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "summarySha256": "e7b2d0791c4a803b977c59364ce70ab70ef7ff5121ae56f6bec6fb89435cb16b" },
+      "checks": { "specTestReferences": 10089, "inventoryPassed": true, "webTypecheckPassed": true, "scopedLintPassed": true, "browserMetadataAndAuditTestsPassed": 18, "nativeControlTestsPassed": 8, "independentCodeReviewPassed": true },
+      "runIds": { "ci": 45718984150, "web": 45718984180, "docker": 45718984181, "nativeArm64": 45719087418 },
+      "vercelAutomaticProductionBuild": "CANCELED",
+      "strictLinuxQualified": false
+    },
     "nov25OhioDependentCareCredit": {
       "implementationCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
       "status": "Standalone 2026 statutory worksheet for one full-year joint Ohio household with two verified wage originals, one qualifying dependent under 13 throughout the year, and source-linked care paid by one spouse. Exact tentative result before liability and credit ordering. No application import.",
@@ -92,6 +103,7 @@
       "evidencePath": ".local/upgrade-evidence/nov25-ohio-dependent-care-root",
       "stagedInventorySha256": "303d5e722e000b7dd2ffe89ad447e7b2c9c4f75e6e778e2f3ae92e1a92c41b90",
       "runIds": { "ci": 45711786839, "web": 45711786840, "docker": 45711786498 },
+      "exactDockerBuildPassed": true,
       "vercelAutomaticProductionBuild": "CANCELED",
       "filingQualified": false
     },
@@ -103,6 +115,15 @@
       "evidencePath": ".local/upgrade-evidence/nov25-oh-credit-render-isolation",
       "summarySha256": "386a12c2f6b755e3c83c075b44439e1f40a831cb05e006ea67efd0b34e752344",
       "directKeyboardExperiment": "Inconclusive. Harness ended unchanged baseline leg at its 150-second outer cutoff before recording any candidate measurements.",
+      "directKeyboardFollowup": {
+        "trustedTabsMatched": 394,
+        "desktopCasesPassedPerVariant": 2,
+        "focusSummarySha256": "419aa86487cff961d9dc3e4e3c31b015ee9464621f844b586bee39f0a713a2f0",
+        "widerCasesPerLeg": 15,
+        "widerLegFailuresInBaselineCandidateCandidateBaselineOrder": [1, 1, 8, 7],
+        "widerSummarySha256": "165f6850697d40a40713fc03cc50d734b996dcd95de2eb3a8b253090f3e859f1",
+        "status": "Dropped after both methods reached case deadlines in the wider window. Tracked field entry retains its existing actions."
+      },
       "strictLinuxQualified": false
     },
     "nov25ReviewCoverInMemory": {
@@ -118,10 +139,11 @@
       "renderParity": { "federalPages": 12, "ohioPages": 18, "sameTextAndRenders": true, "sameFormList": true, "oneNoticePerPage": true, "sha256": "7636b384b9bb9e5e37f6446e2a51f1fc9ec28eab5e6bbe569b52901295e2224d" },
       "focusedLocalBrowser": { "buildPassed": true, "pass": 15, "fail": 0, "skips": 0, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "summarySha256": "7c3adb7e1027d9420f1d16f565d16dea6f8f7b8e66f03059c605051f6195cc44" },
       "sourceAudit": { "digests": 2071, "updated": 1, "controlsPassed": 2, "requestCeilingsChanged": false },
-      "fullExact": { "status": "running", "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main", "localStaticChecksPassed": 8, "unitTestsPassed": 30556, "unitTestSkips": 81, "unitFilesPassed": 2220, "frozenOfflineInstallsPassed": 2, "verifiedSamplePdfsPerArchive": 15 },
+      "fullExact": { "status": "running with a Pennsylvania Schedule SP packet timeout observed in coverage", "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main", "localStaticChecksPassed": 8, "unitTestsPassed": 30556, "unitTestSkips": 81, "unitFilesPassed": 2220, "frozenOfflineInstallsPassed": 2, "verifiedSamplePdfsPerArchive": 15 },
       "runIds": { "ci": 45709246317, "web": 45709245932, "docker": 45709246061, "nativeArm64": 45709442744 },
       "exactLinuxCi": { "jobsPassed": 8, "coverageTestsPassed": 30637, "coverageFilesPassed": 2228, "branchCoveragePercent": 88.84 },
       "exactLinuxWeb": { "managedActivePassed": 652, "strictAmd64ActivePassed": 650, "strictAmd64CaseDeadlineFailures": 2, "originalSkipsPerBrowserRun": 5, "strictAmd64FailureScope": "Ohio part-year school, saved-workspace filing-rejection" },
+      "exactNativeArm64": { "jobId": 139539764109, "imageBuildPassed": true, "smokePassed": true, "independentImageStorePassed": true, "composeRecoveryPassed": true, "configuredScanBindingPassed": true, "cleanupPassed": true, "strictBrowserActivePassed": 645, "strictBrowserDeadlineFailures": 7, "originalSkips": 5 },
       "exactDockerBuildPassed": true,
       "vercelAutomaticProductionBuild": "CANCELED",
       "filingQualified": false,

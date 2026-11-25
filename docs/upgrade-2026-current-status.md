@@ -9,6 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `1736d191` reuses a parsed PDF stream in the Ohio school browser
+  inspector. Two archived packet reports matched byte for byte, and
+  all four focused local browser cases passed. Exact Linux and ARM64
+  qualification runs are pending.
+  [Ohio school PDF inspection](upgrade-2026-progress.md#november-25-ohio-school-pdf-inspection-reuse).
+
 - `26983a3c` computes the tentative 2026 Ohio dependent-care credit for
   a full-year joint household with one verified child and documented
   care paid by a spouse. All 149 focused tests passed. The final annual
@@ -19,8 +25,10 @@ Use the linked progress sections when investigating individual packages.
 - `00ef7e7a` passes the generated review cover directly to the PDF merge.
   All 30 compared federal and Ohio pages rendered identically. The 68
   focused tests, 15 local Chromium cases, and the exact Docker build
-  passed. The exact unit run passed 30,556 tests. Coverage and native
-  browser runs are pending.
+  passed. The exact unit run passed 30,556 tests. Local coverage and
+  browser checks are pending. Managed Linux passed all 652
+  active cases. Strict AMD64 had two timeouts and strict ARM64 had
+  seven. The ARM64 image and Compose recovery passed.
   Filing and strict Linux qualification remain open.
   [Review cover evidence](upgrade-2026-progress.md#november-25-in-memory-review-cover).
 

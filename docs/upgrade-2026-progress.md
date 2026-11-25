@@ -1,5 +1,29 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio school PDF inspection reuse
+
+`1736d191` lets the strict browser inspector reuse each parsed top-level
+PDF content stream for geometry and text extraction. Unusual geometry
+operand types use the original parser. Nested appearance text and the
+original-page, cross-reference and raw-byte checks use their original
+decoding. Independent code review reproduced an operand mismatch in the
+first prototype and verified the fallback in the committed version.
+
+The revised inspector produced byte-for-byte identical JSON for both
+archived 31-page packets. Each report retained 165 source cells and 22
+statuses. CPU time in the paired archived test dropped from 5.927s to
+4.575s for `refund100` and from 5.362s to 4.706s for `covered`.
+All four desktop and mobile browser cases passed on the local built
+app at the existing 30-second case deadline, with two workers and zero
+retries. Eight native-control tests, 18 browser metadata and source-audit
+checks, 10,089 spec references, inventory, web types and scoped lint
+passed. Strict Linux qualification requires the exact-release runs.
+Vercel recorded the automatic production build as canceled.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45718984150) ·
+[Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45718984180) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45718984181) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45719087418).
+
 ## November 25 Ohio dependent-care draft
 
 `26983a3c` adds a standalone statutory worksheet for one full-year Ohio
@@ -42,6 +66,16 @@ REV-413(I) instructions are already in the source ledger.
 [Pennsylvania PIT index](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
 [Pennsylvania residency instructions](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/nonresidents-and-part-year-residents).
 
+The federal publication recheck confirmed the current final Form 1040,
+its annual instructions, the Tax and EIC Tables, and Schedule 1-A
+still cover 2025. The 2026 annual instructions are draft. The final 2026
+Spanish Schedule EIC is available, and its English counterpart is already
+tracked. [Final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Final instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
+[Final Tax and EIC Tables](https://www.irs.gov/pub/irs-pdf/p1040.pdf) ·
+[Final Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf) ·
+[Draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf).
+
 ## November 25 Ohio native label comparison
 
 The existing native-control helper passed all 15 Chromium cases in each
@@ -56,6 +90,13 @@ A separate direct-keyboard prototype reached the harness's outer
 150-second cutoff during its unchanged baseline leg. No candidate
 measurements were collected. The existing per-case deadline and runner
 configuration were used throughout.
+
+A later two-case comparison matched all 394 trusted Tab events, the
+resulting input values and the next focused controls. The baseline and
+prototype also agreed when a segmented date input retained focus. A
+four-leg run of the wider 15-case window recorded 22 passes and eight
+timeouts for the baseline and 21 passes and nine timeouts for the
+prototype. The prototype was dropped after that comparison.
 
 ## November 25 in-memory review cover
 
@@ -79,8 +120,15 @@ eight exact Linux CI jobs passed. Its coverage job passed 30,637 tests
 at 88.84% branch coverage. The managed Linux browser passed all 652
 active cases with five existing skips. The strict AMD64 run passed 650
 cases. Two Ohio part-year school cases reached the 30-second deadline
-on the saved-workspace filing-rejection request. The independent ARM64
-and local coverage and browser checks are still running.
+on the saved-workspace filing-rejection request. The exact ARM64 build,
+smoke test, independent image-store archive, Compose recovery, configured
+scan binding and cleanup passed. Its strict Chromium run passed 645 active cases
+and reached the deadline in seven Ohio cases. Both browser modes retained
+five existing skips. The local coverage and managed browser checks are
+still running.
+The local coverage log currently records one Pennsylvania Schedule SP
+packet timeout. The terminal receipt and a focused reproduction are
+pending.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45709245932) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45709246061) ·
