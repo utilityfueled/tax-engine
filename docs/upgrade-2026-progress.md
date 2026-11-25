@@ -1,5 +1,45 @@
 # 2026 upgrade implementation evidence
 
+## November 25 federal taxpayer source reconciliation
+
+`1e076910` checks 2026 guided extension receipts alongside estimates.
+It holds a reused reference across categories, even when the date or
+amount differs. Positive rows with the same day and Decimal amount need
+distinct references. Two actual same-day payments retain their dates,
+amounts and category through JSON reopen. The canonical data omits
+receipt references. The user confirms the records are processed, since
+Direct Pay's confirmation identifies the submission. The 2026 federal
+calculation gate remains closed. Three regression checks failed before
+the fix. Twenty-six focused checks, eight independent checks, scoped
+lint, web types and the exact staged browser source audit passed.
+[IRS extension payment confirmation](https://www.irs.gov/taxtopics/tc304) ·
+[IRS Direct Pay help](https://www.irs.gov/payments/direct-pay-help).
+
+`1ceca61f` rejects a saved annual highest mortgage balance below the
+matched same-year Form 1098 Box 2 principal. The comparison uses Decimal
+before rounding. A $900,000 original paired with a claimed $750,000
+maximum previously admitted $40,000 of Schedule A interest. The program
+now holds that conflict. An independently documented lender average
+below Box 2, equal maxima and actual zero still pass. Two regressions
+failed on the original 2025 federal and internal 2026 Schedule A
+paths. All 41 focused checks, 16 spec references, scoped lint and the
+exact staged browser source audit passed.
+[IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098) ·
+[IRS Publication 936](https://www.irs.gov/publications/p936).
+
+`bc034c34` shows partial saved 1099-R records on guided review and labels
+the original distribution code by source year. Legacy codes needing
+confirmation are marked. An unentered Box 2a, a confirmed original blank
+and an explicit zero remain distinct. Two persisted-state DOM regressions
+failed before the fix. All 33 focused checks, the 67 guided-input spec
+references, web types and the exact staged browser source audit passed.
+Scoped lint reported four existing warnings and zero errors. This is a
+review display change. Combined verification is running on `bc034c34`.
+[IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45537927120) ·
+[Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45537927056) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45537927014).
+
 ## November 25 Ohio standalone school preview replay
 
 `c901da52` runs one full Ohio school adapter instead of two for a

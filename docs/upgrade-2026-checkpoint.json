@@ -2,10 +2,11 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "c901da527b06c280d1f89a0065afb1e2f8c7b056",
+    "applicationCommit": "bc034c3469073579d9b8ddfe80a0cf38b4253606",
     "verificationCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
+    "taxpayerSourceEvidenceKey": "activeContinuation.nov25FederalTaxpayerSourceReconciliation",
     "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "pendingOhioResultEvidenceKey": "activeContinuation.nov25OhioPendingOwnedResultComparison",
     "ohioCertifiedJobsCreditEvidenceKey": "activeContinuation.nov25OhioCertifiedRefundableJobsCredit",
@@ -53,8 +54,8 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect exact c901da52 local checks, CI 45534420347, Linux Web 45534420296 and ARM64 45534450387. Finish recording earlier exact 3a9f8d24 and corrected jobs-credit results. Earlier Linux and ARM64 gates have recorded browser deadline failures.",
-      "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
+      "Collect exact bc034c34 local checks, CI 45537927120, Linux Web 45537927056 and Docker 45537927014. Finish c901da52 local Chromium, CI 45534420347, Linux Web 45534420296 and ARM64 45534450387.",
+      "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Managed Linux passed all 652 active cases on 3a9f8d24. Strict AMD64 passed 642 with nine Ohio deadlines and one RRTA PDF deadline. ARM64 passed 644 with eight Ohio deadlines on 5bbc0504. Recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -62,6 +63,19 @@
     ]
   },
   "activeContinuation": {
+    "nov25FederalTaxpayerSourceReconciliation": {
+      "revision": "bc034c3469073579d9b8ddfe80a0cf38b4253606",
+      "extensionReceipts": {"revision": "1e0769105d8c393bd4c9813aebaa95e39be5d7dc", "authorities": ["https://www.irs.gov/taxtopics/tc304", "https://www.irs.gov/payments/direct-pay-help"], "failedBefore": 3, "focusedTestsPassed": 26, "independentTestsPassed": 8, "settlementIndependentlyVerified": false, "stagedBrowserSourceAuditPassed": true},
+      "mortgageMaximum": {"revision": "1ceca61f864f2c8b0ee255c467f6c46ed321fc72", "authorities": ["https://www.irs.gov/instructions/i1098", "https://www.irs.gov/publications/p936"], "failedBefore": 2, "focusedTestsPassed": 41, "specReferencesPassed": 16, "stagedBrowserSourceAuditPassed": true},
+      "retirementReview": {"authority": "https://www.irs.gov/instructions/i1099r", "failedBefore": 2, "focusedTestsPassed": 33, "specReferencesPassed": 67, "scopedLintExistingWarnings": 4, "stagedBrowserSourceAuditPassed": true},
+      "trackedGitBlobsVerified": 6697,
+      "officialSampleHashesVerified": 15,
+      "annualFilingQualified": false,
+      "ciRun": 45537927120,
+      "webRun": 45537927056,
+      "dockerRun": 45537927014,
+      "evidence": ".local/upgrade-evidence/nov25-taxpayer-source-reconciliation"
+    },
     "nov25OhioStandaloneAdapterReuse": {
       "revision": "c901da527b06c280d1f89a0065afb1e2f8c7b056",
       "scope": "2025 single no-header Ohio school guided render. Original first adapter always runs. Present overrides, non-render and distinct material retain independent validation.",

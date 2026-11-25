@@ -1,5 +1,18 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 federal source facts for independent tax review
+
+Compare two $500.01 federal extension payments recorded on the same day
+for 2026. Check one repeated processed payment against two distinct
+processed payments, and verify the date, tax year and annual form line
+once final IRS instructions are published. A confirmation number from
+Direct Pay identifies the submission. Check processed status in the
+taxpayer's records. For a single borrower's qualifying 2020 acquisition
+loan with $40,000 in Box 1 and $900,000 in Box 2, independently derive
+Schedule A line 8a using a verified $900,000 maximum, then a lender's
+separately documented $750,000 annual average. Confirm the hold when
+the $750,000 is entered as a maximum. [Source and fixtures](upgrade-2026-progress.md#november-25-federal-taxpayer-source-reconciliation).
+
 ## November 25 Ohio traditional school levy review
 
 Use a fictional single adult with no dependents or claimability, one actual

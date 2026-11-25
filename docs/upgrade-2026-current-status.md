@@ -9,6 +9,14 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `1e076910`, `1ceca61f` and `bc034c34` close three source-fact gaps.
+  2026 federal extensions are checked for duplicate receipts. A linked
+  mortgage maximum below the Form 1098 Box 2 balance is held. Guided
+  review distinguishes partial 1099-R records, missing amounts and
+  explicit zero. Focused checks and exact staged source audits passed
+  for all three. Combined checks are running on `bc034c34`.
+  [Taxpayer source facts](upgrade-2026-progress.md#november-25-federal-taxpayer-source-reconciliation).
+
 - `c901da52` reuses the validated Ohio school adapter once within an
   eligible 2025 guided render. The first validation and the independent
   fallback remain in place. Independent review confirmed exact

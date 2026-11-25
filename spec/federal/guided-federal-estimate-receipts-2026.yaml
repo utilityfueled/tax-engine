@@ -8,7 +8,9 @@ lines:
       Hold 2026 guided federal estimates and extension payments that reuse
       the same actual payment reference, including reuse across categories.
       When positive rows share the same calendar date and exact Decimal
-      amount, require distinct references from actual processed payments.
+      amount, require distinct references reported for processed payments.
+      A Direct Pay confirmation identifies a submission. The user checks
+      that the payment has processed in their records.
       Preserve admitted rows with their original date, amount and category.
       Keep references out of canonical tax input and tax output. Preserve
       existing application-year checks and noncolliding legacy rows. This
