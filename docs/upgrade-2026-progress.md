@@ -14,10 +14,20 @@ in the representative 2025 redacted review PDF. Direct canonical Form
 8863 calculations and student-loan inputs use their existing contracts.
 The legacy, real interview and identity regressions reproduced their gaps
 before the fix. All 299 affected tests, an independent 22-test rerun,
-web typecheck, lint, 10,062 spec references, inventory and the exact staged
-browser source audit passed. The exact combined tree and 15 official
-sample PDF hashes were verified. The exact Docker build passed. Full
-local, CI, Linux and ARM64 verification are open.
+web typecheck, lint, inventory and the exact staged browser source audit
+passed. The exact combined tree and 15 official sample PDF hashes were
+verified. All eleven exact local checks passed. Unit and coverage each
+passed 30,514 cases with 81 original skips and 88.40% branch coverage
+(92,177 of 104,268). All 10,059 exact-tree spec references passed. Local
+Chromium passed 652 active cases with five original skips in eight
+windows, and shutdown of its owned server was verified. The exact Docker
+build passed. The ARM64 browser run passed 645 of 652 active cases with
+five original skips. Seven Ohio cases missed the unchanged 30-second
+deadline. This affected one business part-year and one reciprocal case,
+two resident-credit cases and three part-year school-district cases.
+Isolated Compose recovery, independent archive verification, receipt
+upload and verified browser container removal passed. The ARM64 release
+gate remains open. CI and Linux verification are still running.
 [Form 8863 instructions](https://www.irs.gov/instructions/i8863) ·
 [Guided specification](../spec/federal/guided-aotc-student-history.yaml) ·
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45548981817) ·
@@ -26,8 +36,9 @@ local, CI, Linux and ARM64 verification are open.
 [Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45549081845).
 
 The live IRS endpoint for the final 2026 Form 8863 is byte-for-byte
-identical to the two-page blank already pinned in the repository. The
-current instructions still print 2025. The IRS, Pennsylvania and Ohio
+identical to the two-page blank already pinned in the repository. All 23
+targeted engine and PDF tests passed. The current instructions still
+print 2025. The IRS, Pennsylvania and Ohio
 catalogs still expose their 2025 annual parent returns alongside draft
 or estimated-payment material for 2026. The existing release gates
 therefore remain open. [Final Form 8863](https://www.irs.gov/pub/irs-pdf/f8863.pdf) ·

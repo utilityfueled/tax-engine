@@ -15,8 +15,14 @@ Use the linked progress sections when investigating individual packages.
   claimant, joint spouse, year or substantive claimant answers requires
   another confirmation. The guided return and raw workspace review use
   the same check. All 299 affected tests, independent review, web types,
-  lint, spec checks and the exact staged source audit passed. The exact
-  Docker build passed. Full local, CI, Linux and ARM64 checks are open.
+  lint, spec checks and the exact staged source audit passed. All eleven
+  exact local checks passed. Unit and coverage each passed 30,514 cases
+  with 88.40% branch coverage. Local Chromium passed all 652 active cases
+  with verified server shutdown. The exact Docker build passed. ARM64
+  recovery and independent archive verification passed. That ARM64
+  browser run passed 645 active cases and hit seven Ohio deadlines.
+  Browser container removal was verified. CI and Linux checks are still
+  open.
   [Legacy AOTC evidence](upgrade-2026-progress.md#november-25-explicit-review-of-legacy-aotc-claimant-facts).
 
 - `8b4b4f04` requires AOTC-only interviews to reconfirm shared Form 8863
