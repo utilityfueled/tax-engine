@@ -167,8 +167,8 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
 
 export type FederalPaymentKind = "estimate" | "extension";
 
-export function supportsFederalPaymentReceiptReferences(taxYear: number | null | undefined, kind: FederalPaymentKind): boolean {
-  return taxYear === 2025 || (taxYear === 2026 && kind === "estimate");
+export function supportsFederalPaymentReceiptReferences(taxYear: number | null | undefined): boolean {
+  return taxYear === 2025 || taxYear === 2026;
 }
 
 export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null, kind?: FederalPaymentKind): boolean {
@@ -197,7 +197,7 @@ export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, 
 }
 
 export function federalPaymentReceiptFactErrors(data: PaymentData, taxYear?: number | null): Record<string, string> {
-  if (!supportsFederalPaymentReceiptReferences(taxYear, "estimate")) return {};
+  if (!supportsFederalPaymentReceiptReferences(taxYear)) return {};
   const errors: Record<string, string> = {};
   const referenceFields = new Map<string, string>();
   const matchingPayments = new Map<string, { errorField: string; reference: string }[]>();
@@ -228,7 +228,7 @@ export function federalPaymentReceiptFactErrors(data: PaymentData, taxYear?: num
   }
 
   record(data.estimatedPayments ?? [], "");
-  if (supportsFederalPaymentReceiptReferences(taxYear, "extension")) record(data.extensionPayments ?? [], "extension-");
+  record(data.extensionPayments ?? [], "extension-");
   for (const group of matchingPayments.values()) {
     if (group.length < 2) continue;
     for (const row of group) {

@@ -7,7 +7,7 @@ import { SectionPayments } from "@/components/guided-interview/section-payments"
 import { emptyPaymentData, type PaymentData } from "@/lib/guided-interview-flow";
 import { allPaymentFactErrors } from "@/lib/guided-required-facts";
 
-it("reconciles matching 2025 payment rows in the ordinary Payments panel", async () => {
+it("reconciles matching payment rows through the 2025 and 2026 Payments panel", async () => {
   const actEnvironment = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
   const previousActEnvironment = actEnvironment.IS_REACT_ACT_ENVIRONMENT;
   actEnvironment.IS_REACT_ACT_ENVIRONMENT = true;
@@ -51,9 +51,12 @@ it("reconciles matching 2025 payment rows in the ordinary Payments panel", async
 
     await act(async () => root.render(<Harness year={2026} />));
     expect(field("Estimated payment #1 receipt reference")?.value).toBe("Synthetic receipt A");
-    expect(field("Extension payment #1 receipt reference")).toBeUndefined();
+    expect(field("Extension payment #1 receipt reference")?.value).toBe("Synthetic receipt B");
+    await enter("Extension payment #1 receipt reference", "synthetic receipt a");
+    expect(allPaymentFactErrors(latest, 2026)).toHaveProperty("extension-payment-0-receipt-reference");
     await act(async () => root.render(<Harness year={2024} />));
     expect(field("Estimated payment #1 receipt reference")).toBeUndefined();
+    expect(field("Extension payment #1 receipt reference")).toBeUndefined();
     expect(latest.estimatedPayments[0]?.receiptReference).toBe("Synthetic receipt A");
   } finally {
     await act(async () => root.unmount());

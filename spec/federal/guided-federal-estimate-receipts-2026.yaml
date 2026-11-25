@@ -1,15 +1,21 @@
-form: "2026 guided federal estimated-payment receipt reconciliation"
+form: "2026 guided federal payment receipt reconciliation"
 taxYear: 2026
 reference: https://www.irs.gov/pub/irs-pdf/f1040es.pdf
 lines:
-  - line: "2026 estimated tax payments"
-    description: Admit each actual 2026 federal estimated payment once
+  - line: "2026 estimated tax and extension payments"
+    description: Admit each actual 2026 federal estimated or extension payment once
     formula: >-
-      Hold 2026 guided federal estimates that reuse the same actual payment
-      reference. When positive estimates share the same calendar date and exact
-      Decimal amount, require distinct references from actual processed
-      payments. Preserve each admitted estimate and its original date and amount.
-      This intake change leaves 2026 extension payments, annual calculations,
-      and export qualification unchanged.
-    irsRef: "Final 2026 Form 1040-ES (https://www.irs.gov/pub/irs-pdf/f1040es.pdf); payment-specific confirmations and processing in IRS Direct Pay (https://www.irs.gov/payments/direct-pay-help)"
-    testRef: "tests/guided-interview/guided-federal-payment-receipts.test.ts::requires distinct actual references for matching 2026 estimates only"
+      Hold 2026 guided federal estimates and extension payments that reuse
+      the same actual payment reference, including reuse across categories.
+      When positive rows share the same calendar date and exact Decimal
+      amount, require distinct references from actual processed payments.
+      Preserve admitted rows with their original date, amount and category.
+      Keep references out of canonical tax input and tax output. Preserve
+      existing application-year checks and noncolliding legacy rows. This
+      intake control does not qualify annual forms or exports.
+    irsRef: "Final 2026 Form 1040-ES (https://www.irs.gov/pub/irs-pdf/f1040es.pdf); federal extension payment confirmation (https://www.irs.gov/taxtopics/tc304); payment-specific confirmations and processing in IRS Direct Pay (https://www.irs.gov/payments/direct-pay-help)"
+    testRef: "tests/guided-interview/guided-federal-payment-receipts.test.ts::requires distinct actual references for matching 2026 estimates"
+    testRefs:
+      - "tests/guided-interview/guided-federal-payment-receipts.test.ts::reconciles matching 2026 extension payments before transfer"
+      - "tests/guided-interview/guided-federal-payment-receipts.test.ts::holds a reused 2026 payment reference across estimates and extensions"
+      - "tests/apps/web/guided-federal-payment-receipts.test.tsx::reconciles matching payment rows through the 2025 and 2026 Payments panel"

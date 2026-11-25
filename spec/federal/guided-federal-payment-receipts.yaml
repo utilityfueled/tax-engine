@@ -19,4 +19,4 @@ lines:
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::holds reused and ambiguous receipt evidence across estimates and extensions"
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::keeps exact cents and the existing return-year admission"
       - "tests/guided-interview/guided-federal-payment-receipts.test.ts::admits a saved extension-only draft through Continue and the bridge"
-      - "tests/apps/web/guided-federal-payment-receipts.test.tsx::reconciles matching 2025 payment rows in the ordinary Payments panel"
+      - "tests/apps/web/guided-federal-payment-receipts.test.tsx::reconciles matching payment rows through the 2025 and 2026 Payments panel"

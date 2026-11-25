@@ -54,14 +54,13 @@ function PaymentApplicationFields({ label, entry, taxYear, kind, onChange }: {
   </>;
 }
 
-function PaymentReceiptReference({ label, entry, taxYear, kind, onUpdate }: {
+function PaymentReceiptReference({ label, entry, taxYear, onUpdate }: {
   label: string;
   entry: EstimatedPaymentEntry;
   taxYear?: number | null;
-  kind: FederalPaymentKind;
   onUpdate: (entry: EstimatedPaymentEntry) => void;
 }) {
-  if (!supportsFederalPaymentReceiptReferences(taxYear, kind)) return null;
+  if (!supportsFederalPaymentReceiptReferences(taxYear)) return null;
   return <label className="guided-field">
     <span className="guided-field-label">{label} receipt reference</span>
     <input className="guided-input" value={entry.receiptReference ?? ""}
@@ -122,7 +121,7 @@ function EstimatedPaymentCard({
           onChange={(value) => onUpdate(editPayment(entry, "amount", value))}
           required
         />
-        <PaymentReceiptReference label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="estimate" onUpdate={onUpdate} />
+        <PaymentReceiptReference label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear} onUpdate={onUpdate} />
         <PaymentApplicationFields label={`Estimated payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="estimate"
           onChange={application => onUpdate({ ...entry, application })} />
       </div>
@@ -217,7 +216,7 @@ export function SectionPayments({
             {extensions.map((entry, index) => <div key={index} className="guided-w2-card">
               <label className="guided-field"><span className="guided-field-label">Extension payment #{index + 1} date</span><input className="guided-input" type="date" value={entry.date} onChange={(event) => updatePayment("extensionPayments", index, editPayment(entry, "date", event.target.value))} /></label>
               <CurrencyField label={`Extension payment #${index + 1} amount`} value={entry.amount} onChange={amount => updatePayment("extensionPayments", index, editPayment(entry, "amount", amount))} required />
-              <PaymentReceiptReference label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="extension"
+              <PaymentReceiptReference label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear}
                 onUpdate={updated => updatePayment("extensionPayments", index, updated)} />
               <PaymentApplicationFields label={`Extension payment #${index + 1}`} entry={entry} taxYear={taxYear} kind="extension"
                 onChange={application => updatePayment("extensionPayments", index, { ...entry, application })} />
