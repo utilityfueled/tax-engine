@@ -108,7 +108,7 @@ function sortLotsByMethod(lots: TrackedLot[], method: CryptoCostBasisMethod): Tr
       break;
     case "hifo":
       // Highest cost basis per unit first (minimizes gain / maximizes loss)
-      sorted.sort((a, b) => b.costBasisPerUnit.minus(a.costBasisPerUnit).toNumber());
+      sorted.sort((a, b) => b.costBasisPerUnit.comparedTo(a.costBasisPerUnit));
       break;
     case "specific_id":
       // No sort needed — specific ID matching is handled by lotId

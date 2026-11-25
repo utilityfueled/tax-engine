@@ -769,7 +769,7 @@
     "src/engine/forms/cod-principal-residence.ts": "9880f2522be4d105f46b72e570bbd7206f4fe061bccd481ca948d8e36057f737",
     "src/engine/forms/cod-zero-minimum-tax-credit-bound.ts": "aaf8c9e08b36c2b8fe37a79d1036bd5a8b20240aa866a1c6519906bd3e8a789e",
     "src/engine/forms/coverdell-post-disqualification-interest.ts": "220b222cc8fa11a67322bf24ef4551f96da88394cecec7d188394a826df42a84",
-    "src/engine/forms/crypto-lot-matching.ts": "1d23f3cd71bf77fe1968479a50ec79d505b7d689b54f87301db9a9c30aad9584",
+    "src/engine/forms/crypto-lot-matching.ts": "01446f7fcd1ae3c81faee79fe29f62a1e1c8a9bc3f795e013988f4f7cd692cc7",
     "src/engine/forms/current-charitable-candidates.ts": "3cdecd6f0160989fa779f6e9cfd4ffaed21280baa5a7580457a495dbe4f65d39",
     "src/engine/forms/current-minimum-tax-credit.ts": "4d5ab4e91baa4c1d966e719d22763a0c30134834d19029593be8f4464b930ab0",
     "src/engine/forms/dependent-care-benefit-sources.ts": "80fc46e327beda039836d56b80dd55d1894727a034892a07fb42fe116ba3014f",

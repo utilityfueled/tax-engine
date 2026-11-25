@@ -94,14 +94,21 @@ lines:
   - line: "cost-basis-method"
     description: "Cost basis method election for lot matching"
     formula: |
-      When broker does not report cost basis, taxpayer elects method:
+      When the existing lot-matching path uses an authorized method, apply it
+      to the lots already eligible for comparison:
       - FIFO (default): First In, First Out
       - LIFO: Last In, First Out
-      - HIFO: Highest In, First Out
+      - HIFO: Compare exact per-unit cost bases in descending order. Retain
+        input order among equal prices and use the selected lot's acquisition
+        date to determine its holding period.
       - Specific ID: Match by specific lot identifier
-      Per IRS Notice 2014-21 Q&A 7 and general property rules.
-    irsRef: "IRS Notice 2014-21 Q&A 7"
+      These rules govern the ordering of eligible lots within the existing
+      identification, wallet/account, and return qualification requirements.
+    irsRef: "26 CFR §1.1012-1(j); https://www.irs.gov/irb/2026-15_IRB#NOT-2026-20"
     testRef: "tests/engine/forms/crypto-lot-matching.test.ts::FIFO sells earliest acquired lot first"
+    testRefs:
+      - "tests/edge-cases/crypto-lot-matching-edge-cases.test.ts::HIFO with equal cost basis lots picks first in original order"
+      - "tests/edge-cases/crypto-lot-matching-edge-cases.test.ts::HIFO selects the exact higher basis and its holding period when the difference underflows"
 
   - line: "1040-digital-asset"
     description: "Form 1040 digital asset question derivation"

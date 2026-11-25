@@ -1,11 +1,12 @@
 /**
  * Edge Case Tests for Crypto Lot Matching
- * Spec: spec/federal/crypto-income.yaml, spec/federal/defi-transactions.yaml, spec/federal/defi-advanced.yaml
+ * Spec: spec/federal/form-1099-da.yaml, spec/federal/crypto-income.yaml,
+ * spec/federal/defi-transactions.yaml, spec/federal/defi-advanced.yaml
  *
  * Tests boundary conditions for:
  * - Holding period boundary (exactly 365 vs 366 days)
  * - Lot exhaustion (selling more than available)
- * - HIFO tiebreakers with equal cost basis
+ * - HIFO exact cost ordering and stable ties
  * - Specific ID fallback when lotId doesn't match
  * - Wash sale 30-day window boundaries
  * - LP entry with zero LP tokens (division by zero)
@@ -227,35 +228,51 @@ describe("Crypto Lot Matching - Lot Exhaustion", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("Crypto Lot Matching - HIFO Tiebreaker", () => {
+  const transactions = [{
+    transaction: {
+      digitalAssetName: "Ethereum",
+      ticker: "ETH",
+      dateAcquired: "2025-01-01",
+      dateSold: "2025-06-01",
+      proceeds: "4000",
+      costBasis: "0",
+      holdingPeriod: "short" as const,
+      basisReportedToIRS: false,
+      transactionType: "sale" as const,
+      washSale: false,
+      washSaleDisallowed: "0",
+      adjustments: "0",
+      quantity: "1",
+    },
+    broker: "Coinbase",
+  }];
+
   it("HIFO with equal cost basis lots picks first in original order", () => {
     const lots: TrackedLot[] = [
-      { asset: "ETH", dateAcquired: "2025-01-01", quantity: d(1), costBasisPerUnit: d(3000), source: "purchase", lotId: "lot-A" },
-      { asset: "ETH", dateAcquired: "2025-02-01", quantity: d(1), costBasisPerUnit: d(3000), source: "purchase", lotId: "lot-B" },
+      { asset: "ETH", dateAcquired: "2025-02-01", quantity: d(1), costBasisPerUnit: d(3000), source: "purchase", lotId: "lot-A" },
+      { asset: "ETH", dateAcquired: "2025-01-01", quantity: d(1), costBasisPerUnit: d(3000), source: "purchase", lotId: "lot-B" },
       { asset: "ETH", dateAcquired: "2025-03-01", quantity: d(1), costBasisPerUnit: d(3000), source: "purchase", lotId: "lot-C" },
     ];
-    const transactions = [{
-      transaction: {
-        digitalAssetName: "Ethereum",
-        ticker: "ETH",
-        dateAcquired: "2025-01-01",
-        dateSold: "2025-06-01",
-        proceeds: "4000",
-        costBasis: "0",
-        holdingPeriod: "short" as const,
-        basisReportedToIRS: false,
-        transactionType: "sale" as const,
-        washSale: false,
-        washSaleDisallowed: "0",
-        adjustments: "0",
-        quantity: "1",
-      },
-      broker: "Coinbase",
-    }];
-
     const result = matchLots(transactions, lots, "hifo");
     expect(result.dispositions[0].costBasis.toNumber()).toBe(3000);
-    // 2 remaining lots
-    expect(result.remainingLots).toHaveLength(2);
+    expect(result.dispositions[0].dateAcquired).toBe("2025-02-01");
+    expect(result.remainingLots.map(lot => lot.lotId)).toEqual(["lot-B", "lot-C"]);
+  });
+
+  it("HIFO selects the exact higher basis and its holding period when the difference underflows", () => {
+    const decimalPrefix = `0.${"0".repeat(329)}`;
+    const lowerPrice = `${decimalPrefix}1`;
+    const higherPrice = `${decimalPrefix}2`;
+    expect(d(higherPrice).minus(lowerPrice).toNumber()).toBe(0);
+    const lots = initializeLots([
+      { asset: "ETH", dateAcquired: "2025-02-01", quantity: "1", costBasisPerUnit: lowerPrice, source: "purchase", lotId: "lower" },
+      { asset: "ETH", dateAcquired: "2024-01-01", quantity: "1", costBasisPerUnit: higherPrice, source: "purchase", lotId: "higher" },
+    ]);
+
+    const result = matchLots(transactions, lots, "hifo");
+    expect(result.dispositions[0]).toMatchObject({ dateAcquired: "2024-01-01", holdingPeriod: "long" });
+    expect(result.dispositions[0].costBasis.toString()).toBe(d(higherPrice).toString());
+    expect(result.remainingLots.map(lot => lot.lotId)).toEqual(["lower"]);
   });
 });
 
