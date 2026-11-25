@@ -25,7 +25,12 @@ lines:
     testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
   - line: "printed-source-cells"
     label: "Actual part-year school source and review boundary"
-    formula: "Every 165 text and22 AP states per actual packet match pinned original cells; rows0302/212/.5808 and9999/153/.4191; CountyASHL; VA mailing address; source SSN blank"
+    formula: >-
+      Every 165 text and 22 appearance states per actual packet match pinned original cells; rows 0302/212/.5808
+      and 9999/153/.4191; County ASHL; VA mailing address; source SSN blank. PDF inspection shares parsed
+      top-level content between text and geometry when the geometry operands have their expected types.
+      Unexpected geometry operand types use the original geometry parser. Nested appearance text and the
+      original-page, xref and raw-byte privacy checks retain their original decoding.
     testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
   - line: "actual-public-review"
     label: "Actual part-year school source and review boundary"

@@ -100,18 +100,31 @@ async function results(page:Page,c:SchoolPyPaperCase){const school=page.getByRol
 
 const strictCombined=String.raw`
 from pathlib import Path
+from copy import copy
 from pypdf import PdfReader
-from pypdf.generic import IndirectObject,ContentStream
+from pypdf.generic import IndirectObject,ContentStream,NameObject
 import sys,json,re
 file=Path(sys.argv[1]);plans=json.loads(sys.argv[2]);cells=json.loads(sys.argv[3]);private=json.loads(sys.argv[4]);strike_regions=json.loads(sys.argv[5]);statuses=json.loads(sys.argv[6]);reports={}
 def mult(m,n):
  a,b,c,d,e,f=m;g,h,i,j,k,l=n
  return[a*g+c*h,b*g+d*h,a*i+c*j,b*i+d*j,a*k+c*l+e,b*k+d*l+f]
-def painted(page,r):
+def painter_operations(page,r,contents):
+ # String operands decode differently here and in extract_text. Painting
+ # consumes only numeric operands and an XObject name. Retain the original
+ # parse for a nonstandard relevant operand instead of changing its handling.
+ numbers={b'cm',b'RG',b'G',b'm',b'l'}
+ operations=contents.operations
+ if any((op==b'Do' and (not args or not isinstance(args[0],NameObject))) or
+        (op in numbers and not all(isinstance(arg,(int,float))for arg in args))
+        for args,op in operations):
+  return ContentStream(page['/Contents'],r).operations
+ return operations
+
+def painted(page,r,contents):
  matrix=[1,0,0,1,0,0];stack=[];found=[];segments=[];pending=[];point=None;stroke=(0,0,0)
  def xy(x,y):
   a,b,c,d,e,f=matrix;return[a*float(x)+c*float(y)+e,b*float(x)+d*float(y)+f]
- for args,op in ContentStream(page['/Contents'],r).operations:
+ for args,op in painter_operations(page,r,contents):
   if op==b'q':stack.append((matrix[:],stroke))
   elif op==b'Q':matrix,stroke=stack.pop()
   elif op==b'cm':matrix=mult(matrix,[float(v)for v in args])
@@ -144,9 +157,16 @@ def painted(page,r):
    found.append((rect,''.join(strings),ink or any(text.strip()for text in strings)))
  return found,segments
 
-r=PdfReader(file,strict=True);assert not r.get_fields();assert '/AcroForm'not in r.trailer['/Root'];texts=[];objects=[]
+r=PdfReader(file,strict=True);assert not r.get_fields();assert '/AcroForm'not in r.trailer['/Root'];texts=[];objects=[];streams=[]
 for p in r.pages:
- assert all(a.get_object().get('/Subtype')!='/Widget'for a in p.get('/Annots',[]));text=p.extract_text()or'';assert text.count('FOR REVIEW ONLY - NOT FOR FILING')==1;texts.append(text)
+ assert all(a.get_object().get('/Subtype')!='/Widget'for a in p.get('/Annots',[]))
+ # Match pypdf's text encoding without changing the original page or xref.
+ if '/Contents' in p:
+  contents=ContentStream(p['/Contents'],r,'bytes'); text_page=copy(p)
+  text_page[NameObject('/Contents')]=contents; text=text_page.extract_text()or''
+ else:
+  contents=None; text=p.extract_text()or''
+ streams.append(contents);assert text.count('FOR REVIEW ONLY - NOT FOR FILING')==1;texts.append(text)
 def decode(v):
  if isinstance(v,bytes):
   for enc in['utf-8','latin1','utf-16-be','utf-16-le']:
@@ -171,7 +191,7 @@ raw='\n'.join(objects+texts+[str(r.metadata)])
 for marker in private:assert marker not in raw,('private source marker',marker)
 assert not re.search(r'\b\d{3}-\d{2}-\d{4}\b',raw),'SSN format'
 # Bind source-pinned official blocks by every actual appearance cell, not guessed packet offsets.
-appearances={i:painted(p,r)for i,p in enumerate(r.pages)};occupied=set();total=0;status_count=0
+appearances={i:painted(p,r,streams[i])for i,p in enumerate(r.pages)};occupied=set();total=0;status_count=0
 for name,count in plans.items():
  expected=[c for c in cells if c['file']==name];matches=[]
  for offset in range(len(r.pages)-count+1):
