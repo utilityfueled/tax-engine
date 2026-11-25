@@ -34,11 +34,16 @@ argument limit and stale guided attestations before fixes. Two browser
 source-audit controls passed with seven refreshed pins out of 2,071.
 Both exact tracked-only archives matched all 15 known sample PDF hashes
 and passed frozen offline installation. The exact Docker build passed.
-The full checks have started.
+The exact local unit run passed 30,548 tests in 2,220 files with 81
+original skips. Coverage and the rest of the local suite are in progress.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45678629586) ·
 [Web and strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45678629036) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45678628283) ·
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45678917919).
+
+Vercel canceled automatic production build records for the application
+commit and its evidence-only successor `a6f657a39`. The production site
+was outside the verification scope.
 
 ## November 25 exact digital asset lot ordering
 
@@ -56,7 +61,7 @@ All 189 targeted lot and statement tests, 45 Form 1099-DA spec
 references, inventory, scoped lint, independent engineering review
 and `git diff --check` passed. The two browser source-audit controls
 passed after refreshing one of 2,071 source digests. The exact Docker
-build passed.
+build passed, as did all eight Linux CI jobs.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45675046664) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45675046673) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45675046773).
@@ -91,7 +96,13 @@ suite has started with both archives checking all 15 original sample
 PDF hashes and using the frozen dependency lock. Qualified human tax
 review is outstanding. The exact Docker build passed. Exact unit
 and coverage runs each passed 30,536 tests in 2,220 files, with 81
-original skips and 88.44% branch coverage.
+original skips and 88.44% branch coverage. All eleven local checks and
+all eight Linux CI jobs passed. Local and remote managed Chromium each
+passed 652 cases with five original skips. Strict AMD64 passed 642 cases,
+failed ten and retained the same five skips. The failures were two Ohio
+business, three resident-credit, four part-year school and one railroad
+retirement paper-review case. Isolated Compose recovery and rollback,
+independent archive verification and the scan step passed.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45673736911) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45673736878) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45673736703).
@@ -127,9 +138,20 @@ with a frozen install. The combined Schedule 1-A and 3-A suite passed
 all 81 tests. The exact Docker build passed. Full exact local coverage
 passed 30,530 tests across 2,220 files at 88.43% branch coverage,
 with 81 original skips. Ordinary Linux CI also passed all eight jobs.
+The Web build and all 652 active managed Chromium cases passed.
+Strict AMD64 passed 643 cases, kept five original skips, and missed
+nine Ohio cases across the business part-year, resident-credit and school
+district journeys. Its Compose recovery, rollback, archive verification
+and browser container removal passed.
+Native ARM64 on the docs-equivalent `8ed62bca` passed 645 browser
+cases with five original skips. Six Ohio cases reached their deadline.
+A seventh Ohio resident-credit case reported a missing review download
+button. Image build and smoke, independent archive verification, Compose
+recovery and browser container removal passed.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45670078300) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45670078270) ·
-[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45670078276).
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45670078276) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45671184031).
 
 ## November 25 amended Schedule 3-A first claims
 
@@ -164,7 +186,8 @@ manifest pin. The exact tracked scope passed both audit controls with all
 An independent review counted 670–897 trace filmstrip frames in six
 retained strict AMD64 Ohio failures. Each contained 22.75–34.24 MiB of
 JPEGs. On an archive of `867d5cd8`, a local diagnostic alternated trace
-filmstrip capture on/off/off/on for the same 15 Ohio cases in batch 7.
+filmstrip capture on/off/off/on for the same 13 Ohio cases and two
+Pennsylvania controls in batch 7.
 All 60 executions passed with identical case IDs, Chromium, two workers,
 zero retries, a 30-second deadline and fresh local server processes.
 The median batch was 50.36 seconds with capture and 49.14 seconds without
@@ -185,6 +208,17 @@ under each of four parser variants. All 32 parses returned identical
 receipts within each input. The combined change reduced median CPU time
 by 3.26% on one PDF and 0.50% on the other. Neither experiment changed
 tracked parser code, trace settings, deadlines or readiness gates.
+
+The `795934e7` local macOS follow-up compared the original guided input
+focus transition with a scratch build that disabled it. All 60 cases
+passed across the four original/disabled/disabled/original runs with
+the same 13 Ohio and two Pennsylvania cases, two workers, zero retries
+and 30-second deadline. Median batch time improved 0.10%. The median
+Ohio case was 0.44% slower. All 67 layout probes passed in each run and
+303 original build hashes matched after restoration. The first measured
+startup warmed a route cache shared by later runs. An earlier attempt
+that could not bind the local port ran zero cases and was outside the
+comparison. The result did not justify applying the CSS change.
 
 The current final federal Form 1040 and Schedule 1-A still cover 2025.
 The IRS indexed the 2026 Form 1040 instructions as a draft. Pennsylvania's

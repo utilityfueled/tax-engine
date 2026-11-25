@@ -15,8 +15,8 @@ Use the linked progress sections when investigating individual packages.
   reporting values, requires fresh proof after source edits and checks
   exact Form 8949 totals. All 500 targeted cases, three typechecks, both
   specs, inventory, source-audit checks, engineering review and the exact
-  Docker build passed. Exact full checks have started. Final 2026 federal
-  qualification is outstanding.
+  Docker build passed. The exact unit run passed 30,548 tests with 81
+  original skips. Final 2026 federal qualification is outstanding.
   [Broker-lot evidence](upgrade-2026-progress.md#november-25-form-1099-da-broker-lot-corrections).
 
 - `f94a3a9c` compares digital-asset lot prices with Decimal. The
@@ -33,8 +33,10 @@ Use the linked progress sections when investigating individual packages.
   Changing the borrower resets the relevant confirmations. All 273
   targeted tests, both typechecks, 21 spec references, the inventory
   check, source-audit controls, engineering re-review and the exact
-  Docker build passed. The exact unit and coverage runs each passed
-  30,536 tests, with 88.44% branch coverage. Credits against current
+  Docker build passed. All eleven exact local checks and all eight
+  Linux CI jobs passed. The unit and coverage runs passed 30,536 tests
+  each, with 88.44% branch coverage. Managed Chromium passed locally and
+  in Linux CI. Strict AMD64 had ten browser failures. Credits against current
   interest and unresolved prior tax benefits require further qualification.
   [Cash refund evidence](upgrade-2026-progress.md#november-25-form-1098-vli-prior-year-cash-refunds).
 
@@ -56,11 +58,15 @@ Use the linked progress sections when investigating individual packages.
   run passed 30,526 tests with 81 original skips.
   [Schedule 3-A evidence](upgrade-2026-progress.md#november-25-amended-schedule-3-a-first-claims).
 
-- Four local diagnostic runs passed the same 15 Ohio browser cases.
+- Four local diagnostic runs passed the same 13 Ohio browser cases
+  and two Pennsylvania controls.
   Turning off only trace filmstrip capture reduced median batch time by
   2.42%. The paired railroad retirement PDF prototype was also modest
   and no diagnostic change was applied. Strict AMD64 and ARM64 browser
   qualification remains open.
+  A second four-run comparison on `795934e7` disabled the guided input
+  focus transition in scratch builds. All 60 cases passed and the
+  median batch improved only 0.10%. The original CSS was restored.
   [Timing evidence](upgrade-2026-progress.md#november-25-strict-browser-timing-comparison).
 
 - `ac9ae969` builds the help overview only when the dock is open with
