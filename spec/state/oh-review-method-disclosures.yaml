@@ -38,5 +38,17 @@ lines:
     testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio final review copy retains actual school amounts and source-qualified paper limits"
   - line: "public-support"
     description: "Public 2025 support accurately bounds PY paper"
-    formula: "Only qualified212OH153VA payroll with actual Ashland/Hillsdale header; no-header/other methods unavailable;2025filing and all2026 rows remain unavailable."
+    formula: "Only qualified212OH153VA payroll with actual Ashland/Hillsdale header; no-header/other methods unavailable;2025filing remains unavailable."
     testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::Ohio public support discloses the finite payroll paper method without year or filing promotion"
+  - line: "public-support-2026-sources"
+    description: "Public 2026 support discloses available guided source work in Pennsylvania and Ohio"
+    formula: |
+      Disclose capture and confirmation of a Pennsylvania earned income
+      credit child inventory with no qualifying children, as scoped in
+      state/pa-2026-childless-eic-dependency.yaml. Disclose confirmation of Ohio
+      earned-income school district sources and the district rate, resident
+      compensation and school withholding preview for supported full-year
+      employee cases, as scoped in state/oh-2026-school-sources.yaml. All 2026
+      rows retain fact saving and encrypted local backup availability and disclose
+      that full return calculations, PDFs and filing are unavailable.
+    testRef: "tests/apps/web/oh-review-method-disclosures.test.tsx::public 2026 support discloses Pennsylvania and Ohio source work without promoting returns"

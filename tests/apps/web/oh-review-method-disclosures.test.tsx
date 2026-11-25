@@ -33,4 +33,30 @@ it('Ohio header source copy distinguishes actual business and payroll jurisdicti
 });
 it('Ohio state review copy retains actual school amounts and source-qualified paper limits',async()=>{const f=guidedSchoolDistrictFixture(),before=structuredClone(f),preview=required(computeGuidedPreview(f.state));const p=await mountGuidedPanel(<SectionStateReturn stateCode="OH" data={f.data} guidedPreview={preview} onDataChange={()=>{throw Error('Display must not edit source facts');}}/>);try{const region=p.container.querySelector('[aria-label="School district return review"]');expect(region).not.toBeNull();assertPaper(region?.textContent??null);expect(region?.textContent).toContain('$1,000');expect(region?.textContent).toContain('$1,100');expect(region?.textContent).toContain('$100');expect(region?.textContent).toContain('Payments are separate from Ohio IT1040. A calculated refund is not received cash.');expect(f).toEqual(before);}finally{await p.dispose();}});
 it('Ohio final review copy retains actual school amounts and source-qualified paper limits',async()=>{const f=guidedSchoolDistrictFixture(),before=structuredClone(f),preview=required(computeGuidedPreview(f.state));const p=await mountGuidedPanel(<SectionReview state={f.state} preview={preview} onJumpToSection={()=>{throw Error('Display must not change the route');}}/>);try{const region=p.container.querySelector('[aria-label="School district final review"]');expect(region).not.toBeNull();assertPaper(region?.textContent??null);expect(region?.textContent).toContain('$1,000');expect(region?.textContent).toContain('$1,100');expect(region?.textContent).toContain('$100');expect(region?.textContent).toContain('these payments are separate from IT1040. A calculated refund is not received cash.');expect(f).toEqual(before);}finally{await p.dispose();}});
-it('Ohio public support discloses the finite payroll paper method without year or filing promotion',()=>{const ohio=required(taxYearSupportRows.find(row=>row[0]==='2025'&&row[1]==='Ohio'));expect(ohio[4]).toContain('212-day Ohio / 153-day Virginia payroll');expect(ohio[4]).toContain('actual Ashland County / Hillsdale (0302) header originals');expect(ohio[4]).toContain('Part-year school sources without that header and other school methods have no qualified paper packet');expect(ohio[4]).toContain('no filled official Ohio forms are qualified for filing');expect(ohio[4]).not.toContain('Part-year school district review packets remain unavailable');expect(ohio[5]).toBe('Unavailable');const nextYear=taxYearSupportRows.filter(row=>row[0]==='2026');expect(nextYear).toHaveLength(8);for(const row of nextYear)expect(row.slice(2)).toEqual(['No qualified residency scenarios','Year-specific rules, conformity, facts and final forms remain under review','Save facts and encrypted local backups; full return calculation and PDFs unavailable','Unavailable']);});
+it('Ohio public support discloses the finite payroll paper method without year or filing promotion',()=>{
+  const ohio=required(taxYearSupportRows.find(row=>row[0]==='2025'&&row[1]==='Ohio'));
+  expect(ohio[4]).toContain('212-day Ohio / 153-day Virginia payroll');
+  expect(ohio[4]).toContain('actual Ashland County / Hillsdale (0302) header originals');
+  expect(ohio[4]).toContain('Part-year school sources without that header and other school methods have no qualified paper packet');
+  expect(ohio[4]).toContain('no filled official Ohio forms are qualified for filing');
+  expect(ohio[4]).not.toContain('Part-year school district review packets remain unavailable');
+  expect(ohio[5]).toBe('Unavailable');
+});
+
+it('public 2026 support discloses Pennsylvania and Ohio source work without promoting returns',()=>{
+  const rows=taxYearSupportRows.filter(row=>row[0]==='2026');
+  const generic='Save facts and encrypted local backups; full return calculation and PDFs unavailable';
+  expect(rows).toHaveLength(8);
+  for(const [,jurisdiction,residency,notes,capabilities,filing] of rows){
+    expect(residency).toBe('No qualified residency scenarios');
+    expect(notes).toBe('Year-specific rules, conformity, facts and final forms remain under review');
+    expect(capabilities).toContain(generic);
+    expect(filing).toBe('Unavailable');
+    if(jurisdiction!=='Pennsylvania'&&jurisdiction!=='Ohio')expect(capabilities).toBe(generic);
+  }
+  const pennsylvania=required(rows.find(row=>row[1]==='Pennsylvania'));
+  expect(pennsylvania[4]).toContain('record and confirm an inventory showing no qualifying children for the earned income credit (EIC)');
+  const ohio=required(rows.find(row=>row[1]==='Ohio'));
+  expect(ohio[4]).toContain('For supported full-year employee cases, confirm earned-income school district sources');
+  expect(ohio[4]).toContain('preview the district rate, resident compensation and school withholding');
+});
