@@ -14,7 +14,7 @@ import { assertSupportedWholeReturnAccountingPeriod } from "./guided-standard-de
 import "server-only";
 import Decimal from "decimal.js";
 
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat } from "fs/promises";
 import { tmpdir } from "os";
 import { basename, join } from "path";
 import {
@@ -180,11 +180,13 @@ async function resolveBlankFormsDir() {
   throw new Error("Could not locate the blank PDF form templates.");
 }
 
-async function mergePdfFiles(pdfPaths: string[], referenceDocuments?: ReadonlyMap<string, PDFDocument>) {
+async function mergeReviewPdf(cover: PDFDocument, pdfPaths: string[], referenceDocuments?: ReadonlyMap<string, PDFDocument>) {
   const merged = await PDFDocument.create();
 
-  for (const pdfPath of pdfPaths) {
-    const source = referenceDocuments?.get(pdfPath) ?? await loadPdfDocumentQuietly(await readFile(pdfPath));
+  for (const entry of [cover, ...pdfPaths]) {
+    const source = typeof entry === "string"
+      ? referenceDocuments?.get(entry) ?? await loadPdfDocumentQuietly(await readFile(entry))
+      : entry;
     await markReviewPdf(source);
     const pages = await merged.copyPages(source, source.getPageIndices());
 
@@ -639,7 +641,7 @@ async function buildReturnSummaryCoverPage(summary: PacketSummary) {
     nextPage: () => sectionPage(true, "What may be missing or still needs review", warningColor),
   });
 
-  return doc.save();
+  return doc;
 }
 
 function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | null | undefined) {
@@ -801,10 +803,8 @@ export async function buildWorkspaceFilledReturnDownload(
       `E-file and business-rule validation: ${readiness.businessRuleValidation}.`,
     );
     packetSummary.missingBullets.push(...readiness.findings);
-    const coverPagePdf = await buildReturnSummaryCoverPage(packetSummary);
-    const coverPagePath = join(outputDir, "00-experimental-summary-cover.pdf");
-    await writeFile(coverPagePath, coverPagePdf);
-    const mergedPdf = await mergePdfFiles([coverPagePath, ...filledForms], ohioReferenceDocuments);
+    const cover = await buildReturnSummaryCoverPage(packetSummary);
+    const mergedPdf = await mergeReviewPdf(cover, filledForms, ohioReferenceDocuments);
     const yearToken = workspace.returnSummary.targetTaxYear?.toString() ?? "draft";
 
     return {

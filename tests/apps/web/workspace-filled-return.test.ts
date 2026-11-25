@@ -502,7 +502,7 @@ describe("workspace filled return download", () => {
     expect(download.fileName).toBe("workspace-northwind-review-2025-review-return.pdf");
     expect(download.includedForms).toContain("f1040-filled.pdf");
     expect(pdf.getPageCount()).toBeGreaterThan(0);
-    expect(pdfText).toContain("EXPERIMENTAL TAX RETURN REFERENCE");
+    expect(pdfText.trimStart()).toMatch(/^EXPERIMENTAL TAX RETURN REFERENCE/u);
     expect(pdfText).toContain("SUMMARY OF THIS REVIEW PACKET");
     expect(pdfText.match(/FOR REVIEW ONLY - NOT FOR FILING/g)).toHaveLength(pdf.getPageCount());
     expect(pdfText).not.toContain("123-45-6789");
