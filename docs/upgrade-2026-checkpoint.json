@@ -56,8 +56,8 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect corrected exact d973e8a1 local checks, CI 45539213333, Linux Web 45539213256 and ARM64 45540602031. Exact Docker 45539213235 passed. The c901da52 local checks passed. Follow its CI 45534420347, Linux Web 45534420296 and ARM64 45534450387.",
-      "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Managed Linux passed all 652 active cases on 3a9f8d24. Strict AMD64 passed 642 with nine Ohio deadlines and one RRTA PDF deadline. ARM64 passed 644 with eight Ohio deadlines on 5bbc0504. Recovery and independent archive verification passed on both architectures.",
+      "Collect corrected exact d973e8a1 local Chromium, CI 45539213333, Linux Web 45539213256 and ARM64 45540602031. Exact Docker 45539213235 and the ten other local checks passed. Follow earlier c901da52 CI 45534420347 and Linux Web 45534420296.",
+      "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Managed Linux passed all 652 active cases on 3a9f8d24. Strict AMD64 passed 642 with nine Ohio deadlines and one RRTA PDF deadline. Exact c901da52 ARM64 passed 642 with ten Ohio deadlines. Recovery and independent archive verification passed on both architectures.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -79,7 +79,7 @@
       "dockerConclusion": "cancelled after updated main push",
       "firstLocalUnit": {"passed": 30502, "failed": 1, "skipped": 84, "staleBrowserAuditDigest": true, "sandboxDeniedLoopbackSetup": true},
       "firstLocalCoverage": {"passed": 30502, "failed": 1, "skipped": 84, "staleBrowserAuditDigest": true, "sandboxDeniedLoopbackSetup": true},
-      "correctedVerification": {"revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8", "diagnosticAndOrchestrationTestsPassed": 62, "browserTimingPolicyChanged": false, "ciRun": 45539213333, "webRun": 45539213256, "dockerRun": 45539213235, "dockerConclusion": "success", "arm64Run": 45540602031, "evidence": ".local/upgrade-evidence/nov25-facts-and-audit"},
+      "correctedVerification": {"revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8", "diagnosticAndOrchestrationTestsPassed": 62, "browserTimingPolicyChanged": false, "exactLocalChecksPassedBeforeBrowser": 10, "localUnit": {"passed": 30506, "originalSkips": 81, "workers": 4}, "localCoverage": {"passed": 30506, "originalSkips": 81, "branchPercent": 88.4, "workers": 4}, "exactSpecReferencesPassed": 10055, "ciRun": 45539213333, "webRun": 45539213256, "dockerRun": 45539213235, "dockerConclusion": "success", "arm64Run": 45540602031, "evidence": ".local/upgrade-evidence/nov25-facts-and-audit"},
       "evidence": ".local/upgrade-evidence/nov25-taxpayer-source-reconciliation"
     },
     "nov25OhioStandaloneAdapterReuse": {
@@ -104,6 +104,7 @@
       "dockerRun": 45534420393,
       "dockerConclusion": "success",
       "arm64Run": 45534450387,
+      "arm64": {"job": 138937498897, "windows": 8, "passed": 642, "failed": 10, "originalSkips": 5, "deadlineCategories": {"ohioBusinessNew212": 2, "ohioReciprocal": 1, "ohioResidentCredit": 3, "ohioSchoolDistrict": 4}, "composeRecoveryPassed": true, "independentArchivePassed": true, "scanStepPassed": true, "browserContainerRemoved": true, "sanitizedTimingArtifactSha256": "6f278a29723ae4c7703ca896565da670f1e2e8b812791cfbeebe12ec73af795c"},
       "vercelProductionBuildState": "CANCELED",
       "evidence": ".local/upgrade-evidence/nov25-oh-standalone-adapter"
     },

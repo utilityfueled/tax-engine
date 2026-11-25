@@ -40,7 +40,10 @@ source audit digest, and the sandbox denied the loopback test setup. The
 `d973e8a1` correction changes only that digest. All 62 scoped diagnostic
 and scheduler tests passed with the cases, timings and gates preserved.
 The corrected exact archive verified 6,697 tracked blobs and 15 PDF
-samples. Its combined local checks use local sockets and are running.
+samples. The first ten exact local checks passed with local sockets.
+Unit and coverage each passed 30,506 cases with 81 existing skips
+and 88.40% branch coverage. All 10,055 exact spec references passed.
+Chromium is running.
 The exact Docker build passed. The exact ARM64 job was scheduled after
 the public branch and workflow both reported the reviewed commit.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
@@ -76,11 +79,23 @@ each passed 30,498 cases with 81 existing skips and 88.39% branch
 coverage. Local Chromium passed all 652 active cases in eight windows
 with five existing skips. The runner closed its owned server. The
 independent Docker build passed. Vercel canceled the production build.
-The exact Linux and ARM64 runs are in progress.
+The exact Linux run is active.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45534420347) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45534420393) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45534420296) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45534450387).
+
+The exact ARM64 browser step passed 642 cases and reached ten existing
+30-second case deadlines across eight windows, with five existing
+skips. Two NEW212, one reciprocal, three resident-credit and four
+school-district cases timed out at different actions. School traces
+ended at label lookup, input Tab, header confirmation and guided
+interview dismissal after reopen. Resident-credit traces ended at
+source confirmation and a reopened unapplied-payment check. The third
+resident-credit phase is unavailable. Compose upgrade and recovery,
+independent archive verification, scan and browser-container cleanup
+passed. The local CPU improvement did not qualify this runtime.
+[Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45534450387/job/138937498897).
 
 ## November 25 Ohio traditional school levy
 
