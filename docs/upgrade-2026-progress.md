@@ -22,9 +22,11 @@ each. Median paired CPU fell 26.96% and 27.79%, and one pair was slower.
 Every preview, canonical value, saved state and rejection digest
 matched. Timing preceded the final reentrant consumption guard.
 The exact local checkout matches 6,697 tracked blobs and 15 official
-PDF samples. Local units passed 30,498 cases. The independent Docker
-build passed. Vercel canceled the production build. The remaining
-local, Linux and ARM64 results are in progress.
+PDF samples. The first ten exact local checks passed. Unit and coverage
+each passed 30,498 cases with 81 existing skips and 88.39% branch
+coverage. The independent Docker build passed. Vercel canceled the
+production build. The exact local Chromium, Linux and ARM64 runs are
+in progress.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45534420347) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45534420393) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45534420296) ·
@@ -60,6 +62,17 @@ with four low-priority unit and coverage workers while the earlier
 browser ran. The two Chromium servers ran in sequence. The exact
 browser run passed all 652 active cases with five original skips across
 eight windows, including the mobile K12 reload. Server cleanup passed.
+Managed Linux also passed all 652 active cases across eight windows,
+with five existing skips. Strict AMD64 passed 642 active cases with
+the same windows and skips. The existing 30-second case deadline was
+reached twice in Ohio NEW212, three times in resident-credit cases and
+four times in school-district cases. One desktop railroad retirement
+saved-PDF inspection reached its four-second deadline. Strict Compose
+recovery and rollback, the independent archive, the image scan and
+browser-container cleanup passed.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45527715370/job/138915075001) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45527715370/job/138915074783).
+
 The production deployment listing shows canceled builds for the
 traditional levy and corrected jobs-credit inventory commits.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45527715373) ·

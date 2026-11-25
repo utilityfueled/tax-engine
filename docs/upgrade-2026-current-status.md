@@ -14,8 +14,10 @@ Use the linked progress sections when investigating individual packages.
   fallback remain in place. Independent review confirmed exact
   signed-zero and single-use behavior. Local paired CPU fell about
   27% on two synthetic fixtures before the final single-use guard.
-  All 109 focused checks passed. Exact local, Linux and ARM64 runs
-  are active.
+  All 109 focused checks and the first ten exact local checks passed.
+  Unit and coverage each passed 30,498 cases with 88.39% branches.
+  The Docker build passed. The exact local browser, Linux and ARM64
+  runs are active.
   [Ohio standalone replay](upgrade-2026-progress.md#november-25-ohio-standalone-school-preview-replay).
 
 - `3a9f8d24` computes the pre-credit 2026 Ohio traditional school levy
@@ -24,7 +26,10 @@ Use the linked progress sections when investigating individual packages.
   It remains an internal draft. All 213 focused tests, typecheck, lint
   and spec/inventory checks passed. All eleven exact local checks
   passed. Unit and coverage each passed 30,493 cases with 88.39% branches.
-  Chromium passed 652 active cases, including the mobile K12 reload.
+  Local Chromium and managed Linux each passed 652 active cases.
+  Strict AMD64 passed 642, with nine Ohio case deadlines and one
+  railroad retirement PDF inspection deadline. Strict recovery,
+  rollback, archive, scan and browser-container cleanup passed.
   [Ohio traditional school evidence](upgrade-2026-progress.md#november-25-ohio-traditional-school-levy).
 
 - `5d8e8fd4` validates a direct individual's certified Ohio refundable
@@ -43,8 +48,8 @@ Use the linked progress sections when investigating individual packages.
 - `5bbc0504` avoids repeating the serialization of an internally owned
   federal result during a pending Ohio school header edit. Both original
   checks still run. Independent review, 202 focused tests, the browser
-  source audit and spec checks passed. The exact native ARM64 rehearsal
-  is running. The exact local comparison measured 16.02% and 19.16%
+  source audit and spec checks passed. The exact local comparison
+  measured 16.02% and 19.16%
   lower CPU per edit on two synthetic Ohio fixtures.
   All eleven exact local checks passed, including 30,484 unit and
   coverage tests at 88.38% branches and 652 active Chromium cases.
