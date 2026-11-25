@@ -192,6 +192,8 @@
       "filingQualified": false
     },
     "nov25StrictTimingFollowup": {
+      "exactArm64ToMac": { "applicationCommit": "795934e7", "nativeRunId": 45678917919, "nativeTimingArtifactId": 15057722851, "artifactSha256": "0bdf2da29841c8c445cafa31a0a638458b3b0a6a58774201a6c36fbe14420ff3", "matchedComparisonSha256": "b64f0e0ae539e697fe9a065cc148f62751d4de2407ca05829ec1fd7f64ff1319", "matchedCases": 657, "matchedWindows": 8, "matchedSkips": 5, "timeoutClues": 10, "strictDeadlineMsForFailures": 30000, "localDeadlineMsForFailures": 90000, "failedPairMedianMacMs": 9050, "failedPairMedianArmObservedMs": 32310, "matchedPassesInFailingFiles": 4, "matchedPassesInFailingFilesPairedMedianRatio": 3.083, "otherMatchedPasses": 638, "otherMatchedPassesPairedMedianRatio": 3.532 },
+      "navigationBackdrop": { "applicationCommit": "795934e7", "sequence": ["original", "disabled", "disabled", "original"], "ohioResidentCreditCases": 4, "ohioSchoolCases": 9, "pennsylvaniaControls": 2, "casesPassedPerRun": 15, "windowsMs": [50166, 49235, 49917, 50325], "medianBatchReductionPercent": 1.33, "medianOhioReductionPercent": 0.62, "partYearSchoolHeaderIncreasePercent": 0.33, "layoutProbesPerRun": 67, "restoredBuildHashes": 321, "promoted": false, "receiptSha256": "dc2e6767735539b73e912bfc7ef8c94b1e0e9400a61e7486be39659ef0785c13" },
       "applicationCommit": "867d5cd821347378e0e56e3704e40b7f172c0058",
       "diagnosticOnly": true,
       "ohioFilmstrip": { "sequence": ["on", "off", "off", "on"], "casesPassedPerRun": 15, "workers": 2, "retries": 0, "deadlineMs": 30000, "elapsedMs": [49835, 49237, 49047, 50888], "medianBatchReductionPercent": 2.42, "medianCaseReductionPercent": 3.10, "serverClosed": true },

@@ -1,5 +1,32 @@
 # 2026 upgrade implementation evidence
 
+## November 25 exact ARM64 timing comparison
+
+Matched all 657 case IDs and all eight batch memberships between the
+strict ARM64 receipt and the exact `795934e7` local macOS run. Both
+retained the same five skips. All ten strict failures have timeout clues.
+The strict limit for them was 30 seconds and their local managed limit was
+90 seconds. The ten cases finished locally in a median 9.05 seconds. Their
+median ARM64 observed duration, including timeout handling, was 32.31
+seconds. Four ARM64 passes in the same files had a median paired runtime
+ratio of 3.08. The 638 other passing pairs had a median ratio of 3.53.
+The runs differ in hardware, runtime and execution conditions. The timing
+identifies a broad gap and the failures at long Ohio workflows. It does
+not attribute the gap to any individual app function or estimate how long
+the failed strict cases would have taken without the limit.
+
+The local scratch build of the same application alternated the original
+and disabled sticky navigation blur over four runs. The cohort was four
+Ohio resident-credit cases, nine Ohio school cases and two Pennsylvania
+controls. All 60 executions and all 67 layout probes per run passed.
+Median batch elapsed improved 1.33% and median Ohio elapsed improved
+0.62%. The four part-year school header-entry measurements were 0.33%
+slower. The same two workers, zero retries, 30-second deadline, traces
+and request budgets applied throughout. The build restored all 321
+original file fingerprints. That comparison did not support changing
+the navigation CSS.
+[Exact ARM64 source and sanitized timing](https://github.com/utilityfueled/tax-engine/actions/runs/45678917919).
+
 ## November 25 Form 1099-DA broker lot corrections
 
 `795934e7` handles a narrowly supported Notice 2026-20 correction.
