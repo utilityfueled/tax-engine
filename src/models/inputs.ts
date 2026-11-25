@@ -6693,6 +6693,34 @@ const schedule1ADate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").r
 }, "Invalid calendar date");
 const form1098VliMoney = schedule1AMoney.refine((value) => d(value).decimalPlaces() <= 2, "Use exact dollars and cents");
 const form1098VliNoPriorDeduction = form1098VliMoney.refine((value) => d(value).isZero(), "Prior deducted interest requires separate tax-benefit review");
+const form1098VliRefundFacts = z.object({
+  originTaxYear: z.literal(2025),
+  receiptTaxYear: z.literal(2026),
+  refundSourceReference: z.string().trim().min(1),
+  priorPaymentSourceReference: z.string().trim().min(1),
+  filedReturnSourceReference: z.string().trim().min(1),
+  amendedReturnStatus: z.enum(["none", "reviewed"]),
+  loanSourcesMatchConfirmed: z.literal(true),
+  borrowerBoreRecoveredPaymentConfirmed: z.literal(true),
+  filedReturnHistoryCompleteConfirmed: z.literal(true),
+  factsConfirmed: z.literal(true),
+  schedule1ADeductedInterest: form1098VliNoPriorDeduction,
+  businessDeductedInterest: form1098VliNoPriorDeduction,
+  otherDeductedInterest: form1098VliNoPriorDeduction,
+});
+const form1098VliRefundProof = z.discriminatedUnion("method", [
+  form1098VliRefundFacts.extend({
+    method: z.literal("cash_refund"),
+    cashRefundReceived: form1098VliMoney,
+  }).strict(),
+  form1098VliRefundFacts.extend({
+    method: z.literal("loan_credit"),
+    cashRefundReceived: form1098VliMoney.refine((value) => d(value).isZero(), "Mixed cash and loan credit require separate recovery review"),
+    currentYearInterestCreditApplied: form1098VliMoney,
+    borrowerInterestExcludingCredit: form1098VliMoney,
+    currentYearInterestCreditIncludedInBox1Confirmed: z.literal(true),
+  }).strict(),
+]);
 const form1098VliSchema = z.object({
   taxYear: z.literal(2026),
   sourceReference: z.string().trim().min(1),
@@ -6708,23 +6736,7 @@ const form1098VliSchema = z.object({
   directThirdPartyInterest: form1098VliMoney,
   reimbursedBorrowerInterest: form1098VliMoney,
   priorYearInterestRefund: form1098VliMoney,
-  priorYearRefundProof: z.object({
-    method: z.literal("cash_refund"),
-    originTaxYear: z.literal(2025),
-    receiptTaxYear: z.literal(2026),
-    cashRefundReceived: form1098VliMoney,
-    refundSourceReference: z.string().trim().min(1),
-    priorPaymentSourceReference: z.string().trim().min(1),
-    filedReturnSourceReference: z.string().trim().min(1),
-    amendedReturnStatus: z.enum(["none", "reviewed"]),
-    loanSourcesMatchConfirmed: z.literal(true),
-    borrowerBoreRecoveredPaymentConfirmed: z.literal(true),
-    filedReturnHistoryCompleteConfirmed: z.literal(true),
-    factsConfirmed: z.literal(true),
-    schedule1ADeductedInterest: form1098VliNoPriorDeduction,
-    businessDeductedInterest: form1098VliNoPriorDeduction,
-    otherDeductedInterest: form1098VliNoPriorDeduction,
-  }).strict().optional(),
+  priorYearRefundProof: form1098VliRefundProof.optional(),
   originalUseChecked: z.boolean(),
   usAssemblyChecked: z.boolean(),
 }).strict();

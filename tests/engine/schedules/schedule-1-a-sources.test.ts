@@ -177,3 +177,51 @@ it("accepts only documented 1098-VLI cash refunds of interest never deducted", (
     acquiredDate: "2026-01-09", loanOriginationDate: "2026-01-09",
     form1098Vli: { ...refundStatement, originationDate: "2026-01-09" } }))).toThrow(/2025/u);
 });
+
+it("reconciles 1098-VLI interest credits once as borrower-paid current interest", () => {
+  const creditProof = {
+    ...cashRefundProof, method: "loan_credit", cashRefundReceived: "0.00",
+    refundSourceReference: "Fictional 2026 lender credit applied to this loan's 2026 interest",
+    currentYearInterestCreditApplied: "100.25", borrowerInterestExcludingCredit: "800.30",
+    currentYearInterestCreditIncludedInBox1Confirmed: true,
+  } as const;
+  const creditStatement = { ...statement, reportedInterest: "900.55", directThirdPartyInterest: "0",
+    reimbursedBorrowerInterest: "0", priorYearInterestRefund: "100.25", priorYearRefundProof: creditProof };
+  const creditLoan = { ...vehicleLoan, interestPaid: "900.55", businessInterestDeducted: "0",
+    form1098Vli: creditStatement };
+  const input = vehicleReturnInput(creditLoan);
+  const result = resolveVehicleReturn(input).schedule1A;
+  expect(result.vehicleInterestDeduction.toFixed()).toBe("901");
+  expect(result.lines).toEqual(resolveVehicleReturn(vehicleReturnInput({ ...creditLoan,
+    form1098Vli: { ...creditStatement, priorYearInterestRefund: "0", priorYearRefundProof: undefined },
+  })).schedule1A.lines);
+  expect(JSON.stringify(result.lines)).not.toMatch(/Fictional|1HGCM82633A004352/u);
+  expect(() => calculateFederalTax(input)).toThrow(/rule pack.*incomplete/u);
+  expect(calculateVehicleSource({ ...creditLoan, businessInterestDeducted: "50.00" })
+    .vehicleInterestDeduction.toFixed()).toBe("851");
+  const creditOnlyStatement = { ...creditStatement, reportedInterest: "100.25",
+    priorYearRefundProof: { ...creditProof, borrowerInterestExcludingCredit: "0" } };
+  expect(calculateVehicleSource({ ...creditLoan, interestPaid: "100.25", form1098Vli: creditOnlyStatement })
+    .vehicleInterestDeduction.toFixed()).toBe("100");
+
+  for (const changed of [
+    { method: "mixed" }, { method: "cash_refund" }, { cashRefundReceived: "0.01" },
+    { currentYearInterestCreditApplied: "100.24" }, { currentYearInterestCreditApplied: "100.251" },
+    { currentYearInterestCreditIncludedInBox1Confirmed: false },
+    { currentYearInterestCreditIncludedInBox1Confirmed: undefined },
+    { borrowerInterestExcludingCredit: "800.29" }, { borrowerInterestExcludingCredit: undefined },
+    { borrowerBoreRecoveredPaymentConfirmed: false }, { loanSourcesMatchConfirmed: false },
+    { filedReturnHistoryCompleteConfirmed: false }, { otherDeductedInterest: "0.01" },
+  ]) {
+    const form1098Vli = { ...creditStatement, priorYearRefundProof: { ...creditProof, ...changed } };
+    expect(() => resolveVehicleReturn(vehicleReturnInput({ ...creditLoan, form1098Vli })), JSON.stringify(changed)).toThrow();
+  }
+  for (const change of [
+    { directThirdPartyInterest: "0.01", reportedInterest: "900.56" },
+    { reimbursedBorrowerInterest: "0.01", reportedInterest: "900.56" },
+    { reportedInterest: "800.30" }, { priorYearInterestRefund: "0.00" },
+  ]) {
+    expect(() => resolveVehicleReturn(vehicleReturnInput({ ...creditLoan,
+      form1098Vli: { ...creditStatement, ...change } })), JSON.stringify(change)).toThrow(/box 1|box 5/i);
+  }
+});

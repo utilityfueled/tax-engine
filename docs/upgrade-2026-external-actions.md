@@ -26,11 +26,16 @@ borrower's $600.25 unreimbursed interest and a $50 C/E/F deduction from
 that same amount, leaving $550.25 before Schedule 1-A rounding, caps
 and phaseout. Verify the effect of a separately documented current-year
 reimbursement, and confirm that Box 5 instead requires prior-year
-deduction and recovery evidence. Compare a $100 prior-year refund paid in
-cash with the same amount credited to current loan interest. The issuer
-includes the credit in Box 1 and Box 5 and reports the cash refund only
-in Box 5. Establish that the borrower made and bore the recovered
-payment and received the refund. Verify prior Schedule 1-A, business
+deduction and recovery evidence. Compare a $100 prior-year refund paid
+in cash with the same amount actually applied to accrued 2026 interest
+on the same loan. For the credit case, the borrower made $800 in other
+eligible 2026 payments and the lender reported $900 in Box 1 and $100
+in Box 5. The candidate expects $900 before ordinary limits and no
+separate recovery income when every prior deduction and carryforward
+is confirmed zero. Verify the treatment under the taxpayer's accounting
+method. Hold a bookkeeping-only, prepaid, principal, mixed or
+third-party credit. Establish that the borrower made and bore the
+recovered payment. Verify prior Schedule 1-A, business
 and other deduction or carryforward history for the same recovered
 interest, including any filed amendments. Review
 whether §111 excludes recovery when there was no prior deduction and how
@@ -40,6 +45,7 @@ The final Schedule 1, Schedule 1-A and Form 1040 transfers still require
 qualification.
 [Final recipient instructions](https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4) ·
 [Final issuer instructions](https://www.irs.gov/instructions/i1098vli) ·
+[26 CFR §1.163-16(c)(2)](https://www.ecfr.gov/current/title-26/section-1.163-16#p-1.163-16(c)(2)) ·
 [26 U.S.C. §111](https://uscode.house.gov/us/usc/t26/s111/) ·
 [2025 lender reporting transition](https://www.irs.gov/irb/2025-45_IRB#:~:text=SECTION%203.%20TRANSITIONAL%20GUIDANCE) ·
 [November 24 draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=97).

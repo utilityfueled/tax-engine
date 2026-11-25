@@ -48,8 +48,8 @@ lines:
     formula: |
       Require a confirmed blank box 3b for the original-lender slice. Box 3b
       would be the lender's acquisition date, not the taxpayer's purchase.
-      A positive box 5 requires the separately supported cash-refund proof
-      below. Hold credits toward current interest and unresolved recoveries.
+      A positive box 5 requires one of the supported recovery proofs below.
+      Hold mixed refunds, credits against principal and unresolved recoveries.
       Do not net box 5 against box 1. Box 1 already excludes interest on
       non-SPVL indebtedness.
       Hold any separate positive nonqualifying interest on this statement
@@ -83,3 +83,24 @@ lines:
       lines or changing the incomplete 2026 federal return gate.
     irsRef: "https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4; https://www.irs.gov/instructions/i1098vli; https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf#page=2; https://www.irs.gov/irb/2025-45_IRB; https://uscode.house.gov/us/usc/t26/s111/"
     testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::accepts only documented 1098-VLI cash refunds of interest never deducted"
+  - line: "form-1098-vli-box-5-current-interest-credit"
+    description: "Reconcile recovered 2025 interest credited to 2026 interest on the same loan"
+    formula: |
+      Bind the overpayment and lender application records to the same payer
+      and original vehicle loan purchased and originated in 2025. The
+      borrower made and bore the 2025 payment, and the lender applied the
+      entire 2026 recovery solely to satisfy the borrower's accrued 2026
+      interest on that loan. Require positive box 5 equal to the documented current interest
+      credit in exact cents, zero cash refund, zero direct third-party
+      Box 1 payments and zero reimbursement. Confirm that Box 1 already
+      includes the credit. Current borrower interest excluding the credit plus
+      the credit must equal the confirmed borrower interest in exact cents.
+      Use that reconciled Box 1 base once. Apply the existing business
+      allocation, cap, phaseout and rounding rules. Confirm the complete
+      filed 2025 return history, including amendments, and true zero prior
+      deductions or carryforwards on the recovered amount. There is no
+      separate taxable recovery for the supported zero-benefit case. Hold
+      any mixed, principal, third-party or prior-benefit case. Keep the
+      incomplete 2026 federal return and final output qualification gates.
+    irsRef: "https://www.irs.gov/instructions/i1098vli; https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4; https://uscode.house.gov/us/usc/t26/s111/; https://www.irs.gov/irb/2026-39_irb (26 CFR 1.163-16(c)(2))"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::reconciles 1098-VLI interest credits once as borrower-paid current interest"

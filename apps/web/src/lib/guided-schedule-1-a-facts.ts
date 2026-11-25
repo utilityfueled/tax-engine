@@ -8,6 +8,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { isStartedNec } from "./guided-business-facts";
 import { buildTipIncomeInputs, buildTipIncomeSourceOriginals } from "./guided-tip-income-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import Decimal from "decimal.js";
 type Owner = "primary" | "spouse";
 type TipQualificationData = { owner: "" | Owner; occupationCode: string; eligibleOccupation: boolean | null; voluntaryCashTips: boolean | null; lawfulActivity: boolean | null; meetsSstbRuleOrTransition: boolean | null };
@@ -20,6 +21,12 @@ export interface VehicleInterestRefundData {
   receiptTaxYear: string;
   cashRefundReceived: string;
   refundSourceReference: string;
+  creditAppliedTaxYear?: string;
+  creditCashRefundReceived?: string;
+  creditSourceReference?: string;
+  currentYearInterestCreditApplied?: string;
+  borrowerInterestExcludingCredit?: string;
+  currentYearInterestCreditIncludedInBox1Confirmed?: boolean | null;
   priorPaymentSourceReference: string;
   filedReturnSourceReference: string;
   amendedReturnStatus: "" | "none" | "reviewed" | "unreviewed";
@@ -82,7 +89,7 @@ function flag(value: boolean | null | undefined, label: string): boolean { if (t
 function text(value: string | undefined, label: string) { if (!value?.trim()) throw new Error(`Enter the actual ${label}.`); return value.trim(); }
 function sourceYear(value: string | undefined, year: number) { if (!/^\d{4}$/.test(value ?? "") || Number(value) !== year) throw new Error("Actual source year must match the return year."); return year; }
 
-function statementMoney(value: string, label: string) {
+function statementMoney(value: string | undefined, label: string) {
   const amount = money(value, `Form 1098-VLI ${label}`);
   if (amount.decimalPlaces() > 2) throw new Error(`Enter Form 1098-VLI ${label} in exact dollars and cents.`);
   return amount;
@@ -91,44 +98,103 @@ function statementMoney(value: string, label: string) {
 export function invalidateVehicleRefundPaymentEvidence(proof: VehicleInterestRefundData, borrowerChanged: boolean): VehicleInterestRefundData {
   return {
     ...proof, loanSourcesMatchConfirmed: null, borrowerBoreRecoveredPaymentConfirmed: null, sourceFactsConfirmed: null,
+    ...(proof.method === "loan_credit" || proof.currentYearInterestCreditIncludedInBox1Confirmed !== undefined
+      ? { currentYearInterestCreditIncludedInBox1Confirmed: null } : {}),
     ...(borrowerChanged ? { filedReturnHistoryCompleteConfirmed: null } : {}),
   };
 }
 
+export function vehicleRefundLoanIdentityChanged(previous: VehicleInterestData, next: VehicleInterestData): boolean {
+  const fields = ["owner", "lenderName", "loanAccountReference", "vin", "acquiredDate", "loanOriginationDate"] as const;
+  return fields.some(field => previous[field] !== next[field]) || previous.form1098Vli?.payer !== next.form1098Vli?.payer;
+}
+
+export function invalidateEditedVehicleRefundProof(previous: VehicleInterestRefundData | undefined, next: VehicleInterestRefundData): VehicleInterestRefundData {
+  const paymentFields = ["method", "originTaxYear", "receiptTaxYear", "cashRefundReceived", "refundSourceReference", "priorPaymentSourceReference",
+    "creditAppliedTaxYear", "creditCashRefundReceived", "creditSourceReference", "currentYearInterestCreditApplied", "borrowerInterestExcludingCredit"] as const;
+  const historyFields = ["method", "originTaxYear", "amendedReturnStatus", "filedReturnSourceReference", "schedule1ADeductedInterest",
+    "businessDeductedInterest", "otherDeductedInterest"] as const;
+  const paymentChanged = paymentFields.some(field => previous?.[field] !== next[field]);
+  const historyChanged = historyFields.some(field => previous?.[field] !== next[field]);
+  const reviewed = paymentChanged ? invalidateVehicleRefundPaymentEvidence(next, false) : next;
+  return historyChanged ? { ...reviewed, filedReturnHistoryCompleteConfirmed: null, sourceFactsConfirmed: null } : reviewed;
+}
+
+export function invalidateEditedVehicleLoanCredit(previous: VehicleInterestData, next: VehicleInterestData): VehicleInterestData {
+  const statement = next.form1098Vli;
+  const proof = statement?.priorYearRefundProof;
+  const oldProof = previous.form1098Vli?.priorYearRefundProof;
+  if (proof?.method !== "loan_credit" && oldProof?.method !== "loan_credit") return next;
+  const reviewedBorrower = previous.owner === next.owner ? next : { ...next, borrowerQualificationConfirmed: null };
+  if (!statement) return reviewedBorrower;
+  if (!proof) return { ...reviewedBorrower, form1098Vli: { ...statement, sourceFactsConfirmed: null } };
+  const paymentFacts = (loan: VehicleInterestData) => ({ ...loan, borrowerQualificationConfirmed: undefined,
+    form1098Vli: { ...loan.form1098Vli, priorYearRefundProof: undefined } });
+  const paymentChanged = guidedSourceValuesChanged(paymentFacts(previous), paymentFacts(next));
+  let reviewed = invalidateEditedVehicleRefundProof(oldProof, proof);
+  if (paymentChanged) reviewed = invalidateVehicleRefundPaymentEvidence(reviewed, vehicleRefundLoanIdentityChanged(previous, next));
+  if (reviewed === proof) return reviewedBorrower;
+  return { ...reviewedBorrower,
+    form1098Vli: { ...statement, sourceFactsConfirmed: null, priorYearRefundProof: reviewed } };
+}
+
 type Form1098VliInput = NonNullable<Schedule1AInput["vehicleLoans"][number]["form1098Vli"]>;
-function buildBox5RefundProof(loan: VehicleInterestData, refund: Decimal, proof?: VehicleInterestRefundData): Form1098VliInput["priorYearRefundProof"] {
+function buildBox5RefundProof(loan: VehicleInterestData, proof: VehicleInterestRefundData | undefined, amounts: {
+  refund: Decimal; interestPaid: Decimal; directThirdPartyInterest: Decimal; reimbursedBorrowerInterest: Decimal;
+}): Form1098VliInput["priorYearRefundProof"] {
+  const { refund, interestPaid, directThirdPartyInterest, reimbursedBorrowerInterest } = amounts;
   if (refund.isZero()) {
     if (proof !== undefined) throw new Error("Reconcile or remove saved Form 1098-VLI refund details when Box 5 is zero.");
     return undefined;
   }
-  if (proof?.method !== "cash_refund") throw new Error("Form 1098-VLI Box 5 requires separately documented cash. Loan credits and mixed refunds require separate review.");
-  if (proof.originTaxYear.trim() !== "2025" || proof.receiptTaxYear.trim() !== "2026"
+  if (proof?.method !== "cash_refund" && proof?.method !== "loan_credit") {
+    throw new Error("Form 1098-VLI Box 5 requires a documented cash refund or an interest credit applied to the same loan. Mixed refunds require separate review.");
+  }
+  const recoveryYear = proof.method === "cash_refund" ? proof.receiptTaxYear : proof.creditAppliedTaxYear;
+  if (proof.originTaxYear.trim() !== "2025" || recoveryYear?.trim() !== "2026"
     || !loan.acquiredDate.startsWith("2025-") || !loan.loanOriginationDate.startsWith("2025-")) {
-    throw new Error("Form 1098-VLI Box 5 requires a 2026 refund for interest overpaid in 2025 on a vehicle purchased and loan originated in 2025.");
+    throw new Error("Form 1098-VLI Box 5 requires a 2026 recovery of interest overpaid in 2025 on a vehicle purchased and loan originated in 2025.");
   }
   if (proof.loanSourcesMatchConfirmed !== true || proof.filedReturnHistoryCompleteConfirmed !== true || proof.sourceFactsConfirmed !== true
     || (proof.amendedReturnStatus !== "none" && proof.amendedReturnStatus !== "reviewed")) {
     throw new Error("Confirm the matching Form 1098-VLI Box 5 records and complete filed 2025 return history, including any amendments, after the last edit.");
   }
   if (proof.borrowerBoreRecoveredPaymentConfirmed !== true) {
-    throw new Error("Confirm that the borrower paid and bore the recovered 2025 interest and received the Form 1098-VLI Box 5 refund.");
+    throw new Error("Confirm that the borrower paid and bore the recovered 2025 interest and received the Form 1098-VLI Box 5 refund or credit.");
   }
-  const cash = statementMoney(proof.cashRefundReceived, "Box 5 cash refund received");
-  if (!cash.eq(refund)) throw new Error("Form 1098-VLI Box 5 must equal the cash refund actually received, excluding separate interest on the refund.");
   const schedule1A = statementMoney(proof.schedule1ADeductedInterest, "Box 5 prior Schedule 1-A deduction");
   const business = statementMoney(proof.businessDeductedInterest, "Box 5 prior business deduction");
   const other = statementMoney(proof.otherDeductedInterest, "Box 5 other prior deduction or carryforward");
   if (!schedule1A.isZero() || !business.isZero() || !other.isZero()) throw new Error("Form 1098-VLI Box 5 requires separate recovery review when the refunded interest was previously deducted or carried forward.");
 
-  return {
-    method: proof.method, originTaxYear: 2025, receiptTaxYear: 2026, cashRefundReceived: cash.toFixed(),
-    refundSourceReference: text(proof.refundSourceReference, "Form 1098-VLI Box 5 cash refund source reference"),
+  const common = {
+    originTaxYear: 2025, receiptTaxYear: 2026,
     priorPaymentSourceReference: text(proof.priorPaymentSourceReference, "Form 1098-VLI Box 5 prior payment source reference"),
     filedReturnSourceReference: text(proof.filedReturnSourceReference, "Form 1098-VLI Box 5 filed return source reference"),
     amendedReturnStatus: proof.amendedReturnStatus,
     loanSourcesMatchConfirmed: true, borrowerBoreRecoveredPaymentConfirmed: true, filedReturnHistoryCompleteConfirmed: true, factsConfirmed: true,
     schedule1ADeductedInterest: schedule1A.toFixed(), businessDeductedInterest: business.toFixed(), otherDeductedInterest: other.toFixed(),
-  };
+  } as const;
+  if (proof.method === "cash_refund") {
+    const cash = statementMoney(proof.cashRefundReceived, "Box 5 cash refund received");
+    if (!cash.eq(refund)) throw new Error("Form 1098-VLI Box 5 must equal the cash refund actually received, excluding separate interest on the refund.");
+    return { ...common, method: proof.method, cashRefundReceived: cash.toFixed(),
+      refundSourceReference: text(proof.refundSourceReference, "Form 1098-VLI Box 5 cash refund source reference") };
+  }
+
+  const cash = statementMoney(proof.creditCashRefundReceived, "Box 5 cash received alongside the loan credit");
+  if (!cash.isZero() || !directThirdPartyInterest.isZero() || !reimbursedBorrowerInterest.isZero()) {
+    throw new Error("Form 1098-VLI Box 5 same-loan credit requires actual zero cash received, direct third-party payments and borrower reimbursements.");
+  }
+  const credit = statementMoney(proof.currentYearInterestCreditApplied, "Box 5 credit applied to 2026 interest on the same loan");
+  const otherInterest = statementMoney(proof.borrowerInterestExcludingCredit, "Box 5 borrower 2026 interest excluding the credit");
+  if (!credit.eq(refund) || !sumSourceMoney(otherInterest, credit).eq(interestPaid) || proof.currentYearInterestCreditIncludedInBox1Confirmed !== true) {
+    throw new Error("Reconcile Form 1098-VLI Box 5 to the actual credit used to pay accrued 2026 interest on the same loan. The borrower interest excluding the credit plus the credit must equal the borrower interest included in Box 1.");
+  }
+  return { ...common, method: proof.method, cashRefundReceived: cash.toFixed(),
+    refundSourceReference: text(proof.creditSourceReference, "Form 1098-VLI Box 5 loan credit source reference"),
+    currentYearInterestCreditApplied: credit.toFixed(), borrowerInterestExcludingCredit: otherInterest.toFixed(),
+    currentYearInterestCreditIncludedInBox1Confirmed: true };
 }
 
 function buildForm1098Vli(
@@ -149,11 +215,13 @@ function buildForm1098Vli(
     throw new Error("Confirm that Form 1098-VLI Boxes 6 and 7 are checked and match the original-use and U.S. assembly facts in the loan records.");
   }
   const priorYearInterestRefund = statementMoney(statement.priorYearInterestRefund, "Box 5 refund or credit");
-  const priorYearRefundProof = buildBox5RefundProof(loan, priorYearInterestRefund, statement.priorYearRefundProof);
   if (!nonqualifyingInterest.isZero()) throw new Error("Interest on nonqualifying indebtedness requires separate reconciliation outside Form 1098-VLI Box 1.");
   const reportedInterest = statementMoney(statement.reportedInterest, "Box 1 interest");
   const directThirdPartyInterest = statementMoney(statement.directThirdPartyInterest, "direct interest payments by others");
   const reimbursedBorrowerInterest = statementMoney(statement.reimbursedBorrowerInterest, "borrower-paid interest reimbursed by others");
+  const priorYearRefundProof = buildBox5RefundProof(loan, statement.priorYearRefundProof, {
+    refund: priorYearInterestRefund, interestPaid, directThirdPartyInterest, reimbursedBorrowerInterest,
+  });
   const net = sumSourceMoney(reportedInterest, directThirdPartyInterest.negated(), reimbursedBorrowerInterest.negated());
   if (!net.eq(interestPaid)) throw new Error("Reconcile Form 1098-VLI Box 1 less direct payments by others and borrower reimbursements to interest actually paid by the borrower.");
 

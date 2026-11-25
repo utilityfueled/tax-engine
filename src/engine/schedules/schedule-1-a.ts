@@ -46,11 +46,23 @@ function verifyForm1098Vli(loan: Schedule1AInput["vehicleLoans"][number], taxYea
     throw new Error("Form 1098-VLI box 5 requires separate prior-year interest recovery review.");
   }
   if (refundProof) {
-    if (priorYearRefund.isZero() || !priorYearRefund.eq(refundProof.cashRefundReceived)) {
-      throw new Error("Form 1098-VLI cash refund proof must match a positive box 5 amount.");
-    }
     if (!loan.acquiredDate.startsWith("2025-") || !loan.loanOriginationDate.startsWith("2025-")) {
       throw new Error("Form 1098-VLI proof of a 2025 overpayment requires a vehicle acquired and loan originated in 2025.");
+    }
+    const recoveredAmount = refundProof.method === "cash_refund"
+      ? d(refundProof.cashRefundReceived)
+      : d(refundProof.currentYearInterestCreditApplied);
+    if (priorYearRefund.isZero() || !priorYearRefund.eq(recoveredAmount)) {
+      throw new Error("Form 1098-VLI recovery proof must match a positive box 5 amount.");
+    }
+    if (refundProof.method === "loan_credit") {
+      if (!d(statement.directThirdPartyInterest).isZero() || !d(statement.reimbursedBorrowerInterest).isZero()) {
+        throw new Error("Form 1098-VLI box 1 credit with third-party payments or reimbursements requires separate reconciliation.");
+      }
+      const interestWithCredit = sumSourceMoney(d(refundProof.borrowerInterestExcludingCredit), recoveredAmount);
+      if (!interestWithCredit.eq(loan.interestPaid)) {
+        throw new Error("Form 1098-VLI box 1 borrower interest must include the documented credit exactly once.");
+      }
     }
   }
   if (d(loan.nonqualifyingInterest).gt(0)) {

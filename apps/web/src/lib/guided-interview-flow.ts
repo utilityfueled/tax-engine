@@ -52,7 +52,7 @@ import { investmentInterestFactErrors, type InvestmentInterestSourceData } from 
 import { guidedForeignTaxFactErrors, type ForeignTaxElectionData } from "./guided-foreign-tax-election";
 import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
-import { invalidateVehicleRefundPaymentEvidence, schedule1AFactErrors, type VehicleInterestData } from "./guided-schedule-1-a-facts";
+import { invalidateEditedVehicleLoanCredit, invalidateVehicleRefundPaymentEvidence, schedule1AFactErrors, type VehicleInterestData } from "./guided-schedule-1-a-facts";
 import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
 import { form8919ReasonAFactErrors } from "./guided-form-8919-reason-a";
 import { hasMovingW2Source, invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
@@ -2554,10 +2554,16 @@ export function updateSectionData(
   const paperFactsChanged=!!nextPaper&&(sourceValuesChanged||(sectionId==='additional-deductions'&&(!previousPaper||rrtaPaperDraftValues(previousPaper)!==rrtaPaperDraftValues(nextPaper))));
   const rrtaTipChanged=sectionId==='additional-deductions'&&guidedSourceValuesChanged(state.sectionData['additional-deductions']?.tipIncomeAccounts,nextAdditional?.tipIncomeAccounts)&&nextAdditional?.rrtaPayrollSources;
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
+  const previousVehicleLoans = state.sectionData["additional-deductions"]?.schedule1A?.vehicleLoans;
   const schedule1AToReconfirm = additionalSourcesChanged && {
     ...additionalSourcesChanged,
     sourceFactsConfirmed: null,
     ...(sectionId === "personal-info" ? { vehicleLoans: invalidateChangedVehicleBorrowers(additionalSourcesChanged.vehicleLoans, formerPersonal, nextPersonal) } : {}),
+    ...(sectionId === "additional-deductions" && previousVehicleLoans ? { vehicleLoans: additionalSourcesChanged.vehicleLoans.map((loan, index) => {
+      const previous = previousVehicleLoans.find(row => row.vin && row.vin === loan.vin && row.loanAccountReference === loan.loanAccountReference)
+        ?? previousVehicleLoans[index];
+      return previous ? invalidateEditedVehicleLoanCredit(previous, loan) : loan;
+    }) } : {}),
   };
   const nextAdjustments = sectionId === "adjustments" ? data as AdjustmentData : adjustments;
   const nextMoving = nextAdjustments?.movingExpenses;

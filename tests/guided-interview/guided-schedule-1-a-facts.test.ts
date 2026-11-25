@@ -1,6 +1,6 @@
 // Spec: spec/federal/guided-schedule-1-a.yaml.
 import { expect, it } from "vitest";
-import { buildSchedule1AInput, emptySchedule1AData, emptyVehicleInterest, type Schedule1AData } from "@/lib/guided-schedule-1-a-facts";
+import { buildSchedule1AInput, emptySchedule1AData, emptyVehicleInterest, type Schedule1AData, type VehicleInterestData } from "@/lib/guided-schedule-1-a-facts";
 import { completeBusinessSection, completeW2Entry, startCompleteInterview } from "./complete-facts";
 import { actualTipIncome, actualTipW2 } from "./guided-tip-income-fixtures";
 function stateWithSources(year = 2025) {
@@ -163,6 +163,85 @@ it("routes documented Box 5 cash only when all prior deductions were zero", () =
   }
   expect(() => buildSchedule1AInput({ ...facts, vehicleLoans: [{ ...loan, acquiredDate: "2026-01-01", form1098Vli: statement }] }, state)).toThrow(/Box 5/);
   expect(() => buildSchedule1AInput({ ...facts, vehicleLoans: [{ ...loan, form1098Vli: { ...statement, priorYearInterestRefund: "0" } }] }, state)).toThrow(/Box 5/);
+});
+it("reconciles a documented Box 5 credit included in the same loan's Box 1 interest", () => {
+  const state = stateWithSources(2026);
+  const { facts, loan, form1098Vli } = vehicleStatementFacts();
+  const cash = vehicleRefundProof();
+  const proof = { ...cash, method: "loan_credit" as const, creditAppliedTaxYear: "2026", creditCashRefundReceived: "0.00", creditSourceReference: "2026 lender application record",
+    currentYearInterestCreditApplied: "123.45", borrowerInterestExcludingCredit: "676.80", currentYearInterestCreditIncludedInBox1Confirmed: true };
+  const statement = { ...form1098Vli, priorYearInterestRefund: "123.45", priorYearRefundProof: proof,
+    reportedInterest: "800.25", directThirdPartyInterest: "0.00", reimbursedBorrowerInterest: "0.00" };
+  const sourceLoan = { ...loan, interestPaid: "800.25", form1098Vli: statement };
+  const build = (edited: VehicleInterestData = sourceLoan) => buildSchedule1AInput({ ...facts, vehicleLoans: [edited] }, state)?.vehicleLoans[0];
+  expect(build()).toMatchObject({ interestPaid: "800.25", form1098Vli: { reportedInterest: "800.25", priorYearInterestRefund: "123.45",
+    priorYearRefundProof: { method: "loan_credit", originTaxYear: 2025, receiptTaxYear: 2026, cashRefundReceived: "0",
+      currentYearInterestCreditApplied: "123.45", borrowerInterestExcludingCredit: "676.8", currentYearInterestCreditIncludedInBox1Confirmed: true,
+      refundSourceReference: proof.creditSourceReference, priorPaymentSourceReference: cash.priorPaymentSourceReference,
+      filedReturnSourceReference: cash.filedReturnSourceReference, loanSourcesMatchConfirmed: true, borrowerBoreRecoveredPaymentConfirmed: true,
+      filedReturnHistoryCompleteConfirmed: true, factsConfirmed: true, schedule1ADeductedInterest: "0", businessDeductedInterest: "0", otherDeductedInterest: "0" } } });
+  for (const patch of [
+    { method: "mixed" }, { creditCashRefundReceived: "" }, { creditCashRefundReceived: "0.01" }, { creditSourceReference: "" },
+    { currentYearInterestCreditIncludedInBox1Confirmed: null }, { currentYearInterestCreditIncludedInBox1Confirmed: false },
+    { currentYearInterestCreditApplied: "123.46" }, { borrowerInterestExcludingCredit: "676.81" }, { borrowerInterestExcludingCredit: "676.801" },
+    { creditAppliedTaxYear: "" }, { creditAppliedTaxYear: "2025" }, { borrowerBoreRecoveredPaymentConfirmed: false }, { loanSourcesMatchConfirmed: null },
+    { filedReturnHistoryCompleteConfirmed: null }, { otherDeductedInterest: "0.01" },
+  ] as const) {
+    expect(() => build({ ...sourceLoan, form1098Vli: { ...statement, priorYearRefundProof: { ...proof, ...patch } } })).toThrow(/Box 5/);
+  }
+  for (const patch of [{ directThirdPartyInterest: "0.01" }, { reimbursedBorrowerInterest: "0.01" }]) {
+    expect(() => build({ ...sourceLoan, form1098Vli: { ...statement, reportedInterest: "800.26", ...patch } })).toThrow(/Box 5/);
+  }
+  const largeAmount = "9007199254740993123456.23";
+  const largeStatement = { ...statement, reportedInterest: largeAmount, priorYearInterestRefund: "0.02", priorYearRefundProof: {
+    ...proof, currentYearInterestCreditApplied: "0.02", borrowerInterestExcludingCredit: "9007199254740993123456.21",
+  } };
+  expect(build({ ...sourceLoan, interestPaid: largeAmount, form1098Vli: largeStatement })?.interestPaid).toBe(largeAmount);
+  expect(() => build({ ...sourceLoan, interestPaid: largeAmount, form1098Vli: { ...largeStatement, priorYearRefundProof: {
+    ...largeStatement.priorYearRefundProof, borrowerInterestExcludingCredit: "9007199254740993123456.22",
+  } } })).toThrow(/Box 5/);
+});
+it("revokes stale Box 5 confirmations on batched credit edits", async () => {
+  const { updateSectionData } = await import("@/lib/guided-interview-flow");
+  const state = stateWithSources(2026);
+  const { facts, loan, form1098Vli } = vehicleStatementFacts();
+  const proof = { ...vehicleRefundProof(), method: "loan_credit" as const, creditAppliedTaxYear: "2026", creditCashRefundReceived: "0",
+    creditSourceReference: "Separate lender credit record", currentYearInterestCreditApplied: "123.45",
+    borrowerInterestExcludingCredit: "676.80", currentYearInterestCreditIncludedInBox1Confirmed: true };
+  const statement = { ...form1098Vli, priorYearInterestRefund: "123.45", priorYearRefundProof: proof,
+    reportedInterest: "800.25", directThirdPartyInterest: "0", reimbursedBorrowerInterest: "0" };
+  const cashLoan = { ...loan, interestPaid: "800.25", form1098Vli: { ...statement, priorYearRefundProof: { ...proof, method: "cash_refund" as const } } };
+  state.sectionData["additional-deductions"] = { schedule1A: { ...facts, vehicleLoans: [cashLoan] } };
+  const write = (before: typeof state, after: Schedule1AData) => updateSectionData(before, "additional-deductions", { schedule1A: after });
+  const worksheet = (current: typeof state) => current.sectionData["additional-deductions"]!.schedule1A!;
+  const creditLoan = { ...cashLoan, form1098Vli: statement };
+  const changed = write(state, { ...facts, vehicleLoans: [creditLoan] });
+  expect(worksheet(changed)).toMatchObject({ sourceFactsConfirmed: null, vehicleLoans: [{ form1098Vli: { sourceFactsConfirmed: null,
+    priorYearRefundProof: { ...proof, sourceFactsConfirmed: null, loanSourcesMatchConfirmed: null, borrowerBoreRecoveredPaymentConfirmed: null,
+      filedReturnHistoryCompleteConfirmed: null, currentYearInterestCreditIncludedInBox1Confirmed: null } } }] });
+  const rechecked = write(changed, { ...facts, sourceFactsConfirmed: null, vehicleLoans: [creditLoan] });
+  const requested = write(rechecked, { ...worksheet(rechecked), sourceFactsConfirmed: true });
+  expect(buildSchedule1AInput(worksheet(requested), requested)?.vehicleLoans[0]?.form1098Vli?.priorYearRefundProof?.method).toBe("loan_credit");
+
+  const edited = write(requested, { ...facts, vehicleLoans: [{ ...creditLoan, interestPaid: "800.26", form1098Vli: {
+    ...statement, reportedInterest: "800.26", priorYearRefundProof: { ...proof, borrowerInterestExcludingCredit: "676.81" },
+  } }] });
+  expect(worksheet(edited)).toMatchObject({ sourceFactsConfirmed: null, vehicleLoans: [{ form1098Vli: { sourceFactsConfirmed: null,
+    priorYearRefundProof: { cashRefundReceived: "123.45", borrowerInterestExcludingCredit: "676.81",
+      sourceFactsConfirmed: null, currentYearInterestCreditIncludedInBox1Confirmed: null, filedReturnHistoryCompleteConfirmed: true } } }] });
+  const replaced = write(requested, { ...facts, vehicleLoans: [{ ...creditLoan, owner: "spouse", lenderName: "Other lender" }] });
+  expect(worksheet(replaced).vehicleLoans[0]).toMatchObject({ borrowerQualificationConfirmed: null, form1098Vli: { sourceFactsConfirmed: null,
+    priorYearRefundProof: { filedReturnHistoryCompleteConfirmed: null, filedReturnSourceReference: proof.filedReturnSourceReference } } });
+  const manualSpouseLoan = { ...creditLoan, owner: "spouse" as const, form1098Vli: undefined };
+  const removedStatement = write(requested, { ...facts, vehicleLoans: [manualSpouseLoan] });
+  expect.soft(worksheet(removedStatement).vehicleLoans[0]).toMatchObject({ owner: "spouse", interestPaid: "800.25",
+    borrowerQualificationConfirmed: null, form1098Vli: undefined });
+  const clearedStatement = { ...statement, priorYearInterestRefund: "0", priorYearRefundProof: undefined };
+  const removedProof = write(requested, { ...facts, vehicleLoans: [{ ...creditLoan, form1098Vli: clearedStatement }] });
+  expect.soft(worksheet(removedProof).vehicleLoans[0]).toMatchObject({ borrowerQualificationConfirmed: true,
+    form1098Vli: { ...clearedStatement, sourceFactsConfirmed: null } });
+  const manual = write(requested, { ...facts, vehicleLoans: [{ ...creditLoan, form1098Vli: undefined }] });
+  expect(worksheet(write(manual, { ...facts, vehicleLoans: [manualSpouseLoan] })).vehicleLoans[0]).toEqual(manualSpouseLoan);
 });
 it("rechecks vehicle records when the actual borrower changes", async () => {
   const { updateSectionData } = await import("@/lib/guided-interview-flow");

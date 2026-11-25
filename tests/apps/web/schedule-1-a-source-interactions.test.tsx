@@ -43,7 +43,7 @@ it("collects actual additional deduction records and preserves unknown answers",
   } finally { await act(async () => root.unmount()); container.remove(); }
 });
 
-it("retains positive Box 5 evidence and requires reconfirmation after edits", async () => {
+function vehicleRefundHarness() {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div");
   document.body.appendChild(container);
@@ -56,7 +56,6 @@ it("retains positive Box 5 evidence and requires reconfirmation after edits", as
     const [data, setData] = useState(draft);
     return <Schedule1ASourceDetails data={data} onChange={next => { if (next) { latest = next; setData(next); } }} />;
   }
-  const prefix = "Vehicle loan 1: Form 1098-VLI Box 5";
   function field(label: string) {
     return [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
   }
@@ -71,6 +70,13 @@ it("retains positive Box 5 evidence and requires reconfirmation after edits", as
       control.dispatchEvent(new Event(select ? "change" : "input", { bubbles: true }));
     });
   }
+  return { initial, root, field, change, Harness, saved: () => structuredClone(latest),
+    dispose: async () => { await act(async () => root.unmount()); container.remove(); } };
+}
+
+it("retains positive Box 5 evidence and requires reconfirmation after edits", async () => {
+  const { initial, root, field, change, Harness, saved, dispose } = vehicleRefundHarness();
+  const prefix = "Vehicle loan 1: Form 1098-VLI Box 5";
   try {
     await act(async () => root.render(<Harness draft={initial} />));
     expect(field(`${prefix} refund method`)).toBeUndefined();
@@ -85,8 +91,7 @@ it("retains positive Box 5 evidence and requires reconfirmation after edits", as
     await change(`${prefix} borrower paid the recovered interest and received the refund`, "true");
     await change(`${prefix} checked after the last edit`, "true");
     await change(`${prefix} refund or credit`, "123.46");
-    const saved = structuredClone(latest);
-    await act(async () => root.render(<Harness key="replay" draft={saved} />));
+    await act(async () => root.render(<Harness key="replay" draft={saved()} />));
     expect(field(`${prefix} cash refund received`)?.value).toBe("123.45");
     expect(field(`${prefix} prior payment source reference`)?.value).toBe("2025 lender annual interest statement");
     expect(field(`${prefix} prior Schedule 1-A deduction`)?.value).toBe("0.00");
@@ -97,8 +102,61 @@ it("retains positive Box 5 evidence and requires reconfirmation after edits", as
     await change(`${prefix} refund method`, "cash_refund");
     expect(field(`${prefix} cash refund received`)?.value).toBe("123.45");
   } finally {
-    await act(async () => root.unmount());
-    container.remove();
+    await dispose();
+  }
+});
+
+it("keeps cash and loan credit evidence separate through method switches", async () => {
+  const { initial, root, field, change, Harness, saved, dispose } = vehicleRefundHarness();
+  const form = "Vehicle loan 1: Form 1098-VLI";
+  const prefix = `${form} Box 5`;
+  const prior = () => saved().vehicleLoans[0].form1098Vli?.priorYearRefundProof;
+  try {
+    await act(async () => root.render(<Harness draft={initial} />));
+    await change(`${prefix} refund or credit`, "123.45");
+    await change(`${prefix} refund method`, "cash_refund");
+    await change(`${prefix} cash receipt tax year`, "2026");
+    await change(`${prefix} cash refund received`, "123.45");
+    await change(`${prefix} cash refund source reference`, "2026 cash deposit record");
+    await change(`${prefix} refund method`, "loan_credit");
+    expect(field(`${prefix} credit application tax year`)?.value).toBe("");
+    expect(field(`${prefix} cash received alongside the loan credit`)?.value).toBe("");
+    expect(field(`${prefix} loan credit source reference`)?.value).toBe("");
+    await change(`${prefix} credit application tax year`, "2026");
+    await change(`${prefix} cash received alongside the loan credit`, "0.00");
+    await change(`${prefix} loan credit source reference`, "2026 lender credit record");
+    await change(`${prefix} credit applied to 2026 interest on the same loan`, "123.45");
+    await change(`${prefix} borrower 2026 interest excluding the credit`, "676.80");
+    await change(`${prefix} filed return history is complete`, "true");
+    await change(`${prefix} loan and payment records match`, "true");
+    await change(`${prefix} credit satisfied accrued 2026 interest and is included once in Box 1`, "true");
+    await change(`${prefix} checked after the last edit`, "true");
+    await change(`${form} checked after the last edit`, "true");
+    await change(`${prefix} borrower 2026 interest excluding the credit`, "676.81");
+    expect(prior()).toMatchObject({ method: "loan_credit", cashRefundReceived: "123.45", creditCashRefundReceived: "0.00",
+      creditSourceReference: "2026 lender credit record", currentYearInterestCreditApplied: "123.45", borrowerInterestExcludingCredit: "676.81",
+      currentYearInterestCreditIncludedInBox1Confirmed: null, sourceFactsConfirmed: null, filedReturnHistoryCompleteConfirmed: true });
+    expect(saved().vehicleLoans[0].form1098Vli?.sourceFactsConfirmed).toBeNull();
+    await change(`${prefix} credit satisfied accrued 2026 interest and is included once in Box 1`, "true");
+    await change(`${prefix} refund method`, "cash_refund");
+    expect(field(`${prefix} cash refund received`)?.value).toBe("123.45");
+    expect(field(`${prefix} cash refund source reference`)?.value).toBe("2026 cash deposit record");
+    await change(`${prefix} refund method`, "loan_credit");
+    expect(field(`${prefix} credit applied to 2026 interest on the same loan`)?.value).toBe("123.45");
+    expect(prior()).toMatchObject({ currentYearInterestCreditIncludedInBox1Confirmed: null, loanSourcesMatchConfirmed: null,
+      borrowerBoreRecoveredPaymentConfirmed: null, filedReturnHistoryCompleteConfirmed: null, sourceFactsConfirmed: null });
+    await change(`${prefix} credit satisfied accrued 2026 interest and is included once in Box 1`, "true");
+    await change("Vehicle loan 1: Interest paid", "800.26");
+    expect(prior()).toMatchObject({ currentYearInterestCreditIncludedInBox1Confirmed: null, borrowerInterestExcludingCredit: "676.81" });
+    await change(`${prefix} filed return history is complete`, "true");
+    await change("Vehicle loan 1: Lender", "Different lender");
+    expect(prior()?.filedReturnHistoryCompleteConfirmed).toBeNull();
+    await change("Vehicle loan 1: Owner", "primary");
+    await change("Vehicle loan 1: Borrower qualification confirmed", "true");
+    await change("Vehicle loan 1: Owner", "spouse");
+    expect(saved().vehicleLoans[0].borrowerQualificationConfirmed).toBeNull();
+  } finally {
+    await dispose();
   }
 });
 

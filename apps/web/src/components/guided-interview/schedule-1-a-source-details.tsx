@@ -4,6 +4,7 @@ import { useId } from "react";
 import {
   emptySchedule1AData, emptyEmployeeTipDeduction, emptyBusinessTipDeduction,
   emptyOvertimeDeduction, emptyVehicleInterest, emptyVehicleInterestStatement, emptyVehicleInterestRefund, invalidateVehicleRefundPaymentEvidence,
+  invalidateEditedVehicleRefundProof, vehicleRefundLoanIdentityChanged,
   type Schedule1AData, type EmployeeTipDeductionData, type VehicleInterestStatementData, type VehicleInterestRefundData,
 } from "@/lib/guided-schedule-1-a-facts";
 import { parseGuidedDisplayAmount } from "@/lib/guided-currency";
@@ -26,30 +27,36 @@ function VehicleInterestRefundDetails({ prefix, data, onChange }: {
 }) {
   const update = (patch: Partial<VehicleInterestRefundData>) => {
     const confirmationOnly = "sourceFactsConfirmed" in patch;
-    const paymentChanged = "method" in patch || "originTaxYear" in patch || "receiptTaxYear" in patch
-      || "cashRefundReceived" in patch || "refundSourceReference" in patch || "priorPaymentSourceReference" in patch;
-    const historyChanged = "method" in patch || "originTaxYear" in patch || "amendedReturnStatus" in patch
-      || "filedReturnSourceReference" in patch || "schedule1ADeductedInterest" in patch || "businessDeductedInterest" in patch || "otherDeductedInterest" in patch;
-    onChange({
-      ...data,
-      ...(paymentChanged ? { loanSourcesMatchConfirmed: null, borrowerBoreRecoveredPaymentConfirmed: null } : {}),
-      ...(historyChanged ? { filedReturnHistoryCompleteConfirmed: null } : {}),
-      sourceFactsConfirmed: null,
-      ...patch,
-    }, confirmationOnly);
+    const next = { ...data, sourceFactsConfirmed: null, ...patch };
+    onChange(invalidateEditedVehicleRefundProof(data, next), confirmationOnly);
   };
+  const credit = data.method === "loan_credit";
   return <fieldset>
     <legend>Box 5 refund details</legend>
-    <Choice label={`${prefix} refund method`} value={data.method} choices={[["cash_refund", "Cash paid to the borrower"], ["loan_credit", "Credit applied to the loan"], ["mixed", "Cash and loan credit"]]} onChange={method => update({ method: method as VehicleInterestRefundData["method"] })} />
-    {data.method === "cash_refund" ? <>
-      <p className="guided-hint">Use your 2025 lender statement or account portal, the 2026 cash receipt, and the filed 2025 federal return with any amendments. Check that the borrower paid the recovered interest from their own funds without reimbursement and received the refund. Use source references that omit account and taxpayer ID numbers. Report any separate interest on the refund with your interest income.</p>
+    <Choice label={`${prefix} refund method`} value={data.method} choices={[["cash_refund", "Cash paid to the borrower"], ["loan_credit", "Credit applied to loan interest"], ["mixed", "Cash and loan credit"]]} onChange={method => update({ method: method as VehicleInterestRefundData["method"] })} />
+    {(data.method === "cash_refund" || credit) ? <>
+      <p className="guided-hint">Use your 2025 lender statement or account portal and the filed 2025 federal return with any amendments. Use source references that omit full account and taxpayer ID numbers. Report any separate interest on the recovery with your interest income.</p>
+      {credit
+        ? <p className="guided-hint">Use the lender's 2026 record showing that the borrower's own recovered funds paid accrued 2026 interest on this same loan. A credit entered only in the account ledger, held for future interest, or applied to principal requires separate review. Include the credit once in Interest paid and confirm zero direct payments and reimbursements by others.</p>
+        : <p className="guided-hint">Use the 2026 cash receipt. Check that the borrower paid the recovered interest from their own funds without reimbursement and received the refund.</p>}
       <div className="guided-form-grid">
         {([
-          ["originTaxYear", "original tax year of recovered interest"], ["receiptTaxYear", "cash receipt tax year"],
-          ["refundSourceReference", "cash refund source reference"], ["priorPaymentSourceReference", "prior payment source reference"],
+          ["originTaxYear", "original tax year of recovered interest"],
+          ["priorPaymentSourceReference", "prior payment source reference"],
           ["filedReturnSourceReference", "filed return source reference"],
         ] as const).map(([field, name]) => <TextFact key={field} label={`${prefix} ${name}`} value={data[field]} onChange={value => update({ [field]: value })} />)}
-        <CurrencyField label={`${prefix} cash refund received`} hint="Enter only the refund of prior interest. Keep any separate interest paid on the refund with your interest income." value={data.cashRefundReceived} onChange={cashRefundReceived => update({ cashRefundReceived })} />
+        {credit ? <>
+          <TextFact label={`${prefix} credit application tax year`} value={data.creditAppliedTaxYear ?? ""} onChange={creditAppliedTaxYear => update({ creditAppliedTaxYear })} />
+          <TextFact label={`${prefix} loan credit source reference`} value={data.creditSourceReference ?? ""} onChange={creditSourceReference => update({ creditSourceReference })} />
+          <CurrencyField label={`${prefix} cash received alongside the loan credit`} hint="Enter 0 after verifying there was no cash refund of the recovered interest." value={data.creditCashRefundReceived ?? ""} onChange={creditCashRefundReceived => update({ creditCashRefundReceived })} />
+          <CurrencyField label={`${prefix} credit applied to 2026 interest on the same loan`} value={data.currentYearInterestCreditApplied ?? ""} onChange={currentYearInterestCreditApplied => update({ currentYearInterestCreditApplied })} />
+          <CurrencyField label={`${prefix} borrower 2026 interest excluding the credit`} value={data.borrowerInterestExcludingCredit ?? ""} onChange={borrowerInterestExcludingCredit => update({ borrowerInterestExcludingCredit })} />
+          <BooleanFact label={`${prefix} credit satisfied accrued 2026 interest and is included once in Box 1`} value={data.currentYearInterestCreditIncludedInBox1Confirmed} onChange={currentYearInterestCreditIncludedInBox1Confirmed => update({ currentYearInterestCreditIncludedInBox1Confirmed })} />
+        </> : <>
+          <TextFact label={`${prefix} cash receipt tax year`} value={data.receiptTaxYear} onChange={receiptTaxYear => update({ receiptTaxYear })} />
+          <TextFact label={`${prefix} cash refund source reference`} value={data.refundSourceReference} onChange={refundSourceReference => update({ refundSourceReference })} />
+          <CurrencyField label={`${prefix} cash refund received`} hint="Enter only the refund of prior interest." value={data.cashRefundReceived} onChange={cashRefundReceived => update({ cashRefundReceived })} />
+        </>}
         <Choice label={`${prefix} amended 2025 returns`} value={data.amendedReturnStatus} choices={[["none", "No amendment filed"], ["reviewed", "All filed amendments reviewed"], ["unreviewed", "Amendment history incomplete"]]} onChange={amendedReturnStatus => update({ amendedReturnStatus: amendedReturnStatus as VehicleInterestRefundData["amendedReturnStatus"] })} />
         {([
           ["schedule1ADeductedInterest", "prior Schedule 1-A deduction"],
@@ -57,11 +64,11 @@ function VehicleInterestRefundDetails({ prefix, data, onChange }: {
           ["otherDeductedInterest", "other prior deduction or carryforward"],
         ] as const).map(([field, name]) => <CurrencyField key={field} label={`${prefix} ${name}`} hint="Enter the amount of this recovered interest deducted or carried forward, or 0 after verifying none." value={data[field]} onChange={value => update({ [field]: value })} />)}
         <BooleanFact label={`${prefix} loan and payment records match`} value={data.loanSourcesMatchConfirmed} onChange={loanSourcesMatchConfirmed => update({ loanSourcesMatchConfirmed })} />
-        <BooleanFact label={`${prefix} borrower paid the recovered interest and received the refund`} value={data.borrowerBoreRecoveredPaymentConfirmed} onChange={borrowerBoreRecoveredPaymentConfirmed => update({ borrowerBoreRecoveredPaymentConfirmed })} />
+        <BooleanFact label={`${prefix} ${credit ? "borrower paid and bore the 2025 interest and received the same-loan credit" : "borrower paid the recovered interest and received the refund"}`} value={data.borrowerBoreRecoveredPaymentConfirmed} onChange={borrowerBoreRecoveredPaymentConfirmed => update({ borrowerBoreRecoveredPaymentConfirmed })} />
         <BooleanFact label={`${prefix} filed return history is complete`} value={data.filedReturnHistoryCompleteConfirmed} onChange={filedReturnHistoryCompleteConfirmed => update({ filedReturnHistoryCompleteConfirmed })} />
       </div>
       <BooleanFact label={`${prefix} checked after the last edit`} value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => update({ sourceFactsConfirmed })} />
-    </> : data.method && <p className="guided-hint">Loan credits and mixed refunds require separate review.</p>}
+    </> : data.method && <p className="guided-hint">Mixed cash and loan credit requires separate review.</p>}
   </fieldset>;
 }
 
@@ -168,9 +175,12 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
       const statement = entry.form1098Vli;
       const update = (patch: Partial<typeof entry>, confirmationOnly = false) => {
         const next = { ...entry, ...patch };
+        if (next.owner !== entry.owner) next.borrowerQualificationConfirmed = null;
         if (statement && !("form1098Vli" in patch)) {
           next.form1098Vli = { ...statement, sourceFactsConfirmed: null };
-          if (statement.priorYearRefundProof) next.form1098Vli.priorYearRefundProof = invalidateVehicleRefundPaymentEvidence(statement.priorYearRefundProof, "owner" in patch);
+          if (statement.priorYearRefundProof) {
+            next.form1098Vli.priorYearRefundProof = invalidateVehicleRefundPaymentEvidence(statement.priorYearRefundProof, vehicleRefundLoanIdentityChanged(entry, next));
+          }
         }
         set({
           vehicleLoans: data.vehicleLoans.map((row, position) => position === index ? next : row),
@@ -182,7 +192,7 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
         const confirmationOnly = refundConfirmationOnly || "sourceFactsConfirmed" in patch;
         const updated = { ...statement, ...(confirmationOnly ? {} : { sourceFactsConfirmed: null }), ...patch };
         if (!confirmationOnly && !("priorYearRefundProof" in patch) && statement.priorYearRefundProof) {
-          updated.priorYearRefundProof = invalidateVehicleRefundPaymentEvidence(statement.priorYearRefundProof, "payer" in patch);
+          updated.priorYearRefundProof = invalidateVehicleRefundPaymentEvidence(statement.priorYearRefundProof, statement.payer !== updated.payer);
         }
         update({ form1098Vli: updated }, confirmationOnly);
       };
