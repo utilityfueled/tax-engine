@@ -89,10 +89,9 @@ export function ReturnHelpDock({
     currentSectionId,
     currentSectionLabel,
   };
-  const overview = useMemo(
-    () => buildReturnAssistantReply(workspace, context, ""),
-    [workspace, context],
-  );
+  const overview = open && messages.length === 0
+    ? buildReturnAssistantReply(workspace, context, "")
+    : null;
 
   const quickPrompts = mode === "workspace"
     ? [
@@ -301,7 +300,7 @@ export function ReturnHelpDock({
           </div>
 
           <div className="return-help-thread">
-            {messages.length === 0 ? (
+            {overview ? (
               <div className="return-help-message return-help-message-assistant">
                 <strong>{overview.title}</strong>
                 <p>{overview.summary}</p>

@@ -6,6 +6,7 @@ import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { ReturnHelpDock } from "@/components/return-help-dock";
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
 import { workspaceAiPreferenceId, writeWorkspaceAiOptOut } from "@/lib/workspace-ai-preferences";
+import * as workspaceAssistant from "@/lib/workspace-assistant";
 import { requestTaxCalculationExplanation } from "@/lib/transient-tax-explanation-request";
 import { simpleW2Fixture } from "../../fixtures/simple-w2";
 import { ProviderWorkspaceRequestError, requestProviderWorkspaceHelp } from "@/lib/provider-workspace-request";
@@ -85,6 +86,31 @@ afterEach(async () => {
 });
 
 describe("return helper privacy and user interactions", () => {
+  it("builds the overview only when it is visible and uses current return details", async () => {
+    const buildReply = vi.spyOn(workspaceAssistant, "buildReturnAssistantReply");
+    await render({ mode: "guided", currentSectionId: "state-return", currentSectionLabel: "Ohio state return" });
+    await render();
+    expect(buildReply.mock.calls.length).toBe(0);
+
+    await click(button("Need help?"));
+    expect(text()).toContain("Ohio state return help");
+    expect(text()).toContain("0 uploaded documents are attached to this return.");
+    await click(button("Close"));
+
+    buildReply.mockClear();
+    const replacement = createWorkspaceRecord("other-guided-return");
+    await render({
+      workspace: { ...replacement, summary: { ...replacement.summary, totalDocuments: 2 } },
+      currentSectionId: "review",
+      currentSectionLabel: "Federal review",
+    });
+    expect(buildReply.mock.calls.length).toBe(0);
+
+    await click(button("Need help?"));
+    expect(text()).toContain("Federal review help");
+    expect(text()).toContain("2 uploaded documents are attached to this return.");
+  });
+
   it("forwards the hosted owner and resets opt-in and pending help on owner change", async () => {
     const waiting = deferred<Awaited<ReturnType<typeof requestProviderWorkspaceHelp>>>();
     provider.mockReturnValue(waiting.promise);
