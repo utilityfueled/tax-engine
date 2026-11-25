@@ -13,7 +13,9 @@ Use the linked progress sections when investigating individual packages.
   for the verified single, full-year W-2-only cohort. Independent review
   rechecked the enacted exemption thresholds and the source guards.
   It remains an internal draft. All 213 focused tests, typecheck, lint
-  and spec/inventory checks passed. The exact combined checks are queued.
+  and spec/inventory checks passed. Exact unit and coverage each
+  passed 30,493 cases with 88.39% branches. Ten local checks passed.
+  Exact Chromium is still running.
   [Ohio traditional school evidence](upgrade-2026-progress.md#november-25-ohio-traditional-school-levy).
 
 - `5d8e8fd4` validates a direct individual's certified Ohio refundable
@@ -22,7 +24,9 @@ Use the linked progress sections when investigating individual packages.
   certificate issue-date correction. The draft remains filing-unqualified.
   225 focused tests, the browser source audit and spec checks passed.
   `8f45074d` adds the generated partial coverage entry after the first CI
-  inventory check failed. Full checks are running on the corrected revision.
+  inventory check failed. Both corrected CI spec commands passed.
+  Ten local checks passed. Chromium passed 651 active cases and
+  failed one mobile K12 reload with Chromium reporting suspended I/O.
   [Ohio jobs credit draft](upgrade-2026-progress.md#november-25-ohio-certified-refundable-jobs-credits).
 
 - `5bbc0504` avoids repeating the serialization of an internally owned

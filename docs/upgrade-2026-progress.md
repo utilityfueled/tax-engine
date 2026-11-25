@@ -24,7 +24,10 @@ replayed the original conflict cases. Root verification passed 213 tests,
 typecheck, scoped lint, all 10,053 references, the generated inventory
 and the source audit, with all browser contracts retained. The release
 checkout matches 6,697 tracked blobs and 15 official PDF samples. Its
-complete local run is queued after the two earlier local browser runs.
+ten checks before Chromium passed, including 30,493 unit and coverage
+cases with 81 original skips and 88.39% branch coverage. These checks ran
+with four low-priority unit and coverage workers while the earlier
+browser ran. The two Chromium servers ran in sequence.
 The production deployment listing shows canceled builds for the
 traditional levy and corrected jobs-credit inventory commits.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45527715373) ·
@@ -64,6 +67,14 @@ entry. The inventory classifies the draft as partial and records the
 missing packet and e-file coverage. The corrected release checkout
 matches all 6,694 versioned blobs. The unrelated inventory entry in the
 working checkout was left unstaged.
+[Corrected spec job](https://github.com/utilityfueled/tax-engine/actions/runs/45526119746/job/138909797627).
+
+Ten exact local checks passed on `8f45074d`. Unit and coverage each
+passed 30,489 cases with 81 original skips and 88.39% branch coverage.
+Chromium completed eight windows, passing 651 active cases with five
+original skips. The mobile K12 journey's reload reported
+`net::ERR_NETWORK_IO_SUSPENDED`. Cleanup closed the server. Its cause
+remains unverified.
 [Original spec job](https://github.com/utilityfueled/tax-engine/actions/runs/45525343003/job/138907163116) ·
 [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45526119746) ·
 [Corrected Web](https://github.com/utilityfueled/tax-engine/actions/runs/45526119691).
