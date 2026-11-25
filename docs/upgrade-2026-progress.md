@@ -1,5 +1,27 @@
 # 2026 upgrade implementation evidence
 
+## November 25 in-memory review cover
+
+`00ef7e7a` passes the generated summary `PDFDocument` directly to the
+merge. The merger still marks each source before copying pages in order.
+The cover stops going through a separate serialization, file write,
+file read, and parse. The existing packet regression now checks the
+first extracted heading.
+
+On an isolated `27f85ffc8` archive with the cover diff, all 12 federal
+and 18 Ohio pages matched their baseline Poppler render hashes and
+extracted text. Each page had exactly one review notice. The form lists,
+page sizes, order, and packet review subject matched. All 68 focused
+tests, web types, scoped lint, the source audit and its two controls
+passed. The isolated production web build passed all 15 cases in the
+existing local Ohio and Pennsylvania Chromium request window with two
+workers, zero retries and the original 30-second case deadline. The
+exact Docker build and eight local static checks passed. The remaining
+exact checks are pending. [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45709245932) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45709246061) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45709442744).
+
 ## November 25 elected Ohio job creation credit shares
 
 `e32f3383` reconciles one direct owner's share of a single certified

@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `00ef7e7a` passes the generated review cover directly to the PDF merge.
+  All 30 compared federal and Ohio pages rendered identically. The 68
+  focused tests, 15 local Chromium cases, and the exact Docker build
+  passed. Exact unit, coverage, and native browser runs are pending.
+  Filing and strict Linux qualification remain open.
+  [Review cover evidence](upgrade-2026-progress.md#november-25-in-memory-review-cover).
+
 - `e32f3383` reconciles one direct owner's elected 2026 Ohio job creation
   credit share from the entity's certificate, submitted annual election,
   and documented distributions. The three records each require the full

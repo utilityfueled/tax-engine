@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "e32f33837d1c75e79c3f7e45b41790829481eff7",
+    "applicationCommit": "00ef7e7af0ae05bf300d5aba7eb17a4607dd0f74",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit.fullExact",
@@ -26,6 +26,7 @@
     "ohioCertifiedJobsCreditEvidenceKey": "activeContinuation.nov25OhioCertifiedRefundableJobsCredit",
     "ohioElectedJobsCreditShareEvidenceKey": "activeContinuation.nov25OhioElectedJobsCreditShare",
     "ohioCreditRenderComparisonEvidenceKey": "activeContinuation.nov25OhioCreditRenderComparison",
+    "reviewCoverEvidenceKey": "activeContinuation.nov25ReviewCoverInMemory",
     "ohioTraditionalSchoolEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
     "ohioStandaloneReplayEvidenceKey": "activeContinuation.nov25OhioStandaloneAdapterReuse",
     "ohioChildReplayPrototypeEvidenceKey": "activeContinuation.nov25OhioChildReplayPrototype",
@@ -72,7 +73,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Finish Linux browser qualification. On cd6e64b9 all eleven exact local checks and eight Linux CI jobs passed. Managed Linux Chromium had two railroad retirement PDF inspection timeouts. Strict AMD64 had two Ohio timeouts and strict ARM64 had eight repeated timeouts. Recovery and independent archive verification passed on both architectures.",
+      "Finish exact checks on 00ef7e7a and qualify Linux browsers. On cd6e64b9 all eleven exact local checks and eight Linux CI jobs passed. Managed Linux Chromium had two railroad retirement PDF inspection timeouts. Strict AMD64 had two Ohio timeouts and strict ARM64 had eight repeated timeouts. Recovery and independent archive verification passed on both architectures.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -80,6 +81,26 @@
     ]
   },
   "activeContinuation": {
+    "nov25ReviewCoverInMemory": {
+      "implementationCommit": "00ef7e7af0ae05bf300d5aba7eb17a4607dd0f74",
+      "status": "Pushed. The generated cover goes directly to the existing notice and merge path.",
+      "evidencePath": ".local/upgrade-evidence/nov25-review-cover-in-memory",
+      "verificationBase": "27f85ffc8",
+      "focusedTestsPassed": 68,
+      "focusedFilesPassed": 3,
+      "typecheckWebPassed": true,
+      "scopedLintPassed": true,
+      "engineeringReviewPassed": true,
+      "renderParity": { "federalPages": 12, "ohioPages": 18, "sameTextAndRenders": true, "sameFormList": true, "oneNoticePerPage": true, "sha256": "7636b384b9bb9e5e37f6446e2a51f1fc9ec28eab5e6bbe569b52901295e2224d" },
+      "focusedLocalBrowser": { "buildPassed": true, "pass": 15, "fail": 0, "skips": 0, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "summarySha256": "7c3adb7e1027d9420f1d16f565d16dea6f8f7b8e66f03059c605051f6195cc44" },
+      "sourceAudit": { "digests": 2071, "updated": 1, "controlsPassed": 2, "requestCeilingsChanged": false },
+      "fullExact": { "status": "running", "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main", "localStaticChecksPassed": 8, "frozenOfflineInstallsPassed": 2, "verifiedSamplePdfsPerArchive": 15 },
+      "runIds": { "ci": 45709246317, "web": 45709245932, "docker": 45709246061, "nativeArm64": 45709442744 },
+      "exactDockerBuildPassed": true,
+      "vercelAutomaticProductionBuild": "CANCELED",
+      "filingQualified": false,
+      "strictLinuxQualified": false
+    },
     "nov25OhioCreditRenderComparison": {
       "baselineCommit": "27f85ffc8",
       "evidencePath": ".local/upgrade-evidence/nov25-oh-credit-render-isolation",
