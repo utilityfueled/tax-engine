@@ -1,0 +1,37 @@
+form: "Ohio 2026 traditional school district levy draft"
+fullName: "Full-year single employee original-source traditional school levy before credits"
+taxYear: 2026
+irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026"
+sources:
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.021"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5747.025/9-30-2025"
+  - "https://publicfiles.ohiosos.gov/free/publications/SessionLaws/136/136-HB-096-part-33.pdf"
+  - "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+  - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf"
+  - "https://codes.ohio.gov/ohio-revised-code/section-5703.055"
+notes: |
+  R.C. 5748.01(E)(1), (F) and (G) govern the traditional base and resident
+  period. R.C. 5747.021 applies the certified rate. Use the annual Ohio
+  Rev. 3/26 rate and basis after matching the verified Ohio Finder result.
+  H.B. 96 section 757.120(A) freezes the published exemption tiers through
+  2026. R.C. 5747.025(A) sets the exclusive $500,000 MAGI ceiling for 2026.
+  This candidate stops at the pre-credit levy. No withholding, balances,
+  payment or credit eligibility, physical form, or filing qualification.
+  A declared part-year or nonresident status conflicts with the full-year
+  calendar. A separate unemployment payment original or schedule conflicts
+  with the verified W-2-only sources, even when its amount is zero.
+  Matched all-zero employer identifiers are also placeholders.
+lines:
+  - line: "actual-sources"
+    description: "Bound current Ohio taxpayer, pay and district originals"
+    formula: "Reuse current actual school source proof for one 2026 single primary full-year Ohio resident aged 18–64, explicit not claimable and no dependents, with one verified traditional district in effect all year. Require the canonical owner with a complete taxpayer identifier other than the all-zero placeholder, a full input snapshot, domicile/address, dated matching 2026 Finder result, a referenced original confirming the levy covers all year, complete unique reconciled current W-2 and payroll, and actual complete zero other income/adjustments. Hold earned, mixed, unknown, stale or nonmatching proof. Limit to whole-dollar aggregate wages and an expressly confirmed whole-dollar election."
+    testRef: "tests/engine/state/oh-2026-traditional-school-draft.test.ts::holds unsupported or unverified traditional school facts and retains the earned proof boundary"
+  - line: "school-base"
+    description: "Traditional school taxable income before levy"
+    formula: "Sum verified W-2 ordinary wages for actual Ohio AGI. MAGI equals Ohio AGI plus the actual zero A28 and A34 deductions (R.C. 5747.01(II)). For the sole eligible exemption, the indexed amounts are $2,400 at MAGI <= $40,000, $2,150 at MAGI <= $80,000, and $1,900 above $80,000 through MAGI < $500,000. Exemption is zero at or above $500,000. Taxable school base is max(0, MAGI minus the exemption)."
+    testRef: "tests/engine/state/oh-2026-traditional-school-draft.test.ts::uses the published district rate and exact statutory exemption boundaries"
+  - line: "school-levy"
+    description: "Traditional school levy before credits"
+    formula: "Multiply the exact school base by the bound 2026 traditional rate in Decimal. Preserve the exact levy and report the whole-dollar HALF_UP levy under the explicit R.C. 5703.055 election. Zero base produces a confirmed zero levy. Audit amounts omit original identities and references. Status incomplete, independent review pending, filing qualification false."
+    testRef: "tests/engine/state/oh-2026-traditional-school-draft.test.ts::retains exact levy, rounds the half dollar and reports a real zero with a private audit"

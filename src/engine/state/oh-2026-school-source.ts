@@ -59,15 +59,21 @@ export function readOhio2026SchoolSource(context: Ohio2026SchoolSourceContext, t
 }
 /** Validates current actual inputs without inferring liability, payment coverage or final form rules. */
 export function calculateOhio2026SchoolSource(input: TaxYearInput, raw: unknown): Ohio2026SchoolSourceContext {
-    return qualifyOhio2026SchoolSource(input, raw, false);
+    return bindEarnedSource(input, raw, false);
 }
 
 /** Documentary source proof for the paired state and school calculation. */
 export function calculateOhio2026SchoolDraftSource(input: TaxYearInput, raw: unknown): Ohio2026SchoolSourceContext {
-    return qualifyOhio2026SchoolSource(input, raw, true);
+    return bindEarnedSource(input, raw, true);
 }
 
-function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allowSenior: boolean): Ohio2026SchoolSourceContext {
+/** Complete current source proof for the standalone traditional pre-credit levy. */
+export function readOhio2026TraditionalSchoolOriginals(input: TaxYearInput, raw: unknown) {
+    const { district, wages } = qualifyOhio2026SchoolSource(input, raw, false, 'traditional');
+    return { districtCode: district.code, rate: district.rate, residentCompensation: wages };
+}
+
+function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allowSenior: boolean, taxBase: 'earned' | 'traditional') {
     const { scheduleBPartThree: _disclosure, ...input } = taxInput;
     const parsed = Ohio2026SchoolSourcesSchema.safeParse(raw), taxpayer = TaxpayerSchema.strict().safeParse(input.taxpayer), resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency), standard = StandardDeductionFactsSchema.strict().safeParse(input.standardDeductionFacts);
     if (!parsed.success || !taxpayer.success || !resident.success || !standard.success)
@@ -79,6 +85,14 @@ function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allow
         fail('actual known dependent inventory required');
     if (t.taxYear !== 2026 || facts.taxYear !== 2026 || t.filingStatus !== 'single' || t.spouse || t.dependents.length || !/^\d{9}$/.test(tin(t.primary.ssn)))
         fail('actual2026 single primary no-dependent owner required');
+    if (taxBase === 'traditional') {
+        if (tin(t.primary.ssn) === '000000000')
+            fail('actual taxpayer identifier required');
+        if (t.stateResidency !== undefined && t.stateResidency !== 'full-year')
+            fail('declared status conflicts with actual full-year residency');
+        if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
+            fail('separate unemployment payment evidence conflicts with the W-2-only source');
+    }
     day(t.primary.dateOfBirth);
     if (t.primary.dateOfBirth === '1962-01-01' || t.primary.dateOfBirth > '2008-12-31')
         fail('ordinary adult age within the supported range required');
@@ -98,8 +112,8 @@ function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allow
     if (r.from !== '2026-01-01' || r.through !== '2026-12-31' || f.lookupDate < '2026-01-01' || t.address.state !== 'OH' || digest(r.originalAddress) !== digest(t.address) || digest(f.originalAddress) !== digest(t.address))
         fail('actual full-year Ohio address and year-specific Finder original required');
     const district = lookupOhio2026SchoolDistrict(2026, r.districtCode);
-    if (!district || district.taxBase !== 'earned' || f.districtCode !== district.code || f.districtName !== district.name || f.rate !== district.rate || f.taxBase !== district.taxBase)
-        fail('actual Finder identity rate and earned base must match annual2026 authority');
+    if (!district || district.taxBase !== taxBase || f.districtCode !== district.code || f.districtName !== district.name || f.rate !== district.rate || f.taxBase !== district.taxBase)
+        fail(`actual Finder identity rate and ${taxBase} base must match annual2026 authority`);
     const emptyArrays = new Set(['form1099Int', 'form1099Div', 'form1099B', 'form1099Nec', 'form1099Misc', 'scheduleK1', 'form1098', 'form1095A', 'donations', 'form1099DA', 'form1099G', 'form1099OID', 'formW2G', 'form1099K', 'form1099C', 'form1099Q', 'scheduleK1Form1041', 'form1098E', 'rentalProperties', 'savingsBondRedemptions', 'form6252', 'form8814', 'homeSales', 'form8824', 'form1099R', 'formSSA1099', 'formRRB1099']);
     const allowed = new Set(['taxpayer', 'w2s', 'standardDeductionFacts', 'ohioResidency', 'ohioPayments']);
     for (const [key, value] of Object.entries(input))
@@ -126,6 +140,8 @@ function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allow
         const index = employment.w2Index, w = input.w2s[index], school = s.w2Sources.find(v => v.w2Index === index);
         if (indexes.has(index) || !w || !school || w.taxYear !== 2026 || w.accountHolder !== 'primary' || employment.accountHolder !== 'primary' || tin(employment.employerTin) !== tin(w.employer.ein) || identity(employment.employerName) !== identity(w.employer.name) || !/^\d{9}$/.test(tin(w.employer.ein)))
             fail('actual unique owner employer and W2 index required');
+        if (taxBase === 'traditional' && tin(w.employer.ein) === '000000000')
+            fail('actual employer identifier required');
         indexes.add(index);
         const actual = calculateW2StateLocalSources(input, index, w.stateLocalSources);
         if (actual.stateRows.some(row => row.state !== 'OH'))
@@ -179,6 +195,11 @@ function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allow
         if (!cash(a.federalAmount).eq(expected) || !cash(a.residentAmount).eq(expected) || !cash(a.nonresidentOhioAmount).isZero())
             fail('actual full-year wage categories differ');
     }
+    return { input, district, wages, withheld };
+}
+
+function bindEarnedSource(taxInput: TaxYearInput, raw: unknown, allowSenior: boolean): Ohio2026SchoolSourceContext {
+    const { input, district, wages, withheld } = qualifyOhio2026SchoolSource(taxInput, raw, allowSenior, 'earned');
     const currentDigest = digest({ input, sources: raw }), context: Ohio2026SchoolSourceContext = Object.freeze({ methodId: 'oh-2026-earned-school-source-v1', sourceCommitment: currentDigest });
     contexts.set(context, { currentDigest, projection: { taxYear: 2026, districtCode: district.code, districtName: district.name, taxBase: 'earned', rate: district.rate,
             residentCompensation: wages.toFixed(), schoolWithholding: withheld.toFixed(), taxLiability: null, payments: null, refund: null, underpaymentPenalty: null, lateInterest: null,
