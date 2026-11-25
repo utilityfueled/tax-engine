@@ -14,6 +14,8 @@ import {
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 
+export { calculateOhio2026RefundableJobsCreditDraft } from './oh-2026-refundable-jobs-credit-draft.js';
+
 export interface CalculateOhioResidentReturnFromFederalInput {
   taxInput: TaxYearInput;
   federalResult: TaxReturnResult;

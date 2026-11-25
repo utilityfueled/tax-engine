@@ -1,0 +1,53 @@
+form: "Ohio 2026 certified refundable jobs credit draft"
+fullName: "Direct individual job creation and grandfathered job retention certificates"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.058"
+notes: |
+  Ohio R.C. 5747.058(A) permits an actual refundable job creation award under
+  R.C. 122.17(B) or a legacy award under former R.C. 122.171(B)(2) or (3).
+  Current R.C. 122.171(B) retention is nonrefundable under R.C. 5747.058(B).
+  See https://codes.ohio.gov/ohio-revised-code/section-122.171.
+  This method does not qualify Ohio forms, filing, other claims or a calculation
+  of credit order, current liability, refund or account settlement.
+lines:
+  - line: "certificate"
+    description: "Bind the actual 2026 certified credit to its direct individual holder"
+    formula: >-
+      Require a single 2026 calendar-year taxpayer with matching actual name
+      (allow only letter-case and surrounding whitespace differences) and
+      taxpayer-ID suffix, one annual Ohio Department of Development individual
+      IT1040 certificate, an actual certificate reference, and a valid issue date
+      after the 2026 calendar reporting period and no later than the as-of date. Require explicit current
+      validity, direct ownership and absence of a relocation that disqualifies
+      the 2026 claim, pass-through or megaproject treatment. Accept only an original, verified,
+      nonnegative exact-dollar-and-cent certificate amount including actual zero.
+    irsRef: "R.C. 122.17(B), (D)(6)–(7), 5747.058(A); https://codes.ohio.gov/ohio-revised-code/section-122.17"
+    sources:
+      - "https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07"
+      - "https://codes.ohio.gov/ohio-administrative-code/rule-122:16-1-05"
+    testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::reports only the certified exact creation amount and its deemed payment date"
+    testRefs:
+      - "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::holds incomplete contradictory and unsupported direct certificate facts"
+  - line: "grandfathered-retention"
+    description: "Bind the actual legacy authority, original dates and continuing term"
+    formula: >-
+      Require the same holder's original verified agreement matching the annual
+      certificate reference to that agreement. The agreement must have been
+      granted before September 29, 2015 and specify a term of at most 15
+      taxable years covering 2026, beginning in or after the grant year.
+      Former division (B)(2) requires the actual favorable recommendation
+      dated before July 1, 2011 and no later than the grant. Former division
+      (B)(3) requires a grant from July 1, 2011 through December 31, 2013.
+      The certified amount is used without recomputing award eligibility.
+    irsRef: "Former R.C. 122.171(B)(2)–(3); https://codes.ohio.gov/ohio-revised-code/section-122.171/9-17-2014"
+    testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::uses operative former retention agreements and holds conflicting legacy dates"
+  - line: "deemed-payment"
+    description: "Return the certificate amount and statutory calendar-year payment date"
+    formula: >-
+      Copy the validated certified amount as Decimal and report January 1, 2026
+      as its deemed payment date. Return only an incomplete filing-unqualified
+      draft classification, the amount and date, and a calculation audit line
+      using the public authority and date. Keep original identities, source
+      references and certificate or agreement evidence off the result and audit.
+    irsRef: "R.C. 5747.058(A), https://codes.ohio.gov/ohio-revised-code/section-5747.058; R.C. 5747.98, https://codes.ohio.gov/ohio-revised-code/section-5747.98"
+    testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::preserves an explicit certified zero"
