@@ -40,8 +40,18 @@ function verifyForm1098Vli(loan: Schedule1AInput["vehicleLoans"][number], taxYea
   if (!statement.originalUseChecked || !statement.usAssemblyChecked || !loan.originalUse || !loan.finalAssemblyUnitedStates) {
     throw new Error("Form 1098-VLI requires confirmed original use and United States assembly for this statement path.");
   }
-  if (d(statement.priorYearInterestRefund).gt(0)) {
+  const priorYearRefund = d(statement.priorYearInterestRefund);
+  const refundProof = statement.priorYearRefundProof;
+  if (!refundProof && priorYearRefund.gt(0)) {
     throw new Error("Form 1098-VLI box 5 requires separate prior-year interest recovery review.");
+  }
+  if (refundProof) {
+    if (priorYearRefund.isZero() || !priorYearRefund.eq(refundProof.cashRefundReceived)) {
+      throw new Error("Form 1098-VLI cash refund proof must match a positive box 5 amount.");
+    }
+    if (!loan.acquiredDate.startsWith("2025-") || !loan.loanOriginationDate.startsWith("2025-")) {
+      throw new Error("Form 1098-VLI proof of a 2025 overpayment requires a vehicle acquired and loan originated in 2025.");
+    }
   }
   if (d(loan.nonqualifyingInterest).gt(0)) {
     throw new Error("Form 1098-VLI box 1 already excludes nonqualifying debt. Reconcile any additional exclusion separately.");

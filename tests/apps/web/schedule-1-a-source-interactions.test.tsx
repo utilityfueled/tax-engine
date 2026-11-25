@@ -4,7 +4,9 @@ import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { Schedule1ASourceDetails } from "@/components/guided-interview/schedule-1-a-source-details";
-import type { Schedule1AData } from "@/lib/guided-schedule-1-a-facts";
+import {
+  emptySchedule1AData, emptyVehicleInterest, emptyVehicleInterestStatement, type Schedule1AData,
+} from "@/lib/guided-schedule-1-a-facts";
 it("collects actual additional deduction records and preserves unknown answers", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
@@ -39,6 +41,65 @@ it("collects actual additional deduction records and preserves unknown answers",
     expect(latest).toMatchObject({ employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: [] });
     await click("Remove additional deduction worksheet"); expect(latest).toBeUndefined();
   } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+it("retains positive Box 5 evidence and requires reconfirmation after edits", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  const initial: Schedule1AData = { ...emptySchedule1AData, sourceTaxYear: "2026", vehicleLoans: [{
+    ...emptyVehicleInterest, form1098Vli: { ...emptyVehicleInterestStatement, priorYearInterestRefund: "0" },
+  }] };
+  let latest = initial;
+  function Harness({ draft }: { draft: Schedule1AData }) {
+    const [data, setData] = useState(draft);
+    return <Schedule1ASourceDetails data={data} onChange={next => { if (next) { latest = next; setData(next); } }} />;
+  }
+  const prefix = "Vehicle loan 1: Form 1098-VLI Box 5";
+  function field(label: string) {
+    return [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+  }
+  async function change(label: string, value: string) {
+    const control = field(label);
+    if (!control) throw new Error(`Missing ${label}`);
+    const select = control instanceof HTMLSelectElement;
+    const setter = Object.getOwnPropertyDescriptor(select ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error(`Missing value setter for ${label}`);
+    await act(async () => {
+      setter.call(control, value);
+      control.dispatchEvent(new Event(select ? "change" : "input", { bubbles: true }));
+    });
+  }
+  try {
+    await act(async () => root.render(<Harness draft={initial} />));
+    expect(field(`${prefix} refund method`)).toBeUndefined();
+    await change(`${prefix} refund or credit`, "123.45");
+    expect(field(`${prefix} refund method`)?.value).toBe("");
+    await change(`${prefix} refund method`, "cash_refund");
+    expect(field(`${prefix} original tax year of recovered interest`)?.value).toBe("");
+    await change(`${prefix} cash refund received`, "123.45");
+    await change(`${prefix} prior payment source reference`, "2025 lender annual interest statement");
+    await change(`${prefix} prior Schedule 1-A deduction`, "0.00");
+    await change(`${prefix} loan and payment records match`, "true");
+    await change(`${prefix} borrower paid the recovered interest and received the refund`, "true");
+    await change(`${prefix} checked after the last edit`, "true");
+    await change(`${prefix} refund or credit`, "123.46");
+    const saved = structuredClone(latest);
+    await act(async () => root.render(<Harness key="replay" draft={saved} />));
+    expect(field(`${prefix} cash refund received`)?.value).toBe("123.45");
+    expect(field(`${prefix} prior payment source reference`)?.value).toBe("2025 lender annual interest statement");
+    expect(field(`${prefix} prior Schedule 1-A deduction`)?.value).toBe("0.00");
+    expect(field(`${prefix} borrower paid the recovered interest and received the refund`)?.value).toBe("");
+    expect(field(`${prefix} checked after the last edit`)?.value).toBe("");
+    await change(`${prefix} refund method`, "loan_credit");
+    expect(field(`${prefix} cash refund received`)).toBeUndefined();
+    await change(`${prefix} refund method`, "cash_refund");
+    expect(field(`${prefix} cash refund received`)?.value).toBe("123.45");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
 });
 
 it("collects and reconfirms actual 2026 Copy B without overwriting loan records", async () => {

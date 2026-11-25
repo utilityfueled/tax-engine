@@ -47,8 +47,7 @@ it("preserves actual loan and senior facts and rejects unknown or conflicting so
   state.sectionData["personal-info"]!.childTaxCredit = { possessionIncomeExclusion: "100", puertoRicoExcludedIncome: "100", form4563ExcludedIncome: "0", bonaFidePuertoRicoResident: true };
   expect(() => buildSchedule1AInput(facts, state)).toThrow(/exclu|conflict|reconcil/i);
 });
-it("routes actual 2026 Copy B and reconciles exact borrower payments", async () => {
-  const state = stateWithSources(2026);
+function vehicleStatementFacts() {
   const form1098Vli = {
     sourceTaxYear: "2026", sourceReference: "Fictional Copy B", payer: "primary" as const,
     currentUncorrected: true, sourceFactsConfirmed: true, lenderAcquisitionDateBlank: true, lenderAcquisitionDate: "",
@@ -70,6 +69,11 @@ it("routes actual 2026 Copy B and reconciles exact borrower payments", async () 
     sourceFactsConfirmed: true, allSourcesIncluded: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0",
     vehicleLoans: [loan],
   };
+  return { facts, loan, form1098Vli };
+}
+it("routes actual 2026 Copy B and reconciles exact borrower payments", async () => {
+  const state = stateWithSources(2026);
+  const { facts, loan, form1098Vli } = vehicleStatementFacts();
   const replay = structuredClone(facts);
   expect(buildSchedule1AInput(replay, state)?.vehicleLoans[0]).toMatchObject({
     sourceReference: "Fictional payment ledger", interestPaid: "9007199254740592.88",
@@ -120,6 +124,85 @@ it("routes actual 2026 Copy B and reconciles exact borrower payments", async () 
   expect(schedule.vehicleLoans[0]?.form1098Vli?.reportedInterest).toBe("900719925474099312345678900.25");
   const result = calculateSchedule1A({ taxpayer: input.taxpayer, agi: d("55000"), foreignExcludedIncome: d("0"), facts: schedule });
   expect(result.vehicleInterestDeduction.toFixed()).toBe("480");
+});
+function vehicleRefundProof() {
+  return {
+    method: "cash_refund", originTaxYear: "2025", receiptTaxYear: "2026", cashRefundReceived: "123.45",
+    refundSourceReference: "Refund deposit receipt", priorPaymentSourceReference: "2025 lender portal",
+    filedReturnSourceReference: "Filed 2025 federal return and amendment", amendedReturnStatus: "reviewed",
+    loanSourcesMatchConfirmed: true, borrowerBoreRecoveredPaymentConfirmed: true,
+    filedReturnHistoryCompleteConfirmed: true, sourceFactsConfirmed: true,
+    schedule1ADeductedInterest: "0.00", businessDeductedInterest: "0", otherDeductedInterest: "0.00",
+  } as const;
+}
+it("routes documented Box 5 cash only when all prior deductions were zero", () => {
+  const state = stateWithSources(2026);
+  const { facts, loan, form1098Vli } = vehicleStatementFacts();
+  const proof = vehicleRefundProof();
+  const statement = { ...form1098Vli, priorYearInterestRefund: "123.45", priorYearRefundProof: proof };
+  const draft = { ...facts, vehicleLoans: [{ ...loan, form1098Vli: statement }] };
+  const result = buildSchedule1AInput(draft, state)?.vehicleLoans[0];
+  expect(result).toMatchObject({ interestPaid: loan.interestPaid, form1098Vli: {
+    priorYearInterestRefund: "123.45", reportedInterest: "9007199254740993.01", priorYearRefundProof: {
+      method: "cash_refund", originTaxYear: 2025, receiptTaxYear: 2026, cashRefundReceived: "123.45", factsConfirmed: true,
+      refundSourceReference: proof.refundSourceReference, priorPaymentSourceReference: proof.priorPaymentSourceReference,
+      filedReturnSourceReference: proof.filedReturnSourceReference, amendedReturnStatus: "reviewed",
+      loanSourcesMatchConfirmed: true, borrowerBoreRecoveredPaymentConfirmed: true, filedReturnHistoryCompleteConfirmed: true,
+      schedule1ADeductedInterest: "0", businessDeductedInterest: "0", otherDeductedInterest: "0",
+    },
+  } });
+  for (const patch of [
+    { method: "loan_credit" }, { originTaxYear: "" }, { receiptTaxYear: "2025" }, { cashRefundReceived: "123.44" },
+    { refundSourceReference: "" }, { priorPaymentSourceReference: "" }, { filedReturnSourceReference: "" },
+    { amendedReturnStatus: "unreviewed" }, { loanSourcesMatchConfirmed: false }, { borrowerBoreRecoveredPaymentConfirmed: null },
+    { filedReturnHistoryCompleteConfirmed: null }, { sourceFactsConfirmed: null },
+    { schedule1ADeductedInterest: "" }, { businessDeductedInterest: "0.01" }, { otherDeductedInterest: "1" },
+  ] as const) {
+    const failed = { ...loan, form1098Vli: { ...statement, priorYearRefundProof: { ...proof, ...patch } } };
+    expect(() => buildSchedule1AInput({ ...facts, vehicleLoans: [failed] }, state)).toThrow(/Box 5/);
+  }
+  expect(() => buildSchedule1AInput({ ...facts, vehicleLoans: [{ ...loan, acquiredDate: "2026-01-01", form1098Vli: statement }] }, state)).toThrow(/Box 5/);
+  expect(() => buildSchedule1AInput({ ...facts, vehicleLoans: [{ ...loan, form1098Vli: { ...statement, priorYearInterestRefund: "0" } }] }, state)).toThrow(/Box 5/);
+});
+it("rechecks vehicle records when the actual borrower changes", async () => {
+  const { updateSectionData } = await import("@/lib/guided-interview-flow");
+  const state = stateWithSources(2026);
+  state.segmentation.filingStatus = "mfj";
+  const personal = state.sectionData["personal-info"];
+  if (!personal?.spouse) throw new Error("Missing synthetic joint household");
+  const { facts, loan, form1098Vli } = vehicleStatementFacts();
+  const proof = vehicleRefundProof();
+  const statement = { ...form1098Vli, priorYearInterestRefund: "123.45", priorYearRefundProof: proof };
+  const primaryLoan = { ...loan, form1098Vli: statement };
+  const spouseLoan = { ...loan, owner: "spouse" as const, vin: "1HGCM82633A004350", loanAccountReference: "loan-2",
+    form1098Vli: { ...statement, payer: "spouse" as const } };
+  state.sectionData["additional-deductions"] = { schedule1A: { ...facts, vehicleLoans: [primaryLoan, spouseLoan] } };
+  expect(buildSchedule1AInput(state.sectionData["additional-deductions"].schedule1A, state)?.vehicleLoans).toHaveLength(2);
+
+  const staleStatement = { ...statement, sourceFactsConfirmed: null, priorYearRefundProof: {
+    ...proof, sourceFactsConfirmed: null, loanSourcesMatchConfirmed: null, borrowerBoreRecoveredPaymentConfirmed: null,
+    filedReturnHistoryCompleteConfirmed: null,
+  } };
+  const replaced = { ...personal, spouse: { ...personal.spouse, firstName: "Other spouse", ssn: "222-33-4445" } };
+  const changed = updateSectionData(state, "personal-info", replaced);
+  const updated = changed.sectionData["additional-deductions"]?.schedule1A;
+  expect(updated?.sourceFactsConfirmed).toBeNull();
+  expect(updated?.vehicleLoans).toEqual([primaryLoan, { ...spouseLoan, borrowerQualificationConfirmed: null,
+    form1098Vli: { ...staleStatement, payer: "spouse" } }]);
+  if (!updated) throw new Error("Missing retained Schedule 1-A records");
+  const outerReconfirmed = updateSectionData(changed, "additional-deductions", { schedule1A: { ...updated, sourceFactsConfirmed: true } });
+  expect(() => buildSchedule1AInput(outerReconfirmed.sectionData["additional-deductions"]?.schedule1A, outerReconfirmed)).toThrow(/Copy B/);
+
+  const primaryChanged = updateSectionData(state, "personal-info", { ...personal, lastName: "Changed" });
+  expect(primaryChanged.sectionData["additional-deductions"]?.schedule1A?.vehicleLoans).toEqual([
+    { ...primaryLoan, borrowerQualificationConfirmed: null, form1098Vli: staleStatement }, spouseLoan,
+  ]);
+  const unrelated = updateSectionData(state, "personal-info", { ...personal, addressLine1: "Updated address" });
+  expect(unrelated.sectionData["additional-deductions"]?.schedule1A?.vehicleLoans).toEqual([primaryLoan, spouseLoan]);
+  const formatted = updateSectionData(state, "personal-info", { ...personal, spouse: { ...personal.spouse, ssn: "222334444" } });
+  expect(formatted.sectionData["additional-deductions"]?.schedule1A?.vehicleLoans).toEqual([primaryLoan, spouseLoan]);
+  const removed = updateSectionData(state, "personal-info", { ...personal, spouse: undefined });
+  expect(removed.sectionData["additional-deductions"]?.schedule1A?.vehicleLoans).toEqual(updated.vehicleLoans);
 });
 it("requires actual year-specific reported tips and overtime", () => {
   const state = stateWithSources(2026); const facts = actualAdditionalDeductions(); facts.sourceTaxYear = "2026";

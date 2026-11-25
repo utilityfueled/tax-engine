@@ -69,6 +69,22 @@ function calculateVehicleSource(loan: Record<string, unknown>, taxYear = 2026) {
   });
 }
 
+function vehicleReturnInput(loan: Record<string, unknown>) {
+  return TaxYearInputSchema.parse({
+    ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
+    schedule1A: vehicleSourceFacts(loan, 2026),
+  });
+}
+
+function resolveVehicleReturn(input: ReturnType<typeof vehicleReturnInput>) {
+  return calculateSchedule1AReturn({
+    input, agi: new Decimal("85000"), foreignExcludedIncome: new Decimal(0),
+    tipPayroll: calculateUnreportedTipPayroll(input, FEDERAL_2026_CONSTANTS),
+    scheduleC: calculateScheduleC(input, input.scheduleC),
+    businessSources: [], adjustedBusinessSources: [], businessDeductionsVerified: true,
+  });
+}
+
 it("reconciles current 1098-VLI interest before applying the existing vehicle deduction", () => {
   const result = calculateVehicleSource(vehicleLoan);
   expect(result.vehicleInterestDeduction.toFixed()).toBe("550");
@@ -83,18 +99,9 @@ it("reconciles current 1098-VLI interest before applying the existing vehicle de
   expect(JSON.stringify(result.lines)).not.toMatch(/Fictional|1HGCM82633A004352/u);
   expect(() => calculateVehicleSource({ ...vehicleLoan, interestPaid: "900.25" })).toThrow(/1098-VLI/u);
 
-  const returnInput = TaxYearInputSchema.parse({
-    ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026 },
-    schedule1A: vehicleSourceFacts(vehicleLoan, 2026),
-  });
-  const resolve = (input: typeof returnInput) => calculateSchedule1AReturn({
-    input, agi: new Decimal("85000"), foreignExcludedIncome: new Decimal(0),
-    tipPayroll: calculateUnreportedTipPayroll(input, FEDERAL_2026_CONSTANTS),
-    scheduleC: calculateScheduleC(input, input.scheduleC),
-    businessSources: [], adjustedBusinessSources: [], businessDeductionsVerified: true,
-  });
-  expect(resolve(returnInput).schedule1A.vehicleInterestDeduction.toFixed()).toBe("550");
-  expect(() => resolve({ ...returnInput,
+  const returnInput = vehicleReturnInput(vehicleLoan);
+  expect(resolveVehicleReturn(returnInput).schedule1A.vehicleInterestDeduction.toFixed()).toBe("550");
+  expect(() => resolveVehicleReturn({ ...returnInput,
     schedule1A: vehicleSourceFacts({ ...vehicleLoan, interestPaid: "900.25" }, 2026) })).toThrow(/1098-VLI/u);
   expect(() => calculateFederalTax(returnInput)).toThrow(/rule pack.*incomplete/u);
 });
@@ -115,4 +122,58 @@ it("holds mismatched or exceptional 1098-VLI facts without disturbing manual pay
   expect(() => calculateVehicleSource({ ...vehicleLoan, nonqualifyingInterest: "100" })).toThrow(/1098-VLI/u);
   const belowThreshold = { ...vehicleLoan, form1098Vli: undefined, interestPaid: "599.25" };
   expect(calculateVehicleSource(belowThreshold).vehicleInterestDeduction.toFixed()).toBe("549");
+});
+
+const cashRefundEvidence = {
+  method: "cash_refund", originTaxYear: 2025, receiptTaxYear: 2026, cashRefundReceived: "125.06",
+  refundSourceReference: "Fictional cash refund confirmation",
+  priorPaymentSourceReference: "Fictional 2025 lender portal interest statement",
+  filedReturnSourceReference: "Fictional 2025 filed return history",
+  amendedReturnStatus: "none", loanSourcesMatchConfirmed: true, filedReturnHistoryCompleteConfirmed: true,
+  factsConfirmed: true, schedule1ADeductedInterest: "0.00", businessDeductedInterest: "0.00", otherDeductedInterest: "0.00",
+} as const;
+const cashRefundProof = { ...cashRefundEvidence, borrowerBoreRecoveredPaymentConfirmed: true } as const;
+
+it.each([
+  { case: "omits confirmation", proof: cashRefundEvidence },
+  { case: "denies confirmation", proof: { ...cashRefundEvidence, borrowerBoreRecoveredPaymentConfirmed: false } },
+])("requires the borrower to have borne and recovered the prior payment when the proof $case", ({ proof }) => {
+  const form1098Vli = { ...statement, priorYearInterestRefund: "125.06", priorYearRefundProof: proof };
+  const result = Schedule1ASchema.safeParse({ ...facts, vehicleLoans: [{ ...vehicleLoan, form1098Vli }] });
+  expect(result.error?.issues ?? []).toContainEqual(expect.objectContaining({
+    path: ["vehicleLoans", 0, "form1098Vli", "priorYearRefundProof", "borrowerBoreRecoveredPaymentConfirmed"],
+  }));
+});
+
+it("accepts only documented 1098-VLI cash refunds of interest never deducted", () => {
+  const refundStatement = { ...statement, priorYearInterestRefund: "125.06", priorYearRefundProof: cashRefundProof };
+  const cashRefundLoan = { ...vehicleLoan, form1098Vli: refundStatement };
+  const input = vehicleReturnInput(cashRefundLoan);
+  const result = resolveVehicleReturn(input).schedule1A;
+  expect(result.vehicleInterestDeduction.toFixed()).toBe("550");
+  expect(result.lines).toEqual(resolveVehicleReturn(vehicleReturnInput(vehicleLoan)).schedule1A.lines);
+  expect(JSON.stringify(result.lines)).not.toMatch(/Fictional|1HGCM82633A004352/u);
+  expect(() => calculateFederalTax(input)).toThrow(/rule pack.*incomplete/u);
+
+  const amendedHistory = { ...refundStatement, priorYearRefundProof: { ...cashRefundProof, amendedReturnStatus: "reviewed" } };
+  expect(resolveVehicleReturn(vehicleReturnInput({ ...cashRefundLoan, form1098Vli: amendedHistory })).schedule1A.vehicleInterestDeduction.toFixed()).toBe("550");
+
+  for (const changed of [
+    { method: "current_interest_credit" }, { originTaxYear: 2024 }, { receiptTaxYear: 2025 },
+    { cashRefundReceived: "125.05" }, { cashRefundReceived: "0" }, { cashRefundReceived: "125.061" },
+    { refundSourceReference: " " }, { priorPaymentSourceReference: undefined }, { filedReturnSourceReference: "" },
+    { amendedReturnStatus: undefined }, { filedReturnHistoryCompleteConfirmed: false },
+    { loanSourcesMatchConfirmed: false }, { factsConfirmed: false }, { schedule1ADeductedInterest: "0.01" },
+    { businessDeductedInterest: "0.01" }, { otherDeductedInterest: "0.01" }, { otherDeductedInterest: undefined },
+  ]) {
+    const form1098Vli = { ...refundStatement, priorYearRefundProof: { ...cashRefundProof, ...changed } };
+    expect(() => resolveVehicleReturn(vehicleReturnInput({ ...cashRefundLoan, form1098Vli })), JSON.stringify(changed)).toThrow();
+  }
+  expect(() => resolveVehicleReturn(vehicleReturnInput({ ...cashRefundLoan,
+    interestPaid: "475.19" }))).toThrow(/box 1/i);
+  expect(() => resolveVehicleReturn(vehicleReturnInput({ ...cashRefundLoan,
+    form1098Vli: { ...refundStatement, priorYearInterestRefund: "0.00" } }))).toThrow(/box 5/i);
+  expect(() => resolveVehicleReturn(vehicleReturnInput({ ...cashRefundLoan,
+    acquiredDate: "2026-01-09", loanOriginationDate: "2026-01-09",
+    form1098Vli: { ...refundStatement, originationDate: "2026-01-09" } }))).toThrow(/2025/u);
 });

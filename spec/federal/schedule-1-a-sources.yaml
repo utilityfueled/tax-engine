@@ -48,9 +48,10 @@ lines:
     formula: |
       Require a confirmed blank box 3b for the original-lender slice. Box 3b
       would be the lender's acquisition date, not the taxpayer's purchase.
-      A positive box 5 reflects a prior-year reimbursement, requiring
-      separate recovery treatment. Do not net it against box 1 or silently
-      ignore it. Box 1 already excludes interest on non-SPVL indebtedness.
+      A positive box 5 requires the separately supported cash-refund proof
+      below. Hold credits toward current interest and unresolved recoveries.
+      Do not net box 5 against box 1. Box 1 already excludes interest on
+      non-SPVL indebtedness.
       Hold any separate positive nonqualifying interest on this statement
       path until its basis is reconciled. Hold corrected, assigned or
       refinanced loans and conflicting, incomplete or mismatched records.
@@ -59,3 +60,26 @@ lines:
       eligibility. Do not log the form's private identifiers in the tax audit.
     irsRef: "https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4; https://www.irs.gov/instructions/i1098vli"
     testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::holds mismatched or exceptional 1098-VLI facts without disturbing manual payment records"
+  - line: "form-1098-vli-box-5-cash-refund"
+    description: "Verify a cash recovery of 2025 interest that was never deducted"
+    formula: |
+      For the same matched payer, lender and loan purchased and originated in
+      2025, confirm actual cash received in 2026 for a 2025 overpayment and
+      reconcile the exact cash amount to positive box 5. Explicitly confirm
+      that the borrower made and bore the recovered payment and received the
+      refund of that same payment. Require references
+      to the cash refund, the original 2025 payment records and the complete
+      2025 filed-return history, including whether any amendments were filed
+      and reviewed. A 2025 lender statement or portal payment record can
+      substantiate the original payment. Confirm that the recovered interest
+      was never deducted on Schedule 1-A, Schedules C/E/F or through any other
+      route, including any deduction carried to another year. Require explicit
+      zero on all three deduction amounts. A cash refund meeting this proof
+      adds no recovery income and leaves box 1 reconciliation intact. A credit
+      applied to current interest appears in both boxes 1 and 5 and needs
+      separate reconciliation. Hold missing or contradictory proof, including
+      proof supplied with zero box 5, and any recovered amount with a prior
+      deduction. Retain documentary references without adding them to audit
+      lines or changing the incomplete 2026 federal return gate.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4; https://www.irs.gov/instructions/i1098vli; https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf#page=2; https://www.irs.gov/irb/2025-45_IRB; https://uscode.house.gov/us/usc/t26/s111/"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::accepts only documented 1098-VLI cash refunds of interest never deducted"
