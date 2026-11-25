@@ -49,6 +49,24 @@ lines:
     description: "Normalization and application validation are separate evidence"
     formula: "Validate actual task output against its real schema and derive observations; expected answers or reviewer criteria are never sent."
     testRef: "tests/engine/provider-eval-runner.test.ts::keeps expected answers private and derives actual application observations"
+  - line: "accuracy-version-binding"
+    description: "Exact-field accuracy requires current application, prompt and schema versions"
+    formula: >-
+      Keep every required field of a stale-version measurement in the accuracy
+      denominator and count no exact fields or critical-field success for that
+      row, even if the payload matches the frozen values. Preserve current-version
+      field-by-field scoring, known attempt cost, and repeat coverage requirements.
+    testRef: "tests/engine/provider-model-eval.test.ts::counts stale %s evidence as zero exact fields without dropping required fields or cost"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::uses Decimal for exact cent comparisons beyond JavaScript's safe monetary range"
+  - line: "observed-abstention"
+    description: "Report only validated explicit abstentions"
+    formula: >-
+      Count an abstention only when current measurement versions and a
+      qualified attempt produced a source-bound application result that
+      explicitly abstains. Missing, invalid and stale results still fail
+      applicable accuracy and completion checks but are not abstentions.
+    testRef: "tests/engine/provider-model-eval.test.ts::counts only bound current outputs as observed abstentions"
   - line: "journal"
     description: "Local run persistence fails closed"
     formula: "Exclusive process lock and synced append-only hash chain; reject modified/torn history and concurrent execution."

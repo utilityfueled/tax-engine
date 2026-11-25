@@ -107,9 +107,28 @@ describe("measured task model evaluation", () => {
   });
   it("uses Decimal for exact cent comparisons beyond JavaScript's safe monetary range", () => {
     const entry = run(extraction);
-    expect(scoreProviderEvalEntry(entry, extraction).accepted).toBe(true);
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: true, criticalCorrect: true, exactFields: 2 });
     changePayload(entry, payload => { const amount = payload.facts.find(fact => fact.name === "amount"); if (!amount) throw new Error("Missing amount."); amount.value = "90071992547409.92"; });
     expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, criticalCorrect: false, exactFields: 1 });
+  });
+  it.each(["bindingVersion", "promptVersion", "schemaVersion"] as const)("counts stale %s evidence as zero exact fields without dropping required fields or cost", version => {
+    const stale = run(extraction);
+    const current = run(extraction, "luna-high", 2);
+    if (!stale.measurement) throw new Error("Missing synthetic measurement.");
+    stale.measurement[version] = "previous-version";
+
+    const currentScore = scoreProviderEvalEntry(current, extraction);
+    expect(currentScore).toMatchObject({ accepted: true, criticalCorrect: true, requiredFields: 2, exactFields: 2 });
+    expect(currentScore.actualCostUsd).not.toBeNull();
+    expect(scoreProviderEvalEntry(stale, extraction)).toMatchObject({
+      complete: false, accepted: false, schemaValid: false, criticalCorrect: false, requiredFields: 2, exactFields: 0,
+      actualCostUsd: currentScore.actualCostUsd, filingSeasonCostUsd: currentScore.filingSeasonCostUsd,
+    });
+
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [stale, current] }, undefined, reportAt);
+    const group = summary.groups.find(item => item.profileId === "luna-high" && item.task === "income-extraction");
+    expect(group).toMatchObject({ criticalFieldExactMatch: 0.5, schemaValidity: 0.5, completedRuns: 1, acceptedRuns: 1,
+      blockers: expect.arrayContaining(["held-out-repeat-coverage-incomplete", "critical-field-exact-match"]) });
   });
   it("counts missing or abstained critical fields as failures and reports abstention separately", () => {
     const entry = run(extraction);
@@ -117,6 +136,24 @@ describe("measured task model evaluation", () => {
     const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry] });
     expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
       .toMatchObject({ criticalFieldExactMatch: 0, answerableAbstentions: 1, acceptedRuns: 0 });
+  });
+  it("counts only bound current outputs as observed abstentions", () => {
+    const explicit = run(extraction);
+    const stale = run(extraction, "luna-high", 2);
+    const missing = run(extraction, "luna-high", 3);
+    for (const entry of [explicit, stale]) {
+      changePayload(entry, payload => { payload.disposition = "abstain"; payload.facts = []; });
+    }
+    if (!stale.measurement || !missing.measurement) throw new Error("Missing synthetic measurement.");
+    stale.measurement.schemaVersion = "previous-version";
+    missing.measurement.applicationOutput = null;
+    missing.measurement.normalizationStatus = "failed";
+    missing.output = null;
+    missing.applicationSchemaValid = false;
+
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [explicit, stale, missing] }, undefined, reportAt);
+    expect(summary.groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction"))
+      .toMatchObject({ criticalFieldExactMatch: 0, answerableAbstentions: 1, unanswerableAbstentions: 0, acceptedRuns: 0 });
   });
   it.each(["pii", "filing", "override", "invented", "grounding", "category", "date", "schema"])("rejects %s failures", failure => {
     const entry = run(extraction);

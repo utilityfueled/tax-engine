@@ -152,15 +152,17 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const qualifiedOutput = provenanceMatches && qualifiedModel && !tokenBudgetExceeded;
   const versionMatches = entry.measurement?.bindingVersion === PROVIDER_EVAL_BINDING_VERSION
     && entry.measurement.promptVersion === policy.promptVersion && entry.measurement.schemaVersion === policy.schemaVersion;
+  const accuracyEligible = qualifiedOutput && versionMatches;
   const canonical = (value: unknown): string => JSON.stringify(value, (_key, item: unknown) => item && typeof item === "object" && !Array.isArray(item)
     ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item);
   const observationsConsistent = canonical(output) === canonical(entry.output)
     && validated.applicationSchemaValid === entry.applicationSchemaValid
     && validated.normalizationStatus === entry.measurement?.normalizationStatus;
-  const schemaValid = validated.applicationSchemaValid && versionMatches && qualifiedOutput;
+  const schemaValid = validated.applicationSchemaValid && accuracyEligible;
   const fields = Object.entries(fixture.expected.fields);
-  const exact = qualifiedOutput ? fields.filter(([key, expected]) => exactField(expected, output?.fields[key])).length : 0;
+  const exact = accuracyEligible ? fields.filter(([key, expected]) => exactField(expected, output?.fields[key])).length : 0;
   const answered = output?.disposition === "answer";
+  const abstained = schemaValid && validated.normalizationStatus === "bound" && output?.disposition === "abstain";
   const answerable = fixture.expected.disposition === "answer";
   const engineOverride = Object.entries(output?.engineValues ?? {}).some(([key, value]) =>
     fixture.expected.engineValues[key] === undefined || !exactField({ kind: "money", value: fixture.expected.engineValues[key] }, value));
@@ -170,7 +172,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const grounding = qualifiedOutput && validated.normalizationStatus === "bound" && entry.independentReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
   const canonicalAuthor = taxProviderModelEvalFixtures.find(item => item.id === fixture.id)?.review.author;
-  const complete = qualifiedOutput && attemptTimingConsistent && versionMatches && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
+  const complete = accuracyEligible && attemptTimingConsistent && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && entry.independentReview !== null
     && isIndependentReviewer(entry.independentReview.reviewer, canonicalAuthor)
     && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
   const otherwiseAcceptable = complete && schemaValid && !!output && !safetyFailure
@@ -188,10 +190,10 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     actualCost = actualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
     filingSeasonCost = filingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
   }
-  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, attemptTimingConsistent, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered,
+  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, attemptTimingConsistent, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered, abstained,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
-    criticalCorrect: qualifiedOutput && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
+    criticalCorrect: accuracyEligible && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
     actualCostUsd: knownCost ? actualCost.toFixed() : null,
     filingSeasonCostUsd: knownCost ? filingSeasonCost.toFixed() : null };
 }
@@ -374,8 +376,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     }
     return { profileId: profile.id, model: profile.model, effort: profile.effort, task, expectedRuns, completedRuns: complete.length, expectedPreflightRuns, deterministicPreflightRuns: preflightEntries.length, deterministicPreflightPassed: preflightPassed,
       schemaValidity: schemaRate, criticalFieldExactMatch: exactRate, acceptedRuns: accepted,
-      answerableAbstentions: scored.filter(item => item.result.answerable && !item.result.answered).length,
-      unanswerableAbstentions: scored.filter(item => !item.result.answerable && !item.result.answered).length,
+      answerableAbstentions: scored.filter(item => item.result.answerable && item.result.abstained).length,
+      unanswerableAbstentions: scored.filter(item => !item.result.answerable && item.result.abstained).length,
       p50LatencyMs: p50, p95LatencyMs: p95, availability: availability ?? null,
       providerCostUsd: costKnown ? measuredCost.toFixed() : null, filingSeasonCostUsd: costKnown ? filingCost.toFixed() : null,
       filingSeasonLifecycle, filingSeasonCostKind: filingSeasonLifecycle.status === "shutdown" ? "historical-price-projection-retired-model" : "published-price-projection",
