@@ -25,8 +25,9 @@ Use the linked progress sections when investigating individual packages.
   $0 with an actual dependency claim.
   `6c21031c` describes the available Pennsylvania EIC and Ohio school
   district source work on the public support page. Both focused suites,
-  type checks and exact staged browser audits passed. Full local and
-  public workflow checks on `6c21031c` are running.
+  type checks and exact staged browser audits passed. All eleven exact
+  local checks on `6c21031c` passed, including 30,508 test cases,
+  88.40% branch coverage, 652 active Chromium cases and verified teardown.
   [AOTC and state support evidence](upgrade-2026-progress.md#november-25-aotc-claimant-year-and-state-support).
 
 - `c19c5c6f` holds the calendar-year Pennsylvania 2026 ordinary draft
@@ -48,7 +49,11 @@ Use the linked progress sections when investigating individual packages.
   652 active cases with teardown verified. The exact Docker build
   passed. Exact ARM64 passed 643 active browser cases and hit nine
   existing Ohio deadlines. Recovery, archive verification and cleanup
-  passed. The exact remote CI and Linux checks are still open.
+  passed. Exact managed Linux passed all 652 active browser cases with
+  cleanup verified. Strict AMD64 passed 642 cases and missed nine Ohio
+  deadlines and one railroad retirement PDF inspection deadline. Strict
+  upgrade, recovery, rollback, archive and browser cleanup passed.
+  The remaining CI jobs are open.
   [ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45540602031/job/138962200018).
   [Taxpayer source facts](upgrade-2026-progress.md#november-25-federal-taxpayer-source-reconciliation).
 

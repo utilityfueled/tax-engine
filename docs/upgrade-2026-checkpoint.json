@@ -5,7 +5,7 @@
     "applicationCommit": "459b880a79a36bc9c88dd38cdbf2b388927020d5",
     "verificationCommit": "459b880a79a36bc9c88dd38cdbf2b388927020d5",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov25FederalTaxpayerSourceReconciliation.correctedVerification",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov25AotcClaimantYearAndStateSupport.exactLocal",
     "currentAotcAndStateDisclosureEvidenceKey": "activeContinuation.nov25AotcClaimantYearAndStateSupport",
     "legacyAotcClaimantReviewEvidenceKey": "activeContinuation.nov25LegacyAotcClaimantReview",
     "paShortTaxPeriodEvidenceKey": "activeContinuation.nov25PaShortTaxPeriod",
@@ -59,7 +59,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect exact 459b880a full local checks, CI 45548981817, Linux Web 45548981698, Docker 45548981721 and ARM64 45549081845. Collect the prior exact 6c21031c local run and d973e8a1 CI 45539213333 and Linux Web 45539213256. All eleven d973e8a1 local checks and Docker 45539213235 passed. ARM64 45540602031 recovered and cleaned up and had nine Ohio browser deadline failures.",
+      "Collect exact 459b880a full local checks, CI 45548981817, Linux Web 45548981698 and ARM64 45549081845. Exact Docker 45548981721 and all eleven prior exact local checks on 6c21031c passed. Collect remaining d973e8a1 CI 45539213333. On d973e8a1, managed Linux passed 652, strict AMD64 passed 642 and ARM64 passed 643 active browser cases; both strict runtimes recovered and cleaned up.",
       "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Exact c901da52 managed Linux passed 650 with two railroad retirement PDF deadlines, strict AMD64 passed 650 with two Ohio school deadlines, and ARM64 passed 642 with ten Ohio deadlines. Recovery and independent archive verification passed on both architectures.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
@@ -68,6 +68,34 @@
     ]
   },
   "activeContinuation": {
+    "nov25D973StrictAmd64": {
+      "revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8",
+      "run": 45539213256,
+      "job": 138953300950,
+      "conclusion": "failure",
+      "activePassed": 642,
+      "deadlineFailures": 10,
+      "originalSkips": 5,
+      "windows": 8,
+      "deadlineCategories": { "Ohio business part-year": 2, "Ohio resident credit": 3, "Ohio school part-year": 4, "RRTA saved PDF page_text": 1 },
+      "upgradeRecoveryRollbackArchiveCleanupPassed": true,
+      "jobLogSha256": "9005ada44798ef6a472b11d08e392b7ac1cc8a15ee39963cace6afc234c29feb",
+      "artifactId": 14993498075,
+      "artifactSha256": "c8962cbc01ccea932bc6223ca4994807f1fd4861ee1f7f5d68cf45fce1e3b284"
+    },
+    "nov25D973ManagedLinux": {
+      "revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8",
+      "run": 45539213256,
+      "job": 138953300599,
+      "conclusion": "success",
+      "activePassed": 652,
+      "originalSkips": 5,
+      "windows": 8,
+      "cleanupPassed": true,
+      "jobLogSha256": "ffb1cb53aee37856db2f08a096cd32739db5d0506dd73dee9fa8d84d1235dcf2",
+      "artifactId": 14993366442,
+      "artifactSha256": "a31fc83db94b87291604572f7f875caf8870ff1fd5aef37703a11e209da3e3e5"
+    },
     "nov25LegacyAotcClaimantReview": {
       "status": "pushed; scoped tests, exact source audit and Docker passed; full local, CI, Linux and ARM64 checks open",
       "revision": "459b880a79a36bc9c88dd38cdbf2b388927020d5",
@@ -111,7 +139,7 @@
       "timingArtifactSha256": "d1503a214223d78389a2cd34fedc326ae53f65ac15bb1528031b7576444ee76a"
     },
     "nov25AotcClaimantYearAndStateSupport": {
-      "status": "pushed, focused checks passed, exact-source complete checks under way",
+      "status": "pushed; focused and all eleven exact local checks passed",
       "aotcClaimantFactsCommit": "8b4b4f046941b8929d2e9182469a1447600ba6de",
       "stateDisclosureCommit": "6c21031c0d9a03742efee91b3ddf8d07477aa929",
       "exactSourceTree": "cc2d8fa64e451f6c14d292ece5064838e22a463e",
@@ -129,6 +157,19 @@
       ],
       "localEvidence": ".local/upgrade-evidence/nov25-aotc-claimant-year/",
       "officialSampleChecksumsVerified": 15,
+      "exactLocal": {
+        "checksPassed": 11,
+        "unitAndCoverageCasesPassedEach": 30508,
+        "originalUnitSkips": 81,
+        "branchCoveragePercent": 88.4,
+        "specReferencesPassed": 10057,
+        "activeBrowserCasesPassed": 652,
+        "browserSkips": 5,
+        "browserWindows": 8,
+        "ownedBrowserServerClosed": true,
+        "summarySha256": "7795134de1f7b7897e872d3aa30ae7a30e19b8225e4d11fc0ec119d3d912de72",
+        "cleanupSha256": "8f5d20953d4561724e746a16f324a118c83725a4f7c802b4713168b7cbe32900"
+      },
       "exactRemoteRuns": { "CI": 45547391419, "Web": 45547391470, "Docker": 45547391565 }
     },
     "nov25FederalTaxpayerSourceReconciliation": {

@@ -61,8 +61,12 @@ calculations, PDFs and filing. The new disclosure regression reproduced
 the missing copy. All 39 focused and diagnostic checks, web types,
 scoped lint and the staged source audit passed. The tracked-only exact
 local tree matches the pushed application, with 15 sample PDFs verified
-and a frozen offline dependency install. The complete checks on that tree
-are running. [PA source spec](../spec/state/pa-2026-childless-eic-dependency.yaml) ·
+and a frozen offline dependency install. All eleven checks passed on
+that tree. Unit and coverage each passed 30,508 cases with 81 original
+skips. Branch coverage was 88.40% and all 10,057 spec references passed.
+Chromium passed 652 active cases and retained five original skips
+across eight windows. Owned server teardown was verified.
+[PA source spec](../spec/state/pa-2026-childless-eic-dependency.yaml) ·
 [Ohio source spec](../spec/state/oh-2026-school-sources.yaml) ·
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45547391419) ·
 [Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45547391470) ·
@@ -135,6 +139,16 @@ reciprocal, resident credit and school part-year paths. The isolated
 Compose recovery, independent archive verification and browser cleanup
 steps passed. The independently verified timing ZIP SHA-256 is
 `d1503a214223d78389a2cd34fedc326ae53f65ac15bb1528031b7576444ee76a`.
+Exact managed Linux passed all 652 active Chromium cases with five
+original skips across eight windows and successful cleanup. Its retained
+job log SHA-256 is `ffb1cb53aee37856db2f08a096cd32739db5d0506dd73dee9fa8d84d1235dcf2`.
+Exact strict AMD64 passed 642 of 652 active cases and kept five original
+skips across eight windows. Two Ohio business part-year, three resident
+credit and four school part-year cases hit the 30-second deadline. One
+railroad retirement saved-PDF check hit its four-second limit in
+`page_text`. Compose upgrade, recovery and rollback, independent archive
+verification and container cleanup passed. The bounded strict job log
+SHA-256 is `9005ada44798ef6a472b11d08e392b7ac1cc8a15ee39963cace6afc234c29feb`.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
 [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45539213333) ·
 [Corrected Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45539213256) ·
