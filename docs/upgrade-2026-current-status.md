@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `f94a3a9c` compares digital-asset lot prices with Decimal. The
+  previous comparison could treat different prices as equal and select
+  a lot with the wrong holding period. All 189 targeted tests, 45
+  Form 1099-DA spec references, the inventory check, source-audit
+  controls and independent engineering review passed.
+  [Digital-asset evidence](upgrade-2026-progress.md#november-25-exact-digital-asset-lot-ordering).
+
 - `7fc59749` handles a documented 2026 cash refund of 2025 interest
   from the same original loan when the borrower made and bore the
   recovered payment and verified zero prior deductions or carryforwards.
@@ -24,8 +31,10 @@ Use the linked progress sections when investigating individual packages.
   actually paid by the borrower. All 72 affected tests, both typechecks,
   scoped lint, inventory, spec references, source-audit controls and
   independent engineering review passed. The cash refund successor
-  handles the documented zero-deduction case above. The final Schedule 1-A
-  and full 2026 federal calculation remain open.
+  handles the documented zero-deduction case above. The exact coverage
+  run for this statement revision passed 30,530 tests at 88.43% branch
+  coverage. The final Schedule 1-A and full 2026 federal calculation
+  remain open.
   [Vehicle statement evidence](upgrade-2026-progress.md#november-25-form-1098-vli-loan-statement-reconciliation).
 
 - `1bc6f09a` holds positive draft Schedule 3-A benefits for review when

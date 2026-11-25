@@ -1,5 +1,23 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Form 1099-DA identified-lot review
+
+Review a 2026 broker-reported covered sale for $10,000 on June 1.
+The statement reports a short-term January 15, 2026 acquisition and
+$9,000 basis. Before the sale date, the taxpayer's records identified
+the actual January 15, 2025 lot in the same custody account, with
+$6,000 basis and the exact units sold. Verify that Notice 2026-20 makes
+that timely identification control with no conflicting broker order
+or transitional basis dependency. Independently confirm draft Form 8949
+Part II Box J, columns (b), (e), (f) and (g), and the $4,000 long-term
+gain. The candidate evidence expects the actual date, reported $9,000
+basis, code BT and +$3,000 adjustment. Confirm final federal and state
+transfers when the annual forms and instructions are available.
+[IRS Notice 2026-20](https://www.irs.gov/irb/2026-15_IRB#NOT-2026-20) ·
+[2026 issuer instructions](https://www.irs.gov/instructions/i1099da) ·
+[Current final Form 8949 instructions](https://www.irs.gov/instructions/i8949) ·
+[2026 draft Form 8949](https://www.irs.gov/pub/irs-dft/f8949--dft.pdf).
+
 ## November 25 Form 1098-VLI review
 
 Use a fictional ordinary vehicle purchase with Box 1 of $900.25, of

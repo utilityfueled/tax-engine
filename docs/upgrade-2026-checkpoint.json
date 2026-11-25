@@ -2,12 +2,13 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "7fc59749b607bdc016a5b402e3def8561e55b3a3",
+    "applicationCommit": "f94a3a9c40e9340a0c8f4959222f96b3fe916362",
     "verificationCommit": "867d5cd821347378e0e56e3704e40b7f172c0058",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25GuidedHelpRendering.exactLocal",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
+    "digitalAssetLotOrderingEvidenceKey": "activeContinuation.nov25ExactDigitalAssetLotOrdering",
     "draftSchedule3aEvidenceKey": "activeContinuation.nov25AmendedSchedule3a",
     "localStrictDiagnosticEvidenceKey": "activeContinuation.nov25StrictTimingFollowup",
     "guidedHelpRenderingEvidenceKey": "activeContinuation.nov25GuidedHelpRendering",
@@ -75,6 +76,18 @@
     ]
   },
   "activeContinuation": {
+    "nov25ExactDigitalAssetLotOrdering": {
+      "implementationCommit": "f94a3a9c40e9340a0c8f4959222f96b3fe916362",
+      "status": "Pushed. Exact Decimal comparison inside existing lot identification and release boundaries.",
+      "source": "https://www.irs.gov/irb/2026-15_IRB#NOT-2026-20",
+      "focusedTestsPassed": 189,
+      "specReferencesVerified": 45,
+      "lintAndInventoryPassed": true,
+      "engineeringReviewPassed": true,
+      "sourceAudit": { "digests": 2071, "updated": 1, "controlsPassed": 2, "requestCeilingsChanged": false },
+      "runIds": { "ci": 45675046664, "web": 45675046673, "docker": 45675046773 },
+      "filingQualified": false
+    },
     "nov25Form1098VliCashRefund": {
       "implementationCommit": "7fc59749b607bdc016a5b402e3def8561e55b3a3",
       "status": "Pushed. Documented positive Box 5 cash refund with no prior deduction or carryforward. Exact full verification started.",
@@ -108,7 +121,7 @@
       "engineeringReReviewPassed": true,
       "sourceAudit": { "digests": 2071, "updated": 4, "controlsPassed": 2, "requestCeilingsChanged": false },
       "exactFocused": { "commandsPassed": 7, "combinedSchedule1aAnd3aTestsPassed": 81, "evidencePath": ".local/upgrade-evidence/nov25-followup-browser/vli-exact" },
-      "exactCoverage": { "status": "started", "maxWorkers": 1, "evidenceFile": ".local/upgrade-evidence/nov25-followup-browser/vli-exact/coverage.exit" },
+      "exactCoverage": { "status": "passed", "exitCode": 0, "maxWorkers": 1, "passed": 30530, "originalSkips": 81, "passedFiles": 2220, "branchCoveragePercent": 88.43, "evidenceFile": ".local/upgrade-evidence/nov25-followup-browser/vli-exact/coverage.exit" },
       "runIds": { "ci": 45670078300, "web": 45670078270, "docker": 45670078276 },
       "exactDockerBuildPassed": true,
       "exceptionalStatementsHeld": ["corrected", "assigned", "refinanced", "prior-year interest recovery", "additional nonqualifying interest"],

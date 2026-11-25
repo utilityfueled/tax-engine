@@ -1,5 +1,25 @@
 # 2026 upgrade implementation evidence
 
+## November 25 exact digital asset lot ordering
+
+`f94a3a9c` compares per-unit cost bases directly in Decimal for the
+highest-cost-first ordering of eligible lots. The old conversion of
+the difference to a JavaScript number could report a tie, substituting
+the first listed lot and its holding period. The regression reproduced
+a short-term lot selected over an eligible higher-cost long-term lot.
+Actual equal-price ties keep their original order. Identification
+requirements and the public filing gate remain in force.
+[IRS Notice 2026-20](https://www.irs.gov/irb/2026-15_IRB#NOT-2026-20) ·
+[IRS broker reporting FAQ](https://www.irs.gov/filing/frequently-asked-questions-about-broker-reporting).
+
+All 189 targeted lot and statement tests, 45 Form 1099-DA spec
+references, inventory, scoped lint, independent engineering review
+and `git diff --check` passed. The two browser source-audit controls
+passed after refreshing one of 2,071 source digests.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45675046664) ·
+[Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45675046673) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45675046773).
+
 ## November 25 Form 1098-VLI prior-year cash refunds
 
 `7fc59749` accepts a positive Box 5 for the documented cash case.
@@ -62,7 +82,8 @@ four refreshed digests out of 2,071 and unchanged request ceilings.
 The tracked-only archive passed all seven focused verification commands
 with a frozen install. The combined Schedule 1-A and 3-A suite passed
 all 81 tests. The exact Docker build passed. Full exact local coverage
-was started.
+passed 30,530 tests across 2,220 files at 88.43% branch coverage,
+with 81 original skips.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45670078300) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45670078270) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45670078276).
