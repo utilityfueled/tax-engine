@@ -1,5 +1,55 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Form 1098-VLI credit against current interest
+
+`cd6e64b9` handles a separate case where the original borrower made and
+bore a 2025 overpayment, and the lender used the recovered funds to pay
+accrued 2026 interest on the same original loan. A documented credit of
+$100.25 and $800.30 in other borrower interest reconcile to Box 1 of
+$900.55. Box 5 is $100.25 and is reconciled separately. The $900.55
+enters the existing deduction calculation once and rounds to $901
+under the fixture. The lender application and complete filed prior
+return history must establish zero cash, other-payer amounts,
+reimbursements, deductions and carryforwards. Principal, mixed, prepaid
+and unresolved prior-benefit cases remain held. The treatment is a
+candidate pending qualified tax review and final annual form qualification.
+[Final issuer instructions](https://www.irs.gov/instructions/i1098vli) ·
+[Final payer instructions](https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4) ·
+[26 CFR §1.163-16(c)(2)](https://www.ecfr.gov/current/title-26/section-1.163-16#p-1.163-16(c)(2)) ·
+[26 U.S.C. §111](https://uscode.house.gov/us/usc/t26/s111/).
+
+Red tests reproduced the original cash-only rejection and missing credit
+controls. Independent engineering review caught stale borrower and
+loan history confirmations. The regressions verify the actual owner
+control, a different loan, a bulk edit that removes the whole statement
+or only credit evidence, confirmation-only replay, and continuity for
+manual and cash records. All 68 focused tests in five files, 41 spec
+references, root, contracts and web typechecks, scoped lint with zero
+errors and two source-audit controls passed. Five of 2,071 source pins
+changed. Browser request ceilings and filing gates were preserved.
+Both exact local archives verified all 15 original sample PDFs and used
+the frozen offline lock. All eleven local checks passed, including 30,552
+tests in 2,220 files in both the unit and coverage runs with 81 original
+skips. Local branch coverage reached 88.46%. Local managed Chromium
+finished all eight windows with 652 passes, five original skips, no
+failures and completed cleanup. The exact Docker build passed.
+Vercel canceled the automatic production build. All eight exact Linux
+CI jobs passed, including 30,633 tests in 2,228 files at 88.83% branch
+coverage. Managed Linux Chromium passed 650 cases and hit the
+saved-PDF inspection deadline in both railroad retirement viewports.
+Strict AMD64 passed 650 cases and hit the 30-second deadline in two
+desktop Ohio part-year school cases. Each run retained five original
+skips. AMD64 Compose recovery and rollback, archive verification and
+the scan step passed. Strict ARM64 finished all eight windows with
+644 passes, eight 30-second timeouts and five original skips. All eight
+failures also occurred in the preceding `795934e7` ARM64 run, which
+used the same 657 case IDs. Compose recovery, independent ARM64 archive
+verification, browser cleanup and the scan step passed.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45695580038) ·
+[Web and strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45695580073) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45695580051) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45695621067).
+
 ## November 25 exact ARM64 timing comparison
 
 Matched all 657 case IDs and all eight batch memberships between the

@@ -9,6 +9,21 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `cd6e64b9` accepts a documented 2026 lender credit that used the
+  original borrower's 2025 overpayment to satisfy accrued interest on the
+  same loan. It reconciles the lender credit and the borrower's other
+  payments to Box 1 in exact cents and verifies zero prior deductions or
+  carryforwards. Owner and loan changes require renewed confirmations,
+  including when a saved statement is removed. All 68 focused tests
+  passed. All eleven exact local checks passed with 30,552 unit tests,
+  88.46% branch coverage and 652 managed Chromium passes. The Docker
+  build and all eight Linux CI jobs passed, with 88.83% branch coverage.
+  The separate managed Linux Chromium run had two saved-PDF inspection
+  timeouts. Strict AMD64 and ARM64 had two and eight browser timeouts,
+  respectively. Recovery and archive verification passed on both
+  architectures. Qualified tax review and release qualification remain open.
+  [Interest credit evidence](upgrade-2026-progress.md#november-25-form-1098-vli-credit-against-current-interest).
+
 - `795934e7` handles a documented 2026 broker-lot correction when a
   covered short-term statement conflicts with the taxpayer's timely
   identification of an actual long-term lot. It preserves original
@@ -43,8 +58,8 @@ Use the linked progress sections when investigating individual packages.
   Docker build passed. All eleven exact local checks and all eight
   Linux CI jobs passed. The unit and coverage runs passed 30,536 tests
   each, with 88.44% branch coverage. Managed Chromium passed locally and
-  in Linux CI. Strict AMD64 had ten browser failures. Credits against current
-  interest and unresolved prior tax benefits require further qualification.
+  in Linux CI. Strict AMD64 had ten browser failures. Mixed recoveries
+  and unresolved prior tax benefits require further qualification.
   [Cash refund evidence](upgrade-2026-progress.md#november-25-form-1098-vli-prior-year-cash-refunds).
 
 - `7e9a9e77` reconciles current Form 1098-VLI to unreimbursed interest
