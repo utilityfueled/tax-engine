@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "1736d19163478cb57f5e5c0ba6a69fd437be7c1c",
+    "applicationCommit": "6085e1f554b893ee2d510887aee00022c3c8c1a2",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit.fullExact",
@@ -30,6 +30,8 @@
     "ohioDependentCareEvidenceKey": "activeContinuation.nov25OhioDependentCareCredit",
     "nativeLabelExperimentEvidenceKey": "activeContinuation.nov25NativeLabelComparison",
     "ohioSchoolPdfInspectionEvidenceKey": "activeContinuation.nov25OhioSchoolPdfInspection",
+    "ohioBusinessPdfInspectionEvidenceKey": "activeContinuation.nov25OhioBusinessPdfInspection",
+    "paDependentCareDraftEvidenceKey": "activeContinuation.nov25PaDependentCareDraft",
     "ohioTraditionalSchoolEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
     "ohioStandaloneReplayEvidenceKey": "activeContinuation.nov25OhioStandaloneAdapterReuse",
     "ohioChildReplayPrototypeEvidenceKey": "activeContinuation.nov25OhioChildReplayPrototype",
@@ -84,6 +86,30 @@
     ]
   },
   "activeContinuation": {
+    "nov25PaDependentCareDraft": {
+      "implementationCommit": "6085e1f554b893ee2d510887aee00022c3c8c1a2",
+      "scope": "State-only review draft for one source-complete high-wage single PA resident, one directly claimable child under 13, unrelated non-household provider and one eligible current-year own-funds payment. Saved input captures and replays the separate confirmations.",
+      "control": { "wages": "74000", "withholding": "2500", "eligibleCare": "1800", "federalProjection": "630", "federalLiabilityFloor": "3600", "paCredit": "360", "paTax": "2272", "paRefund": "588" },
+      "checks": { "node": "26.13.1", "focusedTestsPassed": 270, "specTestReferences": 10091, "inventoryPassed": true, "typechecksPassed": 2, "scopedLintPassed": true, "browserAuditTestsPassed": 18, "auditedPaths": 2072, "changedSourcePins": 9, "independentEngineeringReviewCompleted": true },
+      "diagnosticPinRepair": { "implementationCommit": "6b02a00a719c420b34889dab4a9702104573968a", "changedTargets": 2, "diagnosticTestsPassed": 27 },
+      "localExact": { "trackedBlobsVerified": 6701, "contractsTypecheckPassed": true, "libraryBuildPassed": true, "webBuildPassed": true, "fullLintPassed": true, "unitRun": "in progress", "evidencePath": ".local/upgrade-evidence/nov25-pa-care-integrated" },
+      "runIds": { "ci": 45722638528, "web": 45722638506, "docker": 45722638499, "nativeArm64": 45723169761 },
+      "exactDockerBuildPassed": true,
+      "vercelAutomaticProductionBuild": "CANCELED",
+      "qualifiedIndependentTaxReview": false,
+      "filingEligible": false
+    },
+    "nov25OhioBusinessPdfInspection": {
+      "implementationCommit": "c2a992927d4a54f1b0d57b413d8bcdd4ff0cdbd2",
+      "scope": "Business NEW212 strict browser inspector only. Shared parsed top-level operations with original fallback for nonstandard painter operands. Geometry, privacy and original browser assertions unchanged.",
+      "verifiedArchive": { "comparisonLegs": 4, "pages": 44, "objects": 1855, "sourceCells": 390, "sourceStatuses": 41, "identicalJson": true, "originalMedianCpuSeconds": 2.225, "candidateMedianCpuSeconds": 1.796, "receiptSha256": "972ed84342e16c83748e14fe1d575352d9314c212d9996af01976be66b4f15fc" },
+      "localBrowser": { "pass": 2, "fail": 0, "skip": 0, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "summarySha256": "f6187d727c7c0f4774b1e5295edc067387b30e7d0d5e2d62e7c0bc5b912235e6" },
+      "checks": { "specTestReferences": 10090, "inventoryPassed": true, "scopedLintPassed": true, "browserMetadataAndAuditTestsPassed": 18, "focusedTestsPassed": 5 },
+      "runIds": { "ci": 45721431772, "web": 45721431503, "docker": 45721431319 },
+      "exactDockerBuildPassed": true,
+      "vercelAutomaticProductionBuild": "CANCELED",
+      "strictLinuxQualified": false
+    },
     "nov25OhioSchoolPdfInspection": {
       "implementationCommit": "1736d19163478cb57f5e5c0ba6a69fd437be7c1c",
       "scope": "Test inspector only. Reuse top-level parsed commands with a fallback for unexpected geometry operand types; nested and original-page scans retain their existing parser.",
@@ -92,6 +118,7 @@
       "checks": { "specTestReferences": 10089, "inventoryPassed": true, "webTypecheckPassed": true, "scopedLintPassed": true, "browserMetadataAndAuditTestsPassed": 18, "nativeControlTestsPassed": 8, "independentCodeReviewPassed": true },
       "runIds": { "ci": 45718984150, "web": 45718984180, "docker": 45718984181, "nativeArm64": 45719087418 },
       "exactDocker": { "attempts": 2, "firstAttempt": "canceled by branch-scoped concurrency", "secondAttempt": "passed" },
+      "exactLocalUnit": { "passed": 30561, "skips": 81, "failed": 2, "failure": "transformed browser diagnostic source hash checks", "repairCommit": "6b02a00a719c420b34889dab4a9702104573968a" },
       "vercelAutomaticProductionBuild": "CANCELED",
       "strictLinuxQualified": false
     },
@@ -142,8 +169,9 @@
       "renderParity": { "federalPages": 12, "ohioPages": 18, "sameTextAndRenders": true, "sameFormList": true, "oneNoticePerPage": true, "sha256": "7636b384b9bb9e5e37f6446e2a51f1fc9ec28eab5e6bbe569b52901295e2224d" },
       "focusedLocalBrowser": { "buildPassed": true, "pass": 15, "fail": 0, "skips": 0, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "summarySha256": "7c3adb7e1027d9420f1d16f565d16dea6f8f7b8e66f03059c605051f6195cc44" },
       "sourceAudit": { "digests": 2071, "updated": 1, "controlsPassed": 2, "requestCeilingsChanged": false },
-      "fullExact": { "status": "running with a Pennsylvania Schedule SP packet timeout observed in coverage", "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main", "localStaticChecksPassed": 8, "unitTestsPassed": 30556, "unitTestSkips": 81, "unitFilesPassed": 2220, "frozenOfflineInstallsPassed": 2, "verifiedSamplePdfsPerArchive": 15 },
+      "fullExact": { "status": "local coverage finished with one Pennsylvania Schedule SP timeout; managed browser pending", "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main", "localStaticChecksPassed": 8, "unitTestsPassed": 30556, "unitTestSkips": 81, "unitFilesPassed": 2220, "localCoverageTestsPassed": 30555, "localCoverageTestsSkipped": 81, "localCoverageTestsFailed": 1, "coverageDeadlineMs": 15000, "frozenOfflineInstallsPassed": 2, "verifiedSamplePdfsPerArchive": 15 },
       "localScheduleSpCoverageControl": { "casePassed": true, "caseElapsedMs": 2245, "pythonExtractionMs": 759, "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main/pa-sp-reproduction/parallel-control", "globalCoverageQualified": false },
+      "localScheduleSpSequentialCoverageControl": { "casePassed": true, "caseElapsedSecondsReported": 2.20, "evidencePath": ".local/upgrade-evidence/nov25-cover-exact-main/pa-sp-reproduction", "globalCoverageQualified": false },
       "runIds": { "ci": 45709246317, "web": 45709245932, "docker": 45709246061, "nativeArm64": 45709442744 },
       "exactLinuxCi": { "jobsPassed": 8, "coverageTestsPassed": 30637, "coverageFilesPassed": 2228, "branchCoveragePercent": 88.84 },
       "exactLinuxWeb": { "managedActivePassed": 652, "strictAmd64ActivePassed": 650, "strictAmd64CaseDeadlineFailures": 2, "originalSkipsPerBrowserRun": 5, "strictAmd64FailureScope": "Ohio part-year school, saved-workspace filing-rejection" },

@@ -1,5 +1,28 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Pennsylvania dependent-care draft review
+
+Independently confirm the 2026 Pennsylvania Schedule DC amount for a
+full-year Pennsylvania resident with $74,000 of sole W-2 wages, $2,500 of
+Pennsylvania withholding and $1,800 paid by the taxpayer to an unrelated
+provider for care of one qualifying child under 13. The taxpayer is single,
+ineligible for Head of Household, uses the base standard deduction, had
+no employer assistance or reimbursement, and claims the same expense on
+the federal return. Review the documented dependency and provider
+exclusions, the current federal 35% projection, the conservative $3,600
+liability floor after the one-child reserve, and the resulting frozen-rate
+Pennsylvania credit of $360 and draft refund of $588. Also review the
+$75,001 wages and $4,000 paid case, which caps expenses at $3,000 and
+produces a $1,020 federal projection and $600 Pennsylvania credit.
+[Federal provider exclusions](https://www.ecfr.gov/current/title-26/section-1.21-4) ·
+[2022 Form 2441](https://www.irs.gov/pub/irs-prior/f2441--2022.pdf) ·
+[Pennsylvania conformity guidance](https://www.pa.gov/agencies/revenue/resources/tax-law-policies-bulletins-notices/tax-cuts-and-jobs-one-big-beautiful-bill-acts).
+
+Review the final 2026 publications and confirm the actual federal claim,
+required attachments and Pennsylvania form transfers before admitting a
+filing case. Record the reviewer, review date, authority and approved
+expected outputs in the launch evidence.
+
 ## November 25 Form 1099-DA identified-lot review
 
 Review a 2026 broker-reported covered sale for $10,000 on June 1.

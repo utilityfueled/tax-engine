@@ -9,6 +9,19 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `6085e1f55` adds a state-only Pennsylvania care draft for one verified
+  high-wage, full-year resident case. Saved intake binds separate child,
+  provider and payer confirmations. All 270 focused cases passed. A
+  qualified tax review, actual federal claim and annual forms are needed
+  for filing. `6b02a00a7` also repairs two Ohio browser diagnostic pins
+  found stale during the full unit run.
+  [Pennsylvania care draft](upgrade-2026-progress.md#november-25-pennsylvania-dependent-care-draft).
+
+- `c2a99292` shares the parsed PDF content in the Ohio part-year
+  business browser inspector. The 44-page archived report matched byte
+  for byte and both original local browser cases passed.
+  [Ohio business PDF inspection](upgrade-2026-progress.md#november-25-ohio-business-pdf-inspection-reuse).
+
 - `1736d191` reuses a parsed PDF stream in the Ohio school browser
   inspector. Two archived packet reports matched byte for byte, and
   all four focused local browser cases passed. Exact Linux and ARM64
@@ -25,8 +38,9 @@ Use the linked progress sections when investigating individual packages.
 - `00ef7e7a` passes the generated review cover directly to the PDF merge.
   All 30 compared federal and Ohio pages rendered identically. The 68
   focused tests, 15 local Chromium cases, and the exact Docker build
-  passed. The exact unit run passed 30,556 tests. Local coverage and
-  browser checks are pending. Managed Linux passed all 652
+  passed. The exact local unit run passed 30,556 tests. Local coverage
+  recorded one Pennsylvania Schedule SP timeout. The named case passed two
+  isolated coverage runs. The local browser run is pending. Managed Linux passed all 652
   active cases. Strict AMD64 had two timeouts and strict ARM64 had
   seven. The ARM64 image and Compose recovery passed.
   Filing and strict Linux qualification remain open.

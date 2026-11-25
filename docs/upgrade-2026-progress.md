@@ -1,5 +1,67 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Pennsylvania dependent-care draft
+
+`6085e1f55` extends the state-only ordinary draft to a single full-year
+Pennsylvania resident with verified high W-2 wages, one directly claimable
+child under 13, one eligible unrelated provider outside the household, and
+one current-year work-related receipt paid from the claimant’s own funds.
+The guided intake retains the federal eligibility review and original payer
+evidence through save and reopen. Corrections invalidate the affected review.
+
+Using $74,000 in wages, $1,800 in paid care and $2,500 withheld, the draft
+projects a $630 federal allowance, calculates a $360 Pennsylvania credit and
+reports a $588 Pennsylvania refund. The conservative federal liability
+floor is $3,600 after reserving the full $2,200 credit for one child. The
+Pennsylvania calculation applies the frozen 2022 percentage from the Fiscal
+Code. The separate public Schedule DC calculator still requires an actual
+federal liability worksheet. A combined guided preview, completed federal
+claim, annual form transfer and filing qualification remain open.
+[Pennsylvania Fiscal Code](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1929/0/0176.016W000..HTM#19290176u1603-Ws) ·
+[Federal provider exclusions](https://www.ecfr.gov/current/title-26/section-1.21-4) ·
+[Federal 2026 brackets and credit amounts](https://www.irs.gov/irb/2025-45_IRB).
+
+Independent engineering review found the need for a separate provider
+relationship attestation. A failing regression reproduced the missing
+check before repair. Node 26.13.1 passed all 270 focused tests, both type
+checks, scoped lint, 10,091 spec references, inventory and 18 browser audit
+checks. The source audit recomputed 2,072 paths and changed nine pins.
+Qualified tax review and final annual form and transfer review remain open.
+[Reviewer fixtures](upgrade-2026-external-actions.md#november-25-pennsylvania-dependent-care-draft-review).
+
+The exact revision passed the Docker build. Local release-archive
+contracts, library build, web build and lint passed after verifying all
+6,701 tracked blobs. Full unit, browser and native recovery results are
+pending. Vercel canceled the automatic production build.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45722638528) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45722638506) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45722638499) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45723169761).
+
+The full local unit run at `1736d191` exposed stale source hashes in the
+optional browser timing diagnostic. `6b02a00a7` refreshes the two transformed
+Ohio target pins. All 27 diagnostic tests passed in the checkout and the
+Pennsylvania verification archive with the corrected hashes. Case IDs,
+workers, deadlines, and privacy assertions retained their existing values.
+
+## November 25 Ohio business PDF inspection reuse
+
+`c2a99292` shares the parsed top-level stream in the Ohio part-year
+business browser inspector. It retains the original parse for unexpected
+geometry operands and keeps all nested appearance and original-object
+checks. The alternating comparison on the same 44-page packet emitted
+identical reports for 1,855 objects, 390 source cells and 41 statuses.
+Median Python CPU time fell from 2.225 to 1.796 seconds on that packet.
+Both original desktop and mobile browser cases passed locally with
+their 30-second deadlines and all 390 cells and 41 statuses checked.
+Five focused tests, 18 browser metadata and audit controls, 10,090
+spec references, inventory and scoped lint passed. Vercel canceled the
+automatic production build. The exact Docker build passed. Linux CI
+and browser results are pending.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45721431772) ·
+[Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45721431503) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45721431319).
+
 ## November 25 Ohio school PDF inspection reuse
 
 `1736d191` lets the strict browser inspector reuse each parsed top-level
@@ -130,14 +192,12 @@ on the saved-workspace filing-rejection request. The exact ARM64 build,
 smoke test, independent image-store archive, Compose recovery, configured
 scan binding and cleanup passed. Its strict Chromium run passed 645 active cases
 and reached the deadline in seven Ohio cases. Both browser modes retained
-five existing skips. The local coverage and managed browser checks are
-still running.
-The local coverage log currently records one Pennsylvania Schedule SP
-packet timeout. The terminal receipt and an isolated repeat are
-pending. A focused control on the other archive of the same
-revision passed in 2.245 seconds, with 0.759 seconds in Python PDF
-extraction. The one-case run kept the coverage thresholds and provides
-only scoped timing evidence.
+five existing skips. The exact local coverage run finished with 30,555
+passes, 81 skips and one Pennsylvania Schedule SP packet timeout at the
+existing 15-second test deadline. The same named test passed two isolated
+coverage runs in 2.245 and 2.20 seconds. Both probes used the original
+global thresholds and neither qualifies full local coverage. The managed
+local browser run is still pending.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45709245932) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45709246061) ·
