@@ -1,5 +1,39 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Form 1098-VLI loan statement reconciliation
+
+`7e9a9e77` adds an optional guided and engine path for a confirmed
+2026 Copy B from the original lender. It binds the payer, lender,
+masked account reference, VIN and origination date to the same loan.
+Box 1 is reconciled in exact cents to unreimbursed borrower payments
+after distinct direct payments and reimbursements by other people.
+A real edit invalidates the statement confirmation. The existing
+verified manual payment-record path covers returns without this form.
+
+Positive Box 5, corrected or assigned statements, refinancing and
+additional nonqualifying interest on this statement path require
+separate review. The formula preserves business interest allocated
+from the same Box 1 amounts. Raw lender and vehicle details stay out
+of the calculation audit. This package preserves the 2026 rule-pack
+gate and awaits a qualified human review and final Schedule 1-A.
+[Final Copy B](https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=3) ·
+[Final issuer instructions](https://www.irs.gov/instructions/i1098vli) ·
+[Draft Schedule 1-A line 28](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf#page=4).
+
+All 72 affected tests passed, including the guided-to-engine source
+projection, exact arithmetic, stale confirmations and manual and
+refinancing controls. Engine and web types, scoped lint, all 17
+affected spec references, inventory, and independent engineering
+re-review passed. Two browser source-audit controls passed with
+four refreshed digests out of 2,071 and unchanged request ceilings.
+The tracked-only archive passed all seven focused verification commands
+with a frozen install. The combined Schedule 1-A and 3-A suite passed
+all 81 tests. The exact Docker build passed. Full exact local coverage
+was started.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45670078300) ·
+[Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45670078270) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45670078276).
+
 ## November 25 amended Schedule 3-A first claims
 
 `1bc6f09a` keeps a positive benefit in the isolated draft worksheet under
@@ -17,8 +51,16 @@ the omitted-context bypass. All nine worksheet tests, 12 spec references,
 scoped lint, inventory and independent engineering re-review passed.
 An unconstrained full run in the shared checkout had 46 failures and 13
 worker startup errors. It overlapped the final guard edit and did not
-qualify the revision. The exact tracked-only serial verification has
-been started. [November 24 IRS draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=124).
+qualify the revision. The exact tracked-only serial run passed 30,526
+tests with 81 original skips. Exact spec validation, inventory and
+typecheck also passed.
+[November 24 IRS draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=124).
+
+The first Web workflow used the previous source digest and failed browser
+preflight. `7d14db2b` refreshes the changed source digest and its diagnostic
+manifest pin. The exact tracked scope passed both audit controls with all
+2,071 source digests. Browser protocol limits are intact.
+[Corrected Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45669022038).
 
 ## November 25 strict browser timing comparison
 
@@ -31,6 +73,15 @@ zero retries, a 30-second deadline and fresh local server processes.
 The median batch was 50.36 seconds with capture and 49.14 seconds without
 it. The median per-case reduction was 3.10%. The server closed after all
 runs. This diagnostic does not resolve the strict native timeouts.
+
+A second read-only reduction of the six source-matched AMD64/local
+failures from `924c3545` measured fill and select after the first
+actionability marker. The matched cohorts each recorded 1,002 fills
+and 324 selects without action retries. The added strict wall time was
+2.245–6.452 seconds per case, with a median difference of 3.804 seconds.
+It spans browser, DevTools protocol and application work. The traces
+cannot identify a single callback responsible.
+[Paired trace scope](#november-24-paired-ohio-browser-traces).
 
 A private RRTA comparison ran both saved synthetic PDFs four times
 under each of four parser variants. All 32 parses returned identical

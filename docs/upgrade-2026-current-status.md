@@ -9,11 +9,21 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `7e9a9e77` reconciles current Form 1098-VLI to unreimbursed interest
+  actually paid by the borrower. All 72 affected tests, both typechecks,
+  scoped lint, inventory, spec references, source-audit controls and
+  independent engineering review passed. Prior-year refunds and other
+  exceptional statements need separate review. The final Schedule 1-A
+  and full 2026 federal calculation remain open. Full exact local
+  coverage is running.
+  [Vehicle statement evidence](upgrade-2026-progress.md#november-25-form-1098-vli-loan-statement-reconciliation).
+
 - `1bc6f09a` holds positive draft Schedule 3-A benefits for review when
   the return is amended or claim context is missing. All nine focused
   cases, spec references, scoped lint and independent engineering
   re-review passed. The isolated worksheet has no filing or export path.
-  The full exact serial unit run is pending.
+  `7d14db2b` corrects the two source-audit pins. The full exact serial
+  run passed 30,526 tests with 81 original skips.
   [Schedule 3-A evidence](upgrade-2026-progress.md#november-25-amended-schedule-3-a-first-claims).
 
 - Four local diagnostic runs passed the same 15 Ohio browser cases.

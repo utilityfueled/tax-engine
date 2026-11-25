@@ -1,5 +1,18 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Form 1098-VLI review
+
+Use a fictional ordinary vehicle purchase with Box 1 of $900.25, of
+which someone else paid $300 directly to the lender. Confirm the
+borrower's $600.25 unreimbursed interest and a $50 C/E/F deduction from
+that same amount, leaving $550.25 before Schedule 1-A rounding, caps
+and phaseout. Verify the effect of a separately documented current-year
+reimbursement, and confirm that Box 5 instead requires prior-year
+deduction and recovery evidence. The final Schedule 1-A and its
+Form 1040 transfer still require qualification.
+[Final recipient instructions](https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4) ·
+[Final issuer instructions](https://www.irs.gov/instructions/i1098vli).
+
 ## November 25 Schedule 3-A first-claim review
 
 Use a fictional amended return with an earlier nonrefundable child
