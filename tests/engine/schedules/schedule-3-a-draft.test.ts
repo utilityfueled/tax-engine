@@ -8,7 +8,7 @@ const source = {
   earnedIncomeCredit: "2272", additionalChildTaxCredit: "0",
   refundableAmericanOpportunityCredit: "0", refundableAdoptionCredit: "0",
   schedule3Payments: "0", totalTaxBeforeForm1062: "1451", schedule2Line20: "0",
-  benefitElection: "receive", taxpayerEligibility: "no",
+  claimContext: "original", benefitElection: "receive", taxpayerEligibility: "no",
 } satisfies DraftSchedule3AInput;
 
 function values(input: DraftSchedule3AInput, lines: string[]) {
@@ -25,7 +25,7 @@ describe("2026 draft Schedule 3-A", () => {
       earnedIncomeCredit: "4971", additionalChildTaxCredit: "2377",
       refundableAmericanOpportunityCredit: "0", refundableAdoptionCredit: "0",
       schedule3Payments: "0", totalTaxBeforeForm1062: "0", schedule2Line20: "0",
-      benefitElection: "receive", taxpayerEligibility: "yes",
+      claimContext: "original", benefitElection: "receive", taxpayerEligibility: "yes",
     } satisfies DraftSchedule3AInput;
     const result = calculateDraftSchedule3A(ats14);
 
@@ -93,6 +93,28 @@ describe("2026 draft Schedule 3-A", () => {
     expect(declined.lines.find(row => row.line === "8")).toBeUndefined();
   });
 
+  it("holds a positive amended benefit for credit-by-credit first-claim review", () => {
+    const amended = {
+      ...source, claimContext: "amended", additionalChildTaxCredit: "700.01", taxpayerEligibility: "yes",
+    } as const;
+    for (const benefitElection of ["receive", "decline", undefined] as const) {
+      const result = calculateDraftSchedule3A({ ...amended, benefitElection });
+      expect(result.status).toBe("needs-first-claim-review");
+      expect(result.lines.map(row => row.line)).toEqual(["1a", "1b", "2", "3", "4", "5", "6"]);
+      expect(result.lines.at(-1)?.value.toFixed()).toBe("1521.01");
+      expect(result.form1040Line32b).toBeUndefined();
+      expect(result.form1040Line32c).toBeUndefined();
+      expect(JSON.stringify(result.lines)).not.toMatch(/claimContext|amended|taxpayerEligibility|spouseEligibility/u);
+    }
+    const zero = calculateDraftSchedule3A({ ...amended, totalTaxBeforeForm1062: "2972.01" });
+    expect(zero.status).toBe("no-benefit");
+    expect(zero.form1040Line32b?.toFixed()).toBe("0");
+    const missingContext = calculateDraftSchedule3A({ ...amended, claimContext: undefined });
+    expect(missingContext.status).toBe("needs-first-claim-review");
+    expect(missingContext.form1040Line32b).toBeUndefined();
+    expect(missingContext.form1040Line32c).toBeUndefined();
+  });
+
   it("requires an explicit qualification answer and accepts either qualified spouse on a joint return", () => {
     const joint = { ...source, returnForm: "1040-SR", filingStatus: "married_filing_jointly" } as const;
     expect(calculateDraftSchedule3A({ ...joint, taxpayerEligibility: "unknown" }).status).toBe("needs-eligibility");
@@ -111,7 +133,7 @@ describe("2026 draft Schedule 3-A", () => {
     for (const change of [
       { taxYear: 2025 }, { returnForm: "1040-NR" }, { returnForm: "1040-SS" },
       { filingStatus: "joint" }, { spouseEligibility: "yes" }, { taxpayerEligibility: "work-authorized" },
-      { benefitElection: false }, { schedule3Payments: "" }, { earnedIncomeCredit: "-0.01" },
+      { benefitElection: false }, { claimContext: "unknown" }, { schedule3Payments: "" }, { earnedIncomeCredit: "-0.01" },
       { schedule2Line20: "1451.01" }, { refundableAdoptionCredit: "0.001" },
       { additionalChildTaxCredit: new Decimal(Infinity) }, { totalTaxBeforeForm1062: undefined },
       { totalTaxBeforeForm1062: new Decimal("1e100000000") }, { totalTaxBeforeForm1062: "1000000000000" },

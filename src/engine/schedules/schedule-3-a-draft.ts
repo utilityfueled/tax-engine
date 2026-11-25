@@ -18,13 +18,14 @@ export interface DraftSchedule3AInput {
   schedule3Payments: Amount;
   totalTaxBeforeForm1062: Amount;
   schedule2Line20: Amount;
+  claimContext?: "original" | "amended";
   benefitElection?: "receive" | "decline";
   taxpayerEligibility?: Eligibility;
   spouseEligibility?: Eligibility;
 }
 
 interface DraftSchedule3AResult {
-  status: "not-required" | "no-benefit" | "needs-election" | "declined" | "needs-eligibility" | "eligible" | "ineligible";
+  status: "not-required" | "no-benefit" | "needs-first-claim-review" | "needs-election" | "declined" | "needs-eligibility" | "eligible" | "ineligible";
   form1040Line32b?: Decimal;
   form1040Line32c?: Decimal;
   lines: CalculatedLine[];
@@ -45,6 +46,9 @@ export function calculateDraftSchedule3A(input: DraftSchedule3AInput): DraftSche
   if (input.taxYear !== 2026 || (input.returnForm !== "1040" && input.returnForm !== "1040-SR")
     || !FilingStatusSchema.safeParse(input.filingStatus).success) {
     throw new Error("Draft Schedule 3-A requires a supported 2026 Form 1040 or 1040-SR source");
+  }
+  if (![undefined, "original", "amended"].includes(input.claimContext)) {
+    throw new Error("Draft Schedule 3-A requires a recognized claim context");
   }
   const joint = input.filingStatus === "married_filing_jointly";
   if (!joint && input.spouseEligibility !== undefined) {
@@ -86,6 +90,9 @@ export function calculateDraftSchedule3A(input: DraftSchedule3AInput): DraftSche
   });
 
   if (line6.isZero()) return resolve("no-benefit", line6);
+  if (input.claimContext !== "original") {
+    return { status: "needs-first-claim-review", lines: audit.getLines() };
+  }
   if (input.benefitElection === undefined) return { status: "needs-election", lines: audit.getLines() };
   if (input.benefitElection === "decline") return resolve("declined", line6);
 

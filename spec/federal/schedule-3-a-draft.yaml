@@ -53,11 +53,26 @@ lines:
     testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::reproduces the Treasury examples and stops at the liability boundary"
   - line: "7"
     description: "Election to receive the benefit"
-    formula: "An explicit decline stops the worksheet and transfers line 6 to Form 1040/1040-SR line 32b. An explicit request goes to line 8. Missing or unknown election leaves line 32b and line 32c unresolved even when an eligibility answer is known."
+    formula: "On the original-return path, an explicit decline stops the worksheet and transfers line 6 to Form 1040/1040-SR line 32b. An explicit request goes to line 8. Missing or unknown election leaves line 32b and line 32c unresolved even when an eligibility answer is known."
     testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::keeps a missing election unresolved and applies an explicit decline"
+  - line: "amended-first-claim"
+    description: "Hold positive benefits without confirmed original-return context for first-claim review"
+    formula: |
+      Draft instructions determine eligibility at the first claim of each
+      credit, including a prior nonrefundable claim. CTC includes ACTC, and
+      a prior-year nonrefundable adoption carryforward alone does not count
+      as a current-year claim. An amended return may present different
+      first-claim outcomes for different credits. When line 6 is positive
+      and claim context is amended or omitted, retain lines 1a through 6, return
+      needs-first-claim-review, and leave lines 8, 32b and 32c unresolved.
+      Only an explicit original claim context can proceed to lines 7 and 8.
+      Do not infer the history or allocation from aggregate amounts, a
+      current eligibility answer, or an election.
+    irsRef: "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=124 (November 24 draft, printed pages 123–124)"
+    testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::holds a positive amended benefit for credit-by-credit first-claim review"
   - line: "8"
     description: "Confirmed eligibility at first claim"
-    formula: "After an explicit request, use an independently confirmed yes/no/unknown for the filer and, only for a joint return, the spouse. One yes qualifies a joint return. A confirmed no for each applicable filer transfers line 6 to Form 1040/1040-SR line 32b. With no yes and at least one unknown, leave lines 8, 32b and 32c unresolved. A qualified claimant enters zero."
+    formula: "On the original-return path, after an explicit request, use an independently confirmed yes/no/unknown for the filer and, only for a joint return, the spouse. One yes qualifies a joint return. A confirmed no for each applicable filer transfers line 6 to Form 1040/1040-SR line 32b. With no yes and at least one unknown, leave lines 8, 32b and 32c unresolved. A qualified claimant enters zero."
     irsRef: "https://www.irs.gov/newsroom/treasury-irs-proposes-rules-to-protect-refundable-tax-credits-from-abuse-by-illegal-aliens; 8 USC 1611 and 1641"
     testRef: "tests/engine/schedules/schedule-3-a-draft.test.ts::requires an explicit qualification answer and accepts either qualified spouse on a joint return"
   - line: "1040-32c"
