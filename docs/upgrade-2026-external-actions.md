@@ -1,5 +1,23 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Ohio refundable jobs credit review
+
+Use a fictional direct individual on a calendar-year Ohio 2026 return.
+Review an original, unrevoked development department certificate for
+$7,250.49, issued February 15, 2027. In separate cases, vary the underlying
+agreement among a job-creation award under section 122.17(B), a former
+section 122.171(B)(3) agreement granted December 31, 2013 for tax years
+2013–2027, and a current nonrefundable retention award. Derive which amounts
+are refundable and the deemed payment date. In separate controls, change
+the stated amount to certified zero, mismatch the certificate holder, or
+date the 2026 annual certificate December 31, 2026. Verify the scope and
+document each decision before comparing with the draft. Use the final
+2026 Ohio form and instructions for any line transfer when available.
+[Ohio refundable credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.058) ·
+[Ohio job creation statute](https://codes.ohio.gov/ohio-revised-code/section-122.17) ·
+[Former Ohio retention statute](https://codes.ohio.gov/ohio-revised-code/section-122.171/9-17-2014) ·
+[Ohio forms](https://tax.ohio.gov/individual/get-a-form).
+
 ## November 24 Form 4137 review
 
 For one 2026 primary taxpayer, the first employer has $183,000 in

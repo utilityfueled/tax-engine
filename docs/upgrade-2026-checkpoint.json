@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "5d8e8fd413334527ea814dc7a52aa6c3ca08a229",
+    "applicationCommit": "8f45074d04c66bea95613b9699a9f905989e32bd",
     "verificationCommit": "9dac7cb0e09299362761786c16a761bcb8157818",
-    "generatedInventoryCommit": "03f367dedb7daa0bdf7ae3911869a9b39e34a86a",
+    "generatedInventoryCommit": "8f45074d04c66bea95613b9699a9f905989e32bd",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "pendingOhioResultEvidenceKey": "activeContinuation.nov25OhioPendingOwnedResultComparison",
@@ -51,7 +51,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect exact 5d8e8fd4 combined checks and Linux Web 45525344462. Observe 5bbc0504 Ohio timing in exact ARM64 rehearsal 45523084019 and Web 45523012599. The 9dac7cb0 exact local checks passed and the remote Linux results are still pending.",
+      "Collect exact 8f45074d combined checks, CI 45526119746 and Linux Web 45526119691. Observe 5bbc0504 Ohio timing in exact ARM64 rehearsal 45523084019. The 9dac7cb0 exact local checks passed and the remote Linux results are still pending.",
       "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
@@ -62,6 +62,7 @@
   "activeContinuation": {
     "nov25OhioCertifiedRefundableJobsCredit": {
       "revision": "5d8e8fd413334527ea814dc7a52aa6c3ca08a229",
+      "inventoryRevision": "8f45074d04c66bea95613b9699a9f905989e32bd",
       "authorities": ["https://codes.ohio.gov/ohio-revised-code/section-5747.058", "https://codes.ohio.gov/ohio-revised-code/section-122.17", "https://codes.ohio.gov/ohio-revised-code/section-122.171/9-17-2014", "https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07", "https://codes.ohio.gov/ohio-administrative-code/rule-122:16-1-05"],
       "certificateDateRegression": {"failedBefore": 1, "passedBefore": 3, "independentAfter": 4},
       "focusedTestsPassed": 225,
@@ -70,10 +71,14 @@
       "browserSourceAuditPassed": true,
       "scopedLintPassed": true,
       "filingQualified": false,
-      "localExactChecks": "Staged after 5bbc0504 local verification.",
+      "localExactChecks": "Staged corrected inventory revision after 5bbc0504 local verification. All 6694 tracked blobs match.",
       "ciRun": 45525343003,
+      "initialCiInventoryConclusion": "Failed at spec:inventory:check. Spec references passed.",
       "webRun": 45525344462,
       "dockerRun": 45525343120,
+      "correctedCiRun": 45526119746,
+      "correctedWebRun": 45526119691,
+      "correctedDockerRun": 45526119591,
       "evidence": ".local/upgrade-evidence/nov25-oh-certified-jobs-credit"
     },
     "nov25OhioPendingOwnedResultComparison": {

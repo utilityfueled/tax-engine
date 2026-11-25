@@ -28,6 +28,26 @@ and all 10,050 spec references passed. The Ohio catalog still lists the
 [Ohio annual form catalog](https://tax.ohio.gov/individual/get-a-form) ·
 [Ohio release archive](https://tax.ohio.gov/individual/resources/individualincome).
 
+The first CI spec job passed reference validation and failed the
+generated inventory check. `8f45074d` adds only the missing generated
+entry. The inventory classifies the draft as partial and records the
+missing packet and e-file coverage. The corrected release checkout
+matches all 6,694 versioned blobs. The unrelated inventory entry in the
+working checkout was left unstaged.
+[Original spec job](https://github.com/utilityfueled/tax-engine/actions/runs/45525343003/job/138907163116) ·
+[Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45526119746) ·
+[Corrected Web](https://github.com/utilityfueled/tax-engine/actions/runs/45526119691).
+
+An independent November 25 IRS catalog and direct-PDF recheck found
+the same pinned Schedule B and Forms 4137, 6781, 8801 and 5329 bytes.
+Current Form 1040, Schedules 1, 1-A, 2, 3, A, D and E, and Forms 6251,
+8960 and 8582 still print 2025. Form 5329 instructions still print 2025.
+Form 172 and its instructions remain the December 2024 revision.
+[IRS form catalog](https://www.irs.gov/downloads/irs-pdf?c=m&o=d&page=0) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Form 5329 instructions](https://www.irs.gov/pub/irs-pdf/i5329.pdf) ·
+[Form 172 instructions](https://www.irs.gov/pub/irs-pdf/i172.pdf).
+
 ## November 25 Ohio pending-header calculation replay
 
 `5bbc0504` runs one full canonical serialization at each original

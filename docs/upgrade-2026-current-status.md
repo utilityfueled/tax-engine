@@ -14,6 +14,8 @@ Use the linked progress sections when investigating individual packages.
   statutory payment date. Independent source review rechecked the
   certificate issue-date correction. The draft remains filing-unqualified.
   225 focused tests, the browser source audit and spec checks passed.
+  `8f45074d` adds the generated partial coverage entry after the first CI
+  inventory check failed. Full checks are running on the corrected revision.
   [Ohio jobs credit draft](upgrade-2026-progress.md#november-25-ohio-certified-refundable-jobs-credits).
 
 - `5bbc0504` avoids repeating the serialization of an internally owned
