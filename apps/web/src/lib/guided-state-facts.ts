@@ -54,8 +54,13 @@ export function stateEstimatedPaymentFactErrors(entries: StateEstimatedPaymentEn
 }
 
 export function statePaymentFactErrors(data: StateReturnData | undefined, taxYear?: number | null, selectedState?: string | null): Record<string, string> {
-  if (!data) return {};
+  return validateStatePaymentFacts(data, taxYear, selectedState).errors;
+}
+
+export function validateStatePaymentFacts(data: StateReturnData | undefined, taxYear?: number | null, selectedState?: string | null) {
+  if (!data) return { errors: {}, savedEstimatesValid: true };
   const errors = stateEstimatedPaymentFactErrors(data.stateEstimatedPayments, selectedState, taxYear);
+  const savedEstimatesValid = Object.keys(errors).length === 0;
   (data.additionalStateWithholdingEntries ?? []).forEach((entry, index) => {
     if (!entry.payer.trim()) errors[`withholding-${index}-payer`] = "Enter the actual payer from the source form.";
     if (!(stateWithholdingDocumentTypes as readonly string[]).includes(entry.documentType)) errors[`withholding-${index}-source`] = "Choose the source form. W-2 withholding is already included from W-2 entries.";
@@ -69,5 +74,5 @@ export function statePaymentFactErrors(data: StateReturnData | undefined, taxYea
     if (error) errors.additionalStateWithholding = error;
     else if (!Object.keys(errors).length && !sumAdditionalStateWithholding(data).eq(parseGuidedCurrency(data.additionalStateWithholding))) errors.additionalStateWithholding = "Identify the source forms and reconcile the saved additional state withholding total before calculating.";
   }
-  return errors;
+  return { errors, savedEstimatesValid };
 }

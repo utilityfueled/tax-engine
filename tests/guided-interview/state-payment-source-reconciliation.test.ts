@@ -1,10 +1,12 @@
 // Spec: state/guided-state-payment-reconciliation.yaml.
 import Decimal from 'decimal.js';
-import {expect,it} from 'vitest';
+import {expect,it,vi} from 'vitest';
 import {calculatePAOrdinaryReturnFacts} from '@/engine/state/pa-ordinary-return-facts';
 import {TaxYearInputSchema} from '@/models/inputs';
 import {buildTaxInputFromGuidedData} from '@/lib/guided-interview-bridge';
-import {buildGuidedPAOrdinarySourceInput,jumpToSection,shouldPromptBeforeAdvance,updateSectionData,type GuidedFlowState} from '@/lib/guided-interview-flow';
+import {buildGuidedPAOrdinarySourceInput,jumpToSection,shouldPromptBeforeAdvance,updateSectionData,validateSection,type GuidedFlowState} from '@/lib/guided-interview-flow';
+import * as guidedRequiredFacts from '@/lib/guided-required-facts';
+import {statePaymentFactErrors} from '@/lib/guided-state-facts';
 import {confirmGuidedPAOrdinaryReturnFacts,updateGuidedPAOrdinaryReturnFacts} from '@/lib/guided-pa-ordinary-return-facts';
 import {confirmGuidedPAOrdinaryReturnCompletionSources} from '@/lib/guided-pa-ordinary-return-completion';
 import {buildGuidedOhioOverlay,buildGuidedStateOriginals} from '@/lib/guided-state-engine-inputs';
@@ -19,6 +21,34 @@ it('state actual payment ledger does not double add matching legacy Ohio receipt
 it('state actual payment ledger rejects unmatched and duplicate legacy Ohio claims',()=>{for(const mode of ['amount','date','duplicate'] as const){const {s,d,i}=ohio();if(mode==='duplicate')d.stateEstimatedPayments.push({...d.stateEstimatedPayments[0]});else{const row=d.stateEstimatedPayments[0];if(!row)throw Error('Saved row missing');row[mode]=mode==='amount'?'100.01':'2025-06-16';}expect(()=>buildGuidedOhioOverlay(i,s,new Decimal(0))).toThrow(/actual|receipt|source|reconcil/i);}});
 it('state actual payment ledger preserves unsupported additional withholding claims for reconciliation',()=>{const {s,d,i}=ohio();d.additionalStateWithholdingEntries=[{payer:'Actual unbound bank record',documentType:'1099-INT',state:'OH',taxYear:'2025',amount:'50.01'}];const before=structuredClone(s);expect(()=>buildGuidedOhioOverlay(i,s,new Decimal(0))).toThrow(/actual|source|withhold|reconcil/i);expect(s).toEqual(before);});
 it('state actual payment ledger cannot silently discard saved PA estimated amounts',()=>{const s=guidedPACompleteOriginals(),d=s.sectionData['state-return'],raw=buildTaxInputFromGuidedData(s);if(!d||!raw)throw Error('Actual PA sources missing');d.stateEstimatedPayments=[{state:'PA',date:'2025-04-15',amount:'100.01'}];const before=structuredClone(s);expect(()=>buildGuidedStateOriginals(TaxYearInputSchema.parse(raw),s)).toThrow(/actual|receipt|source|reconcil/i);expect(s).toEqual(before);});
+
+it('checks each saved Ohio estimate once during navigation', () => {
+  const { s, d } = ohio();
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(s));
+  d.ohioResidency = confirmGuidedOhioResidencyFacts(input, required(d.ohioResidency));
+  d.ohioPayments = confirmGuidedOhioPaymentFacts(input, required(d.ohioPayments));
+  const amountError = vi.spyOn(guidedRequiredFacts, 'amountError');
+  try {
+    const validation = validateSection(s, 'state-return');
+    expect(validation.status).toBe('complete');
+    // One check when building federal input and one for navigation and receipt matching.
+    expect(amountError.mock.calls.filter(([, label]) => label === 'payment amount')).toHaveLength(2);
+  } finally {
+    amountError.mockRestore();
+  }
+});
+
+it('retains saved payment and withholding error priority', () => {
+  const { d } = ohio();
+  d.additionalStateWithholding = '25';
+  const savedEstimate = required(d.stateEstimatedPayments[0]);
+
+  savedEstimate.state = 'VA';
+  expect(Object.keys(statePaymentFactErrors(d, 2025, 'OH'))).toEqual(['payment-0-state']);
+
+  savedEstimate.state = 'OH';
+  expect(Object.keys(statePaymentFactErrors(d, 2025, 'OH'))).toEqual(['additionalStateWithholding']);
+});
 
 it('2025 Ohio navigation reconciles saved estimates before Continue', () => {
   const cases = [

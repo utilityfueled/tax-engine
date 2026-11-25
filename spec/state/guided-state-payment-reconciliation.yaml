@@ -28,6 +28,11 @@ lines:
     description: Require reconciliation of saved estimated payments before Continue on a 2025 Ohio return with confirmed actual IT 1040 payment originals.
     formula: After validating current Ohio payment originals, match each saved Ohio estimate to one distinct actual estimated receipt by date and exact Decimal amount. A missing receipt, a mismatch in cents, or a second claim on the same receipt requires review. Matching records, including confirmed zero, or removal of the saved claim clear the navigation error. The actual receipts remain the only source of credited payments.
     testRef: "tests/guided-interview/state-payment-source-reconciliation.test.ts::2025 Ohio navigation reconciles saved estimates before Continue"
+  - line: "oh-navigation-estimate-validation"
+    formula: Validate saved estimate fields once within Ohio navigation and use the same result to decide whether to match actual receipts. Keep malformed-field errors, receipt mismatches and the saved withholding checks in their existing order.
+    testRef: "tests/guided-interview/state-payment-source-reconciliation.test.ts::checks each saved Ohio estimate once during navigation"
+    testRefs:
+      - "tests/guided-interview/state-payment-source-reconciliation.test.ts::retains saved payment and withholding error priority"
   - line: "oh-prior-credit-schedule-a"
     description: Include the verified amount of the 2024 Ohio IT 1040 refund that the taxpayer elected and the current account credits to 2025 on federal Schedule A line 5a.
     reference: "https://www.irs.gov/pub/irs-prior/i1040sca--2025.pdf#page=3"

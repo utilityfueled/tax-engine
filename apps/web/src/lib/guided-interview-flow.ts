@@ -79,7 +79,7 @@ import {
   adjustmentFactErrors, alimonySourceFactsChanged, hasAlimonyAmounts, hasHouseholdAmounts,
   hasRetainedAlimonyContext, hasRetainedHouseholdContext, householdFactErrors, householdSourceFactsChanged,
 } from "./guided-adjustment-facts";
-import { assertSavedStateEstimatesMatchReceipts, stateEstimatedPaymentFactErrors, statePaymentFactErrors } from "./guided-state-facts";
+import { assertSavedStateEstimatesMatchReceipts, validateStatePaymentFacts } from "./guided-state-facts";
 import {zeroIncomeMiscSourceFactErrors,type ZeroIncomeMiscSourceDraft} from './guided-zero-income-misc-sources';
 import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
 import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
@@ -3060,7 +3060,7 @@ function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<stri
 }
 
 /** Mandatory actual OH source replay, independent of state return calculation. */
-function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: TaxYearInput | null): Record<string, string> {
+function guidedOhioActualSourceErrors(state: GuidedFlowState, savedEstimatesValid: boolean, currentInput?: TaxYearInput | null): Record<string, string> {
   if (state.segmentation.stateCode !== "OH") return {};
   const data = state.sectionData["state-return"], errors: Record<string, string> = {};
   if (!data?.ohioResidency) errors.ohioResidency = "Complete and explicitly confirm the actual Ohio residency records.";
@@ -3082,7 +3082,7 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, currentInput?: Tax
     try { payments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input); }
     catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
     const savedEstimates = data?.stateEstimatedPayments;
-    if (payments && savedEstimates?.length && !Object.keys(stateEstimatedPaymentFactErrors(savedEstimates, "OH", state.taxYear)).length) {
+    if (payments && savedEstimates?.length && savedEstimatesValid) {
       try { assertSavedStateEstimatesMatchReceipts(savedEstimates, payments.paymentRows, state.taxYear === 2025 ? state.taxYear : undefined); }
       catch (error) { errors.stateEstimatedPayments = error instanceof Error ? error.message : "Reconcile saved Ohio estimated payments."; }
     }
@@ -3265,14 +3265,18 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       return validatePaymentsSection(getSectionData(state, "payments"), state.taxYear, state.segmentation.filingStatus);
     case "review":
       return VALID_SECTION; // Review is always valid
-    case "state-return":
+    case "state-return": {
+      const { errors: paymentErrors, savedEstimatesValid } = validateStatePaymentFacts(
+        getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode,
+      );
       return validateRequiredFacts({
         ...zeroIncomeMiscSourceFactErrors(state),
         ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "PA" ? {} : guidedPAOrdinaryReturnSourceErrors(state)),
-        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {} : guidedOhioActualSourceErrors(state, projection?.currentInput)),
-        ...statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode),
+        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {} : guidedOhioActualSourceErrors(state, savedEstimatesValid, projection?.currentInput)),
+        ...paymentErrors,
         ...guidedOhioInterestFactErrors(state),
       });
+    }
     case "final-review":
       return VALID_SECTION; // Final review is always available
     default:
