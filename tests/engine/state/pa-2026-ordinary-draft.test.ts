@@ -426,6 +426,27 @@ it('PA2026 draft checks retained death facts before income-based EIC proofs', ()
     expect(result.readiness.filingEligible).toBe(false);
   }
 });
+
+it.each([
+  ['part_year', '1197'],
+  ['nonresident', '276'],
+  ['resident', '2303'],
+] as const)('PA2026 draft holds a confirmed short tax year for %s', (status, tax) => {
+  const f = pa2026OrdinaryDraftFixture(status);
+  for (const standardDeductionFacts of [{ primaryDeathDate: null }, { shortTaxYear: false }]) {
+    f.input.standardDeductionFacts = standardDeductionFacts;
+    rebindPA2026Draft(f);
+    const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+    expect(result.pa.residencyStatus).toBe(status);
+    expect(result.pa.pa40.taxLiability.toFixed()).toBe(tax);
+    expect(result.readiness.filingEligible).toBe(false);
+  }
+
+  f.input.standardDeductionFacts = { shortTaxYear: true };
+  rebindPA2026Draft(f);
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/short tax year.*accounting-period change/);
+});
+
 it.each(['70244','70243.99','0'])('PA2026 draft denies unproven all-child-count EIC zero at %s',value=>{const f=pa2026OrdinaryDraftFixture();wage(f,value,'2303');expect(()=>calculatePA2026OrdinaryDraft(f.input,f.facts,f.sources)).toThrow(/phaseout|wage/i);});
 it.each(['year','owner','unconfirmed','duplicate','payroll','unknownGross','unknownWithholding','unknownCare','positiveCare','benefit','retainedInterest','retainedAdjustment','retainedEIC','retainedForeign','unknownEmptyRoot','unreviewedOther','sourceExtension','spUnknown','sourceUnknown','married','late'])('PA2026 draft rejects unsupported or unknown actual source %s',kind=>{
  const f=pa2026OrdinaryDraftFixture();

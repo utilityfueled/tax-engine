@@ -145,6 +145,18 @@ lines:
       https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/dfo-02.pdf
       and federal reporting at https://www.irs.gov/instructions/i1040gi.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft checks retained death facts before income-based EIC proofs"
+  - line: "calendar-year-admission"
+    description: "Hold the calendar-year wage draft for a confirmed accounting-period change"
+    formula: |
+      Pennsylvania Tax Reform Code sections 301(v) and 325(j) recognize the required
+      federal taxable period and separate estimated-tax procedures for a taxable
+      year shorter than twelve months. Withhold the calendar-year wage draft for
+      every residency status when the retained shortTaxYear answer is true. An
+      omitted or false answer keeps existing source validation and results.
+    sources:
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s"
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft holds a confirmed short tax year for %s"
   - line: "local-obligation-inventory"
     description: "Keep confirmed local filing decisions separate from PA-40"
     formula: |

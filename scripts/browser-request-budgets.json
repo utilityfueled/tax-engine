@@ -1140,7 +1140,7 @@
     "src/engine/state/oh-sd-100.ts": "fe91369e4c0479eef788087e9db0ef5b55b4113570dbd89fd12630e75c427603",
     "src/engine/state/oh-source-adapter-invocation.ts": "c84d2e02ee4ee1110bdee76025b0f1c4143b9378e360c401355a5192c36df04b",
     "src/engine/state/pa-2026-farmer-estimated-tax.ts": "0cbbd6fbff032a52ca7b510efd30842967c84cae8df2b9718dee3e521562f57e",
-    "src/engine/state/pa-2026-ordinary-dependencies.ts": "9a89974d276f50c1c0aa1a58d5e6868e1d100ac902f19577a84348ce2debff38",
+    "src/engine/state/pa-2026-ordinary-dependencies.ts": "93b76b7d08bed53eb66905e0eeeed72a8fb7ec2afad97a14dfccfce873d220dd",
     "src/engine/state/pa-2026-ordinary-estimated-tax.ts": "27094a10ce4b223fbde56039cf6ce6641c22f2572db21d5d638913585991dced",
     "src/engine/state/pa-2026-single-late-estimate-interest.ts": "d7b039adba27c266a221ad0c964c3500a5e0186b454f1cf9261708cb31209a6f",
     "src/engine/state/pa-2026-unemployment-source.ts": "e3d423b083e369bdb2253f4c78b5c18aa80ca0e0e435202218e909a2f5da132c",

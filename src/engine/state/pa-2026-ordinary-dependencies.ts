@@ -58,6 +58,9 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  if (typeof input.standardDeductionFacts?.primaryDeathDate === 'string') {
   fail('actual federal death date requires a separate method from the confirmed living owner draft');
  }
+ if (input.standardDeductionFacts?.shortTaxYear === true) {
+  fail('confirmed short tax year from an accounting-period change requires a separate Pennsylvania taxable-period method');
+ }
  if(input.deductionElection!==undefined&&!['automatic','standard','itemized','nonitemized'].includes(input.deductionElection))fail('retained deduction election is unknown');
  const r=PAResidencySourcesSchema.parse(input.paResidencySources);
  const allowed=new Set(['sourceTaxYear','sourceReference','sourceFactsConfirmed','owner','residency','wages','interest','otherPAIncomeClassesConfirmedNone','otherPAAdjustmentsConfirmedNone']);
