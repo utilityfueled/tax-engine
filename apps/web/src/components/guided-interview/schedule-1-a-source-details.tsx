@@ -1,9 +1,10 @@
 "use client";
 
+import { useId } from "react";
 import {
   emptySchedule1AData, emptyEmployeeTipDeduction, emptyBusinessTipDeduction,
-  emptyOvertimeDeduction, emptyVehicleInterest,
-  type Schedule1AData, type EmployeeTipDeductionData,
+  emptyOvertimeDeduction, emptyVehicleInterest, emptyVehicleInterestStatement,
+  type Schedule1AData, type EmployeeTipDeductionData, type VehicleInterestStatementData,
 } from "@/lib/guided-schedule-1-a-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -15,6 +16,39 @@ function Choice({ label, value, choices, onChange }: { label: string; value: str
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={event => onChange(event.target.value)}><option value="">Confirm from actual records</option>{value && !choices.some(([id]) => id === value) && <option value={value}>Saved source needs reconciliation</option>}{choices.map(([id, text]) => <option value={id} key={id}>{text}</option>)}</select></label>;
 }
 const owners: ChoiceEntry[] = [["primary", "You"], ["spouse", "Spouse on joint return"]];
+const statementPayers: ChoiceEntry[] = [...owners, ["other", "Someone else"]];
+
+function VehicleInterestStatementDetails({ label, data, onChange, onRemove }: {
+  label: string;
+  data: VehicleInterestStatementData;
+  onChange: (patch: Partial<VehicleInterestStatementData>) => void;
+  onRemove: () => void;
+}) {
+  const confirmationHint = useId();
+  const prefix = `${label}: Form 1098-VLI`;
+  return <fieldset>
+    <legend>Form 1098-VLI Copy B</legend>
+    <p className="guided-hint">Use Copy B with the original lender, no lender acquisition date or Box 5 refund, and no refinancing. Use a masked account reference or a nickname you can verify against both records. Leave full account and taxpayer ID numbers out of this worksheet.</p>
+    <div className="guided-form-grid">
+      <TextFact label={`${prefix} calendar year`} value={data.sourceTaxYear} onChange={sourceTaxYear => onChange({ sourceTaxYear })} />
+      <TextFact label={`${prefix} source reference`} value={data.sourceReference} onChange={sourceReference => onChange({ sourceReference })} />
+      <Choice label={`${prefix} payer of record`} value={data.payer} choices={statementPayers} onChange={payer => onChange({ payer: payer as VehicleInterestStatementData["payer"] })} />
+      <BooleanFact label={`${prefix} is the current copy with CORRECTED unchecked`} value={data.currentUncorrected} onChange={currentUncorrected => onChange({ currentUncorrected })} />
+      <BooleanFact label={`${prefix} Box 3b is blank`} value={data.lenderAcquisitionDateBlank} onChange={lenderAcquisitionDateBlank => onChange({ lenderAcquisitionDateBlank })} />
+      {(data.lenderAcquisitionDateBlank === false || data.lenderAcquisitionDate) && <TextFact label={`${prefix} Box 3b lender acquisition date`} type="date" value={data.lenderAcquisitionDate} onChange={lenderAcquisitionDate => onChange({ lenderAcquisitionDate })} />}
+      <CurrencyField label={`${prefix} Box 1 interest`} value={data.reportedInterest} onChange={reportedInterest => onChange({ reportedInterest })} />
+      <CurrencyField label={`${prefix} direct interest payments by others`} hint="Enter the portion of Box 1 others paid directly to the lender, or 0 if none." value={data.directThirdPartyInterest} onChange={directThirdPartyInterest => onChange({ directThirdPartyInterest })} />
+      <CurrencyField label={`${prefix} borrower-paid interest reimbursed by others`} hint="Enter the portion of Box 1 that the borrower paid and someone else reimbursed, or 0 if none. Exclude direct payments and refunds the lender already subtracted from Box 1." value={data.reimbursedBorrowerInterest} onChange={reimbursedBorrowerInterest => onChange({ reimbursedBorrowerInterest })} />
+      <CurrencyField label={`${prefix} Box 5 refund or credit`} hint="Enter 0 only after checking that there was no refund or credit of prior-year interest." value={data.priorYearInterestRefund} onChange={priorYearInterestRefund => onChange({ priorYearInterestRefund })} />
+      <BooleanFact label={`${prefix} Box 6 original use is checked`} value={data.originalUseChecked} onChange={originalUseChecked => onChange({ originalUseChecked })} />
+      <BooleanFact label={`${prefix} Box 7 U.S. final assembly is checked`} value={data.usAssemblyChecked} onChange={usAssemblyChecked => onChange({ usAssemblyChecked })} />
+    </div>
+    <p className="guided-hint" id={confirmationHint}>Confirm that the payer, lender, masked account reference, Box 2d VIN and Box 3a origination date match your loan and payment records. Enter the interest the borrower actually paid this year after reimbursements in Interest paid. Only include the business share of that same Box 1 interest in Interest already deducted elsewhere. Box 1 excludes interest on nonqualifying debt.</p>
+    <BooleanFact label={`${prefix} checked after the last edit`} value={data.sourceFactsConfirmed} describedBy={confirmationHint} onChange={sourceFactsConfirmed => onChange({ sourceFactsConfirmed })} />
+    <button type="button" onClick={onRemove}>{label}: Remove Form 1098-VLI</button>
+  </fieldset>;
+}
+
 type Qualification = Pick<EmployeeTipDeductionData, "owner" | "occupationCode" | "eligibleOccupation" | "voluntaryCashTips" | "lawfulActivity" | "meetsSstbRuleOrTransition">;
 function TipQualification({ label, data, onChange }: { label: string; data: Qualification; onChange: (patch: Partial<Qualification>) => void }) {
   return <>
@@ -28,7 +62,7 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
   onChange: (data: Schedule1AData | undefined) => void;
 }) {
   if (!data) return <section><h4>Additional deduction sources</h4><p className="guided-hint">Collect actual qualified tip, FLSA overtime premium, vehicle loan interest or senior eligibility records. A source amount alone does not establish a deduction.</p><button type="button" onClick={() => onChange({ ...emptySchedule1AData, employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: [] })}>Add additional deduction worksheet</button></section>;
-  const set = (patch: Partial<Schedule1AData>) => onChange({ ...data, ...patch, sourceFactsConfirmed: "sourceFactsConfirmed" in patch ? patch.sourceFactsConfirmed! : null });
+  const set = (patch: Partial<Schedule1AData>) => onChange({ ...data, ...patch, sourceFactsConfirmed: patch.sourceFactsConfirmed ?? null });
   const sources = (owner: string, kind?: Source["kind"]) => compensationSources.filter(source => source.accountHolder === owner && (!kind || source.kind === kind)).map(source => [source.sourceId, `${source.name || "Unnamed source"} — ${source.sourceId}`] as const);
   return <section><h4>Additional deduction sources</h4><p className="guided-hint">Use original records for the selected tax year. Confirm identity and senior birth/death facts in About You. Keep source amounts separate from the deduction after eligibility, business income limits and phaseouts.</p>
     <div className="guided-form-grid">
@@ -81,7 +115,15 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
     <button type="button" onClick={() => set({ overtime: [...data.overtime, { ...emptyOvertimeDeduction }] })}>Add overtime deduction</button>
     {data.vehicleLoans.map((entry, index) => {
       const label = `Vehicle loan ${index + 1}`;
-      const update = (patch: Partial<typeof entry>) => set({ vehicleLoans: data.vehicleLoans.map((row, position) => position === index ? { ...row, ...patch } : row) });
+      const statement = entry.form1098Vli;
+      const update = (patch: Partial<typeof entry>, confirmationOnly = false) => {
+        const next = { ...entry, ...patch };
+        if (statement && !("form1098Vli" in patch)) next.form1098Vli = { ...statement, sourceFactsConfirmed: null };
+        set({
+          vehicleLoans: data.vehicleLoans.map((row, position) => position === index ? next : row),
+          ...(confirmationOnly ? { sourceFactsConfirmed: data.sourceFactsConfirmed } : {}),
+        });
+      };
       return <fieldset key={index}><legend>{label}</legend><p className="guided-hint">Confirm original borrower and loan records, qualifying new vehicle use and U.S. final assembly. A VIN alone does not establish eligibility. Keep business and other nonqualifying interest separate. Refinancing needs its original-loan worksheet.</p><div className="guided-form-grid">
         <Choice label={`${label}: Owner`} value={entry.owner} choices={owners} onChange={owner => update({ owner: owner as typeof entry.owner })} />
         {([["lenderName", "Lender"], ["loanAccountReference", "Loan account reference"], ["sourceTaxYear", "Source tax year"], ["sourceReference", "Source reference"], ["vin", "VIN"], ["grossVehicleWeightRating", "Gross vehicle weight rating in pounds"]] as const).map(([field, text]) => <TextFact key={field} label={`${label}: ${text}`} value={entry[field]} onChange={value => update({ [field]: value })} />)}
@@ -89,7 +131,12 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
         {([["interestPaid", "Interest paid"], ["businessInterestDeducted", "Interest already deducted elsewhere"], ["nonqualifyingInterest", "Nonqualifying interest"]] as const).map(([field, text]) => <CurrencyField key={field} label={`${label}: ${text}`} value={entry[field]} onChange={value => update({ [field]: value })} />)}
         <Choice label={`${label}: Vehicle type`} value={entry.vehicleType} choices={[["car", "Car"], ["minivan", "Minivan"], ["van", "Van"], ["sport_utility_vehicle", "SUV"], ["pickup_truck", "Pickup truck"], ["motorcycle", "Motorcycle"]]} onChange={vehicleType => update({ vehicleType: vehicleType as typeof entry.vehicleType })} />
         {([["borrowerQualificationConfirmed", "Borrower qualification confirmed"], ["firstLien", "First lien"], ["originalUse", "Original use begins with borrower"], ["finalAssemblyUnitedStates", "Final assembly in the United States"], ["personalUse", "Purchased for personal use"], ["relatedParty", "Related-party loan"], ["lease", "Lease"], ["fleet", "Fleet purchase"], ["salvageOrScrap", "Salvage or scrap"], ["refinanced", "Refinanced loan"]] as const).map(([field, text]) => <BooleanFact key={field} label={`${label}: ${text}`} value={entry[field]} onChange={value => update({ [field]: value })} />)}
-      </div>{(entry.refinanced === true || entry.refinancingSources !== undefined) && <VehicleRefinancingDetails label={`${label} refinancing`} data={entry.refinancingSources} onChange={refinancingSources => update({ refinancingSources })} />}<button type="button" onClick={() => set({ vehicleLoans: data.vehicleLoans.filter((_, position) => position !== index) })}>{label}: Remove vehicle loan</button></fieldset>;
+      </div>
+        {(entry.refinanced === true || entry.refinancingSources !== undefined) && <VehicleRefinancingDetails label={`${label} refinancing`} data={entry.refinancingSources} onChange={refinancingSources => update({ refinancingSources })} />}
+        {statement && <VehicleInterestStatementDetails label={label} data={statement} onChange={patch => update({ form1098Vli: { ...statement, sourceFactsConfirmed: null, ...patch } }, "sourceFactsConfirmed" in patch)} onRemove={() => update({ form1098Vli: undefined })} />}
+        {!statement && data.sourceTaxYear === "2026" && <button type="button" onClick={() => update({ form1098Vli: { ...emptyVehicleInterestStatement } })}>{label}: Add 2026 Form 1098-VLI</button>}
+        <button type="button" onClick={() => set({ vehicleLoans: data.vehicleLoans.filter((_, position) => position !== index) })}>{label}: Remove vehicle loan</button>
+      </fieldset>;
     })}
     <button type="button" onClick={() => set({ vehicleLoans: [...data.vehicleLoans, { ...emptyVehicleInterest }] })}>Add vehicle loan interest</button>
     <p className="guided-hint">Senior eligibility uses actual birth, death and SSN facts from About You, with the deduction computed after the income limit.</p>

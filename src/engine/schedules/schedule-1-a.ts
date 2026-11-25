@@ -5,6 +5,7 @@ import { Schedule1ASchema, type Schedule1AInput, type Taxpayer } from "@/models/
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, min, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 
 export interface Schedule1AParams {
   taxpayer: Taxpayer;
@@ -25,6 +26,36 @@ export interface Schedule1AResult {
   lines: CalculatedLine[];
 }
 
+function verifyForm1098Vli(loan: Schedule1AInput["vehicleLoans"][number], taxYear: number) {
+  const statement = loan.form1098Vli;
+  if (!statement) return;
+  if (statement.taxYear !== taxYear || statement.payer !== loan.owner
+    || statement.lenderName !== loan.lenderName || statement.loanAccountReference !== loan.loanAccountReference
+    || statement.vin !== loan.vin || statement.originationDate !== loan.loanOriginationDate) {
+    throw new Error("Form 1098-VLI does not match the actual borrower, loan and return year.");
+  }
+  if (statement.lenderAcquisitionDate !== null || loan.refinanced || loan.refinancingSources) {
+    throw new Error("Form 1098-VLI for an assigned or refinanced loan requires separate statement reconciliation.");
+  }
+  if (!statement.originalUseChecked || !statement.usAssemblyChecked || !loan.originalUse || !loan.finalAssemblyUnitedStates) {
+    throw new Error("Form 1098-VLI requires confirmed original use and United States assembly for this statement path.");
+  }
+  if (d(statement.priorYearInterestRefund).gt(0)) {
+    throw new Error("Form 1098-VLI box 5 requires separate prior-year interest recovery review.");
+  }
+  if (d(loan.nonqualifyingInterest).gt(0)) {
+    throw new Error("Form 1098-VLI box 1 already excludes nonqualifying debt. Reconcile any additional exclusion separately.");
+  }
+  const unreimbursedBorrowerInterest = sumSourceMoney(
+    d(statement.reportedInterest),
+    d(statement.directThirdPartyInterest).negated(),
+    d(statement.reimbursedBorrowerInterest).negated(),
+  );
+  if (!unreimbursedBorrowerInterest.eq(loan.interestPaid)) {
+    throw new Error("Form 1098-VLI box 1 does not reconcile to unreimbursed interest actually paid by the borrower.");
+  }
+}
+
 export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const { taxpayer } = input;
   if (![2025, 2026].includes(taxpayer.taxYear)) throw new Error("Unsupported Schedule 1-A tax year");
@@ -33,7 +64,8 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const actualSources = facts.sourceTaxYear !== undefined || facts.sourceReference !== undefined || facts.sourceFactsConfirmed !== undefined || facts.allSourcesIncluded !== undefined
     || facts.employeeTips.some(entry => entry.w2SourceIds !== undefined || entry.form4137EmployerSourceId !== undefined || entry.reportingMethod !== undefined || entry.reportingSourceReference !== undefined)
     || facts.businessTips.some(entry => entry.businessSourceId !== undefined || entry.reportedTipSources !== undefined)
-    || facts.overtime.some(entry => entry.compensationSourceId !== undefined || entry.reportingSourceReference !== undefined);
+    || facts.overtime.some(entry => entry.compensationSourceId !== undefined || entry.reportingSourceReference !== undefined)
+    || facts.vehicleLoans.some(loan => loan.form1098Vli !== undefined);
   if (actualSources) {
     if (facts.sourceTaxYear !== taxpayer.taxYear || !facts.sourceReference || facts.sourceFactsConfirmed !== true || facts.allSourcesIncluded !== true) throw new Error("Confirm the complete actual Schedule1-A sources for the return year.");
     if ((facts.employeeTips.length || facts.businessTips.length || facts.overtime.length) && input.canonicalSourcesVerified !== true) throw new Error("Actual Schedule1-A compensation sources require canonical source verification before calculating.");
@@ -69,6 +101,7 @@ export function calculateSchedule1A(input: Schedule1AParams): Schedule1AResult {
   const overtimeDeduction = marriedSeparate ? d("0") : roundDollar(zeroFloor(min(eligibleOvertime, d(joint ? "25000" : "12500")).minus(wageDeductionReduction)));
   audit.record("Schedule 1-A", "21", "Qualified overtime compensation deduction", overtimeDeduction, "max(0, min(FLSA premium, 12500 [25000 MFJ]) - 100 × floor(MAGI excess / 1000)); MFS excluded");
   const vehicleInterest = sum(...facts.vehicleLoans.map((loan, loanIndex) => {
+    verifyForm1098Vli(loan, taxpayer.taxYear);
     if (actualSources || loan.owner !== undefined || loan.sourceTaxYear !== undefined || loan.borrowerQualificationConfirmed !== undefined) {
       if (!loan.owner || loan.sourceTaxYear !== taxpayer.taxYear || !loan.lenderName || !loan.loanAccountReference || !loan.sourceReference || loan.borrowerQualificationConfirmed === undefined) throw new Error("Schedule1-A requires actual vehicle borrower and loan source facts for this year.");
       if (loan.owner === "spouse" && (!joint || !taxpayer.spouse)) throw new Error("Schedule1-A spouse vehicle borrower requires the actual joint household.");

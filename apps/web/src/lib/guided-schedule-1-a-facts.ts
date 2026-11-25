@@ -1,6 +1,7 @@
 import { buildVehicleRefinancingSources, type VehicleRefinancingData } from "./guided-vehicle-refinancing";
 import { calculateVehicleRefinancing } from "@/engine/forms/vehicle-refinancing";
 import { Schedule1ASchema, type Schedule1AInput } from "@/models/inputs";
+import { sumSourceMoney } from "@/utils/sum-source-money";
 import type { GuidedFlowState } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -13,12 +14,28 @@ type TipQualificationData = { owner: "" | Owner; occupationCode: string; eligibl
 export interface EmployeeTipDeductionData extends TipQualificationData { employer: string; w2SourceIds: string[]; form4137EmployerSourceId: string; reportingMethod: "" | "w2" | "employer_statement" | "form4070" | "form4137"; reportingSourceReference: string; reportedEmployerTips: string; qualifiedW2Tips: string; qualifiedForm4137Tips: string }
 export interface BusinessTipDeductionData extends TipQualificationData { businessSourceId: string; reportedTipSources: { sourceId: string; qualifiedTips: string }[] }
 export interface OvertimeDeductionData { owner: "" | Owner; compensationSourceId: string; compensationExcludedFromWages: string; qualifiedPremium: string; requiredByFlsa: boolean | null; reportingSourceReference: string }
+export interface VehicleInterestStatementData {
+  sourceTaxYear: string;
+  sourceReference: string;
+  payer: "" | Owner | "other";
+  currentUncorrected: boolean | null;
+  sourceFactsConfirmed: boolean | null;
+  lenderAcquisitionDateBlank: boolean | null;
+  lenderAcquisitionDate: string;
+  reportedInterest: string;
+  directThirdPartyInterest: string;
+  reimbursedBorrowerInterest: string;
+  priorYearInterestRefund: string;
+  originalUseChecked: boolean | null;
+  usAssemblyChecked: boolean | null;
+}
 export interface VehicleInterestData {
   owner: "" | Owner; lenderName: string; loanAccountReference: string; sourceTaxYear: string; sourceReference: string; borrowerQualificationConfirmed: boolean | null;
   vin: string; acquiredDate: string; loanOriginationDate: string; interestPaid: string; businessInterestDeducted: string; nonqualifyingInterest: string;
   firstLien: boolean | null; originalUse: boolean | null; finalAssemblyUnitedStates: boolean | null; personalUse: boolean | null;
   vehicleType: "" | Schedule1AInput["vehicleLoans"][number]["vehicleType"]; grossVehicleWeightRating: string;
   refinancingSources?: VehicleRefinancingData;
+  form1098Vli?: VehicleInterestStatementData;
   relatedParty: boolean | null; lease: boolean | null; fleet: boolean | null; salvageOrScrap: boolean | null; refinanced: boolean | null;
 }
 export interface Schedule1AData {
@@ -30,11 +47,69 @@ const emptyTipQualification: TipQualificationData = { owner: "", occupationCode:
 export const emptyEmployeeTipDeduction: EmployeeTipDeductionData = { ...emptyTipQualification, employer: "", w2SourceIds: [], form4137EmployerSourceId: "", reportingMethod: "", reportingSourceReference: "", reportedEmployerTips: "", qualifiedW2Tips: "", qualifiedForm4137Tips: "" };
 export const emptyBusinessTipDeduction: BusinessTipDeductionData = { ...emptyTipQualification, businessSourceId: "", reportedTipSources: [] };
 export const emptyOvertimeDeduction: OvertimeDeductionData = { owner: "", compensationSourceId: "", compensationExcludedFromWages: "", qualifiedPremium: "", requiredByFlsa: null, reportingSourceReference: "" };
+export const emptyVehicleInterestStatement: VehicleInterestStatementData = {
+  sourceTaxYear: "", sourceReference: "", payer: "", currentUncorrected: null, sourceFactsConfirmed: null,
+  lenderAcquisitionDateBlank: null, lenderAcquisitionDate: "", reportedInterest: "", directThirdPartyInterest: "",
+  reimbursedBorrowerInterest: "", priorYearInterestRefund: "", originalUseChecked: null, usAssemblyChecked: null,
+};
 export const emptyVehicleInterest: VehicleInterestData = { owner: "", lenderName: "", loanAccountReference: "", sourceTaxYear: "", sourceReference: "", borrowerQualificationConfirmed: null, vin: "", acquiredDate: "", loanOriginationDate: "", interestPaid: "", businessInterestDeducted: "", nonqualifyingInterest: "", firstLien: null, originalUse: null, finalAssemblyUnitedStates: null, personalUse: null, vehicleType: "", grossVehicleWeightRating: "", relatedParty: null, lease: null, fleet: null, salvageOrScrap: null, refinanced: null };
 function money(value: string | undefined, label: string) { const error = amountError(value, label); if (error) throw new Error(error); return parseGuidedCurrency(value); }
 function flag(value: boolean | null | undefined, label: string): boolean { if (typeof value !== "boolean") throw new Error(`Confirm actual ${label}; unknown is not false.`); return value; }
 function text(value: string | undefined, label: string) { if (!value?.trim()) throw new Error(`Enter the actual ${label}.`); return value.trim(); }
 function sourceYear(value: string | undefined, year: number) { if (!/^\d{4}$/.test(value ?? "") || Number(value) !== year) throw new Error("Actual source year must match the return year."); return year; }
+
+function statementMoney(value: string, label: string) {
+  const amount = money(value, `Form 1098-VLI ${label}`);
+  if (amount.decimalPlaces() > 2) throw new Error(`Enter Form 1098-VLI ${label} in exact dollars and cents.`);
+  return amount;
+}
+
+function buildForm1098Vli(
+  loan: VehicleInterestData, owner: Owner, year: number, interestPaid: Decimal, nonqualifyingInterest: Decimal,
+): Schedule1AInput["vehicleLoans"][number]["form1098Vli"] {
+  const statement = loan.form1098Vli;
+  if (statement === undefined) return undefined;
+  if (year !== 2026 || statement.sourceTaxYear?.trim() !== "2026") throw new Error("Confirm the actual Form 1098-VLI calendar year for this 2026 return.");
+  if (statement.currentUncorrected !== true || statement.sourceFactsConfirmed !== true) {
+    throw new Error("Check the current uncorrected Form 1098-VLI Copy B and confirm its facts after the last edit.");
+  }
+  if (statement.payer !== owner) throw new Error("The Form 1098-VLI payer of record must match the borrower on the payment records.");
+  if (statement.lenderAcquisitionDateBlank !== true || statement.lenderAcquisitionDate?.trim()) {
+    throw new Error("Confirm that Form 1098-VLI Box 3b is blank. A lender acquisition date requires separate reconciliation.");
+  }
+  if (loan.refinanced !== false || loan.refinancingSources !== undefined) throw new Error("A refinanced loan requires separate Form 1098-VLI reconciliation.");
+  if (statement.originalUseChecked !== true || statement.usAssemblyChecked !== true || loan.originalUse !== true || loan.finalAssemblyUnitedStates !== true) {
+    throw new Error("Confirm that Form 1098-VLI Boxes 6 and 7 are checked and match the original-use and U.S. assembly facts in the loan records.");
+  }
+  const priorYearInterestRefund = statementMoney(statement.priorYearInterestRefund, "Box 5 refund or credit");
+  if (!priorYearInterestRefund.isZero()) throw new Error("A Form 1098-VLI Box 5 refund or credit requires separate prior-year interest recovery review.");
+  if (!nonqualifyingInterest.isZero()) throw new Error("Interest on nonqualifying indebtedness requires separate reconciliation outside Form 1098-VLI Box 1.");
+  const reportedInterest = statementMoney(statement.reportedInterest, "Box 1 interest");
+  const directThirdPartyInterest = statementMoney(statement.directThirdPartyInterest, "direct interest payments by others");
+  const reimbursedBorrowerInterest = statementMoney(statement.reimbursedBorrowerInterest, "borrower-paid interest reimbursed by others");
+  const net = sumSourceMoney(reportedInterest, directThirdPartyInterest.negated(), reimbursedBorrowerInterest.negated());
+  if (!net.eq(interestPaid)) throw new Error("Reconcile Form 1098-VLI Box 1 less direct payments by others and borrower reimbursements to interest actually paid by the borrower.");
+
+  return {
+    taxYear: 2026,
+    sourceReference: text(statement.sourceReference, "Form 1098-VLI source reference"),
+    factsConfirmed: true,
+    corrected: false,
+    payer: statement.payer,
+    lenderName: loan.lenderName.trim(),
+    loanAccountReference: loan.loanAccountReference.trim(),
+    vin: loan.vin,
+    originationDate: loan.loanOriginationDate,
+    lenderAcquisitionDate: null,
+    reportedInterest: reportedInterest.toFixed(),
+    directThirdPartyInterest: directThirdPartyInterest.toFixed(),
+    reimbursedBorrowerInterest: reimbursedBorrowerInterest.toFixed(),
+    priorYearInterestRefund: priorYearInterestRefund.toFixed(),
+    originalUseChecked: statement.originalUseChecked,
+    usAssemblyChecked: statement.usAssemblyChecked,
+  };
+}
+
 const normal = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
 export function schedule1ACompensationSources(state: GuidedFlowState) {
   const w2 = (state.sectionData["income-w2"]?.entries ?? []).filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld)).map((entry, index) => ({ sourceId: `formW2:${index}`, kind: "w2" as const, accountHolder: entry.accountHolder, name: entry.employerName, amount: entry.wages, entry }));
@@ -99,9 +174,12 @@ export function buildSchedule1AInput(data: Schedule1AData | undefined, state: Gu
   });
   const vehicleLoans = data.vehicleLoans.map(loan => {
     const owner = requireOwner(loan.owner); sourceYear(loan.sourceTaxYear, year);
+    const interestPaid = money(loan.interestPaid, "original loan interest");
+    const nonqualifyingInterest = money(loan.nonqualifyingInterest, "nonqualifying loan interest");
+    const form1098Vli = buildForm1098Vli(loan, owner, year, interestPaid, nonqualifyingInterest);
     if (loan.refinanced !== true && loan.refinancingSources !== undefined) throw new Error("Saved refinancing records conflict with the actual refinanced-loan answer.");
     const flags = Object.fromEntries((["borrowerQualificationConfirmed", "firstLien", "originalUse", "finalAssemblyUnitedStates", "personalUse", "relatedParty", "lease", "fleet", "salvageOrScrap", "refinanced"] as const).map(key => [key, flag(loan[key], key)]));
-    return { ...loan, ...flags, refinancingSources: loan.refinanced === true ? buildVehicleRefinancingSources(loan.refinancingSources) : undefined, owner, sourceTaxYear: year, lenderName: text(loan.lenderName, "lender"), loanAccountReference: text(loan.loanAccountReference, "loan account reference"), sourceReference: text(loan.sourceReference, "loan source reference"), grossVehicleWeightRating: /^\d+$/.test(loan.grossVehicleWeightRating) ? Number(loan.grossVehicleWeightRating) : undefined, interestPaid: money(loan.interestPaid, "original loan interest").toFixed(), businessInterestDeducted: money(loan.businessInterestDeducted, "interest already deducted elsewhere").toFixed(), nonqualifyingInterest: money(loan.nonqualifyingInterest, "nonqualifying loan interest").toFixed() };
+    return { ...loan, ...flags, form1098Vli, refinancingSources: loan.refinanced === true ? buildVehicleRefinancingSources(loan.refinancingSources) : undefined, owner, sourceTaxYear: year, lenderName: text(loan.lenderName, "lender"), loanAccountReference: text(loan.loanAccountReference, "loan account reference"), sourceReference: text(loan.sourceReference, "loan source reference"), grossVehicleWeightRating: /^\d+$/.test(loan.grossVehicleWeightRating) ? Number(loan.grossVehicleWeightRating) : undefined, interestPaid: interestPaid.toFixed(), businessInterestDeducted: money(loan.businessInterestDeducted, "interest already deducted elsewhere").toFixed(), nonqualifyingInterest: nonqualifyingInterest.toFixed() };
   });
   const seniorOwners = data.seniorOwners.map(requireOwner); if (seniorOwners.length) buildStandardDeductionFacts(household?.standardDeductionFacts, state.segmentation.filingStatus, year, household);
   const excludedPuertoRicoIncome = money(data.excludedPuertoRicoIncome, "actual excluded PuertoRico income"); const form4563Exclusion = money(data.form4563Exclusion, "actual Form4563 exclusion");

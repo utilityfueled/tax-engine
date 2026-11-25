@@ -40,3 +40,80 @@ it("collects actual additional deduction records and preserves unknown answers",
     await click("Remove additional deduction worksheet"); expect(latest).toBeUndefined();
   } finally { await act(async () => root.unmount()); container.remove(); }
 });
+
+it("collects and reconfirms actual 2026 Copy B without overwriting loan records", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  let latest: Schedule1AData | undefined;
+  function Harness({ initial }: { initial?: Schedule1AData }) {
+    const [data, setData] = useState(initial);
+    return <Schedule1ASourceDetails data={data} onChange={next => { latest = next; setData(next); }} />;
+  }
+  function field(label: string) {
+    const control = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!control) throw new Error(`Missing ${label}`);
+    return control;
+  }
+  async function change(label: string, value: string) {
+    const control = field(label);
+    const select = control instanceof HTMLSelectElement;
+    const setter = Object.getOwnPropertyDescriptor(select ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error(`Missing value setter for ${label}`);
+    await act(async () => {
+      setter.call(control, value);
+      control.dispatchEvent(new Event(select ? "change" : "input", { bubbles: true }));
+    });
+  }
+  async function click(label: string) {
+    const button = [...container.querySelectorAll("button")].find(entry => entry.textContent === label);
+    if (!button) throw new Error(`Missing ${label}`);
+    await act(async () => button.click());
+  }
+  const prefix = "Vehicle loan 1: Form 1098-VLI";
+  const confirmation = `${prefix} checked after the last edit`;
+  try {
+    await act(async () => root.render(<Harness />));
+    await click("Add additional deduction worksheet");
+    await click("Add vehicle loan interest");
+    await change("Vehicle loan 1: Owner", "primary");
+    await change("Vehicle loan 1: Interest paid", "400.25");
+    expect(container.textContent).not.toContain("Add 2026 Form 1098-VLI");
+    await change("Additional deductions: Source tax year", "2026");
+    await click("Vehicle loan 1: Add 2026 Form 1098-VLI");
+    expect(field(`${prefix} payer of record`).value).toBe("");
+    expect(field(`${prefix} calendar year`).value).toBe("");
+    expect(field(`${prefix} Box 3b is blank`).value).toBe("");
+    await change(`${prefix} payer of record`, "primary");
+    await change(`${prefix} calendar year`, "2026");
+    await change(`${prefix} Box 1 interest`, "900.25");
+    await change(`${prefix} direct interest payments by others`, "400.00");
+    await change(`${prefix} borrower-paid interest reimbursed by others`, "100.00");
+    await change(`${prefix} Box 5 refund or credit`, "0.00");
+    await change(`${prefix} Box 3b is blank`, "false");
+    await change(`${prefix} Box 3b lender acquisition date`, "2026-02-01");
+    await change("Additional deductions: Sources checked after the last edit", "true");
+    await change(confirmation, "true");
+    expect(latest?.sourceFactsConfirmed).toBe(true);
+    expect(latest?.vehicleLoans[0]).toMatchObject({ interestPaid: "400.25", form1098Vli: { lenderAcquisitionDate: "2026-02-01", lenderAcquisitionDateBlank: false, priorYearInterestRefund: "0.00", sourceFactsConfirmed: true } });
+    await change("Vehicle loan 1: VIN", "1HGCM82633A004352");
+    expect(latest?.sourceFactsConfirmed).toBeNull();
+    expect(latest?.vehicleLoans[0]?.form1098Vli?.sourceFactsConfirmed).toBeNull();
+    await change(confirmation, "true");
+    await change(`${prefix} Box 1 interest`, "900.26");
+    expect(field(confirmation).value).toBe("");
+    const saved = structuredClone(latest);
+    await act(async () => root.render(<Harness key="replay" initial={saved} />));
+    expect(field(`${prefix} Box 1 interest`).value).toBe("900.26");
+    expect(field(`${prefix} Box 3b lender acquisition date`).value).toBe("2026-02-01");
+    expect(field(`${prefix} Box 5 refund or credit`).value).toBe("0.00");
+    expect(field("Vehicle loan 1: Interest paid").value).toBe("400.25");
+    await click("Vehicle loan 1: Remove Form 1098-VLI");
+    expect(latest?.vehicleLoans[0]?.form1098Vli).toBeUndefined();
+    expect(latest?.vehicleLoans[0]?.interestPaid).toBe("400.25");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});

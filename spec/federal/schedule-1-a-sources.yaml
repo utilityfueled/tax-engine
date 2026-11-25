@@ -24,3 +24,38 @@ lines:
     formula: "A supplied actual source worksheet must match the return year and be complete and confirmed. Employee tips, business tips and overtime with actual source metadata cannot calculate until canonical source binding verifies the supplied links. Missing business values cannot become zero. Actual vehicle source metadata requires a matching-year borrower and loan reference; known borrower ineligibility yields zero, while missing qualification remains unknown. Legacy unverified source-free2025 behavior remains distinct."
     irsRef: "Form1040 Instructions qualified reporting, reasonable business deduction allocation and source recordkeeping"
     testRef: "tests/engine/schedules/schedule-1-a-linked-sources.test.ts::rejects unverified linked deductions and missing canonical business values"
+  - line: "form-1098-vli"
+    description: "Reconcile a 2026 Form 1098-VLI to actual interest paid by the borrower"
+    formula: |
+      Bind a confirmed uncorrected Copy B for tax year 2026 to the ordinary
+      original loan using the payer of record, lender, account reference,
+      box 2d VIN and box 3a loan origination date. Require both boxes 6 and 7
+      checked and consistent with the actual loan facts for this slice.
+      Supply explicit nonnegative cent amounts for box 1, direct third-party
+      payments included in box 1 and third-party reimbursements of borrower
+      payments that are still included in box 1. Exclude refunds already
+      netted by the lender. Box 1 minus those two distinct amounts must equal
+      the confirmed unreimbursed interest the borrower actually paid in the
+      return year. Confirm that any C/E/F allocation is part of that same
+      borrower-paid amount. Existing Schedule 1-A rules subtract that
+      business allocation before the cap and MAGI phaseout. Reconcile
+      statement amounts exactly before applying any form rounding. Descriptive
+      boxes 2a–2c and box 4 principal stay on the original statement.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=3; https://www.irs.gov/instructions/i1098vli"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::reconciles current 1098-VLI interest before applying the existing vehicle deduction"
+  - line: "form-1098-vli-limit"
+    description: "Hold lender statements requiring another source or tax method"
+    formula: |
+      Require a confirmed blank box 3b for the original-lender slice. Box 3b
+      would be the lender's acquisition date, not the taxpayer's purchase.
+      A positive box 5 reflects a prior-year reimbursement, requiring
+      separate recovery treatment. Do not net it against box 1 or silently
+      ignore it. Box 1 already excludes interest on non-SPVL indebtedness.
+      Hold any separate positive nonqualifying interest on this statement
+      path until its basis is reconciled. Hold corrected, assigned or
+      refinanced loans and conflicting, incomplete or mismatched records.
+      Continue the independently confirmed payment-record path without this
+      optional form. The lender reporting threshold does not gate deduction
+      eligibility. Do not log the form's private identifiers in the tax audit.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4; https://www.irs.gov/instructions/i1098vli"
+    testRef: "tests/engine/schedules/schedule-1-a-sources.test.ts::holds mismatched or exceptional 1098-VLI facts without disturbing manual payment records"

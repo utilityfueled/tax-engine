@@ -6677,6 +6677,25 @@ const schedule1ADate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").r
   const parsed = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }, "Invalid calendar date");
+const form1098VliMoney = schedule1AMoney.refine((value) => d(value).decimalPlaces() <= 2, "Use exact dollars and cents");
+const form1098VliSchema = z.object({
+  taxYear: z.literal(2026),
+  sourceReference: z.string().trim().min(1),
+  factsConfirmed: z.literal(true),
+  corrected: z.literal(false),
+  payer: schedule1AOwner,
+  lenderName: z.string().trim().min(1),
+  loanAccountReference: z.string().trim().min(1),
+  vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/),
+  originationDate: schedule1ADate,
+  lenderAcquisitionDate: schedule1ADate.nullable(),
+  reportedInterest: form1098VliMoney,
+  directThirdPartyInterest: form1098VliMoney,
+  reimbursedBorrowerInterest: form1098VliMoney,
+  priorYearInterestRefund: form1098VliMoney,
+  originalUseChecked: z.boolean(),
+  usAssemblyChecked: z.boolean(),
+}).strict();
 const schedule1ATipFacts = {
   owner: schedule1AOwner,
   occupationCode: z.string().regex(/^\d{3}$/),
@@ -6748,6 +6767,7 @@ export const Schedule1ASchema = z.object({
     salvageOrScrap: z.boolean(),
     refinanced: z.boolean(),
     refinancingSources: VehicleRefinancingSourcesSchema.optional(),
+    form1098Vli: form1098VliSchema.optional(),
   }).refine((value) => d(value.businessInterestDeducted).plus(value.nonqualifyingInterest).lte(value.interestPaid), "Excluded interest exceeds interest paid")),
   seniorOwners: z.array(schedule1AOwner),
 }).superRefine((facts, ctx) => {
