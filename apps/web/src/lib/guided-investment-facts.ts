@@ -53,6 +53,17 @@ function rejectUnsupportedAmount(value: string | undefined, key: string, message
   if (hasEnteredAmount(value) && !errors[key] && !parseGuidedCurrency(value).isZero()) errors[key] = message;
 }
 
+function investmentStatementIdentity(entry: InvestmentSourceData): string | undefined {
+  const formattedTin = entry.payerTin?.trim() ?? "";
+  const payerTin = formattedTin.replaceAll("-", "");
+  const account = entry.accountReference?.trim() ?? "";
+  if (!/^(?:\d{9}|\d{2}-\d{7}|\d{3}-\d{2}-\d{4})$/.test(formattedTin) || payerTin === "000000000" || !account) return;
+  // A printed mask or a short numeric reference can identify more than one account.
+  const compactAccount = account.replaceAll(/[\s-]/g, "");
+  if (!compactAccount || /[*•…]|\.{3}|\b(?:last (?:4|four)|ending in)\b/i.test(account) || /^(?:x{2,}\d*|\d{1,4})$/i.test(compactAccount)) return;
+  return JSON.stringify([entry.sourceTaxYear?.trim(), entry.accountHolder, payerTin, account]);
+}
+
 export function investmentRowsStarted(data: InvestmentData): boolean {
   return [...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) || data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment))
     || Boolean(data.oidEntries?.some(isStartedOid)) || Boolean(data.digitalAssetEntries?.some(isStartedDigitalAsset));
@@ -69,11 +80,21 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
   Object.assign(errors, qsbsSourceFactErrors(data, taxYear, filingStatus, personal));
   const preferenceSourceIds = new Set<string>();
   for (const [kind, entries] of [["interest", data.interestEntries], ["dividend", data.dividendEntries]] as const) {
+    const statementIdentities = new Set<string>();
     entries.forEach((entry, index) => {
       if (!isStartedInvestment(entry)) return;
       const prefix = `${kind}-${index}`;
       if (!entry.payer.trim()) errors[`${prefix}-payer`] = "Enter the actual payer name from the source record.";
       sourceIdentityErrors(entry, prefix, filingStatus, taxYear, errors);
+      if (!errors[`${prefix}-year`] && !errors[`${prefix}-owner`]) {
+        const identity = investmentStatementIdentity(entry);
+        if (identity !== undefined) {
+          if (statementIdentities.has(identity)) {
+            errors[`${prefix}-accountReference`] = "Two entries identify the same account for this taxpayer and year. Review the statements and keep the current one, or correct the account reference.";
+          }
+          statementIdentities.add(identity);
+        }
+      }
       const fields = kind === "interest" ? interestSourceAmounts : dividendSourceAmounts;
       const values = entry as unknown as Record<string, string | undefined>;
       for (const [field, label] of fields) { const error = amountError(values[field], label); if (error) errors[`${prefix}-${field}`] = error; }

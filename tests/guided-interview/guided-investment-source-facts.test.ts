@@ -6,11 +6,60 @@ import { buildBrokerageInputs, buildDividendInputs, buildGuidedFactAnswers, buil
 import { investmentFactErrors } from "@/lib/guided-investment-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource, startCompleteInterview } from "./complete-facts";
-import { emptyStateReturnData } from "@/lib/guided-interview-flow";
+import { emptyStateReturnData, validateSection } from "@/lib/guided-interview-flow";
 
 function interview() { return startCompleteInterview({ filingStatus: "single", incomeTypes: ["investments"], lifeEvents: [], stateCode: null }); }
 
 describe("guided investment source records", () => {
+  // Spec: spec/federal/guided-input.yaml, investment-statement-reconciliation
+  it("holds repeated interest and dividend statements before calculating", () => {
+    const state = interview();
+    const interest = { ...completeInterestSource, payerTin: "123-45-6789", accountReference: "Account-A", interestIncome: "800.25" };
+    const dividend = { ...completeDividendSource, payerTin: "12-3456789", accountReference: "Account-A", ordinaryDividends: "900.25" };
+    const data = { interestEntries: [interest], dividendEntries: [dividend], brokerageEntries: [] };
+    state.sectionData["income-investments"] = data;
+    expect(buildTaxInputFromGuidedData(state)?.form1099Int[0]?.interestIncome).toBe("800.25");
+    expect(buildTaxInputFromGuidedData(state)?.form1099Div[0]?.ordinaryDividends).toBe("900.25");
+
+    data.interestEntries.push({ ...interest, payerTin: "123456789", accountReference: " Account-A " });
+    data.dividendEntries.push({ ...dividend, ordinaryDividends: "900.76" });
+    const savedFacts = structuredClone(data);
+    expect(validateSection(state, "income-investments").fieldErrors).toMatchObject({
+      "interest-1-accountReference": expect.stringContaining("same account"),
+      "dividend-1-accountReference": expect.stringContaining("same account"),
+    });
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    expect(computeGuidedPreview(state)).toBeNull();
+    expect(data).toEqual(savedFacts);
+  });
+
+  it("keeps separate form kinds, account references, payers and joint-return owners separate", () => {
+    const shared = { payerTin: "12-3456789", accountReference: "Account-A" };
+    const interest = { ...completeInterestSource, ...shared, interestIncome: "800.25" };
+    const data = {
+      interestEntries: [interest,
+        { ...interest, accountReference: "account-A" },
+        { ...interest, payerTin: "98-7654321" },
+        { ...interest, accountHolder: "spouse" as const }],
+      dividendEntries: [{ ...completeDividendSource, ...shared }],
+      brokerageEntries: [],
+    };
+    const errors = investmentFactErrors(data, "mfj", 2025);
+    expect(Object.keys(errors).filter(key => key.endsWith("-accountReference"))).toEqual([]);
+  });
+
+  it.each([
+    { accountReference: "" }, { accountReference: "4321" }, { accountReference: "****4321" },
+    { accountReference: "XX-4321" }, { accountReference: "••••4321" },
+    { accountReference: "X-X-X-4321" }, { accountReference: "XXXX-12-34" },
+    { payerTin: "" }, { payerTin: "XX-XXX6789" }, { payerTin: "00-0000000" },
+  ])("treats a missing or partial statement identity as unknown: %j", partial => {
+    const state = interview();
+    const entry = { ...completeInterestSource, accountReference: "Account-A", interestIncome: "800.25", ...partial };
+    state.sectionData["income-investments"] = { interestEntries: [entry, { ...entry }], dividendEntries: [], brokerageEntries: [] };
+    expect(buildTaxInputFromGuidedData(state)?.form1099Int).toHaveLength(2);
+  });
+
   it("preserves explicit zero records and actual investment amounts without invented payers", () => {
     expect(buildInterestInputs([completeInterestSource])).toEqual([expect.objectContaining({ payer: "Actual bank", interestIncome: "0", earlyWithdrawalPenalty: "0", taxExemptInterest: "0", federalWithheld: "0" })]);
     expect(buildDividendInputs([completeDividendSource])).toEqual([expect.objectContaining({ payer: "Actual fund", ordinaryDividends: "0", section1250Gain: "0", exemptInterestDividends: "0" })]);
