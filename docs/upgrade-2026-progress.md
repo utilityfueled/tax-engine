@@ -1,5 +1,59 @@
 # 2026 upgrade implementation evidence
 
+## November 25 AI evaluation accuracy and abstention
+
+`297f948a` prevents old binding, prompt or schema versions from earning
+exact-field credit or serving as a passing baseline for a critical-field
+comparison. Required fields remain in the denominator and known attempt
+costs remain exact. A current result with a one-cent error still earns
+credit for its independently correct date. Missing, invalid and stale
+responses no longer count as observed abstentions. Three stale-version
+regressions and the abstention regression failed before the fix. The
+mixed current/stale sample scores 50% exact-field accuracy, with one
+completed repeat. The abstention sample counts one explicit abstention.
+All 94 offline tests, 49 independent focused tests, types, scoped lint,
+20 scoped spec references, inventory and 2,071 exact staged browser
+source digests passed. The exact Docker build passed. The initial local
+test pass hit the sandbox's localhost bind restriction. All 62 affected
+cases and the repeated full unit and coverage suites passed with
+loopback allowed. Unit and coverage each passed 30,518 active cases with
+81 original skips and 88.40% branch coverage. All eleven local checks
+passed, with 10,061 exact-tree spec lines linked to tests. Chromium
+passed 652 active cases, with five original skips over eight windows
+and verified test-server shutdown. Strict AMD64 passed 645 of 652 active
+cases. Seven Ohio cases reached their 30-second deadlines, including one
+business part-year, two resident-credit and four part-year school district
+cases. Compose upgrade, recovery and rollback, independent archive
+verification and browser container removal passed. Managed Linux passed
+650 of 652 active cases. Both railroad retirement saved-PDF inspections
+hit the four-second deadline after reaching `page_text` at 3.002 seconds
+on desktop and 2.787 seconds on mobile. The managed test server closed.
+All eight ordinary CI jobs passed. ARM64 passed 642 of 652 active cases
+with five original skips in eight windows. Ten Ohio cases reached their
+30-second deadlines, including two business part-year, one reciprocal,
+three resident-credit and four part-year school-district cases. ARM64
+Compose upgrade and recovery, independent archive verification, receipt
+upload and browser container removal passed. Browser qualification is open
+on each remote runtime.
+Testing used synthetic data and the independent review verified
+engineering behavior.
+[Executor specification](../spec/federal/ai-evaluation-executor.yaml) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45556569276) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45556569069) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45556569023) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45557542139/job/139013128196) ·
+[ARM64 timing artifact](https://github.com/utilityfueled/tax-engine/actions/runs/45557542139/artifacts/14998454950).
+
+The published standard text input and output rates still match the
+configured rates for Luna and Sol. Gemini 3.8 Flash still lists $0.75
+and $3.75 per million through December 31, with $1.50 and $7.50 from
+January 1. OpenAI still lists December 11, 2026 for GPT-5 Mini shutdown.
+This catalog check leaves project availability and held-out evidence
+open. [Luna pricing](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[Sol pricing](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[OpenAI lifecycle dates](https://developers.openai.com/api/docs/deprecations) ·
+[Gemini standard rates](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
+
 ## November 25 explicit review of legacy AOTC claimant facts
 
 `459b880a` retains older claimant answers in the guided return and asks
@@ -27,7 +81,16 @@ deadline. This affected one business part-year and one reciprocal case,
 two resident-credit cases and three part-year school-district cases.
 Isolated Compose recovery, independent archive verification, receipt
 upload and verified browser container removal passed. The ARM64 release
-gate remains open. CI and Linux verification are still running.
+gate remains open. Managed Linux passed 650 active cases with five
+original skips. Both railroad retirement saved-PDF inspections missed
+their unchanged four-second deadline after reaching `page_text` at
+2.818 seconds on desktop and 2.765 seconds on mobile. The local server
+on that runner closed. Strict AMD64 passed 638 active cases with five
+original skips. Eleven Ohio journeys and one mobile passenger vehicle
+journey reached their 30-second deadlines. Both railroad retirement
+saved-PDF inspections reached the four-second deadline. Strict Compose
+upgrade, recovery and rollback, independent archive verification and
+container removal passed. All eight ordinary CI jobs passed.
 [Form 8863 instructions](https://www.irs.gov/instructions/i8863) ·
 [Guided specification](../spec/federal/guided-aotc-student-history.yaml) ·
 [Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45548981817) ·
@@ -160,6 +223,8 @@ railroad retirement saved-PDF check hit its four-second limit in
 `page_text`. Compose upgrade, recovery and rollback, independent archive
 verification and container cleanup passed. The bounded strict job log
 SHA-256 is `9005ada44798ef6a472b11d08e392b7ac1cc8a15ee39963cace6afc234c29feb`.
+All eight exact CI jobs passed, including both unit shards and their
+aggregate status check.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
 [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45539213333) ·
 [Corrected Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45539213256) ·
