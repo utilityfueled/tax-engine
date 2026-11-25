@@ -40,6 +40,9 @@ Use the linked progress sections when investigating individual packages.
   All eleven exact local checks passed. Unit and coverage runs passed
   30,483 tests at 88.38% branch coverage. Local Chromium passed 652
   active cases, with five original skips and verified server cleanup.
+  Exact managed Linux passed 651 active cases and missed one railroad
+  retirement saved-PDF deadline. Strict AMD64 passed 646 and missed six
+  Ohio journey deadlines. Recovery, rollback and container removal passed.
   [Investment statement evidence](upgrade-2026-progress.md#november-25-guided-investment-statement-reconciliation).
 
 - `d316004f` reuses persisted Ohio drafts in the business and resident

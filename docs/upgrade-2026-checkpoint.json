@@ -52,7 +52,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect exact 3a9f8d24 combined checks, CI 45527715373 and Linux Web 45527715370. Observe earlier exact 8f45074d checks and 5bbc0504 timing in ARM64 45523084019. The 9dac7cb0 exact local checks passed and the remote Linux results are still pending.",
+      "Collect exact 3a9f8d24 combined checks, CI 45527715373 and Linux Web 45527715370. Observe earlier exact 8f45074d checks and 5bbc0504 timing in ARM64 45523084019. The 9dac7cb0 managed Linux and strict AMD64 runs completed with browser deadline failures.",
       "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
@@ -152,6 +152,8 @@
       "localFullBrowser": {"passed": 652, "originalSkips": 5, "windows": 8, "cleanupVerified": true, "summarySha256": "7795134de1f7b7897e872d3aa30ae7a30e19b8225e4d11fc0ec119d3d912de72"},
       "ciRun": 45521682742,
       "webRun": 45521682739,
+      "managedLinux": {"job": 138894842382, "windows": 8, "passed": 651, "failed": 1, "originalSkips": 5, "rrtaFailurePhase": "After child complete marker at 3.919046 seconds. Parent deadline at 4.009172 seconds.", "serverTeardownVerified": false, "browserLogSha256": "6a690f81aa4644e1ac6c95c72082731e55d7e438439722ff00dbdd3f6eebcc6f"},
+      "strictAmd64": {"job": 138894842715, "windows": 8, "passed": 646, "failed": 6, "originalSkips": 5, "deadlineCategories": {"ohioBusinessNew212": 1, "ohioResidentCredit": 2, "ohioSchoolDistrict": 3, "rrtaInspection": 0}, "recoveryRollbackPassed": true, "independentArchivePassed": true, "scanStepPassed": true, "browserContainerRemoved": true, "browserLogSha256": "d59a12058e4f5b75d684731a3939681a4493a65c7b4f6d698258332cc06573e2"},
       "dockerRun": 45521682807,
       "dockerStatus": "Success",
       "evidence": ".local/upgrade-evidence/nov24-investment-statement-reconciliation"

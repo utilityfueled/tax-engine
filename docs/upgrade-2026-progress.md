@@ -133,10 +133,22 @@ skips and 88.38% branch coverage. The local types, builds and lint also
 passed. The local browser suite passed 652 active cases with five
 original skips across eight windows. The owned server closed. All eleven
 exact local checks passed. GitHub's exact-source Docker build passed.
-The Linux browser jobs are still in progress.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45521682742) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45521682739) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45521682807).
+
+The managed Linux job passed 651 active cases and failed one desktop
+railroad retirement PDF inspection. The child emitted its final phase
+marker at 3.919 seconds. The parent reached its unchanged four-second
+deadline before receiving the result and process exit. Managed logs
+establish generic job teardown. App server closure remains unverified.
+Strict AMD64 passed 646 active cases. One Ohio business case, two
+resident-credit cases and three school cases reached 30 seconds.
+The strict image build, separate archive verification, recovery,
+rollback, scan and browser container removal passed. Both browser runs
+completed eight windows with five original skips.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45521682739/job/138894842382) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45521682739/job/138894842715).
 
 Two synthetic Ohio school-header fixtures on exact `03f367de` averaged
 0.296–0.307 ms for state updates and 15.033–15.192 ms for render and

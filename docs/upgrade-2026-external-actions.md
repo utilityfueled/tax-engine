@@ -1,5 +1,20 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Ohio traditional school levy review
+
+Use a fictional single adult with no dependents or claimability, one actual
+full-year Ohio residence in Talawanda CSD, verified W-2 wages as the only
+income and a whole-dollar election. Derive the exemption, taxable school
+income and exact and rounded pre-credit levy separately for wages of
+$2,399, $2,449, $2,450, $40,000, $40,001, $80,000, $80,001,
+$499,999 and $500,000. Record the statutory basis and the published
+district rate before comparing with the draft. Review the final SD 100
+form and payment or credit transfers when published.
+[Traditional tax base](https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026) ·
+[Exemption statute](https://codes.ohio.gov/ohio-revised-code/section-5747.025/9-30-2025) ·
+[Enacted H.B. 96](https://publicfiles.ohiosos.gov/free/publications/SessionLaws/136/136-HB-096-part-33.pdf) ·
+[2026 district schedule](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf).
+
 ## November 25 Ohio refundable jobs credit review
 
 Use a fictional direct individual on a calendar-year Ohio 2026 return.
