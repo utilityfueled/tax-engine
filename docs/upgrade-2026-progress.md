@@ -79,6 +79,15 @@ remains unverified.
 [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45526119746) ·
 [Corrected Web](https://github.com/utilityfueled/tax-engine/actions/runs/45526119691).
 
+Managed Linux and strict AMD64 each passed 650 active cases across
+eight windows. Managed hit both railroad retirement PDF inspection
+deadlines. Strict hit the unchanged 30-second limit during the filing
+rejection POST in two desktop Ohio school cases. Both retained five
+original skips. Strict recovery, rollback, separate archive verification,
+scan and container removal passed.
+[Managed Linux](https://github.com/utilityfueled/tax-engine/actions/runs/45526119691/job/138909797275) ·
+[Strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45526119691/job/138909797504).
+
 An independent November 25 IRS catalog and direct-PDF recheck found
 the same pinned Schedule B and Forms 4137, 6781, 8801 and 5329 bytes.
 Current Form 1040, Schedules 1, 1-A, 2, 3, A, D and E, and Forms 6251,

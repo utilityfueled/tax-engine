@@ -117,6 +117,8 @@
       "correctedCiRun": 45526119746,
       "correctedCiInventoryConclusion": "Passed spec:validate and spec:inventory:check.",
       "correctedWebRun": 45526119691,
+      "managedLinux": {"job": 138909797275, "windows": 8, "passed": 650, "failed": 2, "originalSkips": 5, "rrtaInspectionTimeouts": 2, "browserLogSha256": "5a122e9e2d7e170e935c5f2b41ac7757552d5f441cc17f7ee8a0ecba877e6ba6"},
+      "strictAmd64": {"job": 138909797504, "windows": 8, "passed": 650, "failed": 2, "originalSkips": 5, "ohioDesktopSchoolTimeouts": 2, "recoveryRollbackPassed": true, "independentArchivePassed": true, "scanStepPassed": true, "browserContainerRemoved": true, "browserLogSha256": "c5b6b01530be7547ef8cbf2918bfe3df7d451214d44b8ab145c48d92d86b0b5e"},
       "correctedDockerRun": 45526119591,
       "vercelProductionBuildState": "CANCELED",
       "evidence": ".local/upgrade-evidence/nov25-oh-certified-jobs-credit"

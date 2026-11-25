@@ -27,6 +27,8 @@ Use the linked progress sections when investigating individual packages.
   inventory check failed. Both corrected CI spec commands passed.
   Ten local checks passed. Chromium passed 651 active cases and
   failed one mobile K12 reload with Chromium reporting suspended I/O.
+  Managed Linux and strict AMD64 each passed 650. The former missed two
+  railroad retirement deadlines and the latter two Ohio school deadlines.
   [Ohio jobs credit draft](upgrade-2026-progress.md#november-25-ohio-certified-refundable-jobs-credits).
 
 - `5bbc0504` avoids repeating the serialization of an internally owned
