@@ -35,15 +35,30 @@ source-audit controls passed with seven refreshed pins out of 2,071.
 Both exact tracked-only archives matched all 15 known sample PDF hashes
 and passed frozen offline installation. The exact Docker build passed.
 The exact local unit run passed 30,548 tests in 2,220 files with 81
-original skips. Coverage and the rest of the local suite are in progress.
+original skips. All eight exact Linux CI jobs passed. The Linux
+coverage job passed all 30,629 cases in 2,228 files and reached 88.83%
+branch coverage. The initial local coverage run passed 30,547 tests
+and hit one 10-second Form 4137 PDF-reader timeout. The same exact
+archive passed all eight tests in that file on an isolated run. The full
+local coverage retry ran after exact local macOS Chromium and passed
+30,548 tests in 2,220 files with 81 original skips and 88.46% branch
+coverage. All eleven local checks passed with that retry. Both local
+and Linux managed Chromium passed all 652 active cases. Strict AMD64
+passed 644 cases, with eight Ohio failures and five original skips.
+The failures were two business, two resident-credit and four part-year
+school cases. Strict ARM64 passed 642 cases, with ten Ohio failures and
+five original skips over all eight windows. Its failures were two
+business, one reciprocal employee, three resident-credit and four
+part-year school cases. Both images passed isolated Compose recovery,
+independent archive verification and the scan step. AMD64 also passed
+the explicit rollback step and ARM64 confirmed browser container removal.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45678629586) ·
 [Web and strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45678629036) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45678628283) ·
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45678917919).
 
 Vercel canceled automatic production build records for the application
-commit and its evidence-only successor `a6f657a39`. The production site
-was outside the verification scope.
+commit and the evidence commits `a6f657a39` and `7789150c6`.
 
 ## November 25 exact digital asset lot ordering
 
@@ -61,7 +76,10 @@ All 189 targeted lot and statement tests, 45 Form 1099-DA spec
 references, inventory, scoped lint, independent engineering review
 and `git diff --check` passed. The two browser source-audit controls
 passed after refreshing one of 2,071 source digests. The exact Docker
-build passed, as did all eight Linux CI jobs.
+build passed, as did all eight Linux CI jobs. Managed Chromium passed
+650 cases and failed both railroad retirement paper-review viewports.
+Strict AMD64 passed 643 and failed nine. Both retained five original
+skips.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45675046664) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45675046673) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45675046773).

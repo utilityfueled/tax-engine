@@ -15,8 +15,15 @@ Use the linked progress sections when investigating individual packages.
   reporting values, requires fresh proof after source edits and checks
   exact Form 8949 totals. All 500 targeted cases, three typechecks, both
   specs, inventory, source-audit checks, engineering review and the exact
-  Docker build passed. The exact unit run passed 30,548 tests with 81
-  original skips. Final 2026 federal qualification is outstanding.
+  Docker build passed. The exact local unit run passed 30,548 tests
+  with 81 original skips. All eight exact Linux CI jobs passed, with
+  88.83% branch coverage. The initial local coverage run hit one
+  Form 4137 PDF-reader timeout. All eight tests in that file passed in
+  isolation. The full isolated retry reached 88.46% branch coverage,
+  completing all eleven local checks. Local and Linux managed Chromium
+  each passed 652 cases. Both strict images passed recovery and archive
+  verification. AMD64 had eight Ohio browser failures and ARM64 had ten.
+  Final 2026 federal qualification is outstanding.
   [Broker-lot evidence](upgrade-2026-progress.md#november-25-form-1099-da-broker-lot-corrections).
 
 - `f94a3a9c` compares digital-asset lot prices with Decimal. The
