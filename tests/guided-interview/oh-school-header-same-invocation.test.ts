@@ -1,10 +1,13 @@
 /** Spec: state/oh-school-header-same-invocation.yaml. */
 import {test,expect,vi}from 'vitest';
+import Decimal from 'decimal.js';
 import *as federal from '@/engine/federal';
 import *as school from '@/engine/state/oh-sd-100-sources';
 import * as reviewIdentifiers from '@/pdf/redact-review-identifiers';
-import {readOhioSchoolAdapterMethod,verifyOhioSchoolScheduleAPayments,withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
+import * as ohioAdapter from '@/engine/state/oh-input-adapter';
+import {consumeOhioStandaloneSchoolPreviewAdapter,readOhioSchoolAdapterMethod,verifyOhioSchoolScheduleAPayments,withOhioSchoolAdapterInvocation,withOhioStandaloneSchoolPreviewAdapter,withPendingOhioSchoolAdapterInvocation,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {evaluateGuidedRender}from '@/lib/guided-render-evaluation';
+import {computeGuidedPreviewOutcome} from '@/lib/guided-preview-compute';
 import { buildSectionRoute, validateSection } from '@/lib/guided-interview-flow';
 import *as bridge from '@/lib/guided-interview-bridge';
 import {TaxYearInputSchema}from '@/models/inputs';
@@ -191,4 +194,122 @@ test('keeps pending header rejection and the earlier invalid school guard in ord
    .toThrow('complete and explicitly confirm the actual school district records after the last edit');
   expect(observed).not.toHaveBeenCalled();
  }
+});
+
+test.each([0, 1] as const)('reuses one current standalone adapter only during guided rendering %s', (which) => {
+ const state = ohio(which);
+ const route = buildSectionRoute(state.segmentation);
+ state.currentSectionIndex = route.findIndex(section => section.id === 'state-return');
+ state.completedSections = route.slice(0, state.currentSectionIndex).map(section => section.id);
+ delete required(state.sectionData['state-return']).ohioReturnHeaderSources;
+ const before = structuredClone(state);
+ const adapter = vi.spyOn(ohioAdapter, 'buildOhioResidentReturnInput');
+ try {
+  const outcome = computeGuidedPreviewOutcome(state);
+  expect(outcome.metrics?.state).toMatchObject({stateTax: '811', schoolDistrict: {tax: '500', refund: which === 0 ? '100' : '0'}});
+  expect(adapter).toHaveBeenCalledTimes(2);
+
+  const override = structuredClone(state);
+  required(override.sectionData['state-return']).ohioInterestAllocation = {
+   taxYear: '2025', sourceReference: 'FICTIONAL-ZERO-ALLOCATION', sourceFactsConfirmed: true,
+   federalTaxExemptInterest: '0', nonOhioStateLocalInterest: '0', ohioStateLocalInterest: '0',
+   otherInterestExemptFromOhio: '0', federalInterestTaxableByOhio: '0',
+  };
+  adapter.mockClear();
+  expect(evaluateGuidedRender(override).preview.metrics?.state).toBeNull();
+  expect(adapter).toHaveBeenCalledTimes(2);
+  expect(adapter.mock.calls[1]?.[2]).toEqual({nonOhioStateLocalInterest: '0', otherAdditions: '0'});
+  expect(adapter.mock.results[1]?.type).toBe('throw');
+
+  const changed = structuredClone(state);
+  required(required(changed.sectionData['state-return']).ohioSchoolDistrict).originalFederalSources = {};
+  adapter.mockClear();
+  expect(evaluateGuidedRender(changed).preview.metrics?.state).toBeNull();
+  expect(adapter).not.toHaveBeenCalled();
+
+  adapter.mockClear();
+  const current = evaluateGuidedRender(state);
+  expect(current.preview).toEqual(outcome);
+  expect(current.originalInput).toEqual(TaxYearInputSchema.parse(required(bridge.buildTaxInputFromGuidedData(state))));
+  expect(current.schoolDisplayObservation).toBeUndefined();
+  expect(state).toEqual(before);
+  expect(adapter).toHaveBeenCalledTimes(1);
+  expect(Object.isFrozen(required(adapter.mock.calls[0]?.[0]).taxpayer.primary)).toBe(true);
+ } finally {
+  adapter.mockRestore();
+ }
+});
+
+test('consumes an exact standalone adapter result once and expires unused authority', () => {
+ const {ohioReturnHeaderSources: _header, ...input} = structuredClone(schoolPyHeaderPacket().canonical);
+ const currentFederal = federal.calculateFederalTax(input);
+ const competingInput = structuredClone(input);
+ required(competingInput.ohioSchoolDistrict).sourceReference += '-CHANGED';
+ const competingFederal = {...currentFederal, agi: currentFederal.agi.plus(1)};
+ expect(() => ohioAdapter.buildOhioResidentReturnInput(input, competingFederal)).toThrow(/saved federal result is stale/);
+
+ let retained: OhioSourceAdapterInvocation | undefined;
+ withOhioStandaloneSchoolPreviewAdapter(input, proof => {
+  retained = proof;
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(competingInput, currentFederal, proof)).toBeUndefined();
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(input, competingFederal, proof)).toBeUndefined();
+  let reads = 0;
+  const unsupported = Object.defineProperty({...input}, 'syntheticMetadata', {enumerable: true, get() {reads++; return 'changed';}});
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(unsupported, currentFederal, proof)).toBeUndefined();
+  expect(reads).toBe(0);
+  const adapted = required(consumeOhioStandaloneSchoolPreviewAdapter(structuredClone(input), currentFederal, proof));
+  expect(adapted).toEqual(ohioAdapter.buildOhioResidentReturnInput(input, currentFederal));
+  adapted.exemptions = 999;
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(input, currentFederal, proof)).toBeUndefined();
+ });
+ expect(consumeOhioStandaloneSchoolPreviewAdapter(input, currentFederal, retained)).toBeUndefined();
+ expect(consumeOhioStandaloneSchoolPreviewAdapter(input, currentFederal, {} as OhioSourceAdapterInvocation)).toBeUndefined();
+
+ withOhioSchoolAdapterInvocation(input, currentFederal, proof => {
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(input, currentFederal, proof)).toBeUndefined();
+ });
+ withOhioStandaloneSchoolPreviewAdapter(input, proof => {retained = proof;});
+ expect(consumeOhioStandaloneSchoolPreviewAdapter(input, currentFederal, retained)).toBeUndefined();
+ expect(() => withOhioStandaloneSchoolPreviewAdapter(input, proof => {
+  retained = proof;
+  throw Error('fictional exceptional exit');
+ })).toThrow('fictional exceptional exit');
+ expect(consumeOhioStandaloneSchoolPreviewAdapter(input, currentFederal, retained)).toBeUndefined();
+});
+
+test('keeps distinct Decimal zero signs outside the same adapter proof', () => {
+ const {ohioReturnHeaderSources: _header, ...input} = structuredClone(schoolPyHeaderPacket().canonical);
+ const current = federal.calculateFederalTax(input);
+ expect(current.taxExemptInterest.valueOf()).toBe('0');
+ const changed = {...current, taxExemptInterest: new Decimal('-0')};
+ expect(changed.taxExemptInterest.valueOf()).toBe('-0');
+ withOhioStandaloneSchoolPreviewAdapter(input, proof => {
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(input, changed, proof)).toBeUndefined();
+  expect(consumeOhioStandaloneSchoolPreviewAdapter(input, current, proof)).toBeDefined();
+ });
+});
+
+test('allows one successful standalone adapter read across nested comparison', () => {
+ const {ohioReturnHeaderSources: _header, ...input} = structuredClone(schoolPyHeaderPacket().canonical);
+ const current = federal.calculateFederalTax(input);
+ withOhioStandaloneSchoolPreviewAdapter(input, proof => {
+  const originalValue = Decimal.prototype.valueOf;
+  let nested: ReturnType<typeof consumeOhioStandaloneSchoolPreviewAdapter>;
+  let started = false;
+  const comparison = vi.spyOn(Decimal.prototype, 'valueOf').mockImplementation(function(this: Decimal) {
+   if (!started) {
+    started = true;
+    nested = consumeOhioStandaloneSchoolPreviewAdapter(input, current, proof);
+   }
+   return originalValue.call(this);
+  });
+  try {
+   const outer = consumeOhioStandaloneSchoolPreviewAdapter(input, current, proof);
+   expect(nested !== undefined).toBe(true);
+   expect(outer === undefined).toBe(true);
+   expect(consumeOhioStandaloneSchoolPreviewAdapter(input, current, proof)).toBeUndefined();
+  } finally {
+   comparison.mockRestore();
+  }
+ });
 });

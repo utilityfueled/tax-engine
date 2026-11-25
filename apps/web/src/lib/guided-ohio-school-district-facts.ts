@@ -1,7 +1,7 @@
 /** Spec: state/oh-sd-100-guided.yaml. Native drafts are private source records, never scalar overrides. */
 import {calculateFederalTax} from '@/engine/federal';
 import {buildOhioResidentReturnInput} from '@/engine/state/oh-input-adapter';
-import {withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
+import {withOhioSchoolAdapterInvocation,withPendingOhioSchoolAdapterInvocation,withOhioStandaloneSchoolPreviewAdapter,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import {OhioSchoolDistrictFactsSchema,type OhioSchoolDistrictFacts} from '@/models/ohio-school-district';
 import type {TaxYearInput} from '@/models/inputs';
 import {buildGuidedOhioResidencyFacts,snapshotGuidedOhioOriginals,assertGuidedOhioOriginals,type OhioResidencyDraft} from './guided-ohio-residency-facts';
@@ -167,10 +167,11 @@ export function buildGuidedOhioSchoolScheduleAOriginals(input: TaxYearInput, dat
 function replayGuidedOhioSchoolDistrictFacts<T>(
  input: TaxYearInput, data: OhioSchoolDistrictDraft | undefined, readParents: () => CurrentSchoolParents,
  use: (facts: OhioSchoolDistrictFacts, proof?: OhioSourceAdapterInvocation) => T,
- mode: 'standalone' | 'header' | 'pending-header',
+ mode: 'standalone' | 'standalone-preview' | 'header' | 'pending-header',
 ): T {
  const current=readCurrentSchoolOriginals(input,data,readParents);
  if (mode === 'pending-header') return withPendingOhioSchoolAdapterInvocation(current, proof => use(current.ohioSchoolDistrict, proof));
+ if (mode === 'standalone-preview') return withOhioStandaloneSchoolPreviewAdapter(current, proof => use(current.ohioSchoolDistrict, proof));
  const federal=calculateFederalTax(current);
  if (mode === 'header') return withOhioSchoolAdapterInvocation(current, federal, proof => use(current.ohioSchoolDistrict, proof));
  buildOhioResidentReturnInput(current,federal);
@@ -179,6 +180,14 @@ function replayGuidedOhioSchoolDistrictFacts<T>(
 export function buildGuidedOhioSchoolDistrictFacts(input:TaxYearInput,data:OhioSchoolDistrictDraft|undefined,residencyDraft:OhioResidencyDraft|undefined,paymentDraft:OhioPaymentDraft|undefined):OhioSchoolDistrictFacts{
  return replayGuidedOhioSchoolDistrictFacts(input,data,()=>readCurrentSchoolParents(input,residencyDraft,paymentDraft),facts=>facts,'standalone');
 }
+/** Leave standalone school source validation and the first adapter in their original order. */
+export function withGuidedOhioStandaloneSchoolPreview<T>(
+ input: TaxYearInput, data: OhioSchoolDistrictDraft, residencyDraft: OhioResidencyDraft | undefined,
+ paymentDraft: OhioPaymentDraft | undefined, use: (school: OhioSchoolDistrictFacts, proof?: OhioSourceAdapterInvocation) => T,
+): T {
+ return replayGuidedOhioSchoolDistrictFacts(input,data,()=>readCurrentSchoolParents(input,residencyDraft,paymentDraft),use,'standalone-preview');
+}
+
 /** Prepare the header with its own copy before replaying the school with the current base parents. */
 export function withGuidedOhioSchoolDistrictAdapter<T>(
  input: TaxYearInput, data: OhioSchoolDistrictDraft | undefined,

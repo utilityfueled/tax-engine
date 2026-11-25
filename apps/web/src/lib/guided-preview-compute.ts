@@ -20,7 +20,7 @@ import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right";
 import { canUseOhioEstimatesForScheduleA, canUsePennsylvaniaPaymentsForScheduleA } from "@/engine/forms/state-tax-payment-year";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
-import { buildGuidedOhioOverlay, buildGuidedStateOriginals, readGuidedPAMarriedDraft } from "./guided-state-engine-inputs";
+import { buildGuidedOhioOverlay, buildGuidedStateOriginals, readGuidedPAMarriedDraft, tryBuildGuidedOhioStandaloneSchoolPreviewInput } from "./guided-state-engine-inputs";
 import { buildGuidedOhioPaymentFacts, guidedOhioScheduleAPaymentClaim } from "./guided-ohio-payment-facts";
 import { buildGuidedOhioSchoolScheduleAOriginals, guidedOhioSchoolScheduleAPaymentClaim } from "./guided-ohio-school-district-facts";
 import { buildGuidedPAMarriedOrdinarySources } from "./guided-pa-married-ordinary-sources";
@@ -368,8 +368,9 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
           // validation still checks their sources and reports incomplete facts.
           stateResult = null;
         } else if (stateCode === "OH") {
-          const currentOriginals = buildGuidedStateOriginals(taxInput, state, onSchoolReplay);
-          const ohio = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest)));
+          const replayed=renderEvaluation?tryBuildGuidedOhioStandaloneSchoolPreviewInput(taxInput,state,result):undefined;
+          const currentOriginals=replayed?.current??buildGuidedStateOriginals(taxInput,state,onSchoolReplay);
+          const ohio = calculateOhioResidentReturn(replayed?.adapted??buildOhioResidentReturnInput(currentOriginals,result,buildGuidedOhioOverlay(currentOriginals,state,result.taxExemptInterest)));
           const oh=ohio.it1040,sd=ohio.sd100,source=ohio.schoolDistrictSource,schoolPacket=currentOriginals.ohioSchoolDistrict;
           if(currentOriginals.ohioSchoolDistrict&&(!sd||!source))throw new Error('Actual required school district result is unavailable.');
           if(sd&&source&&(source.district.districtNumber!=='0302'||!schoolPacket))throw new Error('Verified finite school district review context is unavailable.');

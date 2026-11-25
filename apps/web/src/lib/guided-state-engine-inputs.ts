@@ -1,7 +1,7 @@
 import {buildGuidedOhioReturnHeaderSources,buildGuidedOhioReturnHeaderOriginals} from './guided-ohio-return-header-sources';
 import {buildGuidedOhioReciprocalWages} from './guided-oh-reciprocal-wages';
 import {buildGuidedOhioResidentCreditSources} from './guided-ohio-resident-credit-sources';
-import {buildGuidedOhioSchoolDistrictFacts} from './guided-ohio-school-district-facts';
+import {buildGuidedOhioSchoolDistrictFacts,withGuidedOhioStandaloneSchoolPreview} from './guided-ohio-school-district-facts';
 import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
 import {reconcileGuidedZeroIncomeMiscWithholding}from './guided-zero-income-misc-withholding-reconciliation';
 import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precision';
@@ -14,8 +14,10 @@ import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import {buildGuidedPAOrdinaryReturnFacts} from "./guided-pa-ordinary-return-facts";
 import {buildGuidedPAOrdinaryReturnCompletionSources} from "./guided-pa-ordinary-return-completion";
 import Decimal from "decimal.js";
+import {consumeOhioStandaloneSchoolPreviewAdapter,type OhioSourceAdapterInvocation} from '@/engine/state/oh-source-adapter-invocation';
 import type { TaxYearInput } from "@/models/inputs";
-import { extractOhioWithholding, type OhioOverlayInput } from "@/engine/state/oh-input-adapter";
+import type { TaxReturnResult } from "@/models/outputs";
+import { buildOhioResidentReturnInput, extractOhioWithholding, type OhioOverlayInput } from "@/engine/state/oh-input-adapter";
 import type { PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator";
 import type { GuidedFlowState, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -105,7 +107,27 @@ export function readGuidedPAMarriedDraft(input: TaxYearInput, data: StateReturnD
 /** Bind current private originals before state calculation and before redaction.
  * This does not turn a source packet into a complete return or filing approval. */
 export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlowState | null, onSchoolReplay?: () => void): TaxYearInput {
-  if (!state) return input;
+  return replayGuidedStateOriginals(input, state, onSchoolReplay, current => current, false);
+}
+
+export function tryBuildGuidedOhioStandaloneSchoolPreviewInput(input: TaxYearInput, state: GuidedFlowState, federal: TaxReturnResult) {
+  const data = state.sectionData['state-return'];
+  if (state.segmentation.stateCode !== 'OH' || input.taxpayer.taxYear !== 2025 || input.taxpayer.filingStatus !== 'single'
+    || input.ohioResidency !== undefined || input.ohioPayments !== undefined || input.ohioSchoolDistrict !== undefined || input.ohioReturnHeaderSources !== undefined
+    || data?.ohioSchoolDistrict?.sourceFactsConfirmed !== true || data.ohioReturnHeaderSources || data.ohioReciprocalWages || data.ohioRetirementCredit
+    || data.ohioResidency?.businessSources || data.ohioResidency?.residentCreditSources) return undefined;
+
+  return replayGuidedStateOriginals(input, state, undefined, (current, proof) => {
+    // This overlay is constructed here. The reader never accepts an overlay from a caller.
+    const overlay = buildGuidedOhioOverlay(current, state, federal.taxExemptInterest);
+    const replayed = proof && Object.getPrototypeOf(overlay) === Object.prototype && Reflect.ownKeys(overlay).length === 0
+      ? consumeOhioStandaloneSchoolPreviewAdapter(current, federal, proof) : undefined;
+    return { current, adapted: replayed ?? buildOhioResidentReturnInput(current, federal, overlay) };
+  }, true);
+}
+
+function replayGuidedStateOriginals<T>(input:TaxYearInput,state:GuidedFlowState|null|undefined,onSchoolReplay:(()=>void)|undefined,use:(current:TaxYearInput,proof?:OhioSourceAdapterInvocation)=>T,preview:boolean):T {
+  if (!state) return use(input);
   const data = state.sectionData["state-return"];
   if (state.segmentation.stateCode === "OH") {
     buildGuidedOhioRetirementIncome(input, data?.ohioRetirementCredit);
@@ -116,22 +138,26 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     // The header needs the same validated current parent/payment/credit/district originals.
     // Keep unsupported reciprocal and missing retained child composition on the existing path.
     if(data?.ohioReturnHeaderSources&&!input.ohioReturnHeaderSources&&!data.ohioReciprocalWages&&!(input.ohioSchoolDistrict&&!data.ohioSchoolDistrict)){
-      return buildGuidedOhioReturnHeaderOriginals(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict,onSchoolReplay);
+      return use(buildGuidedOhioReturnHeaderOriginals(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict,onSchoolReplay));
     }
     let ohioResidency = data?.ohioReciprocalWages
       ?buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments)
       :buildGuidedOhioResidencyFacts(data?.ohioResidency, input);
     const ohioPayments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input);
     if(data?.ohioResidency?.residentCreditSources)ohioResidency=buildGuidedOhioResidentCreditSources(input,data.ohioResidency.residentCreditSources,ohioResidency,ohioPayments);
+    if(preview && data?.ohioSchoolDistrict){
+      return withGuidedOhioStandaloneSchoolPreview(input,data.ohioSchoolDistrict,data.ohioResidency,data.ohioPayments,
+        (ohioSchoolDistrict,proof)=>use({...input,ohioResidency,ohioPayments,ohioSchoolDistrict},proof));
+    }
     const ohioSchoolDistrict=ohioResidency.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict||input.ohioSchoolDistrict
       ?buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments):undefined;
     const ohioReturnHeaderSources=data?.ohioReturnHeaderSources?buildGuidedOhioReturnHeaderSources(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict):undefined;
-    return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {}),...(ohioReturnHeaderSources?{ohioReturnHeaderSources}:{})};
+    return use({...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {}),...(ohioReturnHeaderSources?{ohioReturnHeaderSources}:{})});
   }
   if (state.segmentation.stateCode === "PA") {
     const draft = readGuidedPAMarriedDraft(input, data);
     if (draft) {
-      return { ...input, paMarriedOrdinarySources: buildGuidedPAMarriedOrdinarySources(input, draft) };
+      return use({ ...input, paMarriedOrdinarySources: buildGuidedPAMarriedOrdinarySources(input, draft) });
     }
     if (!data?.paResidencySources) throw new Error("Actual Pennsylvania residency sources are required.");
     const bound = data.paReciprocitySources
@@ -143,7 +169,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     const paOrdinaryReturnFacts=buildGuidedPAOrdinaryReturnFacts(current,data.paOrdinaryReturnFacts);
     reconcileSavedStateLedger(data,input.taxpayer.taxYear,"PA",paOrdinaryReturnFacts.payments.rows.map(row=>row.original),input.form1099R??[],{input:current,state});
     const paOrdinaryReturnCompletionSources=buildGuidedPAOrdinaryReturnCompletionSources(current,data.paOrdinaryReturnCompletionSources,paOrdinaryReturnFacts);
-    return {...current,paOrdinaryReturnFacts,paOrdinaryReturnCompletionSources};
+    return use({...current,paOrdinaryReturnFacts,paOrdinaryReturnCompletionSources});
   }
-  return input;
+  return use(input);
 }

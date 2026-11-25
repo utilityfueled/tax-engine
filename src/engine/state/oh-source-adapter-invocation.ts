@@ -7,7 +7,7 @@ import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
 import {exactOhioSchoolArithmetic} from './oh-sd-100-sources.js';
 const brand=Symbol('completed current Ohio school adapter');
 export interface OhioSourceAdapterInvocation{readonly [brand]:true}
-const active=new WeakMap<OhioSourceAdapterInvocation,{material:string;method:string|undefined}>();
+const active=new WeakMap<OhioSourceAdapterInvocation,{material:string;method:string|undefined;standalonePreview?:ReturnType<typeof buildOhioResidentReturnInput>}>();
 
 /** The pending render owns an isolated, plain canonical record for this adapter call. */
 function immutableSchoolInput(input: TaxYearInput): TaxYearInput | undefined {
@@ -141,7 +141,7 @@ function stable(value:unknown):unknown{
    const entry=Object.getOwnPropertyDescriptor(digits,String(index));
    if(!entry||!('value' in entry)||!entry.enumerable||typeof entry.value!=='number'||!Number.isSafeInteger(entry.value)||entry.value<0||entry.value>=10000000)throw Error('Unsupported source proof Decimal digits');
   }
-  return ['decimal',Decimal.prototype.toString.call(value)];
+  return ['decimal',Decimal.prototype.valueOf.call(value)];
  }
  if(Array.isArray(value))return ['array',arrayData(value).map(stable)];
  if(Object.getPrototypeOf(value)!==Object.prototype)throw Error('Unsupported source proof object');
@@ -157,6 +157,32 @@ export function withOhioSchoolAdapterInvocation<T>(input:TaxYearInput,federal:Ta
  return withCompletedSchoolAdapter(input,federal,use);
 }
 
+/** Run the original first adapter even when current material cannot be owned or reused. */
+export function withOhioStandaloneSchoolPreviewAdapter<T>(input: TaxYearInput, use: (proof: OhioSourceAdapterInvocation) => T): T {
+  const ordinary = input.taxpayer.taxYear === 2025 && input.taxpayer.filingStatus === 'single'
+    && input.ohioResidency?.taxYear === 2025 && input.ohioSchoolDistrict?.taxYear === 2025 && input.ohioReturnHeaderSources === undefined
+    && !input.ohioResidency.businessSources && !input.ohioResidency.residentCreditSources && !input.ohioResidency.reciprocalWageSources;
+  const owned = ordinary ? immutableSchoolInput(input) : undefined;
+  const current = owned ?? input;
+  const federal = calculateFederalTax(current);
+  return withCompletedSchoolAdapter(current, federal, use, undefined, owned !== undefined);
+}
+
+/** The guided caller checks the overlay it built before consuming this one result. */
+export function consumeOhioStandaloneSchoolPreviewAdapter(
+  input: TaxYearInput, federal: TaxReturnResult, proof: OhioSourceAdapterInvocation | undefined,
+): ReturnType<typeof buildOhioResidentReturnInput> | undefined {
+  if (!proof) return undefined;
+  const current = active.get(proof);
+  if (!current?.standalonePreview) return undefined;
+  try {
+    if (current.material !== material(input, federal)) return undefined;
+  } catch {
+    return undefined;
+  }
+  return active.delete(proof) ? current.standalonePreview : undefined;
+}
+
 /** Run the real adapter before exposing its existing proof, with no supplied federal result. */
 export function withPendingOhioSchoolAdapterInvocation<T>(input: TaxYearInput, use: (proof: OhioSourceAdapterInvocation) => T): T {
   const immutable = immutableSchoolInput(input);
@@ -169,11 +195,12 @@ export function withPendingOhioSchoolAdapterInvocation<T>(input: TaxYearInput, u
 function withCompletedSchoolAdapter<T>(
   input: TaxYearInput, federal: TaxReturnResult, use: (proof: OhioSourceAdapterInvocation) => T,
   currentFederal?: OhioCurrentFederalCalculation,
+  standalonePreview = false,
 ): T {
  const adapted=buildOhioResidentReturnInput(input,federal,undefined,currentFederal);
  const proof=Object.freeze({[brand]:true as const});
  // Unsupported serialization cannot introduce an earlier error or authorize reuse.
- try{active.set(proof,{material:material(input,federal),method:adapted.schoolDistrictSource?.methodVersion});}catch{/* Original header validation remains the fallback. */}
+ try{active.set(proof,{material:material(input,federal),method:adapted.schoolDistrictSource?.methodVersion,...(standalonePreview&&adapted.schoolDistrictSource?{standalonePreview:adapted}:{})});}catch{/* The original adapter remains the fallback. */}
  try{return use(proof);}finally{active.delete(proof);}
 }
 /** Missing/forged/expired/changed proof falls back to the original full validation at its original position. */
