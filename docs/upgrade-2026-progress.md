@@ -39,6 +39,24 @@ correction receives a separate native run on `867d5cd8`.
 [Earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45634211549/job/139275199126).
 [Original managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45634170296/job/139275040154) · [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45634574431) · [Corrected Web and AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45634574414) · [Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45634574352) · [Corrected native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45634648361).
 
+Corrected ARM64 completed all eight strict browser batches with 644
+passes, five original skips and eight Ohio 30-second deadlines. The
+timeouts covered one NEW212 case, three resident-credit cases and four
+part-year school cases. The reciprocal refund case passed. Compose
+recovery, independent archive verification and enforcement, receipt upload
+and browser container removal passed. The strict self-host browser gate
+remains open on both architectures.
+[Corrected ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45634648361/job/139311016257).
+
+All eleven local checks passed on an exact `867d5cd8` archive with Node
+26.13.1, pnpm 10.34.8, Python 3.14.6 and pypdf 6.10.0. Unit and
+coverage each passed 30,525 active cases and retained the original 81
+skips. Local branch coverage reached 88.42%. Chromium passed all 652
+active cases across eight windows, retained the five original skips and
+closed its managed server. The frozen dependency install succeeded after
+fetching a tarball missing from the offline cache. Unit and coverage ran
+in separate copies without changing deadlines or thresholds.
+
 ## November 25 Ohio saved-estimate validation and local coverage
 
 `fbe2900a` validates saved estimate fields once within Ohio navigation
