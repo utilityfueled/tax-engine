@@ -7,7 +7,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
 import { SectionReview } from "@/components/guided-interview/section-review";
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
-import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
+import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, validateSection, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { iraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
 
@@ -104,6 +104,62 @@ it("distinguishes an entered zero from missing Box 2a on draft review", () => {
   expect(summary).toContain("$0 reported in Box 2a, Box 4 amount not entered");
   expect(summary).toContain("Incomplete plan");
   expect(summary).toContain("Box 2a amount not entered, $0 withheld");
+});
+
+it("reviews reopened 2026 retirement codes and distinguishes pending, zero and confirmed blank Box 2a", () => {
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  draft.taxYear = 2026;
+  const pension = {
+    ...completeRetirementSource, sourceTaxYear: "2026", grossDistribution: "6000", taxableAmount: "",
+    taxableAmountNotDetermined: true, taxableAmountConfirmed: null,
+  };
+  draft.sectionData["income-retirement"] = { entries: [
+    { ...emptyRetirementEntry, payer: "Code and withholding only", sourceTaxYear: "2026", distributionCode: "G", federalWithheld: "0" },
+    { ...pension, payer: "Pending pension", sourceFactsConfirmed: null },
+    { ...pension, payer: "Unverified statement coverage", accountReference: "coverage-not-confirmed" },
+    { ...emptyRetirementEntry, payer: "Explicit zero", sourceTaxYear: "2026", distributionCode: "7 D", taxableAmount: "0" },
+    { ...pension, payer: "Confirmed pension", accountReference: "other-annuity", simplifiedMethod: {
+      planReference: "Private plan reference", qualifiedPlanConfirmed: true, singleLifeAnnuitantConfirmed: true,
+      statementCoversContractConfirmed: true, startingDate: "2026-01-15", ageAtStart: "35",
+      costInPlan: "26000", monthsPaid: "12", priorRecovered: "0",
+    } },
+    { ...emptyRetirementEntry, payer: "Malformed code", sourceTaxYear: "2026", distributionCode: "992-87-6654" },
+  ] };
+  const target = { storageKey: "retirement-source-review-2026" };
+  expect(saveGuidedFlowState(window.sessionStorage, target, draft)).toBe(true);
+  const reopened = loadGuidedFlowState(window.sessionStorage, target);
+  window.sessionStorage.removeItem(target.storageKey);
+  if (!reopened) throw new Error("The retirement review draft did not reopen");
+  const summary = renderToStaticMarkup(<SectionReview state={reopened} preview={null} onJumpToSection={() => {}} />);
+  const review = new DOMParser().parseFromString(summary, "text/html");
+  const row = (name: string) => [...review.querySelectorAll(".guided-review-row")]
+    .find(element => element.querySelector(".guided-review-label")?.textContent === name)?.textContent ?? "";
+  expect(row("Code and withholding only")).toContain("Box 2a amount not entered, $0 withheld, Box 7a distribution code G");
+  expect(row("Pending pension")).toContain("Box 2a amount not entered");
+  expect(row("Unverified statement coverage")).toContain("Box 2a amount not entered");
+  expect(row("Explicit zero")).toContain("$0 reported in Box 2a, Box 4 amount not entered, Box 7a distribution code 7 D");
+  expect(row("Confirmed pension")).toContain("Box 2a blank on the original");
+  expect(row("Malformed code")).toContain("Box 7a distribution code needs review");
+  expect(summary).not.toContain("992-87-6654");
+  expect(summary).not.toContain("Private plan reference");
+});
+
+it("marks the reopened legacy distribution code as needing reconfirmation", () => {
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  const target = { storageKey: "retirement-source-review-legacy" };
+  const entries = [
+    { ...emptyRetirementEntry, payer: "Legacy pension", distributionCode: "7", grossDistribution: "1000", taxableAmount: "0", federalWithheld: "0", isIraSepSimple: false },
+    { ...emptyRetirementEntry, payer: "Year on original", sourceTaxYear: "2025", distributionCode: "G" },
+  ];
+  expect(saveGuidedFlowState(window.sessionStorage, target, { ...draft, factsVersion: undefined, sectionData: { ...draft.sectionData, "income-retirement": { entries } } })).toBe(true);
+  const reopened = loadGuidedFlowState(window.sessionStorage, target);
+  window.sessionStorage.removeItem(target.storageKey);
+  if (!reopened) throw new Error("The legacy retirement review draft did not reopen");
+  expect(validateSection(reopened, "income-retirement").fieldErrors["retirement-0-code"]).toMatch(/Reconfirm/);
+  const summary = renderToStaticMarkup(<SectionReview state={reopened} preview={null} onJumpToSection={() => {}} />);
+  expect(summary).toContain("Distribution code 7 needs reconfirmation");
+  expect(summary).toContain("Box 7 distribution code G");
+  expect(summary).not.toContain("Box 7a");
 });
 
 // Specs: spec/federal/form-5329-guided-code1-ira-2026.yaml, 1-4, and spec/federal/form-5329-first-home-guided-2026.yaml, 09-guided-source.

@@ -213,7 +213,7 @@
     "apps/web/src/components/guided-interview/section-personal-info.tsx": "3d0bc40f70cf49850985ab9a0d339bae56a80f9f82b395a6ec17e7621c647e6c",
     "apps/web/src/components/guided-interview/section-rental-income.tsx": "ef3e430db8d597f1b80664a3ae5917dc13f47a4981a930d049847181f03d3964",
     "apps/web/src/components/guided-interview/section-retirement-income.tsx": "3cb3d12a9b396b8f9506136d3844fa483460b3d97f87b6b5410da0f18401a8f1",
-    "apps/web/src/components/guided-interview/section-review.tsx": "aed4adb0b49e9af66a40f736b12379b5b48283331a82c6a51c67a2d319c514c7",
+    "apps/web/src/components/guided-interview/section-review.tsx": "381ead0931131554adb1c67c7770be9c15b108700505dacda630279ece63bf3b",
     "apps/web/src/components/guided-interview/section-royalty-income.tsx": "ee20c868ced113be82bd998f0f50b61716ff6c5d891fb744b2659ce9d49112aa",
     "apps/web/src/components/guided-interview/section-self-employment.tsx": "c6ba19200de23789d25dd78dffc825fd78bb3a356614cabebde0b26070916bd5",
     "apps/web/src/components/guided-interview/section-social-security.tsx": "e71707b901168efbfe34b2d23a77eac856f074d8ce7f53fe17ee10d1b513dc2d",

@@ -11,7 +11,7 @@ import { isStartedInvestment } from "@/lib/guided-investment-facts";
 import { isStartedOid, type OidEntryData } from "@/lib/guided-oid-facts";
 import { hasEnteredAmount } from "@/lib/guided-required-facts";
 import { stateEstimatedPaymentFactErrors, usesDedicatedStatePaymentReceipts } from "@/lib/guided-state-facts";
-import { needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
+import { isStartedRetirement, needsGuidedSimplifiedMethod, normalizeGuidedRetirementCode } from "@/lib/guided-retirement-source-inputs";
 import { formatGuidedCurrency, parseGuidedDisplayAmount, sumGuidedDisplayAmounts } from "@/lib/guided-currency";
 import type { ScheduleBPartThreeDraft } from "@/lib/guided-schedule-b-part-three";
 
@@ -406,29 +406,37 @@ function PaymentsSummary({ data }: { data: PaymentData | undefined }) {
 function RetirementSummary({ entries }: { entries: RetirementEntryData[] | undefined }) {
   if (!entries || entries.length === 0) return <p className="guided-review-empty">No 1099-R entered.</p>;
 
-  const filledEntries = entries.filter((entry) => hasEnteredAmount(entry.grossDistribution) || hasEnteredAmount(entry.taxableAmount));
+  const filledEntries = entries.filter(isStartedRetirement);
   if (filledEntries.length === 0) return <p className="guided-review-empty">No 1099-R with data entered.</p>;
 
   return (
     <div className="guided-review-card">
-      {filledEntries.map((entry, i) => (
-        <div key={i} className="guided-review-row">
-          <span className="guided-review-label">
-            {entry.payer || `1099-R #${i + 1}`}
-          </span>
-          <span className="guided-review-value">
-            {hasEnteredAmount(entry.taxableAmount)
-              ? `${formatCurrency(entry.taxableAmount)} reported in Box 2a`
-              : needsGuidedSimplifiedMethod(entry)
-                ? "Box 2a blank on the original"
-                : "Box 2a amount not entered"}
-            {", "}
-            {hasEnteredAmount(entry.federalWithheld)
-              ? `${formatCurrency(entry.federalWithheld)} withheld`
-              : "Box 4 amount not entered"}
-          </span>
-        </div>
-      ))}
+      {filledEntries.map((entry, i) => {
+        const confirmedBlank = entry.sourceFactsConfirmed === true && entry.simplifiedMethod?.statementCoversContractConfirmed === true
+          && !entry.requiresCodeConfirmation && !entry.requiresIraConfirmation && needsGuidedSimplifiedMethod(entry);
+        const code = entry.distributionCode?.trim() ?? "";
+        const showCode = /^[1-9ABCDEFGHJKLMNPQRSTUWY]{1,2}$/.test(normalizeGuidedRetirementCode(code));
+        const codeLabel = entry.sourceTaxYear === "2026" ? "Box 7a distribution code"
+          : entry.sourceTaxYear === "2025" ? "Box 7 distribution code" : "Distribution code";
+        const codeStatus = entry.requiresCodeConfirmation ? "needs reconfirmation" : code ? "needs review" : "not entered";
+        const codeSummary = [codeLabel, showCode && code, (!showCode || entry.requiresCodeConfirmation) && codeStatus].filter(Boolean).join(" ");
+
+        return (
+          <div key={i} className="guided-review-row">
+            <span className="guided-review-label">{entry.payer || `1099-R #${i + 1}`}</span>
+            <span className="guided-review-value">
+              {hasEnteredAmount(entry.taxableAmount)
+                ? `${formatCurrency(entry.taxableAmount)} reported in Box 2a`
+                : confirmedBlank ? "Box 2a blank on the original" : "Box 2a amount not entered"}
+              {", "}
+              {hasEnteredAmount(entry.federalWithheld)
+                ? `${formatCurrency(entry.federalWithheld)} withheld`
+                : "Box 4 amount not entered"}
+              {`, ${codeSummary}`}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
