@@ -1,5 +1,27 @@
 # 2026 upgrade implementation evidence
 
+## November 25 guided help rendering
+
+`ac9ae969` builds the local overview only while the help dock is open and
+the conversation is empty. The mounted regression counted three overview
+builds on closed renders before the change and zero after it. Reopening
+uses the current section and return. Message handling, document selection
+and provider request behavior retain their existing tests. All 22 focused
+cases passed on Node 26.13.1 along with web types, scoped lint, both source
+audit controls and independent engineering review. The browser source
+audit still verifies all 2,071 digests. No browser deadline improvement
+has been measured.
+
+The original help change updated the source digest and missed the
+diagnostic manifest's digest of the audit file. Its managed CI job
+failed the timing preflight before running browser cases. `867d5cd8`
+corrects that one pin. All 58 timing and source-audit controls passed
+with the existing two workers, zero strict retries, 30-second deadline
+and request ceilings. The source and browser test code are unchanged
+from `ac9ae969`. The exact archive matched 6,697 Git blobs and 15 pinned
+PDF samples. The corrected Docker build and web build passed.
+[Original managed job](https://github.com/utilityfueled/tax-engine/actions/runs/45634170296/job/139275040154) · [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45634574431) · [Corrected Web and AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45634574414) · [Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45634574352) · [Corrected native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45634648361).
+
 ## November 25 Ohio saved-estimate validation and local coverage
 
 `fbe2900a` validates saved estimate fields once within Ohio navigation
@@ -58,6 +80,13 @@ the original 81 skips. It reached the child-process timeout in the archive
 diagnostics and the 15-second test limit in Form 2210's two-owner K-1
 physical review. It exited before emitting a repository-wide coverage
 result. The independent exact Linux coverage result is recorded above.
+
+An independent prototype removed one duplicate residency projection from
+confirmed Ohio school, resident-credit and NEW212 renders. All 33 focused
+checks passed, including stale sources and direct-call property access.
+In the paired local CPU control, school took 0.49% more CPU, resident
+credit 3.32% more, and NEW212 4.11% less. Those results did not justify
+the extra adapter plumbing. The prototype was removed from the checkout.
 
 The current IRS Form 8960, Schedule A, and their instructions still show
 2025. The 2026 Schedule 3-A draft was available, and the current and archive

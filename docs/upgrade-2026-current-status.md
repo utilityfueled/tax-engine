@@ -9,6 +9,16 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `ac9ae969` builds the help overview only when the dock is open with
+  an empty conversation. The closed-render regression dropped from three
+  overview builds to zero. All 22 focused cases, web types, scoped lint,
+  the browser source audit and independent engineering review passed.
+  The first managed job stopped before running browser tests because of a
+  stale diagnostic audit pin. `867d5cd8` corrects the pin, and all 58 timing
+  and source-audit controls passed. Exact Linux CI, Web, Docker and native
+  ARM64 checks are in progress on the corrected revision.
+  [Help rendering evidence](upgrade-2026-progress.md#november-25-guided-help-rendering).
+
 - `fbe2900a` validates each saved Ohio estimate once during navigation
   before matching actual receipts. The existing receipt and withholding
   checks remain in place. All 37 focused cases, the separate eight-case

@@ -2,10 +2,11 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "fbe2900ab0226171ad6f89674fb5797bcd0bedfb",
+    "applicationCommit": "867d5cd821347378e0e56e3704e40b7f172c0058",
     "verificationCommit": "83e2eb6a9706531b14ca7253e1d5dd8496321b5f",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25OhioSavedEstimateValidation.macosCoverageControls.priorFullCoverage",
+    "guidedHelpRenderingEvidenceKey": "activeContinuation.nov25GuidedHelpRendering",
     "guidedDraftRecoveryEvidenceKey": "activeContinuation.nov25GuidedDraftRecovery",
     "ohioSavedEstimateValidationEvidenceKey": "activeContinuation.nov25OhioSavedEstimateValidation",
     "currentAotcAndStateDisclosureEvidenceKey": "activeContinuation.nov25AotcClaimantYearAndStateSupport",
@@ -62,6 +63,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
+      "Finish exact checks on 867d5cd8. The help dock regression, web types, scope review and corrected timing and source audits passed. Exact Linux CI, Web, Docker and native ARM64 checks are in progress.",
       "Resolve browser qualification on fbe2900a. Managed Linux passed 651 active cases and hit the 390px railroad retirement saved-PDF inspection deadline after the final phase marker. ARM64 passed 642 active cases and hit ten Ohio deadlines. The restarted strict AMD64 job passed recovery and rollback and is running the browser suite.",
       "Finish the eleven exact local checks on fbe2900a. All eleven passed on the prior 83e2eb6a application after the full coverage repeat with idle sleep held.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -71,6 +73,26 @@
     ]
   },
   "activeContinuation": {
+    "nov25GuidedHelpRendering": {
+      "status": "Pushed. Focused checks and independent engineering review passed. The diagnostic pin was corrected after the initial managed timing preflight failed. Full exact checks continue.",
+      "implementationCommit": "ac9ae969068ff7eb6d1c00a985a3c82ab85ac4e9",
+      "applicationCommit": "867d5cd821347378e0e56e3704e40b7f172c0058",
+      "sourceTree": "bf3e3c05c3bdb8e981190cff1261e04a26aa3dfa",
+      "initialRuns": { "ci": 45634170498, "web": 45634170296, "docker": 45634170277, "arm64": 45634211549, "managedJobId": 139275040154, "managedBrowserStarted": false, "failure": "Stale diagnostic audit file digest at timing preflight" },
+      "runIds": { "ci": 45634574431, "web": 45634574414, "docker": 45634574352, "arm64": 45634648361 },
+      "closedOverviewBuilds": { "baseline": 3, "candidate": 0 },
+      "reviewPassed": true,
+      "focusedCasesPassed": 22,
+      "nodeVersion": "26.13.1",
+      "webTypesPassed": true,
+      "sourceAuditControlsPassed": 2,
+      "sourceAndTimingControlsPassedAfterPinRefresh": 58,
+      "exactArchive": { "trackedBlobs": 6697, "sampleHashes": 15 },
+      "correctedBuilds": { "standaloneDockerPassed": true, "webPassed": true },
+      "auditedDigests": 2071,
+      "browserDeadlineImpactMeasured": false,
+      "evidencePath": ".local/upgrade-evidence/nov25-visible-help-overview"
+    },
     "nov25OhioSavedEstimateValidation": {
       "status": "Pushed. Scoped checks, engineering review, all eight CI jobs and both builds passed. Exact local and native checks continue.",
       "applicationCommit": "fbe2900ab0226171ad6f89674fb5797bcd0bedfb",
@@ -105,6 +127,7 @@
         }
       },
       "officialSourceRefresh": { "form8960": 2025, "form8960Instructions": 2025, "scheduleA": 2025, "scheduleAInstructions": 2025, "schedule3aDraftYear": 2026, "schedule3aFinalAvailable": null },
+      "residencyProjectionExperiment": { "focusedCasesPassed": 33, "medianPairedCpuImprovementPercent": { "school": -0.49, "residentCredit": -3.32, "new212": 4.11 }, "adopted": false, "evidencePath": ".local/upgrade-evidence/nov25-ohio-duplicate-residency-prototype" },
       "evidencePath": ".local/upgrade-evidence/nov25-remaining-deadlines"
     },
     "nov25GuidedDraftRecovery": {
