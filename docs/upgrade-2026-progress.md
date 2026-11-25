@@ -1,5 +1,35 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio standalone school preview replay
+
+`c901da52` runs one full Ohio school adapter instead of two for a
+2025 single guided render with verified school facts, no header and
+an empty preview overlay. It keeps the first adapter at its previous
+position and consumes its result once. Exact current canonical and
+federal material is required. Changed facts, explicit overrides,
+unsupported records and direct preview preserve the independent adapter.
+
+Both fixture tests reproduced the duplicate adapter before the change.
+Independent review found a Decimal signed-zero mismatch and a
+reentrant second consumption. Both new cases failed before correction
+and passed afterward. The final independent suite passed 15 tests.
+Root tests passed 109 scoped cases, 58 diagnostics, typechecks, lint,
+all 10,057 spec references, generated inventory and source audit. The
+source audit retains the existing browser contracts and deadlines.
+
+Three local paired processes per fixture used 105 measured renders
+each. Median paired CPU fell 26.96% and 27.79%, and one pair was slower.
+Every preview, canonical value, saved state and rejection digest
+matched. Timing preceded the final reentrant consumption guard.
+The exact local checkout matches 6,697 tracked blobs and 15 official
+PDF samples. Local units passed 30,498 cases. The independent Docker
+build passed. Vercel canceled the production build. The remaining
+local, Linux and ARM64 results are in progress.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45534420347) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45534420393) ·
+[Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45534420296) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45534450387).
+
 ## November 25 Ohio traditional school levy
 
 `3a9f8d24` computes the 2026 pre-credit traditional school-district levy
@@ -24,10 +54,12 @@ replayed the original conflict cases. Root verification passed 213 tests,
 typecheck, scoped lint, all 10,053 references, the generated inventory
 and the source audit, with all browser contracts retained. The release
 checkout matches 6,697 tracked blobs and 15 official PDF samples. Its
-ten checks before Chromium passed, including 30,493 unit and coverage
+all eleven local checks passed, including 30,493 unit and coverage
 cases with 81 original skips and 88.39% branch coverage. These checks ran
 with four low-priority unit and coverage workers while the earlier
-browser ran. The two Chromium servers ran in sequence.
+browser ran. The two Chromium servers ran in sequence. The exact
+browser run passed all 652 active cases with five original skips across
+eight windows, including the mobile K12 reload. Server cleanup passed.
 The production deployment listing shows canceled builds for the
 traditional levy and corrected jobs-credit inventory commits.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45527715373) ·

@@ -9,13 +9,22 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `c901da52` reuses the validated Ohio school adapter once within an
+  eligible 2025 guided render. The first validation and the independent
+  fallback remain in place. Independent review confirmed exact
+  signed-zero and single-use behavior. Local paired CPU fell about
+  27% on two synthetic fixtures before the final single-use guard.
+  All 109 focused checks passed. Exact local, Linux and ARM64 runs
+  are active.
+  [Ohio standalone replay](upgrade-2026-progress.md#november-25-ohio-standalone-school-preview-replay).
+
 - `3a9f8d24` computes the pre-credit 2026 Ohio traditional school levy
   for the verified single, full-year W-2-only cohort. Independent review
   rechecked the enacted exemption thresholds and the source guards.
   It remains an internal draft. All 213 focused tests, typecheck, lint
-  and spec/inventory checks passed. Exact unit and coverage each
-  passed 30,493 cases with 88.39% branches. Ten local checks passed.
-  Exact Chromium is still running.
+  and spec/inventory checks passed. All eleven exact local checks
+  passed. Unit and coverage each passed 30,493 cases with 88.39% branches.
+  Chromium passed 652 active cases, including the mobile K12 reload.
   [Ohio traditional school evidence](upgrade-2026-progress.md#november-25-ohio-traditional-school-levy).
 
 - `5d8e8fd4` validates a direct individual's certified Ohio refundable
