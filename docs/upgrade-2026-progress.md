@@ -1,5 +1,85 @@
 # 2026 upgrade implementation evidence
 
+## November 25 explicit review of legacy AOTC claimant facts
+
+`459b880a` retains older claimant answers in the guided return and asks
+the user to confirm the selected year when an AOTC student has positive
+expenses. Mixed AOTC and LLC drafts follow the same rule. Confirmed
+answers survive saved reopen and equivalent decimal or TIN formatting.
+A change of return year, claimant identity, joint spouse identity or a
+substantive claimant answer clears the confirmation. A raw workspace
+review request without confirmation stops before federal calculation.
+Explicit confirmation preserves zero and produces the expected $2,500
+in the representative 2025 redacted review PDF. Direct canonical Form
+8863 calculations and student-loan inputs use their existing contracts.
+The legacy, real interview and identity regressions reproduced their gaps
+before the fix. All 299 affected tests, an independent 22-test rerun,
+web typecheck, lint, 10,062 spec references, inventory and the exact staged
+browser source audit passed. The exact combined tree and 15 official
+sample PDF hashes were verified. The exact Docker build passed. Full
+local, CI, Linux and ARM64 verification are open.
+[Form 8863 instructions](https://www.irs.gov/instructions/i8863) ·
+[Guided specification](../spec/federal/guided-aotc-student-history.yaml) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45548981817) ·
+[Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45548981698) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45548981721) ·
+[Exact ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45549081845).
+
+The live IRS endpoint for the final 2026 Form 8863 is byte-for-byte
+identical to the two-page blank already pinned in the repository. The
+current instructions still print 2025. The IRS, Pennsylvania and Ohio
+catalogs still expose their 2025 annual parent returns alongside draft
+or estimated-payment material for 2026. The existing release gates
+therefore remain open. [Final Form 8863](https://www.irs.gov/pub/irs-pdf/f8863.pdf) ·
+[Form 8863 instructions](https://www.irs.gov/pub/irs-pdf/i8863.pdf) ·
+[Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Pennsylvania annual return catalog](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio annual return catalog](https://tax.ohio.gov/individual/get-a-form).
+
+## November 25 AOTC claimant year and state support
+
+`8b4b4f04` resets shared Form 8863 claimant facts for an AOTC-only
+return-year change, including a previously started AOTC worksheet with
+removed student rows. Current-year timely identification, actual and
+potential dependency, residency and election, and the education MAGI
+exclusion are reviewed. Same-year selections, separate LLC student
+resets and isolated student-loan behavior are preserved. An independent
+reproduction used a saved 2026 claimed-dependent answer on a 2025 return
+and calculated $0. With the actual 2025 answer it calculated $2,500.
+The new spec reference failed on the original reducer. All 54 focused
+checks passed on pinned Node 26.13.1, including the real bridge, LLC and
+student-loan controls and diagnostics. Web types, scoped lint and the
+staged source audit passed. Already-switched and subsequently completed
+drafts contain no claimant source year to reconstruct.
+[Final 2025 Form 8863 instructions](https://www.irs.gov/instructions/i8863) ·
+[Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+`6c21031c` describes the available Pennsylvania guided EIC child
+inventory review and the finite Ohio earned-income school district source
+confirmation and preview. All eight 2026 rows still gate full return
+calculations, PDFs and filing. The new disclosure regression reproduced
+the missing copy. All 39 focused and diagnostic checks, web types,
+scoped lint and the staged source audit passed. The tracked-only exact
+local tree matches the pushed application, with 15 sample PDFs verified
+and a frozen offline dependency install. The complete checks on that tree
+are running. [PA source spec](../spec/state/pa-2026-childless-eic-dependency.yaml) ·
+[Ohio source spec](../spec/state/oh-2026-school-sources.yaml) ·
+[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45547391419) ·
+[Exact Web](https://github.com/utilityfueled/tax-engine/actions/runs/45547391470) ·
+[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45547391565).
+
+## November 25 Pennsylvania short tax period
+
+`c19c5c6f` holds the 2026 calendar-year Pennsylvania ordinary draft
+for an affirmatively confirmed short federal accounting year. All three
+residency fixtures demonstrated the previous acceptance. An omitted or
+explicit negative answer retains the previous tax and readiness result.
+All 213 affected PA checks, root typecheck, scoped lint and 14 scoped spec
+references passed. A separate 144-case check and the exact staged browser
+source audit passed. [Tax Reform Code §301(v)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s) ·
+[§325(j)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s) ·
+[Draft spec](../spec/state/pa-2026-ordinary-draft.yaml).
+
 ## November 25 federal taxpayer source reconciliation
 
 `1e076910` checks 2026 guided extension receipts alongside estimates.
@@ -48,8 +128,13 @@ existing skips. The runner verified its owned server closed.
 The exact local checks used Node 26.13.1, pnpm 10.34.8, Python 3.14.6
 and pypdf 6.10.0. The local receipt retains the official PDF hashes
 and browser summary and cleanup hashes.
-The exact Docker build passed. The exact ARM64 job was scheduled after
-the public branch and workflow both reported the reviewed commit.
+The exact Docker build passed. Exact ARM64 passed 643 of 652 active
+browser cases in eight windows and kept five original skips. Nine Ohio
+cases hit the existing 30-second deadline across business part-year,
+reciprocal, resident credit and school part-year paths. The isolated
+Compose recovery, independent archive verification and browser cleanup
+steps passed. The independently verified timing ZIP SHA-256 is
+`d1503a214223d78389a2cd34fedc326ae53f65ac15bb1528031b7576444ee76a`.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
 [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45539213333) ·
 [Corrected Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45539213256) ·

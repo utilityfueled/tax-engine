@@ -2,10 +2,13 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "bc034c3469073579d9b8ddfe80a0cf38b4253606",
-    "verificationCommit": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8",
+    "applicationCommit": "459b880a79a36bc9c88dd38cdbf2b388927020d5",
+    "verificationCommit": "459b880a79a36bc9c88dd38cdbf2b388927020d5",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25FederalTaxpayerSourceReconciliation.correctedVerification",
+    "currentAotcAndStateDisclosureEvidenceKey": "activeContinuation.nov25AotcClaimantYearAndStateSupport",
+    "legacyAotcClaimantReviewEvidenceKey": "activeContinuation.nov25LegacyAotcClaimantReview",
+    "paShortTaxPeriodEvidenceKey": "activeContinuation.nov25PaShortTaxPeriod",
     "taxpayerSourceEvidenceKey": "activeContinuation.nov25FederalTaxpayerSourceReconciliation",
     "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "pendingOhioResultEvidenceKey": "activeContinuation.nov25OhioPendingOwnedResultComparison",
@@ -56,7 +59,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect corrected exact d973e8a1 CI 45539213333, Linux Web 45539213256 and ARM64 45540602031. All eleven exact local checks and Docker 45539213235 passed. Earlier c901da52 CI 45534420347 is pending.",
+      "Collect exact 459b880a full local checks, CI 45548981817, Linux Web 45548981698, Docker 45548981721 and ARM64 45549081845. Collect the prior exact 6c21031c local run and d973e8a1 CI 45539213333 and Linux Web 45539213256. All eleven d973e8a1 local checks and Docker 45539213235 passed. ARM64 45540602031 recovered and cleaned up and had nine Ohio browser deadline failures.",
       "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Exact c901da52 managed Linux passed 650 with two railroad retirement PDF deadlines, strict AMD64 passed 650 with two Ohio school deadlines, and ARM64 passed 642 with ten Ohio deadlines. Recovery and independent archive verification passed on both architectures.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
@@ -65,6 +68,69 @@
     ]
   },
   "activeContinuation": {
+    "nov25LegacyAotcClaimantReview": {
+      "status": "pushed; scoped tests, exact source audit and Docker passed; full local, CI, Linux and ARM64 checks open",
+      "revision": "459b880a79a36bc9c88dd38cdbf2b388927020d5",
+      "exactSourceTree": "8a13b5e5435458bb11a0a0628585a206ae844aab",
+      "focusedTestsPassed": 299,
+      "independentFocusedTestsPassed": 22,
+      "specReferencesPassed": 10062,
+      "dockerConclusion": "success",
+      "localEvidence": ".local/upgrade-evidence/nov25-aotc-claimant-year/final/",
+      "legacyDisposition": "Preserve displayed answers and wait for explicit selected-year confirmation. Positive AOTC expenses activate the review, including mixed LLC drafts. The shared validator covers raw workspace review requests and local draft replay.",
+      "reconfirmationTrigger": "Selected year, substantive claimant answers, or normalized primary/joint-spouse TIN changed. Exact known zero and formatting-only edits are preserved.",
+      "officialSourceRecheck": {
+        "atUtc": "2026-11-25T04:54Z",
+        "liveFinalForm8863MatchesPinnedSha256": "290771de5dbbbede2de9e7cb2ba8a7d51a08aa10e89b4ed74cfdbdb631af167f",
+        "currentFinalForm8863InstructionsYear": 2025,
+        "currentAnnualParentFormsIndexed": { "Form1040": 2025, "PA40": 2025, "OhioIT1040": 2025 }
+      },
+      "exactRemoteRuns": { "CI": 45548981817, "Web": 45548981698, "Docker": 45548981721, "ARM64": 45549081845 }
+    },
+    "nov25PaShortTaxPeriod": {
+      "status": "pushed and independently reproduced; calendar draft remains filing-unqualified",
+      "revision": "c19c5c6fc8bb9b85e0f453ffaae2a74f3c8f5005",
+      "focusedPaPassed": 213,
+      "focusedDraftAndDiagnosticsPassed": 144,
+      "redResidencyCases": ["resident", "part_year", "nonresident"],
+      "sourceAudit": "passed with matching diagnostics digest",
+      "statutes": ["PA Tax Reform Code 301(v)", "PA Tax Reform Code 325(j)"],
+      "remoteRuns": { "CI": 45548345906, "Web": 45548345669, "Docker": 45548345621 }
+    },
+    "nov25D973NativeArm64": {
+      "revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8",
+      "run": 45540602031,
+      "job": 138962200018,
+      "status": "failed existing 30-second browser deadlines",
+      "activePassed": 643,
+      "deadlineFailures": 9,
+      "originalSkips": 5,
+      "windows": 8,
+      "deadlineCategories": { "Ohio business part-year": 2, "Ohio reciprocal": 1, "Ohio resident credit": 2, "Ohio school part-year": 4 },
+      "recoveryArchiveCleanupPassed": true,
+      "timingArtifactSha256": "d1503a214223d78389a2cd34fedc326ae53f65ac15bb1528031b7576444ee76a"
+    },
+    "nov25AotcClaimantYearAndStateSupport": {
+      "status": "pushed, focused checks passed, exact-source complete checks under way",
+      "aotcClaimantFactsCommit": "8b4b4f046941b8929d2e9182469a1447600ba6de",
+      "stateDisclosureCommit": "6c21031c0d9a03742efee91b3ddf8d07477aa929",
+      "exactSourceTree": "cc2d8fa64e451f6c14d292ece5064838e22a463e",
+      "aotcFocusedPassed": 54,
+      "disclosureFocusedPassed": 39,
+      "stagedBrowserSourceAudits": "passed on both package trees with matching diagnostics manifest digests",
+      "aotcIndependentReproduction": "A stale 2026 actual dependency claim survived a saved reopen in 2025 and changed Form 8863 from $2500 to $0; the fresh 2025 answers restore $2500.",
+      "legacyLimit": "Fully answered drafts switched before the fix contain no claimant source-year provenance.",
+      "publicSupport": "Pennsylvania EIC child inventory and finite Ohio earned-income district guided component preview disclosed. Full 2026 returns, PDFs and filing remain unavailable.",
+      "officialSources": [
+        "https://www.irs.gov/instructions/i8863",
+        "https://www.irs.gov/pub/irs-dft/i8863--dft.pdf",
+        "spec/state/pa-2026-childless-eic-dependency.yaml",
+        "spec/state/oh-2026-school-sources.yaml"
+      ],
+      "localEvidence": ".local/upgrade-evidence/nov25-aotc-claimant-year/",
+      "officialSampleChecksumsVerified": 15,
+      "exactRemoteRuns": { "CI": 45547391419, "Web": 45547391470, "Docker": 45547391565 }
+    },
     "nov25FederalTaxpayerSourceReconciliation": {
       "revision": "bc034c3469073579d9b8ddfe80a0cf38b4253606",
       "extensionReceipts": {"revision": "1e0769105d8c393bd4c9813aebaa95e39be5d7dc", "authorities": ["https://www.irs.gov/taxtopics/tc304", "https://www.irs.gov/payments/direct-pay-help"], "failedBefore": 3, "focusedTestsPassed": 26, "independentTestsPassed": 8, "settlementIndependentlyVerified": false, "stagedBrowserSourceAuditPassed": true},

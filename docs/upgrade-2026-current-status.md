@@ -9,6 +9,32 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `459b880a` lets people review older Form 8863 drafts without guessing
+  which year their answers came from. Positive AOTC expenses require
+  one explicit confirmation for the selected tax year. Changing the
+  claimant, joint spouse, year or substantive claimant answers requires
+  another confirmation. The guided return and raw workspace review use
+  the same check. All 299 affected tests, independent review, web types,
+  lint, spec checks and the exact staged source audit passed. The exact
+  Docker build passed. Full local, CI, Linux and ARM64 checks are open.
+  [Legacy AOTC evidence](upgrade-2026-progress.md#november-25-explicit-review-of-legacy-aotc-claimant-facts).
+
+- `8b4b4f04` requires AOTC-only interviews to reconfirm shared Form 8863
+  claimant facts after a year change. Saved reopen retains the pending
+  review. The regression calculates $2,500 after actual 2025 answers and
+  $0 with an actual dependency claim.
+  `6c21031c` describes the available Pennsylvania EIC and Ohio school
+  district source work on the public support page. Both focused suites,
+  type checks and exact staged browser audits passed. Full local and
+  public workflow checks on `6c21031c` are running.
+  [AOTC and state support evidence](upgrade-2026-progress.md#november-25-aotc-claimant-year-and-state-support).
+
+- `c19c5c6f` holds the calendar-year Pennsylvania 2026 ordinary draft
+  when federal facts confirm a short accounting year. The resident,
+  part-year and nonresident regressions reproduced the original problem.
+  All 213 affected state cases, type checks, lint and the staged audit
+  passed. [Pennsylvania draft evidence](upgrade-2026-progress.md#november-25-pennsylvania-short-tax-period).
+
 - `1e076910`, `1ceca61f` and `bc034c34` close three source-fact gaps.
   2026 federal extensions are checked for duplicate receipts. A linked
   mortgage maximum below the Form 1098 Box 2 balance is held. Guided
@@ -20,7 +46,10 @@ Use the linked progress sections when investigating individual packages.
   run passed all eleven local checks. Unit and coverage each passed
   30,506 cases with 88.40% branch coverage. Local Chromium passed all
   652 active cases with teardown verified. The exact Docker build
-  passed. The current remote CI, Linux and ARM64 checks are still open.
+  passed. Exact ARM64 passed 643 active browser cases and hit nine
+  existing Ohio deadlines. Recovery, archive verification and cleanup
+  passed. The exact remote CI and Linux checks are still open.
+  [ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45540602031/job/138962200018).
   [Taxpayer source facts](upgrade-2026-progress.md#november-25-federal-taxpayer-source-reconciliation).
 
 - `c901da52` reuses the validated Ohio school adapter once within an
