@@ -2,13 +2,14 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "f94a3a9c40e9340a0c8f4959222f96b3fe916362",
+    "applicationCommit": "795934e7eea2cd47bb26a6ec24a8c39f46124f94",
     "verificationCommit": "867d5cd821347378e0e56e3704e40b7f172c0058",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25GuidedHelpRendering.exactLocal",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "digitalAssetLotOrderingEvidenceKey": "activeContinuation.nov25ExactDigitalAssetLotOrdering",
+    "digitalAssetBrokerLotEvidenceKey": "activeContinuation.nov25Notice202620BrokerLot",
     "draftSchedule3aEvidenceKey": "activeContinuation.nov25AmendedSchedule3a",
     "localStrictDiagnosticEvidenceKey": "activeContinuation.nov25StrictTimingFollowup",
     "guidedHelpRenderingEvidenceKey": "activeContinuation.nov25GuidedHelpRendering",
@@ -68,7 +69,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Complete the full exact cash refund checks for 7fc59749 and the preceding form verification. Focused checks, engineering review and the exact Docker build passed. Complete strict self-host browser qualification. On the last verified baseline 867d5cd8, all eleven exact local checks, all eight ordinary Linux CI jobs, Web and Docker builds, and managed Chromium passed. Strict AMD64 hit eleven Ohio and two railroad retirement deadlines. Native ARM64 hit eight Ohio deadlines. Both strict recovery and archive paths passed.",
+      "Complete full exact broker lot checks for 795934e7 and remaining cash refund verification for 7fc59749. Focused checks and engineering review passed for both. Complete strict self-host browser qualification. On the last fully verified local baseline 867d5cd8, all eleven exact local checks, all eight ordinary Linux CI jobs, Web and Docker builds, and managed Chromium passed. Strict AMD64 hit eleven Ohio and two railroad retirement deadlines. Native ARM64 hit eight Ohio deadlines. Both strict recovery and archive paths passed.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -76,6 +77,25 @@
     ]
   },
   "activeContinuation": {
+    "nov25Notice202620BrokerLot": {
+      "implementationCommit": "795934e7eea2cd47bb26a6ec24a8c39f46124f94",
+      "status": "Pushed. Bounded documented original covered 2026 broker statement correction in source and guided paths. Exact full verification started.",
+      "notice": "https://www.irs.gov/irb/2026-15_IRB#NOT-2026-20",
+      "issuerInstructions": "https://www.irs.gov/instructions/i1099da",
+      "formDraft": "https://www.irs.gov/pub/irs-dft/f8949--dft.pdf",
+      "focusedTestsPassed": 500,
+      "focusedFilesPassed": 13,
+      "specReferencesVerified": 36,
+      "typechecksPassed": 3,
+      "lintAndInventoryPassed": true,
+      "engineeringReReviewPassed": true,
+      "sourceAudit": { "digests": 2071, "updated": 7, "controlsPassed": 2, "requestCeilingsChanged": false },
+      "fullExact": { "status": "started", "verifiedSamplePdfsPerArchive": 15, "frozenOfflineInstallsPassed": 2, "evidencePath": ".local/upgrade-evidence/nov25-followup-browser/notice-lot-exact" },
+      "runIds": { "ci": 45678629586, "web": 45678629036, "docker": 45678628283, "nativeArm64": 45678917919 },
+      "exactDockerBuildPassed": true,
+      "qualifiedHumanReview": false,
+      "filingQualified": false
+    },
     "nov25ExactDigitalAssetLotOrdering": {
       "implementationCommit": "f94a3a9c40e9340a0c8f4959222f96b3fe916362",
       "status": "Pushed. Exact Decimal comparison inside existing lot identification and release boundaries.",
@@ -86,6 +106,7 @@
       "engineeringReviewPassed": true,
       "sourceAudit": { "digests": 2071, "updated": 1, "controlsPassed": 2, "requestCeilingsChanged": false },
       "runIds": { "ci": 45675046664, "web": 45675046673, "docker": 45675046773 },
+      "exactDockerBuildPassed": true,
       "filingQualified": false
     },
     "nov25Form1098VliCashRefund": {
@@ -105,6 +126,8 @@
       "fullExact": { "status": "started", "verifiedSamplePdfsPerArchive": 15, "frozenOfflineInstallsPassed": 2, "evidencePath": ".local/upgrade-evidence/nov25-followup-browser/cash-refund-exact" },
       "runIds": { "ci": 45673736911, "web": 45673736878, "docker": 45673736703 },
       "exactDockerBuildPassed": true,
+      "exactSerialUnit": { "exitCode": 0, "passed": 30536, "originalSkips": 81, "passedFiles": 2220 },
+      "exactCoverage": { "status": "passed", "exitCode": 0, "passed": 30536, "originalSkips": 81, "passedFiles": 2220, "branchCoveragePercent": 88.44 },
       "remainingRecoveryReview": ["current interest credits", "mixed refunds", "positive or unknown prior deductions or carryforwards"],
       "qualifiedHumanReview": false,
       "filingQualified": false
@@ -123,6 +146,7 @@
       "exactFocused": { "commandsPassed": 7, "combinedSchedule1aAnd3aTestsPassed": 81, "evidencePath": ".local/upgrade-evidence/nov25-followup-browser/vli-exact" },
       "exactCoverage": { "status": "passed", "exitCode": 0, "maxWorkers": 1, "passed": 30530, "originalSkips": 81, "passedFiles": 2220, "branchCoveragePercent": 88.43, "evidenceFile": ".local/upgrade-evidence/nov25-followup-browser/vli-exact/coverage.exit" },
       "runIds": { "ci": 45670078300, "web": 45670078270, "docker": 45670078276 },
+      "exactLinuxCiJobsPassed": 8,
       "exactDockerBuildPassed": true,
       "exceptionalStatementsHeld": ["corrected", "assigned", "refinanced", "prior-year interest recovery", "additional nonqualifying interest"],
       "qualifiedHumanReview": false,

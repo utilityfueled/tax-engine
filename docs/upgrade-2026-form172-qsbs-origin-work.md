@@ -1,5 +1,28 @@
 # Current loss origins with actual QSBS exclusions
 
+## November 25 authority refresh
+
+Section 172(d)(4)(B) explicitly applies the §172(d)(2)(B) exclusion
+addback when setting the nonbusiness-deduction limit. Congress added
+both provisions together. A separate no-exclusion recomputation
+produces $300 net capital gain, negative $99,700 AGI, and a negative
+$115,450 starting amount after the $15,750 standard deduction.
+Adding back the $15,450 deduction disallowed under §172 leaves a
+$100,000 loss. That recomputation is a check on the statute, while
+the separate printed-line trace below remains $99,800.
+
+The current regulation confirms the order of the capital-loss and
+nonbusiness-deduction limits. Its historical §1202 reference concerns
+the earlier capital-gains deduction. The IRS's archived Publication 536
+uses the same printed worksheet arithmetic and its example has no
+§1202 exclusion. No published IRS overlap example or correction was
+found. Obtain a qualified review of the actual Form 172 line
+treatment before enabling this case.
+[26 U.S.C. §172](https://uscode.house.gov/us/usc/119-142/t26/s172/) ·
+[Pub. L. 103-66 §13113(d)(1)](https://www.govinfo.gov/content/pkg/BILLS-103hr2264enr/html/BILLS-103hr2264enr.htm) ·
+[26 CFR §1.172-3(a), (c)](https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/xhtml/CFR-2025-title26-vol4-sec1-172-3.html) ·
+[Archived IRS Publication 536](https://www.irs.gov/pub/irs-prior/p536--2023.pdf#page=5).
+
 ## November 21 authority refresh
 
 The IRS still lists the December 2024 form and instructions as current.

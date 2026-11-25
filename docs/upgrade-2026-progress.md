@@ -1,5 +1,45 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Form 1099-DA broker lot corrections
+
+`795934e7` handles a narrowly supported Notice 2026-20 correction.
+The original 2026 broker statement reports a covered short-term
+purchase and sale. The taxpayer's documented, individually identified
+long-term lot remained in the same custody account and was identified
+before the sale date. The pathway requires exact sold units, suitable
+taxpayer basis evidence, no conflicting broker order and no dependence
+on transitional basis allocation. Same-day identification, standing
+orders and additional sale adjustments require separate qualification.
+[IRS Notice 2026-20, §§4.02–4.05](https://www.irs.gov/irb/2026-15_IRB#NOT-2026-20) ·
+[2026 issuer instructions](https://www.irs.gov/instructions/i1099da).
+
+The internal Form 8949 result uses actual long-term Box J and the
+taxpayer's acquisition date. It retains reported basis in column (e)
+and applies code T with code B and the signed difference when basis
+differs. The source audit describes both dates and terms without freeform
+identifiers. The synthetic $10,000 sale with $9,000 reported basis and
+$6,000 actual basis yields code BT, +$3,000 adjustment and $4,000
+long-term gain. Exact aggregate checks hold cases that lose source
+precision. Guided edits require renewed statement, lot and Pennsylvania
+basis confirmation when their sources change. Final Form 8949
+qualification and the public 2026 calculation remain open.
+[Current Form 8949 instructions](https://www.irs.gov/instructions/i8949) ·
+[2026 draft Form 8949](https://www.irs.gov/pub/irs-dft/f8949--dft.pdf).
+
+All 500 targeted tests in 13 files, three typechecks, 36 affected spec
+references, inventory, scoped lint with zero errors and independent
+engineering re-review passed. Targeted red tests reproduced the
+original date rejection, duplicate proof, cents loss, aggregate
+argument limit and stale guided attestations before fixes. Two browser
+source-audit controls passed with seven refreshed pins out of 2,071.
+Both exact tracked-only archives matched all 15 known sample PDF hashes
+and passed frozen offline installation. The exact Docker build passed.
+The full checks have started.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45678629586) ·
+[Web and strict AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45678629036) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45678628283) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45678917919).
+
 ## November 25 exact digital asset lot ordering
 
 `f94a3a9c` compares per-unit cost bases directly in Decimal for the
@@ -15,7 +55,8 @@ requirements and the public filing gate remain in force.
 All 189 targeted lot and statement tests, 45 Form 1099-DA spec
 references, inventory, scoped lint, independent engineering review
 and `git diff --check` passed. The two browser source-audit controls
-passed after refreshing one of 2,071 source digests.
+passed after refreshing one of 2,071 source digests. The exact Docker
+build passed.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45675046664) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45675046673) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45675046773).
@@ -48,7 +89,9 @@ Two browser-audit controls passed, with five updated out of 2,071 pins
 and the existing browser limits. The tracked-only exact verification
 suite has started with both archives checking all 15 original sample
 PDF hashes and using the frozen dependency lock. Qualified human tax
-review is outstanding. The exact Docker build passed.
+review is outstanding. The exact Docker build passed. Exact unit
+and coverage runs each passed 30,536 tests in 2,220 files, with 81
+original skips and 88.44% branch coverage.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45673736911) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45673736878) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45673736703).
@@ -83,7 +126,7 @@ The tracked-only archive passed all seven focused verification commands
 with a frozen install. The combined Schedule 1-A and 3-A suite passed
 all 81 tests. The exact Docker build passed. Full exact local coverage
 passed 30,530 tests across 2,220 files at 88.43% branch coverage,
-with 81 original skips.
+with 81 original skips. Ordinary Linux CI also passed all eight jobs.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45670078300) ·
 [Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45670078270) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45670078276).

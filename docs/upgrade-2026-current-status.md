@@ -9,11 +9,22 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `795934e7` handles a documented 2026 broker-lot correction when a
+  covered short-term statement conflicts with the taxpayer's timely
+  identification of an actual long-term lot. It preserves original
+  reporting values, requires fresh proof after source edits and checks
+  exact Form 8949 totals. All 500 targeted cases, three typechecks, both
+  specs, inventory, source-audit checks, engineering review and the exact
+  Docker build passed. Exact full checks have started. Final 2026 federal
+  qualification is outstanding.
+  [Broker-lot evidence](upgrade-2026-progress.md#november-25-form-1099-da-broker-lot-corrections).
+
 - `f94a3a9c` compares digital-asset lot prices with Decimal. The
   previous comparison could treat different prices as equal and select
   a lot with the wrong holding period. All 189 targeted tests, 45
   Form 1099-DA spec references, the inventory check, source-audit
-  controls and independent engineering review passed.
+  controls, independent engineering review and the exact Docker build
+  passed.
   [Digital-asset evidence](upgrade-2026-progress.md#november-25-exact-digital-asset-lot-ordering).
 
 - `7fc59749` handles a documented 2026 cash refund of 2025 interest
@@ -22,9 +33,9 @@ Use the linked progress sections when investigating individual packages.
   Changing the borrower resets the relevant confirmations. All 273
   targeted tests, both typechecks, 21 spec references, the inventory
   check, source-audit controls, engineering re-review and the exact
-  Docker build passed. Exact full checks have started. Credits against
-  current interest and unresolved prior tax benefits require further
-  qualification.
+  Docker build passed. The exact unit and coverage runs each passed
+  30,536 tests, with 88.44% branch coverage. Credits against current
+  interest and unresolved prior tax benefits require further qualification.
   [Cash refund evidence](upgrade-2026-progress.md#november-25-form-1098-vli-prior-year-cash-refunds).
 
 - `7e9a9e77` reconciles current Form 1098-VLI to unreimbursed interest
