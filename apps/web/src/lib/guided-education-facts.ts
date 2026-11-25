@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import type { CreditsData, EducationStudentSourceData, FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
+import type { CreditsData, EducationCreditData, EducationStudentSourceData, FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
 export const LLC_YEAR_FACTS_VERSION = 3;
@@ -12,6 +12,11 @@ const present = (value: string | undefined) => !!value?.trim();
 function validAmount(value: string | undefined) { if (!present(value)) return false; try { return parseGuidedCurrency(value).gte(0); } catch { return false; } }
 function amount(value: string | undefined) { parseGuidedCurrency(value); return (value ?? "").trim().replace(/,/g, ""); }
 const cleanId = (value: string | undefined) => value?.trim().replace(/-/g, "") ?? "";
+
+export function requiresAotcClaimantYearReview(education: EducationCreditData | undefined, taxYear?: number | null): boolean {
+  return !!education && Number.isInteger(taxYear) && education.aotcClaimantFactsTaxYear !== taxYear &&
+    education.aocStudents.some(student => validAmount(student.qualifiedExpenses) && parseGuidedCurrency(student.qualifiedExpenses).gt(0));
+}
 
 export function educationFactErrors(data: CreditsData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData): Record<string, string> {
   const errors: Record<string, string> = {}, education = data?.education;
@@ -132,6 +137,9 @@ export function educationFactErrors(data: CreditsData | undefined, taxYear?: num
       const facts = education.refundableAocFacts;
       if (!facts || typeof facts.fullTimeStudent !== "boolean" || typeof facts.parentAlive !== "boolean" || !validAmount(facts.earnedIncome) || !validAmount(facts.totalSupport)) errors.refundableAocFacts = "Enter actual claimant student, earned-income, support and parent-alive facts for refundable AOTC.";
     }
+  }
+  if (requiresAotcClaimantYearReview(education, taxYear)) {
+    errors.aotcClaimantFactsTaxYear = `Confirm the AOTC claimant answers for ${taxYear}.`;
   }
   return errors;
 }

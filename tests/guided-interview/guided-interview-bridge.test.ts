@@ -1382,6 +1382,7 @@ describe("buildEducationInput", () => {
       ...emptyCreditsData,
       education: {
         ...completeEducationClaimant,
+        aotcClaimantFactsTaxYear: 2025,
         refundableAocEligible: false,
         aocStudents: [
           { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4,000", priorYearsClaimed: "1" },
@@ -1389,7 +1390,7 @@ describe("buildEducationInput", () => {
         llcExpenses: "",
       },
     };
-    const result = buildEducationInput(data);
+    const result = buildEducationInput(data, 2025);
     expect(result!.aocStudents).toHaveLength(1);
     expect(result!.aocStudents[0].name).toBe("Jane");
     expect(result!.aocStudents[0].qualifiedExpenses).toBe("4000");
@@ -1401,6 +1402,7 @@ describe("buildEducationInput", () => {
       ...emptyCreditsData,
       education: {
         ...completeEducationClaimant,
+        aotcClaimantFactsTaxYear: 2025,
         refundableAocEligible: false,
         aocStudents: [
           { ...completeAocEligibility, name: "Jane", qualifiedExpenses: "4000", priorYearsClaimed: "0" },
@@ -1409,7 +1411,7 @@ describe("buildEducationInput", () => {
         llcExpenses: "",
       },
     };
-    expect(() => buildEducationInput(data)).toThrow(/actual qualified education expenses/i);
+    expect(() => buildEducationInput(data, 2025)).toThrow(/actual qualified education expenses/i);
   });
 
   it("includes LLC expenses when filled", () => {
@@ -1525,6 +1527,7 @@ describe("buildTaxInputFromGuidedData — credits", () => {
       ...emptyCreditsData,
       education: {
         ...completeEducationClaimant,
+        aotcClaimantFactsTaxYear: 2025,
         refundableAocEligible: false,
         aocStudents: [{ ...completeAocEligibility, name: "Test", qualifiedExpenses: "4000", priorYearsClaimed: "0" }],
         llcExpenses: "",

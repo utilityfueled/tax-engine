@@ -686,6 +686,7 @@ describe("workspace filled return download", () => {
     } finally { calculate.mockRestore(); }
   });
 
+  // Spec: spec/federal/guided-aotc-student-history.yaml, saved-aotc-claimant-year.
   it("calculates education using complete identity before redacting every student page", async () => {
     const calculate = vi.spyOn(federalEngine, "calculateFederalTax");
     const state = createGuidedFlowState();
@@ -699,16 +700,23 @@ describe("workspace filled return download", () => {
       }], llcStudents: [], llcExpenses: "0", possessionIncomeExclusion: "0", primaryTinEligible: true,
       canBeClaimedAsDependent: false, claimedAsDependent: false, nonresidentAlien: false, aocBanInEffect: false, form8862Required: false,
     };
-    const original = JSON.stringify(state);
-    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
-    expect(calculate.mock.lastCall?.[0].taxpayer.primary.ssn).toBe("111-22-3333");
-    calculate.mockRestore();
-    expect(download.includedForms).toContain("f8863-filled.pdf");
-    const text = await extractPdfText(download.contents);
-    expect(text).toContain("Synthetic College");
-    expect(text).toContain("2500");
-    expect(text.replace(/\s|-/g, "")).not.toContain("111223333");
-    expect(JSON.stringify(state)).toBe(original);
+    try {
+      const legacy = JSON.stringify(state);
+      await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), state)).rejects.toThrow(/complete the required taxpayer facts/i);
+      expect(calculate).not.toHaveBeenCalled();
+      expect(JSON.stringify(state)).toBe(legacy);
+
+      credits.education.aotcClaimantFactsTaxYear = 2025;
+      const original = JSON.stringify(state);
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      expect(calculate.mock.lastCall?.[0].taxpayer.primary.ssn).toBe("111-22-3333");
+      expect(download.includedForms).toContain("f8863-filled.pdf");
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain("Synthetic College");
+      expect(text).toContain("2500");
+      expect(text.replace(/\s|-/g, "")).not.toContain("111223333");
+      expect(JSON.stringify(state)).toBe(original);
+    } finally { calculate.mockRestore(); }
   });
 
   // Spec: spec/federal/form-1099-q-in-kind-room-board.yaml.

@@ -85,6 +85,7 @@ describe("required fact interaction boundaries", () => {
     await change("Were you a nonresident alien during the tax year?", "true");
     await change("Did you make the qualifying resident joint-return election?", "false");
     await change("Was your spouse's employment-valid SSN issued by the return due date for education credits?", "true");
+    await click("Confirm 2026 AOTC claimant answers");
     const actualPersonal = { ...completePersonalInfo, standardDeductionFacts: { ...completePersonalInfo.standardDeductionFacts, nonresidentAlien: true, residentJointElection: false } };
     const result = buildEducationInput({ ...emptyCreditsData, education: latest }, 2026, "mfj", actualPersonal);
     expect(result).toMatchObject({ residentJointElection: false, form8862Completed: false, refundableAocFacts: { fullTimeStudent: false, parentAlive: false, earnedIncome: "0", totalSupport: "9007199254740993.01" }, aocStudents: [{ priorYearsClaimed: 1, felonyDrugConviction: true, enrolledAtLeastHalfTime: false }] });

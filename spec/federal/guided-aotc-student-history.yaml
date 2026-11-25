@@ -38,3 +38,12 @@ lines:
       On a return-year change, reset saved claimant timely SSN and TIN, dependency claim and claimability, nonresident status and election, and education MAGI income exclusion. Apply the reset to AOTC-only interviews, including those with retained AOTC answers after the students are removed. Keep the selected return year and the student records for review. Hold guided federal calculation until the applicable facts are answered for the selected year. A same-year selection and a saved reopen preserve the current answers and pending review. The separate student-loan dependency review applies where there are no retained education credit sources.
     irsRef: "2025 Form 8863 instructions, Who Can Claim an Education Credit and Who Cannot Claim an Education Credit; https://www.irs.gov/pub/irs-prior/i8863--2025.pdf; 2026 draft Form 8863 instructions, TIN needed by due date of return; https://www.irs.gov/pub/irs-dft/i8863--dft.pdf"
     testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::rechecks shared claim facts after an AOTC-only saved year change"
+  - line: "saved-aotc-claimant-year"
+    description: "Review unbound Form 8863 claimant facts for the selected tax year"
+    formula: >-
+      For positive entered AOTC student expenses, including on a return with LLC students, retain legacy claimant answers for review. Hold guided federal input until the user explicitly confirms the claimant facts for the selected tax year. A draft, backup, or server request without that confirmation does not establish the answer year. Save the year of the explicit confirmation and preserve it across ordinary reopen. Clear it when the tax year, substantive claimant answers, or the identity of the claimant or joint spouse changes. Identifier formatting alone preserves confirmation. Preserve zero and pending amounts. This is a guided questionnaire requirement and does not change direct canonical Form 8863 calculation or student loan dependency rules.
+    testRef: "tests/guided-interview/guided-aotc-student-history.test.ts::requires explicit selected-year claimant review for a legacy positive AOTC draft"
+    testRefs:
+      - "tests/apps/web/guided-aotc-student-history.test.tsx::confirms the saved AOTC claimant answers for the visible tax year"
+      - "tests/apps/web/workspace-filled-return.test.ts::calculates education using complete identity before redacting every student page"
+      - "tests/guided-interview/guided-aotc-student-history.test.ts::does not reuse claimant review for a different taxpayer in the same year"

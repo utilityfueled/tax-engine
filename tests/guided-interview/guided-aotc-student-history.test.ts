@@ -31,7 +31,7 @@ function educationInterview() {
   };
   state.sectionData.credits = {
     ...emptyCreditsData,
-    education: { ...emptyCreditsData.education, ...completeEducationClaimant, aocStudents: [first] },
+    education: { ...emptyCreditsData.education, ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2025, aocStudents: [first] },
   };
   return { state, first, second: { ...first, name: "River Example", studentTaxId: river.ssn } };
 }
@@ -49,6 +49,11 @@ function replaceStudents(state: GuidedFlowState, students: EducationStudentData[
 function updateEducation(state: GuidedFlowState, patch: Partial<ReturnType<typeof creditsFor>["education"]>) {
   const credits = creditsFor(state);
   return updateSectionData(state, "credits", { ...credits, education: { ...credits.education, ...patch } });
+}
+
+function confirmAotcClaimantYear(state: GuidedFlowState) {
+  if (state.taxYear == null) throw new Error("Missing selected tax year");
+  return updateEducation(state, { aotcClaimantFactsTaxYear: state.taxYear });
 }
 
 function reopen(state: GuidedFlowState) {
@@ -103,7 +108,8 @@ describe("guided AOTC prior-claim history", () => {
         spouse: { ...personal.spouse!, employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate },
       });
       return reopen(updateSectionData(withPersonal, "credits", { ...emptyCreditsData, education: {
-        ...emptyCreditsData.education, ...completeEducationClaimant, primarySsnEligible: false, aocStudents: [student],
+        ...emptyCreditsData.education, ...completeEducationClaimant, primarySsnEligible: false,
+        aotcClaimantFactsTaxYear: 2026, aocStudents: [student],
       } }));
     }
     const consistent = withSpouseTin(true);
@@ -129,7 +135,8 @@ describe("guided AOTC prior-claim history", () => {
         ...personal, spouse: { ...spouse, employmentValidSsnIssuedByDueDate: employmentSsn, tinIssuedByDueDate: timelyTin },
       });
       return reopen(updateSectionData(withPersonal, "credits", {
-        ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant, spouseSsnEligible: employmentSsn, aocStudents: [{ ...student, ...studentFacts }] },
+        ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant, spouseSsnEligible: employmentSsn,
+          aotcClaimantFactsTaxYear: 2026, aocStudents: [{ ...student, ...studentFacts }] },
       }));
     }
     const consistent = returnWithSpouseFacts(true, true);
@@ -216,7 +223,7 @@ describe("guided AOTC prior-claim history", () => {
     const correctedHistory = replaceStudents(changed, [{ ...retained, priorYearsClaimed: "4", requiresPriorYearsConfirmation: false }]);
     expect(buildTaxInputFromGuidedData(reopen(correctedHistory))).toBeNull();
     const corrected = replaceStudents(correctedHistory, [{ ...retained, priorYearsClaimed: "4", requiresPriorYearsConfirmation: false, sourceFactsConfirmed: true }]);
-    const current = updateEducation(corrected, { ...completeEducationClaimant, llcStudents: [llc] });
+    const current = confirmAotcClaimantYear(updateEducation(corrected, { ...completeEducationClaimant, llcStudents: [llc] }));
     const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen(current)));
     expect(input.taxpayer.taxYear).toBe(2026);
     expect(input.educationExpenses?.aocStudents[0].priorYearsClaimed).toBe(4);
@@ -246,7 +253,7 @@ describe("guided AOTC prior-claim history", () => {
       ...emptyCreditsData,
       education: {
         ...emptyCreditsData.education, ...claimant, aocStudents: [first],
-        claimedAsDependent: true, residentJointElection: false,
+        claimedAsDependent: true, residentJointElection: false, aotcClaimantFactsTaxYear: 2026,
       },
     });
     expect(creditsFor(source).education.llcStudents ?? []).toHaveLength(0);
@@ -272,14 +279,62 @@ describe("guided AOTC prior-claim history", () => {
     });
     expect(creditsFor(reviewed).education.possessionIncomeExclusion).toBeUndefined();
 
-    const currentClaimant = reopen(updateEducation(reviewed, claimant));
+    const currentClaimant = reopen(confirmAotcClaimantYear(updateEducation(reviewed, claimant)));
     expect(validateSection(currentClaimant, "credits").status).toBe("complete");
     expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(currentClaimant)).educationExpenses?.possessionIncomeExclusion.toString()).toBe("0");
     expect(calculateAotc(currentClaimant)).toBe("2500");
-    expect(calculateAotc(reopen(updateEducation(currentClaimant, { claimedAsDependent: true })))).toBe("0");
+    expect(calculateAotc(reopen(confirmAotcClaimantYear(updateEducation(currentClaimant, { claimedAsDependent: true }))))).toBe("0");
 
     const afterStudentRemoval = replaceStudents(source, []);
     expect(creditsFor(reopen(setInterviewTaxYear(afterStudentRemoval, 2025))).education.claimedAsDependent).toBeNull();
+  });
+
+  it("requires explicit selected-year claimant review for a legacy positive AOTC draft", () => {
+    const { state, first, second } = educationInterview();
+    const legacy = reopen(updateEducation(state, { aotcClaimantFactsTaxYear: undefined }));
+    const expectedReview = { aotcClaimantFactsTaxYear: expect.stringMatching(/confirm.*2025/i) };
+    expect(creditsFor(legacy).education.claimedAsDependent).toBe(false);
+    expect(validateSection(legacy, "credits").fieldErrors).toMatchObject(expectedReview);
+    expect(buildTaxInputFromGuidedData(legacy)).toBeNull();
+    expect(validateSection(updateEducation(legacy, { aotcClaimantFactsTaxYear: 2026 }), "credits").fieldErrors)
+      .toMatchObject(expectedReview);
+
+    const mixed = updateEducation(legacy, { llcStudents: [{ ...second, qualifiedExpenses: "0", courseEligibilityConfirmed: false }] });
+    expect(validateSection(reopen(mixed), "credits").fieldErrors).toMatchObject(expectedReview);
+    expect(validateSection(replaceStudents(legacy, [{ ...first, qualifiedExpenses: "0.00" }]), "credits")
+      .fieldErrors?.aotcClaimantFactsTaxYear).toBeUndefined();
+
+    const reviewed = reopen(updateEducation(legacy, { aotcClaimantFactsTaxYear: 2025 }));
+    expect(calculateAotc(reviewed)).toBe("2500");
+    const reformatted = updateEducation(reviewed, { possessionIncomeExclusion: "0.00" });
+    expect(creditsFor(reformatted).education.aotcClaimantFactsTaxYear).toBe(2025);
+    const changed = reopen(updateEducation(reformatted, { possessionIncomeExclusion: "0.01" }));
+    expect(creditsFor(changed).education.aotcClaimantFactsTaxYear).toBeUndefined();
+    expect(buildTaxInputFromGuidedData(changed)).toBeNull();
+    expect(calculateAotc(reopen(updateEducation(changed, { aotcClaimantFactsTaxYear: 2025 })))).toBe("2500");
+    expect(creditsFor(reopen(setInterviewTaxYear(reviewed, 2026))).education.aotcClaimantFactsTaxYear).toBeUndefined();
+  });
+
+  it("does not reuse claimant review for a different taxpayer in the same year", () => {
+    const { state } = educationInterview();
+    const personal = state.sectionData["personal-info"];
+    if (!personal) throw new Error("Missing personal facts");
+    const reformatted = reopen(updateSectionData(state, "personal-info", { ...personal, ssn: personal.ssn.replaceAll("-", "") }));
+    expect(creditsFor(reformatted).education.aotcClaimantFactsTaxYear).toBe(2025);
+    expect(calculateAotc(reformatted)).toBe("2500");
+
+    const differentTaxpayer = reopen(updateSectionData(state, "personal-info", { ...personal, firstName: "Lennox", ssn: "321-44-5555" }));
+    expect(differentTaxpayer.taxYear).toBe(2025);
+    expect(creditsFor(differentTaxpayer).education.aotcClaimantFactsTaxYear).toBeUndefined();
+    expect(creditsFor(differentTaxpayer).education.aocStudents).toEqual(creditsFor(state).education.aocStudents);
+    expect(buildTaxInputFromGuidedData(differentTaxpayer)).toBeNull();
+    expect(calculateAotc(reopen(confirmAotcClaimantYear(differentTaxpayer)))).toBe("2500");
+
+    const spouse = personal.spouse;
+    if (!spouse) throw new Error("Missing synthetic spouse");
+    const joint = { ...state, segmentation: { ...state.segmentation, filingStatus: "mfj" as const } };
+    const differentSpouse = updateSectionData(joint, "personal-info", { ...personal, spouse: { ...spouse, ssn: "321-44-6666" } });
+    expect(creditsFor(reopen(differentSpouse)).education.aotcClaimantFactsTaxYear).toBeUndefined();
   });
 
   it("requires actual claimant AOTC answers for the changed return year", () => {
@@ -311,7 +366,7 @@ describe("guided AOTC prior-claim history", () => {
       refundableAocFacts: { fullTimeStudent: true, earnedIncome: "1000", totalSupport: "20000", parentAlive: true },
     });
     expect(buildTaxInputFromGuidedData(currentClaimant)).toBeNull();
-    const ready = updateEducation(currentClaimant, { form8862Completed: true });
+    const ready = confirmAotcClaimantYear(updateEducation(currentClaimant, { form8862Completed: true }));
     const result = calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopen(ready))));
     expect(result.form8863?.aocAfterPhaseOut.toString()).toBe("2500");
     expect(result.form8863?.aocRefundable.toString()).toBe("0");

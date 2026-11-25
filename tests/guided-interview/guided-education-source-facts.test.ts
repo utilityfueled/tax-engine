@@ -22,7 +22,7 @@ describe("guided actual education source facts", () => {
   });
   it("requires actual student identity qualification and institutions without inferring from expenses", () => {
     const aoc = { ...student, qualifiedExpenses: "4000", priorYearsClaimed: "0", completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false, institutionEin: "12-3456789" };
-    const data = { ...emptyCreditsData, education: { ...base, aocStudents: [aoc] } };
+    const data = { ...emptyCreditsData, education: { ...base, aotcClaimantFactsTaxYear: 2026, aocStudents: [aoc] } };
     expect(buildEducationInput(data, 2026, "single", completePersonalInfo)?.aocStudents[0].priorYearsClaimed).toBe(0);
     for (const field of ["studentTaxId", "studentRole", "institutionEligible", "expensesEligibilityConfirmed", "form1098TRequirementMet", "institutions"] as const) {
       const missing = { ...aoc }; delete missing[field];
@@ -35,13 +35,14 @@ describe("guided actual education source facts", () => {
   it("requires every AOTC school EIN with or without a Form 1098-T", () => {
     const secondSchool = { ...institution, name: "Second College", ein: undefined, receivedCurrentYear1098T: false };
     const aoc = { ...student, ...completeAocEligibility, qualifiedExpenses: "4000", priorYearsClaimed: "0" };
-    const aotc = (ein?: string) => ({ ...emptyCreditsData, education: { ...base, aocStudents: [{ ...aoc, institutions: [institution, { ...secondSchool, ein }] }] } });
+    const aotc = (year: number, ein?: string) => ({ ...emptyCreditsData, education: { ...base, aotcClaimantFactsTaxYear: year, aocStudents: [{ ...aoc, institutions: [institution, { ...secondSchool, ein }] }] } });
     for (const year of [2025, 2026]) {
-      expect(educationFactErrors(aotc(), year, "single", completePersonalInfo)["student-0-institutions"]).toMatch(/AOTC.*EIN/i);
-      expect(() => buildEducationInput(aotc("98-76-54321"), year, "single", completePersonalInfo)).toThrow(/EIN/);
-      const input = buildEducationInput(aotc("98-7654321"), year, "single", completePersonalInfo);
+      expect(educationFactErrors(aotc(year), year, "single", completePersonalInfo)["student-0-institutions"]).toMatch(/AOTC.*EIN/i);
+      expect(() => buildEducationInput(aotc(year, "98-76-54321"), year, "single", completePersonalInfo)).toThrow(/EIN/);
+      const input = buildEducationInput(aotc(year, "98-7654321"), year, "single", completePersonalInfo);
       expect(input?.aocStudents[0]?.institutions?.[1]).toMatchObject({ ...secondSchool, ein: "98-7654321" });
-      const ineligible = { ...aotc(), education: { ...base, aocStudents: [{ ...aoc, priorYearsClaimed: "4", institutions: [institution, secondSchool] }] } };
+      const { education } = aotc(year);
+      const ineligible = { ...emptyCreditsData, education: { ...education, aocStudents: [{ ...aoc, priorYearsClaimed: "4", institutions: [institution, secondSchool] }] } };
       expect(buildEducationInput(ineligible, year, "single", completePersonalInfo)?.aocStudents[0]?.priorYearsClaimed).toBe(4);
     }
     const llcStudent = { ...student, institutions: [secondSchool], courseEligibilityConfirmed: true };
@@ -53,12 +54,12 @@ describe("guided actual education source facts", () => {
   it("preserves actual under-24 refund facts and distinct 2025 timely TIN eligibility", () => {
     const aoc = { ...student, qualifiedExpenses: "4000", priorYearsClaimed: "0", completedFirstFourYearsBeforeYear: false, enrolledAtLeastHalfTime: true, pursuingDegreeOrCredential: true, felonyDrugConviction: false, institutionEin: "12-3456789", studentSsnEligible: undefined, studentTinEligible: false };
     const personal = { ...completePersonalInfo, dateOfBirth: "2005-02-01", employmentValidSsnIssuedByDueDate: false, tinIssuedByDueDate: false };
-    const data = { ...emptyCreditsData, education: { ...base, primarySsnEligible: undefined, primaryTinEligible: false, aocStudents: [aoc] } };
+    const data = { ...emptyCreditsData, education: { ...base, aotcClaimantFactsTaxYear: 2025, primarySsnEligible: undefined, primaryTinEligible: false, aocStudents: [aoc] } };
     expect(() => buildEducationInput(data, 2025, "single", personal)).toThrow(/support|refund/i);
     const completed = { ...data, education: { ...data.education, refundableAocFacts: { fullTimeStudent: true, earnedIncome: "0", totalSupport: "9007199254740993.01", parentAlive: false } } };
     expect(buildEducationInput(completed, 2025, "single", personal)).toMatchObject({ primaryTinEligible: false, aocStudents: [{ studentTinEligible: false }], refundableAocFacts: { earnedIncome: "0", totalSupport: "9007199254740993.01", parentAlive: false } });
     expect(() => buildEducationInput({ ...completed, education: { ...completed.education, primaryTinEligible: undefined } }, 2025, "single", personal)).toThrow();
-    expect(educationFactErrors({ ...completed, education: { ...completed.education, primarySsnEligible: false, spouseSsnEligible: true } }, 2026, "mfj", personal)).toEqual({});
+    expect(educationFactErrors({ ...completed, education: { ...completed.education, aotcClaimantFactsTaxYear: 2026, primarySsnEligible: false, spouseSsnEligible: true } }, 2026, "mfj", personal)).toEqual({});
   });
   it("holds conflicting 2025 spouse student TIN answers after save and reopen", () => {
     function reopen(householdTin: boolean | undefined, studentTin: boolean | undefined) {
@@ -67,7 +68,7 @@ describe("guided actual education source facts", () => {
       if (!spouse) throw new Error("Missing fictional spouse");
       spouse.tinIssuedByDueDate = householdTin;
       state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "60000", socialSecurityWages: "60000", socialSecurityWithheld: "3720", medicareWages: "60000", medicareWithheld: "870" }] };
-      state.sectionData.credits = { ...emptyCreditsData, education: { ...completeEducationClaimant, llcExpenses: "", aocStudents: [{
+      state.sectionData.credits = { ...emptyCreditsData, education: { ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2025, llcExpenses: "", aocStudents: [{
         ...completeAocEligibility, name: "Taylor Example", studentRole: "spouse", studentTaxId: spouse.ssn.replaceAll("-", ""), studentTinEligible: studentTin,
         qualifiedExpenses: "4000", priorYearsClaimed: "0",
       }] } };

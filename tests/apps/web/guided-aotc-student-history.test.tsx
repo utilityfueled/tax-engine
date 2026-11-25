@@ -6,21 +6,11 @@ import { expect, it, vi } from "vitest";
 import { GuidedInterviewShell } from "@/components/guided-interview/guided-interview-shell";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
-import { emptyCreditsData, getGuidedFlowStorageKey, loadGuidedFlowState, resumeInterviewAtSection, saveGuidedFlowState } from "@/lib/guided-interview-flow";
+import { emptyCreditsData, getGuidedFlowStorageKey, loadGuidedFlowState, resumeInterviewAtSection, saveGuidedFlowState, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { completeAocEligibility, completeDependent, completeEducationClaimant, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
 
-it("requires current student sources in the real interview after identity or year edits", async () => {
-  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
-  const personal = state.sectionData["personal-info"];
-  if (!personal) throw new Error("Missing synthetic personal facts");
-  state.sectionData["personal-info"] = { ...personal, dependentCount: "1", dependents: [
-    { ...completeDependent, dateOfBirth: "2004-06-01", qualifiesForCTC: false, qualifiesForODC: true },
-  ] };
-  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "50000", socialSecurityWages: "50000", socialSecurityWithheld: "3100", medicareWages: "50000", medicareWithheld: "725" }] };
-  state.sectionData.credits = { ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant,
-    aocStudents: [{ ...completeAocEligibility, name: "Synthetic Primary", qualifiedExpenses: "4000", priorYearsClaimed: "3" }],
-  } };
-  const record = createWorkspaceRecord("synthetic-aotc-source-review");
+function mountInterview(state: GuidedFlowState, title: string) {
+  const record = createWorkspaceRecord(title);
   const storageKey = getGuidedFlowStorageKey(record.id);
   saveGuidedFlowState(localStorage, record.id, resumeInterviewAtSection(state, "credits"));
   const container = document.createElement("div");
@@ -49,15 +39,50 @@ it("requires current student sources in the real interview after identity or yea
     });
   }
 
-  const historyLabel = "Prior years AOTC was claimed";
-  const reviewLabel = "Have you checked the actual records for this AOTC student and tax year?";
   function saved() {
     const restored = loadGuidedFlowState(localStorage, record.id);
     if (!restored) throw new Error("Missing saved synthetic interview");
     return restored;
   }
+  const button = (label: string) => [...container.querySelectorAll("button")].find(element => element.textContent?.trim() === label);
+  return { field, change, saved, button,
+    render: async (key?: string) =>
+      act(async () => root.render(<GuidedInterviewShell key={key} workspace={record} onExitGuided={() => {}} />)),
+    close: async () => {
+      await act(async () => root.unmount());
+      container.remove();
+      scroll.mockRestore();
+      vi.unstubAllGlobals();
+      if (elementScroll) Object.defineProperty(HTMLElement.prototype, "scrollTo", elementScroll);
+      else Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
+      localStorage.removeItem(storageKey);
+    },
+  };
+}
+
+function aotcInterview() {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "50000", socialSecurityWages: "50000", socialSecurityWithheld: "3100", medicareWages: "50000", medicareWithheld: "725" }] };
+  state.sectionData.credits = { ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant,
+    aocStudents: [{ ...completeAocEligibility, name: "Synthetic Primary", qualifiedExpenses: "4000", priorYearsClaimed: "3" }],
+  } };
+  return state;
+}
+
+it("requires current student sources in the real interview after identity or year edits", async () => {
+  const state = aotcInterview();
+  const personal = state.sectionData["personal-info"];
+  const credits = state.sectionData.credits;
+  if (!personal || !credits) throw new Error("Missing synthetic source facts");
+  state.sectionData["personal-info"] = { ...personal, dependentCount: "1", dependents: [
+    { ...completeDependent, dateOfBirth: "2004-06-01", qualifiesForCTC: false, qualifiesForODC: true },
+  ] };
+  state.sectionData.credits = { ...credits, education: { ...credits.education, aotcClaimantFactsTaxYear: 2025 } };
+  const { field, change, saved, button, render, close } = mountInterview(state, "synthetic-aotc-source-review");
+  const historyLabel = "Prior years AOTC was claimed";
+  const reviewLabel = "Have you checked the actual records for this AOTC student and tax year?";
   try {
-    await act(async () => root.render(<GuidedInterviewShell workspace={record} onExitGuided={() => {}} />));
+    await render();
     expect(field(historyLabel)?.value).toBe("3");
     const associatedLabel = field(historyLabel)?.closest("label")?.cloneNode(true) as HTMLLabelElement | undefined;
     associatedLabel?.querySelector("select")?.remove();
@@ -89,22 +114,46 @@ it("requires current student sources in the real interview after identity or yea
 
     await change("Tax year for this interview", "2026");
     expect(saved().taxYear).toBe(2026);
+    expect(button("Confirm 2026 AOTC claimant answers")).toBeDefined();
+    expect(button("Confirm 2025 AOTC claimant answers")).toBeUndefined();
     expect(field(historyLabel)?.value).toBe("");
     expect(field(reviewLabel)?.value).toBe("");
     expect(field("Is an AOTC ban from a prior claim in effect?")?.value).toBe("");
     expect(field("Is Form 8862 required because of a prior AOTC disallowance?")?.value).toBe("");
     expect(buildTaxInputFromGuidedData(saved())).toBeNull();
-    await act(async () => root.render(<GuidedInterviewShell key="reopened" workspace={record} onExitGuided={() => {}} />));
+    await render("reopened");
     expect(field(historyLabel)?.value).toBe("");
     expect(field(reviewLabel)?.value).toBe("");
     expect(field("Qualified tuition & expenses")?.value).toBe("4000");
   } finally {
-    await act(async () => root.unmount());
-    container.remove();
-    scroll.mockRestore();
-    vi.unstubAllGlobals();
-    if (elementScroll) Object.defineProperty(HTMLElement.prototype, "scrollTo", elementScroll);
-    else Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
-    localStorage.removeItem(storageKey);
+    await close();
+  }
+});
+
+it("confirms the saved AOTC claimant answers for the visible tax year", async () => {
+  const { field, change, saved, button, render, close } = mountInterview(aotcInterview(), "synthetic-aotc-claimant-review");
+  const confirm2025 = "Confirm 2025 AOTC claimant answers";
+  const claimant = "Does another taxpayer actually claim you as a dependent on their return?";
+  try {
+    await render();
+    expect(field(claimant)?.value).toBe("false");
+    expect(saved().sectionData.credits?.education.aotcClaimantFactsTaxYear).toBeUndefined();
+    const control = button(confirm2025);
+    expect(control).toBeDefined();
+    expect(buildTaxInputFromGuidedData(saved())).toBeNull();
+    await act(async () => control?.click());
+    expect(button(confirm2025)).toBeUndefined();
+    expect(saved().sectionData.credits?.education.aotcClaimantFactsTaxYear).toBe(2025);
+    expect(buildTaxInputFromGuidedData(saved())?.educationExpenses).toMatchObject({
+      claimedAsDependent: false, possessionIncomeExclusion: "0",
+    });
+
+    await render("confirmed-reopen");
+    expect(button(confirm2025)).toBeUndefined();
+    await change(claimant, "true");
+    expect(button(confirm2025)).toBeDefined();
+    expect(buildTaxInputFromGuidedData(saved())).toBeNull();
+  } finally {
+    await close();
   }
 });

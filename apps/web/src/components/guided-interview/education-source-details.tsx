@@ -1,5 +1,6 @@
 "use client";
 import type { EducationCreditData, EducationStudentData, EducationStudentSourceData, EducationLlcStudentData, FilingStatus } from "@/lib/guided-interview-flow";
+import { requiresAotcClaimantYearReview } from "@/lib/guided-education-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 
@@ -32,6 +33,7 @@ function StudentSourceDetails({ student, onChange, taxYear, filingStatus }: { st
 export function EducationSourceDetails({ data, onChange, taxYear, filingStatus }: { data: EducationCreditData; onChange: (data: EducationCreditData) => void; taxYear?: number | null; filingStatus?: FilingStatus | null }) {
   const update = (next: Partial<EducationCreditData>) => onChange({ ...data, ...next });
   const hasStudents = data.aocStudents.length > 0 || !!data.llcStudents?.length;
+  const claimantReviewYear = (taxYear === 2025 || taxYear === 2026) && requiresAotcClaimantYearReview(data, taxYear) ? taxYear : undefined;
   return <div className="guided-w2-card" style={{ padding: "12px" }}>
     <h3 className="guided-w2-card-title">Education Credits (Form 8863)</h3>
     <p className="guided-hint">Use actual student and institution records. Choose one credit per student. Review qualified expenses, receipt exceptions and prior disallowance in the <a href="https://www.irs.gov/instructions/i8863" target="_blank" rel="noreferrer">IRS instructions</a>.</p>
@@ -97,6 +99,12 @@ export function EducationSourceDetails({ data, onChange, taxYear, filingStatus }
         <CurrencyField label="Your earned income for the refundable AOTC support test" value={data.refundableAocFacts?.earnedIncome ?? ""} onChange={earnedIncome => update({ refundableAocFacts: { ...data.refundableAocFacts, earnedIncome } })} />
         <CurrencyField label="Your total support for the refundable AOTC test" value={data.refundableAocFacts?.totalSupport ?? ""} onChange={totalSupport => update({ refundableAocFacts: { ...data.refundableAocFacts, totalSupport } })} />
         {data.refundableAocEligible != null && <BooleanFact label="Saved refundable AOTC answer (clear to use actual age and support facts)" value={data.refundableAocEligible} onChange={refundableAocEligible => update({ refundableAocEligible })} />}
+      </>}
+      {claimantReviewYear !== undefined && <>
+        <p className="guided-hint">Check the claimant answers above against your {claimantReviewYear} records.</p>
+        <button type="button" className="utility-button" onClick={() => update({ aotcClaimantFactsTaxYear: claimantReviewYear })}>
+          Confirm {claimantReviewYear} AOTC claimant answers
+        </button>
       </>}
     </fieldset>}
   </div>;

@@ -47,7 +47,7 @@ describe("actual guided education distributions", () => {
     const beneficiary = distribution.beneficiaries?.[0], expense = distribution.expenses?.[0], allocation = distribution.allocations?.[0];
     if (!beneficiary || !expense || !allocation) throw new Error("Missing actual synthetic sources");
     beneficiary.studentTaxId = "999887777"; expense.amount = "8000"; expense.educationCreditAmount = "4000"; allocation.creditAmount = "4000";
-    state.sectionData.credits = { ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant, aocStudents: [{ ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0" }] }, educationDistributions: distribution };
+    state.sectionData.credits = { ...emptyCreditsData, education: { ...emptyCreditsData.education, ...completeEducationClaimant, aotcClaimantFactsTaxYear: 2025, aocStudents: [{ ...completeAocEligibility, name: "Actual Student", qualifiedExpenses: "4000", priorYearsClaimed: "0" }] }, educationDistributions: distribution };
     expect(validateSection(state, "credits").fieldErrors?.educationDistributions).toMatch(/actual education-credit student/);
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
     beneficiary.studentTaxId = "111223333"; expense.educationCreditAmount = "4001"; expense.amount = "8001"; allocation.creditAmount = "4001";
