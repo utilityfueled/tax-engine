@@ -9,6 +9,20 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `1bc6f09a` holds positive draft Schedule 3-A benefits for review when
+  the return is amended or claim context is missing. All nine focused
+  cases, spec references, scoped lint and independent engineering
+  re-review passed. The isolated worksheet has no filing or export path.
+  The full exact serial unit run is pending.
+  [Schedule 3-A evidence](upgrade-2026-progress.md#november-25-amended-schedule-3-a-first-claims).
+
+- Four local diagnostic runs passed the same 15 Ohio browser cases.
+  Turning off only trace filmstrip capture reduced median batch time by
+  2.42%. The paired railroad retirement PDF prototype was also modest
+  and no diagnostic change was applied. Strict AMD64 and ARM64 browser
+  qualification remains open.
+  [Timing evidence](upgrade-2026-progress.md#november-25-strict-browser-timing-comparison).
+
 - `ac9ae969` builds the help overview only when the dock is open with
   an empty conversation. The closed-render regression dropped from three
   overview builds to zero. All 22 focused cases, web types, scoped lint,

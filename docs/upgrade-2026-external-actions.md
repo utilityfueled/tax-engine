@@ -1,5 +1,17 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Schedule 3-A first-claim review
+
+Use a fictional amended return with an earlier nonrefundable child
+credit, newly refundable ACTC, and a different covered credit first
+claimed on the amendment after the filer becomes eligible. Confirm which
+claim date governs each credit and how to compute the adjustment when
+line 6 includes both outcomes. Also verify whether a prior-year
+nonrefundable adoption carryforward alone starts the current year's
+first-claim clock. The isolated draft worksheet holds these positive
+benefits pending final authoritative instructions and independent review.
+[November 24 draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=124).
+
 ## November 25 federal source facts for independent tax review
 
 Compare two $500.01 federal extension payments recorded on the same day

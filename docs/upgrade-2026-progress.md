@@ -1,5 +1,52 @@
 # 2026 upgrade implementation evidence
 
+## November 25 amended Schedule 3-A first claims
+
+`1bc6f09a` keeps a positive benefit in the isolated draft worksheet under
+first-claim review when the return is amended or the claim context is
+missing. The November 24 draft instructions use the first claim of each
+credit, including an earlier nonrefundable claim. Draft line 8 offers zero
+or the full adjustment, leaving mixed first-claim outcomes unresolved.
+The worksheet calculates through line 6 and leaves line 8 and Form 1040
+lines 32b and 32c unresolved in that case. A confirmed original context
+can proceed. Audit rows still contain only amounts and line information.
+There are no live tax, intake, export or filing callers.
+
+The regressions reproduced the incorrect positive-benefit result and
+the omitted-context bypass. All nine worksheet tests, 12 spec references,
+scoped lint, inventory and independent engineering re-review passed.
+An unconstrained full run in the shared checkout had 46 failures and 13
+worker startup errors. It overlapped the final guard edit and did not
+qualify the revision. The exact tracked-only serial verification has
+been started. [November 24 IRS draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=124).
+
+## November 25 strict browser timing comparison
+
+An independent review counted 670–897 trace filmstrip frames in six
+retained strict AMD64 Ohio failures. Each contained 22.75–34.24 MiB of
+JPEGs. On an archive of `867d5cd8`, a local diagnostic alternated trace
+filmstrip capture on/off/off/on for the same 15 Ohio cases in batch 7.
+All 60 executions passed with identical case IDs, Chromium, two workers,
+zero retries, a 30-second deadline and fresh local server processes.
+The median batch was 50.36 seconds with capture and 49.14 seconds without
+it. The median per-case reduction was 3.10%. The server closed after all
+runs. This diagnostic does not resolve the strict native timeouts.
+
+A private RRTA comparison ran both saved synthetic PDFs four times
+under each of four parser variants. All 32 parses returned identical
+receipts within each input. The combined change reduced median CPU time
+by 3.26% on one PDF and 0.50% on the other. Neither experiment changed
+tracked parser code, trace settings, deadlines or readiness gates.
+
+The current final federal Form 1040 and Schedule 1-A still cover 2025.
+The IRS indexed the 2026 Form 1040 instructions as a draft. Pennsylvania's
+personal income tax page still links the 2025 PA-40, and Ohio's eServices
+lists IT 1040 and SD 100 only through 2025. Annual template qualification
+remains open. [IRS Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf) ·
+[Pennsylvania](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio](https://tax.ohio.gov/individual/ohtax-eligibility/ohtax-eligibility).
+
 ## November 25 guided help rendering
 
 `ac9ae969` builds the local overview only while the help dock is open and
