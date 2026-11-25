@@ -20,10 +20,19 @@ export const PAOrdinaryCareSourcesSchema=z.object({
  sourceTaxYear:z.number().int().nullable(),sourceReference:z.string(),sourceFactsConfirmed:answer,
  originalDependentCare:z.record(z.string(),z.unknown()),
  paperIdentitySources:PACarePaperIdentitySourcesSchema.optional(),
+ ordinaryDraft2026:z.object({
+  sourceReference:z.string(),singleNotEligibleForHeadOfHouseholdConfirmed:answer,
+  standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed:answer,
+  directFederalDependentEligibilityConfirmed:answer,unrelatedProviderEligibilityConfirmed:answer,
+  sameExpensesWillBeClaimedOnFederalReturnConfirmed:answer,
+ }).strict().optional(),
  payments:z.array(z.object({
   sourceReference:z.string(),providerIndex:z.number().int().nullable(),qualifyingPersonIndex:z.number().int().nullable(),
   paidOn:z.string(),serviceFrom:z.string(),serviceThrough:z.string(),amount:z.string(),
   originalAvailableConfirmed:answer,employmentRelatedConfirmed:answer,notClaimedOnAnotherReturnConfirmed:answer,
+  payerReview2026:z.object({
+   sourceReference:z.string(),claimantPaidWithOwnFundsConfirmed:answer,noThirdPartyPaymentOrReimbursementConfirmed:answer,
+  }).strict().optional(),
   originalReceipt:z.object({receiptNumber:z.string(),date:z.string(),amount:z.string(),providerName:z.string(),providerTin:z.string(),qualifyingPersonName:z.string(),qualifyingPersonTin:z.string()}).strict(),
  }).strict()),
 }).strict();

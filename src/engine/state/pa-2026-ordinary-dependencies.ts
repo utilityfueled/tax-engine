@@ -51,6 +51,9 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  // Empty document arrays are normalization only. They never establish the complete
  // none facts: those are independently replayed from the confirmed source packets.
  const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit','scheduleBPartThree']);
+ const care=sources.care;
+ const actualCare=care.status==='actual_expenses';
+ if(actualCare)roots.add('dependentCare');
  if (unemployment && readPA2026GovernmentUnemployment(input, unemployment)) roots.add('form1099G');
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
  for(const[key,value]of Object.entries(input))if(!roots.has(key)&&value!==undefined&&!(emptyDocumentRoots.has(key)&&Array.isArray(value)&&value.length===0))fail('retained unsupported original or federal dependency: '+key);
@@ -82,8 +85,18 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
    fail('retained Form 8812 context requires its separate federal source method');
   }
  }
- const care=sources.care;
- if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||care.careSources!==undefined)fail('complete actual no-care/no-benefit originals are required');
+ if(actualCare){
+  const [domicile]=r.residency.domicilePeriods;
+  const [child]=p.facts.filing.dependentChildren;
+  if(unemployment||sources.eitcChildInventory||sources.estimatedTaxReview2026||p.facts.payments.rows.length||income.residencyStatus!=='resident'
+    ||r.residency.domicilePeriods.length!==1||domicile?.state!=='PA'||domicile.from!=='2026-01-01'||domicile.through!=='2026-12-31'
+    ||p.paFilingChoice!=='S'||p.claimedAsDependent||p.facts.filing.dependentChildren.length!==1
+    ||input.taxpayer.dependents.length!==1||child?.originalIndex!==0||!['natural_child','adopted_child'].includes(child.relationship)){
+   fail('actual care requires a single directly claimed child, continuous PA domicile and the high-wage-only original method');
+  }
+ }else if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||care.careSources!==undefined){
+  fail('complete actual no-care/no-benefit originals are required');
+ }
  if(Object.values(p.facts.sp.categories).some(row=>row.status!=='known_none'||row.entries.length))fail('other worldwide SP income requires its actual successor');
  const hasUnsupportedPrepayment=p.facts.payments.rows.some(row=>row.original.kind!=='extension'||sources.estimatedTaxReview2026!==undefined);
  if(sources.otherStateTaxes.status!=='none_paid'||hasUnsupportedPrepayment||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');

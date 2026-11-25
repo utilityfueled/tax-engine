@@ -26,6 +26,7 @@ import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import { buildGuidedPAOrdinaryReturnFacts } from "./guided-pa-ordinary-return-facts";
 import { buildGuidedPAOrdinaryReturnCompletionSources, type GuidedPAOrdinaryReturnCompletionSources } from "./guided-pa-ordinary-return-completion";
+import { requireGuidedPA2026CareReview } from "./guided-pa-care-sources";
 import { assertW2StateLocalSources } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
 import type { OhioResidencyDraft } from "./guided-ohio-residency-facts";
@@ -2651,6 +2652,10 @@ export function updateSectionData(
   const ohioStateReturn = previousStateReturn;
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   const stateOriginalsChanged = sourceValuesChanged && sectionId !== "state-return" && ohioStateReturn;
+  const paCompletion = ohioStateReturn?.paOrdinaryReturnCompletionSources;
+  const paCareSources = paCompletion?.care?.careSources;
+  const renewedPACareSources = stateOriginalsChanged && state.taxYear === 2026 && paCareSources
+    ? requireGuidedPA2026CareReview(paCareSources) : paCareSources;
   const currentOhioRetirementCredit = incomingStateReturn?.ohioRetirementCredit;
   const ohioRetirementCreditChanged = currentOhioRetirementCredit && ohioDraftSourceValuesChanged(
     ohioStateReturn?.ohioRetirementCredit, currentOhioRetirementCredit,
@@ -2781,7 +2786,10 @@ export function updateSectionData(
           ...(ohioStateReturn.paResidencySources ? {paResidencySources:{...ohioStateReturn.paResidencySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paReciprocitySources ? {paReciprocitySources:{...ohioStateReturn.paReciprocitySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paOrdinaryReturnFacts ? { paOrdinaryReturnFacts: { ...ohioStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
-          ...(ohioStateReturn.paOrdinaryReturnCompletionSources ? { paOrdinaryReturnCompletionSources: { ...ohioStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
+          ...(paCompletion ? { paOrdinaryReturnCompletionSources: {
+            ...paCompletion, sourceFactsConfirmed: null,
+            ...(renewedPACareSources !== paCareSources ? { care: { ...paCompletion.care, careSources: renewedPACareSources } } : {}),
+          } } : {}),
         } : {}),
       } } : {}),
       ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || studentLoanWorksheetYearChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,

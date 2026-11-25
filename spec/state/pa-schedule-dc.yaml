@@ -99,7 +99,11 @@ lines:
       exactly. Require explicitly known zero excluded section 129 benefits and
       prior-year expense credit, actual individual earned-income facts, actual
       resident eligibility and eligibility under frozen 2022 section 21, current-year paid/incurred expenses not claimed by
-      another taxpayer, and a supplied nonbinding federal credit-limit worksheet.
+      another taxpayer, and a supplied nonbinding federal credit-limit worksheet
+      or the independently source-qualified resident ordinary draft liability
+      floor in spec/state/pa-2026-ordinary-draft.yaml. The floor establishes that
+      section 26 does not bind this case and is never a reported federal form
+      line or proof that a federal claim has been made.
       B = minimum of actual eligible paid care, $3,000 for one or $6,000 for 2+,
       actual nonnegative taxpayer earned income and actual spouse earned income
       for a joint federal return (Form 2441 line 6).

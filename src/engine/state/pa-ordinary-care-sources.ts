@@ -5,22 +5,25 @@ import type {TaxReturnResult} from '@/models/outputs.js';
 import type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
 import {PACompletionOriginalRecordSchema} from '@/models/pa-ordinary-return-completion.js';
 import {PAOrdinaryCareSourcesSchema} from '@/models/pa-care-sources.js';
+import {calculateForm2441,type Form2441Input} from '@/engine/forms/form-2441.js';
 import type {PAResidencySourcesResult} from './pa-residency-sources.js';
-import {calculateScheduleDC,type ScheduleDCResult} from './pa-schedule-dc.js';
+import {calculatePA2026OrdinaryDraftScheduleDC,calculateScheduleDC,type ScheduleDCInput,type ScheduleDCResult} from './pa-schedule-dc.js';
 import {ordinarySourcePrecision,publicOrdinaryMoney} from './pa-ordinary-source-precision.js';
 const fail=(detail:string):never=>{throw new Error('PA actual care sources: '+detail);};
 function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
 const identity=(s:string)=>s.trim().replace(/\s+/g,' ').toUpperCase();
 const tin=(s:string)=>s.replace(/\D/g,'');
 const ref=(s:string)=>{if(!s.trim())return fail('actual original reference is missing');};
-function day(s:string,y:number,asOf:string):void{const n=Date.parse(s+'T00:00:00Z');if(!/^\d{4}-\d{2}-\d{2}$/.test(s)||!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==s||!s.startsWith(y+'-')||s>asOf)return fail('actual paid/incurred date must be in the current tax year and not future');}
-export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinaryReturnCompletionSources['care'],income:PAResidencySourcesResult,federal:TaxReturnResult,asOf:string):ScheduleDCResult|undefined{
+function isActualDate(s:string):boolean{const n=Date.parse(s+'T00:00:00Z');return /^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(n)&&new Date(n).toISOString().slice(0,10)===s;}
+function day(s:string,y:number,asOf:string):void{if(!isActualDate(s)||!s.startsWith(y+'-')||s>asOf)return fail('actual paid/incurred date must be in the current tax year and not future');}
+export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinaryReturnCompletionSources['care'],income:PAResidencySourcesResult,federal:TaxReturnResult|{draftWageAgi:Decimal},asOf:string):ScheduleDCResult|undefined{
+ const useDraftFloor='draftWageAgi' in federal;
  const Money=Decimal.clone({precision:ordinarySourcePrecision(input,care),rounding:Decimal.ROUND_HALF_UP});
  const money=(value:unknown):Decimal=>{if(typeof value!=='string'||!/^\d+(\.\d+)?$/.test(value))return fail('actual nonnegative amount is missing; known zero must be explicit');const n=new Money(value);if(!n.isFinite())return fail('actual amount is nonfinite');return n;};
  ref(care.sourceReference);
  if(care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true)return fail('complete actual payment and employer-benefit source review is required');
  if(care.status==='no_qualifying_expenses'){
-  if(care.careSources!==undefined||care.originalCarePayments.length||input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.w2s.some(w=>!money(w.box10DependentCareBenefits).isZero())||federal.form2441?.credit.gt(0))return fail('no-expense status contradicts retained care or benefit originals');
+  if(care.careSources!==undefined||care.originalCarePayments.length||input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.w2s.some(w=>!money(w.box10DependentCareBenefits).isZero())||(!useDraftFloor&&federal.form2441?.credit.gt(0)))return fail('no-expense status contradicts retained care or benefit originals');
   return undefined;
  }
  if(care.status!=='actual_expenses')return fail('actual care status is unknown');
@@ -33,7 +36,30 @@ export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinar
  const wages=input.w2s.reduce((sum,w)=>sum.plus(money(w.wages)),new Money(0));
  // This first earned-income worksheet is W2-only. Never silently discard SE,
  // excluded wages, taxable benefits or other earned-income adjustments.
- if(input.scheduleC!==undefined||input.scheduleF!==undefined||input.form1099Nec.length||!federal.otherIncome.isZero()||!federal.adjustmentsToIncome.isZero()||!federal.totalWages.eq(wages)||!money(c.primaryEarnedIncome).eq(wages))return fail('actual W2-only earned-income worksheet must reconcile fresh federal wages and adjustments');
+ const wageContextReconciles=useDraftFloor?federal.draftWageAgi.eq(wages)
+   :federal.otherIncome.isZero()&&federal.adjustmentsToIncome.isZero()&&federal.totalWages.eq(wages);
+ if(input.scheduleC!==undefined||input.scheduleF!==undefined||input.form1099Nec.length||!money(c.primaryEarnedIncome).eq(wages)||!wageContextReconciles)return fail('actual W2-only earned-income worksheet must reconcile fresh federal wages and adjustments');
+ if(useDraftFloor){
+  const review=source.ordinaryDraft2026;
+  if(y!==2026||!review?.sourceReference.trim()||review.singleNotEligibleForHeadOfHouseholdConfirmed!==true
+   ||review.standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed!==true||review.directFederalDependentEligibilityConfirmed!==true
+   ||review.unrelatedProviderEligibilityConfirmed!==true
+   ||review.sameExpensesWillBeClaimedOnFederalReturnConfirmed!==true)return fail('complete actual single household, dependent, provider, federal reductions and same-expense claim review is required');
+  const standard=input.standardDeductionFacts;
+  if((input.deductionElection!==undefined&&input.deductionElection!=='standard'&&input.deductionElection!=='automatic')
+    ||!isActualDate(t.dateOfBirth)||t.dateOfBirth<='1962-01-01'||t.dateOfBirth>'2026-12-31'
+    ||standard?.primaryBlind||standard?.primaryCanBeClaimedAsDependent
+    ||standard?.nonresidentAlien||standard?.dualStatusAlien||standard?.residentJointElection||standard?.spouseItemizes){
+   return fail('the ordinary draft requires the basic Single standard deduction without contradictory facts');
+  }
+  if(c.providers.length!==1||c.providers[0].householdEmployee!==false||c.qualifyingIndividuals!==1||source.payments.length!==1||source.paperIdentitySources!==undefined){
+   return fail('the ordinary draft requires one under-13 person, one eligible non-household provider and one original paid receipt');
+  }
+  const payer=source.payments[0].payerReview2026;
+  if(!payer?.sourceReference.trim()||payer.claimantPaidWithOwnFundsConfirmed!==true||payer.noThirdPartyPaymentOrReimbursementConfirmed!==true){
+   return fail('the original receipt needs actual claimant payment proof without third-party payments or reimbursements');
+  }
+ }
  // Every counted person must qualify, including a genuine second person with
  // zero assigned expenses. Such a person may lawfully increase the expense cap.
  const countedPersons=new Set<string>();
@@ -42,8 +68,8 @@ export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinar
   const id=tin(person.taxId??'');if(countedPersons.has(id))return fail('duplicate counted qualifying-person identity');countedPersons.add(id);
   const dependent=input.taxpayer.dependents.filter(d=>tin(d.ssn)===id);
   if(dependent.length!==1)return fail('every counted qualifying person needs matching actual dependent originals');
-  const d=dependent[0],birth=Date.parse(d.dateOfBirth+'T00:00:00Z');
-  if(d.monthsLivedWithYou!==12||identity(d.firstName+' '+d.lastName)!==identity(person.firstName+' '+person.lastName)||!/^\d{4}-\d{2}-\d{2}$/.test(d.dateOfBirth)||!Number.isFinite(birth)||new Date(birth).toISOString().slice(0,10)!==d.dateOfBirth||d.dateOfBirth<`${y-12}-01-01`||d.dateOfBirth>`${y}-12-31`)return fail('every counted person needs actual full-year under13 dependent proof');
+  const d=dependent[0];
+  if(d.monthsLivedWithYou!==12||identity(d.firstName+' '+d.lastName)!==identity(person.firstName+' '+person.lastName)||!isActualDate(d.dateOfBirth)||d.dateOfBirth<`${y-12}-01-01`||d.dateOfBirth>`${y}-12-31`)return fail('every counted person needs actual full-year under13 dependent proof');
   money(person.qualifiedExpenses);
  }
  const providerIdentities=new Set<string>(),excludedProviders=new Set([tin(t.ssn),...input.taxpayer.dependents.map(d=>tin(d.ssn))]);
@@ -68,9 +94,12 @@ export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinar
   providerTotals[pi]=providerTotals[pi].plus(amount);personTotals[qi]=personTotals[qi].plus(amount);
  }
  if(refs.size!==care.originalCarePayments.length||providerTotals.some((n,i)=>!n.eq(money(c.providers?.[i].amountPaid)))||personTotals.some((n,i)=>!n.eq(money(c.qualifyingPersons?.[i].qualifiedExpenses)))||!providerTotals.reduce((s,n)=>s.plus(n),new Money(0)).eq(money(c.expenses)))return fail('complete original provider/person/expense totals must reconcile exactly once');
- const form=federal.form2441,tentative=form?.lines.find(l=>l.line==='9a')?.value,limit=publicOrdinaryMoney(Money.max(new Money(federal.totalTaxBeforeCredits).minus(federal.foreignTaxCredit),0));
- if(!form||!tentative||!form.credit.eq(tentative)||limit.lt(tentative)||!tentative.gt(0))return fail('actual positive federal9a and nonbinding credit-limit worksheet are required');
- return calculateScheduleDC({taxYear:y,qualifyingPersons:c.qualifyingIndividuals,paTaxableIncome:income.totalOrdinaryPATaxableIncome,federalCredit:form.credit,
+ const limit=useDraftFloor?undefined:publicOrdinaryMoney(Money.max(new Money(federal.totalTaxBeforeCredits).minus(federal.foreignTaxCredit),0));
+ const federalCare:Form2441Input={taxYear:y,filingStatus:input.taxpayer.filingStatus,eligibilityConfirmed:true,earnedIncomeFactsVerified:true,careExpenses:publicOrdinaryMoney(money(c.expenses)),qualifyingIndividuals:c.qualifyingIndividuals,earnedIncome:publicOrdinaryMoney(money(c.primaryEarnedIncome)),agi:useDraftFloor?federal.draftWageAgi:federal.agi,excludedDependentCareBenefits:publicOrdinaryMoney(money(c.excludedDependentCareBenefits)),priorYearExpenseCredit:publicOrdinaryMoney(money(c.priorYearExpenseCredit)),taxLiabilityLimit:limit};
+ const form=useDraftFloor?calculateForm2441(federalCare):federal.form2441,tentative=form?.lines.find(l=>l.line==='9a')?.value;
+ if(!form||!tentative||!form.credit.eq(tentative)||limit?.lt(tentative)||!tentative.gt(0))return fail('actual positive federal9a and nonbinding credit-limit evidence are required');
+ const scheduleInput:ScheduleDCInput={taxYear:y,qualifyingPersons:c.qualifyingIndividuals,paTaxableIncome:income.totalOrdinaryPATaxableIncome,federalCredit:form.credit,
   ...(y===2026?{source2022Conformity:{sourceTaxYear:y,sourceReference:source.sourceReference,sourceFactsConfirmed:true,residentIndividualEligibilityConfirmed:true,eligibilityUnder2022Section21Confirmed:true,currentYearExpensesOnlyConfirmed:true,actualEarnedIncomeOnlyConfirmed:true,expensesNotClaimedOnAnotherReturnConfirmed:true,
-   federal:{taxYear:y,filingStatus:input.taxpayer.filingStatus,eligibilityConfirmed:true,earnedIncomeFactsVerified:true,careExpenses:publicOrdinaryMoney(money(c.expenses)),qualifyingIndividuals:c.qualifyingIndividuals,earnedIncome:publicOrdinaryMoney(money(c.primaryEarnedIncome)),agi:federal.agi,excludedDependentCareBenefits:publicOrdinaryMoney(money(c.excludedDependentCareBenefits)),priorYearExpenseCredit:publicOrdinaryMoney(money(c.priorYearExpenseCredit)),taxLiabilityLimit:limit}}}:{})});
+   federal:federalCare}}:{})};
+ return useDraftFloor?calculatePA2026OrdinaryDraftScheduleDC(scheduleInput):calculateScheduleDC(scheduleInput);
 }

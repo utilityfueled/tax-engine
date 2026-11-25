@@ -2,20 +2,78 @@ import Decimal from 'decimal.js';
 import type {TaxYearInput} from '@/models/inputs';
 import {PAOrdinaryCareSourcesSchema,type PAOrdinaryCareSources,type PACarePaperIdentitySources} from '@/models/pa-care-sources';
 import {validatePACarePaperIdentitySources} from '@/engine/state/pa-care-paper-sources';
+type Payment = PAOrdinaryCareSources['payments'][number];
+type OrdinaryReview = NonNullable<PAOrdinaryCareSources['ordinaryDraft2026']>;
+type PayerReview = NonNullable<Payment['payerReview2026']>;
 const fail=(message:string):never=>{throw new Error('PA care sources: '+message);};
 function stable(v:unknown):string{if(Array.isArray(v))return '['+v.map(stable).join(',')+']';if(v&&typeof v==='object')return '{'+Object.entries(v).filter(([,x])=>x!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>JSON.stringify(k)+':'+stable(x)).join(',')+'}';return JSON.stringify(v)??'null';}
 /** Blank private draft; capture and confirmation are separate explicit actions. */
 export function emptyGuidedPACareSources():PAOrdinaryCareSources{return {sourceTaxYear:null,sourceReference:'',sourceFactsConfirmed:null,originalDependentCare:{},payments:[]};}
 export function emptyGuidedPACarePayment():PAOrdinaryCareSources['payments'][number]{return {sourceReference:'',providerIndex:null,qualifyingPersonIndex:null,paidOn:'',serviceFrom:'',serviceThrough:'',amount:'',originalAvailableConfirmed:null,employmentRelatedConfirmed:null,notClaimedOnAnotherReturnConfirmed:null,originalReceipt:{receiptNumber:'',date:'',amount:'',providerName:'',providerTin:'',qualifyingPersonName:'',qualifyingPersonTin:''}};}
+
+export function emptyGuidedPA2026OrdinaryCareReview(sourceReference = ''): OrdinaryReview {
+  return {
+    sourceReference,
+    singleNotEligibleForHeadOfHouseholdConfirmed: null,
+    standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed: null,
+    directFederalDependentEligibilityConfirmed: null,
+    unrelatedProviderEligibilityConfirmed: null,
+    sameExpensesWillBeClaimedOnFederalReturnConfirmed: null,
+  };
+}
+
+export function emptyGuidedPA2026CarePayerReview(sourceReference = ''): PayerReview {
+  return {
+    sourceReference,
+    claimantPaidWithOwnFundsConfirmed: null,
+    noThirdPartyPaymentOrReimbursementConfirmed: null,
+  };
+}
+
+/** Keep actual documentary references and prior-year data when renewed review is required. */
+export function requireGuidedPA2026CareReview(data: PAOrdinaryCareSources): PAOrdinaryCareSources {
+  if (!Array.isArray(data.payments) || (!data.ordinaryDraft2026 && !data.payments.some(row => row?.payerReview2026))) return data;
+  return {
+    ...data,
+    sourceFactsConfirmed: null,
+    ...(data.ordinaryDraft2026 && { ordinaryDraft2026: emptyGuidedPA2026OrdinaryCareReview(data.ordinaryDraft2026.sourceReference) }),
+    payments: data.payments.map(row => row?.payerReview2026 ? {
+      ...row, payerReview2026: emptyGuidedPA2026CarePayerReview(row.payerReview2026.sourceReference),
+    } : row),
+  };
+}
+
 /** Caller has reviewed current originals; this action never supplies a factual year or amount. */
-export function captureGuidedPACareOriginals(input:TaxYearInput,data:PAOrdinaryCareSources,reviewed:boolean|null):PAOrdinaryCareSources{if(reviewed!==true||!input.dependentCare)return fail('review actual current federal care originals before capture');return {...data,sourceFactsConfirmed:null,originalDependentCare:structuredClone(input.dependentCare),...(data.paperIdentitySources?{paperIdentitySources:{...data.paperIdentitySources,sourceFactsConfirmed:null}}:{})};}
+export function captureGuidedPACareOriginals(input:TaxYearInput,data:PAOrdinaryCareSources,reviewed:boolean|null):PAOrdinaryCareSources{
+ if(reviewed!==true||!input.dependentCare)return fail('review actual current federal care originals before capture');
+ const current = stable(data.originalDependentCare) === stable(input.dependentCare) ? data : requireGuidedPA2026CareReview(data);
+ return {...current,sourceFactsConfirmed:null,originalDependentCare:structuredClone(input.dependentCare),...(current.paperIdentitySources?{paperIdentitySources:{...current.paperIdentitySources,sourceFactsConfirmed:null}}:{})};
+}
 /** Source confirmation only; full return and credit qualification remain the engine's responsibility. */
 export function buildGuidedPACareSources(input:TaxYearInput,raw:unknown):PAOrdinaryCareSources{
  const data=PAOrdinaryCareSourcesSchema.parse(raw);
  if(data.sourceFactsConfirmed!==true||data.sourceTaxYear!==input.taxpayer.taxYear||!data.sourceReference.trim())fail('confirm actual current year and collection source after the last edit');
  if(!input.dependentCare||stable(data.originalDependentCare)!==stable(input.dependentCare))return fail('retained actual federal care originals are missing or stale');
  if(!data.payments.length)fail('retain actual care payment originals');
+ const review = data.ordinaryDraft2026;
+ const hasDraftReview = review !== undefined || data.payments.some(row => row.payerReview2026 !== undefined);
+ if (hasDraftReview && (input.taxpayer.taxYear !== 2026 || input.taxpayer.filingStatus !== 'single' || input.taxpayer.spouse)) {
+   return fail('2026 federal review requires current Single filing-status originals');
+ }
+ if (hasDraftReview && (!review?.sourceReference.trim()
+   || review.singleNotEligibleForHeadOfHouseholdConfirmed !== true
+   || review.standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed !== true
+   || review.directFederalDependentEligibilityConfirmed !== true
+   || review.unrelatedProviderEligibilityConfirmed !== true
+   || review.sameExpensesWillBeClaimedOnFederalReturnConfirmed !== true)) {
+   return fail('confirm the complete actual 2026 federal care review and its original source reference');
+ }
  for(const row of data.payments){
+  const payer = row.payerReview2026;
+  if (hasDraftReview && (!payer?.sourceReference.trim() || payer.claimantPaidWithOwnFundsConfirmed !== true
+    || payer.noThirdPartyPaymentOrReimbursementConfirmed !== true)) {
+    return fail('confirm the actual payer, funds, and reimbursement records for every care payment');
+  }
   if(!row.sourceReference.trim()||row.providerIndex===null||row.providerIndex<0||row.qualifyingPersonIndex===null||row.qualifyingPersonIndex<0||row.originalAvailableConfirmed!==true||row.employmentRelatedConfirmed!==true||row.notClaimedOnAnotherReturnConfirmed!==true)return fail('complete and confirm every actual payment source');
   if(!input.dependentCare.providers?.[row.providerIndex]||!input.dependentCare.qualifyingPersons?.[row.qualifyingPersonIndex])fail('select actual current provider and qualifying person');
   for(const value of [row.paidOn,row.serviceFrom,row.serviceThrough,row.originalReceipt.date]){const d=new Date(value+'T00:00:00Z');if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(d.getTime())||d.toISOString().slice(0,10)!==value)fail('complete actual valid receipt and service dates');}

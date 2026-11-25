@@ -187,7 +187,15 @@ function composePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completi
  let dependencyProof:PA2026OrdinaryDependencyProof|undefined;
  let scheduleDC:ScheduleDCResult|undefined;
  let federalEarnedIncomeCredit:Decimal;
- if(stateOnly){dependencyProof=calculatePA2026OrdinaryDependencies(input,p,sources,income,unemployment);federalEarnedIncomeCredit=dependencyProof.federalEarnedIncomeCredit;}
+ if(stateOnly){
+  dependencyProof=calculatePA2026OrdinaryDependencies(input,p,sources,income,unemployment);
+  federalEarnedIncomeCredit=dependencyProof.federalEarnedIncomeCredit;
+  if(sources.care.status==='actual_expenses'){
+   scheduleDC=calculatePAOrdinaryCareSources(input,sources.care,income,{draftWageAgi:dependencyProof.ordinaryWages},p.timing.asOfDate);
+   if(!scheduleDC)return fail('actual care draft did not reconcile a Schedule DC result');
+   dependencyProof.careCredit=scheduleDC.credit;
+  }
+ }
  else {
   const federal = calculateFederalTax(input);
   if (income.nrk1Withholding !== undefined && federal.deductionUsed !== 'standard') {

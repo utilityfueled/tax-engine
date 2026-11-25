@@ -12,6 +12,8 @@ import { min, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { calculateForm2441, type Form2441Input } from "@/engine/forms/form-2441.js";
+import { FEDERAL_2026_CONSTANTS, FEDERAL_2026_INDEXED } from "@/models/federal-2026-indexed.js";
+import { calculateTaxFromBrackets } from "@/utils/tax-math.js";
 
 interface PAScheduleDCConstants {
   threshold: Decimal;
@@ -95,6 +97,16 @@ export interface ScheduleDCResult {
 }
 
 export function calculateScheduleDC(input: ScheduleDCInput): ScheduleDCResult {
+  return calculateScheduleDCWithLiabilityEvidence(input, false);
+}
+
+/** Internal result for the independently validated state-only ordinary care replay. */
+export function calculatePA2026OrdinaryDraftScheduleDC(input: ScheduleDCInput): ScheduleDCResult {
+  if (input.taxYear !== 2026) throw new Error("PA ordinary care liability floor requires tax year 2026");
+  return calculateScheduleDCWithLiabilityEvidence(input, true);
+}
+
+function calculateScheduleDCWithLiabilityEvidence(input: ScheduleDCInput, ordinaryDraft: boolean): ScheduleDCResult {
   const constants = PA_SCHEDULE_DC_CONSTANTS[input.taxYear];
   if (!constants) {
     throw new Error(`PA Schedule DC constants not available for tax year ${input.taxYear}`);
@@ -125,20 +137,45 @@ export function calculateScheduleDC(input: ScheduleDCInput): ScheduleDCResult {
     }
     const amounts = [input.federalCredit, input.paTaxableIncome, federal.careExpenses,
       federal.earnedIncome, federal.agi, federal.excludedDependentCareBenefits,
-      federal.priorYearExpenseCredit, federal.taxLiabilityLimit,
+      federal.priorYearExpenseCredit, ...(ordinaryDraft ? [] : [federal.taxLiabilityLimit]),
       ...(federal.filingStatus === "married_filing_jointly" ? [federal.spouseEarnedIncome] : [])];
     if (amounts.some(amount => !Decimal.isDecimal(amount) || !amount.isFinite())
       || !federal.excludedDependentCareBenefits?.isZero()
-      || !federal.priorYearExpenseCredit?.isZero()
-      || !federal.taxLiabilityLimit || federal.taxLiabilityLimit.isNegative()) {
-      throw new Error("2026 PA Schedule DC requires finite actual amounts, known zero benefits/prior credit and an actual liability worksheet");
+      || !federal.priorYearExpenseCredit?.isZero()) {
+      throw new Error("2026 PA Schedule DC requires finite actual amounts, known zero benefits/prior credit and liability worksheet evidence");
+    }
+    let liabilityLimit: Decimal;
+    if (ordinaryDraft) {
+      const brackets = FEDERAL_2026_INDEXED.taxBrackets.single;
+      const checkpoint = brackets[2].min;
+      // Stay below the cohort's taxable income even after a full $50 Tax Table
+      // interval and a dollar of reporting allowance. Count only the first two
+      // brackets, then reserve the full potentially allowable one-child §24 credit.
+      const lowerTaxable = federal.agi.minus(FEDERAL_2026_INDEXED.standardDeduction.single).minus(51);
+      if (federal.filingStatus !== "single" || input.qualifyingPersons !== 1
+        || !federal.earnedIncome.eq(federal.agi) || federal.taxLiabilityLimit !== undefined
+        || !federal.agi.gt(FEDERAL_2026_INDEXED.eitc.completedPhaseOutMFJ[3]) || lowerTaxable.lt(checkpoint)) {
+        throw new Error("2026 PA Schedule DC requires the bounded ordinary Single wage liability floor inputs");
+      }
+      liabilityLimit = calculateTaxFromBrackets(checkpoint, brackets).minus(FEDERAL_2026_CONSTANTS.childTaxCredit.perChild);
+      audit.record("PA-Schedule-DC", "2026_federal_liability_floor", "Conservative federal care credit liability floor", liabilityLimit,
+        "First two Single brackets with full Tax Table and reporting margin, less the one-child section 24 reserve; review-only lower bound");
+    } else {
+      if (!federal.taxLiabilityLimit || federal.taxLiabilityLimit.isNegative()) {
+        throw new Error("2026 PA Schedule DC requires an actual federal liability worksheet");
+      }
+      liabilityLimit = federal.taxLiabilityLimit;
     }
     const currentFederal = calculateForm2441(federal);
     const tentative = currentFederal.lines.find(line => line.line === "9a")?.value;
     if (!tentative || !input.federalCredit.eq(tentative)
       || !currentFederal.credit.eq(tentative)
-      || roundDollar(federal.taxLiabilityLimit).lt(tentative)) {
+      || roundDollar(liabilityLimit).lt(tentative)) {
       throw new Error("2026 PA Schedule DC requires exact actual federal 9a reconciliation and a nonbinding liability worksheet");
+    }
+    if (ordinaryDraft) {
+      audit.record("PA-Schedule-DC", "2026_federal_care_projection", "Projected federal section 21 allowance", currentFederal.credit,
+        "Current federal rate and independently nonbinding liability floor; actual federal claim and proof required at filing");
     }
     const rate = Decimal.max("0.20", new Decimal("0.35").minus(
       zeroFloor(federal.agi.minus(15000)).dividedBy(2000).ceil().times("0.01"),

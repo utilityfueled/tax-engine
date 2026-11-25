@@ -16,7 +16,8 @@ lines:
     formula: |
       Require selected2026 single living owner, complete actual PA source packets,
       current original W2 coverage, explicit no other classes/adjustments and
-      no care payments/employer benefits; deny every retained unsupported source.
+      no employer benefits and either confirmed no care payments or the bounded
+      full-year resident care method below; deny every retained unsupported source.
       Exact ordinary federal W2 earned wages must be strictly greater than70244,
       the largest official2026 completed EITC phaseout across all four child counts
       and both joint/nonjoint tables. Thus federal EITC and WPTC are exactlyzero
@@ -29,7 +30,8 @@ lines:
       Replay complete actual originals, residency, payroll dates/source amounts,
       worldwideSP, source-linked credits/payment/use-tax/local obligations through
       the existing ordinary composer. This first draft requires no other income,
-      expenses/benefits, reciprocal or specialized packet, and reported PA withholding
+      expenses outside the care method below, benefits, reciprocal or specialized
+      packet, and reported PA withholding
       at least fresh PA40 tax, except for the confirmed nonresident balance below.
       Known zero retained; absence never establishes zero.
       Preserve existing per-class roundDollar then PA40 roundDollar(x*0.0307),
@@ -37,6 +39,53 @@ lines:
       original source-currentness/owner/year/duplicate/source-precision guards.
       REV1630 zero net tax exits before unsourced2027 interest is needed.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves exact cents known zero and complete withholding"
+  - line: "resident-actual-dependent-care"
+    description: "Apply the frozen 2022 care percentage in the narrow full-year PA ordinary draft"
+    formula: |
+      Accept only an actual continuously PA-domiciled full-year living unmarried
+      Single owner whose source review rules out head-of-household eligibility,
+      whose sole income is reconciled ordinary original W-2 wages strictly above
+      $70,244, with the base Single standard deduction and no other federal tax
+      reductions except the possible credit for one child under section 24.
+      Match the actual claimant birth date to the base-deduction cohort.
+      Use exactly one directly claimable under-13 section 152(a)(1) child, after
+      custody and dependency exclusions, one eligible unrelated non-household
+      provider and one actual current-year work-related receipt. Separately confirm
+      the provider relationship under 26 CFR 1.21-4. The provider cannot be a
+      claimable dependent, the taxpayer's child under 19, anyone who was the
+      taxpayer's spouse during the year, or the qualifying child's other parent.
+      This draft also excludes other relatives. The source review
+      must bind the claimant's own payment to that receipt and exclude third-party
+      payment, reimbursement, duplicate claims, deemed income, section 129 benefits
+      and prior-year expense credit. Require confirmation that the same eligible
+      expenses are intended for the current federal claim. Replay the original
+      payment metadata, dates, person, provider, earned income and exact amounts.
+      At this wage floor, ordinary taxable income exceeds $54,143 after the
+      $16,100 basic deduction and even a dollar of reporting allowance. Use only
+      the first two Single 2026 statutory brackets through $50,400 ($5,800) as a
+      conservative regular-tax checkpoint. The 2026 draft section 3 tables' $50
+      intervals cannot cross this checkpoint for the accepted incomes. Reserve
+      the full $2,200 section 24 amount for one child and confirm the remaining
+      $3,600 floor covers the positive current section 21 credit before calculating
+      Pennsylvania Schedule DC from the same expenses at the frozen 2022 rate.
+      At $74,000 of wages and $1,800 paid for care, current section 21 predicts a
+      $630 allowance (35%); the Pennsylvania draft credit is $360 (20%), tax
+      before credits is $2,272, and with $2,500 withheld the draft refund is $588.
+      Retain amount-only audit and no full federal result. Draft amounts do not
+      establish an actual federal claim, a final form transfer, or filing readiness.
+      The public stand-alone Schedule DC calculation still requires its actual
+      federal liability worksheet.
+    sources:
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1929/0/0176.016W000..HTM#19290176u1603-Ws"
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/child-and-dependent-care-credit"
+      - "https://www.pa.gov/agencies/revenue/resources/tax-law-policies-bulletins-notices/tax-cuts-and-jobs-one-big-beautiful-bill-acts"
+      - "https://uscode.house.gov/us/usc/119-120/t26/s21/"
+      - "https://www.ecfr.gov/current/title-26/section-1.21-4"
+      - "https://uscode.house.gov/us/usc/t26/s26/"
+      - "https://uscode.house.gov/us/usc/t26/s3/"
+      - "https://www.irs.gov/irb/2025-45_IRB"
+      - "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=80"
+    testRef: "tests/engine/state/pa-2026-ordinary-care-draft.test.ts::PA2026 actual resident care applies the frozen state rate without a federal return"
   - line: "florida-move-full-year-resident"
     description: "Apply the full-year PA source basis to a complete 2026 Florida-to-Pennsylvania move"
     formula: |
