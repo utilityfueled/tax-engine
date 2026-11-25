@@ -14,7 +14,10 @@ Use the linked progress sections when investigating individual packages.
   mortgage maximum below the Form 1098 Box 2 balance is held. Guided
   review distinguishes partial 1099-R records, missing amounts and
   explicit zero. Focused checks and exact staged source audits passed
-  for all three. Combined checks are running on `bc034c34`.
+  for all three. The combined check found a stale timing-manifest
+  digest and a sandbox-denied loopback bind. `d973e8a1` corrects the
+  digest. All 62 timing and scheduler tests passed. The corrected
+  eleven-check run uses local sockets and is in progress.
   [Taxpayer source facts](upgrade-2026-progress.md#november-25-federal-taxpayer-source-reconciliation).
 
 - `c901da52` reuses the validated Ohio school adapter once within an
@@ -22,10 +25,10 @@ Use the linked progress sections when investigating individual packages.
   fallback remain in place. Independent review confirmed exact
   signed-zero and single-use behavior. Local paired CPU fell about
   27% on two synthetic fixtures before the final single-use guard.
-  All 109 focused checks and the first ten exact local checks passed.
+  All 109 focused checks and all eleven exact local checks passed.
   Unit and coverage each passed 30,498 cases with 88.39% branches.
-  The Docker build passed. The exact local browser, Linux and ARM64
-  runs are active.
+  Local Chromium passed all 652 active cases with verified cleanup.
+  The Docker build passed. The exact Linux and ARM64 runs are active.
   [Ohio standalone replay](upgrade-2026-progress.md#november-25-ohio-standalone-school-preview-replay).
 
 - `3a9f8d24` computes the pre-credit 2026 Ohio traditional school levy
@@ -1326,7 +1329,7 @@ AMD64 runner.
 | State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Final Schedules B and EIC and Forms 2106, 7206, 8829 and 8919 have disabled source candidates. The current annual Form 1040, general instructions, Tax/EIC tables and main Pennsylvania and Ohio returns still print 2025. Qualification of the maps, scenarios and federal/state transfers remains open. [Schedule B source](upgrade-2026-schedule-b-final-source.md) · [IRS annual Form 1040](https://www.irs.gov/forms-pubs/about-form-1040) · [Pennsylvania PIT forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio tax forms](https://tax.ohio.gov/individual/get-a-form). |
 | AI routing and exact billing | Exact cost is recorded separately from whole retail credits. The hold for a second attempt checks the cumulative bound under the owner lock. Independent labels, held-out assessment, repeated live qualification and selected Google project access remain open. [Billing evidence](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold) · [Provider evidence](upgrade-2026-provider-catalog-20261117.md). |
 | Hosted recovery | Protected Preview `cdfdd050` passed all 12 workspace lifecycle checks. Four read-only billing checks passed for each of two authorized actors on `1a9bfd0d`. Its configured prices match Stripe Sandbox, and the canceled actor displays enabled checkout choices. The webhook points to an older Preview. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Current checkout, signed delivery and exact credit reconciliation remain open. [Preview](upgrade-2026-progress.md#november-20-original-student-loan-and-retirement-statements) · [Billing baseline](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Exact `03f367de` passed 652 local, 650 managed Linux and 639 strict AMD64 Chromium cases. Exact `d316004f` passed 642 strict ARM64 cases. The native rehearsals passed recovery and archive verification. Browser deadline misses keep qualification open. [Latest evidence](upgrade-2026-progress.md#november-25-exact-linux-and-arm64-browser-results). |
+| Self-host recovery | Exact `c901da52` passed all 652 active local cases. Exact `3a9f8d24` passed 652 in managed Linux and 642 in strict AMD64. Exact `5bbc0504` passed 644 in ARM64. Both architectures passed recovery and archive verification. Strict browser deadline misses keep qualification open. [Local and pending remote runs](upgrade-2026-progress.md#november-25-ohio-standalone-school-preview-replay) · [AMD64 evidence](upgrade-2026-progress.md#november-25-ohio-traditional-school-levy). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 The `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)

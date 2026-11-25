@@ -7,7 +7,7 @@ It holds a reused reference across categories, even when the date or
 amount differs. Positive rows with the same day and Decimal amount need
 distinct references. Two actual same-day payments retain their dates,
 amounts and category through JSON reopen. The canonical data omits
-receipt references. The user confirms the records are processed, since
+receipt references. The UI asks for references from processed payments.
 Direct Pay's confirmation identifies the submission. The 2026 federal
 calculation gate remains closed. Three regression checks failed before
 the fix. Twenty-six focused checks, eight independent checks, scoped
@@ -34,11 +34,17 @@ and an explicit zero remain distinct. Two persisted-state DOM regressions
 failed before the fix. All 33 focused checks, the 67 guided-input spec
 references, web types and the exact staged browser source audit passed.
 Scoped lint reported four existing warnings and zero errors. This is a
-review display change. Combined verification is running on `bc034c34`.
+review display change. The first combined unit and coverage runs each
+passed 30,502 cases. Their diagnostic manifest referenced an earlier browser
+source audit digest, and the sandbox denied the loopback test setup. The
+`d973e8a1` correction changes only that digest. All 62 scoped diagnostic
+and scheduler tests passed with the cases, timings and gates preserved.
+The corrected exact archive verified 6,697 tracked blobs and 15 PDF
+samples. Its combined local checks use local sockets and are running.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
-[Exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45537927120) ·
-[Exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45537927056) ·
-[Exact Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45537927014).
+[Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45539213333) ·
+[Corrected Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45539213256) ·
+[Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45539213235).
 
 ## November 25 Ohio standalone school preview replay
 
@@ -62,11 +68,12 @@ each. Median paired CPU fell 26.96% and 27.79%, and one pair was slower.
 Every preview, canonical value, saved state and rejection digest
 matched. Timing preceded the final reentrant consumption guard.
 The exact local checkout matches 6,697 tracked blobs and 15 official
-PDF samples. The first ten exact local checks passed. Unit and coverage
+PDF samples. All eleven exact local checks passed. Unit and coverage
 each passed 30,498 cases with 81 existing skips and 88.39% branch
-coverage. The independent Docker build passed. Vercel canceled the
-production build. The exact local Chromium, Linux and ARM64 runs are
-in progress.
+coverage. Local Chromium passed all 652 active cases in eight windows
+with five existing skips. The runner closed its owned server. The
+independent Docker build passed. Vercel canceled the production build.
+The exact Linux and ARM64 runs are in progress.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45534420347) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45534420393) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45534420296) ·
