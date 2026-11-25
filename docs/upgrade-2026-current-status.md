@@ -9,6 +9,21 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `e32f3383` reconciles one direct owner's elected 2026 Ohio job creation
+  credit share from the entity's certificate, submitted annual election,
+  and documented distributions. The three records each require the full
+  2026 entity period. All 96 adjacent tests and 941 Ohio spec references
+  passed. Qualified tax review and the final Ohio form are still needed
+  before any transfer to a return.
+  [Ohio owner-share evidence](upgrade-2026-progress.md#november-25-elected-ohio-job-creation-credit-shares).
+
+- Rebuilding less of the Ohio credit form cut React render time in a
+  controlled profile. The same 15-case Chromium window improved 0.30%
+  and its four Ohio resident-credit cases improved 0.74% in two paired
+  runs. The prototype was dropped. Strict Linux qualification remains
+  open.
+  [Render comparison](upgrade-2026-progress.md#november-25-ohio-resident-credit-render-comparison).
+
 - `cd6e64b9` accepts a documented 2026 lender credit that used the
   original borrower's 2025 overpayment to satisfy accrued interest on the
   same loan. It reconciles the lender credit and the borrower's other

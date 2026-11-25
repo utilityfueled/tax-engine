@@ -1,5 +1,53 @@
 # 2026 upgrade implementation evidence
 
+## November 25 elected Ohio job creation credit shares
+
+`e32f3383` reconciles one direct owner's share of a single certified
+2026 Ohio job creation award. The owner, entity, award, certificate,
+and submitted on-time election must match. Each of the three entity
+records separately requires the January 1 through December 31, 2026
+period. The exact comparison uses income or profit distributions and
+holds fractional-cent, duplicate, tiered, and unresolved cases. An
+independently checked fixture gives a $1,450.49 share of $5,801.96 at
+25%. The deemed payment date is January 1, 2026. Whole-dollar reporting
+waits for final form qualification.
+
+The spec preceded both red runs. Missing entity-period evidence was
+accepted before the second fix. The final run passed all eight worksheet
+tests and 96 tests across the adjacent Ohio suite. Ohio spec validation
+resolved all 941 references. The exact Docker build, root types, scoped
+lint, the 2,071-path source audit and both source-audit controls passed.
+Review of the statute and agency guidance and an independent arithmetic
+check covered the period and precision. Qualified human review and
+final Ohio forms remain open. [Review packet](upgrade-2026-external-actions.md#elected-job-creation-award-for-one-direct-owner) ·
+[Job creation statute](https://codes.ohio.gov/ohio-revised-code/section-122.17) ·
+[Annual reporting rule](https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07) ·
+[2026 draft guidance](https://tax.ohio.gov/individual/who-must-file/whats-new) ·
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45707096316) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45707096364) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45707096291).
+
+## November 25 Ohio resident-credit render comparison
+
+Both original credit fixtures render 181 controls. On the `27f85ffc8`
+tracked archive, a private prototype copied only the edited part of
+the draft and skipped rendering unchanged source groups. A React
+Profiler comparison alternated baseline, prototype, prototype, and
+baseline. It measured 75 actual control edits per fixture and run.
+Final state and control hashes matched. Median render duration fell
+71.79% and 72.60% in the two fixtures. The prototype passed 51 focused
+tests, including old payment rows shifting after deletion, control
+identity, currency blur formatting, immediate confirmation invalidation,
+and adding a receipt while retaining the previous edit.
+
+Both isolated webpack builds passed. The same audited 15-case window
+passed on all four local Chromium runs, with two workers, zero retries,
+30-second deadlines and server cleanup. Median combined duration for
+the resident-credit cases fell 0.74%, and the whole window fell 0.30%.
+The smaller end-to-end result did not justify the added rendering code.
+The prototype stayed in the ignored evidence archive. Browser and filing
+qualification gates were preserved.
+
 ## November 25 Form 1098-VLI credit against current interest
 
 `cd6e64b9` handles a separate case where the original borrower made and

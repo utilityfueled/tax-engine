@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "cd6e64b972869264f35234e64267c88f36778860",
+    "applicationCommit": "e32f33837d1c75e79c3f7e45b41790829481eff7",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit.fullExact",
@@ -24,6 +24,8 @@
     "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "pendingOhioResultEvidenceKey": "activeContinuation.nov25OhioPendingOwnedResultComparison",
     "ohioCertifiedJobsCreditEvidenceKey": "activeContinuation.nov25OhioCertifiedRefundableJobsCredit",
+    "ohioElectedJobsCreditShareEvidenceKey": "activeContinuation.nov25OhioElectedJobsCreditShare",
+    "ohioCreditRenderComparisonEvidenceKey": "activeContinuation.nov25OhioCreditRenderComparison",
     "ohioTraditionalSchoolEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
     "ohioStandaloneReplayEvidenceKey": "activeContinuation.nov25OhioStandaloneAdapterReuse",
     "ohioChildReplayPrototypeEvidenceKey": "activeContinuation.nov25OhioChildReplayPrototype",
@@ -78,6 +80,35 @@
     ]
   },
   "activeContinuation": {
+    "nov25OhioCreditRenderComparison": {
+      "baselineCommit": "27f85ffc8",
+      "evidencePath": ".local/upgrade-evidence/nov25-oh-credit-render-isolation",
+      "status": "Prototype dropped after the paired local Chromium runs showed less than 1% improvement in journey time. No tracked product or test change.",
+      "reactProfile": { "cases": 2, "editsPerCasePerLeg": 75, "legs": 4, "sameFinalStateAndControls": true, "medianRenderReductionPercent": [71.79, 72.60] },
+      "focusedLifecycleTestsPassed": { "baseline": 4, "candidateAndSourceReaders": 51 },
+      "localBrowser": { "passes": 60, "failures": 0, "skips": 0, "runs": 4, "workers": 2, "retries": 0, "caseDeadlineMs": 30000, "residentCreditMedianCombinedReductionPercent": 0.74, "wholeWindowMedianReductionPercent": 0.30, "cleanupPassed": true },
+      "browserSummarySha256": "e1397d0aca7ba87fad5d5fe2e4df093c1ad9dfe04bee9eb0491b81e76674cf9a",
+      "comparisonSummarySha256": "64ee418747c95b2c7372bb2277f69155e301bbd27a12c4cb49c26729a5d3fba2",
+      "strictLinuxQualified": false
+    },
+    "nov25OhioElectedJobsCreditShare": {
+      "implementationCommit": "e32f33837d1c75e79c3f7e45b41790829481eff7",
+      "sources": ["https://codes.ohio.gov/ohio-revised-code/section-122.17", "https://codes.ohio.gov/ohio-revised-code/section-5747.058", "https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07", "https://codes.ohio.gov/ohio-administrative-code/rule-5703-29-22", "https://tax.ohio.gov/individual/who-must-file/whats-new"],
+      "status": "Bounded draft worksheet for a single calendar-year taxpayer and one verified direct owner's elected job creation credit allocation. The certificate, submitted election and owner distribution must independently show the full 2026 entity period. Uses exact distribution share with no rounding at the worksheet.",
+      "focusedTestsPassed": 8,
+      "adjacentTestsPassed": 96,
+      "adjacentFilesPassed": 4,
+      "ohioSpecReferencesVerified": 941,
+      "typecheckPassed": true,
+      "scopedLintPassed": true,
+      "engineeringAndSourceReviewPassed": true,
+      "sourceAudit": { "digests": 2071, "updated": 1, "controlsPassed": 2, "requestCeilingsChanged": false },
+      "runIds": { "ci": 45707096316, "web": 45707096364, "docker": 45707096291 },
+      "exactDockerBuildPassed": true,
+      "vercelAutomaticProductionBuild": "CANCELED",
+      "qualifiedHumanReview": false,
+      "filingQualified": false
+    },
     "nov25Form1098VliInterestCredit": {
       "implementationCommit": "cd6e64b972869264f35234e64267c88f36778860",
       "status": "Pushed. Bounded same-loan 2026 interest credit with a documented 2025 borrower overpayment and zero prior deduction or carryforward. All eleven exact local checks passed. Linux browser qualification and qualified human review remain open.",
