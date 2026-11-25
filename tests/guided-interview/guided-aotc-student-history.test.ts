@@ -230,6 +230,58 @@ describe("guided AOTC prior-claim history", () => {
     });
   });
 
+  it("rechecks shared claim facts after an AOTC-only saved year change", () => {
+    const initial = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
+    const personal = initial.sectionData["personal-info"];
+    if (!personal) throw new Error("Missing personal facts");
+    const state = updateSectionData(initial, "personal-info", {
+      ...personal, dateOfBirth: "2003-02-15",
+      standardDeductionFacts: { ...personal.standardDeductionFacts, primaryCanBeClaimedAsDependent: true, dependentEarnedIncome: "50000" },
+    });
+    const first = { ...completeAocEligibility, name: "Jordan Example", qualifiedExpenses: "4000", priorYearsClaimed: "0",
+      requiresPriorYearsConfirmation: false, sourceFactsConfirmed: true };
+    const claimant = { ...completeEducationClaimant, canBeClaimedAsDependent: true,
+      refundableAocFacts: { fullTimeStudent: true, earnedIncome: "50000", totalSupport: "120000", parentAlive: true } };
+    const source = updateSectionData(withOriginalWages({ ...state, taxYear: 2026 }, "2026"), "credits", {
+      ...emptyCreditsData,
+      education: {
+        ...emptyCreditsData.education, ...claimant, aocStudents: [first],
+        claimedAsDependent: true, residentJointElection: false,
+      },
+    });
+    expect(creditsFor(source).education.llcStudents ?? []).toHaveLength(0);
+    expect(setInterviewTaxYear(source, 2026)).toBe(source);
+
+    const switched = reopen(setInterviewTaxYear(source, 2025));
+    const withCurrentIncome = withOriginalWages(updateSectionData(switched, "personal-info", state.sectionData["personal-info"]), "2025");
+    const [retainedStudent] = creditsFor(withCurrentIncome).education.aocStudents;
+    const reviewed = reopen(updateEducation(withCurrentIncome, {
+      aocStudents: [{ ...retainedStudent, requiresPriorYearsConfirmation: false, sourceFactsConfirmed: true }],
+      aocBanInEffect: false,
+      form8862Required: false,
+      refundableAocFacts: claimant.refundableAocFacts,
+    }));
+    expect(reviewed.taxYear).toBe(2025);
+    expect(validateSection(reviewed, "credits")).toMatchObject({ status: "partial", fieldErrors: {
+      claimedAsDependent: expect.any(String), primaryTinEligible: expect.any(String), educationPossessionExclusion: expect.any(String),
+    } });
+    expect(buildTaxInputFromGuidedData(reviewed)).toBeNull();
+    expect(creditsFor(reviewed).education).toMatchObject({
+      primarySsnEligible: null, spouseSsnEligible: null, primaryTinEligible: null,
+      canBeClaimedAsDependent: null, claimedAsDependent: null, nonresidentAlien: null, residentJointElection: null,
+    });
+    expect(creditsFor(reviewed).education.possessionIncomeExclusion).toBeUndefined();
+
+    const currentClaimant = reopen(updateEducation(reviewed, claimant));
+    expect(validateSection(currentClaimant, "credits").status).toBe("complete");
+    expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(currentClaimant)).educationExpenses?.possessionIncomeExclusion.toString()).toBe("0");
+    expect(calculateAotc(currentClaimant)).toBe("2500");
+    expect(calculateAotc(reopen(updateEducation(currentClaimant, { claimedAsDependent: true })))).toBe("0");
+
+    const afterStudentRemoval = replaceStudents(source, []);
+    expect(creditsFor(reopen(setInterviewTaxYear(afterStudentRemoval, 2025))).education.claimedAsDependent).toBeNull();
+  });
+
   it("requires actual claimant AOTC answers for the changed return year", () => {
     const { state, first, second } = educationInterview();
     const personal = state.sectionData["personal-info"]!;

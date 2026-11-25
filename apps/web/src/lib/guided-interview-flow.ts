@@ -1900,6 +1900,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
           ...(clearStudentLoanEducationDependency ? { claimedAsDependent: null } : {}),
           ...(aotcSourcesEntered ? {
+            ...invalidateEducationClaimantYearSources(),
             aocStudents: education.aocStudents.map(requireAotcSourceReview),
             aocBanInEffect: undefined, form8862Required: undefined, form8862Completed: undefined,
             refundableAocFacts: undefined, refundableAocEligible: undefined,
@@ -2219,9 +2220,8 @@ function requireAotcSourceReview(student: EducationStudentData): EducationStuden
   };
 }
 
-function invalidateLlcYearSources(education: EducationCreditData): EducationCreditData {
+function invalidateEducationClaimantYearSources() {
   return {
-    ...education,
     primarySsnEligible: null,
     spouseSsnEligible: null,
     primaryTinEligible: null,
@@ -2230,6 +2230,13 @@ function invalidateLlcYearSources(education: EducationCreditData): EducationCred
     nonresidentAlien: null,
     residentJointElection: null,
     possessionIncomeExclusion: undefined,
+  };
+}
+
+function invalidateLlcYearSources(education: EducationCreditData): EducationCreditData {
+  return {
+    ...education,
+    ...invalidateEducationClaimantYearSources(),
     llcStudents: education.llcStudents?.map(student => ({
       ...student,
       studentTinEligible: null,
