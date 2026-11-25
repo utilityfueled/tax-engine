@@ -1102,7 +1102,7 @@
     "src/engine/state/oh-2026-payment-source.ts": "f1fd4fa7a3305d69aa4e984227bcff34580ceb8821c63079e1b4cde9121ca7b3",
     "src/engine/state/oh-2026-qualifying-capital-gain-draft.ts": "d3b5fc78729aa8137a3e0aefae31d647b13026567f00055d4c920052dde6ef54",
     "src/engine/state/oh-2026-reciprocal-source.ts": "c7bfd33ab04d8bbf39c88bf0b67dfc05485b5bde27301356a3863ab41dee3a56",
-    "src/engine/state/oh-2026-refundable-jobs-credit-draft.ts": "f50b0a4ffb360e735d7507ca15bd721b5a8ef2daca6230ef1e23a76b9592554d",
+    "src/engine/state/oh-2026-refundable-jobs-credit-draft.ts": "80b75b2125673c836782dabb94f3c2ba5e1eca57aaa71cfed6d3f95b273d945e",
     "src/engine/state/oh-2026-resident-capital-gain-draft.ts": "2f233834ccdfee245b12915e9102a1a15dcedf67a2c9f3ca2bf94bdaa2007430",
     "src/engine/state/oh-2026-resident-credit-source.ts": "92eab94fca345113b36a9a5dd4686728f9b39e8943fc05f3e67d54f75c83b7de",
     "src/engine/state/oh-2026-resident-credit.ts": "ab422bb04c227625a8887a029b3e07dafb795329d12bbbc59e8a8c412817e514",

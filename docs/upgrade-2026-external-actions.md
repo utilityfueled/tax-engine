@@ -108,6 +108,33 @@ document each decision before comparing with the draft. Use the final
 [Former Ohio retention statute](https://codes.ohio.gov/ohio-revised-code/section-122.171/9-17-2014) ·
 [Ohio forms](https://tax.ohio.gov/individual/get-a-form).
 
+### Elected job creation award for one direct owner
+
+Independently derive the credit for a fictional single Ohio filer who
+directly owns part of a calendar-year partnership. Reconcile the entity's
+original certificate, its submitted annual report electing pass-through
+treatment for the same award, and the owner's documented share. Each
+record must cover January 1 through December 31, 2026. Check the Ohio
+IT K-1 if the entity issued one and verify that the same portion was
+unclaimed by the entity and on any other return. The candidate covers
+ordinary on-time submissions.
+
+Give the owner 40% capital ownership and 25% of the documented income
+or profit distributions. Independently calculate the apportioned credit
+from certified totals of $5,801.96 and $5,802.00, the deemed payment date,
+and the reporting amounts if whole-dollar rounding applies. Repeat with
+a fractional-cent share, a different owner or period on the statement,
+a missing election, conflicting share documentation, and duplicate
+use. Record expected amounts and reasons before inspecting the draft
+worksheet. The final 2026 form, its instructions, and qualified human
+review are required before any line transfer is approved.
+[Ohio job creation statute](https://codes.ohio.gov/ohio-revised-code/section-122.17) ·
+[Ohio annual reporting rule](https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07) ·
+[Ohio refundable credit statute](https://codes.ohio.gov/ohio-revised-code/section-5747.058) ·
+[Ohio rounding statute](https://codes.ohio.gov/ohio-revised-code/section-5703.055) ·
+[Ohio CAT rule](https://codes.ohio.gov/ohio-administrative-code/rule-5703-29-22) ·
+[2026 Ohio draft guidance](https://tax.ohio.gov/individual/who-must-file/whats-new).
+
 ## November 24 Form 4137 review
 
 For one 2026 primary taxpayer, the first employer has $183,000 in

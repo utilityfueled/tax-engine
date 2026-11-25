@@ -1,5 +1,5 @@
 form: "Ohio 2026 certified refundable jobs credit draft"
-fullName: "Direct individual job creation and grandfathered job retention certificates"
+fullName: "Direct individual jobs credit certificates and a direct owner's elected job creation share"
 taxYear: 2026
 reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.058"
 notes: |
@@ -7,6 +7,9 @@ notes: |
   R.C. 122.17(B) or a legacy award under former R.C. 122.171(B)(2) or (3).
   Current R.C. 122.171(B) retention is nonrefundable under R.C. 5747.058(B).
   See https://codes.ohio.gov/ohio-revised-code/section-122.171.
+  Ohio's 2026 What's New guidance identifies line 41 and calls for the
+  certificate and documentation of the owner's portion. This is a draft
+  worksheet pending final annual filing sources and qualification.
   This method does not qualify Ohio forms, filing, other claims or a calculation
   of credit order, current liability, refund or account settlement.
 lines:
@@ -28,6 +31,44 @@ lines:
     testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::reports only the certified exact creation amount and its deemed payment date"
     testRefs:
       - "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::holds incomplete contradictory and unsupported direct certificate facts"
+  - line: "elected-owner-share"
+    description: "Reconcile one direct owner's share of a single elected job creation credit"
+    formula: >-
+      Require the existing single 2026 calendar-year taxpayer and no disqualifying
+      relocation. Verify one original, current and unrevoked 2026 Ohio Department
+      of Development certificate for an ordinary R.C. 122.17(B) pass-through
+      entity award, its 2026 R.C. 122.17(D)(6) annual report with the irrevocable
+      election actually made for that award, and verified owner allocation
+      documentation tied to the same entity and certificate. Verify the entity's
+      full January 1 through December 31, 2026 period separately from the
+      certificate or its linked period records, the submitted election report,
+      and the owner allocation records for both distribution amounts. Hold
+      missing, short, fiscal or inconsistent periods. Match the annual
+      election to the certificate by entity and award reference. For this slice
+      require the report submission from January 1 through March 1, 2027, no
+      later than the certificate date, and require a confirmed qualifying
+      pass-through entity. Match the owner
+      documentation by entity, certificate reference and the actual taxpayer's
+      name and ID suffix. Require a direct owner and confirmation of no duplicate
+      claim of that share, including a claim by the entity against commercial
+      activity tax. Require actual 2026 distributed income or profit for
+      this owner and all recipients on the same basis. Both amounts must be
+      positive and the owner amount cannot exceed the total. In exact Decimal
+      arithmetic, the documented positive credit multiplied by the total
+      distribution must equal the certified credit multiplied by the owner's
+      distribution. Hold a fractional-cent share, a mismatch, an allocation based
+      on equity percentages, tiered interests, multiple sources or awards, other
+      years and incomplete facts. Copy the reconciled amount without rounding.
+    irsRef: "R.C. 122.17(D)(6)–(7), (H), (J); https://codes.ohio.gov/ohio-revised-code/section-122.17"
+    sources:
+      - "https://tax.ohio.gov/individual/who-must-file/whats-new"
+      - "https://codes.ohio.gov/ohio-administrative-code/rule-122:7-1-07"
+      - "https://codes.ohio.gov/ohio-administrative-code/rule-5703-29-22"
+    testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::reports a direct owner's exact documented share from the elected annual award"
+    testRefs:
+      - "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::holds ambiguous or mismatched election and owner allocation evidence"
+      - "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::requires the full independently documented entity period on all three records"
+      - "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::holds both fractional-cent and near-limit mismatched allocations"
   - line: "grandfathered-retention"
     description: "Bind the actual legacy authority, original dates and continuing term"
     formula: >-
@@ -42,12 +83,13 @@ lines:
     irsRef: "Former R.C. 122.171(B)(2)–(3); https://codes.ohio.gov/ohio-revised-code/section-122.171/9-17-2014"
     testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::uses operative former retention agreements and holds conflicting legacy dates"
   - line: "deemed-payment"
-    description: "Return the certificate amount and statutory calendar-year payment date"
+    description: "Return the validated refundable amount and statutory calendar-year payment date"
     formula: >-
-      Copy the validated certified amount as Decimal and report January 1, 2026
+      Copy the validated certificate amount or reconciled direct-owner share as Decimal and report January 1, 2026
       as its deemed payment date. Return only an incomplete filing-unqualified
       draft classification, the amount and date, and a calculation audit line
       using the public authority and date. Keep original identities, source
-      references and certificate or agreement evidence off the result and audit.
+      references, entity distribution amounts and certificate, election or
+      agreement evidence off the result and audit.
     irsRef: "R.C. 5747.058(A), https://codes.ohio.gov/ohio-revised-code/section-5747.058; R.C. 5747.98, https://codes.ohio.gov/ohio-revised-code/section-5747.98"
     testRef: "tests/engine/state/oh-2026-refundable-jobs-credit-draft.test.ts::preserves an explicit certified zero"
