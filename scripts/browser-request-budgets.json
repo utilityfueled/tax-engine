@@ -243,7 +243,7 @@
     "apps/web/src/components/refund-ticker.tsx": "d54a6b94e483ea14d5773891d47101aa89caccf808c3b6f5fa44d4634d08baaf",
     "apps/web/src/components/retro-shell.tsx": "5d8538ca08cecbe51b45b6e7d7573a89a504e97e038f1703ee5ab4cb6e42d9c2",
     "apps/web/src/components/return-help-dock.tsx": "7de217ba464710ce4d38099894f23d37183b91172c80d9f2044328ab2fcfa9b5",
-    "apps/web/src/components/return-workspace-screen.tsx": "1d8270a551e892ebd2c6460f270346085a185974c6d3a2d2fc4840881d133ce3",
+    "apps/web/src/components/return-workspace-screen.tsx": "2a159dd715795e1b1b04f7b6fe7fae29c6469f6eaf861774adef35d6f3cde428",
     "apps/web/src/components/site-footer.tsx": "cb86ba68290eb6d1aa61a4f3593544a9f3a2d4ac90332322301986116b385871",
     "apps/web/src/components/start-workspace-button.tsx": "4f78c8ff61ff5d0b2d9eaeee12548204a2e6c660e5ff5b3977ae08d41a7c0399",
     "apps/web/src/components/workspace-recovery-controls.tsx": "4a37c57c7c61152ba6c7b732da16b221b8e9759aeffedaeee93c5cd7730f01d8",

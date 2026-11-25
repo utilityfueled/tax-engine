@@ -43,7 +43,6 @@ import {
 import {
   collectGuidedReviewIssues,
   loadGuidedFlowState,
-  type GuidedFlowState,
   type InterviewSectionId,
 } from "@/lib/guided-interview-flow";
 import { TaxYearInputSchema } from "@/models/inputs";
