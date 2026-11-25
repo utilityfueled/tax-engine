@@ -52,7 +52,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect exact 3a9f8d24 combined checks, CI 45527715373 and Linux Web 45527715370. Observe earlier exact 8f45074d checks and 5bbc0504 timing in ARM64 45523084019. The 9dac7cb0 managed Linux and strict AMD64 runs completed with browser deadline failures.",
+      "Collect exact 3a9f8d24 combined checks, CI 45527715373 and Linux Web 45527715370. Observe earlier exact 8f45074d checks. The 5bbc0504 ARM64 and 9dac7cb0 managed Linux and strict AMD64 runs completed with browser deadline failures.",
       "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
@@ -61,6 +61,18 @@
     ]
   },
   "activeContinuation": {
+    "nov25OhioStandaloneParentPrototype": {
+      "baseline": "7035b8be",
+      "pairsPerFixture": 3,
+      "measuredRendersPerProcess": 110,
+      "refund100MedianCpuMs": {"original": 41.571, "prototype": 34.751},
+      "coveredMedianCpuMs": {"original": 42.327, "prototype": 41.920},
+      "exactDigestsMatched": true,
+      "allFourStaleAndMissingControlsMatched": true,
+      "summarySha256": "b4bc49b231ccc11d2efda8f6cd66f825935d5ca9f7bd516ace10a770f3922eb8",
+      "decision": "Mixed results. Prototype discarded.",
+      "evidence": ".local/upgrade-evidence/nov25-oh-standalone-parent-comparison"
+    },
     "nov25OhioTraditionalSchoolDraft": {
       "revision": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
       "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026",
@@ -78,6 +90,7 @@
       "ciRun": 45527715373,
       "webRun": 45527715370,
       "dockerRun": 45527715482,
+      "vercelProductionBuildState": "CANCELED",
       "evidence": ".local/upgrade-evidence/nov25-oh-traditional-district"
     },
     "nov25OhioCertifiedRefundableJobsCredit": {
@@ -99,6 +112,7 @@
       "correctedCiRun": 45526119746,
       "correctedWebRun": 45526119691,
       "correctedDockerRun": 45526119591,
+      "vercelProductionBuildState": "CANCELED",
       "evidence": ".local/upgrade-evidence/nov25-oh-certified-jobs-credit"
     },
     "nov25OhioPendingOwnedResultComparison": {
@@ -123,6 +137,7 @@
         "evidenceScope": "Local synthetic. Paired prototype archives removed. Strict Linux effect unverified."
       },
       "arm64Run": 45523084019,
+      "arm64": {"job": 138899579610, "windows": 8, "passed": 644, "failed": 8, "originalSkips": 5, "deadlineCategories": {"ohioBusinessNew212": 1, "ohioReciprocal": 1, "ohioResidentCredit": 2, "ohioSchoolDistrict": 4}, "composeRecoveryPassed": true, "independentArchivePassed": true, "scanStepPassed": true, "browserContainerRemoved": true, "browserLogSha256": "690a51e99391410a41dc9d0ce76ee2999e39cfca4c9ca2a6f07fcde5bbfc0479"},
       "ciRun": 45523012365,
       "webRun": 45523012599,
       "dockerRun": 45523012538,

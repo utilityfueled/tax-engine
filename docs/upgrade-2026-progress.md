@@ -25,6 +25,8 @@ typecheck, scoped lint, all 10,053 references, the generated inventory
 and the source audit, with all browser contracts retained. The release
 checkout matches 6,697 tracked blobs and 15 official PDF samples. Its
 complete local run is queued after the two earlier local browser runs.
+The production deployment listing shows canceled builds for the
+traditional levy and corrected jobs-credit inventory commits.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45527715373) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45527715370).
 
@@ -113,6 +115,25 @@ five original skips, zero failures and verified server cleanup.
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45523012599) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45523012538) ·
 [Exact ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45523084019).
+
+The exact ARM64 rehearsal passed 644 active browser cases. Eight hit
+the unchanged 30-second deadline across eight windows, with five
+original skips. The failures were one business part-year and one
+reciprocal journey, two resident-credit cases and four school cases.
+They stopped during PDF download, the filing-rejection request, a
+full-return or saved-workspace assertion, or saved header confirmation.
+Both image builds, independent native archive verification, Compose
+upgrade and recovery, the scan step and browser container removal passed.
+The ARM64 browser gate remains open.
+[Exact ARM64 job](https://github.com/utilityfueled/tax-engine/actions/runs/45523084019/job/138899579610).
+
+A separate uncommitted prototype reused the validated residency and
+payment originals before header entry. It removed one validation of
+each parent. Three paired processes per fixture matched preview, saved
+state, original input and four stale or missing source rejections.
+Median CPU per render changed from 41.571 to 34.751 ms in one fixture
+and from 42.327 to 41.920 ms in the other. One pair slowed in each fixture.
+The prototype was discarded after the mixed results.
 
 ## November 25 guided investment statement reconciliation
 
