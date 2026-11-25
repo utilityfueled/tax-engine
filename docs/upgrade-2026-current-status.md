@@ -31,6 +31,9 @@ Use the linked progress sections when investigating individual packages.
   source audit and spec checks passed. The exact native ARM64 rehearsal
   is running. The exact local comparison measured 16.02% and 19.16%
   lower CPU per edit on two synthetic Ohio fixtures.
+  All eleven exact local checks passed, including 30,484 unit and
+  coverage tests at 88.38% branches and 652 active Chromium cases.
+  The local server closed. The exact ARM64 browser check remains active.
   [Ohio calculation replay](upgrade-2026-progress.md#november-25-ohio-pending-header-calculation-replay).
 
 - `9dac7cb0` stops a repeated guided 1099-INT or 1099-DIV from being

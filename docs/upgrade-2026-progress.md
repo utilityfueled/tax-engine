@@ -105,6 +105,10 @@ reproduced a 16.02% and 19.16% median process CPU reduction on the same
 two local fixtures. Full synthetic outcome hashes matched in each case.
 The saved benchmark SHA-256 is
 `4beef97df8c6344d826e0306e495d049fbc4702a722a78116026e947879b4d10`.
+All eleven exact local commands then passed. Unit and coverage each
+passed 30,484 cases with 81 original skips and branch coverage was
+88.38%. Chromium passed all 652 active cases in eight windows, with
+five original skips, zero failures and verified server cleanup.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45523012365) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45523012599) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45523012538) ·
