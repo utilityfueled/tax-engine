@@ -41,10 +41,13 @@ source audit digest, and the sandbox denied the loopback test setup. The
 and scheduler tests passed with the cases, timings and gates preserved.
 The corrected exact archive verified 6,697 tracked blobs and 15 PDF
 samples. Its combined local checks use local sockets and are running.
+The exact Docker build passed. The exact ARM64 job was scheduled after
+the public branch and workflow both reported the reviewed commit.
 [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
 [Corrected CI](https://github.com/utilityfueled/tax-engine/actions/runs/45539213333) ·
 [Corrected Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45539213256) ·
-[Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45539213235).
+[Corrected Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45539213235) ·
+[Corrected ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45540602031).
 
 ## November 25 Ohio standalone school preview replay
 

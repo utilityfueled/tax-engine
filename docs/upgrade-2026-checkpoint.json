@@ -16,6 +16,7 @@
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
+    "externalActionsDocument": "docs/upgrade-2026-external-actions.md#prior-evidence-and-open-external-gates",
     "evidenceKey": "activeContinuation.nov24PennsylvaniaBalanceConfirmation",
     "stateEstimateYearEvidenceKey": "activeContinuation.nov24StateEstimatedPaymentApplicationYear",
     "individualPaScheduleAEstimateEvidenceKey": "activeContinuation.nov24IndividualPaScheduleAEstimates",
@@ -55,10 +56,10 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect corrected exact d973e8a1 local checks, CI 45539213333, Linux Web 45539213256 and Docker 45539213235. The c901da52 local checks passed. Follow its CI 45534420347, Linux Web 45534420296 and ARM64 45534450387.",
+      "Collect corrected exact d973e8a1 local checks, CI 45539213333, Linux Web 45539213256 and ARM64 45540602031. Exact Docker 45539213235 passed. The c901da52 local checks passed. Follow its CI 45534420347, Linux Web 45534420296 and ARM64 45534450387.",
       "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Managed Linux passed all 652 active cases on 3a9f8d24. Strict AMD64 passed 642 with nine Ohio deadlines and one RRTA PDF deadline. ARM64 passed 644 with eight Ohio deadlines on 5bbc0504. Recovery and independent archive verification passed on both architectures.",
-      "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
-      "Obtain independent AI evaluation review and comparable provider results before any promotion.",
+      "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
+      "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
@@ -78,7 +79,7 @@
       "dockerConclusion": "cancelled after updated main push",
       "firstLocalUnit": {"passed": 30502, "failed": 1, "skipped": 84, "staleBrowserAuditDigest": true, "sandboxDeniedLoopbackSetup": true},
       "firstLocalCoverage": {"passed": 30502, "failed": 1, "skipped": 84, "staleBrowserAuditDigest": true, "sandboxDeniedLoopbackSetup": true},
-      "correctedVerification": {"revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8", "diagnosticAndOrchestrationTestsPassed": 62, "browserTimingPolicyChanged": false, "ciRun": 45539213333, "webRun": 45539213256, "dockerRun": 45539213235, "evidence": ".local/upgrade-evidence/nov25-facts-and-audit"},
+      "correctedVerification": {"revision": "d973e8a173842bd9a948c8f0f3fd80f1d5b0ffa8", "diagnosticAndOrchestrationTestsPassed": 62, "browserTimingPolicyChanged": false, "ciRun": 45539213333, "webRun": 45539213256, "dockerRun": 45539213235, "dockerConclusion": "success", "arm64Run": 45540602031, "evidence": ".local/upgrade-evidence/nov25-facts-and-audit"},
       "evidence": ".local/upgrade-evidence/nov25-taxpayer-source-reconciliation"
     },
     "nov25OhioStandaloneAdapterReuse": {

@@ -17,7 +17,8 @@ Use the linked progress sections when investigating individual packages.
   for all three. The combined check found a stale timing-manifest
   digest and a sandbox-denied loopback bind. `d973e8a1` corrects the
   digest. All 62 timing and scheduler tests passed. The corrected
-  eleven-check run uses local sockets and is in progress.
+  eleven-check run uses local sockets and is in progress. The exact
+  Docker build passed. The corrected Linux and ARM64 runs are queued.
   [Taxpayer source facts](upgrade-2026-progress.md#november-25-federal-taxpayer-source-reconciliation).
 
 - `c901da52` reuses the validated Ohio school adapter once within an
@@ -118,7 +119,9 @@ Use the linked progress sections when investigating individual packages.
   deadlines and retained five original skips. Build, recovery and cleanup
   passed. Exact `f2ac230e` passed all eleven local checks with 30,461 unit
   and coverage cases, 88.37% branch coverage and 652 active Chromium cases.
-  The current Linux and ARM64 workflow results remain open.
+  Managed Linux passed 652 active cases. Strict AMD64 passed 650 with
+  two Ohio deadlines, and ARM64 passed 643 with nine. Each retained
+  five existing skips.
   [Verification evidence](upgrade-2026-progress.md#november-24-current-linux-and-local-verification).
 
 - `90336daf` reuses the saved Ohio draft for related assertions at six
@@ -881,7 +884,7 @@ Ohio’s IT NRC index still ends at 2025. Pennsylvania still links the
   rehearsal. Cybersecurity work is deferred at the user's direction.
   Release qualification remains open.
 
-## Latest exact release verification
+## November 22 exact release verification
 
 `13cf80f4` aligns two Form 2441 interaction assertions with the annual
 confirmation prompt. All 51 focused tests passed. On `ebc5a6b1`, managed
