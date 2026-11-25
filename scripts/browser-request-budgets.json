@@ -1095,6 +1095,7 @@
     "src/engine/state/ny-mctmt.ts": "6430e2904e31002627ee17aa70d6aad2e852a6456049fd99847fb63daf65ab52",
     "src/engine/state/oh-2026-baseline.ts": "e6658839feab37af6d5396a6c8acbf781afb4a4c52bead83b922ca1bdd727da9",
     "src/engine/state/oh-2026-business-draft.ts": "75bfafc356527af7c766e34e7495ca89a35f3461b38ea6c5a612fe53cb8f43af",
+    "src/engine/state/oh-2026-dependent-care-credit-draft.ts": "2774be16523f57a27eb23d3903c536e24a108f451a93ba32b9bb2ec81a1c468f",
     "src/engine/state/oh-2026-earned-school-draft.ts": "b0f156da5598e8d75f41525225e778f5df7837ee46be41c2eb1da83744d18122",
     "src/engine/state/oh-2026-farmer-fisher-estimated-tax.ts": "26a46c32570688d1702deb5df0cdc724300632ddae90ea32110e9693c19ce2fa",
     "src/engine/state/oh-2026-ordinary-estimated-tax.ts": "d85d2efd07474fd40e06ef64e04a1a9e9214543c8f7d8f3d1f729440dfe3ceec",

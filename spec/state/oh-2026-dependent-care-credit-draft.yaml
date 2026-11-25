@@ -1,0 +1,78 @@
+form: "Ohio 2026 statutory dependent care credit draft"
+fullName: "Ohio 2026 R.C. 5747.054 dependent care credit before state liability"
+taxYear: 2026
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.054"
+notes: |
+  R.C. 5701.11(A)(1), effective March 5, 2026, incorporates the I.R.C. as of
+  that date. P.L. 119-21 section 70405 amended I.R.C. section 21(a)(2) for tax
+  years beginning after December 31, 2025. The IRS 2026 Form 2441 and its
+  instructions are drafts. The final 2025 Ohio booklet page 45 uses Form 2441
+  line 9c below $20,000 MAGI and 25% of federal line 11 in the middle tier.
+  Line 11 can include the federal section 26 limit. The computation here
+  follows the 2026 statutory reading of R.C. 5747.054, which expressly
+  disregards section 26 in any case. The historic booklet is evidence of a
+  filing interpretation difference. Any return or form mapping requires final
+  2026 Ohio guidance and independent qualified tax review. The worksheet ends
+  before Ohio liability and prior-credit calculations.
+lines:
+  - line: "qualified-care-base"
+    description: "Derive a one-child qualified expense base from confirmed household and payment originals"
+    formula: >-
+      Require an actual joint 2026 calendar-year filing unit with both spouses
+      domiciled full-year in Ohio. Require one verified ordinary Ohio W-2
+      original per spouse with separate owner references, exact Box 1 amounts
+      equal to their respective section 21 earned incomes, and actual zero Box
+      10. The verified complete wages must be the only income with no federal
+      adjustments or Ohio additions and deductions, so federal AGI and Ohio
+      MAGI each equal their exact sum. Require one verified direct qualifying
+      child in the joint household all year who remains under 13 throughout
+      2026. Verify that the child is claimable by the joint filers as a section
+      152(a)(1) dependent after the section 152(b) exclusions, and verify the
+      child's required taxpayer identification. Require
+      a single unrelated licensed Ohio child care center outside the household
+      with verified name, address, EIN and legal compliance. Require linked
+      original records proving payment for that child to that provider for actual
+      2026 care incurred and paid during 2026 to enable both spouses to work.
+      Match the actual payer to either joint filer and verify that the filer
+      bore the eligible expense from the filer's own funds.
+      Require no benefits, reimbursements, deemed earnings, prior-year expense
+      payments, or other qualifying individuals. Qualified base is the least
+      of actual paid eligible care, $3,000 and each spouse's separate earned
+      income. Hold missing or conflicting facts, duplicate source references,
+      and facts outside this cohort.
+    irsRef: "I.R.C. sections 21(b)–(e), 129 and 152; https://uscode.house.gov/us/usc/119-120/t26/s21/"
+    sources:
+      - "https://www.irs.gov/pub/irs-dft/i2441--dft.pdf"
+      - "https://www.ecfr.gov/current/title-26/section-1.21-1"
+      - "https://uscode.house.gov/us/usc/t26/s152/"
+    testRef: "tests/engine/state/oh-2026-dependent-care-credit-draft.test.ts::caps the 2026 care base by both individual earnings and the single-child limit"
+    testRefs:
+      - "tests/engine/state/oh-2026-dependent-care-credit-draft.test.ts::holds missing contradictory or unsupported household and care originals"
+      - "tests/engine/state/oh-2026-dependent-care-credit-draft.test.ts::requires the actual eligible expense paid and borne by a joint filer"
+      - "tests/engine/state/oh-2026-dependent-care-credit-draft.test.ts::requires actual dependent eligibility after the section 152 exclusions"
+  - line: "statutory-tentative-credit"
+    description: "Apply the 2026 Ohio percentage to the federal section 21 amount before limits"
+    formula: >-
+      Under 2026 section 21(a)(2) the federal rate starts at 50%, drops one
+      percentage point per $2,000 or fraction over $15,000 federal AGI to a
+      minimum 35%, then declines one point per $4,000 or fraction over
+      $150,000 joint AGI to a minimum 20%. Multiply the capped expense base by
+      that rate with Decimal and apply Ohio's 100% rate below $20,000 Ohio
+      MAGI, 25% from $20,000 to below $40,000, and 0% from $40,000. Exclude the
+      federal section 26 limit and retain exact amounts before reporting
+      rounding. Return only a tentative statutory amount and amount-only audit
+      as incomplete draft, independent review pending, filing unqualified.
+      R.C. 5747.98 requires the actual credit to be limited by remaining Ohio
+      liability after the preceding retirement and senior credits. Such a cap
+      and any subsequent credits belong to a separate qualified return method.
+    irsRef: "Ohio R.C. 5747.054, 5701.11(A)(1) and 5747.98; P.L. 119-21 section 70405; I.R.C. section 21(a)(2)"
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5701.11"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.98"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5703.055"
+      - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/pdf/PLAW-119publ21.pdf#page=144"
+      - "https://www.irs.gov/pub/irs-dft/f2441--dft.pdf#page=2"
+      - "https://dam.assets.ohio.gov/image/upload/v1769706362/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=45"
+    testRef: "tests/engine/state/oh-2026-dependent-care-credit-draft.test.ts::reports the statutory tentative amount before federal and Ohio liability limits"
+    testRefs:
+      - "tests/engine/state/oh-2026-dependent-care-credit-draft.test.ts::applies the distinct federal and Ohio income boundaries without reporting rounding"
