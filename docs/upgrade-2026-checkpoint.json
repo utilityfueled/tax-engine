@@ -56,8 +56,8 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect corrected exact d973e8a1 CI 45539213333, Linux Web 45539213256 and ARM64 45540602031. All eleven exact local checks and Docker 45539213235 passed. Follow earlier c901da52 CI 45534420347 and the managed Linux job of Web 45534420296.",
-      "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Managed Linux passed all 652 active cases on 3a9f8d24. Exact c901da52 strict AMD64 passed 650 with two Ohio school deadlines, and ARM64 passed 642 with ten Ohio deadlines. Recovery and independent archive verification passed on both architectures.",
+      "Collect corrected exact d973e8a1 CI 45539213333, Linux Web 45539213256 and ARM64 45540602031. All eleven exact local checks and Docker 45539213235 passed. Earlier c901da52 CI 45534420347 is pending.",
+      "Qualify the exact current managed Linux and strict AMD64 and ARM64 runtimes. Exact c901da52 managed Linux passed 650 with two railroad retirement PDF deadlines, strict AMD64 passed 650 with two Ohio school deadlines, and ARM64 passed 642 with ten Ohio deadlines. Recovery and independent archive verification passed on both architectures.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -101,6 +101,7 @@
       "localFullBrowser": {"passed": 652, "failed": 0, "originalSkips": 5, "windows": 8, "cleanupVerified": true, "summarySha256": "7795134de1f7b7897e872d3aa30ae7a30e19b8225e4d11fc0ec119d3d912de72", "cleanupSha256": "7d8e479773caab041d76c45cdfd9601bfb2d2429b2c13ab51b22f91b4ccc07e8"},
       "ciRun": 45534420347,
       "webRun": 45534420296,
+      "managedLinux": {"job": 138937390696, "windows": 8, "passed": 650, "failed": 2, "originalSkips": 5, "rrtaInspectionTimeouts": 2, "rrtaParentWallMicroseconds": [4016448, 4014062], "rrtaLastRecordedPhase": "page_text", "browserLogSha256": "22e9635ca90b87d417a048cfad5d0172ac3e8c10a4ac85b0ccd2df1477c28c40"},
       "strictAmd64": {"job": 138937390915, "windows": 8, "passed": 650, "failed": 2, "originalSkips": 5, "ohioDesktopSchoolFilingRejectionDeadlines": 2, "recoveryRollbackPassed": true, "independentArchivePassed": true, "scanStepPassed": true, "jobLogSha256": "0683e2a3de611a0bdf48ee113311a20f58b6cba6b74345e766c5ed6e34b31077"},
       "dockerRun": 45534420393,
       "dockerConclusion": "success",

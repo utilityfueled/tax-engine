@@ -83,11 +83,17 @@ each passed 30,498 cases with 81 existing skips and 88.39% branch
 coverage. Local Chromium passed all 652 active cases in eight windows
 with five existing skips. The runner closed its owned server. The
 independent Docker build passed. Vercel canceled the production build.
-The exact managed Linux job is active.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45534420347) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45534420393) ·
 [Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45534420296) ·
 [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45534450387).
+
+Managed Linux passed 650 active cases in eight windows with five
+existing skips. Both railroad retirement saved-PDF inspections timed
+out at the existing four-second subprocess limit, with parent wall
+times of 4.016448 and 4.014062 seconds. The last recorded phase was
+`page_text` in both cases.
+[Exact managed Linux job](https://github.com/utilityfueled/tax-engine/actions/runs/45534420296/job/138937390696).
 
 The exact strict AMD64 job passed 650 active browser cases across eight
 windows, with five existing skips. Both desktop Ohio school cases
