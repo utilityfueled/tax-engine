@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "6085e1f554b893ee2d510887aee00022c3c8c1a2",
+    "applicationCommit": "68170b276f8f1953c03e415cd78ba8e3011cf1a8",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit.fullExact",
@@ -19,6 +19,7 @@
     "currentAotcAndStateDisclosureEvidenceKey": "activeContinuation.nov25AotcClaimantYearAndStateSupport",
     "legacyAotcClaimantReviewEvidenceKey": "activeContinuation.nov25LegacyAotcClaimantReview",
     "aiEvaluationAccuracyEvidenceKey": "activeContinuation.nov25AiEvaluationAccuracy",
+    "aiResponseReviewCutoffEvidenceKey": "activeContinuation.nov25AiResponseReviewCutoff",
     "paShortTaxPeriodEvidenceKey": "activeContinuation.nov25PaShortTaxPeriod",
     "taxpayerSourceEvidenceKey": "activeContinuation.nov25FederalTaxpayerSourceReconciliation",
     "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
@@ -32,6 +33,7 @@
     "ohioSchoolPdfInspectionEvidenceKey": "activeContinuation.nov25OhioSchoolPdfInspection",
     "ohioBusinessPdfInspectionEvidenceKey": "activeContinuation.nov25OhioBusinessPdfInspection",
     "paDependentCareDraftEvidenceKey": "activeContinuation.nov25PaDependentCareDraft",
+    "browserFrozenReplayPinsEvidenceKey": "activeContinuation.nov25BrowserFrozenReplayPins",
     "ohioTraditionalSchoolEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
     "ohioStandaloneReplayEvidenceKey": "activeContinuation.nov25OhioStandaloneAdapterReuse",
     "ohioChildReplayPrototypeEvidenceKey": "activeContinuation.nov25OhioChildReplayPrototype",
@@ -86,6 +88,27 @@
     ]
   },
   "activeContinuation": {
+    "nov25AiResponseReviewCutoff": {
+      "implementationCommit": "68170b276f8f1953c03e415cd78ba8e3011cf1a8",
+      "scope": "Offline evaluation requires an explicit independent response review timestamp within the inclusive measured result-to-report window, preserving known costs and recorded safety failures.",
+      "regression": { "oldAcceptedRunsWithUndatedResponseReview": 1, "currentAcceptedRunsWithUndatedResponseReview": 0, "providerCostUsd": "0.0006", "offsetAndFractionalBoundaryTestPassed": true },
+      "checks": { "node": "26.13.1", "offlineTestsPassed": 75, "typechecksPassed": 2, "scopedLintPassed": true, "inventoryPassed": true, "browserTimingAndAuditTestsPassed": 74, "auditedPaths": 2072, "changedSourcePins": 1, "independentEngineeringReviewCompleted": true },
+      "runIds": { "ci": 45724385243, "web": 45724385113, "docker": 45724385161 },
+      "exactDockerBuildPassed": true,
+      "vercelAutomaticProductionBuild": "CANCELED",
+      "exactLocalEvidencePath": ".local/upgrade-evidence/nov25-pa-care-integrated",
+      "qualifiedIndependentHumanReview": false,
+      "modelPromotionPerformed": false
+    },
+    "nov25BrowserFrozenReplayPins": {
+      "implementationCommit": "90726213558e2e436caab1f510f1b6758148715a",
+      "scope": "Refresh only two raw Ohio test source pins in the frozen full-batch replay manifest. All non-pin contract bytes are identical after working-tree structured comparison.",
+      "priorManagedStopOutsideBrowser": { "runId": 45718984180, "jobId": 139572207356, "step": "Verify original-entry timing contracts" },
+      "localWorkflowTimingContracts": { "priorPassed": 54, "priorFailed": 2, "currentPassed": 56, "currentFailed": 0 },
+      "runIds": { "ci": 45723475598, "web": 45723475459, "docker": 45723475518 },
+      "exactDockerBuildPassed": true,
+      "strictLinuxQualified": false
+    },
     "nov25PaDependentCareDraft": {
       "implementationCommit": "6085e1f554b893ee2d510887aee00022c3c8c1a2",
       "scope": "State-only review draft for one source-complete high-wage single PA resident, one directly claimable child under 13, unrelated non-household provider and one eligible current-year own-funds payment. Saved input captures and replays the separate confirmations.",

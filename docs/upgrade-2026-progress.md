@@ -1,5 +1,38 @@
 # 2026 upgrade implementation evidence
 
+## November 25 dated AI response reviews
+
+`68170b276` counts an independent human response assessment toward qualification
+only when it has an actual timestamp at or after the measured response and at
+or before the report cutoff. Exact fractional timestamps and timezone offsets
+preserve the inclusive boundary. Undated, premature and later assessments still
+carry their exact provider costs and any recorded safety findings. The synthetic
+red regression counted an undated assessment as accepted with a $0.0006 provider
+cost. The corrected report preserves that cost and withholds acceptance until
+the qualifying timestamp. All 75 offline tests, both type checks, scoped lint,
+spec links, inventory and 74 browser timing and audit controls passed. An
+independent engineering review passed. The exact Docker build passed and
+Vercel canceled its automatic production build. The exact local suite is
+queued with pinned Python, verified sample documents and loopback access.
+Human fixture and response assessments, account-specific provider runs
+and model promotion remain open.
+[Review instructions](ai-evaluation-executor.md#usage-reconciliation-and-reporting) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45724385243) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45724385113) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45724385161).
+
+## November 25 frozen browser replay source pins
+
+The Linux managed job for the earlier Ohio change stopped in timing preflight
+before starting Chromium. The same two failures reproduced on the Pennsylvania
+archive. `907262135` refreshes the two raw hashes in the frozen batch replay
+manifest. All 56 tests from that CI step passed afterward. A structured
+comparison confirmed the rest of the manifest is identical. The exact Docker
+build passed. The repaired Linux browser run is pending.
+[Original Web job](https://github.com/utilityfueled/tax-engine/actions/runs/45718984180/job/139572207356) ·
+[Repaired Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45723475459) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45723475518).
+
 ## November 25 Pennsylvania dependent-care draft
 
 `6085e1f55` extends the state-only ordinary draft to a single full-year

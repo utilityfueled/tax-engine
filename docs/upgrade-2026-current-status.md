@@ -9,6 +9,17 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `68170b276` requires a timed, independent response assessment before an
+  AI evaluation can count it toward qualification. The 75 offline cases
+  passed. Human reviews and real account-specific evaluation runs are still
+  needed.
+  [AI response review evidence](upgrade-2026-progress.md#november-25-dated-ai-response-reviews).
+
+- `907262135` repairs the second set of Ohio source hashes that stopped
+  Linux browser preflight. All 56 timing contracts and the exact Docker
+  build passed. Linux browser outcomes are pending.
+  [Replayed source pins](upgrade-2026-progress.md#november-25-frozen-browser-replay-source-pins).
+
 - `6085e1f55` adds a state-only Pennsylvania care draft for one verified
   high-wage, full-year resident case. Saved intake binds separate child,
   provider and payer confirmations. All 270 focused cases passed. A
