@@ -19,11 +19,20 @@ export const digitalBooleanFields = [
   ['noncoveredSecurity', 'Box 9 noncovered security'], ['washSale', 'Wash-sale treatment applies to this actual disposition'],
   ['capitalAssetConfirmed', 'Actual asset was held as capital property'], ['nftOrCollectible', 'Actual asset is an NFT or collectible'],
 ] as const;
+const noticeLotConfirmationKeys = [
+  'sameAccountCustodyConfirmed', 'disposedUnitsConfirmed',
+  'noConflictingBrokerInstructionConfirmed', 'noTransitionalBasisDependencyConfirmed',
+] as const;
+export type DigitalAssetNoticeLotDraft = Partial<Record<'lotId' | 'sourceReference' | 'accountReference' | 'dateIdentified' | 'quantity', string>>
+  & Partial<Record<typeof noticeLotConfirmationKeys[number], boolean | null>>;
+
 export type DigitalAssetTransactionData = Partial<Record<typeof digitalAmountFields[number][0] | 'sourceId' | 'securityIdentifier' | 'digitalAssetCode' | 'digitalAssetName' | 'ticker' | 'quantity' | 'dateAcquired' | 'dateSold' | 'reportedDateAcquired' | 'reportedCostBasis' | 'basisSourceReference' | 'gainOrLoss' | 'paCostBasis' | 'paBasisSourceReference', string>>
   & Partial<Record<typeof digitalBooleanFields[number][0] | 'reportedDateAcquiredBlank' | 'reportedCostBasisBlank' | 'basisFactsConfirmed' | 'basisCorrectionConfirmed' | 'sellingCostsNotInProceedsConfirmed' | 'originIncomeIncludedConfirmed' | 'inheritedBasisConfirmed' | 'giftSourceConfirmed' | 'giftHoldingDocumented' | 'giftFromSpouse' | 'paBasisFactsConfirmed' | 'paTransactionForProfitConfirmed', boolean | null>> & {
     marketDiscountFacts?: MarketDiscountDraft;
+    notice202620Lot?: DigitalAssetNoticeLotDraft;
     giftDonorBasis?: string; giftFairMarketValue?: string; giftDate?: string;
     holdingPeriod?: 'short' | 'long' | ''; transactionType?: 'sale' | 'exchange' | 'payment' | 'other' | '';
+    reportedHoldingPeriod?: 'short' | 'long' | '';
     basisSource?: 'broker_statement' | 'taxpayer_records' | ''; proceedsType?: 'gross' | 'net' | '';
     optionalReportingMethod?: 'none' | 'stablecoins' | 'specified_nfts' | '';
     assetOrigin?: 'purchase' | 'mining' | 'staking' | 'airdrop' | 'gift' | 'inheritance' | 'other' | '';
@@ -54,6 +63,24 @@ function originalBlank(blank: boolean | null | undefined, value: string | undefi
   if (blank) { if (value?.trim()) throw new Error(`Reconcile the saved ${label} with the actual original blank answer.`); return null; }
   return monetary ? amount(value, label) : actual(value, label);
 }
+function completedNoticeLot(row: DigitalAssetTransactionData) {
+  const proof = row.notice202620Lot;
+  const termDiffers = row.reportedHoldingPeriod && row.reportedHoldingPeriod !== row.holdingPeriod;
+  if (!proof && !termDiffers) return undefined;
+  if (!proof || !termDiffers) throw new Error('Reconcile the original Box 6 term and the taxpayer holding period with the documented Notice 2026-20 lot.');
+  if (noticeLotConfirmationKeys.some(key => proof[key] !== true)) {
+    throw new Error('Confirm the same broker account, asset and sold units, and verify there is no conflicting broker instruction or transitional basis dependency for this lot.');
+  }
+  return {
+    lotId: actual(proof.lotId, 'identified lot ID'),
+    sourceReference: actual(proof.sourceReference, 'lot identification record reference'),
+    accountReference: actual(proof.accountReference, 'lot record account reference'),
+    dateIdentified: actual(proof.dateIdentified, 'lot identification date'),
+    quantity: amount(proof.quantity, 'identified lot units'),
+    sameAccountCustodyConfirmed: true, disposedUnitsConfirmed: true,
+    noConflictingBrokerInstructionConfirmed: true, noTransitionalBasisDependencyConfirmed: true,
+  };
+}
 function toSource(entry: DigitalAssetEntryData, context: MarketDiscountContext): Form1099DA {
   if (!/^\d{4}$/.test(entry.taxYear ?? '')) throw new Error('Enter the actual original digital-asset statement year.');
   if (!entry.transactions?.length) throw new Error('Include every actual individual digital-asset disposition.');
@@ -79,6 +106,7 @@ function toSource(entry: DigitalAssetEntryData, context: MarketDiscountContext):
       basisCorrectionConfirmed: row.basisCorrectionConfirmed ?? undefined, sellingCostsNotInProceedsConfirmed: row.sellingCostsNotInProceedsConfirmed ?? undefined, originIncomeIncludedConfirmed: row.originIncomeIncludedConfirmed ?? undefined, inheritedBasisConfirmed: row.inheritedBasisConfirmed ?? undefined,
       ...(row.assetOrigin === 'gift' ? { giftSource: { donorBasis: row.giftDonorBasis?.trim() ? parseGuidedCurrency(row.giftDonorBasis).toFixed() : undefined, fairMarketValueAtGift: row.giftFairMarketValue?.trim() ? parseGuidedCurrency(row.giftFairMarketValue).toFixed() : undefined, giftDate: row.giftDate || undefined, sourceFactsConfirmed: row.giftSourceConfirmed ?? undefined, donorHoldingDocumented: row.giftHoldingDocumented ?? undefined, fromSpouse: row.giftFromSpouse ?? undefined } } : {}),
       holdingPeriod: row.holdingPeriod, transactionType: row.transactionType, proceedsType: row.proceedsType,
+      reportedHoldingPeriod: row.reportedHoldingPeriod || undefined, notice202620Lot: completedNoticeLot(row),
       optionalReportingMethod: row.optionalReportingMethod, assetOrigin: row.assetOrigin,
       paCostBasis: row.paCostBasis?.trim() ? amount(row.paCostBasis, 'Pennsylvania adjusted basis') : undefined,
       paBasisSourceReference: row.paBasisSourceReference?.trim() || undefined,
@@ -112,16 +140,66 @@ export function digitalAssetFactErrors(entries: DigitalAssetEntryData[] | undefi
     return {};
   } catch (error) { return { digitalAssetSources: error instanceof Error ? error.message : 'Complete the actual digital-asset source facts.' }; }
 }
+function noticeLotMaterialFacts(row: DigitalAssetTransactionData) {
+  const { notice202620Lot, basisFactsConfirmed: _basis, basisCorrectionConfirmed: _correction, paBasisFactsConfirmed: _pa,
+    marketDiscountFacts: _marketDiscount, ...disposition } = row;
+  const { lotId, sourceReference, accountReference, dateIdentified, quantity } = notice202620Lot ?? {};
+  return { ...disposition, notice202620Lot: { lotId, sourceReference, accountReference, dateIdentified, quantity } };
+}
+
+function invalidateNoticeLot(row: DigitalAssetTransactionData): DigitalAssetTransactionData {
+  if (!row.notice202620Lot) return row;
+  return {
+    ...row, basisFactsConfirmed: null, basisCorrectionConfirmed: null,
+    notice202620Lot: {
+      ...row.notice202620Lot, sameAccountCustodyConfirmed: null, disposedUnitsConfirmed: null,
+      noConflictingBrokerInstructionConfirmed: null, noTransitionalBasisDependencyConfirmed: null,
+    },
+  };
+}
+
+export function invalidateDigitalAssetNoticeLots(entry: DigitalAssetEntryData): DigitalAssetEntryData {
+  if (!entry.transactions?.some(row => row.notice202620Lot)) return entry;
+  return { ...entry, sourceFactsConfirmed: null, transactions: entry.transactions.map(invalidateNoticeLot) };
+}
+
+export function invalidateEditedDigitalAssetNoticeLots(previous: DigitalAssetEntryData, next: DigitalAssetEntryData): DigitalAssetEntryData {
+  if (!next.transactions || (!next.transactions.some(row => row.notice202620Lot)
+    && !previous.transactions?.some(row => row.notice202620Lot))) return next;
+  const sourceFields = ['sourceId', 'sourceReference', 'taxYear', 'brokerName', 'brokerTin', 'accountReference', 'accountHolder'] as const;
+  const sourceEdited = sourceFields.some(key => previous[key] !== next[key]);
+  const previousRows = new Map(previous.transactions?.filter(row => row.sourceId).map(row => [row.sourceId, row]));
+  let edited = false;
+  const transactions = next.transactions.map((row, index) => {
+    const old = previousRows.get(row.sourceId) ?? previous.transactions?.[index];
+    if (!row.notice202620Lot && !old?.notice202620Lot) return row;
+    const rowEdited = old && (Boolean(old.notice202620Lot) !== Boolean(row.notice202620Lot)
+      || guidedSourceValuesChanged(noticeLotMaterialFacts(old), noticeLotMaterialFacts(row)));
+    if (!sourceEdited && !rowEdited) return row;
+    edited = true;
+    return invalidateNoticeLot({
+      ...row,
+      basisFactsConfirmed: null,
+      basisCorrectionConfirmed: null,
+      paBasisFactsConfirmed: null,
+    });
+  });
+  return edited ? { ...next, sourceFactsConfirmed: null, transactions } : next;
+}
+
 export function updateDigitalAssetTransaction(row: DigitalAssetTransactionData, patch: Partial<DigitalAssetTransactionData>): DigitalAssetTransactionData {
   const next = { ...row, ...patch }, origin = ['originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSourceConfirmed', 'giftHoldingDocumented'];
   const keys = Object.keys(patch);
   if (keys.every(key => key === 'basisFactsConfirmed' || key === 'paBasisFactsConfirmed')) return next;
+  const noticeEdited = next.notice202620Lot && guidedSourceValuesChanged(noticeLotMaterialFacts(row), noticeLotMaterialFacts(next));
+  if (next.notice202620Lot && !noticeEdited && keys.every(key => key === 'notice202620Lot' || key === 'basisCorrectionConfirmed')) return next;
   if (keys.length === 1 && keys[0] === 'marketDiscountFacts') return { ...next, basisFactsConfirmed: null, paBasisFactsConfirmed: null };
   const edited = keys.some(key => !origin.includes(key));
-  return { ...next, marketDiscountFacts: invalidateMarketDiscount(next.marketDiscountFacts), basisFactsConfirmed: null, paBasisFactsConfirmed: null, ...(edited ? { originIncomeIncludedConfirmed: null, inheritedBasisConfirmed: null, giftSourceConfirmed: null, giftHoldingDocumented: null } : {}) };
+  const reviewed = { ...next, marketDiscountFacts: invalidateMarketDiscount(next.marketDiscountFacts), basisFactsConfirmed: null, paBasisFactsConfirmed: null, ...(edited ? { originIncomeIncludedConfirmed: null, inheritedBasisConfirmed: null, giftSourceConfirmed: null, giftHoldingDocumented: null } : {}) };
+  return noticeEdited ? invalidateNoticeLot(reviewed) : reviewed;
 }
 export function updateDigitalAssetEntry(entry: DigitalAssetEntryData, patch: Partial<DigitalAssetEntryData>): DigitalAssetEntryData {
-  const next = { ...entry, ...patch };
+  const next = invalidateEditedDigitalAssetNoticeLots(entry, { ...entry, ...patch });
   const actualValues = (value: DigitalAssetEntryData) => ({ ...value, transactions: value.transactions?.map(row => ({ ...row, basisFactsConfirmed: undefined, paBasisFactsConfirmed: undefined })) });
   if (!guidedSourceValuesChanged(actualValues(entry), actualValues(next))) return next;
   const statementEdited = Object.keys(patch).some(key => key !== "transactions" && key !== "sourceFactsConfirmed");

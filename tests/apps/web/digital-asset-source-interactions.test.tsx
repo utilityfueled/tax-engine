@@ -65,3 +65,40 @@ it('copies original digital records through the investment section', async () =>
     expect(JSON.stringify(source)).toBe(original);
   } finally { await act(async () => root.unmount()); container.remove(); }
 });
+
+it('collects the original Box 6 term and independent 2026 lot proof', async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement('div'); document.body.appendChild(container); const root = createRoot(container);
+  let latest: DigitalAssetEntryData[] = [];
+  function Harness() {
+    const [entries, setEntries] = useState([{ ...actualGuidedDigitalAsset(), taxYear: '2026' }]);
+    return <DigitalAssetSourceCards entries={entries} onChange={value => { latest = value; setEntries(value); }} />;
+  }
+  async function change(label: string, value: string) {
+    const field = [...container.querySelectorAll('label')].find(row => row.querySelector('.guided-field-label')?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>('input,select');
+    if (!field) throw new Error(`Missing ${label}`);
+    const setter = Object.getOwnPropertyDescriptor(field.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype, 'value')?.set;
+    if (!setter) throw new Error('Missing field setter');
+    await act(async () => { setter.call(field, value); field.dispatchEvent(new Event(field.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); field.dispatchEvent(new FocusEvent('focusout', { bubbles: true })); });
+  }
+  try {
+    await act(async () => root.render(<Harness />));
+    await change('DA 1 sale 1 — Original Box 6 holding period', 'long');
+    expect(latest[0].transactions?.[0]).toMatchObject({ reportedHoldingPeriod: 'long', holdingPeriod: 'short' });
+    await change('DA 1 sale 1 — Identified lot ID', 'Dated lot A');
+    await change('DA 1 sale 1 — Lot identification record reference', 'Trading ledger entry');
+    await change('DA 1 sale 1 — Account reference in lot records', 'Actual account A');
+    await change('DA 1 sale 1 — Date the lot was identified in your records', '2026-05-31');
+    await change('DA 1 sale 1 — Units identified in your records', '0.001000000000000001');
+    await change('DA 1 sale 1 — The same asset and lot stayed in this broker account from purchase through sale', 'true');
+    await change('DA 1 sale 1 — The identified units match all units sold on this row', 'true');
+    await change('DA 1 sale 1 — No conflicting lot instruction was given to the broker', 'true');
+    await change('DA 1 sale 1 — The lot basis does not depend on the Rev. Proc. 2024-28 transition', 'true');
+    expect(latest[0].transactions?.[0].notice202620Lot).toMatchObject({ lotId: 'Dated lot A', quantity: '0.001000000000000001', sameAccountCustodyConfirmed: true, disposedUnitsConfirmed: true });
+    await change('DA 1 sale 1 — Completed taxpayer cost basis', '91.24');
+    expect(latest[0].transactions?.[0].notice202620Lot).toMatchObject({ lotId: 'Dated lot A', quantity: '0.001000000000000001', sameAccountCustodyConfirmed: null, disposedUnitsConfirmed: null });
+    await change('DA statement 1 — Actual taxpayer owner', 'spouse');
+    await change('DA statement 1 — Actual source tax year', '2025');
+    expect(latest[0]).toMatchObject({ taxYear: '2025', accountHolder: 'spouse', sourceFactsConfirmed: null, transactions: [{ reportedHoldingPeriod: 'long', notice202620Lot: { lotId: 'Dated lot A' } }] });
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});

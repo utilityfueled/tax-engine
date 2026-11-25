@@ -2,6 +2,7 @@ import {computeGuidedPreviewEvaluation} from './guided-preview-compute';
 import { buildGuidedScheduleBPartThree, scheduleBPartThreeMissingAnswer, type ScheduleBPartThreeDraft } from './guided-schedule-b-part-three';
 import { codPrincipalResidenceNavigationFactErrors, invalidateGuidedCodPrincipalResidence, type CodPrincipalResidenceData } from './guided-cod-principal-residence';
 import { invalidateMarketDiscount } from './guided-market-discount-sources';
+import { invalidateDigitalAssetNoticeLots, invalidateEditedDigitalAssetNoticeLots } from './guided-digital-asset-facts';
 import {rrtaDraftValues,rrtaPaperDraftValues} from './guided-rrta-payroll-sources';
 import { guidedRefundRecoveryDraftErrors } from "./guided-tax-refund-recoveries";
 import {ohio2026SchoolActualValues,type Ohio2026SchoolDraft} from './guided-ohio-2026-school-sources';
@@ -1785,6 +1786,9 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const renterHomeOffice = businessFacts?.homeOfficeRenter;
   const rentals = state.sectionData["income-rental"];
   const royalties = state.sectionData["income-royalties"];
+  const investments = state.sectionData["income-investments"];
+  const digitalAssetYearReview = investments?.digitalAssetEntries?.some(entry =>
+    entry.transactions?.some(row => row.marketDiscountFacts || row.notice202620Lot));
   const otherTaxes = state.sectionData["other-taxes"];
   const k3Election = otherTaxes?.foreignTaxElection;
   const adjustments = state.sectionData.adjustments;
@@ -1872,7 +1876,13 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           entries: rentals.entries.map(entry => entry.sourceFactsConfirmed === true ? { ...entry, sourceFactsConfirmed: null } : entry),
         },
       } : {}),
-      ...(state.sectionData["income-investments"]?.digitalAssetEntries?.some(entry => entry.transactions?.some(row => row.marketDiscountFacts)) ? { "income-investments": { ...state.sectionData["income-investments"]!, digitalAssetEntries: state.sectionData["income-investments"]!.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } } : {}),
+      ...(digitalAssetYearReview && investments ? { "income-investments": {
+        ...investments,
+        digitalAssetEntries: investments.digitalAssetEntries?.map(entry => invalidateDigitalAssetNoticeLots({
+          ...entry, sourceFactsConfirmed: null,
+          transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })),
+        })),
+      } } : {}),
       ...(adjustments && (codSources || requireAlimonyReview || studentLoanFactsToReconfirm) ? {
         adjustments: {
           ...adjustments,
@@ -2499,9 +2509,24 @@ export function updateSectionData(
     || previousEstimatedTax?.calculationMethod !== estimatedTaxSourcesChanged.calculationMethod
     || guidedSourceValuesChanged(previousEstimatedTax?.annualizedIncomePeriods, estimatedTaxSourcesChanged.annualizedIncomePeriods)
   );
-  const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : state.sectionData["income-investments"];
+  const previousInvestments = state.sectionData["income-investments"];
+  const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : previousInvestments;
   const digitalAssetHouseholdChanged = sourceValuesChanged && sectionId === "personal-info" && nextInvestments?.digitalAssetEntries?.length;
-  const marketDiscountInterestChanged = sectionId === "income-investments" && (guidedSourceValuesChanged(state.sectionData["income-investments"]?.interestEntries, nextInvestments?.interestEntries) || guidedSourceValuesChanged(state.sectionData["income-investments"]?.oidEntries, nextInvestments?.oidEntries));
+  const marketDiscountInterestChanged = sectionId === "income-investments" && (guidedSourceValuesChanged(previousInvestments?.interestEntries, nextInvestments?.interestEntries) || guidedSourceValuesChanged(previousInvestments?.oidEntries, nextInvestments?.oidEntries));
+  const previousDigitalAssets = previousInvestments?.digitalAssetEntries ?? [];
+  const digitalAssetSourcesToReview = sectionId === "income-investments" || digitalAssetHouseholdChanged
+    ? nextInvestments?.digitalAssetEntries?.map((entry, index) => {
+      let reviewed = entry;
+      if (digitalAssetHouseholdChanged) reviewed = invalidateDigitalAssetNoticeLots(entry);
+      else {
+        const previous = previousDigitalAssets.find(source => source.sourceId && source.sourceId === entry.sourceId) ?? previousDigitalAssets[index];
+        if (previous) reviewed = invalidateEditedDigitalAssetNoticeLots(previous, entry);
+      }
+      if (!digitalAssetHouseholdChanged && !marketDiscountInterestChanged) return reviewed;
+      return { ...reviewed, sourceFactsConfirmed: null,
+        transactions: reviewed.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) };
+    }) : undefined;
+  const digitalAssetSourcesChanged = digitalAssetSourcesToReview?.some((entry, index) => entry !== nextInvestments?.digitalAssetEntries?.[index]);
   const qofSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment"].includes(sectionId) && nextInvestments?.qofDispositionFacts;
   const capitalSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "income-royalties", "adjustments"].includes(sectionId) && nextInvestments?.scheduleDSources;
   const qsbsSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "income-royalties", "adjustments"].includes(sectionId) && nextInvestments?.section1202Sources;
@@ -2721,7 +2746,7 @@ export function updateSectionData(
       ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null, ...(estimatedTaxSourcesChanged.investmentElectionSources?.household ? { investmentElectionSources: { ...estimatedTaxSourcesChanged.investmentElectionSources, household: { ...estimatedTaxSourcesChanged.investmentElectionSources.household, sourceFactsConfirmed: null } } } : {}), ...(ordinaryPeriodsChanged ? { ordinaryPreferentialPeriodsConfirmed: null } : {}), ...(specialPeriodsChanged ? { specialRatePeriodsConfirmed: null } : {}) } } } : {}),
-      ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetHouseholdChanged || marketDiscountInterestChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null, ...(qofSourcesChanged.investments ? { investments: qofSourcesChanged.investments.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}) } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...((digitalAssetHouseholdChanged || marketDiscountInterestChanged) ? { digitalAssetEntries: nextInvestments.digitalAssetEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })) })) } : {}) } } : {}),
+      ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null, ...(qofSourcesChanged.investments ? { investments: qofSourcesChanged.investments.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}) } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(digitalAssetSourcesChanged ? { digitalAssetEntries: digitalAssetSourcesToReview } : {}) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...((qualifiedK3SourcesChanged || sectionId === "personal-info") && foreignTaxSourcesChanged.qualifiedK3Statements ? { qualifiedK3Statements: foreignTaxSourcesChanged.qualifiedK3Statements.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}), ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged.creditWithForm1116 ? { creditWithForm1116: { ...foreignTaxSourcesChanged.creditWithForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
       ...((tipSourcesChanged || schedule1AToReconfirm || rrtaParentChanged || rrtaTipChanged || rrtaFactsChanged || paperFactsChanged || unreportedWagesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...((nextRRTA&&(rrtaParentChanged||rrtaTipChanged||rrtaFactsChanged))?{rrtaPayrollSources:{...nextRRTA,sourceFactsConfirmed:null,...(nextPaper?{paperSources:{...nextPaper,sourceFactsConfirmed:null}}:{})}}:{}), ...((nextPaper&&paperFactsChanged&&!rrtaParentChanged&&!rrtaTipChanged&&!rrtaFactsChanged)?{rrtaPayrollSources:{...nextRRTA,paperSources:{...nextPaper,sourceFactsConfirmed:null}}}:{}), ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(schedule1AToReconfirm ? { schedule1A: schedule1AToReconfirm } : {}), ...(unreportedWagesChanged && nextUnreportedWages ? { form8919ReasonA: { ...nextUnreportedWages, confirmed: false } } : {}) } } : {}),
       ...((mortgageSourcesChanged || investmentInterestSourcesChanged || charitableCarryoverChanged || k1CharitableSourcesChanged || cryptoDonationsChanged || medicalMileageChanged) && nextDeductions ? { deductions: { ...nextDeductions,

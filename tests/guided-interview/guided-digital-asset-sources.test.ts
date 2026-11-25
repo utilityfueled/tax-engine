@@ -7,7 +7,7 @@ import { buildDigitalAssetInputs, digitalAssetFactErrors, updateDigitalAssetEntr
 import { buildTaxInputFromGuidedData, buildGuidedSyntheticDocuments, buildGuidedFactAnswers } from '@/lib/guided-interview-bridge';
 import { computeGuidedPreview } from '@/lib/guided-preview-compute';
 import { TaxYearInputSchema } from '@/models/inputs.js';
-import { initialFlowState, updateSectionData, type GuidedFlowState } from '@/lib/guided-interview-flow';
+import { initialFlowState, setInterviewTaxYear, updateSectionData, type GuidedFlowState } from '@/lib/guided-interview-flow';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { actualGuidedDigitalAsset } from '../fixtures/guided-digital-asset-sources';
 import { actualGuidedScheduleD } from '../fixtures/guided-schedule-d-sources';
@@ -21,6 +21,121 @@ function stateFor(entry = actualGuidedDigitalAsset()): GuidedFlowState {
     sectionData: { 'personal-info': completePersonalInfo, 'income-w2': { entries: [{ ...completeW2Entry, wages: '50000' }] },
       'income-investments': { interestEntries: [], dividendEntries: [], brokerageEntries: [], digitalAssetEntries: [entry] } } };
 }
+
+function documentedCorrection(): DigitalAssetEntryData {
+  const entry = { ...actualGuidedDigitalAsset(), taxYear: '2026' };
+  Object.assign(entry.transactions![0], {
+    basisReportedToIRS: true, noncoveredSecurity: false, customerProvidedAcquisitionInformation: false,
+    dateSold: '2026-06-01', reportedDateAcquired: '2026-02-01', reportedDateAcquiredBlank: false,
+    reportedCostBasis: '80.24', reportedCostBasisBlank: false, basisCorrectionConfirmed: true,
+    reportedHoldingPeriod: 'short', holdingPeriod: 'long',
+    notice202620Lot: {
+      lotId: 'Purchase lot L', sourceReference: 'Dated lot ledger', accountReference: entry.accountReference,
+      dateIdentified: '2026-05-31', quantity: '0.0010', sameAccountCustodyConfirmed: true,
+      disposedUnitsConfirmed: true, noConflictingBrokerInstructionConfirmed: true,
+      noTransitionalBasisDependencyConfirmed: true,
+    },
+  });
+  return entry;
+}
+
+it('binds a documented 2026 lot and preserves the broker-reported term', () => {
+  const correction = documentedCorrection();
+  const build = (entry: DigitalAssetEntryData, year = 2026) => buildDigitalAssetInputs([entry], 'single', year, completePersonalInfo)[0].transactions[0];
+  expect(build(correction)).toMatchObject({
+    reportedHoldingPeriod: 'short', holdingPeriod: 'long', reportedCostBasis: '80.24', costBasis: '90.24',
+    notice202620Lot: { lotId: 'Purchase lot L', sourceReference: 'Dated lot ledger', dateIdentified: '2026-05-31', quantity: '0.0010' },
+  });
+  const ordinary = actualGuidedDigitalAsset();
+  expect(build(ordinary, 2025).notice202620Lot).toBeUndefined();
+  ordinary.taxYear = '2026';
+  ordinary.transactions![0].dateAcquired = '2026-01-15';
+  ordinary.transactions![0].dateSold = '2026-06-01';
+  expect(build(ordinary).notice202620Lot).toBeUndefined();
+
+  for (const patch of [
+    { notice202620Lot: undefined }, { reportedHoldingPeriod: '' }, { basisCorrectionConfirmed: null },
+    ...[{ quantity: '0.0010000000000000000001' }, { dateIdentified: '2026-06-01' }, { dateIdentified: '2025-01-14' },
+      { accountReference: 'Another account' }, { sameAccountCustodyConfirmed: null }, { disposedUnitsConfirmed: false },
+      { noConflictingBrokerInstructionConfirmed: false }, { noTransitionalBasisDependencyConfirmed: null }]
+      .map(proof => ({ notice202620Lot: { ...correction.transactions![0].notice202620Lot, ...proof } })),
+  ]) {
+    const changed = structuredClone(correction);
+    Object.assign(changed.transactions![0], patch);
+    expect(() => build(changed)).toThrow();
+    expect(changed.transactions![0]).toMatchObject(patch);
+  }
+});
+
+it('retains lot values and invalidates confirmations after source and household edits', () => {
+  const entry = documentedCorrection(), row = entry.transactions![0], proof = row.notice202620Lot!;
+  const expectedProof = { ...proof, sameAccountCustodyConfirmed: null, disposedUnitsConfirmed: null,
+    noConflictingBrokerInstructionConfirmed: null, noTransitionalBasisDependencyConfirmed: null };
+  for (const patch of [{ costBasis: '91.24' }, { reportedHoldingPeriod: 'long' as const }, { notice202620Lot: { ...proof, lotId: 'Changed lot' } }]) {
+    const changed = updateDigitalAssetTransaction(row, patch);
+    expect(changed).toMatchObject({ basisFactsConfirmed: null, basisCorrectionConfirmed: null,
+      notice202620Lot: { ...expectedProof, lotId: patch.notice202620Lot?.lotId ?? proof.lotId } });
+    expect(updateDigitalAssetEntry(entry, { transactions: [changed] }).sourceFactsConfirmed).toBeNull();
+  }
+  for (const patch of [{ accountHolder: 'spouse' as const }, { taxYear: '2025' }, { accountReference: 'Changed statement account' }]) {
+    expect(updateDigitalAssetEntry(entry, patch)).toMatchObject({ ...patch, sourceFactsConfirmed: null,
+      transactions: [{ basisFactsConfirmed: null, notice202620Lot: expectedProof }] });
+  }
+  const state = { ...stateFor(entry), taxYear: 2026 };
+  const investment = state.sectionData['income-investments'];
+  const changedViaReducer = updateSectionData(state, 'income-investments', { ...investment!, digitalAssetEntries: [{ ...entry, accountHolder: 'spouse' }] });
+  const combinedUpdate = updateSectionData(state, 'income-investments', {
+    ...investment!, interestEntries: [{ payer: 'New statement', interestIncome: '10', federalWithheld: '0' }],
+    digitalAssetEntries: [{ ...entry, transactions: [{ ...row, proceeds: '101.49' }] }],
+  });
+  for (const next of [changedViaReducer, combinedUpdate, setInterviewTaxYear(state, 2025), updateSectionData(state, 'personal-info', { ...completePersonalInfo, lastName: 'Changed' })]) {
+    expect(next.sectionData['income-investments']?.digitalAssetEntries?.[0]).toMatchObject({ sourceFactsConfirmed: null,
+      transactions: [{ reportedHoldingPeriod: 'short', holdingPeriod: 'long', basisFactsConfirmed: null, notice202620Lot: expectedProof }] });
+  }
+  expect(combinedUpdate.sectionData['income-investments']?.digitalAssetEntries?.[0].transactions?.[0]?.proceeds).toBe('101.49');
+
+  const reset = updateDigitalAssetTransaction(row, { costBasis: '91.24' });
+  let reviewed = updateDigitalAssetEntry(entry, { transactions: [reset] });
+  for (const key of ['sameAccountCustodyConfirmed', 'disposedUnitsConfirmed', 'noConflictingBrokerInstructionConfirmed', 'noTransitionalBasisDependencyConfirmed'] as const) {
+    const current = reviewed.transactions![0];
+    reviewed = updateDigitalAssetEntry(reviewed, { transactions: [updateDigitalAssetTransaction(current,
+      { notice202620Lot: { ...current.notice202620Lot, [key]: true } })] });
+  }
+  const correctedBasis = updateDigitalAssetTransaction(reviewed.transactions![0], { basisCorrectionConfirmed: true });
+  const confirmedBasis = updateDigitalAssetTransaction(correctedBasis, { basisFactsConfirmed: true });
+  reviewed = updateDigitalAssetEntry(reviewed, { transactions: [confirmedBasis] });
+  const reconfirmed = updateDigitalAssetEntry(reviewed, { sourceFactsConfirmed: true });
+  expect(buildDigitalAssetInputs([reconfirmed], 'single', 2026, completePersonalInfo)[0].transactions[0]).toMatchObject({ costBasis: '91.24', notice202620Lot: proof });
+});
+
+it('requires fresh Pennsylvania basis confirmation after editing a term-only correction', () => {
+  const source = documentedCorrection(), row = source.transactions![0];
+  const paRow = { ...row, costBasis: row.reportedCostBasis, basisCorrectionConfirmed: undefined,
+    paCostBasis: '80.24', paBasisSourceReference: 'Separate PA ledger', paBasisFactsConfirmed: true, paTransactionForProfitConfirmed: true };
+  expect(updateDigitalAssetTransaction(paRow, { paCostBasis: '81.24' })).toMatchObject({ paCostBasis: '81.24', paBasisFactsConfirmed: null });
+  const entry = { ...source, transactions: [paRow] };
+  const state = { ...stateFor(entry), taxYear: 2026 };
+  const next = updateSectionData(state, 'income-investments', { ...state.sectionData['income-investments']!,
+    digitalAssetEntries: [{ ...entry, transactions: [{ ...paRow, paCostBasis: '81.24' }] }],
+  });
+  expect(next.sectionData['income-investments']?.digitalAssetEntries?.[0].transactions?.[0])
+    .toMatchObject({ paCostBasis: '81.24', paBasisFactsConfirmed: null });
+  for (const paCostBasis of ['82.24', paRow.paCostBasis]) {
+    const removed = updateSectionData(state, 'income-investments', { ...state.sectionData['income-investments']!,
+      digitalAssetEntries: [{ ...entry, transactions: [{
+        ...paRow, notice202620Lot: undefined, paCostBasis,
+        dateAcquired: paRow.reportedDateAcquired ?? '', holdingPeriod: 'short',
+      }] }],
+    });
+    const removedEntry = removed.sectionData['income-investments']?.digitalAssetEntries?.[0];
+    expect(removedEntry).toMatchObject({ sourceFactsConfirmed: null, transactions: [{
+      notice202620Lot: undefined, paCostBasis, paBasisFactsConfirmed: null, basisFactsConfirmed: null,
+    }] });
+  }
+  const confirmationEdit = updateDigitalAssetTransaction({ ...paRow, marketDiscountFacts: { sourceFactsConfirmed: true, originalValues: 'snapshot' } },
+    { notice202620Lot: { ...row.notice202620Lot, disposedUnitsConfirmed: null } });
+  expect(confirmationEdit).toMatchObject({ paBasisFactsConfirmed: true, marketDiscountFacts: { sourceFactsConfirmed: true, originalValues: 'snapshot' } });
+});
 it('binds original DA facts and exact taxpayer basis to the canonical return', () => {
   const entry = actualGuidedDigitalAsset();
   const forms = buildDigitalAssetInputs([entry], 'single', 2025, completePersonalInfo);

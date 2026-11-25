@@ -327,6 +327,18 @@ export const Section1202SourcesSchema = z.object({
 // ── Form 1099-DA: Digital Asset Proceeds from Broker Transactions ──
 // Original final-form boxes are separate from completed taxpayer basis records.
 // Legacy defaults retain historical arithmetic but never establish actual facts.
+export const Form1099DANotice202620LotSchema = z.object({
+  lotId: z.string().trim().min(1),
+  sourceReference: z.string().trim().min(1),
+  accountReference: z.string().trim().min(1),
+  dateIdentified: z.string(),
+  quantity: decimal,
+  sameAccountCustodyConfirmed: z.boolean(),
+  disposedUnitsConfirmed: z.boolean(),
+  noConflictingBrokerInstructionConfirmed: z.boolean(),
+  noTransitionalBasisDependencyConfirmed: z.boolean(),
+}).strict();
+
 export const Form1099DATransactionSchema = z.preprocess((value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const raw = value as Record<string, unknown>;
@@ -342,7 +354,9 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
   quantity: decimal.optional(), // Box1c.
   reportedDateAcquired: z.string().nullable().optional(), // Original Box1d; null means actually blank.
   reportedCostBasis: decimal.nullable().optional(), // Original Box1g; null means actually blank.
-  dateAcquired: z.string(), // Completed basis record date, independently supported when Box1d is blank.
+  reportedHoldingPeriod: z.enum(["short", "long"]).optional(), // Original Box6 capital gain/loss classification.
+  notice202620Lot: Form1099DANotice202620LotSchema.optional(),
+  dateAcquired: z.string(), // Completed basis record date, independently supported for a missing or corrected Box1d.
   dateSold: z.string(), // Box1e.
   proceeds: decimal, // Box1f.
   costBasis: decimal, // Actual completed taxpayer basis; never inferred from a blank Box1g.

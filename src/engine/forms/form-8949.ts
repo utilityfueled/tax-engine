@@ -11,6 +11,7 @@ import type { TaxYearInput, CapitalTransaction } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { sumSourceMoneyValues } from "@/utils/sum-source-money.js";
 import { calculateSection1202Sources, type Section1202SourceResult } from "./section-1202-sources.js";
 import { normalizeDigitalAssetCapitalInput } from './digital-asset-capital-input.js';
 import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
@@ -235,8 +236,20 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
     "Box A + Box B + Box C + Box G + Box H + Box I"
   );
 
-  const totalLongTermGainLoss = [longTermBoxD, longTermBoxE, longTermBoxF, longTermBoxJ, longTermBoxK, longTermBoxL]
+  const longTermBoxes = [longTermBoxD, longTermBoxE, longTermBoxF, longTermBoxJ, longTermBoxK, longTermBoxL];
+  const totalLongTermGainLoss = longTermBoxes
     .reduce((total, category) => total.plus(category.totalGainLoss), new Decimal(0));
+  // The canonical source adapter is the only path that supplies these Box J codes in 2026.
+  // A row-level precision check cannot catch rounding when combining accepted rows.
+  if (input.taxpayer.taxYear === 2026 && transactions.J.some(row => row.adjustmentCode === 'T' || row.adjustmentCode === 'BT')) {
+    if (!longTermBoxJ.totalProceeds.eq(sumSourceMoneyValues(transactions.J.map(row => row.proceeds)))
+      || !longTermBoxJ.totalCostBasis.eq(sumSourceMoneyValues(transactions.J.map(row => row.costBasis)))
+      || !longTermBoxJ.totalAdjustments.eq(sumSourceMoneyValues(transactions.J.map(row => row.adjustment)))
+      || !longTermBoxJ.totalGainLoss.eq(sumSourceMoneyValues(transactions.J.map(row => row.gainLoss)))
+      || !totalLongTermGainLoss.eq(sumSourceMoneyValues(longTermBoxes.flatMap(category => category.transactions.map(row => row.gainLoss))))) {
+      throw new Error('Notice 2026-20 lot correction cannot preserve exact Form 8949 totals.');
+    }
+  }
   audit.record(
     "Form 8949",
     "Part II totals",

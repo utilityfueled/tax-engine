@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import type { Form1099B, Form1099DA, TaxYearInput } from '@/models/inputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { calculateForm1099DAMarketDiscount } from './form-1099-da-market-discount.js';
 
 type DigitalSourceInput = Pick<TaxYearInput, 'form1099DA'> & Partial<Pick<TaxYearInput, 'cryptoIncome' | 'form1099Int' | 'form1099OID'>> & {
@@ -52,9 +53,50 @@ function actualDate(value: string, label: string): string {
   return value;
 }
 
+function purchaseHoldingPeriod(acquired: string, sold: string): 'short' | 'long' {
+  const anniversary = `${Number(acquired.slice(0, 4)) + 1}${acquired.slice(4)}`;
+  return sold > anniversary ? 'long' : 'short';
+}
+
+// Notice 2026-20 §§4.02–.05. This source method accepts a named lot recorded
+// before the sale's calendar day; a same-day record needs separate time proof.
+function notice202620LotEvidence(form: Form1099DA, row: Form1099DA['transactions'][number], facts: {
+  acquired: string; sold: string; quantity: Decimal; basis: Decimal; proceeds: Decimal; reportedBasis?: Decimal;
+}) {
+  const proof = row.notice202620Lot;
+  if (!proof) return undefined;
+  const { acquired, sold, quantity, basis, proceeds, reportedBasis } = facts;
+  if (form.taxYear !== 2026 || row.assetOrigin !== 'purchase' || row.transactionType !== 'sale'
+    || row.noncoveredSecurity !== false || !row.basisReportedToIRS || row.basisSource !== 'taxpayer_records'
+    || !row.reportedDateAcquired?.startsWith('2026-') || !reportedBasis?.gt(0)
+    || row.reportedHoldingPeriod !== 'short' || row.holdingPeriod !== 'long' || !basis.gt(0) || !proceeds.gt(0)) {
+    throw new Error('Notice 2026-20 lot correction requires a covered 2026 purchase and sale on the original short-term statement, long-term taxpayer records, and positive original amounts and taxpayer basis.');
+  }
+  const reportedAcquired = actualDate(row.reportedDateAcquired, 'original Box 1d acquisition');
+  const identified = actualDate(proof.dateIdentified, 'Notice 2026-20 identification');
+  if (reportedAcquired > sold || identified < '2025-01-01' || identified < acquired || identified >= sold) {
+    throw new Error('Notice 2026-20 lot correction requires consistent original dates and identification in the relief period before the sale date.');
+  }
+  if (!proof.lotId.trim() || !proof.sourceReference.trim() || !proof.accountReference.trim()
+    || proof.accountReference.trim() !== form.accountReference?.trim() || !amount(proof.quantity, 'identified units').eq(quantity)
+    || proof.sameAccountCustodyConfirmed !== true || proof.disposedUnitsConfirmed !== true
+    || proof.noConflictingBrokerInstructionConfirmed !== true || proof.noTransitionalBasisDependencyConfirmed !== true) {
+    throw new Error('Notice 2026-20 lot correction requires confirmed records for the same broker-custody account and exact sold units, without conflicting instructions or transitional basis dependency.');
+  }
+  const tin = form.brokerTin?.replace(/[-\s]/g, '') ?? '';
+  return {
+    key: JSON.stringify([proof.accountReference.trim(), row.digitalAssetCode?.trim().toUpperCase(), proof.lotId.trim()]),
+    brokerTin: /^\d{9}$/.test(tin) && tin !== '000000000' ? tin : null,
+    reportedBasis,
+    auditInputs: { dateIdentified: identified, reportedDateAcquired: reportedAcquired,
+      reportedCostBasis: reportedBasis.toFixed(), reportedHoldingPeriod: row.reportedHoldingPeriod,
+      dateAcquired: acquired, holdingPeriod: row.holdingPeriod },
+  };
+}
+
 function isActualSource(form: Form1099DA, year: number): boolean {
   const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference', 'stateWithholding', 'stateIdentificationNumber'] as const;
-  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSource',
+  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'reportedHoldingPeriod', 'notice202620Lot', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSource',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
     'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
     'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed', 'securityIdentifier', 'marketDiscountSource'] as const;
@@ -68,6 +110,7 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
   const capitalForms: Form1099B[] = [];
   const marketDiscountSources: Array<{ statementIndex: number; transactionIndex: number; owner: 'primary' | 'spouse'; interest: Decimal }> = [];
   const marketDiscountDispositions = new Set<string>();
+  const usedCustodyLots = new Map<string, Set<string | null>>();
   const identifiers = new Set<string>(), receiptUnits = new Map<object, Decimal>();
   const existing = new Set(input.form1099B.flatMap(form => form.sourceId?.trim() ? [form.sourceId.trim()] : []));
   let federalWithheld = d(0);
@@ -115,10 +158,9 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         const proceeds = amount(row.proceeds, 'proceeds');
         const acquired = actualDate(row.dateAcquired, 'completed acquisition'), sold = actualDate(row.dateSold, 'sale');
         if (!sold.startsWith(`${input.taxpayer.taxYear}-`) || acquired > sold) throw new Error('Form1099DA actual dates do not match the return year or holding period.');
-        const anniversary = `${Number(acquired.slice(0, 4)) + 1}${acquired.slice(4)}`;
         // IRC1223(9): property from a decedent is long-term whatever the dates show.
         const inherited = row.assetOrigin === 'inheritance';
-        if (inherited ? row.holdingPeriod !== 'long' : row.holdingPeriod !== (sold > anniversary ? 'long' : 'short')) throw new Error('Form1099DA holding period conflicts with the actual purchase and sale dates.');
+        if (row.holdingPeriod !== (inherited ? 'long' : purchaseHoldingPeriod(acquired, sold))) throw new Error('Form1099DA holding period conflicts with the actual purchase and sale dates.');
         if (row.assetOrigin === 'gift') {
           const gift = row.giftSource;
           if (gift?.sourceFactsConfirmed !== true || typeof gift.fromSpouse !== 'boolean') throw new Error('Form1099DA gift requires confirmed donor basis, value and date records.');
@@ -144,8 +186,10 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
           if (!receipt) throw new Error('Form1099DA lot received in the return year needs that income on this return.');
           receiptUnits.set(receipt, units(receipt));
         }
-        if (row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
         const reportedBasis = row.reportedCostBasis === null ? undefined : amount(row.reportedCostBasis, 'reported Box1g basis');
+        const noticeLot = notice202620LotEvidence(form, row, { acquired, sold, quantity, basis, proceeds, reportedBasis });
+        if (!noticeLot && row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
+        if (!noticeLot && row.reportedHoldingPeriod !== undefined && row.reportedHoldingPeriod !== row.holdingPeriod) throw new Error('Original Form1099DA holding period correction requires its separate supported source method.');
         const basisCorrected = reportedBasis !== undefined && !reportedBasis.eq(basis);
         if (basisCorrected && (row.basisSource !== 'taxpayer_records' || row.basisCorrectionConfirmed !== true)) {
           throw new Error('Original Form1099DA basis correction requires confirmed taxpayer basis records.');
@@ -179,9 +223,31 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         // basis in column e only when the box reports it to the IRS; column g corrects it.
         const reportedColumn = basisCorrected && row.basisReportedToIRS ? reportedBasis : undefined;
         if (reportedColumn) costBasis = reportedColumn.toFixed();
-        rowAdjustment = (reportedColumn?.minus(basis) ?? new Decimal(0)).minus(sellingExpenses).minus(marketDiscount?.interest ?? 0).toFixed();
-        adjustmentCodes = `${basisCorrected ? 'B' : ''}${sellingExpenses.gt(0) ? 'E' : ''}${marketDiscount?.interest.gt(0) ? 'D' : ''}` || undefined;
-        if (row.gainOrLoss !== undefined && !d(row.gainOrLoss).eq(proceeds.minus(reportedBasis ?? basis).plus(wash))) throw new Error('Form1099DA statement gain conflicts with its actual proceeds, basis and wash adjustment.');
+        const adjustment = (reportedColumn?.minus(basis) ?? new Decimal(0)).minus(sellingExpenses).minus(marketDiscount?.interest ?? 0);
+        if (noticeLot) {
+          if (row.washSale || sellingExpenses.gt(0) || marketDiscount) throw new Error('Notice 2026-20 lot correction with other adjustments requires a separate source method.');
+          const { brokerTin, key, reportedBasis } = noticeLot;
+          const previousBrokers = usedCustodyLots.get(key) ?? new Set<string | null>();
+          if (previousBrokers.has(brokerTin) || previousBrokers.has(null) || (brokerTin === null && previousBrokers.size > 0)) {
+            throw new Error('Notice 2026-20 lot correction can use a named lot for the same broker account and asset only once.');
+          }
+          previousBrokers.add(brokerTin);
+          usedCustodyLots.set(key, previousBrokers);
+          // Mirror Form8949's row reconstruction and the individual source additions to its totals.
+          if (!proceeds.plus(0).eq(proceeds) || !reportedBasis.plus(0).eq(reportedBasis)
+            || !adjustment.eq(sumSourceMoney(reportedBasis, basis.negated()))
+            || !proceeds.minus(reportedBasis).plus(adjustment).eq(sumSourceMoney(proceeds, basis.negated()))) {
+            throw new Error('Notice 2026-20 lot correction cannot preserve exact source amounts on Form 8949.');
+          }
+          audit.record('Form1099DA', `lot-correction:${formIndex}:${transactionIndex}`, 'Actual basis from the identified broker-custody lot', basis,
+            'Notice 2026-20 uses the timely lot on the taxpayer books; Form8949 uses its term and preserves reported basis', noticeLot.auditInputs);
+        }
+        rowAdjustment = adjustment.toFixed();
+        adjustmentCodes = `${basisCorrected ? 'B' : ''}${sellingExpenses.gt(0) ? 'E' : ''}${marketDiscount?.interest.gt(0) ? 'D' : ''}${noticeLot ? 'T' : ''}` || undefined;
+        if (row.gainOrLoss !== undefined) {
+          const originalGain = noticeLot ? sumSourceMoney(proceeds, noticeLot.reportedBasis.negated()) : proceeds.minus(reportedBasis ?? basis).plus(wash);
+          if (!d(row.gainOrLoss).eq(originalGain)) throw new Error('Form1099DA statement gain conflicts with its actual proceeds, basis and wash adjustment.');
+        }
       } else {
         const matched = options.resolvedLegacyBasis?.get(`${description} via ${form.brokerName}|${row.dateSold}`);
         if (matched) { costBasis = matched.costBasis.toFixed(); dateAcquired = matched.dateAcquired; }

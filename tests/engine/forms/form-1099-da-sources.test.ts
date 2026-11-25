@@ -231,6 +231,148 @@ it('corrects differing broker basis with code B', () => {
   expect(() => calculateForm8949(corrected({ gainOrLoss: '4000' }))).toThrow(/statement gain/);
 });
 
+const notice202620 = (rowPatch: Record<string, unknown> = {}, proofPatch: Record<string, unknown> = {},
+  statementPatch: Record<string, unknown> = {}, taxYear = 2026) => {
+  const form = fixture();
+  Object.assign(form, { taxYear, ...statementPatch });
+  Object.assign(form.transactions[0], {
+    dateAcquired: '2025-01-15', dateSold: '2026-06-01', holdingPeriod: 'long', costBasis: '6000', proceeds: '10000',
+    reportedDateAcquired: '2026-01-15', reportedCostBasis: '9000', reportedHoldingPeriod: 'short',
+    basisReportedToIRS: true, noncoveredSecurity: false, basisCorrectionConfirmed: true,
+    notice202620Lot: {
+      lotId: 'Purchased lot A', sourceReference: 'Disposition instruction recorded in customer ledger',
+      accountReference: 'Actual account A', dateIdentified: '2026-05-31', quantity: '0.0010',
+      sameAccountCustodyConfirmed: true, disposedUnitsConfirmed: true, noConflictingBrokerInstructionConfirmed: true,
+      noTransitionalBasisDependencyConfirmed: true, ...proofPatch,
+    },
+    ...rowPatch,
+  });
+  return TaxYearInputSchema.parse({ ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear }, form1099DA: [form] });
+};
+
+it('corrects 2026 broker basis and term from a timely named customer lot', () => {
+  const source = notice202620({ gainOrLoss: '1000' });
+  const original = structuredClone(source);
+  const reporting = calculateForm8949(source);
+  const [correctedRow] = reporting.longTermBoxJ.transactions;
+  expect(reporting.shortTermBoxG.transactions).toHaveLength(0);
+  expect(correctedRow).toMatchObject({ dateAcquired: '2025-01-15', adjustmentCode: 'BT' });
+  expect([correctedRow.costBasis, correctedRow.adjustment, correctedRow.gainLoss].map(value => value.toFixed())).toEqual(['9000', '3000', '4000']);
+  expect(reporting.totalLongTermGainLoss.toFixed()).toBe('4000');
+  expect(reporting.totalShortTermGainLoss.toFixed()).toBe('0');
+  const sourceResult = calculateForm1099DASources(source);
+  expect(sourceResult.lines.find(line => line.line === 'capital:0:0')?.value.toFixed()).toBe('4000');
+  expect(sourceResult.lines.find(line => line.line === 'lot-correction:0:0')?.inputs).toEqual({
+    dateIdentified: '2026-05-31',
+    reportedDateAcquired: '2026-01-15', reportedCostBasis: '9000', reportedHoldingPeriod: 'short', dateAcquired: '2025-01-15', holdingPeriod: 'long',
+  });
+  expect(() => calculateForm8949(notice202620({ gainOrLoss: '4000' }))).toThrow(/statement gain/);
+  expect(source).toEqual(original);
+  expect(source.form1099DA[0].transactions[0]).toMatchObject({ reportedDateAcquired: '2026-01-15', reportedCostBasis: '9000', reportedHoldingPeriod: 'short' });
+  expect(FEDERAL_RULE_PACKS[2026].filingQualified).toBe(false);
+  expect(FEDERAL_RULE_PACKS[2026].calculationStatus).toBe('incomplete');
+  expect(() => calculateFederalTax(source)).toThrow(/2026 rule pack.*incomplete/);
+});
+
+it('reports an equal-basis 2026 broker term correction with code T alone', () => {
+  const source = notice202620({
+    costBasis: '9000.03', proceeds: '10000.04', reportedCostBasis: '9000.03', basisCorrectionConfirmed: undefined,
+  });
+  const [correctedRow] = calculateForm8949(source).longTermBoxJ.transactions;
+  expect(correctedRow).toMatchObject({ dateAcquired: '2025-01-15', adjustmentCode: 'T' });
+  expect([correctedRow.adjustment, correctedRow.gainLoss].map(value => value.toFixed())).toEqual(['0', '1000.01']);
+});
+
+it('holds 2026 broker lot corrections until the dates, units, statement and custody proof agree', () => {
+  for (const proof of [
+    { lotId: ' ' }, { sourceReference: '' }, { accountReference: 'different account' },
+    { dateIdentified: '2026-06-01' }, { dateIdentified: '2026-06-02' }, { dateIdentified: '2026-05-32' },
+    { dateIdentified: '2024-12-31' }, { dateIdentified: '2025-01-14' },
+    { quantity: '0.0009' }, { quantity: '0' }, { sameAccountCustodyConfirmed: false }, { disposedUnitsConfirmed: false },
+    { noConflictingBrokerInstructionConfirmed: false }, { noTransitionalBasisDependencyConfirmed: false }, { standingOrder: true },
+  ]) expect(() => calculateForm8949(notice202620({}, proof))).toThrow();
+  for (const patch of [
+    { notice202620Lot: undefined }, { reportedHoldingPeriod: undefined }, { reportedHoldingPeriod: 'long' },
+    { reportedDateAcquired: null }, { reportedDateAcquired: '2025-01-15' }, { reportedDateAcquired: '2026-02-30' },
+    { reportedCostBasis: null }, { reportedCostBasis: '0' }, { costBasis: '0' }, { proceeds: '0' },
+    { basisFactsConfirmed: false }, { basisCorrectionConfirmed: false }, { basisSource: 'broker_statement' },
+    { noncoveredSecurity: true }, { basisReportedToIRS: false }, { transactionType: 'exchange' },
+    { sellingExpenses: '1', sellingCostsNotInProceedsConfirmed: true }, { washSale: true, washSaleDisallowed: '0' },
+    { reportedDateAcquired: '2025-01-15', notice202620Lot: undefined },
+    { reportedDateAcquired: '2025-09-15' },
+    { dateAcquired: '2026-01-15', holdingPeriod: 'short', reportedDateAcquired: '2025-01-15', reportedHoldingPeriod: 'long' },
+  ]) expect(() => calculateForm8949(notice202620(patch))).toThrow();
+  expect(() => calculateForm8949(notice202620({}, {}, { accountReference: undefined }))).toThrow();
+  expect(() => calculateForm8949(notice202620({ dateSold: '2025-12-31', holdingPeriod: 'short',
+    dateAcquired: '2025-01-15', reportedDateAcquired: '2024-01-15', reportedHoldingPeriod: 'long' },
+  { dateIdentified: '2025-12-29' }, {}, 2025))).toThrow();
+});
+
+it('holds repeated use of a 2026 named lot for the same broker account and asset', () => {
+  const source = notice202620();
+  const [first] = source.form1099DA;
+  const withSecond = (rowPatch: Record<string, unknown> = {}, proofPatch: Record<string, unknown> = {},
+    statementPatch: Record<string, unknown> = {}, firstPatch: Record<string, unknown> = {}) => {
+    const replacement = notice202620({ sourceId: 'Original second disposition', dateSold: '2026-06-02', ...rowPatch },
+      proofPatch, { sourceId: 'Actual DA statement B', ...statementPatch });
+    return { ...source, form1099DA: [{ ...first, ...firstPatch }, ...replacement.form1099DA] };
+  };
+  const aliases = { brokerName: 'Actual digital broker, LLC', brokerTin: '123456789' };
+  for (const duplicate of [
+    withSecond(), withSecond({}, {}, aliases),
+    withSecond({}, {}, { ...aliases, brokerTin: undefined }),
+    withSecond({}, {}, { ...aliases, brokerTin: '12-345X789' }),
+    withSecond({}, {}, aliases, { brokerTin: undefined }),
+    withSecond({}, {}, { ...aliases, brokerTin: undefined }, { brokerTin: undefined }),
+  ]) expect(() => calculateForm8949(duplicate)).toThrow(/named lot.*once/);
+  const distinctLot = withSecond({}, { lotId: 'Purchased lot B' });
+  const distinctAsset = withSecond({ digitalAssetName: 'Ether', digitalAssetCode: 'ACTUAL-ETH', ticker: 'ETH' });
+  const distinctAccount = withSecond({}, { accountReference: 'Actual account B' }, { accountReference: 'Actual account B' });
+  const distinctBroker = withSecond({}, {}, { ...aliases, brokerTin: '98-7654321' });
+  for (const independent of [distinctLot, distinctAsset, distinctAccount, distinctBroker]) {
+    expect(calculateForm8949(independent).totalLongTermGainLoss.toFixed()).toBe('8000');
+  }
+});
+
+it('holds a 2026 lot correction when Form 8949 arithmetic would lose source cents', () => {
+  const amounts = { proceeds: '1000.19', costBasis: '500.10' };
+  const supported = notice202620({ ...amounts, reportedCostBasis: '1000000000000000.03', gainOrLoss: '-999999999998999.84' });
+  const [correctedRow] = calculateForm8949(supported).longTermBoxJ.transactions;
+  expect([correctedRow.costBasis, correctedRow.adjustment, correctedRow.gainLoss].map(value => value.toFixed()))
+    .toEqual(['1000000000000000.03', '999999999999499.93', '500.09']);
+  const inexact = notice202620({ ...amounts, reportedCostBasis: '100000000000000000000.03' });
+  expect(() => calculateForm8949(inexact)).toThrow(/preserve exact source amounts/);
+});
+
+it('holds imprecise 2026 Form 8949 totals that include exact lot corrections', () => {
+  const amounts = { proceeds: '1000.19', costBasis: '500.10' };
+  const forBasis = (reportedCostBasis: string) => {
+    const first = notice202620({ ...amounts, reportedCostBasis });
+    const second = notice202620({ ...amounts, reportedCostBasis }, { lotId: 'Purchased lot B' }, { sourceId: 'Actual DA statement B' });
+    for (const individual of [first, second]) expect(calculateForm8949(individual).totalLongTermGainLoss.toFixed()).toBe('500.09');
+    return { ...first, form1099DA: [...first.form1099DA, ...second.form1099DA] };
+  };
+  expect(() => calculateForm8949(forBasis('999999999999999999.99'))).toThrow(/preserve exact Form 8949 totals/);
+  const withOrdinary = (proceeds: string) => TaxYearInputSchema.parse({ ...forBasis('900.03'), form1099B: [{ broker: 'Ordinary broker',
+    transactions: [{ description: 'Ordinary reported stock sale', dateAcquired: '2024-01-15', dateSold: '2026-06-01', proceeds,
+      costBasis: '0', basisReportedToIRS: true, holdingPeriod: 'long' }],
+  }] });
+  expect(calculateForm8949(withOrdinary('1000000000000000')).totalLongTermGainLoss.toFixed()).toBe('1000000000001000.18');
+  const mixed = withOrdinary('100000000000000000000');
+  expect(() => calculateForm8949(mixed)).toThrow(/preserve exact Form 8949 totals/);
+  expect(calculateForm8949({ ...mixed, form1099DA: [] }).totalLongTermGainLoss.toFixed()).toBe('100000000000000000000');
+});
+
+it('checks exact 2026 Form 8949 totals with 130000 ordinary rows and a lot correction', () => {
+  const ordinary = { description: 'Ordinary reported stock sale', dateAcquired: '2024-01-15', dateSold: '2026-06-01',
+    proceeds: '0.01', costBasis: '0', basisReportedToIRS: true, holdingPeriod: 'long' };
+  const mixed = TaxYearInputSchema.parse({ ...notice202620(), form1099B: [{ broker: 'Ordinary broker',
+    transactions: Array.from({ length: 130_000 }, () => ordinary),
+  }] });
+  expect(calculateForm8949({ ...mixed, form1099DA: [] }).totalLongTermGainLoss.toFixed()).toBe('1300');
+  expect(calculateForm8949(mixed).totalLongTermGainLoss.toFixed()).toBe('5300');
+}, 20_000);
+
 it('reduces gain for costs not on the form with code E', () => {
   const both = row(corrected({ sellingExpenses: '25', sellingCostsNotInProceedsConfirmed: true }))!;
   expect([both.adjustmentCode, both.adjustment.toFixed(), both.gainLoss.toFixed()]).toEqual(['BE', '2975', '3975']);

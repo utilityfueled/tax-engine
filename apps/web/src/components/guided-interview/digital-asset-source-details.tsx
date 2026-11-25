@@ -1,12 +1,31 @@
 "use client";
 import { MarketDiscountSourceDetails } from "./market-discount-source-details";
 import { marketDiscountConfirmationCurrent, type MarketDiscountContext } from "@/lib/guided-market-discount-sources";
-import { digitalAmountFields, digitalBooleanFields, updateDigitalAssetEntry, updateDigitalAssetTransaction, type DigitalAssetEntryData, type DigitalAssetTransactionData } from '@/lib/guided-digital-asset-facts';
+import { digitalAmountFields, digitalBooleanFields, updateDigitalAssetEntry, updateDigitalAssetTransaction, type DigitalAssetEntryData, type DigitalAssetNoticeLotDraft, type DigitalAssetTransactionData } from '@/lib/guided-digital-asset-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
 function Choice({ label, value, options, onChange }: { label: string; value: string | undefined; options: ReadonlyArray<readonly [string, string]>; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(event.target.value)}><option value="">Confirm from actual records</option>{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>;
+}
+function NoticeLotDetails({ row, prefix, onChange }: { row: DigitalAssetTransactionData; prefix: string; onChange: (patch: Partial<DigitalAssetTransactionData>) => void }) {
+  const proof = row.notice202620Lot ?? {};
+  const update = (patch: Partial<DigitalAssetNoticeLotDraft>) => onChange({ notice202620Lot: { ...proof, ...patch } });
+  return <fieldset className="guided-w2-card"><legend>{prefix} — Documented lot identification</legend>
+    <p className="guided-hint">This worksheet supports a covered 2026 sale that the broker classified as short term and your purchase records show was long term. Use the dated record that identifies this exact lot before the calendar date of the sale. Use references you recognize without entering full account numbers.</p>
+    <div className="guided-form-grid">
+      <TextFact label={`${prefix} — Identified lot ID`} value={proof.lotId ?? ''} onChange={lotId => update({ lotId })} />
+      <TextFact label={`${prefix} — Lot identification record reference`} value={proof.sourceReference ?? ''} onChange={sourceReference => update({ sourceReference })} />
+      <TextFact label={`${prefix} — Account reference in lot records`} value={proof.accountReference ?? ''} onChange={accountReference => update({ accountReference })} />
+      <TextFact label={`${prefix} — Date the lot was identified in your records`} type="date" value={proof.dateIdentified ?? ''} onChange={dateIdentified => update({ dateIdentified })} />
+      <TextFact label={`${prefix} — Units identified in your records`} value={proof.quantity ?? ''} onChange={quantity => update({ quantity })} />
+      <BooleanFact label={`${prefix} — The same asset and lot stayed in this broker account from purchase through sale`} value={proof.sameAccountCustodyConfirmed} onChange={sameAccountCustodyConfirmed => update({ sameAccountCustodyConfirmed })} />
+      <BooleanFact label={`${prefix} — The identified units match all units sold on this row`} value={proof.disposedUnitsConfirmed} onChange={disposedUnitsConfirmed => update({ disposedUnitsConfirmed })} />
+      <BooleanFact label={`${prefix} — No conflicting lot instruction was given to the broker`} value={proof.noConflictingBrokerInstructionConfirmed} onChange={noConflictingBrokerInstructionConfirmed => update({ noConflictingBrokerInstructionConfirmed })} />
+      <BooleanFact label={`${prefix} — The lot basis does not depend on the Rev. Proc. 2024-28 transition`} value={proof.noTransitionalBasisDependencyConfirmed} onChange={noTransitionalBasisDependencyConfirmed => update({ noTransitionalBasisDependencyConfirmed })} />
+    </div>
+    {row.notice202620Lot && <button type="button" className="utility-button utility-button-small" onClick={() => onChange({ notice202620Lot: undefined })}>Remove lot evidence from {prefix}</button>}
+  </fieldset>;
 }
 function Disposition({ entry, context, row, prefix, stateCode, onChange, onRemove }: { entry: DigitalAssetEntryData; context: MarketDiscountContext; row: DigitalAssetTransactionData; prefix: string; stateCode?: string | null; onChange: (patch: Partial<DigitalAssetTransactionData>) => void; onRemove: () => void }) {
   return <fieldset className="guided-w2-card"><legend>{prefix} — original disposition</legend>
@@ -18,6 +37,7 @@ function Disposition({ entry, context, row, prefix, stateCode, onChange, onRemov
       <TextFact label={`${prefix} — Original Box 1d acquisition date`} type="date" value={row.reportedDateAcquired ?? ''} onChange={reportedDateAcquired => onChange({ reportedDateAcquired })} />
       <BooleanFact label={`${prefix} — Original Box 1g is blank`} value={row.reportedCostBasisBlank} onChange={reportedCostBasisBlank => onChange({ reportedCostBasisBlank })} />
       <CurrencyField label={`${prefix} — Original Box 1g reported basis`} value={row.reportedCostBasis ?? ''} onChange={reportedCostBasis => onChange({ reportedCostBasis })} />
+      {(entry.taxYear === '2026' || row.reportedHoldingPeriod || row.notice202620Lot) && <Choice label={`${prefix} — Original Box 6 holding period`} value={row.reportedHoldingPeriod} options={[['short', 'Short term'], ['long', 'Long term']]} onChange={value => onChange({ reportedHoldingPeriod: value as DigitalAssetTransactionData['reportedHoldingPeriod'] })} />}
       {digitalAmountFields.map(([key, label]) => <CurrencyField key={key} label={`${prefix} — ${label}`} value={row[key] ?? ''} allowNegative={key === 'adjustments'} onChange={value => onChange({ [key]: value })} />)}
       <CurrencyField label={`${prefix} — Signed statement gain or loss, if shown`} value={row.gainOrLoss ?? ''} allowNegative onChange={gainOrLoss => onChange({ gainOrLoss })} />
       <TextFact label={`${prefix} — Completed acquisition date`} type="date" value={row.dateAcquired ?? ''} onChange={dateAcquired => onChange({ dateAcquired })} />
@@ -44,6 +64,7 @@ function Disposition({ entry, context, row, prefix, stateCode, onChange, onRemov
     <details className="guided-expand"><summary className="guided-expand-trigger">{prefix} — source classifications</summary><div className="guided-expand-body guided-form-grid">
       {digitalBooleanFields.map(([key, label]) => <BooleanFact key={key} label={`${prefix} — ${label}`} value={row[key]} onChange={value => onChange({ [key]: value })} />)}
     </div></details>
+    {(row.notice202620Lot || row.reportedHoldingPeriod && row.holdingPeriod && row.reportedHoldingPeriod !== row.holdingPeriod) && <NoticeLotDetails row={row} prefix={prefix} onChange={onChange} />}
     {(row.assetOrigin && row.assetOrigin !== 'purchase' && !(['mining', 'staking', 'airdrop'].includes(row.assetOrigin) && row.originIncomeIncludedConfirmed === true) && !(row.assetOrigin === 'inheritance' && row.inheritedBasisConfirmed === true) && !(row.assetOrigin === 'gift' && row.giftSourceConfirmed === true) || row.nftOrCollectible || row.qof || (row.ordinaryIncome && !marketDiscountConfirmationCurrent(entry, row, context)) || row.lossNotAllowed || row.optionalReportingMethod && row.optionalReportingMethod !== 'none') && <p role="status" className="guided-hint">These actual answers are saved. This source needs its separate acquisition, special-tax or aggregate reporting method before a preview is available.</p>}
     <MarketDiscountSourceDetails entry={entry} row={row} context={context} prefix={prefix} onChange={onChange} />
     {stateCode === 'PA' && <fieldset className="guided-w2-card"><legend>{prefix} — Pennsylvania source records</legend>
