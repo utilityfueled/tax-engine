@@ -2,13 +2,14 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "8f45074d04c66bea95613b9699a9f905989e32bd",
+    "applicationCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "verificationCommit": "9dac7cb0e09299362761786c16a761bcb8157818",
-    "generatedInventoryCommit": "8f45074d04c66bea95613b9699a9f905989e32bd",
+    "generatedInventoryCommit": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "investmentStatementEvidenceKey": "activeContinuation.nov25InvestmentStatementReconciliation",
     "pendingOhioResultEvidenceKey": "activeContinuation.nov25OhioPendingOwnedResultComparison",
     "ohioCertifiedJobsCreditEvidenceKey": "activeContinuation.nov25OhioCertifiedRefundableJobsCredit",
+    "ohioTraditionalSchoolEvidenceKey": "activeContinuation.nov25OhioTraditionalSchoolDraft",
     "browserTimingCorrectionCommit": "8fa8ab22",
     "runtimeImageCommit": "924c3545980e9dfe663d179af5f538d614f00be6",
     "statusDocument": "docs/upgrade-2026-current-status.md",
@@ -51,7 +52,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Collect exact 8f45074d combined checks, CI 45526119746 and Linux Web 45526119691. Observe 5bbc0504 Ohio timing in exact ARM64 rehearsal 45523084019. The 9dac7cb0 exact local checks passed and the remote Linux results are still pending.",
+      "Collect exact 3a9f8d24 combined checks, CI 45527715373 and Linux Web 45527715370. Observe earlier exact 8f45074d checks and 5bbc0504 timing in ARM64 45523084019. The 9dac7cb0 exact local checks passed and the remote Linux results are still pending.",
       "Qualify managed Linux and the strict AMD64 and ARM64 runtimes. Exact 03f367de passed all eleven local checks. Web 45504699771 managed Linux passed 650 cases with two RRTA saved-PDF deadlines. Strict AMD64 passed 639 cases with eleven Ohio journey deadlines and two RRTA saved-PDF deadlines. ARM64 45503211576 on d316004f passed 642 cases with ten Ohio journey deadlines. Native recovery and independent archive verification passed on both architectures.",
       "Obtain qualified independent tax interpretation and expected outputs, including Sections 443, 172/1202 and 68/8960, and qualify the applicable final federal, Pennsylvania and Ohio forms.",
       "Obtain independent AI evaluation review and comparable provider results before any promotion.",
@@ -60,6 +61,25 @@
     ]
   },
   "activeContinuation": {
+    "nov25OhioTraditionalSchoolDraft": {
+      "revision": "3a9f8d2442143317694415b08d4f82ab2def5ec6",
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026",
+      "confirmedExemptions": {"tiersUsd": ["2400", "2150", "1900"], "firstMaximumMagiInclusive": "40000", "secondMaximumMagiInclusive": "80000", "eligibilityMagiLimitExclusive": "500000"},
+      "initialFailures": 3,
+      "focusedTestsPassed": 213,
+      "independentFocusedTestsPassed": 175,
+      "specReferencesPassed": 10053,
+      "scopedLintPassed": true,
+      "typecheckPassed": true,
+      "browserSourceAuditPassed": true,
+      "inventoryChecked": "generated partial, with packet and e-file unavailable",
+      "filingQualified": false,
+      "localExactChecks": "Queued after earlier local browser checks. All 6697 tracked blobs and 15 PDF samples verified.",
+      "ciRun": 45527715373,
+      "webRun": 45527715370,
+      "dockerRun": 45527715482,
+      "evidence": ".local/upgrade-evidence/nov25-oh-traditional-district"
+    },
     "nov25OhioCertifiedRefundableJobsCredit": {
       "revision": "5d8e8fd413334527ea814dc7a52aa6c3ca08a229",
       "inventoryRevision": "8f45074d04c66bea95613b9699a9f905989e32bd",

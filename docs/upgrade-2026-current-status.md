@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `3a9f8d24` computes the pre-credit 2026 Ohio traditional school levy
+  for the verified single, full-year W-2-only cohort. Independent review
+  rechecked the enacted exemption thresholds and the source guards.
+  It remains an internal draft. All 213 focused tests, typecheck, lint
+  and spec/inventory checks passed. The exact combined checks are queued.
+  [Ohio traditional school evidence](upgrade-2026-progress.md#november-25-ohio-traditional-school-levy).
+
 - `5d8e8fd4` validates a direct individual's certified Ohio refundable
   job creation or grandfathered retention credit with exact cents and the
   statutory payment date. Independent source review rechecked the

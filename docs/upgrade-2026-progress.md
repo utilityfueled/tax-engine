@@ -1,5 +1,33 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Ohio traditional school levy
+
+`3a9f8d24` computes the 2026 pre-credit traditional school-district levy
+for one actual single full-year resident aged 18–64, with W-2 wages,
+no other income or adjustments, no dependents, and verified taxpayer,
+residence, payroll and annual district facts. Under the confirmed
+whole-dollar election it preserves the exact Decimal levy and reports
+the rounded levy separately. The 2026 Ohio exemption tiers are $2,400
+through $40,000 MAGI, $2,150 through $80,000, and $1,900 below
+$500,000. The draft has no payment, credit, form or filing output.
+[Traditional tax base](https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026) ·
+[Exemption statute](https://codes.ohio.gov/ohio-revised-code/section-5747.025/9-30-2025) ·
+[H.B. 96 section 757.120](https://publicfiles.ohiosos.gov/free/publications/SessionLaws/136/136-HB-096-part-33.pdf) ·
+[District schedule](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf).
+
+Three cases failed before implementation. Independent review reproduced
+acceptance of all-zero taxpayer and employer identifiers, a conflicting
+residency declaration and separately supplied unemployment evidence.
+The corrected traditional path holds each case and preserves the
+earned-district result. The reviewer verified 175 focused tests and
+replayed the original conflict cases. Root verification passed 213 tests,
+typecheck, scoped lint, all 10,053 references, the generated inventory
+and the source audit, with all browser contracts retained. The release
+checkout matches 6,697 tracked blobs and 15 official PDF samples. Its
+complete local run is queued after the two earlier local browser runs.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45527715373) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45527715370).
+
 ## November 25 Ohio certified refundable jobs credits
 
 `5d8e8fd4` adds an internal credit draft for one direct individual with
