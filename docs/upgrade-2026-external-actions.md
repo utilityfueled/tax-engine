@@ -8,10 +8,23 @@ borrower's $600.25 unreimbursed interest and a $50 C/E/F deduction from
 that same amount, leaving $550.25 before Schedule 1-A rounding, caps
 and phaseout. Verify the effect of a separately documented current-year
 reimbursement, and confirm that Box 5 instead requires prior-year
-deduction and recovery evidence. The final Schedule 1-A and its
-Form 1040 transfer still require qualification.
+deduction and recovery evidence. Compare a $100 prior-year refund paid in
+cash with the same amount credited to current loan interest. The issuer
+includes the credit in Box 1 and Box 5 and reports the cash refund only
+in Box 5. Establish that the borrower made and bore the recovered
+payment and received the refund. Verify prior Schedule 1-A, business
+and other deduction or carryforward history for the same recovered
+interest, including any filed amendments. Review
+whether §111 excludes recovery when there was no prior deduction and how
+to establish the taxable portion when a deduction reduced prior tax.
+The November 24 draft reaches Schedule 1 line 8z for taxable recoveries.
+The final Schedule 1, Schedule 1-A and Form 1040 transfers still require
+qualification.
 [Final recipient instructions](https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4) ·
-[Final issuer instructions](https://www.irs.gov/instructions/i1098vli).
+[Final issuer instructions](https://www.irs.gov/instructions/i1098vli) ·
+[26 U.S.C. §111](https://uscode.house.gov/us/usc/t26/s111/) ·
+[2025 lender reporting transition](https://www.irs.gov/irb/2025-45_IRB#:~:text=SECTION%203.%20TRANSITIONAL%20GUIDANCE) ·
+[November 24 draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=97).
 
 ## November 25 Schedule 3-A first-claim review
 

@@ -1,5 +1,38 @@
 # 2026 upgrade implementation evidence
 
+## November 25 Form 1098-VLI prior-year cash refunds
+
+`7fc59749` accepts a positive Box 5 for the documented cash case.
+The borrower must show that they made and bore the 2025 payment on the
+same 2025 original loan, received a 2026 cash refund matching Box 5
+exactly and verified no deduction or carryforward for the recovered
+amount in the complete 2025 filed history, including any amendments.
+The refund leaves current Box 1 and current Schedule 1-A unchanged.
+Loan credits and mixed payments require separate reconciliation.
+Recovery of previously deducted interest requires tax-benefit review.
+Separate interest earned on a refund follows the ordinary interest
+path. The general federal filing and final-form gates remain open.
+[Final issuer instructions](https://www.irs.gov/instructions/i1098vli) ·
+[Final recipient instructions](https://www.irs.gov/pub/irs-pdf/f1098vli.pdf#page=4) ·
+[26 U.S.C. §111](https://uscode.house.gov/us/usc/t26/s111/).
+
+Regression tests first reproduced the positive Box 5 rejection, the
+missing borrower payment attestation and the stale borrower identity
+state. The fixed normal interview flow invalidates loan, statement and
+refund confirmations for the changed borrower while keeping draft
+records. Both engine and guided implementation passed independent
+engineering re-review. The combined run passed all 273 tests in 10
+files. Engine and web typechecks, all 21 affected spec references,
+inventory, scoped lint with zero errors and `git diff --check` passed.
+Two browser-audit controls passed, with five updated out of 2,071 pins
+and the existing browser limits. The tracked-only exact verification
+suite has started with both archives checking all 15 original sample
+PDF hashes and using the frozen dependency lock. Qualified human tax
+review is outstanding. The exact Docker build passed.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45673736911) ·
+[Web and strict runtime](https://github.com/utilityfueled/tax-engine/actions/runs/45673736878) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45673736703).
+
 ## November 25 Form 1098-VLI loan statement reconciliation
 
 `7e9a9e77` adds an optional guided and engine path for a confirmed
