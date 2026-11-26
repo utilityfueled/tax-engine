@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `8663136a3` explains the 2026 HSA eligibility treatment for individual
+  bronze and catastrophic plans and qualifying direct primary care.
+  The guide still requires actual coverage answers.
+  [HSA eligibility evidence](upgrade-2026-progress.md#november-25-2026-hsa-plan-eligibility-guidance).
+
 - `8148ca4d7` reconciles the primary 2026 Ohio residency declaration with
   confirmed domicile in the guide and supported ordinary wage and
   unemployment drafts. `5a2ec7f7b` invalidates HSA confirmation when

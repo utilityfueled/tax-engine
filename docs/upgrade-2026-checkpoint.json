@@ -2,9 +2,10 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "8148ca4d7d65a0ef18599084e06400ceba7fd1f1",
+    "applicationCommit": "8663136a317a6f705d6b7b7a5b1d90c005010a00",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov25HsaEligibilityGuidance",
+    "combinedHsaOhioAiEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
     "pensionOriginalReconfirmationEvidenceKey": "activeContinuation.nov25PensionOriginalReconfirmation",
     "longTermCareStatementIntakeEvidenceKey": "activeContinuation.nov25LongTermCareStatementIntake",
     "paResidencyDeclarationEvidenceKey": "activeContinuation.nov25PaResidencyDeclarations",
@@ -98,7 +99,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Verify exact 8148ca4d7 remote CI 45755849229, Web 45755849175 and Docker 45755849248. All 26 selected managed Chromium cases passed locally on that revision.",
+      "Verify exact 8663136a3 remote CI 45756609356, Web 45756609320 and Docker 45756609381. All 26 selected managed Chromium cases passed on this application revision and its predecessor.",
       "Finish GitHub CI 45750813264 and Linux browser 45750813234 for application 3aeb837f5. All 11 required local checks and Docker 45750813162 passed, including 30,645 tests each for unit and coverage, 88.49% branch, and 654 Chromium passes. Earlier strict AMD64 and ARM64 runs retain their original timeout results even where recovery and archive verification passed.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
@@ -107,6 +108,27 @@
     ]
   },
   "activeContinuation": {
+    "nov25HsaEligibilityGuidance": {
+      "commit": "8663136a317a6f705d6b7b7a5b1d90c005010a00",
+      "source": "https://www.irs.gov/pub/irs-drop/n-26-05.pdf",
+      "scope": "2026-only monthly HSA plan guidance. All actual month answers, confirmation and qualification remain explicit.",
+      "redLogSha256": "0792a4fe6f359e49ee9f582806b7dd7419ed5bc78b3c1101ee5315d0b0380af9",
+      "focusedLogSha256": "4e469394f3c84320fa319a8bce9d1b7a91346a358175e8898bfb4954ed6be944",
+      "focusedTestsPassed": 93,
+      "specBindingsPassed": 10107,
+      "trackedBlobsMatched": 6703,
+      "browserAuditBindings": 2073,
+      "timingDiagnosticTestsPassed": 56,
+      "webTypesInventoryAndScopedLint": "passed",
+      "managedChromium": {
+        "passed": 26,
+        "failed": 0,
+        "skipped": 0,
+        "logSha256": "1017b882341740186b51e00a8a6231d9e1230cf64db694550a6b6a7ee539d751"
+      },
+      "vercelProductionBuild": "canceled",
+      "githubRuns": {"ci": 45756609356, "web": 45756609320, "docker": 45756609381}
+    },
     "nov25HsaOhioAiFollowUp": {
       "scope": "Source-complete HSA reconfirmation and Ohio ordinary domicile checks, with exact partial AI attempt accounting. Preserves tax filing, pricing and promotion gates.",
       "ai": {

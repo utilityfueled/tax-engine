@@ -1,5 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 25 2026 HSA plan eligibility guidance
+
+`8663136a3` explains which individual-market bronze and catastrophic
+plans count as HDHPs in the 2026 guided worksheet and links the IRS
+rules for off-Marketplace plans and qualifying direct primary care.
+The regression verifies that 2025 and unknown-year returns omit the
+new guidance and that all 24 monthly coverage answers stay blank until
+the taxpayer supplies them. The committed projection matched 6,703
+tracked blobs and passed 93 focused tests, web types, scoped lint,
+10,107 spec bindings, the inventory, 2,073 audit bindings and all 56
+timing diagnostics tests. The managed production build passed all 26
+selected Chromium guided interview, Ohio school and local recovery
+cases. The Vercel production build was canceled.
+[IRS Notice 2026-05](https://www.irs.gov/pub/irs-drop/n-26-05.pdf).
+
 ## November 25 HSA, Ohio and AI accounting follow-up
 
 - `5a2ec7f7b` requires fresh HSA confirmation after changes to the tax
