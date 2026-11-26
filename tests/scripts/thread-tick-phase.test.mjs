@@ -242,11 +242,13 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
  for(const job of Object.values(workflow.jobs)){
   assert.equal(job.env?.TAX_BROWSER_OHIO_SCHEDULER_MODE,undefined);
   assert.equal(job.env?.TAX_BROWSER_OHIO_SCHEDULER_SCOPE,undefined);
+  assert.equal(job.env?.TAX_BROWSER_SCHOOL_PHASES,undefined);
  }
  for(const step of steps){
   const mode=step===managed?'managed':step===container?'container':undefined;
   assert.equal(step.env?.TAX_BROWSER_OHIO_SCHEDULER_MODE,mode&&schedulerValue(mode));
   assert.equal(step.env?.TAX_BROWSER_OHIO_SCHEDULER_SCOPE,mode&&schedulerValue('full'));
+  assert.equal(step.env?.TAX_BROWSER_SCHOOL_PHASES,step===container?'1':undefined);
  }
  const schedulerEnvLines=mode=>`          TAX_BROWSER_OHIO_SCHEDULER_MODE: ${schedulerValue(mode)}\n          TAX_BROWSER_OHIO_SCHEDULER_SCOPE: ${schedulerValue('full')}\n`;
  const comparison=workflow.jobs.container.steps.filter(step=>step.name==='Compare focused Ohio journeys on the same runner');
@@ -274,6 +276,7 @@ test('workflow phase observer requires explicit full-batch dispatch opt-in',asyn
   ['      - name: Verify original-entry timing contracts\n        run: node --test tests/scripts/thread-tick-phase.test.mjs tests/scripts/full-batch-public-cpu-diagnostic.test.mjs\n',''],
   [`      - run: pnpm test:web\n        env:\n${schedulerEnvLines('managed')}`,'      - run: pnpm test:web\n'],
   [schedulerEnvLines('container'),''],
+  ["          TAX_BROWSER_SCHOOL_PHASES: '1'\n",''],
   ['node:26.13.1-trixie-slim@sha256:615a27817f7b9508f0de73eb1cc8fc8894ab122bee56c1a7a568b72cd1032067','node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc'],
  ];
  for(const[after,before]of reviewedDeltas){

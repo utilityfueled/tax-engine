@@ -190,6 +190,30 @@ test('trace pairing chooses a complete original Ohio window with an observed tim
  assert.equal(selectTraceWindow(original,[{id:ids[1],failureCategory:'assertion'}],new Set(ids)),undefined);
 });
 
+test('captures school phase markers only in original strict AMD64 browser execution', async () => {
+ const browserRunner=new URL('../../scripts/run-browser-tests.mjs',import.meta.url);
+ const {environment,schoolPhaseEnvironment}=await import(browserRunner);
+ const [workflow,runner]=await Promise.all([
+  readFile(new URL('../../.github/workflows/web.yml',import.meta.url),'utf8'),
+  readFile(browserRunner,'utf8'),
+ ]);
+ const strictStep=workflow.match(/^ {6}- name: Browser flows against the actual runtime image\n[\s\S]*?(?=^ {6}- name:)/m)?.[0];
+ assert.ok(strictStep);
+ assert.match(strictStep,/^ {10}TAX_BROWSER_SCHOOL_PHASES: '1'$/m);
+ assert.match(strictStep,/^ {8}run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure$/m);
+ assert.equal(workflow.match(/TAX_BROWSER_SCHOOL_PHASES:/g)?.length,1);
+
+ const strict={GITHUB_ACTIONS:'true',TAX_BROWSER_SCHOOL_PHASES:'1'};
+ assert.deepEqual(schoolPhaseEnvironment(strict,true),{TAX_BROWSER_SCHOOL_PHASES:'1'});
+ assert.deepEqual(schoolPhaseEnvironment(strict,false),{});
+ assert.deepEqual(schoolPhaseEnvironment({...strict,GITHUB_ACTIONS:'false'},true),{});
+ assert.deepEqual(schoolPhaseEnvironment({...strict,TAX_BROWSER_SCHOOL_PHASES:'true'},true),{});
+ assert.deepEqual(schoolPhaseEnvironment({GITHUB_ACTIONS:'true'},true),{});
+ assert.ok(!Object.hasOwn(environment(strict),'TAX_BROWSER_SCHOOL_PHASES'));
+ assert.match(runner,/schoolPhaseEnvironment\(parentEnv, external && !native\)/);
+ assert.match(runner,/env: \{ \.\.\.env, \.\.\.schedulerEnvironment, \.\.\.schoolPhases, PLAYWRIGHT_JSON_OUTPUT_FILE: report \}/);
+});
+
 function traceFixture(file='oh-fixture.spec.ts') {
  const report=(status,timeout=30000)=>({errors:[],config:{workers:2,projects:[{retries:0,repeatEach:1}]},suites:[{title:file,specs:['a','b'].map((label,i)=>({title:label,file,id:`${label.repeat(20)}-${label.repeat(20)}`,tests:[{projectName:'chromium',timeout,expectedStatus:'passed',results:[{status:i===0?status:'passed',retry:0,duration:27,errors:[]}]}]}))}]});
  const waits=[],calls=[],saved=new Map();

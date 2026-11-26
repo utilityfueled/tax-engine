@@ -58,3 +58,14 @@ lines:
       source paths. Preserve original actions, assertions, case identities,
       request budgets, workers, retries, deadlines and image.
     testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::projects only fixed school phase markers from reconciled paired cases"
+  - line: "strict-amd64-school-phases"
+    description: Retain Ohio part-year school phase timing in the original strict AMD64 browser run
+    formula: >-
+      The existing strict AMD64 workflow sets a fixed flag for its executing
+      Playwright children. Forward the flag only to GitHub Actions container
+      browser execution, excluding managed and native ARM64 runs. Record the
+      same five phase markers for the four existing cases in their original
+      batch reports. Preserve the existing test collection, request bounds,
+      workers, retries, deadlines, tracing, and qualification outcome. Start no
+      additional browser run.
+    testRef: "tests/scripts/full-batch-public-cpu-diagnostic.test.mjs::captures school phase markers only in original strict AMD64 browser execution"

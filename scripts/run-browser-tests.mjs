@@ -248,6 +248,12 @@ export function ohioSchedulerEnvironment(parent, external) {
         parent.TAX_BROWSER_OHIO_SCHEDULER_MODE !== mode || !['full', 'focused'].includes(scope)) return {};
     return { TAX_BROWSER_OHIO_SCHEDULER_MODE: mode, TAX_BROWSER_OHIO_SCHEDULER_SCOPE: scope };
 }
+export function schoolPhaseEnvironment(parent, strictAmd64) {
+    if (strictAmd64 && parent.GITHUB_ACTIONS === 'true' && parent.TAX_BROWSER_SCHOOL_PHASES === '1') {
+        return { TAX_BROWSER_SCHOOL_PHASES: '1' };
+    }
+    return {};
+}
 export async function noEnvFiles(root) {
     for (const dir of ['', 'apps/web'])
         for (const name of ['.env', '.env.local', '.env.production', '.env.production.local']) {
@@ -357,6 +363,7 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
     const external = parentEnv.PLAYWRIGHT_DISABLE_WEBSERVER === 'true';
     const schedulerEnvironment = ohioSchedulerEnvironment(parentEnv, external);
     const native = nativeAdmission(parentEnv, external);
+    const schoolPhases = schoolPhaseEnvironment(parentEnv, external && !native);
     if (native) {
         const deadlines = parsed.args.flatMap((a, i) => a === '--timeout' ? [parsed.args[i + 1]] : a.startsWith('--timeout=') ? [a.slice(10)] : []);
         need(deadlines.length === 1 && deadlines[0] === '30000', 'Native container requires explicit unchanged 30000ms deadline');
@@ -447,7 +454,7 @@ export async function main(args, { root = fileURLToPath(new URL('../', import.me
                     const report = path.join(out, `batch-${i + 1}.json`);
                     browser = launch(process.execPath, [cli, 'test', ...parsed.args, '--test-list', batch.list, '--output', path.join(out, `batch-${i + 1}-artifacts`), '--reporter=line,json'], {
                         cwd: app,
-                        env: { ...env, ...schedulerEnvironment, PLAYWRIGHT_JSON_OUTPUT_FILE: report },
+                        env: { ...env, ...schedulerEnvironment, ...schoolPhases, PLAYWRIGHT_JSON_OUTPUT_FILE: report },
                         log: path.join(out, `batch-${i + 1}`),
                         stream: true,
                     });
