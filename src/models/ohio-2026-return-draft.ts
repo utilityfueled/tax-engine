@@ -59,6 +59,32 @@ export const Ohio2026UnemploymentEmployeeSourcesSchema = Ohio2026OrdinarySources
 }).strict();
 export type Ohio2026UnemploymentEmployeeSources = z.infer<typeof Ohio2026UnemploymentEmployeeSourcesSchema>;
 
+/** Separate current Form 1099-INT and actual direct Treasury coupon evidence. */
+const treasuryCusip = z.string().regex(/^912[0-9A-Z]{5}[0-9]$/);
+export const Ohio2026TreasuryCouponEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
+  methodId: z.literal('oh-2026-treasury-coupon-employee-draft-v1'),
+  treasuryCouponOriginal: z.object({
+    sourceReference: reference, sourceTaxYear: z.literal(2026),
+    custodianName: reference, custodianTin: z.string().regex(/^\d{2}-?\d{7}$/), accountReference: reference,
+    recipient: z.object({
+      accountHolder: z.literal('primary'), firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/),
+    }).strict(),
+    currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
+    noOtherOriginalReportingConfirmed: z.literal(true),
+    security: z.object({
+      sourceReference: reference, cusip: treasuryCusip, accountReference: reference,
+      issuer: z.literal('us_treasury'), type: z.enum(['treasury_note', 'treasury_bond']),
+      directBeneficialHoldingConfirmed: z.literal(true), conventionalFixedCouponConfirmed: z.literal(true),
+    }).strict(),
+    receipt: z.object({
+      sourceReference: reference, cusip: treasuryCusip, accountReference: reference,
+      paidOn: date, amount: money, currency: z.literal('USD'),
+      actualGrossCashCouponConfirmed: z.literal(true), noTimingBasisOrReportingAdjustmentsConfirmed: z.literal(true),
+    }).strict(),
+  }).strict(),
+}).strict();
+export type Ohio2026TreasuryCouponEmployeeSources = z.infer<typeof Ohio2026TreasuryCouponEmployeeSourcesSchema>;
+
 /** Separate current documentary method; ordinary packets keep their strict schema. */
 export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: z.literal('oh-2026-pa-reciprocal-employee-draft-v1'),

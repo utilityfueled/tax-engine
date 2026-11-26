@@ -31,6 +31,30 @@ notes: |
   Calculation status remains incomplete, filingQualified=false, review pending;
   final2026 form identities/numbering and professional review are separate gates.
 lines:
+  - line: "direct-treasury-coupon"
+    description: "Private 2026 ordinary employee draft for one directly held conventional Treasury note or bond coupon"
+    formula: "Admit a single primary full-year Ohio resident under 65 who meets existing ordinary original, credit, school and withholding-only gates. Require an explicit private Treasury coupon packet with the actual current, complete, uncorrected nonvoid Form 1099-INT, matched owner, custodian name and TIN, account and year, and a distinct original coupon receipt linked by account and CUSIP to the documented direct U.S. Treasury note or bond. Verify the calendar 2026 coupon date and full positive cash amount against Box 3; Box 3 alone is insufficient. Exclude bills, savings bonds, Treasury funds, indirect holdings, and any premium, accrued interest, discount, basis, election, withholding or other reporting that changes the simple coupon treatment. Reconcile all federal and resident source categories against originals. Federal AGI is rounded ordinary wages plus actual coupon combined before rounding. Deduct the exact federally taxable and Ohio-exempt coupon once under RC5747.01(A)(3) and 31 USC3124(a); Ohio AGI is the remaining ordinary wages rounded at the end. No NRC applies to this full-year household. Keep independent review, final state forms, public routing and filing closed."
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+      - "https://uscode.house.gov/us/usc/t31/s3124/"
+      - "https://www.irs.gov/instructions/i1099int"
+      - "https://www.irs.gov/publications/p550"
+    testRef: "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::deducts only the matched direct Treasury coupon included in federal AGI"
+  - line: "direct-treasury-coupon-source-holds"
+    description: "Hold incomplete, contradictory and uncommon Treasury coupon originals"
+    formula: "The separate method retains and binds unchanged canonical federal income, Ohio residency and payment originals with the documentary 1099-INT and security/receipt proof. Hold missing or mismatched recipient, account, custodian, security, date, amount, year, classifications and unsupported sources. A retained Ohio unemployment payment or payment schedule is incompatible with the wages-and-coupon method even if the canonical Form 1099-G is missing. Preserve ordinary wage-only and historical calculation behavior."
+    testRef: "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::requires separate documentary evidence and leaves ordinary and historical routes unchanged"
+  - line: "direct-treasury-coupon-account-identity"
+    description: "Bind the Treasury coupon to a stable account reference"
+    formula: >-
+      A visible account mask, including after a hyphenated label, an explicit
+      account-ending label, or a bare number of at most four digits is
+      incomplete evidence even if all saved originals display the same suffix.
+      Hold the packet for reconciliation. Accept a stable local reference used
+      on all of the originals without requiring the taxpayer's full account number.
+    testRef: "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::holds a repeated masked or suffix-only account reference after reopening (%s)"
+    testRefs:
+      - "tests/engine/state/oh-2026-treasury-coupon-draft.test.ts::accepts an opaque local account identifier with an embedded suffix"
   - line: "ordinary-unemployment-source"
     description: "Private 2026 ordinary employee draft with one actual Box 1 unemployment original for a single part-year resident or nonresident"
     formula: "Require a recipient-bound, current uncorrected nonvoid original Form 1099-G (Rev. December 2026) for ordinary noncontributory state unemployment insurance. Verify every original box, known-zero non-Box-1 income and adjustments, no repayments or unrecovered contributions, and no state withholding even if omitted from the recipient copy. Require a complete original-bound list of actual dates and positive whole-dollar amounts paid or accrued in calendar 2026. Require one owner, the existing ordinary W2 source admission, and proved continuous Ohio domicile periods. Each unique receipt counts at its actual paid-or-accrued date. Their exact total must match Box 1. Federal AGI is ordinary wages plus gross Box 1, with federal withholding excluded from the income computation. Ohio IT NRC line 12 resident amount is the sum of receipts with Ohio domicile on that date; no payments are Ohio income during a nonresident period merely because the payer is in Ohio. Reconcile the assigned amounts with the complete owner categories before deriving the NRC credit and withholding-only settlement. Hold missing or contradictory originals, unsupported income, deductions, specialized benefits, and unsupported residency or credit facts. Filing qualification stays false and final annual form/PDF support remains outside this method."

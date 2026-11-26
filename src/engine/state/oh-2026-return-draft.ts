@@ -10,7 +10,10 @@ import { roundDollar } from '@/utils/decimal.js';
 import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhio2026ResidentCredit } from './oh-2026-resident-credit.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
-import { calculateOhio2026UnemploymentEmployeeSource, readOhio2026OrdinarySource, type Ohio2026OrdinaryContext } from './oh-2026-ordinary-source.js';
+import {
+  calculateOhio2026TreasuryCouponEmployeeSource, calculateOhio2026UnemploymentEmployeeSource,
+  readOhio2026OrdinarySource, type Ohio2026OrdinaryContext,
+} from './oh-2026-ordinary-source.js';
 
 export interface Ohio2026ReturnDraftResult {
   taxYear: 2026;
@@ -23,6 +26,7 @@ export interface Ohio2026ReturnDraftResult {
   federalAgi: Decimal;
   ohioAgi: Decimal;
   reciprocalWageExclusion?: Decimal;
+  treasuryCouponDeduction?: Decimal;
   residentCredit?: Decimal;
   exemptions: Decimal;
   taxBeforeCredits: Decimal;
@@ -46,13 +50,18 @@ export interface Ohio2026ReturnDraftResult {
 export function calculateOhio2026UnemploymentReturnDraft(input: TaxYearInput, sources: unknown): Ohio2026ReturnDraftResult {
   return calculateOhio2026ReturnDraft(input, sources, calculateOhio2026UnemploymentEmployeeSource(input, sources));
 }
+/** Private documentary draft for one separately qualified direct Treasury coupon. */
+export function calculateOhio2026TreasuryCouponReturnDraft(input: TaxYearInput, sources: unknown): Ohio2026ReturnDraftResult {
+  return calculateOhio2026ReturnDraft(input, sources, calculateOhio2026TreasuryCouponEmployeeSource(input, sources));
+}
 /** Calculate solely from the current opaque source context; caller scalars cannot qualify. */
 export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unknown, context: Ohio2026OrdinaryContext): Ohio2026ReturnDraftResult {
   const actual = readOhio2026OrdinarySource(context, input, sources);
   const federalAgi = new Decimal(actual.federalAgi);
   const reciprocal = actual.reciprocalWageExclusion !== undefined;
   const unemployment = context.methodId === 'oh-2026-unemployment-employee-draft-v1';
-  const ohioAgi = federalAgi.minus(actual.reciprocalWageExclusion ?? '0');
+  const treasuryCouponDeduction = actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.deduction) : undefined;
+  const ohioAgi = actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.ohioAgi) : federalAgi.minus(actual.reciprocalWageExclusion ?? '0');
   const baselineInput = { taxYear: 2026, filingStatus: actual.filingStatus, ohioAdjustedGrossIncome: ohioAgi,
     businessIncomeDeduction: '0', qualifyingCapitalGainsAndPayrollDeduction: '0', taxableBusinessIncome: '0',
     eligibleExemptions: actual.eligibleExemptions, primaryQualifyingIncome: actual.primaryQualifyingIncome,
@@ -67,7 +76,8 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   // Source admission establishes zero EITC using actual no-child facts and the
   // indexed2026 cutoff, rather than defaulting an unavailable federal result.
   const earnedIncomeCredit = new Decimal(0);
-  const nrc = reciprocal ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
+  // The Treasury method already reconciled a single full-year Ohio resident, so no IT NRC is needed.
+  const nrc = reciprocal || actual.treasuryCoupon ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
     federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: actual.residency });
   const taxAfterNrc = baseline.taxAfterJointCredit.minus(nrc.line20);
@@ -83,11 +93,15 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const audit = new AuditTrail();
   if (reciprocal) audit.record('OH2026 enacted PA reciprocal draft', 'reciprocal-exclusion', 'Actual reciprocal compensation excluded once', federalAgi,
     'Current complete full-year PA ordinary employee originals; RC5747.05(A)(2). Ohio AGI0; excluded compensation creates neither NRC nor resident credit. No final2026 form qualification.');
+  if (treasuryCouponDeduction) audit.record('OH2026 enacted Treasury coupon draft', 'direct-treasury-coupon', 'Direct United States Treasury coupon exempt from Ohio income tax', treasuryCouponDeduction,
+    'Subtract the exact source-qualified direct Treasury coupon from unrounded federal income included in AGI before rounding the Ohio amount; RC5747.01(A)(3) and 31 USC3124(a).');
   if (actual.seniorCreditEligibleByAge) audit.record('OH2026 enacted ordinary draft', 'senior-credit', 'Senior citizen credit', seniorCitizenCredit,
     'One nonrefundable $50 per return, limited to available tax, if actual MAGI less exemptions is below $100,000; RC5747.055(F), RC5747.98');
   const agiDescription = unemployment ? 'Actual ordinary wages and gross Box 1 unemployment in federal and Ohio AGI'
+    : treasuryCouponDeduction ? 'Actual ordinary wages and direct Treasury coupon in federal AGI'
     : reciprocal ? 'Actual completed wage-only federal AGI before reciprocal exclusion' : 'Actual completed wage-only federal and Ohio AGI';
   const agiFormula = unemployment ? 'Round the sum of current ordinary W2 wages and gross Form 1099-G Box 1; allocate actual receipts by domicile under RC5747.20'
+    : treasuryCouponDeduction ? 'Round the sum of current ordinary W2 wages and the matched direct Treasury coupon in Form 1099-INT Box 3'
     : 'Round sum current source-qualified ordinary W2 wages; no other actual sources admitted';
   for (const [line, label, value, formula] of [
     ['AGI', agiDescription, federalAgi, agiFormula],
@@ -107,11 +121,13 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   }
   return { ...(actualBalancePayment ? {actualBalancePayment} : {}), taxYear: 2026, ruleVersion: context.methodId, baselineRuleVersion: OHIO_2026_BASELINE.metadata.ruleVersion,
     calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false,
-    sourceCommitment: context.sourceCommitment, federalAgi, ohioAgi, ...(reciprocal ? { reciprocalWageExclusion: new Decimal(actual.reciprocalWageExclusion ?? '0'), residentCredit: new Decimal(0) } : {}), ...(resident ? { residentCredit: resident.credit } : {}), exemptions: baseline.exemptions,
+    sourceCommitment: context.sourceCommitment, federalAgi, ohioAgi, ...(treasuryCouponDeduction ? { treasuryCouponDeduction } : {}),
+    ...(reciprocal ? { reciprocalWageExclusion: new Decimal(actual.reciprocalWageExclusion ?? '0'), residentCredit: new Decimal(0) } : {}), ...(resident ? { residentCredit: resident.credit } : {}), exemptions: baseline.exemptions,
     taxBeforeCredits: baseline.totalTax, ...(actual.seniorCreditEligibleByAge ? { seniorCitizenCredit } : {}), personalExemptionCredit, jointFilingCredit: baseline.jointFilingCredit, earnedIncomeCredit,
     nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax, withholding, underpaymentPenalty, latePaymentInterest, amountDue, refund,
     limitations: [
       unemployment ? 'Single part-year or nonresident ordinary employee under 65 with one actual state unemployment original; no dependents, EITC-qualifying children, state adjustments, or other credit sources.'
+        : treasuryCouponDeduction ? 'Single full-year Ohio resident and ordinary employee under 65 with one actual direct Treasury note or bond coupon and its Ohio deduction. No dependents, EITC-qualifying children, other adjustments, or other credit sources.'
         : actual.seniorCreditEligibleByAge
         ? 'Finite single/MFJ ordinary employee cohort with confirmed complete Ohio senior credit history; no dependents, EITC-qualifying children, state adjustments or other credit sources.'
         : 'Finite single/MFJ current ordinary employee cohort only; no dependents or EITC-qualifying children, under65 adults, no other state adjustments or credit sources.',

@@ -5,8 +5,12 @@ import Decimal from 'decimal.js';
 import {validateOhio2026ActualBalancePaymentSources} from './oh-2026-payment-source.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
-import { TaxpayerSchema, W2Schema, StandardDeductionFactsSchema, type TaxYearInput } from '@/models/inputs.js';
-import { Ohio2026OrdinarySourcesSchema, Ohio2026OrdinaryStateSchema, Ohio2026PaReciprocalSourcesSchema, Ohio2026UnemploymentEmployeeSourcesSchema, Ohio2026UnemploymentOriginalSchema, Ohio2026VaResidentCreditSourcesSchema, type Ohio2026UnemploymentEmployeeSources } from '@/models/ohio-2026-return-draft.js';
+import { Form1099IntSchema, TaxpayerSchema, W2Schema, StandardDeductionFactsSchema, type TaxYearInput } from '@/models/inputs.js';
+import {
+  Ohio2026OrdinarySourcesSchema, Ohio2026OrdinaryStateSchema, Ohio2026PaReciprocalSourcesSchema,
+  Ohio2026TreasuryCouponEmployeeSourcesSchema, Ohio2026UnemploymentEmployeeSourcesSchema, Ohio2026UnemploymentOriginalSchema,
+  Ohio2026VaResidentCreditSourcesSchema, type Ohio2026TreasuryCouponEmployeeSources, type Ohio2026UnemploymentEmployeeSources,
+} from '@/models/ohio-2026-return-draft.js';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioResidencyFacts } from '@/models/ohio-residency.js';
 import { OhioPaymentFactsSchema } from '@/models/ohio-payments.js';
 import { FEDERAL_2026_INDEXED } from '@/models/federal-2026-indexed.js';
@@ -69,9 +73,53 @@ function qualifyUnemployment(input: TaxYearInput, facts: OhioResidencyFacts, ori
   for (const receipt of receipts) cash(receipt.amount);
   return { box1, residentAmount: allocateOhioUnemploymentReceipts(receipts, owner.periods, facts.taxYear, box1) };
 }
+
+const maskedAccountReference = /(?:(?:^|[\s-])(?:[*•●∙⋅·]+|\.{3,}|…)|(?:^|\s)x{4,})(?:[\s-]*\d+)?$/iu;
+const accountEndingLabel = /(?:^|\s)(?:(?:ending|ends)\s+in|last\s+(?:four|4)(?:\s+digits)?)[\s:#-]*(?:(?:…|\.{3,})\s*)?\d+$/iu;
+const bareAccountSuffix = /^\d{1,4}$/u;
+
+function qualifyTreasuryCoupon(input: TaxYearInput, facts: OhioResidencyFacts, original: Ohio2026TreasuryCouponEmployeeSources['treasuryCouponOriginal']): Decimal {
+  const [owner] = facts.owners;
+  if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary' || owner.status !== 'full_year_resident')
+    fail('direct Treasury coupon requires a single primary full-year Ohio resident');
+  if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
+    fail('retained unemployment receipts require their separate method');
+  if (!Array.isArray(input.form1099Int) || input.form1099Int.length !== 1) fail('one current original Form 1099-INT required');
+  const parsed = Form1099IntSchema.strict().safeParse(input.form1099Int[0]);
+  if (!parsed.success) fail('one current original Form 1099-INT required');
+  const form = parsed.data;
+  if (form.taxYear !== original.sourceTaxYear || form.accountHolder !== original.recipient.accountHolder
+    || !form.payerTin || !/^\d{2}-?\d{7}$/.test(form.payerTin) || !form.accountReference)
+    fail('current original Form 1099-INT with payer TIN, recipient and account required');
+  const primary = input.taxpayer.primary;
+  const { recipient, security, receipt } = original;
+  if (tin(recipient.ssn) !== tin(primary.ssn) || identity(recipient.firstName) !== identity(primary.firstName)
+    || identity(recipient.lastName) !== identity(primary.lastName) || tin(original.custodianTin) !== tin(form.payerTin)
+    || identity(original.custodianName) !== identity(form.payer) || original.accountReference !== form.accountReference)
+    fail('actual Form 1099-INT recipient, custodian or account differs');
+  if (security.cusip !== receipt.cusip || security.accountReference !== original.accountReference || receipt.accountReference !== original.accountReference)
+    fail('actual Treasury security and receipt do not match the custodian account or CUSIP');
+  if (maskedAccountReference.test(original.accountReference) || accountEndingLabel.test(original.accountReference)
+    || bareAccountSuffix.test(original.accountReference))
+    fail('a stable account reference is required to match the Form 1099-INT, security, and receipt');
+  if (new Set([original.sourceReference, security.sourceReference, receipt.sourceReference].map(identity)).size !== 3)
+    fail('distinct original Form 1099-INT, security and receipt references required');
+  day(receipt.paidOn);
+  if (receipt.paidOn < '2026-01-01' || receipt.paidOn > '2026-12-31') fail('actual Treasury coupon payment must be in current calendar 2026');
+  const otherAmounts = [form.interestIncome, form.earlyWithdrawalPenalty, form.federalWithheld, form.foreignTaxPaid,
+    form.taxExemptInterest, form.privateActivityBondInterest, form.paDirectObligationInterest, form.stateWithheld];
+  if (form.foreignCountry !== undefined || form.state !== undefined || form.privateActivityBondFacts !== undefined
+    || otherAmounts.some(amount => amount !== undefined && !cash(amount).isZero()))
+    fail('other interest or withholding requires its separate Form 1099-INT method');
+  const coupon = cash(receipt.amount);
+  if (!coupon.gt(0) || !coupon.eq(cash(form.usSavingsBondInterest))) fail('actual Treasury cash coupon does not reconcile to Box 3');
+  return coupon;
+}
+
 interface Projection {
   filingStatus: 'single' | 'married_filing_jointly';
   federalAgi: string; reciprocalWageExclusion?: string; residentCreditIncome?: string; residentCreditTaxPaid?: string; withholding: string; eligibleExemptions: number;
+  treasuryCoupon?: { deduction: string; ohioAgi: string };
   primaryQualifyingIncome: string; spouseQualifyingIncome?: string;
   seniorCreditEligibleByAge?: true;
   actualBalancePayment?: true;
@@ -79,7 +127,8 @@ interface Projection {
   residency: OhioResidencyFacts;
 }
 export interface Ohio2026OrdinaryContext {
-  readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1' | 'oh-2026-earned-school-employee-draft-v1' | 'oh-2026-unemployment-employee-draft-v1';
+  readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1'
+    | 'oh-2026-earned-school-employee-draft-v1' | 'oh-2026-unemployment-employee-draft-v1' | 'oh-2026-treasury-coupon-employee-draft-v1';
   readonly sourceCommitment: string;
 }
 const contexts = new WeakMap<Ohio2026OrdinaryContext, { currentDigest: string; projection: Projection }>();
@@ -97,6 +146,10 @@ export function calculateOhio2026OrdinarySource(input: TaxYearInput, raw: unknow
 export function calculateOhio2026UnemploymentEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
   return qualifyEmployee(input, raw, { unemployment: true });
 }
+/** Private ordinary employee method with separately bound actual direct Treasury coupon evidence. */
+export function calculateOhio2026TreasuryCouponEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
+  return qualifyEmployee(input, raw, { treasuryCoupon: true });
+}
 /** Separate admitted method; caller scalars cannot bypass either documentary proof. */
 export function calculateOhio2026PaReciprocalEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
   return qualifyEmployee(input, raw, { reciprocal: calculateOhio2026ReciprocalWageSource(input, raw) });
@@ -112,16 +165,17 @@ export function calculateOhio2026EarnedSchoolEmployeeSource(input:TaxYearInput,r
  const school=calculateOhio2026SchoolDraftSource(input,parsed.data.schoolSources);
  return qualifyEmployee(input,raw,{school});
 }
-function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, residentCredit, school, unemployment }: {
+function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, residentCredit, school, unemployment, treasuryCoupon }: {
   reciprocal?: Ohio2026ReciprocalWageContext; residentCredit?: Ohio2026ResidentCreditSourceContext;
-  school?: Ohio2026SchoolSourceContext; unemployment?: true;
+  school?: Ohio2026SchoolSourceContext; unemployment?: true; treasuryCoupon?: true;
 } = {}): Ohio2026OrdinaryContext {
   const { scheduleBPartThree: _disclosure, ...input } = taxInput;
   if (reciprocal) readOhio2026ReciprocalWageSource(reciprocal, input, raw);
   const paidResident = residentCredit ? readOhio2026ResidentCreditSource(residentCredit, input, raw) : undefined;
   if (reciprocal && residentCredit) fail('reciprocal and resident credit methods cannot overlap');
   const schema = school ? Ohio2026EarnedSchoolDraftSourcesSchema : reciprocal ? Ohio2026PaReciprocalSourcesSchema
-    : residentCredit ? Ohio2026VaResidentCreditSourcesSchema : unemployment ? Ohio2026UnemploymentEmployeeSourcesSchema : Ohio2026OrdinarySourcesSchema;
+    : residentCredit ? Ohio2026VaResidentCreditSourcesSchema : unemployment ? Ohio2026UnemploymentEmployeeSourcesSchema
+    : treasuryCoupon ? Ohio2026TreasuryCouponEmployeeSourcesSchema : Ohio2026OrdinarySourcesSchema;
   const parsed = schema.safeParse(raw);
   const resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency);
   const payment = OhioPaymentFactsSchema.safeParse(input.ohioPayments);
@@ -151,6 +205,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const seniorCreditEligibleByAge = [...ownerBirthDates.values()].some(birthDate => birthDate <= '1961-12-31');
   const seniorCreditHistory = 'seniorCreditHistory' in source ? source.seniorCreditHistory : undefined;
   if (seniorCreditEligibleByAge) {
+    if (treasuryCoupon) fail('direct Treasury coupon requires an ordinary employee under 65');
     if (reciprocal || residentCredit || payments.remainingTaxPayment.status !== 'no_remaining_tax') fail('Ohio senior credit requires the ordinary withholding-only method');
     if (!seniorCreditHistory || seniorCreditHistory.length !== holders.length
       || new Set(seniorCreditHistory.map(row => row.accountHolder)).size !== holders.length
@@ -162,6 +217,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   }
   const allowed = new Set(['taxpayer', 'w2s', 'standardDeductionFacts', 'ohioResidency', 'ohioPayments']);
   if (unemployment) allowed.add('form1099G');
+  if (treasuryCoupon) allowed.add('form1099Int');
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined || allowed.has(key)) continue;
     if(school)continue; // The current opaque school proof has independently checked every original key.
@@ -174,6 +230,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   if (facts.owners.length !== holders.length || new Set(facts.owners.map(o => o.accountHolder)).size !== holders.length || holders.some(h => !facts.owners.some(o => o.accountHolder === h))) fail('complete actual current residency owners required');
   if (facts.owners.some(owner => owner.periods.some(period => !Ohio2026OrdinaryStateSchema.safeParse(period.domicileState).success))) fail('actual domestic domicile state required');
   const unemploymentAmounts = 'unemploymentOriginal' in source ? qualifyUnemployment(input, facts, source.unemploymentOriginal) : undefined;
+  const coupon = 'treasuryCouponOriginal' in source ? qualifyTreasuryCoupon(input, facts, source.treasuryCouponOriginal) : undefined;
   const wageTotals = { primary: new Decimal(0), spouse: new Decimal(0) };
   const residentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
   const nonresidentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
@@ -216,21 +273,26 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     if (!owner.amounts || owner.stateAdditions === undefined || owner.stateDeductions === undefined || owner.stateAdditions.length || owner.stateDeductions.length) fail('complete actual zero state adjustment and category sources required');
     for (const category of ohioNrcCategories) {
       const row = owner.amounts[category];
-      const actualFederal = category === 'wages' ? wageTotals[owner.accountHolder] : category === 'unemployment' ? unemploymentAmounts?.box1 ?? 0 : 0;
-      const actualResident = category === 'wages' ? residentWages[owner.accountHolder] : category === 'unemployment' ? unemploymentAmounts?.residentAmount ?? 0 : 0;
+      const actualFederal = category === 'wages' ? wageTotals[owner.accountHolder] : category === 'unemployment' ? unemploymentAmounts?.box1 ?? 0
+        : category === 'interestDividends' ? coupon ?? 0 : 0;
+      const actualResident = category === 'wages' ? residentWages[owner.accountHolder] : category === 'unemployment' ? unemploymentAmounts?.residentAmount ?? 0
+        : category === 'interestDividends' ? coupon ?? 0 : 0;
       if (!cash(row.federalAmount).eq(actualFederal)
         || !cash(row.residentAmount).eq(actualResident)
         || !cash(row.nonresidentOhioAmount).eq(category === 'wages' ? nonresidentWages[owner.accountHolder] : 0)) fail('current actual source categories and service allocation differ');
     }
   }
   const federalWages = wageTotals.primary.plus(wageTotals.spouse);
-  const federalAgi = roundDollar(federalWages.plus(unemploymentAmounts?.box1 ?? 0));
+  const federalAgi = roundDollar(federalWages.plus(unemploymentAmounts?.box1 ?? 0).plus(coupon ?? 0));
+  // Apply the statutory subtraction to unrounded cash before rounding Ohio AGI.
+  const ohioAgi = coupon ? roundDollar(federalWages) : federalAgi;
   const cutoff = filingStatus === 'married_filing_jointly' ? FEDERAL_2026_INDEXED.eitc.completedPhaseOutMFJ[0] : FEDERAL_2026_INDEXED.eitc.completedPhaseOutSingleHoH[0];
   if (!cutoff || federalAgi.lt(cutoff)) fail('actual EITC requires its separate eligible-income method');
-  calculateOhioITNRC({ taxYear: 2026, filingStatus, federalAgi, ohioAgi: federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts,
+  calculateOhioITNRC({ taxYear: 2026, filingStatus, federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts,
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category,
-      category === 'wages' ? roundDollar(federalWages) : category === 'unemployment' ? unemploymentAmounts?.box1 ?? '0' : '0'])) });
-  if (schema === Ohio2026OrdinarySourcesSchema || schema === Ohio2026UnemploymentEmployeeSourcesSchema) {
+      category === 'wages' ? roundDollar(federalWages) : category === 'unemployment' ? unemploymentAmounts?.box1 ?? '0'
+        : category === 'interestDividends' && coupon ? roundDollar(coupon) : '0'])) });
+  if (schema === Ohio2026OrdinarySourcesSchema || unemployment || treasuryCoupon) {
     assertOhio2026PrimaryResidencyDeclaration(input.taxpayer, facts);
   }
   const timing = payments.currentTiming;
@@ -240,7 +302,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     || timing.kind === 'filed' && valuationDate > timing.asOfDate || timing.kind === 'expected' && valuationDate < timing.asOfDate) fail('actual timely current filing chronology required');
   const actualBalancePayment = payments.remainingTaxPayment.status === 'actual_payment';
   if (actualBalancePayment) {
-    if (reciprocal || residentCredit || unemployment) fail('actual small balance payment needs the ordinary employee method');
+    if (reciprocal || residentCredit || unemployment || treasuryCoupon) fail('actual small balance payment needs the ordinary employee method');
     validateOhio2026ActualBalancePaymentSources(input);
   } else {
   if (payments.paymentRows.length || payments.priorReturn.status !== 'no_return' || payments.priorCreditCarryforward.status !== 'none' || payments.remainingTaxPayment.status !== 'no_remaining_tax'
@@ -250,6 +312,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const methodId = 'methodId' in source ? source.methodId : 'oh-2026-ordinary-employee-draft-v1';
   const context: Ohio2026OrdinaryContext = Object.freeze({ methodId, sourceCommitment: currentDigest });
   contexts.set(context, { currentDigest, projection: { ...(actualBalancePayment ? {actualBalancePayment: true as const, originalWithholding: withholding.toFixed()} : {}), filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
+    ...(coupon ? { treasuryCoupon: { deduction: coupon.toFixed(), ohioAgi: ohioAgi.toFixed() } } : {}),
     ...(seniorCreditEligibleByAge ? { seniorCreditEligibleByAge: true as const } : {}), primaryQualifyingIncome: wageTotals.primary.toFixed(),
     ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
   return context;
