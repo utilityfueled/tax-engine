@@ -1,5 +1,71 @@
 # 2026 upgrade implementation evidence
 
+## November 25 California household FUTA credit reduction
+
+`30f6be19a` takes the 1.5% rate from final 2026 Schedule A (Form 940).
+The Schedule H interview and engine require documented wages subject to
+both FUTA and California unemployment tax. They preserve explicit zero.
+The supported case has only California periods and one FUTA-eligible
+employee. A separate source method is needed for mixed states and multiple
+employees. The control with $7,000 in overlapping wages produces a $105
+reduction and $147 net FUTA. Period amounts sum before a single state
+rounding. In 2026, complete periods outside California cannot justify
+a positive reduction.
+
+Independent engineering review reproduced the blank-to-zero, non-California
+and cross-state allocation problems before the correction. All 61 focused
+tests, type checks, spec and inventory validation, scoped lint and the 74
+browser timing controls passed. Both local builds passed from the exact
+source tree. Six related desktop and mobile Chromium cases passed on
+the exact local build with the original case deadlines and zero retries.
+They cover Pennsylvania care export and reopening, the gated 2026 child
+inventory, and the existing federal household worksheet collector.
+The exact combined Docker build passed. Vercel canceled the automatic
+production build. Final Schedule H and qualified human review are
+required for filing. Full exact CI and browser checks remain pending.
+[Final source](https://www.irs.gov/pub/irs-pdf/f940sa.pdf#page=2) ·
+[Draft Schedule H Worksheet 2](https://www.irs.gov/pub/irs-dft/i1040sh--dft.pdf#page=11) ·
+[Tax review packet](upgrade-2026-external-actions.md#november-25-california-household-payroll-review) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45728203817) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45728203395) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45728203384).
+
+The same local standalone build also passed all six browser recovery
+cases after all 15 IRS sample PDF digests were verified. The first run
+failed three cases because the browser driver lacked the W-2 sample.
+The rerun used the original deadlines and zero retries. It restored
+the encrypted original document bytes and guided answers after deletion
+and reload, exercised aborted local reset and deletion, and prevented
+another tab from reopening a deleted original. The server stopped
+normally. This is macOS loopback evidence for the packaged app layout.
+
+## November 25 Pennsylvania Head of Household dependent care
+
+`81a73d3f` extends the state-only 2026 care draft to a documented
+Head of Household case with one directly claimable qualifying child.
+The same child must share the taxpayer's Pennsylvania main home for
+365 nights, and original payments from the taxpayer’s own funds must
+exceed half of eligible upkeep. The interview preserves originals and
+requires fresh confirmation after changes to the household facts.
+The $74,000 wage control yields a $2,966 conservative federal liability
+floor, $630 projected federal credit, $360 Pennsylvania credit and
+$588 state draft refund.
+
+The initially split projection failed to parse. The corrected isolated
+projection matched the committed bytes. Its 99 focused tests, both type
+checks, lint, 10,093 spec references, inventory and 74 browser timing
+controls passed. Independent engineering review confirmed the published
+diff contains no Schedule H changes. The full local run is bound to
+6,701 tracked blobs and 15 verified sample PDFs. Both builds and the
+serialized web type check passed. A separate local type check collided
+with the Next build on generated files before that successful retry.
+The automatic Vercel production build was canceled. A newer main-branch
+push canceled this revision’s queued Docker job. The successor job also
+includes this change. Combined-return and filing readiness remain open.
+[Tax review packet](upgrade-2026-external-actions.md#november-25-pennsylvania-dependent-care-for-head-of-household) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45727539565) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45727539399).
+
 ## November 25 exact household upkeep comparison
 
 `fdc773360` preserves all original cents when comparing the household costs
@@ -244,8 +310,9 @@ five existing skips. The exact local coverage run finished with 30,555
 passes, 81 skips and one Pennsylvania Schedule SP packet timeout at the
 existing 15-second test deadline. The same named test passed two isolated
 coverage runs in 2.245 and 2.20 seconds. Both probes used the original
-global thresholds and neither qualifies full local coverage. The managed
-local browser run is still pending.
+global thresholds and neither qualifies full local coverage. The exact
+local managed browser passed all 652 active cases with five existing
+skips and zero failures.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45709246317) ·
 [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45709245932) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45709246061) ·

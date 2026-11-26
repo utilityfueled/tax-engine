@@ -9,6 +9,19 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `30f6be19a` applies the final 2026 California 1.5% household FUTA
+  reduction to documented overlapping wages. The 61 focused tests
+  passed. Mixed-state and multiple-employee allocations, final Schedule H
+  and qualified tax review remain open.
+  [California payroll evidence](upgrade-2026-progress.md#november-25-california-household-futa-credit-reduction).
+
+- `81a73d3f` verifies Head of Household eligibility for one documented
+  Pennsylvania 2026 dependent-care case. The exact isolated run passed
+  all 99 focused tests. The result is a state-only draft. The actual
+  federal claim, final publications and qualified tax review are still
+  required for filing.
+  [Pennsylvania household evidence](upgrade-2026-progress.md#november-25-pennsylvania-head-of-household-dependent-care).
+
 - `fdc773360` compares original household upkeep costs at exact cent
   precision. The test includes one cent below, at and above half. All
   32 focused tests and the exact Docker build passed. The full CI
@@ -57,8 +70,8 @@ Use the linked progress sections when investigating individual packages.
   focused tests, 15 local Chromium cases, and the exact Docker build
   passed. The exact local unit run passed 30,556 tests. Local coverage
   recorded one Pennsylvania Schedule SP timeout. The named case passed two
-  isolated coverage runs. The local browser run is pending. Managed Linux passed all 652
-  active cases. Strict AMD64 had two timeouts and strict ARM64 had
+  isolated coverage runs. Both local and Linux managed browser runs passed
+  all 652 active cases. Strict AMD64 had two timeouts and strict ARM64 had
   seven. The ARM64 image and Compose recovery passed.
   Filing and strict Linux qualification remain open.
   [Review cover evidence](upgrade-2026-progress.md#november-25-in-memory-review-cover).

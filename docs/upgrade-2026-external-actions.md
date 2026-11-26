@@ -1,5 +1,38 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 California household payroll review
+
+Independently calculate Schedule H Worksheet 2 for one 2026 California
+household employee paid $10,000 in cash. Original records show $7,000
+subject to both FUTA and California unemployment tax, $378 in total
+allowable credit before the reduction, and no late contributions. Check
+the $105 California reduction, $273 allowable credit and $147 net FUTA.
+Check explicit zero overlap, a missing or excess overlap, and two
+California rate periods whose eligible totals are summed before rounding.
+For payroll across states or with additional FUTA-eligible employees,
+review the employee-level allocation before implementing those cases.
+The final Schedule H and qualified review are still needed for filing.
+[Final 2026 Form 940 Schedule A](https://www.irs.gov/pub/irs-pdf/f940sa.pdf#page=2) ·
+[Draft Schedule H Worksheet 2](https://www.irs.gov/pub/irs-dft/i1040sh--dft.pdf#page=11).
+
+## November 25 Pennsylvania dependent care for Head of Household
+
+Independently review a full-year Pennsylvania resident with $74,000 of
+wages, $2,500 of Pennsylvania withholding and $1,800 of qualifying care
+expenses. Verify that the same child under 13 shared the taxpayer's
+Pennsylvania main home for the entire year, and that the taxpayer paid
+more than half the eligible upkeep from their own funds. Use documented
+household costs of $12,000 and separate original payments of $5,999.99,
+$6,000.00 and $6,000.01 to check the strict boundary. For the last case,
+check the basic $24,150 standard deduction, the $2,966 conservative
+federal liability floor after reserving the full one-child credit, the
+$630 projected federal care credit, $360 Pennsylvania care credit and
+$588 state draft refund. Confirm the actual federal claim and final
+Pennsylvania instructions before approving a filing transfer.
+[IRS household costs worksheet](https://www.irs.gov/publications/p501#en_US_2025_publink1000220787) ·
+[Federal 2026 adjustments](https://www.irs.gov/irb/2025-45_IRB) ·
+[Pennsylvania conformity guidance](https://www.pa.gov/agencies/revenue/resources/tax-law-policies-bulletins-notices/tax-cuts-and-jobs-one-big-beautiful-bill-acts).
+
 ## November 25 Pennsylvania dependent-care draft review
 
 Independently confirm the 2026 Pennsylvania Schedule DC amount for a
