@@ -2,7 +2,7 @@ import {calculateOhio2026EarnedSchoolDraft,type Ohio2026EarnedSchoolDraftResult}
 import { calculateOhio2026ResidentCapitalGainDraft, type Ohio2026ResidentCapitalGainDraftResult } from './oh-2026-resident-capital-gain-draft.js';
 import { calculateOhio2026BusinessDraft, type Ohio2026BusinessDraftResult } from './oh-2026-business-draft.js';
 import { calculateOhio2026OrdinarySource, calculateOhio2026PaReciprocalEmployeeSource, calculateOhio2026VaResidentCreditEmployeeSource } from "./oh-2026-ordinary-source.js";
-import { calculateOhio2026ReturnDraft, type Ohio2026ReturnDraftResult } from "./oh-2026-return-draft.js";
+import { calculateOhio2026BankInterestReturnDraft, calculateOhio2026ReturnDraft, type Ohio2026ReturnDraftResult } from "./oh-2026-return-draft.js";
 import {
   buildOhioResidentReturnInput,
   type OhioOverlayInput,
@@ -47,6 +47,7 @@ export function calculateOhio2026ReturnDraftFromSources(input: { taxInput: TaxYe
   if (method === 'oh-2026-resident-capital-gain-draft-v1') return calculateOhio2026ResidentCapitalGainDraft(input.taxInput, input.sources);
   if(method==='oh-2026-earned-school-employee-draft-v1')return calculateOhio2026EarnedSchoolDraft(input.taxInput,input.sources);
   if (method === 'oh-2026-canonical-business-draft-v1') return calculateOhio2026BusinessDraft(input.taxInput, input.sources);
+  if (method === 'oh-2026-part-year-bank-interest-employee-draft-v1') return calculateOhio2026BankInterestReturnDraft(input.taxInput, input.sources);
   const context = method === 'oh-2026-pa-reciprocal-employee-draft-v1'
     ? calculateOhio2026PaReciprocalEmployeeSource(input.taxInput, input.sources)
     : method === 'oh-2026-va-resident-credit-employee-draft-v1'

@@ -31,6 +31,55 @@ notes: |
   Calculation status remains incomplete, filingQualified=false, review pending;
   final2026 form identities/numbering and professional review are separate gates.
 lines:
+  - line: "part-year-bank-interest"
+    description: "Private 2026 ordinary employee draft for one nonbusiness deposit account and actual part-year bank interest"
+    formula: >-
+      Admit a single primary cash-method part-year Ohio resident under 65 who
+      meets the ordinary employee, actual domicile, credits, school and
+      withholding-only gates. Require one complete current uncorrected nonvoid
+      Form 1099-INT with positive Box 1 interest from an ordinary U.S. bank deposit,
+      matched taxpayer, payer and stable account reference. Require dated, complete
+      and distinct original bank credits, actually or constructively received on
+      the stated dates without other timing or basis adjustments. Each positive
+      credit belongs to its actual domicile period. Bind every unchanged original
+      and sum exact credits to Box 1 before rounding. Ohio AGI and federal AGI
+      include gross wages and all Box 1 interest. Under RC 5747.20(A), (B)(6)
+      and (C), only interest received during Ohio domicile enters IT NRC Part B.
+      Apply the existing four-place truncated nonresident ratio and whole-dollar
+      credit under RC 5747.05(A). No current ordinary paper export, public routing,
+      final-form or filing qualification follows from this private calculation.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      - "https://www.irs.gov/publications/p550"
+    testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::allocates actual bank credits on both sides of the Ohio move"
+  - line: "part-year-bank-interest-dispatch"
+    description: "Dispatch a complete bank-interest packet through the private Ohio source-to-return entry"
+    formula: >-
+      Select the dedicated bank-interest validation and calculation when the
+      private source packet specifies its method ID. Require the same documentary
+      proof and return the same draft as direct invocation. A bank original on
+      a wage-only packet still requires its separate method. Package exports,
+      public readiness, ordinary paper output and the distinct Treasury coupon
+      method retain their existing boundaries.
+    testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::dispatches complete reopened bank evidence through the private Ohio entry"
+    testRefs:
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds incomplete bank evidence through the private Ohio entry"
+  - line: "part-year-bank-interest-source-holds"
+    description: "Hold unknown, unmatched or contradictory bank records and allocations"
+    formula: >-
+      Require current original and bank records for exactly one account, explicit
+      knowledge of other original boxes, and known absence of other income,
+      withholding, adjustments, an alternate interest method, or orphaned
+      unemployment payment sources. Reject duplicate source records, missing or
+      masked account identity, different institutions, recipients or years,
+      zero/unknown or invalid amounts and dates, and any resident or nonresident
+      amount that differs from the allocation derived from the original bank
+      credits and actual domicile. The existing wage-only draft retains its
+      separate admission and the current public gates stay closed.
+    testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds incomplete contradictory or unsupported bank evidence (%s)"
+    testRefs:
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::keeps bank originals out of the wage-only method"
   - line: "direct-treasury-coupon"
     description: "Private 2026 ordinary employee draft for one directly held conventional Treasury note or bond coupon"
     formula: "Admit a single primary full-year Ohio resident under 65 who meets existing ordinary original, credit, school and withholding-only gates. Require an explicit private Treasury coupon packet with the actual current, complete, uncorrected nonvoid Form 1099-INT, matched owner, custodian name and TIN, account and year, and a distinct original coupon receipt linked by account and CUSIP to the documented direct U.S. Treasury note or bond. Verify the calendar 2026 coupon date and full positive cash amount against Box 3; Box 3 alone is insufficient. Exclude bills, savings bonds, Treasury funds, indirect holdings, and any premium, accrued interest, discount, basis, election, withholding or other reporting that changes the simple coupon treatment. Reconcile all federal and resident source categories against originals. Federal AGI is rounded ordinary wages plus actual coupon combined before rounding. Deduct the exact federally taxable and Ohio-exempt coupon once under RC5747.01(A)(3) and 31 USC3124(a); Ohio AGI is the remaining ordinary wages rounded at the end. No NRC applies to this full-year household. Keep independent review, final state forms, public routing and filing closed."

@@ -85,6 +85,26 @@ export const Ohio2026TreasuryCouponEmployeeSourcesSchema = Ohio2026OrdinarySourc
 }).strict();
 export type Ohio2026TreasuryCouponEmployeeSources = z.infer<typeof Ohio2026TreasuryCouponEmployeeSourcesSchema>;
 
+/** Current Box 1 and dated credits from one ordinary domestic deposit account. */
+export const Ohio2026BankInterestEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
+  methodId: z.literal('oh-2026-part-year-bank-interest-employee-draft-v1'),
+  bankInterestOriginal: z.object({
+    sourceTaxYear: z.literal(2026), sourceReference: reference,
+    payerName: reference, payerTin: z.string().regex(/^\d{2}-?\d{7}$/), accountReference: reference,
+    recipient: z.object({
+      accountHolder: z.literal('primary'), firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/),
+    }).strict(),
+    currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
+    noOtherOriginalReportingConfirmed: z.literal(true), cashMethodOrdinaryDomesticDepositConfirmed: z.literal(true),
+    completeActualBankCreditsConfirmed: z.literal(true),
+    credits: z.array(z.object({
+      sourceReference: reference, accountReference: reference, creditedOn: date, amount: money,
+      availableOnCreditDateConfirmed: z.literal(true),
+    }).strict()).min(1).max(366),
+  }).strict(),
+}).strict();
+export type Ohio2026BankInterestEmployeeSources = z.infer<typeof Ohio2026BankInterestEmployeeSourcesSchema>;
+
 /** Separate current documentary method; ordinary packets keep their strict schema. */
 export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: z.literal('oh-2026-pa-reciprocal-employee-draft-v1'),
