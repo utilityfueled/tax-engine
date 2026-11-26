@@ -13,9 +13,9 @@ function storage() {
     clear: () => values.clear(), key: (i: number) => [...values.keys()][i] ?? null,
     get length() { return values.size; } };
 }
-function fixture() {
+function fixture(fileName = "private-tax-form.pdf") {
   const local = storage();
-  const file = new File([new Uint8Array([0, 1, 2, 255, 8])], "private-tax-form.pdf", {
+  const file = new File([new Uint8Array([0, 1, 2, 255, 8])], fileName, {
     type: "application/pdf", lastModified: 1234567,
   });
   const workspace = ingestFiles(local, "original", [{ name: file.name, size: file.size }]);
@@ -70,6 +70,78 @@ describe("full-fidelity encrypted local recovery", () => {
     expect(restored.lastModified).toBe(1234567);
     expect(restored.type).toBe("application/pdf");
     expect(getWorkspace(f.local, result.workspaceId)?.documents).toHaveLength(1);
+  });
+  it("round trips legacy advanced answers and originals with missing derived fields", async () => {
+    const f = fixture("fw2--2026.pdf");
+    const source = requireStoredReturns(f.local);
+    const legacy = source.workspaces.original;
+    const answer = "Confirmed W-2 wages are exactly 1200.00.";
+    const answeredAt = "2026-03-11T00:05:00.000Z";
+    const wages = f.workspace.seededReturn.facts.find(fact => fact.id === "wages");
+    if (!wages) throw new Error("Expected a seeded W-2 question");
+    legacy.seededReturn = { ...f.workspace.seededReturn, interviewQuestions: [],
+      facts: [{ ...wages, status: "answered", answerText: answer, answeredAt }] };
+    delete legacy.returnSummary;
+    delete legacy.auditTrail;
+    delete legacy.structuredFacts;
+    f.local.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(source));
+    f.local.removeItem(getGuidedFlowStorageKey("original"));
+
+    const locallyOpened = getWorkspace(f.local, "original");
+    if (!locallyOpened) throw new Error("Expected the legacy return to open locally");
+    expect(locallyOpened.seededReturn.interviewQuestions).toContainEqual(expect.objectContaining({
+      id: "wages", status: "answered", answerText: answer, answeredAt,
+    }));
+    const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
+    expect(requireStoredReturns(f.local)).toEqual(source);
+
+    const restoredStorage = storage();
+    const { workspaceId, documentCount } = await importWorkspaceRecovery(restoredStorage, archive, password, { documents: f.documents });
+    const restored = requireStoredReturns(restoredStorage).workspaces[workspaceId];
+    expect(documentCount).toBe(1);
+    expect(restored.seededReturn).toEqual(legacy.seededReturn);
+    expect(restored.privateExtension).toEqual(legacy.privateExtension);
+    expect(restored.returnSummary).toEqual(locallyOpened.returnSummary);
+    expect(restored.auditTrail).toEqual(locallyOpened.auditTrail);
+    expect(restored.structuredFacts).toEqual(locallyOpened.structuredFacts);
+    expect(getWorkspace(restoredStorage, workspaceId)?.seededReturn.interviewQuestions).toContainEqual(expect.objectContaining({
+      id: "wages", status: "answered", answerText: answer, answeredAt,
+    }));
+    expect(restoredStorage.getItem(`tax-engine:guided-mode:${workspaceId}`)).toBe("false");
+    const original = await f.documents.read(workspaceId, f.workspace.documents[0].id);
+    if (!original) throw new Error("Expected restored W-2 original");
+    expect(await original.arrayBuffer()).toEqual(await f.file.arrayBuffer());
+    expect([original.name, original.type, original.lastModified]).toEqual([f.file.name, f.file.type, f.file.lastModified]);
+  });
+  it("preserves present derived fields when a legacy field needs backfill", async () => {
+    const f = fixture();
+    const source = requireStoredReturns(f.local);
+    const saved = source.workspaces.original;
+    saved.returnSummary.privateExtension = { exactZero: "0.00", unknown: null };
+    saved.auditTrail[0].privateExtension = { explanation: "saved local detail" };
+    delete saved.structuredFacts;
+    f.local.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(source));
+
+    const archive = await exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents });
+    const restoredStorage = storage();
+    const { workspaceId } = await importWorkspaceRecovery(restoredStorage, archive, password, { documents: f.documents });
+    const restored = requireStoredReturns(restoredStorage).workspaces[workspaceId];
+    expect(restored.returnSummary).toEqual(saved.returnSummary);
+    expect(restored.auditTrail).toEqual(saved.auditTrail);
+    expect(restored.structuredFacts).toEqual(getWorkspace(f.local, "original")?.structuredFacts);
+  });
+  it.each([
+    ["returnSummary", null], ["auditTrail", {}], ["structuredFacts", [null]],
+  ])("rejects malformed present legacy %s before reading originals", async (field, invalidValue) => {
+    const f = fixture();
+    const source = requireStoredReturns(f.local);
+    delete source.workspaces.original.auditTrail;
+    delete source.workspaces.original.structuredFacts;
+    source.workspaces.original[field] = invalidValue;
+    f.local.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(source));
+
+    await expect(exportWorkspaceRecovery(f.local, "original", password, { documents: f.documents })).rejects.toThrow(field);
+    expect(f.documents.read).not.toHaveBeenCalled();
   });
   it("does not invent a year in a legacy saved interview", async () => {
     const f = fixture();

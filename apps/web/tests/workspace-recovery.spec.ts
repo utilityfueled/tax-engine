@@ -43,6 +43,13 @@ test("encrypted backup restores original bytes and private local answers after d
   expect(downloadCount).toBe(0);
   await page.evaluate(({ id, originalFlow }) => {
     localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow);
+    const key = "tax-engine.return-workspaces.v1";
+    const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+    const workspace = saved.workspaces[id];
+    delete workspace.returnSummary;
+    delete workspace.auditTrail;
+    delete workspace.structuredFacts;
+    localStorage.setItem(key, JSON.stringify(saved));
   }, { id, originalFlow });
   await card.getByLabel("Backup password (at least 12 characters)").fill("synthetic-recovery-password");
   const downloadPromise = page.waitForEvent("download");
@@ -52,6 +59,10 @@ test("encrypted backup restores original bytes and private local answers after d
   const archivePath = testInfo.outputPath("encrypted-recovery.json");
   await download.saveAs(archivePath);
   expect(await readFile(archivePath, "utf8")).not.toContain("900-70-0011");
+  expect(await page.evaluate(id => {
+    const saved = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+    return ["returnSummary", "auditTrail", "structuredFacts"].filter(key => Object.hasOwn(saved.workspaces[id], key));
+  }, id)).toEqual([]);
   await card.getByRole("button", { name: `Delete tax return ${id}`, exact: true }).click();
   await expect(card).toHaveCount(0);
   await page.reload();

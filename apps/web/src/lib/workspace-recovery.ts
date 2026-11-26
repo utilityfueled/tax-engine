@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { emptyDeductionData, getGuidedFlowStorageKey, type GuidedFlowStorageTarget } from "./guided-interview-flow";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
-import { WORKSPACE_STORAGE_KEY, invalidateWorkspaceStorageCache } from "./workspace-storage";
+import { WORKSPACE_STORAGE_KEY, hydrateWorkspaceRecord, invalidateWorkspaceStorageCache } from "./workspace-storage";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import {
   deleteCachedWorkspaceDocumentFiles, getCachedWorkspaceDocumentFile,
@@ -25,6 +25,7 @@ const workspaceSchema = z.object({
   seededReturn: object, returnSummary: object, auditTrail: z.array(object),
   structuredFacts: z.array(object), checklist: z.array(object), summary: object,
 }).passthrough();
+const localWorkspaceSchema = workspaceSchema.partial({ returnSummary: true, auditTrail: true, structuredFacts: true });
 const payloadSchema = z.object({
   schemaVersion: z.literal(1), createdAt: z.iso.datetime(),
   workspace: workspaceSchema,
@@ -94,6 +95,17 @@ function readStorage(storage: Storage) {
   return raw === null ? { workspaces: {} } : z.object({ workspaces: z.record(z.string(), z.unknown()) })
     .passthrough().parse(JSON.parse(raw));
 }
+function backfillLegacyWorkspaceFields(saved: z.infer<typeof localWorkspaceSchema>) {
+  if (saved.returnSummary !== undefined && saved.auditTrail !== undefined && saved.structuredFacts !== undefined) return saved;
+
+  const hydrated = hydrateWorkspaceRecord(saved.id, saved);
+  return workspaceSchema.parse({
+    ...saved,
+    returnSummary: saved.returnSummary ?? hydrated.returnSummary,
+    auditTrail: saved.auditTrail ?? hydrated.auditTrail,
+    structuredFacts: saved.structuredFacts ?? hydrated.structuredFacts,
+  });
+}
 function parseGuided(raw: string | null) {
   if (raw === null) return null;
   // Preserve unknown fields and the original year, including a legacy missing year.
@@ -113,8 +125,11 @@ export async function exportWorkspaceRecovery(
   assertPassword(password);
   aborted(options.signal);
   const hosted = options.hostedSnapshot;
-  const workspace = workspaceSchema.parse(hosted ? hosted.workspace : readStorage(storage).workspaces[workspaceId]);
-  if (workspace.id !== workspaceId) throw new Error("The stored return identity does not match.");
+  const saved = hosted
+    ? workspaceSchema.parse(hosted.workspace)
+    : localWorkspaceSchema.parse(readStorage(storage).workspaces[workspaceId]);
+  if (saved.id !== workspaceId) throw new Error("The stored return identity does not match.");
+  const workspace = backfillLegacyWorkspaceFields(saved);
   const guidedFlowRaw = storage.getItem(getGuidedFlowStorageKey(hosted ? hosted.draftId : workspaceId));
   const guided = parseGuided(guidedFlowRaw);
   if (hosted && [...hosted.workspace.seededReturn.interviewQuestions, ...hosted.workspace.seededReturn.facts]

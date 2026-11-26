@@ -9,7 +9,8 @@ notes: |
   The envelope has exactly eight canonical JSON fields: fixed public algorithm/version
   fields and three canonical base64 binary fields (salt16/iv12/ciphertext+tag).
   No arbitrary plaintext field or unknown key is admitted. Authenticated plaintext
-  must equal the actual pre-backup workspace, raw guided answers/mode and originals.
+  must retain every pre-backup workspace field, raw guided answer and mode, and original.
+  Older local records may gain derived fields absent from the saved record.
   Zero user or provider credentials; these controls use only fictional local returns.
   The full local browser lifecycle checks every captured request for backup
   passwords, PDF bytes, and prohibited destinations. Synchronous assertions
@@ -53,6 +54,11 @@ lines:
   - line: "self-host-legacy-original-time"
     formula: "Compare the archived and restored timestamp to the stored original modification time when present, including zero. For old images that saved only the upload time, use that recorded time as the expected legacy browser timestamp. Reject an invalid timestamp or an absent legacy upload time in rehearsal evidence."
     testRef: "tests/apps/web/encrypted-recovery-review.test.ts::uses the recorded upload time only for a legacy file without modification time"
+  - line: "self-host-legacy-workspace-fields"
+    formula: "For a legacy local return, derive an absent return summary, audit trail, or structured facts from the normal local record hydration. Preserve all present fields, existing private answers, original files, and the raw source record. Reject present malformed required fields and retain source-file integrity checks."
+    testRef: "tests/apps/web/workspace-recovery.test.ts::round trips legacy advanced answers and originals with missing derived fields"
+    testRefs:
+      - "apps/web/tests/workspace-recovery.spec.ts::encrypted backup restores original bytes and private local answers after deletion and reload"
   - line: "local-upload-durability"
     formula: "A local browser upload publishes new document metadata and reports success only after every original is committed in one durable transaction. If original storage is unavailable, leave existing metadata and files intact. A retry after storage recovers may attach the same selection."
     testRef: "apps/web/tests/workspace-upload.spec.ts::keeps local upload metadata unchanged when the original cannot be stored"

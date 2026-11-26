@@ -868,7 +868,7 @@ function normalizeSeededReturnFacts(value: unknown): SeededReturnFactRecord[] {
 }
 
 function getHydrationPreviousQuestions(
-  seededReturn: Partial<SeededReturnSummary> | undefined
+  seededReturn: { interviewQuestions?: unknown; facts?: unknown } | undefined
 ): InterviewQuestionRecord[] {
   const storedQuestionsById = new Map(
     normalizeInterviewQuestions(seededReturn?.interviewQuestions).map((question) => [question.id, question])
@@ -1076,7 +1076,17 @@ function buildWorkspace(
   };
 }
 
-function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceRecord): ReturnWorkspaceRecord {
+/** Rebuild the local display record from a saved workspace, including older fields. */
+export function hydrateWorkspaceRecord(workspaceId: string, workspace: {
+  documents?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  seededReturn?: { interviewQuestions?: unknown; facts?: unknown };
+  auditTrail?: unknown;
+  storageMode?: unknown;
+  guidedCompletion?: unknown;
+  returnSummary?: { targetTaxYear?: unknown };
+}): ReturnWorkspaceRecord {
   const documents = ensureUniqueDocumentIds(
     Array.isArray(workspace.documents)
       ? workspace.documents.flatMap((document) => {
@@ -1138,8 +1148,8 @@ function hydrateWorkspaceRecord(workspaceId: string, workspace: ReturnWorkspaceR
     guidedCompletion
   );
   const savedYear = workspace.returnSummary?.targetTaxYear;
-  if (hydrated.returnSummary.targetTaxYear === null && Number.isInteger(savedYear)
-    && savedYear !== null && savedYear >= 1900 && savedYear <= 2100
+  if (hydrated.returnSummary.targetTaxYear === null && typeof savedYear === "number" && Number.isInteger(savedYear)
+    && savedYear >= 1900 && savedYear <= 2100
     && documents.some((document) => document.taxYear === undefined)) {
     // Preserve the saved return selection separately from unknown source facts.
     // taxYearState remains unknown, so this does not authorize calculation.
