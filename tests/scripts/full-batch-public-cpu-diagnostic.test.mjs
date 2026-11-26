@@ -190,11 +190,12 @@ test('trace pairing chooses a complete original Ohio window with an observed tim
  assert.equal(selectTraceWindow(original,[{id:ids[1],failureCategory:'assertion'}],new Set(ids)),undefined);
 });
 
-test('captures school phase markers only in original strict AMD64 browser execution', async () => {
+test('captures school phase markers only in original strict Linux browser execution', async () => {
  const browserRunner=new URL('../../scripts/run-browser-tests.mjs',import.meta.url);
  const {environment,schoolPhaseEnvironment}=await import(browserRunner);
- const [workflow,runner]=await Promise.all([
+ const [workflow,nativeWorkflow,runner]=await Promise.all([
   readFile(new URL('../../.github/workflows/web.yml',import.meta.url),'utf8'),
+  readFile(new URL('../../.github/workflows/arm64-recovery.yml',import.meta.url),'utf8'),
   readFile(browserRunner,'utf8'),
  ]);
  const strictStep=workflow.match(/^ {6}- name: Browser flows against the actual runtime image\n[\s\S]*?(?=^ {6}- name:)/m)?.[0];
@@ -202,6 +203,11 @@ test('captures school phase markers only in original strict AMD64 browser execut
  assert.match(strictStep,/^ {10}TAX_BROWSER_SCHOOL_PHASES: '1'$/m);
  assert.match(strictStep,/^ {8}run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure$/m);
  assert.equal(workflow.match(/TAX_BROWSER_SCHOOL_PHASES:/g)?.length,1);
+ const nativeStep=nativeWorkflow.match(/^ {6}- name: Run strict browser flows against the ARM64 runtime image\n[\s\S]*?(?=^ {6}- name:)/m)?.[0];
+ assert.ok(nativeStep);
+ assert.match(nativeStep,/^ {10}TAX_BROWSER_SCHOOL_PHASES: '1'$/m);
+ assert.match(nativeStep,/^ {8}run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure$/m);
+ assert.equal(nativeWorkflow.match(/TAX_BROWSER_SCHOOL_PHASES:/g)?.length,1);
 
  const strict={GITHUB_ACTIONS:'true',TAX_BROWSER_SCHOOL_PHASES:'1'};
  assert.deepEqual(schoolPhaseEnvironment(strict,true),{TAX_BROWSER_SCHOOL_PHASES:'1'});
@@ -210,7 +216,7 @@ test('captures school phase markers only in original strict AMD64 browser execut
  assert.deepEqual(schoolPhaseEnvironment({...strict,TAX_BROWSER_SCHOOL_PHASES:'true'},true),{});
  assert.deepEqual(schoolPhaseEnvironment({GITHUB_ACTIONS:'true'},true),{});
  assert.ok(!Object.hasOwn(environment(strict),'TAX_BROWSER_SCHOOL_PHASES'));
- assert.match(runner,/schoolPhaseEnvironment\(parentEnv, external && !native\)/);
+ assert.match(runner,/schoolPhaseEnvironment\(parentEnv, external\)/);
  assert.match(runner,/env: \{ \.\.\.env, \.\.\.schedulerEnvironment, \.\.\.schoolPhases, PLAYWRIGHT_JSON_OUTPUT_FILE: report \}/);
 });
 
@@ -222,6 +228,34 @@ function traceFixture(file='oh-fixture.spec.ts') {
   run:async trace=>{calls.push(trace);clock+=37;const failing=trace==='retain-on-failure';return{exit:failing?1:0,report:report(failing?'timedOut':'passed'),executionMs:28};}};
  return{report,waits,calls,saved,io,save:async(name,record)=>saved.set(name,record),audit:{files:{[file]:{}}},binding:{originalQualification:{failed:7}}};
 }
+
+test('records identity confirmation only after post-batch identity and liveness checks', async () => {
+ const {rowsFromReport,runSchedule}=await import('../../scripts/run-browser-tests.mjs');
+ for(const outcome of ['pass','identity failure','liveness failure','capture failure']) {
+  const f=traceFixture();
+  const rows=rowsFromReport(f.report('passed'));
+  const received=[];
+  let inspected=0;
+  const result=await runSchedule({batches:[{rows,bounds:{}}],expected:rows,audit:f.audit,io:{
+   ...f.io,
+   identity:async()=>{
+    inspected++;
+    if(inspected===3 && outcome==='identity failure') throw new Error('External container replaced');
+   },
+   alive:()=>inspected<3 || outcome!=='liveness failure',
+   record:async receipt=>received.push({kind:'receipt',batch:receipt.batch,inspected}),
+   confirm:async receipt=>{
+    if(outcome==='capture failure') throw new Error('Synthetic diagnostic write failure');
+    received.push({kind:'identity',batch:receipt.batch,inspected});
+   },
+  }});
+  assert.equal(result.batchesCompleted,1);
+  assert.equal(result.cleanup,true);
+  assert.equal(result.status,['pass','capture failure'].includes(outcome)?'PASS':'FAIL');
+  assert.deepEqual(received,[{kind:'receipt',batch:1,inspected:2},
+   ...(outcome==='pass'?[{kind:'identity',batch:1,inspected:3}]:[])]);
+ }
+});
 
 test('trace legs differ only in capture mode and preserve totals across consecutive natural windows', async () => {
  const {runTracePair}=await import(traceUrl);

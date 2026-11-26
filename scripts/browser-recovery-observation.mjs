@@ -4,6 +4,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { projectDiagnosticCases } from './browser-cpu-diagnostics/fixed-metadata.mjs';
 import { projectCaseResults } from './browser-cpu-diagnostics/runner.mjs';
+import { projectSchoolCasePhases } from './browser-cpu-diagnostics/school-phases.mjs';
 
 const count = value => Number.isSafeInteger(value) && value >= 0;
 const need = (valid, reason) => {
@@ -39,7 +40,11 @@ export async function recoveryBrowserObservation({ directory, sourceSha, candida
     let observedFailures = 0;
     let observedSkips = 0;
     for (let number = 1; number <= batchesCompleted; number++) {
-        const { value: receipt } = await readReceipt(directory, `batch-${number}-receipt.json`);
+        const { bytes, value: receipt } = await readReceipt(directory, `batch-${number}-receipt.json`);
+        const { value: confirmation } = await readReceipt(directory, `batch-${number}-identity.json`);
+        need(confirmation?.batch === number && confirmation.sourceSha === sourceSha
+            && confirmation.candidateImageId === candidateImageId
+            && confirmation.receiptSha256 === createHash('sha256').update(bytes).digest('hex'), 'Mismatched recovery batch identity');
         const rows = receipt.result?.rows;
         const startedMs = receipt.start?.mono;
         const finishedMs = receipt.close?.mono;
@@ -55,7 +60,7 @@ export async function recoveryBrowserObservation({ directory, sourceSha, candida
             need(count(deadlineMs) && deadlineMs > 0, 'Invalid recovery case deadline');
             need(!ids.has(result.id), 'Duplicate recovery case');
             ids.add(result.id);
-            return { ...result, deadlineMs };
+            return { ...result, deadlineMs, ...projectSchoolCasePhases(rows[index]) };
         });
         const batchFailures = cases.filter(result => ['failed', 'timedOut'].includes(result.status)).length;
         const batchSkips = cases.filter(result => result.status === 'skipped').length;

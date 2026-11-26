@@ -139,6 +139,7 @@ jobs:
           CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
           PLAYWRIGHT_DISABLE_WEBSERVER: "true"
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
+          TAX_BROWSER_SCHOOL_PHASES: '1'
         run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure
       - name: Stop and remove the rehearsal browser container
         if: ${{ always() && steps.browser_container.outputs.container != '' }}
