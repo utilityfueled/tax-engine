@@ -14,6 +14,7 @@ import { W2Schema } from "@/models/inputs";
 import { assertW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
 import {buildNecInputs} from './guided-business-facts';
+import { buildGuidedCardTipSource } from "./guided-card-tip-source";
 export {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
 import type { z } from "zod";
@@ -908,11 +909,14 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const stateCode = segmentation.stateCode;
   const w2s = buildW2Inputs(w2Data?.entries);
   const necs = buildNecInputs(seData?.necEntries);
+  const cardTipStatement = buildGuidedCardTipSource(seData, state.taxYear, segmentation.filingStatus);
   const scheduleC = buildScheduleCInput(
     seData?.necEntries, seData?.manualGrossReceipts, seData?.expenses, seData?.qbiMateriallyParticipated,
     seData?.businessFacts, standardMileage?.packet, professionalWagering?.ledger,
     homeOffice,
   );
+  // The admitted card statement has one matching ledger receipt total and no other reported receipts.
+  if (cardTipStatement && scheduleC) scheduleC.grossReceipts = parseGuidedCurrency(seData?.manualGrossReceipts).toFixed();
   let actualGoodwill:ReturnType<typeof buildGuidedGoodwill>;
   let actualMacrs:ReturnType<typeof buildGuidedMacrsAssets>;
   let passengerForm:ReturnType<typeof buildGuidedPassengerForm>;
@@ -958,6 +962,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
   try { royaltyInputs={...royaltyInputs,form1099Misc:buildGuidedZeroIncomeMiscSources(state,royaltyInputs.form1099Misc)}; } catch { return null; }
+  if (cardTipStatement && royaltyInputs.form1099Misc?.length) return null;
   if (form8919 && (necs.length > 0 || royaltyInputs.form1099Misc?.length || scheduleC)) return null;
   let scheduleA: ReturnType<typeof buildScheduleAInput>;
   try {
@@ -1067,6 +1072,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form7206: healthInsurance,
     form1099Nec: necs,
+    ...(cardTipStatement ? { form1099K: [cardTipStatement] } : {}),
     ...(professionalWagering?.forms ? { formW2G: professionalWagering.forms } : {}),
     scheduleC: scheduleC ?? undefined,
     form4562:actualGoodwill?.form4562 ?? actualMacrs?.form4562 ?? passengerForm,

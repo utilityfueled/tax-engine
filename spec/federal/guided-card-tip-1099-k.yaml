@@ -1,0 +1,16 @@
+form: Guided 2026 Form 1099-K business tip source
+taxYear: 2026
+reference: https://www.irs.gov/forms-pubs/about-form-1099-k
+lines:
+  - line: statement-intake
+    description: Preserve the actual payment settlement statement in Self-employment
+    formula: Retain actual statement year, payment settlement entity, statement reference, owner, Box 1a gross, Box 1b card-not-present transactions, Box 1c cash tips, Box 1d occupation code, Box 4 federal withholding and confirmed absence of state reporting. Carry only one complete actual 2026 business statement into the tax input. Preserve blanks and explicit zero separately on save and reopen. The actual Schedule C gross from the ledger must equal Box 1a and is counted once. Hold conflicting owners, years, other compensation statements and unreconciled receipts.
+    testRef: "tests/guided-interview/guided-card-tip-1099-k.test.ts::retains the actual statement and reconciles ledger receipts without adding them twice"
+  - line: qualified-tip-link
+    description: Link the qualified business tip to the same statement and ledger
+    formula: Link the same owner and Schedule C to form1099K:0. Require fresh verification of the statement recipient for the filing status, an actual ledger reference, and confirmation of the only payment cohort, Schedule C receipts and qualified tip reconciliation. Check the eligible occupation and tip amount against the actual statement. Keep withholding, income and tax calculation separate. Same-owner identity or year changes revoke statement verification and the three scoped proof confirmations while preserving the statement and ledger reference. Earlier years and existing NEC and W-2 methods retain their existing paths.
+    testRef: "tests/guided-interview/guided-card-tip-1099-k.test.ts::requires original payment and tip facts on the normal guided route"
+  - line: guided-source-controls
+    description: Make the original statement and same-owner deduction link reachable
+    formula: Self-employment offers one original card-tip statement for 2026. Additional deductions offers its linked statement to the same owner's Schedule C tip claim and collects the three source confirmations. The statement appears in neither the W-2 nor overtime source choices.
+    testRef: "tests/guided-interview/guided-card-tip-1099-k.test.ts::makes the same-owner card statement reachable only for the business tip claim"

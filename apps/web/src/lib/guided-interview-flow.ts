@@ -53,7 +53,7 @@ import { investmentInterestFactErrors, type InvestmentInterestSourceData } from 
 import { guidedForeignTaxFactErrors, type ForeignTaxElectionData } from "./guided-foreign-tax-election";
 import { foreignCreditKnownFacts } from './guided-foreign-tax-direct-credit';
 import { premiumTaxCreditFactErrors, type PremiumTaxCreditData } from "./guided-premium-tax-credit-facts";
-import { invalidateEditedVehicleLoanCredit, invalidateVehicleRefundPaymentEvidence, schedule1AFactErrors, type VehicleInterestData } from "./guided-schedule-1-a-facts";
+import { clearSchedule1ACardTipConfirmations, invalidateEditedVehicleLoanCredit, invalidateVehicleRefundPaymentEvidence, schedule1AFactErrors, type VehicleInterestData } from "./guided-schedule-1-a-facts";
 import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip-income-facts";
 import { form8919ReasonAFactErrors } from "./guided-form-8919-reason-a";
 import { hasMovingW2Source, invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
@@ -113,6 +113,7 @@ import { buildActualEducationInput, LLC_YEAR_FACTS_VERSION, requiresLlcYearRevie
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { invalidateEditedReitPtpLossSource, reitPtpLossSourceFactErrors, type GuidedReitPtpLossSource } from "./guided-reit-ptp-loss";
 import { invalidateEditedGuidedDirectReitDividend, invalidateGuidedDirectReitDividend, type GuidedDirectReitDividendFacts } from "./guided-direct-reit-dividend";
+import { cardTipStatementFactsChanged, clearCardTipStatementConfirmation, type GuidedCardTipSource } from "./guided-card-tip-source";
 import { guidedSaversCreditContext, guidedSaversCreditFactErrors, guidedSaversHistoricalEvidence, requireGuidedSaversReview, type GuidedSaversCreditData } from "./guided-savers-credit";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
@@ -1466,6 +1467,7 @@ export interface SectionDataMap {
   "income-w2"?: { entries: W2EntryData[]; combatPayElection?: EicCombatPayElection };
   "income-self-employment"?: {
     necEntries: NecEntryData[];
+    cardTipSource?: GuidedCardTipSource;
     manualGrossReceipts: string;
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses?: ScheduleCBankStatementAnalysis[];
@@ -1806,6 +1808,8 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const llcSourcesEntered = !!education?.llcStudents?.length;
   const bankInterestSourcesEntered = credits?.educationDistributions?.forms?.some(row => row.bankInterestConversion);
   const selfEmployment = state.sectionData["income-self-employment"];
+  const additionalDeductions = state.sectionData["additional-deductions"];
+  const cardTipSchedule = additionalDeductions?.schedule1A?.businessTips.some(row => row.form1099KProof) ? additionalDeductions.schedule1A : undefined;
   const businessFacts = selfEmployment?.businessFacts;
   const renterHomeOffice = businessFacts?.homeOfficeRenter;
   const rentals = state.sectionData["income-rental"];
@@ -1891,17 +1895,19 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } : {}),
         },
       } : {}),
-      ...(selfEmployment && businessFacts && (businessFacts.incomeReconciled === true || businessFacts.expensesReconciled === true || renterHomeOffice?.confirmed === true) ? {
+      ...(selfEmployment && (selfEmployment.cardTipSource || businessFacts?.incomeReconciled === true || businessFacts?.expensesReconciled === true || renterHomeOffice?.confirmed === true) ? {
         "income-self-employment": {
           ...selfEmployment,
-          businessFacts: {
+          ...(selfEmployment.cardTipSource ? { cardTipSource: clearCardTipStatementConfirmation(selfEmployment.cardTipSource) } : {}),
+          ...(businessFacts ? { businessFacts: {
             ...businessFacts,
             ...(businessFacts.incomeReconciled === true ? { incomeReconciled: null } : {}),
             ...(businessFacts.expensesReconciled === true ? { expensesReconciled: null } : {}),
             ...(renterHomeOffice?.confirmed === true ? { homeOfficeRenter: { ...renterHomeOffice, confirmed: false } } : {}),
-          },
+          } } : {}),
         },
       } : {}),
+      ...(cardTipSchedule ? { "additional-deductions": { ...additionalDeductions, schedule1A: clearSchedule1ACardTipConfirmations(cardTipSchedule) } } : {}),
       ...(rentals?.entries?.some(entry => entry.sourceFactsConfirmed === true) ? {
         "income-rental": {
           ...rentals,
@@ -2496,6 +2502,14 @@ export function updateSectionData(
   if (sectionId === "personal-info" && data) {
     data = invalidateEditedShortAccountingPeriod(state.sectionData["personal-info"], data as PersonalInfoData, state.segmentation.filingStatus, state.taxYear);
   }
+  if (sectionId === "income-self-employment" && data) {
+    const before = state.sectionData["income-self-employment"]?.cardTipSource;
+    const update = data as SelfEmploymentSectionData;
+    const after = update.cardTipSource;
+    if (before && after && cardTipStatementFactsChanged(before, after)) {
+      data = { ...update, cardTipSource: clearCardTipStatementConfirmation(after) };
+    }
+  }
   const previousDeductions = state.sectionData.deductions;
   if (sectionId === "deductions" && data && previousDeductions) {
     const next = data as DeductionData;
@@ -2602,6 +2616,10 @@ export function updateSectionData(
   const passengerSourcesChanged=scheduleCValuesChanged && nextBusiness?.businessFacts?.passengerSources;
   const formerPersonal = state.sectionData["personal-info"];
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : formerPersonal;
+  const cardTipRecipient = nextBusiness?.cardTipSource;
+  const cardTipRecipientChanged = sectionId === "personal-info" && cardTipRecipient && (cardTipRecipient.owner === "spouse"
+    ? guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal?.spouse), guidedTaxpayerIdentity(nextPersonal?.spouse))
+    : guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal), guidedTaxpayerIdentity(nextPersonal)));
   const reitPtpSourceToReconfirm = sectionId === "personal-info" && (
     guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal), guidedTaxpayerIdentity(nextPersonal))
     || (state.segmentation.filingStatus === "mfj" && guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal?.spouse), guidedTaxpayerIdentity(nextPersonal?.spouse)))
@@ -2723,9 +2741,13 @@ export function updateSectionData(
   const paperFactsChanged=!!nextPaper&&(sourceValuesChanged||(sectionId==='additional-deductions'&&(!previousPaper||rrtaPaperDraftValues(previousPaper)!==rrtaPaperDraftValues(nextPaper))));
   const rrtaTipChanged=sectionId==='additional-deductions'&&guidedSourceValuesChanged(state.sectionData['additional-deductions']?.tipIncomeAccounts,nextAdditional?.tipIncomeAccounts)&&nextAdditional?.rrtaPayrollSources;
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
+  const cardTipStatementChanged = sectionId === "income-self-employment" && (previousBusiness?.cardTipSource || nextBusiness?.cardTipSource)
+    && (guidedSourceValuesChanged(previousBusiness?.cardTipSource, nextBusiness?.cardTipSource)
+      || guidedAmountChanged(previousBusiness?.manualGrossReceipts, nextBusiness?.manualGrossReceipts)
+      || previousBusiness?.businessFacts?.accountHolder !== nextBusiness?.businessFacts?.accountHolder);
   const previousVehicleLoans = state.sectionData["additional-deductions"]?.schedule1A?.vehicleLoans;
   const schedule1AToReconfirm = additionalSourcesChanged && {
-    ...additionalSourcesChanged,
+    ...(cardTipStatementChanged || cardTipRecipientChanged ? clearSchedule1ACardTipConfirmations(additionalSourcesChanged) : additionalSourcesChanged),
     sourceFactsConfirmed: null,
     ...(sectionId === "personal-info" ? { vehicleLoans: invalidateChangedVehicleBorrowers(additionalSourcesChanged.vehicleLoans, formerPersonal, nextPersonal) } : {}),
     ...(sectionId === "additional-deductions" && previousVehicleLoans ? { vehicleLoans: additionalSourcesChanged.vehicleLoans.map((loan, index) => {
@@ -2933,9 +2955,10 @@ export function updateSectionData(
       } } : {}),
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
-      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged) && nextBusiness ? {
+      ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged || cardTipRecipientChanged) && nextBusiness ? {
         "income-self-employment": {
           ...nextBusiness,
+          ...(cardTipRecipientChanged && cardTipRecipient ? { cardTipSource: clearCardTipStatementConfirmation(cardTipRecipient) } : {}),
           businessFacts: {
             ...nextBusiness.businessFacts,
             ...(renterHomeOfficeChanged ? { homeOfficeRenter: { ...renterHomeOfficeChanged, confirmed: false } } : {}),

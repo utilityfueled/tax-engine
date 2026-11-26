@@ -565,6 +565,7 @@ function SectionContent({
           documentAnalysisOwnerScopeKey={documentAnalysisOwnerScopeKey}
           flowState={state}
           necEntries={necEntries}
+          cardTipSource={seData?.cardTipSource}
           manualGrossReceipts={manualGrossReceipts}
           expenses={expenses}
           bankStatementAnalyses={bankStatementAnalyses}

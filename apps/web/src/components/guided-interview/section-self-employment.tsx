@@ -4,6 +4,8 @@ import {captureGuidedPassengerSources} from "@/lib/guided-interview-bridge";
 import { validateSection, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import {guidedMacrsDisplayAmount} from "@/lib/guided-macrs-assets";
 import { formatGuidedDollars, parseGuidedDisplayAmount } from "@/lib/guided-currency";
+import { cardTipStatementFactsChanged, type GuidedCardTipSource } from "@/lib/guided-card-tip-source";
+import { CardTipSourceDetails } from "./card-tip-source-details";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
@@ -227,6 +229,7 @@ export function SectionSelfEmployment({
   documentAnalysisOwnerScopeKey,
   flowState,
   necEntries,
+  cardTipSource,
   manualGrossReceipts,
   expenses,
   bankStatementAnalyses,
@@ -240,6 +243,7 @@ export function SectionSelfEmployment({
   documentAnalysisOwnerScopeKey?: string | null;
   flowState?:GuidedFlowState;
   necEntries: NecEntryData[];
+  cardTipSource?: GuidedCardTipSource;
   manualGrossReceipts: string;
   expenses: ScheduleCExpenseData;
   bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
@@ -248,6 +252,7 @@ export function SectionSelfEmployment({
   businessFacts?: BusinessSourceData;
   onSectionChange: (next: {
     necEntries: NecEntryData[];
+    cardTipSource?: GuidedCardTipSource;
     manualGrossReceipts: string;
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
@@ -282,7 +287,7 @@ export function SectionSelfEmployment({
   const reviewJobs = useRef<Partial<Record<"income" | "expense", ReviewJob>>>({});
   const currentSection = {
     workspaceId: workspace.id, cacheWorkspaceId, expectedHostedOwnerScopeKey, aiReviewAllowed: canReviewBusinessDocuments, onSectionChange,
-    value: { necEntries: currentEntries, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts },
+    value: { necEntries: currentEntries, cardTipSource, manualGrossReceipts, expenses: currentExpenses, bankStatementAnalyses: currentAnalyses, incomeDocumentAnalyses: currentIncomeAnalyses, qbiMateriallyParticipated, businessFacts },
   };
   const latestSection = useRef(currentSection);
   latestSection.current = currentSection;
@@ -377,6 +382,7 @@ export function SectionSelfEmployment({
 
   function commitSection(next: Partial<{
     necEntries: NecEntryData[];
+    cardTipSource?: GuidedCardTipSource;
     manualGrossReceipts: string;
     expenses: ScheduleCExpenseData;
     bankStatementAnalyses: ScheduleCBankStatementAnalysis[];
@@ -385,13 +391,15 @@ export function SectionSelfEmployment({
     businessFacts?: BusinessSourceData;
   }>) {
     const value = { ...latestSection.current.value, ...next };
-    if (next.necEntries !== undefined || next.manualGrossReceipts !== undefined || next.expenses !== undefined) {
+    const incomeChanged = next.necEntries !== undefined || next.manualGrossReceipts !== undefined
+      || (Object.hasOwn(next, "cardTipSource") && cardTipStatementFactsChanged(latestSection.current.value.cardTipSource, next.cardTipSource));
+    if (incomeChanged || next.expenses !== undefined) {
       value.businessFacts = {
         ...value.businessFacts,
         ...(value.businessFacts?.passengerSources?{passengerSources:{...value.businessFacts.passengerSources,sourceFactsConfirmed:null}}:{}),
         ...(value.businessFacts?.macrsAssets?{macrsAssets:{...value.businessFacts.macrsAssets,sourceFactsConfirmed:null}}:{}),
         ...(value.businessFacts?.scheduleCSourceFacts?{scheduleCSourceFacts:{...value.businessFacts.scheduleCSourceFacts,sourceFactsConfirmed:null}}:{}),
-        ...(next.necEntries !== undefined || next.manualGrossReceipts !== undefined ? { incomeReconciled: null } : {}),
+        ...(incomeChanged ? { incomeReconciled: null } : {}),
         ...(next.expenses !== undefined ? { expensesReconciled: null } : {}),
       };
     }
@@ -723,9 +731,9 @@ export function SectionSelfEmployment({
       <div className="guided-question">
         <p className="guided-prompt">Let&apos;s get your freelance and business income.</p>
         <p className="guided-hint">
-          Enter any 1099-NEC forms you received, plus business income that was paid
-          without a 1099. Then we&apos;ll capture your business expenses for Schedule C.
-          The difference is your net self-employment income.
+          {flowState?.taxYear === 2026
+            ? "Enter your 1099-NEC forms and gross receipts not included on those forms. Add a Form 1099-K business tip statement when it covers all payments for this business. Then enter your Schedule C expenses."
+            : "Enter any 1099-NEC forms you received, plus business income that was paid without a 1099. Then we'll capture your business expenses for Schedule C. The difference is your net self-employment income."}
         </p>
         <label className="guided-field">
           <span><input type="checkbox" aria-label="Allow AI review of selected business documents" checked={canReviewBusinessDocuments} disabled={hasWageringLedger || expectedHostedOwnerScopeKey === null} onChange={(event) => {
@@ -740,10 +748,11 @@ export function SectionSelfEmployment({
         <div className="guided-w2-card">
           <CurrencyField
             label="Income not reported on a 1099-NEC"
-            hint="Cash, checks, app payments, barter, or other self-employment income you earned without receiving a 1099-NEC."
+            hint={cardTipSource ? "Enter actual gross receipts for this business from your ledger, including the card tips already included on Form 1099-K." : "Cash, checks, app payments, barter, or other self-employment income you earned without receiving a 1099-NEC."}
             value={manualGrossReceipts}
             onChange={(value) => commitSection({ manualGrossReceipts: value })}
           />
+          {(flowState?.taxYear === 2026 || cardTipSource) && <CardTipSourceDetails data={cardTipSource} filingStatus={flowState?.segmentation.filingStatus} onChange={data => commitSection({ cardTipSource: data })} />}
 
           <div className="guided-doc-helper" style={{ marginTop: "12px" }}>
             <div className="guided-doc-helper-copy">

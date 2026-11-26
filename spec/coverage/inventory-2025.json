@@ -7184,6 +7184,26 @@
       ]
     },
     {
+      "key": "federal/guided-card-tip-1099-k",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/forms-pubs/about-form-1099-k",
+      "specPath": "spec/federal/guided-card-tip-1099-k.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-charitable-carryover",
       "jurisdiction": "federal",
       "taxYear": 2026,

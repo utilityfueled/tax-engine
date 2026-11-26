@@ -9,6 +9,7 @@ import { buildGuidedRenterHomeOffice, type RenterHomeOfficeDraft } from "./guide
 import { readGuidedProfessionalWagering, type ProfessionalWageringDraft } from "./guided-professional-wagering";
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
+import { buildGuidedCardTipSource } from "./guided-card-tip-source";
 
 import type {ScheduleCSourceFacts} from "@/models/inputs";
 
@@ -66,12 +67,14 @@ export function sumKnownBusinessAmounts(values: Array<string | undefined>): Deci
 export { isStartedNec };
 
 export function hasBusinessSourceData(data: SelfEmploymentSectionData | undefined): boolean {
-  return !!data && (data.businessFacts?.standardMileage !== undefined || data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
+  return !!data && (data.cardTipSource !== undefined || data.businessFacts?.standardMileage !== undefined || data.necEntries.some(isStartedNec) || hasEnteredAmount(data.manualGrossReceipts) || Object.values(data.expenses).some(hasEnteredAmount) || Object.values(data.businessFacts ?? {}).some(value => value !== undefined && value !== null && value !== ""));
 }
 
 export function businessFactErrors(data: SelfEmploymentSectionData | undefined, filingStatus?: FilingStatus | null, _w2s: W2EntryData[] = [], stateData?: StateReturnData, returnYear?: number | null, flow?: GuidedFlowState): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!hasBusinessSourceData(data) || !data) return errors;
+  try { buildGuidedCardTipSource(data, returnYear, filingStatus); }
+  catch (error) { errors.cardTipSource = error instanceof Error ? error.message : "Review the actual Form 1099-K source."; }
   const facts = data.businessFacts ?? {};
   try { buildGuidedRenterHomeOffice(facts.homeOfficeRenter, returnYear, flow?.segmentation.stateCode); }
   catch (error) { errors.homeOfficeRenter = error instanceof Error ? error.message : "Check the original home-office records."; }

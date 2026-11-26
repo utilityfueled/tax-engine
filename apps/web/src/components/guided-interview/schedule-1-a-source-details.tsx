@@ -5,8 +5,9 @@ import {
   emptySchedule1AData, emptyEmployeeTipDeduction, emptyBusinessTipDeduction,
   emptyOvertimeDeduction, emptyVehicleInterest, emptyVehicleInterestStatement, emptyVehicleInterestRefund, invalidateVehicleRefundPaymentEvidence,
   invalidateEditedVehicleRefundProof, vehicleRefundLoanIdentityChanged,
-  type Schedule1AData, type EmployeeTipDeductionData, type VehicleInterestStatementData, type VehicleInterestRefundData,
+  type Schedule1AData, type EmployeeTipDeductionData, type VehicleInterestStatementData, type VehicleInterestRefundData, type GuidedCardTipProof,
 } from "@/lib/guided-schedule-1-a-facts";
+import { cardTipStatementId, type GuidedCardTipSource } from "@/lib/guided-card-tip-source";
 import { parseGuidedDisplayAmount } from "@/lib/guided-currency";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -19,6 +20,9 @@ function Choice({ label, value, choices, onChange }: { label: string; value: str
 }
 const owners: ChoiceEntry[] = [["primary", "You"], ["spouse", "Spouse on joint return"]];
 const statementPayers: ChoiceEntry[] = [...owners, ["other", "Someone else"]];
+const emptyCardTipProof: GuidedCardTipProof = {
+  receiptLedgerReference: "", solePaymentCohortConfirmed: null, scheduleCBusinessReceiptsConfirmed: null, qualifiedTipsReconciledConfirmed: null,
+};
 
 function VehicleInterestRefundDetails({ prefix, data, onChange }: {
   prefix: string;
@@ -114,8 +118,9 @@ function TipQualification({ label, data, onChange }: { label: string; data: Qual
     {([["eligibleOccupation", "Listed tipped occupation"], ["voluntaryCashTips", "Voluntary cash or charge tips"], ["lawfulActivity", "Lawful activity"], ["meetsSstbRuleOrTransition", "Service-business rule or current-year transition met"]] as const).map(([field, text]) => <BooleanFact key={field} label={`${label}: ${text}`} value={data[field]} onChange={value => onChange({ [field]: value })} />)}
   </>;
 }
-export function Schedule1ASourceDetails({ data, compensationSources = [], businessOwner, businessName, onChange }: {
+export function Schedule1ASourceDetails({ data, compensationSources = [], businessOwner, businessName, cardTipSource, onChange }: {
   data?: Schedule1AData; compensationSources?: Source[]; businessOwner?: string; businessName?: string;
+  cardTipSource?: GuidedCardTipSource;
   onChange: (data: Schedule1AData | undefined) => void;
 }) {
   if (!data) return <section><h4>Additional deduction sources</h4><p className="guided-hint">Collect actual qualified tip, FLSA overtime premium, vehicle loan interest or senior eligibility records. A source amount alone does not establish a deduction.</p><button type="button" onClick={() => onChange({ ...emptySchedule1AData, employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: [] })}>Add additional deduction worksheet</button></section>;
@@ -150,8 +155,26 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
     {data.businessTips.map((entry, index) => {
       const label = `Business tips ${index + 1}`;
       const update = (patch: Partial<typeof entry>) => set({ businessTips: data.businessTips.map((row, position) => position === index ? { ...row, ...patch } : row) });
-      return <fieldset key={index}><legend>{label}</legend><p className="guided-hint">Link tips already included in this business's actual NEC receipts. Business profit and attributable deductions come from the completed return. Other information-return receipt arrangements require their reconciliation worksheet.</p><div className="guided-form-grid"><TipQualification label={label} data={entry} onChange={update} /><Choice label={`${label}: Business`} value={entry.businessSourceId} choices={businessOwner === entry.owner ? [["scheduleC", businessName || "Your Schedule C business"]] : []} onChange={businessSourceId => update({ businessSourceId })} /></div>
-        {entry.reportedTipSources.map((source, position) => <div key={position} className="guided-form-grid"><Choice label={`${label}: Reported source ${position + 1}`} value={source.sourceId} choices={sources(entry.owner, "nec")} onChange={sourceId => update({ reportedTipSources: entry.reportedTipSources.map((row, offset) => offset === position ? { ...row, sourceId } : row) })} /><CurrencyField label={`${label}: Qualified tips in source ${position + 1}`} value={source.qualifiedTips} onChange={qualifiedTips => update({ reportedTipSources: entry.reportedTipSources.map((row, offset) => offset === position ? { ...row, qualifiedTips } : row) })} /><button type="button" onClick={() => update({ reportedTipSources: entry.reportedTipSources.filter((_, offset) => offset !== position) })}>{label}: Remove reported source {position + 1}</button></div>)}
+      const choices: ChoiceEntry[] = sources(entry.owner, "nec");
+      if (cardTipSource?.sourceTaxYear.trim() === "2026" && cardTipSource.owner && cardTipSource.owner === entry.owner) {
+        choices.push([cardTipStatementId, `Form 1099-K — ${cardTipSource.pse || "payment settlement entity"}`]);
+      }
+      const hasCardTip = entry.reportedTipSources.some(row => row.sourceId === cardTipStatementId);
+      const updateReports = (reportedTipSources: typeof entry.reportedTipSources) => update({
+        reportedTipSources,
+        form1099KProof: reportedTipSources.some(row => row.sourceId === cardTipStatementId) && entry.form1099KProof
+          ? { ...entry.form1099KProof, qualifiedTipsReconciledConfirmed: null } : undefined,
+      });
+      const proof = entry.form1099KProof ?? emptyCardTipProof;
+      const updateProof = (patch: Partial<GuidedCardTipProof>) => update({ form1099KProof: { ...proof, ...patch } });
+      return <fieldset key={index}><legend>{label}</legend><p className="guided-hint">{cardTipSource || hasCardTip ? "Link tips already included in this business's actual 1099-NEC receipts or its one reconciled Form 1099-K." : "Link tips already included in this business's actual NEC receipts."} Business profit and attributable deductions come from the completed return. Other information-return receipt arrangements require their reconciliation worksheet.</p><div className="guided-form-grid"><TipQualification label={label} data={entry} onChange={update} /><Choice label={`${label}: Business`} value={entry.businessSourceId} choices={businessOwner === entry.owner ? [["scheduleC", businessName || "Your Schedule C business"]] : []} onChange={businessSourceId => update({ businessSourceId })} /></div>
+        {entry.reportedTipSources.map((source, position) => <div key={position} className="guided-form-grid"><Choice label={`${label}: Reported source ${position + 1}`} value={source.sourceId} choices={choices} onChange={sourceId => updateReports(entry.reportedTipSources.map((row, offset) => offset === position ? { ...row, sourceId } : row))} /><CurrencyField label={`${label}: Qualified tips in source ${position + 1}`} value={source.qualifiedTips} onChange={qualifiedTips => updateReports(entry.reportedTipSources.map((row, offset) => offset === position ? { ...row, qualifiedTips } : row))} /><button type="button" onClick={() => updateReports(entry.reportedTipSources.filter((_, offset) => offset !== position))}>{label}: Remove reported source {position + 1}</button></div>)}
+        {hasCardTip && <div className="guided-form-grid">
+          <TextFact label={`${label}: Business receipt ledger reference`} value={proof.receiptLedgerReference} onChange={receiptLedgerReference => update({ form1099KProof: { ...emptyCardTipProof, receiptLedgerReference } })} />
+          <BooleanFact label={`${label}: The Form 1099-K covers the only business payment group`} value={proof.solePaymentCohortConfirmed} onChange={solePaymentCohortConfirmed => updateProof({ solePaymentCohortConfirmed })} />
+          <BooleanFact label={`${label}: The statement gross matches Schedule C receipts in the ledger`} value={proof.scheduleCBusinessReceiptsConfirmed} onChange={scheduleCBusinessReceiptsConfirmed => updateProof({ scheduleCBusinessReceiptsConfirmed })} />
+          <BooleanFact label={`${label}: The claimed tips reconcile to the actual statement and ledger`} value={proof.qualifiedTipsReconciledConfirmed} onChange={qualifiedTipsReconciledConfirmed => updateProof({ qualifiedTipsReconciledConfirmed })} />
+        </div>}
         <button type="button" onClick={() => update({ reportedTipSources: [...entry.reportedTipSources, { sourceId: "", qualifiedTips: "" }] })}>{label}: Add reported tip source</button>
         <button type="button" onClick={() => set({ businessTips: data.businessTips.filter((_, position) => position !== index) })}>{label}: Remove business tips</button>
       </fieldset>;

@@ -2,10 +2,12 @@ import { buildVehicleRefinancingSources, type VehicleRefinancingData } from "./g
 import { calculateVehicleRefinancing } from "@/engine/forms/vehicle-refinancing";
 import { Schedule1ASchema, type Schedule1AInput } from "@/models/inputs";
 import { sumSourceMoney } from "@/utils/sum-source-money";
+import { isQualifiedTippedOccupationCode } from "@/utils/tipped-occupation-code.js";
 import type { GuidedFlowState } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { isStartedNec } from "./guided-business-facts";
+import { buildGuidedCardTipSource, cardTipStatementId, exactCardTipMoney } from "./guided-card-tip-source";
 import { buildTipIncomeInputs, buildTipIncomeSourceOriginals } from "./guided-tip-income-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
@@ -13,7 +15,17 @@ import Decimal from "decimal.js";
 type Owner = "primary" | "spouse";
 type TipQualificationData = { owner: "" | Owner; occupationCode: string; eligibleOccupation: boolean | null; voluntaryCashTips: boolean | null; lawfulActivity: boolean | null; meetsSstbRuleOrTransition: boolean | null };
 export interface EmployeeTipDeductionData extends TipQualificationData { employer: string; w2SourceIds: string[]; form4137EmployerSourceId: string; reportingMethod: "" | "w2" | "employer_statement" | "form4070" | "form4137"; reportingSourceReference: string; reportedEmployerTips: string; qualifiedW2Tips: string; qualifiedForm4137Tips: string }
-export interface BusinessTipDeductionData extends TipQualificationData { businessSourceId: string; reportedTipSources: { sourceId: string; qualifiedTips: string }[] }
+export interface GuidedCardTipProof {
+  receiptLedgerReference: string;
+  solePaymentCohortConfirmed: boolean | null;
+  scheduleCBusinessReceiptsConfirmed: boolean | null;
+  qualifiedTipsReconciledConfirmed: boolean | null;
+}
+export interface BusinessTipDeductionData extends TipQualificationData {
+  businessSourceId: string;
+  reportedTipSources: { sourceId: string; qualifiedTips: string }[];
+  form1099KProof?: GuidedCardTipProof;
+}
 export interface OvertimeDeductionData { owner: "" | Owner; compensationSourceId: string; compensationExcludedFromWages: string; qualifiedPremium: string; requiredByFlsa: boolean | null; reportingSourceReference: string }
 export interface VehicleInterestRefundData {
   method: "" | "cash_refund" | "loan_credit" | "mixed";
@@ -68,6 +80,13 @@ export interface Schedule1AData {
   excludedPuertoRicoIncome: string; form4563Exclusion: string; employeeTips: EmployeeTipDeductionData[]; businessTips: BusinessTipDeductionData[]; overtime: OvertimeDeductionData[]; vehicleLoans: VehicleInterestData[]; seniorOwners: ("" | Owner)[];
 }
 export const emptySchedule1AData: Schedule1AData = { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, allSourcesIncluded: null, excludedPuertoRicoIncome: "", form4563Exclusion: "", employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: [] };
+
+export function clearSchedule1ACardTipConfirmations(data: Schedule1AData): Schedule1AData {
+  return { ...data, sourceFactsConfirmed: null, businessTips: data.businessTips.map(row => row.form1099KProof ? {
+    ...row, form1099KProof: { ...row.form1099KProof, solePaymentCohortConfirmed: null,
+      scheduleCBusinessReceiptsConfirmed: null, qualifiedTipsReconciledConfirmed: null },
+  } : row) };
+}
 const emptyTipQualification: TipQualificationData = { owner: "", occupationCode: "", eligibleOccupation: null, voluntaryCashTips: null, lawfulActivity: null, meetsSstbRuleOrTransition: null };
 export const emptyEmployeeTipDeduction: EmployeeTipDeductionData = { ...emptyTipQualification, employer: "", w2SourceIds: [], form4137EmployerSourceId: "", reportingMethod: "", reportingSourceReference: "", reportedEmployerTips: "", qualifiedW2Tips: "", qualifiedForm4137Tips: "" };
 export const emptyBusinessTipDeduction: BusinessTipDeductionData = { ...emptyTipQualification, businessSourceId: "", reportedTipSources: [] };
@@ -290,8 +309,39 @@ export function buildSchedule1AInput(data: Schedule1AData | undefined, state: Gu
     return { ...qualification, employer: text(entry.employer, "employer name"), w2SourceIds: [...entry.w2SourceIds], form4137EmployerSourceId: entry.form4137EmployerSourceId.trim() || undefined, reportingMethod: entry.reportingMethod || undefined, reportingSourceReference: entry.reportingSourceReference.trim() || undefined, reportedEmployerTips: year === 2025 && ["form4070", "employer_statement"].includes(entry.reportingMethod) ? reportLimit.toFixed() : undefined, qualifiedW2Tips: w2Tips.toFixed(), qualifiedForm4137Tips: formTips.toFixed() };
   });
   const businessTips = data.businessTips.map(entry => {
-    const qualification = qualify(entry); const business = state.sectionData["income-self-employment"]?.businessFacts;
+    const qualification = qualify(entry);
+    const businessData = state.sectionData["income-self-employment"];
+    const business = businessData?.businessFacts;
     if (entry.businessSourceId !== "scheduleC" || !business || business.accountHolder !== qualification.owner) throw new Error("Select the actual supported business and source owner; another business requires its source worksheet.");
+    const businessName = text(business.businessName || business.activityDescription, "business name or activity");
+    if (entry.form1099KProof || entry.reportedTipSources.some(source => source.sourceId.startsWith("form1099K:"))) {
+      const original = buildGuidedCardTipSource(businessData, year, state.segmentation.filingStatus);
+      const evidence = original?.cardTipStatementEvidence;
+      const report = entry.reportedTipSources[0];
+      const proof = entry.form1099KProof;
+      if (!original || original.accountHolder !== qualification.owner || !evidence
+        || data.businessTips.length !== 1 || entry.reportedTipSources.length !== 1 || report?.sourceId !== cardTipStatementId) {
+        throw new Error("Link the one actual Form 1099-K to the same Schedule C and owner.");
+      }
+      if (!proof || proof.solePaymentCohortConfirmed !== true || proof.scheduleCBusinessReceiptsConfirmed !== true || proof.qualifiedTipsReconciledConfirmed !== true) {
+        throw new Error("Confirm the actual Form 1099-K, business receipts and qualified tip reconciliation.");
+      }
+      const amount = exactCardTipMoney(report.qualifiedTips, "actual qualified tips reported on Form 1099-K");
+      if (amount.gt(exactCardTipMoney(original.cashTips, "original Form 1099-K Box 1c"))
+        || original.treasuryTippedOccupationCodes?.[0] !== qualification.occupationCode
+        || (amount.gt(0) && !isQualifiedTippedOccupationCode(qualification.occupationCode))) {
+        throw new Error("Reconcile the claimed occupation and qualified tips to the actual Form 1099-K.");
+      }
+      return {
+        ...qualification, businessSourceId: entry.businessSourceId, businessName,
+        reportedTipSources: [{ sourceId: cardTipStatementId, qualifiedTips: amount.toFixed() }], qualifiedReportedTips: amount.toFixed(),
+        form1099KProof: {
+          statementReference: evidence.statementReference,
+          receiptLedgerReference: text(proof.receiptLedgerReference, "actual business receipt ledger reference"),
+          solePaymentCohortConfirmed: true, scheduleCBusinessReceiptsConfirmed: true, qualifiedTipsReconciledConfirmed: true,
+        },
+      };
+    }
     const reportedTipSources = entry.reportedTipSources.map(row => {
       const source = findSource(row.sourceId, qualification.owner); if (source.kind !== "nec") throw new Error("This guided business tip must link to the actual business NEC source.");
       const amount = money(row.qualifiedTips, "actual qualified tips in this source"); let limit = money(source.amount, "actual reported business compensation");
@@ -300,7 +350,7 @@ export function buildSchedule1AInput(data: Schedule1AData | undefined, state: Gu
       return { sourceId: row.sourceId, qualifiedTips: amount.toFixed() };
     });
     if (!reportedTipSources.length) throw new Error("Add the actual information-return source for business tips.");
-    return { ...qualification, businessSourceId: entry.businessSourceId, businessName: text(business.businessName || business.activityDescription, "business name or activity"), reportedTipSources, qualifiedReportedTips: reportedTipSources.reduce((total, row) => total.plus(row.qualifiedTips), new Decimal(0)).toFixed() };
+    return { ...qualification, businessSourceId: entry.businessSourceId, businessName, reportedTipSources, qualifiedReportedTips: reportedTipSources.reduce((total, row) => total.plus(row.qualifiedTips), new Decimal(0)).toFixed() };
   });
   const overtime = data.overtime.map(entry => {
     const owner = requireOwner(entry.owner); const source = findSource(entry.compensationSourceId, owner); const premium = money(entry.qualifiedPremium, "actual FLSA overtime premium"); const excluded = source.kind === "w2" ? money(entry.compensationExcludedFromWages, "actual payroll compensation excluded from wages") : new Decimal(0); const reported = money(source.amount, "actual reported compensation").plus(excluded);
