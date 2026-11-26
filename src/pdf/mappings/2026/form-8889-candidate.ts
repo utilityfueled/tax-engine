@@ -67,7 +67,7 @@ interface OrdinaryHsaSourceConfirmation {
   /** Checked the owner's actual eligibility and same coverage on each month's first day. */
   fullYearEligibilityConfirmed: boolean;
   coverage: Exclude<Form8889Input["coverageByMonth"][number], "none">;
-  /** Checked the complete originals, contribution timing, and absence of special activity. */
+  /** Checked the complete originals, contribution timing, and all distribution activity, including its absence. */
   ordinaryActivityConfirmed: boolean;
   personalContributions: string;
   employerContributions: string;
@@ -76,8 +76,9 @@ interface OrdinaryHsaSourceConfirmation {
 }
 
 const dollarsAndCents = z.string().regex(/^\d+(?:\.\d{1,2})?$/);
-const ordinaryAmounts = ["line2", "line3", "line4", "line5", "line6", "line8", "line9", "line10",
-  "line11", "line12", "line13", "line14a", "line14b", "line14c", "line15", "line16", "line17b"] as const;
+const contributionAmounts = ["line2", "line3", "line4", "line5", "line6", "line8", "line9", "line10",
+  "line11", "line12", "line13"] as const;
+const distributionAmounts = ["line14a", "line14b", "line14c", "line15", "line16", "line17b"] as const;
 const ordinaryExcludedAmounts = [
   "archerMSAContributions", "qualifiedFundingDistribution", "excludedDistributions", "rolloverDistributions",
   "prohibitedTransactionDistributions", "decedentQualifiedMedicalExpensesPaidWithinOneYearAfterDeath",
@@ -165,7 +166,8 @@ export async function fillForm88892026OrdinaryCandidate(
   }
 
   const statements = input.form1099SA ?? [];
-  if (!statements.length || statements.some(statement => statement.taxYear !== 2026 || statement.accountHolder !== owner
+  const hasDistributions = d(grossDistributions).gt(0);
+  if ((hasDistributions && !statements.length) || statements.some(statement => statement.taxYear !== 2026 || statement.accountHolder !== owner
     || statement.accountType !== "hsa" || statement.distributionCode !== "1" || !statement.payer.trim()
     || !dollarsAndCents.safeParse(statement.grossDistribution).success || !d(statement.grossDistribution).gt(0)
     || !d(statement.earningsOnExcessContributions).isZero() || statement.fmvOnDateOfDeath !== undefined
@@ -196,6 +198,9 @@ export async function fillForm88892026OrdinaryCandidate(
     || (!d(worksheet.supportedW2EmployerContributions).isZero() && !d(worksheet.supportedW2EmployerContributions).eq(employerContributions))) {
     throw new Error("Form 8889 candidate employer contributions must reconcile to current W-2 code W");
   }
+  if (!hasDistributions && d(personalContributions).isZero() && d(employerContributions).isZero()) {
+    throw new Error("Form 8889 candidate requires a contribution or distribution");
+  }
 
   const result = calculateForm8889(input.taxpayer, bound, FEDERAL_2026_CONSTANTS);
   const printedLimit = coverage === "self_only" ? candidate.printedLine3FullYearUnder55.selfOnly : candidate.printedLine3FullYearUnder55.family;
@@ -216,8 +221,11 @@ export async function fillForm88892026OrdinaryCandidate(
   const { fields } = candidate;
   setCheckBox(form, fields.selfOnly, coverage === "self_only");
   setCheckBox(form, fields.family, coverage === "family");
-  setCheckBox(form, fields.line17a, result.line17aHasException);
-  for (const line of ordinaryAmounts) setTextField(form, fields[line], roundDollar(result[line]).toFixed(0));
+  for (const line of contributionAmounts) setTextField(form, fields[line], roundDollar(result[line]).toFixed(0));
+  if (hasDistributions) {
+    setCheckBox(form, fields.line17a, result.line17aHasException);
+    for (const line of distributionAmounts) setTextField(form, fields[line], roundDollar(result[line]).toFixed(0));
+  }
   await markReviewPdf(doc);
   return doc;
 }

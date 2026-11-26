@@ -224,6 +224,59 @@ describe("Final 2026 Form 8889 physical candidate", () => {
     expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
   });
 
+  it("renders contribution-only Part I on the final blank", async () => {
+    const input = TaxYearInputSchema.parse({
+      ...ordinary,
+      form8889: { ...ordinary.form8889, qualifiedMedicalExpenses: "0.00" },
+      form1099SA: undefined,
+    });
+    const doc = await fillForm88892026OrdinaryCandidate(input, {
+      ...evidence, grossDistributions: "0.00", qualifiedMedicalExpenses: "0",
+    }, await readFile(blank));
+    const saved = await PDFDocument.load(await doc.save());
+    const form = saved.getForm();
+    const amounts = {
+      line2: "2199", line3: "4400", line4: "0", line5: "4400", line6: "4400", line8: "4400",
+      line9: "1201", line10: "0", line11: "1201", line12: "3199", line13: "2199",
+    } as const;
+    for (const [line, amount] of Object.entries(amounts)) {
+      const field = form.getTextField(candidate.fields[line as keyof typeof amounts]);
+      expect(field.getText(), line).toBe(amount);
+      expect(field.acroField.getWidgets()[0].getAppearances()?.normal).toBeInstanceOf(PDFRawStream);
+    }
+    for (const field of ["name", "ssn", "line7", "line14a", "line14b", "line14c", "line15", "line16", "line17b",
+      "line18", "line19", "line20", "line21"] as const) {
+      expect(form.getTextField(candidate.fields[field]).getText(), field).toBeUndefined();
+    }
+    expect(form.getCheckBox(candidate.fields.selfOnly).isChecked()).toBe(true);
+    expect(form.getCheckBox(candidate.fields.family).isChecked()).toBe(false);
+    expect(form.getCheckBox(candidate.fields.line17a).isChecked()).toBe(false);
+    expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+  });
+
+  it("holds unconfirmed or conflicting absence of distributions", async () => {
+    const bytes = await readFile(blank);
+    const worksheet = ordinary.form8889;
+    if (!worksheet) throw new Error("Expected the ordinary fixture to include its HSA worksheet");
+    const input = { ...ordinary, form1099SA: [], form8889: { ...worksheet, qualifiedMedicalExpenses: "0" } };
+    const source = { ...evidence, grossDistributions: "0", qualifiedMedicalExpenses: "0" };
+    const withWorksheet = (changes: Partial<typeof worksheet>) => ({
+      ...input, form8889: { ...input.form8889, ...changes },
+    });
+    for (const [returnInput, confirmation, reason] of [
+      [input, { ...source, ordinaryActivityConfirmed: false }, /confirmed/],
+      [input, { ...source, grossDistributions: "" }, /amount/],
+      [input, { ...source, grossDistributions: "0.01" }, /1099-SA/],
+      [{ ...input, form1099SA: ordinary.form1099SA }, source, /1099-SA/],
+      [withWorksheet({ distributionsReceived: "0.01" }), source, /1099-SA/],
+      [withWorksheet({ supported1099SAGrossDistributions: "0.01" }), source, /1099-SA/],
+      [withWorksheet({ qualifiedMedicalExpenses: "0.01" }), { ...source, qualifiedMedicalExpenses: "0.01" }, /qualified/],
+      [{ ...withWorksheet({ contributionsMade: "0" }), w2s: [] }, { ...source, personalContributions: "0", employerContributions: "0" }, /requires.*contribution or distribution/],
+    ] as const) {
+      await expect(fillForm88892026OrdinaryCandidate(returnInput, confirmation, bytes)).rejects.toThrow(reason);
+    }
+  });
+
   it("renders a fully qualified family distribution as an explicit zero", async () => {
     const spouse = TaxYearInputSchema.parse({
       ...ordinary, taxpayer: { ...ordinary.taxpayer, filingStatus: "married_filing_jointly", spouse: ordinary.taxpayer.primary },

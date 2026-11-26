@@ -57,11 +57,29 @@ lines:
       the lesser of lines 2 and 12. Do not populate inapplicable line 7.
     irsRef: "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf"
     testRef: "tests/pdf/form-8889-2026-candidate.test.ts::renders ordinary contributions and partly taxable distributions"
+  - line: "1–13 contributions without distributions"
+    description: "Render an ordinary contribution-only year on the final annual blank"
+    formula: >-
+      With actual eligible personal or employer contributions, accept explicit
+      confirmed zero distributions and zero qualified HSA payments when there
+      are no Form 1099-SA statements and the worksheet has no conflicting
+      distribution amounts. Calculate and round Part I as for other ordinary
+      cases. Leave Part II blank for this internal specimen because there is
+      no distribution activity to report. Keep the original requirement for
+      positive distributions. Reject an unknown amount, a mismatch, or a case
+      without any contributions or distributions.
+    irsRef: "https://www.irs.gov/instructions/i8889"
+    testRef: "tests/pdf/form-8889-2026-candidate.test.ts::renders contribution-only Part I on the final blank"
+    notes: >-
+      The current final instructions are for 2025. Who Must File lists
+      contributions independently of distributions, and the separate 2026
+      draft instructions repeat that treatment. Form 1099-SA ordinarily
+      reports distributions. Field mapping uses the final 2026 Form 8889.
   - line: "14a–17b ordinary distributions"
     description: "Bind dated ordinary Form 1099-SA originals and qualified HSA payments"
     formula: >-
-      Require explicitly attributed 2026 code 1 HSA originals with positive
-      gross distributions and no special distribution facts. Reconcile the
+      For positive distributions, require explicitly attributed 2026 code 1
+      HSA originals with positive gross amounts and no special facts. Reconcile the
       confirmed gross amount to Box 1 totals and the confirmed qualified HSA
       payments to the worksheet. Qualified payments are between zero and gross.
       Lines 14a and 14c equal gross, line 14b is zero, line 15 is the qualified
