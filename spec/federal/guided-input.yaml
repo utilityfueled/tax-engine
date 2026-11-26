@@ -322,6 +322,11 @@ lines:
     formula: "Keep federal estimated payments, extension payments and prior-year refund credits separate. Require actual payment dates and the immediately preceding source tax year for applied refunds. Preserve explicit zero. Reconcile a saved other-payment total to classified entries before using it; never silently drop it or infer a payment type."
     irsRef: "Form 1040 instructions line 26; Schedule 3 extension-payment instructions"
     testRef: "tests/guided-interview/guided-payment-facts.test.ts::preserves extension dates and prior-year credits with exact amounts and zero"
+  - line: "federal-paid-date"
+    description: "Only admit federal estimated and extension payments that have occurred"
+    formula: "Compare each entered federal estimated or extension payment date with the current local calendar date in guided validation and canonical transfer. Hold a later date for review and preserve the saved row. Apply the same date check to explicit zero. An actual date on or before the current day can fall after the end of the selected tax year when the existing application rules allow it."
+    irsRef: "Form 1040 instructions line 26 and Schedule 3 line 10 (https://www.irs.gov/instructions/i1040gi)"
+    testRef: "tests/guided-interview/guided-payment-facts.test.ts::holds future paid dates after reopening a %s return"
   - line: "2026-applied-refund-distinctness"
     description: "Hold repeated positive applied refunds without distinguishing originals"
     formula: >-

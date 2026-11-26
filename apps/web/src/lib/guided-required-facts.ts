@@ -2,14 +2,14 @@ import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
 import { CharitableTangiblePropertyUseSchema } from "@/models/inputs";
 import { repeatedFederalAppliedCreditIndices } from "@/engine/forms/federal-payment-date-sources";
 import { valueOrdinaryTangibleProperty } from "@/utils/charitable-current-receipts";
-import { isActualDate } from "@/utils/civil-date";
+import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 import { sumSourceMoney } from "@/utils/sum-source-money";
 import Decimal from "decimal.js";
 import type { DeductionData, DonationEntryData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { mortgageWorksheetFactErrors } from "./guided-mortgage-worksheet";
 
-export { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
+export { currentLocalCivilDate, isActualDate };
 
 export function hasEnteredAmount(value: string | undefined): boolean {
   return typeof value === "string" && value.trim() !== "";
@@ -189,10 +189,13 @@ export function federalPaymentDateNeedsApplication(date: string, taxYear?: numbe
 
 export function paymentFactErrors(entries: EstimatedPaymentEntry[] | undefined, taxYear?: number | null, kind?: FederalPaymentKind): Record<string, string> {
   const errors: Record<string, string> = {};
-  (entries ?? []).forEach((entry, index) => {
+  if (!entries?.length) return errors;
+  const paidThroughDate = currentLocalCivilDate();
+  entries.forEach((entry, index) => {
     const amount = amountError(entry.amount, "payment amount");
     if (amount) errors[`payment-${index}-amount`] = amount;
     if (!isActualDate(entry.date) || entry.date.startsWith("0000-")) errors[`payment-${index}-date`] = "Enter the actual payment date from the federal record.";
+    else if (entry.date > paidThroughDate) errors[`payment-${index}-date`] = "The payment date is in the future. Enter the date the payment was made.";
     if (entry.application !== undefined || federalPaymentDateNeedsApplication(entry.date, taxYear, kind)) {
       if (taxYear == null || entry.application?.taxYear !== String(taxYear)) {
         errors[`payment-${index}-application-year`] = "Enter this return's tax year as shown on the IRS payment confirmation or account record.";

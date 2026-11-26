@@ -1,5 +1,5 @@
 // Spec: spec/federal/guided-estimated-tax.yaml.
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2210 } from "@/engine/forms/form-2210.js";
@@ -9,6 +9,9 @@ import { emptyPaymentData, parseGuidedFlowState, updateSectionData, validateSect
 import { buildEstimatedTaxFacts, emptyEstimatedTaxFacts, estimatedTaxFactErrors, type EstimatedTaxFactsData } from "@/lib/guided-estimated-tax-facts";
 import { computeGuidedPreviewOutcome } from "@/lib/guided-preview-compute";
 import { completeW2Entry, startCompleteInterview } from "./complete-facts";
+
+afterEach(() => vi.useRealTimers());
+
 function facts(): EstimatedTaxFactsData {
   return { ...structuredClone(emptyEstimatedTaxFacts), sourceTaxYear: "2025", sourceReference: "Actual prior return and IRS payment history", sourceFactsConfirmed: true,
     allPaymentRecordsIncluded: true, calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher: false, disasterReliefClaimed: false, waiverRequested: false,
@@ -57,6 +60,8 @@ it("reconciles actual effective credit dates per original source", () => {
   expect(() => buildEstimatedTaxFacts(payments, 2025)).toThrow(/amount|refund/i);
 });
 it("holds a repeated January estimated payment through Payments, bridge and draft replay", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 0, 15, 12));
   const januaryDate = "2027-01-15";
   const original: PaymentData = { ...emptyPaymentData, estimatedTaxFacts: filedPriorReturnFacts2026(), estimatedPayments: [
     { date: "2026-04-15", amount: "100" },
@@ -92,6 +97,8 @@ it("holds a repeated January estimated payment through Payments, bridge and draf
   }
 });
 it("holds a matching extension payment without admitting invented worksheet receipt identity", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 3, 15, 12));
   const state = stateWith({ ...emptyPaymentData,
     extensionPayments: [{ date: "2027-04-15", amount: "1,200.01", receiptReference: "ACTUAL-EXTENSION-RECORD" }],
     estimatedTaxFacts: { ...filedPriorReturnFacts2026(), returnPayments: [
@@ -103,6 +110,8 @@ it("holds a matching extension payment without admitting invented worksheet rece
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });
 it("accepts separately confirmed original payment references and holds stale or repeated proof", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 0, 16, 12));
   const date = "2027-01-15";
   const estimate = { date, amount: "50.00", receiptReference: "ORIGINAL-ESTIMATE", application: { taxYear: "2026", confirmed: true } };
   const originalReturn = { date, amount: "50", processedReceipt: { reference: " original-return ", confirmedFor: { date, amount: "50.00", reference: "ORIGINAL-RETURN" } } };
@@ -143,6 +152,8 @@ it("accepts separately confirmed original payment references and holds stale or 
   expectHeld([estimate], [{ ...originalReturn, date: "2027-01-16" }], /confirm.*processed.*reference/i);
 });
 it("keeps independently linked credits, distinct dates or amounts and explicit zero", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 3, 15, 12));
   const state = stateWith({ ...emptyPaymentData,
     estimatedPayments: [{ date: "2026-04-15", amount: "100" }],
     extensionPayments: [{ date: "2027-04-15", amount: "100" }, { date: "2027-01-15", amount: "0.00" }],

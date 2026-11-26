@@ -1,5 +1,5 @@
-// Spec: spec/federal/guided-input.yaml, payment-categories, 2026-applied-refund-distinctness, federal-payment-application
-import { describe, expect, it } from "vitest";
+// Spec: spec/federal/guided-input.yaml, payment-categories, federal-paid-date, 2026-applied-refund-distinctness, federal-payment-application
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyPaymentData, getGuidedFlowStorageKey, jumpToSection, loadGuidedFlowState, saveGuidedFlowState, shouldPromptBeforeAdvance, type PaymentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { startCompleteInterview } from "./complete-facts";
@@ -10,15 +10,64 @@ function stateWith(data: PaymentData) {
 }
 
 describe("classified guided payments", () => {
+  afterEach(() => vi.useRealTimers());
+
   it("requires legacy other payments to be classified instead of dropping them", () => {
     const state = stateWith({ ...emptyPaymentData, otherPayments: "100.01" });
     expect(validateSection(state, "payments").status).toBe("partial");
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
   });
   it("preserves extension dates and prior-year credits with exact amounts and zero", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 3, 15, 12));
     const state = stateWith({ ...emptyPaymentData, otherPayments: "100.01", extensionPayments: [{ amount: "0", date: "2026-04-15" }], priorYearAppliedCredits: [{ amount: "100.01", sourceTaxYear: "2024" }] });
     expect(validateSection(state, "payments").status).toBe("complete");
     expect(buildTaxInputFromGuidedData(state)?.adjustments).toMatchObject({ extensionPayments: [{ amount: "0", date: "2026-04-15", type: "federal" }], priorYearAppliedCredits: [{ amount: "100.01", sourceTaxYear: 2024, type: "federal" }] });
+  });
+  it.each([2025, 2026])("holds future paid dates after reopening a %s return", taxYear => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date(taxYear, 10, 26, 12));
+      const zero = { date: `${taxYear}-11-25`, amount: "0.00" };
+      const today = { date: `${taxYear}-11-26`, amount: "123.45" };
+      const future = { date: `${taxYear}-12-20`, amount: "100.01" };
+      const afterYearEnd = { date: `${taxYear + 1}-01-15`, amount: "250.02" };
+      const application = { taxYear: String(taxYear), confirmed: true };
+      const payments = {
+        ...emptyPaymentData,
+        estimatedPayments: [zero, today, future, { ...afterYearEnd, application }],
+        extensionPayments: [{ ...afterYearEnd, amount: "0.00" }],
+      };
+      const values = new Map<string, string>();
+      const storage = {
+        getItem: (key: string) => values.get(key) ?? null,
+        setItem: (key: string, value: string) => values.set(key, value),
+      } as Storage;
+      const draft = updateSectionData({ ...stateWith(emptyPaymentData), taxYear }, "payments", payments);
+      expect(saveGuidedFlowState(storage, "paid-date", draft)).toBe(true);
+      const reopened = loadGuidedFlowState(storage, "paid-date");
+      if (!reopened) throw new Error("Expected the paid-date draft to reopen");
+      expect(reopened.sectionData.payments).toEqual(payments);
+      expect.soft(shouldPromptBeforeAdvance(jumpToSection(reopened, "payments"))).toMatchObject({ status: "partial", allowSkip: false });
+      expect.soft(validateSection(reopened, "payments").fieldErrors).toEqual({
+        "payment-2-date": expect.stringMatching(/future/i),
+        "payment-3-date": expect.stringMatching(/future/i),
+        "extension-payment-0-date": expect.stringMatching(/future/i),
+      });
+      expect.soft(buildTaxInputFromGuidedData(reopened)).toBeNull();
+
+      vi.setSystemTime(new Date(taxYear + 1, 0, 15, 12));
+      expect(validateSection(reopened, "payments").status).toBe("complete");
+      expect(buildTaxInputFromGuidedData(reopened)?.adjustments).toMatchObject({
+        estimatedTaxPayments: [
+          ...[zero, today, future].map(payment => ({ ...payment, type: "federal" })),
+          { ...afterYearEnd, type: "federal", application: { taxYear, confirmed: true } },
+        ],
+        extensionPayments: [{ ...afterYearEnd, amount: "0.00", type: "federal" }],
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("holds a repeated positive 2026 applied refund after reopening", () => {
     const actual = { sourceTaxYear: "2025", amount: "1000.01", rowId: "local-credit-1" };
@@ -104,6 +153,8 @@ describe("classified guided payments", () => {
   });
 
   it("replays confirmed payment application with exact amounts for both payment categories", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2028, 3, 16, 12));
     const application = { taxYear: "2026", confirmed: true };
     const state = { ...stateWith({
       ...emptyPaymentData,

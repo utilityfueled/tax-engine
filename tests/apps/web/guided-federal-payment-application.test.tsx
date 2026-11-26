@@ -2,7 +2,7 @@
 // Spec: spec/federal/guided-input.yaml, federal-payment-application
 import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { SectionPayments } from "@/components/guided-interview/section-payments";
 import { emptyPaymentData, type PaymentData } from "@/lib/guided-interview-flow";
 import { allPaymentFactErrors } from "@/lib/guided-required-facts";
@@ -44,6 +44,8 @@ it("isolates exact-year confirmation by payment and revokes it after a source ed
     });
   }
   try {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2027, 3, 16, 12));
     await act(async () => root.render(<Harness />));
     expect(field("Estimated payment #1 IRS application tax year")).toBeUndefined();
     expect(field("Extension payment #1 IRS application tax year")?.value).toBe("");
@@ -78,5 +80,6 @@ it("isolates exact-year confirmation by payment and revokes it after a source ed
     await act(async () => root.unmount());
     container.remove();
     actEnvironment.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
+    vi.useRealTimers();
   }
 });

@@ -1,5 +1,5 @@
 // Specs: spec/federal/guided-federal-payment-receipts.yaml and spec/federal/guided-federal-estimate-receipts-2026.yaml.
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildEstimatedPaymentsInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
@@ -10,6 +10,8 @@ const firstReceipt = { date: "2025-04-15", amount: "500.00" };
 const repeatedRow = { date: "2025-04-15", amount: "500" };
 const firstOriginal = { ...firstReceipt, receiptReference: "Synthetic receipt A" };
 const secondOriginal = { ...repeatedRow, receiptReference: "Synthetic receipt B" };
+
+afterEach(() => vi.useRealTimers());
 
 function guidedWithPayments(estimatedPayments: PaymentData["estimatedPayments"], extensionPayments?: PaymentData["extensionPayments"], taxYear = 2025) {
   const state = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null }, taxYear);
@@ -113,6 +115,8 @@ it("requires distinct actual references for matching 2026 estimates", () => {
 });
 
 it("reconciles matching 2026 extension payments before transfer", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 3, 15, 12));
   const first = { date: "2027-04-15", amount: "500.01" };
   const repeated = { ...first, amount: "500.010" };
   const single = guidedWithPayments([], [first], 2026);
@@ -139,6 +143,8 @@ it("reconciles matching 2026 extension payments before transfer", () => {
 });
 
 it("holds a reused 2026 payment reference across estimates and extensions", () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2027, 3, 15, 12));
   const estimated = { ...firstOriginal, date: "2026-04-15" };
   const extension = { date: "2027-04-15", amount: "500.01", receiptReference: " synthetic  RECEIPT a " };
   const reused = guidedWithPayments([estimated], [extension], 2026);

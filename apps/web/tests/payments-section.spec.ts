@@ -406,6 +406,7 @@ for (const [device, viewport] of [
       await completeSegmentation(page);
       await page.getByRole("combobox", { name: "Tax year for this interview", exact: true }).selectOption("2026");
       await navigateToPayments(page);
+      await page.clock.setFixedTime(new Date("2028-04-16T12:00:00Z"));
 
       await page.getByRole("button", { name: "Add another estimated tax payment" }).click();
       const estimated = page.locator(".guided-w2-card").filter({ has: page.getByRole("heading", { name: "Payment #1", exact: true }) });
