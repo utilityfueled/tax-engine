@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { TaxYearInput } from '@/models/inputs';
 import { ohioNrcCategories, type OhioNrcCategory } from '@/models/ohio-residency';
 import type { OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
-import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, guidedOhioUnemploymentStatement, hasCurrentGuidedOhioUnemploymentEvidence, type OhioResidencyDraft, type OhioUnemploymentPaymentDraft, type OhioUnemploymentPaymentScheduleDraft } from '@/lib/guided-ohio-residency-facts';
+import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, guidedOhio2026ResidencyReviewError, guidedOhioUnemploymentStatement, hasCurrentGuidedOhioUnemploymentEvidence, type OhioResidencyDraft, type OhioUnemploymentPaymentDraft, type OhioUnemploymentPaymentScheduleDraft } from '@/lib/guided-ohio-residency-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
@@ -67,7 +67,9 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
         ? data.unemploymentPaymentSource : undefined;
     const schedule = unemployment && data?.unemploymentPaymentSchedule?.originalStatementFingerprint === unemployment.fingerprint
         ? data.unemploymentPaymentSchedule : undefined;
-    const confirmed = data?.sourceFactsConfirmed === true && hasCurrentGuidedOhioUnemploymentEvidence(data, originalInput);
+    const reviewError = guidedOhio2026ResidencyReviewError(data, taxYear, originalInput);
+    const confirmed = data?.sourceFactsConfirmed === true && !reviewError && hasCurrentGuidedOhioUnemploymentEvidence(data, originalInput);
+    const displayedError = reviewError ?? confirmationError;
     function editUnemployment(change: Partial<OhioUnemploymentPaymentDraft>) {
         if (!unemployment) return;
         edit(copy => {
@@ -177,12 +179,15 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                 <BooleanFact label="Actual sources contain no business income requiring Ohio apportionment" value={data.noBusinessIncomeConfirmed} onChange={value => edit(copy => { copy.noBusinessIncomeConfirmed = value; })} />
             </>}
             <p role="status">{confirmed ? 'Ohio residency sources explicitly confirmed.' : 'Ohio residency sources need explicit confirmation.'}</p>
-            <button type="button" className="utility-button" disabled={!originalInput} onClick={() => {
+            <button type="button" className="utility-button" disabled={!originalInput || (taxYear === 2026 && originalInput.taxpayer.taxYear !== 2026)} onClick={() => {
                 if (!originalInput) return;
                 try { const confirmed = confirmGuidedOhioResidencyFacts(originalInput, data); setConfirmationError(null); onChange(confirmed); }
-                catch (error) { setConfirmationError(error instanceof Error ? error.message : 'Complete and reconcile actual Ohio residency sources.'); }
+                catch (error) {
+                    const message = error instanceof Error ? error.message : 'Complete and reconcile actual Ohio residency sources.';
+                    setConfirmationError(message === reviewError ? null : message);
+                }
             }}>Confirm actual Ohio residency sources</button>
-            {confirmationError && <p role="alert">{confirmationError}</p>}
+            {displayedError && <p role="alert">{displayedError}</p>}
             <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove Ohio residency source facts</button>
         </>}
     </div>;

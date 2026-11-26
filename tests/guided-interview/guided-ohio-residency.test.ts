@@ -4,15 +4,17 @@ import { ohioResidencyFactErrors, confirmGuidedOhioResidencyFacts, buildGuidedOh
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { confirmGuidedOhioPaymentFacts } from '@/lib/guided-ohio-payment-facts';
 import { computeGuidedPreview } from '@/lib/guided-preview-compute';
-import { emptyStateReturnData, goToNextSection, jumpToSection, loadGuidedFlowState, saveGuidedFlowState, shouldPromptBeforeAdvance, updateSectionData } from '@/lib/guided-interview-flow';
+import { emptyStateReturnData, goToNextSection, jumpToSection, loadGuidedFlowState, saveGuidedFlowState, shouldPromptBeforeAdvance, startInterview, updateSectionData, type GuidedFlowState } from '@/lib/guided-interview-flow';
+import { buildGuidedStateOriginals } from '@/lib/guided-state-engine-inputs';
 import { calculateFederalTax } from '@/engine/federal';
 import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter';
 import { calculateOhioResidentReturn } from '@/engine/state/oh-return';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { ohioResidencyFacts, ohioResidencyOwner } from '../fixtures/oh-residency.js';
+import { ohio2026OrdinaryFixture } from '../fixtures/oh-2026-ordinary-return.js';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
 import { unemploymentSource } from '../fixtures/guided-government-uc-original.js';
-import { completeW2Entry, startCompleteInterview } from './complete-facts.js';
+import { completePersonalInfo, completeW2Entry, startCompleteInterview } from './complete-facts.js';
 
 function required<T>(value: T | null | undefined, description: string): T {
     if (value === null || value === undefined) throw new Error(`Synthetic Ohio fixture requires ${description}`);
@@ -25,6 +27,72 @@ function draft() {
     Object.assign(owner.amounts.wages, { federalAmount: '85000', nonresidentOhioAmount: '20000' });
     return { ...f, taxYear: '2025' } as OhioResidencyDraft;
 }
+
+const ohio2026DeclarationCases = [
+    ['full_year_resident', 'full-year', 'nonresident', '50000'],
+    ['part_year_resident', 'part-year', 'full-year', '30000'],
+    ['nonresident', 'nonresident', 'part-year', '10000'],
+] as const;
+
+function reopenOhioResidencyGuide(state: GuidedFlowState) {
+    const records = new Map<string, string>();
+    const storage = {
+        getItem: (key: string) => records.get(key) ?? null,
+        setItem: (key: string, value: string) => { records.set(key, value); },
+        removeItem: (key: string) => { records.delete(key); },
+        clear: () => records.clear(),
+        key: (index: number) => [...records.keys()][index] ?? null,
+        get length() { return records.size; },
+    } satisfies Storage;
+    expect(saveGuidedFlowState(storage, 'synthetic-ohio-ordinary-residency', state)).toBe(true);
+    return required(loadGuidedFlowState(storage, 'synthetic-ohio-ordinary-residency'), 'the saved Ohio guide');
+}
+
+it.each(ohio2026DeclarationCases)('rejects a 2026 primary Ohio residency conflict at confirmation and after reopening %s', (status, matching, conflicting, ohioWages) => {
+    const fixture = ohio2026OrdinaryFixture(status, '50000', ohioWages);
+    const { ohioResidency, ohioPayments: _ohioPayments, ...input } = fixture.input;
+    const raw = { ...required(ohioResidency, 'the documentary Ohio residency'), taxYear: '2026', sourceFactsConfirmed: null };
+    const matchingInput = { ...input, taxpayer: { ...input.taxpayer, stateResidency: matching } };
+    expect(confirmGuidedOhioResidencyFacts(matchingInput, raw).sourceFactsConfirmed).toBe(true);
+    expect(confirmGuidedOhioResidencyFacts(input, raw).sourceFactsConfirmed).toBe(true);
+
+    const conflictingInput = { ...input, taxpayer: { ...input.taxpayer, stateResidency: conflicting } };
+    const conflict = /declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records/i;
+    expect.soft(() => confirmGuidedOhioResidencyFacts(conflictingInput, raw)).toThrow(conflict);
+
+    const state = startInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: 'OH' }, 2026);
+    state.sectionData['personal-info'] = { ...completePersonalInfo, stateResidency: conflicting };
+    // Model a pre-fix save whose original snapshot already includes the contradictory declaration.
+    state.sectionData['state-return'] = { ...emptyStateReturnData, ohioResidency: {
+        ...raw, sourceFactsConfirmed: true, originalFederalSources: snapshotGuidedOhioOriginals(conflictingInput),
+    } };
+    const reopened = reopenOhioResidencyGuide(state);
+    const retained = required(reopened.sectionData['state-return']?.ohioResidency, 'the retained Ohio residency');
+    expect(reopened.sectionData['personal-info']?.stateResidency).toBe(conflicting);
+    expect(retained.sourceFactsConfirmed).toBe(true);
+    expect.soft(() => buildGuidedOhioResidencyFacts(retained, conflictingInput)).toThrow(conflict);
+    expect.soft(() => buildGuidedStateOriginals(conflictingInput, reopened)).toThrow(conflict);
+
+    reopened.segmentation.stateCode = 'VA';
+    expect(buildGuidedStateOriginals(conflictingInput, reopened)).toBe(conflictingInput);
+});
+
+it('matches only the primary Ohio declaration on a mixed-residency joint return', () => {
+    const fixture = ohio2026OrdinaryFixture('full_year_resident', '50000', '50000', true);
+    const { ohioResidency, ohioPayments: _ohioPayments, ...input } = fixture.input;
+    const residency = required(ohioResidency, 'the documentary Ohio residency');
+    const spouse = required(residency.owners.find(owner => owner.accountHolder === 'spouse'), 'the other documentary owner');
+    spouse.status = 'nonresident';
+    spouse.periods = [{ from: '2026-01-01', to: '2026-12-31', domicileState: 'VA' }];
+    required(spouse.amounts, 'the spouse allocations').wages.residentAmount = '0';
+    residency.owners.reverse();
+    const raw = { ...residency, taxYear: '2026', sourceFactsConfirmed: null };
+    input.taxpayer.stateResidency = 'full-year';
+    const confirmed = confirmGuidedOhioResidencyFacts(input, raw);
+    expect(buildGuidedOhioResidencyFacts(confirmed, input).owners.map(owner => owner.status)).toEqual(['nonresident', 'full_year_resident']);
+    const conflictingInput = { ...input, taxpayer: { ...input.taxpayer, stateResidency: 'nonresident' as const } };
+    expect(() => confirmGuidedOhioResidencyFacts(conflictingInput, raw)).toThrow(/declared Ohio residency conflicts/i);
+});
 
 it('preserves actual source allocations and copies only confirmed current originals', () => {
     const original = structuredClone(simpleW2Fixture);

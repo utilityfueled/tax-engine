@@ -40,6 +40,39 @@ function withSeniorHistory(p: Packet, joint = false) {
 }
 
 describe('Ohio2026 current ordinary source-to-return draft', () => {
+  it.each([
+    ['full_year_resident', 'full-year', 'nonresident', '50000', '932'],
+    ['part_year_resident', 'part-year', 'full-year', '30000', '559'],
+    ['nonresident', 'nonresident', 'part-year', '10000', '186'],
+  ] as const)('reconciles the primary declaration against the ordinary Ohio draft for %s', (status, matching, conflicting, ohioWages, tax) => {
+    const p = ohio2026OrdinaryFixture(status, '50000', ohioWages);
+    expect(run(p)).toMatchObject({ calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false });
+    expect(run(p).incomeTax.toFixed()).toBe(tax);
+    p.input.taxpayer.stateResidency = matching;
+    rebindOhio2026Ordinary(p);
+    expect(run(p).incomeTax.toFixed()).toBe(tax);
+    p.input.taxpayer.stateResidency = conflicting;
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records/i);
+  });
+
+  it('permits a separate spouse domicile on the ordinary Ohio joint draft', () => {
+    const p = ohio2026OrdinaryFixture('full_year_resident', '50000', '50000', true);
+    const spouse = current(residency(p).owners.find(record => record.accountHolder === 'spouse'));
+    const spouseEmployment = current(p.sources.employmentOriginals.find(record => record.accountHolder === 'spouse'));
+    spouse.status = 'nonresident';
+    spouse.periods = [{ from: '2026-01-01', to: '2026-12-31', domicileState: 'VA' }];
+    current(spouse.amounts).wages.residentAmount = '0';
+    current(spouseEmployment.serviceRows[0]).serviceState = 'VA';
+    residency(p).owners.reverse();
+    p.input.taxpayer.stateResidency = 'full-year';
+    rebindOhio2026Ordinary(p);
+    expect(run(p).nonresidentRatio.toFixed(4)).toBe('0.5000');
+    p.input.taxpayer.stateResidency = 'nonresident';
+    rebindOhio2026Ordinary(p);
+    expect(() => run(p)).toThrow(/declared Ohio residency conflicts/i);
+  });
+
   it('derives current ordinary wage AGI without a fabricated federal return', () => {
     const p = ohio2026OrdinaryFixture();
     const before = JSON.stringify(p);

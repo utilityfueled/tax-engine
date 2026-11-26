@@ -46,6 +46,34 @@ lines:
     description: "Bind a current ordinary employee packet to all current originals"
     formula: "Require taxYear2026, actual filing/owner identities, all-original-source-family inventory (reject unknown/unhandled even if zero), W2 source validation, complete Ohio residency periods/categories, exact original snapshot and source commitments. Derive wages/withholding from actual W2 rows once; state wages are not a substitute for services allocation. Require all unknown adjustment/credit/payment facts, never optional defaults."
     testRef: "tests/engine/state/oh-2026-return-draft.test.ts::rejects unknown changed or unsupported actual original sources: %s"
+  - line: "primary-residency-declaration"
+    description: "Reconcile the 2026 primary taxpayer's Ohio declaration with the confirmed Ohio domicile record"
+    formula: |
+      In the selected Ohio guide and private ordinary wage-only and Box 1
+      unemployment employee drafts, reconcile any explicit 2026 primary
+      declaration with the same owner's source status after validating the
+      domicile timeline. Reject a conflict for any of the
+      three statuses during confirmation and replay. In the 2026 guide, display
+      a review alert and withhold current confirmation for a conflicting
+      declaration, absent or mismatched return year, or stale retained originals.
+      Keep prior confirmation as historical evidence and require an explicit
+      new confirmation when the corrected facts differ from that evidence.
+      A missing declaration adds
+      no status and leaves qualification to the actual owner evidence. Evaluate
+      a joint filer's spouse independently using that spouse's own domicile
+      period and source status. This 2026 check does not change historical rules,
+      apply a statement from a different selected state, or qualify final forms
+      or filing.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+    testRef: "tests/guided-interview/guided-ohio-residency.test.ts::rejects a 2026 primary Ohio residency conflict at confirmation and after reopening %s"
+    testRefs:
+      - "tests/guided-interview/guided-ohio-residency.test.ts::matches only the primary Ohio declaration on a mixed-residency joint return"
+      - "tests/engine/state/oh-2026-return-draft.test.ts::reconciles the primary declaration against the ordinary Ohio draft for %s"
+      - "tests/engine/state/oh-2026-return-draft.test.ts::permits a separate spouse domicile on the ordinary Ohio joint draft"
+      - "tests/engine/state/oh-2026-unemployment-draft.test.ts::reconciles the primary declaration against the ordinary Ohio unemployment draft for %s"
+      - "tests/apps/web/ohio-residency-interactions.test.tsx::shows a retained Ohio residency conflict until the current declaration is reconciled and reconfirmed"
   - line: "AGI"
     description: "Ordinary employee federal and Ohio AGI"
     formula: "For the source-complete ordinary W2-only cohort, federalAGI=sum actual federal W2 wages, with no other federal income or adjustment admitted; OhioAGI=federalAGI because every state adjustment is explicitly source-qualified zero. Other federal components require completed current computation or a separate explicit draft method. No forged TaxReturnResult or 2025 constants."

@@ -5,7 +5,7 @@ import type {OhioResidentCreditDraft} from './guided-ohio-resident-credit-source
 import type { TaxYearInput } from '@/models/inputs';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioNrcCategory, type OhioResidencyFacts } from '@/models/ohio-residency';
 import { calculateOhioITNRC } from '@/engine/state/oh-it-nrc';
-import { allocateOhioUnemploymentReceipts, type OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
+import { allocateOhioUnemploymentReceipts, assertOhio2026PrimaryResidencyDeclaration, ohio2026PrimaryResidencyConflict, type OhioUnemploymentReceipt } from '@/engine/state/oh-residency-source';
 import {calculateFederalTax} from '@/engine/federal';
 import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter';
 import {calculateOhioCanonicalBusinessSource,readOhioCanonicalBusinessSource} from '@/engine/state/oh-business-source';
@@ -194,6 +194,7 @@ export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, ta
         const businessSource=parsed.data.businessSources&&input&&businessFederal?calculateOhioCanonicalBusinessSource({taxInput:input,residencyFacts:parsed.data,federalResult:businessFederal}):undefined;
         if(businessSource&&businessFederal){const actual=readOhioCanonicalBusinessSource(businessSource,parsed.data,businessFederal.agi);agi=actual.federalAgi;ohioAgi=actual.ohioAgi;}
         calculateOhioITNRC({ taxYear, filingStatus: filingStatus ?? '', federalAgi: agi.toDecimalPlaces(0, Decimal.ROUND_HALF_UP), ohioAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: parsed.data,...(businessSource?{businessSource}:{}) });
+        if (input) assertOhio2026PrimaryResidencyDeclaration(input.taxpayer, parsed.data);
         if (unemployment && input) buildOhioResidentReturnInput(input, calculateFederalTax(input), { residency: parsed.data });
         return {};
     }
@@ -215,6 +216,31 @@ export function assertGuidedOhioOriginals(input: TaxYearInput, retained: Record<
     if (!retained || stableOhioOriginal(retained) !== stableOhioOriginal(snapshotGuidedOhioOriginals(input)))
         throw new Error('Actual Ohio original sources are missing or stale; explicitly reconfirm current owner, year and federal originals.');
 }
+
+/** Check current review status without changing the retained confirmation. */
+export function guidedOhio2026ResidencyReviewError(
+    data: OhioResidencyDraft | undefined,
+    taxYear: number | null | undefined,
+    input: TaxYearInput | null | undefined,
+): string | null {
+    if (!data || (taxYear !== 2026 && data.taxYear !== '2026' && input?.taxpayer.taxYear !== 2026)) return null;
+    const previouslyConfirmed = data.sourceFactsConfirmed === true;
+    if (taxYear !== 2026 || data.taxYear !== '2026' || input?.taxpayer.taxYear !== 2026) {
+        return previouslyConfirmed ? 'Ohio residency sources need the current 2026 return and matching source year.' : null;
+    }
+    const primaryStatus = data.owners.find(owner => owner.accountHolder === 'primary')?.status;
+    const conflict = ohio2026PrimaryResidencyConflict(input.taxpayer, primaryStatus);
+    if (conflict || !previouslyConfirmed) return conflict;
+    if (!primaryStatus) return 'Enter the actual primary taxpayer Ohio domicile status and explicitly reconfirm.';
+    try {
+        assertGuidedOhioOriginals(input, data.originalFederalSources);
+        return null;
+    } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        return error.message;
+    }
+}
+
 /** Only an explicit confirmation may bind the current private originals. */
 export function confirmGuidedOhioResidencyFacts(input: TaxYearInput, draft: OhioResidencyDraft | undefined): OhioResidencyDraft {
     if (!draft) throw new Error('Actual Ohio residency source facts are required.');

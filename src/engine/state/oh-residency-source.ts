@@ -8,7 +8,7 @@ import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource, 
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { calculateFederalTax } from '@/engine/federal.js';
-import type { TaxYearInput } from '@/models/inputs.js';
+import type { TaxYearInput, Taxpayer } from '@/models/inputs.js';
 import type { TaxReturnResult } from '@/models/outputs.js';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioResidencyFacts, type OhioNrcCategory } from '@/models/ohio-residency.js';
 import type { OhioResidentReturnInput } from './oh-return.js';
@@ -37,6 +37,30 @@ function sameSourceMaterial(left: unknown, right: unknown): boolean {
 function fail(message: string): never {
     throw new Error(`Ohio actual residency sources: ${message}`);
 }
+
+const ohioResidencyByDeclaration = {
+    'full-year': 'full_year_resident',
+    'part-year': 'part_year_resident',
+    nonresident: 'nonresident',
+} as const;
+
+/** Compare an entered primary status without replaying the return. */
+export function ohio2026PrimaryResidencyConflict(
+    taxpayer: Pick<Taxpayer, 'taxYear' | 'stateResidency'>,
+    primaryStatus: OhioResidencyFacts['owners'][number]['status'] | '' | undefined,
+): string | null {
+    const { taxYear, stateResidency } = taxpayer;
+    if (taxYear !== 2026 || stateResidency === undefined || !primaryStatus || primaryStatus === ohioResidencyByDeclaration[stateResidency]) return null;
+    return "Ohio actual residency sources: declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records";
+}
+
+/** Reconcile the selected Ohio declaration after validating the actual owner timelines. */
+export function assertOhio2026PrimaryResidencyDeclaration(taxpayer: Pick<Taxpayer, 'taxYear' | 'stateResidency'>, facts: OhioResidencyFacts): void {
+    const primary = facts.owners.find(owner => owner.accountHolder === 'primary');
+    const conflict = ohio2026PrimaryResidencyConflict(taxpayer, primary?.status);
+    if (conflict) throw new Error(conflict);
+}
+
 export function assertCurrentOhioFederalResult(fresh: TaxReturnResult, result: TaxReturnResult): void {
     if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(result)))
         fail('saved federal result is stale');

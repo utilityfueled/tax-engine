@@ -81,6 +81,25 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
     expect(result.lines.find(line => line.line === '12' && line.description === 'Resident unemployment')?.value.toFixed()).toBe('0');
   });
 
+  // Spec: state/oh-2026-return-draft.yaml#primary-residency-declaration.
+  it.each([
+    ['part_year_resident', 'part-year', 'nonresident', '572'],
+    ['nonresident', 'nonresident', 'full-year', '188'],
+  ] as const)('reconciles the primary declaration against the ordinary Ohio unemployment draft for %s', (status, matching, conflicting, expectedTax) => {
+    const packet = unemploymentFixture(status);
+    expect(run(packet).incomeTax.toFixed()).toBe(expectedTax);
+
+    packet.input.taxpayer.stateResidency = matching;
+    rebindOhio2026Ordinary(packet);
+    const result = run(packet);
+    expect(result.incomeTax.toFixed()).toBe(expectedTax);
+    expect(result).toMatchObject({ calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false });
+
+    packet.input.taxpayer.stateResidency = conflicting;
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(/declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records/);
+  });
+
   it('admits one fully documented actual payment instead of a schedule', () => {
     const packet = unemploymentFixture();
     delete packet.residency.unemploymentPaymentSchedule;

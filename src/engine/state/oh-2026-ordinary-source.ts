@@ -12,7 +12,7 @@ import { OhioPaymentFactsSchema } from '@/models/ohio-payments.js';
 import { FEDERAL_2026_INDEXED } from '@/models/federal-2026-indexed.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
-import { allocateOhioUnemploymentReceipts } from './oh-residency-source.js';
+import { allocateOhioUnemploymentReceipts, assertOhio2026PrimaryResidencyDeclaration } from './oh-residency-source.js';
 import { calculateOhio2026ReciprocalWageSource, readOhio2026ReciprocalWageSource, type Ohio2026ReciprocalWageContext } from './oh-2026-reciprocal-source.js';
 import { calculateOhio2026ResidentCreditSource, readOhio2026ResidentCreditSource, type Ohio2026ResidentCreditSourceContext } from './oh-2026-resident-credit-source.js';
 import { roundDollar } from '@/utils/decimal.js';
@@ -230,6 +230,9 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   calculateOhioITNRC({ taxYear: 2026, filingStatus, federalAgi, ohioAgi: federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts,
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category,
       category === 'wages' ? roundDollar(federalWages) : category === 'unemployment' ? unemploymentAmounts?.box1 ?? '0' : '0'])) });
+  if (schema === Ohio2026OrdinarySourcesSchema || schema === Ohio2026UnemploymentEmployeeSourcesSchema) {
+    assertOhio2026PrimaryResidencyDeclaration(input.taxpayer, facts);
+  }
   const timing = payments.currentTiming;
   const valuationDate = timing.kind === 'filed' ? timing.filedDate : timing.expectedDate;
   day(valuationDate); day(timing.asOfDate);

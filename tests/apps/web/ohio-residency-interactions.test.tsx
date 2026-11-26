@@ -8,6 +8,7 @@ import { buildGovernmentPaymentSourceRecords } from '@/lib/guided-government-pay
 import { snapshotGuidedOhioOriginals, type OhioResidencyDraft } from '@/lib/guided-ohio-residency-facts';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { unemploymentSource } from '../../fixtures/guided-government-uc-original';
+import { ohio2026OrdinaryFixture } from '../../fixtures/oh-2026-ordinary-return';
 import { ohioResidencyFacts, ohioResidencyOwner } from '../../fixtures/oh-residency';
 import { simpleW2Fixture } from '../../fixtures/simple-w2';
 it('collects actual domicile facts and invalidates confirmation after source edits', async () => {
@@ -149,6 +150,71 @@ it('collects the four part-year payment facts and clears the view after a same-v
         expect(control('Unemployment payment 3 original reference')).toBeUndefined();
         await change('primary actual Ohio residency status', 'nonresident');
         expect(latest?.unemploymentPaymentSchedule).toBeUndefined();
+    }
+    finally {
+        await act(async () => root.unmount());
+        container.remove();
+    }
+});
+
+// Spec: state/oh-2026-return-draft.yaml#primary-residency-declaration.
+it('shows a retained Ohio residency conflict until the current declaration is reconciled and reconfirmed', async () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const { ohioResidency, ohioPayments: _payments, ...federal } = ohio2026OrdinaryFixture().input;
+    if (!ohioResidency) throw new Error('The fixture requires Ohio domicile records');
+    const conflicting = { ...federal, taxpayer: { ...federal.taxpayer, stateResidency: 'nonresident' as const } };
+    const corrected = { ...conflicting, taxpayer: { ...conflicting.taxpayer, stateResidency: 'full-year' as const } };
+    const earlier = { ...federal, taxpayer: { ...federal.taxpayer, taxYear: 2025 } };
+    const retained: OhioResidencyDraft = {
+        ...structuredClone(ohioResidency), taxYear: '2026',
+        originalFederalSources: snapshotGuidedOhioOriginals(conflicting),
+    };
+    let latest: OhioResidencyDraft | undefined;
+    function Harness() {
+        const [data, setData] = useState<OhioResidencyDraft | undefined>(retained);
+        const [input, setInput] = useState<typeof federal | null>(null);
+        return <>
+            <button type="button" onClick={() => setInput(earlier)}>Load earlier return</button>
+            <button type="button" onClick={() => setInput(conflicting)}>Reopen current return</button>
+            <button type="button" onClick={() => setInput(corrected)}>Correct personal residency declaration</button>
+            <OhioResidencyDetails data={data} originalInput={input} filingStatus="single" taxYear={2026}
+                onChange={value => { latest = value; setData(value); }} />
+        </>;
+    }
+    const click = async (label: string) => {
+        const button = [...container.querySelectorAll('button')].find(candidate => candidate.textContent === label);
+        if (!button) throw new Error(`Missing button ${label}`);
+        await act(async () => button.click());
+    };
+    const status = () => container.querySelector('[role="status"]')?.textContent;
+    const alert = () => container.querySelector('[role="alert"]')?.textContent;
+    try {
+        await act(async () => root.render(<Harness />));
+        expect.soft(status()).toContain('need explicit confirmation');
+        expect.soft(alert()).toMatch(/current 2026 return/);
+        await click('Load earlier return');
+        expect.soft(status()).toContain('need explicit confirmation');
+        expect.soft(alert()).toMatch(/current 2026 return/);
+        await click('Reopen current return');
+        expect.soft(status()).toContain('need explicit confirmation');
+        expect.soft(alert()).toMatch(/declared Ohio residency conflicts with the primary taxpayer's confirmed domicile records/);
+        expect(latest).toBeUndefined();
+        expect(retained.sourceFactsConfirmed).toBe(true);
+        await click('Confirm actual Ohio residency sources');
+        expect(latest).toBeUndefined();
+
+        await click('Correct personal residency declaration');
+        expect.soft(status()).toContain('need explicit confirmation');
+        expect.soft(alert()).toMatch(/missing or stale; explicitly reconfirm/);
+        expect(latest).toBeUndefined();
+        await click('Confirm actual Ohio residency sources');
+        expect(latest?.originalFederalSources).toEqual(snapshotGuidedOhioOriginals(corrected));
+        expect(retained.originalFederalSources).toEqual(snapshotGuidedOhioOriginals(conflicting));
+        expect(status()).toContain('explicitly confirmed');
+        expect(alert()).toBeUndefined();
     }
     finally {
         await act(async () => root.unmount());
