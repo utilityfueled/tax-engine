@@ -1,5 +1,27 @@
 # 2026 upgrade implementation evidence
 
+## November 26 energy carryforward and AI tier reconciliation
+
+`1a0cd7521` reconciles a 2026 Form 5695 worksheet option with the
+2025 source packet before accepting the carried credit. Exact Decimal
+values must agree before rounding. The source year and confirmation
+must agree when both inputs supply them. The failing regressions
+covered an overwritten zero, differing cents, a conflicting year and
+a conflicting confirmation. The exact archive passed 1,225 tests,
+typecheck, inventory and validation of 10,172 spec lines. Scoped lint
+reported four existing warnings. The IRS 2026 revision is a draft and
+remains held for filing. [26 U.S.C. § 25D](https://uscode.house.gov/us/usc/119-118/t26/s25D/) ·
+[2025 Form 5695](https://www.irs.gov/pub/irs-pdf/f5695.pdf) ·
+[Draft 2026 Form 5695](https://www.irs.gov/pub/irs-dft/f5695--dft.pdf).
+
+`307979af1` puts an empty reported OpenAI service tier into unknown
+usage reconciliation. An omitted or explicit `default` tier follows
+the existing pricing. Synthetic adapter and evaluation regressions
+failed on the original behavior. Exact archive verification passed
+1,175 tests including spec checks. Scoped lint passed. This evidence
+covers offline accounting; paid provider qualification and model
+promotion remain open.
+
 ## November 26 Pennsylvania part-year ordinary cash dividends
 
 `9ac66331c` allocates a current original Form 1099-DIV for one

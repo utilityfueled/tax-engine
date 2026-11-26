@@ -3,8 +3,10 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
-    "latestScopedApplicationCommit": "9ac66331cb2ab1664811d636d1995845fbea941f",
+    "latestScopedApplicationCommit": "1a0cd7521a2cfb098227449fa497627c69cce0f4",
     "latestCombinedCandidateCommit": "9ac66331cb2ab1664811d636d1995845fbea941f",
+    "energyCarryforwardOptionsEvidenceKey": "activeContinuation.nov26EnergyCarryforwardOptions",
+    "aiServiceTierEvidenceKey": "activeContinuation.nov26AiServiceTier",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -138,6 +140,25 @@
     ]
   },
   "activeContinuation": {
+    "nov26EnergyCarryforwardOptions": {
+      "commit": "1a0cd7521a2cfb098227449fa497627c69cce0f4",
+      "exactTestsPassed": 1225,
+      "validatedSpecLines": 10172,
+      "inventoryPassed": true,
+      "typecheckPassed": true,
+      "lintErrors": 0,
+      "existingLintWarnings": 4,
+      "filingQualified": false,
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-energy-carryforward-and-ai-tier-reconciliation"
+    },
+    "nov26AiServiceTier": {
+      "commit": "307979af11e3b21b5d4dd8027ab9211e4f335fa8",
+      "exactTestsPassed": 1175,
+      "lintPassed": true,
+      "liveProviderCalls": 0,
+      "modelPromoted": false,
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-energy-carryforward-and-ai-tier-reconciliation"
+    },
     "nov26PAPartYearCashDividend": {
       "commit": "9ac66331cb2ab1664811d636d1995845fbea941f",
       "progressSection": "docs/upgrade-2026-progress.md#november-26-pennsylvania-part-year-ordinary-cash-dividends",
