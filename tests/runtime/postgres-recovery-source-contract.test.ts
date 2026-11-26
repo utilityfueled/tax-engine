@@ -8,7 +8,7 @@ import { parse } from "yaml";
 const postgresImage = "postgres:16.16-bookworm@sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca";
 type DatabaseServices = { services: { postgres: { image: string } } };
 type WorkflowStep = { id?: string; run?: string; "continue-on-error"?: boolean; with?: { name?: string; path?: string } };
-type ContainerJob = { env: Record<string, string>; steps: WorkflowStep[] };
+type ContainerJob = { env: Record<string, string>; steps: WorkflowStep[]; defaults?: { run?: { shell?: string } } };
 type ShardCaller = { uses: string; with: { shard: string } };
 const { jobs: ci } = parse(readFileSync(".github/workflows/ci.yml", "utf8")) as { jobs: {
   test: DatabaseServices;
@@ -17,6 +17,7 @@ const { jobs: ci } = parse(readFileSync(".github/workflows/ci.yml", "utf8")) as 
 } };
 const { jobs: { "unit-test": unit } } = parse(readFileSync(".github/workflows/unit-tests.yml", "utf8")) as { jobs: { "unit-test": DatabaseServices } };
 const { jobs: { container } } = parse(readFileSync(".github/workflows/web.yml", "utf8")) as { jobs: { container: ContainerJob } };
+const { jobs: { recovery: arm64 } } = parse(readFileSync(".github/workflows/arm64-recovery.yml", "utf8")) as { jobs: { recovery: ContainerJob } };
 
 describe("PostgreSQL 16.16 self-host recovery", () => {
   it("uses the same verified multi-platform database in Compose and both CI test jobs", () => {
@@ -54,6 +55,31 @@ describe("PostgreSQL 16.16 self-host recovery", () => {
     expect(download).toBeGreaterThan(snapshot);
     expect(verification).toBeGreaterThan(download);
     expect(deletion).toBeGreaterThan(verification);
+  });
+
+  it("restores the archive only after starting and checking a fresh browser profile", () => {
+    const source = readFileSync("scripts/rehearse-self-host-release.mjs", "utf8");
+    const sourceProfile = source.indexOf('await startBrowserProfile("source-browser")');
+    const deleteSource = source.indexOf("Delete tax return ${id}", sourceProfile);
+    const closeSource = source.indexOf("await browser.close()", deleteSource);
+    const recoveryProfile = source.indexOf('await startBrowserProfile("recovery-browser")', closeSource);
+    const checkEmptyDocuments = source.indexOf("assert.equal(await documentBytes(page, null), 0)", recoveryProfile);
+    const firstImport = source.indexOf('getByLabel("Encrypted recovery file").setInputFiles(archive)', recoveryProfile);
+    expect(sourceProfile).toBeGreaterThanOrEqual(0);
+    expect(deleteSource).toBeGreaterThan(sourceProfile);
+    expect(closeSource).toBeGreaterThan(deleteSource);
+    expect(recoveryProfile).toBeGreaterThan(closeSource);
+    expect(checkEmptyDocuments).toBeGreaterThan(recoveryProfile);
+    expect(firstImport).toBeGreaterThan(checkEmptyDocuments);
+  });
+
+  it("retains the ARM64 Compose recovery result with the native artifact receipts", () => {
+    const rehearsal = arm64.steps.find(step => step.run?.includes("scripts/rehearse-self-host-release.mjs"));
+    expect(rehearsal?.run).toContain("| tee container-recovery.log");
+    expect(arm64.defaults?.run?.shell).toBe("bash");
+    expect(rehearsal?.["continue-on-error"]).toBeUndefined();
+    const artifact = arm64.steps.find(step => step.with?.name === "native-arm64-archive-evidence");
+    expect(artifact?.with?.path).toContain("container-recovery.log");
   });
 
   it("requires per-run SCRAM credentials before creating rehearsal data", () => {

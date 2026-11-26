@@ -18,7 +18,7 @@ import { rehearsePreviousSchema } from "./rehearse-self-host-previous-schema.mjs
 import { collectRehearsalPageState, createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
 
 // Run with node --import tsx. This creates its own local-only Compose project,
-// database volume and browser profile. It never connects to DATABASE_URL or
+// database volume and browser profiles. It never connects to DATABASE_URL or
 // uses provider/payment credentials. Only its uniquely named resources are removed.
 const [previousImage, candidateImage] = process.argv.slice(2);
 if (!previousImage || !candidateImage || process.argv.length !== 4) {
@@ -67,6 +67,18 @@ const pgPort = await unusedPort();
 const origin = `http://127.0.0.1:${webPort}`;
 const browserDiagnostics = createRehearsalBrowserDiagnostics(origin, { isMainFrame: frame => Boolean(page) && frame === page.mainFrame() });
 browserDiagnostics.setPhase(phase);
+const requests = [];
+async function startBrowserProfile(name) {
+  browser = await chromium.launchPersistentContext(path.join(work, name), { headless: true, baseURL: origin });
+  page = await browser.newPage();
+  page.setDefaultTimeout(15_000);
+  page.on("request", browserDiagnostics.requestStarted);
+  page.on("framenavigated", browserDiagnostics.frameCommitted);
+  page.on("pageerror", browserDiagnostics.pageError);
+  page.on("requestfailed", browserDiagnostics.requestFailed);
+  page.on("response", browserDiagnostics.response);
+  page.on("request", request => requests.push(`${request.url()}\n${request.postData() ?? ""}`));
+}
 const databaseUrl = `postgresql://ai_test@127.0.0.1:${pgPort}/postgres`;
 const databasePassword = randomBytes(32).toString("hex");
 const authenticatedDatabaseUrl = new URL(databaseUrl);
@@ -142,8 +154,12 @@ async function databaseSnapshot() {
 }
 async function documentSources(page, id) {
   return page.evaluate(async id => {
+    const databaseName = "tax-engine-workspace-document-cache";
+    if (!(await globalThis.indexedDB.databases()).some(database => database.name === databaseName)) {
+      return id === null ? 0 : [];
+    }
     const db = await new Promise((resolve, reject) => {
-      const request = globalThis.indexedDB.open("tax-engine-workspace-document-cache", 1);
+      const request = globalThis.indexedDB.open(databaseName, 1);
       request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
     });
     try {
@@ -214,16 +230,7 @@ try {
   await db.pool.query("INSERT INTO hosted_ai_attempts (owner_id,request_id,attempt,task,profile_id,model_id,state,started_at,completed_at,usage,provider_cost_usd,pricing_effective_from) VALUES ('synthetic-owner-a','rehearsal-request',1,'summary','synthetic','synthetic','accepted','2026-10-25T00:00:00Z','2026-10-25T00:00:01Z','{\"inputTokens\":1,\"outputTokens\":1}',0.0000006,'2026-10-25')");
   const beforeDatabase = await databaseSnapshot();
 
-  browser = await chromium.launchPersistentContext(path.join(work, "browser"), { headless: true, baseURL: origin });
-  page = await browser.newPage();
-  page.setDefaultTimeout(15_000);
-  page.on("request", browserDiagnostics.requestStarted);
-  page.on("framenavigated", browserDiagnostics.frameCommitted);
-  page.on("pageerror", browserDiagnostics.pageError);
-  page.on("requestfailed", browserDiagnostics.requestFailed);
-  page.on("response", browserDiagnostics.response);
-  const requests = [];
-  page.on("request", request => requests.push(`${request.url()}\n${request.postData() ?? ""}`));
+  await startBrowserProfile("source-browser");
   const pdf = await PDFDocument.create();
   pdf.addPage().drawText("Synthetic source for release recovery only", { font: await pdf.embedFont(StandardFonts.Helvetica), size: 12 });
   const originalBytes = Buffer.from(await pdf.save());
@@ -239,7 +246,10 @@ try {
     segmentation: { filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null },
     sectionData: { "personal-info": { firstName: "Synthetic", ssn: "900-70-0033" },
       extension: { zero: "0.00", cents: "9007199254740993.27", unanswered: null } } });
-  await page.evaluate(({ id, originalFlow }) => globalThis.localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow), { id, originalFlow });
+  await page.evaluate(({ id, originalFlow }) => {
+    globalThis.localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow);
+    globalThis.localStorage.setItem(`tax-engine:guided-mode:${id}`, "false");
+  }, { id, originalFlow });
   const verify = async (label, expectedImage) => {
     phase = label;
     browserDiagnostics.setPhase(phase);
@@ -330,6 +340,18 @@ try {
   await expect(card).toHaveCount(0);
   await page.reload();
   assert.equal(await documentBytes(page, id), null);
+  await browser.close();
+  browser = undefined;
+  page = undefined;
+
+  await startBrowserProfile("recovery-browser");
+  browserDiagnostics.navigationResponse(await page.goto("/"));
+  await expect(page.getByRole("button", { name: /^Delete tax return / })).toHaveCount(0);
+  assert.deepEqual(await page.evaluate(() => Object.keys(
+    JSON.parse(globalThis.localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}").workspaces ?? {},
+  )), []);
+  assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), id), null);
+  assert.equal(await documentBytes(page, null), 0);
   const restore = page.locator("details").filter({ has: page.getByText("Restore an encrypted backup", { exact: true }) });
   await restore.getByText("Restore an encrypted backup", { exact: true }).click();
   await restore.getByLabel("Encrypted recovery file").setInputFiles(archive);
@@ -360,6 +382,8 @@ try {
   await link.click();
   await page.reload();
   assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), recoveredId), originalFlow);
+  assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine:guided-mode:${id}`), recoveredId), originals.guidedMode);
+  assert.equal(originals.guidedMode, "false");
   const recoveredSources = await documentSources(page, recoveredId);
   assert.equal(recoveredSources.length, 1);
   const recoveredSource = recoveredSources[0];
@@ -372,7 +396,8 @@ try {
   await expect(page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
   assert.equal(await documentBytes(page, recoveredId), null);
   for (const privateValue of ["900-70-0033", "synthetic-release-source.pdf", "%PDF-"]) assert.ok(!requests.join("\n").includes(privateValue));
-  evidence.browserRecovery = { passed: true, encrypted: true, authenticatedOriginals: true, wrongPasswordRejected: true, tamperRejected: true,
+  evidence.browserRecovery = { passed: true, encrypted: true, authenticatedOriginals: true, freshBrowserProfile: true,
+    wrongPasswordRejected: true, tamperRejected: true,
     originalBytes: true, unknownYearPreserved: true, exactCents: true, deletion: true,
     networkObservation: { requests: requests.length, startsBeforeUpload: true, rawPrivateMarkersAbsent: true,
       limitation: "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof." } };

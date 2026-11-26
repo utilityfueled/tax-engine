@@ -704,7 +704,7 @@
     "apps/web/tests/self-host-flows.spec.ts": "cba83b370056bc2ad12d7d6b3b48027824a1061665e4e7c7df814fbe4103bb82",
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "eb19792945492af34215b59b1d4c9cda7593a2f1fcaa67767402bc96a779a59f",
-    "apps/web/tests/workspace-recovery.spec.ts": "ed52fcda6f4113663116bb282f937d419ccbefc4ba0682af6a1192dc91ee2740",
+    "apps/web/tests/workspace-recovery.spec.ts": "05438990927897e30a74a3a00019d30a70ac7db4e272ec3267d31390fe1d6907",
     "apps/web/tests/workspace-upload.spec.ts": "9dafdefc4211b8b5f2c1054aaadeb06ac52176ac134d0ca5058349156e045b41",
     "packages/contracts/package.json": "57053526d9dca0fab4f4d3ceeaf009a15472700a5886b3bed921a4c2c65ad3c7",
     "packages/contracts/src/index.ts": "ebf59013c7bbb367e503fa0297a149eb8f3057f335c89620f85434639721e461",

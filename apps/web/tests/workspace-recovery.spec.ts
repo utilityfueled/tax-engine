@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { taxpayerFacts2025 } from "./guided-fixtures";
 
-test("encrypted backup restores original bytes and private local answers after deletion and reload", async ({ page }, testInfo) => {
+test("encrypted backup restores original bytes and private local answers after deletion and reload", async ({ page, browser, baseURL }, testInfo) => {
   const sent: string[] = [];
   page.on("request", (request) => sent.push(`${request.url()}\n${request.postData() ?? ""}`));
   const pdf = await PDFDocument.create();
@@ -77,56 +77,75 @@ test("encrypted backup restores original bytes and private local answers after d
       request.onsuccess = () => { resolve(request.result); db.close(); };
     });
   })).toBe(0);
-  const otherTab = await page.context().newPage();
-  otherTab.on("request", (request) => sent.push(`${request.url()}\n${request.postData() ?? ""}`));
-  await otherTab.goto("/");
-  await otherTab.getByRole("button", { name: /start your tax return/i }).click();
-  await expect(otherTab).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
-  await otherTab.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
-  await expect(otherTab.getByRole("button", { name: "Reset Return", exact: true })).toBeVisible();
-  const restore = page.locator("details").filter({ has: page.getByText("Restore an encrypted backup", { exact: true }) });
-  await restore.getByText("Restore an encrypted backup", { exact: true }).click();
-  await restore.getByLabel("Encrypted recovery file").setInputFiles(archivePath);
-  await restore.getByLabel("Backup password (at least 12 characters)").fill("wrong-long-password");
-  await restore.getByRole("button", { name: "Restore as new local return", exact: true }).click();
-  await expect(restore.getByRole("status")).toContainText("incorrect");
-  await restore.getByLabel("Backup password (at least 12 characters)").fill("synthetic-recovery-password");
-  await restore.getByRole("button", { name: "Restore as new local return", exact: true }).click();
-  const link = restore.getByRole("link", { name: "Open restored return", exact: true });
-  await expect(link).toBeVisible();
-  const recoveredId = (await link.getAttribute("href"))!.split("/").at(-1)!.split("?")[0];
-  expect(recoveredId).not.toBe(id);
-  // This tab loaded the workspace list before the other tab completed recovery.
-  await otherTab.locator('input[type="file"]').setInputFiles({ name: "unrelated-source.pdf", mimeType: "application/pdf", buffer: bytes });
-  await expect(otherTab.getByText("unrelated-source.pdf", { exact: true }).first()).toBeVisible();
-  await otherTab.close();
-  await link.click();
-  await expect(page).toHaveURL(new RegExp(`/returns/${recoveredId}\\?local=1$`));
-  await page.reload();
-  expect(await page.evaluate((id) => localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), recoveredId)).toBe(originalFlow);
-  await page.getByRole("region", { name: "Your Documents", exact: true }).getByRole("button", { name: "Expand", exact: true }).click();
-  await expect(page.getByText("recovery-source.pdf", { exact: true }).first()).toBeVisible();
-  const recovered = await page.evaluate(async (id) => {
-    const db = await new Promise<IDBDatabase>((resolve) => {
-      const request = indexedDB.open("tax-engine-workspace-document-cache", 1);
-      request.onsuccess = () => resolve(request.result);
-    });
-    const records = await new Promise<Array<{ workspaceId: string; file: Blob }>>((resolve) => {
-      const request = db.transaction("workspace-document-files", "readonly").objectStore("workspace-document-files").getAll();
-      request.onsuccess = () => resolve(request.result);
-    });
-    db.close();
-    const record = records.find((record) => record.workspaceId === id)!;
-    return [...new Uint8Array(await record.file.arrayBuffer())];
-  }, recoveredId);
-  expect(Buffer.from(recovered)).toEqual(bytes);
-  await page.goto("/");
-  const restoredCard = page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` });
-  await expect(restoredCard).toContainText("Restored local return — saved only on this device.");
-  await page.reload();
-  await expect(restoredCard).toBeVisible();
-  await page.getByRole("button", { name: `Delete tax return ${recoveredId}`, exact: true }).click();
-  await expect(page.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
+  const recoveryContext = await browser.newContext({ baseURL });
+  try {
+    recoveryContext.on("request", (request) => sent.push(`${request.url()}\n${request.postData() ?? ""}`));
+    const recoveryPage = await recoveryContext.newPage();
+    await recoveryPage.goto("/");
+    await expect(recoveryPage.getByRole("button", { name: /^Delete tax return / })).toHaveCount(0);
+    expect(await recoveryPage.evaluate(async sourceId => ({
+      workspaces: Object.keys(JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}").workspaces ?? {}),
+      sourceFacts: localStorage.getItem(`tax-engine.guided-flow-state.v1:${sourceId}`),
+      hasDocumentCache: (await indexedDB.databases()).some(db => db.name === "tax-engine-workspace-document-cache"),
+    }), id)).toEqual({ workspaces: [], sourceFacts: null, hasDocumentCache: false });
+
+    const otherTab = await recoveryContext.newPage();
+    await otherTab.goto("/");
+    await otherTab.getByRole("button", { name: /start your tax return/i }).click();
+    await expect(otherTab).toHaveURL(/\/returns\/(?!new)[a-z0-9-]+/i);
+    await otherTab.getByRole("button", { name: "Switch to advanced mode", exact: true }).click();
+    await expect(otherTab.getByRole("button", { name: "Reset Return", exact: true })).toBeVisible();
+    expect(await recoveryPage.evaluate(sourceId => {
+      const saved = JSON.parse(localStorage.getItem("tax-engine.return-workspaces.v1") ?? "{}");
+      return Object.hasOwn(saved.workspaces ?? {}, sourceId);
+    }, id)).toBe(false);
+
+    const restore = recoveryPage.locator("details").filter({ has: recoveryPage.getByText("Restore an encrypted backup", { exact: true }) });
+    await restore.getByText("Restore an encrypted backup", { exact: true }).click();
+    await restore.getByLabel("Encrypted recovery file").setInputFiles(archivePath);
+    await restore.getByLabel("Backup password (at least 12 characters)").fill("wrong-long-password");
+    await restore.getByRole("button", { name: "Restore as new local return", exact: true }).click();
+    await expect(restore.getByRole("status")).toContainText("incorrect");
+    await restore.getByLabel("Backup password (at least 12 characters)").fill("synthetic-recovery-password");
+    await restore.getByRole("button", { name: "Restore as new local return", exact: true }).click();
+    const link = restore.getByRole("link", { name: "Open restored return", exact: true });
+    await expect(link).toBeVisible();
+    const recoveredId = (await link.getAttribute("href"))!.split("/").at(-1)!.split("?")[0];
+    expect(recoveredId).not.toBe(id);
+    // This tab loaded the workspace list before the other tab completed recovery.
+    await otherTab.locator('input[type="file"]').setInputFiles({ name: "unrelated-source.pdf", mimeType: "application/pdf", buffer: bytes });
+    await expect(otherTab.getByText("unrelated-source.pdf", { exact: true }).first()).toBeVisible();
+    await otherTab.close();
+    await link.click();
+    await expect(recoveryPage).toHaveURL(new RegExp(`/returns/${recoveredId}\\?local=1$`));
+    await recoveryPage.reload();
+    expect(await recoveryPage.evaluate((id) => localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), recoveredId)).toBe(originalFlow);
+    await recoveryPage.getByRole("region", { name: "Your Documents", exact: true }).getByRole("button", { name: "Expand", exact: true }).click();
+    await expect(recoveryPage.getByText("recovery-source.pdf", { exact: true }).first()).toBeVisible();
+    const recovered = await recoveryPage.evaluate(async (id) => {
+      const db = await new Promise<IDBDatabase>((resolve) => {
+        const request = indexedDB.open("tax-engine-workspace-document-cache", 1);
+        request.onsuccess = () => resolve(request.result);
+      });
+      const records = await new Promise<Array<{ workspaceId: string; file: Blob }>>((resolve) => {
+        const request = db.transaction("workspace-document-files", "readonly").objectStore("workspace-document-files").getAll();
+        request.onsuccess = () => resolve(request.result);
+      });
+      db.close();
+      const record = records.find((record) => record.workspaceId === id)!;
+      return [...new Uint8Array(await record.file.arrayBuffer())];
+    }, recoveredId);
+    expect(Buffer.from(recovered)).toEqual(bytes);
+    await recoveryPage.goto("/");
+    const restoredCard = recoveryPage.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` });
+    await expect(restoredCard).toContainText("Restored local return — saved only on this device.");
+    await recoveryPage.reload();
+    await expect(restoredCard).toBeVisible();
+    await recoveryPage.getByRole("button", { name: `Delete tax return ${recoveredId}`, exact: true }).click();
+    await expect(recoveryPage.getByRole("listitem").filter({ hasText: `Tax Return ${recoveredId}` })).toHaveCount(0);
+  } finally {
+    await recoveryContext.close();
+  }
   expect(sent.join("\n")).not.toContain("900-70-0011");
   expect(sent.join("\n")).not.toContain("recovery-source.pdf");
   expect(sent.join("\n")).not.toContain("%PDF-");

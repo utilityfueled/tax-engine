@@ -127,7 +127,7 @@ node --import tsx scripts/rehearse-self-host-release.mjs PREVIOUS_IMAGE CANDIDAT
 
 For Podman, set `TAX_ENGINE_CONTAINER_RUNTIME=podman`. If PostgreSQL client tools
 are outside PATH, set `TAX_ENGINE_TEST_POSTGRES_BIN` to their directory. The script
-creates and removes only its own Compose project, volume and browser profile.
+creates and removes only its own Compose project, volume and browser profiles.
 Record the running PostgreSQL server version and both client versions with the
 rehearsal results. CI installs the PostgreSQL Global Development Group client
 package and records the verified recovery utility versions with its runtime
@@ -149,7 +149,12 @@ upgrade, database restart, dump/restore, rollback, browser backup/restore and
 deletion, including original document bytes and exact values. Before deleting
 the synthetic source return, the rehearsal independently authenticates the
 downloaded archive and compares its complete contents with the saved browser
-workspace, guided answers, preference and original PDF.
+workspace, guided answers, preference and original PDF. It closes the source
+profile and opens a clean Chromium profile for recovery. The rehearsal checks
+that the clean profile has no saved returns or files, rejects damaged and
+incorrect-password archives, and verifies the restored answers, preference
+and PDF bytes after a reload. Both target CI workflows retain the Compose
+rehearsal log with their candidate artifacts.
 
 This verifies local recovery with the current application schema. It does not
 verify historical hosted-schema downgrade, hosted authentication or staging.

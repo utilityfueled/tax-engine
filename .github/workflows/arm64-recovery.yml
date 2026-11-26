@@ -114,7 +114,7 @@ jobs:
         env:
           PREVIOUS_IMAGE_ID: ${{ steps.images.outputs.previous }}
           CANDIDATE_IMAGE_ID: ${{ steps.images.outputs.candidate }}
-        run: node --import tsx scripts/rehearse-self-host-release.mjs "$PREVIOUS_IMAGE_ID" "$CANDIDATE_IMAGE_ID"
+        run: node --import tsx scripts/rehearse-self-host-release.mjs "$PREVIOUS_IMAGE_ID" "$CANDIDATE_IMAGE_ID" 2>&1 | tee container-recovery.log
       - name: Start the local candidate for the full browser suite
         id: browser_container
         env:
@@ -208,6 +208,7 @@ jobs:
             container-archive-verification.json
             container-candidate.json
             container-vulnerabilities.json
+            container-recovery.log
       - name: Enforce the ARM64 archive result
         if: ${{ !cancelled() && steps.images.outcome == 'success' }}
         env:
