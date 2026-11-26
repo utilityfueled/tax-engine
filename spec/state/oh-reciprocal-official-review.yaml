@@ -62,3 +62,7 @@ lines:
     description: "Actual positive Ohio withholding retains Schedule W even when reported dollars are zero"
     formula: "Independently supplied actual Ohio withholding0.49, separate PA1842.02, twelve actual payroll rows with zeroOhioWH for eleven and December0.49; wages60000.50 and originals remain exact. Nearest-dollar Ohio withholding/IT14/refund0 does not erase actualpositive source0.49. Actual public review retains all5files/9pages and strict168cells, including W2 wages60001, P/S P and reportedOHWH0, with source/context immutable. Select omission from actual source Decimal zero, never rounded IT14."
     testRef: "tests/pdf/oh-reciprocal-official-review.test.ts::actual positive Ohio withholding cents retain Schedule W despite reported zero"
+  - line: packet-calculation-reuse
+    description: A reciprocal reference packet and its physical companion share one canonical Ohio calculation within the packet request
+    formula: Reuse the canonical result for the same verified originals and empty overlay after repeating the current source check at the ordinary review boundary. Standalone rendering independently validates and calculates. Both routes save identical physical files for the same inputs and PDF metadata time.
+    testRef: "tests/pdf/oh-reciprocal-official-review.test.ts::actual reciprocal packet reuses its canonical calculation with exact standalone bytes %s"

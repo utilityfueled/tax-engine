@@ -1,5 +1,5 @@
 /** Spec: spec/state/oh-reciprocal-official-review.yaml. Controls before products/output. */
-import {expect,it} from 'vitest';
+import {expect,it,vi} from 'vitest';
 import Decimal from 'decimal.js';
 import {access,mkdtemp,mkdir,rm,readFile,writeFile,stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -7,7 +7,9 @@ import {join,basename} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {calculateFederalTax} from '@/engine/federal.js';
 import {calculateOhioResidentReturnFromFederal} from '@/engine/state/oh-engine.js';
+import * as ohioInputAdapter from '@/engine/state/oh-input-adapter.js';
 import {prepareOhioResidencyReview} from '@/engine/state/oh-residency-source.js';
+import {fillOhioOrdinaryOfficialReview} from '@/pdf/mappings/2025/fill-oh-ordinary-official-review.js';
 import {fillOhioReferenceForms} from '@/pdf/mappings/2025/fill-oh-reference-forms.js';
 import {assertPdfExportAllowed} from '@/pdf/export-policy.js';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
@@ -24,6 +26,37 @@ async function outputDirectory(name:string){
  await mkdir(output,{recursive:true});
  return{output,cleanup:()=>rm(temporary,{recursive:true,force:true})};
 }
+
+it.each(cases)('actual reciprocal packet reuses its canonical calculation with exact standalone bytes %s', async (_name, testCase) => {
+  const { input } = reciprocalOfficialReviewFixture(testCase);
+  const federal = calculateFederalTax(input);
+  const context = prepareOhioResidencyReview(input);
+  const display = redactReviewIdentifiers(input);
+  const directory = await mkdtemp(join(tmpdir(), 'oh-reciprocal-calculation-reuse-'));
+  const packetDir = join(directory, 'packet');
+  const standaloneDir = join(directory, 'standalone');
+  const adapt = vi.spyOn(ohioInputAdapter, 'buildOhioResidentReturnInput');
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-11-26T12:00:00Z'));
+  try {
+    const packet = await fillOhioReferenceForms(display, federal, packetDir, {}, context);
+    expect(adapt).toHaveBeenCalledTimes(1);
+    adapt.mockClear();
+    const standalone = await fillOhioOrdinaryOfficialReview(display, federal, standaloneDir, {}, context);
+    expect(adapt).toHaveBeenCalledTimes(1);
+    const packetNames = packet.filledForms.map(path => basename(path)).filter(name => name.endsWith('-review.pdf'));
+    expect(packetNames).toEqual(standalone.map(path => basename(path)));
+    expect(packetNames.slice().sort()).toEqual(Object.keys(testCase.physicalFiles).sort());
+    for (const name of packetNames) {
+      expect(await readFile(join(packetDir, name))).toEqual(await readFile(join(standaloneDir, name)));
+    }
+  } finally {
+    vi.useRealTimers();
+    adapt.mockRestore();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 it('actual reciprocal paper source preconditions retain independently supplied originals',()=>{
  for(const c of reciprocalPaperCases){
   const p=reciprocalOfficialReviewFixture(c),before=JSON.stringify(p),w=reciprocalW2(p),rows=reciprocalPaperRequired(w.stateLocalSources).stateRows;
