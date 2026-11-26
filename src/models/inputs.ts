@@ -4450,6 +4450,37 @@ export const EnergyCreditsSchema = z.object({
   homeEnergyAuditCost: optionalDecimal, // Line 13a
 });
 
+const form8911InvoiceSchema = z.object({
+  invoiceGrossCost: nonnegativeDollarsAndCents.pipe(z.string().refine(value => d(value).gt(0), "The original invoice cost must be positive")),
+  nonqualifyingInvoiceCost: nonnegativeDollarsAndCents,
+  rebatesAndOtherBasisReductions: nonnegativeDollarsAndCents,
+});
+const form8911PossessionStateFips = new Set(["60", "66", "69", "72", "78"]);
+
+export const Form8911Sources2026Schema = z.strictObject({
+  ...form8911InvoiceSchema.shape,
+  taxYear: z.literal(2026),
+  owner: z.enum(["primary", "spouse"]),
+  invoiceReference: z.string().trim().min(1),
+  placedInServiceReference: z.string().trim().min(1),
+  censusTractSourceReference: z.string().trim().min(1),
+  censusTractGeoid: z.string().regex(/^\d{11}$/, "Enter the full 11-digit 2020 Census tract GEOID")
+    .refine(geoid => !form8911PossessionStateFips.has(geoid.slice(0, 2)), "Form 8911 charger property in a U.S. possession requires separate source review"),
+  placedInServiceDate: z.iso.date().refine(date => date.startsWith("2026-"), "Enter the actual 2026 date the charger was ready for use"),
+  originalUseBeganWithTaxpayer: z.literal(true),
+  /** One charging port at the point of charging an electric passenger vehicle. */
+  oneNewChargingPortConfirmed: z.literal(true),
+  domesticMainHomeConfirmed: z.literal(true),
+  /** Property remained installed and in qualifying personal use through the return period. */
+  personalUseOnlyConfirmed: z.literal(true),
+  /** Reconciles original purchase costs paid by this owner and any reductions. */
+  invoiceReconciledConfirmed: z.literal(true),
+  censusTractMatchesLocationConfirmed: z.literal(true),
+}).refine(source => d(source.nonqualifyingInvoiceCost).plus(source.rebatesAndOtherBasisReductions).lte(source.invoiceGrossCost), {
+  path: ["invoiceGrossCost"], message: "Nonqualifying costs and basis reductions may not exceed the original invoice cost",
+  when: payload => form8911InvoiceSchema.safeParse(payload.value).success,
+});
+
 // Record whether original source facts existed before legacy schema defaults.
 // Recompute this marker; an imported `sourceFactsComplete: true` is never evidence.
 const sourceFactPresence = (required: string[]) => (value: unknown) => {
@@ -6999,6 +7030,7 @@ export const TaxYearInputSchema = z.object({
   schedule1A: Schedule1ASchema.optional(),
   salesTaxDeduction: SalesTaxDeductionSchema.optional(),
   energyCredits: EnergyCreditsSchema.optional(),
+  form8911: Form8911Sources2026Schema.optional(),
   form8936: Form8936Schema.optional(),
   savingsBondRedemptions: z.array(SavingsBondRedemptionSchema).default([]),
   form8815: Form8815Schema.optional(),
@@ -7316,6 +7348,7 @@ export type DependentCare = z.infer<typeof DependentCareSchema>;
 export type DependentCareBenefits = z.infer<typeof DependentCareBenefitsSchema>;
 export type EducationExpenses = z.infer<typeof EducationExpensesSchema>;
 export type EnergyCredits = z.infer<typeof EnergyCreditsSchema>;
+export type Form8911Sources2026 = z.infer<typeof Form8911Sources2026Schema>;
 export type SavingsBondRedemption = z.infer<typeof SavingsBondRedemptionSchema>;
 export type ScheduleRInput = z.infer<typeof ScheduleRInputSchema>;
 export type Form4684Property = z.infer<typeof Form4684PropertySchema>;

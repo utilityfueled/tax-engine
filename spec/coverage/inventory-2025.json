@@ -6359,6 +6359,25 @@
       ]
     },
     {
+      "key": "federal/form-8911",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8911",
+      "specPath": "spec/federal/form-8911.yaml",
+      "enginePath": "src/engine/forms/form-8911.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8915-f",
       "jurisdiction": "federal",
       "taxYear": 2025,

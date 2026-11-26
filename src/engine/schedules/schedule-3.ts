@@ -30,6 +30,8 @@ export interface Schedule3Input {
   elderlyOrDisabledCredit?: Decimal;
   /** New clean vehicle credit — Form 8936 Part III, Schedule 3 Line 6f */
   newCleanVehicleCredit?: Decimal;
+  /** Personal refueling property credit — Form 8911 Part II, Schedule 3 Line 6j */
+  alternativeFuelRefuelingCredit?: Decimal;
   /** Previously owned clean vehicle credit — Form 8936 Part IV, Schedule 3 Line 6m */
   previouslyOwnedCleanVehicleCredit?: Decimal;
   netPremiumTaxCredit?: Decimal;
@@ -54,6 +56,7 @@ export interface Schedule3Result {
   adoptionCredit: Decimal; // Line 6c
   elderlyOrDisabledCredit: Decimal; // Line 6d
   newCleanVehicleCredit: Decimal; // Line 6f
+  alternativeFuelRefuelingCredit?: Decimal; // Line 6j
   previouslyOwnedCleanVehicleCredit: Decimal; // Line 6m
   totalNonrefundableCredits: Decimal; // Line 8
 
@@ -148,6 +151,11 @@ export function calculateSchedule3(
   const newCleanVehicleCredit = extra?.newCleanVehicleCredit ?? new Decimal(0);
   audit.record("Sched 3", "6f", "New clean vehicle credit", newCleanVehicleCredit, "Form 8936 Part III");
 
+  const alternativeFuelRefuelingCredit = extra?.alternativeFuelRefuelingCredit;
+  if (alternativeFuelRefuelingCredit !== undefined) {
+    audit.record("Sched 3", "6j", "Alternative fuel vehicle refueling property credit", alternativeFuelRefuelingCredit, "Form 8911 line 10");
+  }
+
   const previouslyOwnedCleanVehicleCredit = extra?.previouslyOwnedCleanVehicleCredit ?? new Decimal(0);
   audit.record("Sched 3", "6m", "Previously owned clean vehicle credit", previouslyOwnedCleanVehicleCredit, "Form 8936 Part IV");
 
@@ -163,10 +171,11 @@ export function calculateSchedule3(
     adoptionCredit,
     elderlyOrDisabledCredit,
     newCleanVehicleCredit,
+    alternativeFuelRefuelingCredit ?? d(0),
     previouslyOwnedCleanVehicleCredit
   );
   const line6Subtotal = sum(priorYearMinimumTaxCredit, generalBusinessCredit, adoptionCredit,
-    elderlyOrDisabledCredit, newCleanVehicleCredit, previouslyOwnedCleanVehicleCredit);
+    elderlyOrDisabledCredit, newCleanVehicleCredit, alternativeFuelRefuelingCredit ?? d(0), previouslyOwnedCleanVehicleCredit);
   audit.record("Sched 3", "7", "Other nonrefundable credit subtotal", line6Subtotal, "Supported lines 6a through 6m");
   audit.record("Sched 3", "8", "Total nonrefundable credits", totalNonrefundableCredits, "Lines 1 through 5b + line 7 → Form 1040 line 20");
 
@@ -212,6 +221,7 @@ export function calculateSchedule3(
     adoptionCredit,
     elderlyOrDisabledCredit,
     newCleanVehicleCredit,
+    ...(alternativeFuelRefuelingCredit === undefined ? {} : { alternativeFuelRefuelingCredit }),
     previouslyOwnedCleanVehicleCredit,
     totalNonrefundableCredits,
     extensionPayment,

@@ -1,0 +1,73 @@
+form: "Form 8911"
+fullName: "Alternative Fuel Vehicle Refueling Property Credit, 2026 personal electric vehicle charger"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-11-26"
+irsReference: "https://www.irs.gov/instructions/i8911"
+notes: |
+  Calculate one documented new electric vehicle charging port used solely for
+  personal purposes at the taxpayer's main home in a U.S. state or D.C. This is
+  a draft federal calculation. Multiple ports, equipment for two- and three-wheel
+  vehicles only, shared-property allocations, commercial or mixed use, property
+  in U.S. possessions, business credits, transfers, elective pay, and recapture
+  require separate source and calculation support. Source authorities are IRC 30C, P.L. 119-21
+  section 70504, the December 2025 Form 8911 and Schedule A (Form 8911), their
+  instructions, and draft 2026 Schedule 3 at
+  https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf.
+  IRS Appendix B (2020 tract boundaries, 55,474 eligible GEOIDs) was extracted
+  from the official PDF below. The exact county-prefix table is bundled with
+  the calculator. Expanded sorted 11-digit GEOIDs retain leading zeros.
+  https://www.irs.gov/pub/irs-drop/appendix-b-list-of-2020-census-tract-boundary-30c-eligible-tracts-v2-1-4-2024.pdf
+  Source PDF SHA-256 ea5d501f3aa37c815cf2658a5925a8e8fcce6433506a80a97b34ac71fdcf0a5d.
+  Expanded list SHA-256 077deed805e28860a8077391081d75a10df520ca09bf7d0a893354036b3cb4f9
+  (one LF-terminated GEOID per line).
+  IRS Publication 6027's personal charger example confirms the $900 tentative
+  credit for $3,000 of qualifying cost, including directly attributable work.
+  https://www.irs.gov/pub/irs-access/p6027_accessible.pdf
+lines:
+  - line: "Schedule A 5-8, 17-18"
+    description: "Verify one owner's actual qualifying personally used property and basis"
+    formula: |
+      Require the 2026 return, actual owner and invoice, the date the purchased
+      new port was ready for use and its supporting record, and confirmation
+      that original use began with the owner at their domestic main home and
+      the property remained in qualifying use through the return period. Require
+      the full 11-digit 2020 Census tract GEOID tied to the installed location
+      by original Census evidence. Confirm eligibility with an exact match in
+      IRS Appendix B (2020 boundaries), which governs property placed in service
+      in 2026. On or before June 30, 2026, personal qualified cost equals gross
+      invoice cost paid by the named taxpayer less nonqualifying costs and
+      rebates or other net basis reductions. Require separately stated exact
+      cents and reject reductions that exceed total invoice cost. A known later
+      2026 ready-for-use date or a tract absent from the exact IRS list yields
+      zero qualifying credit. The actual ready-for-use date cannot follow the
+      independent calculation as-of date, which must be on or before today.
+      Missing facts cannot establish a credit.
+    irsRef: "IRC 30C(c), (e), (i); P.L. 119-21 sec. 70504; Notices 2024-20 and 2024-64; Form 8911 instructions, Schedule A lines 5, 6, 8, and 17"
+    testRef: "tests/engine/forms/form-8911.test.ts::bounds the 2026 personal charger by the actual service date, verified tract and invoice basis"
+  - line: "Schedule A 19-21 and Form 8911 4"
+    description: "Calculate the tentative personal credit for one operating charging port"
+    formula: "Tentative personal credit = min(30% of qualified net personal cost rounded to the nearest dollar, $1,000 per item)."
+    testRef: "tests/engine/forms/form-8911.test.ts::bounds the 2026 personal charger by the actual service date, verified tract and invoice basis"
+  - line: "Form 8911 5-9"
+    description: "Limit the credit by net regular tax above tentative minimum tax"
+    formula: |
+      Line 5 = Form 1040 line 16 plus Schedule 2 line 1z, with AMT outside line 5.
+      Line 6a = foreign tax credit. Line 6b = Form 1040 line 19 plus allowable
+      Schedule 3 lines 2 through 5 and other allowable credits in line 7. Exclude
+      general business credit, prior-year minimum tax credit, tax-credit bond
+      credit, and the Form 8911 credit itself. Line 6c adds 6a and 6b. Line 7 is
+      the nonnegative difference of lines 5 and 6c. Line 8 is the actual Form
+      6251 line 9 even if there is zero alternative minimum tax. Line 9 is the
+      nonnegative difference of lines 7 and 8.
+    testRef: "tests/engine/forms/form-8911.test.ts::subtracts prior allowable credits and actual tentative minimum tax before using the credit"
+  - line: "Form 8911 10 and Schedule 3 6j"
+    description: "Apply the nonrefundable personal credit once to federal tax"
+    formula: |
+      Credit = min(Form 8911 line 4, Form 8911 line 9). Flow an allowable credit
+      to Schedule 3 line 6j, subtotal and Form 1040 line 20. Calculate general
+      business and prior-year minimum tax credits afterward. Unused personal
+      credit is lost. On claiming the credit, reduce eligible property basis by
+      the Schedule A line 21 amount before the Form 8911 tax limitation, under
+      IRC 30C(e)(1). Preserve the 2025 and 2026 filing release gates.
+    testRef: "tests/engine/federal-form-8911.test.ts::calculates the June 30 credit and excludes a July 1 installation"

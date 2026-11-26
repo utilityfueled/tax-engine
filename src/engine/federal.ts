@@ -134,6 +134,7 @@ import { calculateForm2210 } from "./forms/form-2210.js";
 import { getForm2210DistributionOnlyBounds } from "./forms/form-2210-schedule-ai.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
 import { calculateForm5695 } from "./forms/form-5695.js";
+import { calculateForm8911 } from "./forms/form-8911.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
 import { validateSavingsBondReturnIdentity } from "./forms/savings-bond-return-identity.js";
 import { reconcileEducatorEducationExclusions } from "./forms/educator-education-exclusions.js";
@@ -284,6 +285,15 @@ function calculateFederalTaxBeforeOhioSchoolScheduleA(input: TaxYearInput, conte
 
 /** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: string }): TaxReturnResult {
+  if (input.form8911 !== undefined) {
+    const today = currentLocalCivilDate();
+    const asOfDate = context?.asOfDate ?? today;
+    if (!isActualDate(asOfDate) || asOfDate > today) throw new Error("Form 8911 requires a valid as-of date on or before today.");
+    const placedInServiceDate = input.form8911?.placedInServiceDate;
+    if (!placedInServiceDate || !isActualDate(placedInServiceDate) || placedInServiceDate > asOfDate) {
+      throw new Error("Form 8911 requires the actual date the charger was ready for use on or before the calculation as-of date.");
+    }
+  }
   if (input.paMarriedOrdinarySources?.paymentSources !== undefined) {
     return calculatePAMarriedOrdinaryReturnWithFederal(input, input.paMarriedOrdinarySources).federal;
   }
@@ -3871,7 +3881,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       regularTax: taxWithoutScheduleJ.plus(foreignCreditPartI),
       directCreditElectionForeignTaxCredit: directCredit,
       ordinaryForeignTaxCredits: ordinaryCredits,
-      requiresTentativeMinimumTaxForCredits: input.form8801 !== undefined || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward,
+      requiresTentativeMinimumTaxForCredits: input.form8911 !== undefined || input.form8801 !== undefined || hasK1Box15Credits || hasForm3800Input || hasGBCCarryforward,
       filingStatus,
       isItemizing: deductionUsed === "itemized",
       qualifiedDividends,
@@ -4603,7 +4613,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     `Nonrefundable CTC: ${childTaxCredit} (${qualifyingChildren} children, ${otherDependents} other dependents)`);
 
 
-  const otherCredits = sum(earlierPersonalCredits, adoptionCredit, form5695.residentialCleanEnergyCredit);
+  const priorPersonalCredits = sum(earlierPersonalCredits, adoptionCredit, form5695.residentialCleanEnergyCredit);
+  const form8911 = input.form8911 === undefined ? undefined : calculateForm8911(input.form8911, {
+    taxYear: year, filingStatus, spousePresent: input.taxpayer.spouse !== undefined,
+    incomeTax, schedule2PartIAdditions: partIAdditions, foreignTaxCredit,
+    priorAllowableCredits: priorPersonalCredits.minus(foreignTaxCredit).plus(childTaxCredit),
+    tentativeMinimumTax: form6251.tentativeMinimumTax,
+  });
+  if (form8911) audit.merge(form8911.lines);
+  const otherCredits = priorPersonalCredits.plus(form8911?.personalCredit ?? d(0));
 
   // ── Form 3800: General Business Credit ──────────────────
   // Computed after CTC so the limitation can use CTC + other personal credits.
@@ -4696,7 +4714,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     retirementSavingsCredit, residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
     energyImprovementCredit: form5695.energyImprovementCredit, priorYearMinimumTaxCredit, generalBusinessCredit,
     adoptionCredit, elderlyOrDisabledCredit, newCleanVehicleCredit: form8936?.totalNewVehicleCredit,
-    previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit, netPremiumTaxCredit,
+    previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit, alternativeFuelRefuelingCredit: form8911?.personalCredit, netPremiumTaxCredit,
     excessSocialSecurityWithholding: excessSSWithholding, section1341Credit: claimOfRightStage(input)?.credit,
   });
   audit.merge(sched3.lines);
@@ -5519,6 +5537,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form8814,
     form8839,
     form5695,
+    ...(form8911 === undefined ? {} : { form8911 }),
     form461,
     scheduleJ: scheduleJResult,
     form3800,
