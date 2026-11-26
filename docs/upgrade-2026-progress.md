@@ -1,5 +1,15 @@
 # 2026 upgrade implementation evidence
 
+## November 25 historical AI review fixture
+
+The exact local unit jobs exposed one historical provider lifecycle fixture
+with an undated synthetic reviewer record. A focused run reproduced the
+failure. The synthetic review now occurs one millisecond after request start,
+matching the fixture's measured response time and preceding model shutdown.
+All 56 focused provider lifecycle, scorecard and output binding tests passed,
+including the original rejection of post-shutdown quality evidence and
+retention of its exact cost. No provider calls were made.
+
 ## November 25 California household FUTA credit reduction
 
 `30f6be19a` takes the 1.5% rate from final 2026 Schedule A (Form 940).

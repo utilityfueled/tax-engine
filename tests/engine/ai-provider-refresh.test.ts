@@ -7,6 +7,7 @@ import { providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packa
 import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
 
 const before = "2026-12-10T23:59:59.000Z";
+const responseReviewedAt = "2026-12-10T23:59:59.001Z";
 const shutdown = "2026-12-11T00:00:00.000Z";
 const expiry = "2026-12-11T01:00:00.000Z";
 const planInput = { runId: "retirement-boundary", purpose: "smoke" as const, profileIds: ["baseline-gpt-5-mini"],
@@ -21,7 +22,7 @@ function historicalEntry() {
   const validated = validateProviderEvalOutput(fixture, payload);
   const entry: ProviderModelLiveEvalEntry = { profileId: "baseline-gpt-5-mini", fixtureId: fixture.id, fixtureVersion: 1, repeat: 1, elapsedMs: 1,
     applicationSchemaValid: true, output: validated.output,
-    independentReview: { method: "human", reviewer: "synthetic-unit-only-not-human-review", grounded: true, qualityAccepted: true, piiLeak: false },
+    independentReview: { method: "human", reviewer: "synthetic-unit-only-not-human-review", reviewedAt: responseReviewedAt, grounded: true, qualityAccepted: true, piiLeak: false },
     attempts: [{ profileId: "baseline-gpt-5-mini", startedAt: before, usage: { inputTokens: 100, outputTokens: 100 } }],
     measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: providerEvalCorpusDigest(), fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
       promptVersion: "income-extraction/3", schemaVersion: "income-extraction/3", normalizationStatus: "bound", applicationOutput: payload, privacyFailure: false, responseReference: "test-only", reportedModel: "gpt-5-mini-2025-08-07" } };
