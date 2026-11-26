@@ -158,6 +158,7 @@ const officialFixtureCatalog: FixtureMatch[] = officialSampleDocumentFixtures.ma
 const supportByKind = new Map(supportMatrix.map((entry) => [entry.kind, entry]));
 const supportedDocumentKinds = new Set<WorkspaceDocumentKind>([
   ...supportMatrix.map((entry) => entry.kind),
+  "1099-lps",
   "unknown"
 ]);
 const workspaceCoverageStatuses = new Set<WorkspaceDocumentRecord["coverage"]>([
@@ -1178,14 +1179,17 @@ function isSupportedGuided2026Original(file: UploadableFile) {
 function getFutureYearSampleUploads(files: UploadableFile[], allowGuided2026Originals: boolean): FutureYearSampleUpload[] {
   return files.flatMap((file) => {
     if (isDetectedReviewStatement(file)) return [];
+    const detected = file.detectedDocument;
     const matched = matchFixture(file.name);
-    const original = file.detectedDocument && (file.detectedDocument.kind === "training-scenario" || hasWageOrNecOriginal(file, matched)) ? file.detectedDocument : null;
-    if (original?.kind === "unknown") return [];
+    const original = detected && (detected.kind === "1099-lps" || detected.kind === "training-scenario"
+      || hasWageOrNecOriginal(file, matched)) ? detected : null;
+    const originalKind = original?.kind;
+    if (originalKind === "unknown" || originalKind === "1099-lps") return [];
     if (allowGuided2026Originals && isSupportedGuided2026Original(file)) return [];
     // Actual cover metadata overrides a historical filename, including unknown.
-    const fixture = original ? {
-      id: matched?.id ?? (original.kind === "training-scenario" ? "uploaded-training-guide" : "uploaded-original"), label: original.label,
-      kind: original.kind, aliases: [], taxYearHint: original.taxYear ?? null,
+    const fixture = original && originalKind ? {
+      id: matched?.id ?? (originalKind === "training-scenario" ? "uploaded-training-guide" : "uploaded-original"), label: original.label,
+      kind: originalKind, aliases: [], taxYearHint: original.taxYear ?? null,
     } : matched;
 
     if (!fixture || fixture.taxYearHint === null || fixture.taxYearHint <= latestEngineTargetYear) {
@@ -1253,7 +1257,9 @@ function classifyUploadedDocument(file: UploadableFile, usedIds: Set<string>): W
   // seeded facts merely because the original upload is named f1095a.pdf.
   // A real guide cover cannot become a taxpayer form through its filename.
   // Recognized W-2/NEC source facts also take precedence over sample aliases.
+  // A premium statement in the PDF requires review even under a sample alias.
   const matchedFixture = hasWageOrNecOriginal(file, filenameFixture) || isDetectedReviewStatement(file) || detectedFinancialSource
+    || file.detectedDocument?.kind === "1099-lps"
     || (file.detectedDocument?.kind === "1095-a"
     && (filenameFixture?.kind !== "1095-a" || file.detectedDocument.taxYear == null
       || file.detectedDocument.taxYear !== filenameFixture.taxYearHint))

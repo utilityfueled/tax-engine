@@ -368,7 +368,7 @@ export const defaultChecklist: WorkspaceChecklistItem[] = [
   { id: "review", label: "Review summary and completed return", status: "blocked" }
 ];
 
-export type WorkspaceDocumentKind = SupportedDocumentKind | "unknown";
+export type WorkspaceDocumentKind = SupportedDocumentKind | "1099-lps" | "unknown";
 
 export type WorkspaceDocumentCoverage = CoverageStatus | "unsupported" | "reviewed";
 

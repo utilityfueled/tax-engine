@@ -4,6 +4,28 @@ taxYear: 2026
 irsReference: "https://www.irs.gov/instructions/i1040gi"
 notes: "No calculation or filing gate is opened by restoring display metadata. Original document years and saved guided facts remain separate evidence."
 lines:
+  - line: "long-term-care-premium-statement-upload"
+    description: "Keep an actual Form 1099-LPS visible when a PDF contains other statements"
+    formula: >-
+      Recognize the form from the printed Form 1099-LPS identifier, statement
+      title and first-box label on one page, including when a page stamp or
+      neighboring panel shares the same text row. An upload containing the form stays pending
+      separate source review even when a different supported statement appears
+      before or after it. Keep the original upload without seeding either document's
+      tax facts. Printed source evidence overrides any sample filename. Do not
+      infer the calendar year from the form revision, filename
+      or unrelated statements. Box 1 reports premiums and charges paid. It does not
+      establish a deductible medical expense, the qualified distribution amount,
+      or when the separate issuer premium statement was filed with the plan.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f1099lps--2026.pdf"
+      - "https://www.irs.gov/pub/irs-prior/i1099lps--2026.pdf"
+      - "https://www.irs.gov/irb/2026-24_IRB#NOT-2026-33"
+    testRef: "tests/apps/web/uploaded-1099-lps.test.ts::holds a mixed PDF containing the final Form 1099-LPS regardless of page order"
+    testRefs:
+      - "tests/apps/web/uploaded-1099-lps.test.ts::recognizes the final blank without assuming a calendar year or amounts"
+      - "tests/apps/web/uploaded-1099-lps.test.ts::holds the actual form when another panel or page stamp shares the header row"
+      - "tests/apps/web/uploaded-1099-lps.test.ts::keeps importing an interest statement when only the filename or a source note mentions Form 1099-LPS"
   - line: "marketplace-upload-year"
     description: "Retain an explicit Form1095-A original year without authorizing its tax facts"
     formula: "Recognize the actual Marketplace statement title and Form1095-A cover. Accept at least one exact printed four-digit form-year anchor, including the original catalog-number footer on a page-one-only upload or the page-two form header, with all present anchors and explicit source year labels agreeing; contradictory or missing source years remain unknown. Never use a filename, creation date or split decorative year as evidence. Actual detected Marketplace metadata overrides an explicit historical f1095a--2025 filename alias when its kind or year differs or its year is unknown. A matching actual2025 statement retains the existing2025 fixture handling and manual premium-tax-credit-review prompt, as do explicit-year filename-only fixtures. Bare f1095a with no readable statement stays unknown. Otherwise retain needs-review coverage and no seeded or detected facts; printed VOID and CORRECTED labels do not establish checkbox status. Existing year conflicts and manual Marketplace source confirmation still block calculation."

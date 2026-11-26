@@ -877,6 +877,14 @@ export function parseUploadedDocumentText(text: string, fileName = ""): ParsedUp
   return parseDocumentText(text, fileName, null);
 }
 
+function hasLongTermCarePremiumStatement(text: string): boolean {
+  return text.split("\n\n").some(page =>
+    /\bForm[ \t]+1099-LPS\b/i.test(page)
+    && /\bLong-Term Care\b/i.test(page)
+    && /\bPremiums Paid\b/i.test(page)
+    && /\b1[ \t]+Long-term care premiums and charges paid\b/i.test(page));
+}
+
 function parseDocumentText(
   text: string, fileName: string, necCopyB: NecCopyB | null, w2CopyB: W2CopyB | null = null,
   reviewStatement: ParsedUploadedDocument | null = null,
@@ -900,6 +908,18 @@ function parseDocumentText(
       taxYear: years.size === 1 ? [...years][0] : null,
       label: "Publication 4491 training material",
       notes: "The printed return year identifies training material only. Review actual taxpayer documents separately; no financial facts are imported from guide examples.",
+      seededFactIds: [],
+      detectedFacts: [],
+    };
+  }
+
+  if (hasLongTermCarePremiumStatement(normalizedText)) {
+    return {
+      kind: "1099-lps",
+      coverage: "unsupported",
+      taxYear: null,
+      label: "Form 1099-LPS needs review",
+      notes: "Form 1099-LPS reports premiums paid. Review it with the matching Form 1099-R and separate retirement plan records. Upload other forms in separate files.",
       seededFactIds: [],
       detectedFacts: [],
     };
