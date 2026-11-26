@@ -60,6 +60,7 @@ export function calculateEducatorExpensesDeduction(
       if (!source.schools?.length) throw new Error("Educator source requires actual school roles and hours.");
       let eligibleHours = new D(0);
       let itemizedEligibleHours = new D(0);
+      const countedSchoolHours = new Set<string>();
       for (const school of source.schools) {
         if (!school.name.trim() || school.role === undefined || typeof school.schoolEligible !== "boolean") throw new Error("Educator source requires actual school and role eligibility.");
         if (taxYear >= 2026 && school.level === undefined) throw new Error("2026 educator sources require the actual school level; unknown is not K12");
@@ -79,6 +80,14 @@ export function calculateEducatorExpensesDeduction(
         }
         const broadRole = school.role === "coach" || school.role === "interscholastic_sports_administrator";
         if (eligibleSchool && school.role !== "other") {
+          if (taxYear === 2026 && hours.gt(0)) {
+            const schoolName = school.name.trim().replace(/\s+/g, " ").toLowerCase();
+            const record = JSON.stringify([schoolName, school.level, school.role, hours.toFixed()]);
+            if (countedSchoolHours.has(record)) {
+              throw new Error("Reconcile repeated educator school hours for the same school and role. Enter the actual nonoverlapping hours once, or identify the distinct schools.");
+            }
+            countedSchoolHours.add(record);
+          }
           if (!broadRole) eligibleHours = eligibleHours.plus(hours);
           if (taxYear >= 2026) itemizedEligibleHours = itemizedEligibleHours.plus(hours);
         }

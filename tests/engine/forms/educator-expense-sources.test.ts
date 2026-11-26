@@ -1,5 +1,5 @@
 // Spec: spec/federal/educator-expense-sources.yaml
-import { expect, it } from "vitest";
+import { assert, expect, it } from "vitest";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses";
 import { TaxYearInputSchema } from "@/models/inputs";
 import { simpleW2Fixture } from "../../fixtures/simple-w2";
@@ -24,6 +24,30 @@ it("uses actual owner and school-year hours without inferring eligibility", () =
   }
   expect(() => calculate([educatorSource({ schools: [{ ...schools[0], schoolEligible: undefined }] })])).toThrow(/school/i);
   expect(() => calculate([educatorSource({ accountHolder: "spouse" })])).toThrow(/joint/i);
+});
+
+it("holds indistinguishable positive 2026 school hours before either educator deduction", () => {
+  const [originalSchool] = educatorSource().schools;
+  assert.ok(originalSchool);
+  const school = { ...originalSchool, hoursWorked: "450.25" };
+  const repeated = { ...school, name: " actual   PUBLIC school ", hoursWorked: "450.2500" };
+  const source = educatorSource({ reimbursementsNotInWages: "0", excludedSavingsBondInterest: "0",
+    nontaxableQualifiedTuitionProgramAmount: "0", nontaxableCoverdellEarnings: "0" });
+  const withSchools = (...schools: typeof school[]) => calculate([{ ...source, schools }]);
+  expect(withSchools(school).amount.toFixed()).toBe("0");
+  expect(() => withSchools(school, repeated)).toThrow(/reconcile repeated educator school hours/i);
+  expect(() => withSchools({ ...school, role: "coach" }, { ...repeated, role: "coach" }))
+    .toThrow(/reconcile repeated educator school hours/i);
+
+  for (const result of [withSchools({ ...school, hoursWorked: "900.5" }),
+    withSchools(school, { ...repeated, name: "Another actual school" }),
+    withSchools(school, { ...repeated, role: "aide" }),
+    withSchools(school, { ...repeated, hoursWorked: "449.75" })]) {
+    expect(result.amount.toFixed()).toBe("350");
+    expect(result.itemizedDeduction?.toFixed()).toBe("150.15");
+  }
+  const zero = { ...school, hoursWorked: "0" };
+  expect(withSchools(school, zero, zero).amount.toFixed()).toBe("0");
 });
 
 it("reconciles exact qualified costs and education benefit reductions before each cap", () => {

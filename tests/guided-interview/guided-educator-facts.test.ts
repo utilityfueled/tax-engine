@@ -1,5 +1,5 @@
 // Spec: spec/federal/educator-expense-sources.yaml
-import { expect, it } from "vitest";
+import { assert, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { buildSectionRoute, emptyAdjustmentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { buildEducatorSources, emptyEducatorSource, type EducatorSourceData } from "@/lib/guided-educator-facts";
@@ -36,6 +36,28 @@ it("opens the actual educator route and requires its source facts", () => {
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
   state.sectionData.adjustments = { ...emptyAdjustmentData, educatorExpenseSources: [actualEducator] };
   expect(buildTaxInputFromGuidedData(state)).not.toBeNull();
+});
+
+it("holds saved 2026 school-hour duplicates until the actual hours reconcile", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: ["educator-expenses"], stateCode: null });
+  state.taxYear = 2026;
+  const [originalSchool] = actualEducator.schools;
+  assert.ok(originalSchool);
+  const school = { ...originalSchool, level: "k12" as const, hoursWorked: "450.25" };
+  const source = { ...actualEducator, taxYear: "2026", schoolYear: "2025-2026",
+    schools: [school, { ...school, name: " ACTUAL school ", hoursWorked: "450.250" }],
+    expenses: actualEducator.expenses.map(expense => ({ ...expense, datePaid: "2026-03-01", amount: "500.15" })) };
+  const entered = updateSectionData(state, "adjustments", { ...emptyAdjustmentData, educatorExpenseSources: [source] });
+  const saved: typeof entered = JSON.parse(JSON.stringify(entered));
+  expect(saved.sectionData.adjustments?.educatorExpenseSources?.[0]?.schools).toEqual(source.schools);
+  expect(validateSection(saved, "adjustments").status).toBe("partial");
+  expect(buildTaxInputFromGuidedData(saved)).toBeNull();
+
+  const corrected = updateSectionData(saved, "adjustments", { ...emptyAdjustmentData,
+    educatorExpenseSources: [{ ...source, schools: [school] }] });
+  expect(validateSection(corrected, "adjustments").status).toBe("complete");
+  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(corrected));
+  expect(calculateEducatorExpensesDeduction(input.adjustments, "single", 2026).amount.toFixed()).toBe("0");
 });
 
 it("preserves the actual school level and leaves missing 2026 classification unknown", () => {
