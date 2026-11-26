@@ -1,6 +1,6 @@
 # Current 2026 upgrade status
 
-## Resume here · November 25
+## Resume here · November 26
 
 Main is the active branch. The hosted cybersecurity rehearsals are
 deferred at the owner’s direction. Their readiness criteria remain open.
@@ -9,8 +9,36 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- All 11 required local checks passed on `3014f75a1`, including 30,739
+  unit and coverage tests, 88.53% branch coverage, and 654 active
+  Chromium cases. The latest exact remote checks were queued. An earlier
+  strict AMD64 run recorded 16 deadline failures after successful recovery
+  and rollback. [Combined verification](upgrade-2026-progress.md#november-26-combined-local-verification).
+
+- `eea4b1e03` renders an internal 2026 Form 7206 for a sole Schedule C
+  business. The rendered specimen has a 100% allocation, a $212 share of
+  the self-employment tax deduction and a $900 Schedule 1 line 17 transfer.
+  [Form 7206 and payment source evidence](upgrade-2026-progress.md#november-26-form-7206-and-federal-payment-sources).
+
+- `d31cac761` and `bef591521` hold duplicate prior-year federal applied
+  credits in the 2026 guide and calculation. The prompt names the rows
+  for reconciliation and preserves their saved data.
+  [Federal payment source evidence](upgrade-2026-progress.md#november-26-form-7206-and-federal-payment-sources).
+
+- `27de5df10` adds a private full-year Ohio draft for a matched direct
+  Treasury note or bond coupon. It requires stable original account
+  evidence and excludes the exact coupon from state AGI.
+  [Ohio Treasury evidence](upgrade-2026-progress.md#november-26-ohio-treasury-coupon-draft).
+
+- `ebf62ed05` and `3014f75a1` keep estimates separate from verified billed
+  attempts in offline AI evaluation. Reconciliation-only usage appears
+  in spend and token-cap checks from the actual receipt timestamp.
+  `2e0f8aaf9` verifies HSA preview after fresh confirmation with the
+  existing required-facts flow.
+  [Offline AI and HSA evidence](upgrade-2026-progress.md#november-26-offline-ai-accounting-and-hsa-preview).
+
 - `97466cdd9` restores encrypted backup support for older local returns.
-  The latest exact build passed all 28 selected Chromium cases, including
+  Its exact build passed all 28 selected Chromium cases, including
   legacy backup, restore, reload and deletion.
   [Legacy recovery evidence](upgrade-2026-progress.md#november-25-encrypted-recovery-for-older-local-returns).
 

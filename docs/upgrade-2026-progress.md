@@ -1,5 +1,177 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Form 7206 and federal payment sources
+
+`eea4b1e03` extends the internal Form 7206 specimen to a taxpayer with
+one supported Schedule C business. A Schedule F return and its original
+must either both be present or both be absent. The sole-business fixture
+derives $3,000 of qualifying profit, a 100% allocation and a $212 share of
+the self-employment tax deduction. The excluded subsidized month stays
+out of the premium total. The $900 deduction reaches Schedule 1 line 17.
+Both new regressions failed before the change. The exact source passed
+121 focused tests, and an independent pypdf read verified all 16 named
+widgets, their values and populated appearances. Visual inspection of the
+one-page specimen found legible values, blank identifiers and the review
+notice. The specimen PDF SHA-256 was
+`e866e2c6d0f61d689ed2072062445c92196bd146cd561b07a704f6b6cac82388`.
+Public export and filing gates remain closed. [Final IRS Form 7206](https://www.irs.gov/pub/irs-prior/f7206--2026.pdf) ·
+[IRS instructions](https://www.irs.gov/instructions/i7206).
+
+`d31cac761` holds repeated positive federal applied-overpayment entries
+with the same prior return year and exact amount. The 2026 guide
+preserves the saved entries and identifies both rows for reconciliation.
+The canonical check holds before calculation even with separate local row
+IDs or different currency formatting. A valid $1,000.01 credit still
+produced $1,000.01 on line 26 and a $3,980.01 refund in the test. The
+existing records carry no independent identity for equal prior-return
+amounts. Zero entries, distinct amounts and historical returns retain
+their existing treatment. Both regressions failed before the change.
+All 505 focused tests passed on the exact source. [2025 Form 1040, line 36](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[2026 Publication 505](https://www.irs.gov/publications/p505).
+
+`bef591521` names the matching applied-refund rows in the form's
+Continue prompt. The reopened fixture identifies nonadjacent rows 1 and
+3, leaves the unrelated amount and explicit zero clear, and verifies
+that reconciliation restores Continue. The diagnostic failed before the
+change. The successor passed the same 505 exact focused tests.
+
+Both packages matched all 6,703 tracked Git blobs and passed root and
+web types, spec validation, the coverage inventory, scoped lint, 2,073
+browser audit bindings and 56 timing controls. The row-number successor
+passed these same checks and matched all 6,704 tracked Git blobs.
+
+## November 26 offline AI accounting and HSA preview
+
+`ebf62ed05` requires matching billed-model evidence for preceding
+attempts before an offline evaluation can treat their cost as verified.
+A reconciled receipt is eligible from its exact recorded timestamp and
+must belong to the same attempt. Missing or contradictory model evidence,
+a reused receipt, and a receipt recorded before dispatch all hold the
+affected measurement. Older single-attempt results with a matching
+reported model preserve their established accounting treatment. Assumed
+costs remain separately visible from verified totals. In the 90-run
+synthetic comparison, the old report qualified too early. The updated
+report had $0.0108 verified and $0.054 assumed until the required receipts
+were in scope. Neither offline eligibility nor the updated report
+promotes a model. The exact source passed 107 tests, script typecheck and
+the artifact sync check. No provider calls were made.
+
+Independent engineering replay found a remaining cutoff error when the
+original provider response carried a model but no token counters. A later
+receipt could add $0.00006 of verified historical spend, or add the same
+amount to assumed spend when the original model was missing. `3014f75a1`
+marks when usage came only from reconciliation and applies the same
+cutoff to spend and token limits. At one microsecond before the receipt,
+the test reports zero known and assumed spend, with the total unknown.
+At the receipt timestamp it reports the correct spend and enforces the
+existing token caps. Older flattened exports without this provenance can
+be regenerated from the original journal. All 109 tests, script
+typecheck, artifact sync and exact package checks passed. Independent
+human review and live qualification remain pending.
+
+The November 26 public catalogs still list Luna, Sol, Gemini 3.8 Flash
+and the Gemini 3 Flash Preview baseline. OpenAI continues to list December
+11, 2026 for GPT-5 mini shutdown. The public listings verify identifiers
+and lifecycle status. Google project access and a live comparison remain
+open. [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) ·
+[Gemini 3 Flash Preview](https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview) ·
+[OpenAI deprecations](https://developers.openai.com/api/docs/deprecations).
+
+The full exact `d6aca5397` run found one failure alongside 30,676 passes.
+Its HSA preview fixture tried to reconfirm a contribution edit in the
+same update. `2e0f8aaf9` updates the fixture to assert both confirmation
+flags clear after the edit and the preview stays held after general
+review alone. A fresh contribution-timing confirmation restores the
+preview with exactly $3,600 lower AGI. All 287 exact focused tests passed.
+The application validation and readiness thresholds were unchanged.
+
+## November 26 Ohio Treasury coupon draft
+
+`27de5df10` adds a private 2026 draft for a single full-year Ohio
+resident with ordinary wages and one direct U.S. Treasury note or bond
+coupon. Box 3 is matched to the current Form 1099-INT recipient and
+custodian, an original direct holding record and the original coupon
+receipt. The records must share a stable account reference. A short
+numeric suffix, masked number or account-ending label cannot establish
+that match. Independent engineering review reproduced the masked-account
+ambiguity and verified the correction. The case also holds orphan
+unemployment receipts and other incompatible source facts. The audit
+omits the account and original identifiers.
+
+The saved fixture had $54,000 federal AGI, $50,000 Ohio AGI, $932 Ohio
+income tax and a $68 refund. A cents fixture verified separate end-of-line
+rounding after the exact coupon deduction. The exact package matched all
+6,704 tracked Git blobs and passed 7,788 state-engine tests in 300 files,
+10,117 spec bindings, root/web types, inventory, scoped lint, 2,073
+browser audit bindings and 56 timing controls. Independent tax review,
+public routing, annual form mapping and filing still require evidence.
+[Ohio Revised Code § 5747.01](https://codes.ohio.gov/ohio-revised-code/section-5747.01) ·
+[31 U.S.C. § 3124](https://uscode.house.gov/us/usc/t31/s3124/) ·
+[IRS Form 1099-INT instructions](https://www.irs.gov/instructions/i1099int).
+
+## November 26 annual form source check
+
+The current IRS Form 1040 and Schedule 1-A still print 2025. The 2026
+Form 1040, Schedule 1-A and Schedule 3-A that could be opened all carry
+the IRS draft warning. Their 2026 archive endpoints were inaccessible
+during this check. [Current Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Current Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf) ·
+[Draft Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Draft Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf) ·
+[Draft Schedule 3-A](https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf).
+
+Ohio's linked IT 1040 bundle and IT NRC print 2025. The Ohio index tops
+out at 2025 and the 2026 endpoints were inaccessible. Pennsylvania's
+linked PA-40 prints 2025, and its checked 2026 endpoint was inaccessible.
+The standing Pennsylvania NRH and G-L print March 2024 with open tax year
+fields. The 2026 annual return and transfer qualification remains open in
+both states. [Ohio IT 1040 bundle](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle.pdf) ·
+[Ohio IT NRC index](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
+[Pennsylvania PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
+[Pennsylvania Schedule NRH](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf) ·
+[Pennsylvania Schedule G-L](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40_pa-41g-l.pdf).
+
+## November 26 combined local verification
+
+Both application archives were checked against all 6,704 tracked Git
+blobs. The frozen offline install resolved the workspace engine and
+contracts to the exact archive. The local runner used Node 26.13.1,
+pinned pypdf and all 15 registered public sample PDFs. On `bef591521`,
+typechecks, spec, inventory, both builds and lint passed. The full unit
+and coverage invocations hit a sandbox denial when a fixture tried to
+listen on localhost. Their original results are retained. The successor
+`3014f75a1` reran the required checks with local loopback access for
+that fixture. Its full unit and coverage commands each passed 30,739
+tests, with 81 skips. Branch coverage was 88.53% against the 85% gate.
+Both builds, three type checks, spec validation, inventory and lint
+also passed. Both `bef591521` and `3014f75a1` passed all 654 active local
+Chromium cases across nine windows, with five original skips and no
+failures each. The runner confirmed local server cleanup. All 11 required
+local checks passed on `3014f75a1`. Its remote CI, Web and Docker runs
+were queued when recorded. [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45760983183) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45760983329) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45760983059).
+
+On earlier `3aeb837f5`, the GitHub ordinary self-host browser, Compose
+recovery and rollback passed. The strict Linux AMD64 browser step reported
+16 failures across 659 cases, with five planned skips. Fourteen Ohio
+flows hit the unchanged 30-second deadline at differing operations.
+Two RRTA PDF downloads completed before their four-second inspection
+timed out. The exact logs establish deadline failures across several
+paths and leave their common cause unresolved.
+[Strict GitHub job](https://github.com/utilityfueled/tax-engine/actions/runs/45750813234/job/139677880784).
+
+Engineering review matched all 16 failures to passing local cases by
+Playwright ID. The relevant browser tests and RRTA inspection helper were
+unchanged between the two archives. Recorded Ohio case durations were
+32.482–35.273 seconds on the strict image and 7.553–12.249 seconds in
+local Chromium. Both RRTA inspections reached their four-second cap.
+Preparing the content contexts took 2.097–2.198 seconds of wall time and
+1.991–2.109 seconds of CPU time in those inspections. The comparison
+isolates that RRTA stage. Failed Ohio operations vary by case.
+
 ## November 25 encrypted recovery for older local returns
 
 `97466cdd9` backs up older local returns that can already reopen but

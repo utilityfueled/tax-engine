@@ -1,10 +1,10 @@
 {
   "resume": {
-    "asOf": "2026-11-25",
+    "asOf": "2026-11-26",
     "branch": "main",
-    "applicationCommit": "97466cdd9e648f8834054c70747fbc8e9f0999c7",
+    "applicationCommit": "3014f75a12ddf42c3fbcd50d0f64f02a2606b80e",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov25PaResidencyForm8889AndLegacyRecovery",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov26SourcesAndOfflineBilling",
     "combinedHsaOhioAiEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
     "pensionOriginalReconfirmationEvidenceKey": "activeContinuation.nov25PensionOriginalReconfirmation",
     "longTermCareStatementIntakeEvidenceKey": "activeContinuation.nov25LongTermCareStatementIntake",
@@ -24,7 +24,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov25ReviewWorkspaceFollowUpUpload",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov26SourcesAndOfflineBilling.latestApplicationLocal",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -99,8 +99,8 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Verify the latest main Linux CI, Web and Docker checks. Application 97466cdd9 passed 28 selected managed Chromium cases locally. Earlier exact Linux failures and superseded Docker jobs remain recorded.",
-      "Finish GitHub CI 45750813264 and Linux browser 45750813234 for application 3aeb837f5. All 11 required local checks and Docker 45750813162 passed, including 30,645 tests each for unit and coverage, 88.49% branch, and 654 Chromium passes. Earlier strict AMD64 and ARM64 runs retain their original timeout results even where recovery and archive verification passed.",
+      "Verify latest exact main Linux CI, Web and Docker jobs. Strict container browser results, recovery and rollback must be verified before release.",
+      "See the November 26 exact local check receipts and separate focused follow-up for 3014f75a1. Earlier strict AMD64 and ARM64 timeouts remain recorded.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -108,6 +108,212 @@
     ]
   },
   "activeContinuation": {
+    "nov26SourcesAndOfflineBilling": {
+      "scope": "Private federal PDF and Ohio draft, guided applied-credit reconciliation, offline evaluation accounting and exact local suite. Hosted cybersecurity rehearsals deferred.",
+      "applicationCommit": "3014f75a12ddf42c3fbcd50d0f64f02a2606b80e",
+      "packageChecks": "Scoped source archive, focused tests, spec, inventory, root and web types, scoped lint, 2,073 browser bindings and 56 timing controls passed per package.",
+      "form7206": {
+        "commit": "eea4b1e03d04479209fb4654f9b3065e079e4848",
+        "trackedBlobsMatched": 6703,
+        "focusedTestsPassed": 121,
+        "focusedLogSha256": "f7774baf4ebbb98be688c987a152404762f3704485cb11de2be1afe7c0801a8a",
+        "sample": {
+          "scheduleCProfit": "3000",
+          "line6Rate": "100%",
+          "line7SelfEmploymentDeduction": "212",
+          "line14AndSchedule1Line17": "900"
+        },
+        "specimenPdfSha256": "e866e2c6d0f61d689ed2072062445c92196bd146cd561b07a704f6b6cac82388",
+        "specimenImageSha256": "3834c379c5b3daaf512cb6d446059c0f4db76b0057205b8b2b27fd58a785f07a",
+        "logicalWidgetChecks": 16,
+        "visuallyReviewedPages": 1,
+        "publicExport": false,
+        "filingQualified": false
+      },
+      "federalAppliedCredit": {
+        "commit": "d31cac761dbf8bcc2f98d6f302a3ee86872bccd8",
+        "trackedBlobsMatched": 6703,
+        "focusedTestsPassed": 505,
+        "focusedLogSha256": "25ad48103fea88410b1514d3d9904cecb5f85df792a84eeb0d2de6480ad32077",
+        "validFixtureAppliedCredit": "1000.01",
+        "validFixtureRefund": "3980.01",
+        "repeatedRowsAdmitted": false
+      },
+      "federalAppliedCreditFeedback": {
+        "commit": "bef591521ca3db0f4837520cf31d9c1fd1a6e795",
+        "trackedBlobsMatched": 6704,
+        "focusedTestsPassed": 505,
+        "focusedLogSha256": "43a4804961ddfcbbcc70d0a892af73388d9805ffd6582c8276a0dc1c93e46032"
+      },
+      "ohioTreasuryCoupon": {
+        "commit": "27de5df10043ca3152fbe29f71fa720ebad59370",
+        "trackedBlobsMatched": 6704,
+        "focusedTestsPassed": 7788,
+        "focusedLogSha256": "a3d7a23222ea13413c538d82b196db1b518ac17d453f6b52b5d260aa37ad081e",
+        "testFiles": 300,
+        "federalAgi": "54000",
+        "ohioAgi": "50000",
+        "ohioTax": "932",
+        "refund": "68",
+        "maskedReferenceAdmitted": false,
+        "filingQualified": false
+      },
+      "hsaPreviewRegression": {
+        "commit": "2e0f8aaf9535a684d0a00da2143359f90c031448",
+        "trackedBlobsMatched": 6703,
+        "focusedTestsPassed": 287,
+        "focusedLogSha256": "b15a7d4a161d491c2fbd86eab16bef0d293c460d89b02b07cf7155de7159dec1",
+        "earlierExactFailedRevision": "d6aca5397",
+        "earlierExactPassedTests": 30676,
+        "earlierExactFailedTests": 1,
+        "exactConfirmedAgiReduction": "3600"
+      },
+      "offlineEvaluationCost": {
+        "commit": "ebf62ed050b438de213b2de7db4190bd447d4877",
+        "trackedBlobsMatched": 6703,
+        "focusedTestsPassed": 107,
+        "focusedLogSha256": "44b62898ff4d6ea684d52dba71dc4e168e854d42f85a26ffc25ff19e236c16a3",
+        "syntheticRepeatsAcrossCases": 90,
+        "knownSubtotalBeforePrecedingReceipts": "0.0108",
+        "assumedSubtotalBeforePrecedingReceipts": "0.054"
+      },
+      "offlineReconciliationUsageCutoff": {
+        "commit": "3014f75a12ddf42c3fbcd50d0f64f02a2606b80e",
+        "trackedBlobsMatched": 6704,
+        "focusedTestsPassed": 109,
+        "focusedLogSha256": "030b3600809a8a21d54bc275b785ce2005cd14e0560a7b8fdc1ded279cbebfc6",
+        "preReceiptKnownUsd": "0",
+        "preReceiptAssumedUsd": "0",
+        "preReceiptTotalUsd": null,
+        "providerCalls": 0,
+        "promotionEnabled": false
+      },
+      "annualSourceRefresh": {
+        "asOf": "2026-11-26",
+        "current1040AndSchedule1APrintedYear": 2025,
+        "opened2026IrsAnnualSources": "draft",
+        "currentOhioAndPennsylvaniaPrintedYear": 2025,
+        "status": "2026 federal, Ohio and Pennsylvania final annual return qualification remains open"
+      },
+      "githubLatestObserved": {
+        "45760983183": "3014f75a1 queued",
+        "45760983329": "3014f75a1 queued",
+        "45760983059": "3014f75a1 queued",
+        "45760340801": "bef591521 queued",
+        "45750813264": "3aeb837f5 queued",
+        "45750813234": "3aeb837f5 completed failure",
+        "45750813162": "3aeb837f5 completed success"
+      },
+      "earlierStrictAmd64": {
+        "commit": "3aeb837f5",
+        "run": 45750813234,
+        "job": 139677880784,
+        "ordinaryBrowser": "passed",
+        "upgradeRecoveryAndRollback": "passed",
+        "strictBrowser": "failed",
+        "cases": 659,
+        "plannedSkips": 5,
+        "ohioThirtySecondTimeouts": 14,
+        "rrtaFourSecondInspectionTimeouts": 2,
+        "containerEvidenceArtifact": 15089938531,
+        "matchingLocalPassingCaseIds": 16,
+        "timingComparisonSha256": "8507d09b78c76c4b4bd662924d4714001ed49e9cde0a47ea7ff52d48c39ff7c1"
+      },
+      "completeLocalBaseline": {
+        "commit": "bef591521ca3db0f4837520cf31d9c1fd1a6e795",
+        "trackedBlobsMatched": 6704,
+        "registeredSamplePdfs": 15,
+        "allRequiredLocalChecksPassed": false,
+        "checks": {
+          "unit": "failed",
+          "coverage": "failed",
+          "typecheck": "passed",
+          "typecheck-contracts": "passed",
+          "typecheck-web": "passed",
+          "spec-validate": "passed",
+          "spec-inventory": "passed",
+          "build": "passed",
+          "build-web": "passed",
+          "lint": "passed",
+          "browser": "passed"
+        },
+        "unit": {
+          "status": "failed",
+          "exit": 1,
+          "logSha256": "da20d4ef8ea948236ca16d440d19afbd7f9b41008cb5e24480ae52db6ac47c28",
+          "failed": 0,
+          "passed": 30734,
+          "skipped": 84
+        },
+        "coverage": {
+          "status": "failed",
+          "exit": 1,
+          "logSha256": "540ec56b40866bc99bea884e14bcdc0f893bb5a57f0dfd8db2c52bb74dd23270",
+          "failed": 0,
+          "passed": 30734,
+          "skipped": 84
+        },
+        "browser": {
+          "status": "passed",
+          "exit": 0,
+          "logSha256": "2d1dabf1e0d96aae0ddb15856784a6c0f54ea6a00295089eb4c43bd12c507594",
+          "cases": 659,
+          "windows": 9,
+          "passed": 654,
+          "failures": 0,
+          "originalSkips": 5,
+          "ownedServerClosed": true
+        }
+      },
+      "latestApplicationLocal": {
+        "commit": "3014f75a12ddf42c3fbcd50d0f64f02a2606b80e",
+        "trackedBlobsMatched": 6704,
+        "registeredSamplePdfs": 15,
+        "allRequiredLocalChecksPassed": true,
+        "checks": {
+          "unit": "passed",
+          "coverage": "passed",
+          "typecheck": "passed",
+          "typecheck-contracts": "passed",
+          "typecheck-web": "passed",
+          "spec-validate": "passed",
+          "spec-inventory": "passed",
+          "build": "passed",
+          "build-web": "passed",
+          "lint": "passed",
+          "browser": "passed"
+        },
+        "unit": {
+          "status": "passed",
+          "exit": 0,
+          "logSha256": "c683516fa4fd8eaa797750c3745d4b68443a7a09cb999ed100cab6e57d4e2e27",
+          "failed": 0,
+          "passed": 30739,
+          "skipped": 81
+        },
+        "coverage": {
+          "status": "passed",
+          "exit": 0,
+          "logSha256": "2b66576b1c0bbe389af2a79d7f9d7cee1c4a02ddc2ef671a9c7f21a2e6a3a5fc",
+          "failed": 0,
+          "passed": 30739,
+          "skipped": 81,
+          "branchPercent": 88.53,
+          "requiredBranchPercent": 85
+        },
+        "browser": {
+          "status": "passed",
+          "exit": 0,
+          "logSha256": "b99cb7c1eb19d7c906b0cd7f3050a0e05baebe360c029fdf8effecc630416e36",
+          "cases": 659,
+          "windows": 9,
+          "passed": 654,
+          "failures": 0,
+          "originalSkips": 5,
+          "ownedServerClosed": true
+        }
+      }
+    },
     "nov25PaResidencyForm8889AndLegacyRecovery": {
       "pennsylvania": {
         "commit": "b57ff70931f8dd7f81b58e26a28cd619d2816e50",
