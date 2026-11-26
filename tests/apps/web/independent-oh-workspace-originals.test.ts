@@ -1,7 +1,9 @@
 // Specs: state/oh-workspace-actual-source-export.yaml and federal/schedule-a.yaml.
 import {afterEach,it,expect,vi} from 'vitest';
 import {execFileSync} from 'node:child_process';
+import {mkdtempSync,rmSync,writeFileSync} from 'node:fs';
 import {writeFile,mkdir,readdir,readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {basename,join} from 'node:path';
 import {buildWorkspaceFilledReturnDownload} from '@/lib/workspace-filled-return';
 import * as source from '@/engine/state/oh-residency-source';
@@ -29,13 +31,20 @@ vi.mock('server-only',()=>({}));
 afterEach(()=>vi.restoreAllMocks());
 
 function reopenPageText(bytes: Uint8Array): string[] {
-  const result = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', `
-import io, json, sys
+  const inspectionDirectory = mkdtempSync(join(tmpdir(), 'tax-engine-oh-pdf-inspection-'));
+  try {
+    const pdfPath = join(inspectionDirectory, 'review.pdf');
+    writeFileSync(pdfPath, bytes, { mode: 0o600 });
+    const result = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', `
+import json, sys
 from pypdf import PdfReader
-reader = PdfReader(io.BytesIO(sys.stdin.buffer.read()), strict=True)
+reader = PdfReader(sys.argv[1], strict=True)
 print(json.dumps([page.extract_text() for page in reader.pages]))
-`], { input: bytes, encoding: 'utf8' });
-  return JSON.parse(result) as string[];
+`, pdfPath], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 5_000 });
+    return JSON.parse(result) as string[];
+  } finally {
+    rmSync(inspectionDirectory, { recursive: true, force: true });
+  }
 }
 
 it('Ohio workspace merges generated reference pages without temporary files', async () => {
