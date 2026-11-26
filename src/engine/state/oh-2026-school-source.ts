@@ -85,11 +85,11 @@ function qualifyOhio2026SchoolSource(taxInput: TaxYearInput, raw: unknown, allow
         fail('actual known dependent inventory required');
     if (t.taxYear !== 2026 || facts.taxYear !== 2026 || t.filingStatus !== 'single' || t.spouse || t.dependents.length || !/^\d{9}$/.test(tin(t.primary.ssn)))
         fail('actual2026 single primary no-dependent owner required');
+    if (t.stateResidency !== undefined && t.stateResidency !== 'full-year')
+        fail('declared status conflicts with actual full-year residency');
     if (taxBase === 'traditional') {
         if (tin(t.primary.ssn) === '000000000')
             fail('actual taxpayer identifier required');
-        if (t.stateResidency !== undefined && t.stateResidency !== 'full-year')
-            fail('declared status conflicts with actual full-year residency');
         if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
             fail('separate unemployment payment evidence conflicts with the W-2-only source');
     }

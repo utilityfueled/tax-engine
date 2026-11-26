@@ -1109,7 +1109,7 @@
     "src/engine/state/oh-2026-resident-credit.ts": "ab422bb04c227625a8887a029b3e07dafb795329d12bbbc59e8a8c412817e514",
     "src/engine/state/oh-2026-return-draft.ts": "52b9da4ad1b8ff0ebb22a9f242e5913bdbd1be0efe3deea0aca463b0fe4682c1",
     "src/engine/state/oh-2026-school-catalog.ts": "7be7acb7a4a1921fe42412fdf375f227da2f533460c328069823002f41c118b8",
-    "src/engine/state/oh-2026-school-source.ts": "d43a38b9fe15b86c55f4ecba58c170ff6157b0a676983a95184bbee1f7820ac0",
+    "src/engine/state/oh-2026-school-source.ts": "7fb62b5f665a8cf439387c21d183fb6d0c2dd1c72c395d793ad06a267a625e1c",
     "src/engine/state/oh-2026-traditional-school-draft.ts": "967d4487321512697a5a8c94f41ecbb1a713c7eb7df91b75663750fff04d8ee5",
     "src/engine/state/oh-2026-venture-capital-gain-estimate.ts": "7467d2035e9323b72c4c1dc1f8d71cbf3a155b66cbe4f1641a12adacfa50b038",
     "src/engine/state/oh-business-source.ts": "cebde99f8b255ded89ee3a341ff34811bb0a490974631f4820791ed75272c371",

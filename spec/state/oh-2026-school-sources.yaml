@@ -20,6 +20,10 @@ lines:
     description: 'Separate single primary full-year under65 ordinary W2 earned-district source projection. Actual2026 Finder/address/district and complete owner/original W2/payroll/residence evidence; at most one actual school row per W2 with reconciled ordinary wages, no municipal/unresolved rows, duplicate originals or other income.'
     formula: 'Sum exact ordinary wages received while full-year resident; sum complete classified original school withholding once; retain raw cents. No liability multiplication or final-form rounding rule inferred.'
     testRef: "tests/engine/state/oh-2026-school-source.test.ts::projects actual resident wages and withholding without inventing school liability"
+  - line: "declared-state-residency"
+    description: "Reconcile declared state residency with documented full-year Ohio domicile before confirming or replaying school sources"
+    formula: "Under Ohio Revised Code 5748.01(F) and (G), district residency and income depend on Ohio residency during the relevant portion of the year. For the bounded full-year earned and traditional methods, reject an explicit part-year or nonresident declaration that conflicts with the required full-year Ohio domicile packet. Preserve a matching full-year declaration and the existing admission when the declaration is absent and independent evidence establishes full-year residency. The earned-school guided projection remains source-only."
+    testRef: "tests/apps/web/oh-2026-school-native-saved.test.ts::rejects a %s declaration when confirming or replaying full-year Ohio earned-school originals"
   - line: "current-originals"
     description: 'Opaque source context binds the exact current original input and supplied source packet. Owner/year/address/source/cash edits invalidate; cloned contexts cannot qualify.'
     formula: 'Fresh validation before issuing context; SHA256 current original/source commitment, WeakMap identity and exact replay digest.'
