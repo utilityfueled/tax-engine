@@ -126,7 +126,7 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
     taxBeforeCredits: baseline.totalTax, ...(actual.seniorCreditEligibleByAge ? { seniorCitizenCredit } : {}), personalExemptionCredit, jointFilingCredit: baseline.jointFilingCredit, earnedIncomeCredit,
     nonresidentRatio: nrc.line19, nonresidentCredit: nrc.line20, incomeTax, withholding, underpaymentPenalty, latePaymentInterest, amountDue, refund,
     limitations: [
-      unemployment ? 'Single part-year or nonresident ordinary employee under 65 with one actual state unemployment original; no dependents, EITC-qualifying children, state adjustments, or other credit sources.'
+      unemployment ? 'Single ordinary employee under 65 with one actual state unemployment original and a complete domicile timeline. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : treasuryCouponDeduction ? 'Single full-year Ohio resident and ordinary employee under 65 with one actual direct Treasury note or bond coupon and its Ohio deduction. No dependents, EITC-qualifying children, other adjustments, or other credit sources.'
         : actual.seniorCreditEligibleByAge
         ? 'Finite single/MFJ ordinary employee cohort with confirmed complete Ohio senior credit history; no dependents, EITC-qualifying children, state adjustments or other credit sources.'

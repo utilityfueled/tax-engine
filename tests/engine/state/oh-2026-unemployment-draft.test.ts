@@ -11,8 +11,8 @@ function current<T>(value: T | undefined): T {
   return value;
 }
 
-function unemploymentFixture(status: 'part_year_resident' | 'nonresident' | 'full_year_resident' = 'part_year_resident') {
-  const packet = ohio2026OrdinaryFixture(status, '50000', status === 'part_year_resident' ? '30000' : status === 'nonresident' ? '10000' : '50000');
+function unemploymentFixture(status: 'part_year_resident' | 'nonresident' | 'full_year_resident' = 'part_year_resident', joint = false) {
+  const packet = ohio2026OrdinaryFixture(status, '50000', status === 'part_year_resident' ? '30000' : status === 'nonresident' ? '10000' : '50000', joint);
   const form = Form1099GSchema.parse({
     payer: 'Fictional Ohio unemployment agency', accountHolder: 'primary', sourceId: 'PRIVATE-UC-2026',
     accountReference: 'PRIVATE-UC-ACCOUNT', taxYear: 2026, sourceFormRevision: '2026-12',
@@ -72,6 +72,39 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
     expect(JSON.stringify(packet)).toBe(before);
   });
 
+  it('includes all verified Box 1 unemployment for a full-year Ohio resident', () => {
+    const packet = unemploymentFixture('full_year_resident');
+    packet.input.taxpayer.stateResidency = 'full-year';
+    rebindOhio2026Ordinary(packet);
+    const saved = JSON.stringify(packet);
+    const reopened: Packet = JSON.parse(saved);
+    const result = run(reopened);
+    expect(result.federalAgi.toFixed()).toBe('51000');
+    expect(result.ohioAgi.toFixed()).toBe('51000');
+    expect(result.nonresidentRatio.toFixed()).toBe('0');
+    expect(result.nonresidentCredit.toFixed()).toBe('0');
+    expect(result.incomeTax.toFixed()).toBe('959');
+    expect(result.withholding.toFixed()).toBe('1000');
+    expect(result.refund.toFixed()).toBe('41');
+    expect(result.lines.find(line => line.line === '12' && line.description === 'Resident unemployment')?.value.toFixed()).toBe('1000');
+    expect(result).toMatchObject({ ruleVersion: packet.sources.methodId, calculationStatus: 'incomplete', reviewStatus: 'independent-review-pending', filingQualified: false });
+    expect(JSON.stringify(reopened)).toBe(saved);
+  });
+
+  it('holds contradicted full-year unemployment allocations and incomplete original receipts', () => {
+    const misallocated = unemploymentFixture('full_year_resident');
+    misallocated.category.residentAmount = '400';
+    expect(() => run(misallocated)).toThrow(/actual source categories and service allocation differ/);
+
+    const incomplete = unemploymentFixture('full_year_resident');
+    delete incomplete.residency.unemploymentPaymentSchedule;
+    expect(() => run(incomplete)).toThrow(/one complete Box 1 receipt proof/);
+
+    const changedReceipt = unemploymentFixture('full_year_resident');
+    current(changedReceipt.schedule.payments[0]).amount = '599';
+    expect(() => run(changedReceipt)).toThrow(/reconcile to Form 1099-G Box 1/);
+  });
+
   it('uses zero Ohio unemployment for a full-year nonresident paid by an Ohio agency', () => {
     const result = run(unemploymentFixture('nonresident'));
     expect(result.federalAgi.toFixed()).toBe('51000');
@@ -83,6 +116,7 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
 
   // Spec: state/oh-2026-return-draft.yaml#primary-residency-declaration.
   it.each([
+    ['full_year_resident', 'full-year', 'part-year', '959'],
     ['part_year_resident', 'part-year', 'nonresident', '572'],
     ['nonresident', 'nonresident', 'full-year', '188'],
   ] as const)('reconciles the primary declaration against the ordinary Ohio unemployment draft for %s', (status, matching, conflicting, expectedTax) => {
@@ -146,9 +180,9 @@ describe('Ohio 2026 private ordinary Box 1 unemployment draft', () => {
     expect(() => run(packet)).toThrow(match);
   });
 
-  it('keeps full-year Ohio residence and the existing wage-only entry point outside the method', () => {
-    expect(() => run(unemploymentFixture('full_year_resident'))).toThrow(/single part-year or nonresident owner/);
-    const { input, sources } = unemploymentFixture();
+  it('keeps joint owners and the existing wage-only entry point outside the method', () => {
+    expect(() => run(unemploymentFixture('full_year_resident', true))).toThrow(/requires a single primary owner/);
+    const { input, sources } = unemploymentFixture('full_year_resident');
     const { methodId: _method, unemploymentOriginal: _original, ...ordinarySources } = sources;
     expect(() => calculateOhio2026OrdinarySource(input, ordinarySources)).toThrow(/retained other originals/);
     expect(() => calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources })).toThrow(/complete confirmed current source packets/);

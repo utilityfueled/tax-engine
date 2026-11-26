@@ -51,8 +51,8 @@ function cash(value: unknown): Decimal {
 }
 function qualifyUnemployment(input: TaxYearInput, facts: OhioResidencyFacts, original: Ohio2026UnemploymentEmployeeSources['unemploymentOriginal']) {
   const [owner] = facts.owners;
-  if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary' || owner.status === 'full_year_resident')
-    fail('ordinary Box 1 unemployment requires a single part-year or nonresident owner');
+  if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary')
+    fail('ordinary Box 1 unemployment requires a single primary owner');
   if (!Array.isArray(input.form1099G) || input.form1099G.length !== 1) fail('one confirmed current government unemployment original required');
   const form = Ohio2026UnemploymentOriginalSchema.safeParse(input.form1099G[0]);
   if (!form.success) fail('one confirmed current government unemployment original required');
