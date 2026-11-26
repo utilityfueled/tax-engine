@@ -1,5 +1,26 @@
 # 2026 upgrade implementation evidence
 
+## November 26 annual Pennsylvania cash dividend drafts
+
+`9f5ef34ab` extends the private original-bound PA draft to a
+full-year resident or nonresident with one confirmed domicile for the
+entire year. With $75,000 of wages and $120 of Box 1a dividends, the
+resident includes all $120 in PA Schedule B and owes $2,306. The
+nonresident excludes the dividend from PA income and owes $276 on
+$9,000 of PA wages. Both include the dividend once in worldwide
+Schedule SP income of $75,120. A separate review case confirmed the
+allocation and whole-dollar results with $120.51 in Box 1a.
+
+The new PA paths and Ohio cash-dividend drafts share a check for
+abbreviated account references. It detected the colon-delimited,
+repeated short-mask and fullwidth variants found in independent
+software review while preserving exact source agreement. The final
+archive passed 6,381 state, public API and spec tests, root and
+contracts typecheck, scoped lint, inventory and validation of 10,174
+spec lines. Independent tax review and final filing qualification
+remain open. [PA dividend guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends) ·
+[PA Schedule SP guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness).
+
 ## November 26 Ohio ordinary cash dividend draft
 
 `2aa10e8b1` adds private drafts for full-year residents, part-year
@@ -17,6 +38,20 @@ private method still requires independent tax review. Filing remains
 gated. [Ohio Revised Code § 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
 [Ohio nonresident credit](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
 [IRS Form 1099-DIV instructions](https://www.irs.gov/instructions/i1099div).
+
+The `2aa10e8b1` archive also passed the full unit and coverage suites
+with 31,013 active tests each and 81 original environment skips.
+Branch coverage was 88.58% against the 85% gate. Engine and web builds,
+web typecheck and lint passed. The managed Chromium run was superseded
+by the `9f5ef34ab` exact run when the shared state check landed.
+
+The November 26 catalog check found the 2025 annual PA-40 and 2026
+estimated-payment form. Ohio's official indexed notices identify its
+2026 annual forms and instructions as drafts, and its IT NRC index
+still lists 2025 as the latest available year. Final 2026 revisions
+for these forms remain unverified. [Pennsylvania income-tax forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+[Ohio draft notices](https://tax.ohio.gov/individual/resources/individualincome) ·
+[Ohio IT NRC index](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms).
 
 ## November 26 pinned self-host schema migration
 
@@ -59,6 +94,9 @@ failed on the original behavior. Exact archive verification passed
 1,175 tests including spec checks. Scoped lint passed. This evidence
 covers offline accounting; paid provider qualification and model
 promotion remain open.
+
+The `1a0cd7521` archive also passed all nine managed Chromium windows
+with 654 passes, five original skips and zero failures.
 
 ## November 26 Pennsylvania part-year ordinary cash dividends
 
