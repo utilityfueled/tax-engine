@@ -9,6 +9,15 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `8e8ca2533` allocates actual dated bank interest for one 2026
+  Pennsylvania part-year draft. `9a721745d` admits one actual Form
+  1099-K card-tip source for Schedule 1-A and coordinates the QBI
+  deduction. `8657cdac0` collects and verifies the source in the
+  interview. Focused independent engineering review and both Chromium
+  viewports passed.
+  [Pennsylvania interest](upgrade-2026-progress.md#november-26-pennsylvania-part-year-bank-interest) ·
+  [Schedule 1-A card tips](upgrade-2026-progress.md#november-26-form-1099-k-qualified-card-tips).
+
 - `c2410f954` and `b28141535` qualify and collect 2026 direct REIT Box 5
   dividends using the actual account, payment, holding period and
   related-payment facts. Local focused checks passed at desktop and mobile

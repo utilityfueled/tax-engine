@@ -1,5 +1,57 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Pennsylvania part-year bank interest
+
+`8e8ca2533` adds one current, Box 1-only personal bank statement to
+the private 2026 Pennsylvania part-year draft for a single filer with
+covered tax. The dated ledger reconciles $120 to the original. The
+fixture includes $40 received while domiciled in Pennsylvania, keeps
+the $80 received before the move in worldwide Schedule SP income, and
+reports $39,040 of Pennsylvania taxable income and $1,199 of tax.
+Existing withholding covers that tax. Conflicting or missing originals,
+multiple statements, other residency lanes and specialized credits or
+payment methods remain held. The package passed 293 targeted tests
+and an independent 156-test review. Types, scoped lint, spec and
+inventory passed. Final forms and independent tax review remain open.
+[Pennsylvania interest guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest) ·
+[Tax Forgiveness guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness).
+
+## November 26 Form 1099-K qualified card tips
+
+`9a721745d` reconciles one actual 2026 Form 1099-K to the same
+owner's Schedule C receipts and original tip ledger. Box 1c is already
+included in Box 1a. The supported draft admits a qualified portion
+after reconciling the actual occupation, voluntary payment and income.
+The fixture deducts $1,000 on draft Schedule 1-A line 15. AGI and
+self-employment tax stay at $107,304 and $3,391. The QBI deduction
+falls $200 and taxable income falls $800. Net-income, return cap and
+MAGI limits apply. Concurrent NEC or MISC statements and additional
+1099-K statements are held for separate reconciliation. The 108
+targeted tests and an independent 55-test review passed with types,
+scoped lint, specification, inventory and the existing browser audit.
+The filing gate remains closed.
+[IRS Form 1099-K instructions](https://www.irs.gov/instructions/i1099k) ·
+[Final qualified-tips regulations](https://www.irs.gov/irb/2026-18_IRB) ·
+[Draft 2026 Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf).
+
+`9c1d25289` binds the deduction reference to actual statement evidence.
+It reconciles Box 1b and Box 4, holds state reporting for a separate
+method and allows the real principal business activity as the
+worksheet label when the proprietor has no trade name. Schedule C
+line C stays blank. The regression preserves $123 of Box 4 withholding
+on Form 1040 line 25b. All 97 focused tests and the independent raw
+source replay passed. The guided path uses the same Treasury occupation
+table. [Schedule C instructions](https://www.irs.gov/instructions/i1040sc).
+
+`8657cdac0` collects the original statement, recipient and tip ledger
+in the 2026 interview. It holds missing Box 1b and unreconciled gross
+and invalidates stale source links. Independent review covered owner
+changes and prior-year behavior. The exact candidate passed 212
+focused tests. Chromium passed at 1,280 and 390 pixels with no retries,
+including save and reopen, missing Box 1b and rejected mismatched gross.
+The specification validated 10,163 references and the browser audit
+verified 2,084 paths with the existing request limits.
+
 ## November 26 reciprocal Ohio PDF packet calculation
 
 `d21071f70` reuses the canonical Ohio calculation for the reference
@@ -49,6 +101,22 @@ prior revision finishes its strict browser step.
 [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45891948565) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45891948535) ·
 [Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45892163067).
+
+The initial exact combined local run reported 28 unit failures and
+two coverage test failures. Most unit failures reached the existing
+five-second deadline while both suites and a production build shared
+the machine. One later Ohio assertion followed a timed-out case in
+the same test file. `4119eeb22` compares reciprocal packet bytes
+directly and both targeted cases passed. The non-timing federal
+failure was an older synthetic prepaid mortgage insurance return
+without the newly required Box 5 records. `13a04094c` adds the
+source facts and preserves the original tax expectations. All 37
+focused checks passed. The complete local retry uses the existing
+deadlines and a smaller worker pool. On the exact `13a04094c`
+fixture successor both full runs passed 30,908 tests in 2,230 files
+with 81 environment skips. Branch coverage was 88.56% against the
+existing 85% threshold. The combined browser run used `b28141535`.
+The original logs are retained.
 
 ## November 26 combined local builds, coverage and release checks
 

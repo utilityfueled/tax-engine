@@ -1,5 +1,28 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 26 card tips and Pennsylvania part-year interest
+
+For a 2026 single taxpayer, identify the correct Schedule 1-A,
+Schedule C and Section 199A treatment of $24,000 of rideshare receipts
+shown in Form 1099-K Box 1a. The business ledger matches that gross; it
+documents $1,000 in qualified tips out of $1,200 in Box 1c. The taxpayer
+also earned $85,000 of wages. Independently derive taxable income with
+and without the deduction, including the self-employment tax and QBI
+interaction. Verify the business net-income limit and that Box 1c is
+already included in Box 1a.
+[IRS Form 1099-K instructions](https://www.irs.gov/instructions/i1099k) ·
+[Qualified-tips regulations](https://www.irs.gov/irb/2026-18_IRB).
+
+For the Pennsylvania part-year case, independently allocate an actual
+$120 Box 1 total from an $80 credit while domiciled in New York and a
+$40 credit after the move to Pennsylvania. The taxpayer has $39,000
+of Pennsylvania wages and $1,199 of actual Pennsylvania withholding.
+Confirm the worldwide Schedule SP basis and whether the original
+withholding covers the Pennsylvania tax. Reconcile to the final
+annual form before enabling any filing export.
+[Pennsylvania interest guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest) ·
+[2026 Pennsylvania estimated tax instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf).
+
 ## November 26 direct REIT dividend review
 
 Independently determine which part of a $1,000 2026 Form 1099-DIV Box 5

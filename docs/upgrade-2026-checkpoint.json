@@ -3,8 +3,10 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
-    "latestScopedApplicationCommit": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
-    "latestCombinedCandidateCommit": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
+    "latestScopedApplicationCommit": "8657cdac07f74eb74efc4a9699d82fd49f803123",
+    "latestCombinedCandidateCommit": "13a04094c4d2ed74351df03197da670cfe78edb5",
+    "paPartYearInterestEvidenceKey": "activeContinuation.nov26PAPartYearBankInterest",
+    "federalCardTipEvidenceKey": "activeContinuation.nov26FederalCardTipDraft",
     "directReitBox5EvidenceKey": "activeContinuation.nov26DirectReitBox5",
     "reciprocalOhioPdfCalculationEvidenceKey": "activeContinuation.nov26ReciprocalOhioPdfCalculation",
     "combinedLocalVerificationEvidenceKey": "activeContinuation.nov26CombinedLocalVerification",
@@ -123,7 +125,7 @@
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
       "Exact 060efc9bf Linux CI, Docker, managed Chromium, image imports and Compose recovery passed. Strict Chromium failed 11 AMD64 and 9 ARM64 cases at the existing deadlines. Both architecture browser gates remain open.",
-      "Exact 13ec67770 passed both local unit and coverage runs, builds, type checks, lint and specs. Full managed Chromium passed 653 cases and failed one stale Form 1098 hint assertion, which passed the focused c6b28ad43 correction. A combined b28141535 successor and strict Linux results remain open.",
+      "Exact 13ec67770 passed both local unit and coverage runs, builds, type checks, lint and specs. Full managed Chromium passed 653 cases and failed one stale Form 1098 hint assertion, which passed the focused c6b28ad43 correction. Both full 13a04094c local runs passed 30,908 tests with 88.56% branches. Combined b28141535 Chromium and strict Linux results remain open.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -131,6 +133,25 @@
     ]
   },
   "activeContinuation": {
+    "nov26PAPartYearBankInterest": {
+      "commit": "8e8ca25338a4dbeab41d8788b9adda92262c7037",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-pennsylvania-part-year-bank-interest",
+      "targetedTestsPassed": 293,
+      "independentTestsPassed": 156
+    },
+    "nov26FederalCardTipDraft": {
+      "commit": "9a721745da72f25c36a89ead5b9db8c2e113395b",
+      "sourceBindingFollowup": "9c1d25289285bd8a2101b53c30700caade0c773d",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-form-1099-k-qualified-card-tips",
+      "targetedTestsPassed": 108,
+      "independentTestsPassed": 55,
+      "sourceBindingFocusedTestsPassed": 97,
+      "guidedCommit": "8657cdac07f74eb74efc4a9699d82fd49f803123",
+      "guidedExactFocusedTestsPassed": 212,
+      "guidedChromiumWidths": [1280, 390],
+      "guidedSpecReferencesValidated": 10163,
+      "guidedBrowserPathsVerified": 2084
+    },
     "nov26DirectReitBox5": {
       "federalCommit": "c2410f9546ff9bc5690b24bbefdc7888397fca9f",
       "guidedCommit": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
@@ -141,6 +162,12 @@
       "localChromiumWidths": [1280, 390],
       "trackedCandidateBlobs": 6720,
       "validatedSpecReferences": 10158,
+      "initialCombinedLocalFailures": { "unit": 28, "coverageTests": 2 },
+      "testByteComparisonCommit": "4119eeb22",
+      "pmiOriginalFixtureCommit": "13a04094c",
+      "pmiFixtureFocusedTestsPassed": 37,
+      "completeUnitRetry": { "activePassed": 30908, "activeFiles": 2230, "environmentSkips": 81 },
+      "completeCoverageRetry": { "activePassed": 30908, "activeFiles": 2230, "environmentSkips": 81, "branchPercent": 88.56, "requiredBranchPercent": 85 },
       "combinedRunIds": {
         "ci": 45891948565,
         "web": 45891948477,
