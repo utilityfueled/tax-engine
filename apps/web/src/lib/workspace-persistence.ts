@@ -10,6 +10,7 @@ import { deleteCachedWorkspaceDocumentFiles } from "./workspace-document-file-ca
 import { isLocalRecoveryWorkspace } from "./workspace-local-recovery";
 import { sanitizeWorkspaceForHostedStorage } from "./hosted-privacy";
 import { clearHostedWorkspaceBrowserState, hostedDocumentCacheId } from "./hosted-workspace-browser-state";
+import type { LocalWorkspaceDraftRead } from "./workspace-guided-state";
 import {
   hostedWorkspaceConflictCode, hostedWorkspacePreconditionCode, HostedWorkspaceWriteRejectedError,
   parseHostedWorkspaceRevision, readHostedWorkspaceRevision, type HostedWorkspaceWritePrecondition, type VersionedHostedWorkspace,
@@ -617,16 +618,17 @@ export interface HostedWorkspaceDocumentUpload {
 }
 
 function createWorkspacePersistenceSession(
-  options: WorkspacePersistenceSessionOptions
+  options: WorkspacePersistenceSessionOptions,
+  initialDraftRead?: LocalWorkspaceDraftRead,
 ): Promise<WorkspacePersistenceAdapter> {
-  return createWorkspacePersistenceAdapter({
+  return buildWorkspacePersistenceAdapter({
     env: {
       TAX_ENGINE_DEPLOYMENT_MODE: options.deploymentMode
     },
     browserStorage: options.browserStorage,
     hostedStore: options.hostedStore,
     actor: options.actor
-  });
+  }, initialDraftRead);
 }
 
 function resolveHostedWorkspaceStore(
@@ -673,8 +675,15 @@ export function resolveHostedDocumentBlobStore(
   return new DiscardingHostedDocumentBlobStore();
 }
 
-export async function createWorkspacePersistenceAdapter(
+export function createWorkspacePersistenceAdapter(
   options: CreateWorkspacePersistenceAdapterOptions = {}
+): Promise<WorkspacePersistenceAdapter> {
+  return buildWorkspacePersistenceAdapter(options);
+}
+
+async function buildWorkspacePersistenceAdapter(
+  options: CreateWorkspacePersistenceAdapterOptions,
+  initialDraftRead?: LocalWorkspaceDraftRead,
 ): Promise<WorkspacePersistenceAdapter> {
   const runtimeConfig = getHostedPersistenceRuntimeConfig(options.env);
   const {
@@ -699,7 +708,9 @@ export async function createWorkspacePersistenceAdapter(
       availability: "ready",
       ownerScope,
       async getWorkspace(workspaceId) {
-        return getLocalWorkspace(requireBrowserStorage(options.browserStorage), workspaceId);
+        const draftRead = initialDraftRead;
+        initialDraftRead = undefined;
+        return getLocalWorkspace(requireBrowserStorage(options.browserStorage), workspaceId, draftRead);
       },
       async listWorkspaces() {
         return listLocalWorkspaces(requireBrowserStorage(options.browserStorage));
@@ -913,7 +924,8 @@ function hostedShellsMatch(local: ReturnWorkspaceRecord, hosted: ReturnWorkspace
 }
 
 export async function loadPersistedWorkspace(
-  options: LoadPersistedWorkspaceOptions
+  options: LoadPersistedWorkspaceOptions,
+  localDraftRead?: LocalWorkspaceDraftRead,
 ): Promise<{
   adapter: WorkspacePersistenceAdapter;
   workspace: ReturnWorkspaceRecord | null;
@@ -955,14 +967,14 @@ export async function loadPersistedWorkspace(
     };
   }
 
-  const adapter = await createWorkspacePersistenceSession(options);
+  const adapter = await createWorkspacePersistenceSession(options, options.createIfMissing ? undefined : localDraftRead);
 
   if (options.deploymentMode === "self-host" && options.createIfMissing) {
     const { ensureWorkspace } = await import("./workspace-storage");
 
     return {
       adapter,
-      workspace: ensureWorkspace(requireBrowserStorage(options.browserStorage), options.workspaceId),
+      workspace: ensureWorkspace(requireBrowserStorage(options.browserStorage), options.workspaceId, localDraftRead),
       workspaceRevision: null,
       localMirrorMatched: false,
     };

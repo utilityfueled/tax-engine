@@ -48,7 +48,7 @@ import {
 import { TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData, mapFilingStatus } from "@/lib/guided-interview-bridge";
 import { withoutPrivateShortAccountingPeriod } from "@/lib/guided-standard-deduction-facts";
-import { reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
+import { createLocalWorkspaceDraftRead, reconcileWorkspaceGuidedState } from "@/lib/workspace-guided-state";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { getInterviewQuestionUiHint } from "@/lib/interview-question-ui";
 import {
@@ -591,20 +591,24 @@ export function ReturnWorkspaceScreen({
           }
         }
 
+        const localDraftRead = deploymentMode === "self-host" ? createLocalWorkspaceDraftRead(browserStorage, workspaceId) : undefined;
         const { adapter, workspace: nextWorkspace, workspaceRevision: nextRevision, localMirrorMatched } = await loadPersistedWorkspace({
           deploymentMode,
           browserStorage,
           workspaceId,
           createIfMissing
-        });
+        }, localDraftRead);
 
         setEffectiveDeploymentMode(deploymentMode);
         setWorkspaceAvailability(adapter.availability);
         const nextOwnerScopeKey = adapter.ownerScope?.scopeKey ?? null;
         const draft = deploymentMode === "self-host" ? workspaceId : nextOwnerScopeKey && nextRevision
           ? hostedGuidedDraftId(nextOwnerScopeKey, workspaceId, nextRevision) : null;
+        const workspaceWithDraft = nextWorkspace ? (localDraftRead
+          ? localDraftRead.reconcileLatest(nextWorkspace)
+          : reconcileWorkspaceGuidedState(nextWorkspace, draft ? loadGuidedFlowState(browserStorage, draft) : null)) : null;
         setWorkspaceSnapshot({
-          workspace: nextWorkspace ? reconcileWorkspaceGuidedState(nextWorkspace, draft ? loadGuidedFlowState(browserStorage, draft) : null) : null,
+          workspace: workspaceWithDraft,
           workspaceRevision: nextRevision,
           ownerScopeKey: nextOwnerScopeKey,
           hasPrivateSnapshot: localMirrorMatched,

@@ -35,7 +35,7 @@ import {
 } from "./guided-interview-flow";
 import { toHostedDocumentId } from "./hosted-document-identity";
 import { HostedWorkspaceWriteRejectedError } from "./hosted-workspace-revision";
-import { reconcileWorkspaceGuidedState } from "./workspace-guided-state";
+import { reconcileWorkspaceGuidedState, type LocalWorkspaceDraftRead } from "./workspace-guided-state";
 import { getLocalRecoveryStorageKey } from "./workspace-local-recovery";
 import { deleteCachedWorkspaceDocumentFiles, storeNewWorkspaceDocumentFiles } from "./workspace-document-file-cache";
 import { isGuidedSyntheticDocument } from "./workspace-status-copy";
@@ -1368,12 +1368,17 @@ function getSeededFactIds(kind: WorkspaceDocumentKind): SeededFactId[] {
   }
 }
 
-export function ensureWorkspace(storage: Storage, workspaceId: string) {
+function reconcileStoredWorkspaceDraft(storage: Storage, id: string, workspace: ReturnWorkspaceRecord, draftRead?: LocalWorkspaceDraftRead) {
+  return draftRead ? draftRead.reconcileInitial(storage, id, workspace)
+    : reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, id));
+}
+
+export function ensureWorkspace(storage: Storage, workspaceId: string, draftRead?: LocalWorkspaceDraftRead) {
   const data = loadStorage(storage);
   const existing = data.workspaces[workspaceId];
 
   if (existing) {
-    return reconcileWorkspaceGuidedState(existing, loadGuidedFlowState(storage, workspaceId));
+    return reconcileStoredWorkspaceDraft(storage, workspaceId, existing, draftRead);
   }
 
   const workspace = createWorkspace(workspaceId);
@@ -1381,11 +1386,11 @@ export function ensureWorkspace(storage: Storage, workspaceId: string) {
   return workspace;
 }
 
-export function getWorkspace(storage: Storage, workspaceId: string) {
+export function getWorkspace(storage: Storage, workspaceId: string, draftRead?: LocalWorkspaceDraftRead) {
   const data = loadStorage(storage);
 
   const workspace = data.workspaces[workspaceId];
-  return workspace ? reconcileWorkspaceGuidedState(workspace, loadGuidedFlowState(storage, workspaceId)) : null;
+  return workspace ? reconcileStoredWorkspaceDraft(storage, workspaceId, workspace, draftRead) : null;
 }
 
 /** Require the same local return and reset generation before an open editor writes. */

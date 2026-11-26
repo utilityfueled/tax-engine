@@ -1,5 +1,5 @@
 import { isSupportedEngineTaxYear, latestEngineTargetYear, officialSampleDocumentFixtures, type ReturnWorkspaceRecord, type WorkspaceReturnSummaryBlocker } from "@tax-engine/contracts";
-import { isSegmentationComplete, summarizeFlowCompletion, type GuidedFlowState } from "./guided-interview-flow";
+import { getGuidedFlowStorageKey, isSegmentationComplete, parseGuidedFlowState, summarizeFlowCompletion, type GuidedFlowState } from "./guided-interview-flow";
 
 function validYear(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1900 && value <= 2100;
@@ -56,3 +56,31 @@ export function reconcileWorkspaceGuidedState(workspace: ReturnWorkspaceRecord, 
     }),
   };
 }
+
+function readLocalDraft(storage: Storage, workspaceId: string): string | null {
+  try { return storage.getItem(getGuidedFlowStorageKey(workspaceId)); } catch { return null; }
+}
+
+/** Observe only the stock local adapter's initial reconciliation for this screen load. */
+export function createLocalWorkspaceDraftRead(storage: Storage, workspaceId: string) {
+  let initial: { raw: string; workspace: ReturnWorkspaceRecord } | undefined;
+  return {
+    reconcileInitial(source: Storage, id: string, workspace: ReturnWorkspaceRecord) {
+      const raw = readLocalDraft(source, id);
+      const reconciled = reconcileWorkspaceGuidedState(workspace, parseGuidedFlowState(raw));
+      initial = source === storage && id === workspaceId && workspace.id === id && typeof raw === "string" && reconciled !== workspace
+        ? { raw, workspace: reconciled } : undefined;
+      return reconciled;
+    },
+    reconcileLatest(workspace: ReturnWorkspaceRecord) {
+      const prior = initial;
+      initial = undefined;
+      // Another tab may replace the draft while the screen awaits the adapter.
+      const raw = readLocalDraft(storage, workspaceId);
+      if (prior?.workspace === workspace && prior.raw === raw && workspace.id === workspaceId) return workspace;
+      return reconcileWorkspaceGuidedState(workspace, parseGuidedFlowState(raw));
+    },
+  };
+}
+
+export type LocalWorkspaceDraftRead = ReturnType<typeof createLocalWorkspaceDraftRead>;
