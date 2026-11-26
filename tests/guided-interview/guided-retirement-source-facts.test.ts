@@ -10,7 +10,7 @@ import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
 import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
-import { loadGuidedFlowState, parseGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { loadGuidedFlowState, parseGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection, type GuidedFlowState, type RetirementEntryData } from "@/lib/guided-interview-flow";
 
 // Spec: spec/federal/guided-input.yaml, retirement-2025-simplified-method
 it("calculates 2025 single-life pensions from actual Simplified Method facts while preserving original Box 2a", () => {
@@ -206,6 +206,172 @@ it("reopens confirmed 2026 single-life pension facts without enabling the annual
   const changedYear = reopen(setInterviewTaxYear(reopened, 2025));
   expect(changedYear.sectionData["income-retirement"]?.entries[0]?.sourceTaxYear).toBe("2026");
   expect(buildTaxInputFromGuidedData(changedYear)).toBeNull();
+});
+
+function editPensionEntries(state: GuidedFlowState, entries: RetirementEntryData[]) {
+  return updateSectionData(state, "income-retirement", { entries });
+}
+
+function reopenPensionDraft(state: GuidedFlowState) {
+  const items = new Map<string, string>();
+  const storage = { getItem: (key: string) => items.get(key) ?? null, setItem: (key: string, value: string) => items.set(key, value) } as unknown as Storage;
+  const target = { storageKey: "retirement-reducer" };
+  expect(saveGuidedFlowState(storage, target, state)).toBe(true);
+  const reopened = loadGuidedFlowState(storage, target);
+  if (!reopened?.sectionData["income-retirement"]) throw new Error("Could not reopen guided pension draft");
+  return { state: reopened, entries: reopened.sectionData["income-retirement"].entries };
+}
+
+function reviewedPensionDraft() {
+  const start = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  start.taxYear = 2026;
+  const birthday = "1960-01-01";
+  const personal = { ...completePersonalInfo, dateOfBirth: birthday, spouse: { ...completePersonalInfo.spouse!, dateOfBirth: birthday } };
+  start.sectionData["personal-info"] = personal;
+  const worksheet = {
+    planReference: "Plan 42", qualifiedPlanConfirmed: true, singleLifeAnnuitantConfirmed: true,
+    statementCoversContractConfirmed: true, costInPlan: "26000", startingDate: "2025-01-15",
+    ageAtStart: "65", monthsPaid: "12", priorRecovered: "1200",
+  };
+  const pension = {
+    ...completeRetirementSource, sourceTaxYear: "2026", grossDistribution: "6000", taxableAmount: "",
+    taxableAmountNotDetermined: true, taxableAmountConfirmed: null, simplifiedMethod: worksheet,
+  };
+  const spousePension = {
+    ...pension, accountHolder: "spouse" as const, accountReference: "spouse original",
+    simplifiedMethod: { ...worksheet, planReference: "Spouse plan", costInPlan: "32000" },
+  };
+  return { draft: editPensionEntries(start, [pension, spousePension]), personal, pension, spousePension, worksheet };
+}
+
+// Spec: spec/federal/guided-input.yaml, retirement-source-identity
+it("holds carried pension coverage after a direct original or contract edit and reopen", () => {
+  const { draft, pension, spousePension, worksheet } = reviewedPensionDraft();
+  const newPension = { ...pension, accountReference: "additional original", simplifiedMethod: { ...worksheet, planReference: "Additional plan" } };
+  const formattedPension = {
+    ...pension, payerTin: "123456789", accountReference: "  SYNTHETIC-RETIREMENT-1  ",
+    simplifiedMethod: { ...worksheet, planReference: "  PLAN 42  ", monthsPaid: "11" },
+  };
+  const reordered = reopenPensionDraft(editPensionEntries(draft, [newPension, { ...spousePension }, formattedPension]));
+  expect(reordered.entries.map(entry => entry.simplifiedMethod?.statementCoversContractConfirmed)).toEqual([true, true, true]);
+  expect(validateSection(reordered.state, "income-retirement").status).toBe("complete");
+
+  for (const edit of [
+    { accountReference: "corrected original" },
+    { payerTin: "12-3456788" },
+    { accountHolder: "spouse" as const },
+    { simplifiedMethod: { ...worksheet, planReference: "Other contract" } },
+  ]) {
+    const changed = reopenPensionDraft(editPensionEntries(draft, [spousePension, { ...pension, ...edit }]));
+    const incomingWorksheet = "simplifiedMethod" in edit ? edit.simplifiedMethod : worksheet;
+    const [other, replacement] = changed.entries;
+    expect(other?.simplifiedMethod?.statementCoversContractConfirmed).toBe(true);
+    const onlyGeneralReview = reopenPensionDraft(editPensionEntries(changed.state, [other, { ...replacement, sourceFactsConfirmed: true }]));
+    expect(validateSection(onlyGeneralReview.state, "income-retirement").message, JSON.stringify(edit)).toMatch(/Box 1 on this original reports all 2026 periodic payments/);
+    expect(onlyGeneralReview.entries[1]).toMatchObject({
+      sourceFactsConfirmed: true, taxableAmount: "", simplifiedMethod: { ...incomingWorksheet, statementCoversContractConfirmed: null },
+    });
+    expect(buildTaxInputFromGuidedData(onlyGeneralReview.state)).toBeNull();
+
+    const reviewed = reopenPensionDraft(editPensionEntries(onlyGeneralReview.state, [
+      other, { ...onlyGeneralReview.entries[1], simplifiedMethod: { ...incomingWorksheet, statementCoversContractConfirmed: true } },
+    ]));
+    expect(validateSection(reviewed.state, "income-retirement").status).toBe("complete");
+    expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reviewed.state)).form1099R?.[1]).toMatchObject({
+      taxableAmount: undefined, simplifiedMethodPaymentsReceivedThisYear: 12, simplifiedMethodPriorYearRecovered: "1200",
+    });
+  }
+
+  const amendedYear = editPensionEntries(draft, [spousePension, { ...pension, sourceTaxYear: "2025" }]);
+  expect(amendedYear.sectionData["income-retirement"]?.entries[1]?.simplifiedMethod).toEqual({
+    ...worksheet, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "",
+  });
+
+  const collided = reopenPensionDraft(editPensionEntries(draft, [pension, {
+    ...spousePension, accountHolder: pension.accountHolder, accountReference: pension.accountReference,
+    simplifiedMethod: { ...spousePension.simplifiedMethod, planReference: worksheet.planReference },
+  }]));
+  expect(collided.entries.map(entry => entry.simplifiedMethod?.statementCoversContractConfirmed)).toEqual([null, null]);
+  const resolved = reopenPensionDraft(editPensionEntries(collided.state, [{ ...collided.entries[1], sourceFactsConfirmed: true }]));
+  expect(validateSection(resolved.state, "income-retirement").message).toMatch(/Box 1 on this original reports all 2026 periodic payments/);
+});
+
+// Spec: spec/federal/guided-input.yaml, retirement-source-identity
+it("requires fresh coverage for simultaneous original removal and worksheet replacement", () => {
+  const { draft, pension, worksheet } = reviewedPensionDraft();
+  const otherOriginal = {
+    ...pension, payerTin: "12-3456788",
+    simplifiedMethod: { ...worksheet, costInPlan: "32000", priorRecovered: "0" },
+  };
+  const existing = editPensionEntries(draft, [pension]);
+  const twoOriginals = editPensionEntries(existing, [pension, otherOriginal]);
+  expect(validateSection(twoOriginals, "income-retirement").status).toBe("complete");
+  const retained = reopenPensionDraft(editPensionEntries(twoOriginals, [{
+    ...otherOriginal, simplifiedMethod: {
+      ...otherOriginal.simplifiedMethod, planReference: "  PLAN 42 ", costInPlan: "32,000.00", priorRecovered: "0.00",
+    },
+  }]));
+  expect(validateSection(retained.state, "income-retirement").status).toBe("complete");
+
+  const replaced = reopenPensionDraft(editPensionEntries(twoOriginals, [{ ...pension, payerTin: otherOriginal.payerTin }]));
+  const generalReview = reopenPensionDraft(editPensionEntries(replaced.state, [{ ...replaced.entries[0], sourceFactsConfirmed: true }]));
+  expect(validateSection(generalReview.state, "income-retirement").message).toMatch(/Box 1 on this original reports all 2026 periodic payments/);
+  expect(generalReview.entries[0]?.simplifiedMethod).toEqual({ ...worksheet, statementCoversContractConfirmed: null });
+  const reviewed = reopenPensionDraft(editPensionEntries(generalReview.state, [{ ...generalReview.entries[0], simplifiedMethod: worksheet }]));
+  expect(validateSection(reviewed.state, "income-retirement").status).toBe("complete");
+});
+
+// Spec: spec/federal/guided-input.yaml, retirement-2026-simplified-method
+it("clears copied annual pension amounts when year and identity are corrected together", () => {
+  const { draft, pension, worksheet } = reviewedPensionDraft();
+  const formerWorksheet = { ...worksheet, startingDate: "2024-01-15", ageAtStart: "64" };
+  const original = { ...pension, simplifiedMethod: formerWorksheet };
+  const originalOnly = editPensionEntries(draft, [pension]);
+  const confirmed = editPensionEntries(originalOnly, [original]);
+  expect(validateSection(confirmed, "income-retirement").status).toBe("complete");
+  const priorYearReturn = setInterviewTaxYear(confirmed, 2025);
+  const corrected = { ...original, sourceTaxYear: "2025", payerTin: "12-3456788", accountReference: "corrected original" };
+  const copiedWorksheet = { ...formerWorksheet, costInPlan: "26,000.00", priorRecovered: "1,200.00" };
+
+  const replaced = reopenPensionDraft(editPensionEntries(priorYearReturn, [{ ...corrected, simplifiedMethod: copiedWorksheet }]));
+  expect(replaced.entries[0]).toMatchObject({
+    sourceTaxYear: "2025", accountReference: "corrected original", taxableAmount: "",
+    simplifiedMethod: { ...copiedWorksheet, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
+  });
+  const coverageOnly = reopenPensionDraft(editPensionEntries(replaced.state, [{
+    ...replaced.entries[0], sourceFactsConfirmed: true,
+    simplifiedMethod: { ...replaced.entries[0]?.simplifiedMethod, statementCoversContractConfirmed: true },
+  }]));
+  expect(validateSection(coverageOnly.state, "income-retirement").message).toMatch(/actual months covered by 2025 annuity payments/i);
+
+  const newWorksheet = { ...formerWorksheet, monthsPaid: "8", priorRecovered: "300" };
+  const independentlyEntered = reopenPensionDraft(editPensionEntries(priorYearReturn, [{ ...corrected, simplifiedMethod: newWorksheet }]));
+  expect(independentlyEntered.entries[0]?.simplifiedMethod).toEqual({ ...newWorksheet, statementCoversContractConfirmed: null });
+  const freshReview = reopenPensionDraft(editPensionEntries(independentlyEntered.state, [{
+    ...independentlyEntered.entries[0], sourceFactsConfirmed: true, simplifiedMethod: newWorksheet,
+  }]));
+  expect(validateSection(freshReview.state, "income-retirement").status).toBe("complete");
+});
+
+// Spec: spec/federal/guided-input.yaml, retirement-source-identity
+it("requires pension coverage again for a different taxpayer in the same recipient role", () => {
+  const { draft, personal, spousePension } = reviewedPensionDraft();
+  const equivalent = { ...personal, addressLine1: "15 Different Street", spouse: { ...personal.spouse, firstName: "  TAYLOR  ", ssn: "222334444" } };
+  const formatted = reopenPensionDraft(updateSectionData(draft, "personal-info", equivalent));
+  expect(formatted.entries.map(entry => entry.simplifiedMethod?.statementCoversContractConfirmed)).toEqual([true, true]);
+  const changed = reopenPensionDraft(updateSectionData(formatted.state, "personal-info", {
+    ...equivalent, spouse: { ...equivalent.spouse, firstName: "Casey", ssn: "222-33-4445" },
+  }));
+  expect(changed.entries[0].simplifiedMethod?.statementCoversContractConfirmed).toBe(true);
+  const onlyGeneralReview = reopenPensionDraft(editPensionEntries(changed.state, [
+    changed.entries[0], { ...changed.entries[1], sourceFactsConfirmed: true },
+  ]));
+  expect(validateSection(onlyGeneralReview.state, "income-retirement").message).toMatch(/Box 1 on this original reports all 2026 periodic payments/);
+  expect(onlyGeneralReview.entries[1]?.simplifiedMethod).toEqual({ ...spousePension.simplifiedMethod, statementCoversContractConfirmed: null });
+  const reviewed = reopenPensionDraft(editPensionEntries(onlyGeneralReview.state, [
+    onlyGeneralReview.entries[0], { ...onlyGeneralReview.entries[1], simplifiedMethod: spousePension.simplifiedMethod },
+  ]));
+  expect(validateSection(reviewed.state, "income-retirement").status).toBe("complete");
 });
 
 it("requires actual retirement source ownership and preserves zero and unknown amounts", () => {

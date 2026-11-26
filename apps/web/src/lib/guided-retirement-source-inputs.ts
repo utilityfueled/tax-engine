@@ -165,8 +165,12 @@ export function needsGuidedSimplifiedMethod(entry: RetirementEntryData): boolean
     || (entry.sourceTaxYear === '2026' && code === '7');
 }
 
+export function guidedSimplifiedMethodPlanReference(entry: RetirementEntryData): string | undefined {
+  return entry.simplifiedMethod?.planReference?.trim().toLowerCase();
+}
+
 export function simplifiedMethodPlanIdentifier(entry: RetirementEntryData): string {
-  return JSON.stringify([entry.accountHolder, entry.payerTin?.replaceAll('-', ''), entry.simplifiedMethod?.planReference?.trim().toLowerCase()]);
+  return JSON.stringify([entry.accountHolder, entry.payerTin?.replaceAll('-', ''), guidedSimplifiedMethodPlanReference(entry)]);
 }
 
 export function isGuidedQualifiedLumpSum(entry: RetirementEntryData): boolean {

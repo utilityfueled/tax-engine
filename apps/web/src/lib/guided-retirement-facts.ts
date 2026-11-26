@@ -4,11 +4,11 @@ import {statePaymentFactErrors}from './guided-state-facts';
 import type { CreditsData, FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { isBeforeAge59AndHalfDate } from "@/utils/retirement-age";
-import { amountError, currentLocalCivilDate, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { amountError, currentLocalCivilDate, guidedAmountChanged, hasEnteredAmount, isActualDate } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import {
-  isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, needsGuidedSimplifiedMethod, normalizeGuidedRetirementCode,
+  guidedSimplifiedMethodPlanReference, isGuidedQcdStatement, isGuidedQualifiedLumpSum, isStartedRetirement, needsGuidedSimplifiedMethod, normalizeGuidedRetirementCode,
   retirementQcdAmounts, retirementQcdConfirmations, retirementQcdTextFields, retirementSourceInput,
   simplifiedMethodPlanIdentifier, simplifiedMethodWholeNumber,
   type GuidedRetirementQcdSource, type GuidedRetirementSimplifiedMethod,
@@ -17,6 +17,94 @@ import { buildGuidedFirstHomeSource, guidedCode1IraOriginalSnapshot, guidedFirst
 import { buildGuidedIraEducationSource, guidedIraEducationOriginalError, guidedIraEducationOwnerFingerprint, type GuidedIraEducationOriginal, type GuidedIraEducationWorksheet } from "./guided-retirement-education";
 import { buildGuidedDisabilityPensionSource, guidedDisabilityPensionOriginal, type GuidedDisabilityPensionWorksheet } from "./guided-retirement-disability";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
+
+function guidedRetirementSourceIdentity(entry: RetirementEntryData) {
+  return [
+    entry.sourceTaxYear,
+    entry.accountHolder,
+    entry.payerTin?.replaceAll("-", "") ?? "",
+    entry.accountReference?.trim().toLowerCase() ?? "",
+  ] as const;
+}
+
+function pensionCoverageIdentity(entry: RetirementEntryData): string {
+  return JSON.stringify([...guidedRetirementSourceIdentity(entry), guidedSimplifiedMethodPlanReference(entry)]);
+}
+
+export function clearGuidedPensionCoverage(entry: RetirementEntryData, sourceYearChanged = false): RetirementEntryData {
+  const worksheet = entry.simplifiedMethod;
+  if (!worksheet) return entry;
+  if (worksheet.statementCoversContractConfirmed === null && entry.sourceFactsConfirmed === null
+    && (!sourceYearChanged || (worksheet.monthsPaid === "" && worksheet.priorRecovered === ""))) return entry;
+  return {
+    ...entry,
+    sourceFactsConfirmed: null,
+    simplifiedMethod: {
+      ...worksheet,
+      statementCoversContractConfirmed: null,
+      ...(sourceYearChanged ? { monthsPaid: "", priorRecovered: "" } : {}),
+    },
+  };
+}
+
+export function invalidateEditedGuidedPensionCoverage(previous: RetirementEntryData, next: RetirementEntryData): RetirementEntryData {
+  if (!previous.simplifiedMethod || !next.simplifiedMethod || pensionCoverageIdentity(previous) === pensionCoverageIdentity(next)) return next;
+  return clearGuidedPensionCoverage(next, previous.sourceTaxYear !== next.sourceTaxYear);
+}
+
+function pensionCoverageGroups(entries: RetirementEntryData[]): Map<string, RetirementEntryData[]> {
+  const groups = new Map<string, RetirementEntryData[]>();
+  for (const entry of entries) {
+    if (!entry.simplifiedMethod) continue;
+    const key = pensionCoverageIdentity(entry);
+    const group = groups.get(key);
+    if (group) group.push(entry);
+    else groups.set(key, [entry]);
+  }
+  return groups;
+}
+
+function samePensionWorksheetFacts(previous?: GuidedRetirementSimplifiedMethod, next?: GuidedRetirementSimplifiedMethod): boolean {
+  return !!previous && !!next
+    && previous.qualifiedPlanConfirmed === next.qualifiedPlanConfirmed
+    && previous.singleLifeAnnuitantConfirmed === next.singleLifeAnnuitantConfirmed
+    && previous.startingDate?.trim() === next.startingDate?.trim()
+    && simplifiedMethodWholeNumber(previous.ageAtStart) === simplifiedMethodWholeNumber(next.ageAtStart)
+    && simplifiedMethodWholeNumber(previous.monthsPaid) === simplifiedMethodWholeNumber(next.monthsPaid)
+    && !guidedAmountChanged(previous.costInPlan, next.costInPlan)
+    && !guidedAmountChanged(previous.priorRecovered, next.priorRecovered);
+}
+
+export function updateGuidedPensionCoverage(previous: RetirementEntryData[], next: RetirementEntryData[]): RetirementEntryData[] {
+  const previousGroups = pensionCoverageGroups(previous);
+  if (previousGroups.size === 0) return next;
+  const nextGroups = pensionCoverageGroups(next);
+  if (nextGroups.size === 0) return next;
+  const displaced = previous.filter(entry => {
+    if (!entry.simplifiedMethod) return false;
+    const key = pensionCoverageIdentity(entry);
+    return (nextGroups.get(key)?.length ?? 0) < (previousGroups.get(key)?.length ?? 0);
+  });
+  const displacedReview = displaced.some(entry => entry.simplifiedMethod?.statementCoversContractConfirmed != null);
+  const updated = next.map(entry => {
+    if (!entry.simplifiedMethod) return entry;
+    const key = pensionCoverageIdentity(entry);
+    const previousGroup = previousGroups.get(key);
+    if (previousGroup) {
+      // A removed original can be replaced under an existing key without changing that key's count.
+      const countChanged = previousGroup.length !== nextGroups.get(key)?.length;
+      const replacementPossible = displacedReview
+        && !previousGroup.some(original => samePensionWorksheetFacts(original.simplifiedMethod, entry.simplifiedMethod));
+      if (!countChanged && !replacementPossible) return entry;
+    }
+    const statementAccount = JSON.stringify(guidedRetirementSourceIdentity(entry).slice(1));
+    const sourceYearChanged = displaced.some(previousEntry => previousEntry.sourceTaxYear !== entry.sourceTaxYear
+      && (JSON.stringify(guidedRetirementSourceIdentity(previousEntry).slice(1)) === statementAccount
+        || samePensionWorksheetFacts(previousEntry.simplifiedMethod, entry.simplifiedMethod)));
+    return previousGroup || displacedReview || sourceYearChanged ? clearGuidedPensionCoverage(entry, sourceYearChanged) : entry;
+  });
+  return updated.some((entry, index) => entry !== next[index]) ? updated : next;
+}
 
 export interface RetirementSourceData {
   sourceTaxYear?: string;
@@ -200,10 +288,10 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     const boundIra = basisBound && entry.isIraSepSimple === true;
     const fail = (key: string, message: string) => { errors[`retirement-${index}-${key}`] = message; };
     if (!entry.payer.trim()) fail("payer", "Enter the actual retirement payer.");
-    const payerTin = entry.payerTin?.replaceAll("-", "") ?? "";
+    const sourceIdentity = guidedRetirementSourceIdentity(entry);
+    const [, , payerTin, accountReference] = sourceIdentity;
     const validPayerTin = /^\d{9}$/.test(payerTin);
     if (!validPayerTin) fail("payer-tin", "Enter the actual nine-digit payer TIN from the source form.");
-    const accountReference = entry.accountReference?.trim();
     if (!accountReference) fail("account", "Enter a local account reference that distinguishes this retirement statement.");
     const validYear = ["2025", "2026"].includes(entry.sourceTaxYear ?? "")
       && (taxYear == null || entry.sourceTaxYear === String(taxYear));
@@ -212,7 +300,7 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     if (!validRecipient) fail("owner", "Confirm the actual retirement distribution recipient.");
     if (filingStatus && filingStatus !== "mfj" && entry.accountHolder === "spouse") fail("owner", "A spouse's retirement income requires a joint return or their separate return.");
     if (validPayerTin && accountReference && validYear && validRecipient) {
-      const sourceId = JSON.stringify([entry.sourceTaxYear, entry.accountHolder, payerTin, accountReference.toLowerCase()]);
+      const sourceId = JSON.stringify(sourceIdentity);
       if (sourceIds.has(sourceId)) fail("duplicate", "Reconcile duplicate or corrected statements for this retirement account before calculating.");
       sourceIds.add(sourceId);
     }

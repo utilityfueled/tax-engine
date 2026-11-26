@@ -10,7 +10,7 @@ import { CurrencyField } from "./currency-field";
 import { RetirementSourceFields } from "./retirement-source-fields";
 import { IraBasisSourceFields } from "./ira-basis-source-fields";
 import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
-import { guidedDatedRetirementOwnerBirthDate } from "@/lib/guided-retirement-facts";
+import { guidedDatedRetirementOwnerBirthDate, invalidateEditedGuidedPensionCoverage } from "@/lib/guided-retirement-facts";
 import { invalidateEditedGuidedQcdSource, isGuidedQcdStatement, needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 
 const code1IraSourceFields: readonly (keyof RetirementEntryData)[] = [
@@ -140,19 +140,16 @@ export function SectionRetirementIncome({
   ) {
     const next = entries.map((entry, i) => {
       if (i !== index) return entry;
-      const sourceYearChanged = field === "sourceTaxYear" && entry[field] !== value;
       const code1SourceChanged = entry.code1IraAgeSource !== undefined && code1IraSourceFields.includes(field) && entry[field] !== value;
-      const updated = invalidateEditedGuidedQcdSource(entry, {
+      const edited = {
         ...entry, sourceFactsConfirmed: null, [field]: value,
         ...(code1SourceChanged ? { code1IraAgeSource: undefined } : {}),
         ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}),
         ...(field === "isIraSepSimple" ? { requiresIraConfirmation: false } : {}),
         ...((field === "sourceTaxYear" || field === "distributionCode" || field === "isIraSepSimple") && entry[field] !== value
           ? { qualifiedLumpSumReporting: null } : {}),
-        ...(sourceYearChanged && entry.simplifiedMethod ? {
-          simplifiedMethod: { ...entry.simplifiedMethod, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
-        } : {}),
-      });
+      };
+      const updated = invalidateEditedGuidedQcdSource(entry, invalidateEditedGuidedPensionCoverage(entry, edited));
       const sourceWorksheetChanged = (field === "code1IraFirstHomeSource" || field === "code1IraEducationSource" || field === "code3DisabilitySource")
         && (entry[field] !== undefined) !== (value !== undefined);
       const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);

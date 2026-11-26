@@ -99,7 +99,7 @@ import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, typ
 import type { MortgageSourceData } from "./guided-mortgage-facts";
 import type { MortgageWorksheetData } from "./guided-mortgage-worksheet";
 import { guidedSocialSecurityFactContext, socialSecurityFactErrors, socialSecurityEntries, isSmall2026SocialSecurityRepayment, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
-import type { RetirementSourceData } from "./guided-retirement-facts";
+import { clearGuidedPensionCoverage, updateGuidedPensionCoverage, type RetirementSourceData } from "./guided-retirement-facts";
 import { invalidateEditedGuidedQcdSource, replayGuidedQcdOwnerReview, updateGuidedQcdEntries } from "./guided-retirement-source-inputs";
 import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
@@ -2441,14 +2441,14 @@ function invalidateChangedVehicleBorrowers(loans: VehicleInterestData[], before?
   });
 }
 
-function invalidateChangedQcdOwners(entries: RetirementEntryData[], before?: PersonalInfoData, after?: PersonalInfoData) {
-  if (!entries.some(entry => entry.sourceTaxYear === "2026" && entry.qcdSource)) return entries;
+function invalidateChangedRetirementOwners(entries: RetirementEntryData[], before?: PersonalInfoData, after?: PersonalInfoData) {
+  if (!entries.some(entry => entry.simplifiedMethod || (entry.sourceTaxYear === "2026" && entry.qcdSource))) return entries;
   const primaryChanged = guidedSourceValuesChanged(guidedTaxpayerIdentity(before), guidedTaxpayerIdentity(after));
   const spouseChanged = guidedSourceValuesChanged(guidedTaxpayerIdentity(before?.spouse), guidedTaxpayerIdentity(after?.spouse));
   if (!primaryChanged && !spouseChanged) return entries;
   const updated = entries.map(entry => {
     const ownerChanged = entry.accountHolder === "primary" ? primaryChanged : entry.accountHolder === "spouse" && spouseChanged;
-    return ownerChanged ? invalidateEditedGuidedQcdSource(entry, entry, true) : entry;
+    return ownerChanged ? clearGuidedPensionCoverage(invalidateEditedGuidedQcdSource(entry, entry, true)) : entry;
   });
   return updated.some((entry, index) => entry !== entries[index]) ? updated : entries;
 }
@@ -2587,11 +2587,13 @@ export function updateSectionData(
   const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
   const formerRetirement = state.sectionData["income-retirement"];
   const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : formerRetirement;
-  let qcdEntries = nextRetirement?.entries;
-  if (qcdEntries && sectionId === "income-retirement") {
-    qcdEntries = updateGuidedQcdEntries(formerRetirement?.entries ?? [], qcdEntries, formerPersonal);
-  } else if (qcdEntries && sectionId === "personal-info") {
-    qcdEntries = invalidateChangedQcdOwners(qcdEntries, formerPersonal, nextPersonal);
+  let retirementEntries = nextRetirement?.entries;
+  if (retirementEntries && sectionId === "income-retirement") {
+    const previousEntries = formerRetirement?.entries ?? [];
+    retirementEntries = updateGuidedPensionCoverage(previousEntries, retirementEntries);
+    retirementEntries = updateGuidedQcdEntries(previousEntries, retirementEntries, formerPersonal);
+  } else if (retirementEntries && sectionId === "personal-info") {
+    retirementEntries = invalidateChangedRetirementOwners(retirementEntries, formerPersonal, nextPersonal);
   }
   const iraBasisSourcesChanged = sourceValuesChanged && ["income-retirement", "personal-info", "adjustments"].includes(sectionId) && nextRetirement?.basisSources;
   const nextRoyalties = sectionId === "income-royalties" ? data as RoyaltyIncomeData : state.sectionData["income-royalties"];
@@ -2878,9 +2880,9 @@ export function updateSectionData(
         ...(recoverySourcesChanged ? { refundRecoveries: { ...recoverySourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(farmSourcesChanged ? { cashFarm: { ...nextGovernment.cashFarm, sourceFactsConfirmed: null } } : {}),
       } } : {}),
-      ...(nextRetirement && qcdEntries && (iraBasisSourcesChanged || qcdEntries !== nextRetirement.entries) ? {
+      ...(nextRetirement && retirementEntries && (iraBasisSourcesChanged || retirementEntries !== nextRetirement.entries) ? {
         "income-retirement": {
-          ...nextRetirement, entries: qcdEntries,
+          ...nextRetirement, entries: retirementEntries,
           ...(iraBasisSourcesChanged ? { basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } : {}),
         },
       } : {}),

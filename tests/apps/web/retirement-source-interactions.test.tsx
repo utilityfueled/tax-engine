@@ -7,17 +7,18 @@ import { afterEach, expect, it, vi } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
 import { SectionReview } from "@/components/guided-interview/section-review";
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
-import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, validateSection, type FilingStatus, type RetirementEntryData } from "@/lib/guided-interview-flow";
+import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type FilingStatus, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { iraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
 
-async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>, taxYear = 2025, ownerBirthDate = "1966-02-01", filingStatus: FilingStatus = "single") {
+async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string, rowIndex?: number) => Promise<void> }) => Promise<void>, taxYear = 2025, ownerBirthDate = "1966-02-01", filingStatus: FilingStatus = "single") {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container); let latest = initial;
   function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus={filingStatus} taxYear={taxYear} primaryDateOfBirth={ownerBirthDate} primaryOwnerFingerprint={iraEducationOwnerFingerprint(completePersonalInfo)} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
-  async function change(label: string, value: string) {
-    const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+  async function change(label: string, value: string, rowIndex?: number) {
+    const scope = rowIndex === undefined ? container : container.querySelectorAll(".guided-w2-card")[rowIndex];
+    const element = scope && [...scope.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
     if (!element) throw new Error(`Missing control: ${label}`);
     await act(async () => {
       Object.getOwnPropertyDescriptor(element.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(element, value);
@@ -340,6 +341,101 @@ it("requires new annual pension worksheet amounts after correcting the statement
       taxYear: 2026, taxableAmount: undefined, simplifiedMethodPaymentsReceivedThisYear: 12, simplifiedMethodPriorYearRecovered: "1200.00",
     });
   });
+});
+
+// Spec: spec/federal/guided-input.yaml, retirement-source-identity
+it("requires fresh pension coverage after the original identity changes and the draft reopens", async () => {
+  const worksheet = {
+    planReference: "Plan 42", qualifiedPlanConfirmed: true, singleLifeAnnuitantConfirmed: true,
+    statementCoversContractConfirmed: true, startingDate: "2025-01-15", ageAtStart: "65",
+    costInPlan: "26000", monthsPaid: "12", priorRecovered: "1200",
+  };
+  const pension = {
+    ...completeRetirementSource, sourceTaxYear: "2026", grossDistribution: "6000", taxableAmount: "",
+    taxableAmountNotDetermined: true, taxableAmountConfirmed: null, simplifiedMethod: worksheet,
+  };
+  const other = { ...completeRetirementSource, sourceTaxYear: "2026", accountReference: "separate source" };
+  let draft = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  draft.taxYear = 2026;
+  const birthDate = "1960-01-01";
+  const personal = { ...completePersonalInfo, dateOfBirth: birthDate, spouse: { ...completePersonalInfo.spouse!, dateOfBirth: birthDate } };
+  draft.sectionData["personal-info"] = personal;
+  draft.sectionData["income-retirement"] = { entries: [pension, other] };
+  const target = { storageKey: "retirement-original-identity-2026" };
+  const account = "Retirement account reference (last four digits or local statement label)";
+  const tin = "Payer TIN shown on the retirement form";
+  const coverage = "Does Box 1 report all 2026 periodic payments for this contract, with no other payments included?";
+  const coverageError = /Box 1 on this original reports all 2026 periodic payments/;
+  const reopen = () => {
+    expect(saveGuidedFlowState(window.sessionStorage, target, draft)).toBe(true);
+    const reopened = loadGuidedFlowState(window.sessionStorage, target);
+    if (!reopened?.sectionData["income-retirement"]) throw new Error("The retirement sources did not reopen");
+    return reopened;
+  };
+  const assertWorksheetComplete = () => {
+    expect(validateSection(draft, "income-retirement").status).toBe("complete");
+    expect(buildRetirementInputs(draft.sectionData["income-retirement"]?.entries, "mfj", 2026, undefined, { personal })[0]).toMatchObject({
+      taxableAmount: undefined, simplifiedMethodAnnuityStartingDate: "2025-01-15",
+      simplifiedMethodCostInPlan: "26000", simplifiedMethodPaymentsReceivedThisYear: 12, simplifiedMethodPriorYearRecovered: "1200",
+    });
+  };
+  const reopenPendingCoverage = (editedField: string) => {
+    const reopened = reopen();
+    const entries = reopened.sectionData["income-retirement"]?.entries;
+    expect(validateSection(reopened, "income-retirement").message, editedField).toMatch(coverageError);
+    expect(entries?.[0]).toMatchObject({
+      sourceFactsConfirmed: true, taxableAmount: "",
+      simplifiedMethod: { ...worksheet, statementCoversContractConfirmed: null },
+    });
+    expect(() => buildRetirementInputs(entries, "mfj", 2026, undefined, { personal })).toThrow(coverageError);
+    const summary = renderToStaticMarkup(<SectionReview state={reopened} preview={null} onJumpToSection={() => {}} />);
+    expect(summary).toContain("Box 2a amount not entered");
+    expect(summary).not.toContain("Box 2a blank on the original");
+    return reopened;
+  };
+  try {
+    await render([pension, other], async ({ latest, change }) => {
+      const edit = async (label: string, value: string, rowIndex = 0) => {
+        await change(label, value, rowIndex);
+        draft = updateSectionData(draft, "income-retirement", { entries: latest() });
+      };
+      assertWorksheetComplete();
+      await edit(account, "  SYNTHETIC-RETIREMENT-1  ");
+      await edit(tin, "123456789");
+      await edit(confirm, "true");
+      await edit(account, "edited separate source", 1);
+      await edit(confirm, "true", 1);
+      expect(latest()[0]?.simplifiedMethod).toEqual(worksheet);
+      assertWorksheetComplete();
+
+      for (const [label, value] of [
+        [account, "replacement original"],
+        [tin, "12-3456788"],
+      ]) {
+        await edit(label, value);
+        await edit(confirm, "true");
+        reopenPendingCoverage(label);
+        await edit(coverage, "true");
+        await edit(confirm, "true");
+        assertWorksheetComplete();
+      }
+      await edit("Actual retirement distribution recipient", "spouse");
+      await edit(confirm, "true");
+    }, 2026, birthDate, "mfj");
+    draft = reopenPendingCoverage("Actual retirement distribution recipient");
+    await render(draft.sectionData["income-retirement"]!.entries, async ({ latest, change }) => {
+      await change(coverage, "true");
+      expect(latest()[0]?.sourceFactsConfirmed).toBeNull();
+      await change(confirm, "true");
+      draft = updateSectionData(draft, "income-retirement", { entries: latest() });
+    }, 2026, birthDate, "mfj");
+    draft = reopen();
+    assertWorksheetComplete();
+    const confirmedSummary = renderToStaticMarkup(<SectionReview state={draft} preview={null} onJumpToSection={() => {}} />);
+    expect(confirmedSummary).toContain("Box 2a blank on the original");
+  } finally {
+    window.sessionStorage.removeItem(target.storageKey);
+  }
 });
 
 it("keeps a saved QCD worksheet visible and requires source confirmation after an edit", async () => {
