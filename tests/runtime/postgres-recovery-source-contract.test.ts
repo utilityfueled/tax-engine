@@ -65,7 +65,14 @@ describe("PostgreSQL 16.16 self-host recovery", () => {
     expect(source).toContain('await assert.rejects(probe(undefined),');
     expect(source).toContain('await assert.rejects(probe("wrong-rehearsal-password"),');
     expect(source).toContain('error?.code === "28P01"');
-    expect(source).toContain('await verifyDatabaseAuthentication();\n  await ensureHostedAppSchema(dbEnv);');
+    const authentication = source.indexOf('await verifyDatabaseAuthentication();');
+    const historical = source.indexOf('evidence.previousSchemaMigration = await rehearsePreviousSchema(', authentication);
+    const candidate = source.indexOf('await ensureHostedAppSchema(dbEnv);', historical);
+    const restart = source.indexOf('await verify("database-restart"', candidate);
+    expect(authentication).toBeGreaterThan(0);
+    expect(historical).toBeGreaterThan(authentication);
+    expect(candidate).toBeGreaterThan(historical);
+    expect(restart).toBeGreaterThan(candidate);
     expect(source).toContain('await verifyDatabaseAuthentication();\n  await verify("database-restart"');
   });
 

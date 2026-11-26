@@ -14,6 +14,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db.ts";
 import { assertEncryptedRecoveryOriginals, expectedRecoveryFileTimestamp } from "../apps/web/tests/helpers/encrypted-recovery-review.ts";
 import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
+import { rehearsePreviousSchema } from "./rehearse-self-host-previous-schema.mjs";
 import { collectRehearsalPageState, createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
 
 // Run with node --import tsx. This creates its own local-only Compose project,
@@ -196,6 +197,10 @@ try {
   await ready();
   const dbEnv = { TAX_ENGINE_DEPLOYMENT_MODE: "hosted", NODE_ENV: "test", DATABASE_URL: authenticatedDatabaseUrl.toString() };
   await verifyDatabaseAuthentication();
+  const previousRevision = previous.Config?.Labels?.["org.opencontainers.image.revision"];
+  if (process.env.PREVIOUS_REVISION) assert.equal(previousRevision, process.env.PREVIOUS_REVISION);
+  const candidateRevision = candidate.Config?.Labels?.["org.opencontainers.image.revision"];
+  evidence.previousSchemaMigration = await rehearsePreviousSchema({ previousRevision, candidateRevision, candidateImage: candidate.Id, databaseUrl, pgPassFile: passfile });
   await ensureHostedAppSchema(dbEnv);
   db = await getHostedServerDatabase(dbEnv);
   // Restarting the disposable server closes idle connections; later assertions

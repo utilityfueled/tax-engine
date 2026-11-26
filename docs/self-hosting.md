@@ -114,9 +114,12 @@ The downloaded PDFs land in `sample-documents/downloads/` and are ignored by git
 
 ## Isolated release rehearsal
 
-With two locally built images for the same architecture, installed workspace
-dependencies, Playwright Chromium and patched PostgreSQL 16 client tools
-(`pg_dump` and `pg_restore` version 16.16 or later in the 16.x series), run:
+Build both images for the same architecture from their exact Git revisions.
+Set `org.opencontainers.image.revision` to the full source commit on each
+image. Run from the candidate checkout with its schema source matching HEAD
+and the previous commit available locally. Install the workspace dependencies,
+Playwright Chromium and patched PostgreSQL 16 client tools (`pg_dump` and
+`pg_restore` version 16.16 or later in the 16.x series), then run:
 
 ```bash
 node --import tsx scripts/rehearse-self-host-release.mjs PREVIOUS_IMAGE CANDIDATE_IMAGE
@@ -129,6 +132,10 @@ Record the running PostgreSQL server version and both client versions with the
 rehearsal results. CI installs the PostgreSQL Global Development Group client
 package and records the verified recovery utility versions with its runtime
 artifacts. [PostgreSQL Ubuntu package repository](https://www.postgresql.org/download/linux/ubuntu/).
+The schema rehearsal seeds synthetic rows using the previous Git revision,
+applies the candidate schema twice in fresh processes, then dumps and restores
+the disposable schema. The receipt binds both source revisions and checks the
+original rows, migrated column inventory and workspace revision IDs.
 Podman delegates Compose to an external provider. Select a compatible Docker
 Compose executable with `PODMAN_COMPOSE_PROVIDER=/absolute/path/to/docker-compose`
 and verify `podman compose version` before the rehearsal. The recorded ARM64 run
