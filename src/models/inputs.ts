@@ -2924,6 +2924,7 @@ export const Form8962Schema = z.object({
   marriedFilingSeparatelyExceptionConfirmed: z.boolean().optional(),
   belowPovertyException: z.enum(["none","marketplace_estimate","lawfully_present_ineligible_medicaid"]).optional(),
   marketplaceEstimatedIncomeWithinEligibilityRange: z.boolean().optional(),
+  marketplaceIncorrectInformationWithDisregard: z.boolean().optional(),
   marketplaceInformationAccurate: z.boolean().optional(),
   coverageFactsConfirmed: z.boolean().optional(),
   allocationRequired: z.boolean().optional(),

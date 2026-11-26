@@ -23,7 +23,9 @@ it("collects actual policy and coverage answers without inferred amounts", async
     await change("Marketplace worksheet tax year", "2025"); await change("Marketplace worksheet reference", "Actual statements and eligibility worksheet");
     await change("All original Marketplace policies are included", "true"); await change("Actual tax family size", "1"); await change("Poverty guideline region", "alaska");
     await change("Required-filing dependents' modified AGI", "0"); await change("You or your joint-return spouse can be claimed as a dependent", "false");
-    await change("Below-poverty exception", "marketplace_estimate"); await change("Marketplace estimated income met the eligibility range", "false"); await change("Marketplace information was accurate", "true");
+    await change("Below-poverty exception", "marketplace_estimate"); await change("Marketplace estimated income met the eligibility range", "false");
+    await change("You gave the Marketplace incorrect information knowingly or with reckless disregard for the facts", "false");
+    expect(latest?.marketplaceIncorrectInformationWithDisregard).toBe(false);
     await change("Married-filing-separately exception established", "false"); await change("Household eligibility worksheet checked", "true");
     for (const label of ["Shared policy allocation is required", "Alternative marriage calculation elected", "Self-employed health insurance coordination is required", "Lawful-presence premium allocation is required"]) await change(label, "false");
     await change("QSEHRA affects this coverage", "true"); await change("Monthly coverage worksheet checked", "true");

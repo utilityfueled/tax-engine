@@ -89,6 +89,31 @@ it("binds household sources and preserves ineligible answers without inventing e
   data.marketplaceEstimatedIncomeWithinEligibilityRange = false; data.marketplaceInformationAccurate = true;
   expect(input(data).form8962?.marketplaceEstimatedIncomeWithinEligibilityRange).toBe(false);
 });
+it("reconfirms saved inaccuracy under the Marketplace disregard rule", () => {
+  const legacy = { ...actualPremiumTaxCredit(), belowPovertyException: "marketplace_estimate" as const,
+    marketplaceEstimatedIncomeWithinEligibilityRange: true, marketplaceInformationAccurate: false };
+  const state = stateWithCoverage();
+  const saved = new Map<string, string>();
+  const storage = { getItem: (key: string) => saved.get(key) ?? null, setItem: (key: string, value: string) => saved.set(key, value) } as Storage;
+  function reopen(data: PremiumTaxCreditData) {
+    state.sectionData.credits = { ...emptyCreditsData, premiumTaxCredit: data };
+    expect(saveGuidedFlowState(storage, "synthetic-ptc-estimate", state)).toBe(true);
+    const coverage = loadGuidedFlowState(storage, "synthetic-ptc-estimate")?.sectionData.credits?.premiumTaxCredit;
+    if (!coverage) throw new Error("Expected the saved Marketplace worksheet to reopen.");
+    return coverage;
+  }
+  const savedLegacy = reopen(legacy);
+  expect(() => input(savedLegacy)).toThrow(/disregard/i);
+  for (const disregard of [false, true]) {
+    const confirmed = { ...legacy, marketplaceIncorrectInformationWithDisregard: disregard };
+    expect(input(reopen(confirmed)).form8962)
+      .toMatchObject({ marketplaceIncorrectInformationWithDisregard: disregard, marketplaceInformationAccurate: false });
+  }
+  const accurate = { ...legacy, marketplaceInformationAccurate: true };
+  expect(input(accurate).form8962).toMatchObject({ marketplaceInformationAccurate: true });
+  const contradiction = { ...accurate, marketplaceIncorrectInformationWithDisregard: true };
+  expect(() => input(contradiction)).toThrow(/conflict/i);
+});
 it("calculates the independent actual coverage credit in the guided return", () => {
   const state = stateWithCoverage();
   expect(validateSection(state, "credits").status).toBe("complete");

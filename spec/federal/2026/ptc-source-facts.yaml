@@ -1,7 +1,9 @@
 form: "Premium tax credit source facts"
 taxYear: 2026
 references:
+  - "https://www.irs.gov/pub/irs-dft/i8962--dft.pdf"
   - "https://www.irs.gov/instructions/i8962"
+  - "https://www.ecfr.gov/current/title-26/section-1.36B-2"
   - "https://www.ecfr.gov/current/title-26/section-1.36B-3"
   - "https://www.irs.gov/publications/p974"
   - "https://www.irs.gov/irb/2025-32_IRB"
@@ -15,7 +17,8 @@ lines:
       householdFactsConfirmed, canBeClaimedAsDependent,
       marriedFilingSeparatelyExceptionConfirmed, belowPovertyException (none,
       marketplace_estimate, lawfully_present_ineligible_medicaid),
-      marketplaceEstimatedIncomeWithinEligibilityRange, marketplaceInformationAccurate,
+      marketplaceEstimatedIncomeWithinEligibilityRange, marketplaceIncorrectInformationWithDisregard,
+      legacy marketplaceInformationAccurate,
       coverageFactsConfirmed, allocationRequired, alternativeMarriageCalculationElected,
       selfEmployedHealthInsuranceCoordinationRequired and qsehraAffected.
       No inferred family size, AGI-only proxy, default-zero dependent income or
@@ -24,6 +27,18 @@ lines:
       Missing facts remain absent; a known false fact remains false.
     irsRef: "Form 8962 lines 1-5, 9; Pub. 974 coverage and household income rules"
     testRef: "tests/models/ptc-source-facts.test.ts::preserves PTC household facts and unknown optional qualifications"
+  - line: "marketplace-estimate-source"
+    description: "Actual Marketplace disclosure for the below-poverty estimate exception"
+    formula: >-
+      Capture whether incorrect information was given knowingly or with reckless
+      disregard for the facts. A saved affirmative accuracy answer establishes
+      absence of such an error. A saved negative accuracy answer alone leaves
+      intent and recklessness unknown and requires direct confirmation. A positive
+      disregard answer conflicts with a saved affirmative accuracy answer. Hold
+      that conflict until corrected. Retain the independent estimate and advance
+      credit requirements.
+    irsRef: "26 CFR 1.36B-2(b)(6)(ii); draft 2026 Form 8962 instructions, line 6"
+    testRef: "tests/guided-interview/guided-premium-tax-credit.test.ts::reconfirms saved inaccuracy under the Marketplace disregard rule"
   - line: "monthly-reconciliation"
     description: "Actual monthly coverage-family reconciliation, without duplicated benchmark premiums"
     formula: >-

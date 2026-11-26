@@ -71,12 +71,19 @@ lines:
       200-250, .0844 to .0996 at 250-300, and .0996 at 300-400. No 2026 PTC
       when actual household income exceeds 400 percent. Below 100 requires an
       actual applicable exception; the lawful-presence/Medicaid exception ends
-      in 2026. The marketplace-estimate exception requires actual qualifying
-      estimate, accurate information and positive APTC. Claimed-as-dependent
+      in 2026. The marketplace-estimate exception requires a qualifying actual
+      estimate, positive APTC and confirmation that the taxpayer did not give
+      incorrect information intentionally or with reckless disregard for the facts.
+      An innocent error does not disqualify an otherwise eligible taxpayer. Claimed-as-dependent
       taxpayers are ineligible. MFS requires confirmed applicable abuse or
       abandonment exception, including its three-year limitation.
     irsRef: "Form 8962 Table 2; Rev. Proc. 2025-25; PL 119-21 section 71302; 26 CFR 1.36B-2(b)"
     testRef: "tests/engine/forms/form-8962-2026.test.ts::applies 2026 income limits and only actual eligibility exceptions"
+  - line: "marketplace-estimate-disregard"
+    description: "Below-poverty Marketplace estimate and incorrect information"
+    formula: "For both years, allow the estimate exception only with confirmed absence of intentional or reckless provision of incorrect information, a qualifying enrollment-time estimate and positive advance credit, subject to the other applicable taxpayer requirements. A confirmed innocent error preserves the exception; an intentional or reckless error denies it. Hold unknown and inconsistent source answers before relying on the exception."
+    irsRef: "26 CFR 1.36B-2(b)(6)(ii); 2025 Instructions for Form 8962 line 5; draft 2026 instructions line 6"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::distinguishes innocent Marketplace mistakes from intentional or reckless disregard"
   - line: "8a"
     description: "Annual contribution"
     formula: "Round line 3 times line 7 to nearest dollar."

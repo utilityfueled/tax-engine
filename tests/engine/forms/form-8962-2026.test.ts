@@ -114,7 +114,7 @@ describe("Form 8962 2026 source-backed reconciliation", () => {
     expect(calculateForm8962(fixture({ income: "14000", facts: { belowPovertyException: "lawfully_present_ineligible_medicaid" } })).ptcAllowed.toString()).toBe("0");
     const exception = fixture({ income: "14000", facts: { belowPovertyException: "marketplace_estimate", marketplaceEstimatedIncomeWithinEligibilityRange: true, marketplaceInformationAccurate: true } });
     expect(calculateForm8962(exception).ptcAllowed.toString()).toBe("6906");
-    expect(calculateForm8962({ ...exception, facts: { ...exception.facts, marketplaceInformationAccurate: false } }).ptcAllowed.toString()).toBe("0");
+    expect(() => calculateForm8962({ ...exception, facts: { ...exception.facts, marketplaceInformationAccurate: false } })).toThrow(/disregard/i);
     const noAdvances = fixture({ income: "14000", aptc: "0", facts: { belowPovertyException: "marketplace_estimate", marketplaceEstimatedIncomeWithinEligibilityRange: true, marketplaceInformationAccurate: true } });
     expect(calculateForm8962(noAdvances).ptcAllowed.toString()).toBe("0");
     const mfs = { ...fixture(), filingStatus: "married_filing_separately" as const };
@@ -122,6 +122,23 @@ describe("Form 8962 2026 source-backed reconciliation", () => {
     expect(calculateForm8962({ ...mfs, facts: { ...mfs.facts, marriedFilingSeparatelyExceptionConfirmed: false } }).ptcAllowed.toString()).toBe("0");
     expect(calculateForm8962({ ...mfs, facts: { ...mfs.facts, marriedFilingSeparatelyExceptionConfirmed: true } }).ptcAllowed.toString()).toBe("5134");
     expect(calculateForm8962(fixture({ facts: { canBeClaimedAsDependent: true } })).ptcAllowed.toString()).toBe("0");
+  });
+
+  it("distinguishes innocent Marketplace mistakes from intentional or reckless disregard", () => {
+    for (const [year, allowed, repayment] of [[2025, "7200", "375"], [2026, "6906", "4800"]] as const) {
+      const source = fixture({ year, income: "14000", facts: {
+        belowPovertyException: "marketplace_estimate", marketplaceEstimatedIncomeWithinEligibilityRange: true,
+      } });
+      const inaccurate = { ...source.facts, marketplaceInformationAccurate: false };
+      const innocent = { ...inaccurate, marketplaceIncorrectInformationWithDisregard: false };
+      const disqualifying = { ...inaccurate, marketplaceIncorrectInformationWithDisregard: true };
+      expect(calculateForm8962({ ...source, facts: innocent }).ptcAllowed.toString()).toBe(allowed);
+      expect(calculateForm8962({ ...source, facts: disqualifying }).ptcAllowed.toString()).toBe("0");
+      expect(calculateForm8962({ ...source, facts: disqualifying }).excessAPTCRepayment.toString()).toBe(repayment);
+      expect(() => calculateForm8962({ ...source, facts: inaccurate })).toThrow(/disregard/i);
+      const contradiction = { ...disqualifying, marketplaceInformationAccurate: true };
+      expect(() => calculateForm8962({ ...source, facts: contradiction })).toThrow(/conflict/i);
+    }
   });
 
   it("uses independently confirmed timely payments for a zero reported enrollment premium", () => {

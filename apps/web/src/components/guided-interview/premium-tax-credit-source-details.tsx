@@ -1,4 +1,5 @@
 "use client";
+import { useId } from "react";
 import type { HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 
 import { emptyMarketplaceCoverageMonth, emptyMarketplaceMonth, emptyPremiumTaxCreditFacts, isOrdinarySingleMarketplacePolicy, type MarketplacePolicyData, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
@@ -34,6 +35,8 @@ function originalSourceForPayment(data: PremiumTaxCreditData, month: string) {
 }
 
 export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, taxYear, healthInsurance, onChange }: { healthInsurance?: HealthInsuranceData; data?: PremiumTaxCreditData; personal?: PersonalInfoData; filingStatus?: FilingStatus | null; taxYear?: number | null; onChange: (data: PremiumTaxCreditData | undefined) => void }) {
+  const estimateHelpId = useId();
+  const disregardHelpId = useId();
   if (!data) return <section><h4>Marketplace coverage and premium tax credit</h4><p className="guided-hint">Use your original Forms1095-A and the actual household coverage worksheet. Advance credits must be reconciled even when no additional credit is allowed.</p><button type="button" onClick={() => onChange({ ...emptyPremiumTaxCreditFacts, policies: [], monthlyReconciliation: [] })}>Add Marketplace coverage worksheet</button></section>;
   const update = (patch: Partial<PremiumTaxCreditData>) => {
     const next = { ...data, ...patch };
@@ -65,8 +68,20 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
       <BooleanFact label="You or your joint-return spouse can be claimed as a dependent" value={data.canBeClaimedAsDependent} onChange={canBeClaimedAsDependent => update({ canBeClaimedAsDependent })} />
       {(filingStatus !== "hoh" || data.marriedFilingSeparatelyExceptionConfirmed != null) && <BooleanFact label="Married-filing-separately exception established" value={data.marriedFilingSeparatelyExceptionConfirmed} onChange={marriedFilingSeparatelyExceptionConfirmed => update({ marriedFilingSeparatelyExceptionConfirmed })} />}
       <Choice label="Below-poverty exception" value={data.belowPovertyException} choices={[["none", "No exception"], ["marketplace_estimate", "Marketplace income-estimate exception"], ["lawfully_present_ineligible_medicaid", "Lawfully present and ineligible for Medicaid (2025 rule)"]]} onChange={belowPovertyException => update({ belowPovertyException: belowPovertyException as PremiumTaxCreditData["belowPovertyException"] })} />
-      {(data.belowPovertyException === "marketplace_estimate" || data.marketplaceEstimatedIncomeWithinEligibilityRange != null) && <BooleanFact label="Marketplace estimated income met the eligibility range" value={data.marketplaceEstimatedIncomeWithinEligibilityRange} onChange={marketplaceEstimatedIncomeWithinEligibilityRange => update({ marketplaceEstimatedIncomeWithinEligibilityRange })} />}
-      {(data.belowPovertyException === "marketplace_estimate" || data.marketplaceInformationAccurate != null) && <BooleanFact label="Marketplace information was accurate" value={data.marketplaceInformationAccurate} onChange={marketplaceInformationAccurate => update({ marketplaceInformationAccurate })} />}
+      {(data.belowPovertyException === "marketplace_estimate" || data.marketplaceEstimatedIncomeWithinEligibilityRange != null) && <div>
+        <BooleanFact label="Marketplace estimated income met the eligibility range" value={data.marketplaceEstimatedIncomeWithinEligibilityRange} onChange={marketplaceEstimatedIncomeWithinEligibilityRange => update({ marketplaceEstimatedIncomeWithinEligibilityRange })} describedBy={estimateHelpId} />
+        <p id={estimateHelpId} className="guided-hint">Use the Marketplace's household income estimate at enrollment.{taxYear === 2026 && " For 2026, the estimate must be between 100% and 400% of the federal poverty line for your family size, inclusive."}</p>
+      </div>}
+      {data.belowPovertyException === "marketplace_estimate" && <div>
+        <BooleanFact
+          label="You gave the Marketplace incorrect information knowingly or with reckless disregard for the facts"
+          value={data.marketplaceIncorrectInformationWithDisregard === true && data.marketplaceInformationAccurate === true
+            ? null : data.marketplaceIncorrectInformationWithDisregard ?? (data.marketplaceInformationAccurate === true ? false : null)}
+          onChange={marketplaceIncorrectInformationWithDisregard => update({ marketplaceIncorrectInformationWithDisregard, marketplaceInformationAccurate: undefined })}
+          describedBy={disregardHelpId}
+        />
+        <p id={disregardHelpId} className="guided-hint">Consider the information you gave the Marketplace for this coverage year. An honest mistake can still qualify for the exception.</p>
+      </div>}
       <BooleanFact label="Household eligibility worksheet checked" value={data.householdFactsConfirmed} onChange={householdFactsConfirmed => update({ householdFactsConfirmed })} />
       {coverageFlags.map(([field, label]) => <BooleanFact key={field} label={label} value={data[field]} onChange={value => update({ [field]: value })} />)}
     </div>

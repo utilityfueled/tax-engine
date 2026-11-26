@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { buildHealthInsuranceInput } from "./guided-health-insurance-facts";
 import { bindGuidedMarriageSources, type MarriagePolicyData } from "./guided-marriage-policy";
 import { Form8962Schema, type TaxYearInput, type Form7206Input } from "@/models/inputs";
+import { resolveMarketplaceInformationDisregard } from "@/models/form-8962-marketplace-estimate";
 import { validateForm8962EnrollmentPremium } from "@/models/form-8962-premium-payment";
 import { marketplacePolicyIdentity } from "@/models/form-8962-shared-policy";
 import type { FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
@@ -25,7 +26,9 @@ export interface PremiumTaxCreditData {
   taxFamilySize: string; fplRegion: "" | "contiguous" | "alaska" | "hawaii"; requiredFilingDependentsModifiedAGI: string;
   householdFactsConfirmed: boolean | null; canBeClaimedAsDependent: boolean | null; marriedFilingSeparatelyExceptionConfirmed?: boolean | null;
   belowPovertyException: "" | "none" | "marketplace_estimate" | "lawfully_present_ineligible_medicaid";
-  marketplaceEstimatedIncomeWithinEligibilityRange?: boolean | null; marketplaceInformationAccurate?: boolean | null;
+  marketplaceEstimatedIncomeWithinEligibilityRange?: boolean | null;
+  marketplaceIncorrectInformationWithDisregard?: boolean | null;
+  marketplaceInformationAccurate?: boolean | null;
   coverageFactsConfirmed: boolean | null; allocationRequired: boolean | null; alternativeMarriageCalculationElected: boolean | null;
   selfEmployedHealthInsuranceCoordinationRequired: boolean | null; qsehraAffected: boolean | null; lawfulPresenceReconciliationRequired: boolean | null;
   sharedPolicyAllocations?: SharedPolicyAllocationData;
@@ -94,7 +97,10 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
   }
   if (filingStatus === "mfs") fact(data.marriedFilingSeparatelyExceptionConfirmed, "married-filing-separately exception answer");
   if (data.belowPovertyException === "marketplace_estimate") {
-    fact(data.marketplaceEstimatedIncomeWithinEligibilityRange, "Marketplace income estimate eligibility"); fact(data.marketplaceInformationAccurate, "Marketplace information accuracy");
+    fact(data.marketplaceEstimatedIncomeWithinEligibilityRange, "Marketplace income estimate eligibility");
+    if (resolveMarketplaceInformationDisregard(data) === undefined) {
+      throw new Error("Confirm whether you gave the Marketplace incorrect information knowingly or with reckless disregard for the facts.");
+    }
   }
   const qsehra = fact(data.qsehraAffected, "QSEHRA answer");
   const shared = allocationRequired || data.sharedPolicyAllocations ? resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal, form7206) : undefined;
@@ -143,7 +149,10 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     taxFamilySize: familySize, fplRegion: data.fplRegion, requiredFilingDependentsModifiedAGI: dependentMagi,
     householdFactsConfirmed: true, canBeClaimedAsDependent: dependency,
     marriedFilingSeparatelyExceptionConfirmed: data.marriedFilingSeparatelyExceptionConfirmed ?? undefined,
-    belowPovertyException: data.belowPovertyException, marketplaceEstimatedIncomeWithinEligibilityRange: data.marketplaceEstimatedIncomeWithinEligibilityRange ?? undefined, marketplaceInformationAccurate: data.marketplaceInformationAccurate ?? undefined,
+    belowPovertyException: data.belowPovertyException,
+    marketplaceEstimatedIncomeWithinEligibilityRange: data.marketplaceEstimatedIncomeWithinEligibilityRange ?? undefined,
+    marketplaceIncorrectInformationWithDisregard: data.marketplaceIncorrectInformationWithDisregard ?? undefined,
+    marketplaceInformationAccurate: data.marketplaceInformationAccurate ?? undefined,
     coverageFactsConfirmed: true, allocationRequired, sharedPolicyAllocations: shared?.packet, alternativeMarriageCalculationElected: marriageElected, lawfulPresenceReconciliationRequired: false,
     selfEmployedHealthInsuranceCoordinationRequired: fact(data.selfEmployedHealthInsuranceCoordinationRequired, "self-employed health coordination answer"), qsehraAffected: qsehra, monthlyReconciliation: reconciliation,
   });

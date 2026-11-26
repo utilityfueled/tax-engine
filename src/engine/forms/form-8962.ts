@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus } from "@/models/constants.js";
+import { resolveMarketplaceInformationDisregard } from "@/models/form-8962-marketplace-estimate.js";
 import { validateForm8962EnrollmentPremium } from "@/models/form-8962-premium-payment.js";
 import { assertMarketplaceStatementUsable, marketplacePolicyIdentity } from "@/models/form-8962-shared-policy.js";
 import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
@@ -23,6 +24,7 @@ export interface Form8962Facts {
   marriedFilingSeparatelyExceptionConfirmed?: boolean;
   belowPovertyException: "none" | "marketplace_estimate" | "lawfully_present_ineligible_medicaid";
   marketplaceEstimatedIncomeWithinEligibilityRange?: boolean;
+  marketplaceIncorrectInformationWithDisregard?: boolean;
   marketplaceInformationAccurate?: boolean;
   coverageFactsConfirmed: boolean;
   allocationRequired: boolean;
@@ -220,10 +222,15 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   }
   months.sort((left, right) => left.month - right.month);
   const totalAdvances = months.reduce((total, month) => total.plus(month.advance), new Decimal(0));
-  if (fplPercentageForTable.lt(100) && facts?.belowPovertyException === "marketplace_estimate" && (typeof facts.marketplaceEstimatedIncomeWithinEligibilityRange !== "boolean" || typeof facts.marketplaceInformationAccurate !== "boolean")) throw new Error("Form 8962 below-poverty marketplace estimate and information accuracy facts must be confirmed");
-  const belowPovertyEligible = facts?.belowPovertyException === "marketplace_estimate"
-    ? facts.marketplaceEstimatedIncomeWithinEligibilityRange === true && facts.marketplaceInformationAccurate === true && totalAdvances.gt(0)
-    : year === 2025 && facts?.belowPovertyException === "lawfully_present_ineligible_medicaid";
+  let belowPovertyEligible = year === 2025 && facts?.belowPovertyException === "lawfully_present_ineligible_medicaid";
+  if (facts?.belowPovertyException === "marketplace_estimate") {
+    const disregard = resolveMarketplaceInformationDisregard(facts);
+    if (fplPercentageForTable.lt(100)
+      && (typeof facts.marketplaceEstimatedIncomeWithinEligibilityRange !== "boolean" || disregard === undefined)) {
+      throw new Error("Confirm the below-poverty Marketplace estimate and whether incorrect information was given knowingly or with reckless disregard for the facts.");
+    }
+    belowPovertyEligible = facts.marketplaceEstimatedIncomeWithinEligibilityRange === true && disregard === false && totalAdvances.gt(0);
+  }
   const taxpayerEligible = facts?.canBeClaimedAsDependent !== true
     && (input.filingStatus !== "married_filing_separately" || facts?.marriedFilingSeparatelyExceptionConfirmed === true)
     && (fplPercentageForTable.gte(100) || belowPovertyEligible)
