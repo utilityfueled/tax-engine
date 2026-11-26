@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `8148ca4d7` reconciles the primary 2026 Ohio residency declaration with
+  confirmed domicile in the guide and supported ordinary wage and
+  unemployment drafts. `5a2ec7f7b` invalidates HSA confirmation when
+  actual year, owner, annual amounts or W-2 Code W evidence changes.
+  `e18d33724` retains known AI evaluation spend when a different attempt
+  remains unpriced. [Exact package evidence](upgrade-2026-progress.md#november-25-hsa-ohio-and-ai-accounting-follow-up).
+
 - `3aeb837f5` keeps uploads available under **Your Documents** in an
   advanced review workspace. Chromium reopened a held mixed PDF and
   imported the separately uploaded interest original without importing

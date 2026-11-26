@@ -1,5 +1,56 @@
 # 2026 upgrade implementation evidence
 
+## November 25 HSA, Ohio and AI accounting follow-up
+
+- `5a2ec7f7b` requires fresh HSA confirmation after changes to the tax
+  year or account owner. The prior-year Form 5329 and year-end account
+  value confirmation clears when a tracked blank is populated.
+  Changing an owner's W-2 Code W original clears that owner's employer
+  worksheet confirmation even when the Code W total is unchanged.
+  Exact-source checks passed 92 tests, 10,105 spec bindings, both type
+  checks, the inventory, scoped lint and all 2,073 browser audit
+  bindings. The failing DOM and reducer regressions are retained.
+  [IRS Instructions for Form 8889](https://www.irs.gov/pub/irs-pdf/i8889.pdf).
+- `8148ca4d7` checks the primary Ohio declaration against confirmed
+  domicile for full-year, part-year and nonresident 2026 guided,
+  ordinary wage and Box 1 unemployment drafts. It preserves the
+  spouse's separate status and withholds current confirmation when a
+  reopened draft's source is stale or conflicts. Exact-source checks
+  passed 264 tests, 10,106 spec bindings, both type checks, the inventory,
+  scoped lint and all 2,073 browser audit bindings. Separate engineering
+  review reproduced the unemployment and reopened-status errors before
+  they were fixed. [Ohio Revised Code § 5747.01](https://codes.ohio.gov/ohio-revised-code/section-5747.01).
+- `e18d33724` reports Decimal subtotals for AI evaluation attempts with
+  known usage, repriced at the actual attempt date and at filing-season
+  rates. A synthetic Gemini example retains the exact $0.009 and
+  $0.018 subtotals when an escalation lacks usage. Complete totals and
+  cost per accepted result remain unknown. The two regressions failed
+  before the fix and all 79 focused tests passed afterward. Live calls
+  and promotion remain disabled for this qualification work.
+
+All three pushed source projections matched all 6,703 tracked Git blobs,
+and each passed the 56 timing diagnostics tests. Vercel showed canceled
+production builds for all three revisions. The combined `8148ca4d7`
+production build passed all 26 selected managed Chromium guided
+interview, Ohio school and local recovery cases. The latest complete
+local suite remains the separately identified `3aeb837f5` run below.
+The current revision has its own queued
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45755849229),
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45755849175)
+and [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45755849248)
+runs.
+
+At the four checked Pennsylvania and Ohio 2026 document URLs, the state
+servers returned HTTP 404. The corresponding 2025 controls returned
+PDFs for the PA-40, its instructions, the Ohio IT 1040/SD 100 booklet
+and Ohio IT NRC. Ohio has separately published its 2026 rule highlights.
+The checked endpoints add no final annual mapping evidence.
+[PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
+[PA-40 instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf) ·
+[Ohio IT 1040/SD 100 instructions](https://tax.ohio.gov/individual/file-now/individual-and-school-district-income-tax-instructions) ·
+[Ohio IT NRC](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
+[Ohio 2026 highlights](https://tax.ohio.gov/individual/who-must-file/whats-new).
+
 ## November 25 federal annual source refresh
 
 The follow-up checked 26 unresolved federal blanks in the IRS current and

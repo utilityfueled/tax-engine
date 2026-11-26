@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "3aeb837f51946c31614f6a31f88dad2fdb86277a",
+    "applicationCommit": "8148ca4d7d65a0ef18599084e06400ceba7fd1f1",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov25ReviewWorkspaceFollowUpUpload",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
     "pensionOriginalReconfirmationEvidenceKey": "activeContinuation.nov25PensionOriginalReconfirmation",
     "longTermCareStatementIntakeEvidenceKey": "activeContinuation.nov25LongTermCareStatementIntake",
     "paResidencyDeclarationEvidenceKey": "activeContinuation.nov25PaResidencyDeclarations",
@@ -98,6 +98,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
+      "Verify exact 8148ca4d7 remote CI 45755849229, Web 45755849175 and Docker 45755849248. All 26 selected managed Chromium cases passed locally on that revision.",
       "Finish GitHub CI 45750813264 and Linux browser 45750813234 for application 3aeb837f5. All 11 required local checks and Docker 45750813162 passed, including 30,645 tests each for unit and coverage, 88.49% branch, and 654 Chromium passes. Earlier strict AMD64 and ARM64 runs retain their original timeout results even where recovery and archive verification passed.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
@@ -106,6 +107,61 @@
     ]
   },
   "activeContinuation": {
+    "nov25HsaOhioAiFollowUp": {
+      "scope": "Source-complete HSA reconfirmation and Ohio ordinary domicile checks, with exact partial AI attempt accounting. Preserves tax filing, pricing and promotion gates.",
+      "ai": {
+        "commit": "e18d337243de2ad4ec4aa22ecc30761acadb2e65",
+        "redAssertions": 2,
+        "focusedTestsPassed": 79,
+        "specBindingsPassed": 15,
+        "knownActualUsdExample": "0.009",
+        "knownFilingSeasonUsdExample": "0.018",
+        "completeTotalsAndCostPerAccepted": null,
+        "liveProviderCalls": 0
+      },
+      "hsa": {
+        "commit": "5a2ec7f7b9baf8d7ed67953cd38c5707bdf45538",
+        "focusedTestsPassed": 92,
+        "specBindingsPassed": 10105,
+        "focusedLogSha256": "d7e207b13e92e0450d0fee8b78779087802e434c8307077c5f7e6309e7c36a73",
+        "redBlankAnnualSha256": "7a9d788da5201011a3efd8b6633833865abf85ec71e48485559d641ccef41ebe",
+        "redSameTotalPayrollSha256": "120424d18592e04dffac87f9732a478c99975db7528480dc771a97bfaa180359"
+      },
+      "ohio": {
+        "commit": "8148ca4d7d65a0ef18599084e06400ceba7fd1f1",
+        "focusedTestsPassed": 264,
+        "specBindingsPassed": 10106,
+        "focusedLogSha256": "6258a18efa8c4e5c549f4c1123721c6e05dacc9bf721a320d4b6280455111f92",
+        "redUnemploymentAndReopenedStatusSha256": "592f927c78493483a1d3504baf5784f7dd1f1f64719d8bcccc80f87c8f1f1ad6",
+        "authority": "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+      },
+      "matchedTrackedBlobsPerPackage": 6703,
+      "browserAuditBindingsPerPackage": 2073,
+      "timingDiagnosticTestsPerPackage": 56,
+      "combinedManagedChromium": {
+        "commit": "8148ca4d7d65a0ef18599084e06400ceba7fd1f1",
+        "passed": 26,
+        "failed": 0,
+        "skipped": 0,
+        "logSha256": "f5b85ad02f41b79c741165ef7a90dc2f649c30f39f9fbba7e3f2b15550b259c5"
+      },
+      "githubRunsObserved": {
+        "ci": {"id": 45755849229, "status": "queued"},
+        "web": {"id": 45755849175, "status": "queued"},
+        "docker": {"id": 45755849248, "status": "queued"}
+      },
+      "stateAnnualSourceRefresh": {
+        "retrievedAt": "2026-11-26T04:36:01.848029Z",
+        "checkedDocuments": ["PA-40", "PA-40 instructions", "Ohio IT 1040 / SD 100 booklet", "Ohio IT NRC"],
+        "printed2025Controls": 4,
+        "checked2026Http404": 4,
+        "receiptSha256": "31d9fdf29a081263fc693873fe6e94a5a658c6d2775079ba4d115a61a7a21ade",
+        "ohioRuleHighlights": "https://tax.ohio.gov/individual/who-must-file/whats-new"
+      },
+      "inventoryChecks": "passed",
+      "vercelProductionBuilds": "canceled",
+      "previousCompleteLocalRun": "activeContinuation.nov25ReviewWorkspaceFollowUpUpload"
+    },
     "nov25FederalAnnualSourceRefresh": {
       "sourceRegister": "docs/upgrade-2026-form-source-refresh.json",
       "checkedFederalBlankEndpoints": 52,
