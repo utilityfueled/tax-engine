@@ -214,7 +214,7 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
         attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage,
           ...(reconciliation?.billedModel === undefined ? {} : { billingEvidence: {
             billedModel: reconciliation.billedModel, evidenceReference: providerEvalDigest(reconciliation.evidenceReference),
-            recordedAt: reconciliation.at,
+            recordedAt: reconciliation.at, usageSource: "reconciliation" as const,
           } }) }],
         measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: AI_TASKS[fixture.task].promptVersion,
           schemaVersion: AI_TASKS[fixture.task].schemaVersion, normalizationStatus: evaluation?.normalizationStatus ?? "failed",

@@ -644,6 +644,25 @@ describe("measured task model evaluation", () => {
       providerCostUsd: null, knownProviderCostUsd: "0", assumedProviderCostUsd: "0.0006",
       blockers: expect.arrayContaining(["attempt-billing-evidence-unverified"]) });
   });
+  it("applies reconciliation-only token usage at its receipt instant", () => {
+    const entry = run(extraction);
+    const recordedAt = "2026-10-24T12:05:00.000001Z";
+    recordInitialBillingEvidence(entry, recordedAt);
+    const attempt = entry.attempts[0];
+    if (!attempt?.billingEvidence) throw new Error("Missing synthetic receipt");
+    attempt.billingEvidence.usageSource = "reconciliation";
+    attempt.usage = { inputTokens: 1000, outputTokens: AI_TASKS[extraction.task].maxOutputTokens + 1 };
+    const groupAt = (cutoff: string) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability },
+      reviewedFixtures("2026-10-24"), cutoff).groups.find(group => group.profileId === "luna-high" && group.task === extraction.task);
+
+    const before = groupAt("2026-10-24T12:05:00Z");
+    expect(before).toMatchObject({ completedRuns: 0, acceptedRuns: 0, providerCostUsd: null,
+      knownProviderCostUsd: "0", assumedProviderCostUsd: "0", blockers: expect.arrayContaining(["spend-budget-or-unknown-usage"]) });
+    expect(before?.blockers).not.toContain("attempt-token-budget-exceeded");
+    expect(groupAt(recordedAt)).toMatchObject({ completedRuns: 0, acceptedRuns: 0,
+      providerCostUsd: "0.0041965", knownProviderCostUsd: "0.0041965", assumedProviderCostUsd: "0",
+      blockers: expect.arrayContaining(["attempt-token-budget-exceeded"]) });
+  });
   it("blocks contradictory attempt billing while separating verified and assumed cost", () => {
     const entry = run(extraction);
     const [initial] = entry.attempts;

@@ -54,7 +54,8 @@ const entrySchema = z.strictObject({
   attempts: z.array(z.strictObject({
     profileId: z.string(), startedAt: z.iso.datetime(), usage: usageSchema.nullable(),
     billingEvidence: z.strictObject({ billedModel: z.string().trim().min(1).max(128),
-      evidenceReference: z.string().regex(evidenceReferencePattern), recordedAt: z.iso.datetime({ offset: true }) }).optional(),
+      evidenceReference: z.string().regex(evidenceReferencePattern), recordedAt: z.iso.datetime({ offset: true }),
+      usageSource: z.literal("reconciliation").optional() }).optional(),
   })).max(2),
 });
 const availabilitySchema = z.strictObject({
@@ -186,7 +187,13 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     && entry.attempts.every(attempt => publicModelLifecycle(candidate(attempt.profileId).model, attempt.startedAt).status !== "shutdown");
   const attemptTimingConsistent = hasConsistentAttemptTiming(entry);
   const qualifiedModel = modelMatches && modelLifecycleValid;
-  const tokenBudgetExceeded = entry.attempts.some(({ usage }) => usage !== null
+  const attemptsAsOf = entry.attempts.map(attempt => {
+    const billingEvidence = billingEvidenceAsOf(attempt, cutoff);
+    const usageAvailable = attempt.billingEvidence?.usageSource !== "reconciliation"
+      || (billingEvidence && timestampAtOrBefore(attempt.startedAt, billingEvidence.recordedAt));
+    return { attempt, billingEvidence, usage: usageAvailable ? attempt.usage : null };
+  });
+  const tokenBudgetExceeded = attemptsAsOf.some(({ usage }) => usage !== null
     && (usage.inputTokens > policy.maxInputTokens || usage.outputTokens > policy.maxOutputTokens));
   const qualifiedOutput = provenanceMatches && qualifiedModel && !tokenBudgetExceeded;
   const versionMatches = entry.measurement?.bindingVersion === PROVIDER_EVAL_BINDING_VERSION
@@ -217,9 +224,7 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   let assumedFilingSeasonCost = new Money(0);
   let allCostsKnown = entry.attempts.length > 0;
   let billingEvidenceUnverified = false;
-  for (const attempt of entry.attempts) {
-    const { usage } = attempt;
-    const billingEvidence = billingEvidenceAsOf(attempt, cutoff);
+  for (const { attempt, usage, billingEvidence } of attemptsAsOf) {
     const profile = candidate(attempt.profileId);
     const modelBound = billingEvidence ? matchesProviderEvalModel(profile.model, billingEvidence.billedModel)
       && timestampAtOrBefore(attempt.startedAt, billingEvidence.recordedAt)

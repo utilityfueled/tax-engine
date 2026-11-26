@@ -129,7 +129,8 @@ describe("guarded repeated provider executor", () => {
     const resumed = await executeProviderEval({ ...state, transport });
     expect(resumed).toMatchObject({ stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00024" });
     expect(resumed.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: good.usage,
-      billingEvidence: { billedModel: evidence.billedModel, evidenceReference: providerEvalDigest(evidence.evidenceReference), recordedAt: evidence.at } }],
+      billingEvidence: { billedModel: evidence.billedModel, evidenceReference: providerEvalDigest(evidence.evidenceReference),
+        recordedAt: evidence.at, usageSource: "reconciliation" } }],
     measurement: { responseReference: hashedReference, reportedModel: null } });
     const [reconciled] = resumed.template.entries;
     const fixture = taxProviderModelEvalFixtures.find(item => item.id === reconciled?.fixtureId);
@@ -138,11 +139,31 @@ describe("guarded repeated provider executor", () => {
       knownActualCostUsd: "0.00006", assumedActualCostUsd: "0" });
     const groupAt = (cutoff: string) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [reconciled] },
       taxProviderModelEvalFixtures, cutoff).groups.find(group => group.profileId === reconciled.profileId && group.task === fixture.task);
-    expect(groupAt(at)).toMatchObject({ providerCostUsd: null, knownProviderCostUsd: "0", assumedProviderCostUsd: "0.00006" });
+    expect(groupAt(at)).toMatchObject({ providerCostUsd: null, knownProviderCostUsd: "0", assumedProviderCostUsd: "0" });
     expect(groupAt(evidence.at)).toMatchObject({ providerCostUsd: "0.00006", knownProviderCostUsd: "0.00006",
       assumedProviderCostUsd: "0", completedRuns: 0 });
     expect(transport.mock.calls.map(([request]) => request.attemptId)).toEqual(["luna-high:capability:0", attemptId,
       "luna-high:case-income-w2-zero-withholding:2", "luna-high:case-income-w2-zero-withholding:3"]);
+  });
+  it("keeps reconciliation-only usage unknown before its dated receipt even when the original model matches", async () => {
+    const state = setup();
+    const transport = vi.fn().mockResolvedValueOnce(good).mockResolvedValueOnce({ ...good, usage: null });
+    const first = await executeProviderEval({ ...state, transport });
+    expect(first.stoppedReason).toBe("unknown-usage");
+    const attemptId = "luna-high:case-income-w2-zero-withholding:1";
+    expect(state.records.at(-1)).toMatchObject({ type: "result", attemptId, reportedModel: "gpt-6-luna", usage: null });
+    const groupAt = (cutoff: string) => summarizeProviderModelLiveEvalTemplate(summarizeProviderEvalJournal(state.plan, state.records).template,
+      taxProviderModelEvalFixtures, cutoff).groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+    const unknown = { completedRuns: 0, acceptedRuns: 0, providerCostUsd: null, knownProviderCostUsd: "0", assumedProviderCostUsd: "0" };
+    expect(groupAt(at)).toMatchObject(unknown);
+
+    const recordedAt = "2026-10-25T12:01:00.000001Z";
+    await state.append(reconcileProviderEvalAttempt(state.plan, state.records, { attemptId,
+      evidenceReference: "synthetic-matching-original-model-receipt", billedModel: "gpt-6-luna", usage: good.usage, at: recordedAt }));
+    expect(groupAt("2026-10-25T12:01:00.000000Z")).toMatchObject(unknown);
+    expect(groupAt(recordedAt)).toMatchObject({ completedRuns: 0, acceptedRuns: 0, providerCostUsd: "0.00006",
+      knownProviderCostUsd: "0.00006", assumedProviderCostUsd: "0" });
+    expect(transport).toHaveBeenCalledTimes(2);
   });
   it("resumes after referenced usage reconciliation without repeating the uncertain case", async () => {
     const state = setup(); const seen: string[] = [];

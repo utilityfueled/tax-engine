@@ -94,6 +94,17 @@ lines:
       reuse before its timestamp. Preserve modeled historical final response
       evidence that was already present at the report instant.
     testRef: "tests/engine/provider-model-eval.test.ts::does not qualify a full cohort before its billed receipts were recorded"
+  - line: "attempt-reconciled-usage-cutoff"
+    formula: >-
+      Identify usage supplied only by journal reconciliation. Before that
+      receipt is recorded, leave the attempt's usage unknown for verified cost,
+      assumed cost, and token budgets, even if its original response already
+      reported a matching model. Apply the reconciled usage and task caps at
+      the inclusive receipt instant. Existing entries without this provenance
+      continue treating their attempt usage as original telemetry.
+    testRef: "tests/engine/provider-model-eval.test.ts::applies reconciliation-only token usage at its receipt instant"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::keeps reconciliation-only usage unknown before its dated receipt even when the original model matches"
   - line: "report-cutoff"
     description: "Score dated evidence as of the inclusive report instant"
     formula: >-
