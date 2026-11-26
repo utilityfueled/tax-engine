@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 // Spec: spec/federal/guided-card-tip-1099-k.yaml.
+import assert from "node:assert/strict";
 import { expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -72,9 +73,11 @@ it("requires original payment and tip facts on the normal guided route", () => {
   }
   const duplicate = updateSectionData(state, "income-self-employment", { ...business, necEntries: [completeNecSource] });
   expect(buildTaxInputFromGuidedData(duplicate)).toBeNull();
-  const over = { ...schedule1A.businessTips[0]!, reportedTipSources: [{ sourceId: "form1099K:0", qualifiedTips: "1000.56" }] };
-  const otherOccurrence = { ...schedule1A.businessTips[0]!, occupationCode: "103" };
-  const noLedger = { ...schedule1A.businessTips[0]!, form1099KProof: { ...proof, receiptLedgerReference: "" } };
+  const [businessTip] = schedule1A.businessTips;
+  assert(businessTip);
+  const over = { ...businessTip, reportedTipSources: [{ sourceId: "form1099K:0", qualifiedTips: "1000.56" }] };
+  const otherOccurrence = { ...businessTip, occupationCode: "103" };
+  const noLedger = { ...businessTip, form1099KProof: { ...proof, receiptLedgerReference: "" } };
   for (const row of [over, otherOccurrence, noLedger]) {
     const edited = structuredClone(state);
     edited.sectionData["additional-deductions"] = { schedule1A: { ...schedule1A, businessTips: [row] } };
@@ -90,13 +93,15 @@ it("requires original payment and tip facts on the normal guided route", () => {
 
 it("requires fresh recipient proof after the actual owner or filing context changes", () => {
   const { state, schedule1A, business } = cardTipInterview();
-  const person = state.sectionData["personal-info"]!;
+  const person = state.sectionData["personal-info"];
+  assert(person);
   expect(buildTaxInputFromGuidedData(state)?.form1099K).toHaveLength(1);
   const changed = updateSectionData(state, "personal-info", { ...person, ssn: "123-45-6789" });
   expect(changed.sectionData["income-self-employment"]?.cardTipSource).toMatchObject({
     statementReference: statement.statementReference, sourceFactsConfirmed: null, confirmedFilingStatus: null,
   });
-  const actualDeductions = changed.sectionData["additional-deductions"]!.schedule1A!;
+  const actualDeductions = changed.sectionData["additional-deductions"]?.schedule1A;
+  assert(actualDeductions);
   expect(actualDeductions.businessTips[0]?.form1099KProof).toEqual({
     receiptLedgerReference: proof.receiptLedgerReference, solePaymentCohortConfirmed: null,
     scheduleCBusinessReceiptsConfirmed: null, qualifiedTipsReconciledConfirmed: null,
