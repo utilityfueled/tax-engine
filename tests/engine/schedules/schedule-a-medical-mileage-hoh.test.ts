@@ -24,6 +24,17 @@ describe('finite HOH own-care medical mileage', () => {
             expect(() => run(changed)).toThrow(/household|upkeep/i);
         }
     });
+    it('compares one cent below, at and above half of long original household costs', () => {
+        const raw = medicalMileageHohFixture();
+        const proof = raw.scheduleA.medicalMileage.headOfHouseholdSources;
+        proof.totalEligibleHomeCosts = '100000000000000000006.02';
+        proof.paidByPrimary = '50000000000000000003.00';
+        expect(() => run(raw)).toThrow(/home upkeep/i);
+        proof.paidByPrimary = '50000000000000000003.01';
+        expect(() => run(raw)).toThrow(/home upkeep/i);
+        proof.paidByPrimary = '50000000000000000003.02';
+        expect(run(raw).medicalDeduction.toFixed()).toBe('6.61375');
+    });
     it('rejects incomplete contradictory and mismatched HOH originals without inferring zero', () => {
         const changes: Array<(raw: ReturnType<typeof medicalMileageHohFixture>) => void> = [
             raw => { Reflect.deleteProperty(raw.scheduleA.medicalMileage, 'headOfHouseholdSources'); },

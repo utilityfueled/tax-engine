@@ -41,9 +41,13 @@ lines:
       actual home nights greater than 182 and canonical residence months greater than six;
       no other qualifying claimant or special qualification rule. The qualifying-child original confirmation means unmarried all year, no joint return filed or joint-return exception needed, U.S. citizen/resident/national, and no more than half of the child’s own support provided by the child. Require actual complete
       eligible home-upkeep costs and actual primary-paid amount from primary own funds, with explicit confirmation no public-benefit, child-benefit, shared-fund or third-party funding allocation is needed; both known dollars and
-      cents. Admit only primary-paid times two strictly greater than total, not more than
-      total. Do not infer eligibility from a dependent credit checkbox or from medical care.
+      cents. Compute primary-paid times two at precision sufficient for the complete
+      original amount and a carry digit. Admit only an exact amount strictly greater
+      than half and no more than total. Do not infer eligibility from a dependent
+      credit checkbox or from medical care.
     testRef: "tests/engine/schedules/schedule-a-medical-mileage-hoh.test.ts::admits matching actual HOH own-care sources with exact upkeep and mileage arithmetic"
+    testRefs:
+      - "tests/engine/schedules/schedule-a-medical-mileage-hoh.test.ts::compares one cent below, at and above half of long original household costs"
   - line: "1-HOH-rejection"
     description: "Preserve unknowns, source identity and existing status boundaries"
     formula: >
