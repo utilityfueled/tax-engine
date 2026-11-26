@@ -9,23 +9,37 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
-- `9ac66331c` allocates one dated ordinary cash-dividend original
-  for a 2026 Pennsylvania part-year filer and preserves the worldwide
-  Schedule SP amount. The exact and independent tests passed. This is
-  a private draft calculation.
-  [PA dividend evidence](upgrade-2026-progress.md#november-26-pennsylvania-part-year-ordinary-cash-dividends).
+- Private 2026 cash-dividend drafts cover full-year residents, part-year
+  residents and nonresidents in Pennsylvania and Ohio within the
+  original-bound ordinary-income methods. The calculations reconcile
+  the actual account, payment dates and domicile. Pennsylvania also
+  preserves worldwide Schedule SP income. Tax review and annual filing
+  qualification remain open.
+  [Pennsylvania evidence](upgrade-2026-progress.md#november-26-annual-pennsylvania-cash-dividend-drafts) ·
+  [Ohio evidence](upgrade-2026-progress.md#november-26-ohio-ordinary-cash-dividend-draft).
 
-- Exact `9ac66331c` passed 30,971 tests in both local runs, 88.58%
-  branch coverage, both builds, type checks, specs, lint, inventory
-  and 654 managed Chromium cases. The earlier `a690d880a` native ARM64
-  image passed archive and Compose recovery, with 12 failures in
-  strict Chromium. The successor native result remains open.
-  [Combined and ARM64 checks](upgrade-2026-progress.md#november-26-current-combined-checks-and-native-arm64).
+- Exact `9f5ef34ab` passed all 11 local commands. The unit and
+  coverage runs each passed 31,028 tests with 81 existing environment
+  skips. Branch coverage reached 88.59%. Managed Chromium passed 654
+  cases with five existing skips and zero failures. The earlier
+  `b28141535` native ARM64 run passed archive and Compose recovery
+  and recorded 11 timeout-related strict browser failures. Current
+  exact Linux results remain open.
+  [Local checks](upgrade-2026-progress.md#november-26-annual-pennsylvania-cash-dividend-drafts) ·
+  [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45905693607) ·
+  [ARM64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45906276956).
+
+- The self-host rehearsal now seeds synthetic PostgreSQL rows using the
+  previous release's schema. Local PostgreSQL 16 preserved the rows
+  through migration, idempotent reapplication and dump and restore.
+  [Schema migration evidence](upgrade-2026-progress.md#november-26-pinned-self-host-schema-migration).
 
 - `956d61ddf` keeps evaluation spending reserved when a receipt
-  predates dispatch. Independent tests used simulated calls. Live
-  comparisons and human review remain open.
-  [AI accounting evidence](upgrade-2026-progress.md#november-26-offline-ai-usage-receipt-chronology).
+  predates dispatch. `307979af1` sends blank OpenAI service tiers to
+  usage reconciliation. Form 5695 prevents conflicting worksheet
+  options from replacing a verified 2025 carryforward. Live AI
+  comparisons and qualified reviews remain open.
+  [AI and carryforward evidence](upgrade-2026-progress.md#november-26-energy-carryforward-and-ai-tier-reconciliation).
 
 - `62867fad8` calculates the 2026 personal EV charger credit for one
   original-use port at the owner’s main home. `5a22eaf1a` collects its

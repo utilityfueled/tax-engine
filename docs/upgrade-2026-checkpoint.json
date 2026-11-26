@@ -196,6 +196,12 @@
       "ownedCleanupPassed": true,
       "exactContainerRunQualified": false,
       "containerCiRun": "https://github.com/utilityfueled/tax-engine/actions/runs/45903718069",
+      "currentAmd64Run": {
+        "source": "9f5ef34abd5589e35e83bbfbc3f18bb6eab248e9",
+        "run": "https://github.com/utilityfueled/tax-engine/actions/runs/45905693607",
+        "queued": true,
+        "qualified": false
+      },
       "priorArm64StrictBrowser": {
         "source": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
         "run": "https://github.com/utilityfueled/tax-engine/actions/runs/45892163067",
