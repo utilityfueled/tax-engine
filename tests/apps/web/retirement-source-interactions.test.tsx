@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, it, vi } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
 import { SectionReview } from "@/components/guided-interview/section-review";
-import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
+import { buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type FilingStatus, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { iraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
@@ -32,6 +32,77 @@ const confirm = "Have you checked all retirement source and taxability facts aft
 const publicSafetyOfficerElection = "Are you electing the retired public safety officer insurance premium exclusion for this pension?";
 
 afterEach(() => vi.useRealTimers());
+
+const sourceCheckboxes = [
+  ["IRA / SEP / SIMPLE checkbox (Box 7)", "isIraSepSimple"],
+  ["Is taxable amount not determined checked in Box 2b?", "taxableAmountNotDetermined"],
+  ["Have you established the actual taxable amount from the source and applicable basis records?", "taxableAmountConfirmed"],
+  ["Is this an eligible governmental section 457(b) distribution?", "eligibleGovernmental457bPlan"],
+  ["Is this a U.S. military pension or survivor benefit?", "militaryPensionOrSurvivorBenefit"],
+  ["Is this a qualified joint-and-survivor annuity benefit?", "qualifiedJointSurvivorAnnuity"],
+  ["Are basis, Roth or conversion, QCD, contribution-return, disaster, penalty-exception or other additional retirement worksheets needed?", "additionalWorksheetRequired"],
+  [confirm, "sourceFactsConfirmed"],
+] as const;
+
+it.each(sourceCheckboxes)("holds a saved retirement form started with No for %s", async (label, field) => {
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  const key = `retirement-negative-source-${field}`;
+  const reopen = (entries: RetirementEntryData[]) => {
+    const edited = updateSectionData(draft, "income-retirement", { entries });
+    expect(saveGuidedFlowState(window.sessionStorage, key, edited)).toBe(true);
+    const reopened = loadGuidedFlowState(window.sessionStorage, key);
+    if (!reopened) throw new Error("The retirement draft did not reopen");
+    return reopened;
+  };
+  try {
+    await render([{ ...emptyRetirementEntry }], async ({ latest, change }) => {
+      expect(buildTaxInputFromGuidedData(reopen(latest()))?.form1099R).toEqual([]);
+      await change(label, "false");
+      const reopened = reopen(latest());
+      const entries = reopened.sectionData["income-retirement"]?.entries;
+      expect(entries?.[0]?.[field]).toBe(false);
+      if (field === "isIraSepSimple") expect(entries?.[0]?.requiresIraConfirmation).toBe(false);
+      if (field !== "sourceFactsConfirmed") expect(entries?.[0]?.sourceFactsConfirmed).toBeNull();
+      expect.soft(validateSection(reopened, "income-retirement").status).toBe("partial");
+      expect.soft(() => buildRetirementInputs(entries, "single", 2025)).toThrow(/actual retirement payer/i);
+      expect.soft(buildTaxInputFromGuidedData(reopened)).toBeNull();
+
+      await change(label, "");
+      expect(buildTaxInputFromGuidedData(reopen(latest()))?.form1099R).toEqual([]);
+    });
+  } finally {
+    window.sessionStorage.removeItem(getGuidedFlowStorageKey(key));
+  }
+});
+
+it("keeps the legacy prefilled IRA checkbox unanswered and an entered zero incomplete", async () => {
+  const draft = startCompleteInterview({ filingStatus: "single", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  const key = "retirement-negative-legacy";
+  const legacy = updateSectionData(draft, "income-retirement", {
+    entries: [{ ...emptyRetirementEntry, isIraSepSimple: false }],
+  });
+  try {
+    expect(saveGuidedFlowState(window.sessionStorage, key, { ...legacy, factsVersion: undefined })).toBe(true);
+    const reopened = loadGuidedFlowState(window.sessionStorage, key);
+    const entries = reopened?.sectionData["income-retirement"]?.entries;
+    if (!reopened || !entries) throw new Error("The legacy retirement draft did not reopen");
+    expect(entries[0]?.requiresIraConfirmation).toBe(true);
+    expect(buildTaxInputFromGuidedData(reopened)?.form1099R).toEqual([]);
+
+    await render(entries, async ({ latest, change }) => {
+      await change("Taxable amount (Box 2a)", "0");
+      const edited = updateSectionData(reopened, "income-retirement", { entries: latest() });
+      expect(saveGuidedFlowState(window.sessionStorage, key, edited)).toBe(true);
+      const reopenedWithZero = loadGuidedFlowState(window.sessionStorage, key);
+      if (!reopenedWithZero) throw new Error("The retirement draft with an entered zero did not reopen");
+      expect(reopenedWithZero.sectionData["income-retirement"]?.entries[0]?.taxableAmount).toBe("0");
+      expect(validateSection(reopenedWithZero, "income-retirement").status).toBe("partial");
+      expect(buildTaxInputFromGuidedData(reopenedWithZero)).toBeNull();
+    });
+  } finally {
+    window.sessionStorage.removeItem(getGuidedFlowStorageKey(key));
+  }
+});
 
 // Spec: spec/federal/form-1099-r-disability-guided-2026.yaml.
 it("collects and reopens a 2026 Code 3 disability pension worksheet", async () => {

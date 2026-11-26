@@ -183,7 +183,19 @@ export function isGuidedQcdStatement(entry: RetirementEntryData): boolean {
 }
 
 export function isStartedRetirement(entry: RetirementEntryData): boolean {
-  return entry.qcdSource !== undefined || entry.simplifiedMethod !== undefined || entry.code1IraEducationSource !== undefined || entry.code3DisabilitySource !== undefined
+  // Older drafts prefilled an unchecked IRA box and need the taxpayer to answer it again.
+  const answeredNoToIra = entry.isIraSepSimple === false && entry.requiresIraConfirmation === false;
+  const answeredNoToAnotherSourceFact = [
+    entry.taxableAmountNotDetermined,
+    entry.taxableAmountConfirmed,
+    entry.eligibleGovernmental457bPlan,
+    entry.militaryPensionOrSurvivorBenefit,
+    entry.qualifiedJointSurvivorAnnuity,
+    entry.additionalWorksheetRequired,
+    entry.sourceFactsConfirmed,
+  ].includes(false);
+  return answeredNoToIra || answeredNoToAnotherSourceFact
+    || entry.qcdSource !== undefined || entry.simplifiedMethod !== undefined || entry.code1IraEducationSource !== undefined || entry.code3DisabilitySource !== undefined
     || Object.entries(entry).some(([key, value]) => !['requiresCodeConfirmation', 'requiresIraConfirmation'].includes(key) && (typeof value === 'string' ? value.trim() !== '' : value === true));
 }
 function amount(value: string | undefined): string | undefined {
