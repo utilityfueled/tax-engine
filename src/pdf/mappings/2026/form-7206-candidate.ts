@@ -63,7 +63,7 @@ interface OriginalBusinessProfit {
 interface OrdinaryForm7206ReviewSources {
   confirmed: boolean;
   scheduleC: OriginalBusinessProfit;
-  scheduleF: OriginalBusinessProfit;
+  scheduleF?: OriginalBusinessProfit;
 }
 
 const ordinaryLines = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14] as const;
@@ -71,6 +71,10 @@ const documentedProfit = /^\d{1,12}(?:\.0{1,2})?$/;
 const nativeFontSize = 9;
 // A product of the engine's 20-digit percentage and the 13-digit combined profit fits exactly.
 const ExactPercentage = Decimal.clone({ precision: 40 });
+
+function matchesDocumentedProfit(source: OriginalBusinessProfit, calculated: Decimal): boolean {
+  return documentedProfit.test(source.netProfit) && calculated.gt(0) && calculated.eq(source.netProfit);
+}
 
 /** Project the confirmed Schedule C medical plan on its separate internal review copy. */
 export async function fillForm7206OrdinaryReviewCandidate(
@@ -80,17 +84,22 @@ export async function fillForm7206OrdinaryReviewCandidate(
 ) {
   const { taxYear, sha256, fields } = FORM_7206_2026_CANDIDATE;
   const { form7206: facts, scheduleC, scheduleF, taxpayer } = input;
-  if (taxpayer.taxYear !== taxYear || sources.scheduleC.taxYear !== taxYear || sources.scheduleF.taxYear !== taxYear) {
+  const { scheduleC: scheduleCSource, scheduleF: scheduleFSource } = sources;
+  if (Boolean(scheduleF) !== Boolean(scheduleFSource)) {
+    throw new Error("Form 7206 review requires both the Schedule F return input and original source when either is present.");
+  }
+  if (taxpayer.taxYear !== taxYear || scheduleCSource.taxYear !== taxYear
+    || (scheduleFSource && scheduleFSource.taxYear !== taxYear)) {
     throw new Error("Form 7206 review requires 2026 calculation and original business records.");
   }
-  if (sources.confirmed !== true || [sources.scheduleC, sources.scheduleF].some(source => !source.reference.trim())) {
-    throw new Error("Form 7206 review requires confirmed original Schedule C and F business references.");
+  if (sources.confirmed !== true || !scheduleCSource.reference.trim() || (scheduleFSource && !scheduleFSource.reference.trim())) {
+    throw new Error("Form 7206 review requires confirmed original business references for each schedule.");
   }
   const owner = scheduleC?.accountHolder;
   const joint = taxpayer.filingStatus === "married_filing_jointly" && Boolean(taxpayer.spouse);
-  if (!owner || scheduleF?.accountHolder !== owner || sources.scheduleC.accountHolder !== owner
-    || sources.scheduleF.accountHolder !== owner || (owner === "spouse" && !joint)) {
-    throw new Error("Form 7206 review requires one verified owner for the Schedule C and F businesses.");
+  if (!owner || scheduleCSource.accountHolder !== owner || (owner === "spouse" && !joint)
+    || (scheduleF && scheduleF.accountHolder !== owner) || (scheduleFSource && scheduleFSource.accountHolder !== owner)) {
+    throw new Error("Form 7206 review requires one verified owner across the business sources.");
   }
   if (input.w2s.some(w2 => w2.taxYear !== taxYear || !w2.accountHolder || (w2.accountHolder === "spouse" && !joint))) {
     throw new Error("Form 7206 review requires verified 2026 W-2 owners and years.");
@@ -102,7 +111,7 @@ export async function fillForm7206OrdinaryReviewCandidate(
     || plan.marketplaceCoverage !== false || plan.premiumTaxCreditInvolved !== false) {
     throw new Error("Form 7206 review requires one confirmed 2026 non-Marketplace Schedule C medical plan for its owner.");
   }
-  if (scheduleF.accountingMethod !== "cash" || scheduleC.professionalWagering || input.form2555
+  if ((scheduleF && scheduleF.accountingMethod !== "cash") || scheduleC.professionalWagering || input.form2555
     || input.form4137 || input.form4137ByOwner || input.form8919 || input.rrtaPayrollSources
     || input.scheduleK1.length || input.cryptoIncome || input.dependentCareBenefits
     || facts.incomeDeductions || !d(input.adjustments?.seRetirementContributions).isZero()) {
@@ -112,14 +121,12 @@ export async function fillForm7206OrdinaryReviewCandidate(
     throw new Error("Unreviewed Form 7206 template revision.");
   }
 
-  const scheduleCResult = calculateScheduleC(input, scheduleC);
-  const scheduleFResult = calculateScheduleF(scheduleF);
-  const scheduledProfits = [scheduleCResult.netProfit, scheduleFResult.netFarmProfit];
-  if ([sources.scheduleC, sources.scheduleF].some(({ netProfit }, index) =>
-    !documentedProfit.test(netProfit) || !scheduledProfits[index].gt(0) || !scheduledProfits[index].eq(netProfit))) {
-    throw new Error("Form 7206 original positive whole-dollar business profits must match actual Schedule C and F calculations.");
+  const scheduleCProfit = calculateScheduleC(input, scheduleC).netProfit;
+  const scheduleFProfit = scheduleF ? calculateScheduleF(scheduleF).netFarmProfit : d(0);
+  if (!matchesDocumentedProfit(scheduleCSource, scheduleCProfit)
+    || (scheduleFSource && !matchesDocumentedProfit(scheduleFSource, scheduleFProfit))) {
+    throw new Error("Form 7206 original positive whole-dollar business profits must match actual schedule calculations.");
   }
-  const [scheduleCProfit, scheduleFProfit] = scheduledProfits;
   const se = calculateScheduleSE(input, FEDERAL_2026_CONSTANTS, scheduleCProfit, scheduleFProfit);
   if (se.excludedCashFarmCrp?.gt(0)) throw new Error("Form 7206 with exempt farm payments requires separate review.");
   const { form7206 } = calculateForm7206Return({

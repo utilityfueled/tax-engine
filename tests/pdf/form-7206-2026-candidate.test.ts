@@ -228,6 +228,41 @@ describe("Final 2026 Form 7206 physical candidate", () => {
     expect(schedule1Line17.toFixed()).toBe("900");
   });
 
+  it("reopens the sole Schedule C source projection with a 100 percent allocation", async () => {
+    const { fillForm7206OrdinaryReviewCandidate, FORM_7206_2026_CANDIDATE } =
+      await import("@/pdf/mappings/2026/form-7206-candidate.js");
+    const { input, sources } = ordinaryBusinessFixture();
+    const { document, schedule1Line17 } = await fillForm7206OrdinaryReviewCandidate(
+      { ...input, scheduleF: undefined },
+      { confirmed: true, scheduleC: sources.scheduleC },
+      await readFile(blank),
+    );
+    const saved = await PDFDocument.load(await document.save());
+    const form = saved.getForm();
+    const rendered = Object.fromEntries(Object.entries(FORM_7206_2026_CANDIDATE.fields).map(([key, field]) =>
+      [key, form.getTextField(field).getText()]));
+    // $3,000 of profit and the full $212 Schedule SE deduction leave $2,788.
+    // The $900 eligible premium limits the deduction; the subsidized month stays excluded.
+    expect(rendered).toEqual({
+      name: undefined, taxpayerId: undefined, line1: "900", line2: "0", line3: "900",
+      line4: "3000", line5: "3000", line6: "100%", line7: "212", line8: "2788", line9: "0",
+      line10: "2788", line11: undefined, line12: "0", line13: "2788", line14: "900",
+    });
+    expect(saved.getSubject()).toBe(REVIEW_PDF_NOTICE);
+    expect(schedule1Line17.toFixed()).toBe("900");
+  });
+
+  it("holds Schedule F when its input or original is missing", async () => {
+    const { fillForm7206OrdinaryReviewCandidate } = await import("@/pdf/mappings/2026/form-7206-candidate.js");
+    const { input, sources } = ordinaryBusinessFixture();
+    const bytes = await readFile(blank);
+    await expect(fillForm7206OrdinaryReviewCandidate(input, {
+      confirmed: true, scheduleC: sources.scheduleC,
+    }, bytes)).rejects.toThrow(/Schedule F.*input.*source/);
+    await expect(fillForm7206OrdinaryReviewCandidate({ ...input, scheduleF: undefined }, sources, bytes))
+      .rejects.toThrow(/Schedule F.*input.*source/);
+  });
+
   it("holds mismatched ordinary 7206 originals and incomplete monthly facts", async () => {
     const { fillForm7206OrdinaryReviewCandidate } = await import("@/pdf/mappings/2026/form-7206-candidate.js");
     const { input, sources } = ordinaryBusinessFixture();

@@ -61,14 +61,29 @@ lines:
       Save and reopen the pinned form with a visible review notice. This path
       holds other earnings and adjustments requiring separate allocations.
     testRef: "tests/pdf/form-7206-2026-candidate.test.ts::reopens the ordinary Schedule C and F source projection after excluding the subsidized month"
+  - line: "ordinary-c-source-projection"
+    description: "Render one confirmed medical plan under a sole Schedule C business"
+    formula: >-
+      Require an actual positive 2026 Schedule C profit and reconcile it to
+      the confirmed line 31 source. When both the Schedule F input and its
+      supporting source are absent, use the Schedule C profit on lines 4
+      and 5 and show 100 percent on line 6. Use the full applicable canonical
+      Schedule SE deduction on line 7. Apply the same original-payment,
+      monthly eligibility, whole-dollar, and PDF validation as for the
+      Schedule C and F case. Line 14 reconciles to Schedule 1 line 17.
+    irsRef: "https://www.irs.gov/pub/irs-prior/f7206--2026.pdf"
+    testRef: "tests/pdf/form-7206-2026-candidate.test.ts::reopens the sole Schedule C source projection with a 100 percent allocation"
   - line: "ordinary-c-f-source-controls"
     description: "Hold mismatched originals and unconfirmed coverage before projection"
     formula: >-
       Hold incorrect years, unsupported owners or plans, source profit amounts
       that differ from the canonical returns, unsupported income or adjustments,
       and a missing or unconfirmed original monthly employer-plan eligibility fact.
-      Pin the original PDF hash before rendering.
+      If either a Schedule F return input or Schedule F supporting source is
+      present, require both. Pin the original PDF hash before rendering.
     testRef: "tests/pdf/form-7206-2026-candidate.test.ts::holds mismatched ordinary 7206 originals and incomplete monthly facts"
+    testRefs:
+      - "tests/pdf/form-7206-2026-candidate.test.ts::holds Schedule F when its input or original is missing"
   - line: "ordinary-c-f-physical-precision"
     description: "Preserve the exact percentage and whole-dollar calculation on the printed lines"
     formula: >-
