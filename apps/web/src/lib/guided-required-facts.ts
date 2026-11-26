@@ -258,7 +258,7 @@ export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: nu
   });
   if (taxYear === 2026) {
     for (const index of repeatedFederalAppliedCreditIndices(credits)) {
-      errors[`credit-${index}-amount`] = "This amount matches the same prior-year federal applied credit in another row. Reconcile the entries against the actual prior return.";
+      errors[`credit-${index}-amount`] = `Applied refund #${index + 1} matches the amount in another row for the same prior-year federal return. Check the matching rows against that return.`;
     }
   }
   if (hasEnteredAmount(data.otherPayments)) {

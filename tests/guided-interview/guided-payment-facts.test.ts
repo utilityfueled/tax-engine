@@ -1,7 +1,7 @@
 // Spec: spec/federal/guided-input.yaml, payment-categories, 2026-applied-refund-distinctness, federal-payment-application
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyPaymentData, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type PaymentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyPaymentData, getGuidedFlowStorageKey, jumpToSection, loadGuidedFlowState, saveGuidedFlowState, shouldPromptBeforeAdvance, type PaymentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { startCompleteInterview } from "./complete-facts";
 
 function stateWith(data: PaymentData) {
@@ -23,8 +23,9 @@ describe("classified guided payments", () => {
   it("holds a repeated positive 2026 applied refund after reopening", () => {
     const actual = { sourceTaxYear: "2025", amount: "1000.01", rowId: "local-credit-1" };
     const repeated = { ...actual, amount: "1,000.010", rowId: "local-credit-2" };
+    const distinct = { ...actual, amount: "1000.02", rowId: "local-credit-3" };
     const zero = { sourceTaxYear: "2025", amount: "0.00" };
-    const payments = { ...emptyPaymentData, priorYearAppliedCredits: [actual, repeated, zero, zero] };
+    const payments = { ...emptyPaymentData, priorYearAppliedCredits: [actual, distinct, repeated, zero, zero] };
     const values = new Map<string, string>();
     const storage = {
       getItem: (key: string) => values.get(key) ?? null,
@@ -34,12 +35,12 @@ describe("classified guided payments", () => {
     expect(saveGuidedFlowState(storage, "applied-credit", draft)).toBe(true);
     const reopened = loadGuidedFlowState(storage, "applied-credit");
     if (!reopened) throw new Error("Expected the applied-credit draft to reopen");
-    expect(reopened.sectionData.payments?.priorYearAppliedCredits).toEqual([actual, repeated, zero, zero]);
-    const validation = validateSection(reopened, "payments");
-    expect(validation.status).toBe("partial");
-    expect(validation.fieldErrors).toEqual({
-      "credit-0-amount": expect.stringMatching(/same prior-year federal applied credit/i),
-      "credit-1-amount": expect.stringMatching(/same prior-year federal applied credit/i),
+    expect(reopened.sectionData.payments?.priorYearAppliedCredits).toEqual([actual, distinct, repeated, zero, zero]);
+    const prompt = shouldPromptBeforeAdvance(jumpToSection(reopened, "payments"));
+    expect(prompt).toMatchObject({ status: "partial", allowSkip: false });
+    expect(prompt?.fieldErrors).toEqual({
+      "credit-0-amount": "Applied refund #1 matches the amount in another row for the same prior-year federal return. Check the matching rows against that return.",
+      "credit-2-amount": "Applied refund #3 matches the amount in another row for the same prior-year federal return. Check the matching rows against that return.",
     });
     expect(buildTaxInputFromGuidedData(reopened)).toBeNull();
 
@@ -49,9 +50,9 @@ describe("classified guided payments", () => {
     expect(validateSection(wrongYear, "payments").fieldErrors).toEqual({ "credit-1-year": expect.any(String) });
     expect(buildTaxInputFromGuidedData(wrongYear)).toBeNull();
 
-    const distinct = { ...actual, amount: "1000.02" };
     const reconciled = updateSectionData(reopened, "payments", { ...payments, priorYearAppliedCredits: [actual, distinct, zero, zero] });
     expect(validateSection(reconciled, "payments").status).toBe("complete");
+    expect(shouldPromptBeforeAdvance(jumpToSection(reconciled, "payments"))).toBeNull();
     expect(buildTaxInputFromGuidedData(reconciled)?.adjustments?.priorYearAppliedCredits).toEqual([
       { sourceTaxYear: 2025, amount: "1000.01", type: "federal" },
       { sourceTaxYear: 2025, amount: "1000.02", type: "federal" },

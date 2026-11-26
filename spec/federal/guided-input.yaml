@@ -329,9 +329,12 @@ lines:
       tax year and the same positive exact amount, mark each matching entry
       for reconciliation to the actual preceding return credit. The existing
       row format has no distinct original identity. Compare decimal amounts
-      across display formats. Preserve the entered text on reopen and hold
-      transfer until the user reconciles the entries. A single legacy row,
-      explicit zero, and different amounts retain existing admission.
+      across display formats. Each matching entry's validation message names
+      its displayed one-based Applied refund row number so the Continue prompt
+      identifies the entries to reconcile, even when they are nonadjacent.
+      Preserve the entered text on reopen and hold transfer until the user
+      reconciles the entries. A single legacy row, explicit zero, and different
+      amounts retain existing admission.
     irsRef: "2025 Form 1040 line 36 (https://www.irs.gov/pub/irs-pdf/f1040.pdf); 2026 Publication 505, Credit an Overpayment (https://www.irs.gov/publications/p505)"
     testRef: "tests/guided-interview/guided-payment-facts.test.ts::holds a repeated positive 2026 applied refund after reopening"
   - line: "federal-payment-application"
