@@ -95,7 +95,7 @@ function tangiblePropertyUseError(entry: DonationEntryData): string {
     : "This capital property method requires an actual 50%-limit organization. Confirm the recipient's category from your records.";
 }
 
-export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown): Record<string, string> {
+export function deductionFactErrors(data: DeductionData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, spouse?: unknown, paidThroughDate?: string): Record<string, string> {
   if (!data) return {};
   const errors: Record<string, string> = {};
   if (hasEnteredAmount(data.nonW2IncomeTaxesDeductedElsewhere)) {
@@ -130,7 +130,11 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     if (!["cash", "appreciated_stock", "property", "other"].includes(entry.type)) errors[`donation-${index}-type`] = "Choose the actual donation type.";
     const error = amountError(entry.amount, "donation amount");
     if (error) errors[`donation-${index}-amount`] = error;
-    if (!isActualDate(entry.date) || (taxYear != null && !entry.date.startsWith(`${taxYear}-`))) errors[`donation-${index}-date`] = "Enter the actual donation date in the selected tax year.";
+    if (!isActualDate(entry.date) || (taxYear != null && !entry.date.startsWith(`${taxYear}-`))) {
+      errors[`donation-${index}-date`] = "Enter the actual donation date in the selected tax year.";
+    } else if (taxYear === 2026 && paidThroughDate && entry.date > paidThroughDate && !error && parseGuidedCurrency(entry.amount).gt(0)) {
+      errors[`donation-${index}-date`] = "Enter the date you already paid the donation. A future gift cannot be included.";
+    }
     if (typeof entry.qualifiedOrganization !== "boolean") errors[`donation-${index}-qualification`] = "Confirm the recipient's actual charitable qualification.";
     if (entry.qualifiedOrganization === false) return;
     if (entry.type === "cash" && entry.qualifiedOrganization === true && !error) {

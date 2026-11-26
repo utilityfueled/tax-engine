@@ -74,7 +74,7 @@ import { parseGuidedCurrency, hasGuidedCurrency, parseGuidedDisplayAmount } from
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
-import { allPaymentFactErrors, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, directItemizedAmountFields, educationFactErrors, guidedAmountChanged, guidedDonationValue, hasEnteredAmount, retirementFactErrors } from "./guided-required-facts";
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import {
@@ -3383,7 +3383,7 @@ function validateDeductionsSection(data: DeductionData | undefined, taxYear?: nu
   if (!data && !Object.keys(sourceErrors).length) return EMPTY_SECTION("deductions info");
   return validateRequiredFacts({
     ...deductionAmountYearErrors(data, taxYear),
-    ...deductionFactErrors(data, taxYear, filingStatus, spouse),
+    ...deductionFactErrors(data, taxYear, filingStatus, spouse, taxYear === 2026 ? currentLocalCivilDate() : undefined),
     ...guidedMedicalMileageErrors(data, taxYear, filingStatus, spouse, personal),
     ...sourceErrors,
   });

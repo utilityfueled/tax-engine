@@ -73,7 +73,7 @@ import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
-import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
+import { allPaymentFactErrors, assertKnownFacts, currentLocalCivilDate, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony, isScheduleH2026CaliforniaPeriod } from "./guided-adjustment-facts";
@@ -853,7 +853,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode, personalInfo));
     assertKnownFacts(nonitemizedElectionFactErrors(state));
     assertKnownFacts(deductionAmountYearErrors(deductionData, state.taxYear));
-    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
+    const paidThroughDate = state.taxYear === 2026 ? currentLocalCivilDate() : undefined;
+    assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse, paidThroughDate));
     assertKnownFacts(investmentInterestFactErrors(deductionData, investData?.childElections, state.taxYear));
     assertKnownFacts(charitableCarryoverFactErrors(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(nonW2TaxAllocationErrors(state));
