@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Spec: spec/federal/guided-input.yaml, llc-return-year.
+// Spec: spec/federal/guided-input.yaml, llc-return-year and llc-edited-source-review.
 import React from "react";
 import { expect, it, vi } from "vitest";
 import { GuidedInterviewShell } from "@/components/guided-interview/guided-interview-shell";
@@ -148,4 +148,116 @@ it("holds raw legacy LLC state before validating or building tax input", () => {
     expect(validateSection(legacy, "credits").status).toBe("partial");
   }
   expectHistoricalReturn(confirmed);
+});
+
+it("holds edited 2026 LLC originals after saving and reopening until reconfirmed", async () => {
+  const record = createWorkspaceRecord("synthetic-llc-edited-originals");
+  const state = interview(2026);
+  expect(saveGuidedFlowState(localStorage, record.id, state)).toBe(true);
+  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  const scroll = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+  const elementScroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollTo");
+  Object.defineProperty(HTMLElement.prototype, "scrollTo", { value: vi.fn(), configurable: true });
+  const paymentReview = annualFields[1][0];
+  const panel = await mountGuidedPanel(<GuidedInterviewShell workspace={record} onExitGuided={() => {}} />);
+  try {
+    expect(buildTaxInputFromGuidedData(saved(record.id))).not.toBeNull();
+    await panel.change("Institution name", "Replacement College");
+    await panel.change("Institution EIN (required for AOTC or a received Form 1098-T)", "98-7654321");
+    expect(validateSection(saved(record.id), "credits").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(saved(record.id))).toBeNull();
+    await panel.render(<GuidedInterviewShell key="reopened-edited-school" workspace={record} onExitGuided={() => {}} />);
+    expect(panel.control("Institution name").value).toBe("Replacement College");
+    expect(panel.control("Institution EIN (required for AOTC or a received Form 1098-T)").value).toBe("98-7654321");
+    for (const label of [currentReceipt, priorReceipt, ...annualFields.slice(0, 3).map(([label]) => label), annualFields[4][0]]) {
+      expect(panel.control(label).value, label).toBe("");
+    }
+    for (const [label, value] of [...annualFields.slice(0, 3), annualFields[4]]) await panel.change(label, value);
+    await panel.change(currentReceipt, "true");
+    expect(buildTaxInputFromGuidedData(saved(record.id))).toBeNull();
+    await panel.change(priorReceipt, "false");
+    expect(buildTaxInputFromGuidedData(saved(record.id))?.educationExpenses?.llcStudents?.[0]?.institutions?.[0]).toMatchObject({
+      name: "Replacement College", ein: "98-7654321", receivedCurrentYear1098T: true, receivedPriorYear1098TWithBox7: false,
+    });
+
+    await panel.change("Qualified tuition & expenses", "9000.01");
+    await panel.change("Saved Lifetime Learning total to reconcile", "9000.01");
+    await panel.render(<GuidedInterviewShell key="reopened-edited-tuition" workspace={record} onExitGuided={() => {}} />);
+    expect(panel.control(paymentReview).value).toBe("");
+    expect(panel.control(currentReceipt).value).toBe("true");
+    expect(panel.control(priorReceipt).value).toBe("false");
+    expect(buildTaxInputFromGuidedData(saved(record.id))).toBeNull();
+    await panel.change(paymentReview, "true");
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(saved(record.id)));
+    expect(input.educationExpenses?.llcStudents?.[0]?.qualifiedExpenses).toBe("9000.01");
+  } finally {
+    await panel.dispose();
+    scroll.mockRestore();
+    vi.unstubAllGlobals();
+    if (elementScroll) Object.defineProperty(HTMLElement.prototype, "scrollTo", elementScroll);
+    else Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
+    localStorage.removeItem(getGuidedFlowStorageKey(record.id));
+  }
+});
+
+it("preserves LLC answers for unchanged records after row movement and unrelated edits", () => {
+  const state = interview(2026);
+  const credits = state.sectionData.credits!;
+  const secondInstitution = { ...historicalCollege, name: "Second College", ein: "33-4455667" };
+  const firstStudent = { ...student, institutions: [college, secondInstitution] };
+  const secondStudent = { ...student, name: "Another Student", studentTaxId: "222-33-4444", studentRole: "dependent" as const };
+  const empty = updateSectionData(state, "credits", { ...credits, education: { ...credits.education, llcStudents: [] } });
+  const original = updateSectionData(empty, "credits", { ...credits, education: { ...credits.education, llcStudents: [firstStudent, secondStudent] } });
+  const movedStudent = { ...firstStudent, studentTaxId: "111223333", qualifiedExpenses: "4,000.00", institutions: [secondInstitution, { ...college, ein: "123456789" }] };
+  const reordered = [secondStudent, movedStudent];
+  const moved = updateSectionData(original, "credits", {
+    ...credits, dependentCare: { ...credits.dependentCare, expenses: "0" },
+    education: { ...credits.education, llcExpenses: "", llcStudents: reordered },
+  });
+  expect(moved.sectionData.credits?.education.llcStudents).toEqual(reordered);
+
+  const corrected = { ...secondInstitution, name: "Corrected College", ein: "44-5566778" };
+  const changed = updateSectionData(moved, "credits", { ...credits, education: { ...credits.education, llcStudents: [
+    { ...movedStudent, institutions: [corrected, movedStudent.institutions[1]] },
+  ] } });
+  expect(changed.sectionData.credits?.education.llcStudents).toEqual([{
+    ...movedStudent, institutionEligible: null, expensesEligibilityConfirmed: null, form1098TRequirementMet: null,
+    courseEligibilityConfirmed: null, institutions: [{ ...corrected, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null }, movedStudent.institutions[1]],
+  }]);
+});
+
+it("clears stale receipts when an LLC school edit creates an ambiguous matching record", () => {
+  const state = interview(2026);
+  const credits = state.sectionData.credits!;
+  const second = { ...historicalCollege, ein: "33-4455667" };
+  const unaffected = { ...historicalCollege, name: "Third College", ein: "44-5566778" };
+  state.sectionData.credits = { ...credits, education: { ...credits.education, llcStudents: [{ ...student, institutions: [college, second, unaffected] }] } };
+  const updated = updateSectionData(state, "credits", {
+    ...credits, education: { ...credits.education, llcStudents: [{ ...student, institutions: [college, { ...second, ein: college.ein }, unaffected] }] },
+  });
+  expect(updated.sectionData.credits?.education.llcStudents?.[0]?.institutions).toEqual([
+    { ...college, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null },
+    { ...college, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null },
+    unaffected,
+  ]);
+});
+
+it("keeps an LLC student replacement pending after resolving a duplicate identity", () => {
+  const state = interview(2026);
+  const credits = state.sectionData.credits!;
+  const first = { ...student, studentRole: "dependent" as const };
+  const second = { ...first, name: "Second Student", studentTaxId: "222-33-4444", institutions: [historicalCollege] };
+  state.sectionData.credits = { ...credits, education: { ...credits.education, llcStudents: [first, second] } };
+  const duplicate = updateSectionData(state, "credits", {
+    ...credits, education: { ...credits.education, llcStudents: [first, { ...second, studentTaxId: first.studentTaxId }] },
+  });
+  const editedCredits = duplicate.sectionData.credits!;
+  const corrected = updateSectionData(duplicate, "credits", {
+    ...editedCredits, education: { ...editedCredits.education, llcStudents: editedCredits.education.llcStudents!.slice(1) },
+  });
+  expect(corrected.sectionData.credits?.education.llcStudents?.[0]).toMatchObject({
+    name: second.name, studentTaxId: first.studentTaxId, studentTinEligible: null, form1098TRequirementMet: null,
+    institutions: [{ ...historicalCollege, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null }],
+  });
 });

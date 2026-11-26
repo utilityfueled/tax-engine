@@ -216,6 +216,27 @@ lines:
       - "tests/apps/web/guided-llc-year-change.test.tsx::rechecks pre-v3 LLC drafts once and retains reconfirmed historical answers"
       - "tests/apps/web/guided-llc-year-change.test.tsx::holds raw legacy LLC state before validating or building tax input"
       - "tests/apps/web/workspace-filled-return.test.ts::holds raw legacy LLC state at the filled-return endpoint"
+  - line: "llc-edited-source-review"
+    description: "Require current Lifetime Learning Credit answers after editing their source records"
+    formula: >-
+      A substantive edit to an existing student's entered net costs clears the
+      payment timing and expense eligibility answer. A changed student or
+      household role clears that student's identification, institution, receipt,
+      course and expense eligibility answers. Changing an institution record
+      clears its receipt answers, and a changed institution list clears the
+      student's related eligibility and receipt-requirement answers. If an
+      edit changes the count of indistinguishable institution or student rows,
+      clear the affected confirmations because they cannot be traced individually.
+      Keep edited originals and unaffected records. Equivalent formatting,
+      movement of unchanged rows, and edits to unrelated facts or the saved aggregate do
+      not invalidate the underlying confirmations. Retain pending answers on
+      reopen and hold guided admission until the affected facts are reentered.
+    irsRef: "2025 Form 8863 Part III line 22 and instructions Parts I-III; https://www.irs.gov/pub/irs-prior/f8863--2025.pdf#page=2; https://www.irs.gov/pub/irs-prior/i8863--2025.pdf"
+    testRef: "tests/apps/web/guided-llc-year-change.test.tsx::holds edited 2026 LLC originals after saving and reopening until reconfirmed"
+    testRefs:
+      - "tests/apps/web/guided-llc-year-change.test.tsx::preserves LLC answers for unchanged records after row movement and unrelated edits"
+      - "tests/apps/web/guided-llc-year-change.test.tsx::clears stale receipts when an LLC school edit creates an ambiguous matching record"
+      - "tests/apps/web/guided-llc-year-change.test.tsx::keeps an LLC student replacement pending after resolving a duplicate identity"
   - line: "business-analysis-cancellation"
     description: "Bind optional business-document AI review to current consent and return"
     formula: "No analysis starts without explicit current-return opt-in. Cancellation, consent withdrawal, unmount or return change aborts the same request signal; cancelled cache reads and late responses cannot publish suggestions. Successful analysis appends to current facts without overwriting edits made while waiting."

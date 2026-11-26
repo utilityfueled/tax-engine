@@ -2263,25 +2263,86 @@ function invalidateEducationClaimantYearSources() {
   };
 }
 
+function clearLlcInstitutionReceipts(institution: EducationInstitutionData): EducationInstitutionData {
+  return { ...institution, receivedCurrentYear1098T: null, receivedPriorYear1098TWithBox7: null };
+}
+
+function clearLlcStudentQualifications(student: EducationLlcStudentData): EducationLlcStudentData {
+  return {
+    ...student,
+    studentTinEligible: null,
+    studentSsnEligible: null,
+    institutionEligible: null,
+    expensesEligibilityConfirmed: null,
+    form1098TRequirementMet: null,
+    courseEligibilityConfirmed: null,
+    institutions: student.institutions?.map(clearLlcInstitutionReceipts),
+  };
+}
+
 function invalidateLlcYearSources(education: EducationCreditData): EducationCreditData {
   return {
     ...education,
     ...invalidateEducationClaimantYearSources(),
-    llcStudents: education.llcStudents?.map(student => ({
-      ...student,
-      studentTinEligible: null,
-      studentSsnEligible: null,
-      institutionEligible: null,
-      expensesEligibilityConfirmed: null,
-      form1098TRequirementMet: null,
-      courseEligibilityConfirmed: null,
-      institutions: student.institutions?.map(institution => ({
-        ...institution,
-        receivedCurrentYear1098T: null,
-        receivedPriorYear1098TWithBox7: null,
-      })),
-    })),
+    llcStudents: education.llcStudents?.map(clearLlcStudentQualifications),
   };
+}
+
+function llcStudentTin(student: EducationLlcStudentData): string {
+  return educationTin(student.studentTaxId);
+}
+
+function llcInstitutionIdentity(institution: EducationInstitutionData): string {
+  const normalizeText = (text: string) => text.trim().toLowerCase().replace(/\s+/g, " ");
+  return JSON.stringify([educationTin(institution.ein), normalizeText(institution.name), normalizeText(institution.address)]);
+}
+
+function llcSourceCounts(identities: string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const identity of identities) counts.set(identity, (counts.get(identity) ?? 0) + 1);
+  return counts;
+}
+
+function invalidateEditedLlcSources(previous: CreditsData | undefined, next: CreditsData | undefined): CreditsData | undefined {
+  const previousStudents = previous?.education?.llcStudents;
+  const currentStudents = next?.education?.llcStudents;
+  if (!previousStudents?.length || !next || !currentStudents?.length) return next;
+
+  const previousByTin = new Map(previousStudents.map(student => [llcStudentTin(student), student]));
+  const previousStudentCounts = llcSourceCounts(previousStudents.map(llcStudentTin));
+  const currentStudentCounts = llcSourceCounts(currentStudents.map(llcStudentTin));
+  const removedStudent = [...previousByTin.keys()].some(tin => !currentStudentCounts.has(tin));
+  // Match source records across reordering and clear answers when duplicates make their origin ambiguous.
+  const students = currentStudents.map(student => {
+    const tin = llcStudentTin(student);
+    const former = previousByTin.get(tin);
+    if (!former) return removedStudent ? clearLlcStudentQualifications(student) : student;
+    if ((former.studentRole || "") !== (student.studentRole || "")
+      || previousStudentCounts.get(tin) !== currentStudentCounts.get(tin)) {
+      return clearLlcStudentQualifications(student);
+    }
+
+    const previousSchools = llcSourceCounts((former.institutions ?? []).map(llcInstitutionIdentity));
+    const currentSchools = llcSourceCounts((student.institutions ?? []).map(llcInstitutionIdentity));
+    if (previousSchools.size !== currentSchools.size
+      || [...currentSchools].some(([identity, count]) => previousSchools.get(identity) !== count)) {
+      return {
+        ...student,
+        institutionEligible: null,
+        expensesEligibilityConfirmed: null,
+        form1098TRequirementMet: null,
+        courseEligibilityConfirmed: null,
+        institutions: student.institutions?.map(institution => {
+          const identity = llcInstitutionIdentity(institution);
+          return previousSchools.get(identity) === currentSchools.get(identity)
+            ? institution : clearLlcInstitutionReceipts(institution);
+        }),
+      };
+    }
+    return guidedAmountChanged(former.qualifiedExpenses, student.qualifiedExpenses)
+      ? { ...student, expensesEligibilityConfirmed: null } : student;
+  });
+  return { ...next, education: { ...next.education, llcStudents: students } };
 }
 
 function aotcClaimantOriginals(education: EducationCreditData) {
@@ -2649,7 +2710,8 @@ export function updateSectionData(
   const studentLoanWorksheetYearChanged = sectionId === "adjustments" && nextStudentLoanFacts
     && /^\d{4}$/u.test(previousStudentLoanYear) && previousStudentLoanYear !== nextStudentLoanFacts.sourceTaxYear;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
-  const nextCredits = sectionId === "credits" ? retainAotcSources(credits, data as CreditsData | undefined) : credits;
+  const nextCredits = sectionId === "credits"
+    ? invalidateEditedLlcSources(credits, retainAotcSources(credits, data as CreditsData | undefined)) : credits;
   const savedSaversCredit = nextCredits?.saversCredit;
   const editedSaversDraft = sectionId === "credits" && credits?.saversCredit && sourceValuesChanged;
   const saversSourcesChanged = savedSaversCredit && sourceValuesChanged
