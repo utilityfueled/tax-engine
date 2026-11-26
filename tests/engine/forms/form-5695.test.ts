@@ -788,6 +788,29 @@ describe("Form 5695 year transition", () => {
       expect(()=>calculateForm5695({},options(changes))).toThrow();
     }
   });
+  const confirmedSource = { priorYearCarryforward: "9000.00", carryforwardSourceTaxYear: 2025, carryforwardConfirmed: true };
+  it.each([
+    ["amount (actual zero)", { priorYearCarryforward: "0" }],
+    ["amount (unequal cents in the same rounded dollar)", { priorYearCarryforward: "9000.01" }],
+    ["year", { carryforwardSourceTaxYear: 2024 }],
+    ["confirmation", { carryforwardConfirmed: false }],
+  ] as const)("2026 rejects conflicting carryforward %s before using a worksheet override", (_fact, changes) => {
+    expect(() => calculateForm5695({ ...confirmedSource, ...changes }, options())).toThrow(/carryforward options conflict/);
+  });
+  it("2026 accepts matching or singly supplied carryforward facts and retains actual zero", () => {
+    const limitOnly = { taxYear: 2026, taxLiabilityLimit: new Decimal("2500") };
+    for (const result of [
+      calculateForm5695(confirmedSource, options()),
+      calculateForm5695(confirmedSource, limitOnly),
+      calculateForm5695(undefined, options()),
+    ]) {
+      expect(result.residentialCleanEnergyCredit.toFixed()).toBe("2500");
+      expect(result.residentialCleanEnergyCarryforward.toFixed()).toBe("6500");
+    }
+    const zero = calculateForm5695({ ...confirmedSource, priorYearCarryforward: "0.00" }, options({ priorYearCarryforward: new Decimal(0) }));
+    expect(zero.residentialCleanEnergyCredit.toFixed()).toBe("0");
+    expect(zero.residentialCleanEnergyCarryforward.toFixed()).toBe("0");
+  });
   it("2026 zero tax liability preserves the entire carryforward", () => {
     const r=calculateForm5695({},options({taxLiabilityLimit:new Decimal(0)}));
     expect(r.residentialCleanEnergyCredit.toString()).toBe("0");

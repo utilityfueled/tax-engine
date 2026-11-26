@@ -53,6 +53,17 @@ const INSULATION_CAP = new Decimal(1200);
 const ENERGY_PROPERTY_CAP = new Decimal(2000);
 const AUDIT_CAP = new Decimal(150);
 
+function reconcile2026CarryforwardOptions(source: Partial<EnergyCredits> | undefined, options: Form5695Options): void {
+  if ((source?.priorYearCarryforward !== undefined && options.priorYearCarryforward !== undefined
+        && !options.priorYearCarryforward.eq(d(source.priorYearCarryforward))) ||
+      (source?.carryforwardSourceTaxYear !== undefined && options.carryforwardSourceTaxYear !== undefined
+        && options.carryforwardSourceTaxYear !== source.carryforwardSourceTaxYear) ||
+      (source?.carryforwardConfirmed !== undefined && options.carryforwardConfirmed !== undefined
+        && options.carryforwardConfirmed !== source.carryforwardConfirmed)) {
+    throw new Error("Energy carryforward options conflict with the actual confirmed source");
+  }
+}
+
 export function calculateForm5695(
   energyCredits?: Partial<EnergyCredits>,
   options: Form5695Options = {},
@@ -60,6 +71,7 @@ export function calculateForm5695(
   const audit = new AuditTrail();
   const taxYear = options.taxYear ?? 2025;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Unsupported Form 5695 tax year");
+  if (taxYear === 2026) reconcile2026CarryforwardOptions(energyCredits, options);
   const suppliedCarryforward = options.priorYearCarryforward ?? (energyCredits?.priorYearCarryforward === undefined ? undefined : d(energyCredits.priorYearCarryforward));
   const priorYearCarryforward = suppliedCarryforward ?? new Decimal(0);
   const carryforwardConfirmed = options.carryforwardConfirmed ?? energyCredits?.carryforwardConfirmed;

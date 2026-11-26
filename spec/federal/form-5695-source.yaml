@@ -89,7 +89,7 @@ lines:
     testRef: "tests/engine/forms/form-5695-source.test.ts::preserves source cents while rounding the printed category aggregate"
   - line: "carryforward-source"
     description: "Complete source records include the actual prior return carryforward"
-    formula: "Require confirmed immediately prior-year carryforward including explicit zero; reject conflicting options instead of replacing an actual source amount"
+    formula: "Require confirmed immediately prior-year carryforward including explicit zero; reject worksheet options that alter the original amount or fill in missing source year or confirmation"
     irsRef: "Form5695 line12 and prior-year Form5695 line16"
     testRef: "tests/engine/forms/form-5695-source.test.ts::requires actual carryforward facts and rejects contradictory overrides"
   - line: "guided-physical-sources"

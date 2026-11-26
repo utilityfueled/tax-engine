@@ -30,8 +30,16 @@ notes: "Sources refreshed 2026-10-25: IRC 25D(c), (e)(8), (h),
 lines:
   - line: "1"
     description: "Prior-year residential clean energy carryforward"
-    formula: "Actual confirmed 2025 Form 5695 line 16; reject unknown/source-year mismatch and negative amounts"
+    formula: >-
+      Use actual confirmed 2025 Form 5695 line 16. Reject unknown amounts, wrong
+      source years and negative amounts. When the source packet and worksheet
+      options both supply a carryforward fact, require exact Decimal equality
+      before rounding for the amount and agreement on the source year and
+      confirmation, including explicit zero and false.
     testRef: "tests/engine/forms/form-5695.test.ts::2026 applies only the confirmed prior-year carryforward"
+    testRefs:
+      - "tests/engine/forms/form-5695.test.ts::2026 rejects conflicting carryforward %s before using a worksheet override"
+      - "tests/engine/forms/form-5695.test.ts::2026 accepts matching or singly supplied carryforward facts and retains actual zero"
     taxYear: 2026
   - line: "2"
     description: "Remaining tax-liability limit"

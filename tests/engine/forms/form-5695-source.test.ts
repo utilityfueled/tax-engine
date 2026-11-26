@@ -173,6 +173,8 @@ describe("Form5695 actual installation sources", () => {
 
   it("requires actual carryforward facts and rejects contradictory overrides", () => {
     for (const patch of [{ priorYearCarryforward: undefined }, { carryforwardConfirmed: undefined }, { carryforwardConfirmed: false }, { carryforwardSourceTaxYear: 2023 }]) expect(() => calculate({ ...energySource, ...patch })).toThrow(/carryforward/);
+    expect(() => calculate({ ...energySource, carryforwardConfirmed: undefined }, { carryforwardConfirmed: true })).toThrow(/requires confirmed actual immediate-prior-year carryforward/);
+    expect(() => calculate({ ...energySource, carryforwardSourceTaxYear: undefined }, { carryforwardSourceTaxYear: 2024 })).toThrow(/requires confirmed actual immediate-prior-year carryforward/);
     expect(() => calculate(energySource, { priorYearCarryforward: d("1") })).toThrow(/carryforward/);
     expect(() => calculate(energySource, { carryforwardSourceTaxYear: 2023 })).toThrow(/carryforward/);
     expect(() => calculate(energySource, { carryforwardConfirmed: false })).toThrow(/carryforward/);
