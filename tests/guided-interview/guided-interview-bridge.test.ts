@@ -5,6 +5,7 @@ import { completeCareSource } from "./care-source-fixture";
 import { completeRentalSource, completeNecSource, completeBusinessSection, completeBusinessExpenses, completeMortgageSource, completeMortgageWorksheet, completeRetirementSource, completeSocialSecuritySource, completeSocialSecurityTreatment, completeUnemploymentSource } from "./complete-facts";
 import { completeBrokerageSource, completeDividendSource, completeInterestSource, completeTransactionSource } from "./complete-facts";
 import { completeHsaSources, completeW2Entry, startCompleteInterview as startInterview, completePersonalInfo, completeDependent, completeAocEligibility, completeEducationClaimant, completeHouseholdEmployee } from "./complete-facts";
+import Decimal from "decimal.js";
 import { describe, it, expect } from "vitest";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
@@ -1005,6 +1006,7 @@ describe("computeGuidedPreview", () => {
     expect(Number(preview!.totalPayments)).toBeGreaterThanOrEqual(20000);
   });
 
+  // Spec: federal/guided-input.yaml#hsa-actual-contribution-sources and federal/form-8889.yaml line 13.
   it("includes adjustments in preview (reduces AGI)", () => {
     let state = startInterview({
       filingStatus: "single",
@@ -1020,19 +1022,31 @@ describe("computeGuidedPreview", () => {
     // Actual zero HSA contributions establish the comparison baseline.
     state = updateSectionData(state, "adjustments", { ...emptyAdjustmentData, hsaAccounts: [{ ...completeHsaSources, contributionsMade: "0" }] });
     const previewWithout = computeGuidedPreview(state);
+    if (!previewWithout) throw new Error("Expected the confirmed zero-contribution preview");
 
-    // Now add HSA deduction
+    // Changing a retained contribution requires a fresh review of the edited worksheet.
     state = updateSectionData(state, "adjustments", {
       ...emptyAdjustmentData,
-      hsaDeduction: "3600",
       hsaAccounts: [{ ...completeHsaSources, contributionsMade: "3600" }],
     });
-    const previewWith = computeGuidedPreview(state);
+    const edited = state.sectionData.adjustments?.hsaAccounts?.[0];
+    if (!edited) throw new Error("Expected the edited HSA worksheet to be retained");
+    expect(edited).toMatchObject({ contributionsMade: "3600", contributionTimingConfirmed: null, sourceFactsConfirmed: null });
+    expect(computeGuidedPreview(state)).toBeNull();
 
-    expect(previewWithout).not.toBeNull();
-    expect(previewWith).not.toBeNull();
-    // AGI should be lower with the HSA deduction
-    expect(Number(previewWith!.agi)).toBeLessThan(Number(previewWithout!.agi));
+    state = updateSectionData(state, "adjustments", {
+      ...emptyAdjustmentData,
+      hsaAccounts: [{ ...edited, sourceFactsConfirmed: true }],
+    });
+    expect(computeGuidedPreview(state)).toBeNull();
+
+    state = updateSectionData(state, "adjustments", {
+      ...emptyAdjustmentData,
+      hsaAccounts: [{ ...edited, contributionTimingConfirmed: true, sourceFactsConfirmed: true }],
+    });
+    const previewWith = computeGuidedPreview(state);
+    if (!previewWith) throw new Error("Expected the freshly confirmed HSA deduction preview");
+    expect(new Decimal(previewWithout.agi).minus(previewWith.agi).toFixed()).toBe("3600");
   });
 });
 
