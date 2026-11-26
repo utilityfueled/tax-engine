@@ -23,10 +23,12 @@ still enforced. The exact full unit and coverage suites each passed
 unit shards were in progress and Linux browser `45750813234` was queued.
 Vercel canceled the production build.
 
-The complete local Chromium run was in progress at this checkpoint. Its
-clean archive initially lacked the registered public sample PDFs and
-stopped before any browser cases. All 15 files were restored from the
-previous exact archive before the managed run began.
+The complete local Chromium run passed 654 cases in nine windows with
+five original skips and no failures. Its clean archive initially lacked
+the registered public sample PDFs and stopped before any browser cases.
+All 15 files were restored from the previous exact archive. The completed
+run matched all 6,703 tracked blobs and confirmed that its local server
+closed. All 11 required local checks passed for `3aeb837f5`.
 
 ## November 25 pension original reconfirmation
 

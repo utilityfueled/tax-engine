@@ -48,11 +48,11 @@ Use the linked progress sections when investigating individual packages.
   a full-year Ohio domicile record. All 237 focused tests passed.
   [Ohio residency evidence](upgrade-2026-progress.md#november-25-ohio-earned-school-residency).
 
-- The full local baseline at `75084f31c` passed 30,630 unit tests, 88.49%
-  branch coverage, and all 653 active managed Chromium cases. Its Docker
-  build passed. The latest exact revision has its own focused checks and
-  remote release runs.
-  [Exact release evidence](upgrade-2026-progress.md#november-25-lifetime-learning-credit-source-reconfirmation).
+- The exact application revision `3aeb837f5` passed all 11 required local
+  checks, including 30,645 unit tests, 88.49% branch coverage, and all 654
+  active managed Chromium cases. Its Docker build passed. The GitHub CI
+  and Linux browser pipelines still had outstanding jobs.
+  [Exact release evidence](upgrade-2026-progress.md#november-25-uploads-in-reopened-review).
 
 - `8d4481d8c` reconciles 2026 federal estimate, extension and balance-due
   payment receipts before the guided worksheet calculates. Distinct
