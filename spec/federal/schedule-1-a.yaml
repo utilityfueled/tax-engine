@@ -11,6 +11,10 @@ notes: |
   eligible tips, FLSA premium, and loan requirements; gross wages, arbitrary
   overtime pay and a vehicle purchase alone cannot establish those facts.
   All monetary amounts use Decimal. Unknown qualification facts reject.
+  For the 2026 Form 1099-K cohort, see the final form instructions at
+  https://www.irs.gov/instructions/i1099k, T.D. 10044 at
+  https://www.irs.gov/irb/2026-18_IRB, and the draft 2026 Schedule 1-A at
+  https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf.
 lines:
   - line: "1-3"
     description: "MAGI including foreign/territory exclusions"
@@ -26,10 +30,30 @@ lines:
       qualifying TTOC occupation, SSTB rule or applicable transition and valid SSN.
       Married separate filers receive zero. Return-wide limit = 25000; reduce by
       100 * floor(max(0, MAGI - 150000 [300000 MFJ]) / 1000); floor at zero.
-      Self-employed tips require QBI allocation before federal orchestration;
-      until that coordination is verified the federal entrypoint rejects them.
+      The federal entry point requires verified original business sources and
+      business-level QBI allocation for self-employed tips.
     irsRef: "Schedule 1-A lines 4-13; IRC 224; Form 1040 instructions, multiple employer and multiple business worksheets"
     testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
+  - line: "2026-form-1099-k-business-tips"
+    description: "Bind qualified card tips to one original 2026 Form 1099-K and one Schedule C business"
+    formula: |
+      Link one canonical Form 1099-K index to the confirmed sole payment cohort
+      of one Schedule C business. Require original statement and receipt ledger
+      references, confirmed business mapping and reconciled qualified tips, the
+      actual statement year and owner, and a named filer. Require business
+      classification, a positive Box 1a equal to actual and calculated Schedule C
+      gross receipts, and one actual Box 1d code matching the claimed occupation.
+      Keep Box 1c as a subset of Box 1a. The separately reconciled qualified
+      amount must equal the business claim and cannot exceed Box 1c. Hold missing
+      or contradictory facts, additional Forms 1099-K, any concurrent NEC/MISC
+      statements whose overlap is outside this slice, and other business source
+      allocations. A confirmed zero is a reported amount. Apply the canonical
+      net profit less allocable business deductions limit, return-wide cap, and
+      MAGI phase-down. Exclude only the allowable deduction from QBI under
+      IRC 199A(c)(4)(D). Gross receipts, AGI and SE tax are unchanged by the claim.
+      Draft calculation only. The filing release gate is independent.
+    irsRef: "Pub. L. 119-21 sec. 70201, IRC 224(a)-(e) and 199A(c)(4)(D); T.D. 10044; final December 2026 Form 1099-K instructions Boxes 1a, 1c, 1d; draft 2026 Schedule 1-A lines 6-15"
+    testRef: "tests/engine/federal-schedule-1-a-sources.test.ts::deducts qualified card tips from one reconciled 2026 Form 1099-K without adding income"
   - line: "14-21"
     description: "FLSA overtime premium deduction"
     formula: |
@@ -63,6 +87,6 @@ lines:
     testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A additional deductions"
   - line: "1040-13b"
     description: "Federal deduction flow and QBI limitation"
-    formula: "AGI is unchanged; taxable income before QBI = max(0, AGI - standard/itemized deduction - Schedule 1-A total). Total deductions include QBI and Schedule 1-A. Self-employed tip integration rejects until business-level QBI adjustment is supported."
+    formula: "AGI is unchanged; taxable income before QBI = max(0, AGI - standard/itemized deduction - Schedule 1-A total). Total deductions include QBI and Schedule 1-A. Actual business-tip deductions require the supported source reconciliation and business-level QBI adjustment."
     irsRef: "2025 Form 1040 line 13b; Form 8995 instructions line 11"
     testRef: "tests/engine/schedules/schedule-1-a.test.ts::Schedule 1-A federal integration"

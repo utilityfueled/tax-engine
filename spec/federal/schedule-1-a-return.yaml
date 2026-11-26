@@ -24,7 +24,7 @@ lines:
     testRef: "tests/engine/forms/schedule-1-a-return.test.ts::bounds overtime by actual year-specific reporting while retaining the2025 transition"
   - line: "business-net-limit"
     description: "Derive business profit and deductions from calculated return sources"
-    formula: "For the supported actual ScheduleC/NEC route, bind the actual owner, business identity and original information-return receipts. Require source gross income already included in ScheduleC, exact reported-tip allocation totals and known source attribution. Set net profit from calculated ScheduleC and allocable deductions from reconciled SE/health/retirement deductions. Caller supplied profit or deduction values must match; no user override can increase the cap."
+    formula: "For actual Schedule C business tips, bind the owner, business identity and original information-return receipts. The existing NEC route and the sole 2026 Form 1099-K cohort defined in schedule-1-a.yaml both require source gross income already included in Schedule C, exact reported-tip allocation totals and known source attribution. Set net profit from calculated Schedule C and allocable deductions from reconciled SE/health/retirement deductions. Caller supplied profit or deduction values must match; no user override can increase the cap."
     testRef: "tests/engine/forms/schedule-1-a-return.test.ts::uses canonical business profit and attributable deductions rather than overrides"
   - line: "qbi-exclusion"
     description: "Exclude allowable business tip deductions from QBI"

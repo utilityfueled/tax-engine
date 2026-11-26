@@ -6789,6 +6789,13 @@ const schedule1ATipFacts = {
   lawfulActivity: z.boolean(),
   meetsSstbRuleOrTransition: z.boolean(),
 };
+const schedule1AForm1099KProof = z.strictObject({
+  statementReference: z.string().trim().min(1),
+  receiptLedgerReference: z.string().trim().min(1),
+  solePaymentCohortConfirmed: z.literal(true),
+  scheduleCBusinessReceiptsConfirmed: z.literal(true),
+  qualifiedTipsReconciledConfirmed: z.literal(true),
+});
 export const Schedule1ASchema = z.object({
   sourceTaxYear: z.number().int().optional(),
   sourceReference: z.string().trim().min(1).optional(),
@@ -6814,6 +6821,7 @@ export const Schedule1ASchema = z.object({
     businessName: z.string().trim().min(1),
     businessSourceId: z.string().trim().min(1).optional(),
     reportedTipSources: z.array(z.object({ sourceId: z.string().trim().min(1), qualifiedTips: schedule1AMoney })).optional(),
+    form1099KProof: schedule1AForm1099KProof.optional(),
     qualifiedReportedTips: schedule1AMoney,
     netProfit: decimal.optional(),
     otherAllocableDeductions: schedule1AMoney.optional(),

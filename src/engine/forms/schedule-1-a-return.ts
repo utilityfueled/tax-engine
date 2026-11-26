@@ -9,6 +9,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { d, min, sum, zeroFloor } from "@/utils/decimal.js";
 
 type Owner = "primary" | "spouse";
+type BusinessTip = Schedule1AInput["businessTips"][number];
 interface Params {
   input: TaxYearInput;
   agi: Decimal;
@@ -48,6 +49,35 @@ function occupationReporting(codes: string[] | undefined) {
   if (!codes?.length || codes.some(code => code !== "000" && !occupations.has(code))) throw new Error("Schedule1-A requires actual valid TTOC occupation reporting for2026.");
   // IRS permits any two codes when there are more occupations. A missing third
   // code does not disprove the independently documented actual occupation.
+}
+
+function qualifiedCardTips(params: Params, row: BusinessTip, reports: NonNullable<BusinessTip["reportedTipSources"]>, audit: AuditTrail): Decimal {
+  const { input, scheduleC } = params;
+  const year = input.taxpayer.taxYear;
+  if (year !== 2026) throw new Error("Form 1099-K business tips require the 2026 reporting year.");
+  if (!row.form1099KProof) throw new Error("Form 1099-K business tips require original statement and receipt ledger confirmations.");
+  if (reports.length !== 1 || input.form1099K.length !== 1) throw new Error("Form 1099-K business tips require one original report for the sole payment cohort.");
+  if (input.form1099Nec.length || input.form1099Misc.length) throw new Error("Form 1099-K business tips require a sole cohort without concurrent NEC or MISC statements.");
+
+  const report = reports[0];
+  const source = input.form1099K[sourceIndex(report.sourceId, "form1099K")];
+  sourceIdentity(source, row.owner, year);
+  if (!source.pse.trim()) throw new Error("Form 1099-K business tips require the original filer name.");
+  if (source.incomeType !== "business") throw new Error("Form 1099-K payments must belong to the linked Schedule C business.");
+  const gross = requiredAmount(source.grossAmount, "Form 1099-K Box 1a");
+  const grossReceipts = requiredAmount(input.scheduleC?.grossReceipts, "Schedule C gross receipts");
+  if (gross.isZero() || !gross.eq(grossReceipts) || !gross.eq(scheduleC.grossReceipts)) throw new Error("Form 1099-K Box 1a must reconcile to the actual Schedule C gross receipts.");
+  const reportedTips = requiredAmount(source.cashTips, "Form 1099-K Box 1c cash tips");
+  if (reportedTips.gt(gross)) throw new Error("Form 1099-K Box 1c cash tips exceed Box 1a gross payments.");
+  const codes = source.treasuryTippedOccupationCodes;
+  if (codes?.length !== 1 || codes[0] !== row.occupationCode) throw new Error("Form 1099-K Box 1d must show one occupation matching the claimed tips.");
+  occupationReporting(codes);
+  const qualified = d(report.qualifiedTips);
+  if (qualified.gt(reportedTips)) throw new Error("Qualified business tips exceed actual Form 1099-K Box 1c cash tips.");
+  audit.record("Schedule1-A Source Worksheet", `business-report:${report.sourceId}`, "Reconciled qualified card tips", qualified,
+    "Qualified tips documented by the receipt ledger and included in original Form 1099-K Box 1c and Schedule C gross receipts",
+    { "Box 1a gross payments": gross, "Box 1c reported cash tips": reportedTips, "Box 1d occupation code": codes[0] });
+  return qualified;
 }
 
 export function calculateSchedule1AReturn(params: Params) {
@@ -151,25 +181,31 @@ export function calculateSchedule1AReturn(params: Params) {
     if (!allocable.isFinite() || allocable.lt(0)) throw new Error("Canonical business deductions are invalid.");
     if (row.netProfit !== undefined && !d(row.netProfit).eq(params.scheduleC.netProfit)) throw new Error("Supplied business profit disagrees with canonical ScheduleC.");
     if (row.otherAllocableDeductions !== undefined && !d(row.otherAllocableDeductions).eq(allocable)) throw new Error("Supplied business deductions disagree with canonical attribution.");
-    if (!row.reportedTipSources?.length) throw new Error("Actual business tips require original information-return sources.");
+    const reports = row.reportedTipSources;
+    if (!reports?.length) throw new Error("Actual business tips require original information-return sources.");
+    const usesCardTipReport = row.form1099KProof !== undefined || reports.some(report => report.sourceId.startsWith("form1099K:"));
     let qualified = d(0);
-    for (const report of row.reportedTipSources) {
-      if (businessReportSources.has(report.sourceId)) throw new Error("Duplicate business tip information-return source.");
-      businessReportSources.add(report.sourceId);
-      const source = input.form1099Nec[sourceIndex(report.sourceId, "form1099Nec")]; sourceIdentity(source, row.owner, year);
-      const gross = requiredAmount(source.nonemployeeCompensation, "NEC compensation");
-      if (d(report.qualifiedTips).gt(gross)) throw new Error("Business tips exceed actual reported compensation.");
-      if (year >= 2026) {
-        occupationReporting(source.treasuryTippedOccupationCodes);
-        const cashTips = requiredAmount(source.cashTips, "NEC cash tips reporting");
-        if (cashTips.gt(gross)) throw new Error("Reported NEC cash tips exceed actual gross compensation.");
-        if (source.qualifiedOvertimeCompensation !== undefined && cashTips.plus(requiredAmount(source.qualifiedOvertimeCompensation, "original NEC overtime report")).gt(gross)) throw new Error("Distinct original NEC tip and overtime reports exceed the same gross compensation source.");
-        if (d(report.qualifiedTips).gt(cashTips)) throw new Error("Business tips exceed actual separately reported cash tips.");
+    if (usesCardTipReport) {
+      qualified = qualifiedCardTips(params, row, reports, audit);
+    } else {
+      for (const report of reports) {
+        if (businessReportSources.has(report.sourceId)) throw new Error("Duplicate business tip information-return source.");
+        businessReportSources.add(report.sourceId);
+        const source = input.form1099Nec[sourceIndex(report.sourceId, "form1099Nec")]; sourceIdentity(source, row.owner, year);
+        const gross = requiredAmount(source.nonemployeeCompensation, "NEC compensation");
+        if (d(report.qualifiedTips).gt(gross)) throw new Error("Business tips exceed actual reported compensation.");
+        if (year >= 2026) {
+          occupationReporting(source.treasuryTippedOccupationCodes);
+          const cashTips = requiredAmount(source.cashTips, "NEC cash tips reporting");
+          if (cashTips.gt(gross)) throw new Error("Reported NEC cash tips exceed actual gross compensation.");
+          if (source.qualifiedOvertimeCompensation !== undefined && cashTips.plus(requiredAmount(source.qualifiedOvertimeCompensation, "original NEC overtime report")).gt(gross)) throw new Error("Distinct original NEC tip and overtime reports exceed the same gross compensation source.");
+          if (d(report.qualifiedTips).gt(cashTips)) throw new Error("Business tips exceed actual separately reported cash tips.");
+        }
+        qualified = qualified.plus(report.qualifiedTips);
       }
-      qualified = qualified.plus(report.qualifiedTips);
     }
     if (!qualified.eq(row.qualifiedReportedTips)) throw new Error("Business qualified tip source allocations do not reconcile.");
-    if (input.form1099Nec.some(source => source.accountHolder !== row.owner) || params.scheduleC.grossReceipts.lt(sum(...input.form1099Nec.map(source => d(source.nonemployeeCompensation))))) throw new Error("Actual business receipts do not reconcile the information-return income and owner.");
+    if (!usesCardTipReport && (input.form1099Nec.some(source => source.accountHolder !== row.owner) || params.scheduleC.grossReceipts.lt(sum(...input.form1099Nec.map(source => d(source.nonemployeeCompensation)))))) throw new Error("Actual business receipts do not reconcile the information-return income and owner.");
     const limited = eligible ? min(qualified, zeroFloor(adjusted.qbi)) : d(0);
     limitedBusiness.push({ sourceId: id, owner: row.owner, amount: limited });
     audit.record("Schedule1-A Source Worksheet", `business:${id}`, `Net-income limited tips: ${row.businessName}`, limited, "Actual reported tips limited by calculated business profit less reconciled attributable deductions", { "Net profit": params.scheduleC.netProfit, "Other allocable deductions": allocable });
