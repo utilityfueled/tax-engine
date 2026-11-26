@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `cb7f8d522` holds conflicting OpenAI token totals for reconciliation in
+  both application and evaluation transports. All 89 exact tests passed.
+  Human and live qualification remain open.
+  [AI accounting evidence](upgrade-2026-progress.md#november-25-openai-usage-total-reconciliation).
+
 - `cd9d17f5c` holds 2026 529-to-Roth worksheets that conflict with the
   same beneficiary’s recorded IRA contributions. The combined exact
   tests passed. Mixed payment and designation dates need qualified tax

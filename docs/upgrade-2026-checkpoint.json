@@ -2,7 +2,8 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "cd9d17f5c441cf850137d4c01365fccb0b03e00f",
+    "applicationCommit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
+    "openAiUsageTotalEvidenceKey": "activeContinuation.nov25OpenAiUsageTotalReconciliation",
     "rothRolloverContributionEvidenceKey": "activeContinuation.nov25RothRolloverContributionReconciliation",
     "qcdSourceReviewEvidenceKey": "activeContinuation.nov25QcdSourceReview",
     "socialSecurityRepaymentEvidenceKey": "activeContinuation.nov25SocialSecuritySmallRepayment",
@@ -95,6 +96,23 @@
     ]
   },
   "activeContinuation": {
+    "nov25OpenAiUsageTotalReconciliation": {
+      "commit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
+      "sources": ["https://developers.openai.com/api/reference/resources/responses/methods/create"],
+      "scope": "Hosted adapter and offline evaluation transport hold malformed or inconsistent supplied totals, preserve safe reference, and retain existing handling for absent totals.",
+      "focusedExactTestsPassed": 89,
+      "independentTestsPassed": 9,
+      "browserControlTestsPassed": 74,
+      "specReferencesPassed": 10099,
+      "trackedBlobsVerified": 6701,
+      "exactLocalBuilds": {"core": "passed", "web": "passed"},
+      "githubRuns": {"docker": 45734563655, "ci": 45734563642, "web": 45734563569},
+      "dockerResult": "success",
+      "lint": {"errors": 0, "warnings": 12224},
+      "actualProviderRequests": 0,
+      "vercelProductionBuild": "CANCELED",
+      "remaining": "Exact full suites, independent human reviews and actual provider qualification. Promotion remains closed."
+    },
     "nov25RothRolloverContributionReconciliation": {
       "commit": "cd9d17f5c441cf850137d4c01365fccb0b03e00f",
       "sources": ["https://uscode.house.gov/us/usc/119-142/t26/s529/", "https://uscode.house.gov/us/usc/119-142/t26/s408A/", "https://uscode.house.gov/us/usc/119-142/t26/s219/"],
@@ -107,6 +125,7 @@
       "trackedBlobsVerified": 6701,
       "exactLocalBuilds": {"core": "passed", "web": "passed"},
       "githubRuns": {"docker": 45733929741, "ci": 45733929707, "web": 45733929730},
+      "dockerResult": "success",
       "lint": {"errors": 0, "warnings": 12224},
       "vercelProductionBuild": "CANCELED",
       "remaining": "Exact full suites; qualified review of calendar versus designation timing and final 2026 annual qualification. Existing filing gates are closed."

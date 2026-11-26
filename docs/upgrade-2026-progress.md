@@ -1,5 +1,26 @@
 # 2026 upgrade implementation evidence
 
+## November 25 OpenAI usage total reconciliation
+
+`cb7f8d522` verifies a supplied OpenAI token total against the exact sum
+of input and output in the application adapter and evaluation transport.
+The required individual counts still determine the price when the optional
+total is absent. Malformed or contradictory usage holds reconciliation,
+preserves the usable provider reference and yields no accepted output or
+settled charge. Cached input and reasoning subdivisions do not count twice.
+
+Both normal-path controls failed before the correction. The isolated
+source passed 89 exact tests, 74 browser timing and fixture controls,
+core, contract and web types, inventory and 10,099 spec references. All
+6,701 tracked files matched the commit. Both local builds and the exact
+Docker build passed. Full lint reported zero errors and 12,224 warnings.
+Independent review used nine
+targeted tests and a fake-HTTP replay that carried the unknown hold
+across resume without dispatching again. No provider calls were made.
+Human evaluation and live provider qualification remain open.
+[OpenAI Responses API reference](https://developers.openai.com/api/reference/resources/responses/methods/create) ·
+[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45734563655).
+
 ## November 25 529-to-Roth contribution reconciliation
 
 `cd9d17f5c` checks the 2026 transfer worksheet against confirmed regular
@@ -17,11 +38,13 @@ Independent engineering review verified the matched, zero, edited,
 rehydrated and different-beneficiary controls. All 82 scoped tests, 158
 combined exact tests, 74 browser timing controls, both local builds,
 core, contract and web types, inventory and 10,098 exact spec references
-passed. All 6,701 source files matched the published commit. Full lint
+passed. All 6,701 source files matched the published commit. The exact
+Docker build passed. Full lint
 reported zero errors and 12,224 warnings. Annual calculation and filing
 gates remain closed. Mixed dates need qualified review.
 [26 U.S.C. §529](https://uscode.house.gov/us/usc/119-142/t26/s529/) ·
 [26 U.S.C. §408A](https://uscode.house.gov/us/usc/119-142/t26/s408A/) ·
+[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45733929741) ·
 [Review case](upgrade-2026-external-actions.md#november-25-529-to-roth-contribution-timing-review).
 
 ## November 25 qualified charitable distribution source review
