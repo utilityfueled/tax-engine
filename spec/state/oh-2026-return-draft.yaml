@@ -284,6 +284,54 @@ lines:
     formula: "Opaque current source context binds untouched original input and complete packet; missing, stale, copied or forged contexts reject. Provenance-only original changes require requalification and a changed source commitment even at equal cash. Existing ordinary outputs and historical2025 source methods/year guards remain unchanged; all final2026 forms/public year/filing activation and full selected-state completion remain false."
     testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::rejects stale and forged reciprocal contexts without changing historical gates"
 
+  - line: "pa-part-year-reciprocal-sources"
+    description: "Qualify an ordinary Ohio employee who moves between Pennsylvania and Ohio"
+    formula: >-
+      The separate oh-2026-pa-part-year-reciprocal-employee-draft-v1 method
+      requires one single primary employee under 65, one current ordinary
+      Ohio C-corporation W-2, all services performed in Ohio and two actual
+      contiguous PA and OH domicile periods covering calendar 2026. Check two
+      distinct documentary domicile originals against the same taxpayer and
+      canonical timeline. Reconcile employer and service originals, complete
+      unique dated payroll to the W-2, each payroll service period and payment
+      within the same documented domicile period, and actual Ohio withholding.
+      One separately sourced PA W-2 state row may establish known nonnegative
+      PA withholding only on the PA portion, and never contributes to Ohio
+      payments. For this same-pay documentary method, the OH Box 16 must
+      match either total Ohio-service payroll or Ohio-resident wages exactly.
+      A printed PA Box 16 must match the PA-resident wages exactly. Reconcile
+      those amounts independently of withholding and hold other printed
+      wage patterns for manual reconciliation or a separate method. Hold
+      ambiguous boundary payroll, missing dates, unknown
+      withholding, stale originals, other income, special employment, school
+      tax, other adjustments and unsupported payment or credit methods.
+      Preserve the existing full-year PA reciprocal and ordinary routes.
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::reconciles documented Ohio reciprocal wages in both move directions (%s)"
+    testRefs:
+      - "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::holds incomplete or conflicting part-year reciprocal originals (%s)"
+      - "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::accepts full Ohio-service payroll in Box 16 (%s)"
+      - "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::holds contradictory rebound state Box 16 wages (%s)"
+  - line: "pa-part-year-reciprocal-deduction"
+    description: "Deduct the actual Pennsylvania-resident wage portion once"
+    formula: >-
+      Under RC 5747.01(A)(33) and 5747.05(A)(2), add all original wages to
+      federal AGI and deduct the exact Ohio compensation earned and paid
+      during Pennsylvania domicile from Ohio AGI. Round each final AGI once.
+      Under RC 5747.20, retain only Ohio-resident wages in the draft
+      IT NRC allocation. The deducted Pennsylvania-period compensation
+      produces no nonresident or resident credit. Apply the existing Ohio
+      exemption and rate to the remaining Ohio wages. Compare the tax with
+      actual Ohio withholding for the ordinary timely settlement.
+      Ohio's draft 2026 booklet printed pages 25 and 41 describes the
+      deduction and NRC allocation. Final annual forms, independent tax
+      review, public integration and filing qualification remain separate.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.01"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+    testRef: "tests/engine/state/oh-2026-reciprocal-return-draft.test.ts::applies the exact part-year reciprocity deduction before rounding Ohio AGI"
+
   - line: "va-paid-resident-credit-current"
     description: "Compose actual paid Virginia liability after preceding credits and NRC"
     formula: "Separate oh-2026-va-resident-credit-employee-draft-v1 source method requires current single full-year Ohio employee originals, one exact OH/VA W2 and matching complete service payroll, original filed2026 VA763 and settled original agency account/receipts. Derive actual net income tax paid after Virginia credits/payments/refunds, never gross withholding or a calculated Virginia return. Strict new confirmations replace contradictory no-other-state-tax/no-other-credit ordinary facts. Apply remaining-tax ratio/cap after every preceding credit and NRC; full-year OH proves NRC0 and no reciprocal overlap. Current opaque context binds complete unchanged originals; historical2025 methods, ordinary/PA reciprocal packets and final2026 gates remain unchanged."
