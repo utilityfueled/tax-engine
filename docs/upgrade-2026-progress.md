@@ -1,5 +1,78 @@
 # 2026 upgrade implementation evidence
 
+## November 25 portable self-host recovery
+
+The production-mode standalone build of `75084f31c` exported an encrypted
+backup, deleted the synthetic original workspace and restored the archive
+from a second Chromium profile with empty storage. The restored workspace
+had a new ID. Its guided JSON and original PDF matched byte for byte after
+reload, its display preference and file metadata survived, and it
+recalculated the expected $885 refund. Three review requests returned 200,
+and each PDF passed the strict 12-page redaction inspection. The receiving
+profile made zero API requests until the user requested the review export.
+
+The exact local macOS ARM64 rehearsal passed once in 6.4 seconds with no
+retries or skips under a 30-second limit, using Chromium 156.0.8078.4.
+The same rehearsal also passed on `8d4481d8c`. Its first attempt failed to
+hydrate when an earlier launcher referenced assets from another build.
+Both passing runs used matching standalone servers and static assets in
+isolated loopback directories. The November 25 exact receipt SHA-256 is
+`e2939a93200f615d0ca3ad9cba2a65da52644707943989dfc007a2a615a217af`.
+Strict Linux and physical-device evidence remain open.
+
+## November 25 Lifetime Learning Credit source reconfirmation
+
+`75084f31c` clears the affected source confirmations after an edit to
+the student TIN or household role, the school name, address or EIN,
+or qualified tuition. An edit that creates or resolves duplicate
+identities also clears affected confirmations when the record’s origin
+is ambiguous. Formatting and reordering preserve unaffected answers.
+The guided worksheet stays pending across save and reopen until the
+affected answers are confirmed. Drafts saved before the change contain
+only their current values, so earlier edit history cannot be reconstructed.
+
+Four regression cases failed before their fixes, including two identity
+collisions reproduced during independent engineering review. The extended
+focused run passed 444 tests with six existing skips. An exact archive
+passed 54 focused cases, 10,102 spec references, inventory, core and web
+types and scoped lint. Both release-check snapshots matched all 6,701
+tracked blobs. The production build recorded by Vercel was canceled. The
+tax calculation and Form 8863 filing qualification use their existing
+gates. The IRS final 2026 blank matched the pinned PDF byte for byte,
+and 84 exact tests passed for the calculation and physical candidate.
+The final instructions endpoint still served 2025. The published 2026
+instructions are a draft.
+[Final 2026 blank](https://www.irs.gov/pub/irs-prior/f8863--2026.pdf) ·
+[IRS final instructions endpoint](https://www.irs.gov/pub/irs-pdf/i8863.pdf) ·
+[Draft 2026 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
+The exact ordinary and coverage runs each passed 30,630 tests with 81
+existing skips. Coverage was 88.49% against the 85% branch requirement.
+Core, contract and web types, core and web builds, and full lint passed.
+Full lint reported 12,229 warnings and zero errors. Managed Chromium
+passed all 653 active cases with five existing skips. The exact Docker
+build passed. At the last GitHub check one CI job was in progress and all
+three container browser jobs were queued.
+[Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45744662165) ·
+[CI run](https://github.com/utilityfueled/tax-engine/actions/runs/45744662271) ·
+[Linux browser run](https://github.com/utilityfueled/tax-engine/actions/runs/45744662198).
+
+## November 25 Ohio earned school residency
+
+`c0026c90a` applies the existing residency check to both Ohio school tax
+bases. The ordinary 2026 earned-income worksheet now holds a declared
+part-year or nonresident status that conflicts with a documented full-year
+Ohio domicile. Matching full-year declarations and omitted declarations
+supported by independent domicile records still pass. Source-only and
+filing readiness remain gated.
+
+Both contradictory cases failed before the fix, during confirmation and
+saved-draft replay. Afterward 237 focused tests passed, including the exact
+seven-case saved-draft suite. Independent engineering review checked both
+entry points, the paired draft and the traditional controls. Core and web
+types, scoped lint, inventory and 40 exact browser audit controls passed.
+[Ohio Revised Code § 5748.01(F)–(G)](https://codes.ohio.gov/ohio-revised-code/section-5748.01/1-1-2026).
+
 ## November 25 federal estimated-tax payment reconciliation
 
 `8d4481d8c` prevents the guided 2026 worksheet from counting one federal

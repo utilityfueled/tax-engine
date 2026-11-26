@@ -9,11 +9,28 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
-- The latest local checks passed 30,622 unit tests, 88.49% branch coverage,
-  and all 653 active browser cases. The application and the Ohio PDF
-  test repair both passed their exact Docker builds. Remote CI and
-  container browser qualification are recorded separately.
-  [Exact release evidence](upgrade-2026-progress.md#november-25-federal-estimated-tax-payment-reconciliation).
+- A clean Chromium profile restored a self-hosted encrypted backup on
+  the exact `75084f31c` build. The original PDF and guided answers
+  matched byte for byte after reload, and the workflow regenerated the
+  12-page review. Strict Linux release checks remain open.
+  [Portable recovery evidence](upgrade-2026-progress.md#november-25-portable-self-host-recovery).
+
+- `75084f31c` requires fresh Lifetime Learning Credit confirmations when
+  the taxpayer changes the student, school records or tuition in the
+  guided worksheet. Confirmations on unaffected records survive changes
+  in formatting and order. The focused checks passed.
+  [Education source evidence](upgrade-2026-progress.md#november-25-lifetime-learning-credit-source-reconfirmation).
+
+- `c0026c90a` applies the Ohio school-district residency consistency check
+  to the 2026 earned-income worksheet. Confirmation and saved replay hold
+  when the taxpayer declares part-year residence or nonresidence alongside
+  a full-year Ohio domicile record. All 237 focused tests passed.
+  [Ohio residency evidence](upgrade-2026-progress.md#november-25-ohio-earned-school-residency).
+
+- Exact local checks for `75084f31c` passed 30,630 unit tests, 88.49%
+  branch coverage, and all 653 active managed Chromium cases. Its Docker
+  build passed. Remote CI and strict Linux browser runs remain open.
+  [Exact release evidence](upgrade-2026-progress.md#november-25-lifetime-learning-credit-source-reconfirmation).
 
 - `8d4481d8c` reconciles 2026 federal estimate, extension and balance-due
   payment receipts before the guided worksheet calculates. Distinct
@@ -1649,10 +1666,10 @@ AMD64 runner.
 | Package | Current evidence and remaining criterion |
 | --- | --- |
 | Taxpayer facts and federal law | The guided interview retains short-period dates and ties them to the taxpayer and return year. The public calculator holds annualized amounts. Qualified independent tax interpretations and expected outputs remain open. [Intake evidence](upgrade-2026-progress.md#november-23-actual-short-accounting-period-intake) · [Tax review cases](upgrade-2026-external-actions.md). |
-| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Some individual final 2026 forms are pinned, including the final Form 8863 blank. Current annual Form 1040 and the main Pennsylvania and Ohio annual returns still print 2025. Qualification of the scenarios, maps and federal/state transfers remains open. [Form 8863 evidence](upgrade-2026-progress.md#november-25-explicit-review-of-legacy-aotc-claimant-facts) · [IRS annual Form 1040](https://www.irs.gov/forms-pubs/about-form-1040) · [Pennsylvania PIT forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio tax forms](https://tax.ohio.gov/individual/get-a-form). |
+| State and form exports | PA and Ohio are selected for full-year residents, part-year residents and nonresidents. Some individual final 2026 forms are pinned, including the final Form 8863 blank. The official annual Form 1040, Pennsylvania PA-40 and Ohio IT 1040 located on November 25 were for 2025. Qualification of the scenarios, maps and federal/state transfers remains open. [Form 8863 evidence](upgrade-2026-progress.md#november-25-explicit-review-of-legacy-aotc-claimant-facts) · [IRS annual Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) · [Pennsylvania PIT forms](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) · [Ohio tax forms](https://tax.ohio.gov/business/get-a-form). |
 | AI routing, evaluation and exact billing | Exact cost is recorded separately from whole retail credits. The hold for a second attempt checks the cumulative bound under the owner lock. The offline scorecard requires current evidence for exact matches and validated explicit abstentions. Independent labels, held-out provider runs and selected Google project access remain open. [Evaluation evidence](upgrade-2026-progress.md#november-25-ai-evaluation-accuracy-and-abstention) · [Billing evidence](upgrade-2026-progress.md#november-23-exact-ai-escalation-hold). |
 | Hosted recovery | Protected Preview `cdfdd050` passed all 12 workspace lifecycle checks. Four read-only billing checks passed for each of two authorized actors on `1a9bfd0d`. Its configured prices match Stripe Sandbox, and the canceled actor displays enabled checkout choices. The webhook points to an older Preview. Earlier evidence covers email delivery, Stripe scheduled retry, and isolated 11-table migration, rollback and restore. Current checkout, signed delivery and exact credit reconciliation remain open. [Preview](upgrade-2026-progress.md#november-20-original-student-loan-and-retirement-statements) · [Billing baseline](upgrade-2026-progress.md#november-20-stripe-sandbox-catalog-and-billing-baseline) · [Migration](upgrade-2026-progress.md#november-19-persistent-preview-migration-and-restore). |
-| Self-host recovery | Exact `297f948a` passed all 652 active local cases. Managed Linux passed 650, strict AMD64 645 and strict ARM64 642. Both strict architectures passed recovery, archive verification and cleanup. Browser deadlines keep qualification open. [Runtime evidence](upgrade-2026-progress.md#november-25-ai-evaluation-accuracy-and-abstention). |
+| Self-host recovery | Exact `75084f31c` restored an encrypted backup in a fresh Chromium profile and re-created the review on macOS ARM64. Earlier strict Linux runs on both architectures passed recovery, archive verification and cleanup. Browser deadlines keep Linux release qualification open. [Portable recovery](upgrade-2026-progress.md#november-25-portable-self-host-recovery) · [Runtime evidence](upgrade-2026-progress.md#november-25-ai-evaluation-accuracy-and-abstention). |
 | Security and release | Cybersecurity work is deferred at the owner's direction. Independent security/privacy review and advisory disposition remain release criteria. Production automatic builds stay disabled. Filing and model promotion remain closed. [External actions](upgrade-2026-external-actions.md). |
 
 The `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
