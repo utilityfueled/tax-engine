@@ -6,7 +6,7 @@
     "latestScopedApplicationCommit": "ca3b4231a7fb7b9eb9e3e7caaddcbda28bc87862",
     "visitedOhioHeaderEvidenceKey": "activeContinuation.nov26VisitedOhioHeaderEdits",
     "ohioBankInterestResidencyEvidenceKey": "activeContinuation.nov26OhioBankInterestAllResidency",
-    "latestExactLinuxResultsEvidenceKey": "activeContinuation.nov26CurrentExactLinuxReleaseResults",
+    "latestExactLinuxResultsEvidenceKey": "activeContinuation.nov26ExactReleaseAfterOhioNavigation",
     "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
@@ -105,8 +105,8 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Current exact Linux CI, Docker, managed Chromium and native ARM64 archive and Compose recovery passed. Resolve and reverify strict container Chromium failures on AMD64 and ARM64 before release.",
-      "The last fully passing local application was 827f467e2. The current exact ARM64 timing was captured and published. Preserve the newer local and Linux failures until a new exact run qualifies.",
+      "Exact ca3b4231a Linux CI, Docker, image imports and Compose recovery passed. Resolve the two managed Linux RRTA inspections and the strict Chromium failures on AMD64 and ARM64 before release.",
+      "The last fully passing local application was 827f467e2. The current exact local Chromium retry passed. Preserve the newer local unit and Linux browser failures until a new exact run qualifies.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -114,6 +114,22 @@
     ]
   },
   "activeContinuation": {
+    "nov26ExactReleaseAfterOhioNavigation": {
+      "commit": "ca3b4231a7fb7b9eb9e3e7caaddcbda28bc87862",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-exact-release-checks-after-the-ohio-changes",
+      "linuxCoveragePassedTests": 30892,
+      "linuxCoverageTestFiles": 2233,
+      "linuxBranchCoveragePercent": 88.91,
+      "browserCasesPerRun": 659,
+      "browserOriginalSkipsPerRun": 5,
+      "managedLinuxFailures": 2,
+      "strictAmd64Failures": 16,
+      "strictArm64Failures": 11,
+      "composeRecoveryAndImport": "passed on both architectures",
+      "localBrowser": {"passed": 654, "failed": 0, "originalSkips": 5, "batches": 9, "cleanupVerified": true},
+      "localUnit": {"passed": 30795, "failed": 13, "skipped": 84, "fiveSecondTimeouts": 12, "loopbackPermissionFailures": 1, "affectedFilesRetryPassed": 95},
+      "priorBankInterestRevision": {"linuxCoveragePassedTests": 30891, "linuxBranchCoveragePercent": 88.91, "managedLinuxFailures": 2, "strictAmd64Failures": 8}
+    },
     "nov26VisitedOhioHeaderEdits": {
       "commit": "ca3b4231a7fb7b9eb9e3e7caaddcbda28bc87862",
       "progressSection": "docs/upgrade-2026-progress.md#november-26-visited-ohio-header-edits",

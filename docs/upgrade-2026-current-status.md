@@ -9,10 +9,17 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Exact application `ca3b4231a` passed 30,892 Linux tests at 88.91%
+  branch coverage. Docker, Compose recovery on both architectures and
+  the 654 active local Chromium cases passed. Linux managed Chromium
+  failed two RRTA inspections. Strict Linux Chromium failed 16 AMD64
+  and 11 ARM64 cases. The first local unit run failed 13 tests and all
+  95 tests in those files passed on a separate rerun.
+  [Exact release results](upgrade-2026-progress.md#november-26-exact-release-checks-after-the-ohio-changes).
+
 - `ca3b4231a` reduces repeated validation during edits of a visited Ohio
   header. All 2,266 exact guided tests and a separate engineering review
-  passed. The local integration and native ARM64 runs are in progress.
-  Strict Linux Chromium deadlines remain open.
+  passed.
   [Ohio navigation evidence](upgrade-2026-progress.md#november-26-visited-ohio-header-edits).
 
 - `c2044be1f` extends the private Ohio 2026 bank-interest draft to

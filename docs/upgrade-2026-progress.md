@@ -1,5 +1,34 @@
 # 2026 upgrade implementation evidence
 
+## November 26 exact release checks after the Ohio changes
+
+On `ca3b4231a`, Linux CI passed **30,892 tests** across 2,233 files with
+**88.91% branch coverage**. Docker, both Compose recovery runs, independent
+image imports and container cleanup passed. The Linux browser jobs each
+scheduled 659 cases with five original skips. Managed Chromium failed two
+RRTA saved-PDF inspections at their four-second deadline. Strict AMD64
+failed those same inspections and 14 Ohio cases. Strict ARM64 failed 11
+Ohio cases. The strict Ohio failures reached the existing 30-second limit.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45851190174) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45851189993) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45851189912) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45851240755).
+
+The earlier `c2044be1f` passed 30,891 Linux tests at 88.91% branch
+coverage. Its managed Chromium job failed the same two RRTA inspections.
+Its strict AMD64 job failed eight cases. Its Compose recovery passed.
+[Earlier CI](https://github.com/utilityfueled/tax-engine/actions/runs/45849952059) ·
+[Earlier Web](https://github.com/utilityfueled/tax-engine/actions/runs/45849951905).
+
+On the Mac, all eight static and build checks passed for `ca3b4231a`.
+The managed browser retry passed **654 active cases** and kept all five
+original skips across nine batches. Its cleanup receipt confirms server
+closure. The initial sandboxed unit run passed 30,795 tests, skipped 84
+and failed 13 across 13 files. Twelve reached the five-second test limit
+and one could not bind its local fixture. All 95 tests in those 13 files
+passed in a separate run with loopback access. The original full-run
+failure remains recorded.
+
 ## November 26 visited Ohio header edits
 
 `ca3b4231a` reuses current school-source validation for navigation after
