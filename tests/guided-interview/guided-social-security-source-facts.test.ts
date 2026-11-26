@@ -149,6 +149,25 @@ it("invalidates a retained small repayment confirmation after a raw source updat
   expect(buildTaxInputFromGuidedData(replacement)).toBeNull();
 });
 
+it("reconfirms the statement and small repayment after a same-last-four primary taxpayer replacement", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  state.sectionData["income-social-security"] = smallRepayment2026Data();
+  const personal = state.sectionData["personal-info"];
+  if (!personal) throw new Error("Missing synthetic taxpayer details.");
+  const sameOwner = updateSectionData(state, "personal-info", { ...personal, ssn: "111223333", addressLine1: "2 Example Lane" });
+  expect(buildTaxInputFromGuidedData(sameOwner)?.formSSA1099?.[0]?.federalWithheld).toBe("37.25");
+
+  const replaced = updateSectionData(state, "personal-info", { ...personal, firstName: "Morgan", ssn: "555-66-3333" });
+  expect(replaced.sectionData["income-social-security"]).toMatchObject({
+    sourceFactsConfirmed: null, noOtherPriorYearRepaymentsConfirmed: null,
+    entries: [{ accountReference: "actual-ssa", netBenefits: "-3000", federalWithheld: "37.25", sourceFactsConfirmed: null }],
+  });
+  const reopened = loadGuidedFlowState({ getItem: () => JSON.stringify(replaced) } as Storage, "new-owner");
+  expect(validateSection(reopened, "income-social-security").status).toBe("partial");
+  expect(buildTaxInputFromGuidedData(reopened)).toBeNull();
+});
+
 it("forwards actual prior-year election records and rejects inconsistent historical years and zero guesses", () => {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
   const history = { taxYear: "2024", filingStatus: "mfs" as const, livedWithSpouseAtAnyTimeDuringYear: false, benefitsReceivedInEarlierYear: "0", delayedBenefitsReceivedInCurrentYear: "100", adjustedGrossIncome: "-10.20", taxExemptInterest: "0", exclusionsAdjustments: "0", taxableBenefitsPreviouslyReported: "0", sourceFactsConfirmed: true };

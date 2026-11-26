@@ -98,7 +98,7 @@ import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, type UnemploymentSourceData } from "./guided-unemployment-facts";
 import type { MortgageSourceData } from "./guided-mortgage-facts";
 import type { MortgageWorksheetData } from "./guided-mortgage-worksheet";
-import { guidedSocialSecurityFactContext, socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
+import { guidedSocialSecurityFactContext, socialSecurityFactErrors, socialSecurityEntries, isSmall2026SocialSecurityRepayment, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
 import type { RetirementSourceData } from "./guided-retirement-facts";
 import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
@@ -2348,7 +2348,7 @@ function annualConfirmationAfterEdit(previous: number | null, next: number | nul
   return next === undefined ? previous : next;
 }
 
-function vehicleBorrowerIdentity(person?: PersonalInfoData | SpouseInfoData) {
+function guidedTaxpayerIdentity(person?: PersonalInfoData | SpouseInfoData) {
   if (!person) return undefined;
   const name = (value?: string) => value?.trim().replace(/\s+/g, " ").toLowerCase() ?? "";
   return {
@@ -2361,8 +2361,8 @@ function vehicleBorrowerIdentity(person?: PersonalInfoData | SpouseInfoData) {
 }
 
 function invalidateChangedVehicleBorrowers(loans: VehicleInterestData[], before?: PersonalInfoData, after?: PersonalInfoData) {
-  const primaryChanged = guidedSourceValuesChanged(vehicleBorrowerIdentity(before), vehicleBorrowerIdentity(after));
-  const spouseChanged = guidedSourceValuesChanged(vehicleBorrowerIdentity(before?.spouse), vehicleBorrowerIdentity(after?.spouse));
+  const primaryChanged = guidedSourceValuesChanged(guidedTaxpayerIdentity(before), guidedTaxpayerIdentity(after));
+  const spouseChanged = guidedSourceValuesChanged(guidedTaxpayerIdentity(before?.spouse), guidedTaxpayerIdentity(after?.spouse));
   if (!primaryChanged && !spouseChanged) return loans;
   const changed = (owner: string | undefined) => owner === "primary" ? primaryChanged : owner === "spouse" && spouseChanged;
   return loans.map(loan => {
@@ -2452,6 +2452,10 @@ export function updateSectionData(
     const next = data as SocialSecurityData | undefined;
     if (next?.noOtherPriorYearRepaymentsConfirmed != null) data = { ...next, noOtherPriorYearRepaymentsConfirmed: null };
   }
+  const socialSecurity = state.sectionData["income-social-security"];
+  const changedRepaymentOwner = sectionId === "personal-info" && socialSecurity
+    && isSmall2026SocialSecurityRepayment(socialSecurity, state.taxYear, state.segmentation.filingStatus)
+    && guidedSourceValuesChanged(guidedTaxpayerIdentity(state.sectionData["personal-info"]), guidedTaxpayerIdentity(data as PersonalInfoData | undefined));
   const previousStateReturn = state.sectionData["state-return"];
   const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
@@ -2758,6 +2762,12 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: sectionId === "credits" ? nextCredits : data,
+      ...(changedRepaymentOwner && socialSecurity ? { "income-social-security": {
+        ...socialSecurity,
+        entries: socialSecurity.entries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })),
+        sourceFactsConfirmed: null,
+        noOtherPriorYearRepaymentsConfirmed: null,
+      } } : {}),
       ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
       ...((scheduleCSourcesChanged || macrsSourcesChanged || passengerSourcesChanged || mileageSourcesChanged || wageringSourcesChanged || renterHomeOfficeChanged) && nextBusiness ? {
