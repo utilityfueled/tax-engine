@@ -427,7 +427,7 @@
     "apps/web/src/lib/hosted-ai-credit-conflict.ts": "5f8eb5d39a216cf6f6530625f71976d430a225020325f25741af8fa8681b28e9",
     "apps/web/src/lib/hosted-ai-credit-issuance-schema.ts": "bbf7f2c8adf55325b52054fa67993751340ceaaba7aa21325f952130040beee4",
     "apps/web/src/lib/hosted-ai-credit-issuance.ts": "5aaf344559a4c483417a46f6e57c794ca184f45f53381ede502bbce8b6928e06",
-    "apps/web/src/lib/hosted-ai-helper-billing.ts": "42635fdcf35fdffd1b290ad3f77869f2ddd6472b31b31aff61174583b08b58c5",
+    "apps/web/src/lib/hosted-ai-helper-billing.ts": "13fe4fc1d84369e503942602ad22233a8e8b3bcc9104a1e261e2aef0f24480d0",
     "apps/web/src/lib/hosted-ai-ledger-schema.ts": "d4600bd9d32807e80eef0dcf900dcf9ff86354b109b311dc6829e913a790fd87",
     "apps/web/src/lib/hosted-ai-ledger.ts": "59c2d397a47a4119ed2a363182e0ef9f693c7b8ab84cc166da1d76590042640d",
     "apps/web/src/lib/hosted-ai-route.ts": "441416cbbe8084abdc1c416f1a16e6ad7ef0bbb60d58e0f1387941cce7e2c65c",

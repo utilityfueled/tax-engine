@@ -161,12 +161,6 @@ export function estimateHostedAiReserveCostCents(
   }, env).estimatedCostCents;
 }
 
-export function resolveHostedAiHelperModelId(
-  env: HostedAiBillingEnvironment = process.env
-) {
-  return env.MODEL_PROVIDER_MODEL?.trim() || "gpt-6-luna";
-}
-
 export function resolveHostedAiMaxOutputTokens(
   env: HostedAiBillingEnvironment = process.env
 ) {
