@@ -85,9 +85,16 @@ export const Ohio2026TreasuryCouponEmployeeSourcesSchema = Ohio2026OrdinarySourc
 }).strict();
 export type Ohio2026TreasuryCouponEmployeeSources = z.infer<typeof Ohio2026TreasuryCouponEmployeeSourcesSchema>;
 
+export const ohio2026BankInterestMethodByResidency = {
+  full_year_resident: 'oh-2026-full-year-bank-interest-employee-draft-v1',
+  part_year_resident: 'oh-2026-part-year-bank-interest-employee-draft-v1',
+  nonresident: 'oh-2026-nonresident-bank-interest-employee-draft-v1',
+} as const;
+export const Ohio2026BankInterestMethodSchema = z.enum(ohio2026BankInterestMethodByResidency);
+
 /** Current Box 1 and dated credits from one ordinary domestic deposit account. */
 export const Ohio2026BankInterestEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
-  methodId: z.literal('oh-2026-part-year-bank-interest-employee-draft-v1'),
+  methodId: Ohio2026BankInterestMethodSchema,
   bankInterestOriginal: z.object({
     sourceTaxYear: z.literal(2026), sourceReference: reference,
     payerName: reference, payerTin: z.string().regex(/^\d{2}-?\d{7}$/), accountReference: reference,

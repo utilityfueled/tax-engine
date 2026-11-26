@@ -7,7 +7,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { Form1099IntSchema, TaxpayerSchema, W2Schema, StandardDeductionFactsSchema, type TaxYearInput } from '@/models/inputs.js';
 import {
-  Ohio2026BankInterestEmployeeSourcesSchema, type Ohio2026BankInterestEmployeeSources,
+  Ohio2026BankInterestEmployeeSourcesSchema, ohio2026BankInterestMethodByResidency, type Ohio2026BankInterestEmployeeSources,
   Ohio2026OrdinarySourcesSchema, Ohio2026OrdinaryStateSchema, Ohio2026PaReciprocalSourcesSchema,
   Ohio2026TreasuryCouponEmployeeSourcesSchema, Ohio2026UnemploymentEmployeeSourcesSchema, Ohio2026UnemploymentOriginalSchema,
   Ohio2026VaResidentCreditSourcesSchema, type Ohio2026TreasuryCouponEmployeeSources, type Ohio2026UnemploymentEmployeeSources,
@@ -120,11 +120,14 @@ function qualifyTreasuryCoupon(input: TaxYearInput, facts: OhioResidencyFacts, o
   return coupon;
 }
 
-/** Spec: state/oh-2026-return-draft.yaml#part-year-bank-interest. */
-function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts, original: Ohio2026BankInterestEmployeeSources['bankInterestOriginal']) {
+/** Spec: state/oh-2026-return-draft.yaml#bank-interest-method-residency. */
+function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts, source: Ohio2026BankInterestEmployeeSources) {
   const [owner] = facts.owners;
-  if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary' || owner.status !== 'part_year_resident')
-    fail('bank interest requires a single primary part-year Ohio resident');
+  const { bankInterestOriginal: original } = source;
+  if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary')
+    fail('bank interest requires a single primary ordinary employee');
+  if (source.methodId !== ohio2026BankInterestMethodByResidency[owner.status])
+    fail('bank interest method and confirmed primary domicile differ');
   if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
     fail('retained unemployment receipts require their separate method');
   if (!Array.isArray(input.form1099Int) || input.form1099Int.length !== 1) fail('one current original Form 1099-INT required');
@@ -174,6 +177,7 @@ interface Projection {
   filingStatus: 'single' | 'married_filing_jointly';
   federalAgi: string; reciprocalWageExclusion?: string; residentCreditIncome?: string; residentCreditTaxPaid?: string; withholding: string; eligibleExemptions: number;
   treasuryCoupon?: { deduction: string; ohioAgi: string };
+  bankInterestOhioAllocation?: string;
   primaryQualifyingIncome: string; spouseQualifyingIncome?: string;
   seniorCreditEligibleByAge?: true;
   actualBalancePayment?: true;
@@ -183,7 +187,7 @@ interface Projection {
 export interface Ohio2026OrdinaryContext {
   readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1'
     | 'oh-2026-earned-school-employee-draft-v1' | 'oh-2026-unemployment-employee-draft-v1' | 'oh-2026-treasury-coupon-employee-draft-v1'
-    | 'oh-2026-part-year-bank-interest-employee-draft-v1';
+    | Ohio2026BankInterestEmployeeSources['methodId'];
   readonly sourceCommitment: string;
 }
 const contexts = new WeakMap<Ohio2026OrdinaryContext, { currentDigest: string; projection: Projection }>();
@@ -266,7 +270,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const seniorCreditHistory = 'seniorCreditHistory' in source ? source.seniorCreditHistory : undefined;
   if (seniorCreditEligibleByAge) {
     if (treasuryCoupon) fail('direct Treasury coupon requires an ordinary employee under 65');
-    if (bankInterest) fail('part-year bank interest requires an ordinary employee under 65');
+    if (bankInterest) fail('bank interest requires an ordinary employee under 65');
     if (reciprocal || residentCredit || payments.remainingTaxPayment.status !== 'no_remaining_tax') fail('Ohio senior credit requires the ordinary withholding-only method');
     if (!seniorCreditHistory || seniorCreditHistory.length !== holders.length
       || new Set(seniorCreditHistory.map(row => row.accountHolder)).size !== holders.length
@@ -292,7 +296,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   if (facts.owners.some(owner => owner.periods.some(period => !Ohio2026OrdinaryStateSchema.safeParse(period.domicileState).success))) fail('actual domestic domicile state required');
   const unemploymentAmounts = 'unemploymentOriginal' in source ? qualifyUnemployment(input, facts, source.unemploymentOriginal) : undefined;
   const coupon = 'treasuryCouponOriginal' in source ? qualifyTreasuryCoupon(input, facts, source.treasuryCouponOriginal) : undefined;
-  const bank = 'bankInterestOriginal' in source ? qualifyBankInterest(input, facts, source.bankInterestOriginal) : undefined;
+  const bank = 'bankInterestOriginal' in source ? qualifyBankInterest(input, facts, source) : undefined;
   const federalInterest = coupon ?? bank?.box1 ?? new Decimal(0);
   const residentInterest = coupon ?? bank?.residentAmount ?? new Decimal(0);
   const wageTotals = { primary: new Decimal(0), spouse: new Decimal(0) };
@@ -377,6 +381,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const context: Ohio2026OrdinaryContext = Object.freeze({ methodId, sourceCommitment: currentDigest });
   contexts.set(context, { currentDigest, projection: { ...(actualBalancePayment ? {actualBalancePayment: true as const, originalWithholding: withholding.toFixed()} : {}), filingStatus: filingStatus as Projection['filingStatus'], federalAgi: federalAgi.toFixed(), ...(reciprocal ? { reciprocalWageExclusion: federalAgi.toFixed() } : {}), ...(paidResident ? { residentCreditIncome: paidResident.income, residentCreditTaxPaid: paidResident.taxPaid } : {}), withholding: roundDollar(withholding).toFixed(), eligibleExemptions: holders.length,
     ...(coupon ? { treasuryCoupon: { deduction: coupon.toFixed(), ohioAgi: ohioAgi.toFixed() } } : {}),
+    ...(bank ? { bankInterestOhioAllocation: bank.residentAmount.toFixed() } : {}),
     ...(seniorCreditEligibleByAge ? { seniorCreditEligibleByAge: true as const } : {}), primaryQualifyingIncome: wageTotals.primary.toFixed(),
     ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
   return context;

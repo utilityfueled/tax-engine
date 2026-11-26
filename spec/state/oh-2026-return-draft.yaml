@@ -53,6 +53,66 @@ lines:
       - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
       - "https://www.irs.gov/publications/p550"
     testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::allocates actual bank credits on both sides of the Ohio move"
+  - line: "full-year-bank-interest"
+    description: "Private 2026 full-year Ohio resident ordinary employee draft for one nonbusiness deposit account"
+    formula: >-
+      Require the full-year bank-interest method ID, a single primary ordinary
+      employee under 65 with complete actual W-2 originals, and confirmed Ohio
+      domicile timeline covering the year. Apply the same matched current Form
+      1099-INT, exact Box 1 and available dated credit reconciliation, and
+      ordinary withholding-only gates as the part-year bank-interest method.
+      Include all Box 1 interest with wages in both federal and Ohio AGI,
+      rounding the combined amounts once. Allocate all interest to Ohio under
+      RC 5747.20(A). A full-year Ohio resident has zero nonresident ratio and
+      credit, and the return draft omits the nonresident worksheet. Ohio's
+      draft 2026 instructions, printed pages 41–42, describe the applicability
+      and interest allocation. Final publication remains a separate gate.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      - "https://www.irs.gov/publications/p550"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+    testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::includes all bank interest for a full-year Ohio resident"
+  - line: "nonresident-bank-interest"
+    description: "Private 2026 Ohio nonresident ordinary employee draft for one nonbusiness deposit account"
+    formula: >-
+      Require the nonresident bank-interest method ID, a single primary ordinary
+      employee under 65 with complete actual W-2 originals, and confirmed non-Ohio
+      domicile timeline covering the year. Apply the same matched current Form
+      1099-INT, exact Box 1 and available dated credit reconciliation, and
+      ordinary withholding-only gates as the part-year bank-interest method.
+      Include all Box 1 interest with wages in both federal and Ohio AGI.
+      Under RC 5747.20(B)(6), allocate zero bank interest to Ohio regardless of
+      payer or wage service location. Include actual Ohio-source compensation
+      in IT NRC Part A. Ohio's draft 2026 instructions, printed pages 41–42,
+      limit Part B to part-year residents. Omit Part B worksheet lines 10–15
+      from this nonresident draft and trace the verified zero Ohio interest in
+      a separate draft audit entry. Apply the four-place truncated ratio of
+      non-Ohio income to Ohio AGI and whole-dollar credit under RC 5747.05(A).
+      For the existing part-year method, RC 5747.05(C) applies the credit to
+      the nonresident allocation without any duplicate resident credit on the
+      same income. Final publication remains a separate gate.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      - "https://www.irs.gov/publications/p550"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf"
+    testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::credits all bank interest away from Ohio for a full-year nonresident"
+  - line: "bank-interest-method-residency"
+    description: "Bind each private bank-interest method to verified domicile and current source evidence"
+    formula: >-
+      Select the full-year, part-year or nonresident bank validation only when
+      the private packet's explicit method ID agrees with its documented owner
+      status. Hold a missing, overlapping or contradictory domicile timeline,
+      missing or unavailable credit, or a source snapshot changed after binding.
+      Explicitly reconcile the federal, Ohio-resident and Ohio-source
+      nonresident category amounts against actual originals across all methods.
+      Keep the saved part-year ID and its existing direct and dispatcher calls.
+    testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds mismatched bank method and primary domicile (%s)"
+    testRefs:
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds unknown or contradictory evidence across the added residency methods (%s)"
+      - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::reconciles multiple current W-2 originals for one full-year resident"
   - line: "part-year-bank-interest-dispatch"
     description: "Dispatch a complete bank-interest packet through the private Ohio source-to-return entry"
     formula: >-
