@@ -1,5 +1,24 @@
 # 2026 upgrade implementation evidence
 
+## November 25 mobile touch lifecycle
+
+On the exact `cb7f8d522` standalone build, Chromium's 390px mobile context
+reported one touch point and a coarse pointer. It used 35 taps from return
+creation through W-2 review, calculation, three review exports, encrypted
+backup, recovery, and deletion. Playwright supplied the synthetic files
+through the file chooser. The touch case took 6.9 seconds. The existing
+desktop and narrow keyboard cases passed in 6.4 and 5.0 seconds. Each used
+the existing 30-second strict deadline and zero retries. All three cases
+produced three review PDF requests and zero provider, business-expense
+analysis or self-employment analysis requests. This is local synthetic
+browser evidence for the self-host distribution.
+
+The strict browser inventory contains 658 cases and the five original
+skips. Removing the new touch case reproduces the exact 657-case roster
+collected from the preceding source. All 266 focused browser controls
+passed. Independent collection validation retained the same 14 diagnostic
+targets, the per-case request bounds, zero retries and original deadlines.
+
 ## November 25 OpenAI usage total reconciliation
 
 `cb7f8d522` verifies a supplied OpenAI token total against the exact sum

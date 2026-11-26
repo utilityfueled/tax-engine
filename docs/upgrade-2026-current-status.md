@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- The synthetic self-host lifecycle passed in touch-enabled Chromium at
+  390px and in both existing keyboard cases. All three exercised review
+  export, recovery and deletion on the built local application.
+  [Touch lifecycle evidence](upgrade-2026-progress.md#november-25-mobile-touch-lifecycle).
+
 - `cb7f8d522` holds conflicting OpenAI token totals for reconciliation in
   both application and evaluation transports. All 89 exact tests passed.
   Human and live qualification remain open.

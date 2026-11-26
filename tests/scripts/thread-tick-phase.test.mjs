@@ -296,9 +296,18 @@ test('diagnostic source pins refresh without changing original budgets or collec
  }
  for(const [path,hash] of Object.entries(full.sourceSha256)) assert.equal(hash,sha(await read(path)),path);
  const project=(data,keys)=>Object.fromEntries(Object.entries(data).filter(([key])=>!keys.includes(key)));
- // The current audit adds two deductions cases and moves two request call sites.
- assert.equal(sha(JSON.stringify(project(audit,['sourceHashes']))),'f0b4f93c11260d72e39ea769b87028195048a765ef647e02fb316c1938312198');
- assert.equal(sha(JSON.stringify(project(cases,['auditSha256','targetSourceSha256']))),'f5b67f03b7c03f5b92635aa2cb2725d0fdf04006509a0dab81f104580657d1bb');
+ // The touch lifecycle adds one case and moves the existing request call sites.
+ const lifecycle=audit.files['complete-local-lifecycle.spec.ts'];
+ assert.equal(lifecycle.caseCount,3);
+ assert.deepEqual(lifecycle.requestSourceLines,[129,239,246,298]);
+ const beforeTouch={...audit,files:{...audit.files,'complete-local-lifecycle.spec.ts':{
+  ...lifecycle,caseCount:2,requestSourceLines:[110,197,204,242],
+ }}};
+ assert.equal(sha(JSON.stringify(project(beforeTouch,['sourceHashes']))),'f0b4f93c11260d72e39ea769b87028195048a765ef647e02fb316c1938312198');
+ assert.equal(cases.currentFullCaseCount,658);
+ assert.equal(cases.currentFullCollectionSha256,'a37030078e09a5bf777e1f335502bd4f25fac90a76116cfd039828f4eba1fb57');
+ const previousCases={...cases,currentFullCaseCount:657,currentFullCollectionSha256:'c486b270fbc2136a6f6b11c3b0ae1c64c8e03107dc34fc5c77ed7f90aa355525'};
+ assert.equal(sha(JSON.stringify(project(previousCases,['auditSha256','targetSourceSha256']))),'f5b67f03b7c03f5b92635aa2cb2725d0fdf04006509a0dab81f104580657d1bb');
  // The full-batch pin refers to its historical 655-case source selection.
  assert.equal(sha(JSON.stringify(project(full,['sourceSha256']))),'b08c9c74fca59e0f25c9f88fa8b00c7d10eac463f22b32d547252f2ba88378f2');
  assert.equal(full.fullCaseCount,655);assert.equal(cases.workers,2);assert.equal(cases.retries,0);assert.equal(cases.targetDeadlineMs,30000);

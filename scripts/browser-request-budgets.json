@@ -514,7 +514,7 @@
     "apps/web/tests/cod-chapter-12-personal.spec.ts": "c237e3adeba4710d6c25724b8e4fadcc57551ca9b1263a4c5575cbb84c48215e",
     "apps/web/tests/cod-empty-nol-foreign.spec.ts": "a3428d2bec73f40a2dc34ff884d695985b4814bb465a24fac70991a1b0e5e09e",
     "apps/web/tests/cod-ordinary-attributes.spec.ts": "dd1ab672d4e302756e28c103ba1dfb5d219c8cd360e354bf3b96eb15ab952a48",
-    "apps/web/tests/complete-local-lifecycle.spec.ts": "d21f72bdd37f69a3d343ea76bc8eac81ccd7de4810f64f32da80ddd9161db1ae",
+    "apps/web/tests/complete-local-lifecycle.spec.ts": "125950570776f2c51f84b2486b72dcb6a3325cc8e36cab90a34eb5b86b73c92d",
     "apps/web/tests/current-minimum-tax-credit.spec.ts": "2423107b10c6a8c4c4395beb2711d9b48f02101a6df7d1458147a42ae9f8960f",
     "apps/web/tests/deductions-credits.spec.ts": "672e82c3045770702b31fa2e967fa61522c79f8056ec77ad2d9891777a61a168",
     "apps/web/tests/eic-history-fixtures.ts": "7119a117e826059dd25fd920636ff318f10872917e7b79d463d02fda3538e457",
@@ -2269,7 +2269,7 @@
       "skippedTitles": []
     },
     "complete-local-lifecycle.spec.ts": {
-      "caseCount": 2,
+      "caseCount": 3,
       "bounds": {
         "filled-return": 3,
         "provider": 0,
@@ -2277,10 +2277,10 @@
         "self-employment-income-analysis": 0
       },
       "requestSourceLines": [
-        110,
-        197,
-        204,
-        242
+        129,
+        239,
+        246,
+        298
       ],
       "reviewBasis": "Reviewed fixed actual download action and helper invocation sites; expected400 filing POSTs included; conservative per-file bound applies to every registered case",
       "skippedTitles": []

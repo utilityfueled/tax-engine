@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Locator } from '@playwright/test';
+import { expect, test, type Page, type Locator, type TestInfo } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -74,16 +74,27 @@ async function cachedFiles(page: Page) {
   });
   return files.map(({ bytesBase64, ...record }) => ({ ...record, bytes: Buffer.from(bytesBase64, 'base64') }));
 }
-async function completeSegmentation(page: Page) {
-  await reachFilingStatus(page);
-  await page.getByRole('radio', { name: /^single/i }).check();
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await page.getByRole('checkbox', { name: /w-2 wages/i }).check();
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+type LifecycleAction = (target: Locator, action: string) => Promise<void>;
+
+async function completeSegmentation(page: Page, activate: LifecycleAction, select: LifecycleAction, touch: boolean) {
+  const next = page.getByRole('button', { name: 'Continue', exact: true });
+  if (touch) {
+    await expect(page.getByRole('heading', { name: /let's tailor your return/i })).toBeVisible();
+    if (await page.getByRole('heading', { name: /^upload documents$/i }).isVisible()) {
+      await activate(page.locator('.guided-segmentation .guided-nav').getByRole('button', { name: 'Continue', exact: true }), 'continue-from-optional-upload');
+    }
+    await expect(page.getByText(/what's your filing status/i)).toBeVisible();
+  } else {
+    await reachFilingStatus(page);
+  }
+  await select(page.getByRole('radio', { name: /^single/i }), 'select-single');
+  await activate(next, 'confirm-filing-status');
+  await select(page.getByRole('checkbox', { name: /w-2 wages/i }), 'select-w2');
+  await activate(next, 'confirm-income-types');
   await expect(page.getByText(/did any of these happen/i)).toBeVisible();
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await activate(next, 'continue-from-life-events');
   await expect(page.getByRole('combobox', { name: /^state return$/i })).toHaveValue('');
-  await page.getByRole('button', { name: /start my return/i }).click();
+  await activate(page.getByRole('button', { name: /start my return/i }), 'start-federal-return');
 }
 async function estimate(page: Page) {
   const ticker = page.locator('section.panel').filter({ has: page.getByRole('heading', { name: /live ticker/i }) });
@@ -92,7 +103,7 @@ async function estimate(page: Page) {
   await expect(page.getByRole('button', { name: /download completed return/i })).toHaveCount(0);
 }
 
-for (const width of [1280, 390]) test(`complete unseeded local upload/review/recovery/delete lifecycle ${width}`, async ({ page }, testInfo) => {
+async function completeLocalLifecycle(page: Page, testInfo: TestInfo, width: number, touch = false) {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
   const started = performance.now();
   const stageTimes: { stage: string; elapsedMS: number; durationMS?: number; inspectorMS?: number }[] = [];
@@ -103,13 +114,20 @@ for (const width of [1280, 390]) test(`complete unseeded local upload/review/rec
   const bytes = source.buffer, sourceSha256 = sha(bytes);
   const evidence = async (name: string, value: unknown) => writeFile(testInfo.outputPath(name), JSON.stringify(value, null, 2));
   const keyboardActions: Awaited<ReturnType<typeof keyboardActivate>>[] = [];
-  const activate = async (target: Locator) => { keyboardActions.push(await keyboardActivate(page, target)); };
+  const touchActions: string[] = [];
+  const tap: LifecycleAction = async (target, action) => {
+    await target.tap();
+    touchActions.push(action);
+  };
+  const click: LifecycleAction = touch ? tap : async target => { await target.click(); };
+  const select: LifecycleAction = touch ? tap : async target => { await target.check(); };
+  const activate: LifecycleAction = touch ? tap : async target => { keyboardActions.push(await keyboardActivate(page, target)); };
   const downloadReview = async (name: string) => {
     const downloadStarted = performance.now();
     const bundle = page.getByRole('region', { name: 'Return Bundle', exact: true });
     const download = page.waitForEvent('download');
     const response = page.waitForResponse(r => r.url().endsWith('/api/workspace/filled-return'));
-    await activate(bundle.getByRole('button', { name: 'Download Review PDF', exact: true }));
+    await activate(bundle.getByRole('button', { name: 'Download Review PDF', exact: true }), `export-${name}`);
     expect((await response).status()).toBe(200);
     const output = testInfo.outputPath(name); await (await download).saveAs(output);
     const inspectorStarted = performance.now();
@@ -155,31 +173,45 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   // Only initial clear/preference writes. No facts, results, completion stamps or cached files injected.
   await page.evaluate(() => { localStorage.clear(); localStorage.setItem('tax-engine:guided-mode', 'true'); });
   await page.reload();
-  let keyboardCreated = false;
-  for (let i = 0; i < 15; i++) {
-    await page.keyboard.press('Tab');
-    if (/start your tax return/i.test(await page.locator(':focus').textContent() ?? '')) {
-      await page.keyboard.press('Enter'); keyboardCreated = true; break;
+  if (touch) {
+    const touchDevice = await page.evaluate(() => ({ maxTouchPoints: navigator.maxTouchPoints, coarsePointer: matchMedia('(pointer: coarse)').matches }));
+    expect(touchDevice.maxTouchPoints).toBeGreaterThan(0);
+    expect(touchDevice.coarsePointer).toBe(true);
+    await evidence('touch-device.json', touchDevice);
+    await tap(page.getByRole('button', { name: /start your tax return/i }), 'create-return');
+  } else {
+    let keyboardCreated = false;
+    for (let i = 0; i < 15; i++) {
+      await page.keyboard.press('Tab');
+      if (/start your tax return/i.test(await page.locator(':focus').textContent() ?? '')) {
+        await page.keyboard.press('Enter'); keyboardCreated = true; break;
+      }
     }
+    expect(keyboardCreated).toBe(true);
   }
-  expect(keyboardCreated).toBe(true);
   await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
   const id = new URL(page.url()).pathname.split('/').at(-1);
   if (!id) throw new Error('Created workspace URL has no ID');
-  await completeSegmentation(page); mark('segmentation-complete');
-  await page.getByRole('button', { name: /switch to advanced mode/i }).click();
-  await page.locator('input[type="file"]').setInputFiles(source);
+  await completeSegmentation(page, click, select, touch); mark('segmentation-complete');
+  await click(page.getByRole('button', { name: /switch to advanced mode/i }), 'open-advanced-mode');
+  if (touch) {
+    const upload = page.waitForEvent('filechooser');
+    await tap(page.getByText('Upload your tax documents (W-2s, 1099s, etc.)', { exact: true }), 'open-document-upload');
+    await (await upload).setFiles(source);
+  } else {
+    await page.locator('input[type="file"]').setInputFiles(source);
+  }
   await expect(page.getByRole('listitem').filter({ hasText: /^1 uploaded document stored locally$/ })).toBeVisible();
-  await page.getByRole('button', { name: /get step-by-step help/i }).click();
+  await click(page.getByRole('button', { name: /get step-by-step help/i }), 'return-to-guided-interview');
   await fillRequiredTaxpayerFacts(page);
   await page.getByLabel('First name', { exact: true }).fill(original.firstName);
   await page.getByLabel('Last name', { exact: true }).fill(original.lastName);
   await page.getByRole('textbox', { name: /^Social Security number/ }).fill(original.ssn);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await page.getByRole('button', { name: /review uploaded w-2 suggestions/i }).click();
-  await page.getByRole('button', { name: /insert detected values/i }).click();
+  await click(page.getByRole('button', { name: 'Continue', exact: true }), 'confirm-taxpayer-facts');
+  await click(page.getByRole('button', { name: /review uploaded w-2 suggestions/i }), 'review-uploaded-w2');
+  await click(page.getByRole('button', { name: /insert detected values/i }), 'insert-detected-values');
   await expect(page.getByRole('button', { name: /confirm all \d+ highlighted document-detected values/i })).toBeVisible();
-  await page.getByRole('button', { name: /confirm all \d+ highlighted document-detected values/i }).click();
+  await click(page.getByRole('button', { name: /confirm all \d+ highlighted document-detected values/i }), 'confirm-detected-values');
   await fillRequiredW2Facts(page, 'single');
   const wage = page.getByRole('textbox', { name: /^Box 1 — Wages, tips, other comp/ });
   expect((await wage.inputValue()).replace(/,/g, '')).toBe(`${original.wages}.00`);
@@ -188,11 +220,11 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   // Use only visible sequential controls, including the actual empty-payments skip prompt.
   for (let step = 0; step < 10; step++) {
     if (await page.getByRole('button', { name: /open full return/i }).isVisible()) break;
-    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await click(page.getByRole('button', { name: 'Continue', exact: true }), 'advance-interview');
     const skip = page.getByRole('button', { name: /skip this section/i });
-    if (await skip.isVisible()) await skip.click();
+    if (await skip.isVisible()) await click(skip, 'skip-empty-interview-section');
   }
-  await page.getByRole('button', { name: /open full return/i }).click();
+  await click(page.getByRole('button', { name: /open full return/i }), 'open-calculated-return');
   await estimate(page); mark('initial-calculation-complete');
   const before = await stored(page, id);
   expect(before.guidedRaw).not.toBeNull();
@@ -207,42 +239,56 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await downloadReview('initial-review.pdf');
   await page.goto('/');
   const card = page.getByRole('listitem').filter({ hasText: `Tax Return ${id}` });
-  await activate(card.getByRole('link', { name: /continue tax return/i }));
+  await activate(card.getByRole('link', { name: /continue tax return/i }), 'reopen-original-return');
   await expect(page).toHaveURL(new RegExp(`/returns/${id}(?:\\?local=1)?$`));
   await page.reload(); await estimate(page);
   expect((await stored(page, id)).guidedRaw).toBe(before.guidedRaw);
   await downloadReview('reopened-review.pdf');
   await page.goto('/');
-  await card.getByText('Back up this return', { exact: true }).click();
+  await click(card.getByText('Back up this return', { exact: true }), 'open-backup');
   const password = card.getByLabel('Backup password (at least 12 characters)');
   await password.fill(backupPassword);
-  await page.keyboard.press('Tab');
   const backupButton = card.getByRole('button', { name: 'Download encrypted backup', exact: true });
-  await expect(backupButton).toBeFocused();
-  const backupDownload = page.waitForEvent('download'); await page.keyboard.press('Enter');
+  if (!touch) {
+    await page.keyboard.press('Tab');
+    await expect(backupButton).toBeFocused();
+  }
+  const backupDownload = page.waitForEvent('download');
+  if (touch) await tap(backupButton, 'download-encrypted-backup');
+  else await page.keyboard.press('Enter');
   const backupPath = testInfo.outputPath('encrypted-full-backup.json'); await (await backupDownload).saveAs(backupPath);
   const encrypted = await readFile(backupPath, 'utf8'); mark('encrypted-backup-downloaded');
   assertEncryptedRecoveryOriginals(encrypted, backupPassword, { workspace: before.workspace, guidedFlowRaw: before.guidedRaw, guidedMode: before.guidedMode, files: originalFiles });
-  await activate(card.getByRole('button', { name: `Delete tax return ${id}`, exact: true }));
+  await activate(card.getByRole('button', { name: `Delete tax return ${id}`, exact: true }), 'delete-original-return');
   await expect(card).toHaveCount(0); await page.reload();
   expect((await stored(page, id)).guidedRaw).toBeNull(); expect((await stored(page, id)).workspace).toBeUndefined(); expect((await stored(page, id)).keys).toEqual([]); expect(await cachedFiles(page)).toEqual([]);
   const restore = page.locator('details').filter({ has: page.getByText('Restore an encrypted backup', { exact: true }) });
-  await restore.getByText('Restore an encrypted backup', { exact: true }).click();
-  await restore.getByLabel('Encrypted recovery file').setInputFiles(backupPath);
+  await click(restore.getByText('Restore an encrypted backup', { exact: true }), 'open-recovery');
+  if (touch) {
+    const recoveryFile = page.waitForEvent('filechooser');
+    await tap(restore.getByText('Encrypted recovery file', { exact: true }), 'open-recovery-file-input');
+    await (await recoveryFile).setFiles(backupPath);
+  } else {
+    await restore.getByLabel('Encrypted recovery file').setInputFiles(backupPath);
+  }
   await restore.getByLabel('Backup password (at least 12 characters)').fill('incorrect-synthetic-password');
-  await restore.getByRole('button', { name: 'Restore as new local return', exact: true }).click();
+  const restoreButton = restore.getByRole('button', { name: 'Restore as new local return', exact: true });
+  await click(restoreButton, 'submit-incorrect-backup-password');
   await expect(restore.getByRole('status')).toContainText('incorrect');
   expect(await page.getByRole('link', { name: /continue tax return/i }).count()).toBe(0); expect(await cachedFiles(page)).toEqual([]);
   await restore.getByLabel('Backup password (at least 12 characters)').fill(backupPassword);
-  await page.keyboard.press('Tab');
-  await expect(restore.getByRole('button', { name: 'Restore as new local return', exact: true })).toBeFocused();
-  await page.keyboard.press('Enter');
+  if (touch) await tap(restoreButton, 'restore-new-return');
+  else {
+    await page.keyboard.press('Tab');
+    await expect(restoreButton).toBeFocused();
+    await page.keyboard.press('Enter');
+  }
   const restoredLink = restore.getByRole('link', { name: 'Open restored return', exact: true }); await expect(restoredLink).toBeVisible();
   const restoredHref = await restoredLink.getAttribute('href');
   const restoredId = restoredHref?.split('/').at(-1)?.split('?')[0];
   if (!restoredId) throw new Error('Recovery did not provide a new workspace ID');
   expect(restoredId).not.toBe(id);
-  await restoredLink.click();
+  await click(restoredLink, 'open-restored-return');
   await expect(page).toHaveURL(new RegExp(`/returns/${restoredId}\\?local=1$`));
   await page.reload(); await estimate(page);
   mark('restored-recalculation-complete');
@@ -256,7 +302,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await page.goto('/');
   const restoredCard = page.getByRole('listitem').filter({ hasText: `Tax Return ${restoredId}` });
   await expect(restoredCard).toContainText('Restored local return — saved only on this device.');
-  await activate(restoredCard.getByRole('button', { name: `Delete tax return ${restoredId}`, exact: true }));
+  await activate(restoredCard.getByRole('button', { name: `Delete tax return ${restoredId}`, exact: true }), 'delete-restored-return');
   await expect(restoredCard).toHaveCount(0); await page.reload();
   expect((await stored(page, restoredId)).guidedRaw).toBeNull(); expect((await stored(page, restoredId)).workspace).toBeUndefined(); expect((await stored(page, restoredId)).keys).toEqual([]); expect(await cachedFiles(page)).toEqual([]);
   await evidence('after-deletion.json', { original: await stored(page, id), restored: await stored(page, restoredId), cached: await cachedFiles(page) });
@@ -275,7 +321,35 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
     }
   }
   await evidence('requests.json', requests);
-  await evidence('keyboard-actions.json', keyboardActions);
+  const requestPaths = requests.map(request => new URL(request.url).pathname);
+  const requestCounts = {
+    'filled-return': requestPaths.filter(pathname => pathname === '/api/workspace/filled-return').length,
+    provider: requestPaths.filter(pathname => pathname.startsWith('/api/provider/') || pathname === '/api/workspace/tax-explanation').length,
+    'business-expense-analysis': requestPaths.filter(pathname => pathname === '/api/business-expense-analysis').length,
+    'self-employment-income-analysis': requestPaths.filter(pathname => pathname === '/api/self-employment-income-analysis').length
+  };
+  expect(requestCounts).toEqual({
+    'filled-return': 3,
+    provider: 0,
+    'business-expense-analysis': 0,
+    'self-employment-income-analysis': 0
+  });
+  await evidence('request-counts.json', requestCounts);
+  if (touch) {
+    expect(keyboardActions).toHaveLength(0);
+    await evidence('touch-actions.json', { actions: touchActions, filesSuppliedByPlaywright: true });
+  } else await evidence('keyboard-actions.json', keyboardActions);
   mark('restored-deletion-and-privacy-complete');
   await evidence('stage-times.json', stageTimes);
+}
+
+for (const width of [1280, 390]) test(`complete unseeded local upload/review/recovery/delete lifecycle ${width}`, async ({ page }, testInfo) => {
+  await completeLocalLifecycle(page, testInfo, width);
+});
+
+test.describe('touch input', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 });
+  test('complete unseeded local upload/review/recovery/delete lifecycle 390 touch', async ({ page }, testInfo) => {
+    await completeLocalLifecycle(page, testInfo, 390, true);
+  });
 });

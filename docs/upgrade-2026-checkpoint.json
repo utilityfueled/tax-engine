@@ -3,6 +3,7 @@
     "asOf": "2026-11-25",
     "branch": "main",
     "applicationCommit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
+    "mobileTouchEvidenceKey": "activeContinuation.nov25MobileTouchLifecycle",
     "openAiUsageTotalEvidenceKey": "activeContinuation.nov25OpenAiUsageTotalReconciliation",
     "rothRolloverContributionEvidenceKey": "activeContinuation.nov25RothRolloverContributionReconciliation",
     "qcdSourceReviewEvidenceKey": "activeContinuation.nov25QcdSourceReview",
@@ -96,6 +97,21 @@
     ]
   },
   "activeContinuation": {
+    "nov25MobileTouchLifecycle": {
+      "applicationCommit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
+      "scope": "Local synthetic standalone application in touch-enabled Chromium and two preserved keyboard scenarios.",
+      "testFileSha256": "125950570776f2c51f84b2486b72dcb6a3325cc8e36cab90a34eb5b86b73c92d",
+      "deadlineMs": 30000,
+      "retries": 0,
+      "casesPassed": 3,
+      "touchTaps": 35,
+      "browserControlsPassed": 266,
+      "auditedCaseCount": 658,
+      "originalSkips": 5,
+      "diagnosticTargetsRetained": 14,
+      "caseDurationMs": {"keyboard1280": 6351, "keyboard390": 4988, "touch390": 6894},
+      "requestsPerCase": {"filledReturn": 3, "provider": 0, "businessExpenseAnalysis": 0, "selfEmploymentIncomeAnalysis": 0}
+    },
     "nov25OpenAiUsageTotalReconciliation": {
       "commit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
       "sources": ["https://developers.openai.com/api/reference/resources/responses/methods/create"],
