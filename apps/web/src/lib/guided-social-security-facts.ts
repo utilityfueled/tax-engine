@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
-import type { AdjustmentData, FilingStatus, PersonalInfoData, SocialSecurityData } from "./guided-interview-flow";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
+import type { AdjustmentData, FilingStatus, GuidedFlowState, PersonalInfoData, SocialSecurityData, UnemploymentData } from "./guided-interview-flow";
 
 export interface SocialSecurityEntryData {
   sourceType?: "ssa-1099" | "rrb-1099" | "ssa-1042s" | "rrb-1042s" | "foreign" | "";
@@ -33,6 +34,7 @@ export interface SocialSecurityEarlierYearData {
 export interface SocialSecuritySourceData {
   entries?: SocialSecurityEntryData[];
   residentTreatmentConfirmed?: boolean | null;
+  noOtherPriorYearRepaymentsConfirmed?: boolean | null;
   puertoRicoIncomeExclusion?: string;
   americanSamoaIncomeExclusion?: string;
   sourceFactsConfirmed?: boolean | null;
@@ -63,10 +65,38 @@ export function socialSecuritySourceTotal(entries: SocialSecurityEntryData[], fi
 }
 export function withSocialSecurityEntries(data: SocialSecurityData, entries: SocialSecurityEntryData[]): SocialSecurityData {
   const started = entries.some(isStartedSocialSecurity);
-  return { ...data, entries, netBenefits: started ? socialSecuritySourceTotal(entries, "netBenefits")?.toFixed() ?? "" : "", federalWithheld: started ? socialSecuritySourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "", sourceFactsConfirmed: null };
+  return { ...data, entries, netBenefits: started ? socialSecuritySourceTotal(entries, "netBenefits")?.toFixed() ?? "" : "", federalWithheld: started ? socialSecuritySourceTotal(entries, "federalWithheld")?.toFixed() ?? "" : "", sourceFactsConfirmed: null,
+    ...(data.noOtherPriorYearRepaymentsConfirmed != null && guidedSourceValuesChanged(socialSecurityEntries(data), entries)
+      ? { noOtherPriorYearRepaymentsConfirmed: null } : {}),
+  };
 }
 
-export function socialSecurityFactErrors(data: SocialSecurityData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, adjustments?: AdjustmentData): Record<string, string> {
+export function isSmall2026SocialSecurityRepayment(data: SocialSecurityData, taxYear?: number | null, filingStatus?: FilingStatus | null): boolean {
+  if (taxYear !== 2026 || filingStatus !== "single" || data.lumpSumMethod || data.earlierYears?.length || hasEnteredAmount(data.currentYearExclusionsAdjustments)) return false;
+  const [entry, additional] = socialSecurityEntries(data).filter(isStartedSocialSecurity);
+  if (!entry || additional || entry.sourceType !== "ssa-1099" || entry.beneficiaryRole !== "primary" || entry.sourceTaxYear !== "2026" || entry.priorYearBenefits !== false || signedSourceAmountError(entry.netBenefits, "signed net benefits")) return false;
+  if ([entry.benefitsPaid, entry.benefitsRepaid, entry.federalWithheld].some(amount => amountError(amount, "SSA-1099 amount") || parseGuidedCurrency(amount).decimalPlaces() > 2)) return false;
+  const net = parseGuidedCurrency(entry.netBenefits);
+  return net.lt(0) && net.gte(-3000) && net.decimalPlaces() <= 2;
+}
+
+export interface SocialSecurityFactContext {
+  filingStatus?: FilingStatus | null;
+  taxYear?: number | null;
+  personalInfo?: PersonalInfoData;
+  adjustments?: AdjustmentData;
+  ordinaryRepayment?: { unemployment: UnemploymentData | undefined };
+}
+
+export function guidedSocialSecurityFactContext(state: GuidedFlowState): SocialSecurityFactContext {
+  return {
+    filingStatus: state.segmentation.filingStatus, taxYear: state.taxYear,
+    personalInfo: state.sectionData["personal-info"], adjustments: state.sectionData.adjustments,
+    ordinaryRepayment: { unemployment: state.sectionData["income-unemployment"] },
+  };
+}
+
+export function socialSecurityFactErrors(data: SocialSecurityData | undefined, { filingStatus, taxYear, personalInfo, adjustments, ordinaryRepayment }: SocialSecurityFactContext = {}): Record<string, string> {
   const errors: Record<string, string> = {};
   const entries = socialSecurityEntries(data).filter(isStartedSocialSecurity);
   if (!data || !entries.length) return errors;
@@ -109,7 +139,21 @@ export function socialSecurityFactErrors(data: SocialSecurityData | undefined, f
   for (const field of ["puertoRicoIncomeExclusion", "americanSamoaIncomeExclusion"] as const) { const error = amountError(data[field], field === "puertoRicoIncomeExclusion" ? "Puerto Rico excluded income" : "American Samoa excluded income"); if (error) errors[field] = error; }
   if (data.sourceFactsConfirmed !== true) errors.socialSecuritySourceFacts = "Confirm the current-year benefit treatment and exclusion facts after the last edit.";
   const net = socialSecuritySourceTotal(included, "netBenefits");
-  if (net?.isNegative()) errors.socialSecurityRepayment = "Preserve negative net benefits. Excess repayments require their actual prior-year deduction or credit worksheet before this return can calculate.";
+  if (net?.isNegative()) {
+    const taxStatus = personalInfo?.standardDeductionFacts;
+    if (!ordinaryRepayment || ordinaryRepayment.unemployment?.cashFarm || !isSmall2026SocialSecurityRepayment(data, taxYear, filingStatus)) {
+      errors.socialSecurityRepayment = taxYear === 2026
+        ? "Keep the signed net benefits for review. This excess repayment needs its own benefit and repayment review before calculation."
+        : "Preserve negative net benefits. Excess repayments require their actual prior-year deduction or credit worksheet before this return can calculate.";
+    } else if (taxStatus?.dualStatusAlien !== false || taxStatus.nonresidentAlien !== false || taxStatus.residentJointElection === true) {
+      errors.socialSecurityRepayment = "Confirm ordinary resident filing status before calculating this excess repayment.";
+    } else if (ordinaryRepayment.unemployment?.entries?.some(({ priorYearRepaid }) => hasEnteredAmount(priorYearRepaid)
+      && (amountError(priorYearRepaid, "earlier-year government payment repayment") || !parseGuidedCurrency(priorYearRepaid).isZero()))) {
+      errors.socialSecurityRepayment = "The government payment records include a possible separate repayment of earlier-year income. Review the repayments together before calculating.";
+    } else if (data.noOtherPriorYearRepaymentsConfirmed !== true) {
+      errors.socialSecurityRepayment = "Confirm there was no separate repayment of earlier-year income in 2026.";
+    }
+  }
   const ira = adjustments?.iraContributions;
   if (ira && (ira.primaryIsActiveParticipant === true || ira.spouseIsActiveParticipant === true) && [ira.primaryContributions, ira.spouseContributions].some(value => !amountError(value, "contributions") && parseGuidedCurrency(value).gt(0))) errors.socialSecurityIra = "Social Security with retirement-plan-covered IRA contributions needs the actual Publication 590-A Appendix B interaction worksheet.";
   const priorBenefits = included.some(entry => entry.priorYearBenefits === true);

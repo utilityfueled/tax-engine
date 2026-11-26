@@ -1,10 +1,22 @@
-// Spec: spec/federal/guided-input.yaml, social-security-source-records
-import { expect, it } from "vitest";
+// Spec: spec/federal/guided-input.yaml, social-security-source-records and social-security-2026-small-excess-repayment
+import { expect, it, vi } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildSocialSecurityInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { type SocialSecurityData, validateSection } from "@/lib/guided-interview-flow";
+import { loadGuidedFlowState, setInterviewTaxYear, type SocialSecurityData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { completeIraSources, completeW2Entry, startCompleteInterview } from "./complete-facts";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
+import { assertPdfExportAllowed } from "@/pdf/export-policy";
+import { unemploymentSource } from "../fixtures/guided-government-uc-original";
+
+const stagedCore = vi.hoisted(() => ({ enabled: false }));
+vi.mock("@/models/constants.js", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/models/constants.js")>();
+  const { FEDERAL_2026_CONSTANTS } = await import("@/models/federal-2026-indexed.js");
+  return {
+    ...original,
+    getConstants: (year: number) => year === 2026 && stagedCore.enabled ? FEDERAL_2026_CONSTANTS : original.getConstants(year),
+  };
+});
 
 const source = { sourceType: "ssa-1099" as const, sourceTaxYear: "2025", accountReference: "actual-ssa", beneficiaryRole: "primary" as const, recipient: "Actual Taxpayer", beneficiaryTaxIdLast4: "3333", benefitsPaid: "1000.30", benefitsRepaid: "0.20", netBenefits: "1000.10", federalWithheld: "0", priorYearBenefits: false, sourceFactsConfirmed: true };
 const data = (entries: NonNullable<SocialSecurityData["entries"]> = [source]): SocialSecurityData => ({ netBenefits: "", federalWithheld: "", entries, residentTreatmentConfirmed: true, puertoRicoIncomeExclusion: "0", americanSamoaIncomeExclusion: "0", sourceFactsConfirmed: true });
@@ -49,6 +61,92 @@ it("requires the actual lump-sum method and preserves signed excess repayments f
   state.sectionData["income-social-security"] = data([{ ...source, benefitsPaid: "0", benefitsRepaid: "12.34", netBenefits: "-12.34" }]);
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
   expect(state.sectionData["income-social-security"].entries?.[0]?.netBenefits).toBe("-12.34");
+});
+
+const repayment2026 = { ...source, sourceTaxYear: "2026", benefitsPaid: "1000", benefitsRepaid: "4000", netBenefits: "-3000", federalWithheld: "37.25" };
+const smallRepayment2026Data = () => ({ ...data([repayment2026]), noOtherPriorYearRepaymentsConfirmed: true });
+
+it("calculates confirmed 2026 small excess repayments without losing signed benefits or withholding", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  for (const [benefitsRepaid, netBenefits] of [["4000", "-3000"], ["1000.01", "-0.01"]]) {
+    state.sectionData["income-social-security"] = { ...smallRepayment2026Data(), entries: [{ ...repayment2026, benefitsRepaid, netBenefits }] };
+    expect(validateSection(state, "income-social-security").status).toBe("complete");
+    expect(buildGuidedSyntheticDocuments(state).find(document => document.kind === "ssa-1099")?.coverage).toBe("supported");
+    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+    expect(input.formSSA1099).toEqual([{ recipient: "Actual Taxpayer", netBenefits, federalWithheld: "37.25" }]);
+    expect(() => calculateFederalTax(input)).toThrow(/2026.*incomplete/);
+    expect(() => assertPdfExportAllowed(2026, 2026)).toThrow(/No qualified review PDF mapping/);
+    expect(() => assertPdfExportAllowed(2026, 2026, "filing")).toThrow(/Filing exports are unavailable/);
+
+    // Exercise the regular federal core with independently staged 2026 constants in this test only.
+    stagedCore.enabled = true;
+    try {
+      const result = calculateFederalTax(input);
+      expect(result.socialSecurityBenefitsGross.toFixed()).toBe(netBenefits);
+      expect(result.socialSecurityBenefitsTaxable.toFixed()).toBe("0");
+      expect(result.allLines.some(line => line.form === "SS Worksheet")).toBe(false);
+      expect(result.totalWithholding.toFixed()).toBe("37.25");
+      expect(result.agi.toFixed()).toBe("0");
+      expect(result.claimOfRight).toBeUndefined();
+      expect(result.refund.toFixed()).toBe("37.25");
+    } finally {
+      stagedCore.enabled = false;
+    }
+  }
+  const reopened = loadGuidedFlowState({ getItem: () => JSON.stringify(state) } as unknown as Storage, "ss-repayment");
+  if (!reopened) throw new Error("The confirmed repayment draft must reopen");
+  expect(buildTaxInputFromGuidedData(reopened)?.formSSA1099?.[0]?.netBenefits).toBe("-0.01");
+  const returnedTo2026 = setInterviewTaxYear(setInterviewTaxYear(reopened, 2025), 2026);
+  expect(returnedTo2026.sectionData["income-social-security"]?.noOtherPriorYearRepaymentsConfirmed).toBeNull();
+  expect(validateSection(returnedTo2026, "income-social-security").fieldErrors?.socialSecurityRepayment).toMatch(/Confirm/);
+});
+
+it("continues to hold unsupported 2026 benefit repayments", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const supported = smallRepayment2026Data();
+  for (const held of [
+    { ...supported, entries: [{ ...repayment2026, benefitsRepaid: "4000.01", netBenefits: "-3000.01" }] },
+    { ...supported, entries: [{ ...repayment2026, benefitsPaid: "1000.001", benefitsRepaid: "4000.001" }] },
+    { ...supported, entries: [{ ...repayment2026, federalWithheld: "" }] },
+    { ...supported, noOtherPriorYearRepaymentsConfirmed: undefined },
+    { ...supported, noOtherPriorYearRepaymentsConfirmed: false },
+    { ...supported, lumpSumMethod: "current-year" as const, entries: [{ ...repayment2026, priorYearBenefits: true, priorYearBenefitsAmount: "100" }] },
+    { ...supported, entries: [{ ...repayment2026, sourceType: "rrb-1099" as const }] },
+    { ...supported, entries: [repayment2026, { ...repayment2026, beneficiaryRole: "other" as const, accountReference: "second-original" }] },
+  ]) {
+    state.sectionData["income-social-security"] = held;
+    expect(validateSection(state, "income-social-security").status, JSON.stringify(held)).toBe("partial");
+    expect(buildTaxInputFromGuidedData(state), JSON.stringify(held)).toBeNull();
+  }
+  state.sectionData["income-social-security"] = supported;
+  const personal = state.sectionData["personal-info"];
+  if (!personal) throw new Error("The synthetic resident taxpayer facts must be present");
+  for (const changedStatus of [{ dualStatusAlien: true }, { nonresidentAlien: true, residentJointElection: true }]) {
+    const changed = updateSectionData(state, "personal-info", { ...personal, standardDeductionFacts: { ...personal.standardDeductionFacts, ...changedStatus } });
+    expect(validateSection(changed, "income-social-security").status).toBe("partial");
+    expect(buildTaxInputFromGuidedData(changed)).toBeNull();
+  }
+
+  const governmentSource = { ...unemploymentSource, sourceTaxYear: "2026", sourceFormRevision: "2026-12", familyLeaveBenefits: "0" };
+  const withGovernment = updateSectionData(state, "income-unemployment", { compensation: "", federalWithheld: "", entries: [governmentSource] });
+  expect(buildTaxInputFromGuidedData(withGovernment)?.formSSA1099?.[0]?.netBenefits).toBe("-3000");
+  const withRepayment = updateSectionData(withGovernment, "income-unemployment", { compensation: "", federalWithheld: "", entries: [{ ...governmentSource, priorYearRepaid: "1" }] });
+  expect(validateSection(withRepayment, "income-social-security").fieldErrors?.socialSecurityRepayment).toMatch(/separate repayment/);
+  expect(buildTaxInputFromGuidedData(withRepayment)).toBeNull();
+});
+
+it("invalidates a retained small repayment confirmation after a raw source update", () => {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  state.sectionData["income-social-security"] = { ...smallRepayment2026Data(), noOtherPriorYearRepaymentsConfirmed: null };
+  const confirmed = updateSectionData(state, "income-social-security", smallRepayment2026Data());
+  expect(validateSection(confirmed, "income-social-security").status).toBe("complete");
+  const replacement = updateSectionData(confirmed, "income-social-security", { ...smallRepayment2026Data(), entries: [{ ...repayment2026, federalWithheld: "41.10" }] });
+  expect(replacement.sectionData["income-social-security"]?.entries?.[0]?.federalWithheld).toBe("41.10");
+  expect(replacement.sectionData["income-social-security"]?.noOtherPriorYearRepaymentsConfirmed).toBeNull();
+  expect(buildTaxInputFromGuidedData(replacement)).toBeNull();
 });
 
 it("forwards actual prior-year election records and rejects inconsistent historical years and zero guesses", () => {

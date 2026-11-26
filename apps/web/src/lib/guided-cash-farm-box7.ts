@@ -65,7 +65,7 @@ export function buildGuidedCashFarmBenefitOriginals(
   personalInfo?: PersonalInfoData,
 ) {
   if (!farm?.receipts?.some(row => row.program === "crp-annual-rental" && receivesQualifyingBenefit(row))) return undefined;
-  if (Object.keys(socialSecurityFactErrors(data, filingStatus, taxYear, personalInfo)).length) {
+  if (Object.keys(socialSecurityFactErrors(data, { filingStatus, taxYear, personalInfo })).length) {
     throw new Error("Check the actual Social Security benefit originals before reconciling CRP receipts.");
   }
   return socialSecurityEntries(data).filter(isStartedSocialSecurity).flatMap(entry => {

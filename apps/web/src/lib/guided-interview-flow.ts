@@ -98,7 +98,7 @@ import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
 import { isStartedUnemployment, unemploymentEntries, unemploymentFactErrors, type UnemploymentSourceData } from "./guided-unemployment-facts";
 import type { MortgageSourceData } from "./guided-mortgage-facts";
 import type { MortgageWorksheetData } from "./guided-mortgage-worksheet";
-import { socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
+import { guidedSocialSecurityFactContext, socialSecurityFactErrors, socialSecurityEntries, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
 import type { RetirementSourceData } from "./guided-retirement-facts";
 import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
@@ -1759,6 +1759,7 @@ function invalidateStudentLoanYearFacts(draft: StudentLoanData): StudentLoanData
 export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
   if ((state.taxYear ?? null) === taxYear) return state;
   const wages = state.sectionData["income-w2"];
+  const socialSecurity = state.sectionData["income-social-security"];
   const payments = state.sectionData.payments;
   const deductions = state.sectionData.deductions;
   const stateReturn = state.sectionData["state-return"];
@@ -1809,6 +1810,9 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
+      ...(socialSecurity?.noOtherPriorYearRepaymentsConfirmed != null ? {
+        "income-social-security": { ...socialSecurity, noOtherPriorYearRepaymentsConfirmed: null },
+      } : {}),
       ...(stateReturn && (stateReturn.ohioRetirementCredit || paHouseholdNeedsReview) ? { "state-return": { ...stateReturn,
         ...(stateReturn.ohioRetirementCredit ? { ohioRetirementCredit: { ...stateReturn.ohioRetirementCredit, sourceFactsConfirmed: null } } : {}),
         ...(paCompletion && paCare && paHouseholdNeedsReview ? { paOrdinaryReturnCompletionSources: { ...paCompletion, sourceFactsConfirmed: null,
@@ -2440,9 +2444,14 @@ export function updateSectionData(
     if (sectionId === "additional-deductions") return rrtaDocumentaryValues(value);
     if (sectionId === "income-unemployment") return refundDocumentaryValues(value);
     if (sectionId === "credits") return educationDocumentaryValues(value);
+    if (sectionId === "income-social-security" && value) return { ...(value as SocialSecurityData), noOtherPriorYearRepaymentsConfirmed: undefined };
     return value;
   };
   const sourceValuesChanged = guidedSourceValuesChanged(documentaryValues(state.sectionData[sectionId as keyof SectionDataMap]),documentaryValues(data));
+  if (sectionId === "income-social-security" && sourceValuesChanged) {
+    const next = data as SocialSecurityData | undefined;
+    if (next?.noOtherPriorYearRepaymentsConfirmed != null) data = { ...next, noOtherPriorYearRepaymentsConfirmed: null };
+  }
   const previousStateReturn = state.sectionData["state-return"];
   const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
   const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
@@ -3230,7 +3239,7 @@ function validateRetirementSection(data: SectionDataMap["income-retirement"], fi
 
 function validateSocialSecuritySection(data: SocialSecurityData | undefined, state: GuidedFlowState): SectionValidationResult {
   if (!socialSecurityEntries(data).some(isStartedSocialSecurity)) return EMPTY_SECTION("Social Security info");
-  return validateRequiredFacts(socialSecurityFactErrors(data, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments));
+  return validateRequiredFacts(socialSecurityFactErrors(data, guidedSocialSecurityFactContext(state)));
 }
 
 function validateUnemploymentSection(data: UnemploymentData | undefined, state: GuidedFlowState): SectionValidationResult {

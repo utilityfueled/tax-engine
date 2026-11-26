@@ -10,11 +10,11 @@ import { completeSocialSecuritySource, completeSocialSecurityTreatment, complete
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
 
-async function render(initial: SocialSecurityData, run: (context: { latest: () => SocialSecurityData; container: HTMLDivElement; change: (label: string, value: string) => Promise<void>; click: (text: string) => Promise<void> }) => Promise<void>) {
+async function render(initial: SocialSecurityData, run: (context: { latest: () => SocialSecurityData; container: HTMLDivElement; change: (label: string, value: string) => Promise<void>; click: (text: string) => Promise<void> }) => Promise<void>, taxYear = 2025) {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container); let latest = initial;
-  function Harness() { const [data, setData] = useState(initial); return <SectionSocialSecurity data={data} onDataChange={next => { latest = next; setData(next); }} />; }
+  function Harness() { const [data, setData] = useState(initial); return <SectionSocialSecurity data={data} taxYear={taxYear} filingStatus="single" onDataChange={next => { latest = next; setData(next); }} />; }
   async function change(label: string, value: string) {
     const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
     if (!element) throw new Error(`Missing control: ${label}`);
@@ -81,4 +81,23 @@ it("collects the actual lump-sum election history and changes the independently 
     await click("Remove earlier-year worksheet"); await change(confirm, "true");
     expect(input()?.socialSecurityLumpSumElection).toBeUndefined();
   });
+});
+
+it("requires and resets the 2026 small excess repayment confirmation in the guided form", async () => {
+  const initial = { ...completeSocialSecurityTreatment, netBenefits: "-3000", federalWithheld: "0", entries: [{ ...completeSocialSecuritySource, sourceTaxYear: "2026", benefitsPaid: "1000", benefitsRepaid: "4000", netBenefits: "-3000" }] };
+  await render(initial, async ({ latest, change }) => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["social-security"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2026;
+    const input = () => { state.sectionData["income-social-security"] = latest(); return buildTaxInputFromGuidedData(state); };
+    const label = "Can you confirm you made no separate repayment of earlier-year income in 2026?";
+    expect(input()).toBeNull();
+    await change(label, "true");
+    await change(confirm, "true");
+    expect(input()?.formSSA1099?.[0]?.netBenefits).toBe("-3000");
+    await change("Federal withholding (SSA-1099 Box 6)", "10.01");
+    await change(confirmSource, "true");
+    await change(confirm, "true");
+    expect(latest().noOtherPriorYearRepaymentsConfirmed).toBeNull();
+    expect(input()).toBeNull();
+  }, 2026);
 });

@@ -96,7 +96,7 @@ import { buildGuidedTaxRefund } from "./guided-tax-refund";
 import { buildGovernmentPaymentSourceRecords } from "./guided-government-payment-inputs";
 import { buildGuidedCashFarm, buildGuidedCashFarmBenefitOriginals } from "./guided-cash-farm-box7";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
-import { socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal } from "./guided-social-security-facts";
+import { guidedSocialSecurityFactContext, socialSecurityEntries, isStartedSocialSecurity, socialSecurityFactErrors, socialSecuritySourceTotal, type SocialSecurityFactContext } from "./guided-social-security-facts";
 import { buildGuidedFirstHomeSource } from "./guided-retirement-first-home";
 import { buildGuidedIraEducationSource, guidedIraEducationOwnerFingerprint } from "./guided-retirement-education";
 import { guidedCode1IraAgeFacts, guidedCode1IraEducationOriginal, guidedCode1IraOriginal, guidedDatedRetirementOwnerBirthDate, isStartedRetirement } from "./guided-retirement-facts";
@@ -559,8 +559,8 @@ export function buildRetirementInputs(entries: RetirementEntryData[] | undefined
 
 // ── Social Security (SSA-1099) converter ─────────────────────────────────
 
-export function buildSocialSecurityInputs(data: SocialSecurityData | undefined) {
-  assertKnownFacts(socialSecurityFactErrors(data));
+export function buildSocialSecurityInputs(data: SocialSecurityData | undefined, context?: SocialSecurityFactContext) {
+  assertKnownFacts(socialSecurityFactErrors(data, context));
   return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "ssa-1099" && entry.beneficiaryRole !== "other").map(entry => {
     if(typeof entry.recipient!=="string")throw new Error("Enter the actual legal beneficiary's name, which may differ from the representative payee.");
     return {
@@ -568,8 +568,8 @@ export function buildSocialSecurityInputs(data: SocialSecurityData | undefined) 
   };});
 }
 
-export function buildRailroadSocialSecurityInputs(data: SocialSecurityData | undefined) {
-  assertKnownFacts(socialSecurityFactErrors(data));
+export function buildRailroadSocialSecurityInputs(data: SocialSecurityData | undefined, context?: SocialSecurityFactContext) {
+  assertKnownFacts(socialSecurityFactErrors(data, context));
   return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "rrb-1099" && entry.beneficiaryRole !== "other").map(entry => {
     if(typeof entry.recipient!=="string")throw new Error("Enter the actual legal beneficiary's name, which may differ from the representative payee.");
     return {
@@ -817,6 +817,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const retirementData = sectionData["income-retirement"];
   const rentalData = sectionData["income-rental"] as { entries: RentalPropertyEntryData[] } | undefined;
   const socialSecurityData = sectionData["income-social-security"] as SocialSecurityData | undefined;
+  const socialSecurityContext = guidedSocialSecurityFactContext(state);
   const unemploymentData = sectionData["income-unemployment"] as UnemploymentData | undefined;
   const deductionData = sectionData["deductions"] as DeductionData | undefined;
   const adjustmentData = sectionData["adjustments"] as AdjustmentData | undefined;
@@ -859,7 +860,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(estimatedTaxFactErrors(paymentData, state.taxYear, segmentation.filingStatus));
     assertKnownFacts(minimumTaxCreditFactErrors(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(retirementFactErrors(retirementData?.entries, true, segmentation.filingStatus, state.taxYear, stateReturnData, { data: retirementData?.basisSources, personal: personalInfo, adjustments: adjustmentData }, creditsData));
-    assertKnownFacts(socialSecurityFactErrors(socialSecurityData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData));
+    assertKnownFacts(socialSecurityFactErrors(socialSecurityData, socialSecurityContext));
     assertKnownFacts(unemploymentFactErrors(unemploymentData, segmentation.filingStatus, state.taxYear, personalInfo, stateReturnData, deductionData, segmentation.stateCode, socialSecurityData));
     assertKnownFacts(savingsBondFactErrors(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo));
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
@@ -938,8 +939,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const rentalCarryovers = buildGuidedRentalCarryovers(rentalData?.entries, state.taxYear, segmentation.filingStatus, personalInfo);
   const scheduleDInputs = buildGuidedScheduleDInputs(investData, state.taxYear, segmentation.filingStatus, personalInfo);
   const benefitOriginals = buildGuidedCashFarmBenefitOriginals(unemploymentData?.cashFarm, socialSecurityData, state.taxYear, segmentation.filingStatus, personalInfo);
-  const formSSA1099 = benefitOriginals?.map(original => original.input) ?? buildSocialSecurityInputs(socialSecurityData);
-  const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
+  const formSSA1099 = benefitOriginals?.map(original => original.input) ?? buildSocialSecurityInputs(socialSecurityData, socialSecurityContext);
+  const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData, socialSecurityContext);
   const form1099G = buildUnemploymentInputs(unemploymentData, { taxYear: state.taxYear, filingStatus: segmentation.filingStatus, personalInfo, stateData: stateReturnData, deductions: deductionData, stateCode, socialSecurity: socialSecurityData });
   const scheduleF = buildGuidedCashFarm(unemploymentData?.cashFarm, form1099G, state.taxYear, segmentation.filingStatus, personalInfo, stateCode, benefitOriginals);
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
@@ -1299,7 +1300,7 @@ export function buildGuidedFactAnswers(
   const ssEntries = socialSecurityEntries(ssData).filter(isStartedSocialSecurity);
   if (ssEntries.length) {
     const total = socialSecuritySourceTotal(ssEntries, "netBenefits");
-    const complete = Object.keys(socialSecurityFactErrors(ssData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments)).length === 0;
+    const complete = Object.keys(socialSecurityFactErrors(ssData, guidedSocialSecurityFactContext(state))).length === 0;
     answers.push({ factId: "social-security-benefits-review", answerText: total === null ? "Benefit source records entered; some net amounts still need review." : `${ssEntries.length} benefit source record(s) ${complete ? "confirmed" : "entered; source facts need review"}. Net benefits belonging to this return: $${fmtNum(total)}.` });
   }
 
@@ -1464,7 +1465,7 @@ export function buildGuidedSyntheticDocuments(
       size: 0,
       uploadedAt: now,
       kind: "ssa-1099",
-      coverage: Object.keys(socialSecurityFactErrors(ssData, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments)).length ? "partially-supported" : "supported",
+      coverage: Object.keys(socialSecurityFactErrors(ssData, guidedSocialSecurityFactContext(state))).length ? "partially-supported" : "supported",
       label: "SSA-1099 / RRB-1099 (guided interview)",
       notes: "Entered via guided interview.",
       matchedFixtureId: null,

@@ -660,6 +660,8 @@ function SectionContent({
       return (
         <SectionSocialSecurity
           data={getSectionData(state, "income-social-security")}
+          taxYear={state.taxYear ?? null}
+          filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: SocialSecurityData) =>
             onStateChange(updateSectionData(state, "income-social-security", data))
           }
