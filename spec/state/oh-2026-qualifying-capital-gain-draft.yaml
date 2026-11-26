@@ -1,5 +1,5 @@
 form: "Ohio 2026 qualifying capital gain documentary draft"
-fullName: "One direct equity sale under R.C. 5747.79 material-participant method"
+fullName: "One direct equity sale under R.C. 5747.79"
 taxYear: 2026
 irsReference: "https://codes.ohio.gov/ohio-revised-code/section-5747.79"
 sources:
@@ -7,20 +7,30 @@ sources:
   - "https://codes.ohio.gov/ohio-revised-code/section-5747.06"
   - "https://tax.ohio.gov/individual/who-must-file/whats-new"
   - "https://www.ecfr.gov/current/title-26/section-1.469-5T"
+  - "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XXV/subchapter-B/part-2510/section-2510.3-101#p-2510.3-101(d)(3)"
 notes: |
-  Authority checked 2026-11-19. 5747.79 effective September30,2021 applies to
+  Authority checked 2026-11-26. 5747.79 effective September30,2021 applies to
   taxable years beginning in2026. ODT2026 What's New identifies A34 as Schedule
   of Adjustments line14; line15/A35 is the separate venture operating company
-  deduction. This helper does not implement the alternative million-dollar
-  venture-investment method within5747.79, or A35, or multiple/indirect sales.
+  deduction. The two A34 documentary methods are mutually exclusive in one
+  packet. A35, multiple or indirect sales, and indirect investments are outside
+  this worksheet.
   Documentary boundary: source references and explicit completed assessments
   are required inputs, not independently authenticated documents. A completed
   material-participation assessment must establish a permitted (a)(1),(2),(3),
   (4),or(7) criterion and applicable federal restrictions for the exact five
   years immediately before sale. The helper does not infer this from hours or
   prior-year participation, or substitute five calendar years for this period.
-  Payroll is separately the five calendar years2021–2025. A completed annual
-  withholding-base reconciliation under5747.06(A) is required; this helper
+  Material-participant payroll is separately the five calendar years2021–2025.
+  Venture-investment payroll covers the immediately preceding investment period
+  under 5747.79(A)(3)(b). The direct cash investment cohort starts in 2022 or
+  later, so the period touches at most five calendar years and needs no cap
+  interpretation. Its verified payroll reconciliation covers the funding date
+  through the day before sale, with no compensation paid on either closing
+  date. Same-day payroll, a longer period, changed holdings or changes in
+  management rights require further source handling. These are worksheet
+  cohort limits. A completed applicable withholding-base reconciliation under
+  5747.06(A) is required; this helper
   does not derive the legally applicable withholding base from gross wages,
   withholding tax amounts, addresses, or an unsupported allocation.
   Recipient IDs must be stable across the original payroll and relationship
@@ -38,21 +48,31 @@ notes: |
   completed original federal inclusion and exclusion reconciliation. Other
   classes, installment/netting uncertainty and conflicting sources remain
   incomplete. These cohort limits are not additional statutory disqualifiers.
-  Exact Decimal arithmetic retains fractional cents; no annual form rounding
-  is asserted. No OhioAGI/BID/MAGI, residency, school, return, UI, export or
-  filing integration opens. Existing business/ordinary drafts affirm no such
-  gains; baseline only consumes an already completed A34 scalar. A later
-  source-bound integration must deduct A34 before A28 BID, avoid a duplicate
-  OhioAGI deduction, and add A34 back for statutory MAGI and school purposes.
+  Exact Decimal arithmetic retains fractional cents. The investment branch
+  computes a standalone draft worksheet only. The resident capital-gain
+  integration requires material-participation sources and remains separately
+  scoped. Annual form rounding, export and filing still require qualification.
 lines:
   - line: "A34-source"
     description: "Admit only matching completed current sale and gain sources"
     formula: "Same2026 owner/entity/sale/disposal and reported capital gain; qualifyingGain=includedFederalAgi-otherwiseOhioDeductedOrExcluded, with 0<=excluded<=included<=reported and sale gain=reported; no other sale or uncertain inclusion/netting"
     testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::caps payroll by the source-reconciled gain remaining in federal and Ohio AGI"
   - line: "A34-period"
-    description: "Keep immediate five-year entity and participation conditions separate from payroll"
-    formula: "OH organization and headquarters cover saleDate minus five years through saleDate; completed permitted federal material-participation assessment covers that exact interval; OH trade/business at sale"
+    description: "Keep immediate five-year entity and material-participation conditions separate from payroll"
+    formula: "For both methods, OH organization and headquarters cover saleDate minus five years through saleDate and OH trade/business at sale; for material participation, completed permitted federal assessment covers that exact interval"
     testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::rejects missing conflicting and unsupported documentary sources"
+  - line: "A34-venture-investment"
+    description: "Admit a documentary direct venture capital investment in the sold operating company"
+    formula: "Original matching investor/entity acquisition and cash funding of at least 1000000, acquired units equal unchanged pre-sale units; audited operating-company classification outside VCOC and original direct contract for substantial management participation or influence, in effect at investment and through sale"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::uses a documented one-million-dollar venture investment with the qualifying payroll cap"
+  - line: "A34-venture-source-hold"
+    description: "Require exact threshold and coherent rights, ownership and company sources"
+    formula: "Missing, conflicting or below-threshold cash, unrelated owner/entity, unsupported rights/classification or interrupted holding period returns an incomplete worksheet with null monetary outputs"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::rejects incomplete and contradictory venture-investment evidence"
+  - line: "A34-venture-paid-payroll"
+    description: "Reconcile paid withholding compensation for the exact qualifying investment period"
+    formula: "Start equals completed investment date (2022 or later), through equals day before 2026 sale, with no compensation paid on investment or sale date; one complete aggregate per recipient, same entity; reconciled5747.06(A) base subject to existing identity and family exclusions"
+    testRef: "tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts::requires payroll paid only within the documented venture investment window"
   - line: "A34-payroll"
     description: "Reconcile the five preceding calendar years of withholding compensation"
     formula: "Exactly2021,2022,2023,2024,2025, once each; each complete annual5747.06(A) compensation total equals sum of per-recipient qualified withholding bases, each<=gross compensation paid; non-enumerated recipients' qualifying bases summed before percentage"

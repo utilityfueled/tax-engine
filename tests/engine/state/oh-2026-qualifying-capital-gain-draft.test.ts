@@ -38,6 +38,33 @@ function actual() {
   };
 }
 type Packet = ReturnType<typeof actual>;
+function venture() {
+  const { participation: _participation, payroll, ...salePacket } = actual();
+  const { ownerReference, entityReference } = salePacket.sale;
+  const parties = { ownerReference, entityReference };
+  const investmentDate = '2024-01-08';
+  return {
+    ...salePacket,
+    ventureInvestment: {
+      ...parties, sourceReference: 'executed-direct-subscription', fundedAndAcquiredOn: investmentDate,
+      agreedCashAmount: '1000000', acquiredUnits: '40', continuousUnchangedHoldingConfirmed: true,
+      fundingOriginal: { ...parties, sourceReference: 'settled-cash-transfer', paidOn: investmentDate, amount: '1000000' },
+      companyAssessment: { entityReference, sourceReference: 'investment-operating-company-assessment',
+        asOfDate: investmentDate, operatingCompanyConfirmed: true, ventureCapitalOperatingCompany: false },
+      rightsOriginal: { ...parties, sourceReference: 'executed-direct-management-contract',
+        effectiveFrom: investmentDate, effectiveThrough: salePacket.sale.date, directContractConfirmed: true,
+        right: 'substantial-participation', continuouslyInEffectThroughSaleConfirmed: true },
+    },
+    investmentPayroll: { entityReference, sourceReference: 'investment-period-payroll-reconciliation',
+      paidFrom: investmentDate, paidThrough: '2026-07-14', completePeriodCompensationConfirmed: true,
+      noCompensationPaidOnInvestmentOrSaleDatesConfirmed: true, stableRecipientIdentitiesConfirmed: true,
+      withholdingBaseReconciliationConfirmed: true, period5747_06ACompensation: '160000',
+      recipients: at(payroll).recipients.map((row, index) => ({ ...row,
+        sourceReference: 'investment-period-payroll-original', originalPayrollRowReference: `investment-period-worker-${index}`,
+      })) },
+  };
+}
+
 function at<T>(items: readonly T[], index = 0): T {
   const value = items[index];
   if (value === undefined) throw new Error('Synthetic test fixture is missing a required row');
@@ -45,6 +72,80 @@ function at<T>(items: readonly T[], index = 0): T {
 }
 
 describe('Ohio 2026 one-sale qualifying capital gain documentary draft', () => {
+  it('uses a documented one-million-dollar venture investment with the qualifying payroll cap', () => {
+    const input = venture();
+    const result = calculateOhio2026QualifyingCapitalGainDraft(input);
+    expect(result).toMatchObject({ sourceStatus: 'admitted-draft', calculationStatus: 'incomplete', filingQualified: false, exportAllowed: false });
+    expect(result.qualifyingPayroll?.toFixed()).toBe('100000');
+    expect(result.excludedFamilyPayroll?.toFixed()).toBe('60000');
+    expect(result.deductiblePayroll?.toFixed()).toBe('20000');
+    expect(result.deduction?.toFixed()).toBe('20000');
+    expect(result.lines.find(line => line.line === 'A34-venture-investment')?.value.toFixed()).toBe('1000000');
+    expect(JSON.stringify(result)).not.toContain('executed-direct-management-contract');
+    input.ventureInvestment.rightsOriginal.right = 'substantial-influence';
+    input.recognition.otherwiseOhioDeductedOrExcluded = '193000';
+    expect(calculateOhio2026QualifyingCapitalGainDraft(input).deduction?.toFixed()).toBe('7000');
+  });
+
+  it('rejects incomplete and contradictory venture-investment evidence', () => {
+    const mutations: ((input: ReturnType<typeof venture>) => void)[] = [
+      p => { p.ventureInvestment.agreedCashAmount = p.ventureInvestment.fundingOriginal.amount = '999999.99'; },
+      p => { p.ventureInvestment.fundingOriginal.amount = '1000000.01'; },
+      p => { p.ventureInvestment.fundingOriginal.paidOn = '2024-01-09'; },
+      p => { p.ventureInvestment.fundingOriginal.ownerReference = 'another-investor'; },
+      p => { p.ventureInvestment.entityReference = 'another-company'; },
+      p => { p.ventureInvestment.rightsOriginal.entityReference = 'another-company'; },
+      p => { p.ventureInvestment.rightsOriginal.right = 'information-only'; },
+      p => { p.ventureInvestment.rightsOriginal.directContractConfirmed = false; },
+      p => { p.ventureInvestment.rightsOriginal.effectiveFrom = '2024-01-09'; },
+      p => { p.ventureInvestment.rightsOriginal.effectiveThrough = '2026-07-14'; },
+      p => { p.ventureInvestment.companyAssessment.ventureCapitalOperatingCompany = true; },
+      p => { p.ventureInvestment.companyAssessment.operatingCompanyConfirmed = false; },
+      p => { p.ventureInvestment.companyAssessment.asOfDate = '2024-01-09'; },
+      p => { p.ventureInvestment.acquiredUnits = '39'; },
+      p => { p.ventureInvestment.continuousUnchangedHoldingConfirmed = false; },
+      p => { p.entity.ohioHeadquartersFrom = '2021-07-16'; },
+    ];
+    for (const mutate of mutations) {
+      const input = venture();
+      mutate(input);
+      expect(calculateOhio2026QualifyingCapitalGainDraft(input)).toMatchObject({
+        sourceStatus: 'incomplete', qualifyingPayroll: null, deduction: null, lines: [],
+      });
+    }
+    const input = venture();
+    expect(calculateOhio2026QualifyingCapitalGainDraft({ ...input, participation: actual().participation }).deduction).toBeNull();
+  });
+
+  it('requires payroll paid only within the documented venture investment window', () => {
+    const mutations: ((input: ReturnType<typeof venture>) => void)[] = [
+      p => { p.investmentPayroll.paidFrom = '2024-01-07'; },
+      p => { p.investmentPayroll.paidFrom = '2024-01-09'; },
+      p => { p.investmentPayroll.paidThrough = '2026-07-13'; },
+      p => { p.investmentPayroll.paidThrough = p.sale.date; },
+      p => { p.investmentPayroll.noCompensationPaidOnInvestmentOrSaleDatesConfirmed = false; },
+      p => { p.investmentPayroll.period5747_06ACompensation = '160000.01'; },
+      p => { p.investmentPayroll.entityReference = 'another-company'; },
+      p => { p.investmentPayroll.completePeriodCompensationConfirmed = false; },
+    ];
+    for (const mutate of mutations) {
+      const input = venture();
+      mutate(input);
+      expect(calculateOhio2026QualifyingCapitalGainDraft(input).deduction).toBeNull();
+    }
+    const tooEarly = venture();
+    const start = '2021-12-31';
+    tooEarly.ventureInvestment.fundedAndAcquiredOn = tooEarly.ventureInvestment.fundingOriginal.paidOn = start;
+    tooEarly.ventureInvestment.companyAssessment.asOfDate = tooEarly.ventureInvestment.rightsOriginal.effectiveFrom = start;
+    tooEarly.investmentPayroll.paidFrom = start;
+    expect(calculateOhio2026QualifyingCapitalGainDraft(tooEarly).deduction).toBeNull();
+
+    const knownZero = venture();
+    knownZero.investmentPayroll.period5747_06ACompensation = '0';
+    knownZero.investmentPayroll.recipients = [];
+    expect(calculateOhio2026QualifyingCapitalGainDraft(knownZero).deduction?.toFixed()).toBe('0');
+  });
+
   it('caps payroll by the source-reconciled gain remaining in federal and Ohio AGI', () => {
     const input = actual();
     input.recognition.includedFederalAgi = '150000';
