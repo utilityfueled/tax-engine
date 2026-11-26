@@ -3298,6 +3298,8 @@ function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<stri
   return errors;
 }
 
+const ohioReturnHeaderConfirmationRequired = "Complete and explicitly confirm the actual residential, Finder and county originals.";
+
 /** Mandatory actual OH source replay, independent of state return calculation. */
 function guidedOhioActualSourceErrors(state: GuidedFlowState, savedEstimatesValid: boolean, currentInput?: TaxYearInput | null): Record<string, string> {
   if (state.segmentation.stateCode !== "OH") return {};
@@ -3343,7 +3345,7 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState, savedEstimatesVali
         buildGuidedOhioReturnHeaderSources(input, data.ohioReturnHeaderSources, data.ohioResidency, data.ohioPayments, schoolDraft);
         schoolValidatedWithHeader = schoolDraft !== undefined;
       } catch (error) {
-        errors.ohioReturnHeader = error instanceof Error ? error.message : 'Complete and explicitly confirm the actual residential, Finder and county originals.';
+        errors.ohioReturnHeader = error instanceof Error ? error.message : ohioReturnHeaderConfirmationRequired;
       }
     }
     if(data?.ohioReciprocalWages){
@@ -3419,6 +3421,7 @@ export function validateSection(state: GuidedFlowState, sectionId: InterviewSect
 // validation never accepts a projection supplied by its caller.
 interface CurrentRenderProjection {
   stateSourcesValidated: boolean;
+  ohioReturnHeaderPending: boolean;
   currentInput: TaxYearInput | null;
 }
 function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectionId, projection?: CurrentRenderProjection): SectionValidationResult {
@@ -3511,7 +3514,9 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       return validateRequiredFacts({
         ...zeroIncomeMiscSourceFactErrors(state),
         ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "PA" ? {} : guidedPAOrdinaryReturnSourceErrors(state)),
-        ...(projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {} : guidedOhioActualSourceErrors(state, savedEstimatesValid, projection?.currentInput)),
+        ...(projection?.ohioReturnHeaderPending ? { ohioReturnHeader: ohioReturnHeaderConfirmationRequired }
+          : projection?.stateSourcesValidated && state.segmentation.stateCode === "OH" ? {}
+          : guidedOhioActualSourceErrors(state, savedEstimatesValid, projection?.currentInput)),
         ...paymentErrors,
         ...guidedOhioInterestFactErrors(state),
       });
@@ -3855,7 +3860,11 @@ export function evaluateGuidedRenderState(actual: GuidedFlowState) {
     && input.paMarriedOrdinarySources === undefined && !data?.ohioReciprocalWages
     && !data?.paMarriedOrdinarySources && state.segmentation.filingStatus !== 'mfj';
   const paInput = buildPAOrdinarySourceInputUsing(state, () => input);
-  const projection: CurrentRenderProjection = {stateSourcesValidated: ordinary && fresh.sourceReplaySucceeded, currentInput: input};
+  // The same cloned state just passed the school replay. A literal null header
+  // cannot pass its confirmation gate, so its visited status is already partial.
+  const ohioReturnHeaderPending = state.segmentation.stateCode === "OH" && fresh.schoolReplaySucceeded
+    && schoolDisplayOwn(data?.ohioReturnHeaderSources, "sourceFactsConfirmed") === null;
+  const projection: CurrentRenderProjection = {stateSourcesValidated: ordinary && fresh.sourceReplaySucceeded, ohioReturnHeaderPending, currentInput: input};
   const analysis = state.phase === "segmentation" ? null : analyzeGuidedRenderUsing(state, section => getVisitedSectionStatusUsing(state, section,
     () => validateSectionUsing(state, section, projection)));
   const originalInput = input === null ? null : structuredClone(input);

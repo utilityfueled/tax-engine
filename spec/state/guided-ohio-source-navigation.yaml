@@ -15,6 +15,17 @@ lines:
     description: "Reuse the school district validation completed by the accepted return header during the current navigation check."
     formula: "When a return header and its supplied school district draft pass the full current-source replay, no separate school calculation is required in that call. If the header is absent or fails, the standalone district validation still reports its own errors."
     testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::Ohio navigation reuses the accepted header school replay"
+  - line: "visited-pending-header-status"
+    description: "Derive the visited Ohio State Return status while editing a previously confirmed header"
+    formula: >-
+      In the current render only, a successful replay of the current Ohio
+      school district originals and a header with an explicit null confirmation
+      establish that the visited State Return needs review. Use this status
+      without repeating the Ohio header and school source validation. Keep
+      the existing first-visit status and the fallback for failed school
+      replay, non-null confirmation and legacy records. Direct validation and
+      navigation actions still compute the complete current field errors.
+    testRef: "tests/guided-interview/guided-render-evaluation.test.ts::reuses current Ohio school replay for the visited pending-header status"
   - line: "mandatory-packets"
     description: "All three Ohio residency categories need both actual packets"
     formula: |

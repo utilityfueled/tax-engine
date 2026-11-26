@@ -110,6 +110,67 @@ test('retains the separate completed school replay and display when its header i
   expect(render.schoolDisplayObservation).toBeDefined();
 });
 
+test("reuses current Ohio school replay for the visited pending-header status", async () => {
+  const confirmed = prepare(ohio());
+  const data = required(confirmed.sectionData["state-return"]);
+  const header = required(data.ohioReturnHeaderSources);
+  const revised = flow.updateSectionData(confirmed, "state-return", {
+    ...data,
+    ohioReturnHeaderSources: {
+      ...header,
+      finderOriginal: { ...header.finderOriginal, sourceReference: "Fictional revised Finder original" },
+    },
+  });
+  const revisedHeader = required(revised.sectionData["state-return"]?.ohioReturnHeaderSources);
+  expect(revisedHeader.sourceFactsConfirmed).toBeNull();
+  expect(revisedHeader.confirmedHeaderSources).toEqual(header.confirmedHeaderSources);
+
+  const headerSources = await import("@/lib/guided-ohio-return-header-sources");
+  const navigationReplay = vi.spyOn(headerSources, "buildGuidedOhioReturnHeaderSources");
+  const previewReplay = vi.spyOn(headerSources, "buildGuidedOhioReturnHeaderOriginals");
+  try {
+    for (const variant of ["edit", "reopened", "summary", "unvisited", "stale parent", "invalid school", "legacy", "confirmed"] as const) {
+      const state = variant === "reopened" ? JSON.parse(JSON.stringify(revised)) as flow.GuidedFlowState
+        : structuredClone(variant === "confirmed" ? confirmed : revised);
+      const current = required(state.sectionData["state-return"]);
+      if (variant === "summary") state.phase = "complete";
+      if (variant === "unvisited") state.completedSections = state.completedSections.filter(section => section !== "state-return");
+      if (variant === "stale parent") required(current.ohioResidency).originalFederalSources = {};
+      if (variant === "invalid school") required(current.ohioSchoolDistrict).sourceFactsConfirmed = null;
+      if (variant === "legacy") Reflect.deleteProperty(required(current.ohioReturnHeaderSources), "sourceFactsConfirmed");
+
+      const before = structuredClone(state);
+      const expected = old(state);
+      const validation = flow.validateSection(state, "state-return");
+      const prompt = flow.shouldPromptBeforeAdvance(state);
+      navigationReplay.mockClear();
+      previewReplay.mockClear();
+
+      const actual = evaluateGuidedRender(state);
+      expect(actual, variant).toEqual(expected);
+      expect(state, variant).toEqual(before);
+      expect(previewReplay, variant).toHaveBeenCalledTimes(1);
+      const sharedStatus = variant === "edit" || variant === "reopened" || variant === "summary";
+      const needsIndependentReplay = variant === "stale parent" || variant === "invalid school" || variant === "legacy";
+      expect(navigationReplay, variant).toHaveBeenCalledTimes(needsIndependentReplay ? 1 : 0);
+      if (sharedStatus) {
+        expect(actual.schoolDisplayObservation, variant).toBeDefined();
+        expect(actual.analysis?.sectionStatuses.get("state-return"), variant).toBe("needs-review");
+        expect(validation.fieldErrors, variant).toHaveProperty("ohioReturnHeader");
+      }
+      if (variant === "unvisited") expect(actual.analysis?.sectionStatuses.get("state-return")).toBe("not-started");
+
+      navigationReplay.mockClear();
+      expect(flow.validateSection(state, "state-return"), variant).toEqual(validation);
+      expect(navigationReplay, variant).toHaveBeenCalledTimes(1);
+      expect(flow.shouldPromptBeforeAdvance(state), variant).toEqual(prompt);
+    }
+  } finally {
+    navigationReplay.mockRestore();
+    previewReplay.mockRestore();
+  }
+});
+
 test.each(['distinct', 'cents'] as const)('skips only the blocked render replay for pending Ohio resident credit %s', cohort => {
   const fixture = guidedResidentCreditFixture(cohort);
   let state = prepare(fixture.state);
