@@ -322,6 +322,18 @@ lines:
     formula: "Keep federal estimated payments, extension payments and prior-year refund credits separate. Require actual payment dates and the immediately preceding source tax year for applied refunds. Preserve explicit zero. Reconcile a saved other-payment total to classified entries before using it; never silently drop it or infer a payment type."
     irsRef: "Form 1040 instructions line 26; Schedule 3 extension-payment instructions"
     testRef: "tests/guided-interview/guided-payment-facts.test.ts::preserves extension dates and prior-year credits with exact amounts and zero"
+  - line: "2026-applied-refund-distinctness"
+    description: "Hold repeated positive applied refunds without distinguishing originals"
+    formula: >-
+      If saved 2026 federal applied-refund entries have the same preceding
+      tax year and the same positive exact amount, mark each matching entry
+      for reconciliation to the actual preceding return credit. The existing
+      row format has no distinct original identity. Compare decimal amounts
+      across display formats. Preserve the entered text on reopen and hold
+      transfer until the user reconciles the entries. A single legacy row,
+      explicit zero, and different amounts retain existing admission.
+    irsRef: "2025 Form 1040 line 36 (https://www.irs.gov/pub/irs-pdf/f1040.pdf); 2026 Publication 505, Credit an Overpayment (https://www.irs.gov/publications/p505)"
+    testRef: "tests/guided-interview/guided-payment-facts.test.ts::holds a repeated positive 2026 applied refund after reopening"
   - line: "federal-payment-application"
     description: "Confirm the actual return year of a federal estimated or extension payment"
     formula: "Require the tax year shown on the federal payment record and affirmative confirmation for estimated payments made in January of the selected return year or on any date outside the selected year. January estimated payments may apply to either the payment calendar year or its preceding year. The fourth installment deadline governs timeliness. An explicitly classified federal extension payment uses the date-and-amount source in the return year or the following year and requires application facts outside that window. Any supplied application must match the selected return year and be confirmed. Keep prior saved dates, amounts, return years, and any recorded confirmations. Affected rows without application facts require review on reopen. Keep absent, unknown and false facts distinguishable. Date, amount or application year edits revoke the corresponding row's confirmation. Preserve exact amounts and known zero, and carry confirmed application through the canonical bridge and JSON replay. Prior-year refund credits, state payments and raw federal input retain their existing treatment."

@@ -1,5 +1,6 @@
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
 import { CharitableTangiblePropertyUseSchema } from "@/models/inputs";
+import { repeatedFederalAppliedCreditIndices } from "@/engine/forms/federal-payment-date-sources";
 import { valueOrdinaryTangibleProperty } from "@/utils/charitable-current-receipts";
 import { isActualDate } from "@/utils/civil-date";
 import { sumSourceMoney } from "@/utils/sum-source-money";
@@ -247,11 +248,19 @@ export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: nu
   const errors = paymentFactErrors(data.estimatedPayments, taxYear, "estimate");
   for (const [key, value] of Object.entries(paymentFactErrors(data.extensionPayments, taxYear, "extension"))) errors[`extension-${key}`] = value;
   Object.assign(errors, federalPaymentReceiptFactErrors(data, taxYear));
-  (data.priorYearAppliedCredits ?? []).forEach((entry, index) => {
+  const credits = (data.priorYearAppliedCredits ?? []).map((entry, index) => {
     const error = amountError(entry.amount, "applied refund amount");
+    const sourceTaxYear = Number(entry.sourceTaxYear);
+    const validSourceYear = /^\d{4}$/.test(entry.sourceTaxYear) && (taxYear == null || sourceTaxYear === taxYear - 1);
     if (error) errors[`credit-${index}-amount`] = error;
-    if (!/^\d{4}$/.test(entry.sourceTaxYear) || (taxYear != null && Number(entry.sourceTaxYear) !== taxYear - 1)) errors[`credit-${index}-year`] = "Enter the immediately preceding tax year from the return that applied this refund.";
+    if (!validSourceYear) errors[`credit-${index}-year`] = "Enter the immediately preceding tax year from the return that applied this refund.";
+    return taxYear === 2026 && !error && validSourceYear ? { sourceTaxYear, amount: parseGuidedCurrency(entry.amount) } : undefined;
   });
+  if (taxYear === 2026) {
+    for (const index of repeatedFederalAppliedCreditIndices(credits)) {
+      errors[`credit-${index}-amount`] = "This amount matches the same prior-year federal applied credit in another row. Reconcile the entries against the actual prior return.";
+    }
+  }
   if (hasEnteredAmount(data.otherPayments)) {
     const error = amountError(data.otherPayments, "saved other-payment total");
     if (error) errors.otherPayments = error;

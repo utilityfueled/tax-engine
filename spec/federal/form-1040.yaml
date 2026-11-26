@@ -613,6 +613,7 @@ lines:
       - "tests/engine/federal-payment-date-sources.test.ts::preserves following-year estimates and extensions and a confirmed zero"
       - "tests/engine/federal-payment-date-sources.test.ts::credits only nonnegative amounts actually carried over from the preceding return"
       - "tests/engine/federal-payment-date-sources.test.ts::holds a positive prior-return credit that conflicts with a sole taxpayer's no-return history"
+      - "tests/engine/federal-payment-date-sources.test.ts::holds indistinguishable positive 2026 federal applied credits before line 26"
     notes: |
       Final 2025 Form 1040 instructions (https://www.irs.gov/instructions/i1040gi),
       Line 26 and Schedule 3 line 10, distinguish estimates from payments made
@@ -622,7 +623,13 @@ lines:
       conflicting facts for reconciliation before crediting line 26, including
       when the return qualifies for a penalty exception. Preserve explicit zero,
       absent prior-return status and a joint return's potential separately sourced
-      spouse credit. The Form 2210 example (https://www.irs.gov/instructions/i2210)
+      spouse credit. For 2026, hold positive federal applied credits with the
+      same preceding year and exact amount when the input has no original
+      identity to distinguish them. Carry only the actual elected amount from
+      2025 Form 1040 line 36 (https://www.irs.gov/pub/irs-pdf/f1040.pdf) as
+      described in 2026 Publication 505 under Credit an Overpayment. Keep
+      single legacy credits, zero, state credits and earlier-year treatment.
+      The Form 2210 example (https://www.irs.gov/instructions/i2210)
       uses January 15, 2026 for the 2025 liability. Publication 505 (2026),
       chapter 2 (https://www.irs.gov/publications/p505), uses January 15, 2027
       for the fourth 2026 installment. Its early-return waiver changes the

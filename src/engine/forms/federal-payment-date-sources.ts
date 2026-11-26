@@ -10,6 +10,26 @@ function isActualPaymentAmount(amount: string): boolean {
   return typeof amount === "string" && /^\d+(?:\.\d+)?$/u.test(amount) && d(amount).isFinite();
 }
 
+/** Find ambiguous applied credits after source-year and amount validation. */
+export function repeatedFederalAppliedCreditIndices(
+  credits: readonly ({ sourceTaxYear: number; amount: Decimal } | undefined)[],
+): number[] {
+  const firstByYearAndAmount = new Map<string, number>();
+  const repeated = new Set<number>();
+  credits.forEach((credit, index) => {
+    if (!credit?.amount.gt(0)) return;
+    const key = `${credit.sourceTaxYear}:${credit.amount.toFixed()}`;
+    const first = firstByYearAndAmount.get(key);
+    if (first === undefined) {
+      firstByYearAndAmount.set(key, index);
+    } else {
+      repeated.add(first);
+      repeated.add(index);
+    }
+  });
+  return [...repeated];
+}
+
 export function assertPriorReturnCreditSource(
   amount: Decimal,
   priorYearTaxStatus: NonNullable<TaxYearInput["form2210"]>["priorYearTaxStatus"],
@@ -41,6 +61,7 @@ export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer"
       }
     }
   }
+  const appliedCredits: { sourceTaxYear: number; amount: Decimal }[] = [];
   for (const credit of input.adjustments?.priorYearAppliedCredits ?? []) {
     if (credit.type !== "federal") continue;
     if (credit.sourceTaxYear !== year - 1) {
@@ -49,7 +70,12 @@ export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer"
     if (!isActualPaymentAmount(credit.amount)) {
       throw new Error("Federal prior-return applied credit requires a confirmed nonnegative amount.");
     }
+    const amount = d(credit.amount);
     // An ownerless credit on a joint return may come from a spouse's separate prior return.
-    assertPriorReturnCreditSource(d(credit.amount), input.form2210?.priorYearTaxStatus, input.taxpayer.filingStatus !== "married_filing_jointly");
+    assertPriorReturnCreditSource(amount, input.form2210?.priorYearTaxStatus, input.taxpayer.filingStatus !== "married_filing_jointly");
+    appliedCredits.push({ sourceTaxYear: credit.sourceTaxYear, amount });
+  }
+  if (year === 2026 && repeatedFederalAppliedCreditIndices(appliedCredits).length) {
+    throw new Error("More than one entry matches the same prior-year federal applied credit. Reconcile the actual prior-return credit before calculating.");
   }
 }

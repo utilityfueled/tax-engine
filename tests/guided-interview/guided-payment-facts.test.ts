@@ -1,7 +1,7 @@
-// Spec: spec/federal/guided-input.yaml, payment-categories and federal-payment-application
+// Spec: spec/federal/guided-input.yaml, payment-categories, 2026-applied-refund-distinctness, federal-payment-application
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyPaymentData, getGuidedFlowStorageKey, loadGuidedFlowState, type PaymentData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyPaymentData, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, type PaymentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { startCompleteInterview } from "./complete-facts";
 
 function stateWith(data: PaymentData) {
@@ -19,6 +19,45 @@ describe("classified guided payments", () => {
     const state = stateWith({ ...emptyPaymentData, otherPayments: "100.01", extensionPayments: [{ amount: "0", date: "2026-04-15" }], priorYearAppliedCredits: [{ amount: "100.01", sourceTaxYear: "2024" }] });
     expect(validateSection(state, "payments").status).toBe("complete");
     expect(buildTaxInputFromGuidedData(state)?.adjustments).toMatchObject({ extensionPayments: [{ amount: "0", date: "2026-04-15", type: "federal" }], priorYearAppliedCredits: [{ amount: "100.01", sourceTaxYear: 2024, type: "federal" }] });
+  });
+  it("holds a repeated positive 2026 applied refund after reopening", () => {
+    const actual = { sourceTaxYear: "2025", amount: "1000.01", rowId: "local-credit-1" };
+    const repeated = { ...actual, amount: "1,000.010", rowId: "local-credit-2" };
+    const zero = { sourceTaxYear: "2025", amount: "0.00" };
+    const payments = { ...emptyPaymentData, priorYearAppliedCredits: [actual, repeated, zero, zero] };
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    } as Storage;
+    const draft = updateSectionData({ ...stateWith(emptyPaymentData), taxYear: 2026 }, "payments", payments);
+    expect(saveGuidedFlowState(storage, "applied-credit", draft)).toBe(true);
+    const reopened = loadGuidedFlowState(storage, "applied-credit");
+    if (!reopened) throw new Error("Expected the applied-credit draft to reopen");
+    expect(reopened.sectionData.payments?.priorYearAppliedCredits).toEqual([actual, repeated, zero, zero]);
+    const validation = validateSection(reopened, "payments");
+    expect(validation.status).toBe("partial");
+    expect(validation.fieldErrors).toEqual({
+      "credit-0-amount": expect.stringMatching(/same prior-year federal applied credit/i),
+      "credit-1-amount": expect.stringMatching(/same prior-year federal applied credit/i),
+    });
+    expect(buildTaxInputFromGuidedData(reopened)).toBeNull();
+
+    const wrongYear = updateSectionData(reopened, "payments", {
+      ...payments, priorYearAppliedCredits: [actual, { ...repeated, sourceTaxYear: "2024" }],
+    });
+    expect(validateSection(wrongYear, "payments").fieldErrors).toEqual({ "credit-1-year": expect.any(String) });
+    expect(buildTaxInputFromGuidedData(wrongYear)).toBeNull();
+
+    const distinct = { ...actual, amount: "1000.02" };
+    const reconciled = updateSectionData(reopened, "payments", { ...payments, priorYearAppliedCredits: [actual, distinct, zero, zero] });
+    expect(validateSection(reconciled, "payments").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(reconciled)?.adjustments?.priorYearAppliedCredits).toEqual([
+      { sourceTaxYear: 2025, amount: "1000.01", type: "federal" },
+      { sourceTaxYear: 2025, amount: "1000.02", type: "federal" },
+      { sourceTaxYear: 2025, amount: "0.00", type: "federal" },
+      { sourceTaxYear: 2025, amount: "0.00", type: "federal" },
+    ]);
   });
   it("rejects unknown dates, conflicting source years and unreconciled totals", () => {
     for (const data of [

@@ -33,6 +33,25 @@ describe("Actual federal payment dates and selected return application", () => {
     }
   });
 
+  it("holds indistinguishable positive 2026 federal applied credits before line 26", () => {
+    const actual = { sourceTaxYear: 2025, amount: "1000.01", type: "federal" } as const;
+    const zero = { ...actual, amount: "0.00" };
+    const facts = (priorYearAppliedCredits: readonly object[]) => ({ ...adjustments(), priorYearAppliedCredits });
+    const baseline = run(2026);
+    const one = run(2026, facts([actual, zero, zero]));
+    expect(one.estimatedTaxPayments.toFixed()).toBe("1000.01");
+    expect(one.totalPayments.minus(baseline.totalPayments).toFixed()).toBe("1000.01");
+    expect(one.refund.minus(baseline.refund).toFixed()).toBe("1000.01");
+
+    expect(() => run(2026, facts([
+      { ...actual, rowId: "local-credit-1" }, { ...actual, amount: "1000.010", rowId: "local-credit-2" },
+    ]))).toThrow(/same prior-year federal applied credit/i);
+    expect(run(2026, facts([actual, { ...actual, amount: "1000.02" }])).estimatedTaxPayments.toFixed()).toBe("2000.03");
+    expect(run(2026, facts([actual, { ...actual, type: "state", state: "WA" }])).estimatedTaxPayments.toFixed()).toBe("1000.01");
+    const legacy = { ...actual, sourceTaxYear: 2024 };
+    expect(run(2025, facts([legacy, legacy])).estimatedTaxPayments.toFixed()).toBe("2000.02");
+  });
+
   it("holds a positive prior-return credit that conflicts with a sole taxpayer's no-return history", () => {
     for (const year of [2025, 2026] as const) {
       const facts = (amount: string) => raw(year, {
