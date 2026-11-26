@@ -149,8 +149,10 @@ lines:
       matched payer name and TIN, primary recipient identity, a confirmed
       complete literal account reference and actual original facts for a directly held
       domestic corporation's ordinary taxable cash distributions. Repeating a
-      masked token or suffix on matching documents cannot prove the full account;
-      ordinary embedded literal X characters remain eligible. Require
+      masked token or suffix on matching documents cannot prove the full account.
+      Classify abbreviation patterns after compatibility normalization, including
+      separated X groups and fullwidth masks. Match originals by their literal
+      references and preserve ordinary embedded X characters. Require
       positive Box 1a and no qualified-dividend subset, other reportable amounts,
       withholding, nominee, reinvestment or alternative timing or sourcing
       facts. Require distinct original account receipts with actual dates of
@@ -175,6 +177,8 @@ lines:
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds unsupported or contradictory cash dividend facts (%s)"
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds repeated masked references on matched dividend originals (%s)"
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::accepts matching literal account references containing X characters (%s)"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds alternate cash dividend masks across residency statuses (%s)"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::still matches nonmasked dividend references literally"
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds changed originals without rebinding and keeps the wage method separate"
   - line: "direct-treasury-coupon"
     description: "Private 2026 ordinary employee draft for one directly held conventional Treasury note or bond coupon"

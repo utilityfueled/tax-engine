@@ -5,7 +5,7 @@ reference: "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#197
 notes: |
   Finite state-only draft for single living unmarried owners in each actual
   FY/PY/NR class with complete ordinary cash W2 originals and source payroll.
-  The finite part-year investment methods below accept one additional original.
+  The finite investment methods below accept one additional original.
   No original document, missing amount, date, eligibility answer or election is
   inferred. Existing canonical ordinary and full federal APIs keep their gates.
   Enacted sections302/303/304, 61PaCode121.8, final2026REV413(I), Act45/2025
@@ -275,7 +275,7 @@ lines:
       still proves zero federal EITC without a federal return.
       Require the same actual withholding coverage as the bank-interest method
       and complete ordinary completion facts. Hold simultaneous interest,
-      other dividend originals, other residency cohorts, dependent care, childless
+      other dividend originals, outbound and other mover cohorts, dependent care, childless
       EITC, estimated balance, unemployment and prepayment methods. Preserve
       pending final 2026 PA form, mapping and filing gates.
     sources:
@@ -289,6 +289,42 @@ lines:
     testRefs:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend outside the resident period enters Schedule SP only"
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend holds %s"
+  - line: "full-year-personal-cash-dividend"
+    description: "Include one verified cash-dividend original for a continuous PA resident or nonresident"
+    formula: |
+      Apply the same original, filing owner, exact receipt ledger, withholding,
+      classification and other ordinary source conditions as for part-year cash
+      dividends. Require a single confirmed domicile period covering the entire
+      2026 calendar year, in PA for a resident or outside PA for a nonresident,
+      with the existing abode, presence and declaration reconciliation. Hold
+      statutory residency outside that continuous-domicile cohort and all mover
+      methods other than the existing part-year move into Pennsylvania.
+      Require a complete account reference for each added residency method.
+      Repeated masked or suffix-only values cannot verify the account. Preserve
+      literal X characters within ordinary unmasked identifiers and the existing
+      part-year admission rules. Classify separated X masks and fullwidth forms
+      after compatibility normalization. Preserve literal agreement of the
+      matched original evidence.
+      The exact nationwide Box 1a amount contributes once to the source income
+      underlying federal AGI and worldwide Schedule SP. Known Box 1b is a subset
+      already included in Box 1a. The wage floor still proves zero federal EITC
+      without a full federal calculation. Include all Box 1a in PA dividends for
+      the full-year resident. For the full-year nonresident, remove all Box 1a
+      from PA taxable dividends and include it once in outside income for
+      Schedule SP. Use the existing PA tax and settlement calculations. Keep
+      public filing, PDF availability and final 2026 form qualification gated.
+    sources:
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness"
+      - "https://www.irs.gov/instructions/i1099div"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 cash dividends reconcile annual %s tax and worldwide Schedule SP"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 cash dividends still hold the two-period %s method"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual %s cash dividends reject repeated masked account references"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual %s cash dividends accept literal account references with X characters"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual cash dividends reject alternate masks (%s)"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 annual cash dividends still match nonmasked references literally"
   - line: "nonresident-actual-small-balance"
     description: "Reconcile the exact timely PA-40 balance paid by a nonresident wage earner with no estimated installments due"
     formula: |

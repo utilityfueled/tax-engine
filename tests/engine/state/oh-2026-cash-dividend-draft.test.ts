@@ -116,10 +116,25 @@ describe('Ohio 2026 private ordinary cash dividend draft', () => {
     expect(() => run(packet)).toThrow(/stable account reference/);
   });
 
-  it.each(['BROKER-AXXXX-1234', 'BROKER-XXXXA-1234', 'BROKER-X7XX-1234', 'BROKER-XXXX-ALPHA-1234'])('accepts matching literal account references containing X characters (%s)', reference => {
+  it.each(['BROKER-AXXXX-1234', 'BROKER-XXXXA-1234', 'BROKER-X7XX-1234', 'BROKER-XXXX-ALPHA-1234', 'ＢＲＯＫＥＲ－Ｘ７ＸＸ－１２３４'])('accepts matching literal account references containing X characters (%s)', reference => {
     const packet = dividendFixture();
     matchAccountReferences(packet, reference);
     expect(run(packet).incomeTax.toFixed()).toBe('598');
+  });
+
+  it.each(['BROKER:XXXX:1234', 'XXXX-XX-1234', 'ＢＲＯＫＥＲ－ＸＸＸＸ－１２３４'])('holds alternate cash dividend masks across residency statuses (%s)', reference => {
+    for (const status of Object.keys(scenarios) as Status[]) {
+      const packet = dividendFixture(status);
+      matchAccountReferences(packet, reference);
+      expect(() => run(packet), status).toThrow(/stable account reference/);
+    }
+  });
+
+  it('still matches nonmasked dividend references literally', () => {
+    const packet = dividendFixture();
+    matchAccountReferences(packet, 'ＢＲＯＫＥＲ－Ｘ７ＸＸ－１２３４');
+    packet.original.credits[0].accountReference = 'BROKER-X7XX-1234';
+    expect(() => run(packet)).toThrow(/account differs/);
   });
 
   it.each<[string, (p: Packet) => void, RegExp]>([

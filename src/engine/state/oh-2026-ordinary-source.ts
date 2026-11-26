@@ -23,6 +23,7 @@ import { allocateOhioUnemploymentReceipts, assertOhio2026PrimaryResidencyDeclara
 import { calculateOhio2026PartYearPaReciprocalWageSource, calculateOhio2026ReciprocalWageSource, readOhio2026ReciprocalWageSource, type Ohio2026ReciprocalWageContext } from './oh-2026-reciprocal-source.js';
 import { calculateOhio2026ResidentCreditSource, readOhio2026ResidentCreditSource, type Ohio2026ResidentCreditSourceContext } from './oh-2026-resident-credit-source.js';
 import { roundDollar } from '@/utils/decimal.js';
+import { isIncompleteDividendAccountReference } from '@/utils/dividend-account-reference.js';
 
 const federalDocumentCollections: ReadonlySet<string> = new Set([
   'form1099Int', 'form1099Div', 'form1099B', 'form1099DA', 'form1099Nec',
@@ -83,13 +84,6 @@ const bareAccountSuffix = /^\d{1,4}$/u;
 
 function isIncompleteInvestmentAccount(reference: string): boolean {
   return maskedAccountReference.test(reference) || accountEndingLabel.test(reference) || bareAccountSuffix.test(reference);
-}
-
-// Treat standalone trailing mask tokens as abbreviations while preserving Xs inside literal segments.
-const trailingDividendXMask = /(?:^|[\s./_-])x{4,}(?:[\s./_-]+x{4,})*(?:[\s./_-]*\d+(?:[\s./_-]+\d+)*)?$/iu;
-const trailingDividendSymbolMask = /(?:[*•●∙⋅·]+|\.{3,}|…)(?:[\s./_-]*\d+(?:[\s./_-]+\d+)*)?$/u;
-function isIncompleteDividendAccount(reference: string): boolean {
-  return isIncompleteInvestmentAccount(reference) || trailingDividendXMask.test(reference) || trailingDividendSymbolMask.test(reference);
 }
 
 function qualifyTreasuryCoupon(input: TaxYearInput, facts: OhioResidencyFacts, original: Ohio2026TreasuryCouponEmployeeSources['treasuryCouponOriginal']): Decimal {
@@ -188,7 +182,7 @@ function qualifyCashDividends(input: TaxYearInput, facts: OhioResidencyFacts, so
     || identity(recipient.lastName) !== identity(primary.lastName) || tin(original.payerTin) !== tin(form.payerTin)
     || identity(original.payerName) !== identity(form.payer) || accountReference !== form.accountReference)
     fail('actual Form 1099-DIV recipient, payer or account differs');
-  if (isIncompleteDividendAccount(accountReference)) fail('a stable account reference is required to match the Form 1099-DIV and cash dividend credits');
+  if (isIncompleteDividendAccountReference(accountReference)) fail('a stable account reference is required to match the Form 1099-DIV and cash dividend credits');
   // Require actual known-zero boxes from the bound original before schema defaults.
   const otherAmounts = [rawForm.qualifiedDividends, rawForm.totalCapitalGainDistributions, rawForm.section1250Gain,
     rawForm.section1202Gain, rawForm.collectiblesGain, rawForm.nondividendDistributions, rawForm.federalWithheld,

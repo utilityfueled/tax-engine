@@ -14,6 +14,7 @@ import type {PAOrdinaryReturnProjection} from './pa-ordinary-return-facts.js';
 import type {PAResidencySourcesResult} from './pa-residency-sources.js';
 import {ordinarySourcePrecision,publicOrdinaryMoney} from './pa-ordinary-source-precision.js';
 import {readPA2026GovernmentUnemployment,type PA2026GovernmentUnemploymentContext} from './pa-2026-unemployment-source.js';
+import {isIncompleteDividendAccountReference} from '@/utils/dividend-account-reference.js';
 export interface PA2026OrdinaryDependencyProof {
  methodVersion:'pa-2026-ordinary-dependencies-v1';ordinaryWages:Decimal;
  maximumCompletedEitcPhaseout:Decimal;federalEarnedIncomeCredit:Decimal;careCredit:Decimal;
@@ -93,12 +94,12 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  }
  if (bankInterest || cashDividend) {
   const retainedCompletion = input.paOrdinaryReturnCompletionSources;
-  if (income.residencyStatus !== 'part_year' || p.paFilingChoice !== 'S' || actualCare || unemployment
+  if ((bankInterest && income.residencyStatus !== 'part_year') || p.paFilingChoice !== 'S' || actualCare || unemployment
     || sources.eitcChildInventory || retainedCompletion?.eitcChildInventory || retainedCompletion?.care?.status === 'actual_expenses'
     || sources.estimatedTaxReview2026 || retainedCompletion?.estimatedTaxReview2026 || p.facts.payments.rows.length) {
    fail(bankInterest
     ? 'part-year bank interest requires the ordinary high-wage single method without another special source or payment method'
-    : 'part-year cash dividends require a move into Pennsylvania and the ordinary high-wage single method without another special source or payment method');
+    : 'cash dividends require the ordinary high-wage single method without another special source or payment method');
   }
  }
  if (bankInterest) {
@@ -118,15 +119,24 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
   if (new Set(creditReferences).size !== creditReferences.length) fail('conflicting dated bank credits reuse the same actual credit reference');
  }
  if (cashDividend) {
-  const [outside, within] = r.residency.domicilePeriods;
-  if (r.residency.domicilePeriods.length !== 2 || outside.state === 'PA' || within.state !== 'PA') {
-   fail('part-year cash dividends require one move into Pennsylvania');
+  const periods = r.residency.domicilePeriods;
+  const [first, second] = periods;
+  if (income.residencyStatus === 'part_year') {
+   if (periods.length !== 2 || first.state === 'PA' || second.state !== 'PA') {
+    fail('part-year cash dividends require one move into Pennsylvania');
+   }
+  } else if (periods.length !== 1 || (first.state === 'PA') !== (income.residencyStatus === 'resident')) {
+   fail('full-year cash dividends require continuous confirmed domicile consistent with Pennsylvania residency');
   }
   const [dividendSource] = r.dividends ?? [];
+  const accountReference = cashDividend.accountReference?.trim();
   if (input.form1099Div.length !== 1 || r.dividends?.length !== 1 || !dividendSource
     || cashDividend.taxYear !== 2026 || cashDividend.accountHolder !== 'primary'
-    || !cashDividend.payer.trim() || !cashDividend.accountReference?.trim()) {
-   return fail('part-year cash dividends require one actual 2026 Form 1099-DIV for the primary owner and original account');
+    || !cashDividend.payer.trim() || !accountReference) {
+   return fail('cash dividends require one actual 2026 Form 1099-DIV for the primary owner and original account');
+  }
+  if (income.residencyStatus !== 'part_year' && isIncompleteDividendAccountReference(accountReference)) {
+   fail('full-year cash dividends require a complete unmasked account reference');
   }
   if (dividendSource.domesticCorporateCashDividendsOnlyConfirmed !== true) {
    fail('confirm actual domestic corporate cash dividends only for this personal investment original');
@@ -136,7 +146,7 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
    cashDividend.foreignTaxPaid, cashDividend.exemptInterestDividends, cashDividend.specifiedPrivateActivityBondInterest, cashDividend.stateWithheld];
   if (!amount(cashDividend.ordinaryDividends).gt(0) || cashDividend.foreignCountry?.trim() || cashDividend.directReitDividendFacts
     || cashDividend.privateActivityBondFacts || otherAmounts.some(value => value === undefined || !amount(value).isZero())) {
-   fail('part-year cash dividends require positive Box 1a with known-zero other amounts including withholding and without specialized source facts');
+   fail('cash dividends require positive Box 1a with known-zero other amounts including withholding and without specialized source facts');
   }
   if (dividendSource.credits.some(credit => !amount(credit.ordinaryDividends).gt(0))) {
    fail('positive dated domestic cash dividends are required for each credit');

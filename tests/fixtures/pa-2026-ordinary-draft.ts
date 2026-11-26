@@ -33,7 +33,7 @@ export function pa2026PartYearBankInterestFixture(status: 'resident' | 'part_yea
  return f;
 }
 
-export function pa2026PartYearCashDividendFixture(status: 'resident' | 'part_year' | 'nonresident' = 'part_year') {
+export function pa2026OrdinaryCashDividendFixture(status: 'resident' | 'part_year' | 'nonresident' = 'part_year') {
  const f = pa2026OrdinaryDraftFixture(status);
  const original = Form1099DivSchema.parse({
   taxYear: 2026, payer: 'Fictional domestic corporation', accountReference: 'fictional-personal-dividend-account', accountHolder: 'primary',
@@ -55,7 +55,7 @@ export function pa2026PartYearCashDividendFixture(status: 'resident' | 'part_yea
  f.input.form1099Div = [original];
  const residency = { ...f.input.paResidencySources, dividends: [source] };
  f.input.paResidencySources = residency;
- f.input.w2s[0].stateTaxWithheld = '1199';
+ f.input.w2s[0].stateTaxWithheld = { resident: '2306', part_year: '1199', nonresident: '276' }[status];
  rebindPA2026Draft(f);
  return { ...f, residency };
 }
