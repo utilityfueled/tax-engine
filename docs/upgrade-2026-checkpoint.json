@@ -2,7 +2,8 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "0d8a9c59613134cd85b39ecf04b376d7d7f2b868",
+    "applicationCommit": "cd9d17f5c441cf850137d4c01365fccb0b03e00f",
+    "rothRolloverContributionEvidenceKey": "activeContinuation.nov25RothRolloverContributionReconciliation",
     "qcdSourceReviewEvidenceKey": "activeContinuation.nov25QcdSourceReview",
     "socialSecurityRepaymentEvidenceKey": "activeContinuation.nov25SocialSecuritySmallRepayment",
     "historicalAiFixtureEvidenceKey": "activeContinuation.nov25HistoricalAiFixture",
@@ -94,6 +95,22 @@
     ]
   },
   "activeContinuation": {
+    "nov25RothRolloverContributionReconciliation": {
+      "commit": "cd9d17f5c441cf850137d4c01365fccb0b03e00f",
+      "sources": ["https://uscode.house.gov/us/usc/119-142/t26/s529/", "https://uscode.house.gov/us/usc/119-142/t26/s408A/", "https://uscode.house.gov/us/usc/119-142/t26/s219/"],
+      "scope": "2026 guided same-primary-beneficiary Roth transfer worksheets and confirmed designated-year IRA amounts. Hold evidenced conflicts for review, retain consistent original figures.",
+      "controlAmounts": {"directRollover": "7500", "earnings": "1500", "regularRothContribution": "1000", "excludedRollover": "6500", "taxableEarnings": "200"},
+      "focusedTestsPassed": 82,
+      "combinedExactTestsPassed": 158,
+      "browserControlTestsPassed": 74,
+      "specReferencesPassed": 10098,
+      "trackedBlobsVerified": 6701,
+      "exactLocalBuilds": {"core": "passed", "web": "passed"},
+      "githubRuns": {"docker": 45733929741, "ci": 45733929707, "web": 45733929730},
+      "lint": {"errors": 0, "warnings": 12224},
+      "vercelProductionBuild": "CANCELED",
+      "remaining": "Exact full suites; qualified review of calendar versus designation timing and final 2026 annual qualification. Existing filing gates are closed."
+    },
     "nov25QcdSourceReview": {
       "commit": "0d8a9c59613134cd85b39ecf04b376d7d7f2b868",
       "sources": ["https://www.irs.gov/instructions/i1099r", "https://uscode.house.gov/us/usc/119-142/t26/s408/"],
@@ -104,6 +121,7 @@
       "trackedBlobsVerified": 6701,
       "exactLocalBuilds": {"core": "passed", "web": "passed"},
       "githubRuns": {"docker": 45732700346, "ci": 45732700322, "web": 45732700374},
+      "dockerResult": "success",
       "vercelProductionBuild": "CANCELED",
       "controlAmounts": {"exclusionWith4000UnusedDeductedContributions": "2500", "exclusionAfterDocumentedReconfirmationOfZero": "6500"},
       "remaining": "Exact full suites and qualified human approval. Existing 2026 annual calculation and export gates stay closed."
@@ -123,6 +141,7 @@
       "ownerFollowupStandaloneChromium": {"passed": 5, "retries": 0, "deadlineSeconds": 30, "loopbackClosed": true},
       "ownerFollowupDockerRun": 45731461771,
       "ownerFollowupDockerResult": "success",
+      "ownerFollowupExactLocalUnit": {"passed": 30601, "filesPassed": 2222, "originalSkips": 81, "failed": 0},
       "vercelProductionBuilds": ["CANCELED", "CANCELED"],
       "remaining": "Exact full suites, independent tax approval, broader repayment methods and final annual form qualification."
     },

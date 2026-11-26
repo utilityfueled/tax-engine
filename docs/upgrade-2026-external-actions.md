@@ -1,5 +1,20 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 529-to-Roth contribution timing review
+
+Check one 2026 direct $7,500 transfer for the same eligible beneficiary,
+with $1,500 earnings and an actual $1,000 regular Roth contribution in
+2026. Verify the $6,500 excluded transfer and $200 taxable earnings.
+Then consider a separate $400.10 traditional IRA contribution designated
+for 2026 and paid in January 2027. Determine how the amount under
+§408A(c)(2)(B) and the payment-year reduction in §529(c)(3)(E)(ii)(I)
+interact, including the limited purpose of the deemed payment rule in
+§219(f)(3). Provide an independently calculated amount and primary
+authority before using a lower amount from conflicting source records.
+[26 U.S.C. §529](https://uscode.house.gov/us/usc/119-142/t26/s529/) ·
+[26 U.S.C. §408A](https://uscode.house.gov/us/usc/119-142/t26/s408A/) ·
+[26 U.S.C. §219](https://uscode.house.gov/us/usc/119-142/t26/s219/).
+
 ## November 25 qualified charitable distribution review
 
 Independently check one eligible 2026 traditional IRA owner with a

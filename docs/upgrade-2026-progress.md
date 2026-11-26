@@ -1,5 +1,29 @@
 # 2026 upgrade implementation evidence
 
+## November 25 529-to-Roth contribution reconciliation
+
+`cd9d17f5c` checks the 2026 transfer worksheet against confirmed regular
+IRA contributions for the same primary beneficiary. A below-recorded
+total requires review of actual payment dates and tax-year designations.
+If the transfer identifies the primary taxpayer as beneficiary, a missing
+or conflicting beneficiary tax ID cannot bypass that review. The bridge
+preserves entered totals. Independently confirmed zero and unrelated
+beneficiaries retain their existing treatment.
+
+The isolated control with a $7,500 rollover, $1,500 earnings and $1,000
+actual Roth contributions excludes $6,500 and reports $200 of taxable
+earnings. A claimed different payment year cannot reopen a discrepancy.
+Independent engineering review verified the matched, zero, edited,
+rehydrated and different-beneficiary controls. All 82 scoped tests, 158
+combined exact tests, 74 browser timing controls, both local builds,
+core, contract and web types, inventory and 10,098 exact spec references
+passed. All 6,701 source files matched the published commit. Full lint
+reported zero errors and 12,224 warnings. Annual calculation and filing
+gates remain closed. Mixed dates need qualified review.
+[26 U.S.C. §529](https://uscode.house.gov/us/usc/119-142/t26/s529/) ·
+[26 U.S.C. §408A](https://uscode.house.gov/us/usc/119-142/t26/s408A/) ·
+[Review case](upgrade-2026-external-actions.md#november-25-529-to-roth-contribution-timing-review).
+
 ## November 25 qualified charitable distribution source review
 
 `0d8a9c596` requires fresh guided review when a 2026 qualified charitable
@@ -17,8 +41,10 @@ altered contribution amounts and loss of a first explicit No. The
 isolated successor passed all 71 focused tests, 74 browser timing and
 fixture controls, both local builds, contract and application type checks, inventory
 and 10,097 spec references. All 6,701 tracked files were checked against
-the exact source commit. Qualified tax review and the annual 2026 gates
-remain open. [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+the exact source commit. Its Docker build passed. Qualified tax review and
+the annual 2026 gates remain open.
+[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45732700346) ·
+[2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
 [Internal Revenue Code §408(d)(8)](https://uscode.house.gov/us/usc/119-142/t26/s408/).
 
 The earlier exact `4dc165c46` Social Security application passed both
@@ -28,6 +54,8 @@ covered desktop and mobile year restoration and upload through recovery
 and deletion, plus a historical SSA-linked cash-farm review. The first
 attempt stopped before Chromium at a localhost bind restriction. The
 successful run used an authorized local listener and closed it normally.
+The full exact local unit run passed 30,601 tests in 2,222 files with
+81 original skips and zero failures.
 [Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45731461771).
 
 Exact `30f6be19a` reported 30,594 unit passes, 81 skips and two failures.
