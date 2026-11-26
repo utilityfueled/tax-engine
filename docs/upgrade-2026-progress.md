@@ -1,5 +1,120 @@
 # 2026 upgrade implementation evidence
 
+## November 25 uploads in reopened review
+
+`3aeb837f5` keeps the upload control in **Your Documents** when the
+advanced workspace opens in review mode. The browser regression stores
+a PDF containing the official Form 1099-LPS blank and fictional interest,
+reopens it, and confirms that it imported no amounts. It then adds
+the separate fictional interest original and verifies after reload that
+the $123.45 is visible while the mixed packet is still held for review.
+
+The managed production build matched all 6,703 tracked blobs and passed
+all 31 workspace upload cases, including the new regression. The 56 Node
+diagnostics tests and 31 focused Vitest cases passed. Independent review,
+all three type checks, the engine and web builds, all 10,104 spec lines, the
+inventory, and the 2,073-file audit passed. Full lint reported zero
+errors and 12,232 warnings. The exact build also passed all six local
+Chromium workspace recovery cases. The complete browser collection now
+lists 659 cases with its existing budgets and historical comparison
+still enforced. The exact full unit and coverage suites each passed
+30,645 tests with 81 original conditional skips. Branch coverage reached
+88.49% against the 85% gate. GitHub Docker `45750813162` passed. The CI
+unit shards were in progress and Linux browser `45750813234` was queued.
+Vercel canceled the production build.
+
+The complete local Chromium run was in progress at this checkpoint. Its
+clean archive initially lacked the registered public sample PDFs and
+stopped before any browser cases. All 15 files were restored from the
+previous exact archive before the managed run began.
+
+## November 25 pension original reconfirmation
+
+`30a1a0677` ties the Simplified Method Box 1 coverage answer to the
+actual statement, contract and recipient in both guided edits and
+saved-draft replay. Changes that displace the original, including an
+atomic replacement during a bulk update, require fresh review. A
+combined identity and year correction clears copied annual payment
+months and prior recovery. Formatting, reordering and independently
+entered amounts keep their reviewable values. Earlier saved edits
+cannot be identified from drafts that contain only current values.
+
+Five regression cases failed before the corrections. The pension
+focused run passed 40 tests. The exact integrated archive passed 128
+tests, all 10,104 spec references, inventory, core, contract and web
+types, and scoped lint. Independent engineering review covered regular
+and bulk edits, actual owner replacement, and save and reopen. Both
+source snapshots matched all 6,703 tracked blobs. The local production
+build passed 50 selected Chromium cases across upload, guided intake and
+Pennsylvania flows, with no failures or skips. GitHub Docker run
+`45749069271` passed. Vercel canceled the production build. Annual tax
+and export qualification remain open.
+
+The subsequent full coverage attempt on this revision passed 30,642 tests
+with 84 skipped, then exited with one failed suite because the local test
+process could not bind its localhost fixture (`EPERM`). The run does not
+establish the coverage gate. The approved localhost runner was used for
+the newer application revision.
+[IRS Publication 575](https://www.irs.gov/publications/p575) ·
+[Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+## November 25 long-term care premium statement intake
+
+`f752b6429` recognizes the printed Form 1099-LPS identifier, statement
+title and Box 1 label on the same page. A mixed PDF now retains a pending
+Form 1099-LPS record without importing the neighboring statement's
+amounts. That result survives save and reopen, including files named like
+official interest and wage samples. A standalone interest record with
+only a filename or note referring to Form 1099-LPS still imports normally.
+
+The original mixed packet and the blank failed before the fix. Independent
+review then reproduced a page stamp and a two-up layout that had put
+adjacent text on the form identifier's row. The final regression passed
+both layouts and both page orders. The unchanged official six-page PDF is
+a test fixture with SHA-256
+`f9a691f5dd902be70f0d6194bf34d4a7e093c68bc5312f7c3443d2313d235ac8`.
+The exact archive passed 103 tests, 10,104 spec references, inventory,
+contract and web types, scoped lint, and the updated browser audit.
+Vercel canceled the production build.
+
+A separate Chromium attempt stored the mixed PDF but timed out looking
+for its document card before opening the collapsed Documents panel. An
+ordinary workspace regression opened the panel and verified the card
+after reload, with no imported interest. When extended to upload the
+separate statement, that regression exposed a real gap. The advanced
+review-focused workspace had removed the upload input. The retained
+attempt ran 30 existing tests successfully and timed out only in the
+new follow-up at the missing input.
+
+Form 1099-LPS Box 1 reports premiums and charges paid. The plan's
+separate premium statement and actual distribution records establish
+different facts. The current final Form 5329 instructions still print
+2025. The published 2026 exception-number table is a draft. The upload
+holds the scenario for review without activating annual calculation or
+filing.
+[Form 1099-LPS](https://www.irs.gov/pub/irs-prior/f1099lps--2026.pdf) ·
+[Issuer instructions](https://www.irs.gov/pub/irs-prior/i1099lps--2026.pdf) ·
+[Notice 2026-33](https://www.irs.gov/irb/2026-24_IRB#NOT-2026-33) ·
+[Draft Form 5329 instructions](https://www.irs.gov/pub/irs-dft/i5329--dft.pdf).
+
+## November 25 Pennsylvania residency declarations
+
+`191e4a100` checks a declared residency status against the documentary
+result in the ordinary 2026 Pennsylvania worksheet. Guided confirmation
+and saved replay both held conflicting full-year, part-year and
+nonresident claims. Matching declarations and legacy omissions backed by
+complete records still work. Selecting another state leaves its
+declaration alone. Existing statutory methods and filing gates remain in
+place.
+
+All three conflict tests failed before the correction. The broader
+focused run passed 150 tests. The isolated exact archive passed 45
+focused tests including the browser audit controls, all 10,103 spec
+references and the generated inventory check. Web type checking and
+scoped lint passed. Independent engineering review found no remaining
+issue in this change. Vercel recorded the production build as canceled.
+[Pennsylvania residency rules](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency).
+
 ## November 25 portable self-host recovery
 
 The production-mode standalone build of `75084f31c` exported an encrypted

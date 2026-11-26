@@ -9,6 +9,27 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `3aeb837f5` keeps uploads available under **Your Documents** in an
+  advanced review workspace. Chromium reopened a held mixed PDF and
+  imported the separately uploaded interest original without importing
+  data from the mixed packet. All 31 managed upload cases passed.
+  [Reopened upload evidence](upgrade-2026-progress.md#november-25-uploads-in-reopened-review).
+
+- `30a1a0677` requires fresh pension coverage confirmation after changes
+  to the actual statement, contract or recipient. A combined year and
+  identity edit also clears copied payment months and prior recovery.
+  [Pension source evidence](upgrade-2026-progress.md#november-25-pension-original-reconfirmation).
+
+- `f752b6429` holds an upload containing a Form 1099-LPS for source
+  review. A mixed, stamped or two-up PDF keeps its original and supplies
+  no imported tax amounts. Other statements can be uploaded separately.
+  [Long-term care statement evidence](upgrade-2026-progress.md#november-25-long-term-care-premium-statement-intake).
+
+- `191e4a100` requires a declared 2026 Pennsylvania residency status to
+  agree with the confirmed domicile, abode and presence records. Guided
+  confirmation and saved replay now hold all three tested conflicts.
+  [Pennsylvania residency evidence](upgrade-2026-progress.md#november-25-pennsylvania-residency-declarations).
+
 - A clean Chromium profile restored a self-hosted encrypted backup on
   the exact `75084f31c` build. The original PDF and guided answers
   matched byte for byte after reload, and the workflow regenerated the
@@ -27,9 +48,10 @@ Use the linked progress sections when investigating individual packages.
   a full-year Ohio domicile record. All 237 focused tests passed.
   [Ohio residency evidence](upgrade-2026-progress.md#november-25-ohio-earned-school-residency).
 
-- Exact local checks for `75084f31c` passed 30,630 unit tests, 88.49%
+- The full local baseline at `75084f31c` passed 30,630 unit tests, 88.49%
   branch coverage, and all 653 active managed Chromium cases. Its Docker
-  build passed. Remote CI and strict Linux browser runs remain open.
+  build passed. The latest exact revision has its own focused checks and
+  remote release runs.
   [Exact release evidence](upgrade-2026-progress.md#november-25-lifetime-learning-credit-source-reconfirmation).
 
 - `8d4481d8c` reconciles 2026 federal estimate, extension and balance-due
