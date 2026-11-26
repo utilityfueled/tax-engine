@@ -48,7 +48,11 @@ it.each(cases)('actual reciprocal packet reuses its canonical calculation with e
     expect(packetNames).toEqual(standalone.map(path => basename(path)));
     expect(packetNames.slice().sort()).toEqual(Object.keys(testCase.physicalFiles).sort());
     for (const name of packetNames) {
-      expect(await readFile(join(packetDir, name))).toEqual(await readFile(join(standaloneDir, name)));
+      const [packetBytes, standaloneBytes] = await Promise.all([
+        readFile(join(packetDir, name)),
+        readFile(join(standaloneDir, name)),
+      ]);
+      expect(packetBytes.equals(standaloneBytes), name).toBe(true);
     }
   } finally {
     vi.useRealTimers();
