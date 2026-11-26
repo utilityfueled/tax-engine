@@ -28,6 +28,12 @@ import type { CalculatedLine } from "@/models/outputs.js";
 
 const error = (detail: string): never => { throw new Error(`PA ordinary residency sources: ${detail}`); };
 const reciprocalCompensationStates = new Set(["IN", "MD", "NJ", "OH", "VA", "WV"]);
+const paResidencyDeclarations = {
+  resident: "full-year",
+  part_year: "part-year",
+  nonresident: "nonresident",
+} as const satisfies Record<PAResidencyStatus, TaxYearInput["taxpayer"]["stateResidency"]>;
+
 function isPA2026OutboundDomicileChange(year: number, residency: PAResidencySources["residency"]): boolean {
   const periods = residency.domicilePeriods;
   return year === 2026 && periods.length === 2 && periods[0].state === "PA" && periods[1].state === "NY";
@@ -289,6 +295,10 @@ function amount(value: unknown): Decimal {
     const hasSpecializedSources = Object.entries(source).some(([key, value]) => !floridaMoveSourceKeys.has(key as keyof PAResidencySources)
       && value !== undefined && (!Array.isArray(value) || value.length > 0));
     if (source.interest.length || input.form1099Int.length || hasSpecializedSources || input.paReciprocitySources !== undefined || input.paResidentReturn !== undefined) return error("the Florida move requires complete wage-only originals and no other PA adjustments");
+  }
+  const declaredResidency = input.taxpayer.stateResidency;
+  if (year === 2026 && declaredResidency !== undefined && declaredResidency !== paResidencyDeclarations[residency.status]) {
+    return error("the declared Pennsylvania residency conflicts with the confirmed domicile, abode and presence records. Reconcile both answers before continuing.");
   }
   const royaltySources=calculatePAOrdinaryRoyaltySources(input,source.royaltySources,residency);
   const remainingMisc=input.form1099Misc.map((original,index)=>({original,index})).filter(row=>!royaltySources.coveredOriginalIndices.includes(row.index));

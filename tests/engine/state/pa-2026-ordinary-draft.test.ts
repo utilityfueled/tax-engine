@@ -41,6 +41,60 @@ function pa2026UnemploymentFixture(status: 'resident' | 'part_year' | 'nonreside
  return {...f,original,exclusionProof};
 }
 
+// Spec: spec/state/pa-2026-ordinary-draft.yaml#primary-residency-declaration.
+const residencyCases = [
+ ['resident', 'full-year', ['part-year', 'nonresident'], '2303'],
+ ['part_year', 'part-year', ['full-year', 'nonresident'], '1197'],
+ ['nonresident', 'nonresident', ['full-year', 'part-year'], '276'],
+] as const;
+
+function reopenWithDeclaration<T extends ReturnType<typeof pa2026OrdinaryDraftFixture>>(
+ fixture: T, declaration: T['input']['taxpayer']['stateResidency'],
+): T {
+ fixture.input.taxpayer.stateResidency = declaration;
+ rebindPA2026Draft(fixture);
+ return JSON.parse(JSON.stringify(fixture));
+}
+
+it.each(residencyCases)('PA2026 wage draft reconciles retained Pennsylvania residency for %s', (status, matching, conflicts, tax) => {
+ for (const declaration of [undefined, matching]) {
+  const saved = reopenWithDeclaration(pa2026OrdinaryDraftFixture(status), declaration);
+  const result = calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources);
+  expect(result.pa.residencyStatus).toBe(status);
+  expect(result.pa.pa40.taxLiability.toFixed()).toBe(tax);
+  expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ }
+ for (const declaration of conflicts) {
+  const saved = reopenWithDeclaration(pa2026OrdinaryDraftFixture(status), declaration);
+  expect.soft(() => calculatePA2026OrdinaryDraft(saved.input, saved.facts, saved.sources))
+   .toThrow(/declared Pennsylvania residency conflicts with the confirmed domicile, abode and presence records/);
+ }
+});
+
+it.each(residencyCases)('PA2026 Box 1 draft reconciles retained Pennsylvania residency for %s', (status, matching, conflicts, tax) => {
+ for (const declaration of [undefined, matching]) {
+  const saved = reopenWithDeclaration(pa2026UnemploymentFixture(status), declaration);
+  const result = calculatePA2026OrdinaryUnemploymentDraft(saved.input, saved.facts, saved.sources, saved.exclusionProof);
+  expect(result.pa.residencyStatus).toBe(status);
+  expect(result.pa.pa40.taxLiability.toFixed()).toBe(tax);
+  expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ }
+ for (const declaration of conflicts) {
+  const saved = reopenWithDeclaration(pa2026UnemploymentFixture(status), declaration);
+  expect.soft(() => calculatePA2026OrdinaryUnemploymentDraft(saved.input, saved.facts, saved.sources, saved.exclusionProof))
+   .toThrow(/declared Pennsylvania residency conflicts with the confirmed domicile, abode and presence records/);
+ }
+});
+
+it('PA2026 declaration reconciliation preserves historical Pennsylvania residency replay', () => {
+ const original = paOrdinaryReturnFixture('resident', 2025);
+ const expected = calculatePAOrdinaryReturn(original.input, original.facts, original.sources);
+ const saved = reopenWithDeclaration(original, 'nonresident');
+ const result = calculatePAOrdinaryReturn(saved.input, saved.facts, saved.sources);
+ expect(result.residencyStatus).toBe('resident');
+ expect(result.pa40.taxLiability.eq(expected.pa40.taxLiability)).toBe(true);
+});
+
 it('PA2026 privately excludes government Box 1 from PA-40 and Schedule SP in every residency', () => {
  for (const [status,paWages,tax] of [['resident','75000','2303'],['part_year','39000','1197'],['nonresident','9000','276']] as const) {
   const control = pa2026OrdinaryDraftFixture(status);

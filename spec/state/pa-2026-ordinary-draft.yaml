@@ -39,6 +39,24 @@ lines:
       original source-currentness/owner/year/duplicate/source-precision guards.
       REV1630 zero net tax exits before unsourced2027 interest is needed.
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft preserves exact cents known zero and complete withholding"
+  - line: "primary-residency-declaration"
+    description: "Reconcile the retained Pennsylvania declaration with documented residency on draft replay"
+    formula: |
+      For the 2026 ordinary wage and private Box 1 government unemployment
+      drafts, derive the primary taxpayer's Pennsylvania residency from actual
+      domicile, permanent abode and physical-presence records. Reject an
+      explicit declaration that differs from the derived full-year, part-year,
+      or nonresident status, including when the saved original snapshots are
+      current. An omitted declaration leaves the source derivation in control.
+      Preserve the existing Florida inbound and New York outbound mover
+      requirements, historical year behavior, and draft readiness gates.
+    sources:
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/brief-overview-and-filing-requirements"
+      - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/chap101toc.html"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 wage draft reconciles retained Pennsylvania residency for %s"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 Box 1 draft reconciles retained Pennsylvania residency for %s"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 declaration reconciliation preserves historical Pennsylvania residency replay"
   - line: "resident-actual-dependent-care"
     description: "Apply the frozen 2022 care percentage in the narrow full-year PA ordinary draft"
     formula: |
