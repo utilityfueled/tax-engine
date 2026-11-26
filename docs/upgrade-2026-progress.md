@@ -1,5 +1,115 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Schedule 8812 and Linux timing follow-up
+
+- `5445447a1` extends the private 2026 Schedule 8812 specimen to use the
+  confirmed other-dependent count. It applies the nonrefundable tax limit
+  to the combined credit and stops the refundable calculation when no
+  qualifying child is confirmed. The ODC-only and mixed-child cases include
+  independent engineering review. All 97 focused tests passed, along with
+  spec, inventory, type, lint and browser-source checks. Both specimen pages
+  were reviewed visually. This scope uses the same final 2026 blank and
+  still requires qualified review of the tax results and filing transfers.
+  [Final IRS Schedule 8812](https://www.irs.gov/pub/irs-pdf/f1040s8.pdf).
+
+- `9af4eb94c` enables the five fixed Ohio school timing phases in the
+  strict ARM64 rehearsal. The timing artifact requires an exact receipt
+  digest and a successful post-batch check of the candidate and source.
+  Independent review reproduced and verified fixes for stale identity and
+  diagnostic write failure. The exact package passed all four focused
+  tests, 58 Node controls, and spec, inventory, type, lint and browser-source
+  checks. The case deadlines, counts, cleanup and qualification gates remain
+  strict. Native run evidence is tracked separately.
+
+- `7f47543b9` prevents one provider billing receipt from settling two
+  evaluation attempts. A historical journal with reused evidence retains
+  both affected reservations, preserves unrelated verified spend and shows
+  the ambiguous costs separately. Exact verification passed 105 tests
+  across eight suites and spec, inventory, type, lint and browser-source
+  checks. Independent replay also verified that the scorer preserves
+  unknown costs and incomplete runs. The package used offline fixtures only.
+
+- `13f82ced7` admits a private Ohio 2026 part-year bank-interest draft
+  through the internal source dispatcher. It matches one ordinary bank
+  Form 1099-INT to original, dated credits, reconciles cents to Box 1, then
+  allocates by the confirmed domicile on each date. A June 30/July 1
+  Virginia-to-Ohio case yields $54,000 federal AGI, 0.4259 nonresident
+  ratio, $1,042 gross Ohio tax, $444 nonresident credit, $598 remaining
+  tax and $402 refund. The direct and reopened dispatcher cases passed
+  independent engineering review. The exact 180 focused cases and spec,
+  inventory, types, lint and browser-source checks passed. The broader Ohio
+  run passed 2,553 tests before the two dispatcher controls were added.
+  Qualified human review and final state materials remain required.
+  [Ohio R.C. 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20/3-23-2022) ·
+  [Ohio R.C. 5747.05](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+  [IRS Publication 550](https://www.irs.gov/publications/p550).
+
+- On exact `13f82ced7`, Linux CI and Docker passed. Strict AMD64 browser
+  ran all nine batches with nine failures. The native ARM64 workflow
+  verified its native images, independent archive import, Compose upgrade
+  and recovery, and container cleanup. Its nine strict browser batches
+  recorded 659 cases, including ten failures and five preexisting skips.
+  The sanitized ARM64 timing report published successfully and bound to
+  the exact candidate and source. Four failed Ohio school cases recorded
+  school entry between 9.319 and 13.274 seconds. Their subsequent phases
+  stop at different points. The timings do not establish the cause of the
+  failures or qualify either runtime image for release. The separate
+  managed Chromium job passed all 654 active cases, with its five
+  original skips and owned-server cleanup.
+  [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45779644361) ·
+  [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45779590398) ·
+  [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45779590304) ·
+  [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45779590525).
+
+- One recovered strict AMD64 trace covers the desktop Ohio part-year
+  business case. Its PDF click started around 25.65 seconds into the
+  trace, the response wait took 2.112 seconds and the response was HTTP
+  200. The download arrived before the byte comparison and independent PDF
+  checks finished around 31.77 seconds. The timeout was reported before
+  the subsequent filing-rejection check completed. The trace cannot
+  assign server-only latency or explain failures in other cases.
+
+- Eight of the combined local checks passed on `13f82ced7`. The first
+  unit and coverage runs reported worker and case timeouts during repeated
+  Mac sleep and wake events. Both logs and the power-event timeline are
+  retained. The initial browser invocation could not bind the loopback
+  test port under the sandbox. The port was verified free and the normal
+  retry ran nine batches and closed its owned server. It passed 650
+  active cases, including the four Ohio school cases, and reported four
+  failures and five original skips. The separate exact GitHub managed
+  browser run passed all 654 active cases.
+
+- `77c1143ac` skips a redundant Ohio header schema parse while the header
+  confirmation is explicitly pending. The current-school source check runs
+  first, and a changed confirmation runs full validation. The regression
+  measures zero header parses in the pending path versus one before the
+  fix. Independent review and exact focused tests, spec, inventory, types,
+  lint and browser-source checks passed. This result measures work avoided
+  per replay. Exact Linux and native ARM64 runs followed.
+  [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45821846600) ·
+  [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45821671331) ·
+  [Web](https://github.com/utilityfueled/tax-engine/actions/runs/45821671414) ·
+  [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45821671359).
+
+- Current official pricing matches the selected OpenAI and Google route
+  catalog. Gemini 3.8 Flash's standard rates double January 1, 2027, as
+  already modeled. The legacy `gpt-5-mini` comparator is scheduled to stop
+  December 11, 2026. The held-out evaluation still requires independent
+  human labels, selected Google project access and comparable actual runs.
+  This refresh used public documentation only.
+  [OpenAI pricing](https://developers.openai.com/api/docs/pricing) ·
+  [OpenAI retirements](https://developers.openai.com/api/docs/deprecations) ·
+  [Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
+
+- The official materials checked in this follow-up still show final public
+  federal and Pennsylvania materials for 2025 where no 2026 final is posted,
+  and draft 2026 Ohio instructions. The final Schedule 8812 blank is already
+  pinned. The 2026 Schedule 8812 instructions remain draft at this check.
+  [IRS current forms](https://www.irs.gov/forms-instructions) ·
+  [IRS draft forms](https://www.irs.gov/draft-tax-forms) ·
+  [Pennsylvania personal income tax](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax) ·
+  [Ohio individual income tax](https://tax.ohio.gov/individual/resources/individualincome).
+
 ## November 26 tax sources and strict Linux timing
 
 `8339d514f` admits a private full-year Ohio unemployment draft for a single

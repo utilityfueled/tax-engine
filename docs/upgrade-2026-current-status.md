@@ -9,6 +9,15 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- Five focused packages are on `main` through `77c1143ac`. They cover
+  Schedule 8812 other dependents, bound ARM64 timing, offline billing receipt
+  reuse, Ohio part-year bank interest, and pending Ohio header validation.
+  Each passed scoped tests and independent engineering review. On the prior
+  exact application `13f82ced7`, Linux CI, Docker and managed Chromium passed.
+  The strict browser runs failed on both Linux architectures. Native ARM64
+  archive, Compose recovery and cleanup passed.
+  [Sources and tests](upgrade-2026-progress.md#november-26-schedule-8812-and-linux-timing-follow-up).
+
 - All 11 required local checks passed on `827f467e2`. Unit and coverage
   each passed 30,761 tests, with 88.53% branch coverage. The clean browser
   retry passed 654 active Chromium cases across nine batches and closed

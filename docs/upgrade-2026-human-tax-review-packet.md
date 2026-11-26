@@ -443,3 +443,33 @@ outside Ohio return and filing flows pending that review and the applicable
 final annual instructions. [2025 Ohio booklet, page 45](https://dam.assets.ohio.gov/image/upload/v1769706362/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf#page=45),
 [Ohio credit ordering](https://codes.ohio.gov/ohio-revised-code/section-5747.98)
 and [IRS final Form 2441 index](https://www.irs.gov/forms-instructions-and-publications?find=2441).
+
+## November 26 Schedule 8812 other-dependent credit
+
+Review the two private wage-only 2026 specimen paths in `5445447a1`.
+Independently derive the credit from the confirmed dependents and liability,
+then compare the result and stop lines with the specimen. In the first case,
+one other dependent produces a $500 tentative credit and the $350 tax limit
+leaves $150 unused. With no qualifying child, line 16b is zero and no amount
+is refundable. In the second case, one qualifying child and one other
+dependent produce $2,700 combined. After $500 in nonrefundable credit, the
+$2,200 unused credit is subject to a separate $1,700 ceiling based on one
+refundable-credit-eligible child. Reconcile both pages and downstream Form
+1040 transfers against the final annual instructions when released.
+[Final 2026 Schedule 8812 blank](https://www.irs.gov/pub/irs-pdf/f1040s8.pdf) ·
+[IRS draft instructions index](https://www.irs.gov/draft-tax-forms).
+
+## November 26 Ohio bank interest for a midyear move
+
+Review the private cash-method draft at `13f82ced7`. A primary taxpayer
+moves from Virginia to Ohio on July 1. Of $50,000 of wages, $30,000 is
+allocated to Ohio. The one $4,000 Form 1099-INT Box 1 reconciles to a $3,000
+unrestricted bank credit on June 30 and a $1,000 credit on July 1.
+Independently derive the domicile allocation and nonresident credit. The
+draft applies a 0.4259 nonresident ratio to $1,042 gross Ohio tax, yielding
+a $444 credit, $598 Ohio tax and $402 refund after $1,000 withholding.
+Confirm the separate resident and nonresident credit boundaries and the
+rounding and source requirements in the applicable final Ohio instructions.
+[Ohio R.C. 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20/3-23-2022) ·
+[Ohio R.C. 5747.05](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[IRS Publication 550](https://www.irs.gov/publications/p550).

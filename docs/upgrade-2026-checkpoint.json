@@ -3,6 +3,8 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
+    "latestScopedApplicationCommit": "77c1143ace6cb89ecce4a637e6268256651f9799",
+    "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov26SourcesAndOfflineBilling",
@@ -109,6 +111,99 @@
     ]
   },
   "activeContinuation": {
+    "nov26Schedule8812AndNativeTiming": {
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-schedule-8812-and-linux-timing-follow-up",
+      "schedule8812": {
+        "commit": "5445447a1",
+        "officialBlank": "https://www.irs.gov/pub/irs-pdf/f1040s8.pdf",
+        "focusedTestsPassed": 97,
+        "independentEngineeringReview": "passed",
+        "qualifiedTaxReview": "pending"
+      },
+      "nativeBrowserTiming": {
+        "commit": "9af4eb94c09c1b810c29896d5b7dd7faf2b12019",
+        "trackedBlobsMatched": 6704,
+        "focusedTestsPassed": 4,
+        "nodeControlsPassed": 58,
+        "specLines": 10127,
+        "sourceBindingsVerified": 2073,
+        "independentEngineeringReview": "passed",
+        "exactArm64Run": 45779644361,
+        "exactArm64Source": "13f82ced75469ccb5e46f1d70452308909090d53"
+      },
+      "offlineProviderReceiptUniqueness": {
+        "commit": "7f47543b9",
+        "focusedTestsPassed": 105,
+        "focusedSuitesPassed": 8,
+        "priorDuplicateHoldUsd": "0.0222112",
+        "unrelatedVerifiedCostUsd": "0.00006",
+        "ambiguousUnverifiedCostUsd": "0.00012",
+        "independentEngineeringReview": "passed",
+        "providerRequests": 0
+      },
+      "ohioPartYearBankInterest": {
+        "commit": "13f82ced75469ccb5e46f1d70452308909090d53",
+        "trackedBlobsMatched": 6705,
+        "focusedTestsPassed": 180,
+        "broadOhioTestsBeforeDispatcherFollowUp": 2553,
+        "specLines": 10131,
+        "ohioTaxUsd": "598",
+        "refundUsd": "402",
+        "independentEngineeringReview": "passed",
+        "qualifiedTaxReview": "pending"
+      },
+      "ohioPendingHeaderParse": {
+        "commit": "77c1143ace6cb89ecce4a637e6268256651f9799",
+        "trackedBlobsMatched": 6705,
+        "focusedTestsPassed": 16,
+        "specLines": 10132,
+        "independentEngineeringReview": "passed",
+        "pendingHeaderParseCallsBefore": 1,
+        "pendingHeaderParseCallsAfter": 0,
+        "linuxRuns": {
+          "ci": 45821671331,
+          "docker": 45821671359,
+          "web": 45821671414,
+          "arm64": 45821846600
+        }
+      },
+      "officialProviderCatalogRefresh": {
+        "configuredRoutePricingDrift": false,
+        "googleStandardPriceChange": "2027-01-01",
+        "openAiGpt5MiniComparatorShutdown": "2026-12-11",
+        "projectAvailability": "unverified",
+        "providerRequests": 0
+      },
+      "exactLinuxRuns": {
+        "head": "13f82ced75469ccb5e46f1d70452308909090d53",
+        "ci": 45779590398,
+        "web": 45779590304,
+        "docker": 45779590525,
+        "arm64": 45779644361,
+        "ciConclusion": "success",
+        "dockerConclusion": "success",
+        "webConclusion": "failure",
+        "webStrictBrowserCases": 659,
+        "webStrictBrowserFailures": 9,
+        "webManagedBrowserCasesPassed": 654,
+        "arm64Conclusion": "failure",
+        "arm64ArchiveComposeRecoveryAndCleanup": "success",
+        "arm64StrictBrowserCases": 659,
+        "arm64StrictBrowserFailures": 10,
+        "arm64StrictBrowserOriginalSkips": 5,
+        "arm64TimingArtifactSha256": "5201a9aa8b2d0ecdb52f6fceec2a39a484527b81c9a7a0359468802a34ec8aa2"
+      },
+      "priorExactLocalRun": {
+        "applicationCommit": "13f82ced75469ccb5e46f1d70452308909090d53",
+        "combinedChecksPassed": 8,
+        "unitAndCoverage": "worker and case timeouts coincident with Mac sleep/wake events",
+        "initialBrowserStart": "loopback bind refused under sandbox",
+        "managedBrowserRetryCasesPassed": 650,
+        "managedBrowserRetryFailures": 4,
+        "managedBrowserOriginalSkips": 5,
+        "ownedServerClosed": true
+      }
+    },
     "nov26OhioUnemploymentEducatorHoursAndForm4137": {
       "applicationCommit": "b9a891406b095e50b31fa63855b817760c2b2b79",
       "progressSection": "docs/upgrade-2026-progress.md#november-26-tax-sources-and-strict-linux-timing",
