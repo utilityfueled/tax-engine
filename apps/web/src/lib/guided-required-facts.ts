@@ -171,6 +171,10 @@ export function supportsFederalPaymentReceiptReferences(taxYear: number | null |
   return taxYear === 2025 || taxYear === 2026;
 }
 
+export function normalizeFederalPaymentReceiptReference(reference: unknown): string {
+  return typeof reference === "string" ? reference.replace(/\s+/g, "").toUpperCase() : "";
+}
+
 export function federalPaymentDateNeedsApplication(date: string, taxYear?: number | null, kind?: FederalPaymentKind): boolean {
   if (taxYear == null || !isActualDate(date) || date.startsWith("0000-")) return false;
   const paidYear = Number(date.slice(0, 4));
@@ -205,7 +209,7 @@ export function federalPaymentReceiptFactErrors(data: PaymentData, taxYear?: num
   function record(entries: EstimatedPaymentEntry[], prefix: string) {
     entries.forEach((entry, index) => {
       const errorField = `${prefix}payment-${index}-receipt-reference`;
-      const reference = typeof entry.receiptReference === "string" ? entry.receiptReference.replace(/\s+/g, "").toUpperCase() : "";
+      const reference = normalizeFederalPaymentReceiptReference(entry.receiptReference);
       if (reference) {
         const previous = referenceFields.get(reference);
         if (previous) {

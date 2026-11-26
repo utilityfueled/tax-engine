@@ -14,6 +14,27 @@ lines:
     formula: "Each dated applied-credit entry links an actual prior-return credit; exact linked amounts must conserve that original source. Never derive an effective date from the originating tax year. Estimated/extension/return payments retain their distinct categories and dates."
     irsRef: "Form2210 Instructions PartIII line11 and Table1"
     testRef: "tests/guided-interview/guided-estimated-tax-facts.test.ts::reconciles actual effective credit dates per original source"
+  - line: "return-payment-overlap"
+    description: "Reconcile a balance-due payment that matches a federal estimate or extension payment"
+    formula: >-
+      For 2026, reconcile a return payment that shares the date and exact positive
+      Decimal amount of an estimate, extension or another return payment. Require
+      a distinct actual processed IRS payment reference for each matching payment.
+      Bind each worksheet receipt check to its date, amount and reference.
+      Normalize whitespace and case consistently with the existing federal payment
+      references. A reused worksheet reference to another cash payment needs review
+      even when the recorded date or amount differs. A started receipt check must
+      match its payment. Incomplete or stale proof holds the draft without merging
+      or rewriting payments. Keep references and confirmation local to the guided
+      draft. Preserve dates, amounts, explicit
+      zero, distinct payments and independently linked prior-year applied credits.
+    irsRef: "26 USC 6654(b)(1)(B) and (c)(2), https://uscode.house.gov/us/usc/119-134/t26/s6654/; Form 2210 Instructions Part III line 11 and Table 1, https://www.irs.gov/instructions/i2210"
+    testRef: "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds a repeated January estimated payment through Payments, bridge and draft replay"
+    testRefs:
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::holds a matching extension payment without admitting invented worksheet receipt identity"
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::keeps independently linked credits, distinct dates or amounts and explicit zero"
+      - "tests/guided-interview/guided-estimated-tax-facts.test.ts::accepts separately confirmed original payment references and holds stale or repeated proof"
+      - "tests/apps/web/estimated-tax-source-interactions.test.tsx::binds the balance-due receipt check to the edited payment facts"
   - line: "prior-return-credit-conflict"
     description: "Reconcile an applied credit with the sole taxpayer's prior-return history"
     formula: "For 2025 and internal 2026, hold a positive federal applied refund when the sole taxpayer reports no prior return. Preserve the entered facts, explicit zero, absent optional worksheets, and joint credits that can come from a spouse's separate prior return. The Payments section and bridge must require reconciliation before calculation."

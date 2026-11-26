@@ -44,6 +44,43 @@ it("collects actual history and dates while preserving unknowns and exact amount
   } finally { await act(async () => root.unmount()); container.remove(); network.mockRestore(); }
 });
 
+it("binds the balance-due receipt check to the edited payment facts", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: EstimatedTaxFactsData | undefined;
+  function Harness() {
+    const [data, setData] = useState<EstimatedTaxFactsData>();
+    return <EstimatedTaxSourceDetails data={data} taxYear={2026} onChange={next => { latest = next; setData(next); }} />;
+  }
+  async function click(label: string) {
+    const button = [...container.querySelectorAll("button")].find(row => row.textContent === label);
+    if (!button) throw new Error(`Missing ${label}`);
+    await act(async () => button.click());
+  }
+  async function change(label: string, value: string) {
+    const field = [...container.querySelectorAll("label")].find(row => row.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!field) throw new Error(`Missing ${label}`);
+    const select = field instanceof HTMLSelectElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(select ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set?.call(field, value);
+      field.dispatchEvent(new Event(select ? "change" : "input", { bubbles: true }));
+    });
+  }
+  try {
+    await act(async () => root.render(<Harness />)); await click("Add estimated-tax worksheet"); await click("Add return payment");
+    expect(latest?.returnPayments[0]?.processedReceipt).toBeUndefined();
+    await change("Return payment 1: Actual date", "2027-01-15");
+    await change("Return payment 1: Amount", "50.01");
+    await change("Return payment 1: Processed IRS payment reference", "Actual-Return-Record");
+    expect(latest?.returnPayments[0]?.processedReceipt).toEqual({ reference: "Actual-Return-Record", confirmedFor: null });
+    await change("Return payment 1: IRS record confirms this distinct payment cleared", "true");
+    expect(latest?.returnPayments[0]?.processedReceipt?.confirmedFor).toEqual({ date: "2027-01-15", amount: "50.01", reference: "Actual-Return-Record" });
+    await change("Return payment 1: Amount", "50.02");
+    expect(latest?.returnPayments[0]?.processedReceipt).toEqual({ reference: "Actual-Return-Record", confirmedFor: null });
+    expect(latest?.sourceFactsConfirmed).toBeNull();
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
 it("collects farmer and waiver answers only after they apply", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);

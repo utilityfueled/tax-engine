@@ -3,8 +3,12 @@ import { assertPriorReturnCreditSource } from "@/engine/forms/federal-payment-da
 import { buildEstimatedInvestmentElection, type EstimatedInvestmentElectionData } from "./guided-estimated-investment-election";
 import { Form2210Schema, type TaxYearInput } from "@/models/inputs";
 import type { EstimatedPaymentEntry, FilingStatus, PaymentData } from "./guided-interview-flow";
-import { amountError, isActualDate } from "./guided-required-facts";
+import { amountError, isActualDate, normalizeFederalPaymentReceiptReference } from "./guided-required-facts";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
+
+export interface EstimatedTaxReturnPaymentEntry extends EstimatedPaymentEntry {
+  processedReceipt?: { reference: string; confirmedFor: { date: string; amount: string; reference: string } | false | null };
+}
 
 export interface EstimatedTaxFactsData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPaymentRecordsIncluded: boolean | null;
@@ -19,7 +23,7 @@ export interface EstimatedTaxFactsData {
   priorYearTaxStatus: "" | "return-filed" | "no-return" | "no-tax-liability";
   priorYearFullYear: boolean | null; priorYearResidentAllYear: boolean | null; priorYearJointReturn: boolean | null;
   priorYearTaxForForm2210: string; priorYearAgiForForm2210: string; priorYearTaxComputationConfirmed: boolean | null;
-  withholdingPayments: EstimatedPaymentEntry[]; priorYearCreditPayments: (EstimatedPaymentEntry & { appliedCreditIndex: string })[]; returnPayments: EstimatedPaymentEntry[];
+  withholdingPayments: EstimatedPaymentEntry[]; priorYearCreditPayments: (EstimatedPaymentEntry & { appliedCreditIndex: string })[]; returnPayments: EstimatedTaxReturnPaymentEntry[];
   earlyReturnExceptionClaimed: boolean | null; returnFiledDate: string; returnPaidInFullDate: string;
 }
 export const emptyEstimatedTaxFacts: EstimatedTaxFactsData = {
@@ -36,6 +40,47 @@ function money(value: string | undefined, label: string, required = true, signed
   if (!value?.trim() && !required) return undefined;
   if (signed) { if (!value?.trim()) throw new Error(`Enter the actual ${label}.`); return parseGuidedCurrency(value).toFixed(); }
   const error = amountError(value, label); if (error) throw new Error(error); return parseGuidedCurrency(value).toFixed();
+}
+
+export function confirmedReturnPaymentReference(payment: EstimatedTaxReturnPaymentEntry): string {
+  const receipt = payment.processedReceipt;
+  const reference = normalizeFederalPaymentReceiptReference(receipt?.reference);
+  const checked = receipt?.confirmedFor;
+  if (!reference || !checked || checked.date !== payment.date || reference !== normalizeFederalPaymentReceiptReference(checked.reference)
+    || amountError(checked.amount, "checked payment amount") || amountError(payment.amount, "payment amount")) return "";
+  return parseGuidedCurrency(checked.amount).eq(parseGuidedCurrency(payment.amount)) ? reference : "";
+}
+
+function assertDistinctReturnPayments(data: PaymentData, originals: EstimatedTaxReturnPaymentEntry[], returns: { date: string; amount: string }[]) {
+  if (!returns.some(payment => payment.amount !== "0")) return;
+  const references = new Set<string>();
+  const matchingPaymentsVerified = new Map<string, boolean>();
+  for (const payment of [...data.estimatedPayments ?? [], ...data.extensionPayments ?? []]) {
+    if (!isActualDate(payment.date) || amountError(payment.amount, "payment amount")) continue;
+    const amount = parseGuidedCurrency(payment.amount);
+    if (amount.isZero()) continue;
+    const reference = normalizeFederalPaymentReceiptReference(payment.receiptReference);
+    const key = `${payment.date}:${amount.toFixed()}`;
+    matchingPaymentsVerified.set(key, !!reference && (matchingPaymentsVerified.get(key) ?? true));
+    if (reference) references.add(reference);
+  }
+  for (const [index, payment] of returns.entries()) {
+    if (payment.amount === "0") continue;
+    const original = originals[index];
+    const reference = normalizeFederalPaymentReceiptReference(original.processedReceipt?.reference);
+    if (reference && references.has(reference)) throw new Error("A return payment receipt reference is already used for another federal payment. Reconcile the original IRS records before calculating.");
+    const key = `${payment.date}:${payment.amount}`;
+    const verified = !!confirmedReturnPaymentReference(original);
+    const earlierPaymentsVerified = matchingPaymentsVerified.get(key);
+    if (earlierPaymentsVerified !== undefined && (!verified || !earlierPaymentsVerified)) {
+      throw new Error("A return payment matches a federal estimated or extension payment or another return payment. Reconcile the original IRS records and confirm distinct processed payment references before calculating.");
+    }
+    if ((reference || original.processedReceipt?.confirmedFor) && !verified) {
+      throw new Error("Confirm the processed IRS payment reference for the current return payment date and amount before calculating.");
+    }
+    matchingPaymentsVerified.set(key, verified);
+    if (reference) references.add(reference);
+  }
 }
 export const ANNUALIZED_PERIOD_FIELDS = [
   ["adjustedGrossIncome", "Adjusted gross income", true], ["itemizedDeductions", "Itemized deductions, or 0 if you do not itemize", false],
@@ -131,6 +176,7 @@ export function buildEstimatedTaxFacts(
   const withholdingPayments = dated(facts.withholdingPayments, "withholding", true);
   const priorYearCreditPayments = dated(facts.priorYearCreditPayments, "applied-credit", false);
   const returnPayments = dated(facts.returnPayments, "return payment", false, true);
+  if (year === 2026) assertDistinctReturnPayments(data, facts.returnPayments, returnPayments);
   const credits = data.priorYearAppliedCredits ?? [], allocated = credits.map(() => new Decimal(0));
   facts.priorYearCreditPayments.forEach((entry, index) => {
     if (!/^(0|[1-9]\d*)$/.test(entry.appliedCreditIndex)) throw new Error("Link each actual effective-date payment to its original applied-refund source.");

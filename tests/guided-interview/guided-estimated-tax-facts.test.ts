@@ -5,7 +5,7 @@ import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2210 } from "@/engine/forms/form-2210.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyPaymentData, updateSectionData, validateSection, type PaymentData } from "@/lib/guided-interview-flow";
+import { emptyPaymentData, parseGuidedFlowState, updateSectionData, validateSection, type PaymentData } from "@/lib/guided-interview-flow";
 import { buildEstimatedTaxFacts, emptyEstimatedTaxFacts, estimatedTaxFactErrors, type EstimatedTaxFactsData } from "@/lib/guided-estimated-tax-facts";
 import { computeGuidedPreviewOutcome } from "@/lib/guided-preview-compute";
 import { completeW2Entry, startCompleteInterview } from "./complete-facts";
@@ -18,6 +18,12 @@ function stateWith(payments: PaymentData) {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2"], lifeEvents: [], stateCode: null });
   state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "50000", federalWithheld: "0", socialSecurityWages: "50000", medicareWages: "50000" }] };
   state.sectionData.payments = payments; return state;
+}
+function filedPriorReturnFacts2026(): EstimatedTaxFactsData {
+  return {
+    ...facts(), sourceTaxYear: "2026", priorYearTaxStatus: "return-filed", priorYearFullYear: true,
+    priorYearJointReturn: false, priorYearTaxComputationConfirmed: true, priorYearTaxForForm2210: "400", priorYearAgiForForm2210: "50000",
+  };
 }
 it("preserves actual prior history and known zero without creating missing facts", () => {
   expect(buildEstimatedTaxFacts(undefined, 2025)).toBeUndefined();
@@ -49,6 +55,109 @@ it("reconciles actual effective credit dates per original source", () => {
   expect(buildEstimatedTaxFacts(payments, 2025)?.priorYearCreditPayments).toEqual([]);
   payments.priorYearAppliedCredits[0].amount = "";
   expect(() => buildEstimatedTaxFacts(payments, 2025)).toThrow(/amount|refund/i);
+});
+it("holds a repeated January estimated payment through Payments, bridge and draft replay", () => {
+  const januaryDate = "2027-01-15";
+  const original: PaymentData = { ...emptyPaymentData, estimatedTaxFacts: filedPriorReturnFacts2026(), estimatedPayments: [
+    { date: "2026-04-15", amount: "100" },
+    { date: "2026-06-15", amount: "100" },
+    { date: "2026-09-15", amount: "100" },
+    { date: januaryDate, amount: "100", application: { taxYear: "2026", confirmed: true } },
+  ] };
+  const state = stateWith(original); state.taxYear = 2026;
+  const input = buildTaxInputFromGuidedData(state);
+  const estimates = input?.adjustments?.estimatedTaxPayments;
+  if (!input?.form2210 || !estimates) throw new Error("The four original federal estimates must reach the bridge");
+  const result = calculateForm2210({ taxYear: 2026, filingStatus: "single", currentYearTax: new Decimal(4000), incomeTaxAfterCredits: new Decimal(4000),
+    withholding: new Decimal(0), estimatedPayments: new Decimal(400), refundableCredits: new Decimal(0), facts: input.form2210,
+    payments: estimates.map(({ date, amount }) => ({ date, amount, kind: "estimated" })),
+  });
+  expect(result.installments[3]?.payments.toFixed()).toBe("100");
+
+  const returnPayment = { date: januaryDate, amount: "100.00" };
+  const edited = updateSectionData(state, "payments", {
+    ...original, estimatedTaxFacts: { ...original.estimatedTaxFacts, returnPayments: [returnPayment] },
+  });
+  const confirmed = updateSectionData(edited, "payments", {
+    ...edited.sectionData.payments, estimatedTaxFacts: { ...edited.sectionData.payments?.estimatedTaxFacts, sourceFactsConfirmed: true },
+  });
+  const reopened = parseGuidedFlowState(JSON.stringify(confirmed));
+  if (!reopened) throw new Error("The saved payment draft must reopen");
+  for (const draft of [confirmed, reopened]) {
+    expect(draft.sectionData.payments?.estimatedTaxFacts?.returnPayments).toEqual([returnPayment]);
+    expect(draft.sectionData.payments?.estimatedPayments).toEqual(original.estimatedPayments);
+    expect(validateSection(draft, "payments")).toMatchObject({ status: "partial", allowSkip: false,
+      fieldErrors: { estimatedTaxFacts: expect.stringMatching(/return payment.*estimated or extension payment.*reconcile/i) } });
+    expect(buildTaxInputFromGuidedData(draft)).toBeNull();
+  }
+});
+it("holds a matching extension payment without admitting invented worksheet receipt identity", () => {
+  const state = stateWith({ ...emptyPaymentData,
+    extensionPayments: [{ date: "2027-04-15", amount: "1,200.01", receiptReference: "ACTUAL-EXTENSION-RECORD" }],
+    estimatedTaxFacts: { ...filedPriorReturnFacts2026(), returnPayments: [
+      { date: "2027-04-15", amount: "1200.010", receiptReference: "UNVERIFIED-WORKSHEET-REFERENCE" },
+    ] },
+  });
+  state.taxYear = 2026;
+  expect(validateSection(state, "payments").fieldErrors?.estimatedTaxFacts).toMatch(/return payment.*estimated or extension payment.*reconcile/i);
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+it("accepts separately confirmed original payment references and holds stale or repeated proof", () => {
+  const date = "2027-01-15";
+  const estimate = { date, amount: "50.00", receiptReference: "ORIGINAL-ESTIMATE", application: { taxYear: "2026", confirmed: true } };
+  const originalReturn = { date, amount: "50", processedReceipt: { reference: " original-return ", confirmedFor: { date, amount: "50.00", reference: "ORIGINAL-RETURN" } } };
+  const secondReturn = { date, amount: "50.00", processedReceipt: { reference: "SECOND-RETURN", confirmedFor: { date, amount: "50.00", reference: "SECOND-RETURN" } } };
+  const state = stateWith({ ...emptyPaymentData, estimatedPayments: [estimate],
+    estimatedTaxFacts: { ...filedPriorReturnFacts2026(), returnPayments: [originalReturn, secondReturn] },
+  });
+  state.taxYear = 2026;
+  const reopened = parseGuidedFlowState(JSON.stringify(state));
+  if (!reopened) throw new Error("The original receipt draft must reopen");
+  for (const draft of [state, reopened]) {
+    expect(validateSection(draft, "payments").status).toBe("complete");
+    const input = buildTaxInputFromGuidedData(draft);
+    expect(input?.form2210?.returnPayments).toEqual([{ date, amount: "50" }, { date, amount: "50" }]);
+    expect(input?.adjustments?.estimatedTaxPayments?.[0]).toEqual({ date, amount: "50.00", type: "federal", application: { taxYear: 2026, confirmed: true } });
+    expect(JSON.stringify(input)).not.toMatch(/original-estimate|original-return|second-return/i);
+  }
+
+  function expectHeld(estimatedPayments: PaymentData["estimatedPayments"], returnPayments: EstimatedTaxFactsData["returnPayments"], message: RegExp) {
+    const edited = updateSectionData(state, "payments", { ...state.sectionData.payments, estimatedPayments,
+      estimatedTaxFacts: { ...state.sectionData.payments?.estimatedTaxFacts, returnPayments },
+    });
+    const confirmed = updateSectionData(edited, "payments", { ...edited.sectionData.payments,
+      estimatedTaxFacts: { ...edited.sectionData.payments?.estimatedTaxFacts, sourceFactsConfirmed: true },
+    });
+    expect(validateSection(confirmed, "payments").fieldErrors?.estimatedTaxFacts).toMatch(message);
+    expect(buildTaxInputFromGuidedData(confirmed)).toBeNull();
+  }
+
+  expectHeld([{ ...estimate, receiptReference: "" }], [originalReturn], /reconcile/i);
+  expectHeld([estimate], [{ ...originalReturn, processedReceipt: { reference: "ORIGINAL-RETURN", confirmedFor: null } }], /reconcile/i);
+  expectHeld([], [{ date, amount: "50.00" }, { date, amount: "50" }], /reconcile/i);
+  expectHeld([], [originalReturn, { ...secondReturn, processedReceipt: originalReturn.processedReceipt }], /reference.*used/i);
+  expectHeld([estimate], [{ date: "2027-01-16", amount: "49.99", processedReceipt: {
+    reference: " original- estimate ", confirmedFor: { date: "2027-01-16", amount: "49.99", reference: "ORIGINAL-ESTIMATE" },
+  } }], /reference.*used/i);
+  expectHeld([{ ...estimate, amount: "51" }], [{ ...originalReturn, amount: "51" }], /reconcile/i);
+  expectHeld([estimate], [{ ...originalReturn, date: "2027-01-16" }], /confirm.*processed.*reference/i);
+});
+it("keeps independently linked credits, distinct dates or amounts and explicit zero", () => {
+  const state = stateWith({ ...emptyPaymentData,
+    estimatedPayments: [{ date: "2026-04-15", amount: "100" }],
+    extensionPayments: [{ date: "2027-04-15", amount: "100" }, { date: "2027-01-15", amount: "0.00" }],
+    priorYearAppliedCredits: [{ sourceTaxYear: "2025", amount: "100" }],
+    estimatedTaxFacts: { ...filedPriorReturnFacts2026(),
+      priorYearCreditPayments: [{ appliedCreditIndex: "0", date: "2026-04-15", amount: "100.00" }],
+      returnPayments: [{ date: "2027-04-14", amount: "100" }, { date: "2027-04-15", amount: "100.01" }, { date: "2027-01-15", amount: "0" }],
+    },
+  });
+  state.taxYear = 2026;
+  expect(validateSection(state, "payments").status).toBe("complete");
+  const input = buildTaxInputFromGuidedData(state);
+  expect(input?.form2210?.returnPayments).toEqual([{ date: "2027-04-14", amount: "100" }, { date: "2027-04-15", amount: "100.01" }, { date: "2027-01-15", amount: "0" }]);
+  expect(input?.form2210?.priorYearCreditPayments).toEqual([{ date: "2026-04-15", amount: "100" }]);
+  expect(input?.adjustments?.priorYearAppliedCredits).toEqual([{ sourceTaxYear: 2025, amount: "100", type: "federal" }]);
 });
 it("holds conflicting positive prior-return refunds through Payments and the bridge", () => {
   for (const year of [2025, 2026]) {

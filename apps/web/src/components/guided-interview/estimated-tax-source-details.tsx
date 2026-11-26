@@ -1,7 +1,7 @@
 "use client";
 
-import { ANNUALIZED_PERIOD_FIELDS, SPECIAL_RATE_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, hasOrdinaryPreferentialPeriodAmounts, type EstimatedTaxFactsData, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
-import type { EstimatedPaymentEntry, PaymentData } from "@/lib/guided-interview-flow";
+import { ANNUALIZED_PERIOD_FIELDS, SPECIAL_RATE_PERIOD_FIELDS, confirmedReturnPaymentReference, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, hasOrdinaryPreferentialPeriodAmounts, type EstimatedTaxFactsData, type EstimatedTaxReturnPaymentEntry, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
+import type { PaymentData } from "@/lib/guided-interview-flow";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import { EstimatedInvestmentElectionDetails } from "./estimated-investment-election-details";
@@ -25,12 +25,27 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
   };
   const dateRows = (key: "withholdingPayments" | "returnPayments", title: string) => <fieldset><legend>{title}</legend>{data[key].map((payment, index) => {
     const prefix = `${title} ${index + 1}`;
-    const set = (patch: Partial<EstimatedPaymentEntry>) => update({ [key]: data[key].map((row, i) => i === index ? { ...row, ...patch } : row) });
-    return <div key={index} className="guided-form-grid"><TextFact label={`${prefix}: Actual date`} type="date" value={payment.date} onChange={date => set({ date })} /><CurrencyField label={`${prefix}: Amount`} value={payment.amount} onChange={amount => set({ amount })} required /><button type="button" onClick={() => update({ [key]: data[key].filter((_, i) => i !== index) })}>{prefix}: Remove</button></div>;
+    const set = (patch: Partial<EstimatedTaxReturnPaymentEntry>) => update({ [key]: data[key].map((row, i) => i === index ? { ...row, ...patch } : row) });
+    const returnPayment = key === "returnPayments" && taxYear === 2026 ? data.returnPayments[index] : undefined;
+    const receipt = returnPayment?.processedReceipt;
+    const reference = typeof receipt?.reference === "string" ? receipt.reference : "";
+    const resetReceipt = receipt ? { processedReceipt: { reference, confirmedFor: null } } : {};
+    return <div key={index} className="guided-form-grid">
+      <TextFact label={`${prefix}: Actual date`} type="date" value={payment.date} onChange={date => set({ date, ...resetReceipt })} />
+      <CurrencyField label={`${prefix}: Amount`} value={payment.amount} onChange={amount => set({ amount, ...resetReceipt })} required />
+      {returnPayment && <>
+        <TextFact label={`${prefix}: Processed IRS payment reference`} value={reference} onChange={value => set({ processedReceipt: { reference: value, confirmedFor: null } })} />
+        {reference.trim() && <BooleanFact label={`${prefix}: IRS record confirms this distinct payment cleared`}
+          value={confirmedReturnPaymentReference(returnPayment) ? true : receipt?.confirmedFor === false ? false : null}
+          onChange={confirmed => set({ processedReceipt: { reference, confirmedFor: confirmed ? { date: payment.date, amount: payment.amount, reference } : confirmed } })} />}
+      </>}
+      <button type="button" onClick={() => update({ [key]: data[key].filter((_, i) => i !== index) })}>{prefix}: Remove</button>
+    </div>;
   })}<button type="button" onClick={() => update({ [key]: [...data[key], { date: "", amount: "" }] })}>Add {title.toLowerCase()}</button></fieldset>;
   return <section>
     <h4>Estimated-tax penalty history</h4>
     <p className="guided-hint">Use the actual prior return and IRS payment records. The return calculates current-year tax and withholding. Amounts already entered as estimated or extension payments must not be entered again here. See the <a href="https://www.irs.gov/instructions/i2210" target="_blank" rel="noreferrer">Form 2210 instructions</a> for the prior-tax computation and filing-status allocation.</p>
+    {taxYear === 2026 && <p className="guided-hint">If separate payments cleared on the same date for the same amount, enter a different processed IRS reference on each payment row and confirm the return payment against its IRS record.</p>}
     <div className="guided-form-grid">
       <TextFact label="Estimated-tax source year" value={data.sourceTaxYear} onChange={sourceTaxYear => update({ sourceTaxYear })} />
       <TextFact label="Estimated-tax source reference" value={data.sourceReference} onChange={sourceReference => update({ sourceReference })} />
