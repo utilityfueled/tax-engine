@@ -111,6 +111,7 @@ import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-s
 import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
 import { buildActualEducationInput, LLC_YEAR_FACTS_VERSION, requiresLlcYearReview } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
+import { invalidateEditedReitPtpLossSource, reitPtpLossSourceFactErrors, type GuidedReitPtpLossSource } from "./guided-reit-ptp-loss";
 import { guidedSaversCreditContext, guidedSaversCreditFactErrors, guidedSaversHistoricalEvidence, requireGuidedSaversReview, type GuidedSaversCreditData } from "./guided-savers-credit";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
@@ -155,6 +156,7 @@ export const incomeTypeOptions: { value: IncomeType; label: string; hint: string
 
 export type LifeEvent =
   | "k1-loss-sources"
+  | "reit-ptp-loss-carryforward"
   | "bought-home"
   | "sold-home"
   | "had-baby"
@@ -176,6 +178,7 @@ export type LifeEvent =
 
 export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }[] = [
   { value: "k1-loss-sources", label: "Have K-1 income or suspended business losses", hint: "Original partnership or S corporation statements, basis and loss histories" },
+  { value: "reit-ptp-loss-carryforward", label: "Have a prior-year REIT or PTP loss carryforward", hint: "Filed Form 8995 or 8995-A from the preceding tax year" },
   { value: "cancelled-debt", label: "Had personal debt canceled while insolvent or in chapter 13 bankruptcy", hint: "Original debt statements, complete asset and liability records, and actual loss carry histories" },
   { value: "current-year-loss", label: "Calculate a current-year net operating loss", hint: "Actual current business, deduction and independent AMT source records" },
   { value: "net-operating-loss", label: "Have a net operating loss carryforward", hint: "Actual filed regular and AMT loss worksheets and complete carry history" },
@@ -528,6 +531,7 @@ export function buildSectionRoute(segmentation: SegmentationAnswers, hasSavedAdj
   // Adjustments — include when the taxpayer selects a supported source route.
   const needsAdjustments =
     segmentation.lifeEvents.includes("k1-loss-sources") ||
+    segmentation.lifeEvents.includes("reit-ptp-loss-carryforward") ||
     segmentation.incomeTypes.includes("self-employment") ||
     segmentation.lifeEvents.includes("student-loans") ||
     segmentation.lifeEvents.includes("hsa-contributions") ||
@@ -1086,6 +1090,7 @@ export interface AdjustmentData {
   movingExpenses?: MovingExpensesDraft;
   movingExpensesNotApplicable?: true;
   k1LossSources?: K1LossSourcesData;
+  reitPtpLossSource?: GuidedReitPtpLossSource;
   codNolSources?: CodNolData;
   codPrincipalResidenceSources?: CodPrincipalResidenceData;
   currentLossOrigin?: CurrentLossOriginData;
@@ -1599,11 +1604,21 @@ export function getGuidedSectionRoute(state: GuidedFlowState): InterviewSectionD
   const adjustments = state.sectionData.adjustments;
   const hasSavedAdjustmentRecords = hasAlimonyAmounts(adjustments) || adjustments?.movingExpenses !== undefined
     || adjustments?.movingExpensesNotApplicable === true || hasMovingW2Source(state)
+    || adjustments?.reitPtpLossSource !== undefined
     || Boolean(adjustments?.iraContributions || state.sectionData.credits?.saversCredit);
   return buildSectionRoute(
     state.segmentation, hasSavedAdjustmentRecords, guidedQofDiscovery(state).needsDetails,
     hasHouseholdAmounts(state.sectionData["other-taxes"]), !!state.sectionData["additional-deductions"]?.form8919ReasonA,
   );
+}
+
+export function clearGuidedReitPtpLossSelection(state: GuidedFlowState): GuidedFlowState {
+  if (state.sectionData.adjustments?.reitPtpLossSource !== undefined
+    || !state.segmentation.lifeEvents.includes("reit-ptp-loss-carryforward")) return state;
+  return { ...state, segmentation: {
+    ...state.segmentation,
+    lifeEvents: state.segmentation.lifeEvents.filter(event => event !== "reit-ptp-loss-carryforward"),
+  } };
 }
 
 export type VisitedSectionStatus = "not-started" | "complete" | "skipped" | "needs-review";
@@ -1897,9 +1912,10 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           transactions: entry.transactions?.map(row => ({ ...row, marketDiscountFacts: invalidateMarketDiscount(row.marketDiscountFacts) })),
         })),
       } } : {}),
-      ...(adjustments && (codSources || requireAlimonyReview || studentLoanFactsToReconfirm) ? {
+      ...(adjustments && (codSources || requireAlimonyReview || studentLoanFactsToReconfirm || adjustments.reitPtpLossSource) ? {
         adjustments: {
           ...adjustments,
+          ...(adjustments.reitPtpLossSource ? { reitPtpLossSource: { ...adjustments.reitPtpLossSource, sourceFactsConfirmed: null } } : {}),
           ...(codSources ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(codSources) } : {}),
           ...(requireAlimonyReview ? { alimonyAmountsTaxYear: null } : {}),
           ...(studentLoanFactsToReconfirm ? { studentLoanFacts: invalidateStudentLoanYearFacts(studentLoanFactsToReconfirm) } : {}),
@@ -2498,7 +2514,12 @@ export function updateSectionData(
     const previous = state.sectionData.adjustments;
     const next = data as AdjustmentData;
     const hsaAccounts = invalidateEditedHsaAccounts(previous?.hsaAccounts, next.hsaAccounts);
-    const reviewed = hsaAccounts === next.hsaAccounts ? next : { ...next, hsaAccounts };
+    const reitPtpLossSource = invalidateEditedReitPtpLossSource(previous?.reitPtpLossSource, next.reitPtpLossSource);
+    const reviewed = hsaAccounts === next.hsaAccounts && reitPtpLossSource === next.reitPtpLossSource ? next : {
+      ...next,
+      hsaAccounts,
+      reitPtpLossSource,
+    };
     data = reviewed;
     if (previous?.alimonyAmountsTaxYear !== undefined) {
       data = {
@@ -2577,6 +2598,10 @@ export function updateSectionData(
   const passengerSourcesChanged=scheduleCValuesChanged && nextBusiness?.businessFacts?.passengerSources;
   const formerPersonal = state.sectionData["personal-info"];
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : formerPersonal;
+  const reitPtpSourceToReconfirm = sectionId === "personal-info" && (
+    guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal), guidedTaxpayerIdentity(nextPersonal))
+    || (state.segmentation.filingStatus === "mfj" && guidedSourceValuesChanged(guidedTaxpayerIdentity(formerPersonal?.spouse), guidedTaxpayerIdentity(nextPersonal?.spouse)))
+  ) ? adjustments?.reitPtpLossSource : undefined;
   const aotcClaimantIdentityChanged = sectionId === "personal-info" && credits?.education?.aotcClaimantFactsTaxYear !== undefined && (
     educationTin(formerPersonal?.ssn) !== educationTin(nextPersonal?.ssn) ||
     (state.segmentation.filingStatus === "mfj" && educationTin(formerPersonal?.spouse?.ssn) !== educationTin(nextPersonal?.spouse?.ssn))
@@ -2956,8 +2981,9 @@ export function updateSectionData(
           } } : {}),
         } : {}),
       } } : {}),
-      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesToReview || educatorSourcesChanged || studentLoanSourcesChanged || studentLoanWorksheetYearChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesToReview || educatorSourcesChanged || studentLoanSourcesChanged || studentLoanWorksheetYearChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged || reitPtpSourceToReconfirm) && nextAdjustments ? { adjustments: { ...nextAdjustments,
         ...(movingSourcesChanged ? { movingExpenses: invalidateMovingExpenses(nextMoving) } : {}),
+        ...(reitPtpSourceToReconfirm ? { reitPtpLossSource: { ...reitPtpSourceToReconfirm, sourceFactsConfirmed: null } } : {}),
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(principalResidenceCodChanged ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(nextAdjustments.codPrincipalResidenceSources!) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
@@ -3395,7 +3421,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear, education, personal);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.movingExpenses || data.movingExpensesNotApplicable === true || data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.codPrincipalResidenceSources || data.k1LossSources) return VALID_SECTION;
+  if (data.movingExpenses || data.movingExpensesNotApplicable === true || data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.codPrincipalResidenceSources || data.k1LossSources || data.reitPtpLossSource) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -3463,6 +3489,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       Object.assign(errors, codNolNavigationFactErrors(state));
       Object.assign(errors, codPrincipalResidenceNavigationFactErrors(state));
       Object.assign(errors, k1LossSourceFactErrors(state));
+      Object.assign(errors, reitPtpLossSourceFactErrors(state));
       Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources, state.sectionData.adjustments?.codNolSources?.attributeSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {

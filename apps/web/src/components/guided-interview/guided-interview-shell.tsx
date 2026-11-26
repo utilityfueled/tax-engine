@@ -71,6 +71,7 @@ import {
   emptyScheduleCExpenses,
   emptyW2Entry,
   getGuidedFlowStorageKey,
+  clearGuidedReitPtpLossSelection,
   getSectionData,
   getVisitedSectionStatus,
   goToNextSection,
@@ -707,6 +708,8 @@ function SectionContent({
           hasMovingExpenses={state.segmentation.lifeEvents.includes('moving-expenses') || hasMovingW2Source(state)}
           hasSpouse={!!getSectionData(state, 'personal-info')?.spouse}
           filingStatus={state.segmentation.filingStatus}
+          onClearReitPtpLossSelection={state.segmentation.lifeEvents.includes("reit-ptp-loss-carryforward")
+            ? () => onStateChange(clearGuidedReitPtpLossSelection(state)) : undefined}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}
           foreignIncomeSources={foreignIncomeSourceOptions(state)}
           healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries, getSectionData(state, "adjustments")?.k1LossSources)}

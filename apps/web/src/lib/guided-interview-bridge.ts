@@ -1,4 +1,5 @@
 import {buildGuidedGoodwill} from "./guided-goodwill-amortization";
+import { buildGuidedReitPtpLossSource } from "./guided-reit-ptp-loss";
 import { buildGuidedCodPrincipalResidence, codPrincipalResidenceFactErrors } from './guided-cod-principal-residence';
 import { buildInterestInputs } from './guided-interest-originals';
 export { buildInterestInputs } from './guided-interest-originals';
@@ -835,7 +836,9 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let homeOffice: ReturnType<typeof buildGuidedRenterHomeOffice>;
   let form8880: ReturnType<typeof buildGuidedSaversCredit>;
   let form8919: ReturnType<typeof buildGuidedForm8919ReasonA>;
+  let reitPtpLossSource: ReturnType<typeof buildGuidedReitPtpLossSource>;
   try {
+    reitPtpLossSource = buildGuidedReitPtpLossSource(state);
     form8919 = buildGuidedForm8919ReasonA(state);
     form3903 = buildMovingExpenses(state);
     assertKnownFacts(royaltySourceFactErrors(state));
@@ -1065,9 +1068,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
     ...scheduleDInputs,
-    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length || k1Sources?.priorQbiCarry ? {
+    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length || k1Sources?.priorQbiCarry || reitPtpLossSource ? {
       ...scheduleDInputs.priorYear,
       ...k1Sources?.priorQbiCarry,
+      ...(reitPtpLossSource ? { reitPtpLossSource } : {}),
       ...(currentCapitalCarry ? { shortTermCapitalLoss: currentCapitalCarry.shortTermCapitalLoss, longTermCapitalLoss: currentCapitalCarry.longTermCapitalLoss } : {}),
       ...(rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length ? { suspendedPassiveLosses: [...rentalCarryovers, ...(k1Sources?.suspendedPassiveLosses ?? [])] } : {}),
     } : undefined,

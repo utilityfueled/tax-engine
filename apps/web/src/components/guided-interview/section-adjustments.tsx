@@ -6,6 +6,7 @@ import { CurrentLossOriginDetails } from "./current-loss-origin-details";
 import { CodNolDetails } from "./cod-nol-details";
 import { CodPrincipalResidenceDetails } from "./cod-principal-residence-details";
 import { K1LossSourceDetails } from "./k1-loss-source-details";
+import { ReitPtpLossDetails } from "./reit-ptp-loss-details";
 import { HealthInsuranceSourceDetails } from "./health-insurance-source-details";
 import type { HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -39,6 +40,7 @@ export function SectionAdjustments({
   hasMovingExpenses,
   hasSpouse = false,
   investments,
+  onClearReitPtpLossSelection,
   onDataChange,
 }: {
   data: AdjustmentData | undefined;
@@ -55,6 +57,7 @@ export function SectionAdjustments({
   hasMovingExpenses?: boolean;
   hasSpouse?: boolean;
   investments?: InvestmentData;
+  onClearReitPtpLossSelection?: () => void;
   onDataChange: (data: AdjustmentData) => void;
 }) {
   // Older or source-only saved sections may omit the legacy aggregate inputs.
@@ -109,6 +112,8 @@ export function SectionAdjustments({
 
         <ForeignIncomeDetails data={current.foreignIncome} sources={foreignIncomeSources} onChange={foreignIncome => onDataChange({ ...current, foreignIncome })} />
         <NetOperatingLossDetails data={current.netOperatingLossSources} onChange={netOperatingLossSources => onDataChange({ ...(data ?? emptyAdjustmentData), netOperatingLossSources })} />
+        <ReitPtpLossDetails data={current.reitPtpLossSource} taxYear={taxYear} onClearSelection={onClearReitPtpLossSelection}
+          onChange={reitPtpLossSource => onDataChange({ ...current, reitPtpLossSource })} />
         <K1LossSourceDetails data={current.k1LossSources} nol={current.netOperatingLossSources} onChange={k1LossSources => onDataChange({ ...current, k1LossSources })} />
         <CodNolDetails data={current.codNolSources} onChange={codNolSources => onDataChange({ ...current, codNolSources })} />
         <CodPrincipalResidenceDetails data={current.codPrincipalResidenceSources} taxYear={taxYear} onChange={codPrincipalResidenceSources => onDataChange({ ...current, codPrincipalResidenceSources })} />
