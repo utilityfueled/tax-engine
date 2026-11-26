@@ -415,11 +415,15 @@ export async function savePdf(
  * Flatten all form fields so the PDF renders consistently
  * in viewers that don't support interactive forms.
  */
-export async function flattenForm(form: PDFForm): Promise<void> {
+export async function flattenForm(
+  form: PDFForm,
+  options: { requireCurrentAppearances?: boolean } = {},
+): Promise<void> {
   try {
     const font = await form.doc.embedFont(StandardFonts.Helvetica);
     form.updateFieldAppearances(font);
-  } catch {
+  } catch (error) {
+    if (options.requireCurrentAppearances) throw error;
     // Some PDFs have partial appearance metadata; fall back to flattening anyway.
   }
   // pdf-lib can delete a widget object while leaving its page annotation ref.

@@ -7,6 +7,7 @@ import { getRulePack } from "@/models/rule-pack-metadata.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { QUALIFIED_FILING_SCENARIOS } from "./filing-registry.js";
 import { REVIEW_PDF_NOTICE } from "./export-policy.js";
+import { flattenForm } from "./pdf-utils.js";
 
 export interface FilingReturnDownload {
   readonly purpose: "filing";
@@ -77,7 +78,7 @@ export async function buildFilingReturn(
     if (doc.getSubject() === REVIEW_PDF_NOTICE || doc.getPageCount() === 0) {
       throw new Error("A review or empty document cannot be included in a filing export.");
     }
-    doc.getForm().flatten();
+    await flattenForm(doc.getForm(), { requireCurrentAppearances: true });
     for (const page of await packet.copyPages(doc, doc.getPageIndices())) packet.addPage(page);
   }
   packet.setTitle(`Tax return ${year}`);

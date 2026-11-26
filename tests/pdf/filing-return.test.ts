@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PDFDocument } from "pdf-lib";
-import type { QualifiedFilingScenario } from "@/pdf/filing-registry.js";
+import { PDFDocument, PDFString } from "pdf-lib";
+import type { QualifiedFilingForm, QualifiedFilingScenario } from "@/pdf/filing-registry.js";
 import { buildFilingReturn } from "@/pdf/filing-return.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { execFileSync } from "../helpers/file-stdin-exec.js";
 import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 
 // Synthetic pipeline seam only. The shipped registry stays empty and no real
@@ -20,6 +21,48 @@ const sha256 = createHash("sha256").update(template).digest("hex");
 let render: ReturnType<typeof vi.fn>;
 let complete: ReturnType<typeof vi.fn>;
 function scenario(): QualifiedFilingScenario { return mocks.registry.synthetic; }
+
+async function syntheticAcroForm(id: string, label: string, value: string) {
+  const blank = await PDFDocument.create();
+  const page = blank.addPage();
+  page.drawText(label, { x: 50, y: 725 });
+  blank.getForm().createTextField("taxpayer-id").addToPage(page, { x: 50, y: 680, width: 250, height: 20 });
+  const note = blank.context.register(blank.context.obj({
+    Type: "Annot", Subtype: "Text", Rect: [40, 80, 60, 100], Contents: PDFString.of(`${label} note`),
+  }));
+  page.node.addAnnot(note);
+  const bytes = await blank.save();
+  const renderForm = vi.fn<QualifiedFilingForm["render"]>(async (_input, _result, templateBytes) => {
+    const filled = await PDFDocument.load(templateBytes);
+    filled.getForm().getTextField("taxpayer-id").setText(value);
+    return filled;
+  });
+  const form: QualifiedFilingForm = {
+    ...scenario().forms["1040"],
+    id, filename: `${id}.pdf`, finalRevision: `synthetic-${id}-v1`,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    render: renderForm,
+  };
+  return { bytes, form, renderForm };
+}
+
+async function registerSyntheticPacket() {
+  const cover = await syntheticAcroForm("z-cover", "Synthetic cover", "COVER-900-70-0011");
+  const attachment = await syntheticAcroForm("a-attachment", "Synthetic attachment", "ATTACHMENT-900-70-0022");
+  mocks.registry.synthetic = {
+    ...scenario(),
+    forms: { [attachment.form.id]: attachment.form, [cover.form.id]: cover.form },
+    selectForms: () => [cover.form.id, attachment.form.id],
+  };
+  const coverPath = `/synthetic/2025/${cover.form.filename}`;
+  const attachmentPath = `/synthetic/2025/${attachment.form.filename}`;
+  mocks.read.mockImplementation(async (filename: string) => {
+    if (filename === coverPath) return cover.bytes;
+    if (filename === attachmentPath) return attachment.bytes;
+    throw new Error(`Unexpected template path ${filename}`);
+  });
+  return { cover, attachment, coverPath, attachmentPath };
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -44,6 +87,57 @@ describe("complete-data filing pipeline remains distinct from review export", ()
     expect(result).toMatchObject({ purpose: "filing", taxYear: 2025, scenarioId: "synthetic", formRevisions: [{ id: "1040", sha256 }] });
     expect((await PDFDocument.load(result.contents)).getPageCount()).toBe(1);
     expect(mocks.read).toHaveBeenCalledWith("/synthetic/2025/synthetic.pdf");
+  });
+  it("preserves selected attachment order and visible values when flattening real AcroForms", async () => {
+    const { cover, attachment, coverPath, attachmentPath } = await registerSyntheticPacket();
+    const result = await buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic");
+    expect(mocks.read.mock.calls).toEqual([[coverPath], [attachmentPath]]);
+    expect(cover.renderForm.mock.calls.map(([, , bytes]) => bytes)).toEqual([cover.bytes]);
+    expect(attachment.renderForm.mock.calls.map(([, , bytes]) => bytes)).toEqual([attachment.bytes]);
+    expect(result.formRevisions).toEqual([cover.form, attachment.form].map(form => ({
+      id: form.id, revision: form.finalRevision, sha256: form.sha256,
+    })));
+
+    const output = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
+import io, json, sys
+from pypdf import PdfReader
+
+packet = PdfReader(io.BytesIO(sys.stdin.buffer.read()), strict=True)
+annotations = [[ref.get_object() for ref in p.get("/Annots", [])] for p in packet.pages]
+print(json.dumps({
+    "fields": list(packet.get_fields() or {}),
+    "annotations": [[(a.get("/Subtype"), a.get("/Contents")) for a in page] for page in annotations],
+    "pages": [(p.extract_text() or "").split() for p in packet.pages],
+}))
+`], { input: result.contents, encoding: "utf8", timeout: 5_000 });
+    expect(JSON.parse(output)).toEqual({
+      fields: [],
+      annotations: [[["/Text", "Synthetic cover note"]], [["/Text", "Synthetic attachment note"]]],
+      pages: [
+        ["Synthetic", "cover", "COVER-900-70-0011"],
+        ["Synthetic", "attachment", "ATTACHMENT-900-70-0022"],
+      ],
+    });
+  });
+  it("rejects a mismatched attachment pin before running either AcroForm renderer", async () => {
+    const { cover, attachment, coverPath, attachmentPath } = await registerSyntheticPacket();
+    mocks.read.mockResolvedValueOnce(cover.bytes).mockResolvedValueOnce(cover.bytes);
+
+    await expect(buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic")).rejects.toThrow(/requalified/);
+    expect(mocks.read.mock.calls).toEqual([[coverPath], [attachmentPath]]);
+    expect(cover.renderForm).not.toHaveBeenCalled();
+    expect(attachment.renderForm).not.toHaveBeenCalled();
+  });
+  it("rejects a packet when a renderer cannot update a field appearance", async () => {
+    const { cover, attachment } = await registerSyntheticPacket();
+    cover.renderForm.mockImplementation(async (_input, _result, bytes) => {
+      const filled = await PDFDocument.load(bytes);
+      filled.getForm().getTextField("taxpayer-id").setText("🧾");
+      return filled;
+    });
+
+    await expect(buildFilingReturn(simpleW2Fixture, "synthetic", "/synthetic")).rejects.toThrow(/WinAnsi cannot encode/);
+    expect(attachment.renderForm).not.toHaveBeenCalled();
   });
   it.each(["unqualified rules", "stale version", "wrong year", "missing tax review", "missing security review", "missing approval"])("rejects %s", async reason => {
     if (reason === "unqualified rules") mocks.rule.mockReturnValue({ ruleVersion: "synthetic-test", filingQualified: false });
