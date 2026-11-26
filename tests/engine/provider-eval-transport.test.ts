@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createLiveProviderEvalTransport } from "../../scripts/lib/provider-eval-transport";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import type { ProviderEvalRequest } from "../../scripts/lib/provider-eval-runner";
@@ -27,6 +27,30 @@ describe("official evaluation transport", () => {
     for (const payload of [{ ...openai, output_text: "not json" }, { ...openai, status: "incomplete", output_text: "" }]) {
       const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn: async () => response(payload) });
       expect(await transport(request())).toMatchObject({ usage: { inputTokens: 100, outputTokens: 50 }, payload: null });
+    }
+  });
+  it("reconciles reported OpenAI totals before returning evaluation usage", async () => {
+    const fetchFn = vi.fn<typeof fetch>();
+    const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn });
+    for (const total of [undefined, 150]) {
+      fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, usage: { ...openai.usage, total_tokens: total } }));
+      await expect(transport(request())).resolves.toMatchObject({
+        status: "completed", reportedModel: "gpt-6-luna", responseReference: openai.id,
+        usage: { inputTokens: 100, outputTokens: 50, cachedInputTokens: 20 }, payload: { probe: "ok" },
+      });
+      expect(fetchFn).toHaveBeenCalledOnce();
+    }
+
+    const invalidUsage = [
+      ...[149, "150", null, -1, 150.5, Number.MAX_SAFE_INTEGER + 1].map(total => ({ ...openai.usage, total_tokens: total })),
+      { input_tokens: Number.MAX_SAFE_INTEGER, output_tokens: 1, total_tokens: Number.MAX_SAFE_INTEGER },
+    ];
+    for (const usage of invalidUsage) {
+      fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, usage }));
+      await expect(transport(request())).resolves.toMatchObject({
+        status: "failed", httpStatus: 200, reportedModel: null, responseReference: openai.id, usage: null, payload: null,
+      });
+      expect(fetchFn).toHaveBeenCalledOnce();
     }
   });
   it("sends a valid client trace only to OpenAI and retains a timeout as unknown", async () => {

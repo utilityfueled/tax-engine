@@ -350,6 +350,39 @@ describe("task-based candidate AI adapter", () => {
       expect(recordUnknownAttempt).toHaveBeenLastCalledWith(expect.anything(), { providerRequestId: expected });
     }
   });
+  it("reconciles reported OpenAI totals before settling usage", async () => {
+    const base = envelope();
+    const id = "resp_fixtureTotal";
+    for (const total of [undefined, 2100]) {
+      const deps = execution(envelope(undefined, { id, usage: { ...base.usage, total_tokens: total } }));
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      await expect(executeAiTask(request(), { ...deps, recordAttempt, recordUnknownAttempt })).resolves.toMatchObject({
+        accepted: true, accounting: { providerCostUsd: "0.0010064", retailChargeCents: 1 },
+      });
+      expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+        accepted: true, providerRequestId: id, usage: { inputTokens: 100, outputTokens: 2000, cachedInputTokens: 40 },
+      });
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
+
+    const invalidUsage = [
+      ...[2099, "2100", null, -1, 2100.5, Number.MAX_SAFE_INTEGER + 1].map(total => ({ ...base.usage, total_tokens: total })),
+      { input_tokens: Number.MAX_SAFE_INTEGER, output_tokens: 1, total_tokens: Number.MAX_SAFE_INTEGER },
+    ];
+    for (const usage of invalidUsage) {
+      const deps = execution(envelope(undefined, { id, usage }));
+      const beforeAttempt = vi.fn();
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      await expect(executeAiTask(request(), { ...deps, beforeAttempt, recordAttempt, recordUnknownAttempt })).rejects.toThrow(/usage requires reconciliation/);
+      expect(beforeAttempt).toHaveBeenCalledOnce();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+      expect(recordAttempt).not.toHaveBeenCalled();
+      expect(recordUnknownAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), { providerRequestId: id });
+    }
+  });
   it("uses official cache-write detail fields and counts both lifetimes exactly once", async () => {
     const deps = execution(envelope(undefined, { usage: { input_tokens: 12000, output_tokens: 100,
       input_tokens_details: { cached_tokens: 4000, cache_write_tokens: 7000, cache_write_tokens_details: { ttl_30m_tokens: 3000, ttl_12h_tokens: 4000 } } } }));

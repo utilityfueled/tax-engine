@@ -7,7 +7,7 @@ import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./p
 const token = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), service_tier: z.string().optional(), status: z.string(),
   output_text: z.string().optional(), output: z.array(z.object({ type: z.string(), content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional() })).optional(),
-  usage: z.object({ input_tokens: token, output_tokens: token, input_tokens_details: z.object({ cached_tokens: token.optional(),
+  usage: z.object({ input_tokens: token, output_tokens: token, total_tokens: token.optional(), input_tokens_details: z.object({ cached_tokens: token.optional(),
     cache_write_tokens: token.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: token, ttl_12h_tokens: token }).optional() }).optional() }) });
 const googleEnvelope = geminiTextResponseSchema.extend({ modelVersion: z.string(), responseId: z.string().optional() });
 const openAiBodyReference = openAiEnvelope.pick({ id: true });
@@ -66,9 +66,13 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
         responseReference ??= openAiBodyReference.safeParse(payload).data?.id ?? null;
         const envelope = openAiEnvelope.parse(payload);
         if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced tier.");
+        const { input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens } = envelope.usage;
+        if (totalTokens !== undefined && BigInt(totalTokens) !== BigInt(inputTokens) + BigInt(outputTokens)) {
+          throw new Error("OpenAI returned an inconsistent total token count.");
+        }
         const details = envelope.usage.input_tokens_details; const writes = details?.cache_write_tokens_details;
         if ((details?.cache_write_tokens ?? 0) !== (writes?.ttl_30m_tokens ?? 0) + (writes?.ttl_12h_tokens ?? 0)) throw new Error("Unpriced cache duration.");
-        usage = evalUsageSchema.parse({ inputTokens: envelope.usage.input_tokens, outputTokens: envelope.usage.output_tokens,
+        usage = evalUsageSchema.parse({ inputTokens, outputTokens,
           cachedInputTokens: details?.cached_tokens ?? 0, cacheWrite30mTokens: writes?.ttl_30m_tokens ?? 0, cacheWrite12hTokens: writes?.ttl_12h_tokens ?? 0 });
         complete = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
         outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message" ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";

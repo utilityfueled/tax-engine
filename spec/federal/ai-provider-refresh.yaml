@@ -55,6 +55,19 @@ lines:
     description: "Keep reconciliation metadata free of arbitrary upstream strings"
     formula: "On OpenAI HTTP errors retain a bounded request identifier from the documented response header. Leave the identifier absent if the value is unsafe. Continue holding unknown usage."
     testRef: "tests/apps/web/ai-task-adapter.test.ts::holds unknown usage without retaining arbitrary error response headers"
+  - line: "openai-usage-total"
+    description: "Reconcile reported OpenAI input and output token totals"
+    formula: >-
+      Require valid input and output counts. If reported, total_tokens must be
+      a nonnegative safe integer and equal the exact sum of input and output
+      counts. Cached and reasoning tokens are already included in their
+      respective counts. An absent total preserves existing pricing. A malformed
+      or contradictory total leaves usage unknown, with no accepted output,
+      settlement or retry in either transport. Retain the existing provider
+      response reference for reconciliation.
+    testRef: "tests/apps/web/ai-task-adapter.test.ts::reconciles reported OpenAI totals before settling usage"
+    testRefs:
+      - "tests/engine/provider-eval-transport.test.ts::reconciles reported OpenAI totals before returning evaluation usage"
   - line: "gemini-rejected-usage"
     description: "Settle reported usage when Gemini omits candidate content"
     formula: "For one Gemini candidate, allow absent content when usage is complete and valid. Accept only normal completion with valid structured and grounded text. Settle known rejected usage once without another provider dispatch. At November 2026 rates, 1,000 input tokens with 200 cached reads and 100 candidate plus 900 thought tokens cost $0.004365 and one retail cent."

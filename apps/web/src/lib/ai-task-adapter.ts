@@ -102,10 +102,11 @@ const openAiEnvelope = z.object({
     type: z.string(),
     content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(),
   })).optional(),
-  usage: z.object({ input_tokens: usageCount, output_tokens: usageCount,
+  usage: z.object({ input_tokens: usageCount, output_tokens: usageCount, total_tokens: usageCount.optional(),
     input_tokens_details: z.object({ cached_tokens: usageCount.optional(),
       cache_write_tokens: usageCount.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: usageCount, ttl_12h_tokens: usageCount }).optional() }).optional() }),
 });
+const openAiBodyReference = openAiEnvelope.pick({ id: true });
 /** One attempt only. A caller may explicitly escalate once; no provider switching or hidden retries. */
 export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiTaskExecution = { mode: "production" }) {
   if (request.optedOut) return null;
@@ -175,10 +176,14 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
   if (openai) providerRequestId = readProviderIdentifier(providerResponse.headers.get("x-request-id"), openAiRequestId);
   const payload = await readBoundedResponse(providerResponse);
   if (openai) {
+    providerRequestId ??= readProviderIdentifier(openAiBodyReference.safeParse(payload).data?.id, openAiResponseId);
     const envelope = openAiEnvelope.parse(payload);
-    providerRequestId ??= readProviderIdentifier(envelope.id, openAiResponseId);
     if (envelope.model !== profile.model) throw new Error("Reported OpenAI model does not establish the authorized route.");
     if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced provider service tier.");
+    const { input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens } = envelope.usage;
+    if (totalTokens !== undefined && BigInt(totalTokens) !== BigInt(inputTokens) + BigInt(outputTokens)) {
+      throw new Error("OpenAI returned an inconsistent total token count.");
+    }
     completed = envelope.status === "completed" && !envelope.output?.some(item => item.content?.some(part => part.type === "refusal"));
     outputText = envelope.output_text ?? envelope.output?.flatMap(item => item.type === "message"
       ? item.content?.filter(part => part.type === "output_text").map(part => part.text ?? "") ?? [] : []).join("") ?? "";
@@ -188,7 +193,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
     if ((details?.cache_write_tokens ?? 0) !== (writes?.ttl_30m_tokens ?? 0) + (writes?.ttl_12h_tokens ?? 0)) {
       throw new Error("Provider cache-write duration is unknown; usage requires reconciliation.");
     }
-    usage = { inputTokens: envelope.usage.input_tokens, outputTokens: envelope.usage.output_tokens,
+    usage = { inputTokens, outputTokens,
       cachedInputTokens: details?.cached_tokens ?? 0,
       ...(writes?.ttl_30m_tokens ? { cacheWrite30mTokens: writes.ttl_30m_tokens } : {}),
       ...(writes?.ttl_12h_tokens ? { cacheWrite12hTokens: writes.ttl_12h_tokens } : {}) };
