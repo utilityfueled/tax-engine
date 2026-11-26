@@ -34,16 +34,17 @@ const cases: Array<{ name: string; input: () => TaxYearInput; tax: string }> = [
   { name: 'school-part-year', input: () => schoolDistrictPartYearFixture(), tax: '811' },
 ];
 // Compared with 5a8384ec. Only unanswered Schedule B Part III facts and their prior audit rows changed.
+// Six business cases were compared at 48723b483 and 5f5af1dee. Only the new zero REIT/PTP fields and corrected federal audit rows changed.
 const baselineHashes: Readonly<Record<string, string>> = {
-  "july100k": "2ea86d5f9b28116fb9a2da29ca35dfc8d8f4946bb9e4470c170a1b4c36c1651b",
-  "july400k": "fedf32f0d1de8b98534d9fe75ec8e6c8a97cd2585df50defa16b19d1afc729b1",
-  "nr100k": "6c918cf6df45088f39d569293291d4b193276f9d799c0a015ff49957f350fd05",
-  "nr400k": "74cd81cfa92cbbc4f5f0f2da55835d1b2cdcdd462264d4fdcaa699a51aa8a94b",
+  "july100k": "744522685e207a7a80181643abc09c2f47c63990a08ff09567cba0ef9a1a52a1",
+  "july400k": "30b7d2967909d38822964f28d54407db0a1ba0f97ed24aa688209bff8aebc2c5",
+  "nr100k": "b9fb2a9618d7e53bd90ba87002bed7a13be8f5e5c2f0376041224f2b6527ad09",
+  "nr400k": "d794a686f56b62d0de0931e39559e0a9d385d5d0cf89e1389bd993ad1534bf07",
   "ordinary-full_year_resident": "6af458f9aa6bc70ca36e1985065fc3f670786543f798864f4e9497bc9d8cb1dc",
   "ordinary-nonresident": "c6d1fec08cea72c0fbb4cc99479a2ac32df4309e58a3eba904d54c6d186601e6",
   "ordinary-part_year_resident": "8b49a2ecff73e096dd31364684c624fba2242c47a94ee9643f28a5d2b4f34867",
-  "py100k": "d12e31c8fa3182122c78ef5b6d4ca797303e8a9f426d9b5c3fc31dc5f97b98f3",
-  "py400k": "28ef2931cb74bf1519c3be1dc878c4aa83961aca389e86d011f22c4ac8cd3d70",
+  "py100k": "08931fdad151ccc3c30fc99d5e61f5cd83ae4d330f2436db9a4dcdb4c7fd005b",
+  "py400k": "711f4ed9510a14e11ec73e9e7b9003d30751d53e429620feb41f1dc79a87c6d3",
   "reciprocal-known-zero": "6862ca5ca573a530464cbac2091d1f1dc40bc11a37a9603b83585a078c6a66e8",
   "reciprocal-refund": "6c3cf5dd5f72187d2ef0607465cefb6f42a385056be3fad143291149b2816a17",
   "resident-credit": "1fd4f25ed4c2c19fa924d434f1110cba2af463d981264c7ca1c9160fa3d56cef",
@@ -61,6 +62,7 @@ function calculation(input: TaxYearInput) {
 it.each(cases.map(c => [c.name, c] as const))('preserves complete baseline output and commitments for %s', (name, c) => {
   const input = c.input(); const before = JSON.stringify(input); const actual = calculation(input);
   expect(actual.state.it1040.line10_taxAfterCredits.toString()).toBe(c.tax);
+  expect(actual.federal.carryforwards).not.toHaveProperty('reitPtpLossCarryforward');
   expect(actual.payment.sourceDigest).toMatch(/^[0-9a-f]{64}$/);
   expect(JSON.stringify(actual.state.lines)).toContain(actual.payment.sourceDigest);
   expect(JSON.stringify(input)).toBe(before);
