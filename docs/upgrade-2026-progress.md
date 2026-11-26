@@ -1,5 +1,58 @@
 # 2026 upgrade implementation evidence
 
+## November 26 combined local checks for the rate and filing changes
+
+All 11 local commands passed on exact application revision `7af70b3f5`
+with Node 26.13.1, pypdf 6.10.0 and 15 verified official sample documents.
+The full unit and coverage runs each passed 31,033 tests with 81 existing
+environment skips. Branch coverage was 88.59% against the 85% gate.
+Managed Chromium passed 654 cases across all nine windows, with five
+existing skips and zero failures. The browser runtime closed cleanly.
+The first isolated attempts exposed missing public test PDFs and a
+sandbox-denied loopback fixture. The corrected runs supplied both
+prerequisites and kept the normal checks and deadlines.
+
+The evidence manifest SHA-256 is
+`7e7d056d2a25152071864ff2a9b28e5c6cff1bc83a26a8492560a893655aba9d`.
+The managed browser result is local evidence. The strict target Linux
+jobs remain open.
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45909599717) ·
+[ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45911334052).
+
+## November 26 published 2027 underpayment rate
+
+`83039c995` applies the published 8% rate to tax-year-2026 estimated-tax
+underpayments accruing January 1 through April 15, 2027. The regular method
+splits at December 31 and retains the oldest-installment payment allocation.
+Form 2210-F uses the same sourced period for its single-installment method,
+keeps the March 1 filing and full-payment exception, and records the authority
+in the audit entry. `7af70b3f5` records the ruling in draft rule pack
+`2026.230-law-integration-draft`. Final 2026 Form 2210 and 2210-F, their
+instructions, and qualified human review remain open.
+[Revenue Ruling 2026-25](https://www.irs.gov/pub/irs-drop/rr-26-25.pdf) ·
+[26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/) ·
+[Draft Form 2210-F](https://www.irs.gov/pub/irs-dft/f2210f--dft.pdf).
+
+Both calculation tests reproduced the obsolete unpublished-rate failure
+before the implementation. Separate synthetic examples confirm the
+January 1 transition, the March 1 threshold and the April 15 accrual cap.
+The focused calculation and filing-waiver run passed 46 cases on Node
+26.13.1. The rule-pack and calculation run passed 30 cases, and the spec
+and inventory validated with 10,179 spec lines and no missing references.
+Independent engineering review checked the published rate, boundary days
+and unchanged readiness gates.
+
+## November 26 flattened filing packet validation
+
+`4ce83c916` fixes a dangling page widget reference observed after merging
+two synthetic AcroForm templates. The filing builder removes deleted widget
+references while keeping valid text annotations and propagating field
+appearance failures. Strict pypdf checks page order and visible values
+after the combined packet is saved. A changed second template pin stops
+both renderers. There are 57 passing focused PDF tests on Node 26.13.1 and
+a separate engineering review. The shipped filing registry is still empty,
+and the test supplies its synthetic scenario privately inside the suite.
+
 ## November 26 annual Pennsylvania cash dividend drafts
 
 `9f5ef34ab` extends the private original-bound PA draft to a

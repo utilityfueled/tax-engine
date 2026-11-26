@@ -9,6 +9,27 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- All 11 local checks passed on `7af70b3f5`. The unit and coverage runs
+  each passed 31,033 tests with 81 existing environment skips. Branch
+  coverage was 88.59%. Managed Chromium passed 654 cases in nine windows
+  with five existing skips and zero failures. The strict Linux runs
+  for the same revision are awaiting runners.
+  [Exact local evidence](upgrade-2026-progress.md#november-26-combined-local-checks-for-the-rate-and-filing-changes).
+
+- The IRS published the 8% rate for January 1 through April 15, 2027.
+  The 2026 draft applies it to supported estimated-tax underpayments on
+  Forms 2210 and 2210-F. The 2026 rule pack records the ruling.
+  [Calculation and source evidence](upgrade-2026-progress.md#november-26-published-2027-underpayment-rate) ·
+  [Tax reviewer worksheet](upgrade-2026-human-tax-review-packet.md#november-26-estimated-tax-underpayments) ·
+  [Combined candidate AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45909599717) ·
+  [Combined candidate ARM64 recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45911334052).
+
+- Filing PDF assembly now removes dangling widget references after
+  flattening. Synthetic tests verify visible values, page order, original
+  text annotations and template revision checks. The published filing
+  registry remains empty.
+  [PDF evidence](upgrade-2026-progress.md#november-26-flattened-filing-packet-validation).
+
 - Private 2026 cash-dividend drafts cover full-year residents, part-year
   residents and nonresidents in Pennsylvania and Ohio within the
   original-bound ordinary-income methods. The calculations reconcile
@@ -16,15 +37,16 @@ Use the linked progress sections when investigating individual packages.
   preserves worldwide Schedule SP income. Tax review and annual filing
   qualification remain open.
   [Pennsylvania evidence](upgrade-2026-progress.md#november-26-annual-pennsylvania-cash-dividend-drafts) ·
-  [Ohio evidence](upgrade-2026-progress.md#november-26-ohio-ordinary-cash-dividend-draft).
+  [Ohio evidence](upgrade-2026-progress.md#november-26-ohio-ordinary-cash-dividend-draft) ·
+  [Tax reviewer worksheet](upgrade-2026-human-tax-review-packet.md#november-26-pennsylvania-and-ohio-cash-dividends).
 
 - Exact `9f5ef34ab` passed all 11 local commands. The unit and
   coverage runs each passed 31,028 tests with 81 existing environment
   skips. Branch coverage reached 88.59%. Managed Chromium passed 654
   cases with five existing skips and zero failures. The earlier
   `b28141535` native ARM64 run passed archive and Compose recovery
-  and recorded 11 timeout-related strict browser failures. Current
-  exact Linux results remain open.
+  and recorded 11 timeout-related strict browser failures. Strict
+  Linux qualification remains open.
   [Local checks](upgrade-2026-progress.md#november-26-annual-pennsylvania-cash-dividend-drafts) ·
   [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45905693607) ·
   [ARM64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45906276956).

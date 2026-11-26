@@ -526,3 +526,45 @@ Confirm that the no-transfer separate-loan evidence suffices
 for ordinary distinct debts and identify any exceptions.
 [IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098) ·
 [IRS Publication 936](https://www.irs.gov/publications/p936).
+
+## November 26 estimated-tax underpayments
+
+For an ordinary calendar-year resident, take $40,000 of current-year tax,
+zero withholding and refundable credits, and no prior-year return or
+applicable exception. Independently complete the penalty worksheet for
+two alternatives. The taxpayer makes one $36,000 estimated payment on
+January 1, 2027, or makes a $36,000 return payment on April 16, 2027,
+with no earlier payments. Report the installment amounts, days by rate
+period, exact accrual, and whole-dollar penalty. Confirm which date ends
+accrual when the payment is later than April 15.
+
+For a farmer who satisfies the two-thirds gross income test, use
+$30,000 of current-year tax, $18,000 of qualifying prior-year tax, $5,000
+of withholding, and an $8,000 January 15 estimated payment. The taxpayer
+files and pays the remaining $17,000 on March 1, March 2, or April 16,
+2027. Determine the applicable exception or penalty, date count, and
+any disclosures for each. Use the final 2026 forms and instructions when
+published. The ruling supplies the applicable rate today.
+[Revenue Ruling 2026-25](https://www.irs.gov/pub/irs-drop/rr-26-25.pdf) ·
+[26 USC §6621](https://uscode.house.gov/us/usc/119-136/t26/s6621/) ·
+[26 USC §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/) ·
+[Draft Form 2210-F](https://www.irs.gov/pub/irs-dft/f2210f--dft.pdf).
+
+## November 26 Pennsylvania and Ohio cash dividends
+
+Review a cash-method individual holding a domestic corporation directly.
+The original Form 1099-DIV and complete account ledger reconcile. The
+dividends are ordinary cash distributions available on their actual
+credit dates, June 30 and July 1. The Pennsylvania example uses $80 and
+$40. The Ohio example uses $3,000 and $1,000. Move domicile into the
+state on July 1 for the part-year comparison. For the other two
+comparisons, hold domicile in the state or out of the state all year.
+Assume no business situs or other allocation facts for this account.
+Determine the taxable and outside-state portions and how they affect
+Pennsylvania Schedule SP eligibility income and the Ohio IT NRC
+allocation. Confirm the required records and when a different method
+applies. Use the final annual forms to verify form lines and transfers.
+[Pennsylvania dividend guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends) ·
+[Pennsylvania Tax Forgiveness guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness) ·
+[Ohio Revised Code §5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Ohio Revised Code §5747.05](https://codes.ohio.gov/ohio-revised-code/section-5747.05).
