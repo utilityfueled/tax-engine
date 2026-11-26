@@ -129,9 +129,10 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
   fail('retained estimate review differs from the supplied completion sources');
  }
  if (estimateReview) {
-  if (income.residencyStatus !== 'nonresident' || p.paFilingChoice !== 'S' || input.taxpayer.spouse
+  const supportedResidency = income.residencyStatus === 'nonresident' || income.residencyStatus === 'part_year';
+  if (!supportedResidency || p.paFilingChoice !== 'S' || input.taxpayer.spouse
     || input.w2s.length !== 1 || input.w2s[0].taxYear !== 2026 || input.w2s[0].accountHolder !== 'primary'
-    || !wages.gt(maximum) || child) fail('small balance requires one current W-2 for the actual single nonresident high-wage owner');
+    || !wages.gt(maximum) || child) fail('small balance requires one current W-2 for the actual single part-year or nonresident high-wage owner');
   if (!p.paWithholding.isZero()) fail('small balance requires exact zero PA withholding');
   if (stable(estimateReview.owner) !== stable(sources.owner)) fail('estimate review owner differs from the actual return owner');
   if (stable(estimateReview.originalPAResidencySources) !== stable(input.paResidencySources)) fail('estimate review PA originals are stale');

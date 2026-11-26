@@ -32,7 +32,8 @@ lines:
       the existing ordinary composer. This first draft requires no other income,
       expenses outside the care method below, benefits, reciprocal or specialized
       packet, and reported PA withholding
-      at least fresh PA40 tax, except for the confirmed nonresident balance below.
+      at least fresh PA40 tax, except for the confirmed nonresident and part-year
+      balances below.
       Known zero retained; absence never establishes zero.
       Preserve existing per-class roundDollar then PA40 roundDollar(x*0.0307),
       SP statutory unchanged nominal thresholds, one payment disposition, and all
@@ -234,16 +235,40 @@ lines:
       - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u332s"
       - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft reconciles a timely actual nonresident small balance separately from return tax"
+  - line: "part-year-actual-small-balance"
+    description: "Apply the same documented no-installment balance method to a part-year resident"
+    formula: |
+      Establish part-year Pennsylvania residency and actual Pennsylvania-taxable
+      compensation under the existing ordinary residence and payroll method.
+      The final 2026 REV-413(I) applies the $14,000 income and $430 net-tax
+      thresholds to part-year residents. Reuse the nonresident balance method's
+      one current W-2, worldwide wage floor, exact zero PA withholding, source
+      currentness, four contemporaneous projections, strict thresholds and
+      exact original filing and payment receipt requirements. Measure each
+      projection and the fresh return against Pennsylvania-taxable wages only.
+      For a part-year mover with $66,000 in wages outside Pennsylvania before
+      residency and $9,000 of wages during residency, $276.30 rounds to $276.
+      With the exact April 15, 2027 receipt, report zero estimated underpayment
+      interest and zero outstanding balance separately from the $276 return tax.
+      Keep full-year residents outside this method and retain review-only status.
+    sources:
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s"
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u332s"
+      - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf#page=1"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year draft reconciles a timely actual small balance from %s sources"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year draft holds stale estimate review after payroll sources are reconfirmed"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft rejects unsupported small balance evidence (%s)"
   - line: "review-only-extension-receipts"
     description: "Separately reported extension receipts when withholding independently covers the complete state tax"
-    formula: "For the review-only ordinary 2026 draft, accept separately verified extension receipts dated January 1 through April 15, 2027. Withholding independently covers the complete PA tax as before. Report the exact sum rounded once on PA-40 line 16 without affecting REV-1630 or the wage dependency. Require a complete refund disposition. Do not combine these receipts with the nonresident small balance method, prior credit or quarterly estimates. Filing remains disabled."
+    formula: "For the review-only ordinary 2026 draft, accept separately verified extension receipts dated January 1 through April 15, 2027. Withholding independently covers the complete PA tax as before. Report the exact sum rounded once on PA-40 line 16 without affecting REV-1630 or the wage dependency. Require a complete refund disposition. Do not combine these receipts with the small balance method, prior credit or quarterly estimates. Filing remains disabled."
     sources:
       - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/rev-276.pdf"
     testRef: "tests/engine/state/pa-ordinary-return.test.ts::PA2026 draft reports early extension receipts with independently sufficient withholding in %s"
-  - line: "nonresident-small-balance-source-limits"
+  - line: "small-balance-source-limits"
     description: "Reject stale projections, unknown or mismatched receipts, and the $14,000 or $430 boundaries"
     formula: "Require affirmative contemporaneous projection coverage, agreement with any retained projection source, exact current originals and a complete timely receipt. Earlier thresholds and the 2025 REV-1630 do not establish this 2026 boundary."
-    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft rejects unsupported nonresident small balance evidence (%s)"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 draft rejects unsupported small balance evidence (%s)"
   - line: "source-currentness"
     description: "Existing actual guided captures bind unchanged originals without creating confirmation"
     formula: |

@@ -362,7 +362,7 @@ it('PA2026 draft preserves exact cents known zero and complete withholding',()=>
  const half=pa2026OrdinaryDraftFixture();half.input.w2s[0].stateTaxWithheld='2302.50';rebindPA2026Draft(half);expect(calculatePA2026OrdinaryDraft(half.input,half.facts,half.sources).pa.pa40.stateWithholding.toFixed()).toBe('2303');
 });
 
-function paidNonresident(status: 'nonresident' | 'part_year' = 'nonresident') {
+function paidWageBalance(status: 'nonresident' | 'part_year' | 'resident' = 'nonresident') {
   const f = pa2026OrdinaryDraftFixture(status);
   const owner = f.input.taxpayer.primary;
   f.input.w2s[0].stateTaxWithheld = '0';
@@ -406,7 +406,7 @@ function paidNonresident(status: 'nonresident' | 'part_year' = 'nonresident') {
   return {...f, receipt, sources: {...f.sources, estimatedTaxReview2026}};
 }
 
-function changePAWages(f: ReturnType<typeof paidNonresident>, wages: string, paidAmount: string) {
+function changePAWages(f: ReturnType<typeof paidWageBalance>, wages: string, paidAmount: string) {
   f.input.w2s[0].stateWages = wages;
   Object.assign(f.input.paResidencySources.wages[0].payroll[0], {
     paServicesCompensation: wages,
@@ -419,7 +419,7 @@ function changePAWages(f: ReturnType<typeof paidNonresident>, wages: string, pai
 }
 
 it('PA2026 draft reconciles a timely actual nonresident small balance separately from return tax', () => {
-  const f = paidNonresident();
+  const f = paidWageBalance();
   const before = JSON.stringify(f);
   const r = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
   expect(r.pa.residencyStatus).toBe('nonresident');
@@ -438,8 +438,60 @@ it('PA2026 draft reconciles a timely actual nonresident small balance separately
   expect(JSON.stringify(f)).toBe(before);
 });
 
+function paidPartYearBalance() {
+  const f = paidWageBalance('part_year');
+  const { residency, wages } = f.input.paResidencySources;
+  Object.assign(residency.domicilePeriods[0], { state: 'FL', daysInPA: 0 });
+  residency.outsidePAPermanentAbodePeriods[0].state = 'FL';
+  residency.domicilePeriods[1].daysInPA = 160;
+  Object.assign(wages[0].payroll[0], {
+    grossCompensation: '66000', paServicesCompensation: '0', outsidePAServicesCompensation: '66000',
+  });
+  Object.assign(wages[0].payroll[1], {
+    grossCompensation: '9000', paServicesCompensation: '9000', outsidePAServicesCompensation: '0',
+  });
+  f.input.w2s[0].stateWages = '9000';
+  f.input.taxpayer.stateResidency = 'part-year';
+  Object.assign(f.sources.otherStateTaxes.jurisdictions[0], {
+    state: 'FL', sourceReference: 'Fictional complete Florida zero income-tax account',
+  });
+  rebindPA2026Draft(f);
+  f.sources.estimatedTaxReview2026.originalPAResidencySources = structuredClone(f.input.paResidencySources);
+  return f;
+}
+
+// Spec: spec/state/pa-2026-ordinary-draft.yaml#part-year-actual-small-balance.
+it.each(['original', 'reopened'] as const)('PA2026 part-year draft reconciles a timely actual small balance from %s sources', source => {
+  const original = paidPartYearBalance();
+  const f: typeof original = source === 'reopened' ? JSON.parse(JSON.stringify(original)) : original;
+  const before = structuredClone(f);
+  const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+  expect(result.pa.residencyStatus).toBe('part_year');
+  expect(result.dependencyProof.ordinaryWages.toFixed()).toBe('75000');
+  expect(result.pa.pa40.compensation.toFixed()).toBe('9000');
+  expect(result.pa.pa40.stateWithholding.toFixed()).toBe('0');
+  expect(new Decimal('9000').times('0.0307').toFixed(2)).toBe('276.30');
+  expect(result.pa.pa40.taxLiability.toFixed()).toBe('276');
+  expect(result.pa.pa40.totalAmountDue.toFixed()).toBe('276');
+  expect(result.pa.rev1630.penaltyRequired).toBe(false);
+  expect(result.pa.rev1630.totalInterest.toFixed()).toBe('0');
+  expect(result.actualBalancePayment?.actualBalancePaymentApplied.toFixed()).toBe('276');
+  expect(result.actualBalancePayment?.outstandingTaxBalance.toFixed()).toBe('0');
+  expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+  expect(result.pa.readiness.filingEligible).toBe(false);
+  expect(JSON.stringify(result)).not.toContain(f.receipt.confirmationNumber);
+  expect(f).toEqual(before);
+});
+
+it('PA2026 part-year draft holds stale estimate review after payroll sources are reconfirmed', () => {
+  const f = paidPartYearBalance();
+  f.input.paResidencySources.wages[0].payroll[1].sourceReference = 'Replacement original for the same PA payroll';
+  rebindPA2026Draft(f);
+  expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(/estimate review PA originals are stale/);
+});
+
 it('PA2026 draft accepts a confirmed $429 balance below both 2026 estimate boundaries', () => {
-  const f = paidNonresident();
+  const f = paidWageBalance();
   changePAWages(f, '13990', '429');
   for (const period of f.sources.estimatedTaxReview2026.periods) period.maximumExpectedPATaxableWages = '13990';
   const r = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
@@ -469,10 +521,13 @@ it.each([
   ['wrong receipt year', /identity\/date\/amount/],
   ['receipt not exact tax due', /fresh printed tax due/],
   ['partial withholding', /zero PA withholding/],
-  ['part-year resident', /nonresident/],
+  ['part-year payroll exceeds threshold despite a low projection and receipt', /actual PA wages must be below/],
+  ['full-year resident', /part-year or nonresident/],
   ['stale original W-2 year', /current W-2|year/],
-] as const)('PA2026 draft rejects unsupported nonresident small balance evidence (%s)', (kind, reason) => {
-  const f = paidNonresident(kind === 'part-year resident' ? 'part_year' : 'nonresident');
+] as const)('PA2026 draft rejects unsupported small balance evidence (%s)', (kind, reason) => {
+  const status = kind === 'part-year payroll exceeds threshold despite a low projection and receipt' ? 'part_year'
+    : kind === 'full-year resident' ? 'resident' : 'nonresident';
+  const f = paidWageBalance(status);
   const review = f.sources.estimatedTaxReview2026;
   const timing = f.facts.timing;
   if (kind === 'missing proof') {
