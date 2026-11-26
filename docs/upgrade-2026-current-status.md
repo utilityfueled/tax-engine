@@ -15,10 +15,11 @@ Use the linked progress sections when investigating individual packages.
   a private draft calculation.
   [PA dividend evidence](upgrade-2026-progress.md#november-26-pennsylvania-part-year-ordinary-cash-dividends).
 
-- Exact `956d61ddf` passed 30,950 local unit tests. The earlier
-  `a690d880a` native ARM64 image passed archive and Compose recovery,
-  with 12 failures in strict Chromium. The successor native result
-  remains open.
+- Exact `9ac66331c` passed 30,971 tests in both local runs, 88.58%
+  branch coverage, both builds, type checks, specs, lint, inventory
+  and 654 managed Chromium cases. The earlier `a690d880a` native ARM64
+  image passed archive and Compose recovery, with 12 failures in
+  strict Chromium. The successor native result remains open.
   [Combined and ARM64 checks](upgrade-2026-progress.md#november-26-current-combined-checks-and-native-arm64).
 
 - `956d61ddf` keeps evaluation spending reserved when a receipt

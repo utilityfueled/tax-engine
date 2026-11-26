@@ -19,11 +19,26 @@ broader income methods retain their existing gates.
 
 ## November 26 current combined checks and native ARM64
 
-The exact `956d61ddf` tracked archive passed 30,950 unit tests in
-2,234 files with 81 environment skips. This run used its required
-local loopback listeners. Coverage and managed Chromium continued
-on the same revision. The `9ac66331c` Pennsylvania successor uses a
-separate copy for builds and type checks.
+The exact `956d61ddf` archive passed 30,950 tests in both full unit
+and coverage runs, with 2,234 active files and 81 environment skips.
+Branch coverage was 88.57% against the unchanged 85% threshold.
+Managed Chromium passed 654 with five original skips and zero
+failures. The `9ac66331c` Pennsylvania successor passed 30,971 tests
+in both full runs with the same environment skips and 88.58% branch
+coverage. Both builds, all three type checks, lint without errors,
+inventory and 10,172 spec references passed. The unmocked public
+federal entry point still holds the incomplete 2026 rule pack with
+complete Form 8911 originals. Managed Chromium on the same source
+passed 654 cases with five original skips and zero failures across
+nine windows, using the existing limits.
+
+The IRS final-form links for Form 1040 and Schedule 1-A returned the
+2025 revisions on November 26. The 2026 Schedule 3 used for the
+charger transfer is a draft. Each final annual form and its mapping
+still require qualification before filing output.
+[IRS final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[IRS final Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf) ·
+[2026 draft Schedule 3](https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf).
 
 The exact `a690d880a` ARM64 runtime passed image startup, recovery
 archive verification and the six Compose recovery steps. Its strict
@@ -135,7 +150,9 @@ the unit specification parser requires. `dedc4e1f0` quotes all
 three and passes the specification and guided replay together
 (1,020 tests), the full reference validator and unchanged inventory.
 That sandboxed run also lacked permission to open its local TLS
-listener. Both original failures are retained in the run log.
+listener. Both original failures are retained in the run log. The
+test-only `7513efffa` replaces six non-null assertions with explicit
+fixture checks and passes all four guided tests and scoped lint.
 
 ## November 26 reciprocal Ohio PDF packet calculation
 
