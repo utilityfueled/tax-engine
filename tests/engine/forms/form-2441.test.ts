@@ -669,6 +669,18 @@ describe("Form 2441 2026", () => {
     expect(calculateForm2441(current({ agi: d("15000") })).credit.toString()).toBe("1500");
   });
 
+  it("2026 standalone credit from IRS ATS scenario 4 care expenses", () => {
+    const result = calculateForm2441(current({
+      qualifyingIndividuals: 2,
+      careExpenses: d("1600").plus("700"),
+      earnedIncome: d("35545"),
+      agi: d("35545"),
+    }));
+
+    expect(result.lines.find(line => line.line === "8")?.value.toString()).toBe("0.39");
+    expect(result.lines.find(line => line.line === "9a")?.value.toString()).toBe("897");
+  });
+
   it("2026 requires confirmed facts and separate spouse income", () => {
     for (const override of [
       { filingStatus: undefined }, { eligibilityConfirmed: undefined },

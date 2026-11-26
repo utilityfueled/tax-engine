@@ -188,6 +188,12 @@ edgeCases:
     notes: "IRC §21(e)(2) — MFS restriction enforced in federal.ts orchestrator"
 
 validation2026:
+  - rule: "ats-scenario-4-care-expenses"
+    description: "IRS ATS scenario 4 reports $1,600 and $700 of care on Form 2441 and $35,545 in W-2 Box 1. In a standalone Part II case with explicit $35,545 AGI, confirmed eligibility, and no excluded benefits, the draft line 8 table gives 0.39 and line 9a is $897. The ATS leaves line 9a blank, so the result is calculated independently from that table. The fixture does not take a position on the scenario's moving expenses."
+    sources:
+      - "https://www.irs.gov/pub/irs-efile/1040-mef-ats-scenario-4-09222026.pdf#page=9"
+      - "https://www.irs.gov/pub/irs-dft/i2441--dft.pdf#page=6"
+    testRef: "tests/engine/forms/form-2441.test.ts::2026 standalone credit from IRS ATS scenario 4 care expenses"
   - rule: "source-record-review-continuations"
     description: "Printed PartsI/II copy actual source records, put the three largest payments/expenses on the form, and retain every remaining row and due-diligence statement on review continuation pages. Correct physical continuation boxes; explicit household and over12 disability answers. Preserve render-only identifier redaction."
     testRef: "tests/pdf/fill-form-2441-source.test.ts::Form2441 review preserves provider and person source records with continuations"
