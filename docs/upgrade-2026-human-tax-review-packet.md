@@ -473,3 +473,13 @@ rounding and source requirements in the applicable final Ohio instructions.
 [Ohio R.C. 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20/3-23-2022) ·
 [Ohio R.C. 5747.05](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
 [IRS Publication 550](https://www.irs.gov/publications/p550).
+
+The successor at `c2044be1f` covers two additional 2026 cash-method cases.
+For the full-year Ohio resident, verify that the $4,000 available interest
+and $50,000 of wages give $54,000 AGI, $1,042 Ohio tax, and a $208 refund
+after $1,250 withholding, with no nonresident worksheet. For the full-year
+nonresident, only $10,000 of those wages was for work performed in Ohio.
+Verify the $44,000 outside-Ohio numerator, 0.8148 credit ratio, $849 credit,
+$193 tax and $807 refund after $1,000 withholding. Confirm the Part B
+exclusion and the allocation and rounding against the final instructions.
+[Ohio 2026 draft instructions, pp. 41–42](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41).

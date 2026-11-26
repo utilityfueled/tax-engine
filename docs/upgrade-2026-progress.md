@@ -1,5 +1,91 @@
 # 2026 upgrade implementation evidence
 
+## November 26 visited Ohio header edits
+
+`ca3b4231a` reuses current school-source validation for navigation after
+editing a visited Ohio header. A header awaiting explicit confirmation still
+shows **Needs review**. The shortcut applies when the school originals pass
+replay on the same snapshot and the header confirmation is explicitly null.
+Navigation actions and exports still validate their own current originals.
+
+An interleaved benchmark of 300 edits per path on macOS ARM64 with
+Node 26.13.1 measured median CPU of 47.41 ms before and 14.43 ms with the
+shortcut. Median elapsed time fell from 45.14 to 13.85 ms. This benchmark
+covers edits of already visited returns. The strict Ohio school journeys
+initially enter the header before the section is visited. Their deadline
+failures remain open. Existing reciprocal traces reached the separate
+filing-denial request. They did not capture a duration for that request.
+
+The regression reproduced the duplicate replay before implementation.
+Independent review and environmental reproduction passed 37 focused tests.
+The frozen Node 26.13.1 checkout matched all 6,705 tracked blobs. Its focused
+check passed 119 tests and its broader guided check passed 2,266 tests across
+282 files. Spec validation passed 10,136 references. Inventory, typecheck,
+lint, 2,073 source bindings and 58 audit controls passed. Exact local
+integration passed its eight static and build checks, and GitHub’s exact
+Docker build passed. The local browser’s first attempt held at the loopback
+port check. A retry with loopback access, local unit and coverage checks and
+the native ARM64 rehearsal started on this source. Vercel lists the
+production-target build as canceled.
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45851240755) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45851190174) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45851189993) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45851189912).
+
+## November 26 Ohio bank-interest residency coverage
+
+`c2044be1f` adds full-year Ohio resident and nonresident methods to the
+private bank-interest dispatcher. Both reconcile all dated credits to the
+current Form 1099-INT and use the confirmed domicile and actual work
+locations. They share the existing ordinary W-2 inventory checks. The
+saved part-year method retains its identifier and results. The full-year
+resident fixture yields $1,042 tax and a $208 refund. The nonresident
+fixture has $10,000 of Ohio wages and $44,000 of income outside Ohio,
+for a 0.8148 ratio, $849 nonresident credit, $193 tax and $807 refund.
+Its draft audit omits IT NRC Part B and separately records zero Ohio
+interest allocation. The form and filing gates still require final Ohio
+materials and qualified review.
+[Ohio allocation law](https://codes.ohio.gov/ohio-revised-code/section-5747.20/3-23-2022) ·
+[Ohio nonresident credit law](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[Ohio 2026 draft instructions, pp. 41–42](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41) ·
+[IRS Publication 550](https://www.irs.gov/publications/p550).
+
+Independent engineering review and the exact Node 26.13.1 Ohio and
+public API run passed 2,575 tests across 78 files. Scoped validation
+passed 188 tests, 58 Node controls, 10,135 spec references, inventory,
+typecheck, lint and all 2,073 audit bindings. The initial residency
+regressions failed in eight cases before the change. The subsequent
+nonresident Part B assertion reproduced the one draft-audit defect
+before its correction. The archived source matches 6,705 tracked blobs.
+GitHub’s exact Docker build passed. CI and managed Chromium were in
+progress at the next check. Vercel lists the production-target build for
+this revision as canceled.
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45849951808) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45849952059) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45849951905).
+
+On the earlier exact `77c1143ac` browser source, both AMD64 school
+deadline failures happened before PDF inspection. The reciprocal case
+reached the final filing-denial request. The faster class-only selector
+could miss a classless duplicate label. An equivalent broad selector was
+slower in matched fixture checks. The first-header proof-only ablation
+saved 0.31 ms of median CPU per edit and showed no wall-time improvement.
+Those changes were dropped. The strict checks retain their label,
+navigation, privacy, timing and review-file assertions.
+
+An independent publication recheck found 2025 in the current IRS
+Form 1040 and Schedule 1-A files and draft markings on their 2026
+counterparts. Pennsylvania's current PA-40 and Ohio's latest listed IT NRC
+also remain 2025. The November 25 Form 940 instructions corroborate the
+existing Schedule A coverage. The current Schedule H remains 2025.
+[Final Form 1040](https://www.irs.gov/pub/irs-pdf/f1040.pdf) ·
+[Final Schedule 1-A](https://www.irs.gov/pub/irs-pdf/f1040s1a.pdf) ·
+[Draft Form 1040](https://www.irs.gov/pub/irs-dft/f1040--dft.pdf) ·
+[Draft Schedule 1-A](https://www.irs.gov/pub/irs-dft/f1040s1a--dft.pdf) ·
+[Current PA-40](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40.pdf) ·
+[Ohio IT NRC forms](https://tax.ohio.gov/individual/file-now/IT-NRC-Forms) ·
+[Form 940 instructions](https://www.irs.gov/pub/irs-pdf/i940.pdf).
+
 ## November 26 exact Linux release results
 
 On application revision `77c1143ac`, Linux CI, Docker and managed Chromium

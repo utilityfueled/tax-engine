@@ -9,6 +9,18 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `ca3b4231a` reduces repeated validation during edits of a visited Ohio
+  header. All 2,266 exact guided tests and a separate engineering review
+  passed. The local integration and native ARM64 runs are in progress.
+  Strict Linux Chromium deadlines remain open.
+  [Ohio navigation evidence](upgrade-2026-progress.md#november-26-visited-ohio-header-edits).
+
+- `c2044be1f` extends the private Ohio 2026 bank-interest draft to
+  full-year residents and nonresidents. The existing part-year method
+  stays available. All 2,575 exact Ohio and public API tests passed.
+  Final forms and qualified tax review remain open.
+  [Residency evidence](upgrade-2026-progress.md#november-26-ohio-bank-interest-residency-coverage).
+
 - On exact `77c1143ac`, Linux CI passed 30,883 tests at 88.9% branch
   coverage. Docker, managed Chromium, and the native ARM64 archive,
   recovery and cleanup checks passed. Strict container Chromium remains
