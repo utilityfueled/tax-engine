@@ -3,6 +3,7 @@ import {paOrdinaryReturnFixture} from './pa-ordinary-return.js';
 import {paOrdinaryResidencyFixture} from './pa-residency-sources.js';
 import {snapshotPAOrdinaryReturnOriginals} from '@/engine/state/pa-ordinary-return-facts.js';
 import type {PAResidencySources} from '@/models/pa-residency.js';
+import {Form1099DivSchema} from '@/models/inputs.js';
 export function pa2026OrdinaryDraftFixture(status:'resident'|'part_year'|'nonresident'='resident'){
  const f=paOrdinaryReturnFixture(status,2026),w=f.input.w2s[0];
  delete f.input.eic;
@@ -30,6 +31,33 @@ export function pa2026PartYearBankInterestFixture(status: 'resident' | 'part_yea
  f.input.w2s[0].stateTaxWithheld = '1199';
  rebindPA2026Draft(f);
  return f;
+}
+
+export function pa2026PartYearCashDividendFixture(status: 'resident' | 'part_year' | 'nonresident' = 'part_year') {
+ const f = pa2026OrdinaryDraftFixture(status);
+ const original = Form1099DivSchema.parse({
+  taxYear: 2026, payer: 'Fictional domestic corporation', accountReference: 'fictional-personal-dividend-account', accountHolder: 'primary',
+  ordinaryDividends: '120', qualifiedDividends: '30', totalCapitalGainDistributions: '0', section1250Gain: '0',
+  section1202Gain: '0', collectiblesGain: '0', nondividendDistributions: '0', federalWithheld: '0',
+  section199ADividends: '0', foreignTaxPaid: '0', exemptInterestDividends: '0', specifiedPrivateActivityBondInterest: '0', stateWithheld: '0',
+ });
+ const source = {
+  originalIndex: 0, sourceTaxYear: 2026, sourceReference: 'Fictional complete original domestic dividend statement',
+  sourceFactsConfirmed: true, original: structuredClone(original), ordinaryPersonalDividendIncomeConfirmed: true,
+  domesticCorporateCashDividendsOnlyConfirmed: true as boolean | null,
+  capitalDistributionsFromRegulatedInvestmentCompanyConfirmed: null as boolean | null, noOtherPADividendAdjustmentsConfirmed: true,
+  currentUncorrectedNonvoidOriginalConfirmed: true, allOriginalBoxesKnownConfirmed: true,
+  credits: [
+   { sourceReference: 'Fictional pre-move cash distribution credit', creditedOn: '2026-06-30', ordinaryDividends: '80', capitalGainDistributions: '0' },
+   { sourceReference: 'Fictional move-date cash distribution credit', creditedOn: '2026-07-01', ordinaryDividends: '40', capitalGainDistributions: '0' },
+  ],
+ };
+ f.input.form1099Div = [original];
+ const residency = { ...f.input.paResidencySources, dividends: [source] };
+ f.input.paResidencySources = residency;
+ f.input.w2s[0].stateTaxWithheld = '1199';
+ rebindPA2026Draft(f);
+ return { ...f, residency };
 }
 
 export function pa2026FloridaMoveResidentFixture() {

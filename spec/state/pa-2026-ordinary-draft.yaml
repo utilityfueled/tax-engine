@@ -5,7 +5,7 @@ reference: "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#197
 notes: |
   Finite state-only draft for single living unmarried owners in each actual
   FY/PY/NR class with complete ordinary cash W2 originals and source payroll.
-  The finite part-year bank-interest method below accepts one additional original.
+  The finite part-year investment methods below accept one additional original.
   No original document, missing amount, date, eligibility answer or election is
   inferred. Existing canonical ordinary and full federal APIs keep their gates.
   Enacted sections302/303/304, 61PaCode121.8, final2026REV413(I), Act45/2025
@@ -245,6 +245,50 @@ lines:
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year bank interest replays one complete original and its dated credits"
     testRefs:
       - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year bank interest holds %s"
+  - line: "part-year-personal-cash-dividend"
+    description: "Allocate one complete 2026 Box 1a cash-dividend original for a resident moving into Pennsylvania"
+    formula: |
+      Admit the existing single living unmarried high-wage owner with one
+      confirmed move into Pennsylvania, two consecutive domicile periods, and
+      part-year Pennsylvania residency. Require exactly one current uncorrected
+      2026 Form 1099-DIV for the primary owner and actual payer and account,
+      with a matching confirmed PA source row and a complete dated credit
+      ledger. Confirm that the Box 1a amount consists entirely of ordinary cash
+      dividends on the taxpayer's personal investment in a domestic corporation
+      paid in cash without reinvestment, and that the complete original contains
+      no special reportable amounts or classifications. Accept known Box 1b only
+      as a subset of Box 1a. Require
+      positive Box 1a, known-zero other amounts including Box 2a capital gain
+      distributions, federal and state withholding, and foreign tax. Hold
+      specialized PA adjustments, REIT, bond, foreign and other special facts.
+      Zero Box 2a has no regulated-investment-company capital distribution to
+      confirm. Each dated positive cash credit must reconcile exactly to Box 1a.
+      Reject duplicate credit references after normalizing case and whitespace.
+      Report resident-period credits in the dividend class only. Reduce the
+      nationwide Box 1a amount by pre-residency credits using the ordinary
+      Schedule B calculation. Include the outside-period amount once in
+      worldwide Schedule SP eligibility income through the existing outside
+      income calculation. Preserve the existing calculation's reporting precision.
+      The fixture has $80 before the move and $40 beginning on the move date,
+      $39,000 of PA compensation, $1,199 of PA tax and withholding, and $75,120
+      in worldwide Schedule SP eligibility income. The wage floor above $70,244
+      still proves zero federal EITC without a federal return.
+      Require the same actual withholding coverage as the bank-interest method
+      and complete ordinary completion facts. Hold simultaneous interest,
+      other dividend originals, other residency cohorts, dependent care, childless
+      EITC, estimated balance, unemployment and prepayment methods. Preserve
+      pending final 2026 PA form, mapping and filing gates.
+    sources:
+      - "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter103/s103.15.html"
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency"
+      - "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends"
+      - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf"
+      - "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+      - "https://www.irs.gov/instructions/i1099div"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend replays one complete original and its dated credits"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend outside the resident period enters Schedule SP only"
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 part-year cash dividend holds %s"
   - line: "nonresident-actual-small-balance"
     description: "Reconcile the exact timely PA-40 balance paid by a nonresident wage earner with no estimated installments due"
     formula: |

@@ -468,12 +468,17 @@ function amount(value: unknown): Decimal {
     if(index===null||index<0||index>=input.form1099Div.length||dividendIndices.has(index))return error("unique complete dividend original indices are required");
     dividendIndices.add(index);
     if(dividendReferences.has(row.sourceReference.trim()))return error("duplicate actual dividend source reference");dividendReferences.add(row.sourceReference.trim());
-    if(row.sourceTaxYear!==year||row.sourceFactsConfirmed!==true||row.ordinaryPersonalDividendIncomeConfirmed!==true||row.capitalDistributionsFromRegulatedInvestmentCompanyConfirmed!==true||row.noOtherPADividendAdjustmentsConfirmed!==true||row.currentUncorrectedNonvoidOriginalConfirmed!==true||row.allOriginalBoxesKnownConfirmed!==true||!row.original)return error("actual ordinary personal dividend classification and complete current original facts are required");
+    if(row.sourceTaxYear!==year||row.sourceFactsConfirmed!==true||row.ordinaryPersonalDividendIncomeConfirmed!==true||row.noOtherPADividendAdjustmentsConfirmed!==true||row.currentUncorrectedNonvoidOriginalConfirmed!==true||row.allOriginalBoxesKnownConfirmed!==true||!row.original)return error("actual ordinary personal dividend classification and complete current original facts are required");
     const current=input.form1099Div[index];
     if(!Form1099DivSchema.strict().safeParse(current).success||stable(row.original)!==stable(current)||current.taxYear!==year||current.accountHolder!=="primary")return error("actual dividend original owner/year/identity is missing or stale");
     reference(current.payer);
     const economicIdentity=stable(semantic(current,year));if(dividendIdentities.has(economicIdentity))return error("duplicate economic dividend original");dividendIdentities.add(economicIdentity);
     for(const key of ["ordinaryDividends","qualifiedDividends","totalCapitalGainDistributions","section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","federalWithheld","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest","stateWithheld"] as const)amount(current[key]);
+    const ordinaryDomesticCashOnly = year === 2026 && row.domesticCorporateCashDividendsOnlyConfirmed === true
+      && amount(current.totalCapitalGainDistributions).isZero();
+    if (!ordinaryDomesticCashOnly && row.capitalDistributionsFromRegulatedInvestmentCompanyConfirmed !== true) {
+      return error("actual ordinary personal dividend classification and complete current original facts are required");
+    }
     const paExemptAllocation=current.paExemptInterestDividendAllocation===undefined&&amount(current.exemptInterestDividends).isZero()&&row.noOtherPADividendAdjustmentsConfirmed===true?new Money(0):amount(current.paExemptInterestDividendAllocation);
     if(amount(current.qualifiedDividends).gt(amount(current.ordinaryDividends)))return error("qualified dividend subset contradicts actual original ordinary income");
     for(const key of ["section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest"] as const)if(!amount(current[key]).isZero())return error("actual special dividend source class or adjustment requires its successor");
