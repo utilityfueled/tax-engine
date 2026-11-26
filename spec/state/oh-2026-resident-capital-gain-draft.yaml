@@ -10,9 +10,13 @@ sources:
   - "https://tax.ohio.gov/business/ohio-business-taxes/online-services/thefinderschooldistrict"
   - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/employer_withholding/2025-2026%20NYP%20Updates/School_Districts_2026.pdf"
   - "https://uscode.house.gov/us/usc/t26/s1202/"
+  - "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm"
+  - "https://uscode.house.gov/us/usc/t26/s1045/"
+  - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol13/xhtml/CFR-2025-title26-vol13-sec1-1012-1.html"
+  - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol8/xhtml/CFR-2025-title26-vol8-sec1-469-5T.html"
   - "https://www.irs.gov/instructions/i1040sd"
 notes: |
-  Authority checked November19,2026. This separate explicit dispatcher method
+  Authority checked November26,2026. This separate explicit dispatcher method
   admits one single adult under65, one ordinary C-corporation W2 of at least
   $50000, one positive long-term direct C-corporation stock sale, full-year Ohio
   domicile and either confirmed no taxing school district or one independently
@@ -22,18 +26,28 @@ notes: |
   authenticate documents, establish identities independently, or replace a
   completed federal material-participation assessment. No inferred address,
   business classification, source-year, issuer, owner or transaction identity.
-  Secondary-market cash purchase, continuous unchanged shares, and completed
-  no1202(f)/(h) exception assessment establish non-original-issue stock under
-  1202(c)(1)(B); absence of a1202 packet alone is not proof. Other acquisitions,
-  QSBS, pass-throughs, installments, other sales and uncertain netting stay held.
+  The material-participant route requires a secondary-market cash purchase,
+  continuous unchanged shares and a completed no1202(f)/(h) exception
+  assessment under 1202(c)(1)(B). The venture route requires one direct cash
+  subscription at original issue in 2024, one unchanged uniform share lot and
+  reconciled issuer funding and sold-share basis. The 2026 sale is below the
+  section1202 holding-period requirement for that 2024 acquisition with no
+  tacked period. Reconcile no section1045 election, deferral, federal asset-sale
+  treatment, fees, other consideration or basis adjustments. Other acquisitions,
+  applicable 1202 exclusions, pass-throughs, installments, other sales and
+  uncertain netting stay held. These are draft source cohort limits.
   Require the actual2025 completed capital-loss carryover worksheet, three
   explicit zero prior capital-loss fields, and a matching current federal source
   snapshot; no carryover defaults. Original Form8949 and ScheduleD are evaluated
   afresh with the isolated2026 constants, not a fabricated full federal return.
   Federal ordinary long-term character is distinct from Ohio business income:
-  the A34 material-participation interval also establishes5747.01(B)(2).
-  A34 is deducted first, A28 only from the remaining business gain; both are
-  added back exactly once for MAGI. No venture/A35 route is inferred.
+  the material-participant A34 interval also establishes5747.01(B)(2). A
+  separate 2025 assessment under 26 CFR 1.469-5T(a)(1) is required for the
+  venture route. It reconciles strictly more than 500 hours of qualifying
+  actual work and binds the same taxpayer and issuer. A contractual management
+  right alone supplies no business classification. A34 is deducted first,
+  A28 only from the remaining business gain; both are added back exactly once
+  for MAGI. A35 and venture gains outside this business-income cohort stay held.
   This finite integration admits whole-dollar wages, proceeds, basis and A34
   deduction only; fractional annual rounding is unresolved, not silently lost.
   No-child W2>=50000 excludes federal/Ohio EIC; statutory MAGI less exemptions
@@ -100,9 +114,25 @@ lines:
     formula: "Form8949 total long-term gain equals ScheduleD line16 equals reported A34 capital gain; W2 box1 plus that gain is federal AGI; no other income adjustments carryovers or exclusions"
     testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::uses the original federal forms and classifies the material participant gain as business income"
   - line: "carry-and-1202"
-    description: "Require source-established zero carryovers and ineligible secondary purchase"
+    description: "Require source-established zero carryovers and the material-participant acquisition"
     formula: "Completed2025 loss carryover worksheet and current three explicit zero carry fields; actual secondary-market cash purchase, no original issue or1202(f)/(h) exception, unchanged continuous shares; otherwise incomplete"
     testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects unresolved carryovers special gains and unsupported acquisitions"
+  - line: "venture-source-bound-return"
+    description: "Apply the original-issue venture packet in a full-year resident draft"
+    formula: "Match original broker lot and 2026 sale; one 2024 issuer-direct cash subscription matches A34 owner, CUSIP issuer, date, purchase and funding originals, cash, and units; 1099B costBasis*allSubscribedShares=paidCash*soldShares. Fresh A34 then A28 apply to the independently business-classified gain; add both back for statutory MAGI. Unknown payment and other qualification gates stay closed."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::composes the issuer-direct venture sale with separately sourced Ohio business income"
+  - line: "venture-source-hold"
+    description: "Hold unsupported issue, ownership, basis and realization evidence"
+    formula: "Require a supported 2024 cash issue, unchanged uniform share lot, no tacking, no 1045 election or deferred/basis effects, exact source/amount/unit/date and issuer matches for every original. Conflicting or missing evidence returns null amounts without falling back to another A34 method."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::holds unreconciled venture issue funding basis and issuer sources"
+  - line: "venture-independent-originals"
+    description: "Reconcile original subscription and cash funding and keep distinct evidence roles"
+    formula: "Compare the subscription and settled funding originals independently to the exact broker CUSIP and issuer and current return owner, as well as the existing A34 references, dates, and amounts. The original sale, subscription, funding, company assessment, management contract, investment payroll, annual participation assessment and operating activity records use distinct references after NFKC, whitespace and case normalization. Projections of the same original intentionally share a reference."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::rejects reuse of evidence across distinct venture original roles"
+  - line: "venture-business-classification"
+    description: "Prove actual material participation independently of a contractual right"
+    formula: "Require a completed 2025 1.469-5T(a)(1) assessment bound to the actual Ohio taxpayer and sold issuer, more than 30000 qualifying minutes; no asset-sale treatment. At or below threshold, absent or wrong-year assessment, identity mismatch or unsupported participation facts remain incomplete."
+    testRef: "tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts::requires a distinct completed qualifying 2025 participation assessment"
   - line: "A34-A28"
     description: "Apply A34 before the single-filer business income deduction"
     formula: "D=fresh existing A34 method; remainingBusiness=ScheduleD gain-D; BID=min(250000,remainingBusiness); OhioAGI=federalAGI-D-BID; taxableBusiness=remainingBusiness-BID"

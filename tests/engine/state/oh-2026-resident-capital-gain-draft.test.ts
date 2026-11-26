@@ -1,6 +1,7 @@
 // Spec: spec/state/oh-2026-resident-capital-gain-draft.yaml.
 import { describe, expect, it } from 'vitest';
 import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engine.js';
+import { calculateOhio2026QualifyingCapitalGainDraft } from '@/engine/state/oh-2026-qualifying-capital-gain-draft.js';
 import { parseInput } from '@/ingest/loader.js';
 import { ohio2026ResidentCapitalGainFixture as fixture, rebindOhio2026ResidentCapitalGain as rebind } from '../../fixtures/oh-2026-resident-capital-gain.js';
 
@@ -27,7 +28,183 @@ function traditionalSchoolFixture() {
   } } };
 }
 
+function ventureFixture() {
+  const p = fixture();
+  const transaction = required(required(p.input.form1099B[0]).transactions[0]);
+  transaction.dateAcquired = '2024-01-08';
+  transaction.costBasis = '500000';
+  transaction.proceeds = '900000';
+  p.sources.saleAgreementOriginal.federalReportedProceeds = transaction.proceeds;
+  p.sources.equityOriginal.originalTransaction = structuredClone(transaction) as typeof p.sources.equityOriginal.originalTransaction;
+  const { participation: _participation, payroll, ...a34Sale } = p.sources.qualifyingCapitalGainSources;
+  const { ownerReference, entityReference } = a34Sale.sale;
+  const parties = { ownerReference, entityReference };
+  const issueReference = 'PRIVATE-EXECUTED-ISSUER-SUBSCRIPTION';
+  const fundingReference = 'PRIVATE-MATCHING-SETTLED-CASH-TRANSFER';
+  const settledCash = '1000000';
+  const stockOwner = { owner: p.sources.equityOriginal.owner,
+    issuerIdentity: p.sources.equityOriginal.issuerIdentity, securityIdentifier: p.sources.equityOriginal.securityIdentifier };
+  const originalIssue = {
+    ...structuredClone(stockOwner), sourceReference: issueReference, date: transaction.dateAcquired, method: 'issuer_direct_venture_cash_subscription',
+    acquiredAtOriginalIssue: true, paidCash: settledCash, subscribedShares: '40',
+    fundingOriginal: { ...structuredClone(stockOwner), sourceReference: fundingReference, paidOn: transaction.dateAcquired, amount: settledCash },
+    continuousUnchangedSharesConfirmed: true, completeAcquisitionAndDispositionHistoryConfirmed: true,
+    singleUniformLotNoFeesOtherConsiderationOrBasisAdjustmentsConfirmed: true,
+    noTackedHoldingPeriodConfirmed: true, noSection1045RolloverConfirmed: true,
+    noFederalAssetSaleTreatmentConfirmed: true,
+  };
+  rebind(p);
+  return { input: p.input, sources: { ...p.sources,
+    equityOriginal: { ...p.sources.equityOriginal, acquisition: originalIssue },
+    ventureBusinessParticipationOriginal: { ...parties, owner: structuredClone(p.sources.equityOriginal.owner), taxYear: 2025,
+      sourceReference: 'PRIVATE-2025-ANNUAL-PARTICIPATION-ASSESSMENT', activityRecordsReference: 'PRIVATE-2025-ACTUAL-WORK-LOGS',
+      federalCriterion: '26-CFR-1.469-5T(a)(1)', qualifyingMinutes: 30001,
+      completeCalendarYearAndQualifyingWorkReconciliationConfirmed: true },
+    qualifyingCapitalGainSources: { ...a34Sale,
+      ventureInvestment: { ...parties, sourceReference: issueReference, fundedAndAcquiredOn: originalIssue.date,
+        agreedCashAmount: settledCash, acquiredUnits: originalIssue.subscribedShares, continuousUnchangedHoldingConfirmed: true,
+        fundingOriginal: { ...parties, sourceReference: fundingReference, paidOn: originalIssue.date, amount: settledCash },
+        companyAssessment: { entityReference, sourceReference: 'PRIVATE-OPERATING-COMPANY-ASSESSMENT', asOfDate: originalIssue.date,
+          operatingCompanyConfirmed: true, ventureCapitalOperatingCompany: false },
+        rightsOriginal: { ...parties, sourceReference: 'PRIVATE-DIRECT-MANAGEMENT-CONTRACT', effectiveFrom: originalIssue.date,
+          effectiveThrough: transaction.dateSold, directContractConfirmed: true, right: 'substantial-participation',
+          continuouslyInEffectThroughSaleConfirmed: true },
+      },
+      investmentPayroll: { entityReference, sourceReference: 'PRIVATE-INVESTMENT-PERIOD-PAYROLL', paidFrom: originalIssue.date,
+        paidThrough: '2026-07-14', completePeriodCompensationConfirmed: true, noCompensationPaidOnInvestmentOrSaleDatesConfirmed: true,
+        withholdingBaseReconciliationConfirmed: true, stableRecipientIdentitiesConfirmed: true, period5747_06ACompensation: '600000',
+        recipients: [{ ...required(required(payroll[0]).recipients[0]), sourceReference: 'PRIVATE-DATED-PAYROLL-ORIGINAL',
+          originalPayrollRowReference: 'PRIVATE-INVESTMENT-PERIOD-WORKER', compensationPaid: '600000', compensationUsedFor5747_06A: '600000' }],
+      },
+    },
+  } };
+}
+
 describe('Ohio2026 source-bound full-year resident A34 dispatcher', () => {
+  it('composes the issuer-direct venture sale with separately sourced Ohio business income', () => {
+    const p = ventureFixture();
+    const saved = JSON.stringify(p);
+    const result = calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources });
+    expect(result.sourceStatus).toBe('admitted-draft');
+    expect(JSON.parse(JSON.stringify(result))).toMatchObject({ federalAgi: '450000', capitalGain: '400000',
+      qualifyingCapitalGainsAndPayrollDeduction: '120000', businessIncomeDeduction: '250000', taxableBusinessIncome: '30000',
+      ohioAgi: '80000', modifiedAdjustedGrossIncome: '450000', exemptions: '1900', incomeTax: '1838',
+      filingQualified: false, exportAllowed: false, fullFederalReturnCalculated: false, calculationStatus: 'incomplete',
+      payments: null, refund: null, balanceDue: null, outstandingTaxBalance: null, underpaymentPenalty: null, latePaymentInterest: null,
+    });
+    expect(JSON.stringify(result)).not.toContain('PRIVATE-');
+    expect(JSON.stringify(p)).toBe(saved);
+    const reopened: typeof p = JSON.parse(saved);
+    expect(calculateOhio2026ReturnDraftFromSources({ taxInput: reopened.input, sources: reopened.sources })).toEqual(result);
+    reopened.input = parseInput(reopened.input);
+    const { ohioResidency, ...federal } = reopened.input;
+    required(ohioResidency).originalFederalSources = structuredClone(federal);
+    reopened.sources.originalTaxInput = structuredClone(reopened.input);
+    const reparsed = calculateOhio2026ReturnDraftFromSources({ taxInput: reopened.input, sources: reopened.sources });
+    expect(reparsed.sourceStatus).toBe('admitted-draft');
+    expect(reparsed.incomeTax?.toFixed()).toBe('1838');
+  });
+
+  it('holds unreconciled venture issue funding basis and issuer sources', () => {
+    const controls: Array<[string, (p: ReturnType<typeof ventureFixture>) => void]> = [
+      ['wrong subscription reference', p => { p.sources.equityOriginal.acquisition.sourceReference = 'other-subscription'; }],
+      ['wrong funding reference', p => { p.sources.equityOriginal.acquisition.fundingOriginal.sourceReference = 'other-transfer'; }],
+      ['wrong subscription amount', p => { p.sources.equityOriginal.acquisition.paidCash = '1000001'; }],
+      ['wrong subscription units', p => { p.sources.equityOriginal.acquisition.subscribedShares = '41'; }],
+      ['wrong acquisition date on the issue original', p => { p.sources.equityOriginal.acquisition.date = '2024-01-09'; }],
+      ['coherent wrong cash and basis', p => {
+        const investment = p.sources.qualifyingCapitalGainSources.ventureInvestment;
+        const acquisition = p.sources.equityOriginal.acquisition;
+        investment.agreedCashAmount = investment.fundingOriginal.amount = acquisition.paidCash = acquisition.fundingOriginal.amount = '1010000';
+      }],
+      ['copied subscription issuer', p => { p.sources.equityOriginal.acquisition.issuerIdentity = 'OTHER ISSUER'; }],
+      ['copied subscription security', p => { p.sources.equityOriginal.acquisition.securityIdentifier = '000000BB7'; }],
+      ['copied subscription owner', p => { p.sources.equityOriginal.acquisition.owner.ssn = '111-22-4444'; }],
+      ['copied funding issuer', p => { p.sources.equityOriginal.acquisition.fundingOriginal.issuerIdentity = 'OTHER ISSUER'; }],
+      ['copied funding security', p => { p.sources.equityOriginal.acquisition.fundingOriginal.securityIdentifier = '000000BB7'; }],
+      ['copied funding owner', p => { p.sources.equityOriginal.acquisition.fundingOriginal.owner.ssn = '111-22-4444'; }],
+      ['copied funding date', p => { p.sources.equityOriginal.acquisition.fundingOriginal.paidOn = '2024-01-09'; }],
+      ['copied funding amount', p => { p.sources.equityOriginal.acquisition.fundingOriginal.amount = '1000000.01'; }],
+      ['no cash original', p => { Reflect.deleteProperty(p.sources.qualifyingCapitalGainSources.ventureInvestment, 'fundingOriginal'); }],
+      ['no original issue', p => { p.sources.equityOriginal.acquisition.acquiredAtOriginalIssue = false; }],
+      ['no tacking assessment', p => { Reflect.deleteProperty(p.sources.equityOriginal.acquisition, 'noTackedHoldingPeriodConfirmed'); }],
+      ['possible rollover', p => { p.sources.equityOriginal.acquisition.noSection1045RolloverConfirmed = false; }],
+      ['possible federal asset sale', p => { p.sources.equityOriginal.acquisition.noFederalAssetSaleTreatmentConfirmed = false; }],
+      ['possible fees or basis adjustments', p => { p.sources.equityOriginal.acquisition.singleUniformLotNoFeesOtherConsiderationOrBasisAdjustmentsConfirmed = false; }],
+      ['case-alias payroll issuer', p => { p.sources.qualifyingCapitalGainSources.investmentPayroll.entityReference = p.sources.qualifyingCapitalGainSources.investmentPayroll.entityReference.toLowerCase(); }],
+      ['case-alias rights issuer', p => { p.sources.qualifyingCapitalGainSources.ventureInvestment.rightsOriginal.entityReference = p.sources.qualifyingCapitalGainSources.ventureInvestment.rightsOriginal.entityReference.toLowerCase(); }],
+      ['case-alias funding issuer', p => { p.sources.qualifyingCapitalGainSources.ventureInvestment.fundingOriginal.entityReference = p.sources.qualifyingCapitalGainSources.ventureInvestment.fundingOriginal.entityReference.toLowerCase(); }],
+      ['case-alias operating-company issuer', p => { p.sources.qualifyingCapitalGainSources.ventureInvestment.companyAssessment.entityReference = p.sources.qualifyingCapitalGainSources.ventureInvestment.companyAssessment.entityReference.toLowerCase(); }],
+    ];
+    for (const [label, mutate] of controls) {
+      const p = ventureFixture();
+      mutate(p);
+      expect(calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources }), label).toMatchObject({
+        sourceStatus: 'incomplete', ohioAgi: null, qualifyingCapitalGainsAndPayrollDeduction: null, sourceCommitment: null, lines: [],
+      });
+    }
+
+    for (const date of ['2024-01-09', '2023-12-31']) {
+      const p = ventureFixture();
+      const { ventureInvestment, investmentPayroll } = p.sources.qualifyingCapitalGainSources;
+      ventureInvestment.fundedAndAcquiredOn = ventureInvestment.fundingOriginal.paidOn = date;
+      ventureInvestment.companyAssessment.asOfDate = ventureInvestment.rightsOriginal.effectiveFrom = investmentPayroll.paidFrom = date;
+      expect(calculateOhio2026QualifyingCapitalGainDraft(p.sources.qualifyingCapitalGainSources).sourceStatus).toBe('admitted-draft');
+      if (date === '2023-12-31') {
+        const transaction = required(required(p.input.form1099B[0]).transactions[0]);
+        transaction.dateAcquired = p.sources.equityOriginal.acquisition.date = date;
+        p.sources.equityOriginal.acquisition.fundingOriginal.paidOn = date;
+        p.sources.equityOriginal.originalTransaction.dateAcquired = date;
+        const { ohioResidency, ...federal } = p.input;
+        required(ohioResidency).originalFederalSources = structuredClone(federal);
+        p.sources.originalTaxInput = structuredClone(p.input);
+      }
+      expect(calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources }).sourceStatus).toBe('incomplete');
+    }
+  });
+
+  it('requires a distinct completed qualifying 2025 participation assessment', () => {
+    const controls: Array<(p: ReturnType<typeof ventureFixture>) => void> = [
+      p => { Reflect.deleteProperty(p.sources, 'ventureBusinessParticipationOriginal'); },
+      p => { p.sources.ventureBusinessParticipationOriginal.qualifyingMinutes = 30000; },
+      p => { p.sources.ventureBusinessParticipationOriginal.taxYear = 2023; },
+      p => { p.sources.ventureBusinessParticipationOriginal.ownerReference = 'other-owner'; },
+      p => { p.sources.ventureBusinessParticipationOriginal.owner.ssn = '111-22-4444'; },
+      p => { p.sources.ventureBusinessParticipationOriginal.entityReference = 'other-issuer'; },
+      p => { p.sources.ventureBusinessParticipationOriginal.activityRecordsReference = ''; },
+      p => { p.sources.ventureBusinessParticipationOriginal.completeCalendarYearAndQualifyingWorkReconciliationConfirmed = false; },
+    ];
+    for (const mutate of controls) {
+      const p = ventureFixture();
+      mutate(p);
+      expect(calculateOhio2026ReturnDraftFromSources({ taxInput: p.input, sources: p.sources })).toMatchObject({
+        sourceStatus: 'incomplete', incomeTax: null, businessIncomeDeduction: null, lines: [],
+      });
+    }
+    const material = fixture();
+    const mixed = { ...material.sources, ventureBusinessParticipationOriginal: ventureFixture().sources.ventureBusinessParticipationOriginal };
+    expect(calculateOhio2026ReturnDraftFromSources({ taxInput: material.input, sources: mixed }).sourceStatus).toBe('incomplete');
+  });
+
+  it('rejects reuse of evidence across distinct venture original roles', () => {
+    const assess = ventureFixture();
+    const rights = assess.sources.qualifyingCapitalGainSources.ventureInvestment.rightsOriginal.sourceReference;
+    assess.sources.ventureBusinessParticipationOriginal.sourceReference = rights;
+    assess.sources.ventureBusinessParticipationOriginal.activityRecordsReference = rights.toLowerCase();
+
+    const fund = ventureFixture();
+    const investment = fund.sources.qualifyingCapitalGainSources.ventureInvestment;
+    const subscriptionAlias = investment.sourceReference.toLowerCase().replaceAll('-', '\uFF0D');
+    fund.sources.equityOriginal.acquisition.fundingOriginal.sourceReference = investment.fundingOriginal.sourceReference = subscriptionAlias;
+
+    for (const { input, sources } of [assess, fund]) {
+      expect(calculateOhio2026QualifyingCapitalGainDraft(sources.qualifyingCapitalGainSources).sourceStatus).toBe('admitted-draft');
+      expect(calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources })).toMatchObject({
+        sourceStatus: 'incomplete', incomeTax: null, lines: [],
+      });
+    }
+  });
+
   it('combines source-bound A34 with a full-year traditional school draft levy', () => {
     const p = traditionalSchoolFixture();
     const rawSnapshot = JSON.stringify(p);

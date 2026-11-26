@@ -24,6 +24,11 @@ const snapshot = z.record(z.string(), z.unknown());
 const cusip = z.string().regex(/^[A-Z0-9*@#]{8}[0-9]$/u);
 const issuerIdentity = z.string().min(1).max(120).refine(value => value === value.trim() && !/\p{C}/u.test(value));
 const originalOwner = z.strictObject({ firstName: reference, lastName: reference, ssn: reference });
+const originalStockOwner = { owner: originalOwner, securityIdentifier: cusip, issuerIdentity };
+const shareCount = z.string().regex(/^[1-9]\d{0,14}$/u);
+const cashPaid = z.string().regex(/^\d{1,12}(?:\.\d{1,2})?$/u);
+// Enough significant digits for exact products of the maximum source cash and share counts.
+const BasisDecimal = Decimal.clone({ precision: 40 });
 const carryovers = z.strictObject({ capitalLossCarryforward: z.literal('0'), shortTermCapitalLoss: z.literal('0'), longTermCapitalLoss: z.literal('0') });
 // Canonical loader representations, NOT documentary facts. Keep the original
 // worksheet schema below strict and require all three capital amounts there.
@@ -42,6 +47,25 @@ const traditionalSchoolSource = z.strictObject({
   owner: Ohio2026SchoolSourcesSchema.shape.owner,
   residence: Ohio2026SchoolSourcesSchema.shape.residence,
 });
+const acquisitionFacts = {
+  sourceReference: reference, date: reference, continuousUnchangedSharesConfirmed: yes,
+  completeAcquisitionAndDispositionHistoryConfirmed: yes,
+};
+const acquisitionSource = z.discriminatedUnion('method', [
+  z.strictObject({ ...acquisitionFacts, method: z.literal('secondary_market_cash_purchase'),
+    acquiredAtOriginalIssue: z.literal(false), noSection1202FOrHExceptionConfirmed: yes }),
+  z.strictObject({ ...acquisitionFacts, ...originalStockOwner, method: z.literal('issuer_direct_venture_cash_subscription'),
+    acquiredAtOriginalIssue: yes, paidCash: cashPaid, subscribedShares: shareCount,
+    fundingOriginal: z.strictObject({ ...originalStockOwner, sourceReference: reference, paidOn: reference, amount: cashPaid }),
+    singleUniformLotNoFeesOtherConsiderationOrBasisAdjustmentsConfirmed: yes, noTackedHoldingPeriodConfirmed: yes,
+    noSection1045RolloverConfirmed: yes, noFederalAssetSaleTreatmentConfirmed: yes }),
+]);
+const ventureBusinessParticipationOriginal = z.strictObject({
+  ownerReference: reference, entityReference: reference, owner: originalOwner, taxYear: z.literal(2025),
+  sourceReference: reference, activityRecordsReference: reference, federalCriterion: z.literal('26-CFR-1.469-5T(a)(1)'),
+  qualifyingMinutes: z.number().int().min(30_001).max(365 * 24 * 60),
+  completeCalendarYearAndQualifyingWorkReconciliationConfirmed: yes,
+});
 const packet = z.strictObject({
   methodId: z.literal('oh-2026-resident-capital-gain-draft-v1'), taxYear: z.literal(2026), sourceReference: reference,
   sourceFactsConfirmed: yes, calendarYearConfirmed: yes, originalTaxInput: snapshot,
@@ -53,28 +77,36 @@ const packet = z.strictObject({
   saleAgreementOriginal: z.strictObject({ ownerReference: reference, entityReference: reference, saleReference: reference,
     sourceReference: reference, sourceTaxYear: z.literal(2026), sourceFactsConfirmed: yes,
     completeExecutedAgreementAndIssuerReconciliationConfirmed: yes, owner: originalOwner,
-    securityIdentifier: cusip, issuerIdentity, dateSold: reference, sharesTransferred: z.string().regex(/^[1-9]\d{0,14}$/u),
+    securityIdentifier: cusip, issuerIdentity, dateSold: reference, sharesTransferred: shareCount,
     federalReportedProceeds: reference, proceedsReconciliationConfirmed: yes,
   }),
   equityOriginal: z.strictObject({ ownerReference: reference, entityReference: reference, saleReference: reference,
     sourceReference: reference, sourceTaxYear: z.literal(2026),
     owner: originalOwner, securityIdentifier: cusip, issuerIdentity,
     formSourceId: reference, accountReference: reference, transactionIndex: z.literal(0), originalTransaction: snapshot,
-    equityType: z.literal('c_corporation_common_stock'), acquisition: z.strictObject({
-      sourceReference: reference, date: reference, method: z.literal('secondary_market_cash_purchase'), acquiredAtOriginalIssue: z.literal(false),
-      noSection1202FOrHExceptionConfirmed: yes, continuousUnchangedSharesConfirmed: yes, completeAcquisitionAndDispositionHistoryConfirmed: yes,
-    }),
+    equityType: z.literal('c_corporation_common_stock'), acquisition: acquisitionSource,
   }),
   carryoverOriginal: carryovers.extend({ sourceReference: reference, sourceTaxYear: z.literal(2025), ownerReference: reference, completeCapitalCarryoverWorksheetConfirmed: yes }).strict(),
+  ventureBusinessParticipationOriginal: ventureBusinessParticipationOriginal.optional(),
   qualifyingCapitalGainSources: z.unknown(),
 });
 // This projection is used only after the complete original A34 method admits
 // the UNMODIFIED packet. It binds identities, never substitutes its own amounts.
+const entityBinding = z.object({ entityReference: reference });
 const a34Binding = z.object({ ownerReference: reference,
   sale: z.object({ ownerReference: reference, entityReference: reference, saleReference: reference, sourceReference: reference, date: reference, capitalGain: reference }),
   recognition: z.object({ entityReference: reference, reportedCapitalGain: reference, includedFederalAgi: reference, otherwiseOhioDeductedOrExcluded: z.literal('0') }),
-  entity: z.object({ entityReference: reference }), participation: z.object({ entityReference: reference }),
-  ownership: z.object({ entityReference: reference, unitsSold: reference }), payroll: z.array(z.object({ entityReference: reference })),
+  entity: entityBinding, ownership: entityBinding.extend({ unitsSold: shareCount }),
+});
+const materialA34Binding = z.object({ participation: entityBinding, payroll: z.array(entityBinding) });
+const ventureA34Binding = z.object({
+  ventureInvestment: entityBinding.extend({
+    sourceReference: reference, fundedAndAcquiredOn: reference, acquiredUnits: shareCount,
+    fundingOriginal: entityBinding.extend({ sourceReference: reference, amount: cashPaid }),
+    companyAssessment: entityBinding.extend({ sourceReference: reference }),
+    rightsOriginal: entityBinding.extend({ sourceReference: reference }),
+  }),
+  investmentPayroll: entityBinding.extend({ sourceReference: reference }),
 });
 const canonical = (s: string) => s.normalize('NFKC').trim().replace(/\s+/gu, ' ').toUpperCase();
 const same = (a: string, b: string) => canonical(a) === canonical(b);
@@ -167,15 +199,45 @@ export function calculateOhio2026ResidentCapitalGainDraft(taxInput: TaxYearInput
     requireFact(agreement.owner.firstName === person.primary.firstName && agreement.owner.lastName === person.primary.lastName && agreement.owner.ssn === person.primary.ssn);
     requireFact(digest(equity.originalTransaction) === digest(transaction) && equity.formSourceId === form.sourceId && equity.accountReference === form.accountReference);
     requireFact(same(equity.owner.firstName, person.primary.firstName) && same(equity.owner.lastName, person.primary.lastName) && equity.owner.ssn === person.primary.ssn && /^\d{3}-?\d{2}-?\d{4}$/u.test(person.primary.ssn));
-    requireFact(equity.acquisition.date === acquired);
+    const acquisition = equity.acquisition;
+    requireFact(acquisition.date === acquired);
     const a34 = calculateOhio2026QualifyingCapitalGainDraft(source.qualifyingCapitalGainSources);
     requireFact(a34.sourceStatus === 'admitted-draft' && a34.deduction !== null && a34.deduction.isInteger());
     const bound = a34Binding.parse(source.qualifyingCapitalGainSources);
-    requireFact([bound.sale, bound.recognition, bound.entity, bound.participation, bound.ownership, ...bound.payroll].every(row => row.entityReference === anchoredEntity));
+    requireFact([bound.sale, bound.recognition, bound.entity, bound.ownership].every(row => row.entityReference === anchoredEntity));
     requireFact(agreement.sharesTransferred === bound.ownership.unitsSold);
     requireFact(same(equity.ownerReference, bound.ownerReference) && same(source.carryoverOriginal.ownerReference, equity.ownerReference));
     requireFact(same(equity.ownerReference, bound.sale.ownerReference) && same(equity.entityReference, bound.sale.entityReference) && same(equity.saleReference, bound.sale.saleReference) && same(equity.sourceReference, bound.sale.sourceReference) && bound.sale.date === sold);
     requireFact(whole(bound.sale.capitalGain).eq(gain) && whole(bound.recognition.reportedCapitalGain).eq(gain) && whole(bound.recognition.includedFederalAgi).eq(gain));
+    const businessAssessment = source.ventureBusinessParticipationOriginal;
+    if (acquisition.method === 'issuer_direct_venture_cash_subscription') {
+      // A direct 2024 issue without a tacked period cannot reach the pre-July
+      // 2025 section 1202 holding period by a 2026 disposition.
+      requireFact(acquired.startsWith('2024-') && businessAssessment);
+      requireFact(same(businessAssessment.ownerReference, equity.ownerReference)
+        && digest(businessAssessment.owner) === digest(agreement.owner) && businessAssessment.entityReference === anchoredEntity);
+      const { ventureInvestment, investmentPayroll } = ventureA34Binding.parse(source.qualifyingCapitalGainSources);
+      const { fundingOriginal, companyAssessment, rightsOriginal } = ventureInvestment;
+      requireFact([ventureInvestment, fundingOriginal, companyAssessment, rightsOriginal, investmentPayroll].every(row => row.entityReference === anchoredEntity));
+      const ownerCommitment = digest(agreement.owner);
+      requireFact([acquisition, acquisition.fundingOriginal].every(record => record.securityIdentifier === originalSecurity
+        && record.issuerIdentity === originalIssuer && digest(record.owner) === ownerCommitment));
+      // List each original once. Its A34 projection deliberately shares its reference.
+      const independentReferences = [agreement.sourceReference, acquisition.sourceReference, fundingOriginal.sourceReference,
+        companyAssessment.sourceReference, rightsOriginal.sourceReference, investmentPayroll.sourceReference,
+        businessAssessment.sourceReference, businessAssessment.activityRecordsReference];
+      requireFact(new Set(independentReferences.map(canonical)).size === independentReferences.length);
+      requireFact(ventureInvestment.sourceReference === acquisition.sourceReference && ventureInvestment.fundedAndAcquiredOn === acquired
+        && ventureInvestment.acquiredUnits === acquisition.subscribedShares
+        && fundingOriginal.sourceReference === acquisition.fundingOriginal.sourceReference && acquisition.fundingOriginal.paidOn === acquired);
+      const paid = new BasisDecimal(acquisition.paidCash);
+      requireFact(paid.eq(fundingOriginal.amount) && paid.eq(acquisition.fundingOriginal.amount)
+        && paid.times(agreement.sharesTransferred).eq(new BasisDecimal(transaction.costBasis).times(acquisition.subscribedShares)));
+    } else {
+      requireFact(businessAssessment === undefined);
+      const { participation, payroll } = materialA34Binding.parse(source.qualifyingCapitalGainSources);
+      requireFact([participation, ...payroll].every(row => row.entityReference === anchoredEntity));
+    }
     const residency = OhioResidencyFactsSchema.parse(input.ohioResidency), owner = residency.owners[0];
     const schoolSource = source.traditionalSchoolSource;
     requireFact(source.noTaxingSchoolDistrictResidencyConfirmed === (schoolSource === undefined));
