@@ -8,6 +8,9 @@ import type { FilingStatus, TaxBracket, YearConstants } from "./constants.js";
 import { freezeRuleData } from "./rule-pack-metadata.js";
 
 const d = (value: string) => new Decimal(value);
+/** Final 2026 Schedule A (Form 940), page 2, retrieved 2026-11-25. */
+export const FEDERAL_2026_CALIFORNIA_FUTA_CREDIT_REDUCTION_RATE = freezeRuleData(d("0.015"));
+
 function statuses(single: string, joint: string, separate: string, head: string): Record<FilingStatus, Decimal> {
   return { single: d(single), married_filing_jointly: d(joint), married_filing_separately: d(separate), head_of_household: d(head), qualifying_surviving_spouse: d(joint) };
 }

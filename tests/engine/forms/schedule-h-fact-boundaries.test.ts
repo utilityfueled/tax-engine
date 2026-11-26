@@ -10,6 +10,16 @@ const employee = { name: "Actual Employee", cashWages: "0", federalIncomeTaxWith
 // Official Publication 926 (2026) values; whole-return 2026 readiness stays closed.
 const constants = FEDERAL_2026_CONSTANTS.householdEmployment;
 const period = { state: "OH", periodStart: "2026-01-01", periodEnd: "2026-12-31", taxableWages: "7000", experienceRate: "0.03", contributionsPaidTimely: "210" };
+const californiaPeriod = { ...period, state: "CA", futaCreditReductionWages: "7000" };
+const californiaEmployer = {
+  taxYear: 2026,
+  employees: [{ ...employee, cashWages: "10000" }],
+  futaApplies: true,
+  futaSectionA: false,
+  constants,
+  futaStatePeriods: [californiaPeriod],
+  stateUnemploymentContributionsPaidLate: "0",
+};
 
 describe("Schedule H independent tax bases", () => {
   it("rejects a negative FUTA answer when employee wages guarantee a qualifying quarter", () => {
@@ -88,10 +98,44 @@ describe("Schedule H independent tax bases", () => {
   it("validates actual periods and caps late and reduction credits", () => {
     const input = { taxYear: 2026, employees: [{ ...employee, cashWages: "7000" }], futaApplies: true, futaSectionA: false, constants, futaStatePeriods: [{ ...period, experienceRate: null, contributionsPaidTimely: "0" }], stateUnemploymentContributionsPaidLate: "999", futaCreditReduction: "0" };
     expect(calculateScheduleH(input).futaTax.toFixed(2)).toBe("79.80"); // min(378,999)*90%=340.20.
-    expect(calculateScheduleH({ ...input, futaCreditReduction: "999" }).futaTax.toFixed()).toBe("420");
+    expect(() => calculateScheduleH({ ...input, futaCreditReduction: "999" })).toThrow(/only.*California/i);
+    // Check the longstanding floor independently of the new, year-specific source requirement.
+    const prior = { ...input, taxYear: 2025, futaStatePeriods: [{ ...input.futaStatePeriods[0], state: "CA",
+      periodStart: "2025-01-01", periodEnd: "2025-12-31" }] };
+    expect(calculateScheduleH({ ...prior, futaCreditReduction: "999" }).futaTax.toFixed()).toBe("420");
     for (const change of [{ state: "ZZ" }, { periodStart: "2026-02-30" }, { periodEnd: "2025-12-31" }, { taxableWages: "-1" }, { experienceRate: "1.01" }, { contributionsPaidTimely: "-1" }]) expect(() => calculateScheduleH({ ...input, futaStatePeriods: [{ ...period, ...change }] })).toThrow(/actual|period|state/i);
     expect(() => calculateScheduleH({ ...input, futaStatePeriods: [period, period] })).toThrow(/overlap/i);
     expect(() => calculateScheduleH({ ...input, stateUnemploymentContributionsPaidLate: "-1" })).toThrow(/nonnegative/i);
     expect(() => calculateScheduleH({ ...input, employees: [{ ...employee, cashWages: "-1" }] })).toThrow(/nonnegative/i);
+  });
+  it("derives the 2026 California FUTA credit reduction from actual overlapping wages", () => {
+    const facts = ScheduleHSchema.parse(californiaEmployer);
+    const result = calculateScheduleH({ ...facts, taxYear: 2026, constants });
+    expect(result.futaTax.toFixed(2)).toBe("147.00"); // 420 - (378 - 105)
+    expect(calculateScheduleH({ ...californiaEmployer, futaCreditReduction: "105.00" }).futaTax.toFixed(2)).toBe("147.00");
+    const explicitZero = { ...californiaPeriod, taxableWages: "3000", futaCreditReductionWages: "0", experienceRate: null, contributionsPaidTimely: "162" };
+    expect(calculateScheduleH({ ...californiaEmployer, futaStatePeriods: [explicitZero] }).futaTax.toFixed(2)).toBe("258.00");
+  });
+  it("rejects missing and contradictory 2026 California Worksheet 2 originals", () => {
+    for (const value of [undefined, "", " ", "-0.01", "1.001", "7000.01"]) {
+      const original = { ...californiaPeriod, futaCreditReductionWages: value };
+      expect(() => calculateScheduleH({ ...californiaEmployer, futaStatePeriods: [original], futaCreditReduction: "0" })).toThrow(/overlap|Worksheet 2/i);
+    }
+    const excess = { ...californiaPeriod, taxableWages: "8000", futaCreditReductionWages: "7000.01" };
+    expect(() => calculateScheduleH({ ...californiaEmployer, futaStatePeriods: [excess] })).toThrow(/overlap|Worksheet 2/i);
+    expect(() => calculateScheduleH({ ...californiaEmployer, futaCreditReduction: "0" })).toThrow(/Worksheet 2/i);
+    expect(() => calculateScheduleH({ ...californiaEmployer, futaSectionA: true })).toThrow(/California.*Section B/i);
+    expect(() => calculateScheduleH({ ...californiaEmployer, futaStatePeriods: [{ ...californiaPeriod, state: "OH" }], futaCreditReduction: "0" })).toThrow(/overlap|Worksheet 2/i);
+    expect(() => calculateScheduleH({ ...californiaEmployer, futaStatePeriods: [californiaPeriod, period] })).toThrow(/employee-level allocation/i);
+    expect(() => calculateScheduleH({ ...californiaEmployer, employees: [...californiaEmployer.employees,
+      { ...employee, name: "Second Employee", cashWages: "2000" }] })).toThrow(/employee-level allocation/i);
+  });
+  it("sums exact California overlaps before the single state rounding", () => {
+    const periods = [
+      { ...californiaPeriod, periodEnd: "2026-06-30", taxableWages: "3500", futaCreditReductionWages: "3300.33", contributionsPaidTimely: "105" },
+      { ...californiaPeriod, periodStart: "2026-07-01", taxableWages: "3500", futaCreditReductionWages: "3300.33", contributionsPaidTimely: "105" },
+    ];
+    // Each half separately rounds to $49.50; the state's combined reduction is $99.01.
+    expect(calculateScheduleH({ ...californiaEmployer, futaStatePeriods: periods }).futaTax.toFixed(2)).toBe("141.01");
   });
 });

@@ -7,6 +7,7 @@
  */
 
 import Decimal from "decimal.js";
+import { FEDERAL_2026_CALIFORNIA_FUTA_CREDIT_REDUCTION_RATE } from "@/models/federal-2026-indexed.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -38,6 +39,7 @@ export interface ScheduleHInput {
     taxableWages: string | Decimal;
     experienceRate: string | Decimal | null;
     contributionsPaidTimely: string | Decimal;
+    futaCreditReductionWages?: string | Decimal;
   }>;
   stateUnemploymentContributionsPaidLate?: string | Decimal;
   /** FUTA credit reduction for credit reduction states */
@@ -103,9 +105,22 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
   const audit = new AuditTrail();
   const c = input.constants;
   const ZERO = new Decimal(0);
+  const periods = input.futaStatePeriods ?? [];
+  const californiaWorksheet = input.taxYear === 2026 && periods.some(period => period.state === "CA");
   if (typeof input.futaApplies !== "boolean") throw new Error("Schedule H requires the actual current/prior-year FUTA quarterly applicability fact.");
   if (input.futaApplies && typeof input.futaSectionA !== "boolean") throw new Error("Schedule H requires actual FUTA Section A eligibility facts.");
-  if (input.futaApplies && !input.futaSectionA && (!input.futaStatePeriods?.length || input.stateUnemploymentContributionsPaidLate === undefined || input.futaCreditReduction === undefined)) throw new Error("Schedule H Section B requires actual state/rate periods, contribution timing and credit-reduction facts.");
+  if (input.futaApplies && input.futaSectionA && californiaWorksheet) {
+    throw new Error("Schedule H California unemployment periods for 2026 require Section B.");
+  }
+  if (periods.some(period => period.futaCreditReductionWages !== undefined
+    && (!input.futaApplies || !californiaWorksheet || period.state !== "CA"))) {
+    throw new Error("Schedule H Worksheet 2 overlapping wages require an active 2026 California period.");
+  }
+  if (input.futaApplies && !input.futaSectionA
+    && (!periods.length || input.stateUnemploymentContributionsPaidLate === undefined
+      || (!californiaWorksheet && input.futaCreditReduction === undefined))) {
+    throw new Error("Schedule H Section B requires actual state/rate periods, contribution timing and credit-reduction facts.");
+  }
 
   // Filter employees: exclude exempt workers (spouse, child <21, parent, under-18 non-principal)
   // and those below the cash wage threshold
@@ -217,10 +232,12 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
     // Line 15: FUTA wages (capped at $7,000 per employee)
     // FUTA excludes family wages but does not use the Social Security threshold
     // or its unrelated under-18 principal-occupation exception.
+    const futaEmployees = input.employees.filter(countsForFuta);
+    if (californiaWorksheet && (futaEmployees.length !== 1 || periods.some(period => period.state !== "CA"))) {
+      throw new Error("Schedule H 2026 Worksheet 2 requires a separate employee-level allocation for mixed states or multiple FUTA-eligible employees.");
+    }
     const futaWages = sum(
-      ...input.employees
-        .filter(countsForFuta)
-        .map((emp) => Decimal.min(d(emp.cashWages), c.futaWageBase))
+      ...futaEmployees.map((emp) => Decimal.min(d(emp.cashWages), c.futaWageBase))
     );
 
     if (input.futaSectionA) {
@@ -236,7 +253,7 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
       const maxCredit = futaWages.times(c.futaMaxCredit).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
       let experienceCredit = ZERO;
       let timelyContributions = ZERO;
-      const periods = input.futaStatePeriods ?? [];
+      let californiaOverlap = ZERO;
       const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
       const states = new Set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR VI".split(" "));
       periods.forEach((period, index) => {
@@ -247,6 +264,17 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
         const paidTimely = d(period.contributionsPaidTimely);
         const rate = period.experienceRate === null ? null : d(period.experienceRate);
         if (!taxableWages.isFinite() || taxableWages.isNegative() || !paidTimely.isFinite() || paidTimely.isNegative() || (rate !== null && (!rate.isFinite() || rate.isNegative() || rate.gt(1)))) throw new Error("Schedule H state wages, contributions and experience rates must be actual nonnegative amounts/rates.");
+        if (californiaWorksheet && period.state === "CA") {
+          const overlapInput = period.futaCreditReductionWages;
+          if (overlapInput == null || (typeof overlapInput === "string" && !overlapInput.trim())) {
+            throw new Error("Schedule H Worksheet 2 requires actual overlapping FUTA and California unemployment wages for every California period.");
+          }
+          const overlap = d(overlapInput);
+          if (!overlap.isFinite() || overlap.isNegative() || overlap.decimalPlaces() > 2 || overlap.gt(taxableWages)) {
+            throw new Error("Schedule H Worksheet 2 overlapping wages must be nonnegative dollars and cents within the period's actual state taxable wages.");
+          }
+          californiaOverlap = californiaOverlap.plus(overlap);
+        }
         const additional = rate === null ? ZERO : Decimal.max(ZERO, taxableWages.times(c.futaMaxCredit).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).minus(taxableWages.times(rate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP)));
         experienceCredit = experienceCredit.plus(additional);
         timelyContributions = timelyContributions.plus(paidTimely);
@@ -255,7 +283,20 @@ export function calculateScheduleH(input: ScheduleHInput): ScheduleHResult {
       });
       const line19 = experienceCredit.plus(timelyContributions).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
       const paidLate = d(input.stateUnemploymentContributionsPaidLate);
-      const creditReduction = d(input.futaCreditReduction);
+      let creditReduction = d(input.futaCreditReduction);
+      if (californiaWorksheet) {
+        if (californiaOverlap.gt(futaWages)) throw new Error("Schedule H Worksheet 2 overlapping wages cannot exceed total FUTA taxable wages.");
+        const rate = FEDERAL_2026_CALIFORNIA_FUTA_CREDIT_REDUCTION_RATE;
+        const worksheetReduction = californiaOverlap.times(rate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+        if (input.futaCreditReduction !== undefined && !creditReduction.eq(worksheetReduction)) {
+          throw new Error("Schedule H manual credit reduction disagrees with the 2026 California Worksheet 2.");
+        }
+        creditReduction = worksheetReduction;
+        audit.record("Schedule H", "worksheet-2-CA", "California FUTA credit reduction", creditReduction,
+          "$" + californiaOverlap + " in wages subject to both taxes × " + rate.times(100) + "%");
+      } else if (input.taxYear === 2026 && creditReduction.gt(0)) {
+        throw new Error("Schedule H 2026 FUTA credit reduction applies only to California.");
+      }
       if (!paidLate.isFinite() || paidLate.isNegative() || !creditReduction.isFinite() || creditReduction.isNegative()) throw new Error("Schedule H late contributions and credit reduction must be actual nonnegative amounts.");
       const lateCredit = Decimal.min(Decimal.max(ZERO, maxCredit.minus(line19)), paidLate).times("0.90").toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
       const allowableCredit = Decimal.max(ZERO, Decimal.min(maxCredit, line19.plus(lateCredit)).minus(creditReduction));

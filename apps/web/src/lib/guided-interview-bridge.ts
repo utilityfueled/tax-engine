@@ -76,7 +76,7 @@ import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts"
 import { allPaymentFactErrors, assertKnownFacts, deductionAmountYearErrors, deductionFactErrors, educationFactErrors, federalPaymentReceiptFactErrors, guidedDonationValue, hasEnteredAmount, paymentFactErrors, readGuidedTangiblePropertyUse, retirementFactErrors } from "./guided-required-facts";
 import { buildGuidedMedicalMileage } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
-import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
+import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony, isScheduleH2026CaliforniaPeriod } from "./guided-adjustment-facts";
 import { confirmedStateEstimatedPaymentYear, statePaymentFactErrors, sumAdditionalStateWithholding, usesDedicatedStatePaymentReceipts } from "./guided-state-facts";
 import {buildGuidedZeroIncomeMiscSources} from './guided-zero-income-misc-sources';
 import {reconcileGuidedZeroIncomeMiscOriginalClaims} from './guided-zero-income-misc-withholding-reconciliation';
@@ -705,8 +705,18 @@ export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined, 
     futaApplies: otherTaxesData.futaApplies as boolean,
     ...(otherTaxesData.futaApplies ? { futaSectionA: otherTaxesData.futaSectionA as boolean,
       ...(otherTaxesData.futaSectionA === false ? {
-        futaStatePeriods: (otherTaxesData.futaStatePeriods ?? []).map((period) => ({ state: period.state, periodStart: period.periodStart, periodEnd: period.periodEnd, taxableWages: toDecimalString(period.taxableWages), contributionsPaidTimely: toDecimalString(period.contributionsPaidTimely), experienceRate: period.hasAssignedExperienceRate ? parseGuidedCurrency(period.experienceRatePercent).div(100).toFixed() : null })),
-        stateUnemploymentContributionsPaidLate: toDecimalString(otherTaxesData.stateUnemploymentContributionsPaidLate), futaCreditReduction: toDecimalString(otherTaxesData.futaCreditReduction),
+        futaStatePeriods: (otherTaxesData.futaStatePeriods ?? []).map(period => ({
+          state: period.state, periodStart: period.periodStart, periodEnd: period.periodEnd,
+          taxableWages: toDecimalString(period.taxableWages), contributionsPaidTimely: toDecimalString(period.contributionsPaidTimely),
+          experienceRate: period.hasAssignedExperienceRate ? parseGuidedCurrency(period.experienceRatePercent).div(100).toFixed() : null,
+          ...(isScheduleH2026CaliforniaPeriod(period.state, taxYear) && {
+            futaCreditReductionWages: toDecimalString(period.futaCreditReductionWages),
+          }),
+        })),
+        stateUnemploymentContributionsPaidLate: toDecimalString(otherTaxesData.stateUnemploymentContributionsPaidLate),
+        ...(hasEnteredAmount(otherTaxesData.futaCreditReduction) && {
+          futaCreditReduction: toDecimalString(otherTaxesData.futaCreditReduction),
+        }),
       } : {}),
     } : {}),
   };

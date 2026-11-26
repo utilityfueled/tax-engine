@@ -78,7 +78,7 @@ import { allPaymentFactErrors, deductionAmountYearErrors, deductionFactErrors, d
 import { clearMedicalMileageConfirmations, guidedMedicalMileageErrors, medicalMileageOriginals, type MedicalMileageDraft } from "./guided-medical-mileage";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import {
-  adjustmentFactErrors, alimonySourceFactsChanged, hasAlimonyAmounts, hasHouseholdAmounts,
+  adjustmentFactErrors, alimonySourceFactsChanged, clearStaleScheduleHCreditReductionWages, hasAlimonyAmounts, hasHouseholdAmounts,
   hasRetainedAlimonyContext, hasRetainedHouseholdContext, householdFactErrors, householdSourceFactsChanged,
 } from "./guided-adjustment-facts";
 import { assertSavedStateEstimatesMatchReceipts, validateStatePaymentFacts } from "./guided-state-facts";
@@ -1370,6 +1370,7 @@ export interface OtherTaxesData {
   futaStatePeriods?: {
     state: string; periodStart: string; periodEnd: string; taxableWages: string;
     hasAssignedExperienceRate: boolean | null; experienceRatePercent: string; contributionsPaidTimely: string;
+    futaCreditReductionWages?: string;
   }[];
   futaCreditReduction?: string;
 }
@@ -1793,14 +1794,15 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const investments = state.sectionData["income-investments"];
   const digitalAssetYearReview = investments?.digitalAssetEntries?.some(entry =>
     entry.transactions?.some(row => row.marketDiscountFacts || row.notice202620Lot));
-  const otherTaxes = state.sectionData["other-taxes"];
+  const savedOtherTaxes = state.sectionData["other-taxes"];
+  const otherTaxes = savedOtherTaxes && clearStaleScheduleHCreditReductionWages(savedOtherTaxes, null);
   const k3Election = otherTaxes?.foreignTaxElection;
   const adjustments = state.sectionData.adjustments;
   const codSources = adjustments?.codPrincipalResidenceSources;
   const studentLoanFactsToReconfirm = Number.isInteger(state.taxYear) && adjustments?.studentLoanFacts;
   const clearStudentLoanEducationDependency = studentLoanFactsToReconfirm && typeof education?.claimedAsDependent === "boolean";
   const requireAlimonyReview = Number.isInteger(state.taxYear) && hasRetainedAlimonyContext(adjustments);
-  const requireHouseholdReview = Number.isInteger(state.taxYear) && hasRetainedHouseholdContext(otherTaxes);
+  const requireHouseholdReview = Number.isInteger(state.taxYear) && hasRetainedHouseholdContext(savedOtherTaxes);
   return {
     ...state,
     taxYear,
@@ -1899,7 +1901,7 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
         },
       } : {}),
       ...(royalties ? { "income-royalties": invalidateRoyaltySources(royalties) } : {}),
-      ...(otherTaxes && (requireHouseholdReview || k3Election?.qualifiedK3Statements?.length) ? {
+      ...(otherTaxes && (requireHouseholdReview || otherTaxes !== savedOtherTaxes || k3Election?.qualifiedK3Statements?.length) ? {
         "other-taxes": {
           ...otherTaxes,
           ...(requireHouseholdReview ? { householdAmountsTaxYear: null } : {}),
@@ -2410,8 +2412,9 @@ export function updateSectionData(
     }
   } else if (sectionId === "other-taxes" && data) {
     const previous = state.sectionData["other-taxes"];
+    const next = clearStaleScheduleHCreditReductionWages(data as OtherTaxesData, state.taxYear, previous);
+    data = next;
     if (previous?.householdAmountsTaxYear !== undefined) {
-      const next = data as OtherTaxesData;
       data = {
         ...next,
         householdAmountsTaxYear: annualConfirmationAfterEdit(previous.householdAmountsTaxYear, next.householdAmountsTaxYear, householdSourceFactsChanged(previous, next)),

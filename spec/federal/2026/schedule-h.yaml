@@ -5,6 +5,8 @@ irsReference: "https://www.irs.gov/publications/p926"
 notes: |
   Refreshed IRS Publication 926 (2026), Table 1, Wages not counted, FUTA wages,
   and Mary Brown/Jane Oak example. Does not qualify a final 2026 PDF revision.
+  Worksheet 2 uses the California rate from final 2026 Schedule A (Form 940),
+  page 2, retrieved 2026-11-25. The 2026 Schedule H instructions are draft.
 lines:
   - line: "independent-tax-bases"
     description: "Separate Social Security, FUTA and income withholding bases"
@@ -26,3 +28,29 @@ lines:
     formula: "3360 cash wages produce combined Social Security tax416.64 and Medicare tax97.44; no income withholding. FUTA is separate and requires actual quarterly facts."
     irsRef: "Publication 926 (2026), Withholding the employee's share, Mary Brown example"
     testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::matches the IRS 2026 Mary Brown payroll example"
+  - line: "worksheet-2-california"
+    description: "2026 FUTA credit reduction from actual overlapping wage bases"
+    formula: |
+      California is the only 2026 credit reduction state at 1.5%. For
+      Section B with California-only state/rate periods and one FUTA-eligible
+      employee, require the documented FUTA taxable wages also subject to
+      California unemployment tax for each period. Keep
+      explicit zero and reject missing amounts. Each amount must be nonnegative
+      dollars and cents, no greater than the state's taxable wages for the
+      period. Sum across California periods and cap the eligible input by
+      requiring the total to be no greater than Schedule H line 20 FUTA wages
+      (already limited per employee). Multiply that total by 1.5% and round the
+      state amount to cents once. A separately supplied reduction must match
+      the worksheet amount. Subtract the worksheet reduction from the credit
+      before reduction, flooring line 23 at zero. Do not reuse an overlap
+      entry for another year/state or override the rate with a manual entry.
+      Mixed states or additional FUTA-eligible employees require a separate
+      employee-level allocation. Known complete 2026 periods outside California
+      allow no positive credit-reduction amount.
+      A California period retained on Section A requires reconciling the
+      simplified eligibility answer through Section B.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f940sa.pdf#page=2 and https://www.irs.gov/pub/irs-dft/i1040sh--dft.pdf#page=11"
+    testRef: "tests/engine/forms/schedule-h-fact-boundaries.test.ts::derives the 2026 California FUTA credit reduction from actual overlapping wages"
+    testRefs:
+      - "tests/engine/forms/schedule-h-fact-boundaries.test.ts::rejects missing and contradictory 2026 California Worksheet 2 originals"
+      - "tests/engine/forms/schedule-h-fact-boundaries.test.ts::sums exact California overlaps before the single state rounding"

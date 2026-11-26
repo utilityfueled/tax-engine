@@ -15,8 +15,39 @@ const employeeAmountFields = ["cashWages", "federalIncomeTaxWithheld"] as const;
 const employeeQualificationFields = ["isSpouse", "isChildUnder21", "isParent", "isUnder18NonPrincipal", "parentCareExceptionApplies"] as const;
 const futaAmountFields = ["stateUnemploymentContributions", "stateUnemploymentContributionsPaidLate", "futaCreditReduction"] as const;
 const futaAnswerFields = ["futaApplies", "futaSectionA"] as const;
-const futaPeriodAmountFields = ["taxableWages", "contributionsPaidTimely", "experienceRatePercent"] as const;
+const futaPeriodAmountFields = ["taxableWages", "contributionsPaidTimely", "experienceRatePercent", "futaCreditReductionWages"] as const;
 const futaPeriodSourceFields = ["state", "periodStart", "periodEnd", "hasAssignedExperienceRate"] as const;
+
+export function isScheduleH2026CaliforniaPeriod(state: string, taxYear?: number | null): boolean {
+  return taxYear === 2026 && state === "CA";
+}
+
+export function hasCurrentScheduleH2026CaliforniaPeriod(data: OtherTaxesData, taxYear?: number | null): boolean {
+  return (data.futaStatePeriods ?? []).some(period => isScheduleH2026CaliforniaPeriod(period.state, taxYear)
+    && period.periodStart?.startsWith("2026-") && period.periodEnd?.startsWith("2026-"));
+}
+
+/** Worksheet 2 overlap belongs to the selected year and the reviewed California period. */
+export function clearStaleScheduleHCreditReductionWages(
+  data: OtherTaxesData, taxYear?: number | null, previous?: OtherTaxesData,
+): OtherTaxesData {
+  const periods = data.futaStatePeriods;
+  if (!periods?.some(period => period.futaCreditReductionWages !== undefined)) return data;
+  const previousPeriods = previous?.futaStatePeriods ?? [];
+  const updated = periods.map((period, index) => {
+    if (period.futaCreditReductionWages === undefined) return period;
+    const prior = previousPeriods[index];
+    const reusedAfterPeriodEdit = prior?.futaCreditReductionWages !== undefined
+      && !guidedAmountChanged(prior.futaCreditReductionWages, period.futaCreditReductionWages)
+      && !previousPeriods.some(saved => saved.state === period.state && saved.periodStart === period.periodStart
+        && saved.periodEnd === period.periodEnd && !guidedAmountChanged(saved.taxableWages, period.taxableWages));
+    if (isScheduleH2026CaliforniaPeriod(period.state, taxYear) && data.futaApplies === true
+      && data.futaSectionA === false && !reusedAfterPeriodEdit) return period;
+    const { futaCreditReductionWages: _stale, ...originalPeriod } = period;
+    return originalPeriod;
+  });
+  return updated.every((period, index) => period === periods[index]) ? data : { ...data, futaStatePeriods: updated };
+}
 
 export function hasAlimonyAmounts(data: AdjustmentData | undefined): boolean {
   return hasEnteredAmount(data?.alimonyPaid);
@@ -157,18 +188,40 @@ export function householdFactErrors(data: OtherTaxesData | undefined, taxYear?: 
   if (employees.length) {
     if (typeof data.futaApplies !== "boolean") errors.futaApplies = "Confirm whether qualifying household wages reached $1,000 in any calendar quarter of this or the preceding year.";
     if (data.futaApplies === true && typeof data.futaSectionA !== "boolean") errors.futaSectionA = "Confirm state unemployment tax and credit-reduction facts for Schedule H.";
+    if (data.futaApplies === true && data.futaSectionA === true && hasCurrentScheduleH2026CaliforniaPeriod(data, taxYear)) {
+      errors.futaSectionA = "Use Section B for the retained 2026 California unemployment period, or correct the original payroll records.";
+    }
     if (data.futaApplies === true && data.futaSectionA === false) {
-      for (const field of ["stateUnemploymentContributionsPaidLate", "futaCreditReduction"] as const) {
-        const error = amountError(data[field], field);
-        if (error) errors[field] = error;
+      const periods = data.futaStatePeriods ?? [];
+      const californiaPeriods = periods.some(period => isScheduleH2026CaliforniaPeriod(period.state, taxYear));
+      const lateError = amountError(data.stateUnemploymentContributionsPaidLate, "stateUnemploymentContributionsPaidLate");
+      if (lateError) errors.stateUnemploymentContributionsPaidLate = lateError;
+      if (!californiaPeriods || hasEnteredAmount(data.futaCreditReduction)) {
+        const error = amountError(data.futaCreditReduction, "futaCreditReduction");
+        if (error) errors.futaCreditReduction = error;
+        else if (taxYear === 2026 && !californiaPeriods && periods.length
+          && !parseGuidedCurrency(data.futaCreditReduction).isZero()) {
+          errors.futaCreditReduction = "Confirm the state payroll records. Only California has a 2026 FUTA credit reduction; enter 0 if no period was in California.";
+        }
       }
-      if (!data.futaStatePeriods?.length) errors.futaStatePeriods = "Enter actual state/rate periods, taxable wages and contribution timing for Schedule H Section B.";
-      (data.futaStatePeriods ?? []).forEach((period, index) => {
+      if (!periods.length) errors.futaStatePeriods = "Enter actual state/rate periods, taxable wages and contribution timing for Schedule H Section B.";
+      if (californiaPeriods) {
+        const futaEmployees = employees.filter(employee =>
+          employee.isSpouse === false && employee.isChildUnder21 === false && employee.isParent === false);
+        if (periods.some(period => period.state !== "CA") || futaEmployees.length !== 1) {
+          errors.futaStatePeriods = "The 2026 California Worksheet 2 uses California-only periods for one employee subject to FUTA. Other payroll arrangements need a separate source review.";
+        }
+      }
+      periods.forEach((period, index) => {
         if (!/^[A-Z]{2}$/.test(period.state)) errors[`futa-${index}-state`] = "Enter the actual state abbreviation.";
         if (!isActualDate(period.periodStart) || !isActualDate(period.periodEnd) || period.periodStart > period.periodEnd || period.periodStart.slice(0, 4) !== period.periodEnd.slice(0, 4) || (taxYear != null && !period.periodStart.startsWith(`${taxYear}-`))) errors[`futa-${index}-dates`] = "Enter the actual state experience-rate period in the tax year.";
         for (const field of ["taxableWages", "contributionsPaidTimely"] as const) {
           const error = amountError(period[field], field);
           if (error) errors[`futa-${index}-${field}`] = error;
+        }
+        if (isScheduleH2026CaliforniaPeriod(period.state, taxYear)) {
+          const error = amountError(period.futaCreditReductionWages, "FUTA-taxable wages also subject to California unemployment tax for this period");
+          if (error) errors[`futa-${index}-futaCreditReductionWages`] = error;
         }
         if (typeof period.hasAssignedExperienceRate !== "boolean") errors[`futa-${index}-assigned`] = "Confirm whether the state assigned an experience rate.";
         if (period.hasAssignedExperienceRate === true) {

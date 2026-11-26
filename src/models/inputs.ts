@@ -4579,6 +4579,8 @@ export const ScheduleHSchema = z.object({
     taxableWages: decimal,
     experienceRate: decimal.nullable(),
     contributionsPaidTimely: decimal,
+    /** Actual federal FUTA wages also covered by California UI in this 2026 period. */
+    futaCreditReductionWages: optionalDecimalInput,
   })).optional(),
   stateUnemploymentContributionsPaidLate: optionalDecimalInput,
   /** FUTA credit reduction amount for credit reduction states (CA, USVI for 2025) */

@@ -5,6 +5,7 @@ import { expect, it } from "vitest";
 import { SectionAdjustments } from "@/components/guided-interview/section-adjustments";
 import { SectionOtherTaxes } from "@/components/guided-interview/section-other-taxes";
 import { buildAdjustmentsInput, buildScheduleHInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
+import { TaxYearInputSchema } from "@/models/inputs";
 import {
   buildSectionRoute,
   emptyAdjustmentData,
@@ -135,6 +136,85 @@ it("requires renewed household confirmation and keeps the FUTA source history", 
   expect(validateSection(stalePeriod, "other-taxes").fieldErrors).toHaveProperty("futa-0-dates");
   expect(stalePeriod.sectionData["other-taxes"]?.futaStatePeriods).toEqual([period]);
   expect(buildTaxInputFromGuidedData(stalePeriod)).toBeNull();
+});
+
+it("replays only explicit 2026 California FUTA overlap from the saved household records", () => {
+  // Spec: spec/federal/schedule-h.yaml, 2026 Worksheet 2.
+  const period = {
+    state: "CA", periodStart: "2026-01-01", periodEnd: "2026-12-31", taxableWages: "7000",
+    hasAssignedExperienceRate: true, experienceRatePercent: "3.4", contributionsPaidTimely: "238",
+  };
+  const otherTaxes = {
+    ...household, householdEmployees: [{ ...completeHouseholdEmployee, cashWages: "10000" }],
+    futaSectionA: false, stateUnemploymentContributionsPaidLate: "0", futaStatePeriods: [period],
+  };
+  const year = selectYear(start(), 2026);
+  const pending = updateSectionData(year, "other-taxes", otherTaxes);
+  expect(validateSection(pending, "other-taxes").fieldErrors).toHaveProperty("futa-0-futaCreditReductionWages");
+  expect(validateSection(pending, "other-taxes").fieldErrors).not.toHaveProperty("futaCreditReduction");
+  expect(buildTaxInputFromGuidedData(pending)).toBeNull();
+
+  const withOverlap = (amount: string) => ({ ...otherTaxes, futaStatePeriods: [{ ...period, futaCreditReductionWages: amount }] });
+  const zero = updateSectionData(pending, "other-taxes", withOverlap("0"));
+  expect(buildTaxInputFromGuidedData(zero)?.scheduleH).toMatchObject({ futaStatePeriods: [{ futaCreditReductionWages: "0" }] });
+  expect(buildTaxInputFromGuidedData(zero)?.scheduleH).not.toHaveProperty("futaCreditReduction");
+  expect(() => buildScheduleHInput(withOverlap("-0.01"), 2026)).toThrow(/cannot be negative/);
+  const legacy = {
+    ...otherTaxes,
+    futaStatePeriods: [{ ...period, periodStart: "2025-01-01", periodEnd: "2025-12-31" }],
+    futaCreditReduction: "84",
+  };
+  expect(buildScheduleHInput(legacy, 2025)?.futaCreditReduction).toBe("84");
+  expect(buildScheduleHInput(legacy, 2025)?.futaStatePeriods?.[0]).not.toHaveProperty("futaCreditReductionWages");
+  const ohio = { ...period, state: "OH" };
+  expect(() => buildScheduleHInput({ ...otherTaxes, futaCreditReduction: "1", futaStatePeriods: [ohio] }, 2026))
+    .toThrow(/only California/i);
+  expect(buildScheduleHInput({ ...otherTaxes, futaCreditReduction: "0", futaStatePeriods: [ohio] }, 2026)?.futaCreditReduction).toBe("0");
+  const reviewed = withOverlap("3200.10");
+  expect(() => buildScheduleHInput({ ...reviewed, futaStatePeriods: [...reviewed.futaStatePeriods, ohio] }, 2026))
+    .toThrow(/California-only/i);
+  expect(() => buildScheduleHInput({
+    ...reviewed, householdEmployees: [...reviewed.householdEmployees, { ...completeHouseholdEmployee, name: "Second FUTA employee", cashWages: "1000" }],
+  }, 2026)).toThrow(/one employee subject to FUTA/i);
+  expect(buildScheduleHInput({
+    ...reviewed,
+    futaStatePeriods: [
+      { ...reviewed.futaStatePeriods[0]!, periodEnd: "2026-06-30" },
+      { ...period, periodStart: "2026-07-01", taxableWages: "0", contributionsPaidTimely: "0", futaCreditReductionWages: "0" },
+    ],
+  }, 2026)?.futaStatePeriods?.map(row => row.futaCreditReductionWages)).toEqual(["3200.10", "0"]);
+  const complete = updateSectionData(zero, "other-taxes", withOverlap("3,200.10"));
+  const id = "guided-2026-california-futa";
+  try {
+    expect(saveGuidedFlowState(localStorage, id, complete)).toBe(true);
+    const reopened = loadGuidedFlowState(localStorage, id);
+    if (!reopened) throw new Error("Expected the saved California payroll records");
+    const rebuilt = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(reopened));
+    expect(rebuilt.scheduleH).toMatchObject({ futaStatePeriods: [{ futaCreditReductionWages: "3200.10" }] });
+    const details = reopened.sectionData["other-taxes"];
+    if (!details) throw new Error("Expected the saved household details");
+    expect(buildScheduleHInput({ ...details, futaCreditReduction: "0" }, 2026)?.futaCreditReduction).toBe("0");
+    const changes = [
+      updateSectionData(reopened, "other-taxes", { ...details, futaSectionA: true }),
+      updateSectionData(reopened, "other-taxes", { ...details, futaApplies: false }),
+      updateSectionData(reopened, "other-taxes", {
+        ...details, futaStatePeriods: [{ ...period, state: "OH", futaCreditReductionWages: "3,200.10" }],
+      }),
+      updateSectionData(reopened, "other-taxes", {
+        ...details, futaStatePeriods: [{ ...period, periodStart: "2026-02-01", futaCreditReductionWages: "3,200.10" }],
+      }),
+      selectYear(reopened, 2025),
+    ];
+    for (const changed of changes) {
+      expect(changed.sectionData["other-taxes"]?.futaStatePeriods?.[0]).not.toHaveProperty("futaCreditReductionWages");
+      expect(changed.sectionData["other-taxes"]?.futaStatePeriods?.[0]).toMatchObject({ taxableWages: "7000" });
+    }
+    expect(validateSection(changes[0]!, "other-taxes").fieldErrors).toHaveProperty("futaSectionA");
+    expect(validateSection(changes[2]!, "other-taxes").fieldErrors).toHaveProperty("futaCreditReduction");
+    expect(validateSection(changes[3]!, "other-taxes").fieldErrors).toHaveProperty("futa-0-futaCreditReductionWages");
+  } finally {
+    localStorage.removeItem(`tax-engine.guided-flow-state.v1:${id}`);
+  }
 });
 
 it("distinguishes omitted amounts from explicit zero", () => {
