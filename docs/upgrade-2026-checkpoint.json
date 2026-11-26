@@ -2,7 +2,9 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "30f6be19a9e52c8fd8dd5fb93977991708ef4990",
+    "applicationCommit": "4dc165c46f0f9651169cf2a84f54573800008773",
+    "socialSecurityRepaymentEvidenceKey": "activeContinuation.nov25SocialSecuritySmallRepayment",
+    "historicalAiFixtureEvidenceKey": "activeContinuation.nov25HistoricalAiFixture",
     "californiaHouseholdPayrollEvidenceKey": "activeContinuation.nov25ScheduleHCaliforniaWorksheet2",
     "paHouseholdCareEvidenceKey": "activeContinuation.nov25PaHeadOfHouseholdCare",
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
@@ -91,6 +93,29 @@
     ]
   },
   "activeContinuation": {
+    "nov25SocialSecuritySmallRepayment": {
+      "commit": "74ba7e9b9151fd599bba08db8ef18c27310b880e",
+      "ownerEditCommit": "4dc165c46f0f9651169cf2a84f54573800008773",
+      "sources": ["https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=16", "https://uscode.house.gov/us/usc/119-136/t26/s1341/"],
+      "scope": "One actual primary SSA-1099, single ordinary resident, 2026, signed Box 5 from -3000.00 through -0.01, no lump-sum or other earlier-year repayment cases.",
+      "controlAmounts": {"signedBox5": "-3000", "taxableBenefits": "0", "withholding": "37.25", "repaymentCredit": "0"},
+      "focusedTestsPassed": 83,
+      "ownerFollowupExactFocusedTestsPassed": 15,
+      "ownerFollowupIndependentControlsPassed": 11,
+      "ownerFollowupExactSpecReferencesPassed": 10096,
+      "browserControlTestsPassedAtEachRevision": 74,
+      "sourceAuditPaths": 2072,
+      "vercelProductionBuilds": ["CANCELED", "CANCELED"],
+      "remaining": "Exact full suites, independent tax approval, broader repayment methods and final annual form qualification."
+    },
+    "nov25HistoricalAiFixture": {
+      "commit": "fcc8368be",
+      "focusedTestsPassed": 56,
+      "actualProviderRequests": 0,
+      "vercelProductionBuild": "CANCELED",
+      "earlierExactPaUnit": {"passed": 30590, "failed": 2, "originalSkips": 81, "isolatedMarriageReplaySeconds": "3.72"},
+      "earlierExactSchoolManagedLocalBrowser": {"commit": "1736d191", "passed": 652, "failed": 0, "originalSkips": 5, "windows": 8}
+    },
     "nov25ScheduleHCaliforniaWorksheet2": {
       "commit": "30f6be19a9e52c8fd8dd5fb93977991708ef4990",
       "sources": ["https://www.irs.gov/pub/irs-pdf/f940sa.pdf#page=2", "https://www.irs.gov/pub/irs-dft/i1040sh--dft.pdf#page=11"],

@@ -9,6 +9,16 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `74ba7e9b9` and `4dc165c46` preserve one qualifying 2026 Social Security
+  excess repayment up to $3,000 and require fresh review if the actual
+  taxpayer changes. The annual calculator and PDF gates remain closed.
+  [Social Security evidence](upgrade-2026-progress.md#november-25-confirmed-social-security-repayment-and-taxpayer-edits).
+
+- `fcc8368be` corrects the timestamp of a synthetic AI review fixture.
+  All 56 focused tests passed. Independent human reviews and live
+  qualification remain open.
+  [AI fixture evidence](upgrade-2026-progress.md#november-25-historical-ai-review-fixture).
+
 - `30f6be19a` applies the final 2026 California 1.5% household FUTA
   reduction to documented overlapping wages. The 61 focused tests
   passed. Mixed-state and multiple-employee allocations, final Schedule H

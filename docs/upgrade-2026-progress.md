@@ -1,5 +1,40 @@
 # 2026 upgrade implementation evidence
 
+## November 25 confirmed Social Security repayment and taxpayer edits
+
+`74ba7e9b9` collects one original 2026 SSA-1099 for a single filer with
+confirmed ordinary resident status. A reconciled negative Box 5 from
+−$3,000.00 through −$0.01 requires known whole cents, no prior-year
+lump-sum benefits, and confirmation that the taxpayer made no separate
+repayment of earlier-year income. The interview holds additional
+statements, conflicting government payments, cash-farm cases, older
+negative sources, and amounts above $3,000. In the core with test-only
+staged constants, the control preserves −$3,000 and $37.25 withholding,
+skips Worksheet 1, and reports zero taxable benefits and no repayment
+credit. The actual annual calculator and both PDF gates still reject 2026.
+
+`4dc165c46` keeps the original statement and clears three confirmations
+if the same filing role is assigned to another taxpayer. It also catches
+two full taxpayer IDs with identical last four digits. It preserves
+confirmation for address and formatting changes. Independent engineering
+review verified eleven controls, including persistence through reload.
+All 83 initial focused tests and 15 exact follow-up tests passed. Web
+TypeScript, inventory and 10,096 exact spec references passed. All 74
+browser timing and fixture controls passed at each revision. The audit
+covered 2,072 paths. Vercel canceled both automatic production builds.
+Qualified tax review remains open.
+[Final Publication 915, page 16](https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=16) ·
+[26 U.S.C. §1341](https://uscode.house.gov/us/usc/119-136/t26/s1341/) ·
+[Review case](upgrade-2026-external-actions.md#november-25-social-security-excess-repayment-review).
+
+The earlier exact `1736d191` local managed browser run passed all 652
+active cases across eight windows, with five original skips. Its older
+unit and coverage runs retain their frozen source-pin failures. Exact
+`81a73d3f` reported 30,590 unit passes, 81 skips and two failures. The
+historical AI fixture was fixed in `fcc8368be`. The individual marriage
+interview case passed an exact replay in 3.72 seconds under the original
+five-second deadline. The earlier full unit failure remains recorded.
+
 ## November 25 historical AI review fixture
 
 The exact local unit jobs exposed one historical provider lifecycle fixture

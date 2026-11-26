@@ -1,5 +1,19 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 Social Security excess repayment review
+
+Independently check one 2026 single resident with one SSA-1099. Use
+$1,000 in Box 3, $4,000 in Box 4, −$3,000 in Box 5, and $37.25 in
+Box 6. The taxpayer confirms no earlier-year lump-sum payment and no
+separate repayment of earlier-year income. Verify zero taxable benefits,
+skipping Worksheet 1, retaining $37.25 withholding, and no repayment
+deduction or credit. Repeat with −$0.01 and −$3,000.01, an additional
+statement, and a nonzero prior-year government-payment repayment. The
+larger and multi-source cases still need their own reviewed methods.
+Final annual form output and independent tax approval remain open.
+[Final Publication 915, page 16](https://www.irs.gov/pub/irs-prior/p915--2026.pdf#page=16) ·
+[26 U.S.C. §1341](https://uscode.house.gov/us/usc/119-136/t26/s1341/).
+
 ## November 25 California household payroll review
 
 Independently calculate Schedule H Worksheet 2 for one 2026 California
