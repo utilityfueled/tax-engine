@@ -2,8 +2,9 @@
 import { describe, expect, it } from "vitest";
 import { buildEducationDistributionInputs, educationDistributionFactErrors, type EducationDistributionData } from "@/lib/guided-education-distributions";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
-import { startCompleteInterview, completeEducationClaimant, completeAocEligibility } from "./complete-facts";
+import { emptyAdjustmentData, emptyCreditsData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { calculateForm1099Q } from "@/engine/forms/form-1099-q";
+import { startCompleteInterview, completeEducationClaimant, completeAocEligibility, completeIraSources } from "./complete-facts";
 import { inKindCreditFixture } from "../fixtures/education-in-kind-credit.js";
 
 export function actualEducationDistribution(): EducationDistributionData {
@@ -16,6 +17,93 @@ export function actualEducationDistribution(): EducationDistributionData {
     loanBorrowers: [], coverdellAccounts: [], penaltyExceptions: [],
   };
 }
+
+function primaryRothTransferState() {
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const transfer: NonNullable<EducationDistributionData["forms"]>[number]["transfer"] = {
+    kind: "roth", amount: "7500", receivedDate: "2026-05-01", sameBeneficiary: true, eligibleFamilyMember: false,
+    accountOpenedDate: "2011-05-01", contributionsAndEarningsBeforeFiveYears: "7500", beneficiaryAgeAtYearEnd: "36",
+    beneficiaryTaxableCompensation: "20000", otherIraContributions: "0", previousRothRollovers: "0",
+  };
+  state.sectionData.credits = { ...emptyCreditsData, educationDistributions: {
+    ...actualEducationDistribution(), taxYear: "2026", expenses: [], allocations: [],
+    forms: [{ fields: {
+      sourceId: "q1", accountId: "college-fund", beneficiaryId: "student1", recipientOwner: "primary", taxYear: "2026", payerName: "Synthetic plan",
+      accountType: "529", grossDistribution: "7500", earnings: "1500", basis: "6000", isTrusteeToTrustee: false, isQtpToRoth: true,
+      recipientNotBeneficiary: false, sourceFactsConfirmed: true, distributionDate: "2026-05-01",
+    }, transfer }],
+    beneficiaries: [{ id: "student1", name: "Jordan Example", studentTaxId: "111-22-3333", outsideK12QualifiedDistributions: "0" }],
+  } };
+  state.sectionData.adjustments = { ...emptyAdjustmentData, iraContributions: {
+    ...completeIraSources, contributionTaxYear: "2026", primaryContributions: "400.10", primaryRothContributions: "599.90", primaryCompensation: "20000",
+  } };
+  return { state, transfer };
+}
+
+it("reconciles a 2026 primary 529 rollover with actual IRA contributions", () => {
+  const { state, transfer } = primaryRothTransferState();
+  expect(validateSection(state, "credits").fieldErrors?.educationDistributions).toMatch(/actual payment/i);
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  transfer.otherIraContributions = "999.99";
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+
+  state.sectionData.adjustments = { ...emptyAdjustmentData, iraContributions: {
+    ...completeIraSources, contributionTaxYear: "2026", primaryContributions: "0", primaryRothContributions: "1000", primaryCompensation: "20000",
+  } };
+  for (const [reportedContribution, eligibleRollover, taxableEarnings] of [["1000", "6500", "200"], ["1200", "6300", "240"]]) {
+    transfer.otherIraContributions = reportedContribution;
+    const input = buildTaxInputFromGuidedData(state);
+    if (!input?.form1099Q) throw new Error("Reconciled contribution sources must produce the original statements");
+    expect(input.form1099Q[0]?.transfer?.otherIraContributions).toBe(reportedContribution);
+    const isolated = calculateForm1099Q(input.form1099Q, input.qualifiedEducationExpenses, { taxYear: 2026 });
+    expect(isolated.trusteeToTrusteeTransfers.toFixed()).toBe(eligibleRollover);
+    expect(isolated.taxableEarnings.toFixed()).toBe(taxableEarnings);
+  }
+
+  transfer.otherIraContributions = "0";
+  state.sectionData.adjustments = { ...emptyAdjustmentData };
+  expect(buildTaxInputFromGuidedData(state)?.form1099Q?.[0]?.transfer?.otherIraContributions).toBe("0");
+  state.sectionData.adjustments.iraContributions = {
+    ...completeIraSources, contributionTaxYear: "2026", primaryContributions: "0", primaryRothContributions: "0", primaryCompensation: "20000",
+  };
+  expect(buildTaxInputFromGuidedData(state)?.form1099Q?.[0]?.transfer?.otherIraContributions).toBe("0");
+  delete transfer.otherIraContributions;
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
+it("holds a lower 529 total when IRA contribution timing remains unresolved", () => {
+  const { state, transfer } = primaryRothTransferState();
+  // A retained payment-date claim does not resolve the separately incorporated annual limit.
+  transfer.calendarIraPaymentSubtotal = "0";
+  transfer.calendarIraPaymentRecordReference = "Custodian deposits on January 8 and January 12, 2027";
+  transfer.sourceFactsConfirmed = true;
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  expect(validateSection(state, "credits").fieldErrors?.educationDistributions).toMatch(/actual payment dates and tax-year designations/i);
+  expect(transfer.otherIraContributions).toBe("0");
+  expect(transfer.calendarIraPaymentRecordReference).toContain("2027");
+});
+
+it.each([undefined, "222-33-4444"])("holds a lower 529 total when the asserted primary beneficiary tax ID is missing or different (%s)", (studentTaxId) => {
+  const { state } = primaryRothTransferState();
+  const beneficiary = state.sectionData.credits?.educationDistributions?.beneficiaries?.[0];
+  if (!beneficiary) throw new Error("Missing synthetic beneficiary");
+  beneficiary.studentTaxId = studentTaxId;
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  expect(validateSection(state, "credits").fieldErrors?.educationDistributions).toMatch(/beneficiary tax ID is missing or differs/i);
+});
+
+it("keeps the 529 source rules when the beneficiary and recipient are both outside the return", () => {
+  const { state } = primaryRothTransferState();
+  const data = state.sectionData.credits?.educationDistributions;
+  const form = data?.forms?.[0];
+  const beneficiary = data?.beneficiaries?.[0];
+  if (!form || !beneficiary) throw new Error("Missing synthetic records");
+  form.fields.recipientOwner = "other";
+  form.fields.recipientId = "student1";
+  beneficiary.studentTaxId = "222-33-4444";
+  expect(buildTaxInputFromGuidedData(state)?.form1099Q?.[0]?.transfer?.otherIraContributions).toBe("0");
+});
 
 describe("actual guided education distributions", () => {
   it("preserves unknown distribution sources and exact entered amounts", () => {

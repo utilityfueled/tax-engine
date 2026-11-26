@@ -1,10 +1,25 @@
+import Decimal from "decimal.js";
 import { z } from "zod";
 import { Form1099QSchema, QualifiedEducationExpenseSummarySchema, type EducationExpenses, type TaxYearInput } from "@/models/inputs.js";
 import { calculateForm1099Q } from "@/engine/forms/form-1099-q.js";
-import type { FilingStatus } from "./guided-interview-flow";
+import type { AdjustmentData, FilingStatus, GuidedFlowState } from "./guided-interview-flow";
 import { buildCoverdellBankInterest, educationOriginalOptions, educationOriginalValues, invalidateCoverdellBankInterest, type CoverdellBankInterestData, type EducationOriginalContext } from "./guided-coverdell-bank-interest";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
+import { amountError, hasEnteredAmount } from "./guided-required-facts";
+
+interface EducationDistributionOriginalContext extends EducationOriginalContext {
+  iraContributions?: AdjustmentData["iraContributions"];
+}
+
+export function guidedEducationDistributionContext(state: GuidedFlowState): EducationDistributionOriginalContext {
+  const personal = state.sectionData["personal-info"];
+  return {
+    interestEntries: state.sectionData["income-investments"]?.interestEntries,
+    primarySsn: personal?.ssn, spouseSsn: personal?.spouse?.ssn,
+    iraContributions: state.sectionData.adjustments?.iraContributions,
+  };
+}
 
 export type EducationSourceRecord = Record<string, string | boolean | null | undefined>;
 export interface EducationStatementDraft { fields: EducationSourceRecord; transfer: EducationSourceRecord; bankInterestConversion?: CoverdellBankInterestData }
@@ -164,7 +179,30 @@ function normalized(record: EducationSourceRecord): Record<string, unknown> {
   }
   return result;
 }
-function collect(data: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationOriginalContext): Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses"> {
+function assertRothTransferContributions(forms: NonNullable<TaxYearInput["form1099Q"]>, summary: NonNullable<TaxYearInput["qualifiedEducationExpenses"]>, context?: EducationDistributionOriginalContext) {
+  const ira = context?.iraContributions;
+  const primarySsn = context?.primarySsn?.trim();
+  if (!primarySsn || !/^\d{3}-?\d{2}-?\d{4}$/.test(primarySsn) || ira?.contributionTaxYear !== "2026"
+    || ira.sourceFactsConfirmed !== true || ira.contributionTimingConfirmed !== true || ira.specialContributionRulesRequired !== false) return;
+
+  const amounts = [ira.primaryContributions, ira.primaryRothContributions].filter(hasEnteredAmount);
+  if (!amounts.length || amounts.some(value => amountError(value, "regular IRA contribution"))) return;
+  const designated = amounts.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
+  for (const form of forms) {
+    if (form.taxYear !== 2026 || form.accountType !== "529" || form.recipientOwner !== "primary" || form.recipientNotBeneficiary !== false
+      || form.isQtpToRoth !== true || form.transfer?.kind !== "roth" || form.transfer.sameBeneficiary !== true) continue;
+    const reported = form.transfer.otherIraContributions;
+    if (reported === undefined || parseGuidedCurrency(reported).gte(designated)) continue;
+
+    const beneficiary = summary.sourceFacts?.beneficiaries?.find(item => item.id === form.beneficiaryId);
+    if (beneficiary?.studentTaxId?.replaceAll("-", "") !== primarySsn.replaceAll("-", "")) {
+      throw new Error("The 529 transfer identifies the primary taxpayer as its beneficiary, but the beneficiary tax ID is missing or differs from the primary taxpayer's. Check the original beneficiary tax ID and recipient and beneficiary entries before using this transfer.");
+    }
+    throw new Error("Other IRA contributions on the 529 transfer are below the IRA amounts entered in Adjustments. Review the actual payment dates and tax-year designations with a tax reviewer before using this transfer.");
+  }
+}
+
+function collect(data: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationDistributionOriginalContext): Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses"> {
   if ((year !== 2025 && year !== 2026) || !status || data.taxYear !== String(year)) throw new Error("Choose the actual return year and filing status, and match the education source year.");
   if (!Array.isArray(data.forms)) throw new Error("Add the actual distribution statements or explicitly confirm none.");
   const forms = data.forms.map(entry => Form1099QSchema.parse({ ...normalized(entry.fields), transfer: normalized(entry.transfer), ...(entry.bankInterestConversion ? { postDisqualificationInterestSources: buildCoverdellBankInterest(entry, originalContext, year, status) } : {}) }));
@@ -172,11 +210,12 @@ function collect(data: EducationDistributionData, year?: number | null, status?:
   const facts = Object.fromEntries((Object.keys(educationCollectionFields) as EducationSourceCollection[]).map(key => [key, data[key]?.map(normalized)]));
   const summary = QualifiedEducationExpenseSummarySchema.parse({ sourceFacts: { ...facts, taxYear: year, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
     allDistributionsReconciled: data.allDistributionsReconciled ?? undefined, exceptionsDistinctFromCreditConfirmed: data.exceptionsDistinctFromCreditConfirmed ?? undefined } });
+  if (year === 2026) assertRothTransferContributions(forms, summary, originalContext);
   if (!educationExpenses && summary.sourceFacts?.expenses?.some(expense => parseGuidedCurrency(expense.educationCreditAmount).gt(0))) throw new Error("Link each credit allocation to one actual education-credit student before calculating.");
   calculateForm1099Q(forms, summary, { taxYear: year, educationExpenses, ...(data.forms.some(entry => entry.bankInterestConversion) ? educationOriginalOptions(originalContext, year, status) : {}) });
   return { form1099Q: forms, qualifiedEducationExpenses: summary };
 }
-export function educationDistributionFactErrors(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationOriginalContext): Record<string, string> {
+export function educationDistributionFactErrors(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationDistributionOriginalContext): Record<string, string> {
   if (!data) return {};
   try { collect(data, year, status, educationExpenses, originalContext); return {}; }
   catch (error) {
@@ -184,7 +223,7 @@ export function educationDistributionFactErrors(data?: EducationDistributionData
       : error instanceof Error ? error.message : "Complete the actual education distribution sources before calculating." };
   }
 }
-export function buildEducationDistributionInputs(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationOriginalContext): Partial<Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses">> {
+export function buildEducationDistributionInputs(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses, originalContext?: EducationDistributionOriginalContext): Partial<Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses">> {
   if (!data) return {};
   return collect(data, year, status, educationExpenses, originalContext);
 }
@@ -193,7 +232,9 @@ export function buildEducationDistributionInputs(data?: EducationDistributionDat
 export function invalidateEducationPeriodSources(data?: EducationDistributionData): EducationDistributionData | undefined {
   if (!data) return data;
   return { ...data, sourceFactsConfirmed: null,
-    ...(data.forms ? { forms: data.forms.map(row => ({ ...row, ...(row.bankInterestConversion ? { bankInterestConversion: invalidateCoverdellBankInterest(row.bankInterestConversion) } : {}) })) } : {}),
+    ...(data.forms ? { forms: data.forms.map(row => ({ ...row,
+      ...(row.bankInterestConversion ? { bankInterestConversion: invalidateCoverdellBankInterest(row.bankInterestConversion) } : {}),
+    })) } : {}),
     ...(data.expenseRefunds !== undefined ? { expenseRefunds: data.expenseRefunds.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriods !== undefined ? { roomBoardPeriods: data.roomBoardPeriods.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriodExpenses !== undefined ? { roomBoardPeriodExpenses: data.roomBoardPeriodExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),

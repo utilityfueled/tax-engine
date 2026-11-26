@@ -52,7 +52,7 @@ import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSour
 import { buildGuidedMortgageInputs } from "./guided-mortgage-worksheet";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { buildActualEducationInput, requiresLlcYearReview } from "./guided-education-facts";
-import { buildEducationDistributionInputs, educationDistributionFactErrors } from "./guided-education-distributions";
+import { buildEducationDistributionInputs, educationDistributionFactErrors, guidedEducationDistributionContext } from "./guided-education-distributions";
 import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-bond-facts";
 /**
  * Bridge between guided interview section data and the tax engine.
@@ -827,6 +827,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const stateReturnData = sectionData["state-return"] as StateReturnData | undefined;
 
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
+  const educationDistributionContext = guidedEducationDistributionContext(state);
   let loanEducation: StudentLoanEducationSources = [];
   let form3903: ReturnType<typeof buildMovingExpenses>;
   let standardMileage: ReturnType<typeof readGuidedBusinessMileage>;
@@ -866,8 +867,8 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
       buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo),
-      { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn }));
-    if (adjustmentData?.studentLoanFacts || creditsData?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData?.studentLoanFacts, { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn });
+      educationDistributionContext));
+    if (adjustmentData?.studentLoanFacts || creditsData?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData?.studentLoanFacts, educationDistributionContext);
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(foreignIncomeFactErrors(state));
@@ -977,7 +978,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   const dependentCareBenefits = buildCareBenefitsInput(creditsData?.dependentCareBenefits, state.taxYear, segmentation.filingStatus, careBenefitSources);
   const educationExpenses = buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo);
   const savingsBondInputs = buildSavingsBondInputs(creditsData?.savingsBondEducation, state.taxYear, segmentation.filingStatus, investData?.interestEntries, personalInfo);
-  const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses, { interestEntries: investData?.interestEntries, primarySsn: personalInfo?.ssn, spouseSsn: personalInfo?.spouse?.ssn });
+  const educationDistributions = buildEducationDistributionInputs(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus, educationExpenses, educationDistributionContext);
   const energyCredits = buildEnergyCreditsInput(creditsData, state.taxYear, segmentation.filingStatus);
   const scheduleH = buildScheduleHInput(otherTaxesData, state.taxYear);
   const usesDedicatedReceipts = usesDedicatedStatePaymentReceipts(segmentation.stateCode);

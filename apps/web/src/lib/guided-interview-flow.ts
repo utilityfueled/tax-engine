@@ -106,7 +106,7 @@ import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-fact
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { invalidateAdoptionHistories } from "./guided-adoption-prior-benefits";
 import { educationOriginalValues } from "./guided-coverdell-bank-interest";
-import { educationDistributionSourcesChanged, educationDistributionFactErrors, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
+import { educationDistributionSourcesChanged, educationDistributionFactErrors, guidedEducationDistributionContext, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
 import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
 import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
 import { buildActualEducationInput, LLC_YEAR_FACTS_VERSION, requiresLlcYearReview } from "./guided-education-facts";
@@ -3366,7 +3366,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources, state.sectionData.adjustments?.codNolSources?.attributeSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {
-        if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts, { interestEntries: state.sectionData["income-investments"]?.interestEntries, primarySsn: state.sectionData["personal-info"]?.ssn, spouseSsn: state.sectionData["personal-info"]?.spouse?.ssn });
+        if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts, guidedEducationDistributionContext(state));
       } catch (error) { errors.studentLoanSources = error instanceof Error ? error.message : "Reconcile the actual education sources linked to student-loan interest."; }
       Object.assign(errors, studentLoanFactErrors(state.sectionData.adjustments, state.segmentation.filingStatus, state.taxYear, loanEducation, state.segmentation.lifeEvents.includes("student-loans")));
       return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, loanEducation, getSectionData(state, "personal-info"));
@@ -3379,7 +3379,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       let distributionErrors: Record<string, string> = {};
       try {
         const actualEducation = Object.keys(educationErrors).length ? undefined : buildActualEducationInput(credits, state.taxYear, state.segmentation.filingStatus, personal);
-        distributionErrors = educationDistributionFactErrors(credits?.educationDistributions, state.taxYear, state.segmentation.filingStatus, actualEducation, { interestEntries: getSectionData(state, "income-investments")?.interestEntries, primarySsn: personal?.ssn, spouseSsn: personal?.spouse?.ssn });
+        distributionErrors = educationDistributionFactErrors(credits?.educationDistributions, state.taxYear, state.segmentation.filingStatus, actualEducation, guidedEducationDistributionContext(state));
       } catch {
         distributionErrors.educationDistributions = "Complete the actual education credit facts before confirming distribution allocations.";
       }

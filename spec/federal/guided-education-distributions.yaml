@@ -20,6 +20,30 @@ lines:
     description: "Section completion and engine bridge share actual credit coordination"
     formula: "When source records claim credit expenses, require actual matching eligible-credit student inputs and enforce per-student and return limits before marking the section complete; missing student facts remain errors"
     testRef: "tests/guided-interview/guided-education-distributions.test.ts::rejects unlinked or excessive education credits during section validation"
+  - line: "qtp-roth-actual-ira-contributions"
+    description: "Reconcile a 2026 primary beneficiary's 529-to-Roth IRA transfer with recorded IRA contributions"
+    formula: >-
+      For a 2026 direct Roth transfer identifying the primary recipient as its
+      beneficiary, compare the worksheet's other IRA contributions with the
+      known, confirmed regular traditional and Roth IRA contributions designated
+      for that taxpayer and year. Add recorded amounts as decimals and preserve
+      blanks as unknown. When the reported total is lower, require the linked
+      beneficiary taxpayer ID to match the primary return. Missing or conflicting
+      IDs require review of the original beneficiary and recipient records. Hold
+      the discrepancy for review of deposit dates and tax-year designations
+      before issuing calculation inputs. Section 529(c)(3)(E)(ii)(I) incorporates the annual
+      limit under section 408A(c)(2), which considers non-Roth contributions
+      for the taxable year, and separately addresses contributions made during
+      the year. A claimed different payment year alone cannot resolve the
+      discrepancy. Preserve the entered transfer and agreed explicit zero.
+      Keep existing source rules for other beneficiaries, years and transfers,
+      as well as the annual calculation and export gates.
+    irsRef: "26 USC 529(c)(3)(E)(ii)(I), 408A(c)(2) and 219(f)(3); https://uscode.house.gov/us/usc/119-142/t26/s529/; https://uscode.house.gov/us/usc/119-142/t26/s408A/; https://uscode.house.gov/us/usc/119-142/t26/s219/; IRS Notice 2025-67, 2026 IRA limit; https://www.irs.gov/pub/irs-drop/n-25-67.pdf"
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::reconciles a 2026 primary 529 rollover with actual IRA contributions"
+    testRefs:
+      - "tests/guided-interview/guided-education-distributions.test.ts::holds a lower 529 total when IRA contribution timing remains unresolved"
+      - "tests/guided-interview/guided-education-distributions.test.ts::holds a lower 529 total when the asserted primary beneficiary tax ID is missing or different"
+      - "tests/guided-interview/guided-education-distributions.test.ts::keeps the 529 source rules when the beneficiary and recipient are both outside the return"
   - line: "source-invalidation"
     description: "Reconfirm changed source coordination"
     formula: "Substantive edits to education-credit facts, taxpayer identity or adjustment inputs invalidate saved distribution-source confirmation while retaining amounts and links; sourceFactsConfirmed metadata alone does not invalidate linked sections"
