@@ -47,11 +47,20 @@ lines:
       Hold indistinguishable federal payroll copies from the same employer
       even when state fields, EIN formatting or amount spelling differ.
       Reconcile any positive Box 8 to an employer row. Require actual zero
-      RRTA, noncash and Medicare-only government amounts and a positive
+      RRTA and Medicare-only government amounts, a known noncash tip amount and a positive
       exact line 6. Hold mixed owner and Form 8919. Use the existing payroll
       source verification and amounts. Leave name, SSN and employer IDs blank.
       Use local ordinal employer labels. Mark both pages for review only.
     testRef: "tests/pdf/form-4137-2026-candidate.test.ts::holds unknown and incompatible source or payroll facts"
+  - line: "noncash-tips"
+    description: "Keep confirmed noncash tips in income and outside Form 4137"
+    formula: >-
+      A known noncash tip amount not already included in wages contributes
+      to unreported tip income on Form 1040 line 1c. It does not change any
+      cash-and-charge entry or tax on Form 4137. Noncash tips alone do not
+      satisfy the worksheet's positive line 6 requirement.
+    irsRef: "2026 Form 4137 lines 1-6 and 9-13 and page 2, Allocated tips; Publication 531, How to report tips and What tips to report; https://www.irs.gov/publications/p531"
+    testRef: "tests/pdf/form-4137-2026-candidate.test.ts::keeps confirmed noncash tips in income without changing Form 4137"
   - line: "8-original-inventory"
     description: "Hold indistinguishable copies before summing federal wages"
     formula: >-

@@ -59,7 +59,7 @@ export async function fillForm4137_2026OrdinaryCandidate(rawInput: TaxYearInput,
     || input.standardDeductionFacts?.shortTaxYear !== false || input.standardDeductionFacts?.nonresidentAlien !== false
     || input.standardDeductionFacts?.dualStatusAlien !== false || input.form4137ByOwner || input.form8919 || input.rrtaPayrollSources
     || record?.accountHolder !== "primary" || !facts || !employers?.length || employers.length > employerLimit
-    || !isActualZero(facts.railroadRetirementCompensation) || !isActualZero(facts.noncashTipsNotIncludedInWages)
+    || !isActualZero(facts.railroadRetirementCompensation) || facts.noncashTipsNotIncludedInWages === undefined
     || employers.some(row => !row.w2SourceIds?.length || !isActualZero(row.medicareOnlyGovernmentUnreportedTips))) {
     throw new Error("Form 4137 review requires ordinary single-recipient 2026 tip and payroll originals.");
   }

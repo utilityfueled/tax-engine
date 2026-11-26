@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { PDFName, PDFTextField } from "pdf-lib";
 import { expect, it } from "vitest";
+import { calculateUnreportedTipPayroll } from "@/engine/forms/unreported-tip-payroll.js";
+import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { assertPdfExportAllowed, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
@@ -108,6 +110,29 @@ it("renders source amounts and the ordinary wage-cap case without private identi
   }
 });
 
+it("keeps confirmed noncash tips in income without changing Form 4137", async () => {
+  const { fillForm4137_2026OrdinaryCandidate: fill, FORM_4137_2026_CANDIDATE: candidate } = await mapper();
+  const template = await readFile(blank);
+  const withNoncashTips = (input: ReturnType<typeof payrollCase>) => ({
+    ...input,
+    form4137: { ...input.form4137, sourceFacts: { ...input.form4137.sourceFacts, noncashTipsNotIncludedInWages: "275.50" } },
+  });
+  const cash = payrollCase();
+  const mixed = withNoncashTips(cash);
+  const projection = async (input: ReturnType<typeof payrollCase>) => {
+    const saved = await (await fill(input, true, template)).save();
+    const reopened = await loadPdfDocumentQuietly(saved);
+    return candidate.nativeTextFields.map(name => reopened.getForm().getTextField(name).getText());
+  };
+  const cashOnly = await projection(cash);
+  expect(cashOnly[33]).toBe("48");
+  expect(await projection(mixed)).toEqual(cashOnly);
+  expect(calculateUnreportedTipPayroll(mixed, FEDERAL_2026_CONSTANTS).income.toFixed()).toBe("2293.5");
+  const noncashOnly = withNoncashTips(payrollCase(["1000", "200"]));
+  noncashOnly.form4137.sourceFacts.employers[0].smallTipMonths = [];
+  await expect(fill(noncashOnly, true, template)).rejects.toThrow(/positive Medicare-taxable/);
+});
+
 it("holds unknown and incompatible source or payroll facts", async () => {
   const { fillForm4137_2026OrdinaryCandidate: fill } = await mapper();
   const template = await readFile(blank);
@@ -121,7 +146,7 @@ it("holds unknown and incompatible source or payroll facts", async () => {
   const unlinked = { ...input.w2s[0], employer: { name: "Different Private Employer", ein: "22-3456789" }, allocatedTips: "50" };
   await expect(fill({ ...input, w2s: [...input.w2s, unlinked] }, true, template)).rejects.toThrow(/allocated tips/);
   for (const factPatch of [{ sourceTaxYear: 2025 }, { sourceFactsConfirmed: false }, { allEmployersIncluded: false },
-    { railroadRetirementCompensation: "1" }, { noncashTipsNotIncludedInWages: "1" }, { employers: Array(6).fill(employer) },
+    { railroadRetirementCompensation: "1" }, { noncashTipsNotIncludedInWages: undefined }, { employers: Array(6).fill(employer) },
     { employers: [{ ...employer, w2SourceIds: [] }] },
     { employers: [{ ...employer, medicareOnlyGovernmentUnreportedTips: "1" }] },
   ]) {
