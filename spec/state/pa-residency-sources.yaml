@@ -39,8 +39,11 @@ lines:
       permanent-abode coverage and move evidence requirements. Hold possible
       full-year cases with a confirmed PA permanent abode and more than 183
       total days, regardless of the selected residency, except for the finite
-      Florida-to-PA full-year method in pa-2026-ordinary-draft.yaml. Hold exactly
-      183 days with that abode because the statute and the Department's
+      Florida-to-PA and Texas-to-PA full-year methods in pa-2026-ordinary-draft.yaml.
+      Check the actual outside-abode state against the former domicile for those
+      methods, with legacy omission allowed for Florida. Hold an explicitly
+      different state for separate review. Hold exactly 183 days with that abode
+      because the statute and the Department's
       one-move guidance use different threshold wording. This branch leaves
       single-domicile statutory residency and no-PA-abode cases in their
       existing methods.

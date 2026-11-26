@@ -6,7 +6,7 @@ import {calculatePAResidencySources} from '@/engine/state/pa-residency-sources.j
 import {calculateFederalTax} from '@/engine/federal.js';
 import {getConstants} from '@/models/constants.js';
 import {preparePAOrdinaryReturnReview} from '@/pdf/pa-ordinary-return-review-context.js';
-import {pa2026FloridaMoveResidentFixture,pa2026OrdinaryDraftFixture,pa2026OutboundNonresidentFixture,rebindPA2026Draft} from '../../fixtures/pa-2026-ordinary-draft.js';
+import {pa2026FloridaMoveResidentFixture,pa2026OrdinaryDraftFixture,pa2026OutboundNonresidentFixture,pa2026TexasMoveResidentFixture,rebindPA2026Draft} from '../../fixtures/pa-2026-ordinary-draft.js';
 import {paOrdinaryReturnFixture} from '../../fixtures/pa-ordinary-return.js';
 import {paOrdinaryLocalW2Fixture} from '../../fixtures/pa-ordinary-local-w2.js';
 import {confirmGuidedPAOrdinaryReturnFacts,buildGuidedPAOrdinaryReturnFacts,updateGuidedPAOrdinaryReturnFacts} from '../../../apps/web/src/lib/guided-pa-ordinary-return-facts.js';
@@ -259,14 +259,64 @@ it('PA2026 Florida mover derives full-year wages from the actual resident source
  expect(new Decimal('75000').times('0.0307').toFixed(2)).toBe('2302.50');
  expect(result.pa.pa40.stateWithholding.toFixed()).toBe('2303');
  expect(result.pa.pa40.totalAmountDue.isZero()).toBe(true);
+ expect(result.pa.lines.find(line => line.line === 'florida-move-residency')?.value.toFixed()).toBe('200');
  expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
  expect(() => calculatePAOrdinaryReturn(f.input, f.facts, f.sources)).toThrow(/incomplete/i);
  expect(f).toEqual(original);
 });
 
+// Spec: spec/state/pa-2026-ordinary-draft.yaml#texas-move-full-year-resident.
+it('PA2026 Texas mover derives full-year wages from the actual resident source path', () => {
+ const f = pa2026TexasMoveResidentFixture();
+ f.input.taxpayer.stateResidency = 'full-year';
+ rebindPA2026Draft(f);
+ const original = structuredClone(f);
+ const result = calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources);
+ expect(result.pa.residencyStatus).toBe('resident');
+ expect(result.pa.schoolDistrictCode).toBe('02745');
+ expect(result.pa.pa40.totalPATaxableIncome.toFixed()).toBe('75000');
+ expect(result.pa.pa40.taxLiability.toFixed()).toBe('2303');
+ expect(result.pa.pa40.stateWithholding.toFixed()).toBe('2303');
+ expect(result.pa.pa40.totalAmountDue.isZero()).toBe(true);
+ expect(result.pa.lines.find(line => line.line === 'texas-move-residency')?.value.toFixed()).toBe('200');
+ expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
+ expect(() => calculatePAOrdinaryReturn(f.input, f.facts, f.sources)).toThrow(/incomplete/i);
+ expect(f).toEqual(original);
+});
+
+type TexasMoveFixture = ReturnType<typeof pa2026TexasMoveResidentFixture>;
+it.each<[string, (f: TexasMoveFixture) => void, RegExp]>([
+ ['exactly 183 PA days', f => { f.input.paResidencySources.residency.domicilePeriods[1].daysInPA = 143; }, /183.*separate residency method/i],
+ ['an omitted outside-abode state', f => { delete f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods[0].state; }, /actual Texas state code.*outside-PA permanent abode/i],
+ ['a conflicting outside-abode state', f => { f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods[0].state = 'NY'; }, /outside-PA permanent abode.*separate review/i],
+ ['a third jurisdiction among outside-abode periods', f => {
+  const abodes = f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods;
+  abodes[0].through = '2026-03-31';
+  abodes.push({ from: '2026-04-01', through: '2026-06-30', state: 'NY' });
+ }, /outside-PA permanent abode.*separate review/i],
+ ['a conflicting part-year declaration', f => { f.input.taxpayer.stateResidency = 'part-year'; }, /conflicting.*residency/i],
+ ['payroll for outside-PA services', f => { Object.assign(f.input.paResidencySources.wages[0].payroll[0], { paServicesCompensation: '44999', outsidePAServicesCompensation: '1' }); }, /PA services/i],
+ ['a mismatched zero-tax jurisdiction', f => { f.sources.otherStateTaxes.jurisdictions[0].state = 'FL'; }, /outside-state jurisdiction payment history is missing/i],
+ ['an additional zero-tax jurisdiction', f => {
+  const jurisdictions = f.sources.otherStateTaxes.jurisdictions;
+  jurisdictions.push({ ...jurisdictions[0], state: 'FL' });
+ }, /Texas.*sole complete zero-tax jurisdiction/i],
+ ['positive Texas tax history', f => { f.sources.otherStateTaxes.jurisdictions[0].taxPaid = '1'; }, /positive other.state history/i],
+ ['an unsupported former domicile', f => {
+  f.input.paResidencySources.residency.domicilePeriods[0].state = 'NY';
+  f.sources.otherStateTaxes.jurisdictions[0].state = 'NY';
+ }, /183.*separate residency method/i],
+])('PA2026 Texas mover holds %s', (_label, change, expected) => {
+ const f = pa2026TexasMoveResidentFixture();
+ change(f);
+ rebindPA2026Draft(f);
+ expect(() => calculatePA2026OrdinaryDraft(f.input, f.facts, f.sources)).toThrow(expected);
+});
+
 type FloridaMoveFixture = ReturnType<typeof pa2026FloridaMoveResidentFixture>;
 it.each<[string, (f: FloridaMoveFixture) => void, RegExp]>([
  ['exactly 183', f => { f.input.paResidencySources.residency.domicilePeriods[1].daysInPA = 143; }, /183.*separate residency method/i],
+ ['a conflicting outside-abode state', f => { f.input.paResidencySources.residency.outsidePAPermanentAbodePeriods[0].state = 'NY'; }, /outside-PA permanent abode.*separate review/i],
  ['part-year claim', f => { f.input.paResidencySources.residency.status = 'part_year'; }, /183.*separate residency method/i],
  ['conflicting retained residency selection', f => { f.input.taxpayer.stateResidency = 'part-year'; }, /conflicting.*residency/i],
  ['reverse move', f => {

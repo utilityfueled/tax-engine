@@ -21,11 +21,20 @@ export function rebindPA2026Draft(f:ReturnType<typeof paOrdinaryReturnFixture>){
 }
 
 export function pa2026FloridaMoveResidentFixture() {
+ return pa2026InboundMoveResidentFixture('FL', 'Florida');
+}
+
+export function pa2026TexasMoveResidentFixture() {
+ return pa2026InboundMoveResidentFixture('TX', 'Texas');
+}
+
+function pa2026InboundMoveResidentFixture(priorState: 'FL' | 'TX', priorStateName: string) {
  const f = pa2026OrdinaryDraftFixture('part_year');
  const residency = f.input.paResidencySources.residency;
  residency.status = 'resident';
- residency.sourceReference = 'Fictional Florida-to-PA move and permanent abodes with 200 documented PA days';
- Object.assign(residency.domicilePeriods[0], { state: 'FL', daysInPA: 40 });
+ residency.sourceReference = `Fictional ${priorStateName}-to-PA move and permanent abodes with 200 documented PA days`;
+ Object.assign(residency.domicilePeriods[0], { state: priorState, daysInPA: 40 });
+ if (priorState === 'TX') residency.outsidePAPermanentAbodePeriods[0].state = priorState;
  residency.domicilePeriods[1].daysInPA = 160;
  f.input.taxpayer.address = { street: '10 Fictional Way', city: 'Pittsburgh', state: 'PA', zip: '15222' };
  for (const payroll of f.input.paResidencySources.wages[0].payroll) {
@@ -33,7 +42,7 @@ export function pa2026FloridaMoveResidentFixture() {
   payroll.outsidePAServicesCompensation = '0';
  }
  Object.assign(f.input.w2s[0], { stateWages: '75000', stateTaxWithheld: '2303' });
- Object.assign(f.sources.otherStateTaxes.jurisdictions[0], { state: 'FL', sourceReference: 'Fictional complete Florida zero income-tax history' });
+ Object.assign(f.sources.otherStateTaxes.jurisdictions[0], { state: priorState, sourceReference: `Fictional complete ${priorStateName} zero income-tax history` });
  rebindPA2026Draft(f);
  return f;
 }

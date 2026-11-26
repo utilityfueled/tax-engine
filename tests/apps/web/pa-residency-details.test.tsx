@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { PAResidencyDetails } from "@/components/guided-interview/pa-residency-details";
 import { paOrdinaryResidencyFixture } from "../../fixtures/pa-residency-sources.js";
-import { pa2026OutboundNonresidentFixture } from "../../fixtures/pa-2026-ordinary-draft.js";
+import { pa2026OutboundNonresidentFixture, pa2026TexasMoveResidentFixture } from "../../fixtures/pa-2026-ordinary-draft.js";
 import type { PAResidencySources } from "@/models/pa-residency.js";
 // Spec: spec/state/pa-residency-sources.yaml guide-ui.
 
@@ -80,5 +80,41 @@ it("PA residency UI collects original outbound residence evidence without assumi
       { from: "", through: "", sourceReference: "", noReciprocalStateIncomeTaxResidenceConfirmed: null },
       { from: "", through: "", sourceReference: "", noReciprocalStateIncomeTaxResidenceConfirmed: true },
     ]);
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+// Spec: spec/state/pa-2026-ordinary-draft.yaml#texas-move-full-year-resident.
+it("PA residency UI requires the actual Texas outside-abode state on confirmation", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const { input } = pa2026TexasMoveResidentFixture();
+  const draft: PAResidencySources = { ...structuredClone(input.paResidencySources), sourceFactsConfirmed: null };
+  delete draft.residency.outsidePAPermanentAbodePeriods[0].state;
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  let latest = draft;
+  function Harness() {
+    const [data, setData] = useState(draft);
+    return <PAResidencyDetails originalInput={input} data={data} onChange={next => { if (next) { latest = next; setData(next); } }} />;
+  }
+  try {
+    await act(async () => root.render(<Harness />));
+    const label = [...container.querySelectorAll("label")].find(row => row.querySelector(".guided-field-label")?.textContent === "Outside-PA permanent home 1 actual state code");
+    const abode = label?.querySelector("input");
+    const confirm = [...container.querySelectorAll("button")].find(button => button.textContent === "Confirm all actual PA source records after the last edit");
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    if (!abode || !confirm || !setter) throw new Error("Missing actual inbound-abode control");
+    expect(abode.value).toBe("");
+    await act(async () => confirm.click());
+    expect(container.querySelector("[role=status]")?.textContent).toMatch(/actual Texas state code/i);
+    expect(latest.sourceFactsConfirmed).toBeNull();
+    for (const [state, expected] of [["NY", null], ["TX", true]] as const) {
+      await act(async () => { setter.call(abode, state); abode.dispatchEvent(new Event("input", { bubbles: true })); });
+      await act(async () => confirm.click());
+      expect(latest.sourceFactsConfirmed).toBe(expected);
+      expect(latest.residency.outsidePAPermanentAbodePeriods[0].state).toBe(state);
+    }
+    await act(async () => { setter.call(abode, "NY"); abode.dispatchEvent(new Event("input", { bubbles: true })); });
+    expect(latest.sourceFactsConfirmed).toBeNull();
   } finally { await act(async () => root.unmount()); container.remove(); }
 });

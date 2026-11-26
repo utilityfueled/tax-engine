@@ -111,8 +111,13 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const hasUnsupportedPrepayment=p.facts.payments.rows.some(row=>row.original.kind!=='extension'||sources.estimatedTaxReview2026!==undefined);
  if(sources.otherStateTaxes.status!=='none_paid'||hasUnsupportedPrepayment||p.facts.payments.priorCredit.status!=='none'||!p.useTax.isZero())fail('other state payments, PA prepayments, carryforward or use tax require their separate methods');
  if (income.residencyStatus === 'resident' && r.residency.domicilePeriods.length === 2) {
+  const formerDomicile = r.residency.domicilePeriods[0].state;
+  const stateName = formerDomicile === 'FL' ? 'Florida' : formerDomicile === 'TX' ? 'Texas' : undefined;
+  if (!stateName) fail('the former domicile requires a separate full-year residency method');
   const jurisdictions = sources.otherStateTaxes.jurisdictions;
-  if (jurisdictions.length !== 1 || jurisdictions[0].state !== 'FL') fail('the Florida move requires Florida as the sole complete zero-tax jurisdiction history');
+  if (jurisdictions.length !== 1 || jurisdictions[0].state !== formerDomicile) {
+   fail(`the ${stateName} move requires ${stateName} as the sole complete zero-tax jurisdiction history`);
+  }
  }
  if(p.timing.date>'2027-04-15'||p.timing.filingExtension!=='none'||p.timing.paymentExtension!=='none')fail('late or extended timing requires its actual successor');
  const child=sources.eitcChildInventory===undefined?undefined:validatePA2026EicChildInventory(input,sources.eitcChildInventory);

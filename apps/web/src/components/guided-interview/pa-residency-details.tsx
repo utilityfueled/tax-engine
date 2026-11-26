@@ -18,17 +18,15 @@ function NumberFact({ label, value, onChange }: { label: string; value: number |
 function SelectFact({ label, value, options, onChange }: { label: string; value: string; options: Array<[string, string]>; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={event => onChange(event.target.value)}><option value="">Choose from actual records</option>{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select></label>;
 }
-function Abodes({ label, periods, onChange, showStateSource }: { label: string; periods: Period[]; onChange: (periods: Period[]) => void; showStateSource?: boolean }) {
+function Abodes({ label, periods, onChange, showState, showSourceReference }: { label: string; periods: Period[]; onChange: (periods: Period[]) => void; showState?: boolean; showSourceReference?: boolean }) {
   return <fieldset><legend>{label}</legend>{periods.map((period, index) => {
     const update = (patch: Partial<Period>) => onChange(periods.map((p, i) => i === index ? { ...p, ...patch } : p));
     const prefix = `${label} ${index + 1}`;
     return <div className="guided-card" key={index}>
       <TextFact label={`${prefix} first date`} type="date" value={period.from} onChange={from => update({ from })} />
       <TextFact label={`${prefix} last date`} type="date" value={period.through} onChange={through => update({ through })} />
-      {showStateSource && <>
-        <TextFact label={`${prefix} actual state code`} value={period.state ?? ""} onChange={state => update({ state })} />
-        <TextFact label={`${prefix} original reference`} value={period.sourceReference ?? ""} onChange={sourceReference => update({ sourceReference })} />
-      </>}
+      {showState && <TextFact label={`${prefix} actual state code`} value={period.state ?? ""} onChange={state => update({ state })} />}
+      {showSourceReference && <TextFact label={`${prefix} original reference`} value={period.sourceReference ?? ""} onChange={sourceReference => update({ sourceReference })} />}
       <button type="button" onClick={() => onChange(periods.filter((_, i) => i !== index))}>Remove {prefix}</button>
     </div>;
   })}<button type="button" onClick={() => onChange([...periods, { from: "", through: "" }])}>Add {label}</button></fieldset>;
@@ -79,8 +77,12 @@ export function PAResidencyDetails({ originalInput, data, onChange }: {
   const update = (patch: Partial<PAResidencySources>) => { setMessage(""); onChange(updateGuidedPAResidencySources(current, patch)); };
   const residency = current.residency;
   const updateResidency = (patch: Partial<typeof residency>) => update({ residency: { ...residency, ...patch } });
-  const showOutboundTaxResidence = (originalInput?.taxpayer.taxYear ?? current.sourceTaxYear) === 2026 && residency.status === "nonresident"
-    && residency.domicilePeriods.length === 2 && residency.domicilePeriods[0].state === "PA" && residency.domicilePeriods[1].state === "NY";
+  const hasTwo2026DomicilePeriods = (originalInput?.taxpayer.taxYear ?? current.sourceTaxYear) === 2026 && residency.domicilePeriods.length === 2;
+  const [firstDomicile, secondDomicile] = residency.domicilePeriods;
+  const showOutboundTaxResidence = hasTwo2026DomicilePeriods && residency.status === "nonresident"
+    && firstDomicile.state === "PA" && secondDomicile.state === "NY";
+  const showInboundAbodeState = hasTwo2026DomicilePeriods && residency.status === "resident"
+    && (firstDomicile.state === "FL" || firstDomicile.state === "TX") && secondDomicile.state === "PA";
   const taxResidencePeriods = [0, 1].map(index => residency.outboundTaxResidencePeriods?.[index] ?? emptyTaxResidencePeriod);
   const updateWage = (index: number, patch: Partial<PAResidencySources["wages"][number]>) => update({ wages: current.wages.map((row, i) => i === index ? { ...row, ...patch } : row) });
   const updateInterest = (index: number, patch: Partial<PAResidencySources["interest"][number]>) => update({ interest: current.interest.map((row, i) => i === index ? { ...row, ...patch } : row) });
@@ -103,7 +105,7 @@ export function PAResidencyDetails({ originalInput, data, onChange }: {
     </fieldset>)}
     <button type="button" onClick={() => updateResidency({ domicilePeriods: [...residency.domicilePeriods, { from: "", through: "", state: "", daysInPA: null }] })}>Add actual domicile period</button>
     <Abodes label="PA permanent home" periods={residency.paPermanentAbodePeriods} onChange={paPermanentAbodePeriods => updateResidency({ paPermanentAbodePeriods })} />
-    <Abodes label="Outside-PA permanent home" periods={residency.outsidePAPermanentAbodePeriods} onChange={outsidePAPermanentAbodePeriods => updateResidency({ outsidePAPermanentAbodePeriods })} showStateSource={showOutboundTaxResidence} />
+    <Abodes label="Outside-PA permanent home" periods={residency.outsidePAPermanentAbodePeriods} onChange={outsidePAPermanentAbodePeriods => updateResidency({ outsidePAPermanentAbodePeriods })} showState={showOutboundTaxResidence || showInboundAbodeState} showSourceReference={showOutboundTaxResidence} />
     {showOutboundTaxResidence && <fieldset><legend>Income-tax residency during the Pennsylvania-to-New York move</legend>
       <p className="guided-hint">Use the owner’s original income-tax residency records for both domicile periods. Pennsylvania has reciprocal agreements with Indiana, Maryland, New Jersey, Ohio, Virginia and West Virginia.</p>
       {taxResidencePeriods.map((period, index) => {

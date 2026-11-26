@@ -147,8 +147,10 @@ lines:
       matching period, a PA December 31 principal residence, and an explicit
       resident claim with no conflicting retained residency selection. Sum the
       two actual PA presence counts and require more than
-      183. Keep the exact-183 case and every other above-threshold one-move claim
-      in the separate-method hold.
+      183. Keep the exact-183 case and above-threshold one-move claims outside
+      the documented Florida and Texas cohorts in the separate-method hold.
+      A legacy Florida outside-abode record may omit the state. A recorded
+      state other than Florida requires separate review for this draft.
       Limit the route to one complete current primary W-2 and original payroll
       reconciled over both domicile periods with every dollar paid for physical
       PA services and documented PA presence in each paid period. Reconcile the
@@ -167,10 +169,43 @@ lines:
       - "https://floridarevenue.com/faq/Pages/FAQDetails.aspx?FAQID=1466"
       - "https://www.irs.gov/pub/irs-pdf/iw2w3.pdf"
     testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 Florida mover derives full-year wages from the actual resident source path"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 Florida mover holds %s"
   - line: "florida-move-guide-replay"
     description: "Replay the same confirmed 2026 Pennsylvania move through guided originals"
     formula: "Guided capture binds the current W-2 and resolver facts, preserves the two original domicile periods, invalidates edits and cannot substitute payroll or bypass the ordinary completion sources."
     testRef: "tests/apps/web/guided-pa-residency-facts.test.ts::PA residency guide - confirms and replays the Florida mover's original full-year resident facts"
+  - line: "texas-move-full-year-resident"
+    description: "Apply the full-year PA source basis to a complete 2026 Texas-to-Pennsylvania move"
+    formula: |
+      Apply the same confirmed living single owner, continuous two-period
+      domicile timeline, permanent abode, December 31 residence, more than 183
+      actual PA days, one current original W-2 and all-PA payroll requirements
+      as in the Florida method. The Texas domicile period must precede the PA
+      period. Every outside permanent-abode record covering the former domicile
+      must explicitly show Texas, and the sole complete zero-tax jurisdiction
+      history must be Texas. An omitted abode state requires completion. An
+      additional or different abode jurisdiction requires separate review. This
+      checks the finite draft's sources without deciding statutory residency for
+      another set of facts. The guided collector shows the actual outside-abode
+      state for these inbound moves and requires reconfirmation after a change.
+      Article VIII, Section 24-a of the Texas Constitution prohibits individual
+      income tax. Do not derive zero liability for any other jurisdiction from
+      a zero payment. The 200-day fixture reports 75,000 of PA taxable wages,
+      2,302.50 raw tax, 2,303 reported tax and 2,303 actual PA withholding,
+      leaving no balance. Preserve the exact-183 hold, outside-service and
+      incomplete original holds, and all filing and final form gates.
+    sources:
+      - "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s"
+      - "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency#when-is-a-person-considered-a-part-year-resident"
+      - "https://capitol.texas.gov/tlodocs/86R/billtext/html/HJ00038F.htm"
+      - "https://gov.texas.gov/news/post/governor-abbott-issues-proclamation-declaring-the-results-of-the-recent-constitutional-amendment-election"
+      - "https://comptroller.texas.gov/economy/fiscal-notes/industry/2025/small-biz-info/"
+    testRef: "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 Texas mover derives full-year wages from the actual resident source path"
+    testRefs:
+      - "tests/engine/state/pa-2026-ordinary-draft.test.ts::PA2026 Texas mover holds %s"
+      - "tests/apps/web/guided-pa-residency-facts.test.ts::PA residency guide - confirms and replays the Texas mover's original full-year resident facts"
+      - "tests/apps/web/pa-residency-details.test.tsx::PA residency UI requires the actual Texas outside-abode state on confirmation"
   - line: "nonresident-actual-small-balance"
     description: "Reconcile the exact timely PA-40 balance paid by a nonresident wage earner with no estimated installments due"
     formula: |

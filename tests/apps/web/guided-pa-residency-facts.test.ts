@@ -8,7 +8,7 @@ import { buildGuidedPAOrdinarySourceInput, emptyStateReturnData, loadGuidedFlowS
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { calculatePA2026OrdinaryDraft } from "@/engine/state/pa-ordinary-return.js";
-import { pa2026FloridaMoveResidentFixture, pa2026OrdinaryDraftFixture, pa2026OutboundNonresidentFixture, rebindPA2026Draft } from "../../fixtures/pa-2026-ordinary-draft.js";
+import { pa2026FloridaMoveResidentFixture, pa2026OrdinaryDraftFixture, pa2026OutboundNonresidentFixture, pa2026TexasMoveResidentFixture, rebindPA2026Draft } from "../../fixtures/pa-2026-ordinary-draft.js";
 import { paOrdinaryResidencyFixture } from "../../fixtures/pa-residency-sources.js";
 import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts.js";
 // Spec: spec/state/pa-residency-sources.yaml guide-confirmation.
@@ -169,7 +169,14 @@ it("PA residency guide confirms and reopens the 2026 outbound statutory nonresid
 });
 
 it("PA residency guide - confirms and replays the Florida mover's original full-year resident facts", () => {
-  const f = pa2026FloridaMoveResidentFixture();
+  checkInboundMoverGuide(pa2026FloridaMoveResidentFixture());
+});
+
+it("PA residency guide - confirms and replays the Texas mover's original full-year resident facts", () => {
+  checkInboundMoverGuide(pa2026TexasMoveResidentFixture());
+});
+
+function checkInboundMoverGuide(f: ReturnType<typeof pa2026FloridaMoveResidentFixture>) {
   const guide = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "PA" }, 2026);
   const owner = f.input.taxpayer.primary;
   guide.sectionData["personal-info"] = { ...structuredClone(completePersonalInfo), firstName: owner.firstName, lastName: owner.lastName,
@@ -199,7 +206,7 @@ it("PA residency guide - confirms and replays the Florida mover's original full-
   expect(() => buildGuidedStateOriginals(wageInput, guide)).toThrow();
   stateReturn.paOrdinaryReturnCompletionSources = confirmGuidedPAOrdinaryReturnCompletionSources(input, { ...f.sources, sourceFactsConfirmed: null }, facts);
 
-  const saved = structuredClone(guide);
+  const saved = reopenPennsylvaniaResidencyGuide(guide);
   expect(validateSection(saved, "state-return").status).toBe("complete");
   const current = buildGuidedStateOriginals(wageInput, saved);
   expect(current.paResidencySources?.residency).toEqual(paResidencySources.residency);
@@ -222,4 +229,4 @@ it("PA residency guide - confirms and replays the Florida mover's original full-
   expect(() => buildGuidedStateOriginals(wageInput, guide)).toThrow(/confirm/i);
   wageInput.w2s[0].stateWages = "74999";
   expect(() => buildGuidedStateOriginals(wageInput, saved)).toThrow(/original/i);
-});
+}
