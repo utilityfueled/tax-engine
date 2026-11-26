@@ -22,9 +22,28 @@ with zero retries. It saved separate $50.01 payments with matching dates,
 retained the confirmation after reload, then cleared it after an amount
 edit and a second reload. The annual filing and calculation gates remain
 closed pending the required qualification.
+
+The exact managed local browser suite passed all 653 active cases, with
+five existing skips and zero failures. The first complete unit attempt
+recorded 30,619 passes and one failed suite after the default sandbox
+blocked its private loopback fixture. The affected fixture passed all
+62 tests in isolation when local binding was available. The full coverage
+rerun passed 30,622 tests with 81 existing skips and 88.49% branch coverage,
+exceeding the required 85% on the exact source and thresholds.
+
+The next unit attempt reached 2,229 suites before a Python PDF inspection
+helper waited indefinitely for standard input. A process sample confirmed
+the wait. Test-only `ac13814e3` gives strict pypdf the same PDF bytes through
+a private temporary file, with a five-second subprocess deadline and
+cleanup. Its 17 focused tests and all 30,622 active unit tests passed, with
+81 existing skips. The application and its browser and coverage evidence
+remain bound to `8d4481d8c`. The test-only revision also passed its Docker
+build. GitHub's exact CI and container browser jobs were queued when
+checked. Qualified annual tax and form review remain open.
 [26 U.S.C. §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/) ·
 [IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
-[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45736765975).
+[Application Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45736765975) ·
+[Test-repair Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45742135809).
 
 ## November 25 mobile touch lifecycle
 

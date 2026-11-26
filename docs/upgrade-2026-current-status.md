@@ -9,6 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- The latest local checks passed 30,622 unit tests, 88.49% branch coverage,
+  and all 653 active browser cases. The application and the Ohio PDF
+  test repair both passed their exact Docker builds. Remote CI and
+  container browser qualification are recorded separately.
+  [Exact release evidence](upgrade-2026-progress.md#november-25-federal-estimated-tax-payment-reconciliation).
+
 - `8d4481d8c` reconciles 2026 federal estimate, extension and balance-due
   payment receipts before the guided worksheet calculates. Distinct
   equal-date, equal-amount payments can be confirmed from distinct records.

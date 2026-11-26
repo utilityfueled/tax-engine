@@ -112,7 +112,12 @@
       "vercelProductionBuild": "CANCELED",
       "lint": {"errors": 0, "warnings": 12224},
       "localChromium": {"casesPassed": 1, "durationMs": 2451, "deadlineMs": 30000, "retries": 0, "confirmedAfterReload": true, "clearedAfterEditAndReload": true},
-      "remaining": "Exact full suites and qualified annual tax, form and rate review. The existing public whole-return gates are closed."
+      "exactLocalManagedBrowser": {"passed": 653, "originalSkips": 5, "failed": 0, "cleanup": true},
+      "firstUnitSandboxAttempt": {"passed": 30619, "skipped": 84, "failedSuites": 1, "cause": "Private loopback listener EPERM and consequent cleanup failure", "isolatedFixtureRerunPassed": 62},
+      "exactLocalCoverage": {"passed": 30622, "originalSkips": 81, "failed": 0, "branchPercent": 88.49, "requiredPercent": 85},
+      "unitRepair": {"commit": "ac13814e30d21d5734cc968c3f1ee3f2178ec739", "cause": "Python PDF inspector waited indefinitely for stdin", "interruptedSuitesReported": 2229, "focusedPassed": 17, "subprocessDeadlineMs": 5000, "applicationSourcesChanged": false, "dockerRun": 45742135809, "dockerResult": "success"},
+      "exactLocalUnit": {"commit": "ac13814e30d21d5734cc968c3f1ee3f2178ec739", "passed": 30622, "originalSkips": 81, "failed": 0},
+      "remaining": "Exact remote CI and container browser qualification, and qualified annual tax, form and rate review. The existing public whole-return gates are closed."
     },
     "nov25MobileTouchLifecycle": {
       "applicationCommit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
