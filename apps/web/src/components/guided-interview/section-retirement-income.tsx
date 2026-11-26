@@ -11,7 +11,7 @@ import { RetirementSourceFields } from "./retirement-source-fields";
 import { IraBasisSourceFields } from "./ira-basis-source-fields";
 import type { GuidedIraBasisData } from "@/lib/guided-ira-basis";
 import { guidedDatedRetirementOwnerBirthDate } from "@/lib/guided-retirement-facts";
-import { isGuidedQcdStatement, needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
+import { invalidateEditedGuidedQcdSource, isGuidedQcdStatement, needsGuidedSimplifiedMethod } from "@/lib/guided-retirement-source-inputs";
 
 const code1IraSourceFields: readonly (keyof RetirementEntryData)[] = [
   "sourceTaxYear", "payer", "payerTin", "accountReference", "accountHolder", "distributionCode",
@@ -142,7 +142,7 @@ export function SectionRetirementIncome({
       if (i !== index) return entry;
       const sourceYearChanged = field === "sourceTaxYear" && entry[field] !== value;
       const code1SourceChanged = entry.code1IraAgeSource !== undefined && code1IraSourceFields.includes(field) && entry[field] !== value;
-      const updated = {
+      const updated = invalidateEditedGuidedQcdSource(entry, {
         ...entry, sourceFactsConfirmed: null, [field]: value,
         ...(code1SourceChanged ? { code1IraAgeSource: undefined } : {}),
         ...(field === "distributionCode" ? { requiresCodeConfirmation: false } : {}),
@@ -152,7 +152,7 @@ export function SectionRetirementIncome({
         ...(sourceYearChanged && entry.simplifiedMethod ? {
           simplifiedMethod: { ...entry.simplifiedMethod, statementCoversContractConfirmed: null, monthsPaid: "", priorRecovered: "" },
         } : {}),
-      };
+      });
       const sourceWorksheetChanged = (field === "code1IraFirstHomeSource" || field === "code1IraEducationSource" || field === "code3DisabilitySource")
         && (entry[field] !== undefined) !== (value !== undefined);
       const methodChanged = needsGuidedSimplifiedMethod(entry) !== needsGuidedSimplifiedMethod(updated);

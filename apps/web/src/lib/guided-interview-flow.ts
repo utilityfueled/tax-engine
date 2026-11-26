@@ -100,6 +100,7 @@ import type { MortgageSourceData } from "./guided-mortgage-facts";
 import type { MortgageWorksheetData } from "./guided-mortgage-worksheet";
 import { guidedSocialSecurityFactContext, socialSecurityFactErrors, socialSecurityEntries, isSmall2026SocialSecurityRepayment, isStartedSocialSecurity, type SocialSecuritySourceData } from "./guided-social-security-facts";
 import type { RetirementSourceData } from "./guided-retirement-facts";
+import { invalidateEditedGuidedQcdSource, replayGuidedQcdOwnerReview, updateGuidedQcdEntries } from "./guided-retirement-source-inputs";
 import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
@@ -2379,6 +2380,18 @@ function invalidateChangedVehicleBorrowers(loans: VehicleInterestData[], before?
   });
 }
 
+function invalidateChangedQcdOwners(entries: RetirementEntryData[], before?: PersonalInfoData, after?: PersonalInfoData) {
+  if (!entries.some(entry => entry.sourceTaxYear === "2026" && entry.qcdSource)) return entries;
+  const primaryChanged = guidedSourceValuesChanged(guidedTaxpayerIdentity(before), guidedTaxpayerIdentity(after));
+  const spouseChanged = guidedSourceValuesChanged(guidedTaxpayerIdentity(before?.spouse), guidedTaxpayerIdentity(after?.spouse));
+  if (!primaryChanged && !spouseChanged) return entries;
+  const updated = entries.map(entry => {
+    const ownerChanged = entry.accountHolder === "primary" ? primaryChanged : entry.accountHolder === "spouse" && spouseChanged;
+    return ownerChanged ? invalidateEditedGuidedQcdSource(entry, entry, true) : entry;
+  });
+  return updated.some((entry, index) => entry !== entries[index]) ? updated : entries;
+}
+
 export function updateSectionData(
   state: GuidedFlowState,
   sectionId: string,
@@ -2511,7 +2524,14 @@ export function updateSectionData(
   );
   const recoverySourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions", "payments", "state-return"].includes(sectionId) && nextGovernment?.refundRecoveries;
   const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
-  const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
+  const formerRetirement = state.sectionData["income-retirement"];
+  const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : formerRetirement;
+  let qcdEntries = nextRetirement?.entries;
+  if (qcdEntries && sectionId === "income-retirement") {
+    qcdEntries = updateGuidedQcdEntries(formerRetirement?.entries ?? [], qcdEntries, formerPersonal);
+  } else if (qcdEntries && sectionId === "personal-info") {
+    qcdEntries = invalidateChangedQcdOwners(qcdEntries, formerPersonal, nextPersonal);
+  }
   const iraBasisSourcesChanged = sourceValuesChanged && ["income-retirement", "personal-info", "adjustments"].includes(sectionId) && nextRetirement?.basisSources;
   const nextRoyalties = sectionId === "income-royalties" ? data as RoyaltyIncomeData : state.sectionData["income-royalties"];
   const royaltySourcesChanged = sourceValuesChanged && ["personal-info", "income-royalties"].includes(sectionId) && nextRoyalties;
@@ -2796,7 +2816,12 @@ export function updateSectionData(
         ...(recoverySourcesChanged ? { refundRecoveries: { ...recoverySourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(farmSourcesChanged ? { cashFarm: { ...nextGovernment.cashFarm, sourceFactsConfirmed: null } } : {}),
       } } : {}),
-      ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),
+      ...(nextRetirement && qcdEntries && (iraBasisSourcesChanged || qcdEntries !== nextRetirement.entries) ? {
+        "income-retirement": {
+          ...nextRetirement, entries: qcdEntries,
+          ...(iraBasisSourcesChanged ? { basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } : {}),
+        },
+      } : {}),
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null, ...(estimatedTaxSourcesChanged.investmentElectionSources?.household ? { investmentElectionSources: { ...estimatedTaxSourcesChanged.investmentElectionSources, household: { ...estimatedTaxSourcesChanged.investmentElectionSources.household, sourceFactsConfirmed: null } } } : {}), ...(ordinaryPeriodsChanged ? { ordinaryPreferentialPeriodsConfirmed: null } : {}), ...(specialPeriodsChanged ? { specialRatePeriodsConfirmed: null } : {}) } } } : {}),
       ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged || qsbsSourcesChanged || digitalAssetSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null, ...(qofSourcesChanged.investments ? { investments: qofSourcesChanged.investments.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}) } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(qsbsSourcesChanged ? { section1202Sources: { ...qsbsSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(digitalAssetSourcesChanged ? { digitalAssetEntries: digitalAssetSourcesToReview } : {}) } } : {}),
@@ -3598,7 +3623,12 @@ export function parseGuidedFlowState(raw: string | null): GuidedFlowState | null
 
     const sectionData = withDefaultSectionData(parsed.sectionData as SectionDataMap);
     if (sectionData["income-retirement"]) {
-      sectionData["income-retirement"] = { ...sectionData["income-retirement"], entries: sectionData["income-retirement"].entries.map(entry => ({ ...entry, requiresIraConfirmation: entry.requiresIraConfirmation || (entry.isIraSepSimple === false && entry.sourceTaxYear === undefined && entry.sourceFactsConfirmed === undefined) })) };
+      sectionData["income-retirement"] = {
+        ...sectionData["income-retirement"],
+        entries: sectionData["income-retirement"].entries.map(entry => replayGuidedQcdOwnerReview({
+          ...entry, requiresIraConfirmation: entry.requiresIraConfirmation || (entry.isIraSepSimple === false && entry.sourceTaxYear === undefined && entry.sourceFactsConfirmed === undefined),
+        }, sectionData["personal-info"])),
+      };
     }
     const preV2Facts = parsed.factsVersion !== 2 && parsed.factsVersion !== LLC_YEAR_FACTS_VERSION;
     if (preV2Facts) {

@@ -8,9 +8,9 @@ import { calculateForm1099R } from "@/engine/forms/form-1099-r";
 import { assertPdfExportAllowed } from "@/pdf/export-policy";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
 import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
-import { completeRetirementSource, startCompleteInterview } from "./complete-facts";
+import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
-import { loadGuidedFlowState, setInterviewTaxYear, validateSection } from "@/lib/guided-interview-flow";
+import { loadGuidedFlowState, parseGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 
 // Spec: spec/federal/guided-input.yaml, retirement-2025-simplified-method
 it("calculates 2025 single-life pensions from actual Simplified Method facts while preserving original Box 2a", () => {
@@ -342,6 +342,260 @@ it("forwards the actual 2026 QCD worksheet without inventing Box 2a", () => {
   expect(() => buildRetirementInputs([{ ...statement, qcdSource: { ...qcdSource, currentDeductedContributions: "" } }], "single", 2026)).toThrow(/current.*deducted/i);
   expect(() => buildRetirementInputs([{ ...statement, qcdSource: { ...qcdSource, distributionDate: "2026-02-30" } }], "single", 2026)).toThrow(/transfer date/i);
   expect(() => buildRetirementInputs([{ ...statement, sourceFactsConfirmed: null }], "single", 2026)).toThrow(/confirm/i);
+});
+
+const qcdWorksheet = {
+  transferReference: "Fictional current-year trustee transfer",
+  distributionDate: "2026-10-30",
+  recipientName: "Fictional charity",
+  ordinaryTraditionalIraConfirmed: true,
+  ageRequirementConfirmed: true,
+  directTrusteeTransferConfirmed: true,
+  eligibleRecipientAndAcknowledgmentConfirmed: true,
+  transferAmount: "6500.00",
+  adjustmentWorksheetReference: "Fictional owner adjustment worksheet",
+  allOwnerTransfersAndContributionsConfirmed: true,
+  unusedPriorDeductedContributions: "4000.00",
+  currentDeductedContributions: "0",
+};
+const qcdStatement = {
+  ...completeRetirementSource,
+  sourceTaxYear: "2026",
+  distributionCode: "Y7",
+  isIraSepSimple: true,
+  iraBasisConfirmedZero: true,
+  grossDistribution: "6500.00",
+  taxableAmount: "",
+  taxableAmountConfirmed: null,
+  taxableAmountNotDetermined: true,
+  trumpAccount: false,
+  excessContributionEarnings: "0",
+  qcdSource: qcdWorksheet,
+};
+
+function jointQcdDraft() {
+  const state = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["retirement"], lifeEvents: [], stateCode: null });
+  state.taxYear = 2026;
+  const spouse = completePersonalInfo.spouse;
+  if (!spouse) throw new Error("Missing joint fixture owner");
+  const personal = { ...completePersonalInfo, dateOfBirth: "1952-02-15", spouse: { ...spouse, dateOfBirth: "1954-02-15" } };
+  state.sectionData["personal-info"] = personal;
+  return { state, personal };
+}
+
+it("revokes old QCD evidence when the same household role is a different person", () => {
+  const { state, personal } = jointQcdDraft();
+  for (const role of ["primary", "spouse"] as const) {
+    const entry = { ...qcdStatement, accountHolder: role };
+    const confirmed = updateSectionData(state, "income-retirement", { entries: [entry] });
+    expect(buildTaxInputFromGuidedData(confirmed)?.form1099R?.[0]?.qcdSource).toMatchObject(qcdWorksheet);
+    const movedStatement = updateSectionData(confirmed, "income-retirement", {
+      entries: [{ ...entry, accountHolder: role === "primary" ? "spouse" : "primary" }],
+    });
+    expect(movedStatement.sectionData["income-retirement"]?.entries[0]).toMatchObject({
+      iraBasisConfirmedZero: null, sourceFactsConfirmed: null,
+      qcdSource: { allOwnerTransfersAndContributionsConfirmed: null, currentDeductedContributions: "0" },
+    });
+    const moved = updateSectionData(confirmed, "personal-info", { ...personal, city: "Another City" });
+    const otherPerson = role === "primary"
+      ? { ...personal, spouse: { ...personal.spouse, ssn: "222-88-4444" } }
+      : { ...personal, ssn: "111-88-3333" };
+    const otherChanged = updateSectionData(moved, "personal-info", otherPerson);
+    expect(otherChanged.sectionData["income-retirement"]?.entries[0]?.qcdSource).toMatchObject(qcdWorksheet);
+    expect(parseGuidedFlowState(JSON.stringify(otherChanged))?.sectionData["income-retirement"]?.entries[0]?.qcdSource).toMatchObject(qcdWorksheet);
+    const replacement = role === "primary"
+      ? { ...otherPerson, ssn: "111-77-3333", dateOfBirth: "1955-01-15" }
+      : { ...otherPerson, spouse: { ...otherPerson.spouse, ssn: "222-77-4444", dateOfBirth: "1955-01-15" } };
+    const changed = updateSectionData(otherChanged, "personal-info", replacement);
+    expect(changed.sectionData["income-retirement"]?.entries[0]).toMatchObject({
+      accountHolder: role, sourceFactsConfirmed: null, iraBasisConfirmedZero: null,
+      qcdSource: {
+        transferReference: qcdWorksheet.transferReference, distributionDate: qcdWorksheet.distributionDate,
+        adjustmentWorksheetReference: qcdWorksheet.adjustmentWorksheetReference,
+        unusedPriorDeductedContributions: "4000.00", currentDeductedContributions: "0",
+        ageRequirementConfirmed: null, allOwnerTransfersAndContributionsConfirmed: null,
+        directTrusteeTransferConfirmed: null, eligibleRecipientAndAcknowledgmentConfirmed: null,
+        ordinaryTraditionalIraConfirmed: null,
+      },
+    });
+    const pending = changed.sectionData["income-retirement"]?.entries[0];
+    if (!pending) throw new Error("Missing retained original");
+    const onlyOuterConfirmed = updateSectionData(changed, "income-retirement", { entries: [{ ...pending, sourceFactsConfirmed: true }] });
+    const reopened = parseGuidedFlowState(JSON.stringify(onlyOuterConfirmed));
+    expect(reopened).not.toBeNull();
+    expect(reopened && buildTaxInputFromGuidedData(reopened)).toBeNull();
+    const correctedBirthDate = role === "primary"
+      ? { ...personal, dateOfBirth: "1952-01-15" }
+      : { ...personal, spouse: { ...personal.spouse, dateOfBirth: "1954-01-15" } };
+    expect(updateSectionData(confirmed, "personal-info", correctedBirthDate)
+      .sectionData["income-retirement"]?.entries[0]?.qcdSource?.ageRequirementConfirmed).toBeNull();
+  }
+});
+
+it("holds unbound saved QCD confirmations and keeps ordinary Code 7", () => {
+  const { state } = jointQcdDraft();
+  const ordinary = {
+    ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "7",
+    isIraSepSimple: true, iraBasisConfirmedZero: true, trumpAccount: false, excessContributionEarnings: "0",
+    accountReference: "Different fictional ordinary IRA account",
+  };
+  const reopened = parseGuidedFlowState(JSON.stringify({
+    ...state, sectionData: { ...state.sectionData, "income-retirement": { entries: [qcdStatement, ordinary] } },
+  }));
+  expect(reopened?.sectionData["income-retirement"]?.entries).toMatchObject([
+    {
+      sourceFactsConfirmed: null, iraBasisConfirmedZero: null,
+      qcdSource: {
+        allOwnerTransfersAndContributionsConfirmed: null, ageRequirementConfirmed: null,
+        transferReference: qcdWorksheet.transferReference, currentDeductedContributions: "0",
+      },
+    },
+    { distributionCode: "7", sourceFactsConfirmed: true, iraBasisConfirmedZero: true },
+  ]);
+  expect(reopened?.sectionData["income-retirement"]?.entries[1]?.qcdSource).toBeUndefined();
+  expect(reopened && buildTaxInputFromGuidedData(reopened)).toBeNull();
+  const pending = reopened?.sectionData["income-retirement"]?.entries[0];
+  if (!reopened || !pending?.qcdSource) throw new Error("Missing retained QCD worksheet");
+  const partial = updateSectionData(reopened, "income-retirement", {
+    entries: [{ ...pending, qcdSource: { ...pending.qcdSource, ageRequirementConfirmed: true } }, ordinary],
+  });
+  const reopenedPartial = parseGuidedFlowState(JSON.stringify(partial));
+  const partialEntry = reopenedPartial?.sectionData["income-retirement"]?.entries[0];
+  if (!reopenedPartial || !partialEntry?.qcdSource) throw new Error("Could not reopen partial QCD review");
+  expect(partialEntry.qcdSource).toMatchObject({
+    ageRequirementConfirmed: true, allOwnerTransfersAndContributionsConfirmed: null, currentDeductedContributions: "0",
+  });
+  const reviewed = updateSectionData(reopenedPartial, "income-retirement", {
+    entries: [{ ...partialEntry, qcdSource: qcdWorksheet, iraBasisConfirmedZero: true, sourceFactsConfirmed: true }, ordinary],
+  });
+  const bound = parseGuidedFlowState(JSON.stringify(reviewed));
+  const fingerprint = bound?.sectionData["income-retirement"]?.entries[0]?.qcdSource?.reviewedSourceFingerprint;
+  expect(fingerprint).toMatch(/^[a-f0-9]{64}$/);
+  if (!bound || !fingerprint) throw new Error("Missing confirmed local QCD owner");
+  const canonical = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(bound));
+  expect(canonical.form1099R?.[0]?.qcdSource).toEqual(qcdWorksheet);
+  expect(JSON.stringify([canonical, buildGuidedFactAnswers(bound), buildGuidedSyntheticDocuments(bound)])).not.toContain(fingerprint);
+  const forms = calculateForm1099R(canonical.form1099R, { taxYear: 2026, hasJointSpouse: true, qcdReturnContext: canonical });
+  expect(forms.iraQualifiedCharitableDistributions.toFixed()).toBe("2500");
+  expect(forms.iraTaxable.toFixed()).toBe("5000");
+});
+
+it("holds a saved QCD review after an age-eligible birth date is replaced", () => {
+  const { state, personal } = jointQcdDraft();
+  const confirmed = updateSectionData(state, "income-retirement", { entries: [qcdStatement] });
+  confirmed.sectionData["personal-info"] = { ...personal, dateOfBirth: "1953-05-20" };
+  const reopened = parseGuidedFlowState(JSON.stringify(confirmed));
+  expect(reopened?.sectionData["income-retirement"]?.entries[0]).toMatchObject({
+    sourceFactsConfirmed: null, iraBasisConfirmedZero: null,
+    qcdSource: { ageRequirementConfirmed: null, allOwnerTransfersAndContributionsConfirmed: null, currentDeductedContributions: "0" },
+  });
+  expect(reopened && buildTaxInputFromGuidedData(reopened)).toBeNull();
+});
+
+it("holds saved QCD evidence that changed outside review", () => {
+  for (const edited of [
+    { qcdSource: { ...qcdWorksheet, unusedPriorDeductedContributions: "0" } },
+    { qcdSource: { ...qcdWorksheet, transferReference: "Another receipt" } },
+    { accountReference: "Another IRA account" },
+  ]) {
+    const { state } = jointQcdDraft();
+    const confirmed = updateSectionData(state, "income-retirement", { entries: [qcdStatement] });
+    const retirement = confirmed.sectionData["income-retirement"];
+    const original = retirement?.entries[0];
+    if (!retirement || !original?.qcdSource) throw new Error("Missing reviewed QCD draft");
+    retirement.entries = [{
+      ...original, accountReference: "accountReference" in edited ? edited.accountReference : original.accountReference,
+      qcdSource: { ...original.qcdSource, ...("qcdSource" in edited ? edited.qcdSource : {}) },
+    }];
+    const reopened = parseGuidedFlowState(JSON.stringify(confirmed));
+    expect(reopened?.sectionData["income-retirement"]?.entries[0]).toMatchObject({
+      sourceFactsConfirmed: null, iraBasisConfirmedZero: null,
+      qcdSource: {
+        allOwnerTransfersAndContributionsConfirmed: null, currentDeductedContributions: "0",
+        unusedPriorDeductedContributions: edited.qcdSource?.unusedPriorDeductedContributions ?? "4000.00",
+        transferReference: edited.qcdSource?.transferReference ?? qcdWorksheet.transferReference,
+      },
+    });
+    expect(reopened && buildTaxInputFromGuidedData(reopened)).toBeNull();
+  }
+});
+
+it("preserves independent QCD confirmations across a legitimate worksheet edit and reload", () => {
+  const { state } = jointQcdDraft();
+  const confirmed = updateSectionData(state, "income-retirement", { entries: [qcdStatement] });
+  const original = confirmed.sectionData["income-retirement"]?.entries[0];
+  if (!original?.qcdSource) throw new Error("Missing reviewed QCD draft");
+  const edited = updateSectionData(confirmed, "income-retirement", {
+    entries: [{ ...original, qcdSource: { ...original.qcdSource, unusedPriorDeductedContributions: "0" } }],
+  });
+  const reopened = parseGuidedFlowState(JSON.stringify(edited));
+  const entry = reopened?.sectionData["income-retirement"]?.entries[0];
+  expect(entry).toMatchObject({
+    sourceFactsConfirmed: null, iraBasisConfirmedZero: true,
+    qcdSource: {
+      ageRequirementConfirmed: true, directTrusteeTransferConfirmed: true, allOwnerTransfersAndContributionsConfirmed: null,
+      unusedPriorDeductedContributions: "0", currentDeductedContributions: "0",
+    },
+  });
+  expect(reopened && buildTaxInputFromGuidedData(reopened)).toBeNull();
+  if (!reopened || !entry?.qcdSource) throw new Error("Missing reopened partial review");
+  const reviewed = updateSectionData(reopened, "income-retirement", {
+    entries: [{ ...entry, qcdSource: { ...entry.qcdSource, allOwnerTransfersAndContributionsConfirmed: true }, sourceFactsConfirmed: true }],
+  });
+  const restored = parseGuidedFlowState(JSON.stringify(reviewed));
+  const canonical = TaxYearInputSchema.parse(restored && buildTaxInputFromGuidedData(restored));
+  const forms = calculateForm1099R(canonical.form1099R, { taxYear: 2026, hasJointSpouse: true, qcdReturnContext: canonical });
+  expect(forms.iraQualifiedCharitableDistributions.toFixed()).toBe("6500");
+  expect(forms.iraTaxable.toFixed()).toBe("0");
+});
+
+it("keeps a distinct ordinary Code 7 that replaces a removed QCD statement", () => {
+  const { state } = jointQcdDraft();
+  const confirmed = updateSectionData(state, "income-retirement", { entries: [qcdStatement] });
+  const ordinary = {
+    ...completeRetirementSource, sourceTaxYear: "2026", distributionCode: "7",
+    isIraSepSimple: true, iraBasisConfirmedZero: true, trumpAccount: false, excessContributionEarnings: "0",
+    accountReference: "Different fictional ordinary IRA account",
+  };
+  const updated = updateSectionData(confirmed, "income-retirement", { entries: [ordinary] });
+  expect(updated.sectionData["income-retirement"]?.entries).toEqual([ordinary]);
+  expect(buildTaxInputFromGuidedData(updated)?.form1099R?.[0]).toMatchObject({
+    distributionCode: "7", accountReference: ordinary.accountReference, iraBasisConfirmedZero: true,
+  });
+});
+
+it("preserves a first explicit QCD No after reopening the draft", () => {
+  const { state } = jointQcdDraft();
+  const source = {
+    transferReference: qcdWorksheet.transferReference,
+    distributionDate: qcdWorksheet.distributionDate,
+    recipientName: qcdWorksheet.recipientName,
+    transferAmount: qcdWorksheet.transferAmount,
+    adjustmentWorksheetReference: qcdWorksheet.adjustmentWorksheetReference,
+    unusedPriorDeductedContributions: "0",
+    currentDeductedContributions: "0",
+  };
+  const started = { ...qcdStatement, sourceFactsConfirmed: null, qcdSource: source };
+  const draft = updateSectionData(state, "income-retirement", { entries: [started] });
+  const reviewed = updateSectionData(draft, "income-retirement", {
+    entries: [{ ...started, qcdSource: { ...source, directTrusteeTransferConfirmed: false } }],
+  });
+  const reopened = parseGuidedFlowState(JSON.stringify(reviewed));
+  const entry = reopened?.sectionData["income-retirement"]?.entries[0];
+  expect(entry).toMatchObject({
+    iraBasisConfirmedZero: true,
+    sourceFactsConfirmed: null,
+    qcdSource: { ...source, directTrusteeTransferConfirmed: false },
+  });
+  if (!reopened || !entry) throw new Error("Missing reopened QCD statement");
+  const generalReview = updateSectionData(reopened, "income-retirement", {
+    entries: [{
+      ...entry, sourceFactsConfirmed: true,
+      qcdSource: { ...qcdWorksheet, ...source, directTrusteeTransferConfirmed: false },
+    }],
+  });
+  expect(validateSection(generalReview, "income-retirement").fieldErrors).toHaveProperty("retirement-0-qcd-directTrusteeTransferConfirmed");
+  expect(buildTaxInputFromGuidedData(generalReview)).toBeNull();
 });
 
 it("counts actual local withholding in the allocation once and rejects duplicate or contradictory sources", () => {

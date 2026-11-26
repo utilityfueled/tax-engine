@@ -95,3 +95,35 @@ lines:
       incomplete packet and require fresh confirmation after edits. Calculate
       taxable income from the confirmed ordinary zero-basis sources.
     testRef: "tests/guided-interview/guided-retirement-source-facts.test.ts::forwards the actual 2026 QCD worksheet without inventing Box 2a"
+  - line: "guided-worksheet-edit-confirmation"
+    description: "Review edited transfers and owner records again"
+    formula: >-
+      Retain entered transfer and owner worksheet facts, including explicit
+      zeroes, when their source changes. Require fresh QCD confirmations after
+      an edit to the statement identity or IRA owner, including fresh zero-basis
+      evidence for a different owner. An edited transfer or charity invalidates
+      its corresponding confirmations. An edited adjustment reference or
+      contribution amount invalidates the owner's worksheet confirmation. The
+      general Form 1099-R review cannot replace a QCD confirmation. Keep the
+      supported distribution codes, eligibility rules and ordinary return gates.
+      A changed taxpayer identity or birth date invalidates the worksheet for
+      that person only. On reopen, require fresh confirmation if the retained
+      review cannot be matched to the same owner and birth date, original
+      statement fields, and QCD worksheet evidence and confirmations. Create
+      this local binding after an explicit QCD answer, including a negative
+      answer. Preserve that answer on reopen and keep ineligible or incomplete
+      worksheets held. A normal edit may preserve
+      still-valid confirmations from a matching prior review after clearing the
+      confirmations affected by the edit. Require explicit review of edited
+      facts before using them. A distinct ordinary Code 7 original never
+      inherits the worksheet or review status of a removed QCD row.
+    testRef: "tests/apps/web/retirement-source-interactions.test.tsx::requires fresh QCD facts after changing the actual IRA owner"
+    testRefs:
+      - "tests/apps/web/retirement-source-interactions.test.tsx::requires fresh QCD confirmations after editing transfer or contribution records"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::revokes old QCD evidence when the same household role is a different person"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::holds unbound saved QCD confirmations and keeps ordinary Code 7"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::holds a saved QCD review after an age-eligible birth date is replaced"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::holds saved QCD evidence that changed outside review"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::preserves independent QCD confirmations across a legitimate worksheet edit and reload"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::keeps a distinct ordinary Code 7 that replaces a removed QCD statement"
+      - "tests/guided-interview/guided-retirement-source-facts.test.ts::preserves a first explicit QCD No after reopening the draft"

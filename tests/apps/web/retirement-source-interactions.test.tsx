@@ -7,15 +7,15 @@ import { afterEach, expect, it, vi } from "vitest";
 import { SectionRetirementIncome } from "@/components/guided-interview/section-retirement-income";
 import { SectionReview } from "@/components/guided-interview/section-review";
 import { buildRetirementInputs } from "@/lib/guided-interview-bridge";
-import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, validateSection, type RetirementEntryData } from "@/lib/guided-interview-flow";
+import { emptyRetirementEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, validateSection, type FilingStatus, type RetirementEntryData } from "@/lib/guided-interview-flow";
 import { completePersonalInfo, completeRetirementSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { iraEducationOwnerFingerprint } from "@/utils/ira-education-owner.js";
 
-async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>, taxYear = 2025, ownerBirthDate = "1966-02-01") {
+async function render(initial: RetirementEntryData[], run: (context: { latest: () => RetirementEntryData[]; container: HTMLDivElement; change: (label: string, value: string) => Promise<void> }) => Promise<void>, taxYear = 2025, ownerBirthDate = "1966-02-01", filingStatus: FilingStatus = "single") {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container); let latest = initial;
-  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus="single" taxYear={taxYear} primaryDateOfBirth={ownerBirthDate} primaryOwnerFingerprint={iraEducationOwnerFingerprint(completePersonalInfo)} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
+  function Harness() { const [entries, setEntries] = useState(initial); return <SectionRetirementIncome entries={entries} filingStatus={filingStatus} taxYear={taxYear} primaryDateOfBirth={ownerBirthDate} primaryOwnerFingerprint={iraEducationOwnerFingerprint(completePersonalInfo)} onEntriesChange={next => { latest = next; setEntries(next); }} />; }
   async function change(label: string, value: string) {
     const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
     if (!element) throw new Error(`Missing control: ${label}`);
@@ -362,6 +362,75 @@ it("keeps a saved QCD worksheet visible and requires source confirmation after a
     await act(async () => remove?.click());
     expect(latest()[0]).toMatchObject({ qcdSource: undefined, sourceFactsConfirmed: null });
   });
+});
+
+const complete2026QcdEntry = {
+  ...completeRetirementSource,
+  sourceTaxYear: "2026",
+  distributionCode: "Y7",
+  isIraSepSimple: true,
+  iraBasisConfirmedZero: true,
+  grossDistribution: "6500.00",
+  taxableAmount: "",
+  taxableAmountConfirmed: null,
+  taxableAmountNotDetermined: true,
+  trumpAccount: false,
+  excessContributionEarnings: "0",
+  qcdSource: {
+    transferReference: "Synthetic trustee receipt",
+    distributionDate: "2026-10-30",
+    recipientName: "Fictional community charity",
+    ordinaryTraditionalIraConfirmed: true,
+    ageRequirementConfirmed: true,
+    directTrusteeTransferConfirmed: true,
+    eligibleRecipientAndAcknowledgmentConfirmed: true,
+    transferAmount: "6500.00",
+    adjustmentWorksheetReference: "Synthetic owner adjustment worksheet",
+    allOwnerTransfersAndContributionsConfirmed: true,
+    unusedPriorDeductedContributions: "4000.00",
+    currentDeductedContributions: "0",
+  },
+} satisfies RetirementEntryData;
+
+it("requires fresh QCD facts after changing the actual IRA owner", async () => {
+  await render([complete2026QcdEntry], async ({ latest, change }) => {
+    expect(buildRetirementInputs(latest(), "mfj", 2026)[0]?.qcdSource).toBeDefined();
+    await change("Actual retirement distribution recipient", "spouse");
+    expect(latest()[0]).toMatchObject({
+      accountHolder: "spouse", sourceFactsConfirmed: null, iraBasisConfirmedZero: null,
+      qcdSource: {
+        transferReference: "Synthetic trustee receipt",
+        unusedPriorDeductedContributions: "4000.00", currentDeductedContributions: "0",
+        ordinaryTraditionalIraConfirmed: null, ageRequirementConfirmed: null,
+        directTrusteeTransferConfirmed: null, eligibleRecipientAndAcknowledgmentConfirmed: null,
+        allOwnerTransfersAndContributionsConfirmed: null,
+      },
+    });
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "mfj", 2026)).toThrow(/QCD/i);
+  }, 2026, "1952-02-15", "mfj");
+});
+
+it("requires fresh QCD confirmations after editing transfer or contribution records", async () => {
+  await render([complete2026QcdEntry], async ({ latest, change }) => {
+    const ownerHistory = "Have you reconciled all of this owner’s transfers and deducted contributions on the worksheet?";
+    await change("Unused prior-year deducted IRA contributions after age 70½", "0");
+    expect(latest()[0]?.qcdSource).toMatchObject({
+      unusedPriorDeductedContributions: "0", allOwnerTransfersAndContributionsConfirmed: null,
+      directTrusteeTransferConfirmed: true, eligibleRecipientAndAcknowledgmentConfirmed: true,
+    });
+    await change(confirm, "true");
+    expect(() => buildRetirementInputs(latest(), "single", 2026)).toThrow(/QCD/i);
+    await change(ownerHistory, "true");
+    await change(confirm, "true");
+    expect(buildRetirementInputs(latest(), "single", 2026)[0]?.qcdSource?.unusedPriorDeductedContributions).toBe("0");
+    await change("Charity named on the transfer and acknowledgment", "Corrected fictional charity");
+    expect(latest()[0]?.qcdSource).toMatchObject({
+      recipientName: "Corrected fictional charity", directTrusteeTransferConfirmed: null,
+      eligibleRecipientAndAcknowledgmentConfirmed: null, allOwnerTransfersAndContributionsConfirmed: null,
+      ordinaryTraditionalIraConfirmed: true, ageRequirementConfirmed: true,
+    });
+  }, 2026, "1952-02-15");
 });
 
 it("records the qualified lump-sum reporting choice and clears it after a code edit", async () => {

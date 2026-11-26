@@ -1,4 +1,8 @@
-import type { RetirementEntryData } from './guided-interview-flow';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
+import { isActualDate } from '@/utils/civil-date.js';
+import { iraEducationOwnerFingerprint } from '@/utils/ira-education-owner.js';
+import type { PersonalInfoData, RetirementEntryData } from './guided-interview-flow';
 import { parseGuidedCurrency } from './guided-currency';
 
 export const retirementQcdTextFields = [
@@ -24,7 +28,118 @@ export const retirementQcdConfirmations = [
 export type GuidedRetirementQcdSource =
   Partial<Record<(typeof retirementQcdTextFields)[number][0] | 'distributionDate', string>> &
   Partial<Record<(typeof retirementQcdAmounts)[number][0], string>> &
-  Partial<Record<(typeof retirementQcdConfirmations)[number][0], boolean | null>>;
+  Partial<Record<(typeof retirementQcdConfirmations)[number][0], boolean | null>> & {
+    reviewedSourceFingerprint?: string;
+  };
+
+const qcdStatementFields = [
+  'sourceTaxYear', 'payer', 'payerTin', 'accountReference', 'distributionCode', 'isIraSepSimple',
+  'grossDistribution', 'taxableAmount', 'taxableAmountNotDetermined', 'employeeContributions',
+] as const;
+
+/** Keep worksheet entries, but require renewed review of the source that changed. */
+export function invalidateEditedGuidedQcdSource(
+  previous: RetirementEntryData,
+  next: RetirementEntryData,
+  ownerIdentityChanged = false,
+): RetirementEntryData {
+  const prior = previous.qcdSource;
+  const current = next.qcdSource;
+  if (!prior || (previous.sourceTaxYear !== '2026' && next.sourceTaxYear !== '2026')) return next;
+
+  const ownerChanged = ownerIdentityChanged || previous.accountHolder !== next.accountHolder;
+  const statementChanged = ownerChanged || qcdStatementFields.some(field => previous[field] !== next[field]);
+  const basisReview = ownerChanged ? { iraBasisConfirmedZero: null } : {};
+  if (!current) return statementChanged ? { ...next, sourceFactsConfirmed: null, ...basisReview } : next;
+  const dateChanged = prior.distributionDate !== current.distributionDate;
+  const recipientChanged = prior.recipientName !== current.recipientName;
+  const transferChanged = dateChanged || recipientChanged || prior.transferReference !== current.transferReference
+    || prior.transferAmount !== current.transferAmount;
+  const historyChanged = transferChanged || prior.adjustmentWorksheetReference !== current.adjustmentWorksheetReference
+    || prior.unusedPriorDeductedContributions !== current.unusedPriorDeductedContributions
+    || prior.currentDeductedContributions !== current.currentDeductedContributions;
+  if (!statementChanged && !historyChanged) return next;
+
+  return {
+    ...next,
+    sourceFactsConfirmed: null,
+    ...basisReview,
+    qcdSource: {
+      ...current,
+      ...(ownerChanged ? { reviewedSourceFingerprint: undefined } : {}),
+      ...(statementChanged ? { ordinaryTraditionalIraConfirmed: null } : {}),
+      ...(statementChanged || dateChanged ? { ageRequirementConfirmed: null } : {}),
+      ...(statementChanged || transferChanged ? { directTrusteeTransferConfirmed: null } : {}),
+      ...(statementChanged || transferChanged ? { eligibleRecipientAndAcknowledgmentConfirmed: null } : {}),
+      ...(statementChanged || historyChanged ? { allOwnerTransfersAndContributionsConfirmed: null } : {}),
+    },
+  };
+}
+
+function currentQcdReviewFingerprint(entry: RetirementEntryData, personal?: PersonalInfoData): string | undefined {
+  const source = entry.qcdSource;
+  const owner = entry.accountHolder === 'primary' ? personal : entry.accountHolder === 'spouse' ? personal?.spouse : undefined;
+  const ownerFingerprint = iraEducationOwnerFingerprint(owner);
+  const birthDate = owner?.dateOfBirth?.trim();
+  if (!source || !ownerFingerprint || !isActualDate(birthDate)) return undefined;
+
+  const facts = [
+    entry.accountHolder, ownerFingerprint, birthDate,
+    ...qcdStatementFields.map(field => entry[field]),
+    entry.iraBasisConfirmedZero, entry.sourceFactsConfirmed,
+    source.distributionDate,
+    ...retirementQcdTextFields.map(([field]) => source[field]),
+    ...retirementQcdAmounts.map(([field]) => source[field]),
+    ...retirementQcdConfirmations.map(([field]) => source[field]),
+  ];
+  return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(facts))));
+}
+
+/** Record explicit QCD review and preserve independent confirmations after ordinary edits. */
+function updateGuidedQcdReview(
+  previous: RetirementEntryData | undefined,
+  next: RetirementEntryData,
+  personal?: PersonalInfoData,
+): RetirementEntryData {
+  const updated = previous ? invalidateEditedGuidedQcdSource(previous, next) : next;
+  const current = updated.qcdSource;
+  if (updated.sourceTaxYear !== '2026' || !current) return updated;
+  const prior = previous?.qcdSource;
+  const previousFingerprint = prior?.reviewedSourceFingerprint;
+  const previouslyBound = previous && previousFingerprint && previousFingerprint === currentQcdReviewFingerprint(previous, personal);
+  if (previous && previousFingerprint && !previouslyBound) return invalidateEditedGuidedQcdSource(previous, updated, true);
+  const reviewedAnswerChanged = retirementQcdConfirmations.some(([field]) => typeof current[field] === 'boolean' && current[field] !== prior?.[field]);
+  // A matching prior review can carry confirmations that the edit did not revoke.
+  const canPreserveReview = previouslyBound && previous.accountHolder === updated.accountHolder;
+  const reviewedSourceFingerprint = canPreserveReview || reviewedAnswerChanged ? currentQcdReviewFingerprint(updated, personal) : undefined;
+  return current.reviewedSourceFingerprint === reviewedSourceFingerprint ? updated
+    : { ...updated, qcdSource: { ...current, reviewedSourceFingerprint } };
+}
+
+export function updateGuidedQcdEntries(
+  previous: RetirementEntryData[],
+  next: RetirementEntryData[],
+  personal?: PersonalInfoData,
+): RetirementEntryData[] {
+  if (!previous.some(entry => entry.qcdSource) && !next.some(entry => entry.qcdSource)) return next;
+  const updated = next.map((entry, index) => {
+    if (previous.includes(entry)) return entry;
+    const original = previous.find(row => row.sourceTaxYear === entry.sourceTaxYear && row.accountHolder === entry.accountHolder
+      && row.payerTin === entry.payerTin && row.accountReference === entry.accountReference)
+      ?? previous.find(row => entry.qcdSource?.transferReference && row.qcdSource?.transferReference === entry.qcdSource.transferReference)
+      ?? (entry.qcdSource ? previous[index] : undefined);
+    return updateGuidedQcdReview(original, entry, personal);
+  });
+  return updated.some((entry, index) => entry !== next[index]) ? updated : next;
+}
+
+/** Reopen only confirmations that still match the reviewed taxpayer and source facts. */
+export function replayGuidedQcdOwnerReview(entry: RetirementEntryData, personal?: PersonalInfoData): RetirementEntryData {
+  if (entry.sourceTaxYear !== '2026' || !entry.qcdSource) return entry;
+  const fingerprint = currentQcdReviewFingerprint(entry, personal);
+  return fingerprint && entry.qcdSource.reviewedSourceFingerprint === fingerprint
+    ? entry : invalidateEditedGuidedQcdSource(entry, entry, true);
+}
 
 export interface GuidedRetirementSimplifiedMethod {
   planReference?: string;
