@@ -15,6 +15,7 @@ import { assertW2StateLocalSources, type W2StateLocalSourceContext } from "@/eng
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
 import {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCardTipSource } from "./guided-card-tip-source";
+import { buildGuidedPersonalEvCharger } from "./guided-personal-ev-charger";
 export {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
 import type { z } from "zod";
@@ -842,12 +843,14 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let professionalWagering: ReturnType<typeof readGuidedProfessionalWagering>;
   let homeOffice: ReturnType<typeof buildGuidedRenterHomeOffice>;
   let form8880: ReturnType<typeof buildGuidedSaversCredit>;
+  let form8911: ReturnType<typeof buildGuidedPersonalEvCharger>;
   let form8919: ReturnType<typeof buildGuidedForm8919ReasonA>;
   let reitPtpLossSource: ReturnType<typeof buildGuidedReitPtpLossSource>;
   try {
     reitPtpLossSource = buildGuidedReitPtpLossSource(state);
     form8919 = buildGuidedForm8919ReasonA(state);
     form3903 = buildMovingExpenses(state);
+    form8911 = buildGuidedPersonalEvCharger(creditsData?.personalEvCharger, state.taxYear, segmentation.filingStatus);
     assertKnownFacts(royaltySourceFactErrors(state));
     if(sectionData['additional-deductions']?.rrtaPayrollSources)buildTipIncomeSourceOriginals(sectionData['additional-deductions']?.tipIncomeAccounts,segmentation.filingStatus,state.taxYear,w2Data?.entries);
     else assertKnownFacts(tipIncomeFactErrors(state));
@@ -1130,6 +1133,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     ...buildPremiumTaxCreditInputs(creditsData?.premiumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo, healthInsurance),
     ...studentLoans,
     energyCredits,
+    ...(form8911 ? { form8911 } : {}),
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),
     form8839: buildAdoptionInput(creditsData?.adoption, state.taxYear, segmentation.filingStatus, personalInfo),
     scheduleH,

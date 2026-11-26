@@ -114,6 +114,7 @@ import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { invalidateEditedReitPtpLossSource, reitPtpLossSourceFactErrors, type GuidedReitPtpLossSource } from "./guided-reit-ptp-loss";
 import { invalidateEditedGuidedDirectReitDividend, invalidateGuidedDirectReitDividend, type GuidedDirectReitDividendFacts } from "./guided-direct-reit-dividend";
 import { cardTipStatementFactsChanged, clearCardTipStatementConfirmation, type GuidedCardTipSource } from "./guided-card-tip-source";
+import { invalidateEditedPersonalEvCharger, invalidatePersonalEvChargerSource, personalEvChargerFactError, type GuidedPersonalEvCharger } from "./guided-personal-ev-charger";
 import { guidedSaversCreditContext, guidedSaversCreditFactErrors, guidedSaversHistoricalEvidence, requireGuidedSaversReview, type GuidedSaversCreditData } from "./guided-savers-credit";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
 
@@ -1342,6 +1343,7 @@ export const emptyEnergyCreditData: EnergyCreditData = {
 };
 
 export interface CreditsData {
+  personalEvCharger?: GuidedPersonalEvCharger;
   saversCredit?: GuidedSaversCreditData;
   minimumTaxCredit?: MinimumTaxCreditData;
   premiumTaxCredit?: PremiumTaxCreditData;
@@ -1944,9 +1946,10 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } } : {}),
         },
       } : {}),
-      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency || bankInterestSourcesEntered || credits.saversCredit) ? { credits: { ...credits,
+      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency || bankInterestSourcesEntered || credits.saversCredit || credits.personalEvCharger) ? { credits: { ...credits,
         ...(requireCareReview ? { dependentCare: { ...credits.dependentCare, sourceFactsConfirmed: null } } : {}),
         ...(credits.saversCredit ? { saversCredit: requireGuidedSaversReview(credits.saversCredit, Boolean(guidedSaversHistoricalEvidence(credits.saversCredit))) } : {}),
+        ...(credits.personalEvCharger ? { personalEvCharger: invalidatePersonalEvChargerSource(credits.personalEvCharger) } : {}),
         ...(education && (aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency) ? { education: {
           ...(llcSourcesEntered ? invalidateLlcYearSources(education) : education),
           ...(clearStudentLoanEducationDependency ? { claimedAsDependent: null } : {}),
@@ -2797,8 +2800,15 @@ export function updateSectionData(
   const studentLoanWorksheetYearChanged = sectionId === "adjustments" && nextStudentLoanFacts
     && /^\d{4}$/u.test(previousStudentLoanYear) && previousStudentLoanYear !== nextStudentLoanFacts.sourceTaxYear;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
-  const nextCredits = sectionId === "credits"
+  const nextCreditsDraft = sectionId === "credits"
     ? invalidateEditedLlcSources(credits, retainAotcSources(credits, data as CreditsData | undefined)) : credits;
+  const charger = nextCreditsDraft?.personalEvCharger;
+  const chargerOwner = (personal?: PersonalInfoData) => charger?.owner === "spouse" ? personal?.spouse : personal;
+  const chargerOwnerChanged = sectionId === "personal-info" && charger
+    && guidedSourceValuesChanged(guidedTaxpayerIdentity(chargerOwner(formerPersonal)), guidedTaxpayerIdentity(chargerOwner(nextPersonal)));
+  const nextCredits = sectionId === "credits" && nextCreditsDraft && charger
+    ? { ...nextCreditsDraft, personalEvCharger: invalidateEditedPersonalEvCharger(credits?.personalEvCharger, charger) }
+    : nextCreditsDraft;
   const savedSaversCredit = nextCredits?.saversCredit;
   const editedSaversDraft = sectionId === "credits" && credits?.saversCredit && sourceValuesChanged;
   const saversSourcesChanged = savedSaversCredit && sourceValuesChanged
@@ -3036,8 +3046,9 @@ export function updateSectionData(
         ...(studentLoanWorksheetYearChanged ? { studentLoanFacts: invalidateStudentLoanYearFacts(nextStudentLoanFacts) }
           : studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesToReview ? { hsaAccounts: hsaSourcesToReview } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
-      ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged || saversCreditToReconfirm || aotcClaimantIdentityChanged) && nextCredits ? { credits: { ...nextCredits,
+      ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged || saversCreditToReconfirm || aotcClaimantIdentityChanged || chargerOwnerChanged) && nextCredits ? { credits: { ...nextCredits,
         ...(aotcClaimantIdentityChanged ? { education: { ...nextCredits.education, aotcClaimantFactsTaxYear: undefined } } : {}),
+        ...(chargerOwnerChanged ? { personalEvCharger: invalidatePersonalEvChargerSource(charger) } : {}),
         ...(saversCreditToReconfirm ? { saversCredit: requireGuidedSaversReview(saversCreditToReconfirm, Boolean(saversProofChanged)) } : {}),
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
@@ -3545,6 +3556,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
     case "credits": {
       const credits = getSectionData(state, "credits");
       const personal = getSectionData(state, "personal-info");
+      const chargingPortError = credits?.personalEvCharger && personalEvChargerFactError(credits.personalEvCharger, state.taxYear, state.segmentation.filingStatus);
       const educationErrors = educationFactErrors(credits, state.taxYear, state.segmentation.filingStatus, personal);
       if (requiresLlcYearReview(state)) educationErrors.llcYearReview = "Review the Lifetime Learning Credit records for the selected tax year.";
       let distributionErrors: Record<string, string> = {};
@@ -3556,6 +3568,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
       }
       const sources = guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses);
       return validateRequiredFacts({
+        ...(chargingPortError ? { personalEvCharger: chargingPortError } : {}),
         ...educationErrors,
         ...distributionErrors,
         ...educatorBondFactErrors(state),

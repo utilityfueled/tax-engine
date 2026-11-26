@@ -8483,6 +8483,26 @@
       ]
     },
     {
+      "key": "federal/guided-personal-ev-charger-8911",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8911",
+      "specPath": "spec/federal/guided-personal-ev-charger-8911.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-premium-tax-credit",
       "jurisdiction": "federal",
       "taxYear": 2026,
