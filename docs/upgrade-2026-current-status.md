@@ -9,6 +9,23 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `5f5af1dee` restores browser collection after the Ohio change left a
+  stale source hash. The audit and 223 focused checks passed with the
+  existing budgets and deadlines. Strict Linux Chromium remains open.
+  [Browser audit checks](upgrade-2026-progress.md#november-26-browser-source-audit-refresh).
+
+- `26e903d5a`, `cb29fbc20` and `9410b5a62` track the separate federal
+  REIT and PTP loss on Forms 8995 and 8995-A and collect the filed form
+  through Adjustments. A reported loss requires its source and can carry
+  through a year with no current REIT or PTP income. Prior-basis and
+  mixed loss cases still require separate qualification.
+  [Federal REIT and PTP checks](upgrade-2026-progress.md#november-26-federal-reit-and-ptp-loss-carryforward).
+
+- `5f10e5e7b` and `48723b483` add the documented Ohio venture-investment
+  path and its narrow full-year resident draft transfer. Ohio filing still
+  needs the final authority, form mappings and qualified review.
+  [Ohio venture checks](upgrade-2026-progress.md#november-26-ohio-venture-investment-draft).
+
 - `e8fc8452b` removes an unused implicit model default from workspace
   billing. The offline route and billing checks passed. Live qualification
   still requires provider-project access and independent evaluation evidence.

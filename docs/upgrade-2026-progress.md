@@ -1,5 +1,110 @@
 # 2026 upgrade implementation evidence
 
+## November 26 browser source-audit refresh
+
+Both public Web jobs on `5f10e5e7b` stopped before collecting tests.
+Independent verification reproduced a stale hash for the Ohio worksheet
+and verified the parent snapshot. `5f5af1dee` updates 17 changed source
+hashes, adds four reviewed source paths and binds the linked CPU diagnostics
+manifest to the new audit digest. The existing verifier accepted all
+2,078 audited sources. Structural comparison confirmed that both files
+retain their existing request budgets, skip list, collection rules and
+deadlines. The 223 focused orchestration, admission and provenance tests
+passed. This restores the browser prerequisite. It leaves strict Linux
+runtime qualification open.
+[Managed browser failure](https://github.com/utilityfueled/tax-engine/actions/runs/45883897489/job/140129722018) ·
+[Container browser failure](https://github.com/utilityfueled/tax-engine/actions/runs/45883897489/job/140129722037).
+
+Six existing K-1 browser cases then passed through the restored audit
+and the local production-mode Chromium runner on `5f5af1dee`.
+
+## November 26 federal REIT and PTP loss carryforward
+
+`26e903d5a` tracks the separate prior-year loss reported on Form 8995
+line 17 or Form 8995-A Part IV line 40. It requires the preceding filed
+year, identified form and source record, a confirmed amount and continuing
+ownership. It carries an unused balance through a year with no current
+qualifying income. The detailed method applies the SSTB rules to the
+current qualified PTP amounts and uses the combined REIT and PTP component
+without applying the ordinary business wage and property limits.
+[26 U.S.C. §199A](https://uscode.house.gov/us/usc/119-124/t26/s199A/) ·
+[Treas. Reg. §1.199A-3](https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/xhtml/CFR-2025-title26-vol4-sec1-199A-3.html) ·
+[IRS Form 8995 instructions](https://www.irs.gov/instructions/i8995) ·
+[IRS Form 8995-A instructions](https://www.irs.gov/instructions/i8995a).
+
+The filed balance and newly allowed PTP losses have separate audit entries.
+A released loss needs confirmation of the originally qualified portion.
+Current basis, at-risk and passive limits can hold all or part of a
+reported loss. Prior-basis and mixed basis loss categories are held for
+separate qualification. The 2025 simplified PDF fills the opening balance,
+zero floor and closing balance. The 2025 detailed reference artifact labels
+the distinct amounts and the ordinary business loss consistently with the
+form. The 2026 worksheets are calculation evidence pending final forms and
+qualified review.
+
+The focused archive passed 1,840 tests in 13 files. A companion check
+passed 14 engine and retained-browser-fixture tests. All 10,149 spec
+references, inventory, three type checks, scoped lint and whitespace
+passed. An independent engineer reproduced issues involving loss releases,
+current disallowances, and mixed basis sources. Eleven focused regressions
+passed on the corrected source. Qualified tax review still needs to
+independently derive the outcomes and approve the source requirements.
+
+`cb29fbc20` restores the existing federal return shape when no REIT or
+PTP source applies. Actual source data can still produce an explicit zero.
+An initial combined run exposed failures in exact Ohio school hashes and
+three retained K-1 browser fixtures. The corrected source passed all 195
+tests in the seven affected files. The Ohio hashes and saved browser
+originals stayed exact. The fixture builders now provide the explicit
+negative facts found in their retained synthetic originals.
+
+`9410b5a62` collects the actual filed source in Adjustments even without
+a current Schedule K-1. It matches the prior form to the same filing
+status and filer or joint owners. An affirmative answer holds the
+calculation until the source is complete or the taxpayer explicitly
+corrects the answer. Saved zero survives reopening, and editing the
+source requires fresh confirmation. The exact combined archive passed
+1,193 tests in 13 files, three type checks, inventory and 10,153 spec
+references. Independent engineering review passed 45 tests. A 390-pixel
+Chromium journey in the private production-mode app passed source
+selection, removal, explicit correction, save and reopen, and edit
+reconfirmation.
+
+`13ec67770` records the expected audit change in six Ohio business
+full-output fingerprints. Exact predecessor and successor snapshots
+reproduced the old and new hashes independently. Removing the specified
+new zero fields and changed federal audit rows from both sides gave
+byte-identical remaining federal output, Ohio calculations and payment
+commitments. The full-output test remains in force. All 146 focused
+federal and Ohio cases passed. The browser audit closure stayed exact.
+
+## November 26 Ohio venture investment draft
+
+`5f10e5e7b` implements the $1 million qualifying venture investment branch
+of Ohio Revised Code §5747.79. It requires the actual investment and
+management-right records, five years of Ohio organization and headquarters,
+and the entity's actual payroll subject to Ohio withholding during the
+qualifying investment period. It excludes wages paid to the
+specified relatives. The deduction is the smaller of the allocated
+qualifying payroll and qualifying net capital gain.
+[Ohio Revised Code §5747.79](https://codes.ohio.gov/ohio-revised-code/section-5747.79) ·
+[Federal management-rights definition](https://www.ecfr.gov/current/title-29/section-2510.3-101#p-2510.3-101(d)(3)) ·
+[Ohio's 2026 draft instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=24).
+
+`48723b483` transfers this result for a narrow full-year resident case
+with an issuer-direct cash purchase, a one-cohort basis allocation and a
+separately documented Ohio business-income determination. The synthetic
+case yields a $120,000 A34 deduction, $250,000 business-income deduction,
+$30,000 taxable business income, $450,000 Ohio MAGI and $1,838 income tax.
+Each acquisition and payroll evidence role requires its own original
+record. The final Ohio run passed 676 tests across 21 files, root types,
+scoped lint, 965 spec references and whitespace. An independent engineer
+reproduced two evidence-binding gaps before correction, then verified both
+holds and passed 62 focused tests on the corrected source. The official
+draft workbook link returned HTTP 404 during verification. Workbook
+parity, final Ohio forms, other residency and acquisition cases, and
+qualified tax review remain open for this branch.
+
 ## November 26 public AI catalogs and unused model fallback
 
 The public catalogs still list GPT-6 Luna, GPT-6.1 Sol and Gemini 3.8
