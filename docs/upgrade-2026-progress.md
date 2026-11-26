@@ -1,5 +1,138 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Pennsylvania part-year small balance
+
+`a6752c176` extends the existing private small-balance method to a documented
+single Pennsylvania part-year filer with one 2026 W-2 and zero state
+withholding. Final REV-413(I) applies the estimate requirement to part-year
+residents. The draft still requires actual Pennsylvania wages and each
+contemporaneous expected unwithheld amount to stay below the $14,000 income
+and $430 rounded tax limits. Current originals and an exact, timely receipt
+are required. This change covers the sourced small-balance case. Final PA
+return mapping and qualified review remain open.
+[2026 REV-413(I), p. 1](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf#page=1) ·
+[PA Tax Reform Code §325](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s).
+
+In the test, a Florida-to-Pennsylvania mover reconciles $75,000 of total
+pay to $9,000 taxable by Pennsylvania. The result is $276 of tax, the
+same amount paid with the timely PA-40 and no balance or estimated-tax
+interest. Both original and reopened tests failed before the fix. The
+6,707-file exact archive passed 2,619 tests across 132 files, types, lint,
+inventory, spec references and 58 browser audit controls. Independent
+engineering review passed 178 tests and 15 separate split-payroll checks,
+including stale evidence, owner, withholding and receipt cases.
+
+## November 26 explicit negative retirement source facts
+
+`ce5c158a0` treats an explicit “No” on eight Form 1099-R source controls
+as a started form. The taxpayer can clear the answer to remove the blank
+row again. The change preserves the distinction between an old prefilled
+IRA checkbox and an explicit answer, and preserves an entered $0. Reopening
+a draft with incomplete original facts still holds calculation.
+
+The new UI cases failed before the change. The exact archive matched 6,707
+tracked files and passed 3,918 tests across 487 files on Node 26.13.1,
+types, lint, inventory, spec references and all 58 browser audit controls.
+Independent engineering review found two omitted visible questions. The
+corrected version passed the reviewer's 12-case save-and-reopen check.
+Two diagnostics in the reviewer's additional test-inclusive type command
+also reproduced on the prior revision. The normal web type check passed.
+
+The first local full unit run passed 30,847 tests, skipped 81 and timed
+out in ten files during recorded Mac sleep intervals. All 209 cases in
+those ten files passed on the same archive after waking. The interrupted
+full run remains recorded separately.
+
+## November 26 Ohio reciprocity across a Pennsylvania move
+
+`1b9c40793` adds an Ohio 2026 private draft for an ordinary employee who
+moves between Ohio and Pennsylvania and keeps working in Ohio for the same
+employer. The path requires original pay, work-location and domicile records
+that reconcile to the W-2. A pay period spanning the move remains unresolved
+when the records cannot assign it to one residency period. Ohio Box 16 must
+agree with either Ohio service pay or Ohio-resident pay. Pennsylvania Box 16,
+if printed, must agree with the Pennsylvania-resident pay.
+
+In the tested move in either direction, $25,000 of $65,000 in federal wages
+is excluded on Ohio Schedule of Adjustments line 17. The draft keeps those
+wages outside the Ohio nonresident credit calculation, computes $650 of Ohio
+tax, and returns $350 after $1,000 of Ohio withholding. The final Ohio form
+and independent tax review are still required.
+[Ohio AGI statute](https://codes.ohio.gov/ohio-revised-code/section-5747.01) ·
+[Reciprocity statute](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[Enacted 2026 rate](https://codes.ohio.gov/ohio-revised-code/section-5747.02/9-30-2025) ·
+[Draft Ohio instructions, p. 25](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=25) ·
+[Draft Ohio instructions, p. 41](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41).
+
+The exact archive matched 6,706 tracked files. On Node 26.13.1, 2,599
+focused tests in 78 files passed, along with types, lint, inventory, spec
+references and all 58 browser audit controls. An independent engineering
+review found a Box 16 admission gap. After correction it passed 146 tests
+and 20 variations without further findings.
+
+## November 26 local return reopening
+
+`060efc9bf` reuses guided validation when the stock self-host adapter and
+the screen read the same saved draft. The screen still rereads the draft
+after the adapter resolves and reconciles any newer edit. Tests cover that
+handoff and missing, malformed and inaccessible drafts. The exact archive
+matched 6,707 tracked files. It passed 774 focused tests in 130 files on
+Node 26.13.1, types, lint, inventory, spec references and all 58 browser
+audit controls. A separate engineering review passed 163 tests on Node
+25.9.0 and reported no findings.
+
+In 60 alternating trials per Ohio case on macOS ARM64, median elapsed
+time for the adapter-to-screen continuation fell from 27.7 to 13.7 ms
+for school district, 24.9 to 12.4 ms for reciprocity, and 18.8 to 9.2 ms
+for resident credit. The comparison verified equal saved and derived
+results. Exact Linux deadlines still require the release checks.
+Linux CI passed 30,929 tests in 2,234 files with 88.91% branch coverage.
+The Docker build passed. Linux managed Chromium passed all 654 active
+cases and kept the five original skips. This includes the two RRTA cases
+that reached their inspection deadline on the prior exact run. The focused
+macOS Chromium run passed all 12 selected school district,
+reciprocal refund and resident-credit cases with no skips or retries. The
+first command stopped at orchestration before test execution. The successful
+run used the verified file paths and a local loopback test server.
+The macOS run confirmed server cleanup. The exact ARM64 run passed native
+image builds, independent archive import and isolated Compose recovery.
+The exact AMD64 run passed Compose recovery, independent image import and
+container cleanup. Strict AMD64 Chromium failed 11 of 659 scheduled
+cases, with the five original skips.
+[Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45870552643) ·
+[Linux browser](https://github.com/utilityfueled/tax-engine/actions/runs/45870552549) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45870552288) ·
+[ARM64 self-host recovery](https://github.com/utilityfueled/tax-engine/actions/runs/45870623122).
+
+## November 26 IRS test scenario and ordinary income tax
+
+The IRS prints $2,023 on Form 1040 line 16 for a single filer with
+$18,900 of taxable income in its 2026 MeF test scenario 14. The engine’s
+Decimal statutory-rate preview returns $2,020 for that input. Preserve the
+observed $3 difference for final Tax Table qualification. No final table
+or filing capability was enabled. The downloaded scenario PDF SHA-256 is
+`538334418a21508b9a5c22d44883c0001563f2895542194e0a5c960a4d163482`.
+[IRS scenario 14, p. 3](https://www.irs.gov/pub/irs-efile/ty26-1040-ats-scenario-14.pdf#page=3) ·
+[IRS 2026 MeF release schedule](https://www.irs.gov/tax-professionals/tax-year-2026-modernized-e-file-schema-and-business-rules-for-individual-tax-returns-and-extensions).
+
+## November 26 IRS dependent-care worksheet evidence
+
+`2e31476c2` draws on IRS 2026 ATS scenario 4, which supplies two care
+expenses of $1,600 and $700
+and W-2 wages of $35,545. The standalone Form 2441 fixture sets AGI and
+earned income to $35,545, confirms eligibility and uses zero excluded
+benefits. The draft instructions give 0.39 at this AGI. Applying it to
+$2,300 gives an independently derived $897 on line 9a. The scenario
+leaves line 9a blank and lists moving expenses without resolving their
+treatment, so this fixture checks the isolated worksheet calculation
+under its stated inputs. Final instructions and qualified tax review remain
+open. The exact archive matched 6,707 tracked files and passed 128 tests
+in five files, types, lint, inventory, spec references and 58 audit controls.
+The local full unit run passed all 30,858 active tests and retained 81
+environment-dependent skips.
+[IRS ATS scenario 4, p. 9](https://www.irs.gov/pub/irs-efile/1040-mef-ats-scenario-4-09222026.pdf#page=9) ·
+[2026 Form 2441 draft instructions, p. 6](https://www.irs.gov/pub/irs-dft/i2441--dft.pdf#page=6).
+
 ## November 26 exact release checks after the Ohio changes
 
 On `ca3b4231a`, Linux CI passed **30,892 tests** across 2,233 files with

@@ -9,13 +9,38 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
-- Exact application `ca3b4231a` passed 30,892 Linux tests at 88.91%
-  branch coverage. Docker, Compose recovery on both architectures and
-  the 654 active local Chromium cases passed. Linux managed Chromium
-  failed two RRTA inspections. Strict Linux Chromium failed 16 AMD64
-  and 11 ARM64 cases. The first local unit run failed 13 tests and all
-  95 tests in those files passed on a separate rerun.
-  [Exact release results](upgrade-2026-progress.md#november-26-exact-release-checks-after-the-ohio-changes).
+- `a6752c176` adds the sourced small-balance method for a narrow 2026
+  Pennsylvania part-year case. The ordinary draft applies an exact timely
+  payment only after the payroll, estimate and receipt records reconcile.
+  [Pennsylvania checks](upgrade-2026-progress.md#november-26-pennsylvania-part-year-small-balance).
+
+- `ce5c158a0` preserves eight explicit negative retirement source answers
+  through save and reopen and holds calculation until necessary facts are
+  entered. Exact scoped checks and independent engineering review passed.
+  [Retirement checks](upgrade-2026-progress.md#november-26-explicit-negative-retirement-source-facts).
+
+- `1b9c40793` adds private Ohio 2026 part-year drafts for documented
+  Pennsylvania moves with one ordinary Ohio employer. `060efc9bf` cuts
+  repeated validation on self-host reopening while honoring newer saved
+  edits. Both passed scoped checks and independent engineering review.
+  [Reciprocity checks](upgrade-2026-progress.md#november-26-ohio-reciprocity-across-a-pennsylvania-move) ·
+  [Reopening checks](upgrade-2026-progress.md#november-26-local-return-reopening).
+
+- IRS 2026 test scenario 14 prints $2,023 for ordinary income tax where
+  the statutory-rate preview returns $2,020. Final Tax Table qualification
+  remains open. [IRS comparison](upgrade-2026-progress.md#november-26-irs-test-scenario-and-ordinary-income-tax).
+
+- The standalone dependent-care fixture uses expenses from IRS ATS
+  scenario 4 and derives a $897 tentative credit at explicit $35,545 AGI.
+  [Worksheet evidence](upgrade-2026-progress.md#november-26-irs-dependent-care-worksheet-evidence).
+
+- Exact application `060efc9bf` passed 30,929 Linux tests at 88.91%
+  branch coverage, Docker and all 654 active managed Linux Chromium
+  cases. Compose recovery passed on both architectures and strict AMD64
+  Chromium failed 11 cases. The latest strict ARM64 run is still pending.
+  Earlier `ca3b4231a` failed 16 strict AMD64 and 11 strict ARM64 cases.
+  [Latest release results](upgrade-2026-progress.md#november-26-local-return-reopening) ·
+  [Earlier exact results](upgrade-2026-progress.md#november-26-exact-release-checks-after-the-ohio-changes).
 
 - `ca3b4231a` reduces repeated validation during edits of a visited Ohio
   header. All 2,266 exact guided tests and a separate engineering review

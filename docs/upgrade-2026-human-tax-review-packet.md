@@ -483,3 +483,33 @@ Verify the $44,000 outside-Ohio numerator, 0.8148 credit ratio, $849 credit,
 $193 tax and $807 refund after $1,000 withholding. Confirm the Part B
 exclusion and the allocation and rounding against the final instructions.
 [Ohio 2026 draft instructions, pp. 41–42](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41).
+
+## November 26 Pennsylvania moves with Ohio wages
+
+For `1b9c40793`, derive Ohio results for a single ordinary employee who
+works in Ohio for one employer throughout the year and moves between Ohio
+and Pennsylvania. Test both move directions with $40,000 of pay during Ohio
+residency and $25,000 during Pennsylvania residency, all reconciled to the
+original W-2 and payroll. Verify the Schedule of Adjustments line 17 amount,
+the exclusion from Schedule of Credits NRC line 1, the $2,400 exemption,
+$650 tax and $350 refund after $1,000 of Ohio withholding. Confirm which
+original payroll and residency records establish the allocation and whether
+the final Ohio instructions change line placement or rounding.
+[Ohio AGI statute](https://codes.ohio.gov/ohio-revised-code/section-5747.01) ·
+[Ohio reciprocity statute](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[Enacted Ohio rate](https://codes.ohio.gov/ohio-revised-code/section-5747.02/9-30-2025) ·
+[Draft reduction instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=25) ·
+[Draft NRC instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=41).
+
+## November 26 Pennsylvania part-year small balance
+
+For `a6752c176`, review a single Florida-to-Pennsylvania mover with
+$75,000 from one 2026 W-2, $9,000 of documented Pennsylvania-taxable
+pay, zero state withholding and four contemporaneous $9,000 estimates of
+unwithheld Pennsylvania income. Reconcile the annual estimate requirement
+at the statutory thresholds, $276 of Pennsylvania tax and a timely
+$276 PA-40 payment. Check the separate outputs for tax, payment settlement
+and estimated-tax interest. The engineering review checked stale payroll,
+one-cent receipt and owner discrepancies.
+[2026 REV-413(I), p. 1](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf#page=1) ·
+[PA Tax Reform Code §325](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s).
