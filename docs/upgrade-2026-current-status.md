@@ -9,6 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `8d4481d8c` reconciles 2026 federal estimate, extension and balance-due
+  payment receipts before the guided worksheet calculates. Distinct
+  equal-date, equal-amount payments can be confirmed from distinct records.
+  The exact focused suite and the built local browser check passed.
+  [Federal payment evidence](upgrade-2026-progress.md#november-25-federal-estimated-tax-payment-reconciliation).
+
 - The synthetic self-host lifecycle passed in touch-enabled Chromium at
   390px and in both existing keyboard cases. All three exercised review
   export, recovery and deletion on the built local application.

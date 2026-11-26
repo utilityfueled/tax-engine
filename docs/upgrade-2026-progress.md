@@ -1,5 +1,31 @@
 # 2026 upgrade implementation evidence
 
+## November 25 federal estimated-tax payment reconciliation
+
+`8d4481d8c` prevents the guided 2026 worksheet from counting one federal
+payment twice through the estimate, extension or balance-due categories.
+The original repro entered a single $100 payment in two categories and
+produced $200 in the fourth installment column of the isolated Form 2210
+calculation. The corrected path holds the conflicting facts. Separate
+payments matching by date and exact Decimal amount require distinct actual
+processed references. The worksheet binds the balance-due confirmation
+to the current date, amount and normalized reference. Only the payment
+date and amount flow into Form 2210. Explicit zero and independently
+linked prior-year credits retain their treatment.
+
+The exact candidate passed 115 focused tests, both builds, three type
+checks, the inventory, and 10,100 spec references. All 6,701 tracked blobs
+matched the published commit. The exact Docker build passed. Full lint
+reported zero errors and 12,224 warnings. Independent engineering review verified the restored-draft and
+distinct-payment outcomes. A local Chromium check passed in 2.45 seconds
+with zero retries. It saved separate $50.01 payments with matching dates,
+retained the confirmation after reload, then cleared it after an amount
+edit and a second reload. The annual filing and calculation gates remain
+closed pending the required qualification.
+[26 U.S.C. §6654](https://uscode.house.gov/us/usc/119-134/t26/s6654/) ·
+[IRS Form 2210 instructions](https://www.irs.gov/instructions/i2210) ·
+[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45736765975).
+
 ## November 25 mobile touch lifecycle
 
 On the exact `cb7f8d522` standalone build, Chromium's 390px mobile context
@@ -33,12 +59,23 @@ source passed 89 exact tests, 74 browser timing and fixture controls,
 core, contract and web types, inventory and 10,099 spec references. All
 6,701 tracked files matched the commit. Both local builds and the exact
 Docker build passed. Full lint reported zero errors and 12,224 warnings.
+The exact full unit suite passed 30,617 tests with 81 existing skips.
 Independent review used nine
 targeted tests and a fake-HTTP replay that carried the unknown hold
 across resume without dispatching again. No provider calls were made.
 Human evaluation and live provider qualification remain open.
 [OpenAI Responses API reference](https://developers.openai.com/api/reference/resources/responses/methods/create) ·
 [Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45734563655).
+
+The November 25 public catalog still lists Luna, Sol and the stable
+Gemini 3.8 Flash model. The GPT-5 mini deprecation table still lists
+December 11, 2026. This confirms the documented model IDs and schedule.
+Project access, actual usage and post-shutdown comparison require their
+own qualification evidence.
+[Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[Gemini](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) ·
+[Deprecations](https://developers.openai.com/api/docs/deprecations).
 
 ## November 25 529-to-Roth contribution reconciliation
 
@@ -58,7 +95,8 @@ rehydrated and different-beneficiary controls. All 82 scoped tests, 158
 combined exact tests, 74 browser timing controls, both local builds,
 core, contract and web types, inventory and 10,098 exact spec references
 passed. All 6,701 source files matched the published commit. The exact
-Docker build passed. Full lint
+Docker build passed. The exact local unit suite passed 30,615 tests with
+81 existing skips. Full lint
 reported zero errors and 12,224 warnings. Annual calculation and filing
 gates remain closed. Mixed dates need qualified review.
 [26 U.S.C. §529](https://uscode.house.gov/us/usc/119-142/t26/s529/) ·
@@ -83,7 +121,9 @@ altered contribution amounts and loss of a first explicit No. The
 isolated successor passed all 71 focused tests, 74 browser timing and
 fixture controls, both local builds, contract and application type checks, inventory
 and 10,097 spec references. All 6,701 tracked files were checked against
-the exact source commit. Its Docker build passed. Qualified tax review and
+the exact source commit. Its Docker build passed. Exact local coverage
+passed with 30,610 tests, 81 existing skips and 88.48% branch coverage.
+Qualified tax review and
 the annual 2026 gates remain open.
 [Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45732700346) ·
 [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
@@ -169,7 +209,9 @@ browser timing controls passed. Both local builds passed from the exact
 source tree. Six related desktop and mobile Chromium cases passed on
 the exact local build with the original case deadlines and zero retries.
 They cover Pennsylvania care export and reopening, the gated 2026 child
-inventory, and the existing federal household worksheet collector.
+inventory, and the existing federal household worksheet collector. The
+exact managed browser suite passed all 652 active cases with five original
+skips and no failures.
 The exact combined Docker build passed. Vercel canceled the automatic
 production build. Final Schedule H and qualified human review are
 required for filing. Full exact CI and browser checks remain pending.

@@ -2,7 +2,8 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
+    "applicationCommit": "8d4481d8ca908394fc26766f96efcb0a7e63b688",
+    "federalPaymentReceiptEvidenceKey": "activeContinuation.nov25FederalPaymentReceiptReconciliation",
     "mobileTouchEvidenceKey": "activeContinuation.nov25MobileTouchLifecycle",
     "openAiUsageTotalEvidenceKey": "activeContinuation.nov25OpenAiUsageTotalReconciliation",
     "rothRolloverContributionEvidenceKey": "activeContinuation.nov25RothRolloverContributionReconciliation",
@@ -97,6 +98,22 @@
     ]
   },
   "activeContinuation": {
+    "nov25FederalPaymentReceiptReconciliation": {
+      "commit": "8d4481d8ca908394fc26766f96efcb0a7e63b688",
+      "sources": ["https://uscode.house.gov/us/usc/119-134/t26/s6654/", "https://www.irs.gov/instructions/i2210"],
+      "scope": "Balance-due versus estimated, extension or another balance-due payment in the guided 2026 worksheet. Confirmed separate actual payments are preserved. Receipt identities stay in the draft.",
+      "focusedExactTestsPassed": 115,
+      "independentTestsPassed": 5,
+      "specReferencesPassed": 10100,
+      "trackedBlobsVerified": 6701,
+      "exactLocalBuilds": {"core": "passed", "web": "passed"},
+      "githubRuns": {"docker": 45736765975, "ci": 45736766079, "web": 45736766009},
+      "dockerResult": "success",
+      "vercelProductionBuild": "CANCELED",
+      "lint": {"errors": 0, "warnings": 12224},
+      "localChromium": {"casesPassed": 1, "durationMs": 2451, "deadlineMs": 30000, "retries": 0, "confirmedAfterReload": true, "clearedAfterEditAndReload": true},
+      "remaining": "Exact full suites and qualified annual tax, form and rate review. The existing public whole-return gates are closed."
+    },
     "nov25MobileTouchLifecycle": {
       "applicationCommit": "cb7f8d522483601675b6b7f5648b1b1fb7f9b1ee",
       "scope": "Local synthetic standalone application in touch-enabled Chromium and two preserved keyboard scenarios.",
@@ -124,8 +141,12 @@
       "exactLocalBuilds": {"core": "passed", "web": "passed"},
       "githubRuns": {"docker": 45734563655, "ci": 45734563642, "web": 45734563569},
       "dockerResult": "success",
+      "exactLocalUnit": {"passed": 30617, "originalSkips": 81, "failed": 0},
       "lint": {"errors": 0, "warnings": 12224},
       "actualProviderRequests": 0,
+      "publicCatalogChecked": "2026-11-25",
+      "documentedModels": ["gpt-6-luna", "gpt-6.1-sol", "gemini-3.8-flash"],
+      "gpt5MiniShutdownDate": "2026-12-11",
       "vercelProductionBuild": "CANCELED",
       "remaining": "Exact full suites, independent human reviews and actual provider qualification. Promotion remains closed."
     },
@@ -142,9 +163,10 @@
       "exactLocalBuilds": {"core": "passed", "web": "passed"},
       "githubRuns": {"docker": 45733929741, "ci": 45733929707, "web": 45733929730},
       "dockerResult": "success",
+      "exactLocalUnit": {"passed": 30615, "originalSkips": 81, "failed": 0},
       "lint": {"errors": 0, "warnings": 12224},
       "vercelProductionBuild": "CANCELED",
-      "remaining": "Exact full suites; qualified review of calendar versus designation timing and final 2026 annual qualification. Existing filing gates are closed."
+      "remaining": "Qualified review of calendar versus designation timing and final 2026 annual qualification. Existing filing gates are closed."
     },
     "nov25QcdSourceReview": {
       "commit": "0d8a9c59613134cd85b39ecf04b376d7d7f2b868",
@@ -157,9 +179,10 @@
       "exactLocalBuilds": {"core": "passed", "web": "passed"},
       "githubRuns": {"docker": 45732700346, "ci": 45732700322, "web": 45732700374},
       "dockerResult": "success",
+      "exactLocalCoverage": {"passed": 30610, "originalSkips": 81, "failed": 0, "branchPercent": 88.48, "requiredPercent": 85},
       "vercelProductionBuild": "CANCELED",
       "controlAmounts": {"exclusionWith4000UnusedDeductedContributions": "2500", "exclusionAfterDocumentedReconfirmationOfZero": "6500"},
-      "remaining": "Exact full suites and qualified human approval. Existing 2026 annual calculation and export gates stay closed."
+      "remaining": "Qualified human approval. Existing 2026 annual calculation and export gates stay closed."
     },
     "nov25SocialSecuritySmallRepayment": {
       "commit": "74ba7e9b9151fd599bba08db8ef18c27310b880e",
@@ -189,6 +212,7 @@
       "earlierExactSchoolManagedLocalBrowser": {"commit": "1736d191", "passed": 652, "failed": 0, "originalSkips": 5, "windows": 8}
     },
     "nov25ScheduleHCaliforniaWorksheet2": {
+      "exactLocalManagedBrowser": {"passed": 652, "originalSkips": 5, "failed": 0, "cleanup": true},
       "commit": "30f6be19a9e52c8fd8dd5fb93977991708ef4990",
       "sources": ["https://www.irs.gov/pub/irs-pdf/f940sa.pdf#page=2", "https://www.irs.gov/pub/irs-dft/i1040sh--dft.pdf#page=11"],
       "finalScheduleARate": "0.015",
