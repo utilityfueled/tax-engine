@@ -4,7 +4,8 @@ import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed";
 import type { Form8889Input, TaxYearInput } from "@/models/inputs";
 import type { FilingStatus, PersonalInfoData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
-import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { amountError, guidedAmountChanged, hasEnteredAmount, isActualDate } from "./guided-required-facts";
+import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { isStartedW2 } from "./guided-w2-facts";
 import { buildHsaDistributionInputs, hsaDistributionFactErrors, type HsaDistributionSource } from "./guided-hsa-distribution-facts";
 
@@ -39,6 +40,7 @@ export interface HsaAccountData {
   priorYearSourceTaxYear: string;
   priorYearAdditionalTax: string;
   yearEndFairMarketValue: string;
+  annualExcessSourcesConfirmed?: boolean | null;
   hasDistributions: boolean | null;
   distributions?: HsaDistributionSource[];
   correctionsRequired: boolean | null;
@@ -58,6 +60,60 @@ export interface HsaAccountData {
 export function emptyHsaAccount(id: string): HsaAccountData {
   return { id, accountOwner: "", contributionTaxYear: "", coverageByMonth: Array(12).fill(""), medicareByMonth: Array(12).fill(null), otherDisqualifyingCoverageByMonth: Array(12).fill(null), canBeClaimedAsDependent: null, monthlyEligibilityConfirmed: null, contributionsMade: "", contributionTimingConfirmed: null, employerW2Contributions: "", employerPriorYearContributions: "", employerFollowingYearContributions: "", employerWorksheetConfirmed: null, excessEmployerContributionsAlreadyInWages: "", bothSpousesHaveHsas: null, spouseAllocatedLimit: "", otherSpouseAllocatedLimit: "", allocationWorksheetConfirmed: null, useLastMonthRule: null, lastMonthRuleAcknowledged: null, archerMsaContributions: "", qualifiedFundingDistribution: "", priorYearExcessContributions: "", priorYearSourceTaxYear: "", priorYearAdditionalTax: "", yearEndFairMarketValue: "", hasDistributions: null, correctionsRequired: null, testingPeriodFailure: null, sourceFactsConfirmed: null };
 }
+
+const hsaEligibilitySources = ["coverageByMonth", "medicareByMonth", "otherDisqualifyingCoverageByMonth", "canBeClaimedAsDependent"] as const;
+const hsaEmployerSources = ["employerW2Contributions", "employerPriorYearContributions", "employerFollowingYearContributions", "excessEmployerContributionsAlreadyInWages"] as const;
+const hsaAnnualExcessAmounts = ["priorYearExcessContributions", "priorYearAdditionalTax", "yearEndFairMarketValue"] as const;
+
+export function invalidateEditedHsaAccount(previous: HsaAccountData, next: HsaAccountData, ownerSourceChanged = false): HsaAccountData {
+  const yearOrOwnerChanged = ownerSourceChanged || previous.accountOwner !== next.accountOwner
+    || previous.contributionTaxYear?.trim() !== next.contributionTaxYear?.trim();
+  const eligibilityChanged = yearOrOwnerChanged
+    || hsaEligibilitySources.some(field => guidedSourceValuesChanged(previous[field], next[field]));
+  const timingChanged = yearOrOwnerChanged || guidedAmountChanged(previous.contributionsMade, next.contributionsMade);
+  const employerSourcesChanged = yearOrOwnerChanged || hsaEmployerSources.some(field => guidedAmountChanged(previous[field], next[field]));
+  const allocationChanged = eligibilityChanged || previous.bothSpousesHaveHsas !== next.bothSpousesHaveHsas
+    || guidedAmountChanged(previous.spouseAllocatedLimit, next.spouseAllocatedLimit)
+    || guidedAmountChanged(previous.otherSpouseAllocatedLimit, next.otherSpouseAllocatedLimit);
+  const lastMonthRuleChanged = eligibilityChanged || previous.useLastMonthRule !== next.useLastMonthRule;
+  const annualReviewTracked = previous.annualExcessSourcesConfirmed !== undefined;
+  const annualSourcesEntered = annualReviewTracked
+    || hsaAnnualExcessAmounts.some(field => hasEnteredAmount(previous[field]));
+  const annualSourcesChanged = (annualSourcesEntered && (yearOrOwnerChanged
+    || previous.priorYearSourceTaxYear?.trim() !== next.priorYearSourceTaxYear?.trim()))
+    || hsaAnnualExcessAmounts.some(field => (annualReviewTracked || hasEnteredAmount(previous[field])) && guidedAmountChanged(previous[field], next[field]));
+  const annualExcessSourcesConfirmed = annualSourcesChanged ? null
+    : next.annualExcessSourcesConfirmed === undefined ? previous.annualExcessSourcesConfirmed : next.annualExcessSourcesConfirmed;
+  const requiresReview = eligibilityChanged || timingChanged || employerSourcesChanged || allocationChanged || lastMonthRuleChanged || annualSourcesChanged;
+  if (!requiresReview && annualExcessSourcesConfirmed === next.annualExcessSourcesConfirmed) return next;
+  return {
+    ...next,
+    ...(requiresReview ? { sourceFactsConfirmed: null } : {}),
+    ...(eligibilityChanged ? { monthlyEligibilityConfirmed: null } : {}),
+    ...(timingChanged ? { contributionTimingConfirmed: null } : {}),
+    ...(employerSourcesChanged ? { employerWorksheetConfirmed: null } : {}),
+    ...(allocationChanged ? { allocationWorksheetConfirmed: null } : {}),
+    ...(lastMonthRuleChanged ? { lastMonthRuleAcknowledged: null } : {}),
+    ...(annualExcessSourcesConfirmed !== undefined ? { annualExcessSourcesConfirmed } : {}),
+  };
+}
+
+export function invalidateEditedHsaAccounts(previous: HsaAccountData[] | undefined, next: HsaAccountData[] | undefined): HsaAccountData[] | undefined {
+  if (!previous?.length || !next?.length) return next;
+  const previousAccounts = new Map(previous.map(account => [account.id, account]));
+  const nextOwnersById = new Map(next.map(account => [account.id, account.accountOwner]));
+  const displacedAccounts = new Map(previous
+    .filter(account => account.accountOwner && nextOwnersById.get(account.id) !== account.accountOwner)
+    .map(account => [account.accountOwner, account]));
+  const reviewed = next.map(account => {
+    const retained = previousAccounts.get(account.id);
+    if (retained) return retained === account ? account : invalidateEditedHsaAccount(retained, account);
+    const replaced = displacedAccounts.get(account.accountOwner);
+    return replaced ? invalidateEditedHsaAccount(replaced, account, true) : account;
+  });
+  return reviewed.some((account, index) => account !== next[index]) ? reviewed : next;
+}
+
 export const hsaAmountFields = ["contributionsMade", "employerW2Contributions", "employerPriorYearContributions", "employerFollowingYearContributions", "archerMsaContributions", "qualifiedFundingDistribution", "priorYearExcessContributions", "priorYearAdditionalTax", "yearEndFairMarketValue"] as const;
 const knownBooleanFields = ["canBeClaimedAsDependent", "bothSpousesHaveHsas", "useLastMonthRule", "hasDistributions", "correctionsRequired", "testingPeriodFailure"] as const;
 const confirmedFields = ["monthlyEligibilityConfirmed", "contributionTimingConfirmed", "employerWorksheetConfirmed", "sourceFactsConfirmed"] as const;
@@ -86,6 +142,9 @@ export function hsaFactErrors(accounts: HsaAccountData[] | undefined, filingStat
     for (const field of hsaAmountFields) { const error = amountError(account[field], field); if (error) add(field, error); }
     for (const field of knownBooleanFields) if (typeof account[field] !== "boolean") add(field, "Answer the actual HSA eligibility or history question; blank is unknown.");
     for (const field of confirmedFields) if (account[field] !== true) add(field, "Check the actual HSA sources after the last edit.");
+    if (account.annualExcessSourcesConfirmed !== undefined && account.annualExcessSourcesConfirmed !== true) {
+      add("annualExcessSourcesConfirmed", "Check the prior Form 5329 amounts and year-end HSA value for their actual years.");
+    }
     if (account.coverageByMonth?.length !== 12 || account.coverageByMonth.some(value => !["none", "self_only", "family"].includes(value))) add("coverage", "Enter actual coverage on the first day of each of the twelve months.");
     for (const field of ["medicareByMonth", "otherDisqualifyingCoverageByMonth"] as const) if (account[field]?.length !== 12 || account[field].some(value => typeof value !== "boolean")) add(field, "Answer Medicare and other disqualifying coverage for every month, including retroactive coverage.");
     const declaredDependent = account.accountOwner === "spouse" ? personal?.standardDeductionFacts?.spouseCanBeClaimedAsDependent : personal?.standardDeductionFacts?.primaryCanBeClaimedAsDependent;

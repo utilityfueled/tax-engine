@@ -1,10 +1,10 @@
 // Spec: spec/federal/guided-input.yaml#hsa-actual-contribution-sources
 import { expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyAdjustmentData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyAdjustmentData, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { calculateFederalTax } from "@/engine/federal";
 import { TaxYearInputSchema } from "@/models/inputs";
-import { startCompleteInterview, completeW2Entry, completeHsaSources as hsaSources } from "./complete-facts";
+import { startCompleteInterview, completePersonalInfo, completeW2Entry, completeHsaSources as hsaSources } from "./complete-facts";
 
 
 function stateWith(accounts: import("@/lib/guided-hsa-facts").HsaAccountData[] = [hsaSources]) {
@@ -12,6 +12,80 @@ function stateWith(accounts: import("@/lib/guided-hsa-facts").HsaAccountData[] =
   state.sectionData.adjustments = { ...emptyAdjustmentData, hsaDeduction: "3600", hsaAccounts: accounts };
   return state;
 }
+
+function reopenHsaDraft(draft: GuidedFlowState) {
+  let raw: string | null = null;
+  const storage = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } } as unknown as Storage;
+  const target = { storageKey: "hsa-direct-review" };
+  expect(saveGuidedFlowState(storage, target, draft)).toBe(true);
+  const saved = loadGuidedFlowState(storage, target);
+  if (!saved?.sectionData.adjustments?.hsaAccounts) throw new Error("Could not reopen HSA sources");
+  return { draft: saved, accounts: saved.sectionData.adjustments.hsaAccounts };
+}
+
+it("requires fresh review after replacing the same owner's HSA worksheet in one update", () => {
+  const original = { ...hsaSources, priorYearExcessContributions: "125", yearEndFairMarketValue: "5000" };
+  const initial = stateWith([original]);
+  expect(validateSection(initial, "adjustments").status).toBe("complete");
+  const current = updateSectionData(setInterviewTaxYear(initial, 2026), "personal-info", completePersonalInfo);
+  const relabeled = { ...original, id: "replacement-hsa", contributionTaxYear: "2026", priorYearSourceTaxYear: "2025" };
+  const edited = reopenHsaDraft(updateSectionData(current, "adjustments", { ...current.sectionData.adjustments, hsaAccounts: [relabeled] }));
+  const generalReview = reopenHsaDraft(updateSectionData(edited.draft, "adjustments", {
+    ...edited.draft.sectionData.adjustments, hsaAccounts: [{ ...edited.accounts[0], sourceFactsConfirmed: true }],
+  }));
+  expect(validateSection(generalReview.draft, "adjustments").status).toBe("partial");
+  expect(buildTaxInputFromGuidedData(generalReview.draft)).toBeNull();
+  expect(generalReview.accounts[0]).toMatchObject({
+    id: relabeled.id, contributionsMade: original.contributionsMade, priorYearExcessContributions: "125", yearEndFairMarketValue: "5000",
+    monthlyEligibilityConfirmed: null, contributionTimingConfirmed: null, employerWorksheetConfirmed: null, annualExcessSourcesConfirmed: null,
+  });
+  const freshReview = reopenHsaDraft(updateSectionData(generalReview.draft, "adjustments", {
+    ...generalReview.draft.sectionData.adjustments, hsaAccounts: [{ ...relabeled, annualExcessSourcesConfirmed: true }],
+  }));
+  expect(validateSection(freshReview.draft, "adjustments").status).toBe("complete");
+  expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(freshReview.draft)).form8889ByOwner?.primary?.contributionsMade).toBe("3600.1");
+});
+
+it("scopes saved HSA review to the edited periods and actual owner", () => {
+  const primary = { ...hsaSources, contributionTaxYear: "2026", priorYearSourceTaxYear: "2025" };
+  const spouse = { ...primary, id: "spouse-hsa", accountOwner: "spouse" as const, contributionsMade: "1000", bothSpousesHaveHsas: true };
+  const state = stateWith([{ ...primary, bothSpousesHaveHsas: true }]);
+  state.taxYear = 2026;
+  state.segmentation.filingStatus = "mfj";
+  const edit = (draft: GuidedFlowState, hsaAccounts: typeof primary[]) => updateSectionData(draft, "adjustments", { ...draft.sectionData.adjustments, hsaAccounts });
+  const reopen = reopenHsaDraft;
+  const retained = { ...primary, bothSpousesHaveHsas: true, contributionsMade: "3,600.100", priorYearExcessContributions: "0.00" };
+  const added = reopen(edit(state, [spouse, retained]));
+  expect(validateSection(added.draft, "adjustments").status).toBe("complete");
+  expect(added.accounts.map(row => row.sourceFactsConfirmed)).toEqual([true, true]);
+
+  const julyMedicare = primary.medicareByMonth.map((value, index) => index === 6 ? true : value);
+  const editedPeriod = reopen(edit(added.draft, [spouse, { ...retained, medicareByMonth: julyMedicare }]));
+  expect(editedPeriod.accounts[1]).toMatchObject({
+    monthlyEligibilityConfirmed: null, contributionTimingConfirmed: true, employerWorksheetConfirmed: true, sourceFactsConfirmed: null,
+  });
+  expect(editedPeriod.accounts[0]).toEqual(spouse);
+
+  const correctedPriorSource = reopen(edit(added.draft, [spouse, { ...retained, priorYearSourceTaxYear: "2024" }]));
+  const restoredLabel = reopen(edit(correctedPriorSource.draft, [spouse, retained]));
+  const generalReview = reopen(edit(restoredLabel.draft, [spouse, { ...restoredLabel.accounts[1], sourceFactsConfirmed: true }]));
+  expect(validateSection(generalReview.draft, "adjustments").message).toMatch(/Prior Form 5329/i);
+  expect(generalReview.accounts[1]).toMatchObject({ priorYearExcessContributions: "0.00", monthlyEligibilityConfirmed: true, contributionTimingConfirmed: true, employerWorksheetConfirmed: true });
+
+  const personal = added.draft.sectionData["personal-info"]!;
+  const changedOwner = reopen(updateSectionData(added.draft, "personal-info", {
+    ...personal, spouse: { ...personal.spouse!, firstName: "Different", ssn: "222-33-4445" },
+  }));
+  expect(changedOwner.accounts[0]).toMatchObject({
+    monthlyEligibilityConfirmed: null, contributionTimingConfirmed: null, employerWorksheetConfirmed: null, contributionsMade: "1000",
+  });
+  expect(changedOwner.accounts[1]).toMatchObject({ monthlyEligibilityConfirmed: true, contributionTimingConfirmed: true, employerWorksheetConfirmed: true });
+  const reassignedOwner = reopen(edit(state, [{ ...retained, accountOwner: "spouse" }]));
+  expect(reassignedOwner.accounts[0]).toMatchObject({
+    accountOwner: "spouse", contributionsMade: "3,600.100", monthlyEligibilityConfirmed: null,
+    contributionTimingConfirmed: null, employerWorksheetConfirmed: null, annualExcessSourcesConfirmed: null,
+  });
+});
 
 it("replaces an estimated deduction with actual HSA eligibility and contribution facts", () => {
   const state = stateWith();
@@ -41,6 +115,45 @@ it("reconciles actual payroll sources by owner and preserves unknown source answ
     const other = stateWith([{ ...hsaSources, ...patch }]); expect(buildTaxInputFromGuidedData(other), JSON.stringify(patch)).toBeNull();
   }
   state.sectionData["income-w2"]!.entries[0]!.box12CodeW = ""; expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
+it("requires new employer payroll review when the matching Code W original changes", () => {
+  const primary = {
+    ...hsaSources, contributionTaxYear: "2026", priorYearSourceTaxYear: "2025", bothSpousesHaveHsas: true,
+    employerW2Contributions: "100", employerPriorYearContributions: "20",
+  };
+  const spouse = { ...primary, id: "spouse-hsa", accountOwner: "spouse" as const, employerW2Contributions: "80", employerPriorYearContributions: "0" };
+  const state = stateWith([primary, spouse]);
+  state.taxYear = 2026;
+  state.segmentation.filingStatus = "mfj";
+  const w2 = { ...completeW2Entry, sourceTaxYear: "2026", box12CodeW: "100" };
+  const spouseW2 = { ...w2, employerEin: "30-1234567", accountHolder: "spouse" as const, box12CodeW: "80" };
+  state.sectionData["income-w2"] = { entries: [w2, spouseW2] };
+  expect(buildTaxInputFromGuidedData(state)?.form8889ByOwner?.primary?.employerContributions).toBe("80");
+  const updatePayroll = (editedW2: typeof w2) => reopenHsaDraft(updateSectionData(state, "income-w2", { entries: [spouseW2, editedW2] }));
+  const formatted = updatePayroll({ ...w2, employerName: "  SYNTHETIC   EMPLOYER ", employerEin: "123456789", box12CodeW: "100.00" });
+  expect(formatted.accounts.map(account => account.employerWorksheetConfirmed)).toEqual([true, true]);
+
+  const replacement = updatePayroll({ ...w2, employerName: "Replacement Employer", employerEin: "12-3456788" });
+  expect(replacement.accounts[0]).toMatchObject({
+    employerW2Contributions: "100", employerPriorYearContributions: "20",
+    monthlyEligibilityConfirmed: true, contributionTimingConfirmed: true, employerWorksheetConfirmed: null,
+  });
+  expect(replacement.accounts[1]?.employerWorksheetConfirmed).toBe(true);
+  const onlyGeneralReview = reopenHsaDraft(updateSectionData(replacement.draft, "adjustments", {
+    ...replacement.draft.sectionData.adjustments,
+    hsaAccounts: replacement.accounts.map(account => ({ ...account, sourceFactsConfirmed: true })),
+  }));
+  expect(validateSection(onlyGeneralReview.draft, "adjustments").status).toBe("partial");
+  expect(buildTaxInputFromGuidedData(onlyGeneralReview.draft)).toBeNull();
+  const freshReview = reopenHsaDraft(updateSectionData(onlyGeneralReview.draft, "adjustments", {
+    ...onlyGeneralReview.draft.sectionData.adjustments,
+    hsaAccounts: [{ ...onlyGeneralReview.accounts[0], employerWorksheetConfirmed: true }, onlyGeneralReview.accounts[1]],
+  }));
+  expect(buildTaxInputFromGuidedData(freshReview.draft)?.form8889ByOwner?.primary?.employerContributions).toBe("80");
+  for (const change of [{ box12CodeW: "100.01" }, { sourceTaxYear: "2025" }]) {
+    expect(updatePayroll({ ...w2, ...change }).accounts[0]?.employerWorksheetConfirmed).toBeNull();
+  }
 });
 
 it("keeps actual spouses and family allocations distinct without silently dropping saved records", () => {

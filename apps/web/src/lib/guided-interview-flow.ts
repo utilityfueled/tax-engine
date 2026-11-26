@@ -58,7 +58,7 @@ import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip
 import { form8919ReasonAFactErrors } from "./guided-form-8919-reason-a";
 import { hasMovingW2Source, invalidateMovingExpenses, movingExpenseFactErrors, type MovingExpensesDraft } from './guided-moving-expenses';
 import { healthInsuranceSourceErrors, invalidateHealthInsuranceSources, type HealthInsuranceData } from "./guided-health-insurance-facts";
-import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
+import { hsaFactErrors, invalidateEditedHsaAccount, invalidateEditedHsaAccounts, type HsaAccountData } from "./guided-hsa-facts";
 import { invalidateEditedShortAccountingPeriod, withoutPrivateShortAccountingPeriod, type StandardDeductionData } from "./guided-standard-deduction-facts";
 import { educatorFactErrors, educatorBondFactErrors, type EducatorSourceData } from "./guided-educator-facts";
 import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanData, type StudentLoanEducationSources } from "./guided-student-loan-facts";
@@ -70,7 +70,7 @@ import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanDat
 
 import Decimal from "decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money";
-import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
+import { parseGuidedCurrency, hasGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
 import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
@@ -2227,6 +2227,21 @@ function w2OriginalFields(entry: W2EntryData | undefined) {
   return original;
 }
 
+function hsaPayrollW2Originals(entries: W2EntryData[] | undefined, owner: HsaAccountData["accountOwner"]): string[] {
+  if (!owner) return [];
+  return (entries ?? []).flatMap(entry => {
+    const original = w2OriginalFields(entry);
+    if (!original || original.accountHolder !== owner || !hasEnteredAmount(original.box12CodeW)) return [];
+    const amount = parseGuidedDisplayAmount(original.box12CodeW);
+    return [JSON.stringify([
+      original.sourceTaxYear?.trim() || null,
+      original.employerName.trim().replace(/\s+/g, " ").toLowerCase(),
+      original.employerEin.trim().replaceAll("-", ""),
+      amount.isFinite() ? amount.toFixed() : original.box12CodeW?.trim(),
+    ])];
+  }).sort();
+}
+
 function aotcStudentSources(student: EducationStudentData) {
   const { name: _name, studentTaxId: _tin, priorYearsClaimed: _history,
     requiresPriorYearsConfirmation: _historyPending, qualifiedExpenses, ...sources } = student;
@@ -2481,10 +2496,13 @@ export function updateSectionData(
     };
   } else if (sectionId === "adjustments" && data) {
     const previous = state.sectionData.adjustments;
+    const next = data as AdjustmentData;
+    const hsaAccounts = invalidateEditedHsaAccounts(previous?.hsaAccounts, next.hsaAccounts);
+    const reviewed = hsaAccounts === next.hsaAccounts ? next : { ...next, hsaAccounts };
+    data = reviewed;
     if (previous?.alimonyAmountsTaxYear !== undefined) {
-      const next = data as AdjustmentData;
       data = {
-        ...next,
+        ...reviewed,
         alimonyAmountsTaxYear: annualConfirmationAfterEdit(previous.alimonyAmountsTaxYear, next.alimonyAmountsTaxYear, alimonySourceFactsChanged(previous, next)),
       };
     }
@@ -2502,7 +2520,6 @@ export function updateSectionData(
   const credits = state.sectionData.credits;
   const adjustments = state.sectionData.adjustments;
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
-  const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   // A newly retained RRTA snapshot is custody metadata, not a new deduction fact.
   // Every entered row, owner, year, amount, eligibility answer and reference remains compared.
   const rrtaDocumentaryValues=(value:unknown)=>{if(!value||typeof value!=='object'||!('rrtaPayrollSources' in value))return value;const section=value as AdditionalDeductionsData;return {...section,rrtaPayrollSources:section.rrtaPayrollSources?{...section.rrtaPayrollSources,capturedOriginal:undefined,paperSources:undefined}:undefined};};
@@ -2742,6 +2759,22 @@ export function updateSectionData(
   );
   const nextW2 = sectionId === "income-w2" ? data as SectionDataMap["income-w2"] : state.sectionData["income-w2"];
   const previousW2 = state.sectionData["income-w2"];
+  const hsaSourcesToReview = (sectionId === "income-w2" || sectionId === "personal-info")
+    && adjustments?.hsaAccounts?.map(account => {
+      const previousOwner = account.accountOwner === "spouse" ? formerPersonal?.spouse : formerPersonal;
+      const nextOwner = account.accountOwner === "spouse" ? nextPersonal?.spouse : nextPersonal;
+      const ownerChanged = sectionId === "personal-info" && !!account.accountOwner && guidedSourceValuesChanged(
+        guidedTaxpayerIdentity(previousOwner), guidedTaxpayerIdentity(nextOwner),
+      );
+      const payrollChanged = sectionId === "income-w2" && guidedSourceValuesChanged(
+        hsaPayrollW2Originals(previousW2?.entries, account.accountOwner), hsaPayrollW2Originals(nextW2?.entries, account.accountOwner),
+      );
+      return invalidateEditedHsaAccount(account, {
+        ...account,
+        sourceFactsConfirmed: null,
+        ...(payrollChanged ? { employerWorksheetConfirmed: null } : {}),
+      }, ownerChanged);
+    });
   const care = nextCredits?.dependentCare;
   const careEarnedIncomeChanged = care?.sourceFactsConfirmed === true && (
     (sectionId === "income-w2" && guidedSourceValuesChanged(
@@ -2923,7 +2956,7 @@ export function updateSectionData(
           } } : {}),
         } : {}),
       } } : {}),
-      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || studentLoanWorksheetYearChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+      ...((movingSourcesChanged || iraSourcesChanged || hsaSourcesToReview || educatorSourcesChanged || studentLoanSourcesChanged || studentLoanWorksheetYearChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || principalResidenceCodChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
         ...(movingSourcesChanged ? { movingExpenses: invalidateMovingExpenses(nextMoving) } : {}),
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(principalResidenceCodChanged ? { codPrincipalResidenceSources: invalidateGuidedCodPrincipalResidence(nextAdjustments.codPrincipalResidenceSources!) } : {}),
@@ -2932,7 +2965,7 @@ export function updateSectionData(
         ...(nolSourcesChanged ? { netOperatingLossSources: invalidateNetOperatingLossSources(nolSourcesChanged) } : {}),
         ...(studentLoanWorksheetYearChanged ? { studentLoanFacts: invalidateStudentLoanYearFacts(nextStudentLoanFacts) }
           : studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}),
-        ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
+        ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesToReview ? { hsaAccounts: hsaSourcesToReview } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((careEarnedIncomeChanged || benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged || saversCreditToReconfirm || aotcClaimantIdentityChanged) && nextCredits ? { credits: { ...nextCredits,
         ...(aotcClaimantIdentityChanged ? { education: { ...nextCredits.education, aotcClaimantFactsTaxYear: undefined } } : {}),
         ...(saversCreditToReconfirm ? { saversCredit: requireGuidedSaversReview(saversCreditToReconfirm, Boolean(saversProofChanged)) } : {}),

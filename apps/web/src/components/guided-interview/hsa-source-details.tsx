@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdjustmentData, FilingStatus } from "@/lib/guided-interview-flow";
-import { emptyHsaAccount, type HsaAccountData, type HsaCoverageFact } from "@/lib/guided-hsa-facts";
+import { emptyHsaAccount, invalidateEditedHsaAccount, type HsaAccountData, type HsaCoverageFact } from "@/lib/guided-hsa-facts";
 import { CurrencyField } from "./currency-field";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { HsaDistributionDetails } from "./hsa-distribution-details";
@@ -21,7 +21,11 @@ const moneyFields = [
 
 export function HsaSourceDetails({ data, filingStatus, taxYear, onChange }: { data: AdjustmentData; filingStatus?: FilingStatus | null; taxYear?: number | null; onChange: (data: AdjustmentData) => void }) {
   const accounts = data.hsaAccounts ?? [];
-  const update = (index: number, change: Partial<HsaAccountData>) => onChange({ ...data, hsaAccounts: accounts.map((account, position) => position === index ? { ...account, sourceFactsConfirmed: null, ...change } : account) });
+  const update = (index: number, change: Partial<HsaAccountData>) => onChange({
+    ...data,
+    hsaAccounts: accounts.map((account, position) => position === index
+      ? invalidateEditedHsaAccount(account, { ...account, sourceFactsConfirmed: null, ...change }) : account),
+  });
   return <section aria-label="Actual HSA sources">
     <h4>Health Savings Accounts</h4>
     <p className="guided-hint">Enter a separate worksheet for each actual owner. These facts calculate the deduction; an estimated deduction is not a contribution record. {taxYear ? `This return is for ${taxYear}.` : "Select the return year before calculating."}</p>
@@ -51,6 +55,7 @@ export function HsaSourceDetails({ data, filingStatus, taxYear, onChange }: { da
         <div className="guided-form-grid">
           <BooleanFact label={label("Monthly eligibility checked against actual coverage records")} value={account.monthlyEligibilityConfirmed} onChange={monthlyEligibilityConfirmed => update(index, { monthlyEligibilityConfirmed })} />
           {moneyFields.map(([field, text, hint]) => <CurrencyField key={field} label={label(text)} hint={hint} value={account[field]} onChange={value => update(index, { [field]: value })} required />)}
+          {account.annualExcessSourcesConfirmed !== undefined && <BooleanFact label={label("Prior Form 5329 amounts and year-end HSA value checked for their actual years")} value={account.annualExcessSourcesConfirmed} onChange={annualExcessSourcesConfirmed => update(index, { annualExcessSourcesConfirmed })} />}
           <BooleanFact label={label("Personal contributions were timely paid for the designated year")} value={account.contributionTimingConfirmed} onChange={contributionTimingConfirmed => update(index, { contributionTimingConfirmed })} />
           <CurrencyField label={label("Excess employer HSA contributions already included in wages")} hint="For actual employer contributions, check payroll records and enter the amount already included in Box 1, including known zero. Do not infer this from code W." value={account.excessEmployerContributionsAlreadyInWages ?? ""} onChange={excessEmployerContributionsAlreadyInWages => update(index, { excessEmployerContributionsAlreadyInWages })} />
           <BooleanFact label={label("Employer contribution worksheet checked against payroll and custodian records")} value={account.employerWorksheetConfirmed} onChange={employerWorksheetConfirmed => update(index, { employerWorksheetConfirmed })} />
