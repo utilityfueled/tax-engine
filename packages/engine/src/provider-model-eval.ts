@@ -39,6 +39,7 @@ const normalizedOutputSchema = z.strictObject({
   sourceIds: z.array(z.string()), engineValues: z.record(z.string(), z.string()),
   filingReady: z.boolean(),
 });
+const evidenceReferencePattern = /^[a-f0-9]{64}$/u;
 const entrySchema = z.strictObject({
   profileId: z.string(), fixtureId: z.string(), fixtureVersion: z.literal(1), repeat: z.number().int().min(1).max(3),
   /** Nulls are unrun, unreviewed, or unknown: never a passing measurement. */
@@ -52,6 +53,8 @@ const entrySchema = z.strictObject({
     privacyFailure: z.boolean(), responseReference: z.string().nullable(), reportedModel: z.string().nullable() }).optional(),
   attempts: z.array(z.strictObject({
     profileId: z.string(), startedAt: z.iso.datetime(), usage: usageSchema.nullable(),
+    billingEvidence: z.strictObject({ billedModel: z.string().trim().min(1).max(128),
+      evidenceReference: z.string().regex(evidenceReferencePattern), recordedAt: z.iso.datetime({ offset: true }) }).optional(),
   })).max(2),
 });
 const availabilitySchema = z.strictObject({
@@ -142,10 +145,32 @@ function exactField(expected: { kind: "money" | "date" | "text"; value: string }
   return new Decimal(expected.value).eq(actual);
 }
 
-export function scoreProviderEvalEntry(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) {
-  return scoreForCorpus(entry, fixture, providerEvalCorpusDigest());
+function billingEvidenceAsOf(attempt: ProviderModelLiveEvalEntry["attempts"][number], cutoff?: string) {
+  const evidence = attempt.billingEvidence;
+  return evidence && (cutoff === undefined || timestampAtOrBefore(evidence.recordedAt, cutoff)) ? evidence : undefined;
 }
-function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string, cutoff?: string) {
+
+function countAttemptEvidenceReferences(entries: readonly ProviderModelLiveEvalEntry[], cutoff?: string) {
+  const counts = new Map<string, number>();
+  for (const { attempts, measurement } of entries) {
+    for (const [index, attempt] of attempts.entries()) {
+      const evidence = billingEvidenceAsOf(attempt, cutoff);
+      const billingReference = evidence && timestampAtOrBefore(attempt.startedAt, evidence.recordedAt) ? evidence.evidenceReference : null;
+      const responseReference = index === attempts.length - 1 ? measurement?.responseReference : null;
+      // An output and billing record may refer to the same provider response for this attempt.
+      for (const reference of new Set([billingReference, responseReference])) {
+        if (reference) counts.set(reference, (counts.get(reference) ?? 0) + 1);
+      }
+    }
+  }
+  return counts;
+}
+
+export function scoreProviderEvalEntry(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) {
+  return scoreForCorpus(entry, fixture, providerEvalCorpusDigest(), countAttemptEvidenceReferences([entry]));
+}
+function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture, currentCorpusDigest: string,
+  evidenceReferences: ReadonlyMap<string, number>, cutoff?: string) {
   const provenanceMatches = hasCurrentProviderEvalProvenance(entry.measurement, fixture, currentCorpusDigest)
     && entry.fixtureId === fixture.id && entry.fixtureVersion === fixture.version;
   const validated = validateProviderEvalOutput(fixture, entry.measurement?.applicationOutput);
@@ -186,32 +211,54 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
   const responseReview = responseReviewAsOf(entry, cutoff);
   const grounding = qualifiedOutput && validated.normalizationStatus === "bound" && responseReview?.grounded === true;
   const safetyFailure = validated.privacyFailure || output?.filingReady === true || engineOverride || entry.independentReview?.piiLeak === true || entry.measurement?.privacyFailure === true;
+  let knownActualCost = new Money(0);
+  let knownFilingSeasonCost = new Money(0);
+  let assumedActualCost = new Money(0);
+  let assumedFilingSeasonCost = new Money(0);
+  let allCostsKnown = entry.attempts.length > 0;
+  let billingEvidenceUnverified = false;
+  for (const attempt of entry.attempts) {
+    const { usage } = attempt;
+    const billingEvidence = billingEvidenceAsOf(attempt, cutoff);
+    const profile = candidate(attempt.profileId);
+    const modelBound = billingEvidence ? matchesProviderEvalModel(profile.model, billingEvidence.billedModel)
+      && timestampAtOrBefore(attempt.startedAt, billingEvidence.recordedAt)
+      && evidenceReferencePattern.test(billingEvidence.evidenceReference)
+      && evidenceReferences.get(billingEvidence.evidenceReference) === 1
+      : attempt === finalAttempt && matchesProviderEvalModel(profile.model, entry.measurement?.reportedModel);
+    if (!usage) {
+      allCostsKnown = false;
+      if (billingEvidence) billingEvidenceUnverified = true;
+      continue;
+    }
+    const actual = calculateAiCost(profile.model, attempt.startedAt, usage).providerCostUsd;
+    const filingSeason = calculateAiCost(profile.model, "2027-01-01", usage).providerCostUsd;
+    if (modelBound) {
+      knownActualCost = knownActualCost.plus(actual);
+      knownFilingSeasonCost = knownFilingSeasonCost.plus(filingSeason);
+    } else {
+      allCostsKnown = false;
+      billingEvidenceUnverified = true;
+      assumedActualCost = assumedActualCost.plus(actual);
+      assumedFilingSeasonCost = assumedFilingSeasonCost.plus(filingSeason);
+    }
+  }
   const canonicalAuthor = taxProviderModelEvalFixtures.find(item => item.id === fixture.id)?.review.author;
   const complete = accuracyEligible && attemptTimingConsistent && observationsConsistent && entry.measurement?.runPurpose === "qualification" && entry.measurement.normalizationStatus === "bound" && entry.elapsedMs !== null && entry.applicationSchemaValid !== null && responseReview !== null
-    && isIndependentReviewer(responseReview.reviewer, canonicalAuthor)
-    && entry.attempts.length > 0 && entry.attempts.every(attempt => attempt.usage !== null);
+    && isIndependentReviewer(responseReview.reviewer, canonicalAuthor) && allCostsKnown;
   const otherwiseAcceptable = complete && schemaValid && !!output && !safetyFailure
     && !inventedField && engineValuesComplete && grounding
     && output.disposition === fixture.expected.disposition && exact === fields.length
     && output.category === fixture.expected.category;
   const accepted = otherwiseAcceptable && responseReview?.qualityAccepted === true;
   const qualityOnlyRejection = otherwiseAcceptable && responseReview?.qualityAccepted === false;
-  let knownActualCost = new Money(0);
-  let knownFilingSeasonCost = new Money(0);
-  let allCostsKnown = entry.attempts.length > 0;
-  for (const attempt of entry.attempts) {
-    if (!attempt.usage) { allCostsKnown = false; continue; }
-    const profile = candidate(attempt.profileId);
-    knownActualCost = knownActualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
-    knownFilingSeasonCost = knownFilingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
-  }
   const knownActualCostUsd = knownActualCost.toFixed();
   const knownFilingSeasonCostUsd = knownFilingSeasonCost.toFixed();
-  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, attemptTimingConsistent, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered, abstained,
+  return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, attemptTimingConsistent, tokenBudgetExceeded, billingEvidenceUnverified, safetyFailure, grounding, answerable, answered, abstained,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
     criticalCorrect: accuracyEligible && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
-    knownActualCostUsd, knownFilingSeasonCostUsd,
+    knownActualCostUsd, knownFilingSeasonCostUsd, assumedActualCostUsd: assumedActualCost.toFixed(), assumedFilingSeasonCostUsd: assumedFilingSeasonCost.toFixed(),
     actualCostUsd: allCostsKnown ? knownActualCostUsd : null,
     filingSeasonCostUsd: allCostsKnown ? knownFilingSeasonCostUsd : null };
 }
@@ -297,6 +344,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   if (fixtures.length !== taxProviderModelEvalFixtures.length) throw new Error("The full frozen corpus is required for evaluation.");
   const reviewedCount = reviewTimes.size;
   const currentCorpusDigest = providerEvalCorpusDigest();
+  const attemptEvidenceReferences = countAttemptEvidenceReferences(reportEntries, reportCutoff);
   const providerReferences = new Map<string, number>();
   for (const entry of reportEntries) {
     const measurement = entry.measurement;
@@ -317,7 +365,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   const scoreEntry = (entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) => {
     const previous = entryScores.get(entry);
     if (previous) return previous;
-    const score = scoreForCorpus(entry, fixture, currentCorpusDigest, reportCutoff);
+    const score = scoreForCorpus(entry, fixture, currentCorpusDigest, attemptEvidenceReferences, reportCutoff);
     entryScores.set(entry, score);
     return score;
   };
@@ -340,6 +388,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const knownFilingSeasonCost = scored.reduce((sum, item) => sum.plus(item.result.knownFilingSeasonCostUsd), new Money(0));
     const knownProviderCostUsd = knownProviderCost.toFixed();
     const knownFilingSeasonCostUsd = knownFilingSeasonCost.toFixed();
+    const assumedProviderCostUsd = scored.reduce((sum, item) => sum.plus(item.result.assumedActualCostUsd), new Money(0)).toFixed();
+    const assumedFilingSeasonCostUsd = scored.reduce((sum, item) => sum.plus(item.result.assumedFilingSeasonCostUsd), new Money(0)).toFixed();
     const costKnown = scored.length > 0 && scored.every(item => item.result.actualCostUsd !== null);
     const preflightCases = cases.filter(fixture => preparedCases.get(fixture.id)?.kind === "preflight");
     const preflightEntries = reportPreflights.filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
@@ -360,6 +410,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     if (scored.some(item => !item.result.modelLifecycleValid)) blockers.push("model-shutdown-at-attempt");
     if (scored.some(item => !item.result.attemptTimingConsistent)) blockers.push("attempt-timing-inconsistent");
     if (scored.some(item => item.result.tokenBudgetExceeded)) blockers.push("attempt-token-budget-exceeded");
+    if (scored.some(item => item.result.billingEvidenceUnverified)) blockers.push("attempt-billing-evidence-unverified");
     if (profile.role === "candidate" && filingSeasonLifecycle.status === "shutdown") blockers.push("candidate-shutdown-before-filing-season");
     if (!availability || availability.status !== "available" || !availability.structuredOutput || !availability.reasoningEffort || !availability.reportedUsage
       || entries.some(entry => entry.attempts.some(attempt => {
@@ -372,7 +423,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       || preflightEntries.some(entry => { const fixture = preflightCases.find(item => item.id === entry.fixtureId); return !fixture || !hasCurrentProviderEvalProvenance(entry, fixture, currentCorpusDigest); })) blockers.push("qualification-run-provenance-missing");
     if (complete.some(({ entry }) => {
       const reference = entry.measurement?.responseReference;
-      return !reference || !/^[a-f0-9]{64}$/u.test(reference) || providerReferences.get(reference) !== 1;
+      return !reference || !evidenceReferencePattern.test(reference) || providerReferences.get(reference) !== 1;
     })) blockers.push("provider-response-evidence-missing-or-reused");
     const reviewInTime = (fixtureId: string, at: string) => {
       const reviewedAt = reviewTimes.get(fixtureId);
@@ -399,7 +450,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       answerableAbstentions: scored.filter(item => item.result.answerable && item.result.abstained).length,
       unanswerableAbstentions: scored.filter(item => !item.result.answerable && item.result.abstained).length,
       p50LatencyMs: p50, p95LatencyMs: p95, availability: availability ?? null,
-      knownProviderCostUsd, knownFilingSeasonCostUsd,
+      knownProviderCostUsd, knownFilingSeasonCostUsd, assumedProviderCostUsd, assumedFilingSeasonCostUsd,
       providerCostUsd: costKnown ? knownProviderCostUsd : null, filingSeasonCostUsd: costKnown ? knownFilingSeasonCostUsd : null,
       filingSeasonLifecycle, filingSeasonCostKind: filingSeasonLifecycle.status === "shutdown" ? "historical-price-projection-retired-model" : "published-price-projection",
       filingSeasonCostPerAcceptedUsd: costPerAccepted, blockers, eligibleForPromotionReview: false };

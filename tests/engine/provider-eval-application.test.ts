@@ -58,9 +58,14 @@ describe("actual application evaluation", () => {
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: true, actualCostUsd: "0.00006" });
     for (const reportedModel of [null, "a-different-provider-model", "gpt-6-luna-unverified-snapshot", "gpt-6-luna-2026-10-25"]) {
       entry.measurement.reportedModel = reportedModel;
-      expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, complete: false, criticalCorrect: false, actualCostUsd: "0.00006" });
+      expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, complete: false, criticalCorrect: false,
+        actualCostUsd: null, knownActualCostUsd: "0", assumedActualCostUsd: "0.00006" });
     }
-    entry.attempts.push({ profileId: "sol-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 } });
+    const [initial] = entry.attempts;
+    if (!initial) throw new Error("Missing initial test attempt.");
+    initial.billingEvidence = { billedModel: "gpt-6-luna", evidenceReference: providerEvalDigest("initial synthetic billing evidence"), recordedAt: at };
+    entry.attempts.push({ profileId: "sol-high", startedAt: at, usage: { inputTokens: 100, outputTokens: 100 },
+      billingEvidence: { billedModel: "gpt-6.1-sol", evidenceReference: providerEvalDigest("final synthetic billing evidence"), recordedAt: at } });
     entry.measurement.reportedModel = "gpt-6-luna";
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, actualCostUsd: "0.00126" });
     entry.measurement.reportedModel = "gpt-6.1-sol";
@@ -70,7 +75,7 @@ describe("actual application evaluation", () => {
     entry.measurement.reportedModel = "gpt-5-mini-2025-08-07";
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: true, actualCostUsd: "0.000225" });
     entry.measurement.reportedModel = "gpt-5-mini-2026-10-25";
-    expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, actualCostUsd: "0.000225" });
+    expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, actualCostUsd: null, assumedActualCostUsd: "0.000225" });
     entry.measurement.reportedModel = "gpt-5-mini";
     entry.profileId = "luna-high";
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, actualCostUsd: "0.000225" });

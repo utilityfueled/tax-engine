@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, summarizeProviderEvalJournal, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
-import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
+import { providerModelCandidates, scoreProviderEvalEntry, summarizeProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
 import { PROVIDER_EVAL_CONTRACT } from "../../scripts/lib/provider-eval-contract";
 const at = "2026-10-25T12:00:00.000Z";
@@ -123,11 +123,24 @@ describe("guarded repeated provider executor", () => {
     expect(first.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: null }], measurement: { responseReference: hashedReference } });
     expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "unknown-usage" });
     expect(transport).toHaveBeenCalledTimes(2);
-    const evidence = { attemptId, evidenceReference: "verified-invoice-row", billedModel: "gpt-6-luna", usage: good.usage, at };
+    const evidence = { attemptId, evidenceReference: "verified-invoice-row", billedModel: "gpt-6-luna", usage: good.usage,
+      at: "2026-10-25T12:00:00.000001Z" };
     await state.append(reconcileProviderEvalAttempt(state.plan, state.records, evidence));
     const resumed = await executeProviderEval({ ...state, transport });
     expect(resumed).toMatchObject({ stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00024" });
-    expect(resumed.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: good.usage }], measurement: { responseReference: hashedReference } });
+    expect(resumed.template.entries[0]).toMatchObject({ output: null, attempts: [{ usage: good.usage,
+      billingEvidence: { billedModel: evidence.billedModel, evidenceReference: providerEvalDigest(evidence.evidenceReference), recordedAt: evidence.at } }],
+    measurement: { responseReference: hashedReference, reportedModel: null } });
+    const [reconciled] = resumed.template.entries;
+    const fixture = taxProviderModelEvalFixtures.find(item => item.id === reconciled?.fixtureId);
+    if (!reconciled || !fixture) throw new Error("Missing reconciled test entry or fixture.");
+    expect(scoreProviderEvalEntry(reconciled, fixture)).toMatchObject({ accepted: false, complete: false, actualCostUsd: "0.00006",
+      knownActualCostUsd: "0.00006", assumedActualCostUsd: "0" });
+    const groupAt = (cutoff: string) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [reconciled] },
+      taxProviderModelEvalFixtures, cutoff).groups.find(group => group.profileId === reconciled.profileId && group.task === fixture.task);
+    expect(groupAt(at)).toMatchObject({ providerCostUsd: null, knownProviderCostUsd: "0", assumedProviderCostUsd: "0.00006" });
+    expect(groupAt(evidence.at)).toMatchObject({ providerCostUsd: "0.00006", knownProviderCostUsd: "0.00006",
+      assumedProviderCostUsd: "0", completedRuns: 0 });
     expect(transport.mock.calls.map(([request]) => request.attemptId)).toEqual(["luna-high:capability:0", attemptId,
       "luna-high:case-income-w2-zero-withholding:2", "luna-high:case-income-w2-zero-withholding:3"]);
   });

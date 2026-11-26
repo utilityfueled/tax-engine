@@ -211,7 +211,11 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
       template.entries.push({ profileId: dispatch.profileId, fixtureId: dispatch.fixtureId, fixtureVersion: 1, repeat: dispatch.repeat,
         elapsedMs: result?.elapsedMs ?? null, applicationSchemaValid: evaluation?.applicationSchemaValid ?? null,
         output: evaluation?.output ?? null, independentReview: null,
-        attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage }],
+        attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage,
+          ...(reconciliation?.billedModel === undefined ? {} : { billingEvidence: {
+            billedModel: reconciliation.billedModel, evidenceReference: providerEvalDigest(reconciliation.evidenceReference),
+            recordedAt: reconciliation.at,
+          } }) }],
         measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: AI_TASKS[fixture.task].promptVersion,
           schemaVersion: AI_TASKS[fixture.task].schemaVersion, normalizationStatus: evaluation?.normalizationStatus ?? "failed",
           applicationOutput: evaluation?.applicationOutput ?? null, privacyFailure: evaluation?.privacyFailure ?? false,

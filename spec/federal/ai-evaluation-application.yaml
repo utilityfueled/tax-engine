@@ -49,7 +49,9 @@ lines:
       escalation and fully priced attempts in the same group. Sum only priced
       usage and report a zero subtotal when no priced usage exists. Keep full
       cost totals and cost per accepted result unknown when any usage is
-      unknown, and retain the spend gate for qualification.
+      unknown or its billed model is unverified, and retain the spend gate for
+      qualification. Report configured-model estimates for unverified non-null
+      usage as separate assumed subtotals and exclude them from known spend.
     testRef: "tests/engine/provider-model-eval.test.ts::reports exact known spend across a partially priced escalation and other repeats"
   - line: "draft-contract"
     description: "Every frozen draft has an explicit compatible request boundary"
@@ -67,6 +69,31 @@ lines:
     description: "The actual responding model must match the final attempted profile"
     formula: "Use one explicit documented alias/snapshot allowlist in dispatch and scoring; reject missing, other-model or guessed-suffix identity, including incorrect identity after Sol High escalation. Preserve known billed attempt costs without qualifying the result."
     testRef: "tests/engine/provider-eval-application.test.ts::requires the final attempted model identity while retaining incurred costs"
+  - line: "attempt-billed-model"
+    description: "Each priced attempt binds to evidence of the actual billed model"
+    formula: >-
+      Require a matching billed model and an attempt-specific evidence reference
+      for each priced nonfinal attempt. Use the same frozen alias and snapshot
+      allowlist as the final output and runner. Use the matching final response
+      model for final usage when there is no separate reconciliation, including
+      for existing single-attempt records. Explicit model-bound reconciliation
+      can establish final cost without qualifying its output. Missing,
+      contradictory, or reused attempt-specific billing
+      evidence blocks promotion review. Keep historical unverified estimates
+      visible separately from verified cost and leave the full total unknown.
+    testRef: "tests/engine/provider-model-eval.test.ts::blocks a fully measured cohort without verified initial billed models"
+    testRefs:
+      - "tests/engine/provider-model-eval.test.ts::blocks contradictory attempt billing while separating verified and assumed cost"
+      - "tests/engine/provider-eval-runner.test.ts::holds live usage without matching model evidence and resumes without repeating it (%s)"
+  - line: "attempt-billing-cutoff"
+    formula: >-
+      Project a reconciled receipt's original journal timestamp. Count that
+      evidence only when it was recorded at or after that attempt started and
+      at or before the requested report instant, preserving fractional
+      precision. A later receipt contributes neither verified cost nor receipt
+      reuse before its timestamp. Preserve modeled historical final response
+      evidence that was already present at the report instant.
+    testRef: "tests/engine/provider-model-eval.test.ts::does not qualify a full cohort before its billed receipts were recorded"
   - line: "report-cutoff"
     description: "Score dated evidence as of the inclusive report instant"
     formula: >-

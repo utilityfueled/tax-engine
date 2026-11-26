@@ -36,6 +36,14 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
     attempts: [{ profileId, startedAt: "2026-10-24T12:00:00Z", usage: { inputTokens: 1000, outputTokens: 1000 } }],
   };
 }
+function recordInitialBillingEvidence(entry: ProviderModelLiveEvalEntry, recordedAt?: string) {
+  const [initial] = entry.attempts;
+  const profile = providerModelCandidates.find(profile => profile.id === initial?.profileId);
+  if (!initial || !profile) throw new Error("Missing initial synthetic attempt");
+  initial.billingEvidence = { billedModel: profile.model,
+    evidenceReference: providerEvalDigest(["initial-attempt", entry.profileId, entry.fixtureId, entry.repeat]),
+    recordedAt: recordedAt ?? initial.startedAt };
+}
 function changePayload(entry: ProviderModelLiveEvalEntry, change: (payload: { disposition: string; facts: {name: string; value: string}[] }) => void) {
   if (!entry.measurement) throw new Error("Missing test measurement.");
   const payload = entry.measurement.applicationOutput as { disposition: string; facts: {name: string; value: string}[] };
@@ -75,6 +83,22 @@ function qualityComparison() {
     return { entry, review: entry.independentReview };
   };
   return { summarize, reviewedEntry, baselineIds: profiles.slice(1) };
+}
+
+function escalatedIncomeCohort() {
+  const fixtures = reviewedFixtures("2026-10-24");
+  const cases = fixtures.filter(fixture => fixture.task === "income-extraction");
+  const ids = ["luna-high", "baseline-gpt-5-mini", "baseline-gemini-3-flash-preview"];
+  const entries = ids.flatMap(profile => cases.flatMap(fixture => [1, 2, 3].map(repeat => run(fixture, profile, repeat))));
+  const candidateEntries = entries.filter(entry => entry.profileId === "luna-high");
+  for (const entry of candidateEntries) {
+    if (!entry.measurement) throw new Error("Missing synthetic measurement");
+    entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:00.500Z", usage: { inputTokens: 10, outputTokens: 10 } });
+    entry.measurement.reportedModel = "gpt-6.1-sol";
+  }
+  const candidate = (cutoff = reportAt) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries, availability }, fixtures, cutoff)
+    .groups.find(group => group.profileId === "luna-high" && group.task === "income-extraction");
+  return { candidate, candidateEntries };
 }
 
 describe("measured task model evaluation", () => {
@@ -169,9 +193,12 @@ describe("measured task model evaluation", () => {
   });
   it("retains actual and January costs for rejected outputs, including the one escalation", () => {
     const entry = run(extraction, "gemini-flash-high");
+    if (!entry.measurement) throw new Error("Missing synthetic measurement.");
     entry.applicationSchemaValid = false;
     entry.elapsedMs = 3000;
+    recordInitialBillingEvidence(entry);
     entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", usage: { inputTokens: 1000, outputTokens: 1000 } });
+    entry.measurement.reportedModel = "gpt-6.1-sol";
     expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, actualCostUsd: "0.0165", filingSeasonCostUsd: "0.021" });
   });
   it("does not convert unknown usage or missing independent review into a measured pass", () => {
@@ -186,6 +213,7 @@ describe("measured task model evaluation", () => {
   it("reports exact known spend across a partially priced escalation and other repeats", () => {
     const partial = run(extraction, "gemini-flash-high");
     if (!partial.measurement) throw new Error("Missing synthetic measurement.");
+    recordInitialBillingEvidence(partial);
     partial.measurement.reportedModel = "gpt-6.1-sol";
     partial.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:00.500Z", usage: null });
     const complete = run(extraction, "gemini-flash-high", 2);
@@ -257,6 +285,7 @@ describe("measured task model evaluation", () => {
     const entry = run(extraction, "gemini-flash-high");
     const initial = entry.attempts[0];
     if (!initial || !entry.measurement) throw new Error("Missing initial attempt evidence.");
+    recordInitialBillingEvidence(entry);
     const escalation = { profileId: "sol-high", startedAt: "2026-10-24T12:00:02Z", usage: { inputTokens: 1000, outputTokens: 8192 } };
     entry.attempts.push(escalation);
     entry.elapsedMs = 2000;
@@ -368,6 +397,7 @@ describe("measured task model evaluation", () => {
       throw new Error("Missing synthetic cutoff evidence.");
     }
     initial.independentReview.reviewedAt = "2026-10-24T12:00:01.1Z";
+    recordInitialBillingEvidence(escalated);
     escalated.attempts.push({ profileId: escalationProfile.id, startedAt: eventAt, usage: { inputTokens: 1000, outputTokens: 1000 } });
     escalated.elapsedMs = 1500;
     escalated.measurement.reportedModel = escalationProfile.model;
@@ -531,6 +561,7 @@ describe("measured task model evaluation", () => {
     const candidateEntries = entries.filter(entry => entry.profileId === "luna-high");
     for (const entry of candidateEntries) {
       if (!entry.measurement) throw new Error("Missing synthetic measurement");
+      recordInitialBillingEvidence(entry);
       entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:01:00Z", usage: { inputTokens: 10, outputTokens: 10 } });
       entry.measurement.reportedModel = "gpt-6.1-sol";
     }
@@ -546,6 +577,97 @@ describe("measured task model evaluation", () => {
       p50LatencyMs: 60001, p95LatencyMs: 60001, providerCostUsd: "0.0648", filingSeasonCostUsd: "0.0648",
       blockers: ["latency-budget"] });
   });
+  it("blocks a fully measured cohort without verified initial billed models", () => {
+    const { candidate, candidateEntries } = escalatedIncomeCohort();
+
+    expect(candidate()).toMatchObject({ eligibleForPromotionReview: false, completedRuns: 0, acceptedRuns: 0,
+      knownProviderCostUsd: "0.0108", knownFilingSeasonCostUsd: "0.0108", assumedProviderCostUsd: "0.054", assumedFilingSeasonCostUsd: "0.054",
+      providerCostUsd: null, filingSeasonCostUsd: null, blockers: expect.arrayContaining(["attempt-billing-evidence-unverified"]) });
+
+    for (const entry of candidateEntries) recordInitialBillingEvidence(entry);
+    expect(candidate()).toMatchObject({ eligibleForPromotionReview: true, completedRuns: 90, acceptedRuns: 90, blockers: [],
+      providerCostUsd: "0.0648", filingSeasonCostUsd: "0.0648", assumedProviderCostUsd: "0", assumedFilingSeasonCostUsd: "0" });
+
+    const duplicate = candidateEntries[0]?.attempts[0]?.billingEvidence;
+    const anotherInitial = candidateEntries[1]?.attempts[0];
+    if (!duplicate || !anotherInitial) throw new Error("Missing synthetic receipts");
+    anotherInitial.billingEvidence = duplicate;
+    expect(candidate()).toMatchObject({ eligibleForPromotionReview: false, completedRuns: 88, acceptedRuns: 88,
+      knownProviderCostUsd: "0.0636", assumedProviderCostUsd: "0.0012", providerCostUsd: null,
+      blockers: expect.arrayContaining(["attempt-billing-evidence-unverified"]) });
+  });
+  it("does not qualify a full cohort before its billed receipts were recorded", () => {
+    const { candidate, candidateEntries } = escalatedIncomeCohort();
+    const settledAt = "2026-10-24T12:05:00.000001Z";
+    for (const entry of candidateEntries) recordInitialBillingEvidence(entry, settledAt);
+
+    expect(candidate("2026-10-24T08:05:00-04:00")).toMatchObject({
+      eligibleForPromotionReview: false, completedRuns: 0, acceptedRuns: 0,
+      knownProviderCostUsd: "0.0108", assumedProviderCostUsd: "0.054", providerCostUsd: null,
+      blockers: expect.arrayContaining(["attempt-billing-evidence-unverified"]),
+    });
+    expect(candidate(settledAt)).toMatchObject({ eligibleForPromotionReview: true, completedRuns: 90, acceptedRuns: 90,
+      providerCostUsd: "0.0648", assumedProviderCostUsd: "0", blockers: [] });
+
+    const [first, second] = candidateEntries;
+    const firstEvidence = first?.attempts[0]?.billingEvidence;
+    const secondAttempt = second?.attempts[0];
+    if (!first || !firstEvidence || !secondAttempt?.billingEvidence) throw new Error("Missing synthetic cohort receipts");
+    const secondEvidence = secondAttempt.billingEvidence;
+    secondAttempt.billingEvidence = { ...firstEvidence, recordedAt: "2026-10-24T12:05:00.000002Z" };
+    // The future duplicate does not invalidate the already dated first receipt.
+    expect(candidate(settledAt)).toMatchObject({ completedRuns: 89, acceptedRuns: 89,
+      knownProviderCostUsd: "0.0642", assumedProviderCostUsd: "0.0006", providerCostUsd: null });
+    expect(candidate("2026-10-24T12:05:00.000002Z")).toMatchObject({ completedRuns: 88, acceptedRuns: 88,
+      knownProviderCostUsd: "0.0636", assumedProviderCostUsd: "0.0012", providerCostUsd: null });
+
+    secondAttempt.billingEvidence = secondEvidence;
+    recordInitialBillingEvidence(first, "2026-10-24T11:59:59.999999Z");
+    expect(candidate(settledAt)).toMatchObject({
+      eligibleForPromotionReview: false, completedRuns: 89, acceptedRuns: 89,
+      knownProviderCostUsd: "0.0642", assumedProviderCostUsd: "0.0006", providerCostUsd: null,
+    });
+  });
+  it("preserves the matching legacy final model before a later explicit billing receipt", () => {
+    const entry = run(extraction);
+    const recordedAt = "2026-10-24T12:05:00.000001Z";
+    recordInitialBillingEvidence(entry, recordedAt);
+    const evidence = entry.attempts[0]?.billingEvidence;
+    if (!evidence) throw new Error("Missing synthetic receipt");
+    evidence.billedModel = "gpt-6.1-sol";
+    const groupAt = (cutoff: string) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [entry], availability },
+      reviewedFixtures("2026-10-24"), cutoff).groups.find(group => group.profileId === "luna-high" && group.task === extraction.task);
+
+    expect(groupAt("2026-10-24T12:05:00Z")).toMatchObject({ completedRuns: 1, acceptedRuns: 1,
+      providerCostUsd: "0.0006", knownProviderCostUsd: "0.0006", assumedProviderCostUsd: "0" });
+    expect(groupAt(recordedAt)).toMatchObject({ completedRuns: 0, acceptedRuns: 0,
+      providerCostUsd: null, knownProviderCostUsd: "0", assumedProviderCostUsd: "0.0006",
+      blockers: expect.arrayContaining(["attempt-billing-evidence-unverified"]) });
+  });
+  it("blocks contradictory attempt billing while separating verified and assumed cost", () => {
+    const entry = run(extraction);
+    const [initial] = entry.attempts;
+    if (!initial || !entry.measurement?.responseReference) throw new Error("Missing synthetic evidence");
+    entry.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:00.500Z", usage: { inputTokens: 10, outputTokens: 10 } });
+    entry.measurement.reportedModel = "gpt-6.1-sol";
+    initial.billingEvidence = { billedModel: "gpt-6.1-sol", evidenceReference: providerEvalDigest("first-attempt-receipt"), recordedAt: initial.startedAt };
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ complete: false, accepted: false, actualCostUsd: null,
+      knownActualCostUsd: "0.00012", assumedActualCostUsd: "0.0006" });
+
+    initial.billingEvidence = { billedModel: "gpt-6-luna", evidenceReference: entry.measurement.responseReference, recordedAt: initial.startedAt };
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ complete: false, accepted: false, actualCostUsd: null,
+      knownActualCostUsd: "0.00012", assumedActualCostUsd: "0.0006" });
+
+    initial.billingEvidence = { billedModel: "gpt-6-luna", evidenceReference: "not-a-receipt-digest", recordedAt: initial.startedAt };
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ complete: false, billingEvidenceUnverified: true,
+      knownActualCostUsd: "0.00012", assumedActualCostUsd: "0.0006" });
+    expect(() => parseProviderModelLiveEvalTemplate({ version: 2, entries: [entry] })).toThrow(/Invalid provider model live-eval file/);
+
+    recordInitialBillingEvidence(entry);
+    initial.usage = null;
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ complete: false, billingEvidenceUnverified: true,
+      actualCostUsd: null, knownActualCostUsd: "0.00012", assumedActualCostUsd: "0" });
+  });
   it("checks escalation chronology at submillisecond precision", () => {
     const entry = run(extraction);
     const [initial] = entry.attempts;
@@ -553,6 +675,7 @@ describe("measured task model evaluation", () => {
     initial.startedAt = "2026-10-24T12:00:00.999999Z";
     const escalation = { ...initial, profileId: "sol-high", startedAt: "2026-10-24T12:00:01.000001Z" };
     entry.attempts.push(escalation);
+    recordInitialBillingEvidence(entry);
     entry.measurement.reportedModel = "gpt-6.1-sol";
     const evaluate = () => scoreProviderEvalEntry(entry, extraction);
 
