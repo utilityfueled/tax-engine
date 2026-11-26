@@ -1,5 +1,89 @@
 # 2026 upgrade implementation evidence
 
+## November 26 public AI catalogs and unused model fallback
+
+The public catalogs still list GPT-6 Luna, GPT-6.1 Sol and Gemini 3.8
+Flash. Standard text input, cached input and output remain $0.10/$0.01/$0.50
+per million tokens for Luna and $2/$0.10/$10 for Sol up to 272,000 input
+tokens. Google lists $0.75/$0.075/$3.75 for Flash through
+December 31 and $1.50/$0.15/$7.50 starting January 1. Account entitlement
+and qualification still depend on provider evidence and independent review.
+[OpenAI Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) ·
+[OpenAI Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) ·
+[Google Flash pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
+
+`e8fc8452b` removes an unused private billing export that named Luna as an
+implicit model fallback. The active workspace route requires an
+explicit qualified production rollout, and its existing offline test
+checks deterministic fallback even when credentials and the old model
+override are supplied. The exact archive passed 98 offline tests across
+five files, types, lint, inventory, spec references and 58 audit controls.
+The full static checks on that archive also passed both builds, all three
+type checks, full lint, spec references and inventory. The exact Docker
+workflow passed. [Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45881021476).
+
+## November 26 Form 1098 transfers and separate loan proof
+
+`652f4add1` keeps a printed Form 1098 Box 11 date, an explicit blank,
+or an unanswered field through save and reopen. New statements require a
+Box 11 answer. A historical single statement with no saved Box 11 keeps
+its unknown value. The draft holds a documented transfer. A transfer
+calculation needs one underlying debt, its reconciled annual balance and
+the interest paid to each lender.
+Separate loans require an explicit blank Box 11 on each statement plus
+current separate-debt evidence. The confirmation binds the original
+statements and annual records. Changing and restoring either the annual
+record reference or the worksheet year still requires fresh confirmation.
+Direct calculations also hold supplied acquisition dates.
+
+The reproduction used two statements totaling $24,000 of interest on one
+underlying loan. The earlier 2025 guided return counted $960,000 of debt
+and allowed $18,744. The documented one-loan control used a $480,000
+maximum and allowed $24,000. The current gate prevents using the earlier
+two-debt result. The actual transferred-loan treatment still requires
+source reconciliation and qualified review.
+[IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098) ·
+[IRS Publication 936](https://www.irs.gov/publications/p936).
+
+The exact scoped archive passed 3,953 tests across 494 files, types,
+lint, inventory, spec references and 58 browser audit controls.
+Independent source review passed 184 focused tests and 28 probes.
+Independent UI review confirmed that restoring earlier annual values
+keeps the separate-loan proof held until renewed. The focused Chromium
+journey passed, including input correction and reopening. Contract type
+checking passed. The full local unit and coverage runs each passed 30,870
+active tests across 2,226 files and kept 81 environment-dependent skips.
+Branch coverage was 88.55%.
+
+## November 26 actual dates for federal payments
+
+`fbd88bf88` holds guided federal estimated and extension payments dated
+after the current local day. It preserves the saved date, amount and
+application facts so the taxpayer can correct them. The guard also applies
+to explicit zero and preserves actual same-day or post-year-end payments
+when the existing application records assign them to the return year.
+The saved-and-reopened 2025 and 2026 cases both reproduced the future-date
+admission before the fix.
+
+The exact archive passed 2,249 tests across 282 files, types, lint,
+inventory, spec references and 58 audit controls. Both focused payment
+Chromium cases passed, desktop and mobile. Independent review passed
+32 tests in each of the New York and Kiritimati time zones.
+
+## November 26 workspace reopening across calendar boundaries
+
+`85220ce31` revalidates unchanged saved drafts if the local or UTC date
+changes while the workspace loads. The first boundary test uses a dated
+charitable gift. The second uses a Form 8919 determination that becomes
+current at midnight UTC while the New York calendar still shows the prior
+day. In both tests the saved draft stayed byte-for-byte identical while
+fresh completion added one section. Both reproduced stale completion
+before the fix.
+
+The exact archive passed 649 focused tests in 125 files, types, lint,
+inventory, spec references and 58 browser audit controls. Separate review
+passed all 15 workspace cases in New York and Kiritimati time zones.
+
 ## November 26 Pennsylvania part-year small balance
 
 `a6752c176` extends the existing private small-balance method to a documented
@@ -98,7 +182,13 @@ The macOS run confirmed server cleanup. The exact ARM64 run passed native
 image builds, independent archive import and isolated Compose recovery.
 The exact AMD64 run passed Compose recovery, independent image import and
 container cleanup. Strict AMD64 Chromium failed 11 of 659 scheduled
-cases, with the five original skips.
+cases, with the five original skips. Strict ARM64 Chromium failed nine
+of 659, with the same original skips. The AMD64 failures hit the existing
+30-second deadline at several different steps. Reciprocal and resident
+credit cases reached reopened review. The school cases spent 9.12–12.13
+seconds entering school facts and 4.89–6.62 seconds entering headers
+before reaching later timeouts. Review of the available frames found no
+single product action common to the failures.
 [Linux CI](https://github.com/utilityfueled/tax-engine/actions/runs/45870552643) ·
 [Linux browser](https://github.com/utilityfueled/tax-engine/actions/runs/45870552549) ·
 [Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45870552288) ·
@@ -128,8 +218,8 @@ treatment, so this fixture checks the isolated worksheet calculation
 under its stated inputs. Final instructions and qualified tax review remain
 open. The exact archive matched 6,707 tracked files and passed 128 tests
 in five files, types, lint, inventory, spec references and 58 audit controls.
-The local full unit run passed all 30,858 active tests and retained 81
-environment-dependent skips.
+Local full unit and coverage runs each passed all 30,858 active tests and
+retained 81 environment-dependent skips. Branch coverage was 88.55%.
 [IRS ATS scenario 4, p. 9](https://www.irs.gov/pub/irs-efile/1040-mef-ats-scenario-4-09222026.pdf#page=9) ·
 [2026 Form 2441 draft instructions, p. 6](https://www.irs.gov/pub/irs-dft/i2441--dft.pdf#page=6).
 

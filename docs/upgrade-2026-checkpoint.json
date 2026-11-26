@@ -3,7 +3,11 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
-    "latestScopedApplicationCommit": "a6752c17694d6d281607407ba89981a6167a2c68",
+    "latestScopedApplicationCommit": "e8fc8452bf19ab33674111bbea9930df212a3d12",
+    "unusedAiModelFallbackEvidenceKey": "activeContinuation.nov26UnusedAiModelFallback",
+    "mortgageTransferEvidenceKey": "activeContinuation.nov26MortgageTransfer",
+    "guidedPaidDateEvidenceKey": "activeContinuation.nov26GuidedPaidDate",
+    "workspaceCivilRolloverEvidenceKey": "activeContinuation.nov26WorkspaceCivilRollover",
     "paPartYearSmallBalanceEvidenceKey": "activeContinuation.nov26PaPartYearSmallBalance",
     "retirementNegativeAnswersEvidenceKey": "activeContinuation.nov26RetirementNegativeAnswers",
     "federalDependentCareTestScenarioEvidenceKey": "activeContinuation.nov26IrsDependentCareWorksheet",
@@ -111,7 +115,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Exact 060efc9bf Linux CI, Docker and managed Chromium passed. The earlier ca3b4231a image imports and Compose recovery passed on both architectures. Strict Chromium qualification on Linux AMD64 and ARM64 remains open.",
+      "Exact 060efc9bf Linux CI, Docker, managed Chromium, image imports and Compose recovery passed. Strict Chromium failed 11 AMD64 and 9 ARM64 cases at the existing deadlines. Both architecture browser gates remain open.",
       "The last fully passing local application was 827f467e2. The current exact local Chromium retry passed. Preserve the newer local unit and Linux browser failures until a new exact run qualifies.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
@@ -120,6 +124,52 @@
     ]
   },
   "activeContinuation": {
+    "nov26UnusedAiModelFallback": {
+      "commit": "e8fc8452bf19ab33674111bbea9930df212a3d12",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-public-ai-catalogs-and-unused-model-fallback",
+      "exactTrackedFiles": 6707,
+      "focusedOfflineTests": 98,
+      "focusedFiles": 5,
+      "fullStaticChecksPassed": 8,
+      "dockerWorkflowPassed": 45881021476,
+      "publicCatalogsChecked": ["gpt-6-luna", "gpt-6.1-sol", "gemini-3.8-flash"],
+      "providerAccountRequests": 0,
+      "modelPromotion": "held"
+    },
+    "nov26MortgageTransfer": {
+      "commit": "652f4add17afacd5ebdcc0afb363a976259c5fb4",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-form-1098-transfers-and-separate-loan-proof",
+      "exactTrackedFiles": 6707,
+      "focusedTests": 3953,
+      "focusedFiles": 494,
+      "independentSourceReviewTests": 184,
+      "independentSourceProbes": 28,
+      "independentUiFollowupTests": 11,
+      "focusedChromiumPassed": 1,
+      "localFullUnitPassed": 30870,
+      "localFullUnitSkipped": 81,
+      "localCoveragePassedTests": 30870,
+      "localBranchCoveragePercent": 88.55,
+      "transferredLoanCalculation": "held for reconciliation and qualified review"
+    },
+    "nov26GuidedPaidDate": {
+      "commit": "fbd88bf8832e5135ceacf0e003ed76128a72b725",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-actual-dates-for-federal-payments",
+      "exactTrackedFiles": 6707,
+      "focusedTests": 2249,
+      "focusedFiles": 282,
+      "independentTimeZoneTestsPerRun": 32,
+      "focusedChromiumPassed": 2
+    },
+    "nov26WorkspaceCivilRollover": {
+      "commit": "85220ce31a5be4d06b60ff652bcb3cb8bd4ecceb",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-workspace-reopening-across-calendar-boundaries",
+      "exactTrackedFiles": 6707,
+      "focusedTests": 649,
+      "focusedFiles": 125,
+      "independentTimeZoneTestsPerRun": 15,
+      "independentTimeZones": ["America/New_York", "Pacific/Kiritimati"]
+    },
     "nov26PaPartYearSmallBalance": {
       "commit": "a6752c17694d6d281607407ba89981a6167a2c68",
       "progressSection": "docs/upgrade-2026-progress.md#november-26-pennsylvania-part-year-small-balance",
@@ -154,6 +204,8 @@
       "derivedLine9aUsd": "897",
       "localFullUnitPassed": 30858,
       "localFullUnitSkipped": 81,
+      "localCoveragePassedTests": 30858,
+      "localBranchCoveragePercent": 88.55,
       "qualifiedTaxReview": "pending"
     },
     "nov26OhioPartYearReciprocity": {
@@ -191,7 +243,9 @@
       "dockerRunId": 45870552288,
       "dockerResult": "passed",
       "arm64RunId": 45870623122,
-      "arm64ArchiveAndComposeRecovery": "passed"
+      "arm64ArchiveAndComposeRecovery": "passed",
+      "strictArm64ChromiumFailed": 9,
+      "strictArm64ChromiumSkipped": 5
     },
     "nov26IrsOrdinaryIncomeTestScenario": {
       "progressSection": "docs/upgrade-2026-progress.md#november-26-irs-test-scenario-and-ordinary-income-tax",

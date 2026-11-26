@@ -513,3 +513,16 @@ and estimated-tax interest. The engineering review checked stale payroll,
 one-cent receipt and owner discrepancies.
 [2026 REV-413(I), p. 1](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf#page=1) ·
 [PA Tax Reform Code §325](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u325s).
+
+## November 26 Form 1098 loan transfer
+
+Review two statements reporting $12,000 of interest each for one original
+$480,000 acquisition loan sold during the year. The second lender's Box 2
+reports $476,000 at acquisition. Verify which original records establish
+that there is one debt, the allowable annual balance method, and the
+allocation of actual interest, refunds and any points before calculation.
+The current guided and direct calculations hold positive Box 11 dates.
+Confirm that the no-transfer separate-loan evidence suffices
+for ordinary distinct debts and identify any exceptions.
+[IRS Form 1098 instructions](https://www.irs.gov/instructions/i1098) ·
+[IRS Publication 936](https://www.irs.gov/publications/p936).

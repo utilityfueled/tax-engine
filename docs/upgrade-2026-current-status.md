@@ -9,6 +9,28 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `e8fc8452b` removes an unused implicit model default from workspace
+  billing. The offline route and billing checks passed. Live qualification
+  still requires provider-project access and independent evaluation evidence.
+  [Provider and routing checks](upgrade-2026-progress.md#november-26-public-ai-catalogs-and-unused-model-fallback).
+
+- `652f4add1` preserves Form 1098 Box 11 and holds unreconciled transfers.
+  Multiple statements require current evidence that they describe separate
+  loans. Exact scoped tests, Chromium and both engineering reviews passed.
+  Both full local runs passed 30,870 active tests with 81 environment skips
+  and 88.55% branch coverage.
+  [Mortgage checks](upgrade-2026-progress.md#november-26-form-1098-transfers-and-separate-loan-proof).
+
+- `fbd88bf88` holds future-dated federal estimates and extension payments
+  entered as paid. Saved amounts and application records remain available
+  for correction. Desktop and mobile Chromium and independent review passed.
+  [Payment checks](upgrade-2026-progress.md#november-26-actual-dates-for-federal-payments).
+
+- `85220ce31` refreshes reopening validation when the local or UTC date
+  changes during the load. Both actual-form boundary tests and the
+  independent time-zone review passed.
+  [Calendar-boundary checks](upgrade-2026-progress.md#november-26-workspace-reopening-across-calendar-boundaries).
+
 - `a6752c176` adds the sourced small-balance method for a narrow 2026
   Pennsylvania part-year case. The ordinary draft applies an exact timely
   payment only after the payroll, estimate and receipt records reconcile.
@@ -36,8 +58,8 @@ Use the linked progress sections when investigating individual packages.
 
 - Exact application `060efc9bf` passed 30,929 Linux tests at 88.91%
   branch coverage, Docker and all 654 active managed Linux Chromium
-  cases. Compose recovery passed on both architectures and strict AMD64
-  Chromium failed 11 cases. The latest strict ARM64 run is still pending.
+  cases. Compose recovery passed on both architectures. Strict Chromium
+  failed 11 AMD64 and nine ARM64 cases.
   Earlier `ca3b4231a` failed 16 strict AMD64 and 11 strict ARM64 cases.
   [Latest release results](upgrade-2026-progress.md#november-26-local-return-reopening) ·
   [Earlier exact results](upgrade-2026-progress.md#november-26-exact-release-checks-after-the-ohio-changes).
