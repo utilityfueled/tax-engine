@@ -196,21 +196,24 @@ function scoreForCorpus(entry: ProviderModelLiveEvalEntry, fixture: ProviderEval
     && output.category === fixture.expected.category;
   const accepted = otherwiseAcceptable && responseReview?.qualityAccepted === true;
   const qualityOnlyRejection = otherwiseAcceptable && responseReview?.qualityAccepted === false;
-  let actualCost = new Money(0);
-  let filingSeasonCost = new Money(0);
-  let knownCost = entry.attempts.length > 0;
+  let knownActualCost = new Money(0);
+  let knownFilingSeasonCost = new Money(0);
+  let allCostsKnown = entry.attempts.length > 0;
   for (const attempt of entry.attempts) {
-    if (!attempt.usage) { knownCost = false; continue; }
+    if (!attempt.usage) { allCostsKnown = false; continue; }
     const profile = candidate(attempt.profileId);
-    actualCost = actualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
-    filingSeasonCost = filingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
+    knownActualCost = knownActualCost.plus(calculateAiCost(profile.model, attempt.startedAt, attempt.usage).providerCostUsd);
+    knownFilingSeasonCost = knownFilingSeasonCost.plus(calculateAiCost(profile.model, "2027-01-01", attempt.usage).providerCostUsd);
   }
+  const knownActualCostUsd = knownActualCost.toFixed();
+  const knownFilingSeasonCostUsd = knownFilingSeasonCost.toFixed();
   return { complete, accepted, qualityOnlyRejection, schemaValid, observationsConsistent, provenanceMatches, modelMatches, modelLifecycleValid, attemptTimingConsistent, tokenBudgetExceeded, safetyFailure, grounding, answerable, answered, abstained,
     // Abstention is reported separately, but cannot improve exact-field accuracy.
     requiredFields: fields.length, exactFields: exact,
     criticalCorrect: accuracyEligible && validated.normalizationStatus === "bound" && fields.length === exact && !inventedField,
-    actualCostUsd: knownCost ? actualCost.toFixed() : null,
-    filingSeasonCostUsd: knownCost ? filingSeasonCost.toFixed() : null };
+    knownActualCostUsd, knownFilingSeasonCostUsd,
+    actualCostUsd: allCostsKnown ? knownActualCostUsd : null,
+    filingSeasonCostUsd: allCostsKnown ? knownFilingSeasonCostUsd : null };
 }
 
 export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderModelLiveEvalTemplate {
@@ -333,8 +336,10 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const exact = scored.reduce((sum, item) => sum + item.result.exactFields, 0);
     const accepted = scored.filter(item => item.result.accepted).length;
     const latencies = scored.flatMap(({ entry, result }) => entry.elapsedMs === null || !result.attemptTimingConsistent ? [] : [entry.elapsedMs]);
-    const measuredCost = scored.reduce((sum, item) => sum.plus(item.result.actualCostUsd ?? "0"), new Money(0));
-    const filingCost = scored.reduce((sum, item) => sum.plus(item.result.filingSeasonCostUsd ?? "0"), new Money(0));
+    const knownProviderCost = scored.reduce((sum, item) => sum.plus(item.result.knownActualCostUsd), new Money(0));
+    const knownFilingSeasonCost = scored.reduce((sum, item) => sum.plus(item.result.knownFilingSeasonCostUsd), new Money(0));
+    const knownProviderCostUsd = knownProviderCost.toFixed();
+    const knownFilingSeasonCostUsd = knownFilingSeasonCost.toFixed();
     const costKnown = scored.length > 0 && scored.every(item => item.result.actualCostUsd !== null);
     const preflightCases = cases.filter(fixture => preparedCases.get(fixture.id)?.kind === "preflight");
     const preflightEntries = reportPreflights.filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
@@ -350,7 +355,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const exactRate = fields ? exact / fields : null;
     const p95 = percentile(latencies, 0.95);
     const p50 = percentile(latencies, 0.5);
-    const costPerAccepted = costKnown && accepted ? filingCost.div(accepted).toFixed() : null;
+    const costPerAccepted = costKnown && accepted ? knownFilingSeasonCost.div(accepted).toFixed() : null;
     const blockers: string[] = [];
     if (scored.some(item => !item.result.modelLifecycleValid)) blockers.push("model-shutdown-at-attempt");
     if (scored.some(item => !item.result.attemptTimingConsistent)) blockers.push("attempt-timing-inconsistent");
@@ -394,7 +399,8 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
       answerableAbstentions: scored.filter(item => item.result.answerable && item.result.abstained).length,
       unanswerableAbstentions: scored.filter(item => !item.result.answerable && item.result.abstained).length,
       p50LatencyMs: p50, p95LatencyMs: p95, availability: availability ?? null,
-      providerCostUsd: costKnown ? measuredCost.toFixed() : null, filingSeasonCostUsd: costKnown ? filingCost.toFixed() : null,
+      knownProviderCostUsd, knownFilingSeasonCostUsd,
+      providerCostUsd: costKnown ? knownProviderCostUsd : null, filingSeasonCostUsd: costKnown ? knownFilingSeasonCostUsd : null,
       filingSeasonLifecycle, filingSeasonCostKind: filingSeasonLifecycle.status === "shutdown" ? "historical-price-projection-retired-model" : "published-price-projection",
       filingSeasonCostPerAcceptedUsd: costPerAccepted, blockers, eligibleForPromotionReview: false };
   }));

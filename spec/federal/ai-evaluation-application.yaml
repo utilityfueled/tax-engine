@@ -41,6 +41,16 @@ lines:
     description: "Failed application output preserves known costs without unsafe content"
     formula: "Source/schema/privacy failures remain nonpassing; unsafe output is discarded and reported usage remains billable."
     testRef: "tests/engine/provider-eval-application.test.ts::retains real usage when application grounding fails"
+  - line: "known-cost-subtotals"
+    description: "Keep exact known attempt costs visible when some usage is unknown"
+    formula: >-
+      Report exact known actual and filing-season cost subtotals per measurement
+      and per task/profile, including known billed attempts from an incomplete
+      escalation and fully priced attempts in the same group. Sum only priced
+      usage and report a zero subtotal when no priced usage exists. Keep full
+      cost totals and cost per accepted result unknown when any usage is
+      unknown, and retain the spend gate for qualification.
+    testRef: "tests/engine/provider-model-eval.test.ts::reports exact known spend across a partially priced escalation and other repeats"
   - line: "draft-contract"
     description: "Every frozen draft has an explicit compatible request boundary"
     formula: "All eight task shapes and declared source values validate against actual contracts; missing-context cases remain deterministic, all human reviews remain pending. This is a software cross-check, not independent oracle review."

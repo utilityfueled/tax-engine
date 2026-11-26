@@ -178,7 +178,32 @@ describe("measured task model evaluation", () => {
     const entry = run(extraction);
     entry.attempts[0]!.usage = null;
     entry.independentReview = null;
-    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({ accepted: false, complete: false, actualCostUsd: null });
+    expect(scoreProviderEvalEntry(entry, extraction)).toMatchObject({
+      accepted: false, complete: false, actualCostUsd: null, filingSeasonCostUsd: null,
+      knownActualCostUsd: "0", knownFilingSeasonCostUsd: "0",
+    });
+  });
+  it("reports exact known spend across a partially priced escalation and other repeats", () => {
+    const partial = run(extraction, "gemini-flash-high");
+    if (!partial.measurement) throw new Error("Missing synthetic measurement.");
+    partial.measurement.reportedModel = "gpt-6.1-sol";
+    partial.attempts.push({ profileId: "sol-high", startedAt: "2026-10-24T12:00:00.500Z", usage: null });
+    const complete = run(extraction, "gemini-flash-high", 2);
+
+    expect(scoreProviderEvalEntry(partial, extraction)).toMatchObject({
+      accepted: false, complete: false, actualCostUsd: null, filingSeasonCostUsd: null,
+      knownActualCostUsd: "0.0045", knownFilingSeasonCostUsd: "0.009",
+    });
+    expect(scoreProviderEvalEntry(complete, extraction)).toMatchObject({
+      accepted: true, actualCostUsd: "0.0045", filingSeasonCostUsd: "0.009",
+      knownActualCostUsd: "0.0045", knownFilingSeasonCostUsd: "0.009",
+    });
+    const summary = summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [partial, complete], availability }, reviewedFixtures("2026-10-24"), reportAt);
+    expect(summary.groups.find(group => group.profileId === "gemini-flash-high" && group.task === "income-extraction")).toMatchObject({
+      acceptedRuns: 1, providerCostUsd: null, filingSeasonCostUsd: null, filingSeasonCostPerAcceptedUsd: null,
+      knownProviderCostUsd: "0.009", knownFilingSeasonCostUsd: "0.018", eligibleForPromotionReview: false,
+      blockers: expect.arrayContaining(["spend-budget-or-unknown-usage"]),
+    });
   });
   it("rejects duplicate runs, unknown profiles, invalid token counts and extra escalations", () => {
     const entry = run(extraction);
