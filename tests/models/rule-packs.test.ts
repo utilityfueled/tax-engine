@@ -61,4 +61,17 @@ describe("explicit federal rule packs", () => {
     }
     expect(annual.calculationStatus).toBe("incomplete");
   });
+
+  it("records the new Form 2210 rate for 2026 without qualifying the annual return", () => {
+    const source = "https://www.irs.gov/pub/irs-drop/rr-26-25.pdf";
+    const annual = getRulePack(2026);
+    expect(annual.sources).toContainEqual(expect.objectContaining({
+      url: source,
+      section: expect.stringContaining("January 1 through April 15, 2027"),
+      retrievedAt: "2026-11-26",
+    }));
+    expect(getRulePack(2025).sources.map(item => item.url)).not.toContain(source);
+    expect(annual.calculationStatus).toBe("incomplete");
+    expect(annual.filingQualified).toBe(false);
+  });
 });

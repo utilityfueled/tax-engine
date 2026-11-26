@@ -259,7 +259,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.229-law-integration-draft",
+    ruleVersion: "2026.230-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
@@ -471,7 +471,8 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
       { url: "https://www.irs.gov/instructions/i1040sj", section: "Current-year Tax Table and actual three base-year Tax Rate Schedules", revision: "2025 final instructions;2026 statutory preview", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1041sk1", section: "Box10 estate-tax deduction aggregated once in actual ScheduleAline16", revision: "2025 final beneficiary instructions", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/f6251.pdf", section: "Official1a/1b/2a/2d and4-11 printed audit; remaining source worksheets unqualified", revision: "2025 final form", retrievedAt: "2026-10-25" },
-      { url: "https://www.irs.gov/instructions/i2210", section: "Actual dated installments and enumerated line2 taxes, household exception and source facts", revision: "2025 final instructions;2026 rates only through December", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/instructions/i2210", section: "Actual dated installments and enumerated line2 taxes, household exception and source facts", revision: "Final 2025 instructions for the worksheet method. Final 2026 qualification remains open.", retrievedAt: "2026-10-25" },
+      { url: "https://www.irs.gov/pub/irs-drop/rr-26-25.pdf", section: "Form 2210 and 2210-F estimated-tax rate for January 1 through April 15, 2027", revision: "Rev. Rul. 2026-25, released November 24, 2026. Section 6654 uses the published 8% rate, with section 6621(b)(2)(B) extending it through April 15.", retrievedAt: "2026-11-26" },
       { url: "https://www.irs.gov/instructions/i8995", section: "Actual owner/source attribution of SE tax, health insurance and retirement deductions", revision: "2025 final instructions and Reg.1.199A-3(b)(1)(vi)", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p550", section: "Actual OID recipient sources, premium elections and ScheduleA16 allowable excess", revision: "2025 final publication and current continuous-use OID January2024", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1040sse", section: "Separate spouse regular-method forms, actual W2 Boxes3/7 and adjusted K1 Box14A", revision: "2025 final instructions; independently indexed2026 payroll values", retrievedAt: "2026-10-25" },

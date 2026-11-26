@@ -25,3 +25,8 @@ lines:
     formula: "Keep the archived 2025 source in both packs for the established computation. Record the separate archived 2026 template and its printed Schedule 2 line 16a destination in the incomplete 2026 pack. Publishing the template does not qualify the annual calculation or export."
     irsRef: "https://www.irs.gov/pub/irs-prior/f4137--2026.pdf"
     testRef: "tests/models/rule-packs.test.ts::pins historic Form 4137 evidence and records the annual review template separately"
+  - line: "annual-form-2210-source"
+    description: "Version the 2026 estimated-tax rate publication"
+    formula: "Record the January 1 through April 15, 2027 rate authority in the revised 2026 draft rule pack. The 2025 pack retains its separate authorities. Keep 2026 eligibility for calculation and filing under the existing readiness gates."
+    irsRef: "Rev. Rul. 2026-25 and IRC6621(b)(2)(B)"
+    testRef: "tests/models/rule-packs.test.ts::records the new Form 2210 rate for 2026 without qualifying the annual return"
