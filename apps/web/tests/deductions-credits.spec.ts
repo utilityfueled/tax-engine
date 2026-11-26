@@ -232,7 +232,7 @@ test.describe("Deductions section — itemized deductions", () => {
 
     await expect(page.getByText(/7\.5% of your agi/i)).toBeVisible();
     await expect(page.getByText(/excluding withholding and estimates already entered elsewhere/i)).toBeVisible();
-    await expect(page.getByText(/copy each lender's actual amounts and origination date/i)).toBeVisible();
+    await expect(page.getByText("Copy each lender's actual amounts and dates. If the original statement leaves Box 11 blank, record that separately.", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Add donation", exact: true }).click();
     await expect(page.getByRole("combobox", { name: "Donation type", exact: true })).toHaveValue("");
     await expect(page.getByLabel("Donation date", { exact: true })).toHaveValue("");

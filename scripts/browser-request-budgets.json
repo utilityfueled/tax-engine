@@ -518,7 +518,7 @@
     "apps/web/tests/cod-ordinary-attributes.spec.ts": "dd1ab672d4e302756e28c103ba1dfb5d219c8cd360e354bf3b96eb15ab952a48",
     "apps/web/tests/complete-local-lifecycle.spec.ts": "125950570776f2c51f84b2486b72dcb6a3325cc8e36cab90a34eb5b86b73c92d",
     "apps/web/tests/current-minimum-tax-credit.spec.ts": "2423107b10c6a8c4c4395beb2711d9b48f02101a6df7d1458147a42ae9f8960f",
-    "apps/web/tests/deductions-credits.spec.ts": "a1647b86a6111662656ce9984911707aec588ae6ad2f324c5323dcf2fb17f3c7",
+    "apps/web/tests/deductions-credits.spec.ts": "637942480d7d850eae754108b0dc1bbd563149a74e71b70a591c7b3a4cb8e1b2",
     "apps/web/tests/eic-history-fixtures.ts": "7119a117e826059dd25fd920636ff318f10872917e7b79d463d02fda3538e457",
     "apps/web/tests/eic-separated-review-download.spec.ts": "5f5edc78c06ec822b42c77624b2678605096e31a0187856ba763406b8ce5cdcf",
     "apps/web/tests/error-handling.spec.ts": "8143de9c9fda1c5bd1e789e2bde40649c84a483f3ef1bca753b427fd7e3255b0",
