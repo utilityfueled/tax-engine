@@ -24,7 +24,8 @@ export function guidedPriorPropertyState(method: 'basis' | 'risk' | 'both' = 'bo
   const defaults = required(actualGuidedK1Charity().statements)[0];
   Object.assign(required(packet.statements)[0], { link: 'independent', originalSourceReference: 'Fictional original2026 K1',
     allUnlistedAmountsZeroConfirmed: true, domesticContinuingNonPtpConfirmed: true,
-    original: { ...defaults.original, ...original } });
+    // The retained synthetic browser original explicitly records no qualified PTP activity.
+    original: { ...defaults.original, ...original, section199AQualifiedPTPIncome: '0', section199APTPIsSST: false } });
   state.sectionData.deductions = { ...emptyDeductionData, method: 'standard', medicalExpenses: '0', stateLocalTaxes: '0',
     realEstateTaxes: '0', mortgageInterest: '0', charitableContributions: '0', casualtyLosses: '0', otherItemized: '0',
     gamblingWinnings: '0', nonW2IncomeTaxesDeductedElsewhere: '0', donationEntries: [], k1CharitableSources: packet,

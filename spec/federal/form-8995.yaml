@@ -15,6 +15,8 @@ notes: |
   QBI comes from Schedule C, Schedule F, S-corps (K-1), partnerships (K-1), and
   qualifying rental real estate activities from Schedule E Part I.
   SSTB phase-out and W-2/basis limitations only apply above the threshold.
+  The return-level REIT/PTP balance is present when a current qualified
+  component, filed balance or reconciled PTP loss source exists.
 
   Rental real estate activities qualify as a trade or business for §199A purposes
   when the taxpayer meets the safe harbor under Rev. Proc. 2019-38 (250 hours of
@@ -106,6 +108,7 @@ lines:
       - "1099-DIV Box 5 from multiple mutual funds holding REITs are summed"
     testRefs:
       - "tests/engine/federal-reit-ptp-carryforward.test.ts::preserves a 2025 simplified loss on a 2026 return with no current REIT or PTP income"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::preserves the return shape when no qualified REIT or PTP source applies"
       - "tests/engine/federal-reit-ptp-carryforward.test.ts::validates the actual source year and continuing ownership"
       - "tests/engine/federal-reit-ptp-carryforward.test.ts::keeps a fully suspended PTP loss out of the section 199A carry and deduction"
       - "tests/pdf/fill-form-8995.test.ts::renders the audited separate REIT and PTP loss on lines 7 and 17"

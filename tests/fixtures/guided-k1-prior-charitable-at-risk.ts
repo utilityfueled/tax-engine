@@ -25,8 +25,13 @@ export function guidedK1PriorRiskState() {
     const charity = strings(input.k1CharitableSources) as K1CharitableSourcesData;
     const row = requireRiskSource(charity.statements)[0];
     row.original = strings(input.scheduleK1[0]) as typeof row.original;
-    requireRiskSource(row.original).federalIncomeTaxWithheld = '0';
-    requireRiskSource(row.original).priorSuspendedLosses = { ordinary: '0', charitable: '0' };
+    Object.assign(requireRiskSource(row.original), {
+        federalIncomeTaxWithheld: '0',
+        priorSuspendedLosses: { ordinary: '0', charitable: '0' },
+        // The retained synthetic browser original explicitly records no qualified PTP activity.
+        section199AQualifiedPTPIncome: '0',
+        section199APTPIsSST: false,
+    });
     Object.assign(row, { link: 'qbi', qbiSourceId: 'scheduleK1:0', originalSourceReference: 'Fictional original K1 with separate prior history',
         allUnlistedAmountsZeroConfirmed: true, domesticContinuingNonPtpConfirmed: true });
     requireRiskSource(state.sectionData.adjustments).k1LossSources = q;

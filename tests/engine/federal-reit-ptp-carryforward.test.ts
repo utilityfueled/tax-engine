@@ -50,6 +50,12 @@ function calculate2026(overrides: Record<string, unknown>) {
 }
 
 describe("Federal separate REIT and PTP loss carryforward", () => {
+  it("preserves the return shape when no qualified REIT or PTP source applies", () => {
+    const result = calculateFederalTax(simpleW2Fixture);
+    expect(result.carryforwards).not.toHaveProperty("reitPtpLossCarryforward");
+    expect(result.form8582).not.toHaveProperty("ptpLossAllowances");
+  });
+
   it("keeps a fully suspended PTP loss out of the section 199A carry and deduction", () => {
     const original = { ...ptp, isPassiveActivity: true, isPubliclyTradedPartnership: true,
       ordinaryIncome: "-300", section199AQualifiedPTPIncome: "-300" };
@@ -65,7 +71,7 @@ describe("Federal separate REIT and PTP loss carryforward", () => {
     expect(() => calculate({ ...source, currentAllowedAmount: "0.01" })).toThrow(/reconcile/i);
     const result = calculate(source);
     expect(result.form8995?.reitPTPComponent.toFixed()).toBe("200");
-    expect(result.carryforwards.reitPtpLossCarryforward.toFixed()).toBe("0");
+    expect(result.carryforwards.reitPtpLossCarryforward?.toFixed()).toBe("0");
     expect(result.carryforwards.suspendedPTPLosses.map(row => [row.partnershipName, row.amount.toFixed()]))
       .toEqual([[ptp.partnershipName, "300"]]);
   });
@@ -173,7 +179,7 @@ describe("Federal separate REIT and PTP loss carryforward", () => {
     const current = calculate2026({ priorYear: { reitPtpLossSource: carrySource, qbiLossCarryforward: "1000" } });
     expect(current.form8995?.netReitPtpAmount.toFixed()).toBe("-4500");
     expect(current.form8995?.reitPTPComponent.toFixed()).toBe("0");
-    expect(current.carryforwards.reitPtpLossCarryforward.toFixed()).toBe("4500");
+    expect(current.carryforwards.reitPtpLossCarryforward?.toFixed()).toBe("4500");
     expect(current.carryforwards.qbiLossCarryforward.toFixed()).toBe("1000");
     expect(current.carryforwards.suspendedPTPLosses).toEqual([]);
     expect(current.agi.toFixed()).toBe(calculate2026({}).agi.toFixed());
@@ -192,7 +198,7 @@ describe("Federal separate REIT and PTP loss carryforward", () => {
     expect(result.form8995A?.netReitPtpAmount.toFixed()).toBe("2500");
     expect(result.form8995A?.reitPTPComponent.toFixed()).toBe("500");
     expect(result.form8995A?.qbiDeduction.toFixed()).toBe("500");
-    expect(result.carryforwards.reitPtpLossCarryforward.toFixed()).toBe("0");
+    expect(result.carryforwards.reitPtpLossCarryforward?.toFixed()).toBe("0");
   });
 
   it("holds a detailed 2026 PTP amount when its SSTB designation is missing", () => {
@@ -209,7 +215,7 @@ describe("Federal separate REIT and PTP loss carryforward", () => {
     expect(() => calculate({ owner: "joint", sameJointFilersConfirmed: true })).toThrow(/ownership/i);
     expect(() => calculate({ amount: "-0.01" })).toThrow(/nonnegative/i);
     const zero = calculate({ amount: "0" });
-    expect(zero.carryforwards.reitPtpLossCarryforward.toFixed()).toBe("0");
+    expect(zero.carryforwards.reitPtpLossCarryforward?.toFixed()).toBe("0");
     expect(zero.form8995).toBeUndefined();
   });
 });

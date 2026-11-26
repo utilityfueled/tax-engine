@@ -3171,12 +3171,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const ptpSources: QBIBusinessSource[] = [];
   let releasedPriorQualifiedPtpLoss = new Decimal(0);
   let unknownPtpSstb = false;
+  let reviewedPtpLoss = false;
   for (const [sourceIndex, k1] of input.scheduleK1.entries()) {
     const allowance = k1.isPubliclyTradedPartnership && k1.isPassiveActivity
-      ? ptpSourceResult.ptpLossAllowances.find(row => row.name === k1.partnershipName) : undefined;
+      ? ptpSourceResult.ptpLossAllowances?.find(row => row.name === k1.partnershipName) : undefined;
     const { currentAmount: ptpIncome, releasedPriorQualifiedLoss: releasedQualifiedLoss, reviewed } =
       reconcileQualifiedPtpLossSource(year, k1, schedE.partnerships[sourceIndex], allowance);
     if (reviewed) {
+      reviewedPtpLoss = true;
       releasedPriorQualifiedPtpLoss = releasedPriorQualifiedPtpLoss.plus(releasedQualifiedLoss);
       audit.record("Section 199A PTP", `${sourceIndex + 1}-current`, "Allowed current qualified PTP amount", ptpIncome,
         "Confirmed signed statement amount after excluding current suspended losses");
@@ -3227,6 +3229,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     if (!filedReitPtpLoss.isFinite() || filedReitPtpLoss.lt(0)) throw new Error("Prior REIT and PTP loss must be finite and nonnegative");
   }
   const priorYearReitPtpLoss = filedReitPtpLoss.plus(releasedPriorQualifiedPtpLoss);
+  const hasReitPtpSource = reitPtpLossSource !== undefined || !qualifiedReitDividends.isZero()
+    || ptpSources.length > 0 || reviewedPtpLoss;
 
   function computeQBI(selectedDeduction: Decimal, otherDeductions: Decimal) {
     let qbiDeduction = new Decimal(0);
@@ -5353,7 +5357,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         foreignTaxCreditCarryforwardByCategory: cfForeignByCategory,
         ...(cfAlternativeForeignByCategory ? { amtForeignTaxCreditCarryforwardByCategory: cfAlternativeForeignByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
-        reitPtpLossCarryforward: form8995Result?.reitPtpLossCarryforward ?? form8995AResult?.reitPtpLossCarryforward ?? new Decimal(0),
+        ...(hasReitPtpSource ? {
+          reitPtpLossCarryforward: form8995Result?.reitPtpLossCarryforward ?? form8995AResult?.reitPtpLossCarryforward ?? new Decimal(0),
+        } : {}),
         ...(input.qbiLossSources ? { qbiSuspendedLosses: k1QbiLosses.activities.flatMap(activity => [
           ...activity.stages.filter(stage => stage.remainingVintages.length > 0).map(stage => ({
             sourceId: activity.sourceId, accountHolder: activity.accountHolder, limitation: stage.limitation,

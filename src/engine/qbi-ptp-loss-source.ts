@@ -8,7 +8,7 @@ export function reconcileQualifiedPtpLossSource(
   taxYear: number,
   k1: ScheduleK1,
   partnership: PartnershipEntry,
-  allowance?: Form8582Result["ptpLossAllowances"][number],
+  allowance?: NonNullable<Form8582Result["ptpLossAllowances"]>[number],
 ) {
   const statementAmount = d(k1.section199AQualifiedPTPIncome);
   const source = k1.section199APTPLossSource;
