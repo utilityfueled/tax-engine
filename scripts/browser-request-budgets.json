@@ -243,7 +243,7 @@
     "apps/web/src/components/refund-ticker.tsx": "d54a6b94e483ea14d5773891d47101aa89caccf808c3b6f5fa44d4634d08baaf",
     "apps/web/src/components/retro-shell.tsx": "5d8538ca08cecbe51b45b6e7d7573a89a504e97e038f1703ee5ab4cb6e42d9c2",
     "apps/web/src/components/return-help-dock.tsx": "11273827014169b2e9c28a56a00c5fe43cb009f3f52ee3c9ffee24fde9bb7267",
-    "apps/web/src/components/return-workspace-screen.tsx": "2a159dd715795e1b1b04f7b6fe7fae29c6469f6eaf861774adef35d6f3cde428",
+    "apps/web/src/components/return-workspace-screen.tsx": "534c1c62392e63525510d299d4fc4185e95383ba770603b4362319dfe65561dd",
     "apps/web/src/components/site-footer.tsx": "cb86ba68290eb6d1aa61a4f3593544a9f3a2d4ac90332322301986116b385871",
     "apps/web/src/components/start-workspace-button.tsx": "4f78c8ff61ff5d0b2d9eaeee12548204a2e6c660e5ff5b3977ae08d41a7c0399",
     "apps/web/src/components/workspace-recovery-controls.tsx": "4a37c57c7c61152ba6c7b732da16b221b8e9759aeffedaeee93c5cd7730f01d8",
@@ -697,7 +697,7 @@
     "apps/web/tests/workspace-guided-year.spec.ts": "8683248504cbf2b14750b7032242429e15c9e29393a8b3dec5c5a24596e5e6d6",
     "apps/web/tests/workspace-lifecycle.spec.ts": "eb19792945492af34215b59b1d4c9cda7593a2f1fcaa67767402bc96a779a59f",
     "apps/web/tests/workspace-recovery.spec.ts": "02d1fb324b9a0a83722774a2a85a58d534159ec4b636f15e07398bc121e2358e",
-    "apps/web/tests/workspace-upload.spec.ts": "a26e1f9f2dc04cd924856e567ab1bc2475d7bf49d3f1059529916d336533e910",
+    "apps/web/tests/workspace-upload.spec.ts": "9dafdefc4211b8b5f2c1054aaadeb06ac52176ac134d0ca5058349156e045b41",
     "packages/contracts/package.json": "57053526d9dca0fab4f4d3ceeaf009a15472700a5886b3bed921a4c2c65ad3c7",
     "packages/contracts/src/index.ts": "ebf59013c7bbb367e503fa0297a149eb8f3057f335c89620f85434639721e461",
     "packages/engine/package.json": "7b7310b15b3aef79dd78c97c5c4152c8eb240f47ba9d6c985e331e912cd4d0c3",
@@ -4076,7 +4076,7 @@
       "skippedTitles": []
     },
     "workspace-upload.spec.ts": {
-      "caseCount": 30,
+      "caseCount": 31,
       "bounds": {
         "filled-return": 0,
         "provider": 0,

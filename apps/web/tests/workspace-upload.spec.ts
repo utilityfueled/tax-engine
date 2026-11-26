@@ -19,6 +19,68 @@ async function enableAdvancedMode(page: import("@playwright/test").Page) {
   });
 }
 
+test("reopens mixed Form 1099-LPS for review and imports a separate interest original", async ({ page }) => {
+  const fixture = path.resolve(testDir, "../../../tests/fixtures/irs/f1099lps--2026.pdf");
+  const issuer = await PDFDocument.load(await readFile(fixture));
+  const packet = await PDFDocument.create();
+  const sheet = packet.addPage([1224, 792]);
+  sheet.drawPage(await packet.embedPage(issuer.getPage(2)), { x: 612, y: 0 });
+  const interestLines = [
+    "2026 Form 1099-INT",
+    "Interest Income",
+    "1 Interest Income $123.45",
+    "4 Federal income tax withheld $0.00",
+  ];
+  const separate = await PDFDocument.create();
+  const interestPage = separate.addPage([612, 792]);
+  for (const [pdf, pdfPage] of [[packet, sheet], [separate, interestPage]] as const) {
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    interestLines.forEach((line, index) => {
+      pdfPage.drawText(line, { x: 42, y: 728.233 - index * 17, size: 11, font });
+    });
+  }
+
+  await page.goto("/");
+  await enableAdvancedMode(page);
+  await page.getByRole("button", { name: /start your tax return/i }).click();
+  await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+$/i);
+  const upload = page.locator('input[type="file"]');
+  await upload.setInputFiles({ name: "f1099int.pdf", mimeType: "application/pdf", buffer: Buffer.from(await packet.save()) });
+  const status = page.getByRole("status", { name: "Return status" });
+  await expect(status).toHaveText("1 docs stored locally.");
+
+  await page.reload();
+  const documents = page.getByRole("region", { name: "Your Documents", exact: true });
+  await expect(documents).toBeVisible();
+  const expand = documents.getByRole("button", { name: "Expand", exact: true });
+  if (await expand.isVisible()) await expand.click();
+  const cards = documents.getByRole("listitem");
+  const card = cards.filter({ hasText: "Form 1099-LPS needs review" });
+  await expect(cards).toHaveCount(1);
+  await expect(card.getByText("Form 1099-LPS needs review", { exact: true })).toBeVisible();
+  await expect(card.getByText("No data found yet", { exact: true })).toBeVisible();
+  const parsedInterest = page.getByText("Parsed uploaded 1099-INT: taxable interest $123.45.", { exact: true });
+  await expect(parsedInterest).toHaveCount(0);
+
+  const followUpUpload = documents.locator('input[type="file"]');
+  await expect(followUpUpload).toBeAttached();
+  await followUpUpload.setInputFiles({
+    name: "separate-interest.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from(await separate.save()),
+  });
+  await expect(status).toHaveText("2 docs stored locally.");
+  await page.reload();
+  await expect(documents).toBeVisible();
+  if (await expand.isVisible()) await expand.click();
+  await expect(cards).toHaveCount(2);
+  await expect(card.getByText("No data found yet", { exact: true })).toBeVisible();
+  const work = page.getByRole("region", { name: "Show Your Work", exact: true });
+  const expandWork = work.getByRole("button", { name: "Expand", exact: true });
+  if (await expandWork.isVisible()) await expandWork.click();
+  await expect(parsedInterest).toBeVisible();
+});
+
 async function checkUploadFailure(page: Page, fault: "indexed-db" | "return-storage", message: RegExp) {
   await page.goto("/");
   await enableAdvancedMode(page);

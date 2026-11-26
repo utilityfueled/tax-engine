@@ -1187,6 +1187,23 @@ export function ReturnWorkspaceScreen({
   const isReviewFocusedWorkspace = workspace.summary.totalDocuments > 0
     && pendingInterviewQuestionCount === 0
     && guidedReviewIssues.length === 0;
+  const documentUploadTray = (
+    <label className="upload-tray" htmlFor="upload-documents">
+      <span className="upload-title">Upload your tax documents (W-2s, 1099s, etc.)</span>
+      <span className="upload-copy">
+        Supported formats: W-2, 1099-INT, 1099-DIV, 1099-B, 1099-R, 1099-SA,
+        1099-NEC, and IRS training guides. Upload as PDF.
+      </span>
+      <input
+        id="upload-documents"
+        className="upload-input"
+        type="file"
+        accept="application/pdf"
+        multiple
+        onChange={syncUpload}
+      />
+    </label>
+  );
 
   const checklistPanel = (
     <RetroShell title="Checklist" eyebrow="PROGRESS">
@@ -1965,21 +1982,7 @@ export function ReturnWorkspaceScreen({
         return (
           <div className="two-up">
             <RetroShell title="Upload Documents" eyebrow="DOCUMENTS">
-              <label className="upload-tray" htmlFor="upload-documents">
-                <span className="upload-title">Upload your tax documents (W-2s, 1099s, etc.)</span>
-                <span className="upload-copy">
-                  Supported formats: W-2, 1099-INT, 1099-DIV, 1099-B, 1099-R, 1099-SA,
-                  1099-NEC, and IRS training guides. Upload as PDF.
-                </span>
-                <input
-                  id="upload-documents"
-                  className="upload-input"
-                  type="file"
-                  accept="application/pdf"
-                  multiple
-                  onChange={syncUpload}
-                />
-              </label>
+              {documentUploadTray}
               <p className="document-meta">{storageMessage === `${workspace.summary.totalDocuments} docs stored locally.` ? storageMessage : documentStatusMessage}</p>
               <div className="inline-actions">
                 <button className="utility-button" type="button" onClick={resetWorkspace}>
@@ -2154,6 +2157,7 @@ export function ReturnWorkspaceScreen({
             collapsible
             defaultCollapsed={isReviewFocusedWorkspace}
           >
+            {isReviewFocusedWorkspace ? documentUploadTray : null}
             {workspace.documents.length === 0 ? (
               <p className="panel-text">
                 Upload your tax documents (W-2s, 1099s, etc.) to populate your return.

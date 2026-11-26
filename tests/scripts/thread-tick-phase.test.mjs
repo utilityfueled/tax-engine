@@ -296,16 +296,22 @@ test('diagnostic source pins refresh without changing original budgets or collec
  }
  for(const [path,hash] of Object.entries(full.sourceSha256)) assert.equal(hash,sha(await read(path)),path);
  const project=(data,keys)=>Object.fromEntries(Object.entries(data).filter(([key])=>!keys.includes(key)));
+ // The local upload follow-up adds one browser case without protected requests.
+ const upload=audit.files['workspace-upload.spec.ts'];
+ assert.equal(upload.caseCount,31);
+ assert.deepEqual(upload.requestSourceLines,[]);
+ assert.deepEqual(Object.values(upload.bounds),[0,0,0,0]);
  // The touch lifecycle adds one case and moves the existing request call sites.
  const lifecycle=audit.files['complete-local-lifecycle.spec.ts'];
  assert.equal(lifecycle.caseCount,3);
  assert.deepEqual(lifecycle.requestSourceLines,[129,239,246,298]);
- const beforeTouch={...audit,files:{...audit.files,'complete-local-lifecycle.spec.ts':{
-  ...lifecycle,caseCount:2,requestSourceLines:[110,197,204,242],
- }}};
+ const beforeTouch={...audit,files:{...audit.files,
+  'complete-local-lifecycle.spec.ts':{...lifecycle,caseCount:2,requestSourceLines:[110,197,204,242]},
+  'workspace-upload.spec.ts':{...upload,caseCount:30},
+ }};
  assert.equal(sha(JSON.stringify(project(beforeTouch,['sourceHashes']))),'f0b4f93c11260d72e39ea769b87028195048a765ef647e02fb316c1938312198');
- assert.equal(cases.currentFullCaseCount,658);
- assert.equal(cases.currentFullCollectionSha256,'a37030078e09a5bf777e1f335502bd4f25fac90a76116cfd039828f4eba1fb57');
+ assert.equal(cases.currentFullCaseCount,659);
+ assert.equal(cases.currentFullCollectionSha256,'9788f713c390d1426a5843b64f38d6d5bad476852bbf967b6f66188ebcc6e0c9');
  const previousCases={...cases,currentFullCaseCount:657,currentFullCollectionSha256:'c486b270fbc2136a6f6b11c3b0ae1c64c8e03107dc34fc5c77ed7f90aa355525'};
  assert.equal(sha(JSON.stringify(project(previousCases,['auditSha256','targetSourceSha256']))),'f5b67f03b7c03f5b92635aa2cb2725d0fdf04006509a0dab81f104580657d1bb');
  // The full-batch pin refers to its historical 655-case source selection.

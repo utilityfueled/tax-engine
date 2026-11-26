@@ -12,8 +12,10 @@ lines:
       neighboring panel shares the same text row. An upload containing the form stays pending
       separate source review even when a different supported statement appears
       before or after it. Keep the original upload without seeding either document's
-      tax facts. Printed source evidence overrides any sample filename. Do not
-      infer the calendar year from the form revision, filename
+      tax facts. In the review-focused workspace, keep the upload control in Your
+      Documents so a separate supported original can be uploaded on the same
+      return after reopening it. Printed source evidence overrides any sample
+      filename. Do not infer the calendar year from the form revision, filename
       or unrelated statements. Box 1 reports premiums and charges paid. It does not
       establish a deductible medical expense, the qualified distribution amount,
       or when the separate issuer premium statement was filed with the plan.
@@ -25,6 +27,7 @@ lines:
     testRefs:
       - "tests/apps/web/uploaded-1099-lps.test.ts::recognizes the final blank without assuming a calendar year or amounts"
       - "tests/apps/web/uploaded-1099-lps.test.ts::holds the actual form when another panel or page stamp shares the header row"
+      - "apps/web/tests/workspace-upload.spec.ts::reopens mixed Form 1099-LPS for review and imports a separate interest original"
       - "tests/apps/web/uploaded-1099-lps.test.ts::keeps importing an interest statement when only the filename or a source note mentions Form 1099-LPS"
   - line: "marketplace-upload-year"
     description: "Retain an explicit Form1095-A original year without authorizing its tax facts"
