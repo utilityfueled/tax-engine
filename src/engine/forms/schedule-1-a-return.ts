@@ -7,6 +7,7 @@ import type { ScheduleCResult } from "../schedules/schedule-c.js";
 import { calculateSchedule1A } from "../schedules/schedule-1-a.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, sum, zeroFloor } from "@/utils/decimal.js";
+import { isQualifiedTippedOccupationCode } from "@/utils/tipped-occupation-code.js";
 
 type Owner = "primary" | "spouse";
 type BusinessTip = Schedule1AInput["businessTips"][number];
@@ -20,15 +21,6 @@ interface Params {
   adjustedBusinessSources: QBIDeductionSource[];
   businessDeductionsVerified: boolean;
 }
-// TD10044 section1.224-1(h), final table; code000 is not a qualifying occupation.
-const occupations = new Set([
-  "101","102","103","104","105","106","107","108","109","110",
-  "201","202","203","204","205","206","207","208","209","210","211",
-  "301","302","303","304","401","402","403","404","405","406","407","408","409",
-  "501","502","503","504","505","506","507","508","509","510",
-  "601","602","603","604","605","606","607","608","609","610","611",
-  "701","702","703","704","705","706","801","802","803","804","805","806","807","808","809","810",
-]);
 const normalized = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
 function requiredAmount(value: string | undefined, label: string): Decimal {
   if (value === undefined) throw new Error(`Schedule1-A requires the actual ${label}.`);
@@ -46,7 +38,7 @@ function sourceIdentity(source: { taxYear?: number; accountHolder?: Owner } | un
   if (!source || source.taxYear !== year || source.accountHolder !== owner) throw new Error("Schedule1-A source year and actual owner must match the return claim.");
 }
 function occupationReporting(codes: string[] | undefined) {
-  if (!codes?.length || codes.some(code => code !== "000" && !occupations.has(code))) throw new Error("Schedule1-A requires actual valid TTOC occupation reporting for2026.");
+  if (!codes?.length || codes.some(code => code !== "000" && !isQualifiedTippedOccupationCode(code))) throw new Error("Schedule1-A requires actual valid TTOC occupation reporting for2026.");
   // IRS permits any two codes when there are more occupations. A missing third
   // code does not disprove the independently documented actual occupation.
 }
@@ -67,6 +59,23 @@ function qualifiedCardTips(params: Params, row: BusinessTip, reports: NonNullabl
   const gross = requiredAmount(source.grossAmount, "Form 1099-K Box 1a");
   const grossReceipts = requiredAmount(input.scheduleC?.grossReceipts, "Schedule C gross receipts");
   if (gross.isZero() || !gross.eq(grossReceipts) || !gross.eq(scheduleC.grossReceipts)) throw new Error("Form 1099-K Box 1a must reconcile to the actual Schedule C gross receipts.");
+  const evidence = source.cardTipStatementEvidence;
+  if (!evidence) throw new Error("Form 1099-K card tips require original statement evidence.");
+  if (normalized(evidence.statementReference) !== normalized(row.form1099KProof.statementReference)) {
+    throw new Error("The Form 1099-K statement reference must match the linked original.");
+  }
+  const cardNotPresent = requiredAmount(evidence.cardNotPresent, "Form 1099-K Box 1b");
+  const federalWithheld = requiredAmount(evidence.federalWithheld, "Form 1099-K Box 4");
+  if (cardNotPresent.gt(gross) || !cardNotPresent.eq(source.cardNotPresent)) {
+    throw new Error("The actual Box 1b must match the original Form 1099-K and cannot exceed gross payments.");
+  }
+  if (federalWithheld.gt(gross) || !federalWithheld.eq(source.federalWithheld)) {
+    throw new Error("The actual Box 4 must match the original Form 1099-K and cannot exceed gross payments.");
+  }
+  if (evidence.noStateReportingConfirmed !== true || !d(source.stateWithheld).isZero()
+    || source.state?.trim() || source.statePayerNumber?.trim()) {
+    throw new Error("Form 1099-K state reporting requires separate review.");
+  }
   const reportedTips = requiredAmount(source.cashTips, "Form 1099-K Box 1c cash tips");
   if (reportedTips.gt(gross)) throw new Error("Form 1099-K Box 1c cash tips exceed Box 1a gross payments.");
   const codes = source.treasuryTippedOccupationCodes;
@@ -99,7 +108,7 @@ export function calculateSchedule1AReturn(params: Params) {
     if (person.employmentValidSsnIssuedByDueDate === undefined || declared !== person.employmentValidSsnIssuedByDueDate) throw new Error("Schedule1-A SSN eligibility must match the actual household identity facts.");
   }
   const tipEligible = (row: Schedule1AInput["employeeTips"][number] | Schedule1AInput["businessTips"][number]) => {
-    if (row.eligibleOccupation && !occupations.has(row.occupationCode)) throw new Error("Schedule1-A qualifying occupation is not in the final Treasury occupation table.");
+    if (row.eligibleOccupation && !isQualifiedTippedOccupationCode(row.occupationCode)) throw new Error("Schedule1-A qualifying occupation is not in the final Treasury occupation table.");
     return (row.owner === "primary" ? facts.primarySsnEligible : facts.spouseSsnEligible) && row.eligibleOccupation && row.voluntaryCashTips && row.lawfulActivity && row.meetsSstbRuleOrTransition;
   };
   const employerClaims = new Set<string>(), employeeSources = new Set<string>();
@@ -173,17 +182,21 @@ export function calculateSchedule1AReturn(params: Params) {
     if (id !== "scheduleC" || !input.scheduleC) throw new Error("Business tips require the supported actual ScheduleC income-source reconciliation; other business routes remain unsupported.");
     if (businessClaims.has(id)) throw new Error("Duplicate actual business tip claim.");
     businessClaims.add(id);
+    const reports = row.reportedTipSources;
+    const usesCardTipReport = row.form1099KProof !== undefined || reports?.some(report => report.sourceId.startsWith("form1099K:"));
+    const businessName = input.scheduleC.businessName?.trim() || (usesCardTipReport ? input.scheduleC.principalBusinessActivity?.trim() : "");
     const original = params.businessSources.find(source => source.id === id), adjusted = params.adjustedBusinessSources.find(source => source.id === id);
-    if (!original || !adjusted || original.accountHolder !== row.owner || adjusted.accountHolder !== row.owner || input.scheduleC.accountHolder !== row.owner || normalized(row.businessName) !== normalized(input.scheduleC.businessName ?? "")) throw new Error("Business tips require matching actual business identity and owner.");
+    if (!original || !adjusted || original.accountHolder !== row.owner || adjusted.accountHolder !== row.owner
+      || input.scheduleC.accountHolder !== row.owner || normalized(row.businessName) !== normalized(businessName ?? "")) {
+      throw new Error("Business tips require matching actual business identity and owner.");
+    }
     if (!params.businessDeductionsVerified || original.excludedSEIncome) throw new Error("Actual business tip limitation requires verified attributable deduction allocation.");
     if (!original.qbi.eq(params.scheduleC.netProfit)) throw new Error("Canonical ScheduleC business profit does not reconcile.");
     const allocable = original.qbi.minus(adjusted.qbi);
     if (!allocable.isFinite() || allocable.lt(0)) throw new Error("Canonical business deductions are invalid.");
     if (row.netProfit !== undefined && !d(row.netProfit).eq(params.scheduleC.netProfit)) throw new Error("Supplied business profit disagrees with canonical ScheduleC.");
     if (row.otherAllocableDeductions !== undefined && !d(row.otherAllocableDeductions).eq(allocable)) throw new Error("Supplied business deductions disagree with canonical attribution.");
-    const reports = row.reportedTipSources;
     if (!reports?.length) throw new Error("Actual business tips require original information-return sources.");
-    const usesCardTipReport = row.form1099KProof !== undefined || reports.some(report => report.sourceId.startsWith("form1099K:"));
     let qualified = d(0);
     if (usesCardTipReport) {
       qualified = qualifiedCardTips(params, row, reports, audit);

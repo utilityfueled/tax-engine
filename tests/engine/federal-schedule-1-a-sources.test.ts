@@ -19,8 +19,12 @@ function cardTipInput() {
     ...simpleW2Fixture,
     taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year, primary: { ...simpleW2Fixture.taxpayer.primary, employmentValidSsnIssuedByDueDate: true } },
     w2s: [{ ...simpleW2Fixture.w2s[0], accountHolder: "primary", socialSecurityTips: "0", federalWithheld: "18000" }],
-    form1099K: [{ taxYear: year, accountHolder: "primary", pse: "Rideshare platform", grossAmount: "24000", cashTips: "1200", treasuryTippedOccupationCodes: ["802"], incomeType: "business" }],
-    scheduleC: { accountHolder: "primary", businessName, grossReceipts: "24000", qbiMateriallyParticipated: true },
+    form1099K: [{ taxYear: year, accountHolder: "primary", pse: "Rideshare platform", grossAmount: "24000", cashTips: "1200",
+      treasuryTippedOccupationCodes: ["802"], incomeType: "business", cardNotPresent: "24000", federalWithheld: "0", stateWithheld: "0",
+      cardTipStatementEvidence: { statementReference: "2026 rideshare Form 1099-K", cardNotPresent: "24000",
+        federalWithheld: "0", noStateReportingConfirmed: true },
+    }],
+    scheduleC: { accountHolder: "primary", businessName, principalBusinessActivity: "Independent rideshare", grossReceipts: "24000", qbiMateriallyParticipated: true },
     schedule1A: { sourceTaxYear: year, sourceReference: "Complete original tip worksheet", sourceFactsConfirmed: true, allSourcesIncluded: true,
       primarySsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", seniorOwners: [], employeeTips: [], overtime: [], vehicleLoans: [],
       businessTips: [{ owner: "primary", occupationCode: "802", eligibleOccupation: true, voluntaryCashTips: true, lawfulActivity: true, meetsSstbRuleOrTransition: true,
@@ -50,6 +54,27 @@ it("deducts qualified card tips from one reconciled 2026 Form 1099-K without add
   expect(result.form8995?.qbiDeduction.toFixed()).toBe("4261");
   expect(baseline.form8995?.qbiDeduction.toFixed()).toBe("4461");
   expect(baseline.taxableIncome.minus(result.taxableIncome).toFixed()).toBe("800");
+});
+
+it("binds Form 1099-K to the actual principal activity when the Schedule C trade name is blank", () => {
+  const input = cardTipInput();
+  input.scheduleC.businessName = "";
+  const parsed = TaxYearInputSchema.parse(input);
+  const result = calculateFederalTax(parsed);
+  expect(parsed.scheduleC?.businessName).toBe("");
+  expect(result.schedule1A?.tipsDeduction.toFixed()).toBe("1000");
+  input.schedule1A.businessTips[0].businessName = "Other activity";
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse(input))).toThrow(/actual business identity/i);
+});
+
+it("retains actual Form 1099-K Box 4 withholding when claiming qualified tips", () => {
+  const input = cardTipInput();
+  const statement = input.form1099K[0];
+  statement.federalWithheld = "123.00";
+  statement.cardTipStatementEvidence.federalWithheld = "123.00";
+  const result = calculateFederalTax(TaxYearInputSchema.parse(input));
+  expect(result.allLines.find(line => line.form === "1040" && line.line === "25b")?.value.toFixed()).toBe("123");
+  expect(result.schedule1A?.tipsDeduction.toFixed()).toBe("1000");
 });
 
 it("uses the applicable net income limit and accepts an explicitly reported zero", () => {
@@ -102,6 +127,12 @@ it("holds unverified or conflicting 2026 Form 1099-K tip sources", () => {
     [withStatement({ treasuryTippedOccupationCodes: undefined }), /Box 1d/i],
     [withStatement({ treasuryTippedOccupationCodes: ["804"] }), /Box 1d/i],
     [withStatement({ treasuryTippedOccupationCodes: ["802", "000"] }), /Box 1d/i],
+    [withStatement({ cardTipStatementEvidence: undefined }), /statement evidence/i],
+    [withStatement({ cardNotPresent: "23999.99" }), /actual Box 1b/i],
+    [withStatement({ federalWithheld: "0.01" }), /actual Box 4/i],
+    [withStatement({ stateWithheld: "0.01" }), /non-W2 income taxes.*unknown/i],
+    [{ ...input, form1099K: [{ ...statement, state: "PA" }] }, /state reporting/i],
+    [withBusinessTip({ form1099KProof: { ...row.form1099KProof, statementReference: "Different original statement" } }), /statement reference/i],
     [withBusinessTip({ form1099KProof: undefined }), /proof|confirmation/i],
     [withBusinessTip({ form1099KProof: { ...row.form1099KProof, qualifiedTipsReconciledConfirmed: false } }), /true/i],
     [withBusinessTip({ qualifiedReportedTips: "999.99" }), /allocations do not reconcile/i],

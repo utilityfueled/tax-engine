@@ -908,6 +908,12 @@ export const Form1099KSchema = z.object({
   federalWithheld: optionalDecimal, // Box 4 — federal income tax withheld (backup withholding)
   stateWithheld: optionalDecimal, // Box 8 — state income tax withheld
   state: z.string().optional(), // Box 6 — state
+  cardTipStatementEvidence: z.strictObject({
+    statementReference: z.string().trim().min(1),
+    cardNotPresent: decimal,
+    federalWithheld: decimal,
+    noStateReportingConfirmed: z.literal(true),
+  }).optional(),
   /** Income type for routing: which schedule this 1099-K income appears on */
   incomeType: z.enum(["business", "farm", "rental", "other"]).default("business"),
 });

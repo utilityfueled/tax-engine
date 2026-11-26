@@ -43,6 +43,13 @@ lines:
       actual statement year and owner, and a named filer. Require business
       classification, a positive Box 1a equal to actual and calculated Schedule C
       gross receipts, and one actual Box 1d code matching the claimed occupation.
+      Bind the claim to the actual Schedule C trade name when entered. If the
+      original has no separate trade name, use the actual principal business
+      activity for the source label without filling in Schedule C line C.
+      Bind the worksheet statement reference to the original statement
+      evidence and reconcile the explicitly confirmed Box 1b and Box 4
+      amounts to the original. This scope requires confirmation that the
+      statement reports no state amounts or state reporting identifiers.
       Keep Box 1c as a subset of Box 1a. The separately reconciled qualified
       amount must equal the business claim and cannot exceed Box 1c. Hold missing
       or contradictory facts, additional Forms 1099-K, any concurrent NEC/MISC
@@ -52,7 +59,7 @@ lines:
       MAGI phase-down. Exclude only the allowable deduction from QBI under
       IRC 199A(c)(4)(D). Gross receipts, AGI and SE tax are unchanged by the claim.
       Draft calculation only. The filing release gate is independent.
-    irsRef: "Pub. L. 119-21 sec. 70201, IRC 224(a)-(e) and 199A(c)(4)(D); T.D. 10044; final December 2026 Form 1099-K instructions Boxes 1a, 1c, 1d; draft 2026 Schedule 1-A lines 6-15"
+    irsRef: "Pub. L. 119-21 sec. 70201, IRC 224(a)-(e) and 199A(c)(4)(D); T.D. 10044; Form 1099-K instructions Boxes 1a, 1c, 1d; Schedule C instructions lines A and C; draft 2026 Schedule 1-A lines 6-15"
     testRef: "tests/engine/federal-schedule-1-a-sources.test.ts::deducts qualified card tips from one reconciled 2026 Form 1099-K without adding income"
   - line: "14-21"
     description: "FLSA overtime premium deduction"
