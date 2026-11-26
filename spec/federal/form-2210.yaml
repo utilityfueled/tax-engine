@@ -3,7 +3,7 @@ fullName: "Underpayment of Estimated Tax by Individuals"
 taxYear: 2025
 supportedTaxYears: [2025, 2026]
 irsReference: "https://www.irs.gov/instructions/i2210"
-sourceRetrievedAt: "2026-10-25"
+sourceRetrievedAt: "2026-11-26"
 reviewStatus: "implementation-reviewed; independent tax review and final 2026 qualification pending"
 
 notes: |
@@ -13,19 +13,21 @@ notes: |
   Calendar dates and exact Decimal payments are retained; no aggregate payment
   is allocated to invented dates. Historical aggregate prior-tax inputs remain
   unverified 2025 compatibility only. New facts preserve unknown values.
-  The final 2026 Form 2210 and the 2027 first-quarter rate are not yet qualified.
+  Final 2026 Form 2210 qualification is pending. Revenue Ruling 2026-25
+  supplies the 8% rate for January 1 through April 15, 2027.
   Positive exposure in an unpublished rate period rejects calculation rather
   than assuming a rate or reporting zero. A fully timely paid return can prove
   zero without a future rate. Annualized-income Schedule AI uses
-  spec/federal/form-2210-schedule-ai.yaml. Form 2210-F, nonresident/fiscal-year
-  rules and relief/waiver decisions require separate implementation or actual
-  adjudicated evidence; they are explicitly blocked.
+  spec/federal/form-2210-schedule-ai.yaml. See spec/federal/form-2210-f.yaml for
+  the separate single-installment farmer method and waiver requests.
+  Nonresident and fiscal-year calculations require a separate method.
 
 sources:
   - "https://www.irs.gov/instructions/i2210"
   - "https://www.irs.gov/pub/irs-pdf/f2210.pdf"
   - "https://www.irs.gov/pub/irs-pdf/f1040es.pdf"
   - "https://www.irs.gov/payments/quarterly-interest-rates"
+  - "https://www.irs.gov/pub/irs-drop/rr-26-25.pdf"
   - "https://www.irs.gov/irm/part20/irm_20-001-003r#idm140505929672096"
   - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleF-chap67-subchapC-sec6621.htm"
   - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleF-chap68-subchapA-partI-sec6654.htm"
@@ -190,22 +192,29 @@ lines:
     formula: "roundDollar(sum(each unpaid installment balance * published annual rate * days / 365))"
     irsRef: "Form 2210 penalty worksheet line14; IRC6654(a)-(b); IRC6621(b)(2)(B)"
     notes: |
-      Calendar 2025 and2026 have365days. No leap-year rate/day claim is made for
+      Calendar 2025 through 2027 each have 365 days. No leap-year rate/day claim is made for
       unimplemented years. The due date is excluded and payment/end date included.
       Split days at every payment and rate change; payments retire oldest debt.
       2025 accrual rates are7%; the2026Q1 7% rate continues throughApril15 for
       2025 estimated-tax penalties under6621(b)(2)(B), despite the generalQ2 6%.
-      For2026, April-June6%, July-September7%, October-December7%;2027Q1 is
-      unavailable as of2026-10-25. Do not accept caller-supplied invented rates.
+      For tax year 2026, April through June is 6%, July through December is
+      7%, and January 1 through April 15, 2027 is 8% under Revenue Ruling
+      2026-25 and section 6621(b)(2)(B). Use published rates.
       Timely filed and fully paid returns byFebruary2 2026 / February1 2027
       eliminate only the fourth-installment penalty, not earlier unpaid periods.
     testRef: "tests/engine/forms/form-2210-dated.test.ts::segments 2026 exposure across the actual six and seven percent rate periods"
 
+  - line: "19-2026-final-period"
+    description: "Apply the published 8% rate through April 15, 2027"
+    formula: "Split the 7% December 31 and 8% January 1 accrual days. Apply 8% to the unpaid balance through April 15 at most."
+    irsRef: "Rev. Rul. 2026-25; IRC6621(b)(2)(B); IRC6654(a)-(b)"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::applies the published 2027 rate from January 1 through April 15"
+
   - line: "qualification"
-    description: "Unavailable law or unsupported methods cannot become zero penalties"
-    formula: "Reject positive unknown-rate exposure and unsupported actual method/relief facts"
+    description: "Timely payments establish a zero penalty within supported scope"
+    formula: "Return zero when required installments are timely. Reject positive unknown-rate exposure and unsupported method or relief facts."
     irsRef: "Form 2210 instructions; IRC6654(h)-(j); quarterly rate publications"
-    testRef: "tests/engine/forms/form-2210-dated.test.ts::rejects unpublished 2027 exposure but proves zero from fully timely payments"
+    testRef: "tests/engine/forms/form-2210-dated.test.ts::proves zero from fully timely 2026 payments"
 
   - line: "Schedule AI 1-36"
     description: "Annualized income and self-employment calculation remains unavailable"

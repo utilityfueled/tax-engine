@@ -12,7 +12,7 @@ import { TaxYearInputSchema } from "@/models/inputs.js";
 import { mortgageInput, mortgageLoan } from "../fixtures/mortgage-source.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 // These synthetic itemization scenarios have a confirmed full-year2025 US-resident return with no tax liability.
-// This actual fixture fact avoids assuming an unpublished2027 penalty rate while testing deductions.
+// Keep estimated-tax penalties outside these deduction examples.
 const form2210 = {calendarYearTaxpayer:true,residentReturn:true,farmerOrFisher:false,disasterReliefClaimed:false,waiverRequested:false,
   calculationMethod:"regular",withholdingMethod:"equal-installments",priorYearTaxStatus:"no-tax-liability",priorYearFullYear:true,
   priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true};

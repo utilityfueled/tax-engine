@@ -88,10 +88,10 @@ const RATE_PERIODS: Readonly<Record<number, readonly RatePeriod[]>> = Object.fre
     { start: "2026-04-16", end: "2026-06-30", rate: "0.06", source: "https://www.irs.gov/irb/2026-8_IRB" },
     { start: "2026-07-01", end: "2026-09-30", rate: "0.07", source: "https://www.irs.gov/irb/2026-22_IRB" },
     { start: "2026-10-01", end: "2026-12-31", rate: "0.07", source: "https://www.irs.gov/irb/2026-36_IRB" },
-    // No published2027Q1 rate as of2026-10-25. Positive exposure must fail explicitly.
+    // IRC §6621(b)(2)(B) extends the first-quarter rate through April 15 for estimated tax.
+    { start: "2027-01-01", end: "2027-04-15", rate: "0.08", source: "https://www.irs.gov/pub/irs-drop/rr-26-25.pdf" },
   ]),
 });
-const FORM_2210_F_RATES: Readonly<Record<number, string>> = Object.freeze({ 2025: "0.07" });
 const DAY_MS = 86_400_000;
 const FORM = "Form 2210";
 
@@ -141,7 +141,7 @@ function form2210Waiver(facts: Form2210Input["facts"], penalty: Decimal): Form22
 }
 
 /** Form 2210-F. Spec: spec/federal/form-2210-f.yaml. */
-function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNullable<Form2210Input["facts"]>): Form2210Result {
+function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNullable<Form2210Input["facts"]>, rates: readonly RatePeriod[]): Form2210Result {
   if (facts.farmingIncomeTwoThirdsConfirmed !== true) throw new Error("Form 2210-F requires confirmation of the two-thirds farming or fishing gross income test");
   if (facts.calculationMethod === "annualized") throw new Error("Form 2210-F has no annualized method");
   validateScope(facts);
@@ -192,21 +192,26 @@ function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNul
     throw new Error("Form 2210 dated estimated and prior-credit payments must reconcile to estimatedPayments");
   }
   let exact = new Decimal(0), days = 0;
+  let rate: RatePeriod | undefined;
   if (!safeReason) {
-    const rate = FORM_2210_F_RATES[taxYear];
-    if (!rate) throw new Error(`Form 2210-F ${taxYear} penalty rate is unpublished; final penalty unavailable`);
     const late = payments.filter(payment => payment.day > dueDay && payment.day <= endDay).sort((left, right) => left.day - right.day);
     const covering = late.find(payment => payment.amount.gte(line13));
     if (late.length > 0 && (!covering || covering !== late[0])) throw new Error("Form 2210-F has one payment date; several late payments need a separate method");
-    days = (covering?.day ?? endDay) - dueDay;
-    exact = line13.times(days).div(365).times(rate);
+    const paidThrough = covering?.day ?? endDay;
+    const from = dateString(dueDay + 1), through = dateString(paidThrough);
+    rate = rates.find(period => period.start <= from && period.end >= through);
+    if (!rate) throw new Error(`Form 2210-F ${taxYear} requires one published rate for the penalty period`);
+    days = paidThrough - dueDay;
+    exact = line13.times(days).div(365).times(rate.rate);
   }
   const waiver = form2210Waiver(facts, roundDollar(exact));
   const penalty = waiver ? roundDollar(waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount)) : roundDollar(exact);
   for (const [line, value, description] of [["3", line3, "Current tax"], ["4", line4, "Refundable credits"], ["6", line6, "Current-year tax"], ["7", line7, "66 2/3 percent of line 6"], ["8", line8, "Withholding"],
-    ["9", line9, "Line 6 less line 8"], ["11", required, "Required annual payment"], ["12", line12, "Payments by January 15"], ["13", line13, "Underpayment"], ["15", new Decimal(days), "Days"], ["16", penalty, "Penalty"]] as const) {
+    ["9", line9, "Line 6 less line 8"], ["11", required, "Required annual payment"], ["12", line12, "Payments by January 15"], ["13", line13, "Underpayment"], ["15", new Decimal(days), "Days"]] as const) {
     audit.record(FARM, line, description, value, `Form 2210-F line ${line}`);
   }
+  audit.record(FARM, "16", "Penalty", penalty, "Form 2210-F line 16",
+    rate ? { annualRate: new Decimal(rate.rate), rateSource: rate.source } : {});
   const changedJointStatus = facts.priorYearJointReturn !== undefined && facts.priorYearJointReturn !== (input.filingStatus === "married_filing_jointly");
   return { taxYear, sourceFactsVerified: true, safeHarborMet: safeReason !== undefined, safeHarborReason: safeReason ?? "No exception met", requiredAnnualPayment: required,
     totalPayments: line12, underpayment: line13, exactPenalty: exact, penalty, requiresForm2210: waiver !== undefined || (changedJointStatus && required.lt(line7)), withholdingMethod: "equal-installments",
@@ -217,7 +222,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   const taxYear = input.taxYear ?? 2025;
   const rates = RATE_PERIODS[taxYear];
   if (!rates) throw new Error(`Form 2210 tax year ${taxYear} is not implemented`);
-  if (input.facts?.farmerOrFisher === true) return calculateForm2210F(input, taxYear, input.facts);
+  if (input.facts?.farmerOrFisher === true) return calculateForm2210F(input, taxYear, input.facts, rates);
   const audit = new AuditTrail();
   const currentTax = amount(input.currentYearTax, "currentYearTax");
   const withholding = amount(input.withholding, "withholding");

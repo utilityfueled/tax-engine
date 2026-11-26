@@ -3,7 +3,7 @@ fullName: "Underpayment of estimated tax by farmers and fishers, and waiver requ
 taxYear: 2025
 supportedTaxYears: [2025, 2026]
 irsReference: "https://www.irs.gov/pub/irs-pdf/i2210f.pdf"
-sourceRetrievedAt: "2026-10-31"
+sourceRetrievedAt: "2026-11-26"
 notes: |
   Form 2210-F (2025), Instructions for Form 2210-F (2025) and Instructions for Form 2210
   (2025), Waiver of Penalty. https://www.irs.gov/pub/irs-pdf/f2210f.pdf
@@ -13,8 +13,9 @@ notes: |
   One due date: January15. Days run from that date to the payment date or April15.
   Filing and paying by March2 2026 (March1 2027) removes the penalty.
   The form has one payment date, so an underpayment needing two late payments rejects
-  rather than choosing a method. 2026 needs an unpublished rate and rejects when a
-  penalty would accrue. No Form 2210-F PDF map exists.
+  rather than choosing a method. For 2026, Revenue Ruling 2026-25 supplies
+  the 8% rate through April 15, 2027 under section 6621(b)(2)(B).
+  Final 2026 qualification is pending. No Form 2210-F PDF map exists.
   Waivers: a retirement, disability, casualty, disaster or unusual-circumstance reason
   and a statement reference are required. A full request (Form 2210 box A) reports no
   penalty. A partial request (box B, or Form 2210-F box A) subtracts the requested
@@ -27,6 +28,9 @@ sources:
   - "https://www.irs.gov/pub/irs-pdf/f2210f.pdf"
   - "https://www.irs.gov/pub/irs-pdf/i2210f.pdf"
   - "https://www.irs.gov/instructions/i2210"
+  - "https://www.irs.gov/pub/irs-drop/rr-26-25.pdf"
+  - "https://www.irs.gov/pub/irs-dft/f2210f--dft.pdf"
+  - "https://www.irs.gov/pub/irs-dft/i2210f--dft.pdf"
 lines:
   - line: "required-payment"
     description: "Use two-thirds of current tax or prior tax"
@@ -45,9 +49,9 @@ lines:
     testRef: "tests/engine/forms/form-2210-f.test.ts::applies each exception on both sides"
   - line: "unknown"
     description: "Reject unknown or unsupported facts"
-    formula: "An unconfirmed two-thirds test, two late payments needed, and a 2026 penalty with no published rate reject."
+    formula: "Reject an unconfirmed two-thirds test, an underpayment needing several late payments, or positive exposure without a published rate."
     irsRef: "Original-source contract"
-    testRef: "tests/engine/forms/form-2210-f.test.ts::rejects unknown farmer facts and unpublished rates"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::rejects unknown farmer facts and unsupported payments"
   - line: "waiver"
     description: "Record a waiver request without treating it as granted"
     formula: "Partial 30 on penalty86 reports56 with penaltyBeforeWaiver86. Full reports0. A reason and statement reference are required, and a partial amount cannot exceed the penalty. Form2210 is required and box A or B is marked."
@@ -59,10 +63,10 @@ lines:
     irsRef: "Form2210-F Part I"
     testRef: "tests/guided-interview/guided-estimated-tax-schedule-ai.test.ts::collects farmer and waiver facts without defaults"
   - line: "year-2026"
-    description: "Use the 2027 date and hold back an unpublished rate"
-    formula: "A 2026 return filed and paid2027-03-01 owes nothing. 2027-03-02 needs an unpublished rate and rejects. Joint status changes with line10 below line7 require the form."
-    irsRef: "Form2210-F Part I box B; dates follow the 2025 pattern and final 2026 forms must confirm them"
-    testRef: "tests/engine/forms/form-2210-f.test.ts::keeps a 2026 farmer penalty out until its rate is published"
+    description: "Apply the March 1 exception and the published 8% rate for tax year 2026"
+    formula: "A 2026 return filed and paid by March 1, 2027 owes no penalty. Otherwise apply line13 times days since January 15 times 0.08 divided by 365 through April 15 at most. Joint status changes with line10 below line7 require the form."
+    irsRef: "IRC6654(i); IRC6621(b)(2)(B); Rev. Rul. 2026-25; draft 2026 Form 2210-F lines 14–16"
+    testRef: "tests/engine/forms/form-2210-f.test.ts::applies the 2027 rate after the 2026 farmer filing exception"
   - line: "return-flow"
     description: "Carry a waiver request through Form 1040"
     formula: "A partial request lowers line38 and amount owed by the requested amount, and a full request reports0. penaltyBeforeWaiver is retained, Form2210 is required and readiness stays partial."

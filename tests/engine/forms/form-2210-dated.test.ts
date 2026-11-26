@@ -133,8 +133,37 @@ describe("Form 2210 dated regular method", () => {
     expect(result.interestPeriods.some((p) => p.annualRate.eq("0.06"))).toBe(false);
   });
 
-  it("rejects unpublished 2027 exposure but proves zero from fully timely payments", () => {
-    expect(() => calculateForm2210(input({ taxYear: 2026 }))).toThrow(/2027.*rate.*unpublished|unpublished.*2027/i);
+  it("applies the published 2027 rate from January 1 through April 15", () => {
+    const returnInput = input({ taxYear: 2026, currentYearTax: d("40000"), incomeTaxAfterCredits: d("40000") });
+    const source = "https://www.irs.gov/pub/irs-drop/rr-26-25.pdf";
+    const paidOnNewYearsDay = calculateForm2210({
+      ...returnInput, estimatedPayments: d("36000"),
+      payments: [{ date: "2027-01-01", amount: "36000", kind: "estimated" }],
+    });
+    expect(paidOnNewYearsDay.interestPeriods.filter(({ installment }) => installment === 1).slice(-2)
+      .map(({ startDate, endDate, days, annualRate }) => [startDate, endDate, days, annualRate.toFixed()]))
+      .toEqual([["2026-10-01", "2026-12-31", 92, "0.07"], ["2027-01-01", "2027-01-01", 1, "0.08"]]);
+    // Three $9,000 balances incur one additional day at 8%. The fourth installment is prepaid.
+    expect(paidOnNewYearsDay.exactPenalty.toFixed(8)).toBe("960.41095890");
+    expect(paidOnNewYearsDay.penalty.toFixed()).toBe("960");
+
+    const paidAfterCutoff = calculateForm2210({
+      ...returnInput, payments: [{ date: "2027-04-16", amount: "36000", kind: "return" }],
+    });
+    expect(paidAfterCutoff.interestPeriods.filter(({ endDate }) => endDate >= "2027-01-01")
+      .map(({ startDate, endDate, days, annualRate, rateSource }) => [startDate, endDate, days, annualRate.toFixed(), rateSource]))
+      .toEqual([
+        ["2027-01-01", "2027-04-15", 105, "0.08", source],
+        ["2027-01-01", "2027-04-15", 105, "0.08", source],
+        ["2027-01-01", "2027-04-15", 105, "0.08", source],
+        ["2027-01-16", "2027-04-15", 90, "0.08", source],
+      ]);
+    // $9,000 × (91 × 0.06 + 475 × 0.07 + 405 × 0.08) ÷ 365.
+    expect(paidAfterCutoff.exactPenalty.toFixed(8)).toBe("1753.39726027");
+    expect(line(paidAfterCutoff, "19")).toBe("1753");
+  });
+
+  it("proves zero from fully timely 2026 payments", () => {
     const result = calculateForm2210(input({
       taxYear: 2026, estimatedPayments: d(9000),
       payments: ["2026-04-15", "2026-06-15", "2026-09-15", "2027-01-15"].map((date) => ({ date, amount: "2250", kind: "estimated" })),

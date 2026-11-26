@@ -63,7 +63,7 @@ describe('Form 2210-F', () => {
     expect(run({ estimatedPayments: new Decimal(13000), payments: [{ date: '2026-01-15', amount: '13000', kind: 'estimated' }] }).safeHarborReason).toMatch(/January 15/);
   });
 
-  it('rejects unknown farmer facts and unpublished rates', () => {
+  it('rejects unknown farmer facts and unsupported payments', () => {
     expect(() => run({}, { farmingIncomeTwoThirdsConfirmed: undefined })).toThrow(/two-thirds/);
     expect(() => run({}, { calculationMethod: 'annualized' })).toThrow(/no annualized/);
     expect(() => run({}, {}, [{ date: '2026-02-01', amount: '1000' }, { date: '2026-03-01', amount: '4000' }])).toThrow(/one payment date/);
@@ -78,7 +78,6 @@ describe('Form 2210-F', () => {
     expect(() => run({ payments: [{ date: '2020-01-15', amount: '8000', kind: 'estimated' }] })).toThrow(/outside the tax-year/);
     expect(() => run({ payments: [{ date: '2027-01-01', amount: '8000', kind: 'estimated' }] })).toThrow(/outside the tax-year/);
     expect(() => run({ estimatedPayments: new Decimal(9000) })).toThrow(/reconcile to estimatedPayments/);
-    expect(() => run({ taxYear: 2026, payments: [{ date: '2027-01-15', amount: '8000', kind: 'estimated' }] })).toThrow(/unpublished/);
   });
 
   it('records waiver requests without treating them as granted', () => {
@@ -95,10 +94,19 @@ describe('Form 2210-F', () => {
     expect(run({}, { ...waiver, waiverKind: 'partial', waiverAmount: '30.25' }).penalty.toFixed()).toBe('56');
   });
 
-  it('keeps a 2026 farmer penalty out until its rate is published', () => {
-    const paid2026 = [{ date: '2027-01-15', amount: '8000', kind: 'estimated' as const }, { date: '2027-03-01', amount: '17000', kind: 'return' as const }];
-    expect(run({ taxYear: 2026, payments: paid2026 }, { returnFiledDate: '2027-03-01', returnPaidInFullDate: '2027-03-01' }).penalty.toFixed()).toBe('0');
-    expect(() => run({ taxYear: 2026, payments: paid2026 }, { returnFiledDate: '2027-03-02', returnPaidInFullDate: '2027-03-02' })).toThrow(/unpublished/);
+  it('applies the 2027 rate after the 2026 farmer filing exception', () => {
+    const timelyEstimate = { date: '2027-01-15', amount: '8000', kind: 'estimated' as const };
+    const paidOn = (date: string) => [{ ...timelyEstimate }, { date, amount: '17000', kind: 'return' as const }];
+    const result = (date: string) => run({ taxYear: 2026, payments: paidOn(date) }, { returnFiledDate: date, returnPaidInFullDate: date });
+    expect(result('2027-03-01').penalty.toFixed()).toBe('0');
+    const late = result('2027-03-02');
+    // $5,000 × 46 days × 0.08 ÷ 365. April 15 caps accrual at 90 days.
+    expect([line(late, '15'), late.exactPenalty.toFixed(8), late.penalty.toFixed()]).toEqual(['46', '50.41095890', '50']);
+    expect(late.lines.find(row => row.line === '16')?.inputs).toEqual({
+      annualRate: new Decimal('0.08'), rateSource: 'https://www.irs.gov/pub/irs-drop/rr-26-25.pdf',
+    });
+    const afterCutoff = result('2027-04-16');
+    expect([line(afterCutoff, '15'), afterCutoff.exactPenalty.toFixed(8), afterCutoff.penalty.toFixed()]).toEqual(['90', '98.63013699', '99']);
     const changed = run({ filingStatus: 'married_filing_jointly' }, { priorYearJointReturn: false });
     expect(changed.requiresForm2210).toBe(true);
     expect(run({ filingStatus: 'married_filing_jointly' }, { priorYearJointReturn: false, priorYearTaxForForm2210: '25000' }).requiresForm2210).toBe(false);
