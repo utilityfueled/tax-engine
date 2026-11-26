@@ -144,6 +144,7 @@ import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
 import type { QBIBusinessSource } from "./forms/form-8995-a.js";
 import { reconcileQualifiedPtpLossSource } from "./qbi-ptp-loss-source.js";
+import { assertUniqueDirectReitDividend, resolveQualifiedReitBox5 } from "./qbi-reit-dividend-source.js";
 import {
   calculateForm1099R,
   isIraForm1099RDistribution,
@@ -359,10 +360,12 @@ function compareAutomaticReitCashDeduction(input: TaxYearInput, itemized: TaxRet
     || input.form1095A.length || input.form8962 || input.form7206 || input.form8615) return itemized;
 
   const qbi = itemized.form8995A;
+  const calculationDate = currentLocalCivilDate();
   // Schedule B retains cents, while Form 8995-A line 17 rounds the aggregate.
   if (!qbi?.qualifiedReitDividends.gt(0) || qbi.businesses.length || qbi.ptpBusinesses.length
     || !qbi.cooperativeDPAD.isZero() || input.scheduleK1.length || input.scheduleK1Form1041.length
-    || input.form1099Div.some(statement => !d(statement.ordinaryDividends).eq(d(statement.section199ADividends)))
+    || input.form1099Div.some(statement =>
+      !d(statement.ordinaryDividends).eq(resolveQualifiedReitBox5(statement, itemized.taxYear, calculationDate)))
     || !sum(...input.form1099Div.map(statement => d(statement.ordinaryDividends))).eq(itemized.totalDividends)
     || !roundDollar(itemized.totalDividends).eq(qbi.qualifiedReitDividends)
     || !itemized.totalIncome.eq(itemized.totalDividends)
@@ -685,10 +688,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     let collectiblesGain = new Decimal(0);
     let foreignTaxPaid = new Decimal(0);
     let federalWithheld = new Decimal(0);
-    for (const f of input.form1099Div) {
+    const reitOriginals = new Set<string>();
+    const calculationDate = year === 2026 ? currentLocalCivilDate() : "";
+    for (const [index, f] of input.form1099Div.entries()) {
       exemptInterestDividends = exemptInterestDividends.plus(d(f.exemptInterestDividends));
       qualifiedDividends = qualifiedDividends.plus(d(f.qualifiedDividends));
-      section199ADividends = section199ADividends.plus(d(f.section199ADividends));
+      const qualifiedReit = resolveQualifiedReitBox5(f, year, calculationDate);
+      if (year === 2026 && f.directReitDividendFacts) {
+        assertUniqueDirectReitDividend(f, filingStatus === "married_filing_jointly", reitOriginals);
+        audit.record("Section 199A REIT", `dividend-${index + 1}`, "Qualified direct REIT dividend", qualifiedReit,
+          "Actual distribution after reviewing the holding-period and related-payment rules");
+      }
+      section199ADividends = section199ADividends.plus(qualifiedReit);
       section1250Gain = section1250Gain.plus(d(f.section1250Gain));
       collectiblesGain = collectiblesGain.plus(d(f.collectiblesGain));
       foreignTaxPaid = foreignTaxPaid.plus(d(f.foreignTaxPaid));

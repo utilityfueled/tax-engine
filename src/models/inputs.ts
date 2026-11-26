@@ -216,6 +216,23 @@ export const Form1099DivSchema = z.object({
   nondividendDistributions: optionalDecimal, // Box 3
   federalWithheld: optionalDecimal, // Box 4
   section199ADividends: optionalDecimal, // Box 5 — qualified REIT dividends for Section 199A QBI deduction
+  directReitDividendFacts: z.object({
+    sourceTaxYear: z.number().int(),
+    sourceAsOfDate: z.string(),
+    sourceReference: z.string().trim().min(1),
+    sourceFactsConfirmed: z.boolean(),
+    securityIdentifier: z.string().trim().min(1),
+    issuerName: z.string().trim().min(1),
+    originalBox5Amount: decimal,
+    acquiredOn: z.string(),
+    exDividendOn: z.string(),
+    paidOn: z.string(),
+    heldThrough: z.string(),
+    positionEnded: z.boolean(),
+    diminishedRiskDays: z.number().int().min(0).max(91),
+    relatedPaymentAmount: decimal,
+    singleDirectReitDistributionConfirmed: z.boolean(),
+  }).optional(),
   foreignTaxPaid: optionalDecimal, // Box 7
   foreignCountry: z.string().optional(),
   exemptInterestDividends: optionalDecimal, // Box 12

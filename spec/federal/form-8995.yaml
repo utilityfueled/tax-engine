@@ -121,6 +121,27 @@ lines:
     notes: "If Line 8 is zero or negative, this is zero"
     testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 9 - 20% of REIT/PTP"
 
+  - line: "8-reit-box5-source-2026"
+    description: "Determine whether an actual 2026 directly held REIT distribution reported in Box 5 qualifies"
+    formula: "Require one confirmed direct cash distribution and one identified lot reconciled to the dated, actual Box 5 amount. Exclude acquisition day, include the last day held, and intersect with the 91 calendar days beginning 45 days before the ex-dividend date. Subtract the actual reviewed diminished-risk days within the intersection. More than 45 adjusted days are necessary. A known short completed holding period or a full related-payment obligation makes the entire distribution ineligible for Section 199A while leaving ordinary dividends unchanged."
+    irsRef: "https://www.irs.gov/instructions/i1099div, Box 5; 26 CFR 1.199A-3(c)(2); 26 USC 246(c)(3)–(4); 26 CFR 1.246-5"
+    notes: |
+      The filed statement year and the source year must match the return. The
+      original cash payment must be in the statement year and received by the
+      actual source as-of date. Holding records must stop at that date or
+      earlier. The purchased lot must cover the ex-date. Require an actual
+      account reference and, for a joint return, the holder. A stable private
+      label can identify the actual account. Masked or suffix-only references
+      are ambiguous. Reject duplicate originals and duplicate
+      owner/account/security/ex-date combinations,
+      including renamed documents. Reject unknown records, mixed cohorts,
+      partially obligated payments and RIC sources pending separate facts.
+      Before the 91-day window ends, an open holding with at most 45 evidenced
+      qualifying days remains unknown unless the full payment obligation already
+      disqualifies it. Record exact facts, including explicit zero diminished-risk
+      days and zero related obligations. This is 2026 draft calculation evidence.
+    testRef: "tests/engine/federal-reit-ptp-carryforward.test.ts::Federal separate REIT and PTP loss carryforward"
+
   - line: "10"
     description: "Total QBI, REIT, and PTP component"
     formula: "Line 7 + Line 9"

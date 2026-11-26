@@ -41,6 +41,32 @@ const detailedWagesAndEstimates = {
   },
 };
 
+const directReitFacts = {
+  sourceTaxYear: 2026,
+  sourceAsOfDate: "2026-07-30",
+  sourceReference: "Synthetic original cash dividend and brokerage lot",
+  sourceFactsConfirmed: true,
+  securityIdentifier: "SYNTHETIC-REIT-1",
+  issuerName: "Synthetic Direct REIT",
+  originalBox5Amount: "1000",
+  acquiredOn: "2026-04-30",
+  exDividendOn: "2026-06-15",
+  paidOn: "2026-06-30",
+  heldThrough: "2026-06-15",
+  positionEnded: true,
+  diminishedRiskDays: 0,
+  relatedPaymentAmount: "0",
+  singleDirectReitDistributionConfirmed: true,
+};
+
+const directReitForm = {
+  taxYear: 2026,
+  payer: "Synthetic Broker",
+  accountReference: "Synthetic account 1",
+  ordinaryDividends: "1000",
+  section199ADividends: "1000",
+};
+
 function calculate2026(overrides: Record<string, unknown>) {
   return calculateFederalTax(TaxYearInputSchema.parse({
     ...simpleW2Fixture,
@@ -50,6 +76,77 @@ function calculate2026(overrides: Record<string, unknown>) {
 }
 
 describe("Federal separate REIT and PTP loss carryforward", () => {
+  it("requires actual qualification facts before using a 2026 Box 5 amount", () => {
+    expect(() => calculate2026({ form1099Div: [directReitForm] })).toThrow(/actual.*REIT.*Box 5/i);
+  });
+
+  it("uses more than 45 evidenced REIT holding days and preserves the ordinary dividend", () => {
+    const calculate = (overrides: Record<string, unknown> = {}) => calculate2026({
+      form1099Div: [{ ...directReitForm, directReitDividendFacts: { ...directReitFacts, ...overrides } }],
+    });
+    const exact = calculate();
+    const line = (result: typeof exact, id: string) =>
+      result.allLines.find(row => row.form === "1040" && row.line === id)?.value.toFixed();
+    expect(exact.form8995?.reitPTPComponent.toFixed()).toBe("200");
+    const openQualified = calculate({ positionEnded: false });
+    expect(openQualified.form8995?.reitPTPComponent.toFixed()).toBe("200");
+    const completedWindow = calculate({
+      heldThrough: "2026-07-30", positionEnded: false, diminishedRiskDays: 46,
+    });
+    expect(line(completedWindow, "13")).toBe("0");
+    for (const change of [{ acquiredOn: "2026-05-01" }, { diminishedRiskDays: 1 }, { relatedPaymentAmount: "1000" }]) {
+      const excluded = calculate(change);
+      expect(line(excluded, "13")).toBe("0");
+      expect(excluded.agi.eq(exact.agi)).toBe(true);
+      expect(line(excluded, "3b")).toBe("1000");
+    }
+  });
+
+  it("keeps unresolved or contradictory direct REIT qualification sources held", () => {
+    const withSource = (overrides: Record<string, unknown> = {}) => ({
+      ...directReitForm,
+      directReitDividendFacts: { ...directReitFacts, ...overrides },
+    });
+    for (const changes of [
+      { acquiredOn: "2026-05-01", positionEnded: false },
+      { sourceTaxYear: 2025 },
+      { sourceFactsConfirmed: false },
+      { singleDirectReitDistributionConfirmed: false },
+      { originalBox5Amount: "1000.01" },
+      { relatedPaymentAmount: "1" },
+      { diminishedRiskDays: 47 },
+      { acquiredOn: "2026-06-15" },
+      { heldThrough: "2026-06-14" },
+      { paidOn: "2025-12-31" },
+      { paidOn: "2026-06-31" },
+      { sourceAsOfDate: "2026-06-29" },
+      { sourceAsOfDate: "2099-01-01" },
+    ]) {
+      expect(() => calculate2026({ form1099Div: [withSource(changes)] })).toThrow(/REIT|holding/i);
+    }
+    expect(() => calculate2026({ form1099Div: [withSource(), withSource()] })).toThrow(/repeated.*REIT/i);
+    expect(() => calculate2026({ form1099Div: [{ ...withSource(), accountReference: undefined }] })).toThrow(/actual.*account/i);
+    expect(() => calculate2026({ form1099Div: [{ ...withSource(), accountHolder: "spouse" }] })).toThrow(/actual.*holder/i);
+    expect(() => calculate2026({ form1099Div: [
+      { ...withSource(), ordinaryDividends: "100", qualifiedDividends: "-900" },
+      { payer: "Other broker", ordinaryDividends: "1000", qualifiedDividends: "1000" },
+    ] })).toThrow(/ordinary dividend/i);
+  });
+
+  it("rejects renamed duplicates while allowing separately identified accounts", () => {
+    const first = { ...directReitForm, directReitDividendFacts: directReitFacts };
+    const renamed = { ...first, directReitDividendFacts: { ...directReitFacts, sourceReference: "Another upload name" } };
+    expect(() => calculate2026({ form1099Div: [first, renamed] })).toThrow(/repeated.*REIT/i);
+    expect(() => calculate2026({ form1099Div: [first, { ...renamed, accountReference: "Synthetic-account-1" }] }))
+      .toThrow(/repeated.*REIT/i);
+    for (const accountReference of ["****1234", "1234", "Account ending in 1234", "xxxx-1234"]) {
+      expect(() => calculate2026({ form1099Div: [{ ...first, accountReference }] })).toThrow(/unambiguous.*account/i);
+    }
+    const distinct = { ...renamed, accountReference: "Synthetic account 2" };
+    const result = calculate2026({ form1099Div: [first, distinct] });
+    expect(result.form8995?.reitPTPComponent.toFixed()).toBe("400");
+  });
+
   it("preserves the return shape when no qualified REIT or PTP source applies", () => {
     const result = calculateFederalTax(simpleW2Fixture);
     expect(result.carryforwards).not.toHaveProperty("reitPtpLossCarryforward");
@@ -188,7 +285,8 @@ describe("Federal separate REIT and PTP loss carryforward", () => {
   it("applies a 2025 detailed loss to the combined 2026 detailed component", () => {
     const result = calculate2026({
       ...detailedWagesAndEstimates,
-      form1099Div: [{ payer: "Synthetic Fund", ordinaryDividends: "6000", section199ADividends: "6000" }],
+      form1099Div: [{ ...directReitForm, ordinaryDividends: "6000", section199ADividends: "6000",
+        directReitDividendFacts: { ...directReitFacts, originalBox5Amount: "6000" } }],
       scheduleK1: [{ ...ptp, section199AQualifiedPTPIncome: "4000", section199APTPW2Wages: "0", section199APTPUBIA: "0" }],
       priorYear: {
         reitPtpLossSource: { ...carrySource, sourceForm: "form_8995_a", sourceReference: "Synthetic filed Form 8995-A line 40", amount: "7500" },

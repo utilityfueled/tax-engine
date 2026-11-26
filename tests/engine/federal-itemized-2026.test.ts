@@ -22,10 +22,25 @@ const actualMortgage = (interest: string) => {
   if (!source.mortgageInterestWorksheet) throw new Error("Missing synthetic mortgage worksheet");
   return {form1098:source.form1098.map(form=>({...form,taxYear:2026})),mortgageInterestWorksheet:{...source.mortgageInterestWorksheet,sourceTaxYear:2026}};
 };
+
+function directReitStatement(ordinaryDividends: string, section199ADividends = ordinaryDividends, account = 1, relatedPaymentAmount = "0") {
+  return {
+    taxYear: 2026, payer: "Synthetic Broker", accountReference: `Synthetic account ${account}`,
+    ordinaryDividends, section199ADividends,
+    directReitDividendFacts: {
+      sourceTaxYear: 2026, sourceAsOfDate: "2026-07-30", sourceReference: `Synthetic original ${account}`,
+      sourceFactsConfirmed: true, securityIdentifier: "SYNTHETIC-REIT", issuerName: "Synthetic REIT",
+      originalBox5Amount: section199ADividends, acquiredOn: "2026-04-30", exDividendOn: "2026-06-15",
+      paidOn: "2026-06-30", heldThrough: "2026-06-15", positionEnded: true, diminishedRiskDays: 0,
+      relatedPaymentAmount, singleDirectReitDistributionConfirmed: true,
+    },
+  };
+}
+
 const reitCashReturn = (amount: string) => ({
   ...base,
   w2s: [],
-  form1099Div: [{ payer: "Synthetic REIT", ordinaryDividends: "1000000", section199ADividends: "1000000" }],
+  form1099Div: [directReitStatement("1000000")],
   donations: [{
     organization: "Synthetic public charity", type: "cash", amount, dateOfDonation: "2026-01-01",
     qualifiedOrganization: true, supportingOrganization: false, donorAdvisedFund: false, recipientCategory: "fifty-percent",
@@ -49,7 +64,7 @@ describe("2026 federal itemized limitation integration", () => {
     expect(result.deductionAmount.toString()).toBe("16100");
   });
   it("computes QBI before section 68 and subtracts it from the reduction base", () => {
-    const input = TaxYearInputSchema.parse({ ...base, w2s: [], form1099Div: [{ payer: "Synthetic REIT", ordinaryDividends: "700000", section199ADividends: "700000" }], ...actualMortgage("100000") });
+    const input = TaxYearInputSchema.parse({ ...base, w2s: [], form1099Div: [directReitStatement("700000")], ...actualMortgage("100000") });
     const result = calculateFederalTax(input);
     expect(result.form8995A?.qbiDeduction.toString()).toBe("120000");
     expect(result.itemizedDeductionReduction?.toString()).toBe("0");
@@ -59,7 +74,7 @@ describe("2026 federal itemized limitation integration", () => {
     expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...base, priorYear: { nolCarryforward: "1000" } }))).toThrow(/NOL.*coordination/i);
   });
   it("recomputes a taxable-income-limited QBI deduction after switching to standard", () => {
-    const input = TaxYearInputSchema.parse({ ...base, w2s: [], form1099Div: [{ payer: "Synthetic REIT", ordinaryDividends: "1000000", section199ADividends: "1000000" }], ...actualMortgage("16500") });
+    const input = TaxYearInputSchema.parse({ ...base, w2s: [], form1099Div: [directReitStatement("1000000")], ...actualMortgage("16500") });
     const result = calculateFederalTax(input);
     expect(result.deductionUsed).toBe("standard");
     expect(result.form8995A?.qbiDeduction.toString()).toBe("196780");
@@ -113,11 +128,15 @@ describe("2026 federal itemized limitation integration", () => {
       scenario: "a raw box mismatch that rounds to the same dollar", boxes: [["1000000.01", "1000000.00"]],
       ordinary: "1000000.01", line17: "1000000", method: "itemized", balance: "277362",
     },
+    {
+      scenario: "a related-payment penny that rounds to the same dollar",
+      boxes: [["1000000.00", "1000000.00"], ["0.01", "0.01", "0.01"]],
+      ordinary: "1000000.01", line17: "1000000", method: "itemized", balance: "277362",
+    },
   ])("reconciles REIT dividend source precision for $scenario", ({ boxes, ordinary, line17, method, balance }) => {
     const raw = {
-      ...reitCashReturn("23100"), form1099Div: boxes.map(([ordinaryDividends, section199ADividends], index) => ({
-        payer: `Synthetic REIT ${index + 1}`, ordinaryDividends, section199ADividends,
-      })),
+      ...reitCashReturn("23100"), form1099Div: boxes.map(([ordinaryDividends, section199ADividends, relatedPaymentAmount], index) =>
+        directReitStatement(ordinaryDividends, section199ADividends, index + 1, relatedPaymentAmount)),
     };
     const elected = calculatePublicFederalTax(parseInput({ ...raw, deductionElection: method }));
     const automatic = calculatePublicFederalTax(parseInput(raw));

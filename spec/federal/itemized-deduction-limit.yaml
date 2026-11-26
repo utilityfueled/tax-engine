@@ -34,10 +34,11 @@ lines:
   - line: "automatic-reit-dividend-precision"
     description: "Reconcile the original REIT dividend cents with Form 8995-A line 17"
     formula: >-
-      Require exact equality of Form 1099-DIV boxes 1a and 5 on each
-      statement, and reconcile their exact aggregate with federal ordinary
-      dividends. Sum all statements with cents, then round that aggregate
-      once to whole dollars for comparison with Form 8995-A line 17.
+      Require exact equality of Form 1099-DIV Box 1a and the legally
+      eligible portion of Box 5 on each statement. Reconcile their exact
+      aggregate with federal ordinary dividends. Sum all statements with
+      cents, then round that aggregate once to whole dollars for comparison
+      with Form 8995-A line 17.
     irsRef: "Form 1040 instructions, Rounding Off to Whole Dollars; Form 8995-A line 17"
     testRef: 'tests/engine/federal-itemized-2026.test.ts::reconciles REIT dividend source precision for $scenario'
   - line: "explicit-reit-cash-election"
