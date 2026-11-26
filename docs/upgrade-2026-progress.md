@@ -21,6 +21,14 @@ spec lines. Independent tax review and final filing qualification
 remain open. [PA dividend guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends) ·
 [PA Schedule SP guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness).
 
+The `9f5ef34ab` exact full unit and coverage suites each passed
+31,028 active tests with 81 original environment skips. Branch
+coverage reached 88.59% against the unchanged 85% gate. The engine
+build, web build, three typechecks, lint, spec and inventory checks
+also passed. Managed Chromium passed all nine windows with 654 passes,
+five original skips and no failures. The runtime closed successfully.
+All 11 local commands passed for this archived revision.
+
 ## November 26 Ohio ordinary cash dividend draft
 
 `2aa10e8b1` adds private drafts for full-year residents, part-year
@@ -72,6 +80,19 @@ This evidence covers the PostgreSQL rehearsal on the host. Current
 container execution remains a separate result. The private V4
 manifest digest is `ac478f1c1409d93cb3ea98c514894c1b073ab42a6e5fa886898ec5513702b648`.
 [GitHub Web CI for the rehearsal commit](https://github.com/utilityfueled/tax-engine/actions/runs/45903718069).
+
+The older `b28141535` ARM64 run passed smoke, archive and Compose
+recovery with cleanup, then recorded 643 strict browser passes, 11
+failures and five original skips. All 11 failures included timeout
+evidence under the original 30-second limit. The school cases took
+10.1–13.8 seconds to reach entry, then expired at different later
+actions or assertions. Software review established no deterministic
+tax-calculation failure. The current `3a54df082` source was queued
+separately under the same strict workflow and remains unqualified.
+Its runner job queued after the superseded `62cb85858` run was
+canceled with zero steps executed.
+[Earlier ARM64 result](https://github.com/utilityfueled/tax-engine/actions/runs/45892163067) ·
+[Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45906276956).
 
 ## November 26 energy carryforward and AI tier reconciliation
 
