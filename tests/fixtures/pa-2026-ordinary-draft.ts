@@ -1,5 +1,6 @@
 /** Independent literal synthetic annual sources; never production defaults. */
 import {paOrdinaryReturnFixture} from './pa-ordinary-return.js';
+import {paOrdinaryResidencyFixture} from './pa-residency-sources.js';
 import {snapshotPAOrdinaryReturnOriginals} from '@/engine/state/pa-ordinary-return-facts.js';
 import type {PAResidencySources} from '@/models/pa-residency.js';
 export function pa2026OrdinaryDraftFixture(status:'resident'|'part_year'|'nonresident'='resident'){
@@ -18,6 +19,17 @@ export function rebindPA2026Draft(f:ReturnType<typeof paOrdinaryReturnFixture>){
  f.input.paResidencySources.wages.forEach(row=>{if(row.originalIndex!==null)row.original=structuredClone(f.input.w2s[row.originalIndex]);});
  f.facts.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
  f.sources.originalFederalSources=snapshotPAOrdinaryReturnOriginals(f.input);
+}
+
+export function pa2026PartYearBankInterestFixture(status: 'resident' | 'part_year' | 'nonresident' = 'part_year') {
+ const f = pa2026OrdinaryDraftFixture(status);
+ const bank = paOrdinaryResidencyFixture('part_year', 2026);
+ const original = { ...bank.input.form1099Int[0], taxYear: 2026 };
+ f.input.form1099Int = [original];
+ f.input.paResidencySources.interest = [{ ...bank.sources.interest[0], original: structuredClone(original) }];
+ f.input.w2s[0].stateTaxWithheld = '1199';
+ rebindPA2026Draft(f);
+ return f;
 }
 
 export function pa2026FloridaMoveResidentFixture() {

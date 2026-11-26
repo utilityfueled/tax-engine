@@ -62,6 +62,8 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  // Empty document arrays are normalization only. They never establish the complete
  // none facts: those are independently replayed from the confirmed source packets.
  const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit','scheduleBPartThree']);
+ const [bankInterest] = input.form1099Int;
+ if (bankInterest) roots.add('form1099Int');
  if(actualCare)roots.add('dependentCare');
  if (unemployment && readPA2026GovernmentUnemployment(input, unemployment)) roots.add('form1099G');
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
@@ -77,7 +79,7 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
  const r=PAResidencySourcesSchema.parse(input.paResidencySources);
  const allowed=new Set(['sourceTaxYear','sourceReference','sourceFactsConfirmed','owner','residency','wages','interest','otherPAIncomeClassesConfirmedNone','otherPAAdjustmentsConfirmedNone']);
  for(const[key,value]of Object.entries(r))if(!allowed.has(key)&&value!==undefined&&!(Array.isArray(value)&&value.length===0))fail('specialized residency originals require their actual successor: '+key);
- if(!input.w2s.length||r.interest.length||r.otherPAIncomeClassesConfirmedNone!==true||r.otherPAAdjustmentsConfirmedNone!==true)fail('complete wage-only original coverage is required');
+ if(!input.w2s.length||(!bankInterest&&r.interest.length)||r.otherPAIncomeClassesConfirmedNone!==true||r.otherPAAdjustmentsConfirmedNone!==true)fail('complete ordinary wage and income source coverage is required');
  const Money=Decimal.clone({precision:ordinarySourcePrecision(input,p,sources),rounding:Decimal.ROUND_HALF_UP});
  const amount=(raw:unknown):Decimal=>{if(typeof raw!=='string'||!/^\d+(\.\d+)?$/.test(raw))return fail('actual wage/benefit amount is unknown');const n=new Money(raw);return n.isFinite()?n:fail('actual wage amount is nonfinite');};
  let wages=new Money(0);
@@ -85,6 +87,28 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
   wages = wages.plus(amount(w.wages));
   if (!amount(w.box10DependentCareBenefits).isZero()) fail('actual employer benefits require their source method');
   if (w.box12CodeQ !== undefined && !amount(w.box12CodeQ).isZero()) fail('actual combat pay requires its separate compensation method');
+ }
+ if (bankInterest) {
+  const retainedCompletion = input.paOrdinaryReturnCompletionSources;
+  if (income.residencyStatus !== 'part_year' || p.paFilingChoice !== 'S' || actualCare || unemployment
+    || sources.eitcChildInventory || retainedCompletion?.eitcChildInventory || retainedCompletion?.care?.status === 'actual_expenses'
+    || sources.estimatedTaxReview2026 || retainedCompletion?.estimatedTaxReview2026 || p.facts.payments.rows.length) {
+   fail('part-year bank interest requires the ordinary high-wage single method without another special source or payment method');
+  }
+  const [interestSource] = r.interest;
+  if (input.form1099Int.length !== 1 || r.interest.length !== 1 || !interestSource
+    || bankInterest.taxYear !== 2026 || bankInterest.accountHolder !== 'primary'
+    || !bankInterest.payer.trim() || !bankInterest.accountReference?.trim()) {
+   fail('part-year bank interest requires one actual 2026 Form 1099-INT for the primary owner and original account');
+  }
+  const otherAmounts = [bankInterest.earlyWithdrawalPenalty, bankInterest.usSavingsBondInterest, bankInterest.federalWithheld,
+   bankInterest.foreignTaxPaid, bankInterest.taxExemptInterest, bankInterest.privateActivityBondInterest, bankInterest.stateWithheld];
+  if (!amount(bankInterest.interestIncome).gt(0) || bankInterest.foreignCountry?.trim() || bankInterest.privateActivityBondFacts
+    || otherAmounts.some(value => value === undefined || !amount(value).isZero())) {
+   fail('part-year bank interest requires positive Box 1 and known-zero other amounts without specialized source facts');
+  }
+  const creditReferences = interestSource.credits.map(credit => credit.sourceReference.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase());
+  if (new Set(creditReferences).size !== creditReferences.length) fail('conflicting dated bank credits reuse the same actual credit reference');
  }
  if (input.childTaxCredit !== undefined) {
   const parsed = childCreditContext.safeParse(input.childTaxCredit);
