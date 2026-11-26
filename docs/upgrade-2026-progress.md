@@ -1,5 +1,72 @@
 # 2026 upgrade implementation evidence
 
+## November 26 reciprocal Ohio PDF packet calculation
+
+`d21071f70` reuses the canonical Ohio calculation for the reference
+pages and redacted physical companions in the same reciprocal request.
+The physical review boundary still validates the current originals.
+Standalone rendering calculates independently. The exact-date byte
+comparison matched all 18 files from two original-bound fixtures.
+All 203 Ohio PDF tests passed. A separate reviewer verified both public
+entry points and passed 51 scoped tests. TypeScript, 10,154 spec
+references, inventory and the browser source audit passed. The strict
+Linux timing effect still needs measurement.
+
+## November 26 direct REIT Box 5 qualification
+
+`c2410f954` qualifies an actual 2026 direct REIT payment from the
+original statement, ownership, one brokerage lot and actual receipt and
+holding records. The threshold is more than 45 qualifying days in the
+91-day window. Diminished risk reduces eligible days. A full
+related-payment obligation or a known short holding removes the
+distribution from Section 199A and preserves ordinary dividend income.
+Ambiguous account references, duplicates, incomplete dates, fund or
+mixed distributions and partial payment obligations remain held. The
+automatic REIT-only deduction comparison uses legally eligible cents
+before rounding. An independent engineering replay rejected four
+previously admitted invalid sources. The pinned exact archive passed
+185 federal and form tests, type checking, lint without errors,
+inventory, spec validation and unchanged browser request budgets.
+Qualified human review and final 2026 forms remain open.
+[IRS Box 5 instructions](https://www.irs.gov/instructions/i1099div) ·
+[26 CFR §1.199A-3](https://www.ecfr.gov/current/title-26/section-1.199A-3) ·
+[IRC §246](https://uscode.house.gov/us/usc/t26/s246/).
+
+`b28141535` collects the direct source in the 2026 investment
+interview. It holds missing, edited or removed evidence and preserves
+explicit zero, holder identity and a confirmed amount through save and
+reopen. Separate reviewers passed 51 scoped tests across six files and
+221 tests across three integration suites. A local Chromium run at
+1,280 and 390 pixels passed both source and reopen checks with no
+horizontal overflow. The browser request policies were unchanged and
+the tracked candidate matched all 6,720 Git blobs of the committed
+revision. Spec validation passed all 10,158 references.
+
+The exact combined local suite and remote Web, CI and Docker runs were
+started for `b28141535`. The native ARM64 rehearsal queues after the
+prior revision finishes its strict browser step.
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45891948477) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45891948565) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45891948535) ·
+[Native ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45892163067).
+
+## November 26 combined local builds, coverage and release checks
+
+The tracked archive of `13ec67770` used Node 26.13.1, pinned Python/pypdf
+and official sample documents. Unit and coverage runs each passed 30,896
+active tests in 2,229 files and kept 81 environment skips. Coverage was
+91.86% statements, 88.56% branches, 90.73% functions and 94.85% lines.
+Both builds, all three type checks, all 10,153 spec references and
+inventory passed. Lint completed with zero errors and 12,236 warnings.
+The focused audited K-1 Chromium run passed six cases on `5f5af1dee`.
+The full managed run on `13ec67770` passed 653 cases in nine windows
+and kept five original skips. The one failure was an older Form 1098
+help-text assertion. Its exact production-built focused replay passed
+with the assertion correction in `c6b28ad43`. The existing native ARM64
+workflow was dispatched on the subsequent documentation-only
+`a690d880a`. Strict Linux browser qualification remains open.
+[Native ARM64 exercise](https://github.com/utilityfueled/tax-engine/actions/runs/45889599406).
+
 ## November 26 browser source-audit refresh
 
 Both public Web jobs on `5f10e5e7b` stopped before collecting tests.

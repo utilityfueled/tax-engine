@@ -3,8 +3,11 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
-    "latestScopedApplicationCommit": "9410b5a6270170238f700862ee0c7fa3c671955a",
-    "latestCombinedCandidateCommit": "13ec6777089e4037b58bdef97370386c31119390",
+    "latestScopedApplicationCommit": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
+    "latestCombinedCandidateCommit": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
+    "directReitBox5EvidenceKey": "activeContinuation.nov26DirectReitBox5",
+    "reciprocalOhioPdfCalculationEvidenceKey": "activeContinuation.nov26ReciprocalOhioPdfCalculation",
+    "combinedLocalVerificationEvidenceKey": "activeContinuation.nov26CombinedLocalVerification",
     "browserAuditRefreshEvidenceKey": "activeContinuation.nov26BrowserSourceAuditRefresh",
     "federalReitPtpCarryEvidenceKey": "activeContinuation.nov26FederalReitPtpCarry",
     "ohioVentureInvestmentEvidenceKey": "activeContinuation.nov26OhioVentureInvestment",
@@ -120,7 +123,7 @@
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
       "Exact 060efc9bf Linux CI, Docker, managed Chromium, image imports and Compose recovery passed. Strict Chromium failed 11 AMD64 and 9 ARM64 cases at the existing deadlines. Both architecture browser gates remain open.",
-      "The last fully passing local application was 827f467e2. The current exact local Chromium retry passed. Preserve the newer local unit and Linux browser failures until a new exact run qualifies.",
+      "Exact 13ec67770 passed both local unit and coverage runs, builds, type checks, lint and specs. Full managed Chromium passed 653 cases and failed one stale Form 1098 hint assertion, which passed the focused c6b28ad43 correction. A combined b28141535 successor and strict Linux results remain open.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -128,6 +131,50 @@
     ]
   },
   "activeContinuation": {
+    "nov26DirectReitBox5": {
+      "federalCommit": "c2410f9546ff9bc5690b24bbefdc7888397fca9f",
+      "guidedCommit": "b28141535274fcea1ad40e5bd129dd9c0ee9ed3f",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-direct-reit-box-5-qualification",
+      "exactFederalFocused": 185,
+      "guidedFocused": 51,
+      "independentIntegration": 221,
+      "localChromiumWidths": [1280, 390],
+      "trackedCandidateBlobs": 6720,
+      "validatedSpecReferences": 10158,
+      "combinedRunIds": {
+        "ci": 45891948565,
+        "web": 45891948477,
+        "docker": 45891948535,
+        "nativeArm64": 45892163067
+      }
+    },
+    "nov26ReciprocalOhioPdfCalculation": {
+      "commit": "d21071f70f141c33d27edb112ec9e301310d6f9f",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-reciprocal-ohio-pdf-packet-calculation",
+      "ohioPdfTests": 203,
+      "independentPdfTests": 51,
+      "exactPdfFilesMatched": 18,
+      "fixedMetadataTime": true,
+      "strictLinuxTimingVerified": false
+    },
+    "nov26CombinedLocalVerification": {
+      "commit": "13ec6777089e4037b58bdef97370386c31119390",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-combined-local-builds-coverage-and-release-checks",
+      "activeUnitAndCoverageTests": 30896,
+      "activeTestFiles": 2229,
+      "environmentSkipsPerRun": 81,
+      "coveragePercent": { "statements": 91.86, "branches": 88.56, "functions": 90.73, "lines": 94.85 },
+      "specReferences": 10153,
+      "lintErrors": 0,
+      "lintWarnings": 12236,
+      "managedChromiumPassed": 653,
+      "managedChromiumFailed": 1,
+      "managedChromiumOriginalSkips": 5,
+      "mortgageHintCorrectionCommit": "c6b28ad4378a1cbf7112e1d21fd488391d9650e1",
+      "mortgageHintFocusedChromiumPassed": 1,
+      "nativeArm64Run": 45889599406,
+      "nativeArm64Revision": "a690d880a6992108d8446c971464e30b72247c70"
+    },
     "nov26BrowserSourceAuditRefresh": {
       "commit": "5f5af1dee6af478aceac2757c8bdcb5862c28c48",
       "progressSection": "docs/upgrade-2026-progress.md#november-26-browser-source-audit-refresh",

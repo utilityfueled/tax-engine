@@ -1,5 +1,54 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 26 direct REIT dividend review
+
+Independently determine which part of a $1,000 2026 Form 1099-DIV Box 5
+payment enters Section 199A and what stays in Box 1a. The purchased lot
+was acquired April 30 and sold on the June 15 ex-dividend date. The
+direct cash payment arrived June 30. The records are current through
+July 30. First assume no diminished-risk days and no obligation to
+make related payments. Then evaluate the same facts with one
+diminished-risk day, with a full related-payment obligation and with
+the shares still held but only 45 qualifying days evidenced before
+the end of the statutory window. Document the day-count method and
+amount on the applicable Form 8995 or 8995-A lines.
+[IRS Box 5 instructions](https://www.irs.gov/instructions/i1099div) ·
+[26 CFR §1.199A-3](https://www.ecfr.gov/current/title-26/section-1.199A-3) ·
+[26 U.S.C. §246](https://uscode.house.gov/us/usc/t26/s246/).
+
+## November 26 federal REIT and PTP loss review
+
+Independently derive the 2026 deduction for a single filer with $300,000
+of wages, $6,000 of qualified REIT dividends, $4,000 from a confirmed
+non-SSTB PTP, and a $7,500 loss on the same filer's 2025 Form 8995-A
+line 40. The draft implementation expects a $2,500 net component base
+and a $500 deduction. Confirm the line 28–31 transfer and the closing
+balance. Separately check the fixture with a $500 passive loss allowed
+this year, of which $200 originally qualified, and a $300 filed loss.
+Confirm the treatment on Form 8995 line 7 and the vintage and owner
+evidence required for that transfer. Mixed and prior basis histories
+still need their own review.
+[Synthetic cases](../tests/engine/federal-reit-ptp-carryforward.test.ts) ·
+[Form 8995 instructions](https://www.irs.gov/instructions/i8995) ·
+[Form 8995-A instructions](https://www.irs.gov/instructions/i8995a) ·
+[Treas. Reg. §1.199A-3](https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/xhtml/CFR-2025-title26-vol4-sec1-199A-3.html).
+
+## November 26 Ohio venture investment review
+
+Independently derive the $20,000 Schedule A line 34 deduction in the
+standalone $1 million investment case, using the original management
+rights, effective dates, equity fraction and period payroll. Verify
+the exclusion for relatives and the cap at qualifying net gain.
+For the full-year resident fixture, also check the separate
+material-participation finding and derive the $120,000 line 34
+deduction, $250,000 business-income deduction and $1,838 income tax.
+Use the final state materials when available and reconcile the state
+workbook and final form before signing off on export.
+[Standalone case](../tests/engine/state/oh-2026-qualifying-capital-gain-draft.test.ts) ·
+[Resident case](../tests/engine/state/oh-2026-resident-capital-gain-draft.test.ts) ·
+[Ohio Revised Code §5747.79](https://codes.ohio.gov/ohio-revised-code/section-5747.79) ·
+[Ohio's 2026 draft instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=24).
+
 ## November 25 529-to-Roth contribution timing review
 
 Check one 2026 direct $7,500 transfer for the same eligible beneficiary,

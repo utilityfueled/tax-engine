@@ -9,6 +9,24 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `c2410f954` and `b28141535` qualify and collect 2026 direct REIT Box 5
+  dividends using the actual account, payment, holding period and
+  related-payment facts. Local focused checks passed at desktop and mobile
+  sizes. Other distribution types need separate qualification.
+  [Federal Box 5 evidence](upgrade-2026-progress.md#november-26-direct-reit-box-5-qualification).
+
+- `d21071f70` removes one repeated Ohio calculation during a reciprocal
+  PDF request. An exact baseline comparison matched all 18 files.
+  [Ohio PDF evidence](upgrade-2026-progress.md#november-26-reciprocal-ohio-pdf-packet-calculation).
+
+- Exact candidate `13ec67770` passed 30,896 active cases in both full
+  local runs, with 81 environment skips and 88.56% branch coverage.
+  Builds, type checks, lint and specs also passed. The managed
+  Chromium suite passed 653 and recorded one failure. The corrected
+  assertion passed its focused Chromium replay on `c6b28ad43`.
+  A combined successor and strict native Linux runs remain open.
+  [Local verification](upgrade-2026-progress.md#november-26-combined-local-builds-coverage-and-release-checks).
+
 - `5f5af1dee` restores browser collection after the Ohio change left a
   stale source hash. The audit and 223 focused checks passed with the
   existing budgets and deadlines. Strict Linux Chromium remains open.
