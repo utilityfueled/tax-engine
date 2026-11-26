@@ -2574,10 +2574,20 @@ export const ScheduleK1Schema = z.object({
   section199AUBIA: optionalDecimal, // Section 199A statement — UBIA of qualified property
   section199AIsSST: z.boolean().default(false), // Section 199A statement — specified service trade or business
   section199AQualifiedReitDividends: optionalDecimal, // Section 199A statement — qualified REIT dividends
-  section199AQualifiedPTPIncome: optionalDecimal, // Section 199A statement — qualified PTP income
+  section199AQualifiedPTPIncome: optionalDecimalInput, // Section 199A statement — signed qualified PTP income or loss
   section199APTPW2Wages: optionalDecimal, // Section 199A statement — W-2 wages allocable to PTP QBI
   section199APTPUBIA: optionalDecimal, // Section 199A statement — UBIA of qualified property for PTP
-  section199APTPIsSST: z.boolean().default(false), // Section 199A statement — PTP is specified service trade or business
+  section199APTPIsSST: z.boolean().optional(), // Section 199A statement — actual PTP SSTB designation
+  /** Actual retained loss-limit worksheets for this PTP and current statement. */
+  section199APTPLossSource: z.object({
+    sourceTaxYear: z.number().int(),
+    sourceReference: z.string().trim().min(1),
+    sourceFactsConfirmed: z.boolean(),
+    currentStatementAmount: decimal,
+    currentAllowedAmount: decimal,
+    priorAllowedLoss: decimal,
+    releasedPriorQualifiedLoss: decimal,
+  }).optional(),
   // Box 15: Credits — flow to Form 3800 (General Business Credit)
   lowIncomeHousingCredit42j5: optionalDecimal, // Box 15 Code A — §42(j)(5) partnerships
   lowIncomeHousingCreditOther: optionalDecimal, // Box 15 Code B — other low-income housing credit
@@ -2731,6 +2741,7 @@ export const ScheduleK1Form1041Schema = z.object({
   section199AQualifiedReitDividends: optionalDecimal,
   /** Box 14 Code I statement: qualified PTP income → Form 8995/8995-A */
   section199AQualifiedPTPIncome: optionalDecimal,
+  section199APTPIsSST: z.boolean().optional(),
 });
 export type ScheduleK1Form1041 = z.infer<typeof ScheduleK1Form1041Schema>;
 
@@ -3108,6 +3119,16 @@ export const PriorYearCarryforwardSchema = z.object({
     z.array(z.object({ taxYear: z.number().int(), amount: decimal }))
   ).optional(),
   qbiLossCarryforward: optionalDecimalInput,
+  /** Filed qualified REIT/PTP loss, distinct from ordinary QBI and section 469(k). */
+  reitPtpLossSource: z.object({
+    sourceTaxYear: z.number().int(),
+    sourceForm: z.enum(["form_8995", "form_8995_a"]),
+    sourceReference: z.string().trim().min(1),
+    sourceFactsConfirmed: z.boolean(),
+    owner: z.enum(["primary", "spouse", "joint"]),
+    sameJointFilersConfirmed: z.boolean().optional(),
+    amount: decimal,
+  }).optional(),
   /** Actual active portion of the QBI loss carryover; unknown is not zero. */
   activeQbiLossCarryforward: optionalDecimalInput,
   /** Form 8995-A Part IV aggregation elections per Reg. §1.199A-4 */

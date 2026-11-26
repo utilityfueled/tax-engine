@@ -12127,7 +12127,7 @@ describe("REIT dividends and PTP income - federal integration", () => {
     expect(result.form8995A!.qbiDeduction.toNumber()).toBe(5000);
   });
 
-  it("PTP income above threshold uses Form 8995-A with per-PTP W-2/UBIA limits", () => {
+  it("PTP income above threshold uses Form 8995-A without applying per-PTP W-2/UBIA limits", () => {
     const fixture: TaxYearInput = {
       ...simpleW2Fixture,
       w2s: [{ employer: { name: "Employer", ein: "12-3456789" }, wages: "280000", federalWithheld: "55000" }],
@@ -12145,11 +12145,13 @@ describe("REIT dividends and PTP income - federal integration", () => {
     const result = calculateFederalTax(fixture);
     expect(result.form8995A).toBeDefined();
     expect(result.form8995A!.ptpBusinesses.length).toBe(1);
-    // PTP has W-2/UBIA limits applied above the threshold
+    // The legacy output retains the supplied values for reference.
     const ptpBiz = result.form8995A!.ptpBusinesses[0];
     expect(ptpBiz.line1QBI.toNumber()).toBe(20000);
     expect(ptpBiz.line3W2Wages.toNumber()).toBe(8000);
     expect(ptpBiz.line5UBIA.toNumber()).toBe(50000);
+    expect(result.form8995A?.reitPTPComponent.toFixed()).toBe("4000");
+    expect(result.form8995A?.qbiDeduction.toFixed()).toBe("4000");
   });
 
   it("zero REIT and zero PTP does not trigger QBI computation when no trade/business QBI", () => {
@@ -13779,6 +13781,18 @@ describe("Partner basis carryforward output", () => {
 // PTP Loss Segregation — IRC §469(k) Federal Integration
 // ═══════════════════════════════════════════════════════════
 
+function nonQualifiedPtpRelease(priorAllowedLoss: string) {
+  return {
+    sourceTaxYear: 2025,
+    sourceReference: "Fixture PTP loss and section 199A statements",
+    sourceFactsConfirmed: true,
+    currentStatementAmount: "0",
+    currentAllowedAmount: "0",
+    priorAllowedLoss,
+    releasedPriorQualifiedLoss: "0",
+  };
+}
+
 describe("PTP passive loss segregation (IRC §469(k))", () => {
   it("PTP loss is suspended per-PTP and flows to carryforwards, not AGI", () => {
     const result = calculateFederalTax({
@@ -13850,6 +13864,7 @@ describe("PTP passive loss segregation (IRC §469(k))", () => {
           ordinaryIncome: "20000",
           isPassiveActivity: true,
           isPubliclyTradedPartnership: true,
+          section199APTPLossSource: nonQualifiedPtpRelease("15000"),
         },
       ],
       priorYear: {
@@ -13923,6 +13938,7 @@ describe("PTP disposition (IRC §469(g)(1)) — released losses reduce AGI", () 
           isPassiveActivity: true,
           isPubliclyTradedPartnership: true,
           ptpFullyDisposedInTaxableTransaction: true,
+          section199APTPLossSource: nonQualifiedPtpRelease("25000"),
         },
       ],
       priorYear: {
@@ -13953,6 +13969,7 @@ describe("PTP disposition (IRC §469(g)(1)) — released losses reduce AGI", () 
           isPubliclyTradedPartnership: true,
           ptpFullyDisposedInTaxableTransaction: true,
           ptpDispositionGainOrLoss: "10000",
+          section199APTPLossSource: nonQualifiedPtpRelease("20000"),
         },
       ],
       priorYear: {
@@ -13980,6 +13997,7 @@ describe("PTP disposition (IRC §469(g)(1)) — released losses reduce AGI", () 
           isPassiveActivity: true,
           isPubliclyTradedPartnership: true,
           ptpFullyDisposedInTaxableTransaction: true,
+          section199APTPLossSource: nonQualifiedPtpRelease("15000"),
         },
         {
           partnershipName: "MLP Held",
@@ -14019,6 +14037,7 @@ describe("PTP disposition (IRC §469(g)(1)) — released losses reduce AGI", () 
           isPubliclyTradedPartnership: true,
           ptpFullyDisposedInTaxableTransaction: true,
           ptpDispositionGainOrLoss: "50000",
+          section199APTPLossSource: nonQualifiedPtpRelease("10000"),
         },
       ],
       priorYear: {

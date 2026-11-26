@@ -83,6 +83,7 @@ describe("Form 8995-A packet reference summary", () => {
         },
       ],
       qualifiedReitDividends: d(10000),
+      priorYearReitPtpLoss: d(1000),
       aggregationElections: [
         {
           name: "Combined Rentals",
@@ -126,10 +127,11 @@ describe("Form 8995-A packet reference summary", () => {
         name: "Pipeline PTP",
         isSST: false,
         line1QBI: "20000",
+        qualifiedPtpAmount: "20000",
         line3W2Wages: "5000",
         line5UBIA: "0",
-        line9W2UBIALimit: "2500",
-        line15QBIComponent: "2500",
+        line9W2UBIALimit: "0",
+        line15QBIComponent: "4000",
       },
     ]);
     expect(summary.aggregationGroups).toEqual([
@@ -155,19 +157,22 @@ describe("Form 8995-A packet reference summary", () => {
     expect(summary.overallLines).toEqual([
       { line: "phase-in", description: "Phase-in percentage", value: "1" },
       { line: "16", description: "Total QBI component", value: "25000" },
-      { line: "17", description: "Qualified REIT dividends", value: "10000" },
-      { line: "32", description: "Total REIT and PTP component", value: "4500" },
+      { line: "28", description: "Current qualified REIT dividends and PTP income or loss", value: "30000" },
+      { line: "29", description: "Prior qualified REIT and PTP loss", value: "1000" },
+      { line: "30", description: "Total qualified REIT dividends and PTP income", value: "29000" },
+      { line: "31", description: "Total REIT and PTP component", value: "5800" },
+      { line: "32", description: "Combined QBI, REIT, and PTP", value: "30800" },
       { line: "33", description: "Taxable income before QBI", value: "300000" },
       { line: "34", description: "Net capital gain", value: "25000" },
-      { line: "35", description: "Income limitation", value: "55000" },
-      { line: "36", description: "Combined QBI, REIT, and PTP", value: "29500" },
-      { line: "37", description: "QBI deduction before DPAD", value: "29000" },
+      { line: "36", description: "Income limitation", value: "55000" },
+      { line: "37", description: "QBI deduction before DPAD", value: "30300" },
       { line: "38", description: "Section 199A(g) DPAD from cooperatives", value: "800" },
-      { line: "39", description: "Section 199A deduction", value: "29800" },
-      { line: "40", description: "QBI loss carryforward", value: "0" },
+      { line: "39", description: "Section 199A deduction", value: "31100" },
+      { line: "40", description: "Qualified REIT and PTP loss carryforward", value: "0" },
+      { line: "Schedule C", description: "Ordinary QBI loss carryforward", value: "0" },
     ]);
     expect(summary.totals).toEqual([
-      { label: "Allowed section 199A deduction", value: "29800" },
+      { label: "Allowed section 199A deduction", value: "31100" },
       { label: "Tracked QBI loss carryforward", value: "0" },
     ]);
   });

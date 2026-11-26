@@ -179,6 +179,8 @@ export interface TaxReturnResult {
     foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
     amtForeignTaxCreditCarryforwardByCategory?: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
     qbiLossCarryforward: Decimal;
+    /** Qualified REIT/PTP loss that offsets only the future section 199A combined component. */
+    reitPtpLossCarryforward: Decimal;
     /** Character remaining under each separate loss limit; never an ordinary/AMT NOL override. */
     qbiSuspendedLosses?: Array<{ sourceId: string; accountHolder: "primary" | "spouse";
       limitation: import("@/engine/forms/qbi-loss-character.js").QbiLossLimitation;

@@ -8,7 +8,7 @@ import { PDFDocument, PDFTextField } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillForm8995, FORM_8995_FIELDS } from "@/pdf/fill-form-8995.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 import Decimal from "decimal.js";
 
 /** Helper: get text value from a filled PDF field. */
@@ -26,6 +26,24 @@ function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {
 
 const BLANK_8995 = "forms/blank/2025/f8995.pdf";
 const F = FORM_8995_FIELDS;
+
+it("renders the audited separate REIT and PTP loss on lines 7 and 17", async () => {
+  const input = TaxYearInputSchema.parse({
+    ...singleWithScheduleCFixture,
+    form1099Div: [{ payer: "Synthetic Fund", ordinaryDividends: "1500", section199ADividends: "1500" }],
+    priorYear: {
+      reitPtpLossSource: { sourceTaxYear: 2024, sourceForm: "form_8995_a", sourceReference: "Synthetic 2024 Form 8995-A line 40",
+        owner: "primary", sourceFactsConfirmed: true, amount: "3000" },
+    },
+  });
+  const result = calculateFederalTax(input);
+  const filled = await fillForm8995(input, result, BLANK_8995);
+  expect(getFieldText(filled, F.line6)).toBe("1500");
+  expect(getFieldText(filled, F.line7)).toBe("3000");
+  expect(getFieldText(filled, F.line8)).toBe("0");
+  expect(getFieldText(filled, F.line17)).toBe("1500");
+  expect(result.form8995?.qbiComponent.gt(0)).toBe(true);
+});
 
 // ─── Fixture: Single filer with Schedule C (triggers simplified 8995) ────
 

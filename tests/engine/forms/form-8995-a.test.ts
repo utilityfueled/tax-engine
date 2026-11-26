@@ -904,27 +904,40 @@ describe("Form 8995-A - REIT dividends and PTP income", () => {
     expect(result.reitPTPComponent.toNumber()).toBe(5000);
   });
 
-  it("Form 8995-A Lines 18-31 - PTP with W-2/UBIA limits", () => {
-    // PTP above upper threshold with W-2/UBIA limits
+  it("Form 8995-A does not wage-limit qualified PTP income above the threshold", () => {
     const result = calculateForm8995A(make({
       qbiSources: [],
       ptpSources: [{
         name: "Public Energy LP (PTP)",
         qbi: d(40000),
-        w2Wages: d(20000),
-        ubia: d(100000),
+        w2Wages: d(0),
+        ubia: d(0),
         isSST: false,
       }],
       taxableIncomeBeforeQBI: d(300000),
     }));
-    // Above upper threshold (single $247,300): full W-2/UBIA limit applies
-    // 50% of W-2 = $10K
-    // 25% of W-2 + 2.5% of UBIA = $5K + $2.5K = $7.5K
-    // W-2/UBIA limit = max($10K, $7.5K) = $10K
-    // 20% of QBI = $8K
-    // PTP component = min($10K, $8K) = $8K
     expect(result.ptpBusinesses.length).toBe(1);
     expect(result.ptpBusinesses[0].line15QBIComponent.toNumber()).toBe(8000);
+    expect(result.reitPTPComponent.toFixed()).toBe("8000");
+  });
+
+  it("nets signed PTP sources and the prior loss before applying twenty percent", () => {
+    const result = calculateForm8995A(make({
+      qbiSources: [],
+      qualifiedReitDividends: d("4000.26"),
+      ptpSources: [
+        makeBiz({ name: "Taxable PTP", qbi: d("2200.25"), isSST: true }),
+        makeBiz({ name: "Current PTP loss", qbi: d("-4500.50"), isSST: false }),
+      ],
+      priorYearReitPtpLoss: d("1000"),
+      taxableIncomeBeforeQBI: d("222300"), // Exactly 50% of the 2025 phase-in range.
+    }));
+    // 4000.26 + 2200.25 × 50% − 4500.50 = 599.885, which reports as 600.
+    expect(result.reitPtpAmount.toFixed()).toBe("600");
+    expect(result.netReitPtpAmount.toFixed()).toBe("-400");
+    expect(result.reitPTPComponent.toFixed()).toBe("0");
+    expect(result.reitPtpLossCarryforward.toFixed()).toBe("400");
+    expect(result.qbiLossCarryforward.toFixed()).toBe("0");
   });
 
   it("Form 8995-A Line 32 - REIT and PTP component", () => {

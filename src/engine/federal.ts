@@ -143,6 +143,7 @@ import { calculateForm7206Return } from "./forms/form-7206-return.js";
 import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
 import type { QBIBusinessSource } from "./forms/form-8995-a.js";
+import { reconcileQualifiedPtpLossSource } from "./qbi-ptp-loss-source.js";
 import {
   calculateForm1099R,
   isIraForm1099RDistribution,
@@ -748,7 +749,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     let selfEmploymentEarnings = new Decimal(0);
     let guaranteedPayments = new Decimal(0);
     let section199AQualifiedReitDividends = new Decimal(0);
-    let section199AQualifiedPTPIncome = new Decimal(0);
     let unrecapturedSection1250Gain = new Decimal(0);
     let collectiblesGain = new Decimal(0);
     let amtDepreciationAdjustment = new Decimal(0);
@@ -774,7 +774,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       selfEmploymentEarnings = selfEmploymentEarnings.plus(d(k1.selfEmploymentEarnings));
       guaranteedPayments = guaranteedPayments.plus(d(k1.guaranteedPayments));
       section199AQualifiedReitDividends = section199AQualifiedReitDividends.plus(d(k1.section199AQualifiedReitDividends));
-      section199AQualifiedPTPIncome = section199AQualifiedPTPIncome.plus(d(k1.section199AQualifiedPTPIncome));
       unrecapturedSection1250Gain = unrecapturedSection1250Gain.plus(d(k1.unrecapturedSection1250Gain));
       collectiblesGain = collectiblesGain.plus(d(k1.collectiblesGain));
       amtDepreciationAdjustment = amtDepreciationAdjustment.plus(d(k1.amtDepreciationAdjustment));
@@ -794,7 +793,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       investmentIncome, excessBusinessInterestIncomePartnership,
       investmentExpenses, charitableCash, charitableCapitalGain30,
       charitableCapitalGain20, selfEmploymentEarnings, guaranteedPayments,
-      section199AQualifiedReitDividends, section199AQualifiedPTPIncome,
+      section199AQualifiedReitDividends,
       unrecapturedSection1250Gain, collectiblesGain,
       amtDepreciationAdjustment, amtAdjustedGainOrLoss, amtDepletion, amtOtherItems,
       foreignTaxPaid, foreignTaxPassive, foreignTaxGeneral, passiveCount,
@@ -3168,17 +3167,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ...k1Form1041s.map((k1) => d(k1.section199AQualifiedReitDividends))
   );
 
-  // Aggregate qualified PTP income from K-1 1065/1120S and K-1 1041 statements
-  const qualifiedPTPIncome = sum(
-    k1Agg.section199AQualifiedPTPIncome,
-    ...k1Form1041s.map((k1) => d(k1.section199AQualifiedPTPIncome))
-  );
-
-  // Build per-PTP sources with W-2/UBIA/SSTB detail for Form 8995-A
+  // Carry signed current PTP amounts into both forms after any actual section 469(k) reconciliation.
   const ptpSources: QBIBusinessSource[] = [];
-  for (const k1 of input.scheduleK1) {
-    const ptpIncome = d(k1.section199AQualifiedPTPIncome);
+  let releasedPriorQualifiedPtpLoss = new Decimal(0);
+  let unknownPtpSstb = false;
+  for (const [sourceIndex, k1] of input.scheduleK1.entries()) {
+    const allowance = k1.isPubliclyTradedPartnership && k1.isPassiveActivity
+      ? ptpSourceResult.ptpLossAllowances.find(row => row.name === k1.partnershipName) : undefined;
+    const { currentAmount: ptpIncome, releasedPriorQualifiedLoss: releasedQualifiedLoss, reviewed } =
+      reconcileQualifiedPtpLossSource(year, k1, schedE.partnerships[sourceIndex], allowance);
+    if (reviewed) {
+      releasedPriorQualifiedPtpLoss = releasedPriorQualifiedPtpLoss.plus(releasedQualifiedLoss);
+      audit.record("Section 199A PTP", `${sourceIndex + 1}-current`, "Allowed current qualified PTP amount", ptpIncome,
+        "Confirmed signed statement amount after excluding current suspended losses");
+      audit.record("Section 199A PTP", `${sourceIndex + 1}-released`, "Released prior qualified PTP loss", releasedQualifiedLoss,
+        "Actual originally qualified portion of a now-allowed passive loss, reported separately from the filed section 199A carry");
+    }
     if (!ptpIncome.isZero()) {
+      unknownPtpSstb ||= k1.section199APTPIsSST === undefined;
       ptpSources.push({
         name: `${k1.partnershipName} (PTP)`,
         qbi: ptpIncome,
@@ -3192,15 +3198,35 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   for (const k1 of k1Form1041s) {
     const ptpIncome = d(k1.section199AQualifiedPTPIncome);
     if (!ptpIncome.isZero()) {
+      unknownPtpSstb ||= k1.section199APTPIsSST === undefined;
       ptpSources.push({
         name: `${k1.estateTrustName} (PTP)`,
         qbi: ptpIncome,
         w2Wages: new Decimal(0),
         ubia: new Decimal(0),
-        isSST: false,
+        isSST: k1.section199APTPIsSST ?? false,
       });
     }
   }
+
+  const qualifiedPTPIncome = sum(...ptpSources.map(source => source.qbi));
+  const reitPtpLossSource = input.priorYear?.reitPtpLossSource;
+  const filedReitPtpLoss = d(reitPtpLossSource?.amount);
+  if (reitPtpLossSource) {
+    if (reitPtpLossSource.sourceFactsConfirmed !== true || !reitPtpLossSource.sourceReference.trim()
+      || !["form_8995", "form_8995_a"].includes(reitPtpLossSource.sourceForm)) {
+      throw new Error("Prior REIT and PTP loss requires a confirmed filed source");
+    }
+    if (reitPtpLossSource.sourceTaxYear !== year - 1) {
+      throw new Error("Prior REIT and PTP loss must come from the immediately preceding return year");
+    }
+    const continuingOwnership = filingStatus === "married_filing_jointly"
+      ? reitPtpLossSource.owner === "joint" && reitPtpLossSource.sameJointFilersConfirmed === true
+      : reitPtpLossSource.owner === "primary";
+    if (!continuingOwnership) throw new Error("Prior REIT and PTP loss requires confirmed continuing filer ownership");
+    if (!filedReitPtpLoss.isFinite() || filedReitPtpLoss.lt(0)) throw new Error("Prior REIT and PTP loss must be finite and nonnegative");
+  }
+  const priorYearReitPtpLoss = filedReitPtpLoss.plus(releasedPriorQualifiedPtpLoss);
 
   function computeQBI(selectedDeduction: Decimal, otherDeductions: Decimal) {
     let qbiDeduction = new Decimal(0);
@@ -3214,8 +3240,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
 
     const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero()
+      || ptpSources.length > 0 || priorYearReitPtpLoss.gt(0)
       || d(input.priorYear?.qbiLossCarryforward).gt(0) || releasedPriorQualifiedRentalLoss.gt(0);
-    if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0) || input.qbiLossSources !== undefined)) {
+    const hasReitPtpLoss = priorYearReitPtpLoss.gt(0) || qualifiedReitDividends.plus(qualifiedPTPIncome).lt(0);
+    if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0) || input.qbiLossSources !== undefined || hasReitPtpLoss)) {
       const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
       const priorQBILoss = d(input.priorYear?.qbiLossCarryforward).plus(releasedPriorQualifiedRentalLoss);
       const priorYearActiveQBILoss = releasedPriorActiveRentalLoss !== undefined
@@ -3230,6 +3258,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           qbiSources,
           qualifiedReitDividends,
           qualifiedPTPIncome,
+          priorYearReitPtpLoss,
           priorYearQBILoss: priorQBILoss,
           taxableIncomeBeforeQBI,
           netCapitalGain: min(schedD.netLongTerm, schedD.netCapitalGainLoss),
@@ -3237,6 +3266,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         });
         qbiDeduction = form8995Result.qbiDeduction;
       } else {
+        if (year === 2026 && unknownPtpSstb) {
+          throw new Error("2026 detailed QBI requires the actual SSTB designation for each qualified PTP amount");
+        }
         // Detailed Form 8995-A: W-2/UBIA limitations and SSTB phase-out apply
         // Part IV aggregation elections from taxpayer input
         const aggregationElections = (input.priorYear?.qbiAggregationElections ?? []).map((e) => ({
@@ -3250,6 +3282,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           qbiSources,
           ptpSources: ptpSources.length > 0 ? ptpSources : undefined,
           qualifiedReitDividends,
+          priorYearReitPtpLoss,
           aggregationElections: aggregationElections.length > 0 ? aggregationElections : undefined,
           zeroQbiSourceNames,
           priorYearQBILoss: priorQBILoss,
@@ -5320,6 +5353,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         foreignTaxCreditCarryforwardByCategory: cfForeignByCategory,
         ...(cfAlternativeForeignByCategory ? { amtForeignTaxCreditCarryforwardByCategory: cfAlternativeForeignByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
+        reitPtpLossCarryforward: form8995Result?.reitPtpLossCarryforward ?? form8995AResult?.reitPtpLossCarryforward ?? new Decimal(0),
         ...(input.qbiLossSources ? { qbiSuspendedLosses: k1QbiLosses.activities.flatMap(activity => [
           ...activity.stages.filter(stage => stage.remainingVintages.length > 0).map(stage => ({
             sourceId: activity.sourceId, accountHolder: activity.accountHolder, limitation: stage.limitation,

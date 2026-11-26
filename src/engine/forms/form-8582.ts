@@ -111,6 +111,8 @@ export interface Form8582Result {
   // ── PTP segregation (IRC §469(k)) ──────────────────────
   /** PTP net income is nonpassive and excluded from the regular Form8582 pool. */
   ptpNetIncome: Decimal;
+  /** Actual combined section 469(k) limit and loss balances, before allocating across vintages. */
+  ptpLossAllowances: Array<{ name: string; currentLoss: Decimal; priorLoss: Decimal; allowedTotal: Decimal }>;
   /** Per-PTP suspended losses (only offset by same-PTP income) */
   ptpSuspendedLosses: Array<{
     name: string;
@@ -218,6 +220,7 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
   // When a PTP interest is fully disposed of in a taxable transaction,
   // ALL accumulated suspended losses become nonpassive (deductible).
   const ptpDispositionReleasedLosses: Form8582Result["ptpDispositionReleasedLosses"] = [];
+  const ptpLossAllowances: Form8582Result["ptpLossAllowances"] = [];
 
   for (const ptp of disposedPTPs) {
     const priorCarryforward = priorPTPByName.get(ptp.name) ?? new Decimal(0);
@@ -225,6 +228,8 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
 
     const currentIncome = ptp.income;
     const currentLoss = ptp.loss.abs();
+    ptpLossAllowances.push({ name: ptp.name, currentLoss, priorLoss: priorCarryforward,
+      allowedTotal: currentLoss.plus(priorCarryforward) });
     const dispositionGain = ptp.ptpDispositionGainOrLoss ?? new Decimal(0);
     // Net = current income + disposition gain - current loss - prior carryforward
     const totalInflows = currentIncome.plus(Decimal.max(new Decimal(0), dispositionGain));
@@ -283,6 +288,8 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
     const currentLoss = ptp.loss.abs(); // convert to positive for netting
     const netBeforeCarryforward = currentIncome.minus(currentLoss);
     const netAfterCarryforward = netBeforeCarryforward.minus(priorCarryforward);
+    ptpLossAllowances.push({ name: ptp.name, currentLoss, priorLoss: priorCarryforward,
+      allowedTotal: Decimal.min(currentLoss.plus(priorCarryforward), currentIncome) });
 
     if (netAfterCarryforward.greaterThan(0)) {
       // PTP net gain after its own carryforwards is nonpassive.
@@ -438,6 +445,6 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
   });
   const result = { passiveIncome, passiveLoss, netPassive, rentalIncome, rentalLoss, netRental, combinedLoss, rentalAllowance,
     allowedLoss, suspendedLoss, requiresForm8582: grossLoss.gt(0), activityRows, activityAllocations,
-    ptpNetIncome: ptpNetIncomeTotal, ptpSuspendedLosses, ptpDispositionReleasedLosses, lines: audit.getLines() };
+    ptpNetIncome: ptpNetIncomeTotal, ptpLossAllowances, ptpSuspendedLosses, ptpDispositionReleasedLosses, lines: audit.getLines() };
   return scoped ? result : { ...result, modifiedAgi: input.agi };
 }

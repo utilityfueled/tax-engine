@@ -210,13 +210,11 @@ export async function fillForm8995(
   setCurrencyField(form, F.line6, f8995.reitPTPAmount);
 
   // ── Line 7: Prior year REIT/PTP loss carryforward ──
-  // Not separately tracked in engine result — leave blank if not available
+  setCurrencyField(form, F.line7, f8995.priorYearReitPtpLoss);
 
   // ── Line 8: Total qualified REIT/PTP (Line 6 + Line 7) ──
-  // Same as Line 6 when no prior year carryforward
-  // The same printed zero floor applies here; line 17 retains the loss.
-  if (f8995.reitPTPAmount.lte(0)) setTextField(form, F.line8, "0");
-  else setCurrencyField(form, F.line8, f8995.reitPTPAmount);
+  if (f8995.netReitPtpAmount.lte(0)) setTextField(form, F.line8, "0");
+  else setCurrencyField(form, F.line8, f8995.netReitPtpAmount);
 
   // ── Line 9: REIT/PTP component (20% of Line 8, floor 0) ──
   setCurrencyField(form, F.line9, f8995.reitPTPComponent);
@@ -248,8 +246,8 @@ export async function fillForm8995(
   }
 
   // ── Line 17: Total REIT/PTP loss carryforward ──
-  if (f8995.reitPTPAmount.lessThan(0)) {
-    setCurrencyField(form, F.line17, f8995.reitPTPAmount.abs());
+  if (f8995.reitPtpLossCarryforward.gt(0)) {
+    setCurrencyField(form, F.line17, f8995.reitPtpLossCarryforward);
   }
 
   return doc;

@@ -266,30 +266,60 @@ lines:
       is simply 20% of qualified REIT dividends regardless of income level.
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 17 - qualified REIT dividends"
 
-  - line: "18-31"
-    description: "Qualified PTP income — per-PTP computation with W-2/UBIA limits"
-    formula: "Each PTP is subject to the same per-entity W-2/UBIA limitation and SSTB phase-out as trade/business QBI in Lines 1-15"
-    irsRef: "Form 8995-A Instructions, Lines 18-31; IRC §199A(b)(2)"
+  - line: "28-31"
+    description: "Combined qualified REIT dividends and qualified PTP income or loss with separate prior carryforward"
+    formula: "Combine REIT dividends with signed PTP income or loss. For a current SSTB PTP apply its applicable percentage or exclude it above the phase-in range. Non-SSTB PTP receives the full amount. Do not apply W-2 or UBIA limits to either. Subtract the confirmed immediately prior-year combined loss once, without reapplying the SSTB percentage. Round the current aggregate before subtracting the separately reported carryforward. Apply 20% to the nonnegative combined amount."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8995a.pdf, lines 28–31 and 40; https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf, lines 28–31 and 42; IRC §199A(b)(1)(B), (d)(3); Reg. §1.199A-1(d)(3)"
     inputs:
       - "K-1 Section 199A statement qualified PTP income"
-      - "K-1 Section 199A statement PTP W-2 wages"
-      - "K-1 Section 199A statement PTP UBIA"
       - "K-1 Section 199A statement PTP SSTB designation"
+      - "Prior filed Form 8995 or Form 8995-A separately stated REIT/PTP loss carryforward"
     notes: |
-      PTPs above the simplified threshold are subject to the same W-2/UBIA limitations
-      as trade or business QBI. Each PTP is treated as a separate entry with its own
-      W-2 wages, UBIA, and SSTB designation from the K-1 Section 199A statement.
-      The per-PTP computation mirrors the Part I per-business computation.
-    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Lines 18-31 - PTP with W-2/UBIA limits"
+      For the prior return source require a reference, the immediately preceding year,
+      a confirmed separate loss balance, and continuing filer ownership. Joint carry
+      needs confirmation of the same joint filers. A filing-ownership change requires
+      separate resolution. A negative closing net carries forward separately from both
+      ordinary QBI and section 469(k) suspensions (2025 line 40; 2026 draft line 42).
+      A detailed 2026 return requires the actual SSTB designation for each nonzero
+      current qualified PTP amount.
+      Where a reported PTP amount meets a current section 469(k) suspension or
+      release, require a current-year source bound to the signed statement and the
+      computed activity. Only losses actually allowed enter the section 199A amount.
+      A prior released qualified loss uses the actual originally qualified portion,
+      distinct from the prior filed section 199A carry and without current SSTB phase-in.
+      Obtain the reported prior/current allocation and reconcile it to the partnership's
+      allowed total, both loss balances, and the originally qualified portion carried.
+      Do not give either vintage priority. The excluded current qualified loss cannot
+      exceed the allocated current suspension. The released qualified prior loss cannot
+      exceed the allocated allowed prior loss.
+      An allowed prior release requires actual qualification even when the current
+      statement has no separately reported amount. For an actual direct PTP using
+      current basis or at-risk limits without prior basis history, also reconcile the
+      current qualification against disallowances computed before section 469(k).
+      A direct PTP with any actual prior basis loss history requires separate
+      source review, including when the loss was allowed without a current suspension.
+      For a nonpassive direct PTP with a current basis worksheet, use its
+      gross allowed ordinary loss as the current capacity, reduced by any
+      subsequent at-risk suspension. Non-QBI positive payments cannot erase
+      that capacity. Hold basis-limited statements with other current basis
+      loss categories until their qualified portions can be reconciled separately.
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A does not wage-limit qualified PTP income above the threshold"
+    testRefs:
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::applies a 2025 detailed loss to the combined 2026 detailed component"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::holds a detailed 2026 PTP amount when its SSTB designation is missing"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::keeps a fully suspended PTP loss out of the section 199A carry and deduction"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::uses the original qualifying part of a newly released passive loss once"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::holds a released loss with no current statement until its original qualification is confirmed"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::requires post-limitation proof for current PTP basis and at-risk suspensions"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::holds a prior PTP basis loss even when no passive loss or current suspension triggers reconciliation"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::reconciles a gross allowed nonpassive loss alongside unrelated guaranteed payments"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::holds a basis-limited qualified statement with mixed loss categories"
+      - "tests/engine/forms/form-8995-a.test.ts::nets signed PTP sources and the prior loss before applying twenty percent"
 
   - line: "32"
-    description: "Total REIT and qualified PTP component"
-    formula: "20% of Line 17 qualified REIT dividends (floor 0) + sum of per-PTP components from Lines 18-31 (floor 0 for total)"
+    description: "Combined ordinary QBI and REIT/PTP components before the income limitation"
+    formula: "Add the current qualified trade or business component on line 27 to the REIT/PTP component on line 31. The REIT/PTP loss is kept separate from ordinary QBI."
     irsRef: "Form 8995-A Instructions, Line 32"
-    notes: |
-      REIT dividends contribute a flat 20% component (no W-2/UBIA limit).
-      PTP income above the threshold contributes per-PTP W-2/UBIA-limited components.
-      The combined REIT/PTP component is floored at zero.
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 32 - REIT and PTP component"
 
   - line: "33"
@@ -305,17 +335,16 @@ lines:
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 34 - net capital gain includes qualified dividends"
 
   - line: "35"
-    description: "Income limitation"
-    formula: "(Line 33 - Line 34) × 20%"
+    description: "Taxable income after subtracting net capital gain"
+    formula: "max(0, line 33 - line 34)"
     irsRef: "Form 8995-A Instructions, Line 35"
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 35 - income limitation with capital gains"
 
   - line: "36"
-    description: "Total QBI, REIT, and PTP combined"
-    formula: "Line 16 (total QBI component) + Line 32 (REIT/PTP component)"
+    description: "Income limitation"
+    formula: "Line 35 × 20%"
     irsRef: "Form 8995-A Instructions, Line 36"
-    notes: "Combined trade/business QBI deduction component plus REIT and PTP deduction component"
-    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 36 - combined QBI and REIT/PTP"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 35 - income limitation with capital gains"
 
   # ═══════════════════════════════════════════════════════════
   # Schedule D: Patron Reduction for Specified Cooperatives
@@ -372,7 +401,7 @@ lines:
 
   - line: "37"
     description: "QBI deduction before DPAD"
-    formula: "min(Line 36 combined QBI/REIT/PTP minus total patron reduction, Line 35 income limitation)"
+    formula: "min(Line 32 combined QBI/REIT/PTP minus any patron reduction not yet included, Line 36 income limitation)"
     irsRef: "Form 8995-A Instructions, Line 37"
     notes: |
       The total patron reduction from Schedule D reduces the combined QBI/REIT/PTP
@@ -419,10 +448,14 @@ lines:
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 39 - deduction limited by income limitation"
 
   - line: "40"
-    description: "QBI loss carryforward"
-    formula: "If total QBI across all businesses is negative, the absolute value carries forward"
-    irsRef: "Form 8995-A Instructions, Line 40"
-    notes: "Applied in future years to reduce QBI before computing the deduction"
+    description: "Separate negative REIT/PTP balance carried to later years"
+    formula: "If the signed current amount on line 28 less the prior carry on line 29 is negative, retain its magnitude for the next year. Otherwise zero. This is draft 2026 line 42. Ordinary qualified trade/business carry remains on Schedule C."
+    irsRef: "https://www.irs.gov/instructions/i8995a, line 40; https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf, line 42"
+    testRef: "tests/engine/forms/form-8995-a.test.ts::nets signed PTP sources and the prior loss before applying twenty percent"
+
+  - line: "Schedule C closing balance"
+    description: "Ordinary qualified trade or business loss carryforward"
+    formula: "The negative qualified trade or business balance that remains after Schedule C allocation carries separately."
     testRef: "tests/engine/forms/form-8995-a.test.ts::Form 8995-A Line 40 - QBI loss carryforward from loss business"
 
 edgeCases:

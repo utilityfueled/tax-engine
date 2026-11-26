@@ -28,6 +28,7 @@ export interface Form8995AReferenceEntitySummary {
   name: string;
   isSST: boolean;
   line1QBI: string;
+  qualifiedPtpAmount?: string;
   line3W2Wages: string;
   line5UBIA: string;
   line9W2UBIALimit: string;
@@ -186,22 +187,27 @@ export function buildForm8995AReferenceSummary(result: Form8995AResult): Form899
     warningLabel: "REFERENCE SUMMARY ONLY",
     introduction: "Computed from supported Form 8995-A detailed QBI deduction outputs. This packet artifact summarizes the businesses, PTPs, patronage adjustments, and overall limitation lines the engine currently supports.",
     businesses: result.businesses.map((entity) => mapEntity("Trade or business", entity)),
-    ptpBusinesses: result.ptpBusinesses.map((entity) => mapEntity("Qualified PTP", entity)),
+    ptpBusinesses: result.ptpBusinesses.map(entity => ({
+      ...mapEntity("Qualified PTP", entity), qualifiedPtpAmount: formatValue(entity.line2AdjustedQBI),
+    })),
     aggregationGroups: result.aggregationGroups.map(mapAggregationGroup),
     patronageResults: result.patronageResults.map(mapPatronage),
     overallLines: [
       { line: "phase-in", description: "Phase-in percentage", value: formatValue(result.phaseInPercentage) },
       { line: "16", description: "Total QBI component", value: formatValue(result.totalQBIComponent) },
-      { line: "17", description: "Qualified REIT dividends", value: formatValue(result.qualifiedReitDividends) },
-      { line: "32", description: "Total REIT and PTP component", value: formatValue(result.reitPTPComponent) },
+      { line: "28", description: "Current qualified REIT dividends and PTP income or loss", value: formatValue(result.reitPtpAmount) },
+      { line: "29", description: "Prior qualified REIT and PTP loss", value: formatValue(result.priorYearReitPtpLoss) },
+      { line: "30", description: "Total qualified REIT dividends and PTP income", value: result.netReitPtpAmount.gt(0) ? formatValue(result.netReitPtpAmount) : "0" },
+      { line: "31", description: "Total REIT and PTP component", value: formatValue(result.reitPTPComponent) },
+      { line: "32", description: "Combined QBI, REIT, and PTP", value: formatValue(result.combinedComponent) },
       { line: "33", description: "Taxable income before QBI", value: formatValue(result.taxableIncomeBeforeQBI) },
       { line: "34", description: "Net capital gain", value: formatValue(result.netCapitalGainAmount) },
-      { line: "35", description: "Income limitation", value: formatValue(result.incomeLimitation) },
-      { line: "36", description: "Combined QBI, REIT, and PTP", value: formatValue(result.combinedComponent) },
+      { line: "36", description: "Income limitation", value: formatValue(result.incomeLimitation) },
       { line: "37", description: "QBI deduction before DPAD", value: formatValue(result.qbiDeductionBeforeDPAD) },
       { line: "38", description: "Section 199A(g) DPAD from cooperatives", value: formatValue(result.cooperativeDPAD) },
       { line: "39", description: "Section 199A deduction", value: formatValue(result.qbiDeduction) },
-      { line: "40", description: "QBI loss carryforward", value: formatValue(result.qbiLossCarryforward) },
+      { line: "40", description: "Qualified REIT and PTP loss carryforward", value: formatValue(result.reitPtpLossCarryforward) },
+      { line: "Schedule C", description: "Ordinary QBI loss carryforward", value: formatValue(result.qbiLossCarryforward) },
     ],
     totals: [
       { label: "Allowed section 199A deduction", value: formatValue(result.qbiDeduction) },
@@ -341,7 +347,7 @@ export async function fillForm8995AReference(
         maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2,
         lineHeight: 14,
       });
-      const detail = `Line 1 QBI ${entity.line1QBI}; Line 3 W-2 wages ${entity.line3W2Wages}; Line 5 UBIA ${entity.line5UBIA}; Line 9 limit ${entity.line9W2UBIALimit}; Line 15 component ${entity.line15QBIComponent}`;
+      const detail = `Reported PTP income or loss ${entity.line1QBI}. Qualified PTP amount ${entity.qualifiedPtpAmount}.`;
       y = drawWrappedText(page, detail, {
         font: regular,
         size: BODY_FONT_SIZE,

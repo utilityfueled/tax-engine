@@ -87,9 +87,9 @@ lines:
     testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 7 - 20% of QBI"
 
   - line: "8"
-    description: "Qualified REIT dividends and qualified publicly traded partnership (PTP) income or (loss)"
-    formula: "Sum of qualified REIT dividends (from 1099-DIV Box 5 and K-1 Section 199A statement) plus qualified PTP income or loss (from K-1 Section 199A statement)"
-    irsRef: "Form 8995 Instructions, Line 8; IRC §199A(e)(3) (qualified REIT dividends); IRC §199A(e)(4) (qualified PTP income)"
+    description: "Current qualified REIT dividends and qualified publicly traded partnership (PTP) income or loss, and separate loss carryforward"
+    formula: "Round signed current REIT dividends plus qualified PTP income or loss for line 6. Subtract the actual separately stated prior-year line 17 (Form 8995) or line 40 (Form 8995-A) loss on line 7. For line 8 floor the combined amount at zero. Keep its negative balance as a positive magnitude in the engine for Form 8995 line 17 (2026 draft line 19)."
+    irsRef: "https://www.irs.gov/instructions/i8995, lines 6–9 and 17; https://www.irs.gov/pub/irs-dft/f8995--dft.pdf, lines 6–9 and 19; IRC §199A(b)(1)(B)"
     inputs:
       - "1099-DIV Box 5 (Section 199A dividends — qualified REIT dividends)"
       - "K-1 Section 199A statement qualified REIT dividends"
@@ -102,7 +102,13 @@ lines:
     edgeCases:
       - "PTP loss reduces the combined REIT/PTP amount"
       - "If combined amount is zero or negative, Line 9 is zero"
+      - "The next return takes the closing REIT/PTP loss from the immediately preceding return as a separate source and does not deduct it against trade or business QBI, AGI, or section 469(k) income."
       - "1099-DIV Box 5 from multiple mutual funds holding REITs are summed"
+    testRefs:
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::preserves a 2025 simplified loss on a 2026 return with no current REIT or PTP income"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::validates the actual source year and continuing ownership"
+      - "tests/engine/federal-reit-ptp-carryforward.test.ts::keeps a fully suspended PTP loss out of the section 199A carry and deduction"
+      - "tests/pdf/fill-form-8995.test.ts::renders the audited separate REIT and PTP loss on lines 7 and 17"
     testRef: "tests/engine/forms/form-8995.test.ts::Form 8995 Line 8 - REIT dividends and PTP income"
 
   - line: "9"

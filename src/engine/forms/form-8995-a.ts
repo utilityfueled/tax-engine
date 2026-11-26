@@ -12,6 +12,7 @@
 
 import Decimal from "decimal.js";
 import { calculateQBIMinimumDeduction } from "./qbi-minimum-deduction.js";
+import { calculateReitPtpComponent } from "../qbi-reit-ptp.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, max, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -54,10 +55,12 @@ export interface Form8995AInput {
   priorYearActiveQBILoss?: Decimal;
   /** QBI sources with W-2/UBIA/SSTB detail per business */
   qbiSources: QBIBusinessSource[];
-  /** Qualified PTP sources with W-2/UBIA/SSTB detail per PTP */
+  /** Qualified PTP amounts and SSTB detail. Legacy W-2 and UBIA values do not limit this component. */
   ptpSources?: QBIBusinessSource[];
   /** Qualified REIT dividends (1099-DIV Box 5 + K-1 Section 199A statement) */
   qualifiedReitDividends?: Decimal;
+  /** Separate prior qualified REIT/PTP loss, as a positive magnitude. */
+  priorYearReitPtpLoss?: Decimal;
   /** Part IV aggregation elections (Reg. §1.199A-4) */
   aggregationElections?: AggregationGroup[];
   /** Original source names omitted from the deduction rows because their QBI is zero. */
@@ -126,7 +129,7 @@ export interface PatronageCooperativeResult {
 
 export interface Form8995AResult {
   businesses: Form8995ABusinessResult[];
-  /** Per-PTP results from Lines 18-31 (same structure as Part I) */
+  /** Per-PTP detail in the legacy result shape. Wage, property and phase-in limit fields are inapplicable. */
   ptpBusinesses: Form8995ABusinessResult[];
   /** Part IV aggregation groups applied (empty if no aggregation) */
   aggregationGroups: AggregationGroupResult[];
@@ -136,15 +139,19 @@ export interface Form8995AResult {
   totalQBIComponent: Decimal;
   /** Line 17: Qualified REIT dividends */
   qualifiedReitDividends: Decimal;
-  /** Line 32: Total REIT and PTP component */
+  reitPtpAmount: Decimal;
+  priorYearReitPtpLoss: Decimal;
+  netReitPtpAmount: Decimal;
+  reitPtpLossCarryforward: Decimal;
+  /** Line 31: Total REIT and PTP component */
   reitPTPComponent: Decimal;
   /** Line 33: Taxable income before QBI */
   taxableIncomeBeforeQBI: Decimal;
   /** Line 34: Net capital gain + qualified dividends */
   netCapitalGainAmount: Decimal;
-  /** Line 35: Income limitation (20% of TI minus cap gains) */
+  /** Line 36: Income limitation (20% of TI minus cap gains) */
   incomeLimitation: Decimal;
-  /** Line 36: Combined QBI + REIT/PTP */
+  /** Line 32: Combined QBI + REIT/PTP */
   combinedComponent: Decimal;
   /** Total patron reduction from Schedule D (sum of per-cooperative Line 6) */
   totalPatronReduction: Decimal;
@@ -154,7 +161,7 @@ export interface Form8995AResult {
   cooperativeDPAD: Decimal;
   /** Line 39: Section 199A deduction = Line 37 + Line 38 */
   qbiDeduction: Decimal;
-  /** Line 40: QBI loss carryforward */
+  /** Schedule C: Ordinary QBI loss carryforward */
   qbiLossCarryforward: Decimal;
   /** Phase-in percentage used (0 at threshold, 1 at upper threshold) */
   phaseInPercentage: Decimal;
@@ -256,23 +263,15 @@ function applyAggregationElections(
   };
 }
 
-/**
- * Compute per-entity QBI deduction components (shared between Part I trade/business
- * sources and Lines 18-31 PTP sources).
- */
+/** Compute trade or business QBI after Schedule A qualification and Schedule C loss netting. */
 function computePerEntityComponents(
   effectiveSources: QBIBusinessSource[],
   phaseInPercentage: Decimal,
   sstbApplicablePercentage: Decimal,
   priorLoss: Decimal,
   audit: AuditTrail,
-  linePrefix: string,
-  qualifiedTradeLossNetting: boolean,
-): { businesses: Form8995ABusinessResult[]; totalComponent: Decimal; totalGrossQBI: Decimal; lossCarryforward: Decimal } {
-  // Actual Schedule A qualification precedes Schedule C for trades. The legacy
-  // separate PTP computation is retained independently of this trade correction.
-  const qualifiedAmounts = effectiveSources.map(source => qualifiedTradeLossNetting
-    ? roundDollar(source.qbi.times(source.isSST ? sstbApplicablePercentage : 1)) : source.qbi);
+): { businesses: Form8995ABusinessResult[]; totalComponent: Decimal; lossCarryforward: Decimal } {
+  const qualifiedAmounts = effectiveSources.map(source => roundDollar(source.qbi.times(source.isSST ? sstbApplicablePercentage : 1)));
   const currentYearLosses = qualifiedAmounts.reduce((total, amount) => total.plus(zeroFloor(amount.negated())), new Decimal(0));
   const totalLosses = roundDollar(priorLoss).plus(currentYearLosses);
   const positiveAmounts = qualifiedAmounts.map(zeroFloor);
@@ -280,54 +279,44 @@ function computePerEntityComponents(
   const nettableLoss = Decimal.min(totalLosses, totalPositiveQBI);
   const exactAllocations = positiveAmounts.map(amount => totalPositiveQBI.isZero()
     ? new Decimal(0) : nettableLoss.times(amount).div(totalPositiveQBI));
-  const allocations = exactAllocations.map(amount => qualifiedTradeLossNetting ? amount.floor() : roundDollar(amount));
-  if (qualifiedTradeLossNetting) {
-    // Printed-dollar conservation. Largest remainder/original-order ties are an
-    // implementation rounding choice, not a change to the prescribed proportion.
-    let residual = nettableLoss.minus(allocations.reduce((total, amount) => total.plus(amount), new Decimal(0)));
-    const ranked = exactAllocations.map((amount, index) => ({ index, fraction: amount.minus(allocations[index]) }))
-      .sort((a, b) => b.fraction.comparedTo(a.fraction) || a.index - b.index);
-    for (const row of ranked) {
-      if (residual.isZero()) break;
-      allocations[row.index] = allocations[row.index].plus(1);
-      residual = residual.minus(1);
-    }
-    if (!residual.isZero() || allocations.some((amount, index) => amount.gt(positiveAmounts[index]))) {
-      throw new Error("Form8995-A loss allocation does not reconcile with actual qualified income");
-    }
-    audit.record("8995-A Schedule C", "2", "Prior qualified losses, including released suspended losses", roundDollar(priorLoss).negated(), "Actual retained qualified prior loss");
-    audit.record("8995-A Schedule C", "3", "Total qualified losses", totalLosses.negated(), "Qualified current losses plus actual prior qualified loss");
-    audit.record("8995-A Schedule C", "4", "Total qualified positive income", totalPositiveQBI, "Positive current qualified amounts after Schedule A");
-    audit.record("8995-A Schedule C", "5", "Qualified losses allocated", nettableLoss.negated(), "Smaller of total qualified loss or positive qualified income");
-    audit.record("8995-A Schedule C", "6", "Qualified loss carryforward", totalLosses.minus(nettableLoss).negated(), "Total qualified losses less allocated loss");
+  const allocations = exactAllocations.map(amount => amount.floor());
+  // Largest remainder with original-order ties conserves the printed dollars.
+  let residual = nettableLoss.minus(allocations.reduce((total, amount) => total.plus(amount), new Decimal(0)));
+  const ranked = exactAllocations.map((amount, index) => ({ index, fraction: amount.minus(allocations[index]) }))
+    .sort((a, b) => b.fraction.comparedTo(a.fraction) || a.index - b.index);
+  for (const row of ranked) {
+    if (residual.isZero()) break;
+    allocations[row.index] = allocations[row.index].plus(1);
+    residual = residual.minus(1);
   }
+  if (!residual.isZero() || allocations.some((amount, index) => amount.gt(positiveAmounts[index]))) {
+    throw new Error("Form8995-A loss allocation does not reconcile with actual qualified income");
+  }
+  audit.record("8995-A Schedule C", "2", "Prior qualified losses, including released suspended losses", roundDollar(priorLoss).negated(), "Actual retained qualified prior loss");
+  audit.record("8995-A Schedule C", "3", "Total qualified losses", totalLosses.negated(), "Qualified current losses plus actual prior qualified loss");
+  audit.record("8995-A Schedule C", "4", "Total qualified positive income", totalPositiveQBI, "Positive current qualified amounts after Schedule A");
+  audit.record("8995-A Schedule C", "5", "Qualified losses allocated", nettableLoss.negated(), "Smaller of total qualified loss or positive qualified income");
+  audit.record("8995-A Schedule C", "6", "Qualified loss carryforward", totalLosses.minus(nettableLoss).negated(), "Total qualified losses less allocated loss");
 
   const businesses: Form8995ABusinessResult[] = [];
-  let totalGrossQBI = new Decimal(0);
 
   for (const [sourceIndex, source] of effectiveSources.entries()) {
     const applicablePct = source.isSST ? sstbApplicablePercentage : new Decimal(1);
-    const line1 = qualifiedTradeLossNetting
-      ? zeroFloor(qualifiedAmounts[sourceIndex].minus(allocations[sourceIndex]))
-      : (source.qbi.gt(0) ? zeroFloor(roundDollar(source.qbi).minus(allocations[sourceIndex])) : roundDollar(source.qbi));
-    const line2 = qualifiedTradeLossNetting ? line1 : roundDollar(line1.times(applicablePct));
-    const exhausted = qualifiedTradeLossNetting && line2.isZero();
+    const line1 = zeroFloor(qualifiedAmounts[sourceIndex].minus(allocations[sourceIndex]));
+    const line2 = line1;
+    const exhausted = line2.isZero();
     const line3 = exhausted ? new Decimal(0) : roundDollar(source.w2Wages);
     const line4 = roundDollar(line3.times(applicablePct));
     const line5 = exhausted ? new Decimal(0) : roundDollar(source.ubia);
     const line6 = roundDollar(line5.times(applicablePct));
-    if (qualifiedTradeLossNetting) {
-      audit.record("8995-A Schedule C", `1:${sourceIndex}`, `Adjusted qualified income: ${source.name}`, line2,
-        "Current qualified SSTB amount less proportional current/prior qualified loss; zero floor", {
-          "Qualified current amount": qualifiedAmounts[sourceIndex], "Allocated loss": allocations[sourceIndex],
-        });
-    }
+    audit.record("8995-A Schedule C", `1:${sourceIndex}`, `Adjusted qualified income: ${source.name}`, line2,
+      "Current qualified SSTB amount less proportional current/prior qualified loss; zero floor", {
+        "Qualified current amount": qualifiedAmounts[sourceIndex], "Allocated loss": allocations[sourceIndex],
+      });
     const line7 = roundDollar(line4.times(W2_FIFTY_RATE));
     const line8 = roundDollar(line4.times(W2_TWENTY_FIVE_RATE).plus(line6.times(UBIA_TWO_POINT_FIVE_RATE)));
     const line9 = max(line7, line8);
-    const line10 = line2.greaterThan(0)
-      ? roundDollar(line2.times(QBI_RATE))
-      : roundDollar(line2.times(QBI_RATE));
+    const line10 = roundDollar(line2.times(QBI_RATE));
 
     let line11: Decimal;
     if (line2.lessThanOrEqualTo(0)) {
@@ -339,8 +328,6 @@ function computePerEntityComponents(
     const line12 = line2.greaterThan(0) ? zeroFloor(line10.minus(line11)) : new Decimal(0);
     const line14 = roundDollar(line12.times(phaseInPercentage));
     const line15 = line10.minus(line14);
-
-    totalGrossQBI = totalGrossQBI.plus(line1);
 
     const biz: Form8995ABusinessResult = {
       name: source.name,
@@ -362,17 +349,16 @@ function computePerEntityComponents(
     };
     businesses.push(biz);
 
-    audit.record("8995-A", `${linePrefix}${source.name}`, `Line 1 QBI`, line1, source.name);
-    audit.record("8995-A", `${linePrefix}${source.name}`, `Line 2 adj QBI`, line2,
-      qualifiedTradeLossNetting ? "Current SSTB qualification before Schedule C loss netting" : `${line1} × ${applicablePct} SSTB%`);
-    audit.record("8995-A", `${linePrefix}${source.name}`, `Line 15 component`, line15,
+    audit.record("8995-A", `biz-${source.name}`, `Line 1 QBI`, line1, source.name);
+    audit.record("8995-A", `biz-${source.name}`, `Line 2 adj QBI`, line2, "Current SSTB qualification before Schedule C loss netting");
+    audit.record("8995-A", `biz-${source.name}`, `Line 15 component`, line15,
       `20%×$${line2} = $${line10}; W2/UBIA limit = $${line9}; excess = $${line12}; phase-in reduction = $${line14}`);
   }
 
   const rawTotal = businesses.reduce((acc, b) => acc.plus(b.line15QBIComponent), new Decimal(0));
   const totalComponent = zeroFloor(rawTotal);
 
-  return { businesses, totalComponent, totalGrossQBI, lossCarryforward: zeroFloor(totalLosses.minus(nettableLoss)) };
+  return { businesses, totalComponent, lossCarryforward: zeroFloor(totalLosses.minus(nettableLoss)) };
 }
 
 export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
@@ -419,41 +405,42 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   const priorLoss = input.priorYearQBILoss ?? new Decimal(0);
   const partI = computePerEntityComponents(
     effectiveSources, phaseInPercentage, sstbApplicablePercentage,
-    priorLoss, audit, "biz-", true
+    priorLoss, audit
   );
 
   // Line 16: Total QBI component
   audit.record("8995-A", "16", "Total QBI component", partI.totalComponent,
     `Sum of per-business: $${partI.businesses.reduce((a, b) => a.plus(b.line15QBIComponent), new Decimal(0))} (after Schedule C loss netting)`);
 
-  // ── REIT and PTP (Lines 17-32) ──────────────────────────────────────
+  // Signed PTP amounts get the SSTB percentage, then net with REIT dividends and the separate prior loss.
+  const zero = new Decimal(0);
+  const currentReitDividends = input.qualifiedReitDividends ?? zero;
+  const qualifiedReitDividends = roundDollar(currentReitDividends);
+  const ptpBusinesses = (input.ptpSources ?? []).map((source): Form8995ABusinessResult => {
+    const qualified = source.qbi.times(source.isSST ? sstbApplicablePercentage : 1);
+    const beforeNetting = roundDollar(qualified.times(QBI_RATE));
+    audit.record("8995-A", `ptp-${source.name}`, "Qualified current PTP income or loss", qualified, "Current signed amount after any SSTB applicable percentage");
+    return {
+      name: source.name, isSST: source.isSST,
+      line1QBI: source.qbi, line2AdjustedQBI: qualified,
+      line3W2Wages: roundDollar(source.w2Wages), line4AdjustedW2: zero,
+      line5UBIA: roundDollar(source.ubia), line6AdjustedUBIA: zero,
+      line7FiftyPercentW2: zero, line8TwentyFivePlusTwoPointFive: zero, line9W2UBIALimit: zero,
+      line10TwentyPercentQBI: beforeNetting, line11LesserOfLimitOrQBI: beforeNetting,
+      line12Excess: zero, line14PhaseInReduction: zero, line15QBIComponent: beforeNetting,
+    };
+  });
+  const currentReitPtp = ptpBusinesses.reduce((total, source) => total.plus(source.line2AdjustedQBI), currentReitDividends);
+  const { reitPtpAmount, priorYearReitPtpLoss, netReitPtpAmount, reitPTPComponent, reitPtpLossCarryforward } =
+    calculateReitPtpComponent(currentReitPtp, input.priorYearReitPtpLoss);
+  audit.record("8995-A", "28", "Current qualified REIT dividends and PTP income or loss", reitPtpAmount, "Signed aggregate before the separate prior loss");
+  audit.record("8995-A", "29", "Prior qualified REIT and PTP loss", priorYearReitPtpLoss, "Separate qualified loss from the preceding return");
+  audit.record("8995-A", "30", "Total qualified REIT dividends and PTP income", zeroFloor(netReitPtpAmount), "Current amounts less the separate prior loss, with a zero floor");
+  audit.record("8995-A", "31", "REIT and PTP component", reitPTPComponent, "20% of the nonnegative combined amount");
 
-  // Line 17: Qualified REIT dividends — flat 20%, no W-2/UBIA limit per IRC §199A(b)(3)
-  const qualifiedReitDividends = roundDollar(input.qualifiedReitDividends ?? new Decimal(0));
-  const reitComponent = qualifiedReitDividends.greaterThan(0)
-    ? roundDollar(qualifiedReitDividends.times(QBI_RATE))
-    : new Decimal(0);
-  audit.record("8995-A", "17", "Qualified REIT dividends", qualifiedReitDividends,
-    "1099-DIV Box 5 + K-1 Section 199A REIT dividends (no W-2/UBIA limitation)");
-
-  // Lines 18-31: Per-PTP computation (same W-2/UBIA/SSTB treatment as Part I)
-  const ptpSources = input.ptpSources ?? [];
-  let ptpBusinesses: Form8995ABusinessResult[] = [];
-  let ptpComponent = new Decimal(0);
-  if (ptpSources.length > 0) {
-    const ptpResult = computePerEntityComponents(
-      ptpSources, phaseInPercentage, sstbApplicablePercentage,
-      new Decimal(0), // PTP prior loss is handled separately from trade/business QBI
-      audit, "ptp-", false
-    );
-    ptpBusinesses = ptpResult.businesses;
-    ptpComponent = ptpResult.totalComponent;
-  }
-
-  // Line 32: Total REIT and PTP component
-  const reitPTPComponent = zeroFloor(reitComponent.plus(ptpComponent));
-  audit.record("8995-A", "32", "Total REIT and PTP component", reitPTPComponent,
-    `$${reitComponent} REIT component (20% of $${qualifiedReitDividends}) + $${ptpComponent} PTP component`);
+  const combinedComponent = partI.totalComponent.plus(reitPTPComponent);
+  audit.record("8995-A", "32", "Combined QBI, REIT, and PTP", combinedComponent,
+    `$${partI.totalComponent} QBI component + $${reitPTPComponent} REIT/PTP component`);
 
   // Line 33: Taxable income before QBI
   audit.record("8995-A", "33", "Taxable income before QBI", taxableIncome,
@@ -464,16 +451,10 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   audit.record("8995-A", "34", "Net capital gain", netCapitalGainAmount,
     `max(0, ${input.netCapitalGain}) + $${input.qualifiedDividends} qual div`);
 
-  // Line 35: Income limitation = 20% of (taxable income - net capital gain)
   const incomeBase = zeroFloor(taxableIncome.minus(netCapitalGainAmount));
   const incomeLimitation = roundDollar(incomeBase.times(QBI_RATE));
-  audit.record("8995-A", "35", "Income limitation", incomeLimitation,
-    `max(0, ${taxableIncome} - ${netCapitalGainAmount}) × 20%`);
-
-  // Line 36: Combined QBI + REIT/PTP
-  const combinedComponent = partI.totalComponent.plus(reitPTPComponent);
-  audit.record("8995-A", "36", "Combined QBI, REIT, and PTP", combinedComponent,
-    `$${partI.totalComponent} QBI component + $${reitPTPComponent} REIT/PTP component`);
+  audit.record("8995-A", "35", "Taxable income less net capital gain", incomeBase, `max(0, ${taxableIncome} - ${netCapitalGainAmount})`);
+  audit.record("8995-A", "36", "Income limitation", incomeLimitation, `$${incomeBase} × 20%`);
 
   // ── Schedule D: Patron Reduction ────────────────────────────────────
   const patronageSources = input.patronageSources ?? [];
@@ -546,8 +527,8 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
 
   // Carry only the qualified loss remaining after Schedule A then Schedule C.
   const qbiLossCarryforward = partI.lossCarryforward;
-  audit.record("8995-A", "40", "QBI loss carryforward", qbiLossCarryforward,
-    "Actual qualified losses remaining after Schedule C allocation");
+  audit.record("8995-A", input.taxYear === 2026 ? "42" : "40", "Qualified REIT and PTP loss carryforward", reitPtpLossCarryforward,
+    "The negative combined balance carries to the next return separately from trade or business QBI");
 
   return {
     businesses: partI.businesses,
@@ -556,6 +537,10 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
     patronageResults,
     totalQBIComponent: partI.totalComponent,
     qualifiedReitDividends,
+    reitPtpAmount,
+    priorYearReitPtpLoss,
+    netReitPtpAmount,
+    reitPtpLossCarryforward,
     reitPTPComponent,
     taxableIncomeBeforeQBI: taxableIncome,
     netCapitalGainAmount,

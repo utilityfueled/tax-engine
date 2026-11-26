@@ -9,6 +9,7 @@
 
 import Decimal from "decimal.js";
 import { calculateQBIMinimumDeduction } from "./qbi-minimum-deduction.js";
+import { calculateReitPtpComponent } from "../qbi-reit-ptp.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { zeroFloor, min, sum, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -29,6 +30,8 @@ export interface Form8995Input {
   qualifiedReitDividends?: Decimal;
   /** Qualified PTP income or loss (K-1 Section 199A statement) */
   qualifiedPTPIncome?: Decimal;
+  /** Separate prior qualified REIT/PTP loss, as a positive magnitude. */
+  priorYearReitPtpLoss?: Decimal;
   /** Prior year QBI loss carryforward (positive number representing loss) */
   priorYearQBILoss?: Decimal;
   /** Taxable income before QBI deduction (AGI - standard/itemized) */
@@ -48,6 +51,9 @@ export interface Form8995Result {
   qbiComponent: Decimal;
   /** Line 8: Qualified REIT dividends + qualified PTP income */
   reitPTPAmount: Decimal;
+  priorYearReitPtpLoss: Decimal;
+  netReitPtpAmount: Decimal;
+  reitPtpLossCarryforward: Decimal;
   /** Line 9: REIT/PTP component (20% of Line 8, floor 0) */
   reitPTPComponent: Decimal;
   /** Line 10: Combined QBI + REIT/PTP component */
@@ -99,16 +105,17 @@ export function calculateForm8995(input: Form8995Input): Form8995Result {
   // Line 8: Qualified REIT dividends + qualified PTP income
   const reitDividends = input.qualifiedReitDividends ?? new Decimal(0);
   const ptpIncome = input.qualifiedPTPIncome ?? new Decimal(0);
-  const reitPTPAmount = roundDollar(sum(reitDividends, ptpIncome));
+  const { reitPtpAmount: reitPTPAmount, priorYearReitPtpLoss, netReitPtpAmount,
+    reitPTPComponent, reitPtpLossCarryforward } = calculateReitPtpComponent(sum(reitDividends, ptpIncome), input.priorYearReitPtpLoss);
   audit.record("Form 8995", "8", "Qualified REIT dividends and PTP income", reitPTPAmount,
     `$${reitDividends} REIT dividends + $${ptpIncome} PTP income`);
+  audit.record("Form 8995", "reit-ptp-prior-loss", "Prior qualified REIT and PTP loss", priorYearReitPtpLoss,
+    "Separate qualified loss from the preceding return");
 
-  // Line 9: REIT/PTP component = 20% of Line 8 (floor at 0)
-  const reitPTPComponent = reitPTPAmount.greaterThan(0)
-    ? roundDollar(reitPTPAmount.times(QBI_RATE))
-    : new Decimal(0);
   audit.record("Form 8995", "9", "REIT and PTP component (20%)", reitPTPComponent,
-    `max(0, ${reitPTPAmount} × 20%)`);
+    `max(0, ${netReitPtpAmount}) × 20% after the separate prior loss`);
+  audit.record("Form 8995", "reit-ptp-loss-carryforward", "Qualified REIT and PTP loss carryforward", reitPtpLossCarryforward,
+    "The excess of the separately stated loss over current qualified REIT and PTP income carries to the next return");
 
   // Line 10: Combined QBI + REIT/PTP component
   const combinedComponent = qbiComponent.plus(reitPTPComponent);
@@ -150,7 +157,10 @@ export function calculateForm8995(input: Form8995Input): Form8995Result {
     totalQBI,
     qbiComponent,
     reitPTPAmount,
+    priorYearReitPtpLoss,
+    netReitPtpAmount,
     reitPTPComponent,
+    reitPtpLossCarryforward,
     combinedComponent,
     taxableIncomeBeforeQBI,
     netCapitalGainAmount,
