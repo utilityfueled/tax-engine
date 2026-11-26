@@ -2,7 +2,8 @@
   "resume": {
     "asOf": "2026-11-26",
     "branch": "main",
-    "applicationCommit": "3014f75a12ddf42c3fbcd50d0f64f02a2606b80e",
+    "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
+    "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov26SourcesAndOfflineBilling",
     "combinedHsaOhioAiEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
@@ -100,7 +101,7 @@
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
       "Verify latest exact main Linux CI, Web and Docker jobs. Strict container browser results, recovery and rollback must be verified before release.",
-      "See the November 26 exact local check receipts and separate focused follow-up for 3014f75a1. Earlier strict AMD64 and ARM64 timeouts remain recorded.",
+      "See the November 26 exact application verification for 827f467e2 and retained strict AMD64 and ARM64 timing failures. The strict school markers are wired and await the current exact Linux runs.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -108,6 +109,127 @@
     ]
   },
   "activeContinuation": {
+    "nov26OhioUnemploymentEducatorHoursAndForm4137": {
+      "applicationCommit": "b9a891406b095e50b31fa63855b817760c2b2b79",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-tax-sources-and-strict-linux-timing",
+      "pushedMain": true,
+      "productionRecords": "Canceled for each of the six package commits",
+      "packageChecks": "Each exact archive passed inventory, spec references, root and web type checks, scoped lint, 2073 browser audit bindings and 56 timing controls. Independent engineering review only.",
+      "ohioUnemployment": {
+        "commit": "8339d514faea428f886f9098c9c7496b104279a7",
+        "exactFocusedTests": 93,
+        "relatedOhioTests": 2520,
+        "fixtureFederalAndOhioAgi": "51000",
+        "fixtureOhioTax": "959",
+        "fixtureOhioNonresidentCredit": "0",
+        "fixtureRefund": "41",
+        "authority": "https://codes.ohio.gov/ohio-revised-code/section-5747.20/3-23-2022"
+      },
+      "educatorHours": {
+        "commit": "95cf045919126e128086c23c08f042a170bc9c81",
+        "exactFocusedTests": 11,
+        "relatedTests": 54,
+        "fixtureSingleRecordHours": "450.25",
+        "fixtureMinimumHours": "900",
+        "authority": "https://uscode.house.gov/us/usc/119-120/t26/s62/"
+      },
+      "form4137": {
+        "commit": "b9a891406b095e50b31fa63855b817760c2b2b79",
+        "exactFocusedTests": 38,
+        "fixtureNoncashReportedAsIncome": "275.50",
+        "fixtureTotalUnreportedTipIncome": "2293.50",
+        "fixturePayrollTax": "48",
+        "identicalReopenedTextFields": 34,
+        "renderedPagesByteIdentical": 2,
+        "authority": "https://www.irs.gov/pub/irs-pdf/f4137.pdf"
+      },
+      "githubRunsAtPush": {
+        "ci": 45766750599,
+        "docker": 45766750566,
+        "web": 45766750691
+      },
+      "combinedVerification": {
+        "commit": "b9a891406b095e50b31fa63855b817760c2b2b79",
+        "trackedBlobsMatched": 6704,
+        "checksPassed": 11,
+        "unitTestsPassed": 30745,
+        "unitTestsSkipped": 81,
+        "branchCoveragePercent": 88.53,
+        "branchCoverageRequiredPercent": 85,
+        "unitLogSha256": "eb8995ddb4bfd3e68f4b078547557ed95fe3a715c22104d618b5af3d494c1579",
+        "coverageLogSha256": "c5c9c29a0fc94ec71ee316c116bdecb1cb16422c97482c5cbd24cd9240698d35",
+        "browser": {
+          "cases": 659,
+          "passed": 654,
+          "failed": 0,
+          "originalSkips": 5,
+          "batches": 9,
+          "ownedServerClosed": true,
+          "logSha256": "b15276e2b86f8b8ba0fe2cec6f0cb31bfdf2612b1de0dd8243a61896a9078d21"
+        },
+        "pending": []
+      },
+      "strictOhioTiming": {
+        "commit": "2608b37bf150ad8e67eca9b70dcaa70d1b8074f3",
+        "exactNodeControlsPassed": 57,
+        "browserAuditBindingsMatched": 2073,
+        "comparableListedCases": 659,
+        "comparableBatches": 9,
+        "webRun": 45767986819,
+        "actualStrictCapture": "Pending"
+      },
+      "guidedActualDonationDate": {
+        "commit": "8cfa1fe81914d60d1a94e582f01865d23b7ac3d1",
+        "exactGuidedTestsPassed": 2244,
+        "exactGuidedTestFilesPassed": 281,
+        "trackedBlobsMatched": 6704,
+        "source": "https://www.irs.gov/publications/p526",
+        "separateEngineeringEvidence": "Compared the same UTC instant in UTC+14 and UTC; checked historical 2025, invalid date, itemized and canonical behavior."
+      },
+      "paTexasMove": {
+        "commit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
+        "exactFocusedTestsPassed": 165,
+        "widerPaTestsPassed": 2621,
+        "trackedBlobsMatched": 6704,
+        "fixturePaTaxableWages": "75000",
+        "fixturePaTaxAndWithholding": "2303",
+        "fixtureDue": "0",
+        "source": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency",
+        "guard": "Required Texas outside-abode state, more than 183 PA days, PA wages in both periods and matched actual zero-tax history. Conflict and legacy Florida controls pass."
+      },
+      "latestApplicationVerification": {
+        "commit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
+        "trackedBlobsMatched": 6704,
+        "checksPassed": 11,
+        "unitTestsPassed": 30761,
+        "unitTestsSkipped": 81,
+        "branchCoveragePercent": 88.53,
+        "branchCoverageRequiredPercent": 85,
+        "unitLogSha256": "e8249bbf9824afabc09d92027a43c5e68fd1b79c6a1133c806b8b32df8f17afe",
+        "coverageLogSha256": "d27f4c24088f17979c92b8b03fa4361d994ba14417cefe326c8dcd769cfb64ba",
+        "firstBrowserAttempt": {
+          "status": "Failed before Chromium started",
+          "buildExit": 143,
+          "observedStage": "Next.js Collecting build traces",
+          "buildDeadlineMs": 180000,
+          "logSha256": "15bb1e02d32da8568f2bd609c75351159178a67194f8ec6fc7280a38db2313be"
+        },
+        "browser": {
+          "cases": 659,
+          "passed": 654,
+          "failed": 0,
+          "originalSkips": 5,
+          "batches": 9,
+          "ownedServerClosed": true,
+          "logSha256": "0d02e618b0e868a20c560fad94cae868c85c46bb61acad8c075fffd207e979e6"
+        },
+        "pending": [],
+        "githubRuns": {"ci": 45768501829, "docker": 45768501652, "web": 45768501660},
+        "observedGithubState": "CI, Web and Docker were still queued at 2026-11-26 02:35 America/New_York",
+        "productionRecord": "Canceled"
+      },
+      "releaseState": "Filing, public hosting and promotion remain gated. Hosted cybersecurity rehearsals deferred."
+    },
     "nov26SourcesAndOfflineBilling": {
       "scope": "Private federal PDF and Ohio draft, guided applied-credit reconciliation, offline evaluation accounting and exact local suite. Hosted cybersecurity rehearsals deferred.",
       "applicationCommit": "3014f75a12ddf42c3fbcd50d0f64f02a2606b80e",

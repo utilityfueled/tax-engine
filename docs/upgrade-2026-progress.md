@@ -1,5 +1,113 @@
 # 2026 upgrade implementation evidence
 
+## November 26 tax sources and strict Linux timing
+
+`8339d514f` admits a private full-year Ohio unemployment draft for a single
+resident with verified 2026 Form 1099-G Box 1 payments. A saved and reopened
+example with $50,000 of W-2 wages and $1,000 of unemployment produces
+$51,000 of federal and Ohio AGI, $959 of Ohio tax, zero nonresident credit,
+and a $41 refund after Ohio W-2 withholding. The former full-year rejection
+failed two new tests before the fix. All 34 focused unemployment tests and
+all 2,520 Ohio unit tests passed, including part-year and nonresident
+allocation controls. An exact package archive passed 93 focused tests.
+[Ohio allocation FAQ, question 7](https://tax.ohio.gov/help-center/faqs/income-allocation-of-compensation-wages-stock-options-etc/income-allocation-of-compensation) ·
+[Ohio Revised Code § 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20/3-23-2022).
+
+`95cf04591` holds indistinguishable positive school-hours rows before the
+2026 educator expense calculation. A saved and reopened duplicate of
+450.25 hours had previously appeared to meet the 900-hour minimum for the
+same educator. One actual 450.25-hour record yields zero. The existing
+calculation still accepts distinct assignments and a verified consolidated
+total. The two new regressions failed before the fix. All 54 related tests
+passed, including 11 in the exact package archive.
+[26 U.S.C. § 62(d)(1)](https://uscode.house.gov/us/usc/119-120/t26/s62/) ·
+[IRS Publication 4491](https://www.irs.gov/pub/irs-pdf/p4491.pdf).
+
+`b9a891406` renders the internal Form 4137 worksheet when the taxpayer
+also has verified noncash tips. In the mixed specimen, the $275.50 noncash
+amount contributes only to income on Form 1040 line 1c. All 34 native PDF
+fields and line 13's $48 of tax match the cash-only case. Both pages were
+visually inspected and their 85-DPI renderings matched byte for byte.
+Missing noncash amounts and noncash-only cases remain held. The new test
+failed on the old gate and the exact package archive passed 38 focused
+tests. [Final 2026 Form 4137](https://www.irs.gov/pub/irs-pdf/f4137.pdf) ·
+[IRS Publication 531](https://www.irs.gov/publications/p531).
+
+Independent engineering reviewers checked the three changes. The exact
+package archives passed spec, inventory, root and web type checks, scoped
+lint, 2,073 browser audit bindings and 56 timing controls each. Vercel
+reported a canceled production record for each source commit. Filing and
+external review requirements remain. The current IRS catalog still serves
+2025 Form 1040 instructions, Form 6251 and Form 8960, and Form 172 revised
+December 2024. [Form 1040 instructions](https://www.irs.gov/pub/irs-pdf/i1040gi.pdf) ·
+[Form 6251](https://www.irs.gov/pub/irs-pdf/f6251.pdf) ·
+[Form 8960](https://www.irs.gov/pub/irs-pdf/f8960.pdf) ·
+[Form 172](https://www.irs.gov/pub/irs-pdf/f172.pdf).
+
+The clean `b9a891406` application archive matched all 6,704 tracked blobs.
+All 11 combined checks passed, including 30,745 unit and coverage
+tests with 81 skips, all three type checks, both builds, spec validation,
+inventory and lint. Branch coverage was 88.53% against the 85% gate.
+Local Chromium passed 654 active cases with five existing skips across
+nine batches. The runner confirmed its local server closed.
+The exact [CI](https://github.com/utilityfueled/tax-engine/actions/runs/45766750599),
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45766750691) and
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45766750566)
+runs were awaiting workers at the first check. A later observation found
+CI and Web queued and Docker canceled after the next push.
+
+`2608b37bf` enables five fixed Ohio school-district timing markers in the
+regular strict AMD64 browser job. In the retained failing run, two school
+cases timed out during header entry. Two completed header entry in 5.946
+and 6.793 seconds and timed out later in the unknown-payroll step. The new
+flag records timing in the original scheduled run. An independent review
+compared the Playwright lists with and without the flag and matched all
+659 cases, nine batches and their request bounds. The exact package passed
+57 focused checks and all 2,073 audited source hashes. Deadlines, retries,
+workers and tracing are unchanged. Timing capture on the strict image is
+pending the next [Web run](https://github.com/utilityfueled/tax-engine/actions/runs/45767986819).
+
+`8cfa1fe81` holds a positive 2026 donation dated after the filer's local
+calendar date in the guided actual-payment workflow. The saved gift remains
+available for correction. Both field validation and the guided preview
+reject it, and today's paid gifts are accepted. The frozen-date regression
+failed before the fix. All 2,244 guided tests passed on the exact archive.
+Independent engineering checked the same instant under UTC and UTC+14,
+plus invalid dates and itemized gifts. The canonical calculation and
+standalone source conversion remain deterministic.
+[26 U.S.C. § 170(a)(1)](https://uscode.house.gov/us/usc/119-134/t26/s170/) ·
+[Publication 526, When to Deduct](https://www.irs.gov/publications/p526).
+
+`827f467e2` supports a documented Texas-to-Pennsylvania move in the private
+2026 resident calculation. The method requires more than 183 confirmed PA
+days, original PA wages for each domicile period, matching Texas abode
+records and a complete Texas-only zero-tax history. The saved fixture
+calculates $75,000 in PA taxable wages, $2,303 in tax and withholding, and
+$0 due. Review reproduced and then verified a hold for a conflicting New
+York abode. The ordinary part-year fixture and the legacy Florida fixture
+without a recorded abode state still pass. The guide exposes the actual
+abode state and clears confirmation after an edit. The exact archive
+passed 165 tests and the wider PA check passed 2,621.
+[Pennsylvania residency guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
+[Pennsylvania Tax Reform Code § 301(p)](https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM) ·
+[Texas constitutional amendment](https://capitol.texas.gov/tlodocs/86R/billtext/html/HJ00038F.htm).
+
+The final application archive at `827f467e2` matched all 6,704 tracked
+blobs. Unit and coverage verification each passed 30,761 tests with 81
+planned skips. Branch coverage was 88.53% against the 85% gate. All eight
+build, type, lint and spec checks also passed. Its Vercel production
+record was canceled. GitHub was queued at the first check for exact
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45768501829),
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45768501660) and
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45768501652).
+The first local Chromium attempt stopped before any cases ran. Its Next.js
+build reached trace collection and exited 143 at the unchanged 180-second
+deadline. The retry used the same 6,704 archived source blobs and a fresh
+build directory. It passed 654 active Chromium cases across nine batches,
+with five planned skips and zero failures. The runner confirmed it closed
+its local server. All 11 required local checks passed on `827f467e2`.
+Exact GitHub CI, Web and Docker were still queued at 02:35 Eastern.
+
 ## November 26 Form 7206 and federal payment sources
 
 `eea4b1e03` extends the internal Form 7206 specimen to a taxpayer with

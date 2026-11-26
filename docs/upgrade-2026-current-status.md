@@ -9,6 +9,32 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- All 11 required local checks passed on `827f467e2`. Unit and coverage
+  each passed 30,761 tests, with 88.53% branch coverage. The clean browser
+  retry passed 654 active Chromium cases across nine batches and closed
+  its local server. The first browser attempt reached the build deadline
+  before running cases. Exact GitHub CI, Web and Docker were still queued.
+  [Exact verification](upgrade-2026-progress.md#november-26-tax-sources-and-strict-linux-timing).
+
+- `8339d514f` admits a verified full-year Ohio unemployment draft.
+  `95cf04591` holds indistinguishable educator hour rows before the 2026
+  deduction. `b9a891406` renders the internal Form 4137 candidate when
+  verified noncash tips accompany payroll-taxable cash tips. All three
+  exact focused packages passed and were pushed to `main`. Independent
+  tax review and filing qualification remain open.
+  [Sources and tests](upgrade-2026-progress.md#november-26-tax-sources-and-strict-linux-timing).
+
+- `8cfa1fe81` holds future-dated gifts in the guided 2026 actual-payment
+  flow. All 2,244 guided tests passed. `2608b37bf` enables fixed timing
+  markers for the strict Linux Ohio school-district cases. The exact
+  Linux result is pending.
+  [Guided and timing evidence](upgrade-2026-progress.md#november-26-tax-sources-and-strict-linux-timing).
+
+- `827f467e2` supports a documented Texas-to-Pennsylvania move in the
+  private 2026 resident draft. Conflicting abode records are held. The
+  exact package passed 165 tests and the wider Pennsylvania check passed
+  2,621. [Pennsylvania evidence](upgrade-2026-progress.md#november-26-tax-sources-and-strict-linux-timing).
+
 - All 11 required local checks passed on `3014f75a1`, including 30,739
   unit and coverage tests, 88.53% branch coverage, and 654 active
   Chromium cases. The latest exact remote checks were queued. An earlier
