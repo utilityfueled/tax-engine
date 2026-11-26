@@ -12,6 +12,7 @@ import { Form1099IntSchema, Form1099DivSchema } from "@/models/inputs.js";
 import { childElectionFactErrors, type ChildElectionData } from "./guided-child-election-facts";
 import { qsbsSourceFactErrors, type QsbsSourceData } from "./guided-qsbs-sources";
 import { digitalAssetFactErrors, isStartedDigitalAsset, type DigitalAssetEntryData } from "./guided-digital-asset-facts";
+import { buildGuidedDirectReitDividend } from "./guided-direct-reit-dividend";
 
 export interface InvestmentSourceData extends PrivateActivitySourceData {
   /** Actual original calendar year; omission stays unknown. */
@@ -32,7 +33,8 @@ export const dividendSourceAmounts = [
 export type InvestmentData = { interestEntries: InterestEntryData[]; dividendEntries: DividendEntryData[]; brokerageEntries: BrokerageEntryData[]; oidEntries?: OidEntryData[]; digitalAssetEntries?: DigitalAssetEntryData[]; childElections?: ChildElectionData[]; qofDispositionFacts?: QofDispositionData; scheduleDSources?: ScheduleDSourceData; section1202Sources?: QsbsSourceData };
 
 export function isStartedInvestment(entry: InvestmentSourceData | CapitalGainTransactionData): boolean {
-  return Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
+  return ("directReitDividendFacts" in entry && entry.directReitDividendFacts !== undefined)
+    || Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
 }
 
 function sourceIdentityErrors(entry: InvestmentSourceData, prefix: string, filingStatus: FilingStatus | null | undefined, taxYear: number | null | undefined, errors: Record<string, string>) {
@@ -79,6 +81,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
   Object.assign(errors, scheduleDSourceFactErrors(data, taxYear, filingStatus, personal));
   Object.assign(errors, qsbsSourceFactErrors(data, taxYear, filingStatus, personal));
   const preferenceSourceIds = new Set<string>();
+  const directReitDistributions = new Set<string>();
   for (const [kind, entries] of [["interest", data.interestEntries], ["dividend", data.dividendEntries]] as const) {
     const statementIdentities = new Set<string>();
     entries.forEach((entry, index) => {
@@ -119,6 +122,10 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
       }
       if (kind === "dividend") {
         for (const [part, whole] of [["qualifiedDividends", "ordinaryDividends"], ["section1250Gain", "capitalGainDistributions"], ["collectiblesGain", "capitalGainDistributions"]] as const) if (!errors[`${prefix}-${part}`] && !errors[`${prefix}-${whole}`] && parseGuidedCurrency(values[part]).gt(parseGuidedCurrency(values[whole]))) errors[`${prefix}-${part}`] = "This included distribution cannot exceed its actual source total.";
+        if (!errors[`${prefix}-section199ADividends`] && !errors[`${prefix}-ordinaryDividends`]) {
+          try { buildGuidedDirectReitDividend(entry as DividendEntryData, taxYear, filingStatus === "mfj", directReitDistributions); }
+          catch (error) { errors[`${prefix}-directReitDividendFacts`] = error instanceof Error ? error.message : "Review the original 2026 Box 5 distribution."; }
+        }
       }
     });
   }

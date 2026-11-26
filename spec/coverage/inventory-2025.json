@@ -7464,6 +7464,26 @@
       ]
     },
     {
+      "key": "federal/guided-direct-reit-dividend",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.199A-3",
+      "specPath": "spec/federal/guided-direct-reit-dividend.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-education-distributions",
       "jurisdiction": "federal",
       "taxYear": 2026,

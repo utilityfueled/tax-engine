@@ -1,5 +1,6 @@
 import {buildGuidedGoodwill} from "./guided-goodwill-amortization";
 import { buildGuidedReitPtpLossSource } from "./guided-reit-ptp-loss";
+import { buildGuidedDirectReitDividend } from "./guided-direct-reit-dividend";
 import { buildGuidedCodPrincipalResidence, codPrincipalResidenceFactErrors } from './guided-cod-principal-residence';
 import { buildInterestInputs } from './guided-interest-originals';
 export { buildInterestInputs } from './guided-interest-originals';
@@ -326,24 +327,29 @@ function investmentSourceInput(entry: InvestmentSourceData) {
 }
 
 
-export function buildDividendInputs(entries: DividendEntryData[] | undefined, taxYear?: number | null) {
-  return (entries ?? []).filter(isStartedInvestment).map(entry => ({
-    ...investmentSourceInput(entry), payer: entry.payer.trim(),
-    ordinaryDividends: toOptionalDecimalString(entry.ordinaryDividends),
-    qualifiedDividends: toOptionalDecimalString(entry.qualifiedDividends),
-    totalCapitalGainDistributions: toOptionalDecimalString(entry.capitalGainDistributions),
-    federalWithheld: toOptionalDecimalString(entry.federalWithheld),
-    section199ADividends: toOptionalDecimalString(entry.section199ADividends),
-    foreignTaxPaid: toOptionalDecimalString(entry.foreignTaxPaid),
-    foreignCountry: entry.foreignCountry?.trim() || undefined,
-    section1250Gain: toOptionalDecimalString(entry.section1250Gain),
-    section1202Gain: toOptionalDecimalString(entry.section1202Gain),
-    collectiblesGain: toOptionalDecimalString(entry.collectiblesGain),
-    nondividendDistributions: toOptionalDecimalString(entry.nondividendDistributions),
-    exemptInterestDividends: toOptionalDecimalString(entry.exemptInterestDividends),
-    specifiedPrivateActivityBondInterest: toOptionalDecimalString(entry.specifiedPrivateActivityBondInterest),
-    privateActivityBondFacts: buildGuidedPrivateActivityFacts(entry, entry.specifiedPrivateActivityBondInterest, taxYear),
-  }));
+export function buildDividendInputs(entries: DividendEntryData[] | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null) {
+  const directReitDistributions = new Set<string>();
+  return (entries ?? []).filter(isStartedInvestment).map(entry => {
+    const directReitDividendFacts = buildGuidedDirectReitDividend(entry, taxYear, filingStatus === "mfj", directReitDistributions);
+    return {
+      ...investmentSourceInput(entry), payer: entry.payer.trim(),
+      ordinaryDividends: toOptionalDecimalString(entry.ordinaryDividends),
+      qualifiedDividends: toOptionalDecimalString(entry.qualifiedDividends),
+      totalCapitalGainDistributions: toOptionalDecimalString(entry.capitalGainDistributions),
+      federalWithheld: toOptionalDecimalString(entry.federalWithheld),
+      section199ADividends: toOptionalDecimalString(entry.section199ADividends),
+      ...(directReitDividendFacts ? { directReitDividendFacts } : {}),
+      foreignTaxPaid: toOptionalDecimalString(entry.foreignTaxPaid),
+      foreignCountry: entry.foreignCountry?.trim() || undefined,
+      section1250Gain: toOptionalDecimalString(entry.section1250Gain),
+      section1202Gain: toOptionalDecimalString(entry.section1202Gain),
+      collectiblesGain: toOptionalDecimalString(entry.collectiblesGain),
+      nondividendDistributions: toOptionalDecimalString(entry.nondividendDistributions),
+      exemptInterestDividends: toOptionalDecimalString(entry.exemptInterestDividends),
+      specifiedPrivateActivityBondInterest: toOptionalDecimalString(entry.specifiedPrivateActivityBondInterest),
+      privateActivityBondFacts: buildGuidedPrivateActivityFacts(entry, entry.specifiedPrivateActivityBondInterest, taxYear),
+    };
+  });
 }
 
 export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) {
@@ -917,7 +923,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
 
   const form1099Int = buildInterestInputs(investData?.interestEntries, state.taxYear);
   const form1099OID = buildOidInputs(investData?.oidEntries, segmentation.filingStatus, state.taxYear, stateCode);
-  const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear);
+  const form1099Div = buildDividendInputs(investData?.dividendEntries, state.taxYear, segmentation.filingStatus);
   const form1099B = buildBrokerageInputs(investData?.brokerageEntries);
   const form1099DA = buildDigitalAssetInputs(investData?.digitalAssetEntries, segmentation.filingStatus, state.taxYear, personalInfo, form1099B, { interestEntries: investData?.interestEntries, oidEntries: investData?.oidEntries, filingStatus: segmentation.filingStatus, taxYear: state.taxYear, stateCode });
   const retirementEntries = retirementData?.entries;

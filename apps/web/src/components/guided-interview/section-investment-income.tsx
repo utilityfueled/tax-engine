@@ -9,6 +9,8 @@ import type { QsbsSourceData } from "@/lib/guided-qsbs-sources";
 import type { ScheduleDSourceData } from "@/lib/guided-schedule-d-sources";
 import type { QofDispositionData } from "@/lib/guided-qof-facts";
 import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
+import { showGuidedDirectReitDividend, type GuidedDirectReitDividendFacts } from "@/lib/guided-direct-reit-dividend";
+import { DirectReitDividendDetails } from "./direct-reit-dividend-details";
 
 import { RetroShell } from "@/components/retro-shell";
 import {
@@ -101,13 +103,17 @@ function InterestCard({
 function DividendCard({
   index,
   entry,
+  taxYear,
   onUpdate,
+  onDirectReitChange,
   onRemove,
   removable,
 }: {
   index: number;
   entry: DividendEntryData;
+  taxYear?: number | null;
   onUpdate: (field: keyof DividendEntryData, value: string) => void;
+  onDirectReitChange: (facts: GuidedDirectReitDividendFacts | undefined) => void;
   onRemove: () => void;
   removable: boolean;
 }) {
@@ -173,7 +179,7 @@ function DividendCard({
       <div className="guided-form-grid">
         <CurrencyField
           label="Box 5 — Section 199A dividends"
-          hint="Qualified REIT dividends used for the QBI deduction."
+          hint={taxYear === 2026 ? "Copy Box 5 from your statement. A positive amount needs separate qualification facts." : "Qualified REIT dividends used for the QBI deduction."}
           value={entry.section199ADividends}
           onChange={(v) => onUpdate("section199ADividends", v)}
         />
@@ -186,6 +192,7 @@ function DividendCard({
       </div>
       <DividendSourceDetails data={entry} onChange={onUpdate} />
       <InvestmentSourceIdentity data={entry} onChange={patch => { for (const [field, value] of Object.entries(patch)) onUpdate(field as keyof DividendEntryData, value); }} />
+      {showGuidedDirectReitDividend(entry, taxYear) && <DirectReitDividendDetails data={entry.directReitDividendFacts} onChange={onDirectReitChange} />}
     </div>
   );
 }
@@ -537,7 +544,10 @@ export function SectionInvestmentIncome({
               key={index}
               index={index}
               entry={entry}
+              taxYear={taxYear}
               onUpdate={(field, value) => updateDividend(index, field, value)}
+              onDirectReitChange={directReitDividendFacts => onDividendEntriesChange(currentDividends.map((row, rowIndex) =>
+                rowIndex === index ? { ...row, directReitDividendFacts } : row))}
               onRemove={() => removeDividend(index)}
               removable={currentDividends.length > 1}
             />
