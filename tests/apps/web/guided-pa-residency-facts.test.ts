@@ -4,11 +4,11 @@ import { confirmGuidedPAOrdinaryReturnFacts } from "@/lib/guided-pa-ordinary-ret
 import { confirmGuidedPAOrdinaryReturnCompletionSources } from "@/lib/guided-pa-ordinary-return-completion";
 import { buildGuidedStateOriginals } from "@/lib/guided-state-engine-inputs";
 import { confirmGuidedW2StateLocalSources, emptyGuidedW2StateLocalSources } from "@/lib/guided-w2-state-local-facts";
-import { buildGuidedPAOrdinarySourceInput, emptyStateReturnData, startInterview, validateSection, type StateReturnData } from "@/lib/guided-interview-flow";
+import { buildGuidedPAOrdinarySourceInput, emptyStateReturnData, loadGuidedFlowState, saveGuidedFlowState, startInterview, validateSection, type GuidedFlowState, type StateReturnData } from "@/lib/guided-interview-flow";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { calculatePA2026OrdinaryDraft } from "@/engine/state/pa-ordinary-return.js";
-import { pa2026FloridaMoveResidentFixture, pa2026OutboundNonresidentFixture } from "../../fixtures/pa-2026-ordinary-draft.js";
+import { pa2026FloridaMoveResidentFixture, pa2026OrdinaryDraftFixture, pa2026OutboundNonresidentFixture, rebindPA2026Draft } from "../../fixtures/pa-2026-ordinary-draft.js";
 import { paOrdinaryResidencyFixture } from "../../fixtures/pa-residency-sources.js";
 import { completePersonalInfo, completeW2Entry } from "../../guided-interview/complete-facts.js";
 // Spec: spec/state/pa-residency-sources.yaml guide-confirmation.
@@ -34,6 +34,66 @@ it("PA residency guide - actual typed and projected source amounts agree for all
     const { input, sources } = paOrdinaryResidencyFixture(status);
     const confirmed = confirmGuidedPAResidencySources(input, { ...sources, sourceFactsConfirmed: null });
     expect(buildGuidedPAResidencySources(input, confirmed)).toEqual(confirmed);
+  }
+});
+
+const ordinaryResidencyCases = [
+  ["resident", "full-year", "nonresident", "2303"],
+  ["part_year", "part-year", "full-year", "1197"],
+  ["nonresident", "nonresident", "part-year", "276"],
+] as const;
+
+function reopenPennsylvaniaResidencyGuide(guide: GuidedFlowState) {
+  const records = new Map<string, string>();
+  const storage: Storage = {
+    getItem: key => records.get(key) ?? null,
+    setItem: (key, value) => { records.set(key, value); },
+    removeItem: key => { records.delete(key); },
+    clear: () => records.clear(),
+    key: index => [...records.keys()][index] ?? null,
+    get length() { return records.size; },
+  };
+  expect(saveGuidedFlowState(storage, "fictional-pa-ordinary-residency", guide)).toBe(true);
+  const reopened = loadGuidedFlowState(storage, "fictional-pa-ordinary-residency");
+  if (!reopened) throw new Error("Fictional saved Pennsylvania residency guide did not reopen");
+  return reopened;
+}
+
+it.each(ordinaryResidencyCases)("PA residency guide rejects contradictory 2026 declarations for %s on confirmation and saved replay", (status, _matching, declared) => {
+  const f = pa2026OrdinaryDraftFixture(status);
+  f.input.paResidencySources = confirmGuidedPAResidencySources(f.input, { ...f.input.paResidencySources, sourceFactsConfirmed: null });
+  f.input.taxpayer.stateResidency = declared;
+  rebindPA2026Draft(f);
+
+  const guide = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "PA" }, 2026);
+  guide.sectionData["personal-info"] = { ...completePersonalInfo, stateResidency: declared };
+  guide.sectionData["state-return"] = { ...emptyStateReturnData, paResidencySources: f.input.paResidencySources,
+    paOrdinaryReturnFacts: f.facts, paOrdinaryReturnCompletionSources: f.sources };
+  const reopened = reopenPennsylvaniaResidencyGuide(guide);
+  expect(reopened.sectionData["personal-info"]?.stateResidency).toBe(declared);
+  expect(reopened.sectionData["state-return"]?.paResidencySources?.sourceFactsConfirmed).toBe(true);
+  const conflict = /declared Pennsylvania residency conflicts with the confirmed domicile, abode and presence records/i;
+  expect.soft(() => confirmGuidedPAResidencySources(f.input, f.input.paResidencySources)).toThrow(conflict);
+  expect.soft(() => buildGuidedStateOriginals(f.input, reopened)).toThrow(conflict);
+
+  reopened.segmentation.stateCode = "NY";
+  expect(buildGuidedStateOriginals(f.input, reopened)).toBe(f.input);
+});
+
+it.each(ordinaryResidencyCases)("PA residency guide preserves matching and omitted 2026 declarations for %s", (status, matching, _conflicting, tax) => {
+  for (const declared of [matching, undefined]) {
+    const f = pa2026OrdinaryDraftFixture(status);
+    f.input.taxpayer.stateResidency = declared;
+    f.input.paResidencySources = confirmGuidedPAResidencySources(f.input, { ...f.input.paResidencySources, sourceFactsConfirmed: null });
+    rebindPA2026Draft(f);
+    const guide = startInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "PA" }, 2026);
+    guide.sectionData["state-return"] = { ...emptyStateReturnData, paResidencySources: f.input.paResidencySources,
+      paOrdinaryReturnFacts: f.facts, paOrdinaryReturnCompletionSources: f.sources };
+    const actual = buildGuidedStateOriginals(f.input, reopenPennsylvaniaResidencyGuide(guide));
+    const result = calculatePA2026OrdinaryDraft(actual, actual.paOrdinaryReturnFacts, actual.paOrdinaryReturnCompletionSources);
+    expect(result.pa.residencyStatus).toBe(status);
+    expect(result.pa.pa40.taxLiability.toFixed()).toBe(tax);
+    expect(result.readiness).toMatchObject({ filingEligible: false, fullFederalCalculated: false });
   }
 });
 

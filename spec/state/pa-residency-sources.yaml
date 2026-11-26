@@ -141,6 +141,18 @@ lines:
       rejects stale snapshots until actual reconfirmation. No public export
       fallback or arbitrary caller-provided digest qualifies the source packet.
     testRef: "tests/apps/web/guided-pa-residency-facts.test.ts::PA residency guide - binds actual originals and resets source confirmation"
+  - line: "guide-declared-residency-2026"
+    description: "Reconcile the declared residency of the selected Pennsylvania return with the ordinary original records"
+    irsRef: "PA Tax Reform Code §301(p): https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM#19710002u301s; PA Department of Revenue Determining Residency: https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency"
+    formula: |
+      A supplied 2026 Pennsylvania full-year, part-year or nonresident
+      declaration must agree with the residency derived from confirmed domicile,
+      permanent abode and physical-presence records. Hold conflicts during both
+      confirmation and saved replay without rewriting either answer. Preserve
+      legacy omission when the independent records establish residency. The
+      check applies to guided Pennsylvania sources for the selected Pennsylvania
+      return and retains existing special-method and filing gates.
+    testRef: "tests/apps/web/guided-pa-residency-facts.test.ts::PA residency guide rejects contradictory 2026 declarations for %s on confirmation and saved replay"
   - line: "guide-ui"
     description: "Actual controls collect residency, payroll and dated bank credits"
     formula: "Unknown raw fields remain blank; only explicit user action confirms originals; removal preserves unrelated draft facts."

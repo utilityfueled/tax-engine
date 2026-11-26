@@ -37,6 +37,16 @@ function normalizeNrk1Amount(value: string): string {
   return value.trim() === "" ? "" : parseGuidedCurrency(value).toFixed();
 }
 
+const paResidencyDeclarations = { resident: "full-year", part_year: "part-year", nonresident: "nonresident" } as const;
+
+function validateGuidedPennsylvaniaResidency(input: TaxYearInput, sources: PAResidencySources): void {
+  const { residencyStatus } = calculatePAResidencySources(input, sources);
+  const { taxYear, stateResidency } = input.taxpayer;
+  if (taxYear === 2026 && stateResidency !== undefined && stateResidency !== paResidencyDeclarations[residencyStatus]) {
+    throw new Error("The declared Pennsylvania residency conflicts with the confirmed domicile, abode and presence records. Reconcile both answers before continuing.");
+  }
+}
+
 /** Only an explicit user confirmation may replace the privately retained originals. */
 export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unknown): PAResidencySources {
   const data = PAResidencySourcesSchema.parse(draft);
@@ -84,13 +94,13 @@ export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unkn
     ...(data.dividends===undefined?{}:{dividends:data.dividends.map(row=>({...row,original:row.originalIndex===null?undefined:structuredClone(input.form1099Div[row.originalIndex])}))}),
     ...(data.businesses===undefined?{}:{businesses:data.businesses.map(row=>({...row,originalScheduleC:input.scheduleC===undefined?undefined:structuredClone(input.scheduleC),necOriginals:row.necOriginals.map(original=>({...original,original:original.originalIndex===null?undefined:structuredClone(input.form1099Nec[original.originalIndex])}))}))}),
   };
-  calculatePAResidencySources(input, candidate);
+  validateGuidedPennsylvaniaResidency(input, candidate);
   return candidate;
 }
 
 /** Replays actual current originals; an old confirmation never follows source edits automatically. */
 export function buildGuidedPAResidencySources(input: TaxYearInput, draft: unknown): PAResidencySources {
   const data = PAResidencySourcesSchema.parse(draft);
-  calculatePAResidencySources(input, data);
+  validateGuidedPennsylvaniaResidency(input, data);
   return data;
 }
