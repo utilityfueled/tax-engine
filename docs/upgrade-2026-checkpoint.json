@@ -3,10 +3,12 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
-    "latestScopedApplicationCommit": "1a0cd7521a2cfb098227449fa497627c69cce0f4",
+    "latestScopedApplicationCommit": "2aa10e8b15abb88d93e1ab1f878b77e2cfc1e4ec",
     "latestCombinedCandidateCommit": "9ac66331cb2ab1664811d636d1995845fbea941f",
     "energyCarryforwardOptionsEvidenceKey": "activeContinuation.nov26EnergyCarryforwardOptions",
     "aiServiceTierEvidenceKey": "activeContinuation.nov26AiServiceTier",
+    "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
+    "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -140,6 +142,32 @@
     ]
   },
   "activeContinuation": {
+    "nov26OhioCashDividend": {
+      "commit": "2aa10e8b15abb88d93e1ab1f878b77e2cfc1e4ec",
+      "residencyStatuses": ["full_year_resident", "part_year_resident", "nonresident"],
+      "exactScopedTestsPassed": 3727,
+      "validatedSpecLines": 10173,
+      "inventoryPassed": true,
+      "rootAndContractsTypechecksPassed": true,
+      "scopedLintPassed": true,
+      "requiredIndependentTaxReviewComplete": false,
+      "filingQualified": false,
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-ohio-ordinary-cash-dividend-draft"
+    },
+    "nov26PinnedSelfHostSchema": {
+      "commit": "48d6b88bc84e0fc5313216543b488eba596b99d9",
+      "historicalSource": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
+      "qualifiedLocalSchemaSource": "559409490ddad0c5e50980fbfa1bab511c1abe1d",
+      "focusedTestsPassed": 23,
+      "seededRowsPreserved": 3,
+      "freshProcessIdempotencePassed": true,
+      "dumpRestorePassed": true,
+      "ownedCleanupPassed": true,
+      "exactContainerRunQualified": false,
+      "containerCiRun": "https://github.com/utilityfueled/tax-engine/actions/runs/45903718069",
+      "manifestSha256": "ac478f1c1409d93cb3ea98c514894c1b073ab42a6e5fa886898ec5513702b648",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-pinned-self-host-schema-migration"
+    },
     "nov26EnergyCarryforwardOptions": {
       "commit": "1a0cd7521a2cfb098227449fa497627c69cce0f4",
       "exactTestsPassed": 1225,

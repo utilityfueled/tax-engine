@@ -1,5 +1,43 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Ohio ordinary cash dividend draft
+
+`2aa10e8b1` adds private drafts for full-year residents, part-year
+residents and nonresidents. The method ties one original Form 1099-DIV
+and its dated, exact receipts to the same primary owner and complete
+account reference. It holds contradictory domicile on the day of a
+move, incomplete or masked account references, unreconciled cents,
+and unsupported dividend boxes. With $50,000 in wages and $4,000 in
+Box 1a, Ohio dividend allocations are $4,000, $1,000 and $0 across the
+three residency cases. The resulting Ohio income taxes are $1,042,
+$598 and $193. Independent software review found the masked reference
+case, and the final exact archive passed 3,727 tests, root and contracts
+typechecks, scoped lint and validation of 10,173 spec lines. The
+private method still requires independent tax review. Filing remains
+gated. [Ohio Revised Code § 5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Ohio nonresident credit](https://codes.ohio.gov/ohio-revised-code/section-5747.05) ·
+[IRS Form 1099-DIV instructions](https://www.irs.gov/instructions/i1099div).
+
+## November 26 pinned self-host schema migration
+
+`48d6b88bc` tests the previous release's actual schema source in the
+disposable self-host rehearsal. The local ARM64 PostgreSQL 16 run
+seeded three rows with `d32cb8cf3`, applied the candidate schema at
+`559409490` in two fresh processes, and dumped and restored the
+schema. All original row values, the migrated column-name inventory
+and generated workspace revisions survived. The schema and temporary
+files were removed. The candidate schema files are identical between
+the local candidate and the rehearsal implementation commit.
+
+The focused suite passed 23 tests, lint and typecheck. Independent
+review reproduced the Podman image-ID format difference and replayed
+the corrected admission for both image-ID formats. A local connection
+test verified that the new client query timeout lets the pool close.
+This evidence covers the PostgreSQL rehearsal on the host. Current
+container execution remains a separate result. The private V4
+manifest digest is `ac478f1c1409d93cb3ea98c514894c1b073ab42a6e5fa886898ec5513702b648`.
+[GitHub Web CI for the rehearsal commit](https://github.com/utilityfueled/tax-engine/actions/runs/45903718069).
+
 ## November 26 energy carryforward and AI tier reconciliation
 
 `1a0cd7521` reconciles a 2026 Form 5695 worksheet option with the
