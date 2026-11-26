@@ -9,7 +9,17 @@ export function mortgageInsurancePrepaidReturnInput(kind: 'ordinary' | 'reit' | 
     standardDeductionFacts: { primaryBlind: false, spouseBlind: false, primaryCanBeClaimedAsDependent: false, spouseCanBeClaimedAsDependent: false, primaryDeathDate: null, spouseDeathDate: null, dualStatusAlien: false, nonresidentAlien: false, shortTaxYear: false, spouseItemizes: false, claimSpouseAdditionalDeduction: false },
     deductionElection: 'automatic',
     w2s: kind === 'reit' ? [] : [{ taxYear: 2026, accountHolder: 'primary', employer: { name: 'Fictional employer', ein: '00-0000001' }, wages: income, federalWithheld: high ? '250000' : '20000', socialSecurityWages: high ? '184500' : '100000', socialSecurityTips: '0', socialSecurityWithheld: high ? '11439' : '6200', medicareWages: income, medicareWithheld: high ? '10150' : '1450', box10DependentCareBenefits: '0', stateTaxWithheld: '0', stateWages: '0', localWages: '0', localTaxWithheld: '0' }],
-    form1099Div: kind === 'reit' ? [{ taxYear: 2026, accountHolder: 'primary', payer: 'Fictional REIT', ordinaryDividends: income, qualifiedDividends: '0', section199ADividends: income, federalWithheld: '20000' }] : [],
+    form1099Div: kind === 'reit' ? [{
+      taxYear: 2026, accountHolder: 'primary', payer: 'Fictional REIT', accountReference: 'Fictional brokerage account',
+      ordinaryDividends: income, qualifiedDividends: '0', section199ADividends: income, federalWithheld: '20000',
+      directReitDividendFacts: {
+        sourceTaxYear: 2026, sourceAsOfDate: '2026-07-30', sourceReference: 'Fictional dividend notice and lot history',
+        sourceFactsConfirmed: true, securityIdentifier: 'FICTIONAL-REIT', issuerName: 'Fictional REIT',
+        originalBox5Amount: income, acquiredOn: '2026-04-30', exDividendOn: '2026-06-15',
+        paidOn: '2026-06-30', heldThrough: '2026-06-15', positionEnded: true, diminishedRiskDays: 0,
+        relatedPaymentAmount: '0', singleDirectReitDistributionConfirmed: true,
+      },
+    }] : [],
     form1099Int: [], form1099B: [], form1099Nec: [], form1099Misc: [], scheduleK1: [], form1095A: [],
     form1098: [{ sourceId: 'fictional-1098-1', taxYear: 2026, lender: 'Fictional lender', loanAccountReference: 'fictional-account-1', mortgageOriginationDate: '2026-05-15', mortgageInterestReceived: '5000', outstandingMortgagePrincipal: '100000', refundOfOverpaidInterest: '0', mortgageInsurancePremiums: '0', pointsPaid: '0', propertyTax: '20000', mortgageInsuranceQualification: {
       allocationTaxYear: 2026, contractIssueDate: '2026-05-15', qualifiedProvider: true, acquisitionDebt: true, qualifiedResidence: true,
