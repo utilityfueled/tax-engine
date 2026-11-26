@@ -2,7 +2,8 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "68170b276f8f1953c03e415cd78ba8e3011cf1a8",
+    "applicationCommit": "fdc77336004b9edce9d21f03cdac74f8a9933ade",
+    "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
     "latestLocalChecksEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit.fullExact",
@@ -88,6 +89,18 @@
     ]
   },
   "activeContinuation": {
+    "nov25HouseholdUpkeepPrecision": {
+      "commit": "fdc77336004b9edce9d21f03cdac74f8a9933ade",
+      "source": "https://www.irs.gov/publications/p501",
+      "focusedTestsPassed": 32,
+      "browserTimingAndFixtureTestsPassed": 74,
+      "sourceAuditPaths": 2072,
+      "checksPassed": ["typecheck", "typecheck:web", "lint (scoped)", "spec:validate", "spec:inventory:check", "git diff --check", "independent engineering review"],
+      "remoteRuns": {"ci": 45726035562, "web": 45726034975, "docker": 45726035557},
+      "docker": "success",
+      "vercelProductionBuild": "CANCELED",
+      "remaining": "Exact full CI and browser verification, qualified human tax review and final form qualification."
+    },
     "nov25AiResponseReviewCutoff": {
       "implementationCommit": "68170b276f8f1953c03e415cd78ba8e3011cf1a8",
       "scope": "Offline evaluation requires an explicit independent response review timestamp within the inclusive measured result-to-report window, preserving known costs and recorded safety failures.",

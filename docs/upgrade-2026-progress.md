@@ -1,5 +1,20 @@
 # 2026 upgrade implementation evidence
 
+## November 25 exact household upkeep comparison
+
+`fdc773360` preserves all original cents when comparing the household costs
+paid by the taxpayer to one half of the total. The earlier precision rounded
+away a cent in long accepted original amounts. The regression covers one
+cent below, exactly half and one cent above. Independent engineering review,
+32 focused tests, both type checks, lint, spec and inventory validation, the
+2,072-path source audit and 74 browser diagnostic controls passed. The exact
+Docker build passed. Vercel canceled the automatic production build. Full
+CI and browser verification for this revision are pending.
+[IRS household costs worksheet](https://www.irs.gov/publications/p501#en_US_2025_publink1000220787) ·
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45726035562) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45726034975) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45726035557).
+
 ## November 25 dated AI response reviews
 
 `68170b276` counts an independent human response assessment toward qualification

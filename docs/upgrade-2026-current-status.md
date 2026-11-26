@@ -9,6 +9,12 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `fdc773360` compares original household upkeep costs at exact cent
+  precision. The test includes one cent below, at and above half. All
+  32 focused tests and the exact Docker build passed. The full CI
+  and browser runs are pending.
+  [Household upkeep evidence](upgrade-2026-progress.md#november-25-exact-household-upkeep-comparison).
+
 - `68170b276` requires a timed, independent response assessment before an
   AI evaluation can count it toward qualification. The 75 offline cases
   passed. Human reviews and real account-specific evaluation runs are still
