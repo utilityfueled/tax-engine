@@ -1,4 +1,5 @@
 import { isSupportedEngineTaxYear, latestEngineTargetYear, officialSampleDocumentFixtures, type ReturnWorkspaceRecord, type WorkspaceReturnSummaryBlocker } from "@tax-engine/contracts";
+import { currentLocalCivilDate } from "@/utils/civil-date";
 import { getGuidedFlowStorageKey, isSegmentationComplete, parseGuidedFlowState, summarizeFlowCompletion, type GuidedFlowState } from "./guided-interview-flow";
 
 function validYear(value: unknown): value is number {
@@ -61,23 +62,32 @@ function readLocalDraft(storage: Storage, workspaceId: string): string | null {
   try { return storage.getItem(getGuidedFlowStorageKey(workspaceId)); } catch { return null; }
 }
 
+function validationDateKey(): string {
+  // Guided source rules use both the local calendar and UTC.
+  const now = new Date();
+  return `${currentLocalCivilDate(now)}/${now.toISOString().slice(0, 10)}`;
+}
+
 /** Observe only the stock local adapter's initial reconciliation for this screen load. */
 export function createLocalWorkspaceDraftRead(storage: Storage, workspaceId: string) {
-  let initial: { raw: string; workspace: ReturnWorkspaceRecord } | undefined;
+  let initial: { dateKey: string; raw: string; workspace: ReturnWorkspaceRecord } | undefined;
   return {
     reconcileInitial(source: Storage, id: string, workspace: ReturnWorkspaceRecord) {
       const raw = readLocalDraft(source, id);
+      const dateKey = validationDateKey();
       const reconciled = reconcileWorkspaceGuidedState(workspace, parseGuidedFlowState(raw));
       initial = source === storage && id === workspaceId && workspace.id === id && typeof raw === "string" && reconciled !== workspace
-        ? { raw, workspace: reconciled } : undefined;
+        ? { dateKey, raw, workspace: reconciled } : undefined;
       return reconciled;
     },
     reconcileLatest(workspace: ReturnWorkspaceRecord) {
       const prior = initial;
       initial = undefined;
-      // Another tab may replace the draft while the screen awaits the adapter.
+      // The saved draft or the day used by source validation may change during the await.
       const raw = readLocalDraft(storage, workspaceId);
-      if (prior?.workspace === workspace && prior.raw === raw && workspace.id === workspaceId) return workspace;
+      if (prior?.workspace === workspace && prior.raw === raw && workspace.id === workspaceId && prior.dateKey === validationDateKey()) {
+        return workspace;
+      }
       return reconcileWorkspaceGuidedState(workspace, parseGuidedFlowState(raw));
     },
   };

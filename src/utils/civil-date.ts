@@ -5,8 +5,7 @@ export function isActualDate(value: string | undefined): boolean {
 }
 
 /** Use the local calendar when comparing dates reported by the filer. */
-export function currentLocalCivilDate(): string {
-  const now = new Date();
+export function currentLocalCivilDate(now = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${now.getFullYear()}-${month}-${day}`;

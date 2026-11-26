@@ -1,13 +1,19 @@
 // Spec: spec/federal/workspace-guided-year.yaml.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
-import { buildSectionRoute, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState } from "@/lib/guided-interview-flow";
+import { buildSectionRoute, emptyDeductionData, emptyDonationEntry, getGuidedFlowStorageKey, loadGuidedFlowState, saveGuidedFlowState, validateSection } from "@/lib/guided-interview-flow";
 import * as guidedWorkspace from "@/lib/workspace-guided-state";
 import { loadPersistedWorkspace } from "@/lib/workspace-persistence";
 import { createWorkspaceRecord, ensureWorkspace } from "@/lib/workspace-storage";
 import { guidedReciprocalWageFixture } from "../../fixtures/guided-oh-reciprocal-wages-complete";
+import { completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
+import { actualTipW2 } from "../../guided-interview/guided-tip-income-fixtures";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+  vi.unstubAllEnvs();
+});
 
 function setup(initialDraft = true) {
   const id = "local-oh-review";
@@ -74,6 +80,70 @@ describe("saved workspace draft reconciliation", () => {
     expect(saveGuidedFlowState(fixture.storage, fixture.id, { ...fixture.state, taxYear: 2026 })).toBe(true);
     expect(opened.workspace.returnSummary.targetTaxYear).toBe(2025);
     expect(opened.finish().returnSummary.targetTaxYear).toBe(2026);
+  });
+
+  it("revalidates an unchanged draft when a source date becomes current across midnight", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 26, 23, 59));
+    const fixture = setup(false);
+    const { id, key, storage } = fixture;
+    const state = startCompleteInterview({ filingStatus: "mfs", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2026;
+    state.phase = "complete";
+    state.completedSections = buildSectionRoute(state.segmentation).map(section => section.id);
+    const standardFacts = state.sectionData["personal-info"]?.standardDeductionFacts;
+    if (!standardFacts) throw new Error("Expected taxpayer deduction facts");
+    standardFacts.spouseItemizes = true;
+    state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "75000", federalWithheld: "15000" }] };
+    state.sectionData.deductions = {
+      ...emptyDeductionData,
+      method: "nonitemized",
+      gamblingWinnings: "0",
+      nonW2IncomeTaxesDeductedElsewhere: "0",
+      charitableContributions: "100",
+      donationEntries: [{ ...emptyDonationEntry, organization: "Sample charity", type: "cash", cashAmountBasis: "net-contribution",
+        amount: "100", date: "2026-11-27", qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false }],
+    };
+    expect(validateSection(state, "deductions").status).toBe("partial");
+    expect(saveGuidedFlowState(storage, id, state)).toBe(true);
+    const raw = storage.getItem(key);
+    const loaded = await loadForScreen(fixture);
+    const before = loaded.workspace.guidedCompletion?.completedSectionCount;
+    expect(before).toBeTypeOf("number");
+
+    vi.setSystemTime(new Date(2026, 10, 27, 0, 1));
+    expect(storage.getItem(key)).toBe(raw);
+    expect(validateSection(state, "deductions").status).toBe("complete");
+    expect(loaded.finish().guidedCompletion?.completedSectionCount).toBe((before ?? 0) + 1);
+  });
+
+  it("revalidates an unchanged draft when Form 8919 crosses midnight UTC on the same local day", async () => {
+    vi.stubEnv("TZ", "America/New_York");
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-26T23:59:00Z"));
+    const fixture = setup(false);
+    const { id, key, storage } = fixture;
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages"], lifeEvents: ["additional-deductions"], stateCode: null });
+    state.taxYear = 2026;
+    state.phase = "complete";
+    state.completedSections = buildSectionRoute(state.segmentation).map(section => section.id);
+    state.sectionData["income-w2"] = { entries: [{ ...actualTipW2, sourceTaxYear: "2026", wages: "183500", medicareWages: "183500",
+      socialSecurityWages: "183500", socialSecurityTips: "0" }] };
+    state.sectionData["additional-deductions"] = { ...state.sectionData["additional-deductions"],
+      form8919ReasonA: { taxYear: "2026", firmName: "Example Services", employerEin: "65-4321098", determinationDate: "2026-11-27", wages: "1000.25", confirmed: true } };
+    expect(new Date().getDate()).toBe(26);
+    expect(validateSection(state, "additional-deductions").status).toBe("partial");
+    expect(saveGuidedFlowState(storage, id, state)).toBe(true);
+    const raw = storage.getItem(key);
+    const loaded = await loadForScreen(fixture);
+    const before = loaded.workspace.guidedCompletion?.completedSectionCount;
+    expect(before).toBeTypeOf("number");
+
+    vi.setSystemTime(new Date("2026-11-27T00:01:00Z"));
+    expect(new Date().getDate()).toBe(26);
+    expect(storage.getItem(key)).toBe(raw);
+    expect(validateSection(state, "additional-deductions").status).toBe("complete");
+    expect(loaded.finish().guidedCompletion?.completedSectionCount).toBe((before ?? 0) + 1);
   });
 
   it("replays an equal parsed draft when its serialized bytes changed", async () => {
