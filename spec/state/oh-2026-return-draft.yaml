@@ -140,6 +140,42 @@ lines:
     testRef: "tests/engine/state/oh-2026-bank-interest-draft.test.ts::holds incomplete contradictory or unsupported bank evidence (%s)"
     testRefs:
       - "tests/engine/state/oh-2026-bank-interest-draft.test.ts::keeps bank originals out of the wage-only method"
+  - line: "ordinary-cash-dividend"
+    description: "Private 2026 Ohio ordinary cash dividend draft for each verified residency status"
+    formula: >-
+      Bind each residency method to the single primary ordinary employee under
+      65, existing W-2, domicile, withholding-only and other verified ordinary
+      source gates, and one current uncorrected nonvoid Form 1099-DIV. Require
+      matched payer name and TIN, primary recipient identity, a confirmed
+      complete literal account reference and actual original facts for a directly held
+      domestic corporation's ordinary taxable cash distributions. Repeating a
+      masked token or suffix on matching documents cannot prove the full account;
+      ordinary embedded literal X characters remain eligible. Require
+      positive Box 1a and no qualified-dividend subset, other reportable amounts,
+      withholding, nominee, reinvestment or alternative timing or sourcing
+      facts. Require distinct original account receipts with actual dates of
+      payment or availability in 2026 and independently confirm domicile when
+      each credit was available, including any move-date payment. Reconcile
+      their exact sum to Box 1a and the source categories before rounding.
+      Federal and Ohio AGI include all Box 1a cash dividends. Under RC 5747.20(A), (B)(6) and (C), all
+      dividends are Ohio income for residents, none for nonresidents, and only
+      those received on dates of Ohio domicile for part-year residents. Use
+      the existing NRC allocation and credit under RC 5747.05(A) and (C), with
+      no NRC for a resident or Part B for a full-year nonresident. Keep missing,
+      contradicted or stale originals held and preserve all review, form,
+      public and filing gates.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      - "https://www.irs.gov/instructions/i1099div"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+    testRef: "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::allocates verified ordinary cash dividends for %s"
+    testRefs:
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::reconciles exact cents before rounding combined wages and dividends"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds unsupported or contradictory cash dividend facts (%s)"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds repeated masked references on matched dividend originals (%s)"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::accepts matching literal account references containing X characters (%s)"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds changed originals without rebinding and keeps the wage method separate"
   - line: "direct-treasury-coupon"
     description: "Private 2026 ordinary employee draft for one directly held conventional Treasury note or bond coupon"
     formula: "Admit a single primary full-year Ohio resident under 65 who meets existing ordinary original, credit, school and withholding-only gates. Require an explicit private Treasury coupon packet with the actual current, complete, uncorrected nonvoid Form 1099-INT, matched owner, custodian name and TIN, account and year, and a distinct original coupon receipt linked by account and CUSIP to the documented direct U.S. Treasury note or bond. Verify the calendar 2026 coupon date and full positive cash amount against Box 3; Box 3 alone is insufficient. Exclude bills, savings bonds, Treasury funds, indirect holdings, and any premium, accrued interest, discount, basis, election, withholding or other reporting that changes the simple coupon treatment. Reconcile all federal and resident source categories against originals. Federal AGI is rounded ordinary wages plus actual coupon combined before rounding. Deduct the exact federally taxable and Ohio-exempt coupon once under RC5747.01(A)(3) and 31 USC3124(a); Ohio AGI is the remaining ordinary wages rounded at the end. No NRC applies to this full-year household. Keep independent review, final state forms, public routing and filing closed."

@@ -91,26 +91,53 @@ export const ohio2026BankInterestMethodByResidency = {
   nonresident: 'oh-2026-nonresident-bank-interest-employee-draft-v1',
 } as const;
 export const Ohio2026BankInterestMethodSchema = z.enum(ohio2026BankInterestMethodByResidency);
+const currentInvestmentOriginal = {
+  sourceTaxYear: z.literal(2026), sourceReference: reference,
+  payerName: reference, payerTin: z.string().regex(/^\d{2}-?\d{7}$/), accountReference: reference,
+  recipient: z.object({
+    accountHolder: z.literal('primary'), firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/),
+  }).strict(),
+  currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
+  noOtherOriginalReportingConfirmed: z.literal(true),
+};
+const availableInvestmentCredit = z.object({
+  sourceReference: reference, accountReference: reference, creditedOn: date, amount: money,
+  availableOnCreditDateConfirmed: z.literal(true),
+});
 
 /** Current Box 1 and dated credits from one ordinary domestic deposit account. */
 export const Ohio2026BankInterestEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
   methodId: Ohio2026BankInterestMethodSchema,
   bankInterestOriginal: z.object({
-    sourceTaxYear: z.literal(2026), sourceReference: reference,
-    payerName: reference, payerTin: z.string().regex(/^\d{2}-?\d{7}$/), accountReference: reference,
-    recipient: z.object({
-      accountHolder: z.literal('primary'), firstName: reference, lastName: reference, ssn: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/),
-    }).strict(),
-    currentUncorrectedNonvoidOriginalConfirmed: z.literal(true), allOriginalBoxesKnownConfirmed: z.literal(true),
-    noOtherOriginalReportingConfirmed: z.literal(true), cashMethodOrdinaryDomesticDepositConfirmed: z.literal(true),
+    ...currentInvestmentOriginal,
+    cashMethodOrdinaryDomesticDepositConfirmed: z.literal(true),
     completeActualBankCreditsConfirmed: z.literal(true),
-    credits: z.array(z.object({
-      sourceReference: reference, accountReference: reference, creditedOn: date, amount: money,
-      availableOnCreditDateConfirmed: z.literal(true),
-    }).strict()).min(1).max(366),
+    credits: z.array(availableInvestmentCredit.strict()).min(1).max(366),
   }).strict(),
 }).strict();
 export type Ohio2026BankInterestEmployeeSources = z.infer<typeof Ohio2026BankInterestEmployeeSourcesSchema>;
+
+export const ohio2026CashDividendMethodByResidency = {
+  full_year_resident: 'oh-2026-full-year-cash-dividend-employee-draft-v1',
+  part_year_resident: 'oh-2026-part-year-cash-dividend-employee-draft-v1',
+  nonresident: 'oh-2026-nonresident-cash-dividend-employee-draft-v1',
+} as const;
+export const Ohio2026CashDividendMethodSchema = z.enum(ohio2026CashDividendMethodByResidency);
+
+/** Current Box 1a and dated receipts from directly held domestic corporate shares. */
+export const Ohio2026CashDividendEmployeeSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({
+  methodId: Ohio2026CashDividendMethodSchema,
+  cashDividendOriginal: z.object({
+    ...currentInvestmentOriginal,
+    completeAccountReferenceConfirmed: z.literal(true),
+    cashMethodOrdinaryDirectDomesticHoldingConfirmed: z.literal(true),
+    completeActualCashDistributionsConfirmed: z.literal(true),
+    credits: z.array(availableInvestmentCredit.extend({
+      domicileStateAtCredit: Ohio2026OrdinaryStateSchema,
+    }).strict()).min(1).max(366),
+  }).strict(),
+}).strict();
+export type Ohio2026CashDividendEmployeeSources = z.infer<typeof Ohio2026CashDividendEmployeeSourcesSchema>;
 
 /** Separate current documentary method; ordinary packets keep their strict schema. */
 export const Ohio2026PaReciprocalSourcesSchema = Ohio2026OrdinarySourcesSchema.omit({ seniorCreditHistory: true }).extend({

@@ -5,10 +5,11 @@ import Decimal from 'decimal.js';
 import {validateOhio2026ActualBalancePaymentSources} from './oh-2026-payment-source.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
-import { Form1099IntSchema, TaxpayerSchema, W2Schema, StandardDeductionFactsSchema, type TaxYearInput } from '@/models/inputs.js';
+import { Form1099DivSchema, Form1099IntSchema, TaxpayerSchema, W2Schema, StandardDeductionFactsSchema, type TaxYearInput } from '@/models/inputs.js';
 import { OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD, Ohio2026PaPartYearReciprocalSourcesSchema } from '@/models/ohio-2026-part-year-reciprocal-wage-sources.js';
 import {
   Ohio2026BankInterestEmployeeSourcesSchema, ohio2026BankInterestMethodByResidency, type Ohio2026BankInterestEmployeeSources,
+  Ohio2026CashDividendEmployeeSourcesSchema, ohio2026CashDividendMethodByResidency, type Ohio2026CashDividendEmployeeSources,
   Ohio2026OrdinarySourcesSchema, Ohio2026OrdinaryStateSchema, Ohio2026PaReciprocalSourcesSchema,
   Ohio2026TreasuryCouponEmployeeSourcesSchema, Ohio2026UnemploymentEmployeeSourcesSchema, Ohio2026UnemploymentOriginalSchema,
   Ohio2026VaResidentCreditSourcesSchema, type Ohio2026TreasuryCouponEmployeeSources, type Ohio2026UnemploymentEmployeeSources,
@@ -80,8 +81,15 @@ const maskedAccountReference = /(?:(?:^|[\s-])(?:[*•●∙⋅·]+|\.{3,}|…)|
 const accountEndingLabel = /(?:^|\s)(?:(?:ending|ends)\s+in|last\s+(?:four|4)(?:\s+digits)?)[\s:#-]*(?:(?:…|\.{3,})\s*)?\d+$/iu;
 const bareAccountSuffix = /^\d{1,4}$/u;
 
-function isIncompleteInterestAccount(reference: string): boolean {
+function isIncompleteInvestmentAccount(reference: string): boolean {
   return maskedAccountReference.test(reference) || accountEndingLabel.test(reference) || bareAccountSuffix.test(reference);
+}
+
+// Treat standalone trailing mask tokens as abbreviations while preserving Xs inside literal segments.
+const trailingDividendXMask = /(?:^|[\s./_-])x{4,}(?:[\s./_-]+x{4,})*(?:[\s./_-]*\d+(?:[\s./_-]+\d+)*)?$/iu;
+const trailingDividendSymbolMask = /(?:[*•●∙⋅·]+|\.{3,}|…)(?:[\s./_-]*\d+(?:[\s./_-]+\d+)*)?$/u;
+function isIncompleteDividendAccount(reference: string): boolean {
+  return isIncompleteInvestmentAccount(reference) || trailingDividendXMask.test(reference) || trailingDividendSymbolMask.test(reference);
 }
 
 function qualifyTreasuryCoupon(input: TaxYearInput, facts: OhioResidencyFacts, original: Ohio2026TreasuryCouponEmployeeSources['treasuryCouponOriginal']): Decimal {
@@ -105,7 +113,7 @@ function qualifyTreasuryCoupon(input: TaxYearInput, facts: OhioResidencyFacts, o
     fail('actual Form 1099-INT recipient, custodian or account differs');
   if (security.cusip !== receipt.cusip || security.accountReference !== original.accountReference || receipt.accountReference !== original.accountReference)
     fail('actual Treasury security and receipt do not match the custodian account or CUSIP');
-  if (isIncompleteInterestAccount(original.accountReference))
+  if (isIncompleteInvestmentAccount(original.accountReference))
     fail('a stable account reference is required to match the Form 1099-INT, security, and receipt');
   if (new Set([original.sourceReference, security.sourceReference, receipt.sourceReference].map(identity)).size !== 3)
     fail('distinct original Form 1099-INT, security and receipt references required');
@@ -144,7 +152,7 @@ function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts, sou
     || identity(recipient.lastName) !== identity(primary.lastName) || tin(original.payerTin) !== tin(form.payerTin)
     || identity(original.payerName) !== identity(form.payer) || accountReference !== form.accountReference)
     fail('actual Form 1099-INT recipient, bank or account differs');
-  if (isIncompleteInterestAccount(accountReference)) fail('a stable account reference is required to match the Form 1099-INT and bank credits');
+  if (isIncompleteInvestmentAccount(accountReference)) fail('a stable account reference is required to match the Form 1099-INT and bank credits');
   const otherAmounts = [form.earlyWithdrawalPenalty, form.usSavingsBondInterest, form.federalWithheld, form.foreignTaxPaid,
     form.taxExemptInterest, form.privateActivityBondInterest, form.paDirectObligationInterest, form.stateWithheld];
   if (form.foreignCountry !== undefined || form.state !== undefined || form.privateActivityBondFacts !== undefined
@@ -153,25 +161,75 @@ function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts, sou
 
   const box1 = cash(form.interestIncome);
   if (!box1.gt(0)) fail('positive Box 1 ordinary bank interest required');
+  return { box1, residentAmount: reconcileInvestmentCredits(original, owner, box1) };
+}
+
+/** Spec: state/oh-2026-return-draft.yaml#ordinary-cash-dividend. */
+function qualifyCashDividends(input: TaxYearInput, facts: OhioResidencyFacts, source: Ohio2026CashDividendEmployeeSources) {
+  const [owner] = facts.owners;
+  const { cashDividendOriginal: original } = source;
+  if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary')
+    fail('cash dividends require a single primary ordinary employee');
+  if (source.methodId !== ohio2026CashDividendMethodByResidency[owner.status])
+    fail('cash dividend method and confirmed primary domicile differ');
+  if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
+    fail('retained unemployment receipts require their separate method');
+  const rawForm = input.form1099Div?.[0];
+  const parsed = Form1099DivSchema.strict().safeParse(rawForm);
+  if (!Array.isArray(input.form1099Div) || input.form1099Div.length !== 1 || !parsed.success || !rawForm)
+    fail('one current original Form 1099-DIV required');
+  const form = parsed.data;
+  if (form.taxYear !== original.sourceTaxYear || form.accountHolder !== original.recipient.accountHolder
+    || !form.payerTin || !/^\d{2}-?\d{7}$/.test(form.payerTin) || !form.accountReference)
+    fail('current original Form 1099-DIV with payer TIN, recipient and account required');
+  const primary = input.taxpayer.primary;
+  const { recipient, accountReference } = original;
+  if (tin(recipient.ssn) !== tin(primary.ssn) || identity(recipient.firstName) !== identity(primary.firstName)
+    || identity(recipient.lastName) !== identity(primary.lastName) || tin(original.payerTin) !== tin(form.payerTin)
+    || identity(original.payerName) !== identity(form.payer) || accountReference !== form.accountReference)
+    fail('actual Form 1099-DIV recipient, payer or account differs');
+  if (isIncompleteDividendAccount(accountReference)) fail('a stable account reference is required to match the Form 1099-DIV and cash dividend credits');
+  // Require actual known-zero boxes from the bound original before schema defaults.
+  const otherAmounts = [rawForm.qualifiedDividends, rawForm.totalCapitalGainDistributions, rawForm.section1250Gain,
+    rawForm.section1202Gain, rawForm.collectiblesGain, rawForm.nondividendDistributions, rawForm.federalWithheld,
+    rawForm.section199ADividends, rawForm.foreignTaxPaid, rawForm.exemptInterestDividends,
+    rawForm.specifiedPrivateActivityBondInterest, rawForm.stateWithheld];
+  if (form.foreignCountry !== undefined || form.state !== undefined || form.directReitDividendFacts !== undefined
+    || form.privateActivityBondFacts !== undefined || otherAmounts.some(amount => amount === undefined || !cash(amount).isZero())
+    || (form.paExemptInterestDividendAllocation !== undefined && !cash(form.paExemptInterestDividendAllocation).isZero()))
+    fail('other dividend reporting or unknown original boxes require their separate Form 1099-DIV method');
+  const box1a = cash(form.ordinaryDividends);
+  if (!box1a.gt(0)) fail('positive Box 1a ordinary cash dividends required');
+  return { box1a, residentAmount: reconcileInvestmentCredits(original, owner, box1a) };
+}
+
+function reconcileInvestmentCredits(
+  original: Ohio2026BankInterestEmployeeSources['bankInterestOriginal'] | Ohio2026CashDividendEmployeeSources['cashDividendOriginal'],
+  owner: OhioResidencyFacts['owners'][number], expectedBox: Decimal,
+): Decimal {
+  const dividend = 'completeActualCashDistributionsConfirmed' in original;
+  const kind = dividend ? 'cash dividend' : 'bank';
   const references = new Set([identity(original.sourceReference)]);
   let annualAmount = new Decimal(0);
   let residentAmount = new Decimal(0);
   for (const credit of original.credits) {
-    if (credit.accountReference !== accountReference) fail('actual bank credit account differs from Form 1099-INT');
+    if (credit.accountReference !== original.accountReference) fail(`actual ${kind} credit account differs from ${dividend ? 'Form 1099-DIV' : 'Form 1099-INT'}`);
     const reference = identity(credit.sourceReference);
-    if (references.has(reference)) fail('distinct original bank credit references required');
+    if (references.has(reference)) fail(`distinct original ${kind} credit references required`);
     references.add(reference);
     day(credit.creditedOn);
-    if (credit.creditedOn < '2026-01-01' || credit.creditedOn > '2026-12-31') fail('actual bank credit must be in current calendar 2026');
+    if (credit.creditedOn < '2026-01-01' || credit.creditedOn > '2026-12-31') fail(`actual ${kind} credit must be in current calendar 2026`);
     const period = owner.periods.find(row => row.from <= credit.creditedOn && credit.creditedOn <= row.to);
-    if (!period) fail('actual bank credit date must be covered by confirmed domicile');
+    if (!period) fail(`actual ${kind} credit date must be covered by confirmed domicile`);
+    if ('domicileStateAtCredit' in credit && credit.domicileStateAtCredit !== period.domicileState)
+      fail('cash dividend domicile at payment differs from the confirmed timeline');
     const amount = cash(credit.amount);
-    if (!amount.gt(0)) fail('positive actual bank credits required');
+    if (!amount.gt(0)) fail(`positive actual ${kind} credits required`);
     annualAmount = annualAmount.plus(amount);
     if (period.domicileState === 'OH') residentAmount = residentAmount.plus(amount);
   }
-  if (!annualAmount.eq(box1)) fail('actual bank credits do not reconcile to Box 1');
-  return { box1, residentAmount };
+  if (!annualAmount.eq(expectedBox)) fail(`actual ${kind} credits do not reconcile to ${dividend ? 'Box 1a' : 'Box 1'}`);
+  return residentAmount;
 }
 
 interface Projection {
@@ -179,6 +237,7 @@ interface Projection {
   federalAgi: string; reciprocalWageExclusion?: string; residentCreditIncome?: string; residentCreditTaxPaid?: string; withholding: string; eligibleExemptions: number;
   treasuryCoupon?: { deduction: string; ohioAgi: string };
   bankInterestOhioAllocation?: string;
+  cashDividendOhioAllocation?: string;
   partYearReciprocalOhioAgi?: string;
   primaryQualifyingIncome: string; spouseQualifyingIncome?: string;
   seniorCreditEligibleByAge?: true;
@@ -189,7 +248,7 @@ interface Projection {
 export interface Ohio2026OrdinaryContext {
   readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1'
     | 'oh-2026-earned-school-employee-draft-v1' | 'oh-2026-unemployment-employee-draft-v1' | 'oh-2026-treasury-coupon-employee-draft-v1'
-    | Ohio2026BankInterestEmployeeSources['methodId'] | typeof OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD;
+    | Ohio2026BankInterestEmployeeSources['methodId'] | Ohio2026CashDividendEmployeeSources['methodId'] | typeof OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD;
   readonly sourceCommitment: string;
 }
 const contexts = new WeakMap<Ohio2026OrdinaryContext, { currentDigest: string; projection: Projection }>();
@@ -215,6 +274,9 @@ export function calculateOhio2026TreasuryCouponEmployeeSource(input: TaxYearInpu
 export function calculateOhio2026BankInterestEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
   return qualifyEmployee(input, raw, { bankInterest: true });
 }
+export function calculateOhio2026CashDividendEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
+  return qualifyEmployee(input, raw, { cashDividend: true });
+}
 /** Separate admitted method; caller scalars cannot bypass either documentary proof. */
 export function calculateOhio2026PaReciprocalEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
   return qualifyEmployee(input, raw, { reciprocal: calculateOhio2026ReciprocalWageSource(input, raw) });
@@ -234,9 +296,9 @@ export function calculateOhio2026EarnedSchoolEmployeeSource(input:TaxYearInput,r
  const school=calculateOhio2026SchoolDraftSource(input,parsed.data.schoolSources);
  return qualifyEmployee(input,raw,{school});
 }
-function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, residentCredit, school, unemployment, treasuryCoupon, bankInterest }: {
+function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, residentCredit, school, unemployment, treasuryCoupon, bankInterest, cashDividend }: {
   reciprocal?: Ohio2026ReciprocalWageContext; residentCredit?: Ohio2026ResidentCreditSourceContext;
-  school?: Ohio2026SchoolSourceContext; unemployment?: true; treasuryCoupon?: true; bankInterest?: true;
+  school?: Ohio2026SchoolSourceContext; unemployment?: true; treasuryCoupon?: true; bankInterest?: true; cashDividend?: true;
 } = {}): Ohio2026OrdinaryContext {
   const { scheduleBPartThree: _disclosure, ...input } = taxInput;
   const partYearExclusion = reciprocal ? readOhio2026ReciprocalWageSource(reciprocal, input, raw) : undefined;
@@ -247,7 +309,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     : partYearReciprocal ? Ohio2026PaPartYearReciprocalSourcesSchema : reciprocal ? Ohio2026PaReciprocalSourcesSchema
     : residentCredit ? Ohio2026VaResidentCreditSourcesSchema : unemployment ? Ohio2026UnemploymentEmployeeSourcesSchema
     : treasuryCoupon ? Ohio2026TreasuryCouponEmployeeSourcesSchema
-    : bankInterest ? Ohio2026BankInterestEmployeeSourcesSchema : Ohio2026OrdinarySourcesSchema;
+    : bankInterest ? Ohio2026BankInterestEmployeeSourcesSchema : cashDividend ? Ohio2026CashDividendEmployeeSourcesSchema : Ohio2026OrdinarySourcesSchema;
   const parsed = schema.safeParse(raw);
   const resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency);
   const payment = OhioPaymentFactsSchema.safeParse(input.ohioPayments);
@@ -279,6 +341,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   if (seniorCreditEligibleByAge) {
     if (treasuryCoupon) fail('direct Treasury coupon requires an ordinary employee under 65');
     if (bankInterest) fail('bank interest requires an ordinary employee under 65');
+    if (cashDividend) fail('cash dividends require an ordinary employee under 65');
     if (reciprocal || residentCredit || payments.remainingTaxPayment.status !== 'no_remaining_tax') fail('Ohio senior credit requires the ordinary withholding-only method');
     if (!seniorCreditHistory || seniorCreditHistory.length !== holders.length
       || new Set(seniorCreditHistory.map(row => row.accountHolder)).size !== holders.length
@@ -291,6 +354,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const allowed = new Set(['taxpayer', 'w2s', 'standardDeductionFacts', 'ohioResidency', 'ohioPayments']);
   if (unemployment) allowed.add('form1099G');
   if (treasuryCoupon || bankInterest) allowed.add('form1099Int');
+  if (cashDividend) allowed.add('form1099Div');
   for (const [key, value] of Object.entries(input)) {
     if (value === undefined || allowed.has(key)) continue;
     if(school)continue; // The current opaque school proof has independently checked every original key.
@@ -305,8 +369,9 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const unemploymentAmounts = 'unemploymentOriginal' in source ? qualifyUnemployment(input, facts, source.unemploymentOriginal) : undefined;
   const coupon = 'treasuryCouponOriginal' in source ? qualifyTreasuryCoupon(input, facts, source.treasuryCouponOriginal) : undefined;
   const bank = 'bankInterestOriginal' in source ? qualifyBankInterest(input, facts, source) : undefined;
-  const federalInterest = coupon ?? bank?.box1 ?? new Decimal(0);
-  const residentInterest = coupon ?? bank?.residentAmount ?? new Decimal(0);
+  const dividend = 'cashDividendOriginal' in source ? qualifyCashDividends(input, facts, source) : undefined;
+  const federalInterestDividends = coupon ?? bank?.box1 ?? dividend?.box1a ?? new Decimal(0);
+  const residentInterestDividends = coupon ?? bank?.residentAmount ?? dividend?.residentAmount ?? new Decimal(0);
   const wageTotals = { primary: new Decimal(0), spouse: new Decimal(0) };
   const residentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
   const nonresidentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
@@ -351,16 +416,16 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     for (const category of ohioNrcCategories) {
       const row = owner.amounts[category];
       const actualFederal = category === 'wages' ? wageTotals[owner.accountHolder] : category === 'unemployment' ? unemploymentAmounts?.box1 ?? 0
-        : category === 'interestDividends' ? federalInterest : 0;
+        : category === 'interestDividends' ? federalInterestDividends : 0;
       const actualResident = category === 'wages' ? residentWages[owner.accountHolder] : category === 'unemployment' ? unemploymentAmounts?.residentAmount ?? 0
-        : category === 'interestDividends' ? residentInterest : 0;
+        : category === 'interestDividends' ? residentInterestDividends : 0;
       if (!cash(row.federalAmount).eq(actualFederal)
         || !cash(row.residentAmount).eq(actualResident)
         || !cash(row.nonresidentOhioAmount).eq(category === 'wages' ? nonresidentWages[owner.accountHolder] : 0)) fail('current actual source categories and service allocation differ');
     }
   }
   const federalWages = wageTotals.primary.plus(wageTotals.spouse);
-  const federalAgi = roundDollar(federalWages.plus(unemploymentAmounts?.box1 ?? 0).plus(federalInterest));
+  const federalAgi = roundDollar(federalWages.plus(unemploymentAmounts?.box1 ?? 0).plus(federalInterestDividends));
   // Apply the exact statutory subtractions before rounding Ohio AGI.
   const ohioAgi = partYearReciprocal ? roundDollar(federalWages.minus(partYearExclusion))
     : coupon ? roundDollar(federalWages) : federalAgi;
@@ -369,8 +434,8 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   calculateOhioITNRC({ taxYear: 2026, filingStatus, federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts,
     expectedFederalCategories: Object.fromEntries(ohioNrcCategories.map(category => [category,
       category === 'wages' ? roundDollar(federalWages) : category === 'unemployment' ? unemploymentAmounts?.box1 ?? '0'
-        : category === 'interestDividends' ? roundDollar(federalInterest) : '0'])) });
-  if (schema === Ohio2026OrdinarySourcesSchema || partYearReciprocal || unemployment || treasuryCoupon || bankInterest) {
+        : category === 'interestDividends' ? roundDollar(federalInterestDividends) : '0'])) });
+  if (schema === Ohio2026OrdinarySourcesSchema || partYearReciprocal || unemployment || treasuryCoupon || bankInterest || cashDividend) {
     assertOhio2026PrimaryResidencyDeclaration(input.taxpayer, facts);
   }
   const timing = payments.currentTiming;
@@ -380,7 +445,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     || timing.kind === 'filed' && valuationDate > timing.asOfDate || timing.kind === 'expected' && valuationDate < timing.asOfDate) fail('actual timely current filing chronology required');
   const actualBalancePayment = payments.remainingTaxPayment.status === 'actual_payment';
   if (actualBalancePayment) {
-    if (reciprocal || residentCredit || unemployment || treasuryCoupon || bankInterest) fail('actual small balance payment needs the ordinary employee method');
+    if (reciprocal || residentCredit || unemployment || treasuryCoupon || bankInterest || cashDividend) fail('actual small balance payment needs the ordinary employee method');
     validateOhio2026ActualBalancePaymentSources(input);
   } else {
   if (payments.paymentRows.length || payments.priorReturn.status !== 'no_return' || payments.priorCreditCarryforward.status !== 'none' || payments.remainingTaxPayment.status !== 'no_remaining_tax'
@@ -393,6 +458,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     ...(partYearReciprocal ? { partYearReciprocalOhioAgi: ohioAgi.toFixed() } : {}),
     ...(coupon ? { treasuryCoupon: { deduction: coupon.toFixed(), ohioAgi: ohioAgi.toFixed() } } : {}),
     ...(bank ? { bankInterestOhioAllocation: bank.residentAmount.toFixed() } : {}),
+    ...(dividend ? { cashDividendOhioAllocation: dividend.residentAmount.toFixed() } : {}),
     ...(seniorCreditEligibleByAge ? { seniorCreditEligibleByAge: true as const } : {}), primaryQualifyingIncome: wageTotals.primary.toFixed(),
     ...(filingStatus === 'married_filing_jointly' ? { spouseQualifyingIncome: wageTotals.spouse.toFixed() } : {}), residency: structuredClone(facts) } });
   return context;

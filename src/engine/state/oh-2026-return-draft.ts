@@ -1,7 +1,7 @@
 /** Spec: state/oh-2026-return-draft.yaml. Not a qualified final2026 return. */
 import Decimal from 'decimal.js';
 import {calculateOhio2026ActualBalancePayment} from './oh-2026-payment-source.js';
-import { ohio2026BankInterestMethodByResidency, type Ohio2026ActualBalancePaymentProjection } from '@/models/ohio-2026-return-draft.js';
+import { ohio2026BankInterestMethodByResidency, ohio2026CashDividendMethodByResidency, type Ohio2026ActualBalancePaymentProjection } from '@/models/ohio-2026-return-draft.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { OHIO_2026_BASELINE } from '@/models/ohio-2026-baseline.js';
@@ -11,7 +11,7 @@ import { calculateOhio2026Baseline } from './oh-2026-baseline.js';
 import { calculateOhio2026ResidentCredit } from './oh-2026-resident-credit.js';
 import { calculateOhioITNRC } from './oh-it-nrc.js';
 import {
-  calculateOhio2026BankInterestEmployeeSource,
+  calculateOhio2026BankInterestEmployeeSource, calculateOhio2026CashDividendEmployeeSource,
   calculateOhio2026TreasuryCouponEmployeeSource, calculateOhio2026UnemploymentEmployeeSource,
   readOhio2026OrdinarySource, type Ohio2026OrdinaryContext,
 } from './oh-2026-ordinary-source.js';
@@ -59,6 +59,10 @@ export function calculateOhio2026TreasuryCouponReturnDraft(input: TaxYearInput, 
 export function calculateOhio2026BankInterestReturnDraft(input: TaxYearInput, sources: unknown): Ohio2026ReturnDraftResult {
   return calculateOhio2026ReturnDraft(input, sources, calculateOhio2026BankInterestEmployeeSource(input, sources));
 }
+/** Private documentary draft for one actual Form 1099-DIV and its cash receipts. */
+export function calculateOhio2026CashDividendReturnDraft(input: TaxYearInput, sources: unknown): Ohio2026ReturnDraftResult {
+  return calculateOhio2026ReturnDraft(input, sources, calculateOhio2026CashDividendEmployeeSource(input, sources));
+}
 /** Calculate solely from the current opaque source context; caller scalars cannot qualify. */
 export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unknown, context: Ohio2026OrdinaryContext): Ohio2026ReturnDraftResult {
   const actual = readOhio2026OrdinarySource(context, input, sources);
@@ -67,10 +71,13 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   const { partYearReciprocalOhioAgi } = actual;
   const partYearReciprocal = partYearReciprocalOhioAgi !== undefined;
   const unemployment = context.methodId === 'oh-2026-unemployment-employee-draft-v1';
-  const { bankInterestOhioAllocation } = actual;
+  const { bankInterestOhioAllocation, cashDividendOhioAllocation } = actual;
   const bankInterest = bankInterestOhioAllocation !== undefined;
+  const cashDividend = cashDividendOhioAllocation !== undefined;
   const fullYearBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.full_year_resident;
   const nonresidentBankInterest = context.methodId === ohio2026BankInterestMethodByResidency.nonresident;
+  const fullYearCashDividend = context.methodId === ohio2026CashDividendMethodByResidency.full_year_resident;
+  const nonresidentCashDividend = context.methodId === ohio2026CashDividendMethodByResidency.nonresident;
   const treasuryCouponDeduction = actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.deduction) : undefined;
   const ohioAgi = partYearReciprocal ? new Decimal(partYearReciprocalOhioAgi)
     : actual.treasuryCoupon ? new Decimal(actual.treasuryCoupon.ohioAgi) : federalAgi.minus(actual.reciprocalWageExclusion ?? '0');
@@ -88,13 +95,13 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
   // Source admission establishes zero EITC using actual no-child facts and the
   // indexed2026 cutoff, rather than defaulting an unavailable federal result.
   const earnedIncomeCredit = new Decimal(0);
-  // The full-year bank and Treasury methods already reconciled domicile and income.
-  const nrc = (reciprocal && !partYearReciprocal) || actual.treasuryCoupon || fullYearBankInterest
+  // The full-year investment methods already reconciled domicile and income.
+  const nrc = (reciprocal && !partYearReciprocal) || actual.treasuryCoupon || fullYearBankInterest || fullYearCashDividend
     ? { line19: new Decimal(0), line20: new Decimal(0), lines: [] } : calculateOhioITNRC({ taxYear: 2026, filingStatus: actual.filingStatus,
     federalAgi, ohioAgi, taxRemainingBeforeResidencyCredits: baseline.taxAfterJointCredit,
     residencyFacts: actual.residency });
-  // Part B (lines 10–15) applies only to part-year residents in the new bank draft.
-  const nrcLines = nonresidentBankInterest
+  // Part B (lines 10–15) applies only to part-year residents in the investment drafts.
+  const nrcLines = nonresidentBankInterest || nonresidentCashDividend
     ? nrc.lines.filter(({ form, line }) => form !== 'OH-IT-NRC' || !/^1[0-5]$/.test(line))
     : nrc.lines;
   const taxAfterNrc = baseline.taxAfterJointCredit.minus(nrc.line20);
@@ -121,15 +128,19 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
         ? 'All exact reconciled Box 1 bank credits are allocated to Ohio for the full-year resident under RC5747.20(A).'
         : 'All exact reconciled Box 1 bank credits fall outside verified Ohio domicile under RC5747.20(B)(6).');
   }
+  if (cashDividend) audit.record('OH2026 enacted cash dividend draft', 'ohio-ordinary-cash-dividends', 'Ordinary cash dividends allocated to Ohio', new Decimal(cashDividendOhioAllocation),
+    'Sum exact reconciled Box 1a cash distributions received while domiciled in Ohio under RC5747.20(A), (B)(6), and (C).');
   if (actual.seniorCreditEligibleByAge) audit.record('OH2026 enacted ordinary draft', 'senior-credit', 'Senior citizen credit', seniorCitizenCredit,
     'One nonrefundable $50 per return, limited to available tax, if actual MAGI less exemptions is below $100,000; RC5747.055(F), RC5747.98');
   const agiDescription = unemployment ? 'Actual ordinary wages and gross Box 1 unemployment in federal and Ohio AGI'
     : treasuryCouponDeduction ? 'Actual ordinary wages and direct Treasury coupon in federal AGI'
     : bankInterest ? 'Actual ordinary wages and gross Box 1 bank interest in federal and Ohio AGI'
+    : cashDividend ? 'Actual ordinary wages and gross Box 1a cash dividends in federal and Ohio AGI'
     : reciprocal ? 'Actual completed wage-only federal AGI before reciprocal exclusion' : 'Actual completed wage-only federal and Ohio AGI';
   const agiFormula = unemployment ? 'Round the sum of current ordinary W2 wages and gross Form 1099-G Box 1; allocate actual receipts by domicile under RC5747.20'
     : treasuryCouponDeduction ? 'Round the sum of current ordinary W2 wages and the matched direct Treasury coupon in Form 1099-INT Box 3'
     : bankInterest ? 'Round the sum of ordinary W2 wages and matched Form 1099-INT Box 1; allocate actual bank credits by domicile under RC5747.20'
+    : cashDividend ? 'Round the sum of ordinary W2 wages and matched Form 1099-DIV Box 1a; allocate actual cash dividends by domicile under RC5747.20'
     : 'Round sum current source-qualified ordinary W2 wages; no other actual sources admitted';
   for (const [line, label, value, formula] of [
     ['AGI', agiDescription, federalAgi, agiFormula],
@@ -158,6 +169,7 @@ export function calculateOhio2026ReturnDraft(input: TaxYearInput, sources: unkno
         : treasuryCouponDeduction ? 'Single full-year Ohio resident and ordinary employee under 65 with one actual direct Treasury note or bond coupon and its Ohio deduction. No dependents, EITC-qualifying children, other adjustments, or other credit sources.'
         : context.methodId === ohio2026BankInterestMethodByResidency.part_year_resident ? 'Single part-year Ohio resident and ordinary employee under 65 with one actual bank deposit account. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : bankInterest ? 'Single ordinary employee under 65 with documented Ohio residency status and one actual bank deposit account. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
+        : cashDividend ? 'Single ordinary employee under 65 with documented Ohio residency and one ordinary domestic corporate cash dividend original. No dependents, EITC-qualifying children, state adjustments, or other credit sources.'
         : actual.seniorCreditEligibleByAge
         ? 'Finite single/MFJ ordinary employee cohort with confirmed complete Ohio senior credit history; no dependents, EITC-qualifying children, state adjustments or other credit sources.'
         : 'Finite single/MFJ current ordinary employee cohort only; no dependents or EITC-qualifying children, under65 adults, no other state adjustments or credit sources.',
