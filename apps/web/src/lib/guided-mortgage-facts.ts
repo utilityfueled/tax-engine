@@ -26,6 +26,8 @@ export type MortgageSourceData = {
   insurancePrepaid?: GuidedMortgageInsurancePrepaidData;
   sourceTaxYear?: string;
   accountReference?: string;
+  /** Actual Form 1098 Box 11. Undefined is legacy unknown, null is a confirmed blank, and an empty string is an unanswered new entry. */
+  mortgageAcquisitionDate?: string | null;
   accountHolder?: "" | "primary" | "spouse" | "joint";
   propertyAddress?: string;
   propertyUse?: "" | "main-home" | "second-home" | "other";
@@ -78,6 +80,11 @@ export type MortgageSourceData = {
   sourceFactsConfirmed?: boolean | null;
 } & Partial<Record<keyof typeof mortgagePointFacts, boolean | null>>;
 
+export function isEnteredMortgageStatement(entry: MortgageEntryData): boolean {
+  // A new row's unanswered Box 11 marker alone supplies no source fact.
+  return entry.mortgageAcquisitionDate !== "" || Object.values(entry).some(value => value != null && value !== "");
+}
+
 /** Ordinary original debt or actual completed category sources; never infer an average from Box 2. */
 export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: number | null, filingStatus?: FilingStatus | null, sourceWorksheet = false): Record<string, string> {
   const errors: Record<string, string> = {};
@@ -87,6 +94,16 @@ export function mortgageFactErrors(entries: MortgageEntryData[], taxYear?: numbe
   let balancesKnown = true;
   for (const [index, entry] of entries.entries()) {
     const error = (key: string, message: string) => { errors[`mortgage-${index}-${key}`] = message; };
+    if (entry.mortgageAcquisitionDate === "") {
+      error("acquisition-date", "Enter the actual Box 11 acquisition date or confirm that Box 11 is blank on the original statement.");
+    } else if (entry.mortgageAcquisitionDate != null) {
+      const acquisition = entry.mortgageAcquisitionDate;
+      if (!isActualDate(acquisition) || !acquisition.startsWith(`${entry.sourceTaxYear}-`) || acquisition < entry.originationDate) {
+        error("acquisition-date", "Enter the actual Box 11 acquisition date in the statement year, on or after the Box 3 origination date.");
+      } else {
+        error("acquisition-date", "Reconcile the lender transfer using the original statements, the full-year balance for the underlying mortgage, and the interest actually paid to each lender before calculating.");
+      }
+    }
     for (const [field, label] of [["lender", "mortgage lender"], ["accountReference", "loan account reference"], ["propertyAddress", "property securing this mortgage"]] as const) {
       if (!entry[field]?.trim()) error(field, `Enter the actual ${label}.`);
     }

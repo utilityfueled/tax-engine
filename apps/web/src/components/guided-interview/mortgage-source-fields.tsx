@@ -18,6 +18,14 @@ function Text({ label, value, onChange, type = "text" }: { label: string; value:
 export function MortgageSourceFields({ entry, onChange }: { entry: MortgageEntryData; onChange: (change: Partial<MortgageEntryData>) => void }) {
   return <>
     <Text label="Mortgage statement tax year" value={entry.sourceTaxYear} onChange={sourceTaxYear => onChange({ sourceTaxYear })} />
+    <label className="guided-field">
+      <span className="guided-field-label">Box 11 is blank on the original statement</span>
+      <input type="checkbox" checked={entry.mortgageAcquisitionDate === null} onChange={event => onChange({ mortgageAcquisitionDate: event.target.checked ? null : "" })} />
+    </label>
+    {entry.mortgageAcquisitionDate !== null &&
+      <Text label="Actual Box 11 mortgage acquisition date" type="date" value={entry.mortgageAcquisitionDate} onChange={mortgageAcquisitionDate => onChange({ mortgageAcquisitionDate })} />
+    }
+    {entry.mortgageAcquisitionDate && <p className="guided-hint">Keep both lender statements and the transfer records. Reconcile the full-year loan balance and interest paid to each lender before calculating.</p>}
     <Text label="Loan account reference (last four digits or local statement label)" value={entry.accountReference} onChange={accountReference => onChange({ accountReference })} />
     <label className="guided-field"><span className="guided-field-label">Borrowers whose payments this return claims</span><select className="guided-input" value={entry.accountHolder ?? ""} onChange={event => onChange({ accountHolder: event.target.value as MortgageEntryData["accountHolder"] })}><option value="">Choose actual borrower</option><option value="primary">Primary taxpayer</option><option value="spouse">Spouse</option><option value="joint">Both spouses on this joint return</option></select></label>
     <Text label="Address or description of the home securing the loan" value={entry.propertyAddress} onChange={propertyAddress => onChange({ propertyAddress })} />

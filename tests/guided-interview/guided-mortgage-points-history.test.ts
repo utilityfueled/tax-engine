@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { calculateHomeMortgageInterest } from '@/engine/forms/home-mortgage-interest';
 import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
-import { buildGuidedMortgageInputs } from '@/lib/guided-mortgage-worksheet';
+import { buildGuidedMortgageInputs, distinctMortgageLoansConfirmation } from '@/lib/guided-mortgage-worksheet';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { emptyDeductionData, loadGuidedFlowState, saveGuidedFlowState, type MortgageEntryData } from '@/lib/guided-interview-flow';
 import { completeMortgageSource, completeW2Entry, startCompleteInterview } from './complete-facts';
@@ -93,11 +93,14 @@ it('holds a retained original mortgage points balance claimed twice after reopen
     removeItem: (key: string) => saved.delete(key),
   } as Storage;
   const reopen = (second: MortgageEntryData) => {
-    state.sectionData.deductions = { ...deductions, mortgageEntries: [firstLoan, second] };
+    const entries = [firstLoan, second].map(entry => ({ ...entry, mortgageAcquisitionDate: null }));
+    const root = { ...deductions.mortgageWorksheet, distinctMortgageLoansSourceReference: 'Separate signed notes and balances for Loans A and B' };
+    state.sectionData.deductions = { ...deductions, mortgageEntries: entries,
+      mortgageWorksheet: { ...root, distinctMortgageLoansConfirmation: distinctMortgageLoansConfirmation(root, entries) } };
     expect(saveGuidedFlowState(storage, 'fictional-mortgage-points', state)).toBe(true);
     const reopened = loadGuidedFlowState(storage, 'fictional-mortgage-points');
     if (!reopened) throw new Error('Expected the original saved mortgage worksheet.');
-    expect(reopened.sectionData.deductions?.mortgageEntries).toEqual([firstLoan, second]);
+    expect(reopened.sectionData.deductions?.mortgageEntries).toEqual(entries);
     return reopened;
   };
   const reopenAndCalculate = (second: MortgageEntryData) => {
@@ -149,8 +152,11 @@ it('reconciles a saved same-lender refinance with separate old and successor poi
     setItem: (key: string, value: string) => saved.set(key, value),
     removeItem: (key: string) => saved.delete(key),
   } as Storage;
-  const reopen = (entries: MortgageEntryData[]) => {
-    state.sectionData.deductions = { ...deductions, mortgageEntries: entries };
+  const reopen = (loans: MortgageEntryData[]) => {
+    const entries = loans.map(entry => ({ ...entry, mortgageAcquisitionDate: null }));
+    const root = { ...deductions.mortgageWorksheet, distinctMortgageLoansSourceReference: 'Original note, old-loan payoff and separately executed successor note' };
+    state.sectionData.deductions = { ...deductions, mortgageEntries: entries,
+      mortgageWorksheet: { ...root, distinctMortgageLoansConfirmation: distinctMortgageLoansConfirmation(root, entries) } };
     expect(saveGuidedFlowState(storage, 'fictional-refinanced-points', state)).toBe(true);
     const reopened = loadGuidedFlowState(storage, 'fictional-refinanced-points');
     if (!reopened) throw new Error('Expected the saved refinancing worksheet.');

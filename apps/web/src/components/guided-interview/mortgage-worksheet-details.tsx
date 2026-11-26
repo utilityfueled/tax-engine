@@ -1,16 +1,25 @@
 "use client";
 
-import { emptyMortgageWorksheet, type MortgageWorksheetData } from "@/lib/guided-mortgage-worksheet";
+import type { MortgageEntryData } from "@/lib/guided-interview-flow";
+import { distinctMortgageLoansConfirmation, emptyMortgageWorksheet, type MortgageWorksheetData } from "@/lib/guided-mortgage-worksheet";
 import { MortgageRecoveryDetails } from "./mortgage-recovery-details";
 
-export function MortgageWorksheetDetails({ data, onChange }: { data: MortgageWorksheetData | undefined; onChange: (data: MortgageWorksheetData) => void }) {
+export function MortgageWorksheetDetails({ data, entries, onChange }: { data: MortgageWorksheetData | undefined; entries: readonly MortgageEntryData[]; onChange: (data: MortgageWorksheetData) => void }) {
   const current = data ?? emptyMortgageWorksheet;
   const update = (change: Partial<MortgageWorksheetData>) => onChange({ ...current, sourceFactsConfirmed: null, ...change });
+  const separateLoansConfirmation = distinctMortgageLoansConfirmation(current, entries);
+  const separateLoansConfirmed = !!separateLoansConfirmation && current.distinctMortgageLoansConfirmation === separateLoansConfirmation;
   return <fieldset className="guided-fieldset"><legend>Complete home-debt worksheet</legend>
     <p className="guided-hint">Include all debt on your main home and selected second home. Use the actual annual records, even when interest or points are zero.</p>
     <div className="guided-form-grid">
-      <label className="guided-field"><span className="guided-field-label">Home-debt worksheet tax year</span><input className="guided-input" value={current.sourceTaxYear} onChange={event => update({ sourceTaxYear: event.target.value })} /></label>
-      <label className="guided-field"><span className="guided-field-label">Annual home-debt record reference</span><input className="guided-input" value={current.sourceReference} onChange={event => update({ sourceReference: event.target.value })} /></label>
+      <label className="guided-field"><span className="guided-field-label">Home-debt worksheet tax year</span><input className="guided-input" value={current.sourceTaxYear} onChange={event => update({ sourceTaxYear: event.target.value, distinctMortgageLoansConfirmation: null })} /></label>
+      <label className="guided-field"><span className="guided-field-label">Annual home-debt record reference</span><input className="guided-input" value={current.sourceReference} onChange={event => update({ sourceReference: event.target.value, distinctMortgageLoansConfirmation: null })} /></label>
+      {entries.length > 1 && <>
+        <label className="guided-field"><span className="guided-field-label">Original records showing separate mortgage loans</span><input className="guided-input" value={current.distinctMortgageLoansSourceReference ?? ""} onChange={event => update({ distinctMortgageLoansSourceReference: event.target.value, distinctMortgageLoansConfirmation: null })} /></label>
+        <p className="guided-hint">Check Box 11 on each statement and use the original debt records to verify that each statement reports a separate loan. If two lenders reported the same loan, keep both statements for reconciliation.</p>
+        <button type="button" className="utility-button" disabled={!separateLoansConfirmation || separateLoansConfirmed} onClick={() => update({ distinctMortgageLoansConfirmation: separateLoansConfirmation })}>Confirm separate loans from these records</button>
+        {separateLoansConfirmed && <p className="guided-hint" role="status">Separate loans confirmed from the referenced records.</p>}
+      </>}
       {([
         ["allHomeDebtIncluded", "Are all debts on the main and selected second home included?"],
         ["priorYearInterestRecoveriesPresent", "Did you receive a refund or recovery of mortgage interest deducted in an earlier year?"],

@@ -5,8 +5,8 @@ import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { DeductionSourceDetails } from "@/components/guided-interview/deduction-source-details";
 import { buildForm1098Inputs } from "@/lib/guided-interview-bridge";
-import { emptyDeductionData, emptyMortgageEntry, type DeductionData } from "@/lib/guided-interview-flow";
-import { completeMortgageSource, completeMortgageWorksheet } from "../../guided-interview/complete-facts";
+import { emptyDeductionData, loadGuidedFlowState, saveGuidedFlowState, type DeductionData } from "@/lib/guided-interview-flow";
+import { completeMortgageSource, completeMortgageWorksheet, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 it("requires renewed mortgage confirmation and preserves actual insurance allocation without copying Box 5", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -62,11 +62,11 @@ it("requires renewed mortgage confirmation and preserves actual insurance alloca
   } finally { await act(async () => root.unmount()); container.remove(); }
 });
 
-it("collects ordinary purchase-loan and points facts from blank controls and blocks a changed loan classification", async () => {
+it("requires Box 11 on a single newly added mortgage statement", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container);
   const root = createRoot(container);
-  let latest: DeductionData = { ...emptyDeductionData, method: "itemized", mortgageEntries: [{ ...emptyMortgageEntry }] };
+  let latest: DeductionData = { ...emptyDeductionData, method: "itemized" };
   function Harness() { const [data, setData] = useState(latest); return <DeductionSourceDetails data={data} onChange={next => { latest = next; setData(next); }} />; }
   async function change(label: string, value: string) {
     const element = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
@@ -78,7 +78,11 @@ it("collects ordinary purchase-loan and points facts from blank controls and blo
   }
   try {
     await act(async () => root.render(<Harness />));
-    expect(() => buildForm1098Inputs(latest, 2026, "single")).toThrow();
+    const add = [...container.querySelectorAll("button")].find(button => button.textContent === "Add mortgage");
+    if (!add) throw new Error("Expected the Add mortgage control.");
+    await act(async () => add.click());
+    expect(latest.mortgageEntries?.[0]).toMatchObject({ lender: "", mortgageInterest: "", outstandingPrincipal: "", originationDate: "", mortgageAcquisitionDate: "" });
+    expect(buildForm1098Inputs(latest, 2026, "single")).toEqual([]);
     for (const [label, value] of [
       ["Mortgage lender", "Actual Purchase Lender"], ["Home mortgage interest", "100.10"], ["Outstanding mortgage principal (Box 2)", "250000"], ["Mortgage origination date (Box 3)", "2026-02-03"],
       ["Mortgage statement tax year", "2026"], ["Loan account reference (last four digits or local statement label)", "first-statement"], ["Borrowers whose payments this return claims", "primary"], ["Address or description of the home securing the loan", "1 Actual Road, Columbus OH 43215"], ["Actual home use", "main-home"], ["Actual loan type", "original"], ["Actual use of all loan proceeds", "acquisition"], ["Maximum actual loan balance at any time during the tax year", "250000"],
@@ -91,9 +95,108 @@ it("collects ordinary purchase-loan and points facts from blank controls and blo
       ["Qualified real estate taxes actually disbursed by this mortgage account", "0.30"], ["Are these actual qualified tax disbursements, with no escrow deposits or duplicate deductions?", "true"], ["Do current or prepaid mortgage insurance premiums need evaluation for this year?", "false"], ["Have you checked all mortgage source and qualification facts after the last edit?", "true"],
       ["Home-debt worksheet tax year", "2026"], ["Annual home-debt record reference", "Actual closing and annual statements"], ["Are all debts on the main and selected second home included?", "true"], ["Did you receive a refund or recovery of mortgage interest deducted in an earlier year?", "false"], ["Have you confirmed the complete annual home-debt worksheet after the last change?", "true"],
     ]) await change(label, value);
-    expect(buildForm1098Inputs(latest, 2026, "single")[0]).toMatchObject({ lender: "Actual Purchase Lender", mortgageInterestReceived: "100.1", pointsPaid: "20.2", propertyTax: "0.3" });
+    expect(() => buildForm1098Inputs(latest, 2026, "single")).toThrow(/Box 11/i);
+    const box11Blank = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === "Box 11 is blank on the original statement")?.querySelector("input");
+    if (!box11Blank) throw new Error("Expected the explicit blank Box 11 answer.");
+    await act(async () => box11Blank.click());
+    await change("Have you checked all mortgage source and qualification facts after the last edit?", "true");
+    await change("Have you confirmed the complete annual home-debt worksheet after the last change?", "true");
+    expect(buildForm1098Inputs(latest, 2026, "single")[0]).toMatchObject({ lender: "Actual Purchase Lender", mortgageInterestReceived: "100.1", pointsPaid: "20.2", propertyTax: "0.3", mortgageAcquisitionDate: null });
     await change("Actual loan type", "refinance");
     expect(latest.mortgageEntries![0]).toMatchObject({ loanType: "refinance", sourceFactsConfirmed: null });
     expect(() => buildForm1098Inputs(latest, 2026, "single")).toThrow(/refinanc/i);
+    latest = { ...emptyDeductionData, method: "itemized", mortgageInterest: "100" };
+    await act(async () => root.render(<Harness key="legacy-aggregate" />));
+    expect(latest.mortgageEntries).toBeUndefined();
+    await change("Mortgage lender", "First original lender");
+    expect(latest.mortgageEntries?.[0]).toMatchObject({ lender: "First original lender", mortgageInterest: "100", mortgageAcquisitionDate: "" });
   } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+it("keeps Box 11 unknown until answered and preserves a transfer date through reopen", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container);
+  const root = createRoot(container);
+  const state = startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: null });
+  const target = { storageKey: "mortgage-box-11-interaction" };
+  const loan = { ...completeMortgageSource, sourceTaxYear: "2026" };
+  let latest: DeductionData = { ...emptyDeductionData, method: "itemized", mortgageInterest: "200", mortgageWorksheet: { ...completeMortgageWorksheet, sourceTaxYear: "2026" },
+    mortgageEntries: [loan, { ...loan, lender: "Another lender", accountReference: "second account", mortgageAcquisitionDate: null }] };
+  function Harness({ data: initial }: { data: DeductionData }) {
+    const [data, setData] = useState(initial);
+    return <DeductionSourceDetails data={data} onChange={next => { latest = next; setData(next); }} />;
+  }
+  const control = (label: string) => {
+    const result = [...container.querySelectorAll("label")].find(entry => entry.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!result) throw new Error(`Missing control: ${label}`);
+    return result;
+  };
+  async function change(label: string, value: string) {
+    const element = control(label);
+    await act(async () => {
+      const isSelect = element instanceof HTMLSelectElement;
+      const setter = Object.getOwnPropertyDescriptor(isSelect ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set;
+      if (!setter) throw new Error(`Missing value setter: ${label}`);
+      setter.call(element, value);
+      element.dispatchEvent(new Event(isSelect ? "change" : "input", { bubbles: true }));
+    });
+  }
+  function button(label: string) {
+    const result = [...container.querySelectorAll("button")].find(entry => entry.textContent === label);
+    if (!result) throw new Error(`Missing button: ${label}`);
+    return result;
+  }
+  const box = "Box 11 is blank on the original statement";
+  const date = "Actual Box 11 mortgage acquisition date";
+  const confirm = "Have you checked all mortgage source and qualification facts after the last edit?";
+  const confirmWorksheet = "Have you confirmed the complete annual home-debt worksheet after the last change?";
+  const confirmSeparate = "Confirm separate loans from these records";
+  try {
+    await act(async () => root.render(<Harness data={latest} />));
+    expect(control(box)).toMatchObject({ checked: false });
+    expect(control(date).value).toBe("");
+    expect(latest.mortgageEntries?.[0]).toEqual(loan);
+    expect(latest.mortgageEntries?.[0]).not.toHaveProperty("mortgageAcquisitionDate");
+    await change(date, "2026-07-01");
+    state.taxYear = 2026;
+    state.sectionData.deductions = latest;
+    expect(saveGuidedFlowState(window.localStorage, target, state)).toBe(true);
+    const reopened = loadGuidedFlowState(window.localStorage, target)?.sectionData.deductions;
+    if (!reopened) throw new Error("Expected the reopened mortgage deductions.");
+    latest = reopened;
+    await act(async () => root.render(<Harness key="reopened" data={latest} />));
+    expect(control(box)).toMatchObject({ checked: false });
+    expect(control(date).value).toBe("2026-07-01");
+    expect(latest.mortgageEntries?.[0]).toMatchObject({ mortgageAcquisitionDate: "2026-07-01", originationDate: "2020-01-01" });
+    expect(() => buildForm1098Inputs(latest, 2026, "single")).toThrow(/transfer/i);
+    await change("Original records showing separate mortgage loans", "Signed loan notes and matching annual ledgers");
+    expect(button(confirmSeparate).disabled).toBe(true);
+    await act(async () => control(box).click());
+    await act(async () => button(confirmSeparate).click());
+    await change(confirm, "true");
+    await change(confirmWorksheet, "true");
+    expect(buildForm1098Inputs(latest, 2026, "single").map(form => form.mortgageAcquisitionDate)).toEqual([null, null]);
+    const confirmed = latest;
+    for (const [label, changed] of [["Home-debt worksheet tax year", "2025"], ["Annual home-debt record reference", "Different annual ledger"]]) {
+      await act(async () => root.render(<Harness key={label} data={confirmed} />));
+      const originalValue = control(label).value;
+      expect(button(confirmSeparate).disabled).toBe(true);
+      await change(label, changed);
+      await change(label, originalValue);
+      expect.soft(button(confirmSeparate).disabled, label).toBe(false);
+      expect.soft(container.querySelector("[role='status']")?.textContent, label).toBeUndefined();
+      expect(control(confirmWorksheet).value).toBe("");
+    }
+    await act(async () => button("Remove mortgage #2").click());
+    expect(latest.mortgageWorksheet?.distinctMortgageLoansConfirmation).toBeUndefined();
+    latest = confirmed;
+    await act(async () => root.render(<Harness key="confirmed" data={latest} />));
+    await change("Mortgage lender", "Revised lender");
+    expect(latest.mortgageWorksheet?.distinctMortgageLoansConfirmation).toBeUndefined();
+    expect(button(confirmSeparate).disabled).toBe(false);
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+    window.localStorage.removeItem(target.storageKey);
+  }
 });

@@ -120,6 +120,8 @@ test("actual mortgage worksheet survives entry correction and reopening", async 
     ["Was any part of this home or debt used for rental or business purposes?", "false"], ["Do you have a mortgage credit certificate for this loan?", "false"],
     ["Do cooperative, construction, ground-rent, changing-home or other special mortgage rules apply?", "false"],
   ] as const) await page.getByRole("combobox", { name, exact: true }).selectOption(value);
+  const box11Blank = page.getByRole("checkbox", { name: "Box 11 is blank on the original statement", exact: true });
+  await box11Blank.check();
   const confirmLoan = page.getByRole("combobox", { name: "Have you checked all mortgage source and qualification facts after the last edit?", exact: true });
   const confirmWorksheet = page.getByRole("combobox", { name: "Have you confirmed the complete annual home-debt worksheet after the last change?", exact: true });
   await confirmLoan.selectOption("true");
@@ -145,6 +147,7 @@ test("actual mortgage worksheet survives entry correction and reopening", async 
   // Actual average below the debt cap allows this return's $30,000 rounded share.
   await expect(taxable).toContainText("$70,000");
   await page.reload();
+  await expect(box11Blank).toBeChecked();
   await expect(page.getByRole("combobox", { name: "Balance method for the home-debt worksheet", exact: true })).toHaveValue("lender_average");
   await expect(sourceInput("Actual lender-provided annual average loan balance")).toHaveValue("600000");
   await expect(confirmWorksheet).toHaveValue("true");

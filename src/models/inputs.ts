@@ -2798,6 +2798,7 @@ export const Form1098Schema = z.preprocess(value => {
   mortgageInterestReceived: decimal, // Box 1
   outstandingMortgagePrincipal: decimal, // Box 2
   mortgageOriginationDate: z.string().optional(),
+  mortgageAcquisitionDate: z.iso.date().nullable().optional(), // Box 11: lender acquisition date
   refundOfOverpaidInterest: optionalDecimal, // Box 4: prior-year interest recovery
   mortgageInsurancePremiums: optionalDecimal, // Box 5
   mortgageInsuranceQualification: z.object({

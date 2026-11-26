@@ -2931,7 +2931,7 @@ export function updateSectionData(
         ...(charitableCarryoverChanged ? { charitableCarryoverSources: { ...charitableCarryoverChanged, sourceFactsConfirmed: null,
           ...(charitableCarryoverChanged.filingUnitHistory ? { filingUnitHistory: { ...charitableCarryoverChanged.filingUnitHistory, sourceFactsConfirmed: null } } : {}),
         } } : {}),
-        ...(mortgageSourcesChanged ? { mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, ...(entry.insurancePrepaid ? {insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)} : {}) })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } : {}),
+        ...(mortgageSourcesChanged ? { mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null, ...(entry.insurancePrepaid ? {insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)} : {}) })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null, distinctMortgageLoansConfirmation: undefined } } : {}) } : {}),
         ...(investmentInterestSourcesChanged ? { investmentInterestSources: Object.fromEntries(Object.entries(investmentInterestSourcesChanged).map(([key, worksheet]) => [key, worksheet ? { ...worksheet, sourceFactsConfirmed: null, ...(worksheet.childIncomeSources ? { childIncomeSources: { ...worksheet.childIncomeSources, sourceFactsConfirmed: null } } : {}) } : worksheet])) } : {}),
       } } : {}),
       ...((ohioInterestChanged || stateOriginalsChanged) && ohioStateReturn ? { "state-return": {

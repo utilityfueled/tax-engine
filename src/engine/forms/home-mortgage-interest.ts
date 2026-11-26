@@ -138,6 +138,9 @@ export function calculateHomeMortgageInterest(input: HomeMortgageInterestInput):
   const facts = input.mortgageInterestWorksheet;
   const audit = new AuditTrail();
   const forms = input.form1098 ?? [];
+  if (forms.some(form => form.mortgageAcquisitionDate != null)) {
+    throw new Error("Reconcile the lender transfer using the original statements, the full-year balance for the underlying mortgage, and the interest actually paid to each lender before calculating.");
+  }
   let grandfathered = ZERO, old = ZERO, newer = ZERO, reportedInterest = ZERO, unreportedInterest = ZERO, reportedPoints = ZERO, unreportedPoints = ZERO, excludedSourceInterest = ZERO;
   let taxableInterestRecovery = ZERO, additionalTaxableInterestRecovery = ZERO;
   const sourceDeductions: HomeMortgageInterestResult["sourceDeductions"] = [];

@@ -20,6 +20,36 @@ lines:
     formula: "Require actual return year, all-home-debt completeness, source reference and confirmation, plus explicit confirmation of no prior-year recoveries for this ordinary path. Highest annual balance or lender average drives the canonical debt limit; never substitute Box 2 or silently reject a fully supported loan merely for exceeding the statutory limit."
     irsRef: "Publication 936 Part II Average Mortgage Balance and Table 1"
     testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::applies the canonical debt limit to actual highest balances and lender averages"
+  - line: "acquired-mortgage-statements"
+    description: "Keep the original Box 11 acquisition date distinct from origination and hold unreconciled debt"
+    formula: |
+      Retain each Form 1098 Box 11 answer through save and reopen. Record an
+      actual calendar date as a date, a confirmed blank as blank, and an absent
+      saved answer as unknown. The lender acquisition date is separate from Box 3
+      and can change the as-of date of Box 2. Require reconciliation of a stated
+      acquisition before this guided method can count the loan or interest. Keep
+      the statements and ask for the transfer, full-year loan balance and paid
+      interest records. Do not combine statement amounts or infer common debt
+      from matching names, addresses or dates. For multiple active statements,
+      require each Box 11 explicitly blank and confirm from referenced original
+      loan records that the statements represent separate debts. Bind that
+      confirmation to the current originals, paid shares, annual balance facts
+      and annual record reference. Review again after changes.
+      The canonical worksheet also holds a supplied acquisition date. Preserve the
+      original principal including zero. Historical single-statement drafts
+      may retain an unanswered Box 11 without converting it to an actual blank.
+      A new guided statement needs an actual Box 11 answer once its other
+      source facts are entered, including when it is the only statement.
+    sources:
+      - "https://www.irs.gov/instructions/i1098"
+      - "https://www.irs.gov/pub/irs-prior/i1098--2025.pdf"
+      - "https://www.irs.gov/publications/p936"
+    testRef: "tests/guided-interview/guided-mortgage-worksheet.test.ts::holds two statements for the same transferred mortgage after reopening"
+    testRefs:
+      - "tests/guided-interview/guided-mortgage-worksheet.test.ts::preserves actual distinct mortgage statements and their explicit blank Box 11"
+      - "tests/guided-interview/guided-mortgage-worksheet.test.ts::holds a supplied Box 11 at the canonical worksheet boundary"
+      - "tests/apps/web/mortgage-source-interactions.test.tsx::keeps Box 11 unknown until answered and preserves a transfer date through reopen"
+      - "tests/apps/web/mortgage-source-interactions.test.tsx::requires Box 11 on a single newly added mortgage statement"
   - line: "points-and-cutoff"
     description: "Collect actual payment date, use and transition facts"
     formula: "Qualifying current-year purchase/build points require actual payment date and all conditions; origination date does not stand in for payment date. A potentially eligible 2017-2018 binding contract requires its actual status and, when applicable, dates before classification."

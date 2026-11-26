@@ -11,6 +11,10 @@ function sourceValues(value: unknown): unknown {
   return value;
 }
 
+export function guidedSourceValuesSnapshot(value: unknown): string | undefined {
+  return JSON.stringify(sourceValues(value));
+}
+
 export function guidedSourceValuesChanged(previous: unknown, next: unknown): boolean {
-  return JSON.stringify(sourceValues(previous)) !== JSON.stringify(sourceValues(next));
+  return guidedSourceValuesSnapshot(previous) !== guidedSourceValuesSnapshot(next);
 }

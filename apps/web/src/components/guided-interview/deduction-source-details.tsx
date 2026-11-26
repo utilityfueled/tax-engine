@@ -8,6 +8,7 @@ import { sumSourceMoney } from "@/utils/sum-source-money";
 import { CurrencyField } from "./currency-field";
 import { MortgageSourceFields } from "./mortgage-source-fields";
 import { MortgageWorksheetDetails } from "./mortgage-worksheet-details";
+import { isEnteredMortgageStatement } from "@/lib/guided-mortgage-facts";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { amountError, guidedAmountChanged, requiresGuidedTangiblePropertyUse } from "@/lib/guided-required-facts";
 
@@ -19,16 +20,19 @@ function BooleanFact({ label, value, onChange }: { label: string; value: boolean
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={(event) => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from your records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
 
+const newMortgageStatement: MortgageEntryData = { ...emptyMortgageEntry, mortgageAcquisitionDate: "" };
+
 export function DeductionSourceDetails({ data, onChange, includeMortgages = true, includeDonations = true, taxYear, filingStatus }: { taxYear?:number|null;filingStatus?:FilingStatus|null;data: DeductionData; onChange: (data: DeductionData) => void; includeMortgages?: boolean; includeDonations?: boolean }) {
   // An old aggregate is preserved as the amount needing source details. No other
   // fact is inferred, and merely rendering does not rewrite the saved workspace.
-  const mortgages = data.mortgageEntries ?? (data.mortgageInterest.trim() ? [{ ...emptyMortgageEntry, mortgageInterest: data.mortgageInterest }] : []);
+  const mortgages = data.mortgageEntries ?? (data.mortgageInterest.trim() ? [{ ...newMortgageStatement, mortgageInterest: data.mortgageInterest }] : []);
   const donations = data.donationEntries ?? (data.charitableContributions.trim() ? [{ ...emptyDonationEntry, amount: data.charitableContributions }] : []);
   function setMortgages(entries: MortgageEntryData[]) {
-    const known = entries.length > 0 && entries.every(entry => !amountError(entry.mortgageInterest, "mortgage interest"));
+    const entered = entries.filter(isEnteredMortgageStatement);
+    const known = entered.length > 0 && entered.every(entry => !amountError(entry.mortgageInterest, "mortgage interest"));
     const changed = guidedSourceValuesChanged(data.mortgageEntries, entries);
-    onChange({ ...data, mortgageEntries: changed ? entries.map(entry=>entry.insurancePrepaid?{...entry,sourceFactsConfirmed:null,insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)}:entry) : entries, mortgageInterest: known ? sumGuidedDisplayAmounts(entries.map(entry => entry.mortgageInterest)).toFixed() : "",
-      ...(changed && data.mortgageWorksheet ? { mortgageWorksheet: { ...data.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) });
+    onChange({ ...data, mortgageEntries: changed ? entries.map(entry=>entry.insurancePrepaid?{...entry,sourceFactsConfirmed:null,insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)}:entry) : entries, mortgageInterest: known ? sumGuidedDisplayAmounts(entered.map(entry => entry.mortgageInterest)).toFixed() : "",
+      ...(changed && data.mortgageWorksheet ? { mortgageWorksheet: { ...data.mortgageWorksheet, sourceFactsConfirmed: null, distinctMortgageLoansConfirmation: undefined } } : {}) });
   }
   function setDonations(entries: DonationEntryData[]) {
     const amountsChanged = entries.length !== donations.length || entries.some((entry, index) => guidedAmountChanged(donations[index]?.amount, entry.amount));
@@ -44,8 +48,8 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
   return <>
     {includeMortgages && <>
     <h4>Mortgage interest — Form 1098</h4>
-    <p className="guided-hint">Copy each lender&apos;s actual amounts and origination date. Leave an unknown fact blank; it must be resolved before calculating.</p>
-    <MortgageWorksheetDetails data={data.mortgageWorksheet} onChange={mortgageWorksheet => {
+    <p className="guided-hint">Copy each lender&apos;s actual amounts and dates. If the original statement leaves Box 11 blank, record that separately.</p>
+    <MortgageWorksheetDetails data={data.mortgageWorksheet} entries={mortgages.filter(isEnteredMortgageStatement)} onChange={mortgageWorksheet => {
       const changed=guidedSourceValuesChanged(data.mortgageWorksheet,mortgageWorksheet);
       onChange({...data,mortgageWorksheet,...(changed?{mortgageEntries:data.mortgageEntries?.map(entry=>entry.insurancePrepaid?{...entry,sourceFactsConfirmed:null,insurancePrepaid:invalidateMortgagePrepaid(entry.insurancePrepaid)}:entry)}:{})});
     }} />
@@ -65,7 +69,7 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
         {entry.insuranceAllocationMethod === 'current-original-prepaid' && <MortgageInsurancePrepaidFields data={data} index={index} taxYear={taxYear} filingStatus={filingStatus} onChange={insurancePrepaid=>update({insurancePrepaid})}/>}
       </div><button type="button" className="utility-button" onClick={() => setMortgages(mortgages.filter((_, i) => i !== index))}>Remove mortgage #{index + 1}</button></fieldset>;
     })}
-    <button type="button" className="utility-button" onClick={() => setMortgages([...mortgages, { ...emptyMortgageEntry }])}>Add mortgage</button>
+    <button type="button" className="utility-button" onClick={() => setMortgages([...mortgages, { ...newMortgageStatement }])}>Add mortgage</button>
     </>}
     {includeDonations && <><h4>Charitable contributions</h4>
     {donations.map((entry, index) => {
