@@ -2,6 +2,25 @@
   "refreshedAt": "2026-10-25",
   "scope": "37 existing federal blank-form endpoints from the historical template manifest. This records the current official endpoint response, not an exhaustive proof that another final or draft revision is unavailable. No export registry changed.",
   "inspection": "Year and creation date checked against each printed first-page footer. Generic draft/Do not file matches in ScheduleF describe draft livestock and form applicability, not a draft watermark.",
+  "followUp": {
+    "checkedOn": "2026-11-25",
+    "scope": "The 23 federal templates in the original register that still lack a physical 2026 blank, plus Schedule 1-A, draft Schedule 3-A and Form 8962. This is an endpoint comparison for the named forms.",
+    "currentDirectory": "https://www.irs.gov/pub/irs-pdf/",
+    "yearSpecificDirectory": "https://www.irs.gov/pub/irs-prior/",
+    "currentPdfsWithPrinted2025Year": [
+      "f1040.pdf", "f1040s1.pdf", "f1040s1a.pdf", "f1040s2.pdf", "f1040s3.pdf", "f1040sa.pdf", "f1040sd.pdf", "f1040se.pdf", "f1040sf.pdf", "f1040sh.pdf", "f1040sj.pdf", "f2210.pdf", "f2441.pdf", "f4684.pdf", "f4797.pdf", "f5695.pdf", "f6251.pdf", "f8582.pdf", "f8839.pdf", "f8936.pdf", "f8949.pdf", "f8959.pdf", "f8960.pdf", "f8962.pdf", "f8995.pdf"
+    ],
+    "current404": ["f1040s3a.pdf"],
+    "yearSpecific2026Http404Count": 26,
+    "yearSpecificNaming": "The current basename, followed by --2026.pdf in place of .pdf.",
+    "receiptSha256": "dc4d61e9215127fed48c9f635c455dff25f4474e528e7e82d1eede104821697d",
+    "draftStillLabeledNotForFiling": "https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf",
+    "currentInstructionsStillPrint2025": [
+      "https://www.irs.gov/pub/irs-pdf/i8863.pdf",
+      "https://www.irs.gov/pub/irs-pdf/i8889.pdf",
+      "https://www.irs.gov/pub/irs-pdf/i5329.pdf"
+    ]
+  },
   "templates": [
     {
       "filename": "f1040.pdf",

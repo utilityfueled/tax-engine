@@ -1,5 +1,18 @@
 # 2026 upgrade implementation evidence
 
+## November 25 federal annual source refresh
+
+The follow-up checked 26 unresolved federal blanks in the IRS current and
+year-specific directories. Twenty-five current PDFs still printed 2025.
+Schedule 3-A was absent from the current directory, and all 26 checked
+2026-specific URLs returned HTTP 404. The published 2026 Schedule 3-A
+still carries the draft filing warning. Current Form 8863, Form 8889, and
+Form 5329 instructions still print 2025. The source register identifies
+the exact endpoints and preserves the evidence digest. These narrow
+checks leave physical annual qualification open for the affected forms.
+[Source register](upgrade-2026-form-source-refresh.json) ·
+[IRS Schedule 3-A draft](https://www.irs.gov/pub/irs-dft/f1040s3a--dft.pdf).
+
 ## November 25 uploads in reopened review
 
 `3aeb837f5` keeps the upload control in **Your Documents** when the

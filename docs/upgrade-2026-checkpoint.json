@@ -3,6 +3,7 @@
     "asOf": "2026-11-25",
     "branch": "main",
     "applicationCommit": "3aeb837f51946c31614f6a31f88dad2fdb86277a",
+    "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov25ReviewWorkspaceFollowUpUpload",
     "pensionOriginalReconfirmationEvidenceKey": "activeContinuation.nov25PensionOriginalReconfirmation",
     "longTermCareStatementIntakeEvidenceKey": "activeContinuation.nov25LongTermCareStatementIntake",
@@ -105,6 +106,15 @@
     ]
   },
   "activeContinuation": {
+    "nov25FederalAnnualSourceRefresh": {
+      "sourceRegister": "docs/upgrade-2026-form-source-refresh.json",
+      "checkedFederalBlankEndpoints": 52,
+      "currentPrinted2025": 25,
+      "current404": 1,
+      "yearSpecific2026Http404": 26,
+      "receiptSha256": "dc4d61e9215127fed48c9f635c455dff25f4474e528e7e82d1eede104821697d",
+      "remaining": "Final annual revisions and qualified field reviews remain pending for the affected exports."
+    },
     "nov25ReviewWorkspaceFollowUpUpload": {
       "commit": "3aeb837f51946c31614f6a31f88dad2fdb86277a",
       "scope": "A reopened advanced review workspace keeps the mixed packet on hold and exposes its upload control under Your Documents so a supported original can be added independently.",
