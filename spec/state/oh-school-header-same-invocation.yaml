@@ -50,6 +50,17 @@ lines:
       existing adapter proof before the header rejection. Unsupported canonical
       material uses the original independent calculations and existing proof rules.
     testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::keeps pending header rejection and the earlier invalid school guard in order"
+  - line: "pending-header-schema-rejection"
+    description: Skip redundant parsing of a still-unconfirmed header during the existing part-year school render replay
+    formula: >-
+      In the existing pending guided render case, finish current school
+      validation and report its acceptance to the caller first. If the header
+      still has its own data property set to null for explicit confirmation,
+      return the established incomplete-header error before normalizing and
+      parsing the whole header. Preserve an earlier school error, the accepted
+      school display, and the ordinary header schema path for confirmed,
+      legacy, changed, and standalone inputs.
+    testRef: "tests/guided-interview/oh-school-header-same-invocation.test.ts::skips only pending header parsing after verifying the current school"
   - line: "unsupported-material"
     description: A source proof cannot omit unsupported defined values or normalize distinct material into an existing proof
     formula: after the original full adapter, only finite primitives, explicit finite Decimal values with original data descriptors and dense finite integer digit arrays, exact plain objects with defined data properties and exact dense ordered arrays can capture or consume authority; unsupported types, symbol keys, accessors (never invoked by proof admission), extended Decimal metadata and nonfinite numbers fall back to original full validation without an earlier error; undefined object data properties remain omitted

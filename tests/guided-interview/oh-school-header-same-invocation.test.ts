@@ -11,6 +11,7 @@ import {computeGuidedPreviewOutcome} from '@/lib/guided-preview-compute';
 import { buildSectionRoute, validateSection } from '@/lib/guided-interview-flow';
 import *as bridge from '@/lib/guided-interview-bridge';
 import {TaxYearInputSchema}from '@/models/inputs';
+import { OhioReturnHeaderSourcesSchema } from '@/models/ohio-return-header-sources';
 import {schoolPyHeaderPacket,schoolPyPaperCases}from '../fixtures/oh-school-district-part-year-official-review';
 import {guidedSchoolDistrictFixture,enteredSchoolDraft}from '../fixtures/guided-oh-school-district-complete';
 import {confirmGuidedW2StateLocalSources}from '@/lib/guided-w2-state-local-facts';
@@ -193,6 +194,54 @@ test('keeps pending header rejection and the earlier invalid school guard in ord
   expect(() => buildGuidedOhioReturnHeaderOriginals(original, pending, data.ohioResidency, data.ohioPayments, invalid, observed))
    .toThrow('complete and explicitly confirm the actual school district records after the last edit');
   expect(observed).not.toHaveBeenCalled();
+ }
+});
+
+test('skips only pending header parsing after verifying the current school', () => {
+ const state = ohio();
+ const original = required(evaluateGuidedRender(state).originalInput);
+ const data = required(state.sectionData['state-return']);
+ const confirmed = required(data.ohioReturnHeaderSources);
+ const pending = { ...confirmed, sourceFactsConfirmed: null };
+ const schoolDraft = required(data.ohioSchoolDistrict);
+ const schoolCheck = vi.spyOn(school, 'buildOhioSchoolDistrictSource');
+ const parse = vi.spyOn(OhioReturnHeaderSourcesSchema, 'safeParse');
+ const observed = vi.fn();
+ const replay = (header: typeof confirmed, district = schoolDraft, observe?: () => void) =>
+  buildGuidedOhioReturnHeaderOriginals(original, header, data.ohioResidency, data.ohioPayments, district, observe);
+ const headerError = 'complete every actual header field and retain its explicit source confirmation';
+ try {
+  expect(() => replay(pending, schoolDraft, observed)).toThrow(headerError);
+  expect(schoolCheck).toHaveBeenCalledTimes(1);
+  expect(observed).toHaveBeenCalledTimes(1);
+  expect(required(schoolCheck.mock.invocationCallOrder[0])).toBeLessThan(required(observed.mock.invocationCallOrder[0]));
+  expect(parse).not.toHaveBeenCalled();
+
+  observed.mockClear();
+  const invalidSchoolDraft = { ...schoolDraft, sourceFactsConfirmed: null };
+  expect(() => replay(pending, invalidSchoolDraft, observed)).toThrow('complete and explicitly confirm the actual school district records after the last edit');
+  expect(observed).not.toHaveBeenCalled();
+  expect(parse).not.toHaveBeenCalled();
+
+  expect(() => replay(pending)).toThrow(headerError);
+  expect(parse).toHaveBeenCalledTimes(1);
+  const legacy = { ...pending };
+  Reflect.deleteProperty(legacy, 'sourceFactsConfirmed');
+  expect(() => replay(legacy, schoolDraft, observed)).toThrow(headerError);
+  expect(() => replay({ ...pending, sourceFactsConfirmed: false }, schoolDraft, observed)).toThrow(headerError);
+  expect(parse).toHaveBeenCalledTimes(3);
+
+  expect(replay(confirmed, schoolDraft, observed).ohioReturnHeaderSources).toEqual(confirmed.confirmedHeaderSources);
+  expect(parse.mock.calls.length).toBeGreaterThan(3);
+  parse.mockClear();
+  const changedDuringObservation: typeof confirmed = { ...pending };
+  expect(replay(changedDuringObservation, schoolDraft, () => {
+   changedDuringObservation.sourceFactsConfirmed = true;
+  }).ohioReturnHeaderSources).toEqual(confirmed.confirmedHeaderSources);
+  expect(parse).toHaveBeenCalled();
+ } finally {
+  parse.mockRestore();
+  schoolCheck.mockRestore();
  }
 });
 

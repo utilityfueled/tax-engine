@@ -34,6 +34,7 @@ function stable(value:unknown):unknown{
 }
 function same(a:unknown,b:unknown){return JSON.stringify(stable(a))===JSON.stringify(stable(b));}
 function year(value:string):number|string{return /^\d{4}$/.test(value)?Number(value):value;}
+const incompleteHeader = 'complete every actual header field and retain its explicit source confirmation';
 function enteredSource(data:OhioReturnHeaderDraft):OhioReturnHeaderSources{
  const{confirmedHeaderSources:_confirmed,originalOhioSchoolDistrictSources:_school,...entered}=data;
  const parsed=OhioReturnHeaderSourcesSchema.safeParse({...entered,taxYear:year(data.taxYear),
@@ -41,7 +42,7 @@ function enteredSource(data:OhioReturnHeaderDraft):OhioReturnHeaderSources{
   countyOriginal:{...data.countyOriginal,taxYear:year(data.countyOriginal.taxYear)},
   officialInventoryOriginal:{...data.officialInventoryOriginal,taxYear:year(data.officialInventoryOriginal.taxYear),printedPage:/^\d+$/.test(data.officialInventoryOriginal.printedPage)?Number(data.officialInventoryOriginal.printedPage):data.officialInventoryOriginal.printedPage},
  });
- if(!parsed.success)return fail('complete every actual header field and retain its explicit source confirmation');return parsed.data;
+ if(!parsed.success)return fail(incompleteHeader);return parsed.data;
 }
 type CurrentHeaderContext={canonical:TaxYearInput;federal:Record<string,unknown>;facts:ReturnType<typeof buildGuidedOhioResidencyFacts>;paid:ReturnType<typeof buildGuidedOhioPaymentFacts>;district:OhioSchoolDistrictFacts|undefined};
 function withCurrentContext<T>(
@@ -89,6 +90,9 @@ export function buildGuidedOhioReturnHeaderOriginals(input:TaxYearInput,data:Ohi
   && school?.partYearWageSources && !residency?.residentCreditSources
   && Object.getOwnPropertyDescriptor(data, 'sourceFactsConfirmed')?.value === null);
  return withCurrentContext(input,residency,payments,school,(current,proof)=>{
+ // The current school check and its observation have completed. The header
+ // schema requires literal true and cannot accept this still-pending draft.
+ if (pendingRender && Object.getOwnPropertyDescriptor(data, 'sourceFactsConfirmed')?.value === null) return fail(incompleteHeader);
  const source=enteredSource(data),saved=OhioReturnHeaderSourcesSchema.safeParse(data.confirmedHeaderSources);
  if(!same(data.originalOhioSchoolDistrictSources,current.district))return fail('actual school district originals differ from the separately confirmed header child; explicitly review them again');
  if(!saved.success||!same(source,saved.data))return fail('actual header records differ from the separately confirmed originals; explicitly review them again');
