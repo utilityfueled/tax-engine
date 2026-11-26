@@ -91,6 +91,42 @@ describe("Final 2026 Schedule 8812 wage-only specimen", () => {
     await expect(projection({ ...sources, adjustedGrossIncome: "200000.01", w2s: [{ ...sources.w2s[0], box1: "200000.01" }] })).rejects.toThrow(/printed|rounded/i);
   });
 
+  it("uses confirmed other dependents without increasing the refundable child cap", async () => {
+    const { fields } = await mapping();
+    const otherDependent = { ...sources, qualifyingChildren: 0, otherDependents: 1, otherDependentSourcesConfirmed: true };
+    const onlyOther = await projection({ ...otherDependent, worksheetALine5: "350" });
+    expect(onlyOther.text).toMatchObject({
+      [fields.line4]: "0", [fields.line5]: "0", [fields.line6]: "1", [fields.line7]: "500",
+      [fields.line8]: "500", [fields.line12]: "500", [fields.line14]: "350", [fields.line16a]: "150",
+      [fields.line16bCount]: "0", [fields.line16b]: "0",
+    });
+    expect(onlyOther.checked).toEqual([fields.line12Yes]);
+    const pdf = await PDFDocument.load(await readFile(blank));
+    removeTrustedTemplateLegacyFormData(pdf);
+    const form = pdf.getForm();
+    for (const [name, value] of Object.entries(onlyOther.text)) form.getTextField(name).setText(value);
+    for (const name of onlyOther.checked) form.getCheckBox(name).check();
+    await markReviewPdf(pdf);
+    const bytes = await pdf.save();
+    if (process.env.TAX_ENGINE_SCHEDULE_8812_WAGE_PROBE_DIRECTORY) {
+      await writeFile(join(process.env.TAX_ENGINE_SCHEDULE_8812_WAGE_PROBE_DIRECTORY, "schedule-8812-other-dependent-review.pdf"), bytes, { flag: "wx" });
+    }
+    const saved = (await PDFDocument.load(bytes)).getForm();
+    expect(saved.getTextField(fields.line16b).getText()).toBe("0");
+    for (const name of [fields.line17, fields.line18a, fields.line19, fields.line20, fields.line27]) {
+      expect(onlyOther.text[name]).toBeUndefined();
+      expect(saved.getTextField(name).getText()).toBeUndefined();
+    }
+
+    const mixed = await projection({ ...otherDependent, qualifyingChildren: 1, worksheetALine5: "500" });
+    expect(mixed.text).toMatchObject({
+      [fields.line5]: "2200", [fields.line7]: "500", [fields.line8]: "2700", [fields.line14]: "500",
+      [fields.line16a]: "2200", [fields.line16bCount]: "1", [fields.line16b]: "1700", [fields.line27]: "1700",
+    });
+    await expect(projection({ ...otherDependent, otherDependentSourcesConfirmed: false })).rejects.toThrow(/source/i);
+    await expect(projection({ ...sources, qualifyingChildren: 0 })).rejects.toThrow(/source/i);
+  });
+
   it("rejects incomplete and out-of-cohort sources", async () => {
     for (const patch of [
       { taxYear: 2025 }, { parentForm: "1040-NR" }, { qualifyingChildren: 3 }, { otherDependents: 1 },

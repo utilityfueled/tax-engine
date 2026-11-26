@@ -82,9 +82,10 @@ const wageSources = z.strictObject({
   wageOnlyNoExclusionsOrWorksheetBConfirmed: z.literal(true),
   nonPuertoRicoResidentConfirmed: z.literal(true),
   filingStatus: FilingStatusSchema,
-  qualifyingChildren: z.union([z.literal(1), z.literal(2)]),
+  qualifyingChildren: z.number().int().min(0).max(2),
   qualifyingChildSourcesConfirmed: z.literal(true),
-  otherDependents: z.literal(0),
+  otherDependents: z.number().int().min(0),
+  otherDependentSourcesConfirmed: z.boolean().optional(),
   adjustedGrossIncome: dollarsAndCents,
   worksheetALine5: dollarsAndCents,
   worksheetAConfirmed: z.literal(true),
@@ -100,7 +101,10 @@ const wageSources = z.strictObject({
 export function projectSchedule8812WageOnly2026(sources: unknown): { text: Record<string, string>; checked: string[] } {
   const parsed = wageSources.safeParse(sources);
   if (!parsed.success) throw new Error("Schedule 8812 requires confirmed 2026 wage-only source records");
-  const { filingStatus, qualifyingChildren, adjustedGrossIncome, worksheetALine5, w2s } = parsed.data;
+  const { filingStatus, qualifyingChildren, otherDependents, otherDependentSourcesConfirmed, adjustedGrossIncome, worksheetALine5, w2s } = parsed.data;
+  if ((otherDependents === 0 && qualifyingChildren === 0) || (otherDependents > 0 && otherDependentSourcesConfirmed !== true)) {
+    throw new Error("Schedule 8812 requires confirmed eligible dependent sources");
+  }
   const employerOwners = w2s.map(w2 => `${w2.owner}/${w2.employerEin.replace("-", "")}`);
   if (new Set(employerOwners).size !== w2s.length || (filingStatus !== "married_filing_jointly" && w2s.some(w2 => w2.owner === "spouse"))) {
     throw new Error("Schedule 8812 requires distinct W-2 sources per employer and return owner");
@@ -110,7 +114,7 @@ export function projectSchedule8812WageOnly2026(sources: unknown): { text: Recor
   const combatPay = sumStrings(...w2s.map(w2 => w2.codeQ));
   const zero = d(0);
   const input = {
-    taxYear: 2026, filingStatus, qualifyingChildren, otherDependents: 0,
+    taxYear: 2026, filingStatus, qualifyingChildren, otherDependents,
     agi: wages, adjustedGrossIncome: wages, puertoRicoExcludedIncome: zero, form4563ExcludedIncome: zero,
     foreignExcludedIncome: zero, earnedIncome: wages.plus(combatPay), nontaxableCombatPay: combatPay,
     taxLiability: d(worksheetALine5), filesForm2555: false, bonaFidePuertoRicoResident: false,
@@ -119,7 +123,7 @@ export function projectSchedule8812WageOnly2026(sources: unknown): { text: Recor
   // Line 18a rounds the complete earned-income amount, including the amount on 18b.
   const printed = calculateForm8812({ ...input, agi: roundDollar(wages), adjustedGrossIncome: roundDollar(wages),
     earnedIncome: roundDollar(input.earnedIncome), nontaxableCombatPay: roundDollar(combatPay) }, FEDERAL_2026_CONSTANTS);
-  const exactActcWorksheet = exact.unusedCTC.gt(0);
+  const exactActcWorksheet = qualifyingChildren > 0 && exact.unusedCTC.gt(0);
   if (!exact.ctcBeforeLimitation.eq(printed.ctcBeforeLimitation) || !exact.nonrefundableCTC.eq(printed.nonrefundableCTC)
     || !exact.actc.eq(printed.actc) || (exactActcWorksheet && exact.earnedIncomeExcess.gt(0) !== printed.earnedIncomeExcess.gt(0))) {
     throw new Error("Exact Schedule 8812 amounts cannot reconcile to the printed rounded worksheet");
@@ -142,7 +146,9 @@ export function projectSchedule8812WageOnly2026(sources: unknown): { text: Recor
   write(["12", "13", "14", "16a"]);
   if (printed.unusedCTC.isZero()) return { text, checked };
   text[fields.line16bCount] = String(qualifyingChildren);
-  write(["16b", "17", "18a", "18b", "20", "27"]);
+  write(["16b"]);
+  if (qualifyingChildren === 0) return { text, checked };
+  write(["17", "18a", "18b", "20", "27"]);
   const earnedIncomeExceedsMinimum = printed.earnedIncomeExcess.gt(0);
   checked.push(earnedIncomeExceedsMinimum ? fields.line19Yes : fields.line19No, fields.nextNo);
   if (earnedIncomeExceedsMinimum) write(["19"]);
