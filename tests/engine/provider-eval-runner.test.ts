@@ -9,15 +9,15 @@ import { providerModelCandidates, scoreProviderEvalEntry, summarizeProviderModel
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
 import { PROVIDER_EVAL_CONTRACT } from "../../scripts/lib/provider-eval-contract";
 const at = "2026-10-25T12:00:00.000Z";
-function setup(maximumProviderUsd = "1") {
+function setup(maximumProviderUsd = "1", start = at) {
   const plan = createProviderEvalPlan({ runId: "test-run", purpose: "smoke", profileIds: ["luna-high"],
     fixtureIds: ["case-income-w2-zero-withholding"], maximumProviderUsd, maximumRequests: 4,
-    createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
+    createdAt: start, expiresAt: "2026-10-25T13:00:00.000Z" });
   const approval = { version: 1, planDigest: providerEvalDigest(plan), authorizedBy: "synthetic-test-owner",
-    authorizationReference: "test-only-not-live-authority", approvedAt: at, expiresAt: plan.expiresAt,
+    authorizationReference: "test-only-not-live-authority", approvedAt: start, expiresAt: plan.expiresAt,
     maximumProviderUsd, maximumRequests: 4, accountReference: "test-account", syntheticOnly: true };
   const records: EvalJournalRecord[] = [];
-  return { plan, approval, records, append: async (record: EvalJournalRecord) => { records.push(structuredClone(record)); }, now: () => at };
+  return { plan, approval, records, append: async (record: EvalJournalRecord) => { records.push(structuredClone(record)); }, now: () => start };
 }
 const good = { status: "completed" as const, usage: { inputTokens: 100, outputTokens: 100 }, elapsedMs: 50,
   reportedModel: "gpt-6-luna", responseReference: "response:test", payload: { probe: "ok" } };
@@ -222,6 +222,50 @@ describe("guarded repeated provider executor", () => {
       stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00024", legacyUnverifiedProviderCostUsd: "0",
     });
     expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it("reconciles only at or after dispatch with exact fractional seconds and UTC offsets", async () => {
+    const start = "2026-10-25T12:00:00.000001Z";
+    const state = setup("1", start);
+    const transport = vi.fn().mockResolvedValueOnce(good).mockRejectedValueOnce(new Error("synthetic timeout")).mockResolvedValue(good);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({
+      stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00006", unknownMaximumUsd: "0.0111056",
+    });
+    const evidence = { attemptId: "luna-high:case-income-w2-zero-withholding:1",
+      evidenceReference: "synthetic-precisely-dated-receipt", billedModel: "gpt-6-luna", usage: good.usage };
+    for (const at of ["2026-10-25T12:00:00.000000Z", "2026-10-25T08:00:00.000000-04:00"]) {
+      expect(() => reconcileProviderEvalAttempt(state.plan, state.records, { ...evidence, at })).toThrow(/before dispatch/i);
+    }
+    const justAfter = "2026-10-25T08:00:00.000002-04:00";
+    expect(reconcileProviderEvalAttempt(state.plan, state.records, { ...evidence, at: justAfter })).toMatchObject({ at: justAfter });
+    const equivalent = "2026-10-25T08:00:00.0000010-04:00";
+    const receipt = reconcileProviderEvalAttempt(state.plan, state.records, { ...evidence, at: equivalent });
+    await state.append(receipt);
+    validateProviderEvalJournal(state.plan, state.records);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({
+      stoppedReason: "completed", knownProviderCostUsd: "0.00024", unknownMaximumUsd: "0",
+    });
+    expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it("keeps a historical early receipt readable and holds further dispatch", async () => {
+    const state = setup("1", "2026-10-25T12:00:00.000001Z");
+    const transport = vi.fn().mockResolvedValueOnce(good).mockRejectedValueOnce(new Error("synthetic timeout")).mockResolvedValue(good);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({ stoppedReason: "unknown-usage" });
+    const earlyReceipt = {
+      type: "reconcile", attemptId: "luna-high:case-income-w2-zero-withholding:1",
+      evidenceReference: "synthetic-impossible-receipt", billedModel: "gpt-6-luna", usage: good.usage,
+      at: "2026-10-25T12:00:00.000000Z",
+    } as const;
+    await state.append(earlyReceipt);
+    validateProviderEvalJournal(state.plan, state.records);
+    const previous = structuredClone(state.records);
+    const result = await executeProviderEval({ ...state, transport });
+    expect(result).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00006",
+      unknownMaximumUsd: "0.0111056", legacyUnverifiedProviderCostUsd: "0.00006",
+      bindingBlockers: ["reconciliation-recorded-before-dispatch"] });
+    expect(result.template.entries[0]?.attempts[0]).toMatchObject({ usage: null,
+      billingEvidence: { evidenceReference: providerEvalDigest(earlyReceipt.evidenceReference), recordedAt: earlyReceipt.at } });
+    expect(transport).toHaveBeenCalledTimes(2);
+    expect(state.records).toEqual(previous);
   });
   it("retains every affected hold when a durable historical journal reuses a verified receipt", async () => {
     const { state, transport, evidence } = await priorVerifiedReceiptAndNextHold();

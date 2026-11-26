@@ -93,7 +93,7 @@ function submillisecondDigits(value: string) {
   return (/\.\d{3}(\d+)/u.exec(value)?.[1] ?? "").replace(/0+$/u, "");
 }
 
-function timestampAtOrBefore(instant: string, cutoff: string, cutoffOffsetMs = 0): boolean {
+export function timestampAtOrBefore(instant: string, cutoff: string, cutoffOffsetMs = 0): boolean {
   const instantMs = Date.parse(instant);
   const cutoffMs = Date.parse(cutoff) + cutoffOffsetMs;
   if (instantMs !== cutoffMs) return instantMs < cutoffMs;

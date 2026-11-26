@@ -106,6 +106,18 @@ lines:
     testRef: "tests/engine/provider-eval-runner.test.ts::refuses a reused reconciliation reference and resumes on distinct evidence"
     testRefs:
       - "tests/engine/provider-eval-runner.test.ts::retains every affected hold when a durable historical journal reuses a verified receipt"
+  - line: "reconciliation-time-order"
+    description: "Release a usage reservation only with evidence recorded at or after dispatch"
+    formula: >-
+      Compare the exact dispatch and authoritative receipt instants, preserving
+      submillisecond precision and accounting for the recorded UTC offsets.
+      Reject new receipts recorded before dispatch. Keep historical journals
+      with early receipts readable. Preserve verified charges on other
+      dispatches and show the early receipt's cost as unverified while
+      retaining the full hold and stopping further dispatch.
+    testRef: "tests/engine/provider-eval-runner.test.ts::reconciles only at or after dispatch with exact fractional seconds and UTC offsets"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::keeps a historical early receipt readable and holds further dispatch"
   - line: "dispatch-order"
     description: "No paid request precedes durable accounting identity"
     formula: "A failed or ineffective append prevents dispatch; cancellation and expired capability evidence stop before the next request."

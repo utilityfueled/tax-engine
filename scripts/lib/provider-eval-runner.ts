@@ -4,7 +4,7 @@ import { z } from "zod";
 import { AI_PRICES, calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "../../packages/engine/src/ai-pricing";
 import { AI_TASKS, type AiTask } from "../../packages/engine/src/ai-task-registry";
 import { AI_PROVIDER_DOCUMENTATION, publicModelLifecycle } from "../../packages/engine/src/ai-provider-documentation";
-import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate,
+import { providerModelCandidates, summarizeProviderModelLiveEvalTemplate, timestampAtOrBefore,
   type ProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
 import { taxProviderModelEvalFixtures, type ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
 import { evaluationRequestContent, providerEvalBindingManifest, validateProviderEvalOutput, prepareProviderEvalCase, PROVIDER_EVAL_BINDING_VERSION } from "./provider-eval-bindings";
@@ -14,6 +14,7 @@ import { matchesProviderEvalModel, PROVIDER_EVAL_MODEL_IDENTITIES, providerEvalD
 const Money = Decimal.clone({ precision: 80 });
 export { providerEvalDigest } from "../../packages/engine/src/provider-eval-provenance";
 const instant = z.iso.datetime();
+const reconciliationInstant = z.iso.datetime({ offset: true });
 const usd = z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d+)?$/).refine(value => new Money(value).isFinite() && new Money(value).lte("10000"));
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const evalHttpStatusSchema = z.number().int().min(100).max(599);
@@ -197,7 +198,9 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
     let usage = resultUsage;
     if (reconciliation && evidenceReference !== undefined) {
       requireMatchingBilledModel(requestedModel, reconciliation.billedModel);
-      if ((receiptUses.get(evidenceReference) ?? 0) > 1) {
+      if (!timestampAtOrBefore(dispatch.startedAt, reconciliation.at)) {
+        bindingBlockers.add("reconciliation-recorded-before-dispatch");
+      } else if ((receiptUses.get(evidenceReference) ?? 0) > 1) {
         bindingBlockers.add("reconciliation-evidence-reference-reused");
       } else {
         usage = reconciliation.usage;
@@ -350,7 +353,8 @@ export function reconcileProviderEvalAttempt(plan: ProviderEvalPlan, records: re
     throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
   }
   const evidenceReference = input.evidenceReference.trim();
-  if (!evidenceReference || input.evidenceReference.length > 500 || !instant.safeParse(input.at).success) throw new Error("Authoritative reconciliation reference and time are required.");
+  if (!evidenceReference || input.evidenceReference.length > 500 || !reconciliationInstant.safeParse(input.at).success) throw new Error("Authoritative reconciliation reference and time are required.");
+  if (!timestampAtOrBefore(dispatch.startedAt, input.at)) throw new Error("Authoritative reconciliation cannot be recorded before dispatch.");
   if (records.some(record => verifiedReconciliationReference(record) === evidenceReference)) {
     throw new Error("Authoritative reconciliation reference already verifies another attempt.");
   }
@@ -372,7 +376,7 @@ const recordSchema = z.discriminatedUnion("type", [
     responseReference: z.string().nullable(), capabilityPassed: z.boolean(), evaluation: evaluationSchema.nullable() }),
   z.strictObject({ type: z.literal("not-sent"), attemptId: z.string(), reason: z.literal("cancelled-before-send") }),
   z.strictObject({ type: z.literal("reconcile"), attemptId: z.string(), evidenceReference: z.string().trim().min(1).max(500),
-    billedModel: z.string().min(1).max(200).optional(), usage: evalUsageSchema, at: instant }),
+    billedModel: z.string().min(1).max(200).optional(), usage: evalUsageSchema, at: reconciliationInstant }),
 ]);
 export function parseEvalJournalRecord(value: unknown): EvalJournalRecord {
   return recordSchema.parse(value) as EvalJournalRecord;
