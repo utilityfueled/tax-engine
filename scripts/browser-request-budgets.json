@@ -256,7 +256,7 @@
     "apps/web/src/lib/ai-document-redaction.ts": "cbe7420b87ac0b99f1d115099a27054cb855ab1f67fc100e7005d0f47f575d4e",
     "apps/web/src/lib/ai-evidence-tasks.ts": "5a9a5bf527cc801e29a7a38a71b1b54018fc53f51ca5169281082fcac0a7e591",
     "apps/web/src/lib/ai-rollout.ts": "5b6d395e3d2fdbe8c0fe5b38728996c41af5ddb5dc20e0315f34c8ae71911942",
-    "apps/web/src/lib/ai-task-adapter.ts": "ee571a9a39fbc5928b58d422d40bdb0f6bafcc301377e80fcca3275bb781122f",
+    "apps/web/src/lib/ai-task-adapter.ts": "ac3d086bdd92b687046acf05975b8493c9e1b5a253fd36c3edd06e9e4e0ea052",
     "apps/web/src/lib/ai-tax-context.ts": "7e279b1ef11ea4f74db13b0c670accc57492acc818d76ef0287660ca310260c6",
     "apps/web/src/lib/browser-storage.ts": "74b21e1e41a8ec19fbe78964e68f5d83949409116354e7c5bf9759da00850c86",
     "apps/web/src/lib/business-expense-analysis.ts": "2b40b4519121ee02682681d043d874311eab944aea5083e7406f3bb100aeba96",

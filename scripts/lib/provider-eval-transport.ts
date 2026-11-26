@@ -65,7 +65,7 @@ export function createLiveProviderEvalTransport(options: { profileIds: string[];
       if (openai) {
         responseReference ??= openAiBodyReference.safeParse(payload).data?.id ?? null;
         const envelope = openAiEnvelope.parse(payload);
-        if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced tier.");
+        if (envelope.service_tier !== undefined && envelope.service_tier !== "default") throw new Error("Unpriced tier.");
         const { input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens } = envelope.usage;
         if (totalTokens !== undefined && BigInt(totalTokens) !== BigInt(inputTokens) + BigInt(outputTokens)) {
           throw new Error("OpenAI returned an inconsistent total token count.");

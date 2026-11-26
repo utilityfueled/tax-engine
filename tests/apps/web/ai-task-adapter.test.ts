@@ -388,6 +388,32 @@ describe("task-based candidate AI adapter", () => {
       input_tokens_details: { cached_tokens: 4000, cache_write_tokens: 7000, cache_write_tokens_details: { ttl_30m_tokens: 3000, ttl_12h_tokens: 4000 } } } }));
     expect((await executeAiTask(request(), deps))?.accounting.providerCostUsd).toBe("0.001565");
   });
+  it("holds OpenAI usage for an unpriced reported service tier", async () => {
+    const id = "resp_fixtureTier";
+    for (const serviceTier of [undefined, "default"]) {
+      const deps = execution(envelope(undefined, { id, service_tier: serviceTier }));
+      const recordAttempt = vi.fn();
+      const recordUnknownAttempt = vi.fn();
+      await expect(executeAiTask(request(), { ...deps, recordAttempt, recordUnknownAttempt })).resolves.toMatchObject({
+        accepted: true, accounting: { providerCostUsd: "0.0010064", retailChargeCents: 1 },
+      });
+      expect(recordAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+        accepted: true, providerRequestId: id, usage: { inputTokens: 100, outputTokens: 2000, cachedInputTokens: 40 },
+      });
+      expect(recordUnknownAttempt).not.toHaveBeenCalled();
+      expect(deps.fetchFn).toHaveBeenCalledOnce();
+    }
+
+    const deps = execution(envelope(undefined, { id, service_tier: "" }));
+    const recordAttempt = vi.fn();
+    const recordUnknownAttempt = vi.fn();
+    const validateGrounding = vi.fn();
+    await expect(executeAiTask(request({ validateGrounding }), { ...deps, recordAttempt, recordUnknownAttempt })).rejects.toThrow(/usage requires reconciliation/);
+    expect(validateGrounding).not.toHaveBeenCalled();
+    expect(recordAttempt).not.toHaveBeenCalled();
+    expect(recordUnknownAttempt).toHaveBeenCalledExactlyOnceWith(expect.anything(), { providerRequestId: id });
+    expect(deps.fetchFn).toHaveBeenCalledOnce();
+  });
   it.each([
     { service_tier: "priority" },
     { usage: { input_tokens: 100, output_tokens: 2, input_tokens_details: { cache_write_tokens: 50 } } },

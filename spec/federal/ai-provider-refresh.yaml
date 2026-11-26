@@ -56,7 +56,7 @@ lines:
     formula: "On OpenAI HTTP errors retain a bounded request identifier from the documented response header. Leave the identifier absent if the value is unsafe. Continue holding unknown usage."
     testRef: "tests/apps/web/ai-task-adapter.test.ts::holds unknown usage without retaining arbitrary error response headers"
   - line: "openai-usage-total"
-    description: "Reconcile reported OpenAI input and output token totals"
+    description: "Reconcile reported OpenAI token totals and service tier"
     formula: >-
       Require valid input and output counts. If reported, total_tokens must be
       a nonnegative safe integer and equal the exact sum of input and output
@@ -64,10 +64,14 @@ lines:
       respective counts. An absent total preserves existing pricing. A malformed
       or contradictory total leaves usage unknown, with no accepted output,
       settlement or retry in either transport. Retain the existing provider
-      response reference for reconciliation.
+      response reference for reconciliation. Accept an omitted service_tier
+      or an explicit default. Any other supplied value, including an empty
+      string, leaves usage unknown under the same rules.
     testRef: "tests/apps/web/ai-task-adapter.test.ts::reconciles reported OpenAI totals before settling usage"
     testRefs:
       - "tests/engine/provider-eval-transport.test.ts::reconciles reported OpenAI totals before returning evaluation usage"
+      - "tests/apps/web/ai-task-adapter.test.ts::holds OpenAI usage for an unpriced reported service tier"
+      - "tests/engine/provider-eval-transport.test.ts::holds OpenAI evaluation usage for an unpriced reported service tier"
   - line: "gemini-rejected-usage"
     description: "Settle reported usage when Gemini omits candidate content"
     formula: "For one Gemini candidate, allow absent content when usage is complete and valid. Accept only normal completion with valid structured and grounded text. Settle known rejected usage once without another provider dispatch. At November 2026 rates, 1,000 input tokens with 200 cached reads and 100 candidate plus 900 thought tokens cost $0.004365 and one retail cent."

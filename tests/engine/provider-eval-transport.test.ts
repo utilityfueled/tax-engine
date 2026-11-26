@@ -53,6 +53,24 @@ describe("official evaluation transport", () => {
       expect(fetchFn).toHaveBeenCalledOnce();
     }
   });
+  it("holds OpenAI evaluation usage for an unpriced reported service tier", async () => {
+    const fetchFn = vi.fn<typeof fetch>();
+    const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn });
+    for (const serviceTier of [undefined, "default"]) {
+      fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, service_tier: serviceTier }));
+      await expect(transport(request())).resolves.toMatchObject({
+        status: "completed", reportedModel: "gpt-6-luna", responseReference: openai.id,
+        usage: { inputTokens: 100, outputTokens: 50, cachedInputTokens: 20 }, payload: { probe: "ok" },
+      });
+      expect(fetchFn).toHaveBeenCalledOnce();
+    }
+
+    fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, service_tier: "" }));
+    await expect(transport(request())).resolves.toMatchObject({
+      status: "failed", httpStatus: 200, reportedModel: null, responseReference: openai.id, usage: null, payload: null,
+    });
+    expect(fetchFn).toHaveBeenCalledOnce();
+  });
   it("sends a valid client trace only to OpenAI and retains a timeout as unknown", async () => {
     const trace = "e341945d-1b77-4315-9720-a6761ebd0b11";
     const headers: Headers[] = [];

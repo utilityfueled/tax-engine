@@ -179,7 +179,7 @@ export async function executeAiTask<T>(request: AiTaskRequest<T>, execution: AiT
     providerRequestId ??= readProviderIdentifier(openAiBodyReference.safeParse(payload).data?.id, openAiResponseId);
     const envelope = openAiEnvelope.parse(payload);
     if (envelope.model !== profile.model) throw new Error("Reported OpenAI model does not establish the authorized route.");
-    if (envelope.service_tier && envelope.service_tier !== "default") throw new Error("Unpriced provider service tier.");
+    if (envelope.service_tier !== undefined && envelope.service_tier !== "default") throw new Error("Unpriced provider service tier.");
     const { input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens } = envelope.usage;
     if (totalTokens !== undefined && BigInt(totalTokens) !== BigInt(inputTokens) + BigInt(outputTokens)) {
       throw new Error("OpenAI returned an inconsistent total token count.");
