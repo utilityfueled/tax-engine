@@ -14,7 +14,7 @@ import { actualGuidedK1Sources } from "../fixtures/guided-k1-qbi-sources";
 import { paOrdinaryCareFixture } from "../fixtures/pa-ordinary-care-sources";
 import { completePersonalInfo } from "./complete-facts";
 import {
-  captureGuidedPACareOriginals, confirmGuidedPACareSources, emptyGuidedPA2026CarePayerReview,
+  buildGuidedPACareSources, captureGuidedPACareOriginals, confirmGuidedPACareSources, emptyGuidedPA2026CarePayerReview,
   emptyGuidedPA2026OrdinaryCareReview,
 } from "@/lib/guided-pa-care-sources";
 function sourceInput(state: flow.GuidedFlowState): TaxYearInput | null {
@@ -95,6 +95,70 @@ it("requires actual federal and payer review and replays it from the saved 2026 
   expect(stale?.care.careSources?.ordinaryDraft2026).toEqual(captured.ordinaryDraft2026);
   expect(stale?.care.careSources?.payments[0]?.payerReview2026).toEqual(captured.payments[0]?.payerReview2026);
   expect(stale?.care.originalCarePayments).toEqual(completion.care.originalCarePayments);
+});
+
+it("replays the actual 2026 PA care household worksheet and renews it after original edits", () => {
+  const { input, facts, sources } = paOrdinaryCareFixture(2026);
+  const { firstName, lastName, ssn, dateOfBirth } = input.taxpayer.primary;
+  const child = required(input.taxpayer.dependents[0]);
+  const residence = confirmGuidedPAResidencySources(input, input.paResidencySources);
+  const actual: TaxYearInput = {
+    ...input, paResidencySources: residence,
+    taxpayer: { ...input.taxpayer, filingStatus: "head_of_household", primary: { ...input.taxpayer.primary, usResidencyMonths: 12 }, address: { street: "18 Fictional Household Way", city: "Pittsburgh", state: "PA", zip: "15201" } },
+    standardDeductionFacts: { primaryCanBeClaimedAsDependent: false, nonresidentAlien: false, dualStatusAlien: false, shortTaxYear: false, primaryDeathDate: null },
+  };
+  const original = sources.care.careSources;
+  const household = {
+    taxYear: "2026", sourceReference: "Fictional household worksheet", primary: { firstName, lastName, ssn, dateOfBirth },
+    homeAddress: actual.taxpayer.address,
+    child: { firstName: child.firstName, lastName: child.lastName, ssn: child.ssn, dateOfBirth: child.dateOfBirth, dependentIndex: "0", relationship: "child", actualNightsInHome: "365" },
+    totalEligibleHomeCosts: "10,000.00", paidByPrimary: "5,000.01",
+    unmarriedAndNotSurvivingSpouseConfirmed: true, fullYearResidentAndNotDependentConfirmed: true,
+    qualifyingChildTestsConfirmed: true, noOtherQualifyingClaimantConfirmed: true, noSpecialQualificationRulesConfirmed: true,
+    eligibleUpkeepCostsAndPaymentsCompleteConfirmed: true, primaryPaymentsFromOwnFundsConfirmed: true,
+  };
+  const pending = {
+    ...original, ordinaryDraft2026: {
+      sourceReference: "Fictional federal care claim review", singleNotEligibleForHeadOfHouseholdConfirmed: null,
+      standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed: true, directFederalDependentEligibilityConfirmed: true,
+      unrelatedProviderEligibilityConfirmed: true, sameExpensesWillBeClaimedOnFederalReturnConfirmed: true,
+    },
+    headOfHousehold2026: { actualAllYearPAMainHomeConfirmed: true, originalHousehold: household },
+    payments: [{ ...required(original.payments[0]), payerReview2026: {
+      sourceReference: "Fictional original claimant payment", claimantPaidWithOwnFundsConfirmed: true, noThirdPartyPaymentOrReimbursementConfirmed: true,
+    } }],
+  };
+  const confirmed = confirmGuidedPACareSources(actual, pending);
+  expect(confirmed.headOfHousehold2026?.originalHousehold).toEqual(household);
+  const canonical = buildGuidedPACareSources(actual, confirmed);
+  expect(canonical.headOfHousehold2026?.originalHousehold).toMatchObject({ taxYear: 2026, paidByPrimary: "5000.01", child: { dependentIndex: 0, actualNightsInHome: 365 } });
+  expect(() => confirmGuidedPACareSources(actual, { ...pending, headOfHousehold2026: undefined })).toThrow(/household/i);
+  for (const patch of [{ paidByPrimary: "5000.00" }, { child: { ...household.child, actualNightsInHome: "364" } }, { homeAddress: { ...household.homeAddress, state: "OH" } }]) {
+    expect(() => confirmGuidedPACareSources(actual, { ...pending, headOfHousehold2026: { ...pending.headOfHousehold2026, originalHousehold: { ...household, ...patch } } })).toThrow(/household/i);
+  }
+  expect(() => confirmGuidedPACareSources({ ...actual, taxpayer: { ...actual.taxpayer, filingStatus: "single" } }, pending)).toThrow(/household|single/i);
+
+  const state = flow.startInterview({ filingStatus: "hoh", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "PA" }, 2026);
+  state.sectionData["personal-info"] = { ...completePersonalInfo, firstName, lastName, ssn, dateOfBirth };
+  const ordinary = confirmGuidedPAOrdinaryReturnFacts(actual, facts);
+  const completion = confirmGuidedPAOrdinaryReturnCompletionSources(actual, { ...sources, care: { ...sources.care, careSources: confirmed } }, ordinary);
+  state.sectionData["state-return"] = { stateEstimatedPayments: [], additionalStateWithholding: "", paResidencySources: residence, paOrdinaryReturnFacts: ordinary, paOrdinaryReturnCompletionSources: completion };
+  const reopened = required(flow.parseGuidedFlowState(JSON.stringify(state)));
+  expect(buildGuidedStateOriginals(actual, reopened).paOrdinaryReturnCompletionSources?.care.careSources).toEqual(canonical);
+  const personal = required(reopened.sectionData["personal-info"]);
+  for (const edited of [flow.updateSectionData(reopened, "personal-info", { ...personal, addressLine1: "Changed original home" }), flow.setInterviewTaxYear(flow.setInterviewTaxYear(reopened, 2025), 2026)]) {
+    const renewed = data(edited).paOrdinaryReturnCompletionSources;
+    expect(renewed?.sourceFactsConfirmed).toBeNull();
+    expect(renewed?.care.careSources?.sourceFactsConfirmed).toBeNull();
+    expect(renewed?.care.careSources?.headOfHousehold2026).toMatchObject({ actualAllYearPAMainHomeConfirmed: null, originalHousehold: { sourceReference: household.sourceReference, paidByPrimary: "5,000.01", primaryPaymentsFromOwnFundsConfirmed: null } });
+  }
+  const editedHousehold = { ...pending.headOfHousehold2026, originalHousehold: { ...household, paidByPrimary: "6000" } };
+  const edited = flow.updateSectionData(reopened, "state-return", { ...data(reopened), paOrdinaryReturnCompletionSources: { ...completion, care: { ...completion.care, careSources: { ...confirmed, headOfHousehold2026: editedHousehold } } } });
+  expect(data(edited).paOrdinaryReturnCompletionSources?.care.careSources?.headOfHousehold2026).toMatchObject({ actualAllYearPAMainHomeConfirmed: null, originalHousehold: { paidByPrimary: "6000", primaryPaymentsFromOwnFundsConfirmed: null } });
+  const reviewedAfterEdit = confirmGuidedPACareSources(actual, { ...confirmed, headOfHousehold2026: editedHousehold });
+  const reviewOnly = flow.updateSectionData(edited, "state-return", { ...data(edited), paOrdinaryReturnCompletionSources: { ...completion, care: { ...completion.care, careSources: reviewedAfterEdit } } });
+  expect(data(reviewOnly).paOrdinaryReturnCompletionSources?.care.careSources).toEqual(reviewedAfterEdit);
+  expect(data(reviewOnly).paOrdinaryReturnCompletionSources?.sourceFactsConfirmed).toBeNull();
 });
 
 it("reopens and previews one confirmed PA partnership NRK-1", () => {

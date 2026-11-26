@@ -3,9 +3,11 @@ import {useState,type ComponentProps} from 'react';
 import type {TaxYearInput} from '@/models/inputs';
 import type {PAOrdinaryCareSources, PACarePaperIdentitySources} from '@/models/pa-care-sources';
 import {emptyGuidedPACareSources,emptyGuidedPACarePayment,captureGuidedPACareOriginals,confirmGuidedPACareSources,emptyGuidedPACarePaperIdentitySources,emptyGuidedPACareProviderIdentity,emptyGuidedPACarePersonIdentity,captureGuidedPACarePaperIdentityOriginals,confirmGuidedPACarePaperIdentitySources} from '@/lib/guided-pa-care-sources';
-import {emptyGuidedPA2026CarePayerReview, emptyGuidedPA2026OrdinaryCareReview, requireGuidedPA2026CareReview} from '@/lib/guided-pa-care-sources';
+import {emptyGuidedPA2026CarePayerReview, emptyGuidedPA2026OrdinaryCareReview, requireGuidedPA2026CareHouseholdReview, requireGuidedPA2026CareReview} from '@/lib/guided-pa-care-sources';
+import {readGuidedMedicalMileageHoh, type MedicalMileageHohDraft} from '@/lib/guided-medical-mileage-hoh';
 import {BooleanFact,TextFact} from './fact-fields';
 import {CurrencyField,parseCurrencyInput,isValidCurrencyValue} from './currency-field';
+import {MedicalMileageHohDetails} from './medical-mileage-hoh-details';
 type Sources=PAOrdinaryCareSources;
 /** Actual source strings are changed only by a different admitted primitive. */
 function ActualCareCurrency({value,onChange,...props}:ComponentProps<typeof CurrencyField>){return <CurrencyField {...props} value={value} onChange={raw=>{const parsed=parseCurrencyInput(raw);const next=raw.trim()===''||(parsed!==''&&isValidCurrencyValue(raw,props.allowNegative))?parsed:raw;if(next!==value)onChange(next);}}/>;}
@@ -16,9 +18,16 @@ export function PACareSourcesDetails({originalInput,data,onChange,collect2026Dra
  if(!data)return <button type="button" onClick={()=>onChange(emptyGuidedPACareSources())}>Add actual PA current care source records</button>;
  const update=(patch:Partial<Sources>)=>{setMessage('');onChange({...data,...patch,sourceFactsConfirmed:null,...(data.paperIdentitySources?{paperIdentitySources:{...data.paperIdentitySources,sourceFactsConfirmed:null}}:{})});};
  const updateCollection=(patch:Partial<Sources>)=>update(requireGuidedPA2026CareReview({...data,...patch}));
+ const headOfHousehold=originalInput?.taxpayer.filingStatus==='head_of_household';
  const supports2026DraftReview=collect2026DraftReview && originalInput?.taxpayer.taxYear===2026
-  && originalInput.taxpayer.filingStatus==='single' && !originalInput.taxpayer.spouse;
+  && (originalInput.taxpayer.filingStatus==='single'||headOfHousehold) && !originalInput.taxpayer.spouse;
  const annualReview=data.ordinaryDraft2026;
+ const household=data.headOfHousehold2026;
+ const householdDraft=readGuidedMedicalMileageHoh(household?.originalHousehold);
+ const editHousehold=(originalHousehold:MedicalMileageHohDraft|undefined, originalsChanged:boolean)=>{
+  const next=originalHousehold?{actualAllYearPAMainHomeConfirmed:household?.actualAllYearPAMainHomeConfirmed??null,originalHousehold}:undefined;
+  update({headOfHousehold2026:next&&originalsChanged?requireGuidedPA2026CareHouseholdReview(next):next});
+ };
  const action=(work:(input:TaxYearInput)=>Sources)=>{try{if(!originalInput)throw Error('Complete actual current federal care originals first');onChange(work(originalInput));setMessage('Actual source action saved. Credit qualification requires complete current return sources.');}catch(e){setMessage(e instanceof Error?e.message:'Complete actual source records');}};
  return <fieldset className="guided-card"><legend>Actual current care payment originals</legend><p className="guided-hint">Retain actual receipts and their provider and qualifying-person links. Unknown values remain blank. Source confirmation does not establish an eligible credit or filing readiness.</p>
  <IntegerFact label="PA care source tax year" value={data.sourceTaxYear} onChange={sourceTaxYear=>updateCollection({sourceTaxYear})}/><TextFact label="PA care collection original source reference" value={data.sourceReference} onChange={sourceReference=>updateCollection({sourceReference})}/>
@@ -27,7 +36,12 @@ export function PACareSourcesDetails({originalInput,data,onChange,collect2026Dra
   <legend>2026 federal review for the Pennsylvania care draft</legend>
   <p className="guided-hint">Complete the receipt below before confirming this review. The draft supports one child under 13, one eligible provider outside your household, and one payment receipt.</p>
   <TextFact label="Federal review original source reference" value={annualReview.sourceReference} onChange={sourceReference=>update({ordinaryDraft2026:emptyGuidedPA2026OrdinaryCareReview(sourceReference)})}/>
-  <BooleanFact label="I reviewed my filing status and do not qualify for Head of Household" value={annualReview.singleNotEligibleForHeadOfHouseholdConfirmed} onChange={singleNotEligibleForHeadOfHouseholdConfirmed=>update({ordinaryDraft2026:{...annualReview,singleNotEligibleForHeadOfHouseholdConfirmed}})}/>
+  {!headOfHousehold&&<BooleanFact label="I reviewed my filing status and do not qualify for Head of Household" value={annualReview.singleNotEligibleForHeadOfHouseholdConfirmed} onChange={singleNotEligibleForHeadOfHouseholdConfirmed=>update({ordinaryDraft2026:{...annualReview,singleNotEligibleForHeadOfHouseholdConfirmed}})}/>}
+  {headOfHousehold&&annualReview.singleNotEligibleForHeadOfHouseholdConfirmed!==null&&<button type="button" onClick={()=>update({ordinaryDraft2026:{...annualReview,singleNotEligibleForHeadOfHouseholdConfirmed:null}})}>Clear retained Single filing-status review</button>}
+  {headOfHousehold&&<>
+   <MedicalMileageHohDetails data={householdDraft} onChange={next=>editHousehold(next,false)} onOriginalsChange={next=>editHousehold(next,true)} instructions="Use your original household worksheet for the same biological child under 13 on the care receipt. Confirm that you and your child shared this Pennsylvania main home for all of 2026. Use a neutral reference without private details."/>
+   {householdDraft&&household&&<BooleanFact label="Household records confirm the same Pennsylvania main home for me and this child throughout 2026" value={household.actualAllYearPAMainHomeConfirmed} onChange={actualAllYearPAMainHomeConfirmed=>update({headOfHousehold2026:{...household,actualAllYearPAMainHomeConfirmed}})}/>}
+  </>}
   <p className="guided-hint">Review all federal deductions and credits for this return. This draft supports the standard deduction, the care credit, and any child tax credit for the one eligible child.</p>
   <BooleanFact label="I reviewed all federal records and confirmed no other adjustments, deductions or credits" value={annualReview.standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed} onChange={standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed=>update({ordinaryDraft2026:{...annualReview,standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed}})}/>
   <p className="guided-hint">Check your child’s relationship, age, residency and custody records. Review whether someone else can claim your child.</p>
@@ -36,7 +50,8 @@ export function PACareSourcesDetails({originalInput,data,onChange,collect2026Dra
   <BooleanFact label="I reviewed the provider’s relationship and confirmed the provider meets these rules" value={annualReview.unrelatedProviderEligibilityConfirmed} onChange={unrelatedProviderEligibilityConfirmed=>update({ordinaryDraft2026:{...annualReview,unrelatedProviderEligibilityConfirmed}})}/>
   <BooleanFact label="I will claim these same care expenses on my federal return" value={annualReview.sameExpensesWillBeClaimedOnFederalReturnConfirmed} onChange={sameExpensesWillBeClaimedOnFederalReturnConfirmed=>update({ordinaryDraft2026:{...annualReview,sameExpensesWillBeClaimedOnFederalReturnConfirmed}})}/>
  </fieldset> : <button type="button" onClick={()=>update({ordinaryDraft2026:emptyGuidedPA2026OrdinaryCareReview()})}>Add federal and payer review for the 2026 Pennsylvania care draft</button>)}
- {collect2026DraftReview && annualReview && <button type="button" onClick={()=>update({ordinaryDraft2026:undefined,payments:data.payments.map(({payerReview2026:_payer,...payment})=>payment)})}>Remove 2026 federal and payer review records</button>}
+ {collect2026DraftReview && household && (!supports2026DraftReview || !headOfHousehold || !householdDraft) && <button type="button" onClick={()=>update({headOfHousehold2026:undefined})}>Remove retained head-of-household originals</button>}
+ {collect2026DraftReview && annualReview && <button type="button" onClick={()=>update({ordinaryDraft2026:undefined,headOfHousehold2026:undefined,payments:data.payments.map(({payerReview2026:_payer,...payment})=>payment)})}>Remove 2026 federal and payer review records</button>}
  {data.payments.map((row,index)=>{
   const pre=`Care receipt ${index+1} `;
   const replace=(payment:typeof row)=>data.payments.map((r,i)=>i===index?payment:r);

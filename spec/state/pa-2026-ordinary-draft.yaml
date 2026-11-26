@@ -86,6 +86,41 @@ lines:
       - "https://www.irs.gov/irb/2025-45_IRB"
       - "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=80"
     testRef: "tests/engine/state/pa-2026-ordinary-care-draft.test.ts::PA2026 actual resident care applies the frozen state rate without a federal return"
+  - line: "resident-head-of-household-dependent-care"
+    description: "Apply the same state care method with separately proven federal Head of Household status"
+    formula: |
+      Limit to the 2026 state-only actual-care draft with continuous full-year PA
+      domicile, PA filing choice S, and the same reviewed wages and one provider,
+      child and own-paid receipt requirements. Keep federal Single proof and the
+      separate household proof mutually exclusive. The taxpayer must be unmarried,
+      ineligible for qualifying surviving spouse, alive and a U.S. resident all
+      year, and unable to be claimed as a dependent. Require exactly one directly
+      claimed biological child under 13. Reconcile that same child and claimant by
+      identity and the same actual Pennsylvania main home for all 365 nights.
+      Replay the annual household worksheet with documented eligible total costs
+      and documented actual taxpayer payments from own funds. Compare twice the
+      taxpayer's payments exactly to total eligible costs and require strictly more
+      than half. Confirm no other claimant, special qualification rule or allocated
+      public-benefit, child-benefit, shared-fund or third-party funding applies.
+      After the basic $24,150 Head of Household deduction and a $51 whole-table
+      interval and reporting margin, wages above $70,244 leave taxable income
+      above $46,043. Use the $46,000 statutory checkpoint: $1,770 plus 12% of
+      $28,300 is $5,166. Reserve the full one-child section 24 amount of $2,200,
+      yielding a $2,966 conservative floor, sufficient for the cohort's maximum
+      current section 21 credit of $1,050. No alternative eligibility, deduction,
+      other federal credit or liability-discount calculation is assumed.
+      At $74,000 wages, $1,800 qualifying paid care and $2,500 PA withholding,
+      independently reconcile the $630 federal projection, $360 state care credit,
+      $2,272 gross tax and $588 draft refund. Household source references, amounts
+      paid for upkeep and identifiers remain private. Preserve all 2025, combined
+      return, public liability worksheet and filing gates.
+    sources:
+      - "https://uscode.house.gov/us/usc/t26/s2/"
+      - "https://www.irs.gov/publications/p501"
+      - "https://www.irs.gov/irb/2025-45_IRB"
+      - "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=78"
+      - "https://www.irs.gov/pub/irs-dft/i2441--dft.pdf#page=6"
+    testRef: "tests/engine/state/pa-2026-ordinary-care-draft.test.ts::PA2026 Head of Household care uses independently proven filing facts and a conservative liability floor"
   - line: "florida-move-full-year-resident"
     description: "Apply the full-year PA source basis to a complete 2026 Florida-to-Pennsylvania move"
     formula: |

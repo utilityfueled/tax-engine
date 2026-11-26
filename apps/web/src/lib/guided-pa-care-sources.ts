@@ -2,9 +2,12 @@ import Decimal from 'decimal.js';
 import type {TaxYearInput} from '@/models/inputs';
 import {PAOrdinaryCareSourcesSchema,type PAOrdinaryCareSources,type PACarePaperIdentitySources} from '@/models/pa-care-sources';
 import {validatePACarePaperIdentitySources} from '@/engine/state/pa-care-paper-sources';
+import {validateMedicalMileageHohSource} from '@/engine/schedules/schedule-a-medical-mileage-hoh';
+import {clearMedicalMileageHohConfirmations, normalizeGuidedMedicalMileageHoh, readGuidedMedicalMileageHoh} from './guided-medical-mileage-hoh';
 type Payment = PAOrdinaryCareSources['payments'][number];
 type OrdinaryReview = NonNullable<PAOrdinaryCareSources['ordinaryDraft2026']>;
 type PayerReview = NonNullable<Payment['payerReview2026']>;
+type HouseholdReview = NonNullable<PAOrdinaryCareSources['headOfHousehold2026']>;
 const fail=(message:string):never=>{throw new Error('PA care sources: '+message);};
 function stable(v:unknown):string{if(Array.isArray(v))return '['+v.map(stable).join(',')+']';if(v&&typeof v==='object')return '{'+Object.entries(v).filter(([,x])=>x!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>JSON.stringify(k)+':'+stable(x)).join(',')+'}';return JSON.stringify(v)??'null';}
 /** Blank private draft; capture and confirmation are separate explicit actions. */
@@ -30,17 +33,50 @@ export function emptyGuidedPA2026CarePayerReview(sourceReference = ''): PayerRev
   };
 }
 
+export function requireGuidedPA2026CareHouseholdReview(household: HouseholdReview): HouseholdReview {
+  const draft = readGuidedMedicalMileageHoh(household.originalHousehold);
+  return {
+    ...household,
+    actualAllYearPAMainHomeConfirmed: null,
+    ...(draft && { originalHousehold: clearMedicalMileageHohConfirmations(draft) }),
+  };
+}
+
 /** Keep actual documentary references and prior-year data when renewed review is required. */
 export function requireGuidedPA2026CareReview(data: PAOrdinaryCareSources): PAOrdinaryCareSources {
-  if (!Array.isArray(data.payments) || (!data.ordinaryDraft2026 && !data.payments.some(row => row?.payerReview2026))) return data;
+  if (!Array.isArray(data.payments) || (!data.ordinaryDraft2026 && !data.headOfHousehold2026 && !data.payments.some(row => row?.payerReview2026))) return data;
   return {
     ...data,
     sourceFactsConfirmed: null,
     ...(data.ordinaryDraft2026 && { ordinaryDraft2026: emptyGuidedPA2026OrdinaryCareReview(data.ordinaryDraft2026.sourceReference) }),
+    ...(data.headOfHousehold2026 && { headOfHousehold2026: requireGuidedPA2026CareHouseholdReview(data.headOfHousehold2026) }),
     payments: data.payments.map(row => row?.payerReview2026 ? {
       ...row, payerReview2026: emptyGuidedPA2026CarePayerReview(row.payerReview2026.sourceReference),
     } : row),
   };
+}
+
+function buildGuidedPA2026CareHousehold(input: TaxYearInput, sources: PAOrdinaryCareSources): HouseholdReview {
+  const household = sources.headOfHousehold2026;
+  if (!household || household.actualAllYearPAMainHomeConfirmed !== true) return fail('confirm the original all-year Pennsylvania head-of-household records');
+  const original = readGuidedMedicalMileageHoh(household.originalHousehold);
+  if (!original) return fail('complete actual head-of-household original records');
+  let proof: ReturnType<typeof normalizeGuidedMedicalMileageHoh>;
+  try {
+    proof = normalizeGuidedMedicalMileageHoh(original);
+    validateMedicalMileageHohSource(proof, input);
+  } catch {
+    return fail('complete a current head-of-household worksheet showing that you paid more than half of eligible home upkeep from your own funds');
+  }
+  const care = input.dependentCare;
+  const person = care?.qualifyingPersons?.[0];
+  if (proof.homeAddress.state !== 'PA' || proof.child.dependentIndex !== 0 || proof.child.actualNightsInHome !== 365
+    || input.taxpayer.dependents.length !== 1 || input.taxpayer.dependents[0]?.monthsLivedWithYou !== 12
+    || care?.qualifyingPersons?.length !== 1 || sources.payments.length !== 1
+    || sources.payments[0]?.qualifyingPersonIndex !== 0 || proof.child.ssn.replaceAll('-', '') !== person?.taxId?.replaceAll('-', '')) {
+    return fail('head-of-household originals require the same child and the same Pennsylvania main home for the entire year');
+  }
+  return { ...household, originalHousehold: proof };
 }
 
 /** Caller has reviewed current originals; this action never supplies a factual year or amount. */
@@ -56,18 +92,23 @@ export function buildGuidedPACareSources(input:TaxYearInput,raw:unknown):PAOrdin
  if(!input.dependentCare||stable(data.originalDependentCare)!==stable(input.dependentCare))return fail('retained actual federal care originals are missing or stale');
  if(!data.payments.length)fail('retain actual care payment originals');
  const review = data.ordinaryDraft2026;
- const hasDraftReview = review !== undefined || data.payments.some(row => row.payerReview2026 !== undefined);
- if (hasDraftReview && (input.taxpayer.taxYear !== 2026 || input.taxpayer.filingStatus !== 'single' || input.taxpayer.spouse)) {
-   return fail('2026 federal review requires current Single filing-status originals');
+ const hasDraftReview = review !== undefined || data.headOfHousehold2026 !== undefined || data.payments.some(row => row.payerReview2026 !== undefined);
+ const headOfHousehold = input.taxpayer.filingStatus === 'head_of_household';
+ if (hasDraftReview && (input.taxpayer.taxYear !== 2026 || (input.taxpayer.filingStatus !== 'single' && !headOfHousehold) || input.taxpayer.spouse)) {
+   return fail('2026 federal review requires current Single or head-of-household filing-status originals');
+ }
+ if (hasDraftReview && !headOfHousehold && data.headOfHousehold2026 !== undefined) {
+   return fail('reconcile retained head-of-household originals before confirming Single status');
  }
  if (hasDraftReview && (!review?.sourceReference.trim()
-   || review.singleNotEligibleForHeadOfHouseholdConfirmed !== true
+   || review.singleNotEligibleForHeadOfHouseholdConfirmed !== (headOfHousehold ? null : true)
    || review.standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed !== true
    || review.directFederalDependentEligibilityConfirmed !== true
    || review.unrelatedProviderEligibilityConfirmed !== true
    || review.sameExpensesWillBeClaimedOnFederalReturnConfirmed !== true)) {
    return fail('confirm the complete actual 2026 federal care review and its original source reference');
  }
+ const household = hasDraftReview && headOfHousehold ? buildGuidedPA2026CareHousehold(input, data) : undefined;
  for(const row of data.payments){
   const payer = row.payerReview2026;
   if (hasDraftReview && (!payer?.sourceReference.trim() || payer.claimantPaidWithOwnFundsConfirmed !== true
@@ -81,9 +122,13 @@ export function buildGuidedPACareSources(input:TaxYearInput,raw:unknown):PAOrdin
   for(const value of Object.values(row.originalReceipt))if(!value.trim())fail('complete actual receipt identity and amount');
  }
  if(data.paperIdentitySources!==undefined)validatePACarePaperIdentitySources(input,data);
- return data;
+ return household ? { ...data, headOfHousehold2026: household } : data;
 }
-export function confirmGuidedPACareSources(input:TaxYearInput,data:PAOrdinaryCareSources):PAOrdinaryCareSources{return buildGuidedPACareSources(input,{...data,sourceFactsConfirmed:true});}
+export function confirmGuidedPACareSources(input:TaxYearInput,data:PAOrdinaryCareSources):PAOrdinaryCareSources{
+ const confirmed = {...data, sourceFactsConfirmed:true};
+ buildGuidedPACareSources(input, confirmed);
+ return confirmed;
+}
 
 /** Documentary identity entry is optional and begins without inferred facts. */
 export function emptyGuidedPACarePaperIdentitySources():PACarePaperIdentitySources{return {sourceTaxYear:null,sourceReference:'',sourceFactsConfirmed:null,providers:[],qualifyingPersons:[]};}

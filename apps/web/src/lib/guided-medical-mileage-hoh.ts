@@ -24,16 +24,28 @@ export const medicalMileageHohDraftSchema = z.strictObject({
 export type MedicalMileageHohDraft = z.infer<typeof medicalMileageHohDraftSchema>;
 export function clearMedicalMileageHohConfirmations(source: MedicalMileageHohDraft): MedicalMileageHohDraft { return { ...source, unmarriedAndNotSurvivingSpouseConfirmed: null, fullYearResidentAndNotDependentConfirmed: null, qualifyingChildTestsConfirmed: null, noOtherQualifyingClaimantConfirmed: null, noSpecialQualificationRulesConfirmed: null, primaryPaymentsFromOwnFundsConfirmed:null,eligibleUpkeepCostsAndPaymentsCompleteConfirmed: null }; }
 export function newMedicalMileageHohDraft(): MedicalMileageHohDraft { return clearMedicalMileageHohConfirmations({ taxYear: '', sourceReference: '', homeAddress: { street: '', city: '', state: '', zip: '' }, primary: { firstName: '', lastName: '', ssn: '', dateOfBirth: '' }, child: { dependentIndex: '', relationship: '', firstName: '', lastName: '', ssn: '', dateOfBirth: '', actualNightsInHome: '' }, totalEligibleHomeCosts: '', paidByPrimary: '', unmarriedAndNotSurvivingSpouseConfirmed: null, fullYearResidentAndNotDependentConfirmed: null, qualifyingChildTestsConfirmed: null, noOtherQualifyingClaimantConfirmed: null, noSpecialQualificationRulesConfirmed: null, primaryPaymentsFromOwnFundsConfirmed:null,eligibleUpkeepCostsAndPaymentsCompleteConfirmed: null }); }
+/** Convert a retained editable or confirmed household record for source editing. */
+export function readGuidedMedicalMileageHoh(value: unknown): MedicalMileageHohDraft | undefined {
+    const draft = medicalMileageHohDraftSchema.safeParse(value);
+    if (draft.success) return draft.data;
+    const original = MedicalMileageHohSchema.safeParse(value);
+    if (!original.success) return undefined;
+    const { taxYear, child, ...rest } = original.data;
+    return { ...rest, taxYear: String(taxYear), child: { ...child, dependentIndex: String(child.dependentIndex), actualNightsInHome: String(child.actualNightsInHome) } };
+}
 function integer(value: string) { if (!/^(?:0|[1-9]\d*)$/.test(value))
     throw new Error('Enter the actual household original year, child index and nights'); const result = Number(value); if (!Number.isSafeInteger(result))
     throw new Error('Enter actual whole household source counts'); return result; }
 function money(value: string) { return value.trim().replace(/^(\d{1,3}(?:,\d{3})+)(\.\d{1,2})?$/, text => text.replaceAll(',', '')); }
+export function normalizeGuidedMedicalMileageHoh(source: unknown) {
+    const draft = medicalMileageHohDraftSchema.parse(source);
+    return MedicalMileageHohSchema.parse({ ...draft, taxYear: integer(draft.taxYear), child: { ...draft.child, dependentIndex: integer(draft.child.dependentIndex), actualNightsInHome: integer(draft.child.actualNightsInHome) }, totalEligibleHomeCosts: money(draft.totalEligibleHomeCosts), paidByPrimary: money(draft.paidByPrimary) });
+}
 /** No household identity, eligibility or amount is manufactured from a status selection. */
 export function buildGuidedMedicalMileageHoh(source: MedicalMileageHohDraft | undefined, personal: PersonalInfoData | undefined) {
     if (!source || !personal || !personal.dateOfBirth)
         throw new Error('Complete the original head-of-household evidence and actual household identities');
-    const draft = medicalMileageHohDraftSchema.parse(source);
-    const proof = MedicalMileageHohSchema.parse({ ...draft, taxYear: integer(draft.taxYear), child: { ...draft.child, dependentIndex: integer(draft.child.dependentIndex), actualNightsInHome: integer(draft.child.actualNightsInHome) }, totalEligibleHomeCosts: money(draft.totalEligibleHomeCosts), paidByPrimary: money(draft.paidByPrimary) });
+    const proof = normalizeGuidedMedicalMileageHoh(source);
     const facts = personal.standardDeductionFacts;
     const knownBoolean = (value: boolean | null | undefined) => typeof value === 'boolean' ? value : undefined;
     validateMedicalMileageHohSource(proof, {

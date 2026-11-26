@@ -47,12 +47,21 @@ export function validatePA2026EicChildInventory(input:TaxYearInput,raw:unknown,r
 /** Call only after the existing complete ordinary/residency source replay. No federal result is manufactured. */
 export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdinaryReturnProjection,sources:PAOrdinaryReturnCompletionSources,income:PAResidencySourcesResult,unemployment?:PA2026GovernmentUnemploymentContext):PA2026OrdinaryDependencyProof {
  if(input.taxpayer.taxYear!==2026||p.taxYear!==2026)fail('the separately typed draft requires actual2026 sources');
- if(input.taxpayer.filingStatus!=='single'||p.facts.filing.maritalStatus!=='unmarried'||p.facts.filing.aliveEntireYear!==true)fail('only actual single living unmarried owners are supported');
+ const care=sources.care;
+ const actualCare=care.status==='actual_expenses';
+ const careHeadOfHousehold=actualCare&&input.taxpayer.filingStatus==='head_of_household';
+ if((input.taxpayer.filingStatus!=='single'&&!careHeadOfHousehold)||p.facts.filing.maritalStatus!=='unmarried'||p.facts.filing.aliveEntireYear!==true)fail('only actual single living unmarried owners or the proven Head of Household care method are supported');
+ const retainedCare=input.paOrdinaryReturnCompletionSources?.care?.careSources;
+ const retainedHousehold=retainedCare?.headOfHousehold2026;
+ if(retainedHousehold!==undefined&&stable(retainedHousehold)!==stable(care.careSources?.headOfHousehold2026)){
+  fail('retained Head of Household proof differs from the supplied care sources');
+ }
+ if(careHeadOfHousehold&&retainedCare?.ordinaryDraft2026?.singleNotEligibleForHeadOfHouseholdConfirmed===true){
+  fail('retained Single proof conflicts with the supplied Head of Household care method');
+ }
  // Empty document arrays are normalization only. They never establish the complete
  // none facts: those are independently replayed from the confirmed source packets.
  const roots=new Set(['taxpayer','w2s','paResidencySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources','standardDeductionFacts','deductionElection','childTaxCredit','scheduleBPartThree']);
- const care=sources.care;
- const actualCare=care.status==='actual_expenses';
  if(actualCare)roots.add('dependentCare');
  if (unemployment && readPA2026GovernmentUnemployment(input, unemployment)) roots.add('form1099G');
  const emptyDocumentRoots=new Set(['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','paScheduleGLStatements','paScheduleJStatements','paPassThroughStatements','scheduleK1','scheduleK1Form1041','form1098','form1098E','form1095A','donations','rentalProperties','savingsBondRedemptions','form6252','form8814','homeSales','form8824']);
@@ -91,7 +100,8 @@ export function calculatePA2026OrdinaryDependencies(input:TaxYearInput,p:PAOrdin
   if(unemployment||sources.eitcChildInventory||sources.estimatedTaxReview2026||p.facts.payments.rows.length||income.residencyStatus!=='resident'
     ||r.residency.domicilePeriods.length!==1||domicile?.state!=='PA'||domicile.from!=='2026-01-01'||domicile.through!=='2026-12-31'
     ||p.paFilingChoice!=='S'||p.claimedAsDependent||p.facts.filing.dependentChildren.length!==1
-    ||input.taxpayer.dependents.length!==1||child?.originalIndex!==0||!['natural_child','adopted_child'].includes(child.relationship)){
+    ||input.taxpayer.dependents.length!==1||child?.originalIndex!==0
+    ||(child.relationship!=='natural_child'&&(careHeadOfHousehold||child.relationship!=='adopted_child'))){
    fail('actual care requires a single directly claimed child, continuous PA domicile and the high-wage-only original method');
   }
  }else if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||care.careSources!==undefined){

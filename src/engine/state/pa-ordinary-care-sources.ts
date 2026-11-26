@@ -5,7 +5,9 @@ import type {TaxReturnResult} from '@/models/outputs.js';
 import type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
 import {PACompletionOriginalRecordSchema} from '@/models/pa-ordinary-return-completion.js';
 import {PAOrdinaryCareSourcesSchema} from '@/models/pa-care-sources.js';
+import {MedicalMileageHohSchema} from '@/models/medical-mileage-hoh.js';
 import {calculateForm2441,type Form2441Input} from '@/engine/forms/form-2441.js';
+import {validateMedicalMileageHohSource} from '@/engine/schedules/schedule-a-medical-mileage-hoh.js';
 import type {PAResidencySourcesResult} from './pa-residency-sources.js';
 import {calculatePA2026OrdinaryDraftScheduleDC,calculateScheduleDC,type ScheduleDCInput,type ScheduleDCResult} from './pa-schedule-dc.js';
 import {ordinarySourcePrecision,publicOrdinaryMoney} from './pa-ordinary-source-precision.js';
@@ -28,9 +30,12 @@ export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinar
  }
  if(care.status!=='actual_expenses')return fail('actual care status is unknown');
  const parsed=PAOrdinaryCareSourcesSchema.safeParse(care.careSources);if(!parsed.success)return fail('complete actual care source packet is required');const source=parsed.data,y=input.taxpayer.taxYear,c=input.dependentCare,t=input.taxpayer.primary;
+ const household=source.headOfHousehold2026;
+ const draftHeadOfHousehold=useDraftFloor&&y===2026&&input.taxpayer.filingStatus==='head_of_household';
+ if(household!==undefined&&!useDraftFloor)return fail('Head of Household care proof is restricted to the 2026 state-only draft');
  if(source.sourceTaxYear!==y||source.sourceFactsConfirmed!==true)return fail('confirm the actual current-year care originals');ref(source.sourceReference);
  if(!c||stable(source.originalDependentCare)!==stable(c))return fail('current care originals differ from the retained snapshot');
- if(income.residencyStatus!=='resident'||input.taxpayer.spouse||input.taxpayer.filingStatus!=='single')return fail('first care method requires actual single full-year resident originals');
+ if(income.residencyStatus!=='resident'||input.taxpayer.spouse||(input.taxpayer.filingStatus!=='single'&&!draftHeadOfHousehold))return fail('first care method requires actual full-year resident originals for a supported unmarried filing status');
  if(c.sourceFactsConfirmed!==true||c.eligibilityConfirmed!==true||c.receivedBenefits!==false||c.usesDeemedIncome!==false||input.dependentCareBenefits!==undefined||input.w2s.some(w=>!money(w.box10DependentCareBenefits).isZero())||!money(c.excludedDependentCareBenefits).isZero()||!money(c.priorYearExpenseCredit).isZero())return fail('actual eligibility, known zero benefits/prior credit and ordinary earned income are required');
  if(!c.providers||!c.qualifyingPersons||!c.providers.length||!c.qualifyingPersons.length||c.qualifyingIndividuals!==c.qualifyingPersons.length||!source.payments.length)return fail('complete actual providers, qualifying persons and paid receipts are required');
  const wages=input.w2s.reduce((sum,w)=>sum.plus(money(w.wages)),new Money(0));
@@ -41,16 +46,30 @@ export function calculatePAOrdinaryCareSources(input:TaxYearInput,care:PAOrdinar
  if(input.scheduleC!==undefined||input.scheduleF!==undefined||input.form1099Nec.length||!money(c.primaryEarnedIncome).eq(wages)||!wageContextReconciles)return fail('actual W2-only earned-income worksheet must reconcile fresh federal wages and adjustments');
  if(useDraftFloor){
   const review=source.ordinaryDraft2026;
-  if(y!==2026||!review?.sourceReference.trim()||review.singleNotEligibleForHeadOfHouseholdConfirmed!==true
+  if(y!==2026||!review?.sourceReference.trim()
    ||review.standardDeductionOnlyAndNoOtherFederalTaxReductionsConfirmed!==true||review.directFederalDependentEligibilityConfirmed!==true
    ||review.unrelatedProviderEligibilityConfirmed!==true
-   ||review.sameExpensesWillBeClaimedOnFederalReturnConfirmed!==true)return fail('complete actual single household, dependent, provider, federal reductions and same-expense claim review is required');
+   ||review.sameExpensesWillBeClaimedOnFederalReturnConfirmed!==true)return fail('complete actual household, dependent, provider, federal reductions and same-expense claim review is required');
+  if(draftHeadOfHousehold){
+   if(review.singleNotEligibleForHeadOfHouseholdConfirmed!==null)return fail('Single proof conflicts with the Head of Household care method');
+   if(!household)return fail('Head of Household care requires original household proof');
+   const proof=MedicalMileageHohSchema.safeParse(household.originalHousehold);
+   if(!proof.success)return fail('complete original household proof is required');
+   if(household.actualAllYearPAMainHomeConfirmed!==true||proof.data.homeAddress.state!=='PA'
+     ||proof.data.child.actualNightsInHome!==365||proof.data.child.dependentIndex!==0){
+    return fail('confirm the actual all-year Pennsylvania main home shared with the sole care child');
+   }
+   try{validateMedicalMileageHohSource(proof.data,input);}
+   catch(error){return fail(error instanceof Error?error.message.replace(/^Medical mileage HOH /,'Head of Household '):'invalid original household proof');}
+  }else if(review.singleNotEligibleForHeadOfHouseholdConfirmed!==true||household!==undefined){
+   return fail('confirm the actual Single proof without retained Head of Household proof');
+  }
   const standard=input.standardDeductionFacts;
   if((input.deductionElection!==undefined&&input.deductionElection!=='standard'&&input.deductionElection!=='automatic')
     ||!isActualDate(t.dateOfBirth)||t.dateOfBirth<='1962-01-01'||t.dateOfBirth>'2026-12-31'
     ||standard?.primaryBlind||standard?.primaryCanBeClaimedAsDependent
     ||standard?.nonresidentAlien||standard?.dualStatusAlien||standard?.residentJointElection||standard?.spouseItemizes){
-   return fail('the ordinary draft requires the basic Single standard deduction without contradictory facts');
+   return fail('the ordinary draft requires the basic standard deduction for the proven filing status without contradictory facts');
   }
   if(c.providers.length!==1||c.providers[0].householdEmployee!==false||c.qualifyingIndividuals!==1||source.payments.length!==1||source.paperIdentitySources!==undefined){
    return fail('the ordinary draft requires one under-13 person, one eligible non-household provider and one original paid receipt');

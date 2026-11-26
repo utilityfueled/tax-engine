@@ -26,6 +26,10 @@ export const PAOrdinaryCareSourcesSchema=z.object({
   directFederalDependentEligibilityConfirmed:answer,unrelatedProviderEligibilityConfirmed:answer,
   sameExpensesWillBeClaimedOnFederalReturnConfirmed:answer,
  }).strict().optional(),
+ headOfHousehold2026:z.object({
+  actualAllYearPAMainHomeConfirmed:answer,
+  originalHousehold:original,
+ }).strict().optional(),
  payments:z.array(z.object({
   sourceReference:z.string(),providerIndex:z.number().int().nullable(),qualifyingPersonIndex:z.number().int().nullable(),
   paidOn:z.string(),serviceFrom:z.string(),serviceThrough:z.string(),amount:z.string(),

@@ -146,20 +146,24 @@ function calculateScheduleDCWithLiabilityEvidence(input: ScheduleDCInput, ordina
     }
     let liabilityLimit: Decimal;
     if (ordinaryDraft) {
-      const brackets = FEDERAL_2026_INDEXED.taxBrackets.single;
-      const checkpoint = brackets[2].min;
+      const status = federal.filingStatus;
+      if (status !== "single" && status !== "head_of_household") {
+        throw new Error("2026 PA Schedule DC requires a proven Single or Head of Household filing status for the ordinary wage liability floor");
+      }
+      const brackets = FEDERAL_2026_INDEXED.taxBrackets[status];
+      const checkpoint = status === "single" ? brackets[2].min : new Decimal("46000");
       // Stay below the cohort's taxable income even after a full $50 Tax Table
-      // interval and a dollar of reporting allowance. Count only the first two
-      // brackets, then reserve the full potentially allowable one-child §24 credit.
-      const lowerTaxable = federal.agi.minus(FEDERAL_2026_INDEXED.standardDeduction.single).minus(51);
-      if (federal.filingStatus !== "single" || input.qualifyingPersons !== 1
+      // interval and a dollar of reporting allowance, then reserve all of the
+      // potentially allowable one-child §24 credit.
+      const lowerTaxable = federal.agi.minus(FEDERAL_2026_INDEXED.standardDeduction[status]).minus(51);
+      if (input.qualifyingPersons !== 1
         || !federal.earnedIncome.eq(federal.agi) || federal.taxLiabilityLimit !== undefined
         || !federal.agi.gt(FEDERAL_2026_INDEXED.eitc.completedPhaseOutMFJ[3]) || lowerTaxable.lt(checkpoint)) {
-        throw new Error("2026 PA Schedule DC requires the bounded ordinary Single wage liability floor inputs");
+        throw new Error("2026 PA Schedule DC requires the bounded ordinary wage liability floor inputs");
       }
       liabilityLimit = calculateTaxFromBrackets(checkpoint, brackets).minus(FEDERAL_2026_CONSTANTS.childTaxCredit.perChild);
       audit.record("PA-Schedule-DC", "2026_federal_liability_floor", "Conservative federal care credit liability floor", liabilityLimit,
-        "First two Single brackets with full Tax Table and reporting margin, less the one-child section 24 reserve; review-only lower bound");
+        "Statutory checkpoint for the proven filing status with full Tax Table and reporting margin, less the one-child section 24 reserve; review-only lower bound");
     } else {
       if (!federal.taxLiabilityLimit || federal.taxLiabilityLimit.isNegative()) {
         throw new Error("2026 PA Schedule DC requires an actual federal liability worksheet");

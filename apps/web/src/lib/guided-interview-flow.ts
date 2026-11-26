@@ -26,7 +26,7 @@ import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import { buildGuidedPAOrdinaryReturnFacts } from "./guided-pa-ordinary-return-facts";
 import { buildGuidedPAOrdinaryReturnCompletionSources, type GuidedPAOrdinaryReturnCompletionSources } from "./guided-pa-ordinary-return-completion";
-import { requireGuidedPA2026CareReview } from "./guided-pa-care-sources";
+import { requireGuidedPA2026CareHouseholdReview, requireGuidedPA2026CareReview } from "./guided-pa-care-sources";
 import { assertW2StateLocalSources } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
 import type { OhioResidencyDraft } from "./guided-ohio-residency-facts";
@@ -1761,6 +1761,9 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
   const payments = state.sectionData.payments;
   const deductions = state.sectionData.deductions;
   const stateReturn = state.sectionData["state-return"];
+  const paCompletion = stateReturn?.paOrdinaryReturnCompletionSources;
+  const paCare = paCompletion?.care?.careSources;
+  const paHouseholdNeedsReview = paCare?.headOfHousehold2026 !== undefined;
   function requirePaymentApplication(entry: EstimatedPaymentEntry): EstimatedPaymentEntry {
     if (entry.application !== undefined || !(entry.date?.trim() || entry.amount?.trim())) return entry;
     return { ...entry, application: { taxYear: "", confirmed: null } };
@@ -1804,8 +1807,11 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
     ...(llcSourcesEntered ? { factsVersion: LLC_YEAR_FACTS_VERSION } : {}),
     sectionData: {
       ...state.sectionData,
-      ...(stateReturn?.ohioRetirementCredit ? { "state-return": { ...stateReturn,
-        ohioRetirementCredit: { ...stateReturn.ohioRetirementCredit, sourceFactsConfirmed: null },
+      ...(stateReturn && (stateReturn.ohioRetirementCredit || paHouseholdNeedsReview) ? { "state-return": { ...stateReturn,
+        ...(stateReturn.ohioRetirementCredit ? { ohioRetirementCredit: { ...stateReturn.ohioRetirementCredit, sourceFactsConfirmed: null } } : {}),
+        ...(paCompletion && paCare && paHouseholdNeedsReview ? { paOrdinaryReturnCompletionSources: { ...paCompletion, sourceFactsConfirmed: null,
+          care: { ...paCompletion.care, careSources: requireGuidedPA2026CareReview(paCare) },
+        } } : {}),
       } } : {}),
       ...(Number.isInteger(state.taxYear) && wages?.entries?.some(isStartedW2) ? {
         "income-w2": {
@@ -2665,14 +2671,28 @@ export function updateSectionData(
     : guidedSourceValuesChanged(paStateDependencyValues(ohioStateReturn), paStateDependencyValues(incomingStateReturn)));
   const paOrdinaryChanged = incomingStateReturn && guidedSourceValuesChanged(paOrdinarySourceValues(ohioStateReturn?.paOrdinaryReturnFacts), paOrdinarySourceValues(incomingStateReturn.paOrdinaryReturnFacts));
   const paCompletionChanged = incomingStateReturn && guidedSourceValuesChanged(paCompletionSourceValues(ohioStateReturn?.paOrdinaryReturnCompletionSources), paCompletionSourceValues(incomingStateReturn.paOrdinaryReturnCompletionSources));
+  const incomingPACompletion = incomingStateReturn?.paOrdinaryReturnCompletionSources;
+  const incomingPACare = incomingPACompletion?.care?.careSources;
+  const priorHousehold = paCareSources?.headOfHousehold2026;
+  const incomingHousehold = incomingPACare?.headOfHousehold2026;
+  const paHouseholdContextChanged = incomingHousehold && (paDependenciesChanged
+    || (paOrdinaryChanged && guidedSourceValuesChanged(ohioStateReturn?.paOrdinaryReturnFacts?.filing, incomingStateReturn?.paOrdinaryReturnFacts?.filing))
+    || (priorHousehold !== incomingHousehold && guidedSourceValuesChanged(
+      priorHousehold ? requireGuidedPA2026CareHouseholdReview(priorHousehold) : undefined,
+      requireGuidedPA2026CareHouseholdReview(incomingHousehold),
+    )));
+  const editedPACare = paHouseholdContextChanged && state.taxYear === 2026 && incomingPACare
+    ? requireGuidedPA2026CareReview(incomingPACare) : undefined;
   const paMarriedChanged=incomingStateReturn&&guidedSourceValuesChanged(paMarriedSourceValues(ohioStateReturn?.paMarriedOrdinarySources),paMarriedSourceValues(incomingStateReturn.paMarriedOrdinarySources));
-  const invalidatedPAStateReturn = incomingStateReturn && (paDependenciesChanged || paOrdinaryChanged || paCompletionChanged || paMarriedChanged) ? {
+  const invalidatedPAStateReturn = incomingStateReturn && (paDependenciesChanged || paOrdinaryChanged || paCompletionChanged || paMarriedChanged || editedPACare) ? {
     ...incomingStateReturn,
     ...(incomingStateReturn.paMarriedOrdinarySources&&(paDependenciesChanged||paOrdinaryChanged||paCompletionChanged||paMarriedChanged)?{paMarriedOrdinarySources:{...incomingStateReturn.paMarriedOrdinarySources,sourceFactsConfirmed:null}}:{}),
     ...(incomingStateReturn.paOrdinaryReturnFacts && (paDependenciesChanged || paOrdinaryChanged)
       ? { paOrdinaryReturnFacts: { ...incomingStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
-    ...(incomingStateReturn.paOrdinaryReturnCompletionSources && (paDependenciesChanged || paCompletionChanged)
-      ? { paOrdinaryReturnCompletionSources: { ...incomingStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
+    ...(incomingPACompletion && (paDependenciesChanged || paCompletionChanged || editedPACare)
+      ? { paOrdinaryReturnCompletionSources: { ...incomingPACompletion, sourceFactsConfirmed: null,
+        ...(editedPACare ? { care: { ...incomingPACompletion.care, careSources: editedPACare } } : {}),
+      } } : {}),
   } : undefined;
   const ohio2026SchoolChanged=incomingStateReturn&&guidedSourceValuesChanged(ohio2026SchoolActualValues(ohioStateReturn?.ohio2026SchoolSources),ohio2026SchoolActualValues(incomingStateReturn.ohio2026SchoolSources));
   const ohio2026SchoolDependenciesChanged=incomingStateReturn&&incomingStateReturn.ohio2026SchoolSources&&guidedSourceValuesChanged({...ohioStateReturn,ohio2026SchoolSources:undefined},{...incomingStateReturn,ohio2026SchoolSources:undefined});
