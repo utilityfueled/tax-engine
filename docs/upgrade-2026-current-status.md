@@ -9,6 +9,13 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- On exact `77c1143ac`, Linux CI passed 30,883 tests at 88.9% branch
+  coverage. Docker, managed Chromium, and the native ARM64 archive,
+  recovery and cleanup checks passed. Strict container Chromium remains
+  open with three AMD64 and eleven ARM64 failures. Eight exact static Mac
+  checks passed. The local unit, coverage and focused browser runs did not
+  pass. [Exact results](upgrade-2026-progress.md#november-26-exact-linux-release-results).
+
 - Five focused packages are on `main` through `77c1143ac`. They cover
   Schedule 8812 other dependents, bound ARM64 timing, offline billing receipt
   reuse, Ohio part-year bank interest, and pending Ohio header validation.

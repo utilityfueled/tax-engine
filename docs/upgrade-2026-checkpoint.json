@@ -4,6 +4,7 @@
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
     "latestScopedApplicationCommit": "77c1143ace6cb89ecce4a637e6268256651f9799",
+    "latestExactLinuxResultsEvidenceKey": "activeContinuation.nov26CurrentExactLinuxReleaseResults",
     "latestSchedule8812AndNativeTimingEvidenceKey": "activeContinuation.nov26Schedule8812AndNativeTiming",
     "ohioUnemploymentEducatorHoursAndForm4137EvidenceKey": "activeContinuation.nov26OhioUnemploymentEducatorHoursAndForm4137",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
@@ -102,8 +103,8 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Verify latest exact main Linux CI, Web and Docker jobs. Strict container browser results, recovery and rollback must be verified before release.",
-      "See the November 26 exact application verification for 827f467e2 and retained strict AMD64 and ARM64 timing failures. The strict school markers are wired and await the current exact Linux runs.",
+      "Current exact Linux CI, Docker, managed Chromium and native ARM64 archive and Compose recovery passed. Resolve and reverify strict container Chromium failures on AMD64 and ARM64 before release.",
+      "The last fully passing local application was 827f467e2. The current exact ARM64 timing was captured and published. Preserve the newer local and Linux failures until a new exact run qualifies.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -111,6 +112,30 @@
     ]
   },
   "activeContinuation": {
+    "nov26CurrentExactLinuxReleaseResults": {
+      "applicationCommit": "77c1143ace6cb89ecce4a637e6268256651f9799",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-exact-linux-release-results",
+      "ciRun": 45821671331,
+      "dockerRun": 45821671359,
+      "webRun": 45821671414,
+      "arm64Run": 45821846600,
+      "ciDockerManagedBrowser": "success",
+      "linuxCoverageTestsPassed": 30883,
+      "linuxCoverageFilesPassed": 2233,
+      "linuxBranchCoveragePercent": 88.9,
+      "strictCasesPerArchitecture": 659,
+      "strictOriginalSkipsPerArchitecture": 5,
+      "amd64StrictBrowserFailures": 3,
+      "arm64StrictBrowserFailures": 11,
+      "arm64SchoolCasesFailed": 4,
+      "arm64ArchiveComposeRecoveryAndCleanup": "success",
+      "arm64TimingArtifactSha256": "04966f51dc29447aef1fa101ba80ac2e83d0b913956fc550c85c225eefb4974e",
+      "exactMacStaticChecksPassed": 8,
+      "exactMacUnitAndCoverage": "failed with timeouts",
+      "macFocusedBrowserPassed": 3,
+      "macFocusedBrowserFailures": 1,
+      "macFocusedBrowserOwnedServerClosed": true
+    },
     "nov26Schedule8812AndNativeTiming": {
       "progressSection": "docs/upgrade-2026-progress.md#november-26-schedule-8812-and-linux-timing-follow-up",
       "schedule8812": {

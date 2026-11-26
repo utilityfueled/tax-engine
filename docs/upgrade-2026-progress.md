@@ -1,5 +1,34 @@
 # 2026 upgrade implementation evidence
 
+## November 26 exact Linux release results
+
+On application revision `77c1143ac`, Linux CI, Docker and managed Chromium
+passed. The exact Linux coverage job passed 30,883 tests across 2,233
+files and measured 88.9% branch coverage against the 85% gate. Both Linux
+container jobs completed their recorded Compose recovery checks. The ARM64
+job also verified an independent image import, closed its browser container,
+and published its candidate-bound timing report.
+[CI](https://github.com/utilityfueled/tax-engine/actions/runs/45821671331) ·
+[Docker](https://github.com/utilityfueled/tax-engine/actions/runs/45821671359) ·
+[Web](https://github.com/utilityfueled/tax-engine/actions/runs/45821671414) ·
+[ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45821846600).
+
+The strict Chromium step failed on both exact container images. AMD64
+reported three failures and ARM64 reported eleven, each from 659 scheduled
+cases with five original skips. All four timing-marked ARM64 school cases
+failed. The observed comparison with the previous source varies by runtime
+and case. It gives no measured gate-level benefit for the pending-header
+optimization.
+
+On the matching Mac checkout, all eight static checks passed. The local
+unit and coverage runs reported timeouts despite preventing idle sleep.
+The focused Ohio school Chromium run passed three of four cases and closed
+its server. All four cases completed header entry in 1.34–1.46 seconds.
+The failing case recorded a 688.86-second elapsed gap during a successful
+button-count check, then reached its original 30-second deadline shortly
+after its review response wait began. It captured no network entries. Both
+strict Linux results and the local failures remain part of the release record.
+
 ## November 26 Schedule 8812 and Linux timing follow-up
 
 - `5445447a1` extends the private 2026 Schedule 8812 specimen to use the
