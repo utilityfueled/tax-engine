@@ -28,6 +28,11 @@ export function HsaSourceDetails({ data, filingStatus, taxYear, onChange }: { da
   });
   return <section aria-label="Actual HSA sources">
     <h4>Health Savings Accounts</h4>
+    {taxYear === 2026 && accounts.length > 0 && <p className="guided-hint">
+      Bronze or catastrophic plans available as individual coverage through a Marketplace count as HDHPs in 2026.
+      A qualifying direct primary care arrangement is permitted alongside an HDHP.
+      See <a href="https://www.irs.gov/pub/irs-drop/n-26-05.pdf" target="_blank" rel="noreferrer">IRS Notice 2026-05</a> for the off-Marketplace and direct primary care rules.
+    </p>}
     <p className="guided-hint">Enter a separate worksheet for each actual owner. These facts calculate the deduction; an estimated deduction is not a contribution record. {taxYear ? `This return is for ${taxYear}.` : "Select the return year before calculating."}</p>
     {data.hsaDeduction.trim() && <p className="guided-hint">Saved HSA deduction estimate: {data.hsaDeduction}. It will not be used as an actual contribution. <button type="button" className="utility-button" onClick={() => onChange({ ...data, hsaDeduction: "" })}>Clear saved HSA deduction estimate</button></p>}
     {accounts.map((account, index) => {

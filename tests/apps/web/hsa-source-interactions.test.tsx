@@ -5,10 +5,11 @@ import { createRoot } from "react-dom/client";
 import { expect, it } from "vitest";
 import { HsaSourceDetails } from "@/components/guided-interview/hsa-source-details";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
+import { emptyHsaAccount } from "@/lib/guided-hsa-facts";
 import { emptyAdjustmentData, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection, type AdjustmentData, type FilingStatus } from "@/lib/guided-interview-flow";
 import { completeHsaSources, completePersonalInfo, startCompleteInterview } from "../../guided-interview/complete-facts";
 
-async function render(initial: AdjustmentData, run: (context: { latest: () => AdjustmentData; change: (label: string, value: string) => Promise<void>; click: (label: string) => Promise<void>; status: (value: FilingStatus) => Promise<void> }) => Promise<void>, taxYear = 2025) {
+async function render(initial: AdjustmentData, run: (context: { container: HTMLDivElement; latest: () => AdjustmentData; change: (label: string, value: string) => Promise<void>; click: (label: string) => Promise<void>; status: (value: FilingStatus) => Promise<void> }) => Promise<void>, taxYear: number | null = 2025) {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
   let latest = initial; let setStatus: (value: FilingStatus) => void = () => {};
@@ -19,7 +20,7 @@ async function render(initial: AdjustmentData, run: (context: { latest: () => Ad
     await act(async () => { Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")!.set!.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); });
   }
   async function click(label: string) { const button = [...container.querySelectorAll("button")].find(entry => entry.textContent === label); if (!button) throw new Error(`Missing button ${label}`); await act(async () => button.click()); }
-  try { await act(async () => root.render(<Harness />)); await run({ latest: () => latest, change, click, status: async value => { await act(async () => setStatus(value)); } }); }
+  try { await act(async () => root.render(<Harness />)); await run({ container, latest: () => latest, change, click, status: async value => { await act(async () => setStatus(value)); } }); }
   finally { await act(async () => root.unmount()); container.remove(); }
 }
 const confirm = "HSA 1: All HSA source facts checked after the last edit";
@@ -27,6 +28,25 @@ const monthlyReview = "HSA 1: Monthly eligibility checked against actual coverag
 const timingReview = "HSA 1: Personal contributions were timely paid for the designated year";
 const payrollReview = "HSA 1: Employer contribution worksheet checked against payroll and custodian records";
 const excessReview = "HSA 1: Prior Form 5329 amounts and year-end HSA value checked for their actual years";
+
+it("shows the 2026 HSA plan guidance only in its year while leaving actual answers unknown", async () => {
+  const account = emptyHsaAccount("actual-owner");
+  const worksheet = { ...emptyAdjustmentData, hsaAccounts: [account] };
+  const notice = "https://www.irs.gov/pub/irs-drop/n-26-05.pdf";
+  for (const year of [2025, null, 2026]) {
+    await render(worksheet, async ({ container, latest }) => {
+      const guidance = container.querySelector<HTMLAnchorElement>(`a[href="${notice}"]`);
+      if (year === 2026) {
+        expect(guidance?.parentElement?.textContent).toMatch(/bronze or catastrophic plans.*individual coverage.*direct primary care/i);
+        expect([...container.querySelectorAll<HTMLSelectElement>("label select")].filter(field =>
+          /HDHP coverage|other disqualifying coverage/.test(field.labels?.[0]?.textContent ?? "")).map(field => field.value)).toEqual(Array(24).fill(""));
+      } else {
+        expect(guidance).toBeNull();
+      }
+      expect(latest()).toBe(worksheet);
+    }, year);
+  }
+});
 
 it("holds relabeled HSA years until the specific source facts are reviewed again", async () => {
   const account = { ...completeHsaSources, priorYearExcessContributions: "125", yearEndFairMarketValue: "5000" };

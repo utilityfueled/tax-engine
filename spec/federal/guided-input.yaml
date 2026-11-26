@@ -414,6 +414,18 @@ lines:
       - "tests/apps/web/hsa-source-interactions.test.tsx::renews tracked annual HSA review after completing a previously blank amount"
       - "tests/guided-interview/guided-hsa-source-facts.test.ts::scopes saved HSA review to the edited periods and actual owner"
       - "tests/guided-interview/guided-hsa-source-facts.test.ts::requires fresh review after replacing the same owner's HSA worksheet in one update"
+  - line: "hsa-2026-plan-eligibility-guidance"
+    description: "Explain expanded HSA eligibility alongside the actual monthly coverage entry"
+    formula: |
+      For 2026 returns, identify that an ACA bronze or catastrophic plan available as
+      individual coverage through an Exchange is treated as an HDHP. Refer to the IRS
+      guidance for individual plans bought off-Exchange and qualifying direct primary
+      care arrangements, which are not disqualifying coverage under section 223(c)(1)(E).
+      The owner still enters the actual coverage and separately answers each month's
+      disqualifying coverage and confirmation. Displaying this guidance must not
+      populate coverage or carry the 2026 explanation into a historical or unknown year.
+    irsRef: "IRS Notice 2026-05, Q&A 3–8 and 11–16; https://www.irs.gov/pub/irs-drop/n-26-05.pdf"
+    testRef: "tests/apps/web/hsa-source-interactions.test.tsx::shows the 2026 HSA plan guidance only in its year while leaving actual answers unknown"
   - line: "hsa-owner-source-reconciliation"
     description: "Keep HSA owners and payroll sources separate"
     formula: "One worksheet per actual owner; spouse-owned worksheets require a joint return. Match each owner's actual current-year W-2 code W total before applying known prior/following-year employer adjustments. A change in the matching owner's set of W-2 Code W originals, including employer name or EIN, statement year, owner, or amount, requires fresh employer contribution review even when the total is unchanged. Preserve the entered allocations, the other owner's specific review, and the matching review for equivalent formatting or reordered records. Source edits invalidate confirmation; dual-spouse family allocation requires actual reconciled shares. Prior-year source year, excess and additional tax plus current year-end value remain separate for each owner on Form5329. Do not combine spouse values for an excess-tax cap or infer prior tax from the excess amount."
