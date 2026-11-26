@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "8663136a317a6f705d6b7b7a5b1d90c005010a00",
+    "applicationCommit": "97466cdd9e648f8834054c70747fbc8e9f0999c7",
     "latestFederalAnnualSourceEvidenceKey": "activeContinuation.nov25FederalAnnualSourceRefresh",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov25HsaEligibilityGuidance",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov25PaResidencyForm8889AndLegacyRecovery",
     "combinedHsaOhioAiEvidenceKey": "activeContinuation.nov25HsaOhioAiFollowUp",
     "pensionOriginalReconfirmationEvidenceKey": "activeContinuation.nov25PensionOriginalReconfirmation",
     "longTermCareStatementIntakeEvidenceKey": "activeContinuation.nov25LongTermCareStatementIntake",
@@ -99,7 +99,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Verify exact 8663136a3 remote CI 45756609356, Web 45756609320 and Docker 45756609381. All 26 selected managed Chromium cases passed on this application revision and its predecessor.",
+      "Verify the latest main Linux CI, Web and Docker checks. Application 97466cdd9 passed 28 selected managed Chromium cases locally. Earlier exact Linux failures and superseded Docker jobs remain recorded.",
       "Finish GitHub CI 45750813264 and Linux browser 45750813234 for application 3aeb837f5. All 11 required local checks and Docker 45750813162 passed, including 30,645 tests each for unit and coverage, 88.49% branch, and 654 Chromium passes. Earlier strict AMD64 and ARM64 runs retain their original timeout results even where recovery and archive verification passed.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
@@ -108,6 +108,58 @@
     ]
   },
   "activeContinuation": {
+    "nov25PaResidencyForm8889AndLegacyRecovery": {
+      "pennsylvania": {
+        "commit": "b57ff70931f8dd7f81b58e26a28cd619d2816e50",
+        "scope": "Share the primary residency reconciliation across the 2026 native guide, private wage drafts, and private Box 1 unemployment drafts. Preserve historical and special-mover handling.",
+        "redCases": 6,
+        "redLogSha256": "a7ab6ae9b85066da71a2bc8aec8049afb146aa186e520a76345ff8de10beda7d",
+        "focusedTestsPassed": 306,
+        "focusedLogSha256": "b17d1b2f4aab9fadc13284fb6aa70f657567710769f0ce55bde71efc553192d4",
+        "specBindingsPassed": 10108,
+        "authority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/brief-overview-and-filing-requirements"
+      },
+      "form8889": {
+        "commit": "bc3dc4655545e65874d969d0a5b3a68ec61b8434",
+        "scope": "Internal redacted 2026 contribution-only Form 8889 specimen leaves inapplicable Part II blank. Positive distributions still require attributed original support.",
+        "redCases": 2,
+        "redLogSha256": "5f35c4f2a03c6abf01c27354e6593acaa147cecc9b2c5a344462087524c3beac",
+        "focusedTestsPassed": 107,
+        "focusedLogSha256": "6661c315f9e0f1019fdb942bc9af8f23cfdab2d5da07410e2e415b6ae2d63bc6",
+        "specBindingsPassed": 10109,
+        "finalBlank": "https://www.irs.gov/pub/irs-prior/f8889--2026.pdf",
+        "currentFinalInstructionsTaxYear": 2025,
+        "draftInstructions": "https://www.irs.gov/pub/irs-dft/i8889--dft.pdf",
+        "publicReviewAndFiling": "closed"
+      },
+      "legacyRecovery": {
+        "commit": "97466cdd9e648f8834054c70747fbc8e9f0999c7",
+        "scope": "Backfill only missing derived fields from a supported legacy local workspace snapshot. Preserve the source record, original files and private answers, and retain existing archive compatibility.",
+        "redCases": 1,
+        "focusedTestsPassed": 111,
+        "focusedLogSha256": "17028f1afa70a26b096b446f3bddac8dcf3f285e86d3242bc14bb637fb36a062",
+        "specBindingsPassed": 10110,
+        "independentEngineeringReview": "passed",
+        "managedChromium": {
+          "passed": 28,
+          "failed": 0,
+          "skipped": 0,
+          "logSha256": "2b3db8b7e3195c44060a034f6c0be6926e7457379b5bae971537854c0c10e7e2"
+        }
+      },
+      "exactLocalAuditPerPackage": {
+        "trackedBlobsMatched": 6703,
+        "browserAuditBindings": 2073,
+        "timingDiagnosticsPassed": 56,
+        "inventoryTypesAndScopedLint": "passed"
+      },
+      "earlierStrictLinuxObserved": {
+        "commit": "3aeb837f51946c31614f6a31f88dad2fdb86277a",
+        "ci": {"id": 45750813264, "unitShardsPassed": 2, "coverage": "in_progress"},
+        "web": {"id": 45750813234, "webBuild": "passed", "selfHostAndImageRecovery": "in_progress"},
+        "ohioDiagnostic": {"componentMedianBeforeMs": 86.909, "componentMedianAfterMs": 71.814, "outputPagesMatched": 6, "implementationChanged": false}
+      }
+    },
     "nov25HsaEligibilityGuidance": {
       "commit": "8663136a317a6f705d6b7b7a5b1d90c005010a00",
       "source": "https://www.irs.gov/pub/irs-drop/n-26-05.pdf",

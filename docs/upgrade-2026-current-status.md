@@ -9,6 +9,17 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `97466cdd9` restores encrypted backup support for older local returns.
+  The latest exact build passed all 28 selected Chromium cases, including
+  legacy backup, restore, reload and deletion.
+  [Legacy recovery evidence](upgrade-2026-progress.md#november-25-encrypted-recovery-for-older-local-returns).
+
+- `b57ff7093` reconciles the 2026 Pennsylvania residency declaration in
+  private wage and unemployment draft replay and the guide.
+  `bc3dc4655` renders contribution-only Part I of the internal 2026
+  Form 8889 specimen, with the public gates closed.
+  [Pennsylvania and Form 8889 evidence](upgrade-2026-progress.md#november-25-pennsylvania-private-drafts-and-contribution-only-form-8889).
+
 - `8663136a3` explains the 2026 HSA eligibility treatment for individual
   bronze and catastrophic plans and qualifying direct primary care.
   The guide still requires actual coverage answers.

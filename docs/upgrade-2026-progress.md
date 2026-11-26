@@ -1,5 +1,65 @@
 # 2026 upgrade implementation evidence
 
+## November 25 encrypted recovery for older local returns
+
+`97466cdd9` backs up older local returns that can already reopen but
+were saved before the derived summary, audit trail or structured-fact
+fields existed. Export fills only absent derived fields from the same
+saved record. Present fields, advanced answers and original file bytes
+are preserved. Present malformed field containers fail before reading
+original files.
+
+The old export reproduced a failure for the supported legacy record.
+The committed projection matched all 6,703 tracked blobs and passed
+111 focused tests, 10,110 spec bindings, root and web types, scoped lint,
+the inventory, 2,073 audit bindings and all 56 timing controls. Independent
+engineering review reproduced an exact offline recovery of the answers
+and retained original. The managed build passed all 28 selected
+Chromium cases. Its recovery lifecycle covered backup of a record
+without the three derived fields, unchanged source storage, exact
+original bytes and guided answers after restore, and reopening and
+deleting the restored local return.
+
+## November 25 Pennsylvania private drafts and contribution-only Form 8889
+
+`b57ff7093` checks any explicit 2026 Pennsylvania residency declaration
+against the validated primary taxpayer's domicile, abode and presence in
+the shared source engine. Saved and reopened wage and Box 1 unemployment
+drafts reject conflicting full-year, part-year and nonresident
+declarations. The guide uses the same engine check. Matching and omitted
+declarations, the two existing mover paths and 2025 replay all passed.
+Six regression cases failed before the fix. The exact package passed
+306 tests and all 10,108 spec bindings.
+[Pennsylvania Department of Revenue residency rules](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/brief-overview-and-filing-requirements).
+
+`bc3dc4655` renders the internal 2026 Form 8889 specimen for an eligible
+owner with confirmed personal or employer contributions and zero
+distributions. It leaves Part II blank in this cohort. Positive
+distributions still require attributable Form 1099-SA originals; the
+renderer checks source cents before applying the printed form's
+rounding. The public review and filing gates are closed. Both regression
+cases failed before the fix. The exact package passed 107 tests and all
+10,109 spec bindings. The official physical 2026 blank is final. The
+current final instructions are for 2025 and the 2026 instructions carry
+draft status. [Final 2026 Form 8889](https://www.irs.gov/pub/irs-prior/f8889--2026.pdf) ·
+[Current final instructions](https://www.irs.gov/instructions/i8889) ·
+[2026 draft instructions](https://www.irs.gov/pub/irs-dft/i8889--dft.pdf).
+
+The two packages each passed root and web types, the inventory, scoped
+lint, 2,073 browser audit bindings and 56 timing controls. Each archived
+projection matched all 6,703 tracked Git blobs.
+
+Strict Linux verification remained open. The exact `3aeb837f5` Linux
+job had a successful web build and live self-host browser and image
+recovery jobs when checked. The exact CI run had two successful unit
+shards and coverage was in progress. A read-only Ohio PDF component
+experiment saved roughly 15 ms and three temporary file round trips
+with byte-identical six-page output after fixing test metadata. No
+optimizer was applied on that evidence. The railroad inspector
+timeout occurs after the download, separately from that merge.
+[Earlier exact CI](https://github.com/utilityfueled/tax-engine/actions/runs/45750813264) ·
+[Earlier exact Linux Web](https://github.com/utilityfueled/tax-engine/actions/runs/45750813234).
+
 ## November 25 2026 HSA plan eligibility guidance
 
 `8663136a3` explains which individual-market bronze and catastrophic
