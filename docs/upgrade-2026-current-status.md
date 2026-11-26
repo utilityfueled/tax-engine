@@ -9,6 +9,30 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `9ac66331c` allocates one dated ordinary cash-dividend original
+  for a 2026 Pennsylvania part-year filer and preserves the worldwide
+  Schedule SP amount. The exact and independent tests passed. This is
+  a private draft calculation.
+  [PA dividend evidence](upgrade-2026-progress.md#november-26-pennsylvania-part-year-ordinary-cash-dividends).
+
+- Exact `956d61ddf` passed 30,950 local unit tests. The earlier
+  `a690d880a` native ARM64 image passed archive and Compose recovery,
+  with 12 failures in strict Chromium. The successor native result
+  remains open.
+  [Combined and ARM64 checks](upgrade-2026-progress.md#november-26-current-combined-checks-and-native-arm64).
+
+- `956d61ddf` keeps evaluation spending reserved when a receipt
+  predates dispatch. Independent tests used simulated calls. Live
+  comparisons and human review remain open.
+  [AI accounting evidence](upgrade-2026-progress.md#november-26-offline-ai-usage-receipt-chronology).
+
+- `62867fad8` calculates the 2026 personal EV charger credit for one
+  original-use port at the owner’s main home. `5a22eaf1a` collects its
+  source records and confirmations. Independent engineering review and
+  both local Chromium viewports passed. Qualified human review and the
+  annual filing gates remain open.
+  [Form 8911 evidence](upgrade-2026-progress.md#november-26-personal-ev-charger-credit).
+
 - `8e8ca2533` allocates actual dated bank interest for one 2026
   Pennsylvania part-year draft. `9a721745d` admits one actual Form
   1099-K card-tip source for Schedule 1-A and coordinates the QBI

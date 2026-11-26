@@ -1,5 +1,83 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Pennsylvania part-year ordinary cash dividends
+
+`9ac66331c` allocates a current original Form 1099-DIV for one
+single filer who moved into Pennsylvania. The original is one
+domestic corporate cash distribution source held for personal
+investment. The dated ledger reconciles all $120. Schedule B removes
+$80 credited before the move and retains $40 credited during
+residency. The entire $120 remains in worldwide Schedule SP income,
+which is $75,120 in the fixture. Pennsylvania taxable income is
+$39,040, with $1,199 of tax covered by original withholding. A
+duplicate $80 Schedule SP entry is rejected. The private 2026 draft
+passed all 2,775 Pennsylvania tests, an independent 192-test replay
+and 1,209 exact archive tests, including spec references. Filing and
+broader income methods retain their existing gates.
+[PA dividend guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends) ·
+[PA tax forgiveness guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness).
+
+## November 26 current combined checks and native ARM64
+
+The exact `956d61ddf` tracked archive passed 30,950 unit tests in
+2,234 files with 81 environment skips. This run used its required
+local loopback listeners. Coverage and managed Chromium continued
+on the same revision. The `9ac66331c` Pennsylvania successor uses a
+separate copy for builds and type checks.
+
+The exact `a690d880a` ARM64 runtime passed image startup, recovery
+archive verification and the six Compose recovery steps. Its strict
+browser run recorded 642 passed, 11 timeouts, one assertion failure
+and five skips. The timeouts affected reciprocal, resident-credit,
+school-district and business cases. This revision predates both the
+reciprocal PDF optimization and the mortgage hint assertion fix.
+The newer ARM64 rehearsal containing those changes remains open.
+[ARM64 recovery and strict Chromium](https://github.com/utilityfueled/tax-engine/actions/runs/45889599406) ·
+[Successor ARM64 rehearsal](https://github.com/utilityfueled/tax-engine/actions/runs/45892163067).
+
+## November 26 offline AI usage receipt chronology
+
+`956d61ddf` keeps the unresolved reservation when an evaluation
+receipt predates its dispatch. A new receipt with invalid chronology
+is rejected immediately. A historical receipt with the same defect
+remains readable and contributes only assumed cost while its full
+reservation stays held. The executor and the scorer share the same
+submillisecond comparison. Equal instants expressed with UTC offsets
+passed, along with a receipt one microsecond after dispatch. The
+original regression demonstrated that an invalid earlier receipt
+opened the hold and let simulated calls proceed. After correction,
+104 focused tests, a separate 77-test review and a 1,094-test exact
+runner, scorer and specification replay passed. No live provider
+usage or qualification evidence was added.
+
+## November 26 personal EV charger credit
+
+`62867fad8` calculates the 2026 draft Form 8911 credit for one
+documented personal charging port continuously used at the owner’s
+main home in a state or D.C. The exact IRS Appendix B lookup includes
+55,474 GEOIDs. An independent extraction matched every ordered row
+on all 642 pages. The $2,000 fixture changes from a $600 credit on
+June 30 to $0 on July 1. Form 6251 tentative minimum tax applies even
+when no AMT is due. Only the allowed credit transfers to Schedule 3
+line 6j, and the basis reduction follows Schedule A line 21. The
+core passed 492 scoped tests, 278 exact archive tests and an
+independent seven-test replay. The indexed-constant test harness
+keeps the public 2026 calculation and filing gates closed.
+[IRS Form 8911](https://www.irs.gov/instructions/i8911) ·
+[2026 draft Schedule 3](https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf).
+
+`5a22eaf1a` collects the original charger invoice, actual service
+date and tract in Credits. Changes revoke the source confirmations
+while preserving the written records and explicit zeroes. It passed
+396 scoped tests, 15 exact archive tests and an independent four-test
+review. The final Chromium run passed at 1,280 and 390 pixels with
+zero retries. The initial browser harness had repeated only the
+final confirmation after the date changed. The replay verified all six
+required answers were cleared and re-entered them. The source audit
+covered 2,088 paths and `798f79a78` synchronized its diagnostics
+digest. The existing browser request budgets and deadlines remain
+in force.
+
 ## November 26 Pennsylvania part-year bank interest
 
 `8e8ca2533` adds one current, Box 1-only personal bank statement to
@@ -51,6 +129,13 @@ focused tests. Chromium passed at 1,280 and 390 pixels with no retries,
 including save and reopen, missing Box 1b and rejected mismatched gross.
 The specification validated 10,163 references and the browser audit
 verified 2,084 paths with the existing request limits.
+
+The next full sandboxed run exposed unquoted line identifiers that
+the unit specification parser requires. `dedc4e1f0` quotes all
+three and passes the specification and guided replay together
+(1,020 tests), the full reference validator and unchanged inventory.
+That sandboxed run also lacked permission to open its local TLS
+listener. Both original failures are retained in the run log.
 
 ## November 26 reciprocal Ohio PDF packet calculation
 
@@ -115,8 +200,9 @@ focused checks passed. The complete local retry uses the existing
 deadlines and a smaller worker pool. On the exact `13a04094c`
 fixture successor both full runs passed 30,908 tests in 2,230 files
 with 81 environment skips. Branch coverage was 88.56% against the
-existing 85% threshold. The combined browser run used `b28141535`.
-The original logs are retained.
+existing 85% threshold. The managed Chromium run on `b28141535` passed
+654 cases with five original skips and zero failures across nine
+windows. The original logs are retained.
 
 ## November 26 combined local builds, coverage and release checks
 

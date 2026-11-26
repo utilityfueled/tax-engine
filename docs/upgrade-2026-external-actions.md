@@ -1,5 +1,31 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 26 Pennsylvania part-year ordinary cash dividends
+
+Independently reconcile a $120 Box 1a ordinary cash-dividend original
+for one individual who moves to Pennsylvania from New York. The
+account credits $80 before the move and $40 during residency. The
+taxpayer has $75,000 in worldwide wages, $39,000 in Pennsylvania
+wages and $1,199 in actual Pennsylvania withholding. Check the
+Pennsylvania Schedule B residency adjustment, Schedule SP worldwide
+eligibility and whether withholding covers the tax. Verify the final
+annual form and attachment rule before qualifying a filing export.
+[Pennsylvania dividend guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends) ·
+[Pennsylvania tax forgiveness guidance](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness).
+
+## November 26 personal EV charger
+
+For a 2026 single filer with $125,000 in wages and no other credits,
+independently determine the Form 8911 and Schedule 3 treatment of one
+new $2,000 charging port at the taxpayer’s main home in an eligible
+2020 census tract. Compare an operational date of June 30 with July 1.
+Verify Form 6251 tentative minimum tax even when no AMT is due. In a
+second worksheet with $75 of regular tax above tentative minimum tax,
+verify the allowed credit and remaining basis against the $600
+tentative property credit. Reconcile the final forms before enabling
+filing output. [IRS Form 8911 instructions](https://www.irs.gov/instructions/i8911) ·
+[2026 draft Schedule 3](https://www.irs.gov/pub/irs-dft/f1040s3--dft.pdf).
+
 ## November 26 card tips and Pennsylvania part-year interest
 
 For a 2026 single taxpayer, identify the correct Schedule 1-A,

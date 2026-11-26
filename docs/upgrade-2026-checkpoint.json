@@ -3,8 +3,13 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "827f467e2bedb7f006a4a4975895ffb3b35ed284",
-    "latestScopedApplicationCommit": "8657cdac07f74eb74efc4a9699d82fd49f803123",
+    "latestScopedApplicationCommit": "9ac66331cb2ab1664811d636d1995845fbea941f",
     "latestCombinedCandidateCommit": "13a04094c4d2ed74351df03197da670cfe78edb5",
+    "inProgressCombinedCandidateCommit": "956d61ddfaa38f7fd80ebe6afbf59d1503a8f57f",
+    "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
+    "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
+    "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
+    "aiReceiptChronologyEvidenceKey": "activeContinuation.nov26AiReceiptChronology",
     "paPartYearInterestEvidenceKey": "activeContinuation.nov26PAPartYearBankInterest",
     "federalCardTipEvidenceKey": "activeContinuation.nov26FederalCardTipDraft",
     "directReitBox5EvidenceKey": "activeContinuation.nov26DirectReitBox5",
@@ -125,7 +130,8 @@
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
       "Exact 060efc9bf Linux CI, Docker, managed Chromium, image imports and Compose recovery passed. Strict Chromium failed 11 AMD64 and 9 ARM64 cases at the existing deadlines. Both architecture browser gates remain open.",
-      "Exact 13ec67770 passed both local unit and coverage runs, builds, type checks, lint and specs. Full managed Chromium passed 653 cases and failed one stale Form 1098 hint assertion, which passed the focused c6b28ad43 correction. Both full 13a04094c local runs passed 30,908 tests with 88.56% branches. Combined b28141535 Chromium and strict Linux results remain open.",
+      "Exact a690d880a ARM64 passed archive and Compose recovery. Strict Chromium recorded 11 timeouts and one assertion failure. The native rehearsal with the reciprocal PDF optimization and assertion follow-up is still open.",
+      "Exact 13ec67770 passed both local unit and coverage runs, builds, type checks, lint and specs. Both full 13a04094c local runs passed 30,908 tests with 88.56% branches. Managed Chromium on b28141535 passed 654 with five original skips and zero failures. The exact 956d61ddf combined campaign and both strict native Linux gates remain open.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -133,6 +139,50 @@
     ]
   },
   "activeContinuation": {
+    "nov26PAPartYearCashDividend": {
+      "commit": "9ac66331cb2ab1664811d636d1995845fbea941f",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-pennsylvania-part-year-ordinary-cash-dividends",
+      "pennsylvaniaTestsPassed": 2775,
+      "independentTestsPassed": 192,
+      "exactStateAndSpecTestsPassed": 1209,
+      "validatedSpecReferences": 10172,
+      "browserPathsVerified": 2088,
+      "filingQualified": false
+    },
+    "nov26CombinedEvAiAndArm64": {
+      "commit": "956d61ddfaa38f7fd80ebe6afbf59d1503a8f57f",
+      "trackedBlobsVerified": 6734,
+      "unit": { "activePassed": 30950, "activeFiles": 2234, "environmentSkips": 81 },
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-current-combined-checks-and-native-arm64",
+      "nativeArm64": { "runId": 45889599406, "revision": "a690d880a6992108d8446c971464e30b72247c70", "recoveryPassed": true, "strictPassed": 642, "strictTimeouts": 11, "strictAssertionFailures": 1, "strictSkips": 5 },
+      "nativeArmSuccessorRunId": 45892163067
+    },
+    "nov26AiReceiptChronology": {
+      "commit": "956d61ddfaa38f7fd80ebe6afbf59d1503a8f57f",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-offline-ai-usage-receipt-chronology",
+      "authorLocalTestsPassed": 104,
+      "independentLocalTestsPassed": 77,
+      "exactRunnerAndSpecTestsPassed": 1094,
+      "liveProviderCalls": 0,
+      "modelPromotionEnabled": false
+    },
+    "nov26PersonalEvCharger": {
+      "federalCommit": "62867fad8cdadd341902feab14bbb703273893cd",
+      "guidedCommit": "5a22eaf1a0e666bec8c7036dba24e50280207b24",
+      "progressSection": "docs/upgrade-2026-progress.md#november-26-personal-ev-charger-credit",
+      "irsAppendixPages": 642,
+      "verifiedTractIds": 55474,
+      "irsAppendixSha256": "ea5d501f3aa37c815cf2658a5925a8e8fcce6433506a80a97b34ac71fdcf0a5d",
+      "expandedTractIdsSha256": "077deed805e28860a8077391081d75a10df520ca09bf7d0a893354036b3cb4f9",
+      "exactFederalTestsPassed": 278,
+      "independentFederalTestsPassed": 7,
+      "exactGuidedTestsPassed": 15,
+      "independentGuidedTestsPassed": 4,
+      "localChromiumWidths": [1280, 390],
+      "localChromiumRetries": 0,
+      "browserDiagnosticsFollowupCommit": "798f79a78",
+      "filingQualified": false
+    },
     "nov26PAPartYearBankInterest": {
       "commit": "8e8ca25338a4dbeab41d8788b9adda92262c7037",
       "progressSection": "docs/upgrade-2026-progress.md#november-26-pennsylvania-part-year-bank-interest",
@@ -150,7 +200,9 @@
       "guidedExactFocusedTestsPassed": 212,
       "guidedChromiumWidths": [1280, 390],
       "guidedSpecReferencesValidated": 10163,
-      "guidedBrowserPathsVerified": 2084
+      "guidedBrowserPathsVerified": 2084,
+      "specParserFollowupCommit": "dedc4e1f090c88284bb76795b60806801e3648c4",
+      "specAndGuidedFollowupTestsPassed": 1020
     },
     "nov26DirectReitBox5": {
       "federalCommit": "c2410f9546ff9bc5690b24bbefdc7888397fca9f",
@@ -168,6 +220,7 @@
       "pmiFixtureFocusedTestsPassed": 37,
       "completeUnitRetry": { "activePassed": 30908, "activeFiles": 2230, "environmentSkips": 81 },
       "completeCoverageRetry": { "activePassed": 30908, "activeFiles": 2230, "environmentSkips": 81, "branchPercent": 88.56, "requiredBranchPercent": 85 },
+      "managedChromium": { "activePassed": 654, "originalSkips": 5, "failures": 0, "windows": 9 },
       "combinedRunIds": {
         "ci": 45891948565,
         "web": 45891948477,
