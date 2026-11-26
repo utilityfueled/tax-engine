@@ -1,5 +1,40 @@
 # 2026 upgrade implementation evidence
 
+## November 25 qualified charitable distribution source review
+
+`0d8a9c596` requires fresh guided review when a 2026 qualified charitable
+distribution changes owner, birth date, statement, transfer or contribution
+history. The draft keeps entered facts, explicit zeroes and separately
+confirmed facts that the edit did not affect. An explicit No survives a
+reload and continues to hold calculation. A saved draft without matching
+review evidence reopens for confirmation. Its local review marker never
+enters calculation input, guided summaries or generated document facts.
+An unrelated ordinary Code 7 statement keeps its own review when it
+replaces a removed QCD row.
+
+Independent engineering review reproduced stale saved birth dates,
+altered contribution amounts and loss of a first explicit No. The
+isolated successor passed all 71 focused tests, 74 browser timing and
+fixture controls, both local builds, contract and application type checks, inventory
+and 10,097 spec references. All 6,701 tracked files were checked against
+the exact source commit. Qualified tax review and the annual 2026 gates
+remain open. [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Internal Revenue Code §408(d)(8)](https://uscode.house.gov/us/usc/119-142/t26/s408/).
+
+The earlier exact `4dc165c46` Social Security application passed both
+local builds and its Docker run. Five exact standalone Chromium cases
+passed with two workers, zero retries and 30-second deadlines. They
+covered desktop and mobile year restoration and upload through recovery
+and deletion, plus a historical SSA-linked cash-farm review. The first
+attempt stopped before Chromium at a localhost bind restriction. The
+successful run used an authorized local listener and closed it normally.
+[Exact Docker run](https://github.com/utilityfueled/tax-engine/actions/runs/45731461771).
+
+Exact `30f6be19a` reported 30,594 unit passes, 81 skips and two failures.
+The dated AI fixture has since been corrected. All eight cases in the
+affected PA care PDF file passed an exact isolated replay under the
+original deadline. Its full unit failure remains recorded.
+
 ## November 25 confirmed Social Security repayment and taxpayer edits
 
 `74ba7e9b9` collects one original 2026 SSA-1099 for a single filer with

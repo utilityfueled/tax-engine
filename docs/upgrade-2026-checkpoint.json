@@ -2,7 +2,8 @@
   "resume": {
     "asOf": "2026-11-25",
     "branch": "main",
-    "applicationCommit": "4dc165c46f0f9651169cf2a84f54573800008773",
+    "applicationCommit": "0d8a9c59613134cd85b39ecf04b376d7d7f2b868",
+    "qcdSourceReviewEvidenceKey": "activeContinuation.nov25QcdSourceReview",
     "socialSecurityRepaymentEvidenceKey": "activeContinuation.nov25SocialSecuritySmallRepayment",
     "historicalAiFixtureEvidenceKey": "activeContinuation.nov25HistoricalAiFixture",
     "californiaHouseholdPayrollEvidenceKey": "activeContinuation.nov25ScheduleHCaliforniaWorksheet2",
@@ -93,6 +94,20 @@
     ]
   },
   "activeContinuation": {
+    "nov25QcdSourceReview": {
+      "commit": "0d8a9c59613134cd85b39ecf04b376d7d7f2b868",
+      "sources": ["https://www.irs.gov/instructions/i1099r", "https://uscode.house.gov/us/usc/119-142/t26/s408/"],
+      "scope": "2026 guided QCD owner, original statement and worksheet validation for edit and saved replay; ordinary Code 7 kept independent.",
+      "focusedTestsPassed": 71,
+      "browserControlTestsPassed": 74,
+      "specReferencesPassed": 10097,
+      "trackedBlobsVerified": 6701,
+      "exactLocalBuilds": {"core": "passed", "web": "passed"},
+      "githubRuns": {"docker": 45732700346, "ci": 45732700322, "web": 45732700374},
+      "vercelProductionBuild": "CANCELED",
+      "controlAmounts": {"exclusionWith4000UnusedDeductedContributions": "2500", "exclusionAfterDocumentedReconfirmationOfZero": "6500"},
+      "remaining": "Exact full suites and qualified human approval. Existing 2026 annual calculation and export gates stay closed."
+    },
     "nov25SocialSecuritySmallRepayment": {
       "commit": "74ba7e9b9151fd599bba08db8ef18c27310b880e",
       "ownerEditCommit": "4dc165c46f0f9651169cf2a84f54573800008773",
@@ -105,6 +120,9 @@
       "ownerFollowupExactSpecReferencesPassed": 10096,
       "browserControlTestsPassedAtEachRevision": 74,
       "sourceAuditPaths": 2072,
+      "ownerFollowupStandaloneChromium": {"passed": 5, "retries": 0, "deadlineSeconds": 30, "loopbackClosed": true},
+      "ownerFollowupDockerRun": 45731461771,
+      "ownerFollowupDockerResult": "success",
       "vercelProductionBuilds": ["CANCELED", "CANCELED"],
       "remaining": "Exact full suites, independent tax approval, broader repayment methods and final annual form qualification."
     },

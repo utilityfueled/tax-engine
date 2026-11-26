@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `0d8a9c596` keeps the 2026 QCD review tied to the actual IRA owner,
+  statement and worksheet through edits and reload. All 71 exact focused
+  tests passed. Qualified tax review and annual calculation remain open.
+  [Retirement evidence](upgrade-2026-progress.md#november-25-qualified-charitable-distribution-source-review).
+
 - `74ba7e9b9` and `4dc165c46` preserve one qualifying 2026 Social Security
   excess repayment up to $3,000 and require fresh review if the actual
   taxpayer changes. The annual calculator and PDF gates remain closed.

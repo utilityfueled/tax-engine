@@ -1,5 +1,18 @@
 # External actions needed to finish the 2026 upgrade
 
+## November 25 qualified charitable distribution review
+
+Independently check one eligible 2026 traditional IRA owner with a
+$6,500 qualified direct transfer, $4,000 of unused deducted contributions,
+and zero current deducted contributions. Verify the $2,500 exclusion
+and preserve the printed statement and owner worksheet. A documented
+amendment to zero unused contributions should receive fresh review before
+the $6,500 exclusion is used. Check the same facts after replacing the
+named owner, editing the birth date, and retaining a negative answer to
+the direct-transfer question. Larger and other special cases remain in
+their current qualification scopes. [2026 Form 1099-R instructions](https://www.irs.gov/instructions/i1099r) ·
+[Internal Revenue Code §408(d)(8)](https://uscode.house.gov/us/usc/119-142/t26/s408/).
+
 ## November 25 Social Security excess repayment review
 
 Independently check one 2026 single resident with one SSA-1099. Use
