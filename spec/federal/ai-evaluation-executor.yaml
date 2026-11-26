@@ -93,6 +93,19 @@ lines:
       - "tests/engine/provider-eval-runner.test.ts::keeps old reconciliation costs visible and awaits verified model evidence before resuming"
       - "tests/engine/provider-eval-runner.test.ts::keeps older result usage without matching identity held until verified reconciliation (%s)"
       - "tests/engine/provider-eval-cli.test.ts::requires the evidenced billed model for offline reconciliation"
+  - line: "reconciliation-reference-uniqueness"
+    description: "Bind each authoritative reconciliation reference to one dispatched attempt"
+    formula: >-
+      Trim surrounding whitespace from the opaque reference and compare it
+      case-sensitively throughout the journal. Reject a new verified receipt
+      whose reference already verifies a different attempt. Keep older journals
+      with reused verified references readable and leave every affected dispatch
+      held at its full reserved maximum. Preserve unrelated verified spend and
+      report implicated usage costs separately as unverified. Keep the recorded
+      evidence without projecting its usage as verified or resuming dispatch.
+    testRef: "tests/engine/provider-eval-runner.test.ts::refuses a reused reconciliation reference and resumes on distinct evidence"
+    testRefs:
+      - "tests/engine/provider-eval-runner.test.ts::retains every affected hold when a durable historical journal reuses a verified receipt"
   - line: "dispatch-order"
     description: "No paid request precedes durable accounting identity"
     formula: "A failed or ineffective append prevents dispatch; cancellation and expired capability evidence stop before the next request."

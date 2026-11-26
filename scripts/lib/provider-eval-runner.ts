@@ -153,6 +153,9 @@ export function maximumProviderAttemptUsd(request: ProviderEvalRequest, at: stri
 function requireMatchingBilledModel(requestedModel: string, billedModel: string | undefined) {
   if (!matchesProviderEvalModel(requestedModel, billedModel)) throw new Error("Reconciliation evidence must name a billed model that matches the approved profile.");
 }
+function verifiedReconciliationReference(record: EvalJournalRecord) {
+  return record.type === "reconcile" && record.billedModel !== undefined ? record.evidenceReference.trim() : undefined;
+}
 export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: readonly EvalJournalRecord[]) {
   validatePlan(plan);
   const template: ProviderModelLiveEvalTemplate = { version: 2, entries: [], availability: [], preflightEntries: records.flatMap(record => {
@@ -164,6 +167,11 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
   const dispatches = records.filter((item): item is Extract<EvalJournalRecord, { type: "dispatch" }> => item.type === "dispatch");
   if (new Set(dispatches.map(item => item.attemptId)).size !== dispatches.length) throw new Error("Duplicate durable dispatch identity.");
   const notSent = new Set(records.flatMap(item => item.type === "not-sent" ? [item.attemptId] : []));
+  const receiptUses = new Map<string, number>();
+  for (const record of records) {
+    const reference = verifiedReconciliationReference(record);
+    if (reference !== undefined) receiptUses.set(reference, (receiptUses.get(reference) ?? 0) + 1);
+  }
   let dispatchedRequests = 0;
   let known = new Money(0); let held = new Money(0); let legacyUnverified = new Money(0); let overrun = false;
   const bindingBlockers = new Set<string>();
@@ -185,17 +193,24 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
     }
     dispatchedRequests++;
     const reconciliation = subsequentReconciliation ?? firstReconciliation;
+    const evidenceReference = reconciliation && verifiedReconciliationReference(reconciliation);
     let usage = resultUsage;
-    if (reconciliation?.billedModel !== undefined) {
+    if (reconciliation && evidenceReference !== undefined) {
       requireMatchingBilledModel(requestedModel, reconciliation.billedModel);
-      usage = reconciliation.usage;
+      if ((receiptUses.get(evidenceReference) ?? 0) > 1) {
+        bindingBlockers.add("reconciliation-evidence-reference-reused");
+      } else {
+        usage = reconciliation.usage;
+      }
+    }
+    if (usage) {
+      const cost = calculateAiCost(requestedModel, dispatch.startedAt, evalUsageSchema.parse(usage)).providerCostUsd;
+      known = known.plus(cost); overrun ||= new Money(cost).gt(dispatch.maximumUsd);
     } else {
+      held = held.plus(dispatch.maximumUsd);
       const assumedUsage = reconciliation?.usage ?? (modelMatches ? null : result?.usage);
       if (assumedUsage) legacyUnverified = legacyUnverified.plus(calculateAiCost(requestedModel, dispatch.startedAt, evalUsageSchema.parse(assumedUsage)).providerCostUsd);
     }
-    if (usage) { const cost = calculateAiCost(requestedModel, dispatch.startedAt, evalUsageSchema.parse(usage)).providerCostUsd;
-      known = known.plus(cost); overrun ||= new Money(cost).gt(dispatch.maximumUsd); }
-    else held = held.plus(dispatch.maximumUsd);
     if (dispatch.kind === "capability") {
       const capabilityPassed = !!resultUsage && result?.capabilityPassed === true;
       template.availability?.push({ profileId: dispatch.profileId, status: capabilityPassed ? "available" : result?.status === "unavailable" ? "unavailable" : "failed",
@@ -212,8 +227,8 @@ export function summarizeProviderEvalJournal(plan: ProviderEvalPlan, records: re
         elapsedMs: result?.elapsedMs ?? null, applicationSchemaValid: evaluation?.applicationSchemaValid ?? null,
         output: evaluation?.output ?? null, independentReview: null,
         attempts: [{ profileId: dispatch.profileId, startedAt: dispatch.startedAt, usage,
-          ...(reconciliation?.billedModel === undefined ? {} : { billingEvidence: {
-            billedModel: reconciliation.billedModel, evidenceReference: providerEvalDigest(reconciliation.evidenceReference),
+          ...(reconciliation?.billedModel === undefined || evidenceReference === undefined ? {} : { billingEvidence: {
+            billedModel: reconciliation.billedModel, evidenceReference: providerEvalDigest(evidenceReference),
             recordedAt: reconciliation.at, usageSource: "reconciliation" as const,
           } }) }],
         measurement: { runPurpose: plan.purpose === "qualification" ? "qualification" : "smoke", planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION, promptVersion: AI_TASKS[fixture.task].promptVersion,
@@ -334,10 +349,14 @@ export function reconcileProviderEvalAttempt(plan: ProviderEvalPlan, records: re
       || item.type === "not-sent" || (item.type === "reconcile" && item.billedModel !== undefined)))) {
     throw new Error("Only an unresolved dispatched attempt may be reconciled once.");
   }
-  if (!input.evidenceReference.trim() || input.evidenceReference.length > 500 || !instant.safeParse(input.at).success) throw new Error("Authoritative reconciliation reference and time are required.");
+  const evidenceReference = input.evidenceReference.trim();
+  if (!evidenceReference || input.evidenceReference.length > 500 || !instant.safeParse(input.at).success) throw new Error("Authoritative reconciliation reference and time are required.");
+  if (records.some(record => verifiedReconciliationReference(record) === evidenceReference)) {
+    throw new Error("Authoritative reconciliation reference already verifies another attempt.");
+  }
   requireMatchingBilledModel(requestedModel, input.billedModel);
   const usage = evalUsageSchema.parse(input.usage); calculateAiCost(requestedModel, dispatch.startedAt, usage);
-  return { type: "reconcile", ...input, usage };
+  return { type: "reconcile", ...input, evidenceReference, usage };
 }
 
 const normalized = z.strictObject({ disposition: z.enum(["answer", "abstain"]), fields: z.record(z.string(), z.string()), category: z.string().nullable(),

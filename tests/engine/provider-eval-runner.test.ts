@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, summarizeProviderEvalJournal, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
+import { openProviderEvalJournal } from "../../scripts/lib/provider-eval-journal";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
 import { providerModelCandidates, scoreProviderEvalEntry, summarizeProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
@@ -17,6 +21,26 @@ function setup(maximumProviderUsd = "1") {
 }
 const good = { status: "completed" as const, usage: { inputTokens: 100, outputTokens: 100 }, elapsedMs: 50,
   reportedModel: "gpt-6-luna", responseReference: "response:test", payload: { probe: "ok" } };
+
+async function priorVerifiedReceiptAndNextHold() {
+  const state = setup();
+  const transport = vi.fn().mockResolvedValueOnce(good)
+    .mockRejectedValueOnce(new Error("first synthetic timeout"))
+    .mockRejectedValueOnce(new Error("second synthetic timeout")).mockResolvedValue(good);
+  const evidence = (repeat: number, evidenceReference: string) => ({
+    attemptId: `luna-high:case-income-w2-zero-withholding:${repeat}`, evidenceReference,
+    billedModel: "gpt-6-luna", usage: good.usage, at,
+  });
+  expect((await executeProviderEval({ ...state, transport })).stoppedReason).toBe("unknown-usage");
+  const firstReceipt = reconcileProviderEvalAttempt(state.plan, state.records, evidence(1, "  synthetic-invoice-line  "));
+  await state.append(firstReceipt);
+  expect(await executeProviderEval({ ...state, transport })).toMatchObject({
+    stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00012", unknownMaximumUsd: "0.0111056",
+  });
+  expect(transport).toHaveBeenCalledTimes(3);
+  return { state, transport, evidence, firstReceipt };
+}
+
 describe("guarded repeated provider executor", () => {
   it("requires exact current approval before any paid dispatch", async () => {
     const state = setup(); let calls = 0;
@@ -180,6 +204,50 @@ describe("guarded repeated provider executor", () => {
     expect(resumed.knownProviderCostUsd).toBe("0.00029"); expect(resumed.unknownMaximumUsd).toBe("0");
     expect(resumed.template.entries[0]?.output).toBeNull();
     expect(() => reconcileProviderEvalAttempt(state.plan, state.records, { attemptId, evidenceReference: "second", billedModel: "gpt-6-luna", usage: good.usage, at })).toThrow(/once/);
+  });
+  it("refuses a reused reconciliation reference and resumes on distinct evidence", async () => {
+    const { state, transport, evidence, firstReceipt } = await priorVerifiedReceiptAndNextHold();
+    for (const reference of ["synthetic-invoice-line", "\tsynthetic-invoice-line\n"]) {
+      expect(() => reconcileProviderEvalAttempt(state.plan, state.records, evidence(2, reference))).toThrow(/reference.*another attempt/i);
+    }
+    expect(firstReceipt).toMatchObject({ type: "reconcile", evidenceReference: "synthetic-invoice-line" });
+    const held = await executeProviderEval({ ...state, transport });
+    expect(held).toMatchObject({ stoppedReason: "unknown-usage", knownProviderCostUsd: "0.00012", unknownMaximumUsd: "0.0111056" });
+    expect(transport).toHaveBeenCalledTimes(3);
+    expect(held.template.entries[0]?.attempts[0]?.billingEvidence?.evidenceReference).toBe(providerEvalDigest("synthetic-invoice-line"));
+
+    const distinctReceipt = reconcileProviderEvalAttempt(state.plan, state.records, evidence(2, "Synthetic-Invoice-Line"));
+    await state.append(distinctReceipt);
+    expect(await executeProviderEval({ ...state, transport })).toMatchObject({
+      stoppedReason: "completed", unknownMaximumUsd: "0", knownProviderCostUsd: "0.00024", legacyUnverifiedProviderCostUsd: "0",
+    });
+    expect(transport).toHaveBeenCalledTimes(4);
+  });
+  it("retains every affected hold when a durable historical journal reuses a verified receipt", async () => {
+    const { state, transport, evidence } = await priorVerifiedReceiptAndNextHold();
+    const dir = await mkdtemp(join(tmpdir(), "provider-eval-duplicate-receipt-"));
+    const file = join(dir, "run.jsonl");
+    try {
+      const prior = await openProviderEvalJournal(file);
+      try {
+        for (const record of state.records) await prior.append(record);
+        await prior.append({ type: "reconcile", ...evidence(2, "synthetic-invoice-line") });
+      } finally { await prior.close(); }
+      const original = await readFile(file, "utf8");
+      const reopened = await openProviderEvalJournal(file);
+      try {
+        validateProviderEvalJournal(state.plan, reopened.records);
+        const summary = summarizeProviderEvalJournal(state.plan, reopened.records);
+        expect(summary).toMatchObject({ unknownMaximumUsd: "0.0222112", knownProviderCostUsd: "0.00006",
+          legacyUnverifiedProviderCostUsd: "0.00012", bindingBlockers: ["reconciliation-evidence-reference-reused"] });
+        expect(summary.template.entries.map(entry => entry.attempts[0]?.usage)).toEqual([null, null]);
+        expect(await executeProviderEval({ ...state, ...reopened, transport })).toMatchObject({
+          stoppedReason: "unknown-usage", unknownMaximumUsd: "0.0222112", knownProviderCostUsd: "0.00006",
+        });
+        expect(transport).toHaveBeenCalledTimes(3);
+        expect(await readFile(file, "utf8")).toBe(original);
+      } finally { await reopened.close(); }
+    } finally { await rm(dir, { recursive: true, force: true }); }
   });
   it("keeps a timed-out attempt held when reconciliation names a different billed model", async () => {
     const state = setup("0.015");
