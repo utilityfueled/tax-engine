@@ -29,6 +29,22 @@ and one could not bind its local fixture. All 95 tests in those 13 files
 passed in a separate run with loopback access. The original full-run
 failure remains recorded.
 
+The full local coverage run passed 30,786 tests, skipped 84 and recorded
+22 test failures across 23 failed files. Reported errors included 20 test
+timeouts, two subprocess timeouts and a refused loopback bind. All 294
+tests in those 23 files passed on an isolated unit rerun with loopback
+access. The exact Linux coverage result above supplies the completed
+coverage measurement.
+
+All four timed-out RRTA inspections in the current Linux managed and
+strict AMD64 jobs spent 2.250–2.382 seconds preparing content contexts.
+Each entered page-text extraction before its unchanged subprocess
+deadline. A bounded local comparison reused the Decimal conversion for
+each geometry operand and preserved all eight receipt fields in eight
+completed attempts. Desktop elapsed time increased 2.40% and mobile
+fell 0.78%. The earlier incomplete comparison included one baseline
+timeout. The inspector and browser limits remain in place.
+
 ## November 26 visited Ohio header edits
 
 `ca3b4231a` reuses current school-source validation for navigation after

@@ -128,6 +128,8 @@
       "composeRecoveryAndImport": "passed on both architectures",
       "localBrowser": {"passed": 654, "failed": 0, "originalSkips": 5, "batches": 9, "cleanupVerified": true},
       "localUnit": {"passed": 30795, "failed": 13, "skipped": 84, "fiveSecondTimeouts": 12, "loopbackPermissionFailures": 1, "affectedFilesRetryPassed": 95},
+      "localCoverage": {"passed": 30786, "failed": 22, "skipped": 84, "failedFiles": 23, "testTimeouts": 20, "subprocessTimeouts": 2, "loopbackPermissionFailures": 1, "affectedFilesUnitRetryPassed": 294},
+      "rrtaInspectionTiming": {"observations": 4, "contentContextsElapsedSecondsRange": [2.25, 2.382], "completedPageText": false, "geometryDecimalReuseCompletedComparisons": 8, "geometryDecimalReuseDesktopElapsedChangePercent": 2.4, "geometryDecimalReuseMobileElapsedChangePercent": -0.78, "inspectorChanged": false},
       "priorBankInterestRevision": {"linuxCoveragePassedTests": 30891, "linuxBranchCoveragePercent": 88.91, "managedLinuxFailures": 2, "strictAmd64Failures": 8}
     },
     "nov26VisitedOhioHeaderEdits": {
