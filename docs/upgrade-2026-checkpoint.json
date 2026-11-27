@@ -3,7 +3,7 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "64ca11a71ab066bbe027d79dd55a3fdbc4331f17",
-    "latestScopedApplicationCommit": "ba45cde16975867a94260a8f71783b0e590060bf",
+    "latestScopedApplicationCommit": "98884bc352565e903a60862ceb722b0b26421689",
     "latestCombinedCandidateCommit": "64ca11a71ab066bbe027d79dd55a3fdbc4331f17",
     "paDividendAccountIdentityEvidenceKey": "activeContinuation.nov27PaDividendAccountIdentity",
     "ohioTreasuryEvidenceKey": "activeContinuation.nov27OhioTreasuryDocumentedBoxes",
@@ -16,6 +16,7 @@
     "confirmedOhioSchoolHeaderEvidenceKey": "activeContinuation.nov27ConfirmedOhioSchoolHeader",
     "form8919SourceInventoryEvidenceKey": "activeContinuation.nov26Form8919SourceInventory",
     "latestPublicProviderCatalogEvidenceKey": "activeContinuation.nov26PublicProviderCatalog",
+    "geminiPromptBlockSettlementEvidenceKey": "activeContinuation.nov27GeminiPromptBlockSettlement",
     "guidedForm8919OriginalEvidenceKey": "activeContinuation.nov26GuidedForm8919Original",
     "form8919OriginalEvidenceKey": "activeContinuation.nov26Form8919Original",
     "providerEvaluationWindowEvidenceKey": "activeContinuation.nov26ExactProviderEvaluationWindows",
@@ -171,6 +172,30 @@
     ]
   },
   "activeContinuation": {
+    "nov27GeminiPromptBlockSettlement": {
+      "commit": "98884bc352565e903a60862ceb722b0b26421689",
+      "specNotesCommit": "dc38459850f7852f8570bb9940044d88603d0377",
+      "regressionsFailedBeforeImplementation": 2,
+      "focusedTestsPassed": 91,
+      "focusedSpecReferencesPassed": 22,
+      "typechecksPassed": true,
+      "scopedLintPassed": true,
+      "offlineEvaluationArtifactsPassed": true,
+      "browserSourceAuditSha256": "0cefc601ad262c5dcfaefd94470238767edcdf7fc3adafea6f513fed5bd3586e",
+      "fixtureProviderCostUSD": "0.000615",
+      "fixtureRetailChargeCents": 1,
+      "publicGemini3FlashPreviewShutdownAnnounced": false,
+      "liveProviderCalls": 0,
+      "selectedGoogleProjectAccessVerified": false,
+      "ciRun": 45985916449,
+      "dockerRun": 45985916508,
+      "amd64WebRun": 45985917620,
+      "sourceUrls": [
+        "https://aistudio.google.com/api-reference/generate-content",
+        "https://protobuf.dev/programming-guides/json/#presence-and-default-values",
+        "https://aistudio.google.com/docs/deprecations#gemini-3-preview-models"
+      ]
+    },
     "nov27Code3PlacementExact": {
       "commit": "64ca11a71ab066bbe027d79dd55a3fdbc4331f17",
       "requiredLocalChecksPassed": 11,

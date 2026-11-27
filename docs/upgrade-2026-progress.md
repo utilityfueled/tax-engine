@@ -1,5 +1,21 @@
 # 2026 upgrade implementation evidence
 
+## November 27 Exact Gemini prompt-block settlement
+
+The hosted adapter and offline provider evaluator now retain usage for a
+documented Gemini prompt block when the response omits the candidate count and
+its reported total equals the sum of prompt and reported thought tokens.
+The hosted regression settles `$0.000615` in provider cost and one cent retail
+exactly once. An incomplete or contradictory counter still requires
+reconciliation. Both regression paths failed before `98884bc35` and passed after
+it. The encoding reference moved to the spec notes in `dc3845985` to keep the
+coverage inventory's authority field stable. Google still lists Gemini 3 Flash
+Preview without an announced shutdown. Selected-project access and comparative
+provider runs remain open. No provider calls were made for this change.
+[Gemini response and usage fields](https://aistudio.google.com/api-reference/generate-content) ·
+[ProtoJSON default values](https://protobuf.dev/programming-guides/json/#presence-and-default-values) ·
+[Google model lifecycle](https://aistudio.google.com/docs/deprecations#gemini-3-preview-models).
+
 ## November 27 Exact Code 3 and Form 5329 release checks
 
 All 11 local checks passed. The exact `64ca11a71` unit and coverage
