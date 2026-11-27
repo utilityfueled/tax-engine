@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `71c4736a6` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `0cf50ee63` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -56,10 +56,16 @@ archive's corresponding runs to reuse local resources safely.
   Independent review verified 191 focused tests across this change and the
   guided Ohio change. [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
 
-All four commits reached `main`. Combined local verification has started
-from the tracked archive of `0cf50ee63`. The earlier exact release checks
-remain tied to `71c4736a6` until the new suite finishes. These packages do
-not qualify draft 2026 filing forms or replace independent tax review.
+All four commits reached `main`. The tracked archive of `0cf50ee63` passed
+all 11 local checks. Both unit runs passed 31,296 tests with
+83 skips and 88.67% branch coverage.
+Chromium passed 654 cases with 5 skips
+across 9 windows. Encrypted standalone recovery passed,
+and the local listeners closed. The archive used Node 26.13.1,
+pypdf 6.10.0, and 15 verified
+sample-document hashes. The manifest SHA-256 is
+`b6ab81bde4a3b34b9697dfcf59a61df52a6d94543511e0b632e41ab66436d51a`. Final 2026 forms and independent tax review
+remain open.
 
 ## November 27 strict ARM64 browser run
 
