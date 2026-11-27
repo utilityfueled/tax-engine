@@ -104,6 +104,54 @@ describe("2026 original pension source facts", () => {
     return calculateFederalTax(pensionInput(changes, year));
   }
 
+  const originalPension = { ...pension, payerTin: "12-3456789", accountReference: "Fictional plan 1", taxableAmount: "9000.01" };
+
+  it("holds same-account copies before summing pension income and federal withholding", () => {
+    const input = pensionInput(originalPension);
+    const single = calculateFederalTax(TaxYearInputSchema.parse(input));
+    expect(single.pensionDistributionsTaxable.toFixed(2)).toBe("9000.01");
+    expect(single.form1099R?.federalWithholding.toFixed(2)).toBe("99.09");
+    for (const other of [originalPension, {
+      ...originalPension, payer: "Former fictional plan name", payerTin: "123456789", accountReference: "Fictional  plan 1",
+      grossDistribution: "12000.120", federalWithheld: "99.090", taxableAmount: "9000.010", stateWithheld: "21.00",
+    }]) {
+      const duplicated = TaxYearInputSchema.parse({ ...input, form1099R: [originalPension, other] });
+      expect(() => calculateFederalTax(duplicated)).toThrow(/reconcile indistinguishable Form 1099-R originals/i);
+    }
+  });
+
+  it("preserves reporting distinctions between absent and explicit original boxes", () => {
+    const input = pensionInput(originalPension);
+    for (const explicitBoxes of [{ trumpAccount: false }, { excessContributionEarnings: "0" }]) {
+      const form1099R = [originalPension, { ...originalPension, ...explicitBoxes }];
+      const result = calculateFederalTax(TaxYearInputSchema.parse({ ...input, form1099R }));
+      expect(result.pensionDistributionsTaxable.toFixed(2)).toBe("18000.02");
+      expect(result.form1099R?.federalWithholding.toFixed(2)).toBe("198.18");
+    }
+  });
+
+  it("preserves different pension originals and historical aggregation", () => {
+    const input = pensionInput(originalPension);
+    const fromSeparateAccount = { ...originalPension, accountReference: "Fictional plan 2" };
+    const differentOriginal = { ...originalPension, grossDistribution: "12100.12" };
+    for (const form1099R of [[originalPension, fromSeparateAccount], [originalPension, differentOriginal]]) {
+      const result = calculateFederalTax(TaxYearInputSchema.parse({ ...input, form1099R }));
+      expect(result.pensionDistributionsTaxable.toFixed(2)).toBe("18000.02");
+      expect(result.form1099R?.federalWithholding.toFixed(2)).toBe("198.18");
+    }
+    const joint = calculateFederalTax(TaxYearInputSchema.parse({ ...input,
+      taxpayer: { ...input.taxpayer, filingStatus: "married_filing_jointly",
+        spouse: { ...input.taxpayer.primary, firstName: "Alex", ssn: "321-54-9876" } },
+      w2s: input.w2s.map(w2 => ({ ...w2, accountHolder: "primary" })),
+      form1099R: [originalPension, { ...originalPension, accountHolder: "spouse" }],
+    }));
+    expect(joint.pensionDistributionsTaxable.toFixed(2)).toBe("18000.02");
+    const historical = pensionInput({}, 2025);
+    const original2025 = { ...originalPension, taxYear: 2025 };
+    const result = calculateFederalTax(TaxYearInputSchema.parse({ ...historical, form1099R: [original2025, original2025] }));
+    expect(result.pensionDistributionsTaxable.toFixed(2)).toBe("18000.02");
+  });
+
   it("holds unknown ordinary pension checkbox facts before or after parsing", () => {
     for (const unknown of [
       { taxableAmountNotDetermined: undefined },

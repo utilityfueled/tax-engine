@@ -136,6 +136,37 @@ function sameOriginalQcdStatement(source: Form1099R, other: Form1099R): boolean 
   return other.payer.trim().toLowerCase() === source.payer.trim().toLowerCase();
 }
 
+function originalBoxAmount(value: string | undefined): string | null {
+  return value === undefined ? null : d(value).toString();
+}
+
+function assertDistinct2026RetirementOriginals(forms: Form1099R[], isJointReturn: boolean): void {
+  const originals = new Map<string, Set<Form1099R["accountHolder"]>>();
+  for (const form of forms) {
+    const payerTin = form.payerTin?.replace(/[-\s]/gu, "");
+    const account = form.accountReference?.trim().replace(/\s+/gu, " ");
+    if (form.taxYear !== 2026 || !payerTin || !/^\d{9}$/.test(payerTin) || !account) continue;
+
+    const code = [...getUpperDistributionCode(form).replace(/\s+/gu, "")].sort().join("");
+    const original = JSON.stringify([
+      payerTin, account, code, d(form.grossDistribution).toString(), originalBoxAmount(form.taxableAmount),
+      form.taxableAmountNotDetermined, originalBoxAmount(form.capitalGainIncluded), originalBoxAmount(form.federalWithheld),
+      originalBoxAmount(form.employeeContributions), form.iraSepSimple, form.trumpAccount,
+      originalBoxAmount(form.excessContributionEarnings),
+    ]);
+    const owner = isJointReturn ? form.accountHolder : "primary";
+    const priorOwners = originals.get(original);
+    if (!priorOwners) {
+      originals.set(original, new Set([owner]));
+      continue;
+    }
+    if (!owner || priorOwners.has(undefined) || priorOwners.has(owner)) {
+      throw new Error("Compare and reconcile indistinguishable Form 1099-R originals before totaling retirement income and withholding.");
+    }
+    priorOwners.add(owner);
+  }
+}
+
 function resolve2026QcdSources(
   forms: Form1099R[],
   options: RetirementAggregationOptions,
@@ -357,6 +388,10 @@ export function calculateForm1099R(
     throw new Error("2026 QCD manual Form 8606 numbers require separate reconciliation with the actual owner worksheet");
   }
   const currentQcd = use2026Rules && forms.some(hasQcdClaim) ? resolve2026QcdSources(forms, options) : undefined;
+
+  if (forms.length > 1 && (options.taxYear === undefined || options.taxYear === 2026)) {
+    assertDistinct2026RetirementOriginals(forms, isJointReturn);
+  }
 
   if (use2026Rules) {
     for (const form of forms) {

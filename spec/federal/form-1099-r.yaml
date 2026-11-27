@@ -370,6 +370,26 @@ lines:
       - "tests/engine/federal-pension-box2a-2025.test.ts::reports known amounts in the existing lines for a dated 2025 $name"
       - "tests/engine/federal-pension-box2a-2025.test.ts::uses a complete dated Code 2 Simplified Method worksheet"
 
+  - line: "2026-duplicate-statement-source"
+    description: "Reconcile indistinguishable 2026 Form 1099-R originals before summing income and payments"
+    formula: >-
+      Match the confirmed year, recipient, payer TIN, and actual statement account
+      reference. Hold when two records with that source identity also report the
+      same federal original boxes after normalizing whitespace, TIN punctuation,
+      distribution-code order and exact decimal amounts. Preserve the difference
+      between absent values and explicit zero or unchecked values where the
+      input retains that distinction. Hold an otherwise matching pair on a joint
+      return when either recipient is unknown. State and local fields,
+      the payer's display name, and added worksheet data cannot distinguish those
+      copies. Preserve separately identified accounts, recipients and federal
+      originals, as well as historical tax-year behavior. Retain separate QCD
+      original and transfer reconciliation.
+    irsRef: "https://www.irs.gov/instructions/i1099r; https://www.irs.gov/pub/irs-dft/f1040--dft.pdf#page=1"
+    testRef: "tests/engine/federal-pension-sources-2026.test.ts::holds same-account copies before summing pension income and federal withholding"
+    testRefs:
+      - "tests/engine/federal-pension-sources-2026.test.ts::preserves different pension originals and historical aggregation"
+      - "tests/engine/federal-pension-sources-2026.test.ts::preserves reporting distinctions between absent and explicit original boxes"
+
   - line: "2026-pension-source"
     description: "Form 1040 Lines 1h, 5a and 5b require known non-IRA distribution sources for tax year 2026"
     formula: >-
