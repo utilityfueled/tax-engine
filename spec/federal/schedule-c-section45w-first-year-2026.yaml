@@ -1,0 +1,36 @@
+form: "Schedule C"
+fullName: "Private 2026 Schedule C attribution of first-year Section 45W vehicle depreciation"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-11-27"
+irsReference: "https://www.irs.gov/instructions/i1040sc"
+notes: |
+  Schedule C line 13 includes depreciation for property used in this trade or business.
+  Form 4562 Part V line 28 flows through Part IV line 22; in this finite slice
+  the one verified vehicle is the only amount on both lines. The current-year
+  general business credit, AMT attribution and filing exports require separate qualification.
+  https://www.irs.gov/pub/irs-dft/f1040sc--dft.pdf
+lines:
+  - line: "13"
+    description: "First-year depreciation from the same original Schedule C and vehicle"
+    formula: |
+      For a 2026 Single primary calendar-year cash sole proprietor, verify that the
+      actual owner, trade, business name and EIN (or confirmed absence), activity workpaper, VIN, delivery,
+      prepared Schedule A direct credit and underlying Form 4562 asset belong to
+      the same canonical activity. Reconcile the complete cash receipts and
+      actual nonvehicle advertising, office and supply expenses to the canonical
+      amounts. The line 1 audit identifies the verified cash receipts ledger.
+      Use the Form 4562 first-year workpaper's line 28 as the entire depreciation deduction once.
+      This source method holds other depreciation, section 179, amortization, mileage,
+      generic Form 4562, additional vehicle deductions, competing vehicle claims,
+      positive same-business W-2 wages, or incomplete or conflicting originals.
+      A prepared direct claim requires separate Form 3800 and filing qualification.
+    testRef: "tests/engine/schedules/schedule-c-section45w-first-year-2026.test.ts::attributes verified Section 45W depreciation once through canonical Schedule C"
+  - line: "31"
+    description: "Actual profit after the single attributed depreciation deduction"
+    formula: |
+      The supported nonnegative net profit is the reconciled actual gross receipts
+      less the reconciled nonvehicle expenses and the attributable Form 4562
+      depreciation once. Missing or changed owner, business, ledger, or vehicle
+      originals hold the result, including after serializing and reopening inputs.
+    testRef: "tests/engine/schedules/schedule-c-section45w-first-year-2026.test.ts::holds conflicting or incomplete Section 45W Schedule C evidence"

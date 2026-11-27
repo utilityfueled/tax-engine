@@ -108,7 +108,7 @@ lines:
 
   - line: "13"
     description: "Depreciation and section 179 expense deduction"
-    formula: "Use Form 4562 Line 22 when the supported Form 4562 summary slice is present; otherwise use the validated manual Schedule C depreciation amount"
+    formula: "Use the matching 2026 Section 45W private original-source workpaper when its separate Schedule C method applies. Otherwise use Form 4562 Line 22 when the supported Form 4562 summary slice is present, or the validated manual Schedule C depreciation amount."
     irsRef: "Schedule C Instructions, Line 13; Form 4562"
     inputs:
       - "Form 4562 Line 22"

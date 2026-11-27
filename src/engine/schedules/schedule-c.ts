@@ -1,4 +1,5 @@
 import {assertScheduleCPassengerResult} from './schedule-c-passenger-first-year-sources.js';
+import { calculateScheduleCSection45WFirstYear } from './schedule-c-section45w-first-year-sources.js';
 /**
  * Schedule C — Profit or Loss From Business (Sole Proprietorship)
  * Spec: spec/federal/schedule-c.yaml
@@ -185,11 +186,12 @@ function calculateStandardMileage(input: TaxYearInput, business: ScheduleCInput 
 export function calculateScheduleC(
   input: TaxYearInput,
   scheduleCInput: ScheduleCInput | undefined = input.scheduleC?.professionalWagering !== undefined
-    || input.scheduleC?.standardMileage !== undefined ? input.scheduleC : undefined,
+    || input.scheduleC?.standardMileage !== undefined || input.scheduleC?.sourceFacts?.section45WFirstYear !== undefined ? input.scheduleC : undefined,
   options: { dependentCareBenefitsAdjustment?: Decimal } = {},
 ): ScheduleCResult {
   assertStatementYear("Form 1099-NEC", input.form1099Nec, input.taxpayer.taxYear);
   const audit = new AuditTrail();
+  const section45W = calculateScheduleCSection45WFirstYear(input, scheduleCInput, options.dependentCareBenefitsAdjustment);
   const wagering = calculateProfessionalWagering(input, scheduleCInput, options.dependentCareBenefitsAdjustment, audit);
   const mileage = calculateStandardMileage(input, scheduleCInput);
   const sources = calculateScheduleCSourceFacts(input, scheduleCInput);
@@ -200,6 +202,7 @@ export function calculateScheduleC(
     ? new Exact(value === undefined || value === null || value === '' ? 0 : value)
     : legacyAmount(value);
   if(sources) audit.merge(sources.lines);
+  if (section45W) audit.merge(section45W.lines);
 
   // Line 1: Gross receipts
   const necTotal = input.form1099Nec.reduce(
@@ -210,7 +213,8 @@ export function calculateScheduleC(
     ? d(scheduleCInput.grossReceipts)
     : necTotal);
   audit.record("Sched C", "1", "Gross receipts or sales", grossReceipts,
-    wagering ? "Gross taxable wagering gains from the confirmed professional ledger" : "Sum of 1099-NEC + other business income");
+    section45W ? "Gross receipts from the verified cash receipts ledger"
+      : wagering ? "Gross taxable wagering gains from the confirmed professional ledger" : "Sum of 1099-NEC + other business income");
 
   // Line 2: Returns and allowances
   const returnsAndAllowances = d(scheduleCInput?.returnsAndAllowances);
@@ -257,15 +261,15 @@ export function calculateScheduleC(
   totalExpenses = totalExpenses.plus(mileage?.deduction ?? addExpense("9", "Car and truck", expenses.carAndTruck));
   totalExpenses = totalExpenses.plus(addExpense("10", "Commissions and fees", expenses.commissionsAndFees));
   totalExpenses = totalExpenses.plus(addExpense("11", "Contract labor", expenses.contractLabor));
-  const depreciationAndSection179Deduction = form4562?.line22 ?? d(expenses.depreciation);
+  const depreciationAndSection179Deduction = section45W?.line28 ?? form4562?.line22 ?? d(expenses.depreciation);
   expenseBreakdown["Depreciation and section 179"] = depreciationAndSection179Deduction;
   audit.record(
     "Sched C",
     "13",
     "Depreciation and section 179 expense deduction",
     depreciationAndSection179Deduction,
-    form4562 ? "Form 4562 Line 22" : "Validated manual Schedule C depreciation amount",
-    form4562
+    section45W ? "Verified Section 45W vehicle depreciation from the sole Form 4562 asset" : form4562 ? "Form 4562 Line 22" : "Validated manual Schedule C depreciation amount",
+    section45W ? { "Verified Form 4562 listed property depreciation": section45W.line28 } : form4562
       ? { "Form 4562 Line 22": form4562.line22 }
       : { "Validated manual Schedule C depreciation amount": d(expenses.depreciation) }
   );
@@ -347,6 +351,7 @@ export function calculateScheduleC(
 
   // Line 31: Net profit or loss
   const netProfit = tentativeProfit.minus(homeOfficeDeduction);
+  if (section45W && netProfit.lt(0)) throw new Error("Section 45W Schedule C loss requires a separate loss attribution method.");
   audit.record("Sched C", "31", "Net profit or loss", netProfit, "Line 29 - Line 30");
 
   const result:ScheduleCResult = {
