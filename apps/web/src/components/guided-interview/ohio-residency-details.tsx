@@ -103,6 +103,12 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
     function editReceipt(index: number, field: keyof OhioUnemploymentReceipt, value: string) {
         editUnemploymentSchedule(next => { next.payments[index][field] = value; });
     }
+    const singleReceiptFields = <>
+        <TextFact label="Unemployment payment record reference" value={payment?.sourceReference ?? ''} onChange={sourceReference => editUnemployment({ sourceReference })} />
+        <TextFact label="Unemployment payment or accrual date" type="date" value={payment?.paidOrAccruedOn ?? ''} onChange={paidOrAccruedOn => editUnemployment({ paidOrAccruedOn })} />
+        <CurrencyField label="Actual unemployment payment amount" value={payment?.amount ?? ''} onChange={amount => editUnemployment({ amount })} />
+        <BooleanFact label="Does this one payment account for all of Form 1099-G Box 1?" value={payment?.allPaymentsIncludedConfirmed} onChange={allPaymentsIncludedConfirmed => editUnemployment({ allPaymentsIncludedConfirmed })} />
+    </>;
     return <div className="guided-card">
         <h3 className="guided-card-title">Ohio domicile and income sources</h3>
         <p className="guided-hint">Use actual domicile records and income allocation worksheets for each owner. A mailing address does not establish residency. Enter actual zero amounts explicitly. Business, district tax and other specialized sources require their separate worksheets. These records apply to {taxYear ?? 'the selected year'}.</p>
@@ -144,17 +150,21 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                         <button type="button" className="utility-button" onClick={() => editOwner(key, row => { row.periods.splice(index, 1); })}>Remove {key} domicile period {index + 1}</button>
                     </div>)}
                     <button type="button" className="utility-button" onClick={() => editOwner(key, row => { row.periods.push({ from: '', to: '', domicileState: '' }); })}>Add {key} domicile period</button>
-                    {needsAmounts && amounts && ohioNrcCategories.map(category => <fieldset key={category}>
-                        <legend>{key}: {categoryLabels[category]}</legend>
-                        {category === 'unemployment' && key === 'primary' && reviewReceiptScope && !unemployment ?
-                            <p className="guided-hint">Ohio review requires a supported current 2026 Form 1099-G and one complete receipt.</p>
-                        : category === 'unemployment' && key === 'primary' && unemployment && (owner.status === 'part_year_resident' || owner.status === 'nonresident') ? <>
+                    {key === 'primary' && reviewReceiptScope && <fieldset>
+                        <legend>{key}: Unemployment</legend>
+                        {unemployment ? <>
                             <p className="guided-hint">Verified Form 1099-G Box 1: ${unemployment.amount}</p>
-                            {reviewReceiptScope && <p className="guided-hint">Record the one payment covering Box 1 for Ohio review.</p>}
-                            {staleReviewSchedule && <button type="button" className="utility-button" onClick={() => edit(copy => { delete copy.unemploymentPaymentSchedule; })}>
+                            <p className="guided-hint">Record the one payment covering Box 1 for Ohio review.</p>
+                            {staleReviewSchedule ? <button type="button" className="utility-button" onClick={() => edit(copy => { delete copy.unemploymentPaymentSchedule; })}>
                                 Remove saved unemployment payment schedule
-                            </button>}
-                            {owner.status === 'part_year_resident' && !staleReviewSchedule && (legacyReceiptScope && data.unemploymentPaymentSchedule ? <>
+                            </button> : singleReceiptFields}
+                        </> : <p className="guided-hint">Ohio review requires a supported current 2026 Form 1099-G and one complete receipt.</p>}
+                    </fieldset>}
+                    {needsAmounts && amounts && ohioNrcCategories.filter(category => category !== 'unemployment' || key !== 'primary' || !reviewReceiptScope).map(category => <fieldset key={category}>
+                        <legend>{key}: {categoryLabels[category]}</legend>
+                        {category === 'unemployment' && key === 'primary' && unemployment && (owner.status === 'part_year_resident' || owner.status === 'nonresident') ? <>
+                            <p className="guided-hint">Verified Form 1099-G Box 1: ${unemployment.amount}</p>
+                            {owner.status === 'part_year_resident' && (data.unemploymentPaymentSchedule ? <>
                                 {(schedule?.payments ?? [emptyUnemploymentReceipt(), emptyUnemploymentReceipt()]).map((receipt, index) => <div key={index}>
                                     <TextFact label={`Unemployment payment ${index + 1} original reference`} value={receipt.sourceReference} onChange={value => editReceipt(index, 'sourceReference', value)} />
                                     <TextFact label={`Unemployment payment ${index + 1} date paid or accrued`} type="date" value={receipt.paidOrAccruedOn} onChange={value => editReceipt(index, 'paidOrAccruedOn', value)} />
@@ -165,11 +175,8 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                                 <BooleanFact label="Do these payments account for all of Form 1099-G Box 1?" value={schedule?.allPaymentsIncludedConfirmed} onChange={value => editUnemploymentSchedule(next => { next.allPaymentsIncludedConfirmed = value; })} />
                                 <button type="button" className="utility-button" onClick={() => edit(clearUnemploymentEvidence)}>Remove schedule and enter one unemployment payment</button>
                             </> : <>
-                                <TextFact label="Unemployment payment record reference" value={payment?.sourceReference ?? ''} onChange={sourceReference => editUnemployment({ sourceReference })} />
-                                <TextFact label="Unemployment payment or accrual date" type="date" value={payment?.paidOrAccruedOn ?? ''} onChange={paidOrAccruedOn => editUnemployment({ paidOrAccruedOn })} />
-                                <CurrencyField label="Actual unemployment payment amount" value={payment?.amount ?? ''} onChange={amount => editUnemployment({ amount })} />
-                                <BooleanFact label="Does this one payment account for all of Form 1099-G Box 1?" value={payment?.allPaymentsIncludedConfirmed} onChange={allPaymentsIncludedConfirmed => editUnemployment({ allPaymentsIncludedConfirmed })} />
-                                {legacyReceiptScope && <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule()}>Enter multiple unemployment payments</button>}
+                                {singleReceiptFields}
+                                <button type="button" className="utility-button" onClick={() => editUnemploymentSchedule()}>Enter multiple unemployment payments</button>
                             </>)}
                         </> : <>
                             <TextFact label={`${key} ${categoryLabels[category]} original source reference`} value={amounts[category].sourceReference} onChange={value => editOwner(key, row => { currentAmounts(row)[category].sourceReference = value; })} />

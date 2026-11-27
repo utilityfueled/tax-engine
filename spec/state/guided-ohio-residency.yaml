@@ -41,9 +41,10 @@ lines:
     testRefs:
       - "tests/guided-interview/guided-ohio-residency.test.ts::replays a complete split unemployment payment schedule through the guided Ohio return"
   - line: "ordinary-2026-unemployment-receipt"
-    description: "Retain one actual Box 1 receipt for review on an admitted 2026 Ohio part-year return"
+    description: "Retain one actual Box 1 receipt for review on an admitted 2026 Ohio return"
     formula: |
-      For the single primary part-year cohort, retain one actual dated receipt
+      For one single-filer primary owner with known full-year, part-year, or
+      nonresident status, retain one actual dated receipt
       covering all of a verified current December 2026 ordinary Form 1099-G
       Box 1. Use the existing private statement and owner fingerprint and
       require reentry when either changes. Match the positive whole-dollar
@@ -53,13 +54,16 @@ lines:
       originals with positive Box 1 even with completed manual category
       answers. Hold future receipts. When a saved schedule is present in the
       2026 single-receipt cohort, offer explicit removal before showing the
-      current single-receipt inputs. Keep 2025 replay, 2026 state preview and
-      filing gates.
+      current single-receipt inputs. Replay the confirmed source, receipt, and
+      exact Ohio resident amount for the private 2026 method. Keep new
+      full-year and nonresident payment proof out of the shared legacy NRC
+      input. Preserve 2025 replay, state preview, and filing gates.
     irsRef: "https://www.irs.gov/instructions/i1099g; https://codes.ohio.gov/ohio-revised-code/section-5747.20; https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf#page=42"
-    testRef: "tests/apps/web/ohio-residency-interactions.test.tsx::captures and reopens one 2026 Ohio part-year unemployment receipt for review"
+    testRef: "tests/apps/web/ohio-residency-interactions.test.tsx::captures and reopens one 2026 Ohio unemployment receipt for review as %s"
     testRefs:
       - "tests/guided-interview/guided-ohio-residency.test.ts::binds a 2026 Ohio receipt to the original and actual domicile date"
-      - "tests/guided-interview/guided-ohio-residency.test.ts::holds unsupported positive Box 1 in the 2026 Ohio single part-year receipt cohort"
+      - "tests/guided-interview/guided-ohio-residency.test.ts::holds unsupported positive Box 1 in the 2026 Ohio single receipt cohort"
+      - "tests/guided-interview/guided-ohio-residency.test.ts::replays source-bound 2026 Ohio review receipt amounts and private draft for %s"
 businessRuleValidation:
   - rule: "actual-collector-confirmation-recovery"
     description: "Visible actual data edits invalidate confirmation; explicit removal preserves missing state instead of inventing full-year residency. No hidden zero defaults."

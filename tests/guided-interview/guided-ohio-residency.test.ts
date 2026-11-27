@@ -1,6 +1,6 @@
 /** Spec: spec/state/guided-ohio-residency.yaml */
 import { it, expect, vi } from 'vitest';
-import { ohioResidencyFactErrors, confirmGuidedOhioResidencyFacts, buildGuidedOhioResidencyFacts, guidedOhioUnemploymentStatement, snapshotGuidedOhioOriginals, type OhioResidencyDraft } from '../../apps/web/src/lib/guided-ohio-residency-facts.js';
+import { ohioResidencyFactErrors, confirmGuidedOhioResidencyFacts, buildGuidedOhioResidencyFacts, guidedOhioUnemploymentStatement, readGuidedOhio2026UnemploymentReceipt, snapshotGuidedOhioOriginals, type OhioResidencyDraft } from '../../apps/web/src/lib/guided-ohio-residency-facts.js';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { confirmGuidedOhioPaymentFacts } from '@/lib/guided-ohio-payment-facts';
 import { computeGuidedPreview } from '@/lib/guided-preview-compute';
@@ -11,7 +11,8 @@ import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter';
 import { calculateOhioResidentReturn } from '@/engine/state/oh-return';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { ohioResidencyFacts, ohioResidencyOwner } from '../fixtures/oh-residency.js';
-import { ohio2026OrdinaryFixture } from '../fixtures/oh-2026-ordinary-return.js';
+import { ohio2026OrdinaryFixture, rebindOhio2026Ordinary } from '../fixtures/oh-2026-ordinary-return.js';
+import { calculateOhio2026UnemploymentReturnDraft } from '@/engine/state/oh-2026-return-draft';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
 import { unemploymentSource } from '../fixtures/guided-government-uc-original.js';
 import { completePersonalInfo, completeW2Entry, startCompleteInterview } from './complete-facts.js';
@@ -182,14 +183,58 @@ it('binds a 2026 Ohio receipt to the original and actual domicile date', () => {
     }
 });
 
-it('holds unsupported positive Box 1 in the 2026 Ohio single part-year receipt cohort', () => {
+it('holds unsupported positive Box 1 in the 2026 Ohio single receipt cohort', () => {
     const { original, base, statement } = ohio2026UnemploymentFacts();
     const otherState = TaxYearInputSchema.parse({ ...original, form1099G: [{ ...statement, state: 'PA' }] });
     expect(base.owners[0]?.amounts?.unemployment?.federalAmount).toBe('1000');
     expect(() => confirmGuidedOhioResidencyFacts(otherState, base)).toThrow(/supported.*2026 Form 1099-G/i);
     const fullYear = TaxYearInputSchema.parse({ ...otherState, taxpayer: { ...otherState.taxpayer, stateResidency: 'full-year' } });
     const owner = { ...ohioResidencyOwner('primary', 'full_year_resident'), periods: [{ from: '2026-01-01', to: '2026-12-31', domicileState: 'OH' }] };
-    expect(confirmGuidedOhioResidencyFacts(fullYear, { ...base, owners: [owner] }).sourceFactsConfirmed).toBe(true);
+    expect(() => confirmGuidedOhioResidencyFacts(fullYear, { ...base, owners: [owner] })).toThrow(/supported.*2026 Form 1099-G/i);
+});
+
+it.each([
+    ['full_year_resident', '50000', '1000', '959'],
+    ['nonresident', '10000', '0', '188'],
+] as const)('replays source-bound 2026 Ohio review receipt amounts and private draft for %s', (status, ohioWages, residentAmount, tax) => {
+    const { statement } = ohio2026UnemploymentFacts();
+    const packet = ohio2026OrdinaryFixture(status, '50000', ohioWages);
+    const form = required(TaxYearInputSchema.parse({ ...packet.input, form1099G: [statement] }).form1099G?.[0], 'current Box 1 source');
+    packet.input.form1099G = [JSON.parse(JSON.stringify(form)) as typeof form];
+    const residency = required(packet.input.ohioResidency, 'current domicile');
+    const draft: OhioResidencyDraft = { ...residency, taxYear: '2026', sourceFactsConfirmed: null,
+        allFederalSourcesIncludedConfirmed: residency.allFederalSourcesIncludedConfirmed ?? null,
+        noBusinessIncomeConfirmed: residency.noBusinessIncomeConfirmed ?? null };
+    expect(() => confirmGuidedOhioResidencyFacts(packet.input, draft)).toThrow(/complete dated unemployment/i);
+    const source = required(guidedOhioUnemploymentStatement(packet.input), 'current Box 1 proof');
+    const receipt = { sourceReference: 'Synthetic actual full receipt', paidOrAccruedOn: '2026-07-01', amount: '1,000',
+        allPaymentsIncludedConfirmed: true, originalStatementFingerprint: source.fingerprint };
+    const saved = confirmGuidedOhioResidencyFacts(packet.input, { ...draft, unemploymentPaymentSource: receipt });
+    const reopened = JSON.parse(JSON.stringify(saved)) as OhioResidencyDraft;
+    const proof = required(readGuidedOhio2026UnemploymentReceipt(reopened, packet.input), 'reopened 2026 review evidence');
+    expect(proof).toEqual({
+        receipt: { originalSourceId: source.sourceId, sourceReference: receipt.sourceReference, paidOrAccruedOn: '2026-07-01',
+            amount: '1000', allPaymentsIncludedConfirmed: true },
+        amounts: { federalAmount: '1000', residentAmount, nonresidentOhioAmount: '0', sourceReference: source.reference },
+    });
+    expect(buildGuidedOhioResidencyFacts(reopened, packet.input).unemploymentPaymentSource).toBeUndefined();
+    expect(() => readGuidedOhio2026UnemploymentReceipt({ ...reopened, sourceFactsConfirmed: null }, packet.input)).toThrow(/confirm/i);
+    expect(() => readGuidedOhio2026UnemploymentReceipt(reopened, { ...packet.input, form1099G: [{ ...form, accountReference: 'Replacement' }] })).toThrow(/stale/i);
+    residency.unemploymentPaymentSource = proof.receipt;
+    required(residency.owners[0]?.amounts, 'private actual category').unemployment = proof.amounts;
+    rebindOhio2026Ordinary(packet);
+    const { firstName, lastName, ssn } = packet.input.taxpayer.primary;
+    const result = calculateOhio2026UnemploymentReturnDraft(packet.input, { ...packet.sources,
+        methodId: 'oh-2026-unemployment-employee-draft-v1', unemploymentOriginal: {
+            sourceId: source.sourceId, sourceReference: source.reference, recipient: { firstName, lastName, ssn },
+            currentUncorrectedNonvoidOriginalConfirmed: true, allOriginalBoxesKnownConfirmed: true,
+            ordinaryNoncontributoryStateUnemploymentConfirmed: true, ohioWithholding: {
+                statePayerId: form.statePayerId, amount: '25.25', sourceFactsConfirmed: true,
+            },
+        },
+    });
+    expect(result.incomeTax.toFixed()).toBe(tax);
+    expect(result).toMatchObject({ filingQualified: false, reviewStatus: 'independent-review-pending' });
 });
 
 function unemploymentFlow(status: 'part_year_resident' | 'nonresident', partYearBalance = '955') {

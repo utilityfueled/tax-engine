@@ -157,7 +157,9 @@ it('collects the four part-year payment facts and clears the view after a same-v
     }
 });
 
-it('captures and reopens one 2026 Ohio part-year unemployment receipt for review', async () => {
+it.each([
+    ['full_year_resident', 'full-year'], ['part_year_resident', 'part-year'], ['nonresident', 'nonresident'],
+] as const)('captures and reopens one 2026 Ohio unemployment receipt for review as %s', async (status, declaration) => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -165,12 +167,12 @@ it('captures and reopens one 2026 Ohio part-year unemployment receipt for review
     const form = { ...unemploymentSource, compensation: '1000', sourceTaxYear: '2026', sourceFormRevision: '2026-12', familyLeaveBenefits: '0',
         stateTaxReporting: 'single' as const, state: 'OH', statePayerId: 'SYNTHETIC-OH', stateWithheld: '25.25' };
     const original = TaxYearInputSchema.parse({ ...simpleW2Fixture,
-        taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026, stateResidency: 'part-year' },
+        taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: 2026, stateResidency: declaration },
         w2s: simpleW2Fixture.w2s.map(wage => ({ ...wage, accountHolder: 'primary', taxYear: 2026 })),
         form1099G: buildGovernmentPaymentSourceRecords([form]) });
-    const owner = ohioResidencyOwner('primary', 'part_year_resident');
+    const owner = ohioResidencyOwner('primary', status);
     owner.periods = owner.periods.map(period => ({ ...period, from: period.from.replace('2025', '2026'), to: period.to.replace('2025', '2026') }));
-    Object.assign(owner.amounts.wages, { federalAmount: '85000', residentAmount: '30000', nonresidentOhioAmount: '10000' });
+    Object.assign(owner.amounts.wages, { federalAmount: '85000', residentAmount: status === 'nonresident' ? '0' : '30000', nonresidentOhioAmount: '10000' });
     const initial: OhioResidencyDraft = { ...ohioResidencyFacts(), taxYear: '2026', sourceFactsConfirmed: null, owners: [owner],
         unemploymentPaymentSchedule: { originalStatementFingerprint: 'prior-year-form', allPaymentsIncludedConfirmed: true,
             payments: [{ sourceReference: 'First old payment', paidOrAccruedOn: '2025-06-30', amount: '500' },

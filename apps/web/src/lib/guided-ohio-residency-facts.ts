@@ -87,9 +87,7 @@ export function guidedOhioUnemploymentStatement(input: TaxYearInput | null | und
     if (year === 2025) {
         if (original.stateTaxReporting !== 'none' || !stateWithheld.isZero()) return undefined;
     } else {
-        // The guided adapter can retain absent optional keys as undefined.
-        const presentFacts = Object.fromEntries(Object.entries(original).filter(([, value]) => value !== undefined));
-        if (!Ohio2026UnemploymentOriginalSchema.safeParse(presentFacts).success) return undefined;
+        if (!Ohio2026UnemploymentOriginalSchema.safeParse(original).success) return undefined;
         const federalWithheld = new Decimal(original.federalWithheld);
         if (federalWithheld.plus(stateWithheld).gt(box1)) return undefined;
         if (original.stateTaxReporting === 'single') {
@@ -120,7 +118,8 @@ export function hasGuidedOhio2026UnemploymentReceiptScope(data: OhioResidencyDra
     if (!data || input?.taxpayer.taxYear !== 2026 || input.taxpayer.filingStatus !== 'single' || input.ohioSchoolDistrict) return false;
     const [owner] = data.owners;
     return data.taxYear === '2026' && data.owners.length === 1 && owner?.accountHolder === 'primary'
-        && owner.status === 'part_year_resident' && data.schoolDistrictStatus === 'no_ohio_taxing_district_residency'
+        && (owner.status === 'full_year_resident' || owner.status === 'part_year_resident' || owner.status === 'nonresident')
+        && data.schoolDistrictStatus === 'no_ohio_taxing_district_residency'
         && !data.businessSources && !data.residentCreditSources
         && (Boolean(data.unemploymentPaymentSource || data.unemploymentPaymentSchedule) || hasPositiveUnemploymentBox1(input));
 }
@@ -139,17 +138,17 @@ function projectUnemployment(data: OhioResidencyDraft, input?: TaxYearInput) {
     if (current2026) {
         const reviewScope = hasGuidedOhio2026UnemploymentReceiptScope(data, input);
         if (!evidence && !reviewScope) return undefined;
-        if (!reviewScope || !original) throw new Error('Ohio review requires a supported current 2026 Form 1099-G and one complete receipt for the single part-year taxpayer.');
+        if (!reviewScope || !original) throw new Error('Ohio review requires a supported current 2026 Form 1099-G and one complete receipt for the single taxpayer.');
         if (schedule) throw new Error('Remove the saved unemployment payment schedule before entering one Ohio review receipt.');
     }
-    if (!original || data.owners.length !== 1 || owner?.accountHolder !== 'primary'
+    if (!original || !owner || (!current2026 && (data.owners.length !== 1 || owner.accountHolder !== 'primary'
         || (owner.status !== 'part_year_resident' && owner.status !== 'nonresident')
         || data.businessSources || data.residentCreditSources || data.schoolDistrictStatus !== 'no_ohio_taxing_district_residency'
-        || input?.ohioSchoolDistrict) {
+        || input?.ohioSchoolDistrict))) {
         throw new Error('Ohio unemployment requires one verified ordinary 2025 Form 1099-G and the nonresident or part-year method.');
     }
     const amounts = { federalAmount: original.amount, residentAmount: '0', nonresidentOhioAmount: '0', sourceReference: original.reference };
-    if (owner.status === 'nonresident') {
+    if (!current2026 && owner.status === 'nonresident') {
         if (evidence) throw new Error('Remove the part-year unemployment payment evidence for this full-year nonresident.');
         return { amounts, payment: undefined, paymentSchedule: undefined };
     }
@@ -183,12 +182,13 @@ export function hasCurrentGuidedOhioUnemploymentEvidence(data: OhioResidencyDraf
 function raw(data: OhioResidencyDraft, input: TaxYearInput | undefined, unemployment: ReturnType<typeof projectUnemployment>) {
     if(data.businessSources&&!input)throw Error('Actual current federal originals are required to replay Ohio business sources.');
     const allFull = data.owners.length > 0 && data.owners.every(owner => owner.status === 'full_year_resident');
+    const includeUnemploymentReceipt = data.taxYear !== '2026' || data.owners[0]?.status === 'part_year_resident';
     // The entered child has its own strict conversion and complete-source replay after parent/payment confirmation.
     const {residentCreditSources:_residentCredit, unemploymentPaymentSource:_unemploymentPayment,
         unemploymentPaymentSchedule:_unemploymentSchedule, ...parent}=data;
     return {
         ...parent, taxYear: Number(data.taxYear),
-        ...(unemployment?.payment ? { unemploymentPaymentSource: unemployment.payment } : {}),
+        ...(includeUnemploymentReceipt && unemployment?.payment ? { unemploymentPaymentSource: unemployment.payment } : {}),
         ...(unemployment?.paymentSchedule ? { unemploymentPaymentSchedule: unemployment.paymentSchedule } : {}),
         ...(data.businessSources&&input?{businessSources:buildGuidedOhioBusinessFacts(data.businessSources,input)}:{}),
         allFederalSourcesIncludedConfirmed: data.allFederalSourcesIncludedConfirmed ?? undefined,
@@ -295,4 +295,14 @@ export function buildGuidedOhioResidencyFacts(data: OhioResidencyDraft | undefin
     const errors = ohioResidencyFactErrors(data, input.taxpayer.taxYear, input.taxpayer.filingStatus,input);
     if (Object.keys(errors).length) throw new Error(Object.values(errors).join(' '));
     return OhioResidencyFactsSchema.parse(raw(data,input,projectUnemployment(data,input)));
+}
+
+/** Replay confirmed receipt evidence independently of the legacy NRC input. */
+export function readGuidedOhio2026UnemploymentReceipt(data: OhioResidencyDraft | undefined, input: TaxYearInput) {
+    if (!data || !hasGuidedOhio2026UnemploymentReceiptScope(data, input)) return undefined;
+    if (data.sourceFactsConfirmed !== true) throw new Error('Confirm the current Ohio residency and unemployment receipt for review.');
+    buildGuidedOhioResidencyFacts(data, input);
+    const projected = projectUnemployment(data, input);
+    if (!projected?.payment) throw new Error('Confirm one complete current Ohio unemployment receipt for review.');
+    return { receipt: projected.payment, amounts: projected.amounts };
 }
