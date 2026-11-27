@@ -3,8 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "71c4736a609920c52345598a4d711354a3a39cc1",
-    "latestScopedApplicationCommit": "71c4736a609920c52345598a4d711354a3a39cc1",
-    "latestCombinedCandidateCommit": "71c4736a609920c52345598a4d711354a3a39cc1",
+    "latestScopedApplicationCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
+    "latestCombinedCandidateCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
+    "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27ReceiptW2AndOhioPackagesEvidenceKey": "activeContinuation.nov27ReceiptW2AndOhioPackages",
     "previousArm64StrictBrowserEvidenceKey": "activeContinuation.nov27Arm64StrictBrowserResult",
     "ohioBusinessAndEquityResidencyEvidenceKey": "activeContinuation.nov27OhioBusinessAndEquityResidency",
@@ -292,6 +293,18 @@
         "scopedLintExistingWarnings": 4,
         "browserSourceAuditSha256": "adffe2ea772540a0829c344bbf07eefb12d9543b02be92c2f486990c7511ce0e"
       }
+    },
+    "nov27OhioPennsylvaniaPension": {
+      "privateOhioUnemploymentDispatchCommit": "e8f2d395009955d7da0c79953fa5dd228b56d589",
+      "fullYearPABankInterestCommit": "711345b0339861192101aa03150904dde592b07b",
+      "guidedOhioAllResidenciesCommit": "78f03681ef8542a9a34976ae51a244a206cdc7a1",
+      "federalPensionOriginalsCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
+      "privateOhioFocusedTestsPassed": 109,
+      "pennsylvaniaFocusedTestsPassed": 273,
+      "guidedOhioAndFederalIndependentFocusedTestsPassed": 191,
+      "combinedCandidate": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
+      "combinedLocalVerification": "started",
+      "latestVerifiedRevisionRemains": "71c4736a609920c52345598a4d711354a3a39cc1"
     },
     "nov27OhioGuidedReceiptExact": {
       "commit": "71c4736a609920c52345598a4d711354a3a39cc1",

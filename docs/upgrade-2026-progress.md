@@ -15,6 +15,32 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 Pennsylvania, Ohio and federal source packages
+
+- `e8f2d3950` reaches the narrowly scoped Ohio unemployment calculator through
+  the private dispatcher and handles optional Form 1099-G keys the same way
+  before and after saving. The intended failures reproduced before the fix.
+  All 109 focused tests passed. [Ohio forms and instructions](https://tax.ohio.gov/individual/resources/annual-tax-rates-and-forms).
+- `711345b03` calculates ordinary bank interest for the already-supported
+  high-wage, single filer domiciled in Pennsylvania for the full year. The
+  synthetic example transfers $120 to PA-40 line 2 with $2,306 in tax and
+  $75,120 in Schedule SP eligibility income. All 273 focused tests passed.
+  [Pennsylvania guidance on interest](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest).
+- `78f03681e` retains and replays confirmed Ohio unemployment evidence for
+  full-year, part-year and nonresident cases. The 2026 Ohio IT NRC input
+  receives the derived receipt only on the existing part-year
+  path. The private receipt replay covers all three statuses.
+- `0cf50ee63` holds indistinguishable confirmed 2026 Form 1099-R copies before
+  summing income and withholding. It keeps distinct recipients, accounts,
+  and original box values, including missing versus explicit zero values.
+  Independent review verified 191 focused tests across this change and the
+  guided Ohio change. [IRS Form 1099-R instructions](https://www.irs.gov/instructions/i1099r).
+
+All four commits reached `main`. Combined local verification has started
+from the tracked archive of `0cf50ee63`. The earlier exact release checks
+remain tied to `71c4736a6` until the new suite finishes. These packages do
+not qualify draft 2026 filing forms or replace independent tax review.
+
 ## November 27 exact Ohio guided receipt verification
 
 The tracked archive for `71c4736a6` passed all 11 local release checks
