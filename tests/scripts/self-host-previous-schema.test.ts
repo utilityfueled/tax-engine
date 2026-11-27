@@ -36,6 +36,21 @@ describe('pinned previous-schema rehearsal', () => {
   it('rejects a candidate revision different from the checkout before opening authentication', async () => {
     await expect(rehearsePreviousSchema({previousRevision:revision,candidateRevision:'0'.repeat(40),candidateImage,databaseUrl:database,pgPassFile:'/not-read'})).rejects.toThrow('Candidate image revision must match this checkout');
   });
+  it('reports the failed source stage without exposing credentials or Git stderr', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'previous-stage-test-'));
+    const syntheticPassword = 'b'.repeat(64);
+    const missingRevision = 'f'.repeat(40);
+    const file = path.join(directory, 'pgpass');
+    try {
+      await writeFile(file, `127.0.0.1:54321:postgres:ai_test:${syntheticPassword}\n`, {mode: 0o600});
+      const failure = await rehearsePreviousSchema({previousRevision: missingRevision, candidateRevision, candidateImage, databaseUrl: database, pgPassFile: file}).catch((error: unknown) => error);
+      expect(String(failure)).toContain('verification failed during historical-source');
+      expect(String(failure)).not.toContain(syntheticPassword);
+      expect(String(failure)).not.toContain(missingRevision);
+    } finally {
+      await rm(directory, {recursive: true, force: true});
+    }
+  });
   it('rejects row loss, amount changes, owner exchange and added rows', () => {
     const before = { ledger: ['{"owner":"a","cents":"1.00"}', '{"owner":"b","cents":"2.00"}'] };
     expect(() => assertPreviousRowsPreserved(before, structuredClone(before))).not.toThrow();

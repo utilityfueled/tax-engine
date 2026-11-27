@@ -80,12 +80,20 @@ export async function rehearsePreviousSchema({ previousRevision, candidateRevisi
   let created = false;
   let receipt;
   let failure;
+  let stage = 'historical-source';
+  let commandStatus;
   const deadline = Date.now() + 120_000;
   async function command(executable, args, commandEnv = env) {
     const remaining = deadline - Date.now();
     assert.ok(remaining > 0, 'Previous-schema verification deadline exceeded');
     try { return (await exec(executable, args, { cwd: root, env: commandEnv, encoding: 'utf8', timeout: Math.min(30_000, remaining), maxBuffer: 1024 * 1024 })).stdout.trim(); }
-    catch { throw new Error('Bounded previous-schema command failed; private output omitted'); }
+    catch (error) {
+      if (error.killed) commandStatus = 'interrupted';
+      else if (Number.isInteger(error.code)) commandStatus = 'exited';
+      else if (error.code === 'ENOENT') commandStatus = 'unavailable';
+      else commandStatus = 'failed';
+      throw new Error('Bounded previous-schema command failed; private output omitted');
+    }
   }
   async function columns() {
     const result = await admin.query('SELECT table_name,column_name FROM information_schema.columns WHERE table_schema=$1 ORDER BY table_name,ordinal_position', [schema]);
@@ -104,10 +112,12 @@ export async function rehearsePreviousSchema({ previousRevision, candidateRevisi
   }
   try {
     const historical = await materializeHistoricalSchemaSource(previousRevision, path.join(work, 'historical'));
+    stage = 'candidate-source';
     const candidate = await materializeHistoricalSchemaSource(candidateRevision, path.join(work, 'candidate'), true);
     for (const name of CANDIDATE_FILES) {
       assert.equal(hash(await readFile(path.join(root, name))), candidate.files[name].sha256, 'Candidate schema source differs from its image revision');
     }
+    stage = 'initializer-staging';
     const entry = path.join(work, 'initialize.mts');
     await writeFile(entry, `import {pathToFileURL} from 'node:url';try {const m=await import(pathToFileURL(process.env.PRIVATE_SCHEMA_MODULE).href);const e={TAX_ENGINE_DEPLOYMENT_MODE:'hosted',NODE_ENV:'test',DATABASE_URL:process.env.PRIVATE_SCHEMA_URL};await m.ensureHostedAppSchema(e);const r=await m.getHostedServerDatabase(e);await r.db.destroy();if(!r.pool.ending&&!r.pool.ended)await r.pool.end();if(!r.pool.ended)throw Error();console.log('INITIALIZED');}catch{console.error('Previous-schema initializer unavailable.');process.exitCode=1;}`, { mode: 0o600, flag: 'wx' });
     const scoped = new URL(url); scoped.searchParams.set('options', `-csearch_path=${schema}`);
@@ -115,32 +125,43 @@ export async function rehearsePreviousSchema({ previousRevision, candidateRevisi
       const initialized = await command(process.execPath, ['--import', 'tsx', entry], { ...env, TSX_TSCONFIG_PATH: old ? historical.config : candidate.config, PRIVATE_SCHEMA_URL: scoped.toString(), PRIVATE_SCHEMA_MODULE: old ? historical.module : candidate.module });
       assert.equal(initialized, 'INITIALIZED');
     }
+    stage = 'create-schema';
     await admin.query(`CREATE SCHEMA ${identifier(schema)}`); created = true;
+    stage = 'historical-initialization';
     await initialize(true);
+    stage = 'historical-fixtures';
     const oldColumns = await columns();
     assert.equal(Object.keys(oldColumns).length, 7, 'Historical initializer schema changed; review the finite fixture');
     assert.ok(!oldColumns.hosted_workspace_shells.includes('revision'));
     await admin.query(`INSERT INTO ${identifier(schema)}.hosted_workspace_shells(owner_id,workspace_id,created_at,updated_at,workspace) VALUES ($1,$3,$4,$4,$5::jsonb),($2,$3,$4,$4,$5::jsonb)`, ['synthetic-owner-a', 'synthetic-owner-b', 'same-return', '2026-10-25T00:00:00Z', JSON.stringify({ id: 'same-return', storageMode: 'local-browser' })]);
     await admin.query(`INSERT INTO ${identifier(schema)}.hosted_ai_usage_ledger(request_id,owner_id,cycle_key,task,provider,estimated_cost_cents,included_charge_cents) VALUES ('synthetic-legacy','synthetic-owner-a','2026-10','summary','synthetic',1,1)`);
     const before = await snapshot(oldColumns);
+    stage = 'candidate-migration';
     await initialize(false);
+    stage = 'candidate-projection';
     assertPreviousRowsPreserved(before, await snapshot(oldColumns));
     assert.equal((await admin.query(`SELECT count(*)::int AS count FROM ${identifier(schema)}.hosted_workspace_shells WHERE revision IS NOT NULL`)).rows[0].count, 2);
     const migratedColumns = await columns();
     const migrated = await snapshot(migratedColumns);
     // Separate processes prevent the global promise cache from faking idempotence.
+    stage = 'migration-replay';
     await initialize(false);
     assert.deepEqual(await columns(), migratedColumns, 'Column inventory changed on rerun');
     assertPreviousRowsPreserved(migrated, await snapshot(migratedColumns));
+    stage = 'dump';
     const dump = path.join(work, 'migrated.dump');
     const bin = process.env.TAX_ENGINE_TEST_POSTGRES_BIN ?? '';
     await command(path.join(bin, 'pg_dump'), ['--dbname', databaseUrl, '--schema', schema, '--format=custom', '--no-owner', '--no-privileges', '--file', dump]);
+    stage = 'restore';
     await admin.query(`DROP SCHEMA ${identifier(schema)} CASCADE`);
     await command(path.join(bin, 'pg_restore'), ['--dbname', databaseUrl, '--no-owner', '--no-privileges', '--exit-on-error', '--single-transaction', dump]);
     assert.deepEqual(await columns(), migratedColumns, 'Column inventory changed on restore');
     assertPreviousRowsPreserved(migrated, await snapshot(migratedColumns));
     receipt = { kind: 'pinned-previous-schema-migration', previousRevision, candidateRevision, candidateImage, candidateSourceFiles: candidate.files, columnInventoryExact: true, historicalFiles: historical.files, previousTables: 7, seededRows: 3, previousRowsExact: true, workspaceRevisionsAdded: 2, freshProcessIdempotence: true, dumpRestoreExact: true, migratedSha256: hash(JSON.stringify(migrated)) };
-  } catch { failure = new Error('Pinned previous-schema migration verification failed; private output omitted'); }
+  } catch {
+    const outcome = commandStatus ? ` (command ${commandStatus})` : '';
+    failure = new Error(`Pinned previous-schema migration verification failed during ${stage}${outcome}; private output omitted`);
+  }
   finally {
     for (const cleanup of [
       async () => {
