@@ -34,6 +34,40 @@ lines:
     description: "Exercise the saved annual fields with synthetic placements"
     formula: "Reopen both switch positions for each checkbox and check nonempty appearances and stored values for all text leaves."
     testRef: "tests/pdf/form-8863-2026-candidate.test.ts::retains diagnostic values and appearances after save"
+  - line: "private-aotc-transfer-review"
+    description: "Verify the printed whole-dollar transfers for one primary AOTC student"
+    formula: >-
+      Require a canonical 2026 single return with one primary AOTC student,
+      one matching actual institution and explicit current and prior Form
+      1098-T receipt answers. Accept only the ordinary current-year receipt
+      method without LLC, foreign or possession adjustments. Require confirmed
+      actual Form 1040 line 11a and Credit Limit Worksheet remaining tax, and
+      the prepared Form 8863 amounts, bound to the current canonical return
+      by its SHA-256. Workpaper and prepared amounts must already be
+      nonnegative whole dollars. Recalculate under Form 8863 and require exact agreement
+      for line 8 to Form 1040 or 1040-SR line 29 and line 19 to Schedule 3
+      line 3. Expose the annual revision identity, printed labels and amounts
+      only. Keep the source workpapers, taxpayer and institution identifiers,
+      and public review and filing exports out of the projection.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::verifies exact private AOTC transfers from current original workpapers"
+  - line: "held-aotc-transfer-review"
+    description: "Hold stale, incomplete or incompatible evidence"
+    formula: >-
+      Decline fractional workpaper or prepared amounts without rounding,
+      changed canonical facts, changed amounts, missing confirmation,
+      mismatched claimant or institution records, an exhausted prior claim
+      history, and non-2026 evidence.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::holds stale, incomplete, or mismatched AOTC transfer evidence"
+  - line: "exact-printed-aotc-factor"
+    description: "Bind the original printed line 6 to the exact calculated factor"
+    formula: >-
+      Require the actual Form 8863 line 6 in its printed decimal format, with
+      1.000 for a full factor and at least three decimal places otherwise.
+      This private method compares it by Decimal equality to calculator line 6
+      before verifying line 8 and line 19. The final form permits rounding to
+      three or more places. Other rounded representations are outside this
+      method and are held even if the two reported transfer amounts agree.
+    testRef: "tests/pdf/form-8863-2026-candidate.test.ts::binds transfers to the exact reported line 6 factor"
   - line: "closed-exports"
     description: "Keep public review and filing disabled"
     formula: "The physical map has no route or export registration. Neither the 2025 nor the 2026 qualified template registry accepts these bytes."

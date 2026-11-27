@@ -1,4 +1,10 @@
 /** Disabled final 2026 Form 8863 physical candidate. Spec: spec/federal/form-8863-2026-template.yaml. */
+import { createHash } from "node:crypto";
+import { z } from "zod";
+import { calculateForm8863 } from "@/engine/forms/form-8863.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
+import { d } from "@/utils/decimal.js";
+
 const page1 = "topmostSubform[0].Page1[0].";
 const page2 = "topmostSubform[0].Page2[0].";
 
@@ -105,3 +111,87 @@ export const FORM_8863_2026_CANDIDATE = Object.freeze({
     line31: page2 + "f2_35[0]",
   }),
 });
+
+const wholeDollars = z.string().regex(/^\d{1,12}$/);
+const transferWorkpapers = z.object({
+  taxYear: z.literal(2026),
+  currentWorkpapersConfirmed: z.literal(true),
+  canonicalInputSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  form1040Line11a: wholeDollars,
+  creditLimitWorksheetRemainingTax: wholeDollars,
+  form8863Line6: z.string().regex(/^(?:0\.\d{3,}|1\.000)$/),
+  form8863Line8: wholeDollars,
+  form8863Line19: wholeDollars,
+}).strict();
+
+/** Verify separate, confirmed original workpapers without turning on the full 2026 return. */
+export function projectForm88632026Transfers(rawInput: TaxYearInput, rawWorkpapers: unknown) {
+  const { taxYear, sha256, printedReferences } = FORM_8863_2026_CANDIDATE;
+  const parsed = TaxYearInputSchema.safeParse(rawInput);
+  if (!parsed.success || parsed.data.taxpayer.taxYear !== taxYear) {
+    throw new Error("Form 8863 review requires valid canonical 2026 return facts.");
+  }
+  const input = parsed.data;
+  const workpapers = transferWorkpapers.safeParse(rawWorkpapers);
+  if (!workpapers.success) {
+    throw new Error("Form 8863 review requires the reported line 6 and confirmed original 2026 workpaper amounts in whole dollars.");
+  }
+  const originals = workpapers.data;
+  if (originals.canonicalInputSha256 !== createHash("sha256").update(JSON.stringify(input)).digest("hex")) {
+    throw new Error("Form 8863 review workpapers must match the current canonical return.");
+  }
+
+  const { educationExpenses: education, taxpayer: { primary, filingStatus } } = input;
+  if (filingStatus !== "single" || !education || education.aocStudents.length !== 1 || education.llcStudents?.length
+    || !d(education.llcExpenses).isZero() || input.form2555 || education.possessionIncomeExclusion === undefined
+    || !d(education.possessionIncomeExclusion).isZero() || education.claimedAsDependent !== false
+    || education.nonresidentAlien !== false || input.standardDeductionFacts?.nonresidentAlien === true
+    || input.standardDeductionFacts?.dualStatusAlien === true || education.aocBanInEffect !== false
+    || education.form8862Required !== false) {
+    throw new Error("Form 8863 review requires one ordinary primary AOTC claim on a single return.");
+  }
+  const [student] = education.aocStudents;
+  const school = student.institutions?.[0];
+  const primaryTin = primary.ssn.replaceAll("-", "");
+  const primarySsnEligible = education.primarySsnEligible ?? primary.employmentValidSsnIssuedByDueDate;
+  if (!/^\d{9}$/.test(primaryTin) || student.studentRole !== "primary" || student.studentTaxId?.replaceAll("-", "") !== primaryTin
+    || primarySsnEligible !== true || primary.employmentValidSsnIssuedByDueDate === false || primary.tinIssuedByDueDate === false
+    || education.primaryTinEligible === false || student.studentSsnEligible === false || student.studentTinEligible !== true
+    || student.institutionEligible !== true || student.expensesEligibilityConfirmed !== true || student.form1098TRequirementMet !== true) {
+    throw new Error("Form 8863 review requires the actual eligible primary student and confirmed education facts.");
+  }
+  if (student.institutions?.length !== 1 || !school?.name.trim() || !school.address.trim()
+    || !school.ein || school.ein.replaceAll("-", "") !== student.institutionEin?.replaceAll("-", "")
+    || school.receivedCurrentYear1098T !== true) {
+    throw new Error("Form 8863 review requires one matching original institution with a current-year Form 1098-T.");
+  }
+  const refundableFacts = education.refundableAocFacts;
+  const result = calculateForm8863({
+    taxYear, filingStatus, primarySsnEligible, primaryDateOfBirth: primary.dateOfBirth,
+    claimedAsDependent: education.claimedAsDependent, nonresidentAlien: education.nonresidentAlien,
+    aocBanInEffect: education.aocBanInEffect, form8862Required: education.form8862Required,
+    refundableAocEligible: education.refundableAocEligible,
+    refundableAocFacts: refundableFacts && {
+      ...refundableFacts, earnedIncome: d(refundableFacts.earnedIncome), totalSupport: d(refundableFacts.totalSupport),
+    },
+    aocStudents: [{ ...student, qualifiedExpenses: d(student.qualifiedExpenses) }], llcExpenses: d(0),
+    magi: d(originals.form1040Line11a), taxLiabilityLimit: d(originals.creditLimitWorksheetRemainingTax),
+  });
+  if (!result.sourceFactsVerified || !result.aocAfterPhaseOut.gt(0)) {
+    throw new Error("Form 8863 review requires a verified positive AOTC amount before the credit limit.");
+  }
+  const exactFactor = result.lines.find(row => row.form === "Form 8863" && row.line === "6")?.value;
+  if (!exactFactor?.eq(originals.form8863Line6)) {
+    throw new Error("Form 8863 review requires the exact calculated factor on line 6.");
+  }
+  if (!result.totalRefundable.eq(originals.form8863Line8) || !result.totalNonrefundable.eq(originals.form8863Line19)) {
+    throw new Error("Form 8863 review line 8 or line 19 disagrees with the current calculated amount.");
+  }
+  return {
+    taxYear, sha256,
+    transfers: [
+      { line: "8", to: printedReferences.line8To, amount: result.totalRefundable.toFixed() },
+      { line: "19", to: printedReferences.line19To, amount: result.totalNonrefundable.toFixed() },
+    ],
+  };
+}
