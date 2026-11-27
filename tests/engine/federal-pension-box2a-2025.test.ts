@@ -1,4 +1,4 @@
-// Spec: spec/federal/form-1099-r.yaml, 2025-box2a-ordinary.
+// Spec: spec/federal/form-1099-r.yaml, 2025-box2a-ordinary and 2025-box2a-survivor.
 import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm1099R, getForm1099RTaxabilitySource } from "@/engine/forms/form-1099-r.js";
@@ -39,6 +39,38 @@ function line(result: ReturnType<typeof calculateFederalTax>, form: string, id: 
 }
 
 const missingWorksheet = "2025 Form 1099-R pension with checked Box 2b and missing Box 2a requires a supported taxable-amount worksheet";
+const survivor = { ...scenarios[1], code: "4" };
+
+it("holds dated 2025 survivor pension taxability when no amount or supported method is supplied", () => {
+  for (const taxableAmountNotDetermined of [true, false, undefined]) {
+    for (const employeeContributions of [undefined, "1200"]) {
+      const input = parsed(survivor, { taxableAmountNotDetermined, employeeContributions });
+      expect(input.form1099R?.[0]?.taxableAmount).toBeUndefined();
+      expect(input.form1099R?.[0]?.taxableAmountNotDetermined).toBe(taxableAmountNotDetermined);
+      expect(() => calculateFederalTax(input)).toThrow(/Code 4 survivor pension requires the actual Box 2a/);
+    }
+  }
+});
+
+it("reports known survivor pension amounts and a supported Simplified Method", () => {
+  for (const [overrides, expectedTaxable] of [
+    [{ taxableAmount: "0" }, "0"],
+    [{ taxableAmount: "4200", taxableAmountNotDetermined: false }, "4200"],
+    [{
+      simplifiedMethodCostInPlan: survivor.costInPlan,
+      simplifiedMethodAnnuityStartingDate: "2025-01-15",
+      simplifiedMethodPrimaryAnnuitantAgeAtStartingDate: survivor.age,
+      simplifiedMethodPaymentsReceivedThisYear: 12,
+      simplifiedMethodPriorYearRecovered: "0",
+    }, "4800"],
+  ] as const) {
+    const result = calculateFederalTax(parsed(survivor, overrides));
+    expect(line(result, "1040", "5a")).toBe("6000");
+    expect(line(result, "1040", "5b")).toBe(expectedTaxable);
+    expect(line(result, "1040", "25b")).toBe("125");
+    expect(line(result, "Form 5329", "4") ?? "0").toBe("0");
+  }
+});
 
 it.each(scenarios)("holds a dated 2025 Code $code pension with checked Box 2b and omitted Box 2a", scenario => {
   const input = parsed(scenario);

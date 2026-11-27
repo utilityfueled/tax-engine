@@ -325,6 +325,27 @@ lines:
       - "tests/engine/federal-pension-box2a-2025.test.ts::holds a dated 2025 Code $code pension with unchecked Box 2b and omitted Box 2a"
       - "tests/engine/federal-pension-box2a-2025.test.ts::preserves the historical positive Box 5 exception for Code $code"
 
+  - line: "2025-box2a-survivor"
+    description: "Keep a dated non-IRA Code 4 pension's missing taxable amount unresolved"
+    formula: >-
+      For a positive distribution on an explicitly dated 2025 original with a
+      recorded unchecked IRA/SEP/SIMPLE box and standalone Code 4, require the
+      actual Box 2a amount or a supported Simplified Method worksheet before
+      federal aggregation. If Box 2a is omitted, checked, unchecked, and unknown
+      Box 2b states all leave taxability unresolved without a supported method.
+      Gross and Box 5 alone do not determine the beneficiary's taxable amount.
+      Preserve an explicit Box 2a zero, withholding, and supported worksheet
+      treatment. Leave other Code 4 combinations and legacy undated returns
+      subject to their existing methods.
+    irsRef: >-
+      2025 Form 1040 instructions, lines 5a and 5b and Simplified Method Worksheet
+      (https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf#page=28);
+      2025 Instructions for Forms 1099-R and 5498, Boxes 2a, 2b, 5 and Box 7 Code 4
+      (https://www.irs.gov/pub/irs-prior/i1099r--2025.pdf).
+    testRef: "tests/engine/federal-pension-box2a-2025.test.ts::holds dated 2025 survivor pension taxability when no amount or supported method is supplied"
+    testRefs:
+      - "tests/engine/federal-pension-box2a-2025.test.ts::reports known survivor pension amounts and a supported Simplified Method"
+
   - line: "2026-pension-source"
     description: "Form 1040 Lines 1h, 5a and 5b require known non-IRA distribution sources for tax year 2026"
     formula: >-
