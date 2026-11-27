@@ -2,13 +2,16 @@ form: "Form W-2G"
 fullName: "Certain Gambling Winnings"
 taxYear: 2025
 irsReference: "https://www.irs.gov/forms-pubs/about-form-w-2g"
+references:
+  - "https://www.irs.gov/instructions/iw2g"
+  - "https://www.irs.gov/taxtopics/tc419"
 
 notes: |
   Form W-2G reports certain gambling winnings to the IRS. Payers must issue a
   W-2G when winnings exceed reporting thresholds (e.g., $1,200 for bingo/slots,
   $1,500 for keno, $5,000 for poker tournaments, $600 for other wagers if at
-  least 300× the wager). The engine does not enforce reporting thresholds —
-  it accepts any W-2G document as entered.
+  least 300× the wager). The engine does not use those thresholds to decide
+  whether a reported amount belongs in the return.
 
   Gambling winnings are fully taxable and must be reported as income on
   Schedule 1 Line 8b (Other income — Gambling income). The total flows to
@@ -32,6 +35,12 @@ notes: |
   State income tax withheld (Box 13) is available for state return support.
 
 lines:
+  - line: "box-1-source"
+    description: "Validate the reported winnings before including them in income"
+    formula: "For 2025 and 2026, accept finite nonnegative Form W-2G Box 1 amounts and preserve the submitted zero or cents through input validation. Reject a negative Box 1 amount before aggregating statements, including when the calculation receives an already typed return. Reporting thresholds apply to payers."
+    irsRef: "Instructions for Forms W-2G and 5754, Box 1; IRS Topic 419, Gambling winnings and Gambling losses"
+    testRef: "tests/engine/forms/form-w2g.test.ts::rejects negative Box 1 before it can offset other winnings"
+
   - line: "gamblingIncome"
     description: "Total gambling winnings reported as income"
     formula: "Sum of all W-2G Box 1 amounts plus any additional manual gambling winnings"

@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
-import type { TaxYearInput } from "@/models/inputs.js";
+import { FormW2GSchema, type TaxYearInput } from "@/models/inputs.js";
 
 const baseTaxpayer: TaxYearInput["taxpayer"] = {
   taxYear: 2025,
@@ -62,6 +62,27 @@ function makeInput(overrides: Partial<TaxYearInput> = {}): TaxYearInput {
 
 describe("W-2G gambling income", () => {
   // ── Income reporting ────────────────────────────────────
+
+  it("rejects negative Box 1 when parsing a statement", () => {
+    for (const taxYear of [2025, 2026]) {
+      expect(FormW2GSchema.safeParse({ payer: "Casino A", reportableWinnings: "-2500", taxYear }).success).toBe(false);
+    }
+  });
+
+  it("rejects negative Box 1 before it can offset other winnings", () => {
+    const positive = { payer: "Casino A", reportableWinnings: "5000.01", federalWithheld: "0" };
+    for (const reportableWinnings of ["-2500", "Infinity", "NaN"]) {
+      const invalid = { payer: "Casino B", reportableWinnings, federalWithheld: "0" };
+      expect(() => calculateFederalTax(makeInput({ formW2G: [positive, invalid] }))).toThrow(/W-2G.*Box 1.*nonnegative/i);
+    }
+  });
+
+  it("preserves ordinary Box 1 zero and cents through parsing and aggregation", () => {
+    const forms = ["0", "5000.01", "0.02"].map(reportableWinnings => FormW2GSchema.parse({ payer: "Casino", reportableWinnings }));
+    expect(forms.map(form => form.reportableWinnings)).toEqual(["0", "5000.01", "0.02"]);
+    const result = calculateFederalTax(makeInput({ formW2G: forms }));
+    expect(result.allLines.find(line => line.form === "Sched 1" && line.line === "8b")?.value.toFixed()).toBe("5000.03");
+  });
 
   it("W-2G gambling income - single W-2G reports winnings as income", () => {
     const result = calculateFederalTax(makeInput({

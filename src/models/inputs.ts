@@ -860,7 +860,10 @@ const formW2GFields = z.object({
   payer: z.string(),
   payerTin: z.string().optional(), // Payer identification number for IL Schedule IL-WIT Column B auto-attachment
   accountHolder: z.enum(["primary", "spouse"]).optional(), // Local owner tag for taxpayer vs spouse attribution on shared returns
-  reportableWinnings: decimal, // Box 1
+  reportableWinnings: decimal.pipe(z.string().refine(value => {
+    const amount = d(value);
+    return amount.isFinite() && amount.gte(0);
+  }, "Form W-2G Box 1 winnings must be finite and nonnegative")),
   typeOfWager: z.string().optional(), // Box 3 — e.g., "lottery", "slots", "poker", "horse_racing"
   stateWinnings: decimal.optional(), // Box 14 — state winnings for IL Schedule IL-WIT Column D
   stateWithheld: optionalDecimal, // Box 15 — state income tax withheld

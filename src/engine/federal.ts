@@ -1893,8 +1893,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Schedule C already includes every reconciled professional W-2G payment.
   // The remaining W-2G and manual winnings flow to Schedule 1 line 8b.
   const w2gForms = input.formW2G ?? [];
+  const reportedGamblingWinnings = w2gForms.map(form => {
+    const amount = d(form.reportableWinnings);
+    if (!amount.isFinite() || amount.lt(0)) throw new Error("Form W-2G Box 1 winnings must be finite and nonnegative");
+    return amount;
+  });
   const w2gWinnings = schedC.professionalW2GWithholding === undefined
-    ? sum(...w2gForms.map((f) => d(f.reportableWinnings))) : d(0);
+    ? sum(...reportedGamblingWinnings) : d(0);
   const manualGamblingWinnings = d(input.scheduleA?.gamblingWinnings);
   const totalGamblingWinnings = w2gWinnings.plus(manualGamblingWinnings);
 
