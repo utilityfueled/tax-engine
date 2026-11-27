@@ -1,5 +1,8 @@
 /** Spec: state/pa-married-payment-sources.yaml, federal-schedule-a-5a. */
 import { execFileSync } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { expect, it, vi } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
@@ -58,17 +61,23 @@ it('uses the verified paid amounts in guided preview and the saved federal revie
   workspace.returnSummary.targetTaxYear = 2025;
   const download = await buildWorkspaceFilledReturnDownload(workspace, reopened);
   expect(download.includedForms).toEqual(expect.arrayContaining(['f1040sa-filled.pdf', 'pa-primary-40-review.pdf', 'pa-spouse-40-review.pdf']));
-  const page = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', `
-from io import BytesIO
+  const directory = await mkdtemp(join(tmpdir(), 'tax-engine-pa-schedule-a-'));
+  try {
+    const pdf = join(directory, 'review.pdf');
+    await writeFile(pdf, download.contents, { mode: 0o600 });
+    const page = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-I', '-B', '-c', `
 import sys
 from pypdf import PdfReader
-for page in PdfReader(BytesIO(sys.stdin.buffer.read())).pages:
+for page in PdfReader(sys.argv[1]).pages:
     text = page.extract_text()
     if 'Itemized Deductions' in text and 'www.irs.gov/ScheduleA' in text:
         print(text)
-`], { input: download.contents, encoding: 'utf8' });
-  expect(page.match(/\b2,?786\b/g)?.length).toBeGreaterThanOrEqual(3);
-  expect(page).toContain('FOR REVIEW ONLY - NOT FOR FILING');
+`, pdf], { encoding: 'utf8', timeout: 10_000 });
+    expect(page.match(/\b2,?786\b/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(page).toContain('FOR REVIEW ONLY - NOT FOR FILING');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 }, 15_000);
 
 it('holds a previously used receipt after a saved edit or removal until reconfirmed', () => {
