@@ -9,6 +9,19 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `a9a74d149` removes one duplicate federal calculation from the
+  confirmed Ohio school header preview. Both school adapters and the
+  independent Schedule A path still run. All 128 focused tests passed.
+  The two isolated fixture medians fell about 6%, with Linux browser
+  qualification still open. [Ohio preview evidence](upgrade-2026-progress.md#november-27-confirmed-ohio-school-header-preview).
+
+- `1808a5a6b` binds the isolated 2026 Form 8919 review PDF to the
+  verified original Form 1099-NEC and the IRS determination. Saved PDF
+  checks cover the actual firm row, receipt box, and private reference
+  handling. Independent engineering review passed. Exact local checks
+  passed unit, coverage, static checks and both builds. The browser
+  rerun has all 15 verified sample files. [Form 8919 PDF evidence](upgrade-2026-progress.md#november-27-form-8919-review-pdf-source-binding).
+
 - `5f958545d` adds linked Form 1099-NEC draft facts to the Form
   8919 interview, keeping the actual residency fact and separate
   federal-only confirmation. All 60 focused tests passed.

@@ -1,5 +1,48 @@
 # 2026 upgrade implementation evidence
 
+## November 27 confirmed Ohio school header preview
+
+`a9a74d149` removes one duplicate federal calculation from the confirmed
+guided 2025 single part-year school render. The header accepts the method
+from the completed producer-owned calculation only during that callback
+and only for identical canonical originals. Both school adapters, the
+independent standalone path, and canonical Schedule A payment verification
+remain in use. The new January-payment regression holds the shortcut when
+the credited school payment requires federal proof despite falling outside
+the calendar tax year. Both confirmed fixtures retain the same output and
+source commitment. Three work-count cases failed before implementation,
+and the Schedule A correction had its own failing regression. All 128
+focused tests, all 15 scoped spec references, web type checking and scoped
+lint passed after independent review.
+
+In an alternating local comparison on Node 26.13.1, the two median
+fixture durations fell from 34.708 to 32.705 ms and from 34.006 to
+31.742 ms. Each of four runs took 100 warm samples per case. This tests
+the pure render evaluation on macOS. Linux browser qualification still
+requires full-image evidence at the existing deadlines.
+[Ohio source-replay spec](../spec/state/oh-school-header-same-invocation.yaml) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45945885969).
+
+## November 27 Form 8919 review PDF source binding
+
+`1808a5a6b` replays the canonical Reason A wage reconciliation as of
+the internal review date. The single PDF row shows the verified firm,
+EIN, determination issue date, original wage cents and receipt box.
+Conflicting firm rows, substituted statement references, determinations
+received after review and orphan original markers are held. The saved
+PDF test verifies that document references and the taxpayer ID stay out
+of the copy. The regression initially generated a PDF for the wrong
+reason code. After the correction, 52 related tests and all 23 scoped
+spec references passed. Independent engineering verification passed 42
+checks. The renderer remains internal and gated. Exact local unit and
+coverage each passed 31,128 tests with 81 existing skips and 88.62%
+branch coverage. Static checks, both builds and the offline evaluation
+artifact check passed. Initial browser preflight stopped before any cases
+because the archive had no downloaded samples. The same archive is
+rerunning after all 15 official samples passed their hash checks.
+[Final 2026 Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+[AMD64 Web](https://github.com/utilityfueled/tax-engine/actions/runs/45944364135).
+
 ## November 26 guided Form 8919 original
 
 `5f958545d` lets federal-only, non-joint filers capture a verified
@@ -159,6 +202,20 @@ all nine windows. The isolated browser container was removed. Managed
 Linux Chromium recorded 652 passes, five skips and two RRTA saved-PDF
 inspection timeouts. Both strict architectures missed deadlines in
 the same three groups. [AMD64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45931694869).
+
+On later `c7d851d39`, AMD64 passed Compose recovery and cleaned up the
+browser container. Strict Chromium recorded 652 passes, five existing
+skips and two desktop school district timeouts across nine windows.
+A separate managed Chromium job had 652 passes, five existing skips
+and two RRTA saved-PDF inspection timeouts.
+A separate local Node 26.13.1 measurement used two synthetic Ohio
+school fixtures, with 100 pinned-source samples per case and header
+state. Whole draft evaluation medians were 10.156–10.664 ms while the
+header was pending and 28.824–29.483 ms after confirmation. JSON
+serialization medians were 0.018–0.042 ms. This measures pure local
+evaluation and serialization. Browser commits, storage writes and
+runner scheduling are outside its scope.
+[Later AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45932847590).
 
 ## November 26 upper QBI audit transfers
 

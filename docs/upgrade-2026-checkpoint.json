@@ -1,10 +1,12 @@
 {
   "resume": {
-    "asOf": "2026-11-26",
+    "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4",
-    "latestScopedApplicationCommit": "5f958545d990f1ff423dbf267653b6f0cef9da9a",
+    "applicationCommit": "a9a74d1498371e957248343eb915ee72850f3268",
+    "latestScopedApplicationCommit": "a9a74d1498371e957248343eb915ee72850f3268",
     "latestCombinedCandidateCommit": "a6111984c0f1a96f6ff327ec0143efc46f1f4ea4",
+    "form8919ReviewPdfEvidenceKey": "activeContinuation.nov27Form8919ReviewPdf",
+    "confirmedOhioSchoolHeaderEvidenceKey": "activeContinuation.nov27ConfirmedOhioSchoolHeader",
     "form8919SourceInventoryEvidenceKey": "activeContinuation.nov26Form8919SourceInventory",
     "latestPublicProviderCatalogEvidenceKey": "activeContinuation.nov26PublicProviderCatalog",
     "guidedForm8919OriginalEvidenceKey": "activeContinuation.nov26GuidedForm8919Original",
@@ -162,6 +164,36 @@
     ]
   },
   "activeContinuation": {
+    "nov27ConfirmedOhioSchoolHeader": {
+      "commit": "a9a74d1498371e957248343eb915ee72850f3268",
+      "focusedTestsPassed": 128,
+      "scopedSpecReferences": 15,
+      "browserSourceHashesVerified": 2093,
+      "confirmedRenderFederalCallsBefore": 7,
+      "confirmedRenderFederalCallsAfter": 6,
+      "standaloneFederalCalls": 7,
+      "pairedMacTimingLogSha256": "d89e8958b835572aedd7d8891d6c2d401993d924e3d2f23049de459b5626e5a1",
+      "review": "independent engineering review passed after canonical Schedule A finding was corrected and retested",
+      "amd64WebRun": 45945885969,
+      "ciRun": 45945886131,
+      "linuxQualified": false
+    },
+    "nov27Form8919ReviewPdf": {
+      "commit": "1808a5a6b18eac24c3e4546423c7a5c593163b87",
+      "officialSource": "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+      "focusedTestsPassed": 52,
+      "independentEngineeringTestsPassed": 42,
+      "scopedSpecReferences": 23,
+      "browserSourceHashesVerified": 2093,
+      "amd64WebRun": 45944364135,
+      "ciRun": 45944364190,
+      "unitPassed": 31128,
+      "coveragePassed": 31128,
+      "existingSkips": 81,
+      "branchCoveragePercent": 88.62,
+      "fullLocalRun": "unit, coverage, static checks and both builds passed; browser rerun in progress after setup of 15 verified public sample documents",
+      "publicExportAndFilingQualified": false
+    },
     "nov26PublicProviderCatalog": {
       "publicDocsRechecked": "2026-11-26",
       "standardPricingOrder": ["input", "cachedInput", "output"],
@@ -332,6 +364,29 @@
       "forcedFailure": "missing client, dump (command unavailable), zero residual schemas",
       "arm64RecoveryFixRun": 45932508665,
       "recoveryFixAmd64WebRun": 45931694869,
+      "laterC7StrictAmd64Browser": {
+        "run": 45932847590,
+        "composeRecoveryPassed": true,
+        "jobLogSha256": "bae1054923143fd745f655f56c1e3631d9981aeff8e22f82a8415c7f7bf422ba",
+        "windows": 9,
+        "passed": 652,
+        "failed": 2,
+        "skipped": 5,
+        "cleanupPassed": true,
+        "managedLogSha256": "aef2e156dd47c4c930a0029f9a53ad8d142d6db4a0c7e00c7ee649720763d648",
+        "managedPassed": 652,
+        "managedFailed": 2,
+        "managedSkipped": 5,
+        "managedFailure": "two RRTA saved-PDF inspection timeouts"
+      },
+      "isolatedSchoolDraftTiming": {
+        "application": "a6111984c",
+        "macNode": "26.13.1",
+        "syntheticCases": 2,
+        "samplesPerCaseAndHeaderState": 100,
+        "logSha256": "a2da29b08276934ceefd89a4462bed94558d38fc6cff0d29772ee4f82b2253fc",
+        "scope": "pure evaluation and JSON serialization on macOS; diagnostics only"
+      },
       "recoveryFixAmd64Browser": {
         "composeUpgradeRecoveryRollback": "passed",
         "strictLogSha256": "2f0b69964cb12acc28d172b077d98bcca1e9e270ade2b2d78208af668f14ab2f",
