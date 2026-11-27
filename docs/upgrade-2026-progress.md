@@ -15,6 +15,47 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 commercial clean vehicle tax limit and carryover
+
+`fc0420e56` verifies a private Form 3800 workpaper for the ordinary §45W
+credit of a materially participating sole proprietor filing single. It requires
+confirmed tax and allowable-credit workpapers for the same post-basis
+return, reconciles same-return vehicle claims by VIN, and holds unused
+credit until the 2025 capacity and priority amounts are verified. The
+reference case yields $6,000 tentative, $1,500 allowable in 2026, $1,000
+eligible for 2025 carryback, and $3,500 potentially carried into 2027.
+All 55 focused tests, type checks, lint, 10,264 linked spec checks, and the
+generated inventory check passed. Independent review checked the tax
+limit and ordering, and verified that the audit uses descriptive labels.
+Full federal credit/depreciation attribution and final filing stay gated.
+Exact-source static and unit checks started. Browser, recovery and coverage
+are queued behind the earlier archive to limit disk contention.
+[26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
+[26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
+[Draft 2026 Form 3800](https://www.irs.gov/pub/irs-dft/f3800--dft.pdf).
+
+## November 27 tentative commercial clean vehicle credit
+
+`48f572a3a` preserves 2026 §45W originals and calculates the tentative
+commercial clean vehicle credit for a primary sole proprietor's qualifying
+light battery-electric road vehicle used exclusively for business. The
+original contract and payment establish acquisition between January 1, 2023
+and September 30, 2025. Original possession establishes 2026 service. The
+Decimal calculation uses confirmed basis, actual purchase and qualifying
+comparable-vehicle prices, and the $7,500 cap. The $25,000 purchase and basis
+with a $19,000 comparable vehicle yields $6,000 before Form 3800 limits.
+A positive tentative credit keeps the full-return Form 3800 hold in place.
+Final filing, each vehicle's basis reduction upon actual claiming, and
+Form 3800 attribution and carryover still require verification.
+Both regressions failed before implementation. All 98 targeted tests,
+typechecks, lint and 10,261 linked spec checks passed. Independent review
+repeated the 74 relevant calculator cases. The 2026 form remains draft.
+The first clean-archive inventory check found a missing generated entry.
+`06ec2e114` adds that entry, and the regenerated archive passes the inventory check.
+[26 USC §45W](https://uscode.house.gov/us/usc/t26/s45W/) ·
+[IRS commercial vehicle credit](https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit) ·
+[Draft 2026 Form 8936](https://www.irs.gov/pub/irs-dft/f8936--dft.pdf).
+
 ## November 27 Form 1098 original identity
 
 `35634b849` makes the 2026 guided intake and mortgage-interest calculator compare lender

@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
-    "latestScopedApplicationCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
+    "latestScopedApplicationCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
     "latestCombinedCandidateCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27MortgageOriginalIdentity",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialCreditCarryover",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -336,6 +336,45 @@
           "conclusion": null
         }
       }
+    },
+    "nov27CommercialCreditCarryover": {
+      "commit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
+      "primarySources": [
+        "https://uscode.house.gov/us/usc/t26/s38/",
+        "https://uscode.house.gov/us/usc/t26/s39/",
+        "https://www.irs.gov/pub/irs-dft/f3800--dft.pdf"
+      ],
+      "focusedTestsPassed": 55,
+      "repositorySpecReferencesValidated": 10264,
+      "generatedInventoryCheckPassed": true,
+      "independentPrivateWorkpaperReviewPassed": true,
+      "typechecksAndScopedLintPassed": true,
+      "tentativeCredit": "6000",
+      "allowableIn2026": "1500",
+      "eligible2025Carryback": "1000",
+      "potential2027Carryforward": "3500",
+      "filingQualified": false,
+      "exactCurrentVerification": "running",
+      "browserSourceAuditSha256": "05e9e9b671d6574841e92bb62a900e3527ba8ab17da2a0bb42198596bbb4678d"
+    },
+    "nov27CommercialCleanVehicle": {
+      "commit": "48f572a3a6abd25f50fd7e36e9cae3208e426784",
+      "coverageInventoryCommit": "06ec2e11426edcd758e24f3e7e6075d72793faff",
+      "regeneratedCoverageInventoryCheckPassed": true,
+      "primarySources": [
+        "https://uscode.house.gov/us/usc/t26/s45W/",
+        "https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit",
+        "https://www.irs.gov/pub/irs-dft/f8936--dft.pdf"
+      ],
+      "commercialOriginalAndIntegratedRegressionsReproduced": true,
+      "focusedTestsPassed": 98,
+      "independentFocusedTestsPassed": 74,
+      "repositorySpecReferencesValidated": 10261,
+      "typechecksAndScopedLintPassed": true,
+      "exampleTentativeCreditBeforeForm3800": "6000",
+      "form3800AttributionRequired": true,
+      "filingQualified": false,
+      "browserSourceAuditSha256": "bd5936f7a0d994c20eabacfa2c439276012f0f55c86a6de9d1a90319090395f2"
     },
     "nov27MortgageOriginalIdentity": {
       "commit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
