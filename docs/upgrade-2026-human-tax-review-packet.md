@@ -129,6 +129,27 @@ Refresh the applicable revision and controlling authority before deciding. The
 negative-net branch remains explicitly rejected; the separate implemented
 nonnegative-net method does not resolve this question.
 
+November 27 source review found the current Form 172 still dated December
+2024 and no correction listed on the IRS product page. Under §172(d)(2),
+restoring the excluded $500 leaves $1,000 of gain against the $700 capital
+loss. Section 172(d)(4)(B) carries the same $300 net into the nonbusiness
+deduction limit, leaving a statutory computation of $100,000 before any
+later-year use. The outstanding question is how to report that treatment
+against the printed line 21 adjustment. [IRS product page](https://www.irs.gov/forms-pubs/about-form-172) ·
+[26 USC §172(d)](https://uscode.house.gov/us/usc/t26/s172/).
+
+The review should also address the actual $200 Schedule D loss separately.
+Section 1212(b)(2) takes negative adjusted taxable income into account, so
+this loss appears unused in the synthetic case. Its character requires the
+original short- and long-term lots. A separate alternative minimum tax
+calculation would start with a $99,700 loss under the assumptions of no
+standard deduction, no basis difference and no other AMT adjustments or
+applicable QSBS preference. These are review calculations. The original
+facts still need reviewer signoff before any form or carryover is qualified.
+[26 USC §1212(b)](https://uscode.house.gov/us/usc/t26/s1212/) ·
+[26 USC §56(d)](https://uscode.house.gov/us/usc/t26/s56/) ·
+[Form 6251 instructions](https://www.irs.gov/instructions/i6251).
+
 ## Other recorded interpretation questions
 
 These are specific questions already identified in repository research. No answer
