@@ -14,6 +14,16 @@ lines:
     description: "Distinct source and decision coverage replaces template count inflation"
     formula: "240 unique cases; 30 per task; 10 fixed held-out per task; unique source narrative and reviewer criteria; zero template variants."
     testRef: "tests/engine/provider-model-eval.test.ts::keeps 240 distinct draft scenarios with fixed held-out coverage and no qualification claim"
+  - line: "fixture-pack-isolation"
+    description: "Keep the canonical corpus stable when preparing editable fixture packs"
+    formula: >-
+      Preserve the canonical corpus, including its collection and nested case
+      material, during the process lifetime. Return detached editable packs.
+      Changes to a pack's split or reviewer metadata cannot change the source
+      corpus, its digest, or held-out eligibility in a smoke plan.
+    testRef: "tests/engine/provider-eval-runner.test.ts::keeps held-out cases out of smoke plans after a fixture pack is edited"
+    testRefs:
+      - "tests/engine/provider-eval-corpus.test.ts::keeps the canonical corpus frozen through nested case data"
   - line: "source-oracles"
     description: "Draft source-bound expected values remain separate from provider input"
     formula: "Literal monetary/date/text oracles, named source IDs and case-specific human review criteria; expected outputs never establish application-schema validation or independent review."

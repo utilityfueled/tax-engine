@@ -24,6 +24,14 @@ export interface ProviderEvalFixture {
   review: { author: string; status: "pending" | "reviewed"; reviewer: string | null; reviewedAt: string | null };
 }
 
+function freezeFixtureTree<T extends object>(value: T): T {
+  for (const child of Object.values(value)) {
+    if (child !== null && typeof child === "object") freezeFixtureTree(child);
+  }
+  Object.freeze(value);
+  return value;
+}
+
 // Every scenario is individually authored. No task/year/amount variant expansion.
 // These are synthetic drafts. Published held-out cases are not a secret benchmark.
-export const taxProviderModelEvalFixtures: ProviderEvalFixture[] = standaloneProviderEvalScenarios;
+export const taxProviderModelEvalFixtures: ProviderEvalFixture[] = freezeFixtureTree(structuredClone(standaloneProviderEvalScenarios));

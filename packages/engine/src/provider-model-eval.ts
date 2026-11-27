@@ -309,7 +309,7 @@ export function parseProviderModelLiveEvalTemplate(value: unknown): ProviderMode
 export function buildProviderModelEvalFixturePack() {
   return { version: 4, corpusId: "tax-assistance-2026-r4", qualification: "draft-unreviewed", fixtureCount: taxProviderModelEvalFixtures.length,
     templateScenarioFamilies: 0, templateVariantCount: 0, standaloneScenarioCount: taxProviderModelEvalFixtures.length,
-    taskTypes: Object.keys(AI_TASKS), fixtures: taxProviderModelEvalFixtures };
+    taskTypes: Object.keys(AI_TASKS), fixtures: structuredClone(taxProviderModelEvalFixtures) };
 }
 export function buildProviderModelBenchmark() {
   return { version: 2, candidates: providerModelCandidates, gates: evaluationGates,

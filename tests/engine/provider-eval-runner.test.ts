@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createProviderEvalPlan, executeProviderEval, providerEvalDigest, providerEvalExecutionContract, reconcileProviderEvalAttempt, summarizeProviderEvalJournal, validatePlan, validateProviderEvalJournal, type EvalJournalRecord } from "../../scripts/lib/provider-eval-runner";
 import { openProviderEvalJournal } from "../../scripts/lib/provider-eval-journal";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
-import { providerModelCandidates, scoreProviderEvalEntry, summarizeProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
+import { buildProviderModelEvalFixturePack, providerModelCandidates, scoreProviderEvalEntry, summarizeProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
 import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
 import { PROVIDER_EVAL_CONTRACT } from "../../scripts/lib/provider-eval-contract";
 const at = "2026-10-25T12:00:00.000Z";
@@ -525,6 +525,30 @@ describe("guarded repeated provider executor", () => {
       createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" };
     expect(() => createProviderEvalPlan({ ...input, fixtureIds: [heldOut.id] })).toThrow(/held-out/i);
     expect(createProviderEvalPlan(input).fixtureIds).toHaveLength(160);
+  });
+  it("keeps held-out cases out of smoke plans after a fixture pack is edited", () => {
+    const pack = buildProviderModelEvalFixturePack();
+    const fixture = pack.fixtures.find(item => item.id === "case-income-nec-k-overlap");
+    if (!fixture || fixture.split !== "held-out") throw new Error("The test requires a frozen held-out case.");
+    const { plan } = setup();
+    const originalAuthor = fixture.review.author;
+    const planForFixture = () => createProviderEvalPlan({ ...plan, fixtureIds: [fixture.id] });
+    expect(planForFixture).toThrow(/held-out/i);
+    try {
+      fixture.split = "development";
+      fixture.review.author = "synthetic-replacement-author";
+      expect(planForFixture).toThrow(/held-out/i);
+      expect(setup().plan.corpusDigest).toBe(plan.corpusDigest);
+      pack.fixtures.pop();
+      const freshPack = buildProviderModelEvalFixturePack();
+      expect(freshPack.fixtures).toHaveLength(240);
+      expect(freshPack.fixtures.find(item => item.id === fixture.id)).toMatchObject({
+        split: "held-out", review: { author: originalAuthor },
+      });
+    } finally {
+      fixture.split = "held-out";
+      fixture.review.author = originalAuthor;
+    }
   });
   it("requires full independent corpus review even with complete application bindings", () => {
     const reviewed = taxProviderModelEvalFixtures.map(fixture => ({ ...fixture, review: { ...fixture.review,

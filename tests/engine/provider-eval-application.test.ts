@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { evaluationRequestContent, providerEvalBindingManifest, validateProviderEvalOutput, prepareProviderEvalCase, PROVIDER_EVAL_BINDING_VERSION } from "../../packages/engine/src/provider-eval-application";
 import { taxProviderModelEvalFixtures } from "../../packages/engine/src/provider-eval-fixtures";
 import { scoreProviderEvalEntry, parseProviderModelLiveEvalTemplate, summarizeProviderModelLiveEvalTemplate, type ProviderModelLiveEvalEntry, type ProviderModelLiveEvalTemplate } from "../../packages/engine/src/provider-model-eval";
@@ -13,6 +13,18 @@ function provenance(f: ReturnType<typeof fixture>) {
   const plan = createProviderEvalPlan({ runId: "unit-provenance", purpose: "capability", profileIds: ["luna-high"], maximumProviderUsd: "1", maximumRequests: 1, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
   const { review: _review, ...content } = f;
   return { planDigest: providerEvalDigest(plan), corpusDigest: plan.corpusDigest, fixtureDigest: providerEvalDigest(content) };
+}
+function zeroBudgetQualification(runId: string) {
+  const reviewedFixtures = taxProviderModelEvalFixtures.map(item => ({ ...item, review: { ...item.review,
+    status: "reviewed" as const, reviewer: "synthetic-independent-reviewer", reviewedAt: at } }));
+  const plan = createProviderEvalPlan({ runId, purpose: "qualification", profileIds: ["luna-high"],
+    maximumProviderUsd: "0", maximumRequests: 1, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" }, reviewedFixtures);
+  const records: EvalJournalRecord[] = [];
+  const transport = vi.fn(async () => { throw new Error("Must not dispatch on a zero budget."); });
+  return { plan, reviewedFixtures, records, transport, append: async (record: EvalJournalRecord) => { records.push(record); },
+    now: () => at, approval: { version: 1, planDigest: providerEvalDigest(plan), authorizedBy: "unit-test-only",
+      authorizationReference: "not-live-authorization", approvedAt: at, expiresAt: plan.expiresAt,
+      maximumProviderUsd: plan.maximumProviderUsd, maximumRequests: plan.maximumRequests, accountReference: "unit-test", syntheticOnly: true } };
 }
 describe("actual application evaluation", () => {
   it("uses actual task JSON and derives observations without a sidecar", () => {
@@ -81,7 +93,7 @@ describe("actual application evaluation", () => {
     expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, actualCostUsd: "0.000225" });
   });
   it("rejects stale corpus and changed request context for model and preflight results", () => {
-    const f = fixture("case-explain-income-versus-agi"); const original = structuredClone(f.requestContext);
+    const f = structuredClone(fixture("case-explain-income-versus-agi"));
     const context = f.requestContext?.taxContext;
     if (!context) throw new Error("Missing synthetic context.");
     const payload = { disposition: "answer", sourceIds: [...f.sourceIds, ...context.excerpts.map(item => item.id), ...context.auditEntries.map(item => item.id)], answer: "These are the supplied audited values.", engineValues: [{ id: "1040:9", value: "75000" }, { id: "1040:10", value: "2000" }, { id: "1040:11", value: "73000" }] };
@@ -106,37 +118,30 @@ describe("actual application evaluation", () => {
     expect(scoreProviderEvalEntry(staleFixture, f).accepted).toBe(false);
     delete staleFixture.measurement.fixtureDigest;
     expect(scoreProviderEvalEntry(staleFixture, f).accepted).toBe(false);
-    try {
-      context.excerpts[0].text += " A changed request-side source with identical numeric oracles.";
-      expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, complete: false });
-    } finally { f.requestContext = original; }
+    context.excerpts[0].text += " A changed request-side source with identical numeric oracles.";
+    expect(scoreProviderEvalEntry(entry, f)).toMatchObject({ accepted: false, complete: false });
 
-    const preflightCase = fixture("case-explain-stale-year"); const oldContext = structuredClone(preflightCase.requestContext);
+    const preflightCase = fixture("case-explain-stale-year");
     const preflight: NonNullable<ProviderModelLiveEvalTemplate["preflightEntries"]>[number] = { profileId: "luna-high", fixtureId: preflightCase.id, repeat: 1, reason: "invalid-verified-context", at, runPurpose: "qualification", ...provenance(preflightCase), bindingVersion: PROVIDER_EVAL_BINDING_VERSION };
     const summary = (record = preflight) => summarizeProviderModelLiveEvalTemplate({ version: 2, entries: [], preflightEntries: [record] }).groups.find(item => item.profileId === "luna-high" && item.task === "tax-explanation");
     expect(summary()?.deterministicPreflightPassed).toBe(1);
     expect(summary({ ...preflight, corpusDigest: "stale-unrelated-corpus" })?.deterministicPreflightPassed).toBe(0);
     expect(summary({ ...preflight, fixtureDigest: "0".repeat(64) })?.deterministicPreflightPassed).toBe(0);
     expect(summary({ ...preflight, fixtureDigest: undefined })?.deterministicPreflightPassed).toBe(0);
-    try {
-      const old = preflightCase.requestContext?.taxContext;
-      if (!old) throw new Error("Missing deliberately stale context.");
-      old.excerpts[0].text += " Changed stale context.";
-      expect(summary()?.deterministicPreflightPassed).toBe(0);
-    } finally { preflightCase.requestContext = oldContext; }
+    const changedPreflight = structuredClone(preflightCase);
+    const old = changedPreflight.requestContext?.taxContext;
+    if (!old) throw new Error("Missing deliberately stale context.");
+    old.excerpts[0].text += " Changed stale context.";
+    expect(summary({ ...preflight, ...provenance(changedPreflight) })?.deterministicPreflightPassed).toBe(0);
   });
   it("records deterministic preflight separately without any paid request", async () => {
-    const f = fixture("case-explain-income-versus-agi"); const original = f.requestContext;
-    try {
-      f.requestContext = { provenance: "synthetic-application-context", taxContext: null };
-      const plan = createProviderEvalPlan({ runId: "preflight-test", purpose: "smoke", profileIds: ["luna-high"], fixtureIds: [f.id], maximumProviderUsd: "1", maximumRequests: 4, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
-      const records: EvalJournalRecord[] = []; let calls = 0;
-      const result = await executeProviderEval({ plan, approval: { version: 1, planDigest: providerEvalDigest(plan), authorizedBy: "unit-test-only", authorizationReference: "not-live-authorization", approvedAt: at, expiresAt: plan.expiresAt, maximumProviderUsd: "1", maximumRequests: 4, accountReference: "unit-test", syntheticOnly: true }, records, append: async record => { records.push(record); }, now: () => at,
-        transport: async () => { calls++; throw new Error("must not dispatch"); } });
-      expect(calls).toBe(0); expect(result.knownProviderCostUsd).toBe("0"); expect(result.template.entries).toEqual([]);
-      expect(result.template.preflightEntries).toHaveLength(3); expect(result.dispatchedRequests).toBe(0);
-      expect(result.template.preflightEntries?.every(entry => entry.reason === "missing-verified-context")).toBe(true);
-    } finally { f.requestContext = original; }
+    const execution = zeroBudgetQualification("preflight-test");
+    const result = await executeProviderEval(execution);
+    const missingAudit = result.template.preflightEntries?.filter(entry => entry.fixtureId === "case-explain-missing-audit");
+    expect(missingAudit).toHaveLength(3);
+    expect(missingAudit?.every(entry => entry.reason === "missing-verified-context")).toBe(true);
+    expect(execution.transport).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ knownProviderCostUsd: "0", dispatchedRequests: 0, stoppedReason: "budget", template: { entries: [] } });
   });
   it("checks every draft against its application contract without simulating a provider review", () => {
     let preflights = 0;
@@ -173,24 +178,16 @@ describe("actual application evaluation", () => {
     const regular = fixture("case-income-w2-zero-withholding");
     const plan = createProviderEvalPlan({ runId: "forged-preflight", purpose: "smoke", profileIds: ["luna-high"], fixtureIds: [regular.id], maximumProviderUsd: "1", maximumRequests: 4, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
     expect(() => validateProviderEvalJournal(plan, [{ type: "start", planDigest: providerEvalDigest(plan), approvalDigest: "test" }, { type: "preflight", profileId: "luna-high", fixtureId: regular.id, repeat: 1, reason: "missing-verified-context", at }])).toThrow(/preflight/i);
-    const replayFixture = fixture("case-explain-income-versus-agi"); const original = replayFixture.requestContext;
-    try {
-      replayFixture.requestContext = { provenance: "synthetic-application-context", taxContext: null };
-      const replayPlan = createProviderEvalPlan({ runId: "preflight-replay", purpose: "smoke", profileIds: ["luna-high"], fixtureIds: [replayFixture.id], maximumProviderUsd: "1", maximumRequests: 4, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });
-      const records: EvalJournalRecord[] = []; let calls = 0;
-      const execution = { plan: replayPlan, approval: { version: 1, planDigest: providerEvalDigest(replayPlan), authorizedBy: "unit-test-only", authorizationReference: "not-live-authorization", approvedAt: at, expiresAt: replayPlan.expiresAt, maximumProviderUsd: "1", maximumRequests: 4, accountReference: "unit-test", syntheticOnly: true }, records,
-        append: async (record: EvalJournalRecord) => { records.push(record); }, now: () => at,
-        transport: async () => { calls++; throw new Error("must not dispatch"); } };
-      const initial = await executeProviderEval(execution);
-      const savedJournal = JSON.stringify(records);
-      const resumed = await executeProviderEval(execution);
-      expect(JSON.stringify(records)).toBe(savedJournal);
-      expect(resumed).toEqual(initial);
-      expect(resumed.template.preflightEntries).toHaveLength(3);
-      expect(resumed.template.entries).toEqual([]);
-      expect(resumed.knownProviderCostUsd).toBe("0");
-      expect(calls).toBe(0);
-    } finally { replayFixture.requestContext = original; }
+    const execution = zeroBudgetQualification("preflight-replay");
+    const initial = await executeProviderEval(execution);
+    const savedJournal = JSON.stringify(execution.records);
+    const resumed = await executeProviderEval(execution);
+    expect(JSON.stringify(execution.records)).toBe(savedJournal);
+    expect(resumed).toEqual(initial);
+    expect(resumed.template.preflightEntries?.filter(entry => entry.fixtureId === f.id)).toHaveLength(3);
+    expect(resumed.template.entries).toEqual([]);
+    expect(resumed.knownProviderCostUsd).toBe("0");
+    expect(execution.transport).not.toHaveBeenCalled();
   });
   it("retains real usage when application grounding fails", async () => {
     const f = fixture("case-income-w2-zero-withholding"); const plan = createProviderEvalPlan({ runId: "billed-source-test", purpose: "smoke", profileIds: ["luna-high"], fixtureIds: [f.id], maximumProviderUsd: "1", maximumRequests: 4, createdAt: at, expiresAt: "2026-10-25T13:00:00.000Z" });

@@ -4,6 +4,14 @@ import { AI_TASKS } from "../../packages/engine/src/ai-task-registry";
 import { taxProviderModelEvalFixtures as cases } from "../../packages/engine/src/provider-eval-fixtures";
 
 describe("representative draft evaluation corpus", () => {
+  it("keeps the canonical corpus frozen through nested case data", () => {
+    const fixture = cases.find(item => item.id === "case-income-large-ledger-precision");
+    if (!fixture) throw new Error("The test requires a frozen source case.");
+    for (const value of [cases, fixture, fixture.review, fixture.sourceIds, fixture.expected.fields.amount]) {
+      expect(value).toBeDefined();
+      expect(Object.isFrozen(value)).toBe(true);
+    }
+  });
   it("preserves distinct source boundaries and review criteria across every task", () => {
     expect(cases).toHaveLength(240);
     expect(new Set(cases.map(item => item.input)).size).toBe(240);
