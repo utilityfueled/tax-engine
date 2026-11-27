@@ -24,6 +24,26 @@ describe("classified guided payments", () => {
     expect(validateSection(state, "payments").status).toBe("complete");
     expect(buildTaxInputFromGuidedData(state)?.adjustments).toMatchObject({ extensionPayments: [{ amount: "0", date: "2026-04-15", type: "federal" }], priorYearAppliedCredits: [{ amount: "100.01", sourceTaxYear: 2024, type: "federal" }] });
   });
+  it("reconciles the saved other-payment total without rounding classified entries", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 3, 15, 12));
+    const payments = {
+      ...emptyPaymentData,
+      extensionPayments: [{ amount: "1,000,000,000,000,000,000", date: "2026-04-15" }],
+      priorYearAppliedCredits: [{ amount: "0.01", sourceTaxYear: "2024" }],
+    };
+
+    const roundedTotal = stateWith({ ...payments, otherPayments: "1000000000000000000" });
+    expect(validateSection(roundedTotal, "payments").fieldErrors?.otherPayments).toEqual(expect.stringMatching(/classify/i));
+    expect(buildTaxInputFromGuidedData(roundedTotal)).toBeNull();
+
+    const exactTotal = stateWith({ ...payments, otherPayments: "1000000000000000000.01" });
+    expect(validateSection(exactTotal, "payments").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(exactTotal)?.adjustments).toMatchObject({
+      extensionPayments: [{ amount: "1000000000000000000" }],
+      priorYearAppliedCredits: [{ amount: "0.01" }],
+    });
+  });
   it.each([2025, 2026])("holds future paid dates after reopening a %s return", taxYear => {
     vi.useFakeTimers({ toFake: ["Date"] });
     try {

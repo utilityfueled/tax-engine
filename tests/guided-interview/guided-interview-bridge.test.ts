@@ -277,6 +277,15 @@ describe("buildScheduleCInput", () => {
     expect(result?.grossReceipts).toBe("6750");
   });
 
+  it("adds NEC and manual receipts without rounding the source total", () => {
+    // Spec: spec/federal/guided-input.yaml, business-receipts-aggregation-precision
+    const entries = [{ ...emptyNecEntry, nonemployeeCompensation: "1,000,000,000,000,000,000" }];
+    const result = buildScheduleCInput(entries, "0.49", emptyScheduleCExpenses);
+
+    expect(result?.grossReceipts).toBe("1000000000000000000.49");
+    expect(buildScheduleCInput(entries, "", emptyScheduleCExpenses)?.grossReceipts).toBeUndefined();
+  });
+
   it("preserves exact Schedule C receipts when accepting an invoice suggestion", () => {
     const interview = startInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: null });
     const section = {

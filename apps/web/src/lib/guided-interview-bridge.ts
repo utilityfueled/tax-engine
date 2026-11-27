@@ -69,6 +69,7 @@ import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-
 
 import Decimal from "decimal.js";
 import { ordinarySourcePrecision } from "@/engine/state/pa-ordinary-source-precision";
+import { sumSourceMoneyValues } from "@/utils/sum-source-money";
 import { buildGuidedNiitSources, guidedNiitFactErrors } from "./guided-niit-facts";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedDisplayAmounts } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
@@ -276,7 +277,7 @@ export function buildScheduleCInput(
   const receiptAmounts = [...sources.map(entry => entry.nonemployeeCompensation), manualGrossReceipts]
     .map(value => hasEnteredAmount(value) ? parseGuidedCurrency(value) : null);
   const totalGross = receiptAmounts.every(value => value !== null)
-    ? receiptAmounts.reduce((sum, value) => sum.plus(value), new Decimal(0)) : null;
+    ? sumSourceMoneyValues(receiptAmounts) : null;
 
   return {
     sourceFacts: businessFacts?.scheduleCSourceFacts,

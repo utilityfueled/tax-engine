@@ -3,7 +3,7 @@ import { CharitableTangiblePropertyUseSchema } from "@/models/inputs";
 import { repeatedFederalAppliedCreditIndices } from "@/engine/forms/federal-payment-date-sources";
 import { valueOrdinaryTangibleProperty } from "@/utils/charitable-current-receipts";
 import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
-import { sumSourceMoney } from "@/utils/sum-source-money";
+import { sumSourceMoney, sumSourceMoneyValues } from "@/utils/sum-source-money";
 import Decimal from "decimal.js";
 import type { DeductionData, DonationEntryData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
@@ -272,7 +272,9 @@ export function allPaymentFactErrors(data: PaymentData | undefined, taxYear?: nu
     const error = amountError(data.otherPayments, "saved other-payment total");
     if (error) errors.otherPayments = error;
     else if (!Object.keys(errors).length) {
-      const classified = [...data.extensionPayments ?? [], ...data.priorYearAppliedCredits ?? []].reduce((total, entry) => total.plus(parseGuidedCurrency(entry.amount)), new Decimal(0));
+      const classified = sumSourceMoneyValues(
+        [...data.extensionPayments ?? [], ...data.priorYearAppliedCredits ?? []].map(entry => parseGuidedCurrency(entry.amount)),
+      );
       if (!classified.eq(parseGuidedCurrency(data.otherPayments))) errors.otherPayments = "Classify the saved other-payment total as extension payments or prior-year applied refunds. Other credits need their specific supporting forms.";
     }
   }
