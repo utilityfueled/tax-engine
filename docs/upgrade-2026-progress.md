@@ -15,6 +15,23 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 federal commercial EV current-year credit
+
+`419470095` applies the verified ordinary §45W credit in the 2026 federal
+return. It uses the actual Schedule C depreciation, Form 6251 tentative
+minimum tax and earlier nonrefundable credits. The verified case yields
+$8,340 tentative minimum tax, a $9,716 Form 3800 limit and a $6,000 transfer
+to Schedule 3. Adding the actual $2,200 child tax credit reduces the limit
+to $7,516. The calculation rejects evidence dated after the calculation date.
+Independent engineering review found and verified the possession-date fix.
+All 137 focused tests and eight exact-tree static checks passed, including
+10,280 spec lines. Full-suite and browser verification are underway. An
+unused credit still requires verified 2025 carryback capacity. Qualified
+human tax review and final filing qualification remain open.
+[IRS commercial clean vehicle credit](https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit) ·
+[26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
+[Form 6251 instructions](https://www.irs.gov/instructions/i6251).
+
 ## November 27 commercial EV Schedule C attribution
 
 `75122eee1` carries the verified first-year vehicle depreciation into the

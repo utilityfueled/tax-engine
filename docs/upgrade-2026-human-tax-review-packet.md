@@ -858,3 +858,19 @@ nonrefundable credits.
 [Notice 2026-11](https://www.irs.gov/pub/irs-drop/n-26-11.pdf) ·
 [Rev. Proc. 2026-15](https://www.irs.gov/pub/irs-drop/rp-26-15.pdf) ·
 [Draft 2026 Form 4562](https://www.irs.gov/pub/irs-dft/f4562--dft.pdf).
+
+For a complete current-year federal return, use the same vehicle prices
+and 100% bonus rate for an ordinary work van with a 7,200-pound GVWR. Use
+$179,185 in verified business receipts, $185 in other business expenses,
+no wages or other income, and the 2026 single standard deduction. The
+taxpayer's annual log shows 654.25 actual hours of material participation.
+Derive Schedule C net profit, Schedule SE tax, Form 1040 AGI and taxable
+income, Form 8995 QBI deduction, and Form 6251 tentative minimum tax.
+Recompute Form 3800 and Schedule 3 after an otherwise eligible $2,200
+child tax credit. Compare calculating as of January 31 and February 1
+when the actual possession date is February 1. Report independent expected
+results together with any source or rounding disagreements.
+[Final 2026 Schedule SE](https://www.irs.gov/pub/irs-prior/f1040sse--2026.pdf) ·
+[Rev. Proc. 2025-32](https://www.irs.gov/pub/irs-drop/rp-25-32.pdf) ·
+[Form 6251 instructions](https://www.irs.gov/instructions/i6251) ·
+[26 USC §38](https://uscode.house.gov/us/usc/t26/s38/).

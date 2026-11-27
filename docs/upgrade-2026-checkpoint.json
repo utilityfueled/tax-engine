@@ -3,9 +3,9 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedApplicationCommit": "75122eee13832b2dabff99fa57e808531eabdc9c",
+    "latestScopedApplicationCommit": "41947009527b5ba1fb5386c06180ed9f1551e0cd",
     "latestCombinedCandidateCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleScheduleCAttribution",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleCurrentCredit",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -194,6 +194,27 @@
     ]
   },
   "activeContinuation": {
+    "nov27CommercialVehicleCurrentCredit": {
+      "commit": "41947009527b5ba1fb5386c06180ed9f1551e0cd",
+      "verifiedTree": "a7014b3fe0b45fa4a996bb7508efb3c9d2abeb89",
+      "primarySources": [
+        "https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit",
+        "https://uscode.house.gov/us/usc/t26/s38/",
+        "https://www.irs.gov/instructions/i6251"
+      ],
+      "focusedTestsPassed": 137,
+      "repositorySpecReferencesValidated": 10280,
+      "exactTreeChecksPassed": ["typecheck", "contracts", "web-types", "spec", "inventory", "lint", "build", "offline-eval"],
+      "independentEngineeringReviewPassed": true,
+      "actualTentativeMinimumTax": "8340",
+      "ordinaryCreditLimit": "9716",
+      "ordinaryCreditLimitWithChildCredit": "7516",
+      "appliedCurrentCredit": "6000",
+      "fullReleaseChecks": "running",
+      "canonicalUnusedCreditSupported": false,
+      "qualifiedHumanReviewPassed": false,
+      "filingQualified": false
+    },
     "nov27CommercialVehicleScheduleCAttribution": {
       "commit": "75122eee13832b2dabff99fa57e808531eabdc9c",
       "verifiedTree": "f14505021d8fd5d4f6739130feae7134908a8c69",
