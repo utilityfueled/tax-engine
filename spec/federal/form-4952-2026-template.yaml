@@ -22,3 +22,23 @@ lines:
     description: "Save and reopen synthetic mapping proof with canonical values and appearances"
     formula: "Write independent synthetic expected worksheet amounts, retain all 17 interactive fields, compare canonical values and page widgets, and require a nonempty normal appearance. Preserve instructions and mark every page FOR REVIEW ONLY - NOT FOR FILING."
     testRef: "tests/pdf/form-4952-2026-candidate.test.ts::retains synthetic values and appearances without changing readiness"
+  - line: "verified-source-review-proof"
+    description: "Render the recomputed 2026 investment interest worksheet on the pinned final blank for private review"
+    formula: >-
+      Accept the complete actual confirmed Form 4952 input for 2026, including
+      immediately preceding-year evidence for any positive carry and actual
+      deductible expense confirmation when required. Recompute every printed
+      monetary line with the existing Decimal worksheet. The private lane
+      holds preferential-income elections and invested child income reported
+      from a Form 8814. Never accept supplied calculation totals. Render the
+      pinned original PDF with all public and filing gates closed, leave the
+      name and taxpayer identifier blank, retain no documentary references in
+      the PDF, and mark all four pages for review only. Independently read
+      every monetary widget, including the deduction and carryforward, from
+      the saved proof. Preserve the posted whole-dollar worksheet at the
+      half-dollar boundary so displayed subtotals reconcile.
+    irsRef: "Final calendar 2026 Form 4952, lines 1–8, https://www.irs.gov/pub/irs-prior/f4952--2026.pdf"
+    testRef: "tests/pdf/form-4952-2026-candidate.test.ts::renders verified current and prior Form 4952 sources in a redacted private proof"
+    testRefs:
+      - "tests/pdf/form-4952-2026-candidate.test.ts::holds stale or incomplete Form 4952 facts, elections, child income and foreign template bytes"
+      - "tests/pdf/form-4952-2026-candidate.test.ts::reconciles the printed expense subtotal on both sides of the half-dollar boundary"

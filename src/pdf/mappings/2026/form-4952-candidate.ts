@@ -4,6 +4,14 @@
  * Deliberately absent from public exports, template registries and fillReturn.
  * This immutable map supports independent review; it does not grant readiness.
  */
+import { createHash } from "node:crypto";
+import { PDFDocument } from "pdf-lib";
+import { calculateForm4952 } from "@/engine/forms/form-4952.js";
+import { Form4952InputSchema } from "@/models/inputs.js";
+import { d } from "@/utils/decimal.js";
+import { markReviewPdf } from "../../export-policy.js";
+import { formatCurrency } from "../../pdf-utils.js";
+
 const page = "topmostSubform[0].Page1[0].";
 
 export const FORM_4952_2026_CANDIDATE = Object.freeze({
@@ -36,3 +44,27 @@ export const FORM_4952_2026_CANDIDATE = Object.freeze({
     line8: `${page}f1_17[0]`,
   }),
 });
+
+/** Isolated proof of the final physical worksheet. Recompute the supplied originals; never accept derived totals. */
+export async function renderPrivateForm49522026Review(rawSources: unknown, blank: Uint8Array): Promise<Uint8Array> {
+  if (createHash("sha256").update(blank).digest("hex") !== FORM_4952_2026_CANDIDATE.sha256) {
+    throw new Error("Form 4952 review requires the pinned final 2026 template bytes");
+  }
+  const parsed = Form4952InputSchema.safeParse(rawSources);
+  if (!parsed.success) throw new Error("Form 4952 review requires valid original source facts");
+  const sources = parsed.data;
+  if (sources.childIncomeSources !== undefined) throw new Error("Form 4952 review requires a separate method for Form 8814 child income");
+  if (!d(sources.electedPreferentialIncome).isZero() || !d(sources.electedNetCapitalGain).isZero()) {
+    throw new Error("Form 4952 review requires a separate method for preferential-income elections");
+  }
+  const result = calculateForm4952(sources, 2026);
+  const doc = await PDFDocument.load(blank);
+  const form = doc.getForm();
+  const { name: _name, ssn: _ssn, ...amountFields } = FORM_4952_2026_CANDIDATE.fields;
+  for (const line of Object.keys(amountFields) as Array<keyof typeof amountFields>) {
+    const amount = result[line];
+    form.getTextField(amountFields[line]).setText(amount.isZero() ? "0" : formatCurrency(amount));
+  }
+  await markReviewPdf(doc);
+  return doc.save();
+}
