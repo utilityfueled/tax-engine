@@ -6488,6 +6488,25 @@
       ]
     },
     {
+      "key": "federal/form-8936-commercial-clean-vehicle-2026",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8936",
+      "specPath": "spec/federal/form-8936-commercial-clean-vehicle-2026.yaml",
+      "enginePath": "src/engine/forms/form-8936-commercial-clean-vehicle-2026.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8949",
       "jurisdiction": "federal",
       "taxYear": 2025,
