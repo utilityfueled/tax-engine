@@ -15,6 +15,16 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 AOTC institution replacement
+
+`85645fdcb` requires fresh 2026 Form 1098-T and related eligibility answers
+when a known institution changes. It preserves the other schools' receipt
+answers, prior claims, and equivalent formatting. A saved-reopen regression
+confirmed that the revised school cannot reach canonical input with the old
+receipt answers. Independent engineering review, all 58 pinned targeted
+tests, nine spec references and the web typecheck passed. The exact combined
+suite is queued behind `1746edc42`. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+
 ## November 27 Pennsylvania nonresident interest and AOTC expense confirmation
 
 - `fcc7742ff` reconciles a nonresident's verified ordinary bank-interest
@@ -26,7 +36,9 @@ the latest application revision, exact-source runs and open dependencies. The
   retained amount materially changes. Save and reopen preserve the edited
   amount, pending confirmation, and prior claim history. Equivalent Decimal
   formatting preserves the answer. The independent engineering review and
-  all 57 pinned targeted tests passed. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
+  all 57 pinned targeted tests passed. A separate desktop probe verified
+  the $1,000 to $4,000 edit, save, reopen, and re-attestation on the exact
+  build. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
 
 The tracked archive of `1746edc42` started static checks. The new unit,
 coverage, browser and recovery runs are queued behind the earlier exact

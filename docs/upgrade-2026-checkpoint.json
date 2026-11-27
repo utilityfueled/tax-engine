@@ -3,10 +3,11 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
-    "latestScopedApplicationCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
-    "latestCombinedCandidateCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
+    "latestScopedApplicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
+    "latestCombinedCandidateCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
+    "nov27AotcInstitutionEvidenceKey": "activeContinuation.nov27AotcInstitution",
     "nov27AnnualFormAvailability": "docs/upgrade-2026-official-source-refresh-20261117-continuation.md#november-27-annual-availability-recheck",
     "nov27ReceiptW2AndOhioPackagesEvidenceKey": "activeContinuation.nov27ReceiptW2AndOhioPackages",
     "previousArm64StrictBrowserEvidenceKey": "activeContinuation.nov27Arm64StrictBrowserResult",
@@ -297,6 +298,14 @@
         "browserSourceAuditSha256": "adffe2ea772540a0829c344bbf07eefb12d9543b02be92c2f486990c7511ce0e"
       }
     },
+    "nov27AotcInstitution": {
+      "commit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
+      "focusedSpecReferencesPassed": 9,
+      "pinnedNodeFocusedTestsPassed": 58,
+      "webTypecheckPassed": true,
+      "engineeringReviewPassed": true,
+      "combinedVerification": "queued-after-1746edc42"
+    },
     "nov27PennsylvaniaNonresidentAndAotc": {
       "paNonresidentInterestCommit": "fcc7742ff032b80d0f59f3467a62c5f1586db5a8",
       "paNonresidentInterestFocusedTestsPassed": 287,
@@ -304,6 +313,8 @@
       "aotcExpenseConfirmationCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
       "aotcPinnedNodeFocusedTestsPassed": 57,
       "aotcEngineeringReviewPassed": true,
+      "aotcExactDesktopExpenseLifecyclePassed": true,
+      "aotcDesktopProbeLogSha256": "858bea29529e4eac46970c22ad3c37276cb14df8044b80d889794af873c1104f",
       "scopedApplicationVerificationPassed": true,
       "combinedVerification": "static-started-unit-coverage-and-web-queued"
     },
