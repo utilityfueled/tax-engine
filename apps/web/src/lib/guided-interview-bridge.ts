@@ -10,7 +10,8 @@ import {buildTipIncomeSourceOriginals} from './guided-tip-income-facts';
 import {buildGuidedPassengerForm,bindGuidedPassengerInput,type GuidedPassengerDraft} from './guided-passenger-sources';
 import {buildGuidedMacrsAssets} from "./guided-macrs-assets";
 import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
-import { W2Schema } from "@/models/inputs";
+import { TaxYearInputSchema, W2Schema, type Form1099Misc, type Form1099Nec } from "@/models/inputs";
+import { reconcileForm8919NecSources } from "@/engine/forms/form-8919-nec-sources";
 import { assertW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
 import {buildNecInputs} from './guided-business-facts';
@@ -19,7 +20,6 @@ import { buildGuidedPersonalEvCharger } from "./guided-personal-ev-charger";
 export {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
 import type { z } from "zod";
-import type { TaxYearInputSchema, Form1099Misc } from "@/models/inputs";
 import { buildGuidedCryptoDonations, cryptoDonationFactErrors } from './guided-crypto-donations';
 import { buildGuidedRoyaltySources, royaltySourceFactErrors } from "./guided-royalty-sources";
 import { buildGuidedQofFacts, guidedQofDiscovery } from "./guided-qof-facts";
@@ -744,7 +744,7 @@ type GuidedTaxInputSources = Omit<z.input<typeof TaxYearInputSchema>,
   };
   form8889ByOwner?: ReturnType<typeof buildHsaInputs>["form8889ByOwner"];
   w2s: ReturnType<typeof buildW2Inputs>;
-  form1099Nec: ReturnType<typeof buildNecInputs>;
+  form1099Nec: (ReturnType<typeof buildNecInputs>[number] | Form1099Nec)[];
   form1099Int: ReturnType<typeof buildInterestInputs>;
   form1099Div: ReturnType<typeof buildDividendInputs>;
   form1099B: ReturnType<typeof buildBrokerageInputs>;
@@ -845,11 +845,11 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   let homeOffice: ReturnType<typeof buildGuidedRenterHomeOffice>;
   let form8880: ReturnType<typeof buildGuidedSaversCredit>;
   let form8911: ReturnType<typeof buildGuidedPersonalEvCharger>;
-  let form8919: ReturnType<typeof buildGuidedForm8919ReasonA>;
+  let form8919Sources: ReturnType<typeof buildGuidedForm8919ReasonA>;
   let reitPtpLossSource: ReturnType<typeof buildGuidedReitPtpLossSource>;
   try {
     reitPtpLossSource = buildGuidedReitPtpLossSource(state);
-    form8919 = buildGuidedForm8919ReasonA(state);
+    form8919Sources = buildGuidedForm8919ReasonA(state);
     form3903 = buildMovingExpenses(state);
     form8911 = buildGuidedPersonalEvCharger(creditsData?.personalEvCharger, state.taxYear, segmentation.filingStatus);
     assertKnownFacts(royaltySourceFactErrors(state));
@@ -967,7 +967,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
   try { royaltyInputs={...royaltyInputs,form1099Misc:buildGuidedZeroIncomeMiscSources(state,royaltyInputs.form1099Misc)}; } catch { return null; }
   if (cardTipStatement && royaltyInputs.form1099Misc?.length) return null;
-  if (form8919 && (necs.length > 0 || royaltyInputs.form1099Misc?.length || scheduleC)) return null;
+  if (form8919Sources && (necs.length > 0 || royaltyInputs.form1099Misc?.length || scheduleC)) return null;
   let scheduleA: ReturnType<typeof buildScheduleAInput>;
   try {
     scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear, { state, originals: royaltyInputs.form1099Misc });
@@ -1045,7 +1045,7 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       spouse: (segmentation.filingStatus === "mfj" || segmentation.filingStatus === "mfs") && personalInfo.spouse
         ? { ...personalInfo.spouse, usResidencyMonths: Number(personalInfo.spouse.usResidencyMonths), employmentValidSsnIssuedByDueDate: personalInfo.spouse.employmentValidSsnIssuedByDueDate ?? undefined, tinIssuedByDueDate: personalInfo.spouse.tinIssuedByDueDate ?? undefined } : undefined,
       livedWithSpouseAtAnyTimeDuringYear: personalInfo?.livedWithSpouseAtAnyTimeDuringYear,
-      stateResidency: personalInfo.stateResidency,
+      stateResidency: form8919Sources?.originalNec ? personalInfo.stateResidency ?? undefined : personalInfo.stateResidency,
       address: {
         street: personalInfo.addressLine1,
         apt: personalInfo.addressLine2 || undefined,
@@ -1072,10 +1072,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
     form8801: buildMinimumTaxCreditInput(creditsData?.minimumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
     form4137ByOwner: (sectionData['additional-deductions']?.rrtaPayrollSources?buildTipIncomeSourceOriginals:buildTipIncomeInputs)(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
-    ...(form8919 ? { form8919 } : {}),
+    ...(form8919Sources ? { form8919: form8919Sources.form8919 } : {}),
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
     form7206: healthInsurance,
-    form1099Nec: necs,
+    form1099Nec: form8919Sources?.originalNec ? [form8919Sources.originalNec] : necs,
     ...(cardTipStatement ? { form1099K: [cardTipStatement] } : {}),
     ...(professionalWagering?.forms ? { formW2G: professionalWagering.forms } : {}),
     scheduleC: scheduleC ?? undefined,
@@ -1174,6 +1174,10 @@ function buildGuidedSourceInput(state: GuidedFlowState, capturePassenger=false,c
       if (!context) return null;
       context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) assertW2StateLocalSources(context, index, entry.stateLocalSources); });
     } catch { return null; }
+  }
+  if (form8919Sources?.originalNec) {
+    try { reconcileForm8919NecSources(TaxYearInputSchema.parse(input), currentLocalCivilDate()); }
+    catch { return null; }
   }
   // Both exact-original proofs must observe the same canonical key inventory.
   // Refund custody already uses this JSON wire boundary; applying it once before

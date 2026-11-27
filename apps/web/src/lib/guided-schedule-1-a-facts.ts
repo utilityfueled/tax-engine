@@ -11,6 +11,7 @@ import { buildGuidedCardTipSource, cardTipStatementId, exactCardTipMoney } from 
 import { buildTipIncomeInputs, buildTipIncomeSourceOriginals } from "./guided-tip-income-facts";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
+import { buildGuidedForm8919ReasonA, form8919NecSourceId } from "./guided-form-8919-reason-a";
 import Decimal from "decimal.js";
 type Owner = "primary" | "spouse";
 type TipQualificationData = { owner: "" | Owner; occupationCode: string; eligibleOccupation: boolean | null; voluntaryCashTips: boolean | null; lawfulActivity: boolean | null; meetsSstbRuleOrTransition: boolean | null };
@@ -269,6 +270,19 @@ const normal = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase(
 export function schedule1ACompensationSources(state: GuidedFlowState) {
   const w2 = (state.sectionData["income-w2"]?.entries ?? []).filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld)).map((entry, index) => ({ sourceId: `formW2:${index}`, kind: "w2" as const, accountHolder: entry.accountHolder, name: entry.employerName, amount: entry.wages, entry }));
   const nec = (state.sectionData["income-self-employment"]?.necEntries ?? []).filter(isStartedNec).map((entry, index) => ({ sourceId: `form1099Nec:${index}`, kind: "nec" as const, accountHolder: entry.accountHolder, name: entry.payerName, amount: entry.nonemployeeCompensation, entry }));
+  if (state.sectionData["additional-deductions"]?.form8919ReasonA?.originalNec) {
+    try {
+      const original = buildGuidedForm8919ReasonA(state)?.originalNec;
+      if (original?.originalForForm8919) return [...w2, {
+        sourceId: "form8919Nec:0", kind: "form8919Nec" as const, accountHolder: "primary" as const,
+        name: original.payer, amount: original.nonemployeeCompensation,
+        entry: { sourceTaxYear: "2026", qualifiedOvertimeCompensation: original.qualifiedOvertimeCompensation },
+        statementReference: original.originalForForm8919.statementReference,
+      }];
+    } catch {
+      // The Form 8919 section reports its source errors and retains the entered facts.
+    }
+  }
   return [...w2, ...nec];
 }
 export function buildSchedule1AInput(data: Schedule1AData | undefined, state: GuidedFlowState): Schedule1AInput | undefined {
@@ -354,9 +368,14 @@ export function buildSchedule1AInput(data: Schedule1AData | undefined, state: Gu
   });
   const overtime = data.overtime.map(entry => {
     const owner = requireOwner(entry.owner); const source = findSource(entry.compensationSourceId, owner); const premium = money(entry.qualifiedPremium, "actual FLSA overtime premium"); const excluded = source.kind === "w2" ? money(entry.compensationExcludedFromWages, "actual payroll compensation excluded from wages") : new Decimal(0); const reported = money(source.amount, "actual reported compensation").plus(excluded);
+    const reference = text(entry.reportingSourceReference, "overtime reporting reference");
+    if (source.kind === "form8919Nec" && (usedOvertime.has(source.sourceId) || reference !== source.statementReference
+      || premium.decimalPlaces() > 2 || (entry.compensationExcludedFromWages?.trim() && !money(entry.compensationExcludedFromWages, "actual payroll compensation excluded from wages").isZero()))) {
+      throw new Error("Enter one Form 8919 overtime claim in dollars and cents, using the same original Form 1099-NEC reference and no separate payroll exclusions.");
+    }
     let limit = reported; if (year === 2026) limit = money(source.kind === "w2" ? source.entry.box12CodeTT : source.entry.qualifiedOvertimeCompensation, "actual2026 reported overtime source");
     const total = (usedOvertime.get(source.sourceId) ?? new Decimal(0)).plus(premium); if (total.gt(limit) || total.gt(reported)) throw new Error("Qualified overtime exceeds the actual reported source."); usedOvertime.set(source.sourceId, total);
-    return { owner, compensationSourceId: source.sourceId, qualifiedPremium: premium.toFixed(), reportedCompensation: reported.toFixed(), compensationExcludedFromWages: source.kind === "w2" ? excluded.toFixed() : undefined, requiredByFlsa: flag(entry.requiredByFlsa, "FLSA premium requirement"), reportingSourceReference: text(entry.reportingSourceReference, "overtime reporting reference") };
+    return { owner, compensationSourceId: source.kind === "form8919Nec" ? form8919NecSourceId : source.sourceId, qualifiedPremium: premium.toFixed(), reportedCompensation: reported.toFixed(), compensationExcludedFromWages: source.kind === "w2" ? excluded.toFixed() : undefined, requiredByFlsa: flag(entry.requiredByFlsa, "FLSA premium requirement"), reportingSourceReference: reference };
   });
   const vehicleLoans = data.vehicleLoans.map(loan => {
     const owner = requireOwner(loan.owner); sourceYear(loan.sourceTaxYear, year);

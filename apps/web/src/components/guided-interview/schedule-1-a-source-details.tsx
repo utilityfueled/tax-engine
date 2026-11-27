@@ -13,7 +13,7 @@ import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import { VehicleRefinancingDetails } from "./vehicle-refinancing-details";
 
-type Source = { sourceId: string; kind: "w2" | "nec"; accountHolder?: string; name: string };
+type Source = { sourceId: string; kind: "w2" | "nec" | "form8919Nec"; accountHolder?: string; name: string };
 type ChoiceEntry = readonly [string, string];
 function Choice({ label, value, choices, onChange }: { label: string; value: string; choices: readonly ChoiceEntry[]; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={event => onChange(event.target.value)}><option value="">Confirm from actual records</option>{value && !choices.some(([id]) => id === value) && <option value={value}>Saved source needs reconciliation</option>}{choices.map(([id, text]) => <option value={id} key={id}>{text}</option>)}</select></label>;
@@ -125,7 +125,7 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
 }) {
   if (!data) return <section><h4>Additional deduction sources</h4><p className="guided-hint">Collect actual qualified tip, FLSA overtime premium, vehicle loan interest or senior eligibility records. A source amount alone does not establish a deduction.</p><button type="button" onClick={() => onChange({ ...emptySchedule1AData, employeeTips: [], businessTips: [], overtime: [], vehicleLoans: [], seniorOwners: [] })}>Add additional deduction worksheet</button></section>;
   const set = (patch: Partial<Schedule1AData>) => onChange({ ...data, ...patch, sourceFactsConfirmed: patch.sourceFactsConfirmed ?? null });
-  const sources = (owner: string, kind?: Source["kind"]) => compensationSources.filter(source => source.accountHolder === owner && (!kind || source.kind === kind)).map(source => [source.sourceId, `${source.name || "Unnamed source"} — ${source.sourceId}`] as const);
+  const sources = (owner: string, kind?: Source["kind"]) => compensationSources.filter(source => source.accountHolder === owner && (!kind || source.kind === kind)).map(source => [source.sourceId, `${source.name || "Unnamed source"} — ${source.kind === "form8919Nec" ? "Form 8919 wages from 1099-NEC" : source.sourceId}`] as const);
   return <section><h4>Additional deduction sources</h4><p className="guided-hint">Use original records for the selected tax year. Confirm identity and senior birth/death facts in About You. Keep source amounts separate from the deduction after eligibility, business income limits and phaseouts.</p>
     <div className="guided-form-grid">
       <TextFact label="Additional deductions: Source tax year" value={data.sourceTaxYear} onChange={sourceTaxYear => set({ sourceTaxYear })} />
@@ -185,7 +185,7 @@ export function Schedule1ASourceDetails({ data, compensationSources = [], busine
       const update = (patch: Partial<typeof entry>) => set({ overtime: data.overtime.map((row, position) => position === index ? { ...row, ...patch } : row) });
       return <fieldset key={index}><legend>{label}</legend><p className="guided-hint">Enter only the premium above the regular pay rate that the FLSA requires. State-law, contract or voluntary overtime alone does not establish federal eligibility. Use actual reported overtime amounts and the employer's calculation.</p><div className="guided-form-grid">
         <Choice label={`${label}: Owner`} value={entry.owner} choices={owners} onChange={owner => update({ owner: owner as typeof entry.owner })} />
-        <Choice label={`${label}: Compensation source`} value={entry.compensationSourceId} choices={sources(entry.owner)} onChange={compensationSourceId => update({ compensationSourceId })} />
+        <Choice label={`${label}: Compensation source`} value={entry.compensationSourceId} choices={sources(entry.owner)} onChange={compensationSourceId => update({ compensationSourceId, ...(compensationSourceId.startsWith("form8919Nec:") ? { compensationExcludedFromWages: "" } : {}) })} />
         <CurrencyField label={`${label}: Qualified FLSA premium`} value={entry.qualifiedPremium} onChange={qualifiedPremium => update({ qualifiedPremium })} />
         {entry.compensationSourceId.startsWith("formW2:") && <CurrencyField label={`${label}: Payroll compensation excluded from Box 1`} hint="Actual compensation excluded from taxable wages, including a checked zero; never infer this from the proposed deduction." value={entry.compensationExcludedFromWages} onChange={compensationExcludedFromWages => update({ compensationExcludedFromWages })} />}
         <BooleanFact label={`${label}: Premium required by FLSA`} value={entry.requiredByFlsa} onChange={requiredByFlsa => update({ requiredByFlsa })} />

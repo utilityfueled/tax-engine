@@ -3466,6 +3466,7 @@ export const Form8919Schema = z.object({
     allCompensationEmployeeWagesConfirmed: z.boolean(),
     noEmployeeFicaWithheldConfirmed: z.boolean(),
     receivedInsteadOfW2Confirmed: z.boolean(),
+    federalOnlyConfirmed: z.boolean().optional(),
   }).strict().optional(),
 });
 

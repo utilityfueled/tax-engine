@@ -108,12 +108,15 @@ export function reconcileForm8919NecSources(input: TaxYearInput, asOfDate: strin
     throw new Error("Form 8919 Reason A wages with tip reporting require separate source reconciliation.");
   }
   if (source.state?.trim() || !d(source.stateWithheld).isZero() || !d(source.stateIncome).isZero()
-    || input.taxpayer.stateResidency || input.stateReturns?.illinois
+    || input.stateReturns?.illinois
     || input.ohioResidency || input.ohioPayments || input.ohioReturnHeaderSources || input.ohioSchoolDistrict
     || input.paResidencySources || input.paReciprocitySources || input.paOrdinaryReturnFacts
     || input.paMarriedOrdinarySources || input.paOrdinaryReturnCompletionSources
     || input.paResidentReturn || input.paNonresidentReturn) {
     throw new Error("Form 8919 Reason A wages with state-source reporting require separate reconciliation.");
+  }
+  if (input.taxpayer.stateResidency !== undefined && proof.federalOnlyConfirmed !== true) {
+    throw new Error("Form 8919 Reason A wages with a residency answer require explicit federal-only confirmation.");
   }
   if (input.scheduleC || input.scheduleF || input.form1099Misc.length || input.form1099K.length
     || input.scheduleK1.length || input.scheduleK1Form1041.length || input.rentalProperties.length || input.cryptoIncome

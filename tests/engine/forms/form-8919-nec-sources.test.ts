@@ -46,6 +46,21 @@ describe("2026 original Form 1099-NEC linked to Reason A wages", () => {
     expect(input.form1099Nec[0]).toMatchObject({ originalForForm8919: original.form1099Nec[0].originalForForm8919 });
   });
 
+  it("admits residency only with federal-only confirmation and still holds state-source reporting", () => {
+    const input = TaxYearInputSchema.parse(sourceInput());
+    const proof = input.form8919?.reasonANecSource;
+    const [source] = input.form1099Nec;
+    if (!proof || !source) throw new Error("Expected a linked Form 1099-NEC fixture.");
+    input.taxpayer.stateResidency = "part-year";
+    expect(() => reconcileForm8919NecSources(input, observationDate)).toThrow(/explicit federal-only confirmation/i);
+    proof.federalOnlyConfirmed = false;
+    expect(() => reconcileForm8919NecSources(input, observationDate)).toThrow(/explicit federal-only confirmation/i);
+    proof.federalOnlyConfirmed = true;
+    expect(reconcileForm8919NecSources(input, observationDate).businessInput.taxpayer.stateResidency).toBe("part-year");
+    source.stateIncome = "3000.25";
+    expect(() => reconcileForm8919NecSources(input, observationDate)).toThrow(/state-source reporting/i);
+  });
+
   it("filters only the documented original from the business calculation input", () => {
     const input = TaxYearInputSchema.parse(sourceInput());
     const result = reconcileForm8919NecSources(input, observationDate);

@@ -153,6 +153,22 @@ lines:
     irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf#page=2"
     testRef: "tests/engine/forms/form-8919-nec-sources.test.ts::filters only the documented original from the business calculation input"
 
+  - line: "2026-reason-a-guided-original-nec"
+    description: "Collect a linked original in the federal-only Form 8919 interview"
+    formula: >-
+      For a federal-only, non-joint return, collect the original employee determination,
+      its actual receipt date, and the current Form 1099-NEC issued in place of Form W-2.
+      Use the primary filer's confirmed identifying facts and the original issuer, recipient,
+      Box 1a, Box 1d, Box 4 and attestations. Block missing, changed or unsupported sources.
+      Preserve the taxpayer's actual residency answer. Require explicit confirmation that
+      the linked calculation covers only the federal return. This confirms calculation
+      scope and leaves all state filing obligations and unsupported state sources separate.
+      Transfer the statement as Form 8919 employee compensation without a Schedule C.
+      Allow a separately confirmed FLSA premium to reference this original from Schedule 1-A.
+      Preserve existing no-1099 guided drafts and final-year export gates.
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f8919.pdf; https://www.irs.gov/instructions/i1099mec; https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110"
+    testRef: "tests/guided-interview/guided-form-8919-reason-a.test.ts::projects a verified original 1099-NEC as employee compensation without creating business income"
+
   - line: "2026-reason-a-determination-date"
     description: "Observe the received IRS classification before using Reason A"
     formula: >-

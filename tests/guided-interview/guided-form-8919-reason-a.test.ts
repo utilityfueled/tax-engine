@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { expect, it } from "vitest";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { form8919ReasonAFactErrors } from "@/lib/guided-form-8919-reason-a";
-import { getGuidedSectionRoute, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyStateReturnData, getGuidedSectionRoute, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
+import { emptyOvertimeDeduction, emptySchedule1AData, schedule1ACompensationSources } from "@/lib/guided-schedule-1-a-facts";
 import { calculateForm8919 } from "@/engine/forms/form-8919";
 import { calculateUnreportedTipPayroll } from "@/engine/forms/unreported-tip-payroll";
 import { getConstants } from "@/models/constants";
@@ -32,6 +33,115 @@ function wageStatement(state: ReturnType<typeof interview>) {
   assert.ok(entry);
   return entry;
 }
+
+const originalNec = {
+  statementReference: "Synthetic employee compensation statement",
+  payerName: original.firmName,
+  payerTin: original.employerEin,
+  recipientTin: "111-22-3333",
+  nonemployeeCompensation: "1,000.25",
+  federalWithheld: "100.00",
+  qualifiedOvertimeCompensation: "200.00",
+  currentOriginalNoCorrectionsOrVoidsConfirmed: true,
+  noDirectSalesOrParachutePaymentConfirmed: true,
+  noTipsOrStateBoxesConfirmed: true,
+  federalOnlyConfirmed: true,
+};
+
+function interviewWithOriginalNec() {
+  const state = interview();
+  state.sectionData["additional-deductions"] = { form8919ReasonA: {
+    ...original, determinationDate: "2026-02-12", determinationReceivedDate: "2026-02-14",
+    determinationReference: "Synthetic SS-8 determination", originalNec,
+  } };
+  return state;
+}
+
+it("projects a verified original 1099-NEC as employee compensation without creating business income", () => {
+  const state = interviewWithOriginalNec();
+  expect(validateSection(state, "additional-deductions").status).toBe("complete");
+  const input = buildTaxInputFromGuidedData(state);
+  expect(input?.form8919?.reasonANecSource).toMatchObject({
+    necSourceId: "form1099Nec:0", determinationReceivedDate: "2026-02-14",
+    determinationReference: "Synthetic SS-8 determination", federalOnlyConfirmed: true,
+  });
+  expect(input?.form1099Nec).toEqual([expect.objectContaining({
+    accountHolder: "primary", nonemployeeCompensation: "1000.25",
+    federalWithheld: "100", qualifiedOvertimeCompensation: "200",
+  })]);
+  expect(input?.scheduleC).toBeUndefined();
+  expect(input?.taxpayer.stateResidency).toBe("full-year");
+});
+
+it("preserves an actual residency answer and requires explicit federal-only scope for the linked original", () => {
+  const state = interviewWithOriginalNec();
+  const profile = state.sectionData["personal-info"];
+  const form = state.sectionData["additional-deductions"]?.form8919ReasonA;
+  assert.ok(profile && form);
+  profile.stateResidency = "part-year";
+  expect(buildTaxInputFromGuidedData(state)?.taxpayer.stateResidency).toBe("part-year");
+  state.sectionData["additional-deductions"] = {
+    form8919ReasonA: { ...form, originalNec: { ...originalNec, federalOnlyConfirmed: false } },
+  };
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
+it("holds selected and saved state returns even with federal-only scope confirmed", () => {
+  const state = interviewWithOriginalNec();
+  for (const stateDraft of [
+    { ...state, segmentation: { ...state.segmentation, stateCode: "OH" as const } },
+    { ...state, sectionData: { ...state.sectionData, "state-return": { ...emptyStateReturnData, additionalStateWithholding: "100" } } },
+  ]) {
+    expect(form8919ReasonAFactErrors(stateDraft).form8919ReasonA).toMatch(/federal/i);
+    expect(buildTaxInputFromGuidedData(stateDraft)).toBeNull();
+    expect(stateDraft.sectionData["additional-deductions"]?.form8919ReasonA?.originalNec).toEqual(originalNec);
+  }
+});
+
+it("holds an enterable original 1099-NEC if its recipient TIN is different from the filer", () => {
+  const state = interviewWithOriginalNec();
+  const source = state.sectionData["additional-deductions"]?.form8919ReasonA;
+  assert.ok(source);
+  state.sectionData["additional-deductions"] = {
+    form8919ReasonA: { ...source, originalNec: { ...originalNec, recipientTin: "123-45-6789" } },
+  };
+  expect(validateSection(state, "additional-deductions").status).not.toBe("complete");
+  expect(buildTaxInputFromGuidedData(state)).toBeNull();
+});
+
+it("links one qualified overtime claim to the wage original and preserves invalid drafts for correction", () => {
+  const state = interviewWithOriginalNec();
+  const personal = state.sectionData["personal-info"];
+  const additional = state.sectionData["additional-deductions"];
+  assert.ok(personal && additional?.form8919ReasonA);
+  personal.employmentValidSsnIssuedByDueDate = true;
+  const linkedSource = schedule1ACompensationSources(state).find(source => source.kind === "form8919Nec");
+  assert.ok(linkedSource);
+  const overtime = { ...emptyOvertimeDeduction, owner: "primary" as const, compensationSourceId: linkedSource.sourceId,
+    qualifiedPremium: "200.00", requiredByFlsa: true, reportingSourceReference: originalNec.statementReference };
+  const schedule1A = { ...emptySchedule1AData, sourceTaxYear: "2026", sourceReference: "Synthetic Schedule 1-A inventory",
+    sourceFactsConfirmed: true, allSourcesIncluded: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", overtime: [overtime] };
+  state.sectionData["additional-deductions"] = { ...additional, schedule1A };
+  const input = buildTaxInputFromGuidedData(state);
+  expect(input?.schedule1A?.overtime).toEqual([expect.objectContaining({
+    compensationSourceId: "form1099Nec:0", qualifiedPremium: "200", reportedCompensation: "1000.25",
+  })]);
+
+  for (const claims of [[{ ...overtime, qualifiedPremium: "200.01" }], [{ ...overtime, reportingSourceReference: "Different original" }],
+    [{ ...overtime, qualifiedPremium: "100" }, { ...overtime, qualifiedPremium: "100" }]]) {
+    state.sectionData["additional-deductions"] = { ...additional, schedule1A: { ...schedule1A, overtime: claims } };
+    expect(validateSection(state, "additional-deductions").status).not.toBe("complete");
+    expect(buildTaxInputFromGuidedData(state)).toBeNull();
+  }
+
+  const changed = updateSectionData(state, "additional-deductions", { ...additional, schedule1A,
+    form8919ReasonA: { ...additional.form8919ReasonA, determinationReceivedDate: "2026-02-11" } });
+  expect(changed.sectionData["additional-deductions"]?.form8919ReasonA).toMatchObject({
+    originalNec, determinationReceivedDate: "2026-02-11", confirmed: false,
+  });
+  expect(changed.sectionData["additional-deductions"]?.schedule1A?.sourceFactsConfirmed).toBeNull();
+  expect(buildTaxInputFromGuidedData(changed)).toBeNull();
+});
 
 it("projects confirmed source wages to the real payroll calculation", () => {
   const state = interview();
