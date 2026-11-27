@@ -26,6 +26,10 @@ function semantic(value: unknown, year: number, key = ""): unknown {
   if (typeof value === "string") { if (/ein|ssn|tin/i.test(key)) return value.replace(/\D/g, ""); if (/^-?\d+(\.\d+)?$/.test(value)) return new Decimal(value).toString(); return value.trim().replace(/\s+/g, " ").toUpperCase(); }
   return value;
 }
+/** Internal comparison key for federal facts. Never include it in output or diagnostics. */
+export function w2FederalEconomicIdentity(w2: Record<string, unknown>, year: number): string {
+  return stable(semantic(w2, year));
+}
 function checkCount(mode: string, count: number): void {
   if (!(mode === "none" && count === 0 || mode === "single" && count === 1 || mode === "multiple" && count === 2)) error("actual none/single/multiple reporting must match complete zero/one/two printed rows");
 }
@@ -55,8 +59,8 @@ function prepareW2StateLocalSources(input: W2StateLocalSourceContext, index: num
   const canonicalPacket = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
   if (canonicalPacket !== undefined && stable(canonicalPacket) !== stable(rawSources)) return error("caller proof contradicts the actual retained canonical source packet");
   if (!W2Schema.strict().safeParse(current).success || stable(source.originalW2) !== stable(current) || w2.taxYear !== undefined && w2.taxYear !== year) return error("current full original identity, year or content changed; explicitly reconfirm actual source");
-  const identity = stable(semantic(current, year));
-  for (const [otherIndex, other] of input.w2s.entries()) if (otherIndex !== index && stable(semantic(other, year)) === identity && (!other.accountHolder || other.accountHolder === holder)) return error("indistinguishable duplicate federal economic originals or continuation copies require their actual source method, not extra W-2 income");
+  const identity = w2FederalEconomicIdentity(current, year);
+  for (const [otherIndex, other] of input.w2s.entries()) if (otherIndex !== index && w2FederalEconomicIdentity(other, year) === identity && (!other.accountHolder || other.accountHolder === holder)) return error("indistinguishable duplicate federal economic originals or continuation copies require their actual source method, not extra W-2 income");
   for (const [key, value] of Object.entries(current)) if (typeof value === "string" && /wages|withheld|tips|benefits|box12Code/i.test(key)) amount(value);
   checkCount(source.stateReporting, source.stateRows.length); checkCount(source.localReporting, source.localRows.length);
   const checkedPositions = (rows: Array<{ printedRow: number | null; sourceReference: string }>) => {

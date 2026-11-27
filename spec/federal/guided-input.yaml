@@ -295,6 +295,19 @@ lines:
     testRefs:
       - "tests/apps/web/w2-source-interactions.test.tsx::checks retained W-2 years in the visible original year field without taking the upload year"
       - "apps/web/tests/guided-interview.spec.ts::W-2 section allows entering wages and shows refund ticker"
+  - line: "w2-duplicate-current-original"
+    description: "Hold indistinguishable 2026 wage statements for a single recipient"
+    formula: |
+      Treat employee copies and reissued copies of the same wage statement as
+      one economic original. In a 2026 guided return, hold entries with the
+      same recipient and indistinguishable federal W-2 facts after normalizing
+      employer formatting, EIN punctuation and exact amounts. State and local
+      labels and private reference text cannot establish a second federal wage
+      amount. Preserve separate joint recipients, originals with different
+      federal facts even at one employer, and historical entry behavior.
+      Report the conflicting row without private identifiers.
+    irsRef: "https://www.irs.gov/instructions/iw2w3 (Distributing Copies B, C, and 2; Reissued statement; Multiple forms)"
+    testRef: "tests/guided-interview/guided-w2-duplicate-original.test.ts::holds indistinguishable 2026 W-2 entries after reopening the interview"
   - line: "document-facts"
     description: "Require source facts instead of supplying representative defaults"
     formula: "Mortgage lender, principal and origination date; donation recipient, type, date and applicable basis/classification; estimated payment date; retirement distribution code and taxable amount; and AOTC prior claim history are actual facts. Blank does not mean zero. Preserve explicit zero. Incomplete entries or legacy aggregate-only deductions require correction before calculation."
