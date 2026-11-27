@@ -2,10 +2,10 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
-    "latestScopedApplicationCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
-    "latestCombinedCandidateCommit": "35634b84984a6284505ad19bb5a2e969a7bcee47",
-    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialCreditCarryover",
+    "applicationCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
+    "latestScopedApplicationCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+    "latestCombinedCandidateCommit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
+    "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasis",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
     "nov27PennsylvaniaNonresidentAndAotcEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotc",
@@ -62,7 +62,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -110,7 +110,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -183,7 +183,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27PaymentEducationMortgageExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -337,6 +337,60 @@
         }
       }
     },
+    "nov27CommercialVehicleBasis": {
+      "commit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+      "primarySources": [
+        "https://www.irs.gov/instructions/i8936",
+        "https://uscode.house.gov/us/usc/t26/s45W/",
+        "https://uscode.house.gov/us/usc/t26/s30D/"
+      ],
+      "focusedTestsPassed": 99,
+      "repositorySpecReferencesValidated": 10267,
+      "generatedInventoryCheckPassed": true,
+      "typechecksAndScopedLintPassed": true,
+      "independentSourceBindingReviewPassed": true,
+      "staleOwnerRegressionReproduced": true,
+      "originalBasis": "25000",
+      "line26Reduction": "6000",
+      "adjustedBasisBeforeDepreciation": "19000",
+      "actualDepreciationAndFederalAttributionVerified": false,
+      "filingQualified": false,
+      "exactBasisVerification": "running",
+      "browserSourceAuditSha256": "2114f7470b2e801f43147d455c273a61273df9ccf6dd23a52bc70b24e1f1fde5"
+    },
+    "nov27CommercialCreditCarryoverExact": {
+      "commit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
+      "archiveSha256": "baa4d75fee88f7d80bda7bdcffd0fac3bc3d2ad3bfd5bc8121486d843d1c5afe",
+      "localManifestSha256": "013ea1fa912ccc4a5423ee0030ff95f5cd72b55f4eb6d71445866ded7e407c40",
+      "requiredLocalChecksPassed": 11,
+      "unitPassed": 31336,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.68,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "standaloneReceiptSha256": "9349e72e279b275ef8aaa98e78351ba2498b54b69c7e38b5334c57a0f575a769",
+      "standalonePassed": true,
+      "localListenersClosed": true,
+      "remoteWorkflows": {
+        "CI": {
+          "id": 46052021076,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Web": {
+          "id": 46052020927,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Docker": {
+          "id": 46052021026,
+          "status": "queued",
+          "conclusion": null
+        }
+      }
+    },
     "nov27CommercialCreditCarryover": {
       "commit": "fc0420e56ad478ab0cda4d7fd627e5550999dc4e",
       "primarySources": [
@@ -354,7 +408,8 @@
       "eligible2025Carryback": "1000",
       "potential2027Carryforward": "3500",
       "filingQualified": false,
-      "exactCurrentVerification": "running",
+      "exactCurrentVerification": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27CommercialCreditCarryoverExact",
       "browserSourceAuditSha256": "05e9e9b671d6574841e92bb62a900e3527ba8ab17da2a0bb42198596bbb4678d"
     },
     "nov27CommercialCleanVehicle": {

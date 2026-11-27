@@ -8,12 +8,33 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `35634b849` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `fc0420e56` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
+
+## November 27 commercial clean vehicle asset basis
+
+`dbf3d7f79` verifies the section 45W basis reduction against a confirmed
+2026 claim, the original owner's matching possession record, a Schedule C
+activity and its underlying depreciation asset record. The records agree
+on the taxpayer, VIN, service date, activity, and pre-credit basis where
+applicable. The test with $25,000 original basis and $6,000 on Schedule A
+line 26 yields $19,000 before depreciation. A confirmed no-claim position
+preserves the $25,000 for this adjustment. A Form 3800 utilization amount
+or evidence for a replaced vehicle holds the calculation. The stale-owner
+regression failed before the correction. All 99 focused tests, type checks,
+lint, 10,267 linked spec checks and the generated inventory check passed.
+Independent review confirmed the source binding and adjusted amount.
+Full federal attribution still needs verified listed-property or passenger
+classification, the applicable weight measurement, a depreciation election,
+and the complete business asset record for downstream deduction and tax.
+Exact-source verification started with the prior archive's work completing.
+[IRS Form 8936 basis instructions](https://www.irs.gov/instructions/i8936) ·
+[26 USC §45W](https://uscode.house.gov/us/usc/t26/s45W/) ·
+[26 USC §30D](https://uscode.house.gov/us/usc/t26/s30D/).
 
 ## November 27 commercial clean vehicle tax limit and carryover
 
@@ -28,8 +49,11 @@ All 55 focused tests, type checks, lint, 10,264 linked spec checks, and the
 generated inventory check passed. Independent review checked the tax
 limit and ordering, and verified that the audit uses descriptive labels.
 Full federal credit/depreciation attribution and final filing stay gated.
-Exact-source static and unit checks started. Browser, recovery and coverage
-are queued behind the earlier archive to limit disk contention.
+The clean tracked archive passed all 11 local checks. Both unit runs passed
+31,336 tests with 83 skips and 88.68% branch coverage. Chromium passed
+654 cases with 5 skips across 9 windows. Encrypted standalone
+backup, deletion and restoration passed, and all listeners closed.
+Manifest SHA-256 `013ea1fa912ccc4a5423ee0030ff95f5cd72b55f4eb6d71445866ded7e407c40`.
 [26 USC §38](https://uscode.house.gov/us/usc/t26/s38/) ·
 [26 USC §39](https://uscode.house.gov/us/usc/t26/s39/) ·
 [Draft 2026 Form 3800](https://www.irs.gov/pub/irs-dft/f3800--dft.pdf).
