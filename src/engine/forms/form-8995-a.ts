@@ -270,6 +270,7 @@ function computePerEntityComponents(
   sstbApplicablePercentage: Decimal,
   priorLoss: Decimal,
   audit: AuditTrail,
+  use2026DraftAudit: boolean,
 ): { businesses: Form8995ABusinessResult[]; totalComponent: Decimal; lossCarryforward: Decimal } {
   const qualifiedAmounts = effectiveSources.map(source => roundDollar(source.qbi.times(source.isSST ? sstbApplicablePercentage : 1)));
   const currentYearLosses = qualifiedAmounts.reduce((total, amount) => total.plus(zeroFloor(amount.negated())), new Decimal(0));
@@ -309,9 +310,11 @@ function computePerEntityComponents(
     const line4 = roundDollar(line3.times(applicablePct));
     const line5 = exhausted ? new Decimal(0) : roundDollar(source.ubia);
     const line6 = roundDollar(line5.times(applicablePct));
-    audit.record("8995-A Schedule C", `1:${sourceIndex}`, `Adjusted qualified income: ${source.name}`, line2,
+    const lossAuditDescription = use2026DraftAudit ? "Adjusted qualified income" : `Adjusted qualified income: ${source.name}`;
+    audit.record("8995-A Schedule C", `1:${sourceIndex}`, lossAuditDescription, line2,
       "Current qualified SSTB amount less proportional current/prior qualified loss; zero floor", {
         "Qualified current amount": qualifiedAmounts[sourceIndex], "Allocated loss": allocations[sourceIndex],
+        ...(use2026DraftAudit ? { "Business ordinal": String(sourceIndex + 1) } : {}),
       });
     const line7 = roundDollar(line4.times(W2_FIFTY_RATE));
     const line8 = roundDollar(line4.times(W2_TWENTY_FIVE_RATE).plus(line6.times(UBIA_TWO_POINT_FIVE_RATE)));
@@ -349,16 +352,72 @@ function computePerEntityComponents(
     };
     businesses.push(biz);
 
-    audit.record("8995-A", `biz-${source.name}`, `Line 1 QBI`, line1, source.name);
-    audit.record("8995-A", `biz-${source.name}`, `Line 2 adj QBI`, line2, "Current SSTB qualification before Schedule C loss netting");
-    audit.record("8995-A", `biz-${source.name}`, `Line 15 component`, line15,
-      `20%×$${line2} = $${line10}; W2/UBIA limit = $${line9}; excess = $${line12}; phase-in reduction = $${line14}`);
+    if (!use2026DraftAudit) {
+      audit.record("8995-A", `biz-${source.name}`, `Line 1 QBI`, line1, source.name);
+      audit.record("8995-A", `biz-${source.name}`, `Line 2 adj QBI`, line2, "Current SSTB qualification before Schedule C loss netting");
+      audit.record("8995-A", `biz-${source.name}`, `Line 15 component`, line15,
+        `20%×$${line2} = $${line10}; W2/UBIA limit = $${line9}; excess = $${line12}; phase-in reduction = $${line14}`);
+    }
   }
 
   const rawTotal = businesses.reduce((acc, b) => acc.plus(b.line15QBIComponent), new Decimal(0));
   const totalComponent = zeroFloor(rawTotal);
 
   return { businesses, totalComponent, lossCarryforward: zeroFloor(totalLosses.minus(nettableLoss)) };
+}
+
+/** Project the existing business component amounts onto the 2026 draft lines. */
+function record2026DraftBusinessAudit(
+  audit: AuditTrail,
+  { businesses, totalComponent }: { businesses: Form8995ABusinessResult[]; totalComponent: Decimal },
+  { taxableIncome, threshold, phaseInRange, phaseInPercentage }: {
+    taxableIncome: Decimal; threshold: Decimal; phaseInRange: Decimal; phaseInPercentage: Decimal;
+  },
+): void {
+  const wageLimitApplies = taxableIncome.gt(threshold);
+  const withinPhaseInRange = wageLimitApplies && taxableIncome.lte(threshold.plus(phaseInRange));
+  const phaseInBusinesses: Array<{ business: Form8995ABusinessResult; index: number }> = [];
+  const recordBusinessLine = (index: number, line: number, description: string, amount: Decimal, formula: string) => {
+    const ordinal = String(index + 1);
+    audit.record("8995-A", `${line}:${ordinal}`, description, amount, formula, { "Business ordinal": ordinal });
+  };
+
+  for (const [index, business] of businesses.entries()) {
+    const needsPhaseIn = withinPhaseInRange && business.line12Excess.gt(0);
+    recordBusinessLine(index, 2, "Qualified business income", business.line2AdjustedQBI, "Qualified amount after loss netting");
+    recordBusinessLine(index, 3, "Tentative QBI component", business.line10TwentyPercentQBI, "Multiply line 2 by 20%");
+    if (wageLimitApplies) {
+      recordBusinessLine(index, 10, "Wage and qualified property limit", business.line9W2UBIALimit, "Greater of lines 5 and 9");
+      recordBusinessLine(index, 11, "QBI component under the wage and property limit", business.line11LesserOfLimitOrQBI, "Smaller of lines 3 and 10");
+    }
+    if (needsPhaseIn) {
+      phaseInBusinesses.push({ business, index });
+      recordBusinessLine(index, 12, "QBI component after phase-in reduction", business.line15QBIComponent, "Carry line 26");
+    }
+    const deductionSource = needsPhaseIn ? "Greater of lines 11 and 12" : wageLimitApplies ? "Carry line 11" : "Carry line 3";
+    recordBusinessLine(index, 13, "QBI deduction before patron reduction", business.line15QBIComponent, deductionSource);
+    recordBusinessLine(index, 15, "Qualified business income component", business.line15QBIComponent, "Carry line 13 when no patron reduction applies");
+  }
+  audit.record("8995-A", "16", "Total QBI component", totalComponent, "Add all line 15 amounts");
+
+  if (phaseInBusinesses.length > 0) {
+    for (const { business, index } of phaseInBusinesses) {
+      recordBusinessLine(index, 17, "Tentative QBI component", business.line10TwentyPercentQBI, "Carry line 3");
+      recordBusinessLine(index, 18, "Wage and qualified property limit", business.line9W2UBIALimit, "Carry line 10");
+      recordBusinessLine(index, 19, "QBI component above the wage and property limit", business.line12Excess, "Subtract line 18 from line 17");
+    }
+    audit.record("8995-A", "20", "Taxable income before QBI deduction", taxableIncome, "Carry taxable income before QBI deduction");
+    audit.record("8995-A", "21", "Taxable income threshold", threshold, "Applicable threshold for the filing status");
+    audit.record("8995-A", "22", "Taxable income above threshold", taxableIncome.minus(threshold), "Subtract line 21 from line 20");
+    audit.record("8995-A", "23", "Phase-in range", phaseInRange, "Applicable range for the filing status");
+    audit.record("8995-A", "24", "Phase-in percentage", phaseInPercentage, "Divide line 22 by line 23");
+    for (const { business, index } of phaseInBusinesses) {
+      recordBusinessLine(index, 25, "Phase-in reduction", business.line14PhaseInReduction, "Multiply line 19 by line 24");
+      recordBusinessLine(index, 26, "QBI component after phase-in reduction", business.line15QBIComponent, "Subtract line 25 from line 17 and carry to line 12");
+    }
+  }
+
+  audit.record("8995-A", "27", "Total qualified business income component", totalComponent, "Carry line 16");
 }
 
 export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
@@ -373,11 +432,16 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
       ? applyAggregationElections(input.qbiSources, elections, input.zeroQbiSourceNames ?? [])
       : { effectiveSources: input.qbiSources, groupResults: [] as AggregationGroupResult[] };
 
-  if (aggregationGroups.length > 0) {
-    for (const g of aggregationGroups) {
-      audit.record("8995-A", `agg-${g.name}`, "Aggregation group",
-        g.combinedQBI,
-        `${g.componentBusinessNames.join(" + ")}: QBI=$${g.combinedQBI}, W-2=$${g.combinedW2Wages}, UBIA=$${g.combinedUBIA}`);
+  for (const [index, group] of aggregationGroups.entries()) {
+    if (use2026DraftAudit) {
+      const ordinal = String(index + 1);
+      audit.record("8995-A", `aggregation:${ordinal}`, "Aggregation group", group.combinedQBI,
+        "Sum qualified business income, W-2 wages, and UBIA across group members", {
+          "Group ordinal": ordinal, "Combined W-2 wages": group.combinedW2Wages, "Combined UBIA": group.combinedUBIA,
+        });
+    } else {
+      audit.record("8995-A", `agg-${group.name}`, "Aggregation group", group.combinedQBI,
+        `${group.componentBusinessNames.join(" + ")}: QBI=$${group.combinedQBI}, W-2=$${group.combinedW2Wages}, UBIA=$${group.combinedUBIA}`);
     }
   }
 
@@ -398,8 +462,10 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
 
   const sstbApplicablePercentage = new Decimal(1).minus(phaseInPercentage);
 
-  audit.record("8995-A", "phase-in", "Phase-in percentage", phaseInPercentage,
-    `(${taxableIncome} - ${threshold}) / ${phaseInRange}`);
+  if (!use2026DraftAudit) {
+    audit.record("8995-A", "phase-in", "Phase-in percentage", phaseInPercentage,
+      `(${taxableIncome} - ${threshold}) / ${phaseInRange}`);
+  }
   audit.record("8995-A", "sstb-%", "SSTB applicable percentage", sstbApplicablePercentage,
     `1 - ${phaseInPercentage}`);
 
@@ -407,21 +473,27 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
   const priorLoss = input.priorYearQBILoss ?? new Decimal(0);
   const partI = computePerEntityComponents(
     effectiveSources, phaseInPercentage, sstbApplicablePercentage,
-    priorLoss, audit
+    priorLoss, audit, use2026DraftAudit
   );
 
-  // Line 16: Total QBI component
-  audit.record("8995-A", "16", "Total QBI component", partI.totalComponent,
-    `Sum of per-business: $${partI.businesses.reduce((a, b) => a.plus(b.line15QBIComponent), new Decimal(0))} (after Schedule C loss netting)`);
+  if (use2026DraftAudit) {
+    record2026DraftBusinessAudit(audit, partI, { taxableIncome, threshold, phaseInRange, phaseInPercentage });
+  } else {
+    audit.record("8995-A", "16", "Total QBI component", partI.totalComponent,
+      `Sum of per-business: $${partI.businesses.reduce((a, b) => a.plus(b.line15QBIComponent), new Decimal(0))} (after Schedule C loss netting)`);
+  }
 
   // Signed PTP amounts get the SSTB percentage, then net with REIT dividends and the separate prior loss.
   const zero = new Decimal(0);
   const currentReitDividends = input.qualifiedReitDividends ?? zero;
   const qualifiedReitDividends = roundDollar(currentReitDividends);
-  const ptpBusinesses = (input.ptpSources ?? []).map((source): Form8995ABusinessResult => {
+  const ptpBusinesses = (input.ptpSources ?? []).map((source, index): Form8995ABusinessResult => {
     const qualified = source.qbi.times(source.isSST ? sstbApplicablePercentage : 1);
     const beforeNetting = roundDollar(qualified.times(QBI_RATE));
-    audit.record("8995-A", `ptp-${source.name}`, "Qualified current PTP income or loss", qualified, "Current signed amount after any SSTB applicable percentage");
+    const ordinal = String(index + 1);
+    audit.record("8995-A", use2026DraftAudit ? `ptp:${ordinal}` : `ptp-${source.name}`,
+      "Qualified current PTP income or loss", qualified, "Current signed amount after any SSTB applicable percentage",
+      use2026DraftAudit ? { "PTP ordinal": ordinal } : undefined);
     return {
       name: source.name, isSST: source.isSST,
       line1QBI: source.qbi, line2AdjustedQBI: qualified,
@@ -444,7 +516,7 @@ export function calculateForm8995A(input: Form8995AInput): Form8995AResult {
 
   const combinedComponent = partI.totalComponent.plus(reitPTPComponent);
   audit.record("8995-A", "32", "Combined QBI, REIT, and PTP", combinedComponent,
-    `$${partI.totalComponent} QBI component + $${reitPTPComponent} REIT/PTP component`);
+    use2026DraftAudit ? "Add lines 27 and 31" : `$${partI.totalComponent} QBI component + $${reitPTPComponent} REIT/PTP component`);
 
   // Line 33: Taxable income before QBI
   audit.record("8995-A", "33", "Taxable income before QBI", taxableIncome,

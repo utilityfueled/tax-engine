@@ -12,6 +12,24 @@ notes: |
   subsection (g) deduction requires qualified review before adopting the draft
   form's cooperative routing. This supplement does not qualify an export.
 lines:
+  - line: "12 and 17 through 26"
+    description: "Printed phase-in audit and per-business transfer"
+    formula: "For a business whose Line 10 is below Line 3, audit Part III only when pre-QBI taxable income exceeds the threshold and is at or below the upper end of the phase-in range. Show Lines 17–19 and 25–26 for each affected business. Show the shared taxable income, threshold, excess, range, and ratio on Lines 20–24. Transfer Line 26 to Part II Line 12 for that same business. The numeric Part II audit starts at Line 2 because printed Line 1 identifies the business. Identify businesses in the numeric audit by the ordinal of the form calculation row without repeating business names."
+    irsRef: "https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3"
+    testRef: "tests/engine/forms/form-8995-a-2026-audit.test.ts::audits the printed phase-in calculation and transfers"
+    testRefs:
+      - "tests/engine/forms/form-8995-a-2026-audit.test.ts::skips Part III when the income or wage limit does not require it"
+      - "tests/engine/forms/form-8995-a-2026-audit.test.ts::uses distinct business rows when only one business needs Part III"
+  - line: "16, 27 and 32"
+    description: "Transfer the ordinary component and combine it with the REIT/PTP component"
+    formula: "Sum the business components on Line 16, carry Line 16 to Line 27, and show Line 32 as the sum of Lines 27 and 31. The existing amounts and method gates are preserved."
+    irsRef: "https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3"
+    testRef: "tests/engine/forms/form-8995-a-2026-audit.test.ts::audits the printed phase-in calculation and transfers"
+  - line: "Supporting business and PTP detail"
+    description: "Ordinal descriptions in the draft audit"
+    formula: "Identify supplemental Schedule C business, aggregation, and PTP audit details by position in their calculation order. Keep group and source names in the typed calculation results."
+    irsRef: "https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=7"
+    testRef: "tests/engine/forms/form-8995-a-2026-audit.test.ts::keeps business labels in named results and uses ordinals throughout the draft audit"
   - line: "29 and 42"
     description: "Signed prior and outgoing qualified REIT/PTP losses"
     formula: "Display the negative prior loss on Line 29 and min(0, Line 28 + Line 29) on Line 42. Preserve the positive loss magnitudes in internal results and keep the ordinary Schedule C loss separate."
