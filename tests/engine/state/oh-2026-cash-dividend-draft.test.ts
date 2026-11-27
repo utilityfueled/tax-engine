@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculateOhio2026ReturnDraftFromSources } from '@/engine/state/oh-engine.js';
-import { Form1099DivSchema } from '@/models/inputs.js';
+import { Form1099DivSchema, Form1099IntSchema } from '@/models/inputs.js';
 import { ohio2026OrdinaryFixture, rebindOhio2026Ordinary } from '../../fixtures/oh-2026-ordinary-return.js';
 
 const scenarios = {
@@ -60,6 +60,37 @@ function dividendFixture(status: Status = 'part_year_resident') {
 type Packet = ReturnType<typeof dividendFixture>;
 const run = ({ input, sources }: Pick<Packet, 'input' | 'sources'>) => calculateOhio2026ReturnDraftFromSources({ taxInput: input, sources });
 
+function combinedInvestmentFixture(status: Status = 'part_year_resident') {
+  const packet = dividendFixture(status);
+  const accountReference = 'PRIVATE-BANK-011';
+  const payer = 'Fictional Domestic Bank';
+  const payerTin = '55-5555513';
+  const bankForm = Form1099IntSchema.parse({
+    taxYear: 2026, payer, payerTin, accountReference, accountHolder: 'primary', interestIncome: '4000',
+    earlyWithdrawalPenalty: '0', usSavingsBondInterest: '0', federalWithheld: '0',
+    foreignTaxPaid: '0', taxExemptInterest: '0', privateActivityBondInterest: '0', stateWithheld: '0',
+  });
+  const bankInterestOriginal = {
+    sourceTaxYear: 2026, sourceReference: 'PRIVATE-2026-INT-STATEMENT', payerName: payer, payerTin, accountReference,
+    recipient: { ...packet.original.recipient }, currentUncorrectedNonvoidOriginalConfirmed: true,
+    allOriginalBoxesKnownConfirmed: true, noOtherOriginalReportingConfirmed: true,
+    cashMethodOrdinaryDomesticDepositConfirmed: true, completeActualBankCreditsConfirmed: true,
+    credits: [
+      { sourceReference: 'PRIVATE-INT-JUNE', accountReference, creditedOn: '2026-06-30', amount: '3000', availableOnCreditDateConfirmed: true },
+      { sourceReference: 'PRIVATE-INT-JULY', accountReference, creditedOn: '2026-07-01', amount: '1000', availableOnCreditDateConfirmed: true },
+    ],
+  };
+  packet.input.form1099Int = [bankForm];
+  packet.allocation.federalAmount = '8000';
+  packet.allocation.residentAmount = { full_year_resident: '8000', part_year_resident: '2000', nonresident: '0' }[status];
+  const sources = {
+    ...packet.sources, methodId: 'oh-2026-part-year-bank-interest-and-cash-dividend-employee-draft-v1', bankInterestOriginal,
+  };
+  const combined = { ...packet, sources, bankForm };
+  rebindOhio2026Ordinary(combined);
+  return combined;
+}
+
 function matchAccountReferences(packet: Packet, accountReference: string) {
   packet.form.accountReference = packet.original.accountReference = accountReference;
   for (const credit of packet.original.credits) credit.accountReference = accountReference;
@@ -67,6 +98,49 @@ function matchAccountReferences(packet: Packet, accountReference: string) {
 }
 
 describe('Ohio 2026 private ordinary cash dividend draft', () => {
+  it('combines independently matched bank interest and cash dividends on the part-year Ohio draft', () => {
+    const packet = combinedInvestmentFixture();
+    const before = JSON.stringify(packet);
+    const result = run(packet);
+    expect(result).toMatchObject({ ruleVersion: packet.sources.methodId, calculationStatus: 'incomplete',
+      reviewStatus: 'independent-review-pending', filingQualified: false });
+    expect(result.federalAgi.toFixed()).toBe('58000');
+    expect(result.ohioAgi.toFixed()).toBe('58000');
+    expect(result.lines.find(line => line.form === 'OH-IT-NRC' && line.line === '10')?.value.toFixed()).toBe('2000');
+    expect(result.lines.find(line => line.line === 'ohio-bank-interest')?.value.toFixed()).toBe('1000');
+    expect(result.lines.find(line => line.line === 'ohio-ordinary-cash-dividends')?.value.toFixed()).toBe('1000');
+    expect(result.nonresidentRatio.toFixed(4)).toBe('0.4482');
+    expect(result.nonresidentCredit.toFixed()).toBe('516');
+    expect(result.incomeTax.toFixed()).toBe('636');
+    expect(result.refund.toFixed()).toBe('364');
+    expect(JSON.stringify(packet)).toBe(before);
+  });
+
+  it('rounds the combined Ohio investment totals only after adding both originals', () => {
+    const packet = combinedInvestmentFixture();
+    packet.form.ordinaryDividends = packet.bankForm.interestIncome = '4000.25';
+    packet.original.credits[1].amount = packet.sources.bankInterestOriginal.credits[1].amount = '1000.25';
+    packet.allocation.federalAmount = '8000.50';
+    packet.allocation.residentAmount = '2000.50';
+    rebindOhio2026Ordinary(packet);
+    const result = run(packet);
+    expect(result.federalAgi.toFixed()).toBe('58001');
+    expect(result.ohioAgi.toFixed()).toBe('58001');
+    expect(result.lines.find(line => line.form === 'OH-IT-NRC' && line.line === '10')?.value.toFixed()).toBe('2001');
+  });
+
+  it.each(['bank', 'dividend'] as const)('holds the combined investment method if the %s original does not reconcile', kind => {
+    const packet = combinedInvestmentFixture();
+    const credits = kind === 'bank' ? packet.sources.bankInterestOriginal.credits : packet.original.credits;
+    credits[0].amount = '2999.99';
+    rebindOhio2026Ordinary(packet);
+    expect(() => run(packet)).toThrow(kind === 'bank' ? /bank credits do not reconcile to Box 1$/ : /dividend credits do not reconcile to Box 1a$/);
+  });
+
+  it('holds the combined investment method outside part-year residency', () => {
+    expect(() => run(combinedInvestmentFixture('full_year_resident'))).toThrow(/method and confirmed primary domicile differ/);
+  });
+
   it.each(Object.entries(scenarios) as [Status, (typeof scenarios)[Status]][])('allocates verified ordinary cash dividends for %s', (status, expected) => {
     const saved: Packet = JSON.parse(JSON.stringify(dividendFixture(status)));
     const before = JSON.stringify(saved);

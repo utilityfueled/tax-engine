@@ -11,6 +11,8 @@ import {
   Ohio2026BankInterestEmployeeSourcesSchema, ohio2026BankInterestMethodByResidency, type Ohio2026BankInterestEmployeeSources,
   Ohio2026CashDividendEmployeeSourcesSchema, ohio2026CashDividendMethodByResidency, type Ohio2026CashDividendEmployeeSources,
   Ohio2026OrdinarySourcesSchema, Ohio2026OrdinaryStateSchema, Ohio2026PaReciprocalSourcesSchema,
+  OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD, Ohio2026PartYearBankInterestAndDividendsSourcesSchema,
+  type Ohio2026PartYearBankInterestAndDividendsSources,
   Ohio2026TreasuryCouponEmployeeSourcesSchema, Ohio2026UnemploymentEmployeeSourcesSchema, Ohio2026UnemploymentOriginalSchema,
   Ohio2026VaResidentCreditSourcesSchema, type Ohio2026TreasuryCouponEmployeeSources, type Ohio2026UnemploymentEmployeeSources,
 } from '@/models/ohio-2026-return-draft.js';
@@ -124,12 +126,14 @@ function qualifyTreasuryCoupon(input: TaxYearInput, facts: OhioResidencyFacts, o
 }
 
 /** Spec: state/oh-2026-return-draft.yaml#bank-interest-method-residency. */
-function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts, source: Ohio2026BankInterestEmployeeSources) {
+function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts,
+  source: Ohio2026BankInterestEmployeeSources | Ohio2026PartYearBankInterestAndDividendsSources) {
   const [owner] = facts.owners;
   const { bankInterestOriginal: original } = source;
   if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary')
     fail('bank interest requires a single primary ordinary employee');
-  if (source.methodId !== ohio2026BankInterestMethodByResidency[owner.status])
+  const partYearCombined = source.methodId === OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD && owner.status === 'part_year_resident';
+  if (!partYearCombined && source.methodId !== ohio2026BankInterestMethodByResidency[owner.status])
     fail('bank interest method and confirmed primary domicile differ');
   if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
     fail('retained unemployment receipts require their separate method');
@@ -159,12 +163,14 @@ function qualifyBankInterest(input: TaxYearInput, facts: OhioResidencyFacts, sou
 }
 
 /** Spec: state/oh-2026-return-draft.yaml#ordinary-cash-dividend. */
-function qualifyCashDividends(input: TaxYearInput, facts: OhioResidencyFacts, source: Ohio2026CashDividendEmployeeSources) {
+function qualifyCashDividends(input: TaxYearInput, facts: OhioResidencyFacts,
+  source: Ohio2026CashDividendEmployeeSources | Ohio2026PartYearBankInterestAndDividendsSources) {
   const [owner] = facts.owners;
   const { cashDividendOriginal: original } = source;
   if (input.taxpayer.filingStatus !== 'single' || owner?.accountHolder !== 'primary')
     fail('cash dividends require a single primary ordinary employee');
-  if (source.methodId !== ohio2026CashDividendMethodByResidency[owner.status])
+  const partYearCombined = source.methodId === OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD && owner.status === 'part_year_resident';
+  if (!partYearCombined && source.methodId !== ohio2026CashDividendMethodByResidency[owner.status])
     fail('cash dividend method and confirmed primary domicile differ');
   if (facts.unemploymentPaymentSource || facts.unemploymentPaymentSchedule)
     fail('retained unemployment receipts require their separate method');
@@ -242,7 +248,8 @@ interface Projection {
 export interface Ohio2026OrdinaryContext {
   readonly methodId: 'oh-2026-ordinary-employee-draft-v1' | 'oh-2026-pa-reciprocal-employee-draft-v1' | 'oh-2026-va-resident-credit-employee-draft-v1'
     | 'oh-2026-earned-school-employee-draft-v1' | 'oh-2026-unemployment-employee-draft-v1' | 'oh-2026-treasury-coupon-employee-draft-v1'
-    | Ohio2026BankInterestEmployeeSources['methodId'] | Ohio2026CashDividendEmployeeSources['methodId'] | typeof OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD;
+    | Ohio2026BankInterestEmployeeSources['methodId'] | Ohio2026CashDividendEmployeeSources['methodId']
+    | typeof OHIO_2026_PART_YEAR_BANK_INTEREST_AND_DIVIDENDS_METHOD | typeof OHIO_2026_PA_PART_YEAR_RECIPROCAL_METHOD;
   readonly sourceCommitment: string;
 }
 const contexts = new WeakMap<Ohio2026OrdinaryContext, { currentDigest: string; projection: Projection }>();
@@ -270,6 +277,9 @@ export function calculateOhio2026BankInterestEmployeeSource(input: TaxYearInput,
 }
 export function calculateOhio2026CashDividendEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
   return qualifyEmployee(input, raw, { cashDividend: true });
+}
+export function calculateOhio2026PartYearBankInterestAndDividendsSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
+  return qualifyEmployee(input, raw, { bankInterest: true, cashDividend: true });
 }
 /** Separate admitted method; caller scalars cannot bypass either documentary proof. */
 export function calculateOhio2026PaReciprocalEmployeeSource(input: TaxYearInput, raw: unknown): Ohio2026OrdinaryContext {
@@ -303,6 +313,7 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
     : partYearReciprocal ? Ohio2026PaPartYearReciprocalSourcesSchema : reciprocal ? Ohio2026PaReciprocalSourcesSchema
     : residentCredit ? Ohio2026VaResidentCreditSourcesSchema : unemployment ? Ohio2026UnemploymentEmployeeSourcesSchema
     : treasuryCoupon ? Ohio2026TreasuryCouponEmployeeSourcesSchema
+    : bankInterest && cashDividend ? Ohio2026PartYearBankInterestAndDividendsSourcesSchema
     : bankInterest ? Ohio2026BankInterestEmployeeSourcesSchema : cashDividend ? Ohio2026CashDividendEmployeeSourcesSchema : Ohio2026OrdinarySourcesSchema;
   const parsed = schema.safeParse(raw);
   const resident = OhioResidencyFactsSchema.safeParse(input.ohioResidency);
@@ -364,8 +375,8 @@ function qualifyEmployee(taxInput: TaxYearInput, raw: unknown, { reciprocal, res
   const coupon = 'treasuryCouponOriginal' in source ? qualifyTreasuryCoupon(input, facts, source.treasuryCouponOriginal) : undefined;
   const bank = 'bankInterestOriginal' in source ? qualifyBankInterest(input, facts, source) : undefined;
   const dividend = 'cashDividendOriginal' in source ? qualifyCashDividends(input, facts, source) : undefined;
-  const federalInterestDividends = coupon ?? bank?.box1 ?? dividend?.box1a ?? new Decimal(0);
-  const residentInterestDividends = coupon ?? bank?.residentAmount ?? dividend?.residentAmount ?? new Decimal(0);
+  const federalInterestDividends = coupon ?? (bank?.box1 ?? new Decimal(0)).plus(dividend?.box1a ?? 0);
+  const residentInterestDividends = coupon ?? (bank?.residentAmount ?? new Decimal(0)).plus(dividend?.residentAmount ?? 0);
   const wageTotals = { primary: new Decimal(0), spouse: new Decimal(0) };
   const residentWages = { primary: new Decimal(0), spouse: new Decimal(0) };
   const nonresidentWages = { primary: new Decimal(0), spouse: new Decimal(0) };

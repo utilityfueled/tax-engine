@@ -180,6 +180,29 @@ lines:
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds alternate cash dividend masks across residency statuses (%s)"
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::still matches nonmasked dividend references literally"
       - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds changed originals without rebinding and keeps the wage method separate"
+  - line: "part-year-ordinary-interest-and-dividends"
+    description: "Private 2026 Ohio ordinary employee draft with both original Form 1099-INT and Form 1099-DIV"
+    formula: >-
+      For one single primary part-year Ohio employee under 65, require the
+      same complete residency, payroll, withholding, and other confirmations
+      as the independent bank and cash-dividend methods. Independently bind
+      and reconcile each admitted current original and its exact dated
+      receipts under the existing Box 1 and Box 1a rules. Federal and Ohio
+      AGI include gross wages plus both annual totals, rounded once. Sum
+      only the two investment amounts received during confirmed Ohio
+      domicile for IT NRC Part B line 10. Apply the current credit calculation
+      and require withholding to cover the resulting tax. Reject missing or
+      mismatched source evidence and declarations outside the part-year
+      method. Keep the draft private, incomplete and filing-ineligible.
+    sources:
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+      - "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+      - "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+    testRef: "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::combines independently matched bank interest and cash dividends on the part-year Ohio draft"
+    testRefs:
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::rounds the combined Ohio investment totals only after adding both originals"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds the combined investment method if the %s original does not reconcile"
+      - "tests/engine/state/oh-2026-cash-dividend-draft.test.ts::holds the combined investment method outside part-year residency"
   - line: "direct-treasury-coupon"
     description: "Private 2026 ordinary employee draft for one directly held conventional Treasury note or bond coupon"
     formula: "Admit a single primary full-year Ohio resident under 65 who meets existing ordinary original, credit, school and withholding-only gates. Require an explicit private Treasury coupon packet with the actual current, complete, uncorrected nonvoid Form 1099-INT, matched owner, custodian name and TIN, account and year, and a distinct original coupon receipt linked by account and CUSIP to the documented direct U.S. Treasury note or bond. Verify the calendar 2026 coupon date and full positive cash amount against Box 3; Box 3 alone is insufficient. Exclude bills, savings bonds, Treasury funds, indirect holdings, and any premium, accrued interest, discount, basis, election, withholding or other reporting that changes the simple coupon treatment. Reconcile all federal and resident source categories against originals. Federal AGI is rounded ordinary wages plus actual coupon combined before rounding. Deduct the exact federally taxable and Ohio-exempt coupon once under RC5747.01(A)(3) and 31 USC3124(a); Ohio AGI is the remaining ordinary wages rounded at the end. No NRC applies to this full-year household. Keep independent review, final state forms, public routing and filing closed."
