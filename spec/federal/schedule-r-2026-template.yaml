@@ -5,7 +5,7 @@ reference: "https://www.irs.gov/pub/irs-pdf/f1040sr.pdf"
 revision: "Created 4/21/26; final annual source, not export-qualified"
 retrievedAt: "2026-11-01"
 notes: |
-  No tax calculation or export route is enabled. This candidate stays absent from
+  The public calculation and export gates stay closed. This candidate stays absent from
   all public/review/filing registries. Final2026 instructions are available and
   published worksheet cases are exercised in isolation; complete-data return
   scenario qualification and independent human review remain pending.
@@ -24,7 +24,7 @@ lines:
     testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains every diagnostic value and appearance after save"
   - line: "agi-cross-reference"
     description: "Retain the new printed AGI cross-reference without changing calculations"
-    formula: "Line14 references Form1040 line11b in 2026, not 2025 line11a. This physical map takes no input or result and performs no tax calculation."
+    formula: "Line14 references Form1040 line11b in 2026. The 2025 physical map references line11a."
     testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains the 2026 AGI reference contract"
 
   - line: "published-worksheets"
@@ -32,3 +32,29 @@ lines:
     formula: "Actual core line11 and printed14-22 retain identity on saved/reopened candidate: mixed-age box6 and final2026 Jesse box2. This is not an admitted full2026 return or public export."
     irsRef: "Final2026 Schedule R and current2026 instructions, Initial Amounts Example1 and Jesse Example1"
     testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains isolated published worksheet amounts in final2026 physical cells (%j)"
+  - line: "verified-box-2-review-proof"
+    description: "Render a private final 2026 Schedule R proof for one confirmed single under-65 disability claimant"
+    formula: >-
+      Require one current single U.S. citizen or resident alien with an actual
+      birth date under the IRS end-of-year age rule, a confirmed qualifying
+      disability retirement before year-end and actual taxable disability
+      receipts from the employer plan before mandatory retirement age. Require
+      the same claimant's retained statement obtained in 1984–2025, with
+      the physician's Line B signature dated on or after that retirement,
+      in the documented statement year and by December 31, 2025. Require
+      permanent and total disability and inability to engage in substantial
+      gainful activity during 2026, and confirmed nonnegative whole-dollar
+      AGI, included benefits, and each source for the line 21
+      credit limit on the same return. Recompute the existing Schedule R
+      worksheet and admit a positive limited credit only. Set eligibility
+      box 2 and the Part II checkbox. Render lines 10–22 using the pinned final
+      template with every name, taxpayer identifier and source reference
+      absent. Mark both pages for review only. Public calculation, review
+      export and filing stay closed. The Jesse example prints line 20 $17,
+      line 21 $16, and line 22 $16, the Schedule 3 line 6d amount.
+    sources:
+      - "https://www.irs.gov/pub/irs-prior/f1040sr--2026.pdf"
+      - "https://www.irs.gov/instructions/i1040sr"
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::renders a redacted source-bound Box 2 and Part II proof from the published 2026 worksheet"
+    testRefs:
+      - "tests/pdf/schedule-r-2026-candidate.test.ts::holds incompatible Schedule R dates, statement, amounts and final template evidence"

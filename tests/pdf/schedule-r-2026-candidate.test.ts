@@ -2,12 +2,13 @@
 import Decimal from "decimal.js";
 import { calculateScheduleR } from "@/engine/forms/schedule-r.js";
 import { getConstants } from "@/models/constants.js";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PDFArray, PDFCheckBox, PDFDict, PDFDocument, PDFName, PDFRawStream, PDFTextField, decodePDFRawStream } from "pdf-lib";
-import { SCHEDULE_R_2026_CANDIDATE as candidate } from "@/pdf/mappings/2026/schedule-r-candidate.js";
+import { renderPrivateScheduleR2026Review, SCHEDULE_R_2026_CANDIDATE as candidate } from "@/pdf/mappings/2026/schedule-r-candidate.js";
 import { assertPdfExportAllowed, markReviewPdf, PDF_MAPPING_PACKS, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { assertReviewTemplateBytes, REVIEW_TEMPLATE_PACKS } from "@/pdf/template-registry.js";
 
@@ -16,7 +17,122 @@ type SourceContract = { filename: string; sha256: string; leafWidgets: number;
 const original = JSON.parse(await readFile("tests/fixtures/pdf-2026/schedule-r-source.json", "utf8")) as SourceContract;
 const sourcePath = `forms/blank/2026/${original.filename}`;
 
+// The IRS publishes the worksheet amounts and age; the exact dates and source references are synthetic.
+const jesseSources = {
+  taxYear: 2026,
+  filingStatus: "single",
+  dateOfBirth: "1968-06-12",
+  retirementDate: "2024-07-06",
+  citizenshipOrResidentAlienStatusConfirmed: true,
+  retiredPermanentlyAndTotallyDisabledConfirmed: true,
+  notReachedMandatoryRetirementAgeOnJanuary1Confirmed: true,
+  actualEmployerDisabilityPayInLieuOfWagesBeforeMandatoryRetirementAgeConfirmed: true,
+  permanentlyAndTotallyDisabledDuring2026Confirmed: true,
+  unableToEngageInSubstantialGainfulActivityDuring2026Confirmed: true,
+  priorPhysicianStatement: {
+    sourceYear: 2024,
+    signedDate: "2024-07-08",
+    signedLineBConfirmed: true,
+    obtainedAndRetainedConfirmed: true,
+    sameClaimantConfirmed: true,
+    sourceReference: "PRIVATE-DR-REFERENCE",
+  },
+  incomeWorksheet: {
+    sourceReference: "PRIVATE-DISABILITY-PAY-REFERENCE",
+    taxableDisabilityIncome: "16170",
+  },
+  returnWorksheet: {
+    sourceReference: "PRIVATE-RETURN-WORKSHEET-REFERENCE",
+    sameReturnAndIncomeOwnerConfirmed: true,
+    allApplicableNontaxableBenefitsConfirmed: true,
+    actualCreditLimitWorksheetConfirmed: true,
+    scheduleRLine13aBenefits: "500",
+    scheduleRLine13bBenefits: "0",
+    form1040Line11b: "16270",
+    form1040Line18: "16",
+    schedule3Line1: "0",
+    schedule3Line2: "0",
+    schedule3Line6l: "0",
+  },
+};
+
 describe("Final 2026 schedule-r physical candidate", () => {
+  it("renders a redacted source-bound Box 2 and Part II proof from the published 2026 worksheet", async () => {
+    const bytes = await renderPrivateScheduleR2026Review(jesseSources, await readFile(sourcePath));
+    const saved = (await PDFDocument.load(bytes)).getForm();
+    expect(saved.getCheckBox(candidate.fields.box2).isChecked()).toBe(true);
+    expect(saved.getCheckBox(candidate.fields.priorPhysicianStatement).isChecked()).toBe(true);
+    expect(saved.getCheckBox(candidate.fields.box1).isChecked()).toBe(false);
+    const output = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-I", "-B", "-c", [
+      "from io import BytesIO", "from sys import stdin", "from pypdf import PdfReader", "from json import dumps",
+      "reader = PdfReader(BytesIO(stdin.buffer.read()), strict=True)",
+      "fields = {name: str(field.get('/V', '')) for name, field in reader.get_fields().items()}",
+      "print(dumps({'fields': fields, 'pages': [page.extract_text() for page in reader.pages]}))",
+    ].join("\n")], { input: bytes, encoding: "utf8" });
+    const proof = JSON.parse(output) as { fields: Record<string, string>; pages: string[] };
+    const expected = { line10: "5000", line11: "16170", line12: "5000", line13a: "500", line13b: "0",
+      line13c: "500", line14Agi: "16270", line15: "7500", line16: "8770", line17: "4385", line18: "4885",
+      line19: "115", line20: "17", line21: "16", line22: "16" } as const;
+    for (const [key, value] of Object.entries(expected)) {
+      expect(proof.fields[candidate.fields[key as keyof typeof expected]]).toBe(value);
+    }
+    expect(proof.fields[candidate.fields.name]).toBe("");
+    expect(proof.fields[candidate.fields.ssn]).toBe("");
+    expect(proof.pages).toHaveLength(2);
+    expect(proof.pages.every(page => page.includes(REVIEW_PDF_NOTICE))).toBe(true);
+    for (const privateValue of [jesseSources.dateOfBirth, jesseSources.retirementDate,
+      jesseSources.priorPhysicianStatement.signedDate,
+      jesseSources.priorPhysicianStatement.sourceReference, jesseSources.incomeWorksheet.sourceReference,
+      jesseSources.returnWorksheet.sourceReference]) {
+      expect(output).not.toContain(privateValue);
+    }
+    expect(() => assertPdfExportAllowed(2026, 2026)).toThrow(/No qualified review/);
+    const adjustedSources = {
+      ...jesseSources,
+      priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedDate: jesseSources.retirementDate },
+      returnWorksheet: {
+        ...jesseSources.returnWorksheet,
+        form1040Line18: "23", schedule3Line1: "1", schedule3Line2: "2", schedule3Line6l: "4",
+      },
+    };
+    const adjusted = (await PDFDocument.load(
+      await renderPrivateScheduleR2026Review(adjustedSources, await readFile(sourcePath)),
+    )).getForm();
+    expect(adjusted.getTextField(candidate.fields.line21).getText()).toBe("16");
+    expect(adjusted.getTextField(candidate.fields.line22).getText()).toBe("16");
+  });
+
+  it("holds incompatible Schedule R dates, statement, amounts and final template evidence", async () => {
+    const blank = await readFile(sourcePath);
+    const undatedStatement: Partial<typeof jesseSources.priorPhysicianStatement> = { ...jesseSources.priorPhysicianStatement };
+    delete undatedStatement.signedDate;
+    for (const sources of [
+      { ...jesseSources, priorPhysicianStatement: { ...undatedStatement, sourceYear: 2023 } },
+      { ...jesseSources, taxYear: 2025 },
+      { ...jesseSources, dateOfBirth: "1962-01-01" },
+      { ...jesseSources, retirementDate: "2025-02-29" },
+      { ...jesseSources, retirementDate: "2027-01-01" },
+      { ...jesseSources, retirementDate: "2026-07-06" },
+      { ...jesseSources, permanentlyAndTotallyDisabledDuring2026Confirmed: false },
+      { ...jesseSources, unableToEngageInSubstantialGainfulActivityDuring2026Confirmed: false },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, sourceYear: 2026 } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, sourceYear: 2023, signedDate: "2023-12-31" } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedDate: "2024-07-05" } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedDate: "2025-12-31" } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedDate: "2026-01-01" } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedDate: "2025-02-29" } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedDate: undefined } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, signedLineBConfirmed: false } },
+      { ...jesseSources, priorPhysicianStatement: { ...jesseSources.priorPhysicianStatement, sameClaimantConfirmed: false } },
+      { ...jesseSources, incomeWorksheet: { ...jesseSources.incomeWorksheet, taxableDisabilityIncome: "0" } },
+      { ...jesseSources, returnWorksheet: { ...jesseSources.returnWorksheet, form1040Line11b: "16270.25" } },
+      { ...jesseSources, returnWorksheet: { ...jesseSources.returnWorksheet, form1040Line18: "0" } },
+      { ...jesseSources, returnWorksheet: { ...jesseSources.returnWorksheet, schedule3Line6l: undefined } },
+    ]) {
+      await expect(renderPrivateScheduleR2026Review(sources, blank)).rejects.toThrow(/Schedule R/);
+    }
+    await expect(renderPrivateScheduleR2026Review(jesseSources, blank.subarray(0, -1))).rejects.toThrow(/template/);
+  });
   it("pins the exact source and keeps every export gate closed", async () => {
     const bytes = await readFile(sourcePath);
     expect(createHash("sha256").update(bytes).digest("hex")).toBe(original.sha256);
