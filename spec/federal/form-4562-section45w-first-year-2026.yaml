@@ -1,0 +1,80 @@
+form: "Form 4562"
+fullName: "Private 2026 first-year depreciation of a Section 45W passenger or work vehicle"
+taxYear: 2026
+reviewStatus: "independent-review-pending"
+retrievedAt: "2026-11-27"
+irsReference: "https://www.irs.gov/instructions/i4562"
+notes: |
+  Section 45W(d)(1) and the Form 8936 basis instructions govern the verified
+  per-vehicle reduction used here. For one exclusive qualified-business-use
+  road BEV in the supported Section 45W route, use the original 2026 asset and
+  classify it under Section 280F(d)(5). The sole calendar-year proprietor's
+  complete inventory must establish that only this property was placed in
+  service. The actual asset class and method must be five-year GDS 200%
+  declining balance, with no Section 179 expense, prior use, other basis
+  adjustment, disposition, alternative mileage method, Section 280F(d)(5)(B)
+  exception, qualified nonpersonal use or separate depreciation claim. This
+  private first-year workpaper requires separate qualification for Schedule C
+  and Form 3800 attribution, later years, and final 2026 filing.
+  https://www.irs.gov/instructions/i8936
+  https://www.irs.gov/publications/p946
+  https://uscode.house.gov/us/usc/t26/s45W/
+  https://uscode.house.gov/us/usc/t26/s280F/
+  https://www.irs.gov/pub/irs-drop/rp-26-15.pdf
+  https://www.irs.gov/pub/irs-drop/n-26-11.pdf
+  https://www.irs.gov/pub/irs-dft/f4562--dft.pdf
+lines:
+  - line: "basis-after-section45w"
+    description: "Exact listed-property basis after the verified credit"
+    formula: |
+      Reconcile the exact original vehicle claim, Schedule C activity and
+      asset. Separately bind the classification, service date, actual use,
+      asset inventory and signed contract for depreciation to those same
+      originals. Reduce the original pre-credit basis by the exact prepared
+      Section 45W claim per vehicle, or zero for a verified no-claim position.
+      Hold a proposed direct claim if the contract was not enforceable by the
+      September 30, 2025 acquisition cutoff.
+      Use the confirmed unloaded gross weight of a passenger car or the
+      confirmed GVWR of a truck or van. The Section 280F passenger limit
+      applies at or below 6,000 pounds. An ordinary heavier transportation
+      work vehicle remains listed property without the passenger dollar cap.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::selects the passenger limit from the original applicable weight"
+  - line: "25"
+    description: "First-year allowance allocated to listed property"
+    formula: |
+      A verified class election under Section 168(k)(7) sets bonus to zero.
+      Otherwise for qualified original-use property the regulation's
+      acquisition date is the latest of the signed date, state enforceability
+      date, final cancellation expiry and final contingency satisfaction,
+      including explicit inapplicability for the last two. Bonus is 20% for the
+      supported pre-January 20, 2025 acquisition and 100% on or after that date.
+      Limit it by the applicable first-year Section 280F ceiling. Preserve
+      exact workings and round the reportable deduction to whole dollars.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::uses original contract dates for transitional and permanent bonus depreciation"
+  - line: "26(e)"
+    description: "Regular depreciation basis when bonus does not consume the ceiling"
+    formula: |
+      Subtract the exact applicable special allowance from the credit-adjusted
+      business basis. If the bonus consumes the passenger ceiling, stop at
+      the ceiling for the current year and do not supply a regular basis
+      amount to the private first-year worksheet.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::uses original contract dates for transitional and permanent bonus depreciation"
+  - line: "26(h)"
+    description: "Regular first-year GDS depreciation allocated to listed property"
+    formula: |
+      Apply five-year 200% declining balance to the exact remainder after
+      the otherwise allowable bonus. For the only eligible asset in the
+      annual inventory, the half-year rate is 20% when placed in service
+      January through September. If placed in the final quarter all of the
+      eligible basis is in that quarter and the mid-quarter rate is 5%.
+      Round the reportable amount and limit it by the remaining first-year
+      cap, if any. If the bonus itself is capped, that cap leaves no room for
+      regular depreciation this year.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::uses the verified service quarter and rounds only reportable deductions"
+  - line: "28"
+    description: "Total listed-property first-year depreciation"
+    formula: |
+      Add the allowed bonus and regular amounts once. The allowed amount is
+      a private Form 4562 line 28 workpaper total, eligible for later parent
+      reconciliation. Do not report original identifiers in the audit.
+    testRef: "tests/engine/forms/form-4562-section45w-basis-reconciliation-2026.test.ts::uses the credit-adjusted vehicle basis before first-year depreciation"
