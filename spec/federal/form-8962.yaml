@@ -10,9 +10,10 @@ references:
   - "https://www.ecfr.gov/current/title-26/section-1.36B-2"
   - "https://www.ecfr.gov/current/title-26/section-1.36B-3"
   - "https://www.irs.gov/pub/irs-dft/i8962--dft.pdf"
+  - "https://www.irs.gov/pub/irs-dft/f8962--dft.pdf"
 notes: >-
-  Refreshed 2026-10-25. Final IRS instructions available are for 2025; their
-  physical line identifiers describe the audit, not a qualified 2026 form.
+  Final IRS instructions available are for 2025. The 2026 audit uses the
+  draft Form 8962 reconciliation rows 26 and 27. No 2026 form is qualified.
   Apply enacted 2026 law and indexed percentages without applying the 2027
   noncitizen restrictions or 2028 verification changes early. The October 15,
   2026 proposed regulations are not final law. All monetary operations use
@@ -178,14 +179,14 @@ lines:
     testRef: "tests/engine/forms/form-8962-2026.test.ts::rejects inconsistent duplicate or incomplete source reconciliation"
   - line: "26"
     description: "Net refundable premium tax credit"
-    formula: "max(0,line 24-line 25); route to Schedule 3 line 9."
+    formula: "2025: max(0,line 24-line 25); route net credit to Schedule 3 line 9. For ordinary 2026 draft reconciliation, transfer only a positive difference to Schedule 3 line 9, record zero without transfer for equal amounts, and omit line 26 when advances exceed credit."
     irsRef: "Form 8962 line 26"
-    testRef: "tests/engine/forms/form-8962-2026.test.ts::records distinct excess, repayment limit and repayment lines"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses the draft 2026 reconciliation rows while preserving historical repayment lines"
   - line: "27"
-    description: "Excess advance premium tax credit before limitation"
-    formula: "max(0,line 25-line 24), before any repayment cap."
+    description: "Excess advance premium tax credit"
+    formula: "2025: max(0,line 25-line 24), before any repayment cap. 2026 draft: when line 25 exceeds line 24, record the full excess here and transfer directly to Schedule 2 line 1a. Otherwise omit line 27."
     irsRef: "Form 8962 line 27"
-    testRef: "tests/engine/forms/form-8962-2026.test.ts::records distinct excess, repayment limit and repayment lines"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses the draft 2026 reconciliation rows while preserving historical repayment lines"
   - line: "28"
     description: "Repayment limitation"
     formula: >-
@@ -197,9 +198,9 @@ lines:
     testRef: "tests/engine/forms/form-8962-2026.test.ts::repays all excess 2026 advances without the historical income-based caps"
   - line: "29"
     description: "Excess APTC repayment tax"
-    formula: "min(line27,line28) where a cap applies, otherwise line27; route to Schedule 2 line 1a."
+    formula: "2025: min(line 27,line 28) where a cap applies, otherwise line 27; route to Schedule 2 line 1a. The 2026 draft reserves lines 28 and 29 and emits neither audit row."
     irsRef: "Form 8962 line 29"
-    testRef: "tests/engine/forms/form-8962-2026.test.ts::records distinct excess, repayment limit and repayment lines"
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses the draft 2026 reconciliation rows while preserving historical repayment lines"
   - line: "30-33"
     description: "Allocation of policy amounts"
     formula: "Preserve an explicit allocationRequired fact and reject ordinary calculation pending completed Part IV source allocations and agreements; no inferred 50-percent or zero allocation."

@@ -12,6 +12,7 @@ import { calculateForm8962SharedPolicy, type Form8962AllocationInput, type Form8
 import { calculateForm8962Contribution } from "./form-8962-contribution.js";
 import { calculateForm8962MarriageSources, type Form8962MarriageSourceResult } from "./form-8962-marriage-sources.js";
 import { calculateForm8962MarriageWorksheets, type Form8962MarriageWorksheetResult } from "./form-8962-marriage-worksheets.js";
+import { recordForm8962DraftReconciliation } from "./form-8962-repayment-audit.js";
 
 /** Actual completed household and coverage worksheets; never inferred from AGI alone. */
 export interface Form8962Facts {
@@ -308,10 +309,14 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   const excessAPTCRepayment = repaymentCap === null ? excessAPTC : min(excessAPTC, repaymentCap);
   record("24", "Allowed premium tax credit", ptcAllowed, "Annual column e or sum of monthly column e");
   record("25", "Advance premium tax credit", advancePTCTotal, "Annual column f or sum of monthly column f");
-  record("26", "Net premium tax credit", netPTC, "max(0, line 24 - line 25) -> Schedule 3 line 9");
-  record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
-  if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, worksheetLimit === undefined ? "2025 Table 5; no repayment limitation applies in 2026" : "Actual Pub974 WorksheetX/Y/Z limitation replaces Table5");
-  record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
+  if (year === 2026) {
+    recordForm8962DraftReconciliation(audit, netPTC, excessAPTCRepayment);
+  } else {
+    record("26", "Net premium tax credit", netPTC, "max(0, line 24 - line 25) -> Schedule 3 line 9");
+    record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
+    if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, worksheetLimit === undefined ? "2025 Table 5; no repayment limitation applies in 2026" : "Actual Pub974 WorksheetX/Y/Z limitation replaces Table5");
+    record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
+  }
   const marriageCalculation = marriageSources ? calculateForm8962MarriageWorksheets({
     ...marriageSources, taxYear: year, fplRegion: region, householdIncome: modifiedAGI,
     healthInsuranceRepaymentLimit: worksheetLimit, orderedDeductionInterim: input.orderedDeductionInterim,

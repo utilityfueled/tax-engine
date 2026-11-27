@@ -49,7 +49,7 @@ lines:
     testRef: "tests/pdf/marketplace-reported-repayment-review.test.ts::prints reported repayment and unpaid source cents with private source binding"
   - line: "isolated-2026"
     description: "Current-law final eligibility follows the actual paid deduction"
-    formula: "The isolated indexed2026 calculation still computes final zero credit after the actual paid deduction and rejects any result restoring positive credit. No production readiness or export gate changes."
+    formula: "The isolated indexed2026 calculation still computes final zero credit after the actual paid deduction and rejects any result restoring positive credit. The completed repayment, full-repayment, paid-repayment and actual-cash methods verify unique audit totals on lines24–25 and the year-specific repayment position. A positive 2026 repayment requires one matching line27 with no line26. A recorded zero repayment requires one zero line26 with no Schedule 3 transfer and no line27. Draft lines28–29 remain absent. Preserve 2025 line29 verification and all production readiness and export gates."
     testRef: "tests/engine/federal-marketplace-reported-repayment-2026.test.ts::checks final2026 credit after actual reported payment"
   - line: "workspace"
     description: "Actual workspace export retains the complete source payment proof"

@@ -4,6 +4,7 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, min, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
 import { calculateForm8962Contribution, type Form8962FplRegion } from './form-8962-contribution.js';
+import { recordForm8962DraftReconciliation } from './form-8962-repayment-audit.js';
 
 type Owner = 'primary' | 'spouse';
 interface CoverageMonth { month: number; premium: Decimal; slcsp: Decimal; coverageEligible: boolean }
@@ -209,11 +210,16 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   }
   audit.record('Form 8962', '24', 'Allowed assistance for reconciliation', ptcAllowed, 'Sum monthly columnE');
   audit.record('Form 8962', '25', 'Actual advance payments', advancePTCTotal, 'Sum monthly columnF');
-  audit.record('Form 8962', '26', 'Net premium tax credit', netPTC, electionApplies ? 'Pub974 Step8 requires zero for this election' : 'max(0,24-25)');
-  if (!electionApplies || excessAPTC.gt(0)) {
-    audit.record('Form 8962', '27', 'Excess advance payments', excessAPTC, 'max(0,25-24)');
-    if (repaymentCap !== null && excessAPTC.gt(0)) audit.record('Form 8962', '28', 'Applicable historical repayment cap', repaymentCap, worksheetLimit === undefined ? '2025 joint Table5 using actual joint household income' : 'Actual computed Pub974 X/Y/Z limitation replaces Table5');
-    audit.record('Form 8962', '29', 'Excess advance repayment', excessAPTCRepayment, repaymentCap === null ? `Full excess; no repayment cap for ${input.taxYear}` : 'min(27,28)');
+  if (input.taxYear === 2026) {
+    recordForm8962DraftReconciliation(audit, netPTC, excessAPTCRepayment,
+      electionApplies ? 'Pub974 Step8 requires zero for this election' : undefined);
+  } else {
+    audit.record('Form 8962', '26', 'Net premium tax credit', netPTC, electionApplies ? 'Pub974 Step8 requires zero for this election' : 'max(0,24-25)');
+    if (!electionApplies || excessAPTC.gt(0)) {
+      audit.record('Form 8962', '27', 'Excess advance payments', excessAPTC, 'max(0,25-24)');
+      if (repaymentCap !== null && excessAPTC.gt(0)) audit.record('Form 8962', '28', 'Applicable historical repayment cap', repaymentCap, worksheetLimit === undefined ? '2025 joint Table5 using actual joint household income' : 'Actual computed Pub974 X/Y/Z limitation replaces Table5');
+      audit.record('Form 8962', '29', 'Excess advance repayment', excessAPTCRepayment, repaymentCap === null ? `Full excess; no repayment cap for ${input.taxYear}` : 'min(27,28)');
+    }
   }
   return { electionApplies, ...(reason ? { reason } : {}), families, partV, ordinaryCredit, ordinaryRepayment,
     ordinaryPreMarriageCredit, alternativePreMarriageCredit, months, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment, lines: audit.getLines() };

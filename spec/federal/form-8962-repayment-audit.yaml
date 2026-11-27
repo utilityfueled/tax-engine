@@ -1,0 +1,31 @@
+form: "Form 8962 Repayment Audit"
+fullName: "Premium tax credit reconciliation and final health deduction evidence"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/pub/irs-dft/i8962--dft.pdf#page=19"
+references:
+  - "https://www.irs.gov/pub/irs-dft/f8962--dft.pdf#page=1"
+  - "https://www.irs.gov/pub/irs-pdf/f8962.pdf"
+notes: |
+  The TY2026 form and instructions are draft evidence for audit placement.
+  The projection consumes completed Decimal amounts. Source verification,
+  calculated credit and repayment, and physical filing eligibility stay in
+  their respective calculations and gates.
+lines:
+  - line: "26"
+    description: "Draft net credit or zero reconciliation"
+    formula: "For 2026, a positive ordinary net credit transfers to Schedule 3 line 9. Equal allowed credit and advances record zero without a transfer. The marriage election records zero when alternative credit meets or exceeds advances. A positive excess advance leaves line 26 blank."
+    testRef: "tests/engine/forms/form-8962-2026.test.ts::uses the draft 2026 reconciliation rows while preserving historical repayment lines"
+    testRefs:
+      - "tests/engine/federal-marketplace-reported-repayment-2026.test.ts::checks final2026 credit after actual reported payment"
+  - line: "27"
+    description: "Draft full excess advance repayment"
+    formula: "For 2026, when line 25 exceeds line 24, their difference transfers once from line 27 to Schedule 2 line 1a. Otherwise omit line 27. Draft lines 28 and 29 are reserved."
+    testRef: "tests/engine/federal-marketplace-reported-repayment-2026.test.ts::checks final2026 credit after actual reported payment"
+  - line: "final-health-proof"
+    description: "Completed zero-credit health methods verify year-specific audit evidence"
+    formula: "Require one Form 8962 line 24 at zero and one line 25 matching reported advances. For 2025 require one matching repayment on line 29. For 2026 require one matching positive repayment on line 27 or one zero amount on line 26. Reject duplicates, the opposite reconciliation row, and reserved lines 28 and 29 for 2026. The calling health method verifies its own original sources and completed results."
+    testRef: "tests/engine/federal-marketplace-reported-repayment-2026.test.ts::checks final2026 credit after actual reported payment"
+    testRefs:
+      - "tests/engine/federal-marketplace-actual-cash-2026.test.ts::requires an actual zero final2026 credit after the cash deduction"
+      - "tests/engine/federal-marketplace-full-repayment-2026.test.ts::requires actual final2026 zero credit after the full ordinary deduction"
+      - "tests/engine/federal-marketplace-actual-paid-2026.test.ts::checks actual2026 credit after the actual paid deduction"

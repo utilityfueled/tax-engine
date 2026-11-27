@@ -162,7 +162,8 @@ describe("Form 8962 2026 source-backed reconciliation", () => {
     const lateWithoutClaim = calculateForm8962({ ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation,
       enrolleePremium: "0", coverageEligible: false, zeroReportedPremiumPayment: { paidByUnextendedReturnDueDate: false },
     }] } });
-    expect([value(lateWithoutClaim, "24"), value(lateWithoutClaim, "25"), value(lateWithoutClaim, "29")]).toEqual(["0", "100", "100"]);
+    expect([value(lateWithoutClaim, "24"), value(lateWithoutClaim, "25"), value(lateWithoutClaim, "27")]).toEqual(["0", "100", "100"]);
+    expect(value(lateWithoutClaim, "29")).toBeUndefined();
     for (const unsupported of [
       { ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation, coverageEligible: false }] } },
       { ...actual, facts: { ...actual.facts, monthlyReconciliation: [{ ...reconciliation, incomeBasedSepEnrollment: true }] } },
@@ -233,13 +234,22 @@ describe("Form 8962 2026 source-backed reconciliation", () => {
     expect(historical.repaymentCap?.toString()).toBe("375");
   });
 
-  it("records distinct excess, repayment limit and repayment lines", () => {
+  it("uses the draft 2026 reconciliation rows while preserving historical repayment lines", () => {
     const result = calculateForm8962(fixture({ year: 2025, income: "18000", slcsp: "200", aptc: "500" }));
     expect(value(result, "27")).toBe("3600");
     expect(value(result, "28")).toBe("375");
     expect(value(result, "29")).toBe("375");
     expect(result.lines.find(line => line.line === "29")?.formula).toContain("Schedule 2 line 1a");
-    expect(calculateForm8962(fixture()).lines.find(line => line.line === "26")?.formula).toContain("Schedule 3 line 9");
+
+    const repayment = calculateForm8962(fixture({ income: "18000", slcsp: "200", aptc: "500" }));
+    expect(value(repayment, "27")).toBe("3978");
+    expect(repayment.lines.find(line => line.line === "27")?.formula).toContain("Schedule 2 line 1a");
+    expect(["26", "28", "29"].map(line => value(repayment, line))).toEqual([undefined, undefined, undefined]);
+
+    const credit = calculateForm8962(fixture({ income: "18000", slcsp: "200", aptc: "0" }));
+    expect(value(credit, "26")).toBe("2022");
+    expect(credit.lines.find(line => line.line === "26")?.formula).toContain("Schedule 3 line 9");
+    expect(["27", "28", "29"].map(line => value(credit, line))).toEqual([undefined, undefined, undefined]);
   });
 
   it("preserves ineligible coverage and disallows income-only special enrollment from 2026", () => {

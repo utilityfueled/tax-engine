@@ -2,9 +2,10 @@
 import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { TaxReturnResult, CalculatedLine } from '@/models/outputs.js';
-import { d, sum, roundDollar } from '@/utils/decimal.js';
+import { sum, roundDollar } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { calculateForm7206 } from './form-7206.js';
+import { assertForm8962RepaymentAudit } from './form-8962-repayment-audit.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
 import { calculateMarketplaceCoverageFamilyHealth } from './marketplace-coverage-family-health.js';
 
@@ -97,10 +98,8 @@ export function calculateMarketplaceReportedRepaymentPayment(
     if (!health.deductionToSchedule1.eq(deduction) || !result.schedule1?.seHealthInsurance.eq(deduction)) {
       throw new Error('Reported repayment payment must transfer the actual deduction once.');
     }
-    for (const [number, value] of [['24', d(0)], ['25', reportedAdvances], ['29', reportedAdvances]] as const) {
-      const lines = credit.lines.filter(row => row.form === 'Form 8962' && row.line === number);
-      if (lines.length !== 1 || !lines[0].value.eq(value)) throw new Error('Reported repayment payment disagrees with the final credit audit.');
-    }
+    assertForm8962RepaymentAudit(credit.lines, credit.taxYear, reportedAdvances,
+      'Reported repayment payment disagrees with the final credit audit.');
   }
   const audit = new AuditTrail();
   audit.record('Marketplace Reported Repayment', 'cost', 'Original eligible premium cost', originalEligiblePremiums,

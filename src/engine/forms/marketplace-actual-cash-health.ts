@@ -7,6 +7,7 @@ import { AuditTrail } from '@/utils/audit.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
 import { calculateMarketplaceCoverageFamilyHealth } from './marketplace-coverage-family-health.js';
 import { calculateSharedMarketplaceHealthSources, type SharedMarketplaceHealthInput } from './shared-marketplace-health.js';
+import { assertForm8962RepaymentAudit } from './form-8962-repayment-audit.js';
 
 export interface MarketplaceActualCashMonth {
   planId: string; month: number; taxFamilyPremium: Decimal;
@@ -57,10 +58,8 @@ export function calculateMarketplaceActualCashHealth(input: TaxYearInput, result
     || health.marketplaceHandling !== 'actual-cash-zero-credit' || !credit?.sourceFactsVerified || credit.orderedDeductionInterim
     || credit.taxYear !== input.taxpayer.taxYear || !credit.ptcAllowed.isZero() || !credit.netPTC.isZero()
     || !credit.advancePTCTotal.isZero() || !credit.excessAPTC.isZero() || !credit.excessAPTCRepayment.isZero()) throw new Error('Actual cash health requires zero final credit and no advances after the actual ordinary deduction; a positive credit requires its separate payment method.');
-  for (const number of ['24', '25', '29']) {
-    const rows = credit.lines.filter(row => row.form === 'Form 8962' && row.line === number);
-    if (rows.length !== 1 || !rows[0].value.isZero()) throw new Error('Actual cash health proof requires the unique completed zero-credit audit.');
-  }
+  assertForm8962RepaymentAudit(credit.lines, credit.taxYear, credit.advancePTCTotal,
+    'Actual cash health proof requires the unique completed zero-credit audit.');
   const businesses = health.businesses.map(row => {
     if (!row.earnedIncomeLimit || !row.deduction || !row.eligiblePremiums.isFinite() || row.eligiblePremiums.lt(0)
       || !row.earnedIncomeLimit.isFinite() || row.earnedIncomeLimit.lt(0) || !row.deduction.isFinite() || row.deduction.lt(0)

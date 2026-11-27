@@ -9,6 +9,7 @@ import { calculateScheduleC } from '@/engine/schedules/schedule-c.js';
 import { calculateScheduleF } from '@/engine/schedules/schedule-f.js';
 import { calculateScheduleSE } from '@/engine/schedules/schedule-se.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
+import { assertForm8962RepaymentAudit } from './form-8962-repayment-audit.js';
 import { calculateMarketplaceCoverageFamilyHealth } from './marketplace-coverage-family-health.js';
 import { calculateForm8962SharedPolicy } from './form-8962-shared-policy.js';
 
@@ -134,10 +135,8 @@ export function calculateMarketplaceFullAdvanceRepayment(input: TaxYearInput, re
     || !credit.excessAPTCRepayment.eq(reportedAdvances) || !credit.excessAPTCRepayment.eq(exactSourceAdvances)) throw new Error(bindingOwners
       ? 'Pub974 binding owner earned-income limits with historical advances require the separate capped-repayment coordination method unless every original advance is repaid; partial, capped or source-cent differences remain separate.'
       : 'Full advance repayment requires every original advance repaid; partial, capped or source-cent differences need their separate payment attribution method.');
-  for (const [number, value] of [['24', d(0)], ['25', reportedAdvances], ['29', reportedAdvances]] as const) {
-    const rows = credit.lines.filter(row => row.form === 'Form 8962' && row.line === number);
-    if (rows.length !== 1 || !rows[0].value.eq(value)) throw new Error('Full advance repayment proof does not reconcile the actual final credit audit.');
-  }
+  assertForm8962RepaymentAudit(credit.lines, credit.taxYear, reportedAdvances,
+    'Full advance repayment proof does not reconcile the actual final credit audit.');
   const businesses = health.businesses.map(row => {
     if (!row.earnedIncomeLimit || !row.deduction || !row.eligiblePremiums.isFinite() || row.eligiblePremiums.lt(0)
       || !row.earnedIncomeLimit.isFinite() || row.earnedIncomeLimit.lt(0) || !row.deduction.isFinite() || row.deduction.lt(0)

@@ -8,6 +8,7 @@ import { AuditTrail } from '@/utils/audit.js';
 import { calculateMarketplaceMarriageHealth } from './marketplace-marriage-health.js';
 import { calculateForm7206 } from './form-7206.js';
 import { calculateMarketplaceActualPaidSources } from './marketplace-actual-paid-sources.js';
+import { assertForm8962RepaymentAudit } from './form-8962-repayment-audit.js';
 
 /** Internal canonical reporting adjustment, never an input schema or election. */
 export interface MarketplaceActualPaidAdjustment {
@@ -74,10 +75,8 @@ export function calculateMarketplaceActualPaidRepayment(input: TaxYearInput, res
     }
     deduction = sum(...health.businesses.map(row => roundDollar(row.deduction!)));
     if (!health.deductionToSchedule1.eq(deduction) || !result.schedule1?.seHealthInsurance.eq(deduction)) throw new Error('Actual paid repayment deduction must transfer once.');
-    for (const [number, value] of [['24', d(0)], ['25', reportedAdvances], ['29', reportedAdvances]] as const) {
-      const lines = credit.lines.filter(row => row.form === 'Form 8962' && row.line === number);
-      if (lines.length !== 1 || !lines[0].value.eq(value)) throw new Error('Actual paid repayment requires the unique completed credit audit.');
-    }
+    assertForm8962RepaymentAudit(credit.lines, credit.taxYear, reportedAdvances,
+      'Actual paid repayment requires the unique completed credit audit.');
   }
   const unreportedAdvanceRemainder = Decimal.max(0, sources.exactSourceAdvances.minus(reportedAdvances));
   const reportingExcess = Decimal.max(0, reportedAdvances.minus(sources.exactSourceAdvances));

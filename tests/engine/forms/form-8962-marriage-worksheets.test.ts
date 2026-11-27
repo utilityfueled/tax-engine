@@ -123,8 +123,13 @@ it('identifies the actual year when explaining uncapped advance repayment', () =
     expect(result.repaymentCap).toBeNull();
     expect(result.ptcAllowed.toFixed()).toBe('0');
     expect(result.excessAPTCRepayment.toFixed()).toBe('8423');
-    expect(result.lines.find(row => row.form === 'Form 8962' && row.line === '29')?.formula)
-      .toBe(`Full excess; no repayment cap for ${taxYear}`);
+    const transfers = result.lines.filter(row => row.form === 'Form 8962' && ['26', '27', '28', '29'].includes(row.line));
+    if (taxYear === 2025) {
+      expect(transfers.find(row => row.line === '29')?.formula).toBe('Full excess; no repayment cap for 2025');
+    } else {
+      expect(transfers.map(row => [row.line, row.value.toFixed()])).toEqual([['27', '8423']]);
+      expect(transfers[0]?.formula).toContain('Schedule 2 line 1a');
+    }
   }
   const capped = example(); capped.householdIncome = d('30000'); capped.familySize = 2;
   capped.months.forEach(row => Object.assign(row, { premium: d('1000'), slcsp: d('900'), advance: d('1000') }));
