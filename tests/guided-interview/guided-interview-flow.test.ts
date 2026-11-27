@@ -2618,11 +2618,35 @@ describe("getStandardDeductionAmount", () => {
   it("returns 0 for null filing status", () => {
     expect(getStandardDeductionAmount(null, 2025)).toBe(0);
   });
+
+  it("reads the 2026 base standard deduction for each filing status", () => {
+    expect(getStandardDeductionAmount("single", 2026)).toBe(16100);
+    expect(getStandardDeductionAmount("mfj", 2026)).toBe(32200);
+    expect(getStandardDeductionAmount("mfs", 2026)).toBe(16100);
+    expect(getStandardDeductionAmount("hoh", 2026)).toBe(24150);
+    expect(getStandardDeductionAmount("qss", 2026)).toBe(32200);
+  });
+
+  it("leaves the standard deduction unknown for a missing or unsupported year or status", () => {
+    expect(getStandardDeductionAmount(null, 2026)).toBe(0);
+    expect(getStandardDeductionAmount("single", null)).toBe(0);
+    expect(getStandardDeductionAmount("single", 2027)).toBe(0);
+  });
 });
 
 // ── Deduction comparison ────────────────────────────────────────────────────
 
 describe("computeDeductionComparison", () => {
+  it("compares exact entered expenses with the 2026 standard base", () => {
+    const input = { ...emptyDeductionData, method: "itemized" as const, mortgageInterest: "16100.01" };
+    expect(computeDeductionComparison("single", input, 2026)).toEqual({
+      standardAmount: 16100, itemizedTotal: "16100.01", recommendation: "itemized", savings: "0.01",
+    });
+    expect(computeDeductionComparison("single", { ...input, mortgageInterest: "16099.99" }, 2026)).toEqual({
+      standardAmount: 16100, itemizedTotal: "16099.99", recommendation: "standard", savings: "0.01",
+    });
+  });
+
   it("recommends standard when itemized total is below standard deduction", () => {
     const result = computeDeductionComparison("single", {
       ...emptyDeductionData,

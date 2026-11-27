@@ -69,6 +69,8 @@ import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanDat
  */
 
 import Decimal from "decimal.js";
+import { TAX_CONSTANTS } from "@/models/constants";
+import { FEDERAL_2026_INDEXED } from "@/models/federal-2026-indexed";
 import { sumSourceMoney } from "@/utils/sum-source-money";
 import { parseGuidedCurrency, hasGuidedCurrency, parseGuidedDisplayAmount } from "./guided-currency";
 import { clearGuidedDependentAnnualFacts, invalidateEditedDependentOriginals, personalFactErrors } from "./guided-taxpayer-facts";
@@ -283,23 +285,18 @@ export function isSegmentationComplete(answers: SegmentationAnswers): boolean {
 
 // ── Standard deduction lookup ─────────────────────────────────────────────
 
-/**
- * 2025 federal standard deduction amounts by filing status.
- * These mirror TAX_CONSTANTS[2025].standardDeduction from the engine constants
- * but are duplicated here to keep the guided interview flow module free of
- * engine/Decimal dependencies.
- */
-const standardDeductionAmounts: Record<FilingStatus, number> = {
-  single: 15750,
-  mfj: 31500,
-  mfs: 15750,
-  hoh: 23625,
-  qss: 31500,
-};
+const deductionFilingStatuses = {
+  single: "single",
+  mfj: "married_filing_jointly",
+  mfs: "married_filing_separately",
+  hoh: "head_of_household",
+  qss: "qualifying_surviving_spouse",
+} as const;
 
 export function getStandardDeductionAmount(filingStatus: FilingStatus | null, taxYear?: number | null): number {
-  if (!filingStatus || taxYear !== 2025) return 0;
-  return standardDeductionAmounts[filingStatus] ?? 0;
+  if (!filingStatus || !Object.hasOwn(deductionFilingStatuses, filingStatus)) return 0;
+  const rules = taxYear === 2026 ? FEDERAL_2026_INDEXED : taxYear === 2025 ? TAX_CONSTANTS[2025] : undefined;
+  return rules?.standardDeduction[deductionFilingStatuses[filingStatus]].toNumber() ?? 0;
 }
 
 export interface DeductionComparison {
@@ -321,9 +318,8 @@ export function computeDeductionComparison(
   if(data.mortgageEntries?.some(entry=>entry.insuranceAllocationMethod==='current-original-prepaid')) {
     if(taxYear!==2026 || !filingStatus)throw new Error('Confirm the actual 2026 context and original premium sources before comparison.');
     const sources=buildGuidedMortgageInputs(data,taxYear,filingStatus);
-    const status={single:'single',mfj:'married_filing_jointly',mfs:'married_filing_separately',hoh:'head_of_household',qss:'qualifying_surviving_spouse'} as const;
     for(const entry of data.mortgageEntries)if(entry.insuranceAllocationMethod==='current-original-prepaid') {
-      const allocated=calculateMortgageInsurancePrepaid({...sources,form1099Misc:sources.form1099Misc??[],taxpayer:{taxYear,filingStatus:status[filingStatus]}},`${entry.lender.trim()}:${entry.accountReference?.trim()??''}`);
+      const allocated=calculateMortgageInsurancePrepaid({...sources,form1099Misc:sources.form1099Misc??[],taxpayer:{taxYear,filingStatus:deductionFilingStatuses[filingStatus]}},`${entry.lender.trim()}:${entry.accountReference?.trim()??''}`);
       originalAllocations.set(entry,allocated.allocatedPremium.toFixed());
     }
   }
@@ -343,7 +339,7 @@ export function computeDeductionComparison(
   ];
 
   const itemizedTotal = sumSourceMoney(...fields.map(parseGuidedCurrency));
-  const diff = sumSourceMoney(itemizedTotal, new Decimal(-standardAmount));
+  const diff = sumSourceMoney(itemizedTotal, new Decimal(standardAmount).negated());
   return {
     standardAmount,
     itemizedTotal: itemizedTotal.toFixed(),

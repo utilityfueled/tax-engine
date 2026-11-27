@@ -70,7 +70,7 @@ export function SectionDeductions({
 
         {standardAmount > 0 && current.method !== "nonitemized" && (
           <div className="guided-deduction-standard-callout">
-            Base standard deduction before age, blindness or dependent adjustments: <strong>{formatUsd(standardAmount)}</strong> based on your filing status.
+            Base standard deduction is <strong>{formatUsd(standardAmount)}</strong> before age, blindness, dependency and other eligibility adjustments.
           </div>
         )}
 
@@ -88,7 +88,7 @@ export function SectionDeductions({
                 className="guided-option-radio"
               />
               <span className="guided-option-label">
-                Standard deduction{standardAmount > 0 ? ` (${formatUsd(standardAmount)})` : ""}
+                Standard deduction
               </span>
               <span className="guided-option-description">
                 The IRS sets a flat amount based on your filing status. No receipts needed.
@@ -213,7 +213,7 @@ export function SectionDeductions({
                   </div>
                   {standardAmount > 0 && (
                     <div className="guided-ticker-item">
-                      <span className="guided-ticker-label">Standard Deduction</span>
+                      <span className="guided-ticker-label">Base standard deduction</span>
                       <strong className="guided-ticker-value">
                         {formatUsd(standardAmount)}
                       </strong>

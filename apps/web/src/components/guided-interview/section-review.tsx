@@ -213,8 +213,12 @@ function DeductionsSummary({ data, filingStatus, taxYear }: { data: DeductionDat
       <div className="guided-review-card">
         <div className="guided-review-row">
           <span className="guided-review-label">Method</span>
-          <span className="guided-review-value">{current.method === "nonitemized" ? "No standard or itemized deduction; current charity reviewed separately" : `Standard deduction${stdAmount > 0 ? ` (${formatCurrency(stdAmount)})` : ""}`}</span>
+          <span className="guided-review-value">{current.method === "nonitemized" ? "No standard or itemized deduction; current charity reviewed separately" : "Standard deduction"}</span>
         </div>
+        {current.method === "standard" && stdAmount > 0 && <div className="guided-review-row">
+          <span className="guided-review-label">Base standard deduction</span>
+          <span className="guided-review-value">{formatCurrency(stdAmount)}</span>
+        </div>}
         {current.gamblingWinnings?.trim() && <div className="guided-review-row"><span className="guided-review-label">Gambling winnings (income)</span><span className="guided-review-value">{formatCurrency(current.gamblingWinnings)}</span></div>}
       </div>
     );

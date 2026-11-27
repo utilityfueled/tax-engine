@@ -27,6 +27,7 @@ it('collects a nonitemized election without displaying a standard deduction enti
     await act(async () => root.render(<SectionReview state={state} preview={null} onJumpToSection={() => {}} />));
     expect(element.textContent).toContain('No standard or itemized deduction; current charity reviewed separately');
     expect(element.textContent).not.toContain('Standard deduction ($');
+    expect(element.textContent).not.toContain('Base standard deduction');
     expect(element.textContent).not.toContain('Itemized (Schedule A)');
     await act(async () => root.render(<SectionDeductions data={emptyDeductionData} filingStatus="mfs" taxYear={2025} onDataChange={() => {}} />));
     expect(element.querySelector('input[value="nonitemized"]')).toBeNull();

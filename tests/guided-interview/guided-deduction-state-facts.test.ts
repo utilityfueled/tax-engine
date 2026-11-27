@@ -25,6 +25,21 @@ function illinoisReturn(taxYear: number, draft = startInterview({ filingStatus: 
 }
 
 describe("classified deduction and state facts", () => {
+  it("labels the 2026 lookup as a base amount in deductions and review", () => {
+    const start = startInterview({ filingStatus: "mfs", incomeTypes: ["w2-wages"], lifeEvents: [], stateCode: "IL" }, 2026);
+    const data = { ...emptyDeductionData, method: "standard" as const };
+    const state = updateSectionData(start, "deductions", data);
+    const deductions = renderToStaticMarkup(createElement(SectionDeductions, {
+      data, filingStatus: "mfs", taxYear: 2026, onDataChange: () => {},
+    }));
+    const review = renderToStaticMarkup(createElement(SectionReview, {
+      state, preview: null, onJumpToSection: () => {},
+    }));
+    expect(deductions).toContain("Base standard deduction is <strong>$16,100</strong>");
+    expect(review).toContain("Standard deduction");
+    expect(review).toMatch(/Base standard deduction[^<]*<\/span><span[^>]*>\$16,100/u);
+  });
+
   it("holds a retained estimate instead of crediting the wrong generic state return year", () => {
     const payment = { state: "IL", date: "2026-09-15", amount: "1000" };
     const prior = updateSectionData(illinoisReturn(2026), "state-return", { ...emptyStateReturnData, stateEstimatedPayments: [payment] });
