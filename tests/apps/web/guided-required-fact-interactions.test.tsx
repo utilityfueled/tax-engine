@@ -200,6 +200,36 @@ describe("required fact interaction boundaries", () => {
     await click("Remove vehicle 1");
     expect(buildVehicleCreditInput(latest, 2026, "mfj")).toBeUndefined();
   });
+  it("keeps the 2026 commercial vehicle originals separate from personal credit fields", async () => {
+    let latest: VehicleCreditData = { entries: [] };
+    function Harness({ taxYear }: { taxYear: number }) {
+      const [data, setData] = useState(latest);
+      return <VehicleSourceDetails data={data} taxYear={taxYear} filingStatus="single" onChange={(next) => { latest = next; setData(next); }} />;
+    }
+    await act(async () => root.render(<Harness taxYear={2026} />));
+    await click("Add business-only commercial vehicle");
+    expect(control("Commercial vehicle identification number (VIN)").value).toBe("");
+    await change("Commercial vehicle identification number (VIN)", "1M8GDM9AXKP042788");
+    await change("Commercial vehicle written contract date", "2025-09-29");
+    await change("Commercial vehicle written contract record", "Signed order A");
+    await change("Commercial vehicle payment date", "2025-09-30");
+    await change("Commercial vehicle payment record", "Deposit receipt B");
+    await change("Commercial vehicle possession date", "2026-01-02");
+    await change("Commercial vehicle possession record", "Delivery receipt C");
+    expect(latest).toEqual({ entries: [], commercialOriginal: {
+      vin: "1M8GDM9AXKP042788", bindingContractDate: "2025-09-29", bindingContractReference: "Signed order A",
+      paymentDate: "2025-09-30", paymentReference: "Deposit receipt B", datePlacedInService: "2026-01-02", placedInServiceReference: "Delivery receipt C",
+    } });
+    expect(container.textContent).toMatch(/Schedule C.*depreciation.*credit/i);
+    expect(container.textContent).toMatch(/For personal clean vehicle credits, use the actual accepted seller report and purchase records and reconcile any transfer election/i);
+    expect(container.textContent).not.toMatch(/Vehicle credit MAGI worksheet/i);
+    await act(async () => root.render(<Harness taxYear={2025} />));
+    expect(container.textContent).toMatch(/belong to 2026/i);
+    expect(container.textContent).not.toMatch(/Commercial vehicle possession record/i);
+    await click("Remove business-only commercial vehicle");
+    expect(latest.commercialOriginal).toBeUndefined();
+    expect(container.textContent).not.toMatch(/Add business-only commercial vehicle/i);
+  });
   it("records child credit identity as unknown false and true without guessing from an SSN", async () => {
     let latest: PersonalInfoData = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: null, tinIssuedByDueDate: null, childTaxCredit: { nonTaxableCombatPayElection: "0.20" }, dependentCount: "1", dependents: [{ ...completeDependent, ctcSsnEligible: null }] };
     function Harness() { const [data, setData] = useState(latest); return <SectionPersonalInfo data={data} filingStatus="mfj" onDataChange={(next) => { latest = next; setData(next); }} />; }

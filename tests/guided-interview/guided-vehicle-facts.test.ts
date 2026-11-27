@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildVehicleCreditInput, vehicleFactErrors, type VehicleCreditData, type VehicleEntryData } from "@/lib/guided-vehicle-facts";
 import { Form8936Schema } from "../../src/models/inputs";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData } from "@/lib/guided-interview-flow";
+import { emptyCreditsData, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { startCompleteInterview } from "./complete-facts";
 
 const actualVehicle: VehicleEntryData = {
@@ -15,6 +15,36 @@ const actualVehicle: VehicleEntryData = {
 function actual(): VehicleCreditData { return { entries: [{ ...actualVehicle }], agiAdjustmentsConfirmed: true, foreignEarnedIncomeExclusion: "0", foreignHousingDeduction: "0", possessionIncomeExclusion: "0" }; }
 
 describe("guided actual clean vehicle records", () => {
+  it("preserves commercial vehicle originals and holds calculation through a saved 2026 draft", () => {
+    const state = { ...startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: "OH" }), taxYear: 2026 };
+    const commercialOriginal = {
+      vin: " 1M8GDM9AXKP042788 ", bindingContractDate: "2025-09-29", bindingContractReference: "Signed commercial order",
+      paymentDate: "2025-09-30", paymentReference: "Deposit receipt", datePlacedInService: "2026-01-02", placedInServiceReference: "Actual delivery record",
+    };
+    const vehicles = { ...actual(), commercialOriginal };
+    const draft = updateSectionData(state, "credits", { ...emptyCreditsData, vehicles });
+    const values = new Map<string, string>();
+    const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } } as Storage;
+    expect(saveGuidedFlowState(storage, "commercial-vehicle", draft)).toBe(true);
+    const reopened = loadGuidedFlowState(storage, "commercial-vehicle");
+    if (!reopened) throw new Error("Expected the commercial vehicle draft to reopen");
+    expect(reopened.sectionData.credits?.vehicles).toEqual(vehicles);
+    const validation = validateSection(reopened, "credits");
+    expect(validation).toMatchObject({ allowSkip: false, fieldErrors: { commercialVehicleOriginal: expect.stringMatching(/Schedule C.*depreciation.*credit/i) } });
+    expect(buildTaxInputFromGuidedData(reopened)).toBeNull();
+    expect(() => buildVehicleCreditInput({ entries: [], commercialOriginal }, 2026, "single")).toThrow(/Schedule C.*depreciation.*credit/i);
+    expect(vehicleFactErrors({ ...vehicles, commercialOriginal: {} }, 2026, "single").commercialVehicleOriginal).toMatch(/actual commercial vehicle VIN/i);
+    expect(vehicleFactErrors({ ...vehicles, commercialOriginal: { ...commercialOriginal, vin: actualVehicle.vin?.toLowerCase() } }, 2026, "single").commercialVehicleOriginal).toMatch(/also appears in a personal credit entry/i);
+    expect(vehicleFactErrors({ ...vehicles, commercialOriginal: { ...commercialOriginal, paymentDate: "2026-01-03" } }, 2026, "single").commercialVehicleOriginal).toMatch(/on or before possession/i);
+    expect(vehicleFactErrors({ ...vehicles, commercialOriginal: { ...commercialOriginal, placedInServiceReference: "" } }, 2026, "single").commercialVehicleOriginal).toMatch(/identify the original/i);
+    const priorYear = setInterviewTaxYear(reopened, 2025);
+    expect(priorYear.sectionData.credits?.vehicles).toEqual(vehicles);
+    expect(validateSection(priorYear, "credits").fieldErrors.commercialVehicleOriginal).toMatch(/belong to 2026/i);
+    const removed = updateSectionData(reopened, "credits", { ...emptyCreditsData, vehicles: actual() });
+    expect(validateSection(removed, "credits").status).toBe("complete");
+    expect(buildTaxInputFromGuidedData(removed)?.form8936?.newCleanVehicles[0]?.vin).toBe(actualVehicle.vin);
+  });
+
   it("requires individual seller report and actual transition facts", () => {
     const data = actual();
     expect(vehicleFactErrors(data, 2026, "single")).toEqual({});

@@ -1,5 +1,7 @@
 import type { FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import type { CommercialCleanVehicle2026Source } from "@/models/inputs";
+import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
 
 export interface VehicleEntryData {
   kind?: "new" | "used" | "";
@@ -32,6 +34,8 @@ export interface VehicleEntryData {
 
 export interface VehicleCreditData {
   entries: VehicleEntryData[];
+  commercialOriginal?: Partial<Pick<CommercialCleanVehicle2026Source,
+    "vin" | "bindingContractDate" | "bindingContractReference" | "paymentDate" | "paymentReference" | "datePlacedInService" | "placedInServiceReference">>;
   agiAdjustmentsConfirmed?: boolean | null;
   foreignEarnedIncomeExclusion?: string;
   foreignHousingDeduction?: string;
@@ -61,8 +65,33 @@ function actualDate(value: string | undefined): boolean {
 }
 function actualStatus(value: FilingStatus | "" | undefined): value is FilingStatus { return !!value && value in filingStatusMap; }
 
+export function commercialVehicleOriginalError(data: VehicleCreditData | undefined, taxYear?: number | null): string | undefined {
+  const original = data?.commercialOriginal;
+  if (original === undefined) return undefined;
+  if (taxYear !== 2026) return "These saved commercial vehicle records belong to 2026. Switch to 2026 to review them or remove the entry.";
+
+  const { vin: enteredVin, bindingContractDate = "", paymentDate = "", datePlacedInService = "" } = original ?? {};
+  const vin = typeof enteredVin === "string" ? enteredVin.trim().toUpperCase() : "";
+  if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return "Enter the actual commercial vehicle VIN.";
+  if (data?.entries.some(entry => entry.vin?.trim().toUpperCase() === vin)) {
+    return "The commercial vehicle VIN also appears in a personal credit entry. Reconcile the vehicle entries.";
+  }
+  if (!isActualDate(datePlacedInService) || !datePlacedInService.startsWith("2026-") || datePlacedInService > currentLocalCivilDate()) {
+    return "Enter the actual 2026 date you took possession, on or before today.";
+  }
+  if (!isActualDate(bindingContractDate) || !isActualDate(paymentDate) || bindingContractDate > datePlacedInService || paymentDate > datePlacedInService) {
+    return "Enter the actual written contract and payment dates, both on or before possession.";
+  }
+  if (![original.bindingContractReference, original.paymentReference, original.placedInServiceReference].every(value => typeof value === "string" && value.trim())) {
+    return "Identify the original written contract, payment and possession records.";
+  }
+  return "Commercial vehicle calculation is on hold until the Schedule C, depreciation and current credit records are linked to these originals.";
+}
+
 export function vehicleFactErrors(data: VehicleCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null): Record<string, string> {
   const errors: Record<string, string> = {};
+  const commercialError = commercialVehicleOriginalError(data, taxYear);
+  if (commercialError) errors.commercialVehicleOriginal = commercialError;
   if (!data?.entries.length) return errors;
   if (data.agiAdjustmentsConfirmed !== true) errors.vehicleMagi = "Confirm the actual current-year Form 8936 MAGI adjustments";
   for (const field of ["foreignEarnedIncomeExclusion", "foreignHousingDeduction", "possessionIncomeExclusion"] as const) {
@@ -109,9 +138,9 @@ export function vehicleFactErrors(data: VehicleCreditData | undefined, taxYear?:
 }
 
 export function buildVehicleCreditInput(data: VehicleCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null) {
-  if (!data?.entries.length) return undefined;
   const errors = vehicleFactErrors(data, taxYear, status);
   if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
+  if (!data?.entries.length) return undefined;
   const common = (entry: VehicleEntryData) => ({
     owner: entry.owner as "primary" | "spouse", vin: entry.vin?.trim().toUpperCase(),
     dateAcquired: entry.dateAcquired as string, datePlacedInService: entry.datePlacedInService,

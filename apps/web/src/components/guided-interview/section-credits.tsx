@@ -176,7 +176,7 @@ export function SectionCredits({
           <PersonalEvChargerDetails data={current.personalEvCharger} taxYear={taxYear} filingStatus={filingStatus}
             onChange={personalEvCharger => onDataChange({ ...current, personalEvCharger })} />
           <AdoptionSourceDetails data={current.adoption} onChange={(next) => onDataChange({ ...current, adoption: next })} />
-          <VehicleSourceDetails data={current.vehicles} filingStatus={filingStatus} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
+          <VehicleSourceDetails data={current.vehicles} taxYear={taxYear} filingStatus={filingStatus} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
         </div>
       </div>
     </RetroShell>

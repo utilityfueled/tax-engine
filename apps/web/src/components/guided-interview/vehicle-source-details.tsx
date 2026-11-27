@@ -1,7 +1,7 @@
 "use client";
 
 import { filingStatusOptions, type FilingStatus } from "@/lib/guided-interview-flow";
-import type { VehicleCreditData, VehicleEntryData } from "@/lib/guided-vehicle-facts";
+import { commercialVehicleOriginalError, type VehicleCreditData, type VehicleEntryData } from "@/lib/guided-vehicle-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 
@@ -9,12 +9,14 @@ function FilingStatusFact({ label, value, onChange }: { label: string; value: Fi
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ""} onChange={(event) => onChange(event.target.value as FilingStatus | "")}><option value="">Choose the actual prior-year status</option>{filingStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
 }
 
-export function VehicleSourceDetails({ data, filingStatus, onChange }: { data: VehicleCreditData | undefined; filingStatus?: FilingStatus | null; onChange: (data: VehicleCreditData) => void }) {
+export function VehicleSourceDetails({ data, taxYear, filingStatus, onChange }: { data: VehicleCreditData | undefined; taxYear?: number | null; filingStatus?: FilingStatus | null; onChange: (data: VehicleCreditData) => void }) {
   const current = data ?? { entries: [] };
   const update = (values: Partial<VehicleCreditData>) => onChange({ ...current, ...values });
+  const commercial = current.commercialOriginal;
+  const updateCommercial = (values: NonNullable<VehicleCreditData["commercialOriginal"]>) => update({ commercialOriginal: { ...commercial, ...values } });
   return <div className="guided-w2-card" style={{ padding: "12px" }}>
     <h3 className="guided-w2-card-title">Clean Vehicle Credits (Form 8936)</h3>
-    <p className="guided-hint">Use the actual accepted seller report and purchase records. A binding written contract and payment by September 30, 2025 may qualify a vehicle placed in service later. Transfer elections must still be reconciled on the return. <a href="https://www.irs.gov/instructions/i8936" target="_blank" rel="noreferrer">Review the IRS eligibility requirements.</a></p>
+    <p className="guided-hint">For personal clean vehicle credits, use the actual accepted seller report and purchase records and reconcile any transfer election on the return. A binding written contract and payment by September 30, 2025 may qualify a vehicle placed in service later. <a href="https://www.irs.gov/instructions/i8936" target="_blank" rel="noreferrer">Review the IRS eligibility requirements.</a></p>
     {current.entries.map((entry, index) => {
       const change = (values: Partial<VehicleEntryData>) => update({ entries: current.entries.map((item, itemIndex) => itemIndex === index ? { ...item, ...values } : item) });
       return <fieldset className="guided-fieldset" key={index}><legend>Vehicle {index + 1}</legend>
@@ -60,5 +62,21 @@ export function VehicleSourceDetails({ data, filingStatus, onChange }: { data: V
         <BooleanFact label="Are all prior-year vehicle MAGI adjustments confirmed from actual records?" value={current.priorYearAgiAdjustmentsConfirmed} onChange={(value) => update({ priorYearAgiAdjustmentsConfirmed: value })} />
       </>}
     </fieldset>}
+    {commercial !== undefined ? <fieldset className="guided-fieldset">
+      <legend>2026 business-only commercial vehicle (§45W)</legend>
+      {taxYear === 2026 && <>
+        <TextFact label="Commercial vehicle identification number (VIN)" value={commercial?.vin ?? ""} onChange={(vin) => updateCommercial({ vin })} />
+        {([
+          ["bindingContractDate", "bindingContractReference", "written contract"],
+          ["paymentDate", "paymentReference", "payment"],
+          ["datePlacedInService", "placedInServiceReference", "possession"],
+        ] as const).map(([date, reference, label]) => <div key={date}>
+          <TextFact label={`Commercial vehicle ${label} date`} type="date" value={commercial?.[date] ?? ""} onChange={(value) => updateCommercial({ [date]: value })} />
+          <TextFact label={`Commercial vehicle ${label} record`} value={commercial?.[reference] ?? ""} onChange={(value) => updateCommercial({ [reference]: value })} />
+        </div>)}
+      </>}
+      <p className="guided-hint">{commercialVehicleOriginalError(current, taxYear)}</p>
+      <button type="button" className="utility-button" onClick={() => update({ commercialOriginal: undefined })}>Remove business-only commercial vehicle</button>
+    </fieldset> : taxYear === 2026 && <button type="button" className="utility-button" onClick={() => update({ commercialOriginal: {} })}>Add business-only commercial vehicle</button>}
   </div>;
 }
