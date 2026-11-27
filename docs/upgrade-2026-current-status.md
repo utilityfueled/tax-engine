@@ -13,8 +13,8 @@ Use the linked progress sections when investigating individual packages.
   confirmed Ohio school header preview. Both school adapters and the
   independent Schedule A path still run. All 128 focused tests passed.
   The two isolated fixture medians fell about 6%, with Linux browser
-  qualification still open. Exact local unit and coverage each passed
-  31,130 tests at 88.62% branch coverage. Local Chromium is running.
+  qualification still open. All 11 exact local checks passed, including
+  31,130 unit tests, 88.62% branch coverage and 654 Chromium cases.
   [Ohio preview evidence](upgrade-2026-progress.md#november-27-confirmed-ohio-school-header-preview).
 
 - `1808a5a6b` binds the isolated 2026 Form 8919 review PDF to the
@@ -70,7 +70,7 @@ Use the linked progress sections when investigating individual packages.
   inspection timeouts. The strict gates remain open.
   [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
   [AMD64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45931694869) ·
-  [Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
+  [Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45946100698) ·
   [Rehearsal evidence](upgrade-2026-progress.md#november-26-self-host-migration-authentication).
 
 - The November 27 source check found no final 2026 release for the

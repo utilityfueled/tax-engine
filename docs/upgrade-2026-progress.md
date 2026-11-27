@@ -16,9 +16,14 @@ focused tests, all 15 scoped spec references, web type checking and scoped
 lint passed after independent review.
 
 The exact archive passed unit and coverage with 31,130 tests each,
-81 existing skips and 88.62% branch coverage. Static checks, both builds
-and the offline AI artifact check passed. The managed Chromium run is
-underway with the 15 verified public sample files.
+81 existing skips, 88.62% branch coverage and 10,209 referenced spec
+lines. Static checks, both builds and the offline AI artifact check passed.
+Managed Chromium finished all nine windows with 654 passes, five existing
+skips and confirmed cleanup using the 15 verified public sample files.
+All 11 required local commands passed. The superseded,
+unassigned ARM64 run `45938095409` was cancelled so the current ARM64
+run could enter the runner queue. The current ARM64 and AMD64 jobs were
+still queued after local verification completed.
 
 In an alternating local comparison on Node 26.13.1, the two median
 fixture durations fell from 34.708 to 32.705 ms and from 34.006 to
@@ -187,12 +192,12 @@ expected dump stage and left zero schemas. The older AMD64 and ARM64
 runs both failed at `create-schema`. The ARM64 fix run passed native
 archive import and isolated Compose upgrade and recovery. The strict
 browser stage finished with 645 passes, five existing skips and nine
-deadline failures across all nine windows. Cleanup passed. The current ARM64 run uses main
-`969126595`, whose application files match `a6111984c`.
+deadline failures across all nine windows. Cleanup passed. The later ARM64
+attempt for `a6111984c` was superseded before runner assignment.
 [Old AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
 [Old ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965) ·
 [Recovery fix ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
-[Current ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
+[Superseded ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45938095409) ·
 [Current AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45936627770).
 
 The nine failures spanned Ohio business, resident credit and reciprocity,
