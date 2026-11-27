@@ -1,10 +1,11 @@
-// Spec: spec/federal/guided-input.yaml, vehicle-source-records
+// Spec: spec/federal/guided-input.yaml, vehicle-source-records and commercial-vehicle-schedule-c-link-2026
 import { describe, expect, it } from "vitest";
 import { buildVehicleCreditInput, vehicleFactErrors, type VehicleCreditData, type VehicleEntryData } from "@/lib/guided-vehicle-facts";
+import { guidedCommercialScheduleCContext, reviewCommercialScheduleCLink } from "@/lib/guided-commercial-vehicle-schedule-c";
 import { Form8936Schema } from "../../src/models/inputs";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { emptyCreditsData, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
-import { startCompleteInterview } from "./complete-facts";
+import { emptyCreditsData, loadGuidedFlowState, saveGuidedFlowState, setInterviewTaxYear, updateSectionData, validateSection, type SelfEmploymentSectionData } from "@/lib/guided-interview-flow";
+import { completeBusinessSection, startCompleteInterview } from "./complete-facts";
 
 const actualVehicle: VehicleEntryData = {
   kind: "new", owner: "primary", vin: "1HGCM82633A004352", dateAcquired: "2025-09-30", datePlacedInService: "2026-01-02", bindingContractDate: "2025-09-29", paymentDate: "2025-09-30",
@@ -15,6 +16,83 @@ const actualVehicle: VehicleEntryData = {
 function actual(): VehicleCreditData { return { entries: [{ ...actualVehicle }], agiAdjustmentsConfirmed: true, foreignEarnedIncomeExclusion: "0", foreignHousingDeduction: "0", possessionIncomeExclusion: "0" }; }
 
 describe("guided actual clean vehicle records", () => {
+  it("rechecks the commercial Schedule C link when an original identity or exact cash amount changes", () => {
+    let state = { ...startCompleteInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: "OH" }), taxYear: 2026 };
+    state = { ...updateSectionData(state, "personal-info", { ...state.sectionData["personal-info"], spouse: undefined }), taxYear: 2026 };
+    const ownerName = `${state.sectionData["personal-info"]?.firstName} ${state.sectionData["personal-info"]?.lastName}`;
+    const business: SelfEmploymentSectionData = { ...completeBusinessSection, manualGrossReceipts: "44500.25", expenses: { ...completeBusinessSection.expenses, advertising: "125.25", officeExpense: "40.25", supplies: "19.50" },
+      businessFacts: { ...completeBusinessSection.businessFacts, scheduleCSourceFacts: { sourceTaxYear: 2026, sourceFactsConfirmed: true, accountHolder: "primary", ownerName,
+        sourceReference: "Actual original Schedule C A", businessNameStatus: "blank_original", businessEINStatus: "not_issued" } } };
+    const commercialOriginal = {
+      vin: "1M8GDM9AXKP042788", bindingContractDate: "2025-09-29", bindingContractReference: "Signed commercial order",
+      paymentDate: "2025-09-30", paymentReference: "Deposit receipt", datePlacedInService: "2026-01-02", placedInServiceReference: "Actual delivery record",
+      scheduleCLink: { taxpayerReference: "Actual filer record A", ownerRecordReference: "Actual named delivery record owner", activityReference: "Actual activity ledger A",
+        ledgerRecordReference: "Original 2026 annual cash ledger A", sameOwnerAndVehicleConfirmed: true, scopeAndAmountsConfirmed: true },
+    };
+    state = { ...updateSectionData(state, "income-self-employment", business), taxYear: 2026 };
+    state = { ...updateSectionData(state, "income-self-employment", business), taxYear: 2026 };
+    state = { ...updateSectionData(state, "credits", { ...emptyCreditsData, vehicles: { entries: [], commercialOriginal } }), taxYear: 2026 };
+    expect(guidedCommercialScheduleCContext(state)).toMatchObject({ taxYear: 2026, filingStatus: "single",
+      personal: { spouse: undefined }, business: { businessFacts: { accountingMethod: "cash", accountHolder: "primary", allInvestmentAtRisk: true,
+        singleBusinessConfirmed: true, incomeReconciled: true, expensesReconciled: true,
+        scheduleCSourceFacts: { accountHolder: "primary", sourceTaxYear: 2026, sourceFactsConfirmed: true } } } });
+    expect(validateSection(state, "credits").fieldErrors.commercialVehicleOriginal).toMatch(/confirm.*Schedule C.*cash ledger/i);
+    const review = reviewCommercialScheduleCLink(commercialOriginal, guidedCommercialScheduleCContext(state));
+    expect(review.summary).toMatchObject({ grossReceipts: "44500.25", advertising: "125.25", officeExpense: "40.25", supplies: "19.5" });
+    expect(review.fingerprint).toMatch(/^[0-9a-f]{64}$/u);
+    const linkedOriginal = { ...commercialOriginal, scheduleCLink: { ...commercialOriginal.scheduleCLink, reviewedFingerprint: review.fingerprint } };
+    const linkedCredits = { ...emptyCreditsData, vehicles: { entries: [], commercialOriginal: linkedOriginal } };
+    const linked = updateSectionData(state, "credits", linkedCredits);
+    const values = new Map<string, string>();
+    const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } } as Storage;
+    expect(saveGuidedFlowState(storage, "commercial-ledger", linked)).toBe(true);
+    const reopened = loadGuidedFlowState(storage, "commercial-ledger");
+    if (!reopened) throw new Error("Expected original link to reopen");
+    const originalPersonal = reopened.sectionData["personal-info"];
+    if (!originalPersonal) throw new Error("Expected the original taxpayer record");
+    expect(JSON.stringify(linkedOriginal.scheduleCLink)).not.toContain(originalPersonal.ssn);
+    expect(validateSection(reopened, "credits").fieldErrors.commercialVehicleOriginal).toMatch(/Schedule C owner and cash ledger linked.*calculation remains on hold/i);
+    expect(buildTaxInputFromGuidedData(reopened)).toBeNull();
+
+    const originalBusiness = reopened.sectionData["income-self-employment"];
+    const originalFacts = originalBusiness?.businessFacts;
+    const originalHeader = originalFacts?.scheduleCSourceFacts;
+    if (!originalBusiness || !originalFacts || !originalHeader) throw new Error("Expected the original Business and Schedule C records");
+    const changedLedger = updateSectionData(reopened, "income-self-employment", { ...originalBusiness, expenses: { ...originalBusiness.expenses, advertising: "125.26" } });
+    const changedOwner = updateSectionData(reopened, "personal-info", { ...originalPersonal, ssn: "123-45-6781" });
+    const changedBusinessReference = updateSectionData(reopened, "income-self-employment", { ...originalBusiness, businessFacts: {
+      ...originalFacts, scheduleCSourceFacts: { ...originalHeader, sourceReference: "Actual original Schedule C B" },
+    } });
+    const changedActivity = updateSectionData(reopened, "income-self-employment", { ...originalBusiness, businessFacts: { ...originalFacts, activityDescription: "Replacement activity" } });
+    const changedVin = updateSectionData(reopened, "credits", { ...linkedCredits, vehicles: { entries: [], commercialOriginal: { ...linkedOriginal, vin: "1M8GDM9AXKP042789" } } });
+    const changedLedgerReference = updateSectionData(reopened, "credits", { ...linkedCredits, vehicles: { entries: [], commercialOriginal: { ...linkedOriginal, scheduleCLink: {
+      ...linkedOriginal.scheduleCLink, ledgerRecordReference: "Original 2026 annual cash ledger B",
+    } } } });
+    for (const changed of [changedLedger, changedOwner, changedBusinessReference, changedActivity, changedVin, changedLedgerReference]) {
+      expect(changed.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink).toMatchObject({ reviewedFingerprint: undefined, sameOwnerAndVehicleConfirmed: null, scopeAndAmountsConfirmed: null });
+      expect(validateSection(changed, "credits").fieldErrors.commercialVehicleOriginal).not.toMatch(/cash ledger linked/i);
+    }
+    const withPersonalSourceChange = updateSectionData(reopened, "credits", { ...linkedCredits, vehicles: { ...linkedCredits.vehicles, entries: [{ ...actualVehicle }] } });
+    for (const changed of [changedLedger, changedOwner, changedBusinessReference, changedActivity, withPersonalSourceChange]) {
+      expect(changed.sectionData["income-self-employment"]?.businessFacts?.scheduleCSourceFacts?.sourceFactsConfirmed).toBeNull();
+    }
+    for (const changed of [changedVin, changedLedgerReference]) {
+      expect(changed.sectionData["income-self-employment"]?.businessFacts?.scheduleCSourceFacts?.sourceFactsConfirmed).toBe(true);
+    }
+    const rejectedOwnership = updateSectionData(reopened, "credits", { ...linkedCredits, vehicles: { entries: [], commercialOriginal: { ...linkedOriginal, scheduleCLink: {
+      ...linkedOriginal.scheduleCLink, sameOwnerAndVehicleConfirmed: false,
+    } } } });
+    expect(rejectedOwnership.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink).toMatchObject({ reviewedFingerprint: undefined, sameOwnerAndVehicleConfirmed: false });
+    // Reconfirm the existing Schedule C header after reverting the ledger; the vehicle attestations still require a fresh review.
+    const reverted = updateSectionData(updateSectionData(changedLedger, "income-self-employment", originalBusiness), "income-self-employment", originalBusiness);
+    expect(validateSection(reverted, "credits").fieldErrors.commercialVehicleOriginal).toMatch(/confirm.*Schedule C.*cash ledger/i);
+    const revertedOriginal = reverted.sectionData.credits?.vehicles?.commercialOriginal;
+    if (!revertedOriginal) throw new Error("Expected the retained vehicle original");
+    expect(reviewCommercialScheduleCLink(revertedOriginal, guidedCommercialScheduleCContext(reverted)).fingerprint).toBeUndefined();
+    const switchedYear = setInterviewTaxYear(setInterviewTaxYear(reopened, 2025), 2026);
+    expect(switchedYear.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toBeUndefined();
+  });
+
   it("preserves commercial vehicle originals and holds calculation through a saved 2026 draft", () => {
     const state = { ...startCompleteInterview({ filingStatus: "single", incomeTypes: [], lifeEvents: [], stateCode: "OH" }), taxYear: 2026 };
     const commercialOriginal = {

@@ -2,6 +2,7 @@ import type { FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import type { CommercialCleanVehicle2026Source } from "@/models/inputs";
 import { currentLocalCivilDate, isActualDate } from "@/utils/civil-date";
+import { reviewCommercialScheduleCLink, type GuidedCommercialScheduleCContext, type GuidedCommercialScheduleCLink } from "./guided-commercial-vehicle-schedule-c";
 
 export interface VehicleEntryData {
   kind?: "new" | "used" | "";
@@ -32,10 +33,14 @@ export interface VehicleEntryData {
   priorYearMagiConfirmed?: boolean | null;
 }
 
+export type CommercialVehicleOriginal = Partial<Pick<CommercialCleanVehicle2026Source,
+  "vin" | "bindingContractDate" | "bindingContractReference" | "paymentDate" | "paymentReference" | "datePlacedInService" | "placedInServiceReference">> & {
+    scheduleCLink?: GuidedCommercialScheduleCLink;
+  };
+
 export interface VehicleCreditData {
   entries: VehicleEntryData[];
-  commercialOriginal?: Partial<Pick<CommercialCleanVehicle2026Source,
-    "vin" | "bindingContractDate" | "bindingContractReference" | "paymentDate" | "paymentReference" | "datePlacedInService" | "placedInServiceReference">>;
+  commercialOriginal?: CommercialVehicleOriginal;
   agiAdjustmentsConfirmed?: boolean | null;
   foreignEarnedIncomeExclusion?: string;
   foreignHousingDeduction?: string;
@@ -65,7 +70,7 @@ function actualDate(value: string | undefined): boolean {
 }
 function actualStatus(value: FilingStatus | "" | undefined): value is FilingStatus { return !!value && value in filingStatusMap; }
 
-export function commercialVehicleOriginalError(data: VehicleCreditData | undefined, taxYear?: number | null): string | undefined {
+export function commercialVehicleOriginalFactError(data: VehicleCreditData | undefined, taxYear?: number | null): string | undefined {
   const original = data?.commercialOriginal;
   if (original === undefined) return undefined;
   if (taxYear !== 2026) return "These saved commercial vehicle records belong to 2026. Switch to 2026 to review them or remove the entry.";
@@ -85,12 +90,19 @@ export function commercialVehicleOriginalError(data: VehicleCreditData | undefin
   if (![original.bindingContractReference, original.paymentReference, original.placedInServiceReference].every(value => typeof value === "string" && value.trim())) {
     return "Identify the original written contract, payment and possession records.";
   }
-  return "Commercial vehicle calculation is on hold until the Schedule C, depreciation and current credit records are linked to these originals.";
+  return undefined;
 }
 
-export function vehicleFactErrors(data: VehicleCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null): Record<string, string> {
+export function commercialVehicleOriginalError(data: VehicleCreditData | undefined, taxYear?: number | null, context?: GuidedCommercialScheduleCContext): string | undefined {
+  if (data?.commercialOriginal === undefined) return undefined;
+  return commercialVehicleOriginalFactError(data, taxYear)
+    ?? (data.commercialOriginal.scheduleCLink && context ? reviewCommercialScheduleCLink(data.commercialOriginal, context).message
+      : "Commercial vehicle calculation is on hold until the Schedule C, depreciation and current credit records are linked to these originals.");
+}
+
+export function vehicleFactErrors(data: VehicleCreditData | undefined, taxYear?: number | null, status?: FilingStatus | null, context?: GuidedCommercialScheduleCContext): Record<string, string> {
   const errors: Record<string, string> = {};
-  const commercialError = commercialVehicleOriginalError(data, taxYear);
+  const commercialError = commercialVehicleOriginalError(data, taxYear, context);
   if (commercialError) errors.commercialVehicleOriginal = commercialError;
   if (!data?.entries.length) return errors;
   if (data.agiAdjustmentsConfirmed !== true) errors.vehicleMagi = "Confirm the actual current-year Form 8936 MAGI adjustments";

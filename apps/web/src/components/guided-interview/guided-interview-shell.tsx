@@ -105,6 +105,7 @@ import { SectionDeductions } from "./section-deductions";
 import { SectionAdjustments } from "./section-adjustments";
 import { hasMovingW2Source } from "@/lib/guided-moving-expenses";
 import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
+import { guidedCommercialScheduleCContext } from "@/lib/guided-commercial-vehicle-schedule-c";
 import { SectionCredits } from "./section-credits";
 import { PremiumTaxCreditSourceDetails } from "./premium-tax-credit-source-details";
 import { SectionOtherTaxes } from "./section-other-taxes";
@@ -751,6 +752,7 @@ function SectionContent({
       const depCount = Number(personalData?.dependentCount ?? "0");
       return (
         <SectionCredits
+          commercialScheduleCContext={guidedCommercialScheduleCContext(state)}
           interestEntries={getSectionData(state, "income-investments")?.interestEntries}
           healthInsurance={getSectionData(state, "adjustments")?.healthInsuranceFacts}
           personalData={personalData}

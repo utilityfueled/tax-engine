@@ -102,7 +102,8 @@ import { guidedSocialSecurityFactContext, socialSecurityFactErrors, socialSecuri
 import { clearGuidedPensionCoverage, updateGuidedPensionCoverage, type RetirementSourceData } from "./guided-retirement-facts";
 import { invalidateEditedGuidedQcdSource, replayGuidedQcdOwnerReview, updateGuidedQcdEntries } from "./guided-retirement-source-inputs";
 import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-basis";
-import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
+import { guidedCommercialScheduleCContext, reviewCommercialScheduleCLink } from "./guided-commercial-vehicle-schedule-c";
+import { commercialVehicleOriginalFactError, vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { invalidateAdoptionHistories } from "./guided-adoption-prior-benefits";
 import { educationOriginalValues } from "./guided-coverdell-bank-interest";
@@ -1778,6 +1779,20 @@ function invalidateStudentLoanYearFacts(draft: StudentLoanData): StudentLoanData
   };
 }
 
+function clearCommercialScheduleCLink(vehicles: VehicleCreditData): VehicleCreditData {
+  const original = vehicles.commercialOriginal;
+  if (!original?.scheduleCLink) return vehicles;
+  return {
+    ...vehicles,
+    commercialOriginal: { ...original, scheduleCLink: {
+      ...original.scheduleCLink,
+      reviewedFingerprint: undefined,
+      sameOwnerAndVehicleConfirmed: original.scheduleCLink.sameOwnerAndVehicleConfirmed === false ? false : null,
+      scopeAndAmountsConfirmed: original.scheduleCLink.scopeAndAmountsConfirmed === false ? false : null,
+    } },
+  };
+}
+
 export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | null): GuidedFlowState {
   if ((state.taxYear ?? null) === taxYear) return state;
   const wages = state.sectionData["income-w2"];
@@ -1938,7 +1953,8 @@ export function setInterviewTaxYear(state: GuidedFlowState, taxYear: number | nu
           } } : {}),
         },
       } : {}),
-      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency || bankInterestSourcesEntered || credits.saversCredit || credits.personalEvCharger) ? { credits: { ...credits,
+      ...(credits && (requireCareReview || aotcSourcesEntered || llcSourcesEntered || clearStudentLoanEducationDependency || bankInterestSourcesEntered || credits.saversCredit || credits.personalEvCharger || credits.vehicles?.commercialOriginal?.scheduleCLink) ? { credits: { ...credits,
+        ...(credits.vehicles?.commercialOriginal?.scheduleCLink ? { vehicles: clearCommercialScheduleCLink(credits.vehicles) } : {}),
         ...(requireCareReview ? { dependentCare: { ...credits.dependentCare, sourceFactsConfirmed: null } } : {}),
         ...(credits.saversCredit ? { saversCredit: requireGuidedSaversReview(credits.saversCredit, Boolean(guidedSaversHistoricalEvidence(credits.saversCredit))) } : {}),
         ...(credits.personalEvCharger ? { personalEvCharger: invalidatePersonalEvChargerSource(credits.personalEvCharger) } : {}),
@@ -2673,7 +2689,18 @@ export function updateSectionData(
     ))
   );
   const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined,standardMileage:undefined,homeOfficeRenter:value.businessFacts.homeOfficeRenter?{...value.businessFacts.homeOfficeRenter,confirmed:undefined}:undefined,passengerSources:value.businessFacts.passengerSources?{...value.businessFacts.passengerSources,sourceFactsConfirmed:undefined,originalInput:undefined,originalDraft:undefined}:undefined,macrsAssets:value.businessFacts.macrsAssets?{...value.businessFacts.macrsAssets,sourceFactsConfirmed:undefined,originalBusiness:undefined,originalCollection:undefined}:undefined}:undefined}:value;
-  const scheduleCValuesChanged=sectionId==='income-self-employment'?guidedSourceValuesChanged(scheduleCValues(state.sectionData['income-self-employment']),scheduleCValues(nextBusiness)):sourceValuesChanged;
+  const previousCreditValues = state.sectionData.credits;
+  const nextCreditValues = sectionId === "credits" ? data as CreditsData | undefined : undefined;
+  const commercialReviewEntered = state.taxYear === 2026 && sectionId === "credits"
+    && (previousCreditValues?.vehicles?.commercialOriginal || nextCreditValues?.vehicles?.commercialOriginal);
+  const creditsWithoutCommercialOriginal = (value: CreditsData = emptyCreditsData) => educationDocumentaryValues({ ...value,
+    vehicles: value.vehicles ? { ...value.vehicles, entries: value.vehicles.entries?.length ? value.vehicles.entries : undefined, commercialOriginal: undefined } : undefined,
+  });
+  const scheduleCValuesChanged = sectionId === "income-self-employment"
+    ? guidedSourceValuesChanged(scheduleCValues(state.sectionData["income-self-employment"]), scheduleCValues(nextBusiness))
+    : commercialReviewEntered
+      ? guidedSourceValuesChanged(creditsWithoutCommercialOriginal(previousCreditValues), creditsWithoutCommercialOriginal(nextCreditValues))
+      : sourceValuesChanged;
   const renterHomeOfficeChanged = scheduleCValuesChanged && ["personal-info", "income-self-employment"].includes(sectionId) && nextBusiness?.businessFacts?.homeOfficeRenter;
   const scheduleCSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.scheduleCSourceFacts;
   const macrsSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","income-rental","income-royalties","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.macrsAssets;
@@ -3123,6 +3150,15 @@ export function updateSectionData(
       } } : {}),
     },
   };
+  const commercialCredits = nextState.sectionData.credits;
+  const commercialVehicles = commercialCredits?.vehicles;
+  const commercialOriginal = commercialVehicles?.commercialOriginal;
+  const commercialLink = commercialOriginal?.scheduleCLink;
+  if (commercialCredits && commercialVehicles && commercialOriginal && commercialLink?.reviewedFingerprint !== undefined
+    && (commercialVehicleOriginalFactError(commercialVehicles, nextState.taxYear)
+      || reviewCommercialScheduleCLink(commercialOriginal, guidedCommercialScheduleCContext(nextState)).fingerprint !== commercialLink.reviewedFingerprint)) {
+    nextState.sectionData.credits = { ...commercialCredits, vehicles: clearCommercialScheduleCLink(commercialVehicles) };
+  }
   let nextStateReturn = nextState.sectionData["state-return"];
   if (state.taxYear === 2025 && state.segmentation.stateCode === "OH" && nextStateReturn) {
     const lastConfirmedOHScheduleAPaymentYear = retainedOhioScheduleAPaymentYear(state.taxYear, nextState, previousStateReturn);
@@ -3642,7 +3678,7 @@ function validateSectionUsing(state: GuidedFlowState, sectionId: InterviewSectio
         ...careBenefitsFactErrors(credits?.dependentCareBenefits, state.taxYear, state.segmentation.filingStatus, sources),
         ...careFactErrors(credits?.dependentCare, state.segmentation.filingStatus, { data: credits?.dependentCareBenefits, year: state.taxYear, sources }),
         ...energyFactErrors(credits?.energy, state.taxYear, state.segmentation.filingStatus),
-        ...vehicleFactErrors(credits?.vehicles, state.taxYear, state.segmentation.filingStatus),
+        ...vehicleFactErrors(credits?.vehicles, state.taxYear, state.segmentation.filingStatus, guidedCommercialScheduleCContext(state)),
         ...adoptionFactErrors(credits?.adoption, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]),
       });
     }

@@ -15,10 +15,11 @@ import { buildStandardDeductionFacts, type StandardDeductionData } from "@/lib/g
 import { buildEducationInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { buildAdoptionInput, type AdoptionCreditData } from "@/lib/guided-adoption-facts";
 import { buildVehicleCreditInput, type VehicleCreditData } from "@/lib/guided-vehicle-facts";
+import { guidedCommercialScheduleCContext } from "@/lib/guided-commercial-vehicle-schedule-c";
 import { buildDonationsInput, buildForm1098Inputs, buildScheduleHInput } from "@/lib/guided-interview-bridge";
 import { personalFactErrors } from "@/lib/guided-taxpayer-facts";
 import { emptyCreditsData, emptyEducationCreditData, emptyDeductionData, emptyDonationEntry, emptyOtherTaxesData, loadGuidedFlowState, saveGuidedFlowState, updateSectionData, validateSection, type EducationCreditData, type DeductionData, type DonationEntryData, type OtherTaxesData, type PersonalInfoData } from "@/lib/guided-interview-flow";
-import { completeAocEligibility, completeEducationClaimant, completeDependent, completePersonalInfo, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
+import { completeAocEligibility, completeBusinessSection, completeEducationClaimant, completeDependent, completePersonalInfo, completeW2Entry, startCompleteInterview } from "../../guided-interview/complete-facts";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -229,6 +230,43 @@ describe("required fact interaction boundaries", () => {
     await click("Remove business-only commercial vehicle");
     expect(latest.commercialOriginal).toBeUndefined();
     expect(container.textContent).not.toMatch(/Add business-only commercial vehicle/i);
+  });
+  it("confirms the original commercial VIN owner and exact cash ledger in the guided panel", async () => {
+    const initial = { ...startCompleteInterview({ filingStatus: "single", incomeTypes: ["self-employment"], lifeEvents: [], stateCode: "OH" }), taxYear: 2026 };
+    initial.sectionData["personal-info"] = { ...completePersonalInfo, spouse: undefined };
+    initial.sectionData["income-self-employment"] = { ...completeBusinessSection, manualGrossReceipts: "44500.25",
+      expenses: { ...completeBusinessSection.expenses, advertising: "125.26", officeExpense: "40.25", supplies: "19.50" },
+      businessFacts: { ...completeBusinessSection.businessFacts, scheduleCSourceFacts: { sourceTaxYear: 2026, sourceFactsConfirmed: true, accountHolder: "primary",
+        ownerName: "Jordan Example", sourceReference: "Original primary Schedule C", businessNameStatus: "blank_original", businessEINStatus: "not_issued" } },
+    };
+    let latest = updateSectionData(initial, "credits", { ...emptyCreditsData, vehicles: { entries: [], commercialOriginal: {
+      vin: "1M8GDM9AXKP042788", bindingContractDate: "2025-09-29", bindingContractReference: "Signed commercial order A",
+      paymentDate: "2025-09-30", paymentReference: "Deposit receipt B", datePlacedInService: "2026-01-02", placedInServiceReference: "Actual delivery record C",
+    } } });
+    function Harness() {
+      const [state, setState] = useState(latest);
+      const credits = state.sectionData.credits ?? emptyCreditsData;
+      return <VehicleSourceDetails taxYear={2026} filingStatus="single" data={credits.vehicles} scheduleCContext={guidedCommercialScheduleCContext(state)}
+        onChange={(vehicles) => { latest = updateSectionData(state, "credits", { ...credits, vehicles }); setState(latest); }} />;
+    }
+    await act(async () => root.render(<Harness />));
+    expect(container.textContent).toContain("$44500.25");
+    expect(container.textContent).toContain("$125.26");
+    await click("Confirm Schedule C owner and cash ledger");
+    expect(latest.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toBeUndefined();
+    await change("Original primary taxpayer record", "Filer identity record");
+    await change("Original commercial vehicle owner record", "Title owner's VIN record");
+    await change("Original Schedule C business activity record", "Business record");
+    await change("Original annual cash ledger record", "Complete cash ledger");
+    await change("Do the original records show this primary taxpayer and business own the vehicle with this VIN?", "true");
+    await change("Do these exact amounts cover the full cash ledger for this business, excluding vehicle costs and other activities?", "true");
+    await click("Confirm Schedule C owner and cash ledger");
+    expect(container.textContent).toMatch(/Schedule C owner and cash ledger linked.*calculation remains on hold/i);
+    expect(latest.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toMatch(/^[0-9a-f]{64}$/u);
+    await change("Original annual cash ledger record", "Replacement cash ledger");
+    expect(control("Do these exact amounts cover the full cash ledger for this business, excluding vehicle costs and other activities?").value).toBe("");
+    expect(latest.sectionData.credits?.vehicles?.commercialOriginal?.scheduleCLink?.reviewedFingerprint).toBeUndefined();
+    expect(buildTaxInputFromGuidedData(latest)).toBeNull();
   });
   it("records child credit identity as unknown false and true without guessing from an SSN", async () => {
     let latest: PersonalInfoData = { ...completePersonalInfo, employmentValidSsnIssuedByDueDate: null, tinIssuedByDueDate: null, childTaxCredit: { nonTaxableCombatPayElection: "0.20" }, dependentCount: "1", dependents: [{ ...completeDependent, ctcSsnEligible: null }] };

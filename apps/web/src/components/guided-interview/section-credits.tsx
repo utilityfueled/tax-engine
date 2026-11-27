@@ -12,6 +12,7 @@ import {
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
 import { EnergySourceDetails } from "./energy-source-details";
+import type { GuidedCommercialScheduleCContext } from "@/lib/guided-commercial-vehicle-schedule-c";
 import { VehicleSourceDetails } from "./vehicle-source-details";
 import { AdoptionSourceDetails } from "./adoption-source-details";
 import { EducationSourceDetails } from "./education-source-details";
@@ -106,6 +107,7 @@ function DependentCareSection({
 }
 
 export function SectionCredits({
+  commercialScheduleCContext,
   interestEntries,
   data,
   hasDependents,
@@ -116,6 +118,7 @@ export function SectionCredits({
   personalData,
   healthInsurance,
 }: {
+  commercialScheduleCContext?: GuidedCommercialScheduleCContext;
   healthInsurance?: HealthInsuranceData;
   personalData?: PersonalInfoData;
   careBenefitSources?: CareBenefitSource[];
@@ -176,7 +179,7 @@ export function SectionCredits({
           <PersonalEvChargerDetails data={current.personalEvCharger} taxYear={taxYear} filingStatus={filingStatus}
             onChange={personalEvCharger => onDataChange({ ...current, personalEvCharger })} />
           <AdoptionSourceDetails data={current.adoption} onChange={(next) => onDataChange({ ...current, adoption: next })} />
-          <VehicleSourceDetails data={current.vehicles} taxYear={taxYear} filingStatus={filingStatus} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
+          <VehicleSourceDetails data={current.vehicles} taxYear={taxYear} filingStatus={filingStatus} scheduleCContext={commercialScheduleCContext} onChange={(next) => onDataChange({ ...current, vehicles: next })} />
         </div>
       </div>
     </RetroShell>

@@ -1,7 +1,8 @@
 "use client";
 
 import { filingStatusOptions, type FilingStatus } from "@/lib/guided-interview-flow";
-import { commercialVehicleOriginalError, type VehicleCreditData, type VehicleEntryData } from "@/lib/guided-vehicle-facts";
+import { reviewCommercialScheduleCLink, type GuidedCommercialScheduleCContext, type GuidedCommercialScheduleCLink } from "@/lib/guided-commercial-vehicle-schedule-c";
+import { commercialVehicleOriginalError, commercialVehicleOriginalFactError, type VehicleCreditData, type VehicleEntryData } from "@/lib/guided-vehicle-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 
@@ -9,11 +10,16 @@ function FilingStatusFact({ label, value, onChange }: { label: string; value: Fi
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ""} onChange={(event) => onChange(event.target.value as FilingStatus | "")}><option value="">Choose the actual prior-year status</option>{filingStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
 }
 
-export function VehicleSourceDetails({ data, taxYear, filingStatus, onChange }: { data: VehicleCreditData | undefined; taxYear?: number | null; filingStatus?: FilingStatus | null; onChange: (data: VehicleCreditData) => void }) {
+export function VehicleSourceDetails({ data, taxYear, filingStatus, scheduleCContext, onChange }: { data: VehicleCreditData | undefined; taxYear?: number | null; filingStatus?: FilingStatus | null; scheduleCContext?: GuidedCommercialScheduleCContext; onChange: (data: VehicleCreditData) => void }) {
   const current = data ?? { entries: [] };
   const update = (values: Partial<VehicleCreditData>) => onChange({ ...current, ...values });
   const commercial = current.commercialOriginal;
   const updateCommercial = (values: NonNullable<VehicleCreditData["commercialOriginal"]>) => update({ commercialOriginal: { ...commercial, ...values } });
+  const link = commercial?.scheduleCLink;
+  const updateLink = (values: GuidedCommercialScheduleCLink) => updateCommercial({ scheduleCLink: { ...link, ...values } });
+  const scheduleCReview = commercial && scheduleCContext && !commercialVehicleOriginalFactError(current, taxYear)
+    ? reviewCommercialScheduleCLink(commercial, scheduleCContext)
+    : undefined;
   return <div className="guided-w2-card" style={{ padding: "12px" }}>
     <h3 className="guided-w2-card-title">Clean Vehicle Credits (Form 8936)</h3>
     <p className="guided-hint">For personal clean vehicle credits, use the actual accepted seller report and purchase records and reconcile any transfer election on the return. A binding written contract and payment by September 30, 2025 may qualify a vehicle placed in service later. <a href="https://www.irs.gov/instructions/i8936" target="_blank" rel="noreferrer">Review the IRS eligibility requirements.</a></p>
@@ -75,7 +81,31 @@ export function VehicleSourceDetails({ data, taxYear, filingStatus, onChange }: 
           <TextFact label={`Commercial vehicle ${label} record`} value={commercial?.[reference] ?? ""} onChange={(value) => updateCommercial({ [reference]: value })} />
         </div>)}
       </>}
-      <p className="guided-hint">{commercialVehicleOriginalError(current, taxYear)}</p>
+      {scheduleCReview && <fieldset className="guided-fieldset">
+        <legend>Original Schedule C owner and cash ledger</legend>
+        {scheduleCReview.summary ? <>
+          <dl className="guided-hint">
+            <dt>Primary owner</dt><dd>{scheduleCReview.summary.ownerName}</dd>
+            <dt>Business activity</dt><dd>{scheduleCReview.summary.activity}</dd>
+            <dt>Confirmed Schedule C record</dt><dd>{scheduleCReview.summary.sourceReference}</dd>
+            <dt>Cash receipts</dt><dd>${scheduleCReview.summary.grossReceipts}</dd>
+            <dt>Advertising</dt><dd>${scheduleCReview.summary.advertising}</dd>
+            <dt>Office expenses</dt><dd>${scheduleCReview.summary.officeExpense}</dd>
+            <dt>Supplies</dt><dd>${scheduleCReview.summary.supplies}</dd>
+          </dl>
+          {([
+            ["taxpayerReference", "Original primary taxpayer record"],
+            ["ownerRecordReference", "Original commercial vehicle owner record"],
+            ["activityReference", "Original Schedule C business activity record"],
+            ["ledgerRecordReference", "Original annual cash ledger record"],
+          ] as const).map(([field, label]) => <TextFact key={field} label={label} value={link?.[field] ?? ""} onChange={(value) => updateLink({ [field]: value })} />)}
+          <BooleanFact label="Do the original records show this primary taxpayer and business own the vehicle with this VIN?" value={link?.sameOwnerAndVehicleConfirmed} onChange={(value) => updateLink({ sameOwnerAndVehicleConfirmed: value })} />
+          <BooleanFact label="Do these exact amounts cover the full cash ledger for this business, excluding vehicle costs and other activities?" value={link?.scopeAndAmountsConfirmed} onChange={(value) => updateLink({ scopeAndAmountsConfirmed: value })} />
+          <button type="button" className="utility-button" disabled={!scheduleCReview.fingerprint || scheduleCReview.fingerprint === link?.reviewedFingerprint}
+            onClick={() => updateLink({ reviewedFingerprint: scheduleCReview.fingerprint })}>Confirm Schedule C owner and cash ledger</button>
+        </> : !link && <p className="guided-hint">{scheduleCReview.message}</p>}
+      </fieldset>}
+      <p className="guided-hint">{commercialVehicleOriginalError(current, taxYear, scheduleCContext)}</p>
       <button type="button" className="utility-button" onClick={() => update({ commercialOriginal: undefined })}>Remove business-only commercial vehicle</button>
     </fieldset> : taxYear === 2026 && <button type="button" className="utility-button" onClick={() => update({ commercialOriginal: {} })}>Add business-only commercial vehicle</button>}
   </div>;
