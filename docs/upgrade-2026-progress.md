@@ -1,5 +1,66 @@
 # 2026 upgrade implementation evidence
 
+## November 26 W-2G Box 1 and guided money totals
+
+`b7f9c76b2` rejects negative W-2G Box 1 winnings in both schema
+branches and the federal calculation. A negative entry previously
+reduced taxable income. Existing affected entries require the amount
+from the original or corrected statement. Ordinary zero and cent
+amounts still pass. The two regressions failed before the change.
+All 114 focused cases passed, including 20 in independent engineering
+review. All 23 scoped spec references resolved.
+[IRS Box 1 instructions](https://www.irs.gov/instructions/iw2g) ·
+[IRS Topic 419](https://www.irs.gov/taxtopics/tc419).
+
+`369c195b2` uses the shared exact Decimal sum for guided Schedule C
+gross receipts and saved other-payment reconciliation. Both regressions
+failed before the change. All 251 focused cases passed, including 213
+in independent engineering review. All 74 scoped spec references and
+web types passed. The large-value cases verify these adapter operations.
+Federal end-to-end precision at those magnitudes remains unqualified.
+Across the recovery, PTC, W-2G and guided packages, 287 focused tests,
+root types and the complete browser evidence source audit passed.
+[Latest AMD64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45914249027) ·
+[Latest ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/45914423019).
+
+## November 26 clean-profile self-host recovery
+
+`46ec4b65c` restores the encrypted backup in a new Chromium profile.
+The managed test checks an empty starting profile, rejection without
+writes for the wrong password, exact guided answers and PDF bytes after
+reload, and the existing stale-tab save regression. The Compose
+rehearsal now also separates source and restore profiles, checks the
+recovered mode and draft, and retains its log alongside the ARM64
+archive evidence even when later checks fail. Independent engineering
+review verified the flow, cleanup, and workflow exit propagation.
+
+The managed exact-source subset passed all six cases with the existing
+30-second timeout, zero retries, zero skips and successful cleanup.
+Its summary SHA-256 is
+`b96db32187206971cf0b8021a945db011e11ec88cd728aa26f37d7b6038e309c`.
+All 46 focused release and recovery contract cases passed. The updated
+Compose flow still needs its native runtime result.
+[ARM64 candidate run](https://github.com/utilityfueled/tax-engine/actions/runs/45914423019).
+
+## November 26 below-poverty Marketplace estimate exception
+
+`6f6749286` collects whether the filer gave incorrect information
+knowingly or with reckless disregard for the facts. An otherwise
+eligible filer can claim the exception after confirming an innocent
+mistake. A saved affirmative accuracy answer remains usable. Saved
+inaccuracy alone needs a new answer, and contradictory confirmations
+block calculation. The interview explains the enrollment-time
+estimate and the 2026 income range.
+[Treasury regulation](https://www.ecfr.gov/current/title-26/section-1.36B-2) ·
+[Draft 2026 Form 8962 instructions](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf#page=10).
+
+Spec-first regressions failed on the prior code. Independent
+engineering review confirmed the eligibility and legacy-data behavior.
+The pinned focused run passed 189 cases, and 41 focused cases passed
+after the interview guidance update. Qualified independent tax review
+and final form qualification remain open.
+[Independent review worksheet](upgrade-2026-human-tax-review-packet.md#november-26-marketplace-estimate-exception).
+
 ## November 26 combined local checks for the rate and filing changes
 
 All 11 local commands passed on exact application revision `7af70b3f5`

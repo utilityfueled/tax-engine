@@ -2,9 +2,12 @@
   "resume": {
     "asOf": "2026-11-26",
     "branch": "main",
-    "applicationCommit": "7af70b3f5a057d1a4aa638c507e14ece15cb29d6",
-    "latestScopedApplicationCommit": "7af70b3f5a057d1a4aa638c507e14ece15cb29d6",
-    "latestCombinedCandidateCommit": "7af70b3f5a057d1a4aa638c507e14ece15cb29d6",
+    "applicationCommit": "369c195b248a0d5e9010140139ae89e2f5edeab1",
+    "latestScopedApplicationCommit": "369c195b248a0d5e9010140139ae89e2f5edeab1",
+    "latestCombinedCandidateCommit": "369c195b248a0d5e9010140139ae89e2f5edeab1",
+    "w2gAndGuidedExactMoneyEvidenceKey": "activeContinuation.nov26W2gGuidedExactMoney",
+    "marketplaceEstimateDisregardEvidenceKey": "activeContinuation.nov26MarketplaceEstimateDisregard",
+    "cleanProfileRecoveryEvidenceKey": "activeContinuation.nov26CleanProfileRecovery",
     "publishedUnderpaymentRateEvidenceKey": "activeContinuation.nov26PublishedUnderpaymentRate",
     "flattenedFilingPacketEvidenceKey": "activeContinuation.nov26FlattenedFilingPacket",
     "energyCarryforwardOptionsEvidenceKey": "activeContinuation.nov26EnergyCarryforwardOptions",
@@ -136,14 +139,57 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45905693607 and ARM64 45906276956 cover 9f5ef34ab application source. AMD64 Web 45909599717 and ARM64 recovery 45911334052 cover the 7af70b3f5 rate and filing candidate.",
-      "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202 and 68/8960. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
+      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45914249027 and ARM64 recovery 45914423019 cover the current 369c195b2 application source.",
+      "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960 and the Marketplace estimate exception. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
       "Hosted cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open."
     ]
   },
   "activeContinuation": {
+    "nov26W2gGuidedExactMoney": {
+      "w2gCommit": "b7f9c76b22d4341c90b00e1aa0e65daffc4bd4e7",
+      "guidedCommit": "369c195b248a0d5e9010140139ae89e2f5edeab1",
+      "w2gFocusedTestsPassed": 114,
+      "w2gIndependentCasesPassed": 20,
+      "guidedFocusedTestsPassed": 251,
+      "guidedIndependentCasesPassed": 213,
+      "combinedFocusedTestsPassed": 287,
+      "browserSourceAudit": "passed",
+      "w2gAuthorities": [
+        "https://www.irs.gov/instructions/iw2g",
+        "https://www.irs.gov/taxtopics/tc419"
+      ],
+      "amd64WebRun": 45914249027,
+      "arm64RecoveryRun": 45914423019
+    },
+    "nov26MarketplaceEstimateDisregard": {
+      "commit": "6f67492865371094af4fe4c61e09bc314c898bbe",
+      "authorities": [
+        "https://www.ecfr.gov/current/title-26/section-1.36B-2",
+        "https://www.irs.gov/pub/irs-dft/i8962--dft.pdf#page=10"
+      ],
+      "focusedTestsPassed": 189,
+      "focusedTestsAfterInterviewGuidancePassed": 41,
+      "independentEngineeringReview": "passed",
+      "qualifiedTaxReview": "open",
+      "reviewWorksheet": "docs/upgrade-2026-human-tax-review-packet.md#november-26-marketplace-estimate-exception"
+    },
+    "nov26CleanProfileRecovery": {
+      "commit": "46ec4b65c28c6a198fda1dd1a9172f7058338e1d",
+      "managedChromiumPasses": 6,
+      "managedChromiumFailures": 0,
+      "managedChromiumSkips": 0,
+      "managedChromiumCleanup": true,
+      "perTestDeadlineMs": 30000,
+      "retries": 0,
+      "managedSummarySha256": "b96db32187206971cf0b8021a945db011e11ec88cd728aa26f37d7b6038e309c",
+      "focusedReleaseContractTestsPassed": 46,
+      "independentEngineeringReview": "passed",
+      "strictAmd64Run": 45914249027,
+      "arm64RecoveryRun": 45914423019,
+      "cleanProfileComposeQualification": "open"
+    },
     "nov26RateAndFilingCombinedLocal": {
       "applicationCommit": "7af70b3f5a057d1a4aa638c507e14ece15cb29d6",
       "archiveSha256": "7664af61fa010a5af24767fc818cadd95245388f913a1088b0e1bf24fc6217ec",

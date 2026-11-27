@@ -9,6 +9,27 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `b7f9c76b2` rejects negative W-2G winnings before federal
+  aggregation. `369c195b2` preserves exact guided Schedule C receipts
+  and reconciles other payments to the cent. All 287 combined focused
+  checks passed. Linux qualification uses this latest source.
+  [Tax and interview checks](upgrade-2026-progress.md#november-26-w-2g-box-1-and-guided-money-totals) ·
+  [AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45914249027) ·
+  [ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45914423019).
+
+- `6f6749286` applies the Marketplace income-estimate exception after
+  an otherwise eligible filer confirms an innocent mistake. Older
+  answers that establish only inaccuracy require confirmation.
+  Independent engineering review and focused tests passed. Qualified
+  tax review remains open.
+  [Form 8962 evidence](upgrade-2026-progress.md#november-26-below-poverty-marketplace-estimate-exception).
+
+- `46ec4b65c` restores the encrypted self-host backup in a clean
+  Chromium profile. All six local recovery cases passed at the existing
+  timeout and retry settings. The updated Compose flow remains part of
+  strict ARM64 qualification.
+  [Recovery evidence](upgrade-2026-progress.md#november-26-clean-profile-self-host-recovery).
+
 - All 11 local checks passed on `7af70b3f5`. The unit and coverage runs
   each passed 31,033 tests with 81 existing environment skips. Branch
   coverage was 88.59%. Managed Chromium passed 654 cases in nine windows

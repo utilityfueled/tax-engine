@@ -568,3 +568,25 @@ applies. Use the final annual forms to verify form lines and transfers.
 [Pennsylvania Tax Forgiveness guide](https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/tax-forgiveness) ·
 [Ohio Revised Code §5747.20](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
 [Ohio Revised Code §5747.05](https://codes.ohio.gov/ohio-revised-code/section-5747.05).
+
+## November 26 Marketplace estimate exception
+
+Independently complete Form 8962 for a single filer in the contiguous
+United States in 2025 and 2026. The filer has a tax family of one,
+$14,000 of household income, and no one can claim the filer as a
+dependent. At enrollment the Marketplace projected $20,000 for that
+coverage year. An original Form 1095-A shows $600 of enrollment
+premiums, a $600 applicable benchmark, and $400 of advance credit for
+each of twelve eligible months. Assume the plan qualifies and no other
+exception or coordination rule applies.
+
+Compute the Form 8962 line 6 answer, total credit, and excess advance
+credit repayment in each year for two scenarios. In the first, the
+filer gave incorrect information through a reasonable mistake. In the
+second, the filer supplied the same information with reckless disregard
+for the facts. State what further evidence is needed if records establish
+only that the information was incorrect. Confirm the worksheet against
+the final annual materials once available.
+[26 CFR §1.36B-2](https://www.ecfr.gov/current/title-26/section-1.36B-2) ·
+[2026 draft Form 8962 instructions](https://www.irs.gov/pub/irs-dft/i8962--dft.pdf#page=10) ·
+[2025 Form 8962 instructions](https://www.irs.gov/instructions/i8962).
