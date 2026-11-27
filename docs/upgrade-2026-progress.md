@@ -1,5 +1,25 @@
 # 2026 upgrade implementation evidence
 
+## November 26 combined Pennsylvania investment sources
+
+`dba45278c` supports one complete original Form 1099-INT and one
+complete original cash-dividend Form 1099-DIV together for the existing
+high-wage single inbound part-year draft. The engine reconciles each
+ledger to its own original. Pennsylvania Schedules A and B each report
+$40 in resident-period income. Alongside $39,000 of Pennsylvania wages,
+the fixture has $39,080 in Pennsylvania taxable income and $1,200 in
+tax and actual withholding. Schedule SP includes both $80 nonresident
+credits once, for $75,240 of worldwide eligibility income. $1,199 of
+withholding and mismatched individual originals are rejected.
+[Department of Revenue residency guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
+[Schedule SP instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf).
+
+The documented allowed and insufficient-withholding examples each
+reproduced the old blanket rejection. The final package passed 219
+focused tests, 1,290 Pennsylvania spec references, browser source
+binding and inventory verification. Independent engineering review
+passed. Qualified review and final 2026 state forms remain open.
+
 ## November 26 draft QBI form transfers
 
 `32a455f41` updates the 2026 draft audit for Forms 8995 and 8995-A.

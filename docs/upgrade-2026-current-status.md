@@ -9,6 +9,11 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `dba45278c` combines verified bank interest and ordinary cash
+  dividends in the inbound Pennsylvania part-year draft. The source
+  checks, state tax and Schedule SP tests passed. Final 2026 filing
+  remains gated. [Pennsylvania evidence](upgrade-2026-progress.md#november-26-combined-pennsylvania-investment-sources).
+
 - `32a455f41` aligns both federal QBI deduction audits with the 2026
   drafts. All 228 integrated and 182 independent focused tests passed.
   The existing cooperative calculation remains subject to qualified

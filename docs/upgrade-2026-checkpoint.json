@@ -3,10 +3,11 @@
     "asOf": "2026-11-26",
     "branch": "main",
     "applicationCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
-    "latestScopedApplicationCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
+    "latestScopedApplicationCommit": "dba45278c615a38bc0134bbbe3db42599db38142",
     "latestCombinedCandidateCommit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
     "annualDeductionLinesEvidenceKey": "activeContinuation.nov26AnnualDeductionLines",
     "draftQbiFormsEvidenceKey": "activeContinuation.nov26DraftQbiForms",
+    "paCombinedInvestmentEvidenceKey": "activeContinuation.nov26PACombinedOrdinaryInvestment",
     "ohioTimelyObservationEvidenceKey": "activeContinuation.nov26OhioTimelyObservation",
     "previousSchemaDiagnosticsEvidenceKey": "activeContinuation.nov26PreviousSchemaFailureDiagnostics",
     "w2gAndGuidedExactMoneyEvidenceKey": "activeContinuation.nov26W2gGuidedExactMoney",
@@ -151,6 +152,19 @@
     ]
   },
   "activeContinuation": {
+    "nov26PACombinedOrdinaryInvestment": {
+      "commit": "dba45278c615a38bc0134bbbe3db42599db38142",
+      "residency": "part-year inbound",
+      "residentInterest": "40",
+      "residentCashDividends": "40",
+      "taxableIncome": "39080",
+      "paTaxAndActualWithholding": "1200",
+      "worldwideScheduleSPEligibilityIncome": "75240",
+      "focusedTestsPassed": 219,
+      "scopedSpecReferencesPassed": 1290,
+      "independentEngineeringReview": "passed",
+      "finalFormQualification": "open"
+    },
     "nov26DraftQbiForms": {
       "commit": "32a455f41cd8c7a7c8e31ded00b3ad7591cb94d0",
       "draftForm8995": "https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2",

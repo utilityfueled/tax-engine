@@ -638,3 +638,20 @@ patronage or its filing export.
 [26 U.S.C. §199A](https://uscode.house.gov/us/usc/119-124/t26/s199A/) ·
 [Draft Form 8995-A](https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3) ·
 [Draft instructions](https://www.irs.gov/pub/irs-dft/i8995a--dft.pdf#page=8).
+
+## November 26 combined Pennsylvania interest and dividends
+
+For this fictional single part-year resident, Pennsylvania domicile
+begins July 1, 2026. Assume $75,000 in annual wages including $39,000
+of verified Pennsylvania compensation. The independently supported
+bank interest and ordinary cash dividend originals each report $120,
+with $80 credited before the move and $40 credited on July 1. Neither
+original reports withholding or any other amount. The only PA
+withholding is $1,200 on the wage original.
+
+Independently derive Schedule A, Schedule B, the PA-40 tax and balance,
+and worldwide Schedule SP income. Repeat the withholding comparison
+with $1,199, keeping all income facts constant. Confirm the treatment
+on the final 2026 state forms when published.
+[Department of Revenue residency guidance](https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/determining-residency) ·
+[Schedule SP instructions](https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf).
