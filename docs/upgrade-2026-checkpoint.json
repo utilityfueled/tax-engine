@@ -3,7 +3,7 @@
     "asOf": "2026-11-27",
     "branch": "main",
     "applicationCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
-    "latestScopedApplicationCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+    "latestScopedApplicationCommit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
     "latestCombinedCandidateCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasis",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
@@ -371,6 +371,30 @@
         }
       }
     },
+    "nov27DependentOriginalAndEligibilityScoped": {
+      "commit": "bed42a90f3b25899a1ad4987f88366e8cbe04208",
+      "focusedPassed": 30,
+      "specLinkedChecksPassed": 10269,
+      "independentEngineeringReview": "passed",
+      "desktopAndMobileBeforeFailed": 2,
+      "desktopAndMobileAfterPassed": 2,
+      "exactUnitPassed": 31349,
+      "exactUnitSkipped": 83,
+      "fullLocalChecks": "running"
+    },
+    "nov27NoncashDonationDateReview": {
+      "commit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
+      "focusedPassed": 26,
+      "specLinkedChecksPassed": 10270,
+      "webTypecheckPassed": true,
+      "independentEngineeringReview": "passed",
+      "reproducedStaleAnswerBeforeCorrection": true,
+      "fullLocalChecks": "pending",
+      "authorities": [
+        "https://www.irs.gov/publications/p526",
+        "https://uscode.house.gov/us/usc/t26/s170/"
+      ]
+    },
     "nov27CurrentNativeRecoveryQueue": {
       "appRevision": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
       "relativeChangedPaths": [
@@ -380,20 +404,27 @@
       "currentRun": {
         "runId": 46057962832,
         "revision": "86fe42b9b291f3f4bb2eb5240523491f166372fd",
-        "status": "pending",
+        "status": "queued",
         "conclusion": null,
-        "jobId": null,
+        "jobId": 140720960329,
         "strictBrowserStatus": null,
         "strictBrowserConclusion": null
       },
       "priorRun": {
         "runId": 46014076098,
         "revision": "e075fceaf376fef3e7aff1b01a1eea63c390cb75",
-        "status": "in_progress",
-        "conclusion": null,
+        "status": "completed",
+        "conclusion": "failure",
         "jobId": 140634639448,
-        "strictBrowserStatus": "in_progress",
-        "strictBrowserConclusion": null
+        "strictBrowserStatus": "completed",
+        "strictBrowserConclusion": "failure",
+        "archivePassed": true,
+        "composeRecoveryPassed": true,
+        "browserCleanupConfirmed": true,
+        "strictPassed": 643,
+        "strictFailed": 11,
+        "strictSkipped": 5,
+        "sanitizedTimingArtifactId": 15228734483
       }
     },
     "nov27CommercialVehicleBasis": {

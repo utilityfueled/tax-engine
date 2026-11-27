@@ -15,14 +15,33 @@ the latest application revision, exact-source runs and open dependencies. The
 | Hosted qualification | Cybersecurity rehearsals are deferred at the owner's direction. Hosted qualification remains open. |
 | Self-host release | Exact local evidence already includes encrypted backup, deletion and restoration. Qualify the AMD64 and ARM64 runtime images and record strict browser, upgrade and recovery evidence before publishing. |
 
+## November 27 noncash donation date review
+
+`1fb0542be` requires fresh 2026 holding-period and valuation answers when
+a known noncash gift date changes. Where equal-value gifts have competing
+dates, the retained confirmation must match the actual remaining gift.
+The saved-draft tests reproduce the stale answer before the correction and
+verify that a later confirmation applies to the corrected date. All 26
+focused tests, web type checking, 10,270 spec checks and independent
+engineering review passed. The exact full local check sequence is pending.
+[IRS Publication 526](https://www.irs.gov/publications/p526) ·
+[26 USC §170(e)](https://uscode.house.gov/us/usc/t26/s170/).
+
 ## November 27 native recovery queue
 
 The current ARM64 rehearsal `46057962832` targets `86fe42b9b`, which
-contains application code `dbf3d7f79` and the two checklist updates. It was
-pending at the check. The earlier `e075fceaf` run `46014076098`
-was in progress. Final Linux image, browser, and recovery qualification
-requires successful results for the release candidate.
-[Current ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832) · [Earlier ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098).
+contains application code `dbf3d7f79` and the two checklist updates. Its
+job `140720960329` was queued. The earlier `e075fceaf` run `46014076098`
+passed archive verification, isolated Compose upgrade and recovery, and
+browser cleanup. Its strict browser suite passed 643 cases, failed 11,
+and retained five expected skips. The same 11 cases hit the 30-second
+deadline on the earlier attempt. Six of them stopped at different
+actions, so the receipts do not isolate a single application function.
+Final Linux qualification still needs a passing strict run on the release
+candidate.
+[Queued ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832) ·
+[Completed ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098) ·
+[Sanitized timing](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098/artifacts/15228734483).
 
 ## November 27 commercial clean vehicle asset basis
 
