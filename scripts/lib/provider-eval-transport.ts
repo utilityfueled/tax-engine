@@ -1,14 +1,13 @@
 import { performance } from "node:perf_hooks";
 import { z } from "zod";
 import { geminiTextResponseSchema, readGeminiTextResponse } from "../../packages/engine/src/ai-gemini-text-response";
+import { openAiUsageSchema } from "../../packages/engine/src/ai-openai-usage";
 import { providerModelCandidates } from "../../packages/engine/src/provider-model-eval";
 import { evalHttpStatusSchema, evalUsageSchema, type ProviderEvalRequest, type ProviderEvalTransport, type ProviderEvalTransportResult } from "./provider-eval-runner";
 import { PROVIDER_EVAL_CONTRACT as contract, providerEvalClientTrace } from "./provider-eval-contract";
-const token = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const openAiEnvelope = z.object({ model: z.string(), id: z.string().optional(), service_tier: z.string().optional(), status: z.string(),
   output_text: z.string().optional(), output: z.array(z.object({ type: z.string(), content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional() })).optional(),
-  usage: z.object({ input_tokens: token, output_tokens: token, total_tokens: token.optional(), input_tokens_details: z.object({ cached_tokens: token.optional(),
-    cache_write_tokens: token.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: token, ttl_12h_tokens: token }).optional() }).optional() }) });
+  usage: openAiUsageSchema });
 const googleEnvelope = geminiTextResponseSchema.extend({ modelVersion: z.string(), responseId: z.string().optional() });
 const openAiBodyReference = openAiEnvelope.pick({ id: true });
 const googleBodyReference = googleEnvelope.pick({ responseId: true });

@@ -358,8 +358,10 @@ describe("task-based candidate AI adapter", () => {
   it("reconciles reported OpenAI totals before settling usage", async () => {
     const base = envelope();
     const id = "resp_fixtureTotal";
-    for (const total of [undefined, 2100]) {
-      const deps = execution(envelope(undefined, { id, usage: { ...base.usage, total_tokens: total } }));
+    for (const reported of [{}, { total_tokens: 2100, output_tokens_details: {} },
+      { output_tokens_details: { reasoning_tokens: 0 } },
+      { total_tokens: 2100, output_tokens_details: { reasoning_tokens: 2000 } }]) {
+      const deps = execution(envelope(undefined, { id, usage: { ...base.usage, ...reported } }));
       const recordAttempt = vi.fn();
       const recordUnknownAttempt = vi.fn();
       await expect(executeAiTask(request(), { ...deps, recordAttempt, recordUnknownAttempt })).resolves.toMatchObject({
@@ -375,6 +377,10 @@ describe("task-based candidate AI adapter", () => {
     const invalidUsage = [
       ...[2099, "2100", null, -1, 2100.5, Number.MAX_SAFE_INTEGER + 1].map(total => ({ ...base.usage, total_tokens: total })),
       { input_tokens: Number.MAX_SAFE_INTEGER, output_tokens: 1, total_tokens: Number.MAX_SAFE_INTEGER },
+      ...[2001, "1", null, -1, 0.5, Number.MAX_SAFE_INTEGER + 1].map(reasoning => ({
+        ...base.usage, total_tokens: 2100, output_tokens_details: { reasoning_tokens: reasoning },
+      })),
+      { ...base.usage, output_tokens_details: null },
     ];
     for (const usage of invalidUsage) {
       const deps = execution(envelope(undefined, { id, usage }));

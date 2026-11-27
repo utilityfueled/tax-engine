@@ -63,8 +63,11 @@ lines:
       Require valid input and output counts. If reported, total_tokens must be
       a nonnegative safe integer and equal the exact sum of input and output
       counts. Cached and reasoning tokens are already included in their
-      respective counts. An absent total preserves existing pricing. A malformed
-      or contradictory total leaves usage unknown, with no accepted output,
+      respective counts. When supplied, the reasoning counter must be a
+      nonnegative safe integer no greater than the output count, as described in
+      https://developers.openai.com/api/reference/resources/responses/methods/create.
+      An absent total or reasoning detail preserves existing pricing. Malformed
+      or contradictory token counts leave usage unknown, with no accepted output,
       settlement or retry in either transport. Retain the existing provider
       response reference for reconciliation. Accept an omitted service_tier
       or an explicit default. Any other supplied value, including an empty

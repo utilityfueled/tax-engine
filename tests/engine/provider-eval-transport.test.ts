@@ -32,8 +32,10 @@ describe("official evaluation transport", () => {
   it("reconciles reported OpenAI totals before returning evaluation usage", async () => {
     const fetchFn = vi.fn<typeof fetch>();
     const transport = createLiveProviderEvalTransport({ profileIds: ["luna-high"], apiKeys: { openai: "synthetic" }, fetchFn });
-    for (const total of [undefined, 150]) {
-      fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, usage: { ...openai.usage, total_tokens: total } }));
+    for (const reported of [{}, { total_tokens: 150, output_tokens_details: {} },
+      { output_tokens_details: { reasoning_tokens: 0 } },
+      { total_tokens: 150, output_tokens_details: { reasoning_tokens: 50 } }]) {
+      fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, usage: { ...openai.usage, ...reported } }));
       await expect(transport(request())).resolves.toMatchObject({
         status: "completed", reportedModel: "gpt-6-luna", responseReference: openai.id,
         usage: { inputTokens: 100, outputTokens: 50, cachedInputTokens: 20 }, payload: { probe: "ok" },
@@ -44,6 +46,10 @@ describe("official evaluation transport", () => {
     const invalidUsage = [
       ...[149, "150", null, -1, 150.5, Number.MAX_SAFE_INTEGER + 1].map(total => ({ ...openai.usage, total_tokens: total })),
       { input_tokens: Number.MAX_SAFE_INTEGER, output_tokens: 1, total_tokens: Number.MAX_SAFE_INTEGER },
+      ...[51, "1", null, -1, 0.5, Number.MAX_SAFE_INTEGER + 1].map(reasoning => ({
+        ...openai.usage, total_tokens: 150, output_tokens_details: { reasoning_tokens: reasoning },
+      })),
+      { ...openai.usage, output_tokens_details: null },
     ];
     for (const usage of invalidUsage) {
       fetchFn.mockReset().mockResolvedValueOnce(response({ ...openai, usage }));

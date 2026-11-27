@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { calculateAiCost, maximumAiRequestCost, type AiTokenUsage } from "@tax-engine/engine/src/ai-pricing";
 import { geminiTextResponseSchema, readGeminiTextResponse } from "@tax-engine/engine/src/ai-gemini-text-response";
+import { openAiUsageSchema } from "@tax-engine/engine/src/ai-openai-usage";
 import { resolveCandidateAiRoute, type AiProvider, type AiTask, type AiProfileId } from "@tax-engine/engine/src/ai-task-registry";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
 import { selectQualifiedAiRoute, type AiRolloutState } from "./ai-rollout";
@@ -84,7 +85,6 @@ async function readBoundedResponse(response: Response): Promise<unknown> {
   return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(combined));
 }
 
-const usageCount = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const openAiRequestId = /^req_[a-zA-Z0-9]{1,128}$/;
 const openAiResponseId = /^resp_[a-zA-Z0-9]{1,128}$/;
 
@@ -102,9 +102,7 @@ const openAiEnvelope = z.object({
     type: z.string(),
     content: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(),
   })).optional(),
-  usage: z.object({ input_tokens: usageCount, output_tokens: usageCount, total_tokens: usageCount.optional(),
-    input_tokens_details: z.object({ cached_tokens: usageCount.optional(),
-      cache_write_tokens: usageCount.optional(), cache_write_tokens_details: z.object({ ttl_30m_tokens: usageCount, ttl_12h_tokens: usageCount }).optional() }).optional() }),
+  usage: openAiUsageSchema,
 });
 const openAiBodyReference = openAiEnvelope.pick({ id: true });
 /** One attempt only. A caller may explicitly escalate once; no provider switching or hidden retries. */
