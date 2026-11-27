@@ -41,6 +41,16 @@ from the tracked archive of `0cf50ee63`. The earlier exact release checks
 remain tied to `71c4736a6` until the new suite finishes. These packages do
 not qualify draft 2026 filing forms or replace independent tax review.
 
+## November 27 strict ARM64 browser run
+
+Run `46005900143` for `bc9ab6a12` passed 643 browser cases, skipped five,
+and failed 11 under the 30-second test limit. Four of the failures were
+Ohio part-year school journeys. They reached different actions before
+timing out. The independent log review found no shared failing request
+or evidence of an incorrect tax result. The successor recovered the ARM64
+workflow lease, and its recovery job was queued at the check. The strict
+Linux gate stays open. [Failed browser job](https://github.com/utilityfueled/tax-engine/actions/runs/46005900143/job/140551972635) · [Successor run](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098).
+
 ## November 27 exact Ohio guided receipt verification
 
 The tracked archive for `71c4736a6` passed all 11 local release checks
