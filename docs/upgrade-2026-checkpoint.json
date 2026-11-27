@@ -2,7 +2,7 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "0cf50ee630ebc71d6a91d79e383bd549ea392277",
+    "applicationCommit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
     "latestScopedApplicationCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
     "latestCombinedCandidateCommit": "85645fdcbca8045e19ab2884e3b19f3bddf5b9b4",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
@@ -60,7 +60,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPensionExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -109,7 +109,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPensionExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -182,7 +182,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPensionExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -306,6 +306,24 @@
       "engineeringReviewPassed": true,
       "combinedVerification": "queued-after-1746edc42"
     },
+    "nov27PennsylvaniaNonresidentAndAotcExact": {
+      "commit": "1746edc4267ac3fa885e2d15e83e0e039c8f62ea",
+      "archiveSha256": "4f6ad5b656ec2a9ddc51987ff1ea0a1e0edbc9c3fdd92d070c81459c92dba221",
+      "localManifestSha256": "7dae4cd2394e3f266fb37259876ba27e6c065315caef9717fea696fbeb572eb1",
+      "requiredLocalChecksPassed": 11,
+      "unitPassed": 31311,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.67,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "standaloneReceiptSha256": "ae6e48bd90ff3717b155c9d15591b40ab2e5b9e1063ffe5b76f40cdf1fe6f853",
+      "localListenersClosed": true,
+      "aotcBrowserLifecyclePassed": true,
+      "aotcBrowserProbeLogSha256": "858bea29529e4eac46970c22ad3c37276cb14df8044b80d889794af873c1104f",
+      "aotcBrowserProbeSourceSha256": "2886c2e13dc04504b6a7d9f0d446ca57dbcc718f3c6fad37520b7b4b944084ad"
+    },
     "nov27PennsylvaniaNonresidentAndAotc": {
       "paNonresidentInterestCommit": "fcc7742ff032b80d0f59f3467a62c5f1586db5a8",
       "paNonresidentInterestFocusedTestsPassed": 287,
@@ -316,7 +334,8 @@
       "aotcExactDesktopExpenseLifecyclePassed": true,
       "aotcDesktopProbeLogSha256": "858bea29529e4eac46970c22ad3c37276cb14df8044b80d889794af873c1104f",
       "scopedApplicationVerificationPassed": true,
-      "combinedVerification": "static-started-unit-coverage-and-web-queued"
+      "combinedVerification": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27PennsylvaniaNonresidentAndAotcExact"
     },
     "nov27Arm64StrictBrowserFollowup": {
       "revision": "bc9ab6a12c25c6075ee6375daeac4c20133eca04",

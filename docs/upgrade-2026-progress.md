@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `0cf50ee63` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `1746edc42` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -40,9 +40,15 @@ suite is queued behind `1746edc42`. [Draft Form 8863 instructions](https://www.i
   the $1,000 to $4,000 edit, save, reopen, and re-attestation on the exact
   build. [Draft Form 8863 instructions](https://www.irs.gov/pub/irs-dft/i8863--dft.pdf).
 
-The tracked archive of `1746edc42` started static checks. The new unit,
-coverage, browser and recovery runs are queued behind the earlier exact
-archive's corresponding runs to reuse local resources safely.
+The tracked archive of `1746edc42` passed all 11 local checks. Both unit runs
+passed 31,311 tests with 83 skips. Branch coverage was
+88.67%. Chromium passed 654 cases across
+9 windows with 5 skips. The standalone
+encrypted backup, deletion and restore rehearsal passed. A separate
+desktop probe edited the AOTC expense from $1,000 to $4,000, preserved three
+prior claims, held canonical input after reopen, and restored the $4,000
+amount after re-attestation. Both browser listeners closed. Manifest SHA-256
+`7dae4cd2394e3f266fb37259876ba27e6c065315caef9717fea696fbeb572eb1`.
 
 ## November 27 Pennsylvania, Ohio and federal source packages
 
