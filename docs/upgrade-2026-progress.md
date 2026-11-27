@@ -1,5 +1,86 @@
 # 2026 upgrade implementation evidence
 
+## November 26 Form 8919 original and offline evaluation windows
+
+`63efb2e25` counts a verified 2026 Form 8919 Reason A original
+1099-NEC once as employee wages. It matches the original to the
+employer, return owner, recipient TIN and full Box 1a amount. The
+determination's actual receipt controls the calculation date.
+Box 4 remains federal withholding, and eligible Box 1d overtime
+uses Schedule 1-A line 16. Unlinked overlap, duplicate or corrected
+originals, same-firm W-2s and additional business receipts remain
+held. The initial tests reproduced $87,000 of gross income on
+$86,000 of wages and acceptance before the determination was
+received. The corrected fixture has $86,000 of gross income,
+$69,700 taxable income, $77 of Form 8919 payroll tax, $100 of
+withholding from the original, and $200 of eligible overtime.
+All 116 focused tests and 11 independent chronology tests passed.
+Typechecking and the browser source binding passed. Annual filing
+and qualified human review remain open.
+[Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+[Draft Schedule 1-A instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110).
+
+`b1878ddd0` enforces the provider evaluation's authorized interval
+to sub-millisecond precision. Dispatch may occur at plan creation
+and must precede expiry. Lawfully dispatched attempts can still
+settle or reconcile after expiry. Positive plan duration is
+limited to exactly seven days. All 97 focused offline cases and
+38 independent offline cases passed. The tests used synthetic
+transports. Independent human evaluation and model promotion
+qualification remain open.
+
+## November 26 draft federal tables and Ohio investment sources
+
+`0d564ea03` uses the 2026 draft Tax and Earned Income Credit tables
+in isolated draft calculations. The joint $25,300 example gives
+$2,543. The last joint table band gives $11,501 and the worksheet
+gives $11,504 at $100,000. The one-child EIC example with $1,000
+earned income and $30,000 AGI gives $349. Two independent source
+extractions support 8,248 ordinary and 11,240 EIC cells. Tests check
+both ends of every cell and all eight partial EIC interval cutoffs.
+Form 2210, Form 8880, child tax credit, foreign and minimum tax credit,
+and investment interest regressions cover downstream amounts. All 86
+targeted tests passed. `7d44f58e8` binds the changed fixtures to the
+browser audit. Final-year rule-pack and export gates remain closed.
+[Draft Publication 1040](https://www.irs.gov/pub/irs-dft/p1040--dft.pdf) ·
+[November 24 draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf).
+
+`c7d851d39` combines the original bank interest and ordinary cash
+dividends in the existing under-65, single-employee Ohio part-year
+draft. Each original and its dated receipts reconcile independently.
+The combined fixture has $58,000 AGI, $2,000 on IT NRC line 10, a
+$516 credit, $636 Ohio tax and a $364 refund. Five new tests failed
+before implementation. All 283 focused cases and 148 independent
+cases passed, along with typechecking, scoped lint and source binding.
+Official annual Ohio instructions and mapping qualification remain
+open. [Ohio allocation statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Draft Ohio instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
+Exact `c7d851d39` passed the static checks, offline AI artifact check,
+31,084 unit tests with 81 existing skips, coverage at 88.60% branches,
+and the self-host web build. The managed Chromium run is in progress.
+
+## November 26 self-host migration authentication
+
+`b496c367d` corrects how the migration rehearsal supplies the seed
+schema's password. The installed PostgreSQL client library gave the
+empty URL password precedence over the separate file-derived password.
+The helper now supplies the validated connection fields and file-derived
+password to the admin client. The URL used by subprocesses stays
+password-free. The regression reproduced the missing password without
+a parent passfile. All 21 focused tests and scoped lint passed.
+
+Disposable PostgreSQL 16.14 with parent `PGPASSFILE` and `PGPASSWORD`
+unset passed migration, preserved rows, fresh-process replay, dump,
+restore and cleanup. The forced missing-client control stopped at the
+expected dump stage and left zero schemas. The older AMD64 and ARM64
+runs both failed at `create-schema`. The new ARM64 run covers the
+recovery fix. Exact local and AMD64 runs cover `c7d851d39`.
+[Old AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45920349552) ·
+[Old ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45919423965) ·
+[Recovery fix ARM64](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
+[Combined AMD64](https://github.com/utilityfueled/tax-engine/actions/runs/45932847590).
+
 ## November 26 upper QBI audit transfers
 
 `07710f086` follows draft Form 8995 lines 1–14 for individual

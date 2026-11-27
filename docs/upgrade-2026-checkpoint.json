@@ -2,9 +2,13 @@
   "resume": {
     "asOf": "2026-11-26",
     "branch": "main",
-    "applicationCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
-    "latestScopedApplicationCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
-    "latestCombinedCandidateCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",
+    "applicationCommit": "63efb2e25e9d98159e874fa243828e9d9120607f",
+    "latestScopedApplicationCommit": "63efb2e25e9d98159e874fa243828e9d9120607f",
+    "latestCombinedCandidateCommit": "63efb2e25e9d98159e874fa243828e9d9120607f",
+    "form8919OriginalEvidenceKey": "activeContinuation.nov26Form8919Original",
+    "providerEvaluationWindowEvidenceKey": "activeContinuation.nov26ExactProviderEvaluationWindows",
+    "draftFederalTableAndOhioInvestmentEvidenceKey": "activeContinuation.nov26DraftFederalTablesAndOhioInvestment",
+    "migrationPoolAuthenticationEvidenceKey": "activeContinuation.nov26SelfHostMigrationAuthentication",
     "annualDeductionLinesEvidenceKey": "activeContinuation.nov26AnnualDeductionLines",
     "draftQbiFormsEvidenceKey": "activeContinuation.nov26DraftQbiForms",
     "upperQbiAuditEvidenceKey": "activeContinuation.nov26UpperQbiAudit",
@@ -145,7 +149,7 @@
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
     "unitCoverageEvidenceKey": "activeContinuation.nov24Main5f32UnitCoverage",
     "remaining": [
-      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45927516117 covers the latest d92d17742 application. ARM64 recovery 45919423965 covers the prior f34372189 application. Earlier ARM64 45906276956 passed image/archive and stopped inside the pinned-schema migration before Chromium. Another earlier ARM64 run, 45914423019, also failed the pinned-schema migration.",
+      "Both strict Linux browser gates and target image evidence remain open. AMD64 Web 45932847590 covers c7d851d39. ARM64 recovery 45932508665 covers b496c367d, the migration authentication fix. Prior ARM64 45919423965 and AMD64 45920349552 failed at create-schema. A standalone SCRAM 16.14 positive and failure-mode rehearsal passed after the fix.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
       "Assign independent human AI-case reviewers, preserve the held-out labeled corpus, obtain selected Google project access and collect comparable provider runs before any promotion.",
       "Resolve or assign each applicable final-image advisory with an owner and expiry before release. The November 24 npm lockfile audits returned zero findings.",
@@ -153,6 +157,71 @@
     ]
   },
   "activeContinuation": {
+    "nov26Form8919Original": {
+      "commit": "63efb2e25e9d98159e874fa243828e9d9120607f",
+      "focusedTestsPassed": 116,
+      "independentChronologyTestsPassed": 11,
+      "independentEngineeringReview": "passed after receipt date and calculation date recheck",
+      "unitCiRun": 45934328653,
+      "amd64WebRun": 45934328745,
+      "browserSourceBindingVerified": true,
+      "sampleGrossIncome": "86000.00",
+      "sampleTaxableIncome": "69700.00",
+      "sampleAdditionalPayrollTax": "77.00",
+      "sampleNecFederalWithholding": "100.00",
+      "sampleSchedule1AOvertime": "200.00",
+      "qualification": "2026 isolated draft calculation only, final rules and qualified human review open",
+      "sourceLinks": [
+        "https://www.irs.gov/pub/irs-pdf/f8919.pdf",
+        "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110"
+      ]
+    },
+    "nov26ExactProviderEvaluationWindows": {
+      "commit": "b1878ddd0838d09cd93aee751a6cf2cd1cc438d6",
+      "focusedOfflineTestsPassed": 97,
+      "independentOfflineTestsPassed": 38,
+      "independentEngineeringReview": "passed",
+      "qualification": "synthetic transports only, independent human evaluation open"
+    },
+    "nov26DraftFederalTablesAndOhioInvestment": {
+      "federalCommit": "0d564ea03bcb7ad05fdb898649e760b6067327ce",
+      "federalBrowserFixtureAuditCommit": "7d44f58e898b0ab672b1032add9600a1ad386d29",
+      "ohioCommit": "c7d851d39d226de7553b2e8a9df3e8271350507d",
+      "independentEngineeringReview": "passed for federal draft tables and Ohio sources",
+      "federalFocusedTestsPassed": 86,
+      "ordinaryDraftCellsChecked": 8248,
+      "eicDraftCellsChecked": 11240,
+      "eicPartialCutoffsChecked": 8,
+      "ohioFocusedTestsPassed": 283,
+      "ohioIndependentTestsPassed": 148,
+      "trackedSpecReferencesValidated": 10195,
+      "ordinaryFixtureSha256": "afb147e72e8d437ed967025e6fc1071f70c3349ae48ab4f90ebe3e60014c4169",
+      "eicFixtureSha256": "0ad0e6cdaf90f68292ba18c6291c0e9f3b1e4f6ba14f9bcbd4bc9c5c72ccc848",
+      "sourceLinks": [
+        "https://www.irs.gov/pub/irs-dft/p1040--dft.pdf",
+        "https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf",
+        "https://codes.ohio.gov/ohio-revised-code/section-5747.20",
+        "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf"
+      ],
+      "amd64WebRun": 45932847590,
+      "unitCiRun": 45932847719,
+      "exactLocalEvidenceInProgress": {
+        "unitTestsPassed": 31084,
+        "unitExistingSkips": 81,
+        "branchCoveragePercent": "88.60",
+        "buildWebPassed": true,
+        "managedChromium": "running"
+      }
+    },
+    "nov26SelfHostMigrationAuthentication": {
+      "commit": "b496c367d9be9fcca755b6014079cb09b2f8b3b8",
+      "focusedTestsPassed": 21,
+      "preFixFailedAtCreateSchema": [45920349552, 45919423965],
+      "localPostgres": "16.14 SCRAM, no parent PGPASSFILE or PGPASSWORD, migration and replay preserved the rows, dump/restore and cleanup passed",
+      "forcedFailure": "missing client, dump (command unavailable), zero residual schemas",
+      "arm64RecoveryFixRun": 45932508665,
+      "recoveryFixAmd64WebRun": 45931694869
+    },
     "nov26UpperQbiAudit": {
       "simpleFormCommit": "07710f086ffde0178f69b100f44e3a81e39f98c8",
       "detailedFormCommit": "d92d17742fcd37d6304127bc258d4cac6c6fa019",

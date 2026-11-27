@@ -9,6 +9,26 @@ Read the `resume` entry in the [checkpoint](upgrade-2026-checkpoint.json)
 for the exact application revision, current blockers and evidence key.
 Use the linked progress sections when investigating individual packages.
 
+- `63efb2e25` reconciles Form 8919 wages with the 2026 original
+  1099-NEC, preserves withholding and routes eligible overtime to
+  draft Schedule 1-A. `b1878ddd0` enforces exact offline evaluation
+  authorization windows. Both reviews passed. Exact local unit,
+  coverage and web build checks passed for `c7d851d39`, with the
+  managed browser run in progress. [Form 8919 and evaluation evidence](upgrade-2026-progress.md#november-26-form-8919-original-and-offline-evaluation-windows).
+
+- `0d564ea03` applies the independently reconciled 2026 draft ordinary
+  tax and EIC tables. `c7d851d39` combines individually verified Ohio
+  part-year interest and cash dividends. Exact local verification and
+  [AMD64 CI](https://github.com/utilityfueled/tax-engine/actions/runs/45932847590)
+  cover the combined source. Final tax review and filing qualification
+  remain open. [Federal and Ohio evidence](upgrade-2026-progress.md#november-26-draft-federal-tables-and-ohio-investment-sources).
+
+- `b496c367d` fixes the authenticated step that failed during clean
+  schema creation on both Linux architectures. The local PostgreSQL
+  migration, backup and restore passed with the parent password
+  variables unset. [ARM64 fix run](https://github.com/utilityfueled/tax-engine/actions/runs/45932508665) ·
+  [Rehearsal evidence](upgrade-2026-progress.md#november-26-self-host-migration-authentication).
+
 - `07710f086` and `d92d17742` align the remaining upper draft QBI
   audit rows. The phase-in tests verify lines 12, 25, 26, 27 and 32.
   The ordinary draft audit uses numbered source labels. All 426

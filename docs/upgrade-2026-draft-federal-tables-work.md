@@ -20,8 +20,10 @@ every Tax and EIC Table cell, including the eight EIC footnotes. Both start
 from the IRS PDF. The comparison used Decimal and the existing indexed rates.
 The statutory ordinary preview differs from the draft in 8,236 of 8,248
 cells at each integer endpoint. At the example $25,300, it gives $2,540.
-The comparison leaves that preview, the final 2025 methods and all year gates
-unchanged. The separate technical extraction checks do not supply human review.
+That November 13 comparison left the preview unchanged. On November 26,
+`0d564ea03` applied the verified draft ordinary and EIC lookup to the 2026
+draft. The final 2025 methods and year gates remain in force. The separate
+technical extraction checks do not supply human review.
 [Rev. Proc. 2025-32, §§3.01 and 3.06](https://www.irs.gov/irb/2025-45_IRB).
 
 Private evidence is in `.local/upgrade-evidence/nov13-irs-draft-publication-1040/`.

@@ -673,3 +673,42 @@ Record the official thresholds, loss presentation and final form
 revision used in the independent worksheet.
 [Draft Form 8995](https://www.irs.gov/pub/irs-dft/f8995--dft.pdf#page=2) ·
 [Draft Form 8995-A](https://www.irs.gov/pub/irs-dft/f8995a--dft.pdf#page=3).
+
+## November 26 draft federal tables and Ohio investment allocation
+
+Recompute federal draft ordinary tax at the $25,300 joint example,
+just below $100,000, and at $100,000. Recompute the one-child EIC with
+$1,000 of earned income and $30,000 of AGI. Confirm how the final
+instructions treat a qualifying surviving spouse and each of the eight
+partial EIC intervals. Require the final Publication 1040 revision and
+source hash before approving filing. The full-cell engineering
+comparison used 8,248 ordinary and 11,240 EIC amounts.
+[Draft Publication 1040](https://www.irs.gov/pub/irs-dft/p1040--dft.pdf) ·
+[November 24 draft instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf).
+
+For the single Ohio midyear mover, determine which independently
+confirmed receipts from the original Form 1099-INT and Form 1099-DIV
+enter IT NRC Part B line 10. Recompute the Ohio allocation ratio, credit,
+state tax and refund using the combined synthetic fixture with $58,000
+of AGI, $2,000 of investment income received while domiciled in Ohio and
+$1,000 of withholding. Record the official form revision and separately
+verify both original receipts. The current draft yields a $516 credit,
+$636 tax and $364 refund.
+[Ohio allocation statute](https://codes.ohio.gov/ohio-revised-code/section-5747.20) ·
+[Draft Ohio instructions](https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/DRAFTS/2026/it1040-booklet-draft.pdf).
+
+## November 26 Form 8919 original and overtime transfer
+
+Recompute the case of a single employee with $85,000 of W-2 wages
+and another $1,000 in Form 1099-NEC Box 1a from a different firm.
+The original reports $200 of eligible overtime in Box 1d and
+$100 of federal withholding in Box 4. The employee has no
+business receipts or expenses. The IRS determination was
+issued November 1 and received November 2. Confirm when Reason A
+applies, whether the wages enter only once, and how the $200 and
+$100 flow to the return. Determine the additional Social Security
+and Medicare tax. The draft engine produces $86,000 gross income,
+$69,700 taxable income and $77 of additional payroll tax. Record
+the final 2026 Schedule 1-A line and authority for the transfer.
+[Form 8919](https://www.irs.gov/pub/irs-pdf/f8919.pdf) ·
+[Draft Schedule 1-A instructions](https://www.irs.gov/pub/irs-dft/i1040gi--dft.pdf#page=110).
