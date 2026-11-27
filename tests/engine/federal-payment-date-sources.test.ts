@@ -18,7 +18,7 @@ const raw = (taxYear: 2025 | 2026, adjustmentFacts: object) => ({
   ...simpleW2Fixture, taxpayer: { ...simpleW2Fixture.taxpayer, taxYear },
   w2s: simpleW2Fixture.w2s.map(w2 => ({ ...w2, taxYear })), adjustments: adjustmentFacts,
 });
-const run = (year: 2025 | 2026, facts = adjustments()) => calculateFederalTax(parseInput(raw(year, facts)));
+const run = (year: 2025 | 2026, facts = adjustments(), asOfDate?: string) => calculateFederalTax(parseInput(raw(year, facts)), { asOfDate });
 
 describe("Actual federal payment dates and selected return application", () => {
   it("holds a reused actual federal payment receipt before crediting payments", () => {
@@ -133,6 +133,33 @@ describe("Actual federal payment dates and selected return application", () => {
     expect(() => run(2025, adjustments([], [{ ...extension, amount: "-0.01" }]))).toThrow(/amount/i);
   });
 
+  it("holds 2026 future estimates and extensions until their recorded payment date", () => {
+    const application = { taxYear: 2026, confirmed: true } as const;
+    const currentEstimate = { ...estimate, date: "2026-09-15", application };
+    const followingYearEstimate = { ...estimate, date: "2027-01-15", application };
+    const followingYearExtension = { ...extension, date: "2027-04-15", application };
+    vi.setSystemTime(new Date(2027, 3, 14, 12));
+    try {
+      expect(run(2026).estimatedTaxPenalty.isZero()).toBe(true);
+      expect(() => run(2026, adjustments([currentEstimate]), "2026-09-14")).toThrow(/payment date.*on or before.*as-of/i);
+      expect(() => run(2026, adjustments([followingYearEstimate]), "2027-01-14")).toThrow(/payment date.*on or before.*as-of/i);
+      expect(() => run(2026, adjustments([], [followingYearExtension]))).toThrow(/payment date.*on or before.*as-of/i);
+      expect(() => run(2026, adjustments([], [{ ...followingYearExtension, amount: "0.00" }]))).toThrow(/payment date.*on or before.*as-of/i);
+      expect(() => run(2026, adjustments([], [followingYearExtension]), "2027-04-15")).toThrow(/as-of date.*on or before today/i);
+      expect(() => run(2026, adjustments([currentEstimate]), "2026-02-30")).toThrow(/as-of date.*on or before today/i);
+      for (const payment of [currentEstimate, followingYearEstimate]) {
+        expect(run(2026, adjustments([payment]), payment.date).estimatedTaxPayments.toFixed()).toBe("125.37");
+      }
+      expect(run(2026, adjustments([{ ...currentEstimate, amount: "0.00" }]), currentEstimate.date).estimatedTaxPayments.isZero()).toBe(true);
+      vi.setSystemTime(new Date(2027, 3, 15, 12));
+      const paid = run(2026, adjustments([followingYearEstimate], [followingYearExtension]));
+      expect(paid.estimatedTaxPayments.toFixed()).toBe("125.37");
+      expect(paid.allLines.find(line => line.form === "Sched 3" && line.line === "10")?.value.toFixed()).toBe("53.24");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("keeps the actual paid date distinct from the historical tax year application", () => {
     const legacyLate = { ...estimate, date: "2026-11-18" };
     expect(run(2025, adjustments([legacyLate])).estimatedTaxPayments.toFixed()).toBe("125.37");
@@ -158,13 +185,18 @@ describe("Actual federal payment dates and selected return application", () => {
   });
 
   it("preserves following-year estimates and extensions and a confirmed zero", () => {
-    for (const taxYear of [2025, 2026] as const) {
-      const current = run(taxYear, adjustments(
-        [{ ...estimate, date: `${taxYear + 1}-01-15` }], [{ ...extension, date: `${taxYear + 1}-04-15` }],
-      ));
-      expect(current.estimatedTaxPayments.toFixed()).toBe("125.37");
-      expect(current.allLines.find(line => line.form === "Sched 3" && line.line === "10")?.value.toFixed()).toBe("53.24");
-      expect(current.estimatedTaxPenalty.isZero()).toBe(true);
+    vi.setSystemTime(new Date(2027, 3, 15, 12));
+    try {
+      for (const taxYear of [2025, 2026] as const) {
+        const current = run(taxYear, adjustments(
+          [{ ...estimate, date: `${taxYear + 1}-01-15` }], [{ ...extension, date: `${taxYear + 1}-04-15` }],
+        ));
+        expect(current.estimatedTaxPayments.toFixed()).toBe("125.37");
+        expect(current.allLines.find(line => line.form === "Sched 3" && line.line === "10")?.value.toFixed()).toBe("53.24");
+        expect(current.estimatedTaxPenalty.isZero()).toBe(true);
+      }
+    } finally {
+      vi.useRealTimers();
     }
     expect(run(2025, adjustments([{ ...estimate, amount: "0.00" }])).estimatedTaxPayments.isZero()).toBe(true);
     expect(() => run(2025, adjustments([{ ...estimate, amount: "0.00", date: "" }]))).toThrow(/date/i);

@@ -2,6 +2,7 @@
 import type Decimal from "decimal.js";
 import { z } from "zod";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { currentLocalCivilDate } from "@/utils/civil-date.js";
 import { d } from "@/utils/decimal.js";
 
 const actualDate = z.iso.date().refine(date => !date.startsWith("0000-"));
@@ -48,13 +49,28 @@ export function assertPriorReturnCreditSource(
   }
 }
 
-export function assertFederalPaymentSources(input: Pick<TaxYearInput, "taxpayer" | "adjustments" | "form2210">): void {
+export function assertFederalPaymentSources(
+  input: Pick<TaxYearInput, "taxpayer" | "adjustments" | "form2210">,
+  calculationAsOfDate?: string,
+): void {
   const year = input.taxpayer.taxYear;
+  const datedPayments = [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.extensionPayments ?? [])]
+    .filter(payment => payment.type === "federal");
+  let paymentAsOfDate: string | undefined;
+  if (year === 2026 && datedPayments.length > 0) {
+    const today = currentLocalCivilDate();
+    paymentAsOfDate = calculationAsOfDate ?? today;
+    if (!actualDate.safeParse(paymentAsOfDate).success || paymentAsOfDate > today) {
+      throw new Error("Federal payment calculation as-of date must be a valid calendar date on or before today.");
+    }
+  }
   const receiptReferences = new Set<string>();
-  for (const payment of [...(input.adjustments?.estimatedTaxPayments ?? []), ...(input.adjustments?.extensionPayments ?? [])]) {
-    if (payment.type !== "federal") continue;
+  for (const payment of datedPayments) {
     if (!actualDate.safeParse(payment.date).success) {
       throw new Error("Federal estimated or extension payment requires its actual calendar date.");
+    }
+    if (paymentAsOfDate !== undefined && payment.date > paymentAsOfDate) {
+      throw new Error("Federal estimated or extension payment date must be on or before the calculation as-of date.");
     }
     if (!isActualPaymentAmount(payment.amount)) {
       throw new Error("Federal estimated or extension payment requires a confirmed nonnegative amount.");

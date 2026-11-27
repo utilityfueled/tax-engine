@@ -609,6 +609,7 @@ lines:
     testRef: "tests/engine/federal.test.ts::Form 1040 Line 26 - estimated tax payments"
     testRefs:
       - "tests/engine/federal-payment-date-sources.test.ts::holds undocumented estimates and extension payments even with no installment penalty"
+      - "tests/engine/federal-payment-date-sources.test.ts::holds 2026 future estimates and extensions until their recorded payment date"
       - "tests/engine/federal-payment-date-sources.test.ts::keeps the actual paid date distinct from the historical tax year application"
       - "tests/engine/federal-payment-date-sources.test.ts::preserves following-year estimates and extensions and a confirmed zero"
       - "tests/engine/federal-payment-date-sources.test.ts::credits only nonnegative amounts actually carried over from the preceding return"
@@ -642,6 +643,16 @@ lines:
       and a year application do not establish timely payment, an extension or
       eligibility for late relief. The Form 2210 timing method retains its
       separate scope and reconciliations. No federal filing or export gate is changed.
+      For 2026, compare federal estimated and extension payment dates with the
+      calculation's valid civil as-of date on or before today, or today's local
+      date if none was supplied. Hold a future payment row before crediting
+      either line, including zero or when the tax year application was confirmed.
+      Direct Pay help questions 2, 3,
+      and 6 distinguish cancelable future payments from successful withdrawals
+      credited for the selected date (https://www.irs.gov/payments/direct-pay-help).
+      On or after the actual payment date, a federal receipt applied to the
+      selected return follows the existing source rules, including following-year
+      receipts. Earlier tax years and separate payment projections retain their rules.
       For 2025 and 2026, preserve an optional receipt reference from the actual
       federal payment record on imported estimate and extension rows. Hold
       repeated nonblank references across positive federal rows within either

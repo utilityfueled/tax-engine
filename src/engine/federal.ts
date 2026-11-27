@@ -319,7 +319,7 @@ function calculateFederalTaxReturn(input: TaxYearInput, context?: { asOfDate?: s
       throw new Error("Form 5329 education receipt and tuition payment dates must be on or before the calculation as-of date.");
     }
   }
-  assertFederalPaymentSources(input);
+  assertFederalPaymentSources(input, context?.asOfDate);
   // Validate retained actual row packets even when Schedule A is not selected.
   input.w2s.forEach((w2, index) => {
     const packet = (w2 as typeof w2 & { stateLocalSources?: unknown }).stateLocalSources;
