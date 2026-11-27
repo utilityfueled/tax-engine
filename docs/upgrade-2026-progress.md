@@ -8,7 +8,7 @@ the latest application revision, exact-source runs and open dependencies. The
 
 | Package | Remaining release evidence |
 | --- | --- |
-| Baseline and advisories | `dbf3d7f79` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
+| Baseline and advisories | `bed42a90f` passed all 11 local checks and the 85% branch gate. Qualify each final runtime image with its SBOM and advisory dispositions. |
 | Taxpayer facts and federal law | Finish scoped fact and calculation gaps. Obtain qualified independent review of the remaining interpretations and expected outputs, including the Form 172/§1202 case. See the [human tax review packet](upgrade-2026-human-tax-review-packet.md). |
 | Pennsylvania, Ohio and exports | Both states are selected for full-year, part-year and nonresident returns. Qualify the final revisions, blank hashes, mappings and transfers before enabling each filing output. |
 | AI routing and evaluation | Obtain independent human case labels and comparable evidence for the selected routes. Google project access remains unavailable for the optional Gemini route. Keep promotion gated on the published quality, spend and latency thresholds. See the [external actions ledger](upgrade-2026-external-actions.md). |
@@ -27,6 +27,29 @@ engineering review passed. The exact full local check sequence is pending.
 [IRS Publication 526](https://www.irs.gov/publications/p526) ·
 [26 USC §170(e)](https://uscode.house.gov/us/usc/t26/s170/).
 
+## November 27 dependent original and credit review
+
+`bed42a90f` requires fresh 2026 dependent residency and credit answers
+if an established dependent changes. A copied relationship is cleared at
+replacement or when an in-progress edit loses its identity anchor.
+Formatting-only ID edits and unchanged siblings preserve their facts.
+Corrections to the same dependent's relationship or months lived together
+clear composite credit answers while preserving timely ID confirmations.
+The tests cover saved reopen, reorder and replacement, the documented blank
+EIC identifier exception, and the unchanged 2025 route. All 30 focused tests,
+web type checking, 10,269 linked spec checks and independent engineering
+review passed. Chromium reproduced the stale answer at desktop and mobile
+widths before the change. Both widths now hold the answer and persist re-entry.
+The clean tracked archive passed all 11 local checks. Both unit runs passed
+31,349 tests with 83 skips and 88.69% branch coverage. Chromium passed
+654 cases with 5 skips across 9 windows. Encrypted standalone
+backup, deletion and restoration passed, and all listeners closed. The initial
+browser attempt exhausted disk space. The rerun used the same source revision
+after removal of its generated webpack cache.
+Manifest SHA-256 `c186f34fa851ecff409a858541b71e6409249f91d6773b1cd4712a7e637104d8`.
+[IRS Child Tax Credit and Credit for Other Dependents](https://www.irs.gov/credits-deductions/individuals/child-tax-credit-and-credit-for-other-dependents) ·
+[26 USC §152](https://uscode.house.gov/us/usc/t26/s152/).
+
 ## November 27 native recovery queue
 
 The current ARM64 rehearsal `46057962832` targets `86fe42b9b`, which
@@ -42,6 +65,23 @@ candidate.
 [Queued ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832) ·
 [Completed ARM64 run](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098) ·
 [Sanitized timing](https://github.com/utilityfueled/tax-engine/actions/runs/46014076098/artifacts/15228734483).
+
+## November 27 ARM64 browser worker comparison
+
+`1cd975b37` adds an opt-in comparison after a strict ARM64 browser failure.
+It compares the same 131 cases with two workers then one on the same native
+image. Both legs use zero retries and preserve the strict run's per-case
+body deadlines. The recorded GitHub job start bounds the comparison to
+29 minutes 30 seconds and reserves 5 minutes 30 seconds for cleanup. The
+fixed order and warmed runtime can affect results. The strict workflow still
+determines release qualification.
+
+All 90 focused checks and eight scoped spec references passed. Both local
+Playwright collections match the recorded case and deadline digest.
+`750b0c803` allowed the opt-in comparison to queue separately. Both the new
+job and the existing default ARM64 job were queued at readback.
+[Opt-in run](https://github.com/utilityfueled/tax-engine/actions/runs/46066052234) ·
+[Default run](https://github.com/utilityfueled/tax-engine/actions/runs/46057962832).
 
 ## November 27 commercial clean vehicle asset basis
 

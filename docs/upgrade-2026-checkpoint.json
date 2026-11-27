@@ -2,9 +2,9 @@
   "resume": {
     "asOf": "2026-11-27",
     "branch": "main",
-    "applicationCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+    "applicationCommit": "bed42a90f3b25899a1ad4987f88366e8cbe04208",
     "latestScopedApplicationCommit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
-    "latestCombinedCandidateCommit": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
+    "latestCombinedCandidateCommit": "bed42a90f3b25899a1ad4987f88366e8cbe04208",
     "latestScopedChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasis",
     "nov27PaymentReceiptsAndForm8863EvidenceKey": "activeContinuation.nov27PaymentReceiptsAndForm8863",
     "nov27OhioPennsylvaniaPensionEvidenceKey": "activeContinuation.nov27OhioPennsylvaniaPension",
@@ -63,7 +63,7 @@
     "pinnedSelfHostSchemaEvidenceKey": "activeContinuation.nov26PinnedSelfHostSchema",
     "ohioOrdinaryCashDividendEvidenceKey": "activeContinuation.nov26OhioCashDividend",
     "pennsylvaniaAnnualCashDividendEvidenceKey": "activeContinuation.nov26PaAnnualCashDividend",
-    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
+    "latestExactLocalVerificationEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact",
     "paPartYearDividendEvidenceKey": "activeContinuation.nov26PAPartYearCashDividend",
     "currentCombinedAndArmEvidenceKey": "activeContinuation.nov26CombinedEvAiAndArm64",
     "evChargerEvidenceKey": "activeContinuation.nov26PersonalEvCharger",
@@ -111,7 +111,7 @@
     "householdUpkeepEvidenceKey": "activeContinuation.nov25HouseholdUpkeepPrecision",
     "verificationCommit": "cd6e64b972869264f35234e64267c88f36778860",
     "generatedInventoryCommit": "26983a3c48380a3c1ead47a86dbe3977dd02f6bd",
-    "latestLocalChecksEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
+    "latestLocalChecksEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact",
     "vehicleStatementEvidenceKey": "activeContinuation.nov25Form1098Vli",
     "vehicleRefundEvidenceKey": "activeContinuation.nov25Form1098VliCashRefund",
     "vehicleInterestCreditEvidenceKey": "activeContinuation.nov25Form1098VliInterestCredit",
@@ -184,7 +184,7 @@
     "pensionTaxableAmountEvidenceKey": "activeContinuation.nov24ReportedPensionTaxableAmount",
     "completeLocalBaselineEvidenceKey": "activeContinuation.nov24ExactLocalBaselineAndCurrentRuns",
     "rrtaTimingEvidenceKey": "activeContinuation.nov24RRTALinuxComparison",
-    "unitCoverageEvidenceKey": "activeContinuation.nov27CommercialVehicleBasisExact",
+    "unitCoverageEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact",
     "remaining": [
       "Both strict Linux browser gates and current image evidence remain open. See activeContinuation.nov27OhioBusinessAndEquityResidency for the current e075fceaf run IDs. The earlier ARM64 strict browser step failed on nine Ohio deadlines. Verified 46005900143 held the active concurrency lease and exact e075fceaf run 46014076098 was pending behind it. Keep both runs in place.",
       "Assign qualified independent tax reviewers for expected outputs and interpretations, including Sections 443, 172/1202, 68/8960, Marketplace estimate exception, and the QBI minimum with any separate cooperative deduction. Qualify the final form revision, blank hash, maps and transfers for every enabled federal, Pennsylvania and Ohio scenario.",
@@ -380,7 +380,8 @@
       "desktopAndMobileAfterPassed": 2,
       "exactUnitPassed": 31349,
       "exactUnitSkipped": 83,
-      "fullLocalChecks": "running"
+      "fullLocalChecks": "passed",
+      "exactEvidenceKey": "activeContinuation.nov27DependentOriginalAndEligibilityExact"
     },
     "nov27NoncashDonationDateReview": {
       "commit": "1fb0542be1d5f82924c761791984d0d7b547cc3a",
@@ -394,6 +395,70 @@
         "https://www.irs.gov/publications/p526",
         "https://uscode.house.gov/us/usc/t26/s170/"
       ]
+    },
+    "nov27NativeArm64WorkerComparison": {
+      "implementationCommit": "1cd975b3786a52a1333dd467b6c5bf8de4b54d37",
+      "queueIsolationCommit": "750b0c8037956852d77b783d7613164020cc6d3e",
+      "runId": 46066052234,
+      "jobId": 140731517397,
+      "status": "queued",
+      "ordinaryRunPreserved": 46057962832,
+      "focusedChecksPassed": 90,
+      "scopedSpecChecksPassed": 8,
+      "caseCount": 131,
+      "caseDeadlineDigestSha256": "2bb7371be0486a1416d99c48a571e166128d42cc4492c1cbf1d71186d287bcee",
+      "workerOrder": [
+        2,
+        1
+      ],
+      "diagnosticTimeLimitSeconds": 1770,
+      "minimumCleanupReserveSeconds": 330,
+      "nativeResultsObserved": false,
+      "qualificationChanged": false
+    },
+    "nov27DependentOriginalAndEligibilityExact": {
+      "commit": "bed42a90f3b25899a1ad4987f88366e8cbe04208",
+      "archiveSha256": "cb4c2b1be56bed4c14b0f6326c178ccc8bc42bb29fb1bdc9dd61a8379e97e006",
+      "localManifestSha256": "c186f34fa851ecff409a858541b71e6409249f91d6773b1cd4712a7e637104d8",
+      "requiredLocalChecksPassed": 11,
+      "initialBrowserAttempt": {
+        "exit": 1,
+        "cause": "Local filesystem ENOSPC",
+        "logSha256": "036734b2a8b23173ac235156d7dc5c5ef90055fba0db4cb9a92ea58dbd23f4e8"
+      },
+      "unitPassed": 31349,
+      "unitSkips": 83,
+      "branchCoveragePercent": 88.69,
+      "chromiumPassed": 654,
+      "chromiumSkipped": 5,
+      "chromiumWindows": 9,
+      "browserSummarySha256": "6248e28c6bd2fafd8a9e28b094800bd3e2ab7614bf293a3c4bb79950c31f987d",
+      "dependentBrowserCases": {
+        "beforeFailed": 2,
+        "afterPassed": 2,
+        "beforeLogSha256": "0b1eb42683876690c2e7de279f468f63ad80836e99099221e58c0b5220d003e1",
+        "afterLogSha256": "d7044b8eb2988100303feed221d2d93be5c54bc635c4c994284a2abc78f13874"
+      },
+      "standaloneReceiptSha256": "c68079a4d9048038ad4134bca4fcf5eb051873c04e5dc6635d9cd47f68eb28b1",
+      "standalonePassed": true,
+      "localListenersClosed": true,
+      "remoteWorkflows": {
+        "Docker": {
+          "id": 46062233030,
+          "status": "queued",
+          "conclusion": null
+        },
+        "CI": {
+          "id": 46062233237,
+          "status": "queued",
+          "conclusion": null
+        },
+        "Web": {
+          "id": 46062233063,
+          "status": "queued",
+          "conclusion": null
+        }
+      }
     },
     "nov27CurrentNativeRecoveryQueue": {
       "appRevision": "dbf3d7f794ae865d6317f24b7e3dc54f6cd076d4",
